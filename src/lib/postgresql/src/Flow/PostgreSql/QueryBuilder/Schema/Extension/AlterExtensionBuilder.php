@@ -4,8 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Extension;
 
-use Flow\PostgreSql\Protobuf\AST\{AlterExtensionContentsStmt, AlterExtensionStmt, DefElem, Node, ObjectType, ObjectWithArgs, PBList, PBString};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\AlterExtensionContentsStmt;
+use Flow\PostgreSql\Protobuf\AST\AlterExtensionStmt;
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\ObjectWithArgs;
+use Flow\PostgreSql\Protobuf\AST\PBList;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class AlterExtensionBuilder implements AlterExtensionActionStep, AlterExtensionFinalStep
 {
@@ -18,63 +26,34 @@ final readonly class AlterExtensionBuilder implements AlterExtensionActionStep, 
         private ?int $action = null,
         private ?int $objtype = null,
         private ?string $objectName = null,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name) : AlterExtensionActionStep
+    public static function create(string $name): AlterExtensionActionStep
     {
         return new self($name);
     }
 
-    public function addFunction(string $function) : AlterExtensionFinalStep
+    public function addFunction(string $function): AlterExtensionFinalStep
     {
-        return new self(
-            $this->name,
-            false,
-            null,
-            1,
-            ObjectType::OBJECT_FUNCTION,
-            $function,
-        );
+        return new self($this->name, false, null, 1, ObjectType::OBJECT_FUNCTION, $function);
     }
 
-    public function addTable(string $table) : AlterExtensionFinalStep
+    public function addTable(string $table): AlterExtensionFinalStep
     {
-        return new self(
-            $this->name,
-            false,
-            null,
-            1,
-            ObjectType::OBJECT_TABLE,
-            $table,
-        );
+        return new self($this->name, false, null, 1, ObjectType::OBJECT_TABLE, $table);
     }
 
-    public function dropFunction(string $function) : AlterExtensionFinalStep
+    public function dropFunction(string $function): AlterExtensionFinalStep
     {
-        return new self(
-            $this->name,
-            false,
-            null,
-            -1,
-            ObjectType::OBJECT_FUNCTION,
-            $function,
-        );
+        return new self($this->name, false, null, -1, ObjectType::OBJECT_FUNCTION, $function);
     }
 
-    public function dropTable(string $table) : AlterExtensionFinalStep
+    public function dropTable(string $table): AlterExtensionFinalStep
     {
-        return new self(
-            $this->name,
-            false,
-            null,
-            -1,
-            ObjectType::OBJECT_TABLE,
-            $table,
-        );
+        return new self($this->name, false, null, -1, ObjectType::OBJECT_TABLE, $table);
     }
 
-    public function toAst() : AlterExtensionStmt|AlterExtensionContentsStmt
+    public function toAst(): AlterExtensionStmt|AlterExtensionContentsStmt
     {
         if ($this->isUpdate) {
             $stmt = new AlterExtensionStmt();
@@ -153,27 +132,13 @@ final readonly class AlterExtensionBuilder implements AlterExtensionActionStep, 
         return $stmt;
     }
 
-    public function update() : AlterExtensionFinalStep
+    public function update(): AlterExtensionFinalStep
     {
-        return new self(
-            $this->name,
-            true,
-            null,
-            null,
-            null,
-            null,
-        );
+        return new self($this->name, true, null, null, null, null);
     }
 
-    public function updateTo(string $version) : AlterExtensionFinalStep
+    public function updateTo(string $version): AlterExtensionFinalStep
     {
-        return new self(
-            $this->name,
-            true,
-            $version,
-            null,
-            null,
-            null,
-        );
+        return new self($this->name, true, $version, null, null, null);
     }
 }

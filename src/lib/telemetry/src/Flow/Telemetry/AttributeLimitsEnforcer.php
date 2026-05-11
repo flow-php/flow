@@ -22,11 +22,8 @@ final readonly class AttributeLimitsEnforcer
      * @param int $countLimit Maximum number of attributes to keep
      * @param null|int $valueLengthLimit Maximum length for string values (null = unlimited)
      */
-    public function enforce(
-        Attributes $attributes,
-        int $countLimit,
-        ?int $valueLengthLimit,
-    ) : EnforcedAttributes {
+    public function enforce(Attributes $attributes, int $countLimit, ?int $valueLengthLimit): EnforcedAttributes
+    {
         $normalized = $attributes->normalize();
         $droppedCount = 0;
 
@@ -39,10 +36,7 @@ final readonly class AttributeLimitsEnforcer
             $normalized = $this->truncateStringValues($normalized, $valueLengthLimit);
         }
 
-        return new EnforcedAttributes(
-            Attributes::fromArray($normalized),
-            $droppedCount,
-        );
+        return new EnforcedAttributes(Attributes::fromArray($normalized), $droppedCount);
     }
 
     /**
@@ -50,7 +44,7 @@ final readonly class AttributeLimitsEnforcer
      *
      * @return array<bool|float|int|string>
      */
-    private function truncateArrayValues(array $values, int $maxLength) : array
+    private function truncateArrayValues(array $values, int $maxLength): array
     {
         foreach ($values as $index => $value) {
             if (\is_string($value) && \mb_strlen($value) > $maxLength) {
@@ -66,7 +60,7 @@ final readonly class AttributeLimitsEnforcer
      *
      * @return array<string, array<bool|float|int|string>|bool|float|int|string>
      */
-    private function truncateStringValues(array $values, int $maxLength) : array
+    private function truncateStringValues(array $values, int $maxLength): array
     {
         foreach ($values as $key => $value) {
             if (\is_string($value) && \mb_strlen($value) > $maxLength) {

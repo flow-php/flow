@@ -13,6 +13,5 @@ final readonly class FilesystemTelemetryConfig
         public Telemetry $telemetry,
         public ClockInterface $clock,
         public FilesystemTelemetryOptions $options = new FilesystemTelemetryOptions(),
-    ) {
-    }
+    ) {}
 }

@@ -4,12 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML;
 
+use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\FileExtractor;
+use Flow\ETL\Extractor\Limitable;
+use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\PathFiltering;
+use Flow\ETL\Extractor\Signal;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Schema;
+use Flow\Filesystem\Path;
+
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\Types\DSL\type_string;
-use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PathFiltering, Signal};
-use Flow\ETL\{Extractor, FlowContext, Schema};
-use Flow\Filesystem\Path;
 
 final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -61,24 +68,28 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
      *
      * @param Path $path
      */
-    public function __construct(private readonly Path $path)
-    {
+    public function __construct(
+        private readonly Path $path,
+    ) {
         $this->resetLimit();
     }
 
-    public function characterDataHandler(\XMLParser $parser, string $data) : void
+    public function characterDataHandler(\XMLParser $parser, string $data): void
     {
         if ($this->capturing) {
             $this->writer()->text($data);
         }
     }
 
-    public function endElementHandler(\XMLParser $parser, string $name) : void
+    public function endElementHandler(\XMLParser $parser, string $name): void
     {
         if ($this->capturing) {
             $this->writer()->endElement();
 
-            if (implode('/', $this->currentPath) === $this->xmlNodePath || ($this->xmlNodePath === '' && \count($this->currentPath) === 1)) {
+            if (
+                implode('/', $this->currentPath) === $this->xmlNodePath
+                || $this->xmlNodePath === '' && \count($this->currentPath) === 1
+            ) {
                 $this->capturing = false;
                 $this->elements[] = $this->writer()->outputMemory();
             }
@@ -88,7 +99,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         array_pop($this->namespaceStack);
     }
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
@@ -100,7 +111,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
                     throw new RuntimeException(sprintf(
                         'XML Error: %s at line %d',
                         (string) xml_error_string(xml_get_error_code($this->parser())),
-                        xml_get_current_line_number($this->parser())
+                        xml_get_current_line_number($this->parser()),
                     ));
                 }
 
@@ -115,7 +126,12 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
                             $rowData = ['node' => $this->createDOMNode($element)];
                         }
 
-                        $signal = yield array_to_rows($rowData, $context->entryFactory(), $stream->path()->partitions(), $this->schema);
+                        $signal = yield array_to_rows(
+                            $rowData,
+                            $context->entryFactory(),
+                            $stream->path()->partitions(),
+                            $this->schema,
+                        );
 
                         $this->incrementReturnedRows();
 
@@ -161,7 +177,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         }
     }
 
-    public function source() : Path
+    public function source(): Path
     {
         return $this->path;
     }
@@ -169,7 +185,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
     /**
      * @param array<string, mixed> $attrs
      */
-    public function startElementHandler(\XMLParser $parser, string $name, array $attrs) : void
+    public function startElementHandler(\XMLParser $parser, string $name, array $attrs): void
     {
         $this->currentPath[] = $name;
 
@@ -186,7 +202,9 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
 
         $this->namespaceStack[] = $namespaceDeclarations;
 
-        $isCapturedRoot = implode('/', $this->currentPath) === $this->xmlNodePath || ($this->xmlNodePath === '' && \count($this->currentPath) === 1);
+        $isCapturedRoot =
+            implode('/', $this->currentPath) === $this->xmlNodePath
+            || $this->xmlNodePath === '' && \count($this->currentPath) === 1;
 
         if ($isCapturedRoot) {
             $this->capturing = true;
@@ -211,28 +229,28 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
     /**
      * @param int<1, max> $bufferSize $bufferSize - size of the chunks to read from the xml file. Bigger chunks means faster reading but more memory usage.
      */
-    public function withBufferSize(int $bufferSize) : self
+    public function withBufferSize(int $bufferSize): self
     {
         $this->bufferSize = $bufferSize;
 
         return $this;
     }
 
-    public function withSchema(Schema $schema) : self
+    public function withSchema(Schema $schema): self
     {
         $this->schema = $schema;
 
         return $this;
     }
 
-    public function withXMLNodePath(string $xmlNodePath) : self
+    public function withXMLNodePath(string $xmlNodePath): self
     {
         $this->xmlNodePath = $xmlNodePath;
 
         return $this;
     }
 
-    private function createDOMNode(string $xmlString) : \DOMNode
+    private function createDOMNode(string $xmlString): \DOMNode
     {
         $doc = new \DOMDocument();
         $doc->loadXML($xmlString);
@@ -240,7 +258,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         return $doc;
     }
 
-    private function freeParser() : void
+    private function freeParser(): void
     {
         if ($this->parser !== null) {
             xml_parser_free($this->parser);
@@ -251,7 +269,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         $this->currentPath = [];
     }
 
-    private function parser() : \XMLParser
+    private function parser(): \XMLParser
     {
         if ($this->parser === null) {
             $this->parser = xml_parser_create();
@@ -263,7 +281,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         return $this->parser;
     }
 
-    private function writer() : \XMLWriter
+    private function writer(): \XMLWriter
     {
         if ($this->writer === null) {
             $this->writer = new \XMLWriter();

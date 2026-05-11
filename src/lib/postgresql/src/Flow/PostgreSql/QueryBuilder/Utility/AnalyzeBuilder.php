@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Utility;
 
-use Flow\PostgreSql\Protobuf\AST\{DefElem, Node, PBString, RangeVar, VacuumRelation as VacuumRelationAST, VacuumStmt};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\Protobuf\AST\VacuumRelation as VacuumRelationAST;
+use Flow\PostgreSql\Protobuf\AST\VacuumStmt;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class AnalyzeBuilder implements AnalyzeFinalStep
 {
@@ -18,33 +24,24 @@ final readonly class AnalyzeBuilder implements AnalyzeFinalStep
         private array $relations = [],
         private bool $verbose = false,
         private bool $skipLocked = false,
-    ) {
-    }
+    ) {}
 
-    public static function create() : AnalyzeFinalStep
+    public static function create(): AnalyzeFinalStep
     {
         return new self();
     }
 
-    public function skipLocked() : AnalyzeFinalStep
+    public function skipLocked(): AnalyzeFinalStep
     {
-        return new self(
-            $this->relations,
-            $this->verbose,
-            true,
-        );
+        return new self($this->relations, $this->verbose, true);
     }
 
-    public function table(string $table, string ...$columns) : AnalyzeFinalStep
+    public function table(string $table, string ...$columns): AnalyzeFinalStep
     {
-        return new self(
-            [...$this->relations, new VacuumRelation($table, $columns)],
-            $this->verbose,
-            $this->skipLocked,
-        );
+        return new self([...$this->relations, new VacuumRelation($table, $columns)], $this->verbose, $this->skipLocked);
     }
 
-    public function tables(string ...$tables) : AnalyzeFinalStep
+    public function tables(string ...$tables): AnalyzeFinalStep
     {
         $relations = $this->relations;
 
@@ -52,14 +49,10 @@ final readonly class AnalyzeBuilder implements AnalyzeFinalStep
             $relations[] = new VacuumRelation($table);
         }
 
-        return new self(
-            $relations,
-            $this->verbose,
-            $this->skipLocked,
-        );
+        return new self($relations, $this->verbose, $this->skipLocked);
     }
 
-    public function toAst() : VacuumStmt
+    public function toAst(): VacuumStmt
     {
         $stmt = new VacuumStmt();
         $stmt->setIsVacuumcmd(false);
@@ -123,16 +116,12 @@ final readonly class AnalyzeBuilder implements AnalyzeFinalStep
         return $stmt;
     }
 
-    public function verbose() : AnalyzeFinalStep
+    public function verbose(): AnalyzeFinalStep
     {
-        return new self(
-            $this->relations,
-            true,
-            $this->skipLocked,
-        );
+        return new self($this->relations, true, $this->skipLocked);
     }
 
-    private function createDefElemBool(string $name) : Node
+    private function createDefElemBool(string $name): Node
     {
         $defElem = new DefElem();
         $defElem->setDefname($name);

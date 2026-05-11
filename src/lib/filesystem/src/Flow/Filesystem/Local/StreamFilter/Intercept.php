@@ -14,7 +14,7 @@ final class Intercept extends \php_user_filter
      * @param int $consumed
      * @param bool $closing
      */
-    public function filter($in, $out, &$consumed, bool $closing) : int
+    public function filter($in, $out, &$consumed, bool $closing): int
     {
         while ($bucket = stream_bucket_make_writeable($in)) {
             self::$buffer .= $bucket->data;

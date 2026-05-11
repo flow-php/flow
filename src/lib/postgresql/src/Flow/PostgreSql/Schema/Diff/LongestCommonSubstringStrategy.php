@@ -8,10 +8,9 @@ final readonly class LongestCommonSubstringStrategy implements SimilarityStrateg
 {
     public function __construct(
         private float $threshold = 50.0,
-    ) {
-    }
+    ) {}
 
-    public function similarity(string $a, string $b) : float
+    public function similarity(string $a, string $b): float
     {
         $maxLen = \max(\strlen($a), \strlen($b));
 
@@ -44,7 +43,7 @@ final readonly class LongestCommonSubstringStrategy implements SimilarityStrateg
         return ($longest / $maxLen) * 100.0;
     }
 
-    public function threshold() : float
+    public function threshold(): float
     {
         return $this->threshold;
     }

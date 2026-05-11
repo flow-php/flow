@@ -6,5 +6,5 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\AlterSequence;
 
 interface AlterSequenceNameStep
 {
-    public function sequence(string $name, ?string $schema = null) : AlterSequenceOptionsStep;
+    public function sequence(string $name, ?string $schema = null): AlterSequenceOptionsStep;
 }

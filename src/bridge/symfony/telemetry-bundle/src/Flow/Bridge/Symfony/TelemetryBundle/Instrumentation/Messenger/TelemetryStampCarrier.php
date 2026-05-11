@@ -16,23 +16,23 @@ use Flow\Telemetry\Propagation\Carrier;
  */
 final class TelemetryStampCarrier implements Carrier
 {
-    public function __construct(private TelemetryStamp $stamp = new TelemetryStamp())
-    {
-    }
+    public function __construct(
+        private TelemetryStamp $stamp = new TelemetryStamp(),
+    ) {}
 
-    public function get(string $key) : ?string
+    public function get(string $key): ?string
     {
         return $this->stamp->get($key);
     }
 
-    public function set(string $key, string $value) : static
+    public function set(string $key, string $value): static
     {
         $this->stamp = $this->stamp->with($key, $value);
 
         return $this;
     }
 
-    public function unwrap() : TelemetryStamp
+    public function unwrap(): TelemetryStamp
     {
         return $this->stamp;
     }

@@ -17,12 +17,12 @@ interface UpdateSetStep extends UpdateFromStep
      * @param string $column The column name
      * @param Expression $value The value expression
      */
-    public function set(string $column, Expression $value) : self;
+    public function set(string $column, Expression $value): self;
 
     /**
      * Set multiple column assignments at once.
      *
      * @param array<string, Expression> $assignments Column => value assignments
      */
-    public function setAll(array $assignments) : UpdateFromStep;
+    public function setAll(array $assignments): UpdateFromStep;
 }

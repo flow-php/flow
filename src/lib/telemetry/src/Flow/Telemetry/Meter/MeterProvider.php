@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter;
 
-use Flow\Telemetry\{Attributes, InstrumentationScope, Resource};
-use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
-use Flow\Telemetry\Meter\Exemplar\{ExemplarFilter, TraceBasedExemplarFilter};
+use Flow\Telemetry\Attributes;
+use Flow\Telemetry\ErrorHandler\ErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
+use Flow\Telemetry\InstrumentationScope;
+use Flow\Telemetry\Meter\Exemplar\ExemplarFilter;
+use Flow\Telemetry\Meter\Exemplar\TraceBasedExemplarFilter;
 use Flow\Telemetry\Provider\Clock\SystemClock;
+use Flow\Telemetry\Resource;
 use Psr\Clock\ClockInterface;
 
 /**
@@ -43,8 +47,7 @@ final readonly class MeterProvider
         private ExemplarFilter $exemplarFilter = new TraceBasedExemplarFilter(),
         private MetricLimits $limits = new MetricLimits(),
         private ErrorHandler $errorHandler = new ErrorLogHandler(),
-    ) {
-    }
+    ) {}
 
     /**
      * Create a meter for the given instrumentation scope.
@@ -58,8 +61,13 @@ final readonly class MeterProvider
      * @param null|string $schemaUrl Schema URL for semantic conventions
      * @param null|Attributes $attributes Additional scope attributes
      */
-    public function meter(Resource $resource, string $name, string $version = 'unknown', ?string $schemaUrl = null, ?Attributes $attributes = null) : Meter
-    {
+    public function meter(
+        Resource $resource,
+        string $name,
+        string $version = 'unknown',
+        ?string $schemaUrl = null,
+        ?Attributes $attributes = null,
+    ): Meter {
         return new Meter(
             $resource,
             new InstrumentationScope($name, $version, $schemaUrl, $attributes ?? new Attributes()),

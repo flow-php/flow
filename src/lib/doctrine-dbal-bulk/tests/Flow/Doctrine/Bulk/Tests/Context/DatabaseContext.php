@@ -9,16 +9,16 @@ use Doctrine\DBAL\Schema\Table;
 
 final readonly class DatabaseContext
 {
-    public function __construct(private Connection $connection)
-    {
-    }
+    public function __construct(
+        private Connection $connection,
+    ) {}
 
-    public function connection() : Connection
+    public function connection(): Connection
     {
         return $this->connection;
     }
 
-    public function createTable(Table $table) : void
+    public function createTable(Table $table): void
     {
         $schemaManager = $this->connection->createSchemaManager();
 
@@ -29,7 +29,7 @@ final readonly class DatabaseContext
         $schemaManager->createTable($table);
     }
 
-    public function dropAllTables() : void
+    public function dropAllTables(): void
     {
         foreach ($this->connection->createSchemaManager()->listTables() as $table) {
             if (\str_contains($table->getName(), 'innodb')) {
@@ -44,28 +44,22 @@ final readonly class DatabaseContext
         }
     }
 
-    public function selectAll(string $tableName) : array
+    public function selectAll(string $tableName): array
     {
         return $this->connection->fetchAllAssociative(
-            $this
-                ->connection
+            $this->connection
                 ->createQueryBuilder()
                 ->select('*')
                 ->from($tableName)
                 ->orderBy('id')
-                ->getSQL()
+                ->getSQL(),
         );
     }
 
-    public function tableCount(string $tableName) : int
+    public function tableCount(string $tableName): int
     {
         return (int) $this->connection->fetchOne(
-            $this
-                ->connection
-                ->createQueryBuilder()
-                ->select('COUNT(*)')
-                ->from($tableName)
-                ->getSQL()
+            $this->connection->createQueryBuilder()->select('COUNT(*)')->from($tableName)->getSQL(),
         );
     }
 }

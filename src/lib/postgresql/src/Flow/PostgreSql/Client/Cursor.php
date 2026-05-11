@@ -17,13 +17,13 @@ interface Cursor extends \Countable, \IteratorAggregate
     /**
      * Get the number of rows in the result set.
      */
-    public function count() : int;
+    public function count(): int;
 
     /**
      * Free the cursor resources.
      * Called automatically when iteration completes.
      */
-    public function free() : void;
+    public function free(): void;
 
     /**
      * Iterate all remaining rows lazily as arrays.
@@ -31,7 +31,7 @@ interface Cursor extends \Countable, \IteratorAggregate
      *
      * @return \Generator<int, array<string, mixed>>
      */
-    public function iterate() : \Generator;
+    public function iterate(): \Generator;
 
     /**
      * Iterate all remaining rows, mapping each using the provided mapper.
@@ -43,12 +43,12 @@ interface Cursor extends \Countable, \IteratorAggregate
      *
      * @return \Generator<int, T>
      */
-    public function map(RowMapper $mapper) : \Generator;
+    public function map(RowMapper $mapper): \Generator;
 
     /**
      * Fetch the next row. Returns null when exhausted.
      *
      * @return null|array<string, mixed>
      */
-    public function next() : ?array;
+    public function next(): ?array;
 }

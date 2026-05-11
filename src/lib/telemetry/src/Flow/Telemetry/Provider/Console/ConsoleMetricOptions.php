@@ -13,15 +13,14 @@ final readonly class ConsoleMetricOptions
         public bool $showAggregationTemporality = false,
         public bool $showStartTimestamp = false,
         public bool $showAllExemplars = false,
-    ) {
-    }
+    ) {}
 
-    public static function default() : self
+    public static function default(): self
     {
         return new self();
     }
 
-    public static function minimal() : self
+    public static function minimal(): self
     {
         return new self(
             showResourceAttributes: false,
@@ -33,33 +32,75 @@ final readonly class ConsoleMetricOptions
         );
     }
 
-    public function withAggregationTemporality(bool $show = true) : self
+    public function withAggregationTemporality(bool $show = true): self
     {
-        return new self($this->showResourceAttributes, $this->showInstrumentationScope, $this->showDescription, $show, $this->showStartTimestamp, $this->showAllExemplars);
+        return new self(
+            $this->showResourceAttributes,
+            $this->showInstrumentationScope,
+            $this->showDescription,
+            $show,
+            $this->showStartTimestamp,
+            $this->showAllExemplars,
+        );
     }
 
-    public function withAllExemplars(bool $show = true) : self
+    public function withAllExemplars(bool $show = true): self
     {
-        return new self($this->showResourceAttributes, $this->showInstrumentationScope, $this->showDescription, $this->showAggregationTemporality, $this->showStartTimestamp, $show);
+        return new self(
+            $this->showResourceAttributes,
+            $this->showInstrumentationScope,
+            $this->showDescription,
+            $this->showAggregationTemporality,
+            $this->showStartTimestamp,
+            $show,
+        );
     }
 
-    public function withDescription(bool $show = true) : self
+    public function withDescription(bool $show = true): self
     {
-        return new self($this->showResourceAttributes, $this->showInstrumentationScope, $show, $this->showAggregationTemporality, $this->showStartTimestamp, $this->showAllExemplars);
+        return new self(
+            $this->showResourceAttributes,
+            $this->showInstrumentationScope,
+            $show,
+            $this->showAggregationTemporality,
+            $this->showStartTimestamp,
+            $this->showAllExemplars,
+        );
     }
 
-    public function withInstrumentationScope(bool $show = true) : self
+    public function withInstrumentationScope(bool $show = true): self
     {
-        return new self($this->showResourceAttributes, $show, $this->showDescription, $this->showAggregationTemporality, $this->showStartTimestamp, $this->showAllExemplars);
+        return new self(
+            $this->showResourceAttributes,
+            $show,
+            $this->showDescription,
+            $this->showAggregationTemporality,
+            $this->showStartTimestamp,
+            $this->showAllExemplars,
+        );
     }
 
-    public function withResourceAttributes(bool $show = true) : self
+    public function withResourceAttributes(bool $show = true): self
     {
-        return new self($show, $this->showInstrumentationScope, $this->showDescription, $this->showAggregationTemporality, $this->showStartTimestamp, $this->showAllExemplars);
+        return new self(
+            $show,
+            $this->showInstrumentationScope,
+            $this->showDescription,
+            $this->showAggregationTemporality,
+            $this->showStartTimestamp,
+            $this->showAllExemplars,
+        );
     }
 
-    public function withStartTimestamp(bool $show = true) : self
+    public function withStartTimestamp(bool $show = true): self
     {
-        return new self($this->showResourceAttributes, $this->showInstrumentationScope, $this->showDescription, $this->showAggregationTemporality, $show, $this->showAllExemplars);
+        return new self(
+            $this->showResourceAttributes,
+            $this->showInstrumentationScope,
+            $this->showDescription,
+            $this->showAggregationTemporality,
+            $show,
+            $this->showAllExemplars,
+        );
     }
 }

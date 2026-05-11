@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Model\Documentation;
 
-enum Module : string
+enum Module: string
 {
     case AVRO = 'Avro';
     case AZURE_FILESYSTEM = 'Azure Filesystem';
@@ -38,14 +38,14 @@ enum Module : string
     case TYPES = 'Types';
     case XML = 'XML';
 
-    public static function fromName(string $name) : self
+    public static function fromName(string $name): self
     {
         $name = \mb_strtoupper(\str_replace([' ', '-'], '_', $name));
 
         return constant("self::{$name}");
     }
 
-    public function priority() : int
+    public function priority(): int
     {
         return match ($this) {
             self::CORE => 1,

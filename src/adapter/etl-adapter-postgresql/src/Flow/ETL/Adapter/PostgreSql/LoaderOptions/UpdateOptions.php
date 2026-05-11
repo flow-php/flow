@@ -14,6 +14,5 @@ final readonly class UpdateOptions
      */
     public function __construct(
         public array $primaryKeys,
-    ) {
-    }
+    ) {}
 }

@@ -4,10 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native;
 
-use function Flow\Types\DSL\{type_literal, type_map, type_mixed, type_string, type_structure};
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
-use Flow\Types\Type\{Logical\OptionalType, TypeFactory, Types};
+use Flow\Types\Type\Logical\OptionalType;
+use Flow\Types\Type\TypeFactory;
+use Flow\Types\Type\Types;
+
+use function Flow\Types\DSL\type_literal;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 /**
  * @template TLeft
@@ -26,10 +34,14 @@ final readonly class IntersectionType implements Type
      * @param Type<TLeft> $left
      * @param Type<TRight> $right
      */
-    public function __construct(private Type $left, private Type $right)
-    {
+    public function __construct(
+        private Type $left,
+        private Type $right,
+    ) {
         if ($left instanceof MixedType || $right instanceof MixedType) {
-            throw new InvalidTypeException('IntersectionType cannot be mixed with MixedType, mixed is a standalone type');
+            throw new InvalidTypeException(
+                'IntersectionType cannot be mixed with MixedType, mixed is a standalone type',
+            );
         }
 
         $types = [];
@@ -54,7 +66,7 @@ final readonly class IntersectionType implements Type
      *
      * @return IntersectionType<mixed, mixed>
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         $data = type_structure([
             'type' => type_literal('intersection'),
@@ -62,16 +74,13 @@ final readonly class IntersectionType implements Type
             'right' => type_map(type_string(), type_mixed()),
         ])->assert($data);
 
-        return new self(
-            TypeFactory::fromArray($data['left']),
-            TypeFactory::fromArray($data['right']),
-        );
+        return new self(TypeFactory::fromArray($data['left']), TypeFactory::fromArray($data['right']));
     }
 
     /**
      * @return TLeft&TRight
      */
-    public function assert(mixed $value) : mixed
+    public function assert(mixed $value): mixed
     {
         if (!$this->isValid($value)) {
             throw InvalidTypeException::value($value, $this);
@@ -80,7 +89,7 @@ final readonly class IntersectionType implements Type
         return $value;
     }
 
-    public function cast(mixed $value) : mixed
+    public function cast(mixed $value): mixed
     {
         if ($this->isValid($value)) {
             return $value;
@@ -107,7 +116,7 @@ final readonly class IntersectionType implements Type
         throw new CastingException($value, $this);
     }
 
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return $this->left->isValid($value) && $this->right->isValid($value);
     }
@@ -115,7 +124,7 @@ final readonly class IntersectionType implements Type
     /**
      * @return array{type: 'intersection', left: array<string, mixed>, right: array<string, mixed>}
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'intersection',
@@ -124,7 +133,7 @@ final readonly class IntersectionType implements Type
         ];
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         $stringTypes = [];
 
@@ -152,7 +161,7 @@ final readonly class IntersectionType implements Type
     /**
      * @return Types<TLeft|TRight>
      */
-    public function types() : Types
+    public function types(): Types
     {
         return $this->flatTypes;
     }

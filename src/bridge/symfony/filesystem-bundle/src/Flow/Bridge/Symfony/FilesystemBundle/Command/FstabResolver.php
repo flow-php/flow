@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\FilesystemBundle\Command;
 
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\InvalidArgumentException;
-use Flow\Filesystem\{FilesystemTable, Path};
+use Flow\Filesystem\FilesystemTable;
+use Flow\Filesystem\Path;
 use Psr\Container\ContainerInterface;
 
 final readonly class FstabResolver
@@ -13,13 +14,12 @@ final readonly class FstabResolver
     public function __construct(
         private ContainerInterface $locator,
         private string $defaultFstab,
-    ) {
-    }
+    ) {}
 
     /**
      * @return list<string>
      */
-    public function availableFstabs() : array
+    public function availableFstabs(): array
     {
         if (!\method_exists($this->locator, 'getProvidedServices')) {
             return [];
@@ -31,12 +31,12 @@ final readonly class FstabResolver
         return \array_keys($services);
     }
 
-    public function defaultFstabName() : string
+    public function defaultFstabName(): string
     {
         return $this->defaultFstab;
     }
 
-    public function parseUri(string $raw) : Path
+    public function parseUri(string $raw): Path
     {
         if (\preg_match('#^[a-zA-Z][a-zA-Z0-9+.-]*://#', $raw) === 1) {
             return Path::from($raw);
@@ -48,7 +48,7 @@ final readonly class FstabResolver
         return Path::from('file://' . ($real !== false ? $real : self::normalizePath($absolute)));
     }
 
-    public function resolve(?string $fstabName) : FilesystemTable
+    public function resolve(?string $fstabName): FilesystemTable
     {
         $name = $fstabName ?? $this->defaultFstab;
 
@@ -60,13 +60,11 @@ final readonly class FstabResolver
             ));
         }
 
-        /** @var FilesystemTable $table */
-        $table = $this->locator->get($name);
-
-        return $table;
+        /** @phpstan-ignore return.type */
+        return $this->locator->get($name);
     }
 
-    private static function normalizePath(string $path) : string
+    private static function normalizePath(string $path): string
     {
         $isAbsolute = \str_starts_with($path, '/');
         $segments = [];

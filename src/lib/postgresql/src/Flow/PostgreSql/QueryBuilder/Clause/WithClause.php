@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Clause;
 
-use Flow\PostgreSql\Protobuf\AST\{Node, WithClause as ProtobufWithClause};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\WithClause as ProtobufWithClause;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 /**
@@ -18,10 +19,9 @@ final readonly class WithClause
     public function __construct(
         private array $ctes,
         private bool $recursive = false,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(ProtobufWithClause $withClause) : static
+    public static function fromAst(ProtobufWithClause $withClause): static
     {
         $cteNodes = $withClause->getCtes();
 
@@ -40,7 +40,7 @@ final readonly class WithClause
         return new self($ctes, $recursive);
     }
 
-    public function add(CTE $cte) : self
+    public function add(CTE $cte): self
     {
         return new self([...$this->ctes, $cte], $this->recursive);
     }
@@ -48,17 +48,17 @@ final readonly class WithClause
     /**
      * @return array<CTE>
      */
-    public function ctes() : array
+    public function ctes(): array
     {
         return $this->ctes;
     }
 
-    public function recursive() : bool
+    public function recursive(): bool
     {
         return $this->recursive;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $withClause = new ProtobufWithClause();
         $withClause->setRecursive($this->recursive);

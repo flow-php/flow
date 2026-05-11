@@ -10,6 +10,5 @@ final readonly class UserWithAddress
         public int $id,
         public string $name,
         public Address $address,
-    ) {
-    }
+    ) {}
 }

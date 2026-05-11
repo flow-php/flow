@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Diff;
 
-use function Flow\PostgreSql\DSL\{create, drop};
-
 use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexMethod as QbIndexMethod;
 use Flow\PostgreSql\QueryBuilder\Sql;
-use Flow\PostgreSql\Schema\{Index, IndexMethod, MaterializedView};
+use Flow\PostgreSql\Schema\Index;
+use Flow\PostgreSql\Schema\IndexMethod;
+use Flow\PostgreSql\Schema\MaterializedView;
+
+use function Flow\PostgreSql\DSL\create;
+use function Flow\PostgreSql\DSL\drop;
 
 final readonly class MaterializedViewDiff implements Diff
 {
@@ -21,13 +24,12 @@ final readonly class MaterializedViewDiff implements Diff
         public MaterializedView $target,
         public array $addedIndexes = [],
         public array $removedIndexes = [],
-    ) {
-    }
+    ) {}
 
     /**
      * @return list<Sql>
      */
-    public function generate() : array
+    public function generate(): array
     {
         $sqls = [];
 
@@ -37,9 +39,7 @@ final readonly class MaterializedViewDiff implements Diff
             }
 
             $sqls[] = drop()->materializedView($this->source->name);
-            $sqls = [...$sqls, ...$this->target->toSql()];
-
-            return $sqls;
+            return [...$sqls, ...$this->target->toSql()];
         }
 
         foreach ($this->removedIndexes as $idx) {
@@ -65,7 +65,7 @@ final readonly class MaterializedViewDiff implements Diff
         return $sqls;
     }
 
-    public function hasDefinitionChanged() : bool
+    public function hasDefinitionChanged(): bool
     {
         return $this->source->definition !== $this->target->definition;
     }

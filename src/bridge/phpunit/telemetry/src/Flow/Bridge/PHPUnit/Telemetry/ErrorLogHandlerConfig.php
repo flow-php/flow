@@ -12,6 +12,5 @@ final readonly class ErrorLogHandlerConfig
         public ErrorLogMessageType $messageType,
         public bool $expandNewlines,
         public string $messagePrefix,
-    ) {
-    }
+    ) {}
 }

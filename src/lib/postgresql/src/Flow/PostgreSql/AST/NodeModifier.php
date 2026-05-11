@@ -32,7 +32,7 @@ interface NodeModifier
      *
      * @return list<class-string<Message>> The node classes this modifier is registered for
      */
-    public static function nodeClasses() : array;
+    public static function nodeClasses(): array;
 
     /**
      * Called to modify a node of the registered type.
@@ -51,5 +51,5 @@ interface NodeModifier
      *                         - int (DONT_TRAVERSE_CHILDREN, STOP_TRAVERSAL): Control flow
      *                         - object: Replace current node with returned node
      */
-    public function modify(object $node, ModificationContext $context) : int|object|null;
+    public function modify(object $node, ModificationContext $context): int|object|null;
 }

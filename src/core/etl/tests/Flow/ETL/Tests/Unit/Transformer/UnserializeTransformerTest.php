@@ -4,15 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use function Flow\ETL\DSL\{bool_entry, flow_context, int_entry, list_entry, row, rows, str_entry};
-use function Flow\Types\DSL\{type_list, type_string};
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\UnserializeTransformer;
-use Flow\Serializer\{Base64Serializer, NativePHPSerializer};
+use Flow\Serializer\Base64Serializer;
+use Flow\Serializer\NativePHPSerializer;
+
+use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\list_entry;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_string;
 
 final class UnserializeTransformerTest extends FlowTestCase
 {
-    public function test_unserializing_row_from_entry() : void
+    public function test_unserializing_row_from_entry(): void
     {
         $row1 = row(
             int_entry('id', 1),
@@ -36,7 +45,7 @@ final class UnserializeTransformerTest extends FlowTestCase
 
         $transformedRows = $transformer->transform($rows, flow_context());
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 [
                     'serialized' => (new Base64Serializer(new NativePHPSerializer()))->serialize($row1),
@@ -57,20 +66,18 @@ final class UnserializeTransformerTest extends FlowTestCase
         );
     }
 
-    public function test_unserializing_something_that_is_not_serialized_row() : void
+    public function test_unserializing_something_that_is_not_serialized_row(): void
     {
-        $rows = rows(
-            row(str_entry('serialized', 'not-serialized')),
-        );
+        $rows = rows(row(str_entry('serialized', 'not-serialized')));
 
         $transformer = new UnserializeTransformer('serialized');
 
         $transformedRows = $transformer->transform($rows, flow_context());
 
-        self::assertEquals($rows, $transformedRows);
+        static::assertEquals($rows, $transformedRows);
     }
 
-    public function test_unserializing_without_merge() : void
+    public function test_unserializing_without_merge(): void
     {
         $row1 = row(
             int_entry('id', 1),
@@ -94,7 +101,7 @@ final class UnserializeTransformerTest extends FlowTestCase
 
         $transformedRows = $transformer->transform($rows, flow_context());
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 [
                     'id' => 1,

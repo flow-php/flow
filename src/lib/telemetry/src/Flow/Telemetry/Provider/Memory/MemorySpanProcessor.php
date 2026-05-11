@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Provider\Memory;
 
-use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
+use Flow\Telemetry\ErrorHandler\ErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Signal\Signals;
-use Flow\Telemetry\Tracer\{Span, SpanProcessor};
+use Flow\Telemetry\Tracer\Span;
+use Flow\Telemetry\Tracer\SpanProcessor;
 
 /**
  * Processor that stores spans in memory and exports via configured exporter.
@@ -29,15 +31,14 @@ final class MemorySpanProcessor implements SpanProcessor
     public function __construct(
         private readonly Exporter $spanExporter,
         private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
-    ) {
-    }
+    ) {}
 
     /**
      * Get all spans that have ended.
      *
      * @return array<Span>
      */
-    public function endedSpans() : array
+    public function endedSpans(): array
     {
         return \array_merge(...\array_values($this->endedSpansByTraceId));
     }
@@ -47,12 +48,12 @@ final class MemorySpanProcessor implements SpanProcessor
      *
      * @return array<Span>
      */
-    public function endedSpansForTrace(string $traceId) : array
+    public function endedSpansForTrace(string $traceId): array
     {
         return $this->endedSpansByTraceId[$traceId] ?? [];
     }
 
-    public function flush() : bool
+    public function flush(): bool
     {
         $spans = $this->endedSpans();
 
@@ -69,7 +70,7 @@ final class MemorySpanProcessor implements SpanProcessor
         }
     }
 
-    public function onEnd(Span $span) : void
+    public function onEnd(Span $span): void
     {
         $traceId = $span->context()->traceId->toHex();
 
@@ -80,7 +81,7 @@ final class MemorySpanProcessor implements SpanProcessor
         $this->endedSpansByTraceId[$traceId][] = $span;
     }
 
-    public function onStart(Span $span) : void
+    public function onStart(Span $span): void
     {
         $traceId = $span->context()->traceId->toHex();
 
@@ -91,13 +92,13 @@ final class MemorySpanProcessor implements SpanProcessor
         $this->startedSpansByTraceId[$traceId][] = $span;
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->startedSpansByTraceId = [];
         $this->endedSpansByTraceId = [];
     }
 
-    public function shutdown() : void
+    public function shutdown(): void
     {
         if ($this->isShutdown) {
             return;
@@ -119,7 +120,7 @@ final class MemorySpanProcessor implements SpanProcessor
      *
      * @return array<Span>
      */
-    public function startedSpans() : array
+    public function startedSpans(): array
     {
         return \array_merge(...\array_values($this->startedSpansByTraceId));
     }
@@ -129,7 +130,7 @@ final class MemorySpanProcessor implements SpanProcessor
      *
      * @return array<Span>
      */
-    public function startedSpansForTrace(string $traceId) : array
+    public function startedSpansForTrace(string $traceId): array
     {
         return $this->startedSpansByTraceId[$traceId] ?? [];
     }
@@ -139,7 +140,7 @@ final class MemorySpanProcessor implements SpanProcessor
      *
      * @return array<string>
      */
-    public function traceIds() : array
+    public function traceIds(): array
     {
         return \array_values(\array_unique(\array_merge(
             \array_keys($this->startedSpansByTraceId),

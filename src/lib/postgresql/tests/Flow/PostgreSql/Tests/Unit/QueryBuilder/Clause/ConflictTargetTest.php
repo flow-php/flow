@@ -5,53 +5,55 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Clause;
 
 use Flow\PostgreSql\QueryBuilder\Clause\ConflictTarget;
-use Flow\PostgreSql\QueryBuilder\Condition\{Comparison, ComparisonOperator};
-use Flow\PostgreSql\QueryBuilder\Expression\{Column, Literal};
+use Flow\PostgreSql\QueryBuilder\Condition\Comparison;
+use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
+use Flow\PostgreSql\QueryBuilder\Expression\Column;
+use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use PHPUnit\Framework\TestCase;
 
 final class ConflictTargetTest extends TestCase
 {
-    public function test_columns() : void
+    public function test_columns(): void
     {
         $target = ConflictTarget::columns(['email']);
 
-        self::assertCount(1, $target->getColumns());
-        self::assertSame(['email'], $target->getColumns());
-        self::assertNull($target->getConstraint());
+        static::assertCount(1, $target->getColumns());
+        static::assertSame(['email'], $target->getColumns());
+        static::assertNull($target->getConstraint());
     }
 
-    public function test_constraint() : void
+    public function test_constraint(): void
     {
         $target = ConflictTarget::constraint('users_email_key');
 
-        self::assertEmpty($target->getColumns());
-        self::assertSame('users_email_key', $target->getConstraint());
+        static::assertEmpty($target->getColumns());
+        static::assertSame('users_email_key', $target->getConstraint());
     }
 
-    public function test_multiple_columns() : void
+    public function test_multiple_columns(): void
     {
         $target = ConflictTarget::columns(['first_name', 'last_name']);
 
-        self::assertCount(2, $target->getColumns());
-        self::assertSame(['first_name', 'last_name'], $target->getColumns());
+        static::assertCount(2, $target->getColumns());
+        static::assertSame(['first_name', 'last_name'], $target->getColumns());
     }
 
-    public function test_to_ast() : void
+    public function test_to_ast(): void
     {
         $target = ConflictTarget::columns(['email']);
         $node = $target->toAst();
         $inferClause = $node->getInferClause();
 
-        self::assertNotNull($inferClause);
+        static::assertNotNull($inferClause);
     }
 
-    public function test_where() : void
+    public function test_where(): void
     {
         $target = ConflictTarget::columns(['email']);
         $condition = new Comparison(Column::name('deleted_at'), ComparisonOperator::EQ, Literal::null());
         $targetWithWhere = $target->where($condition);
 
-        self::assertNull($target->whereClause());
-        self::assertNotNull($targetWithWhere->whereClause());
+        static::assertNull($target->whereClause());
+        static::assertNotNull($targetWithWhere->whereClause());
     }
 }

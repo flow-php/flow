@@ -9,15 +9,15 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface TruncateFinalStep extends Sql
 {
-    public function cascade() : self;
+    public function cascade(): self;
 
-    public function continueIdentity() : self;
+    public function continueIdentity(): self;
 
-    public function restartIdentity() : self;
+    public function restartIdentity(): self;
 
-    public function restrict() : self;
+    public function restrict(): self;
 
-    public function toAst() : TruncateStmt;
+    public function toAst(): TruncateStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

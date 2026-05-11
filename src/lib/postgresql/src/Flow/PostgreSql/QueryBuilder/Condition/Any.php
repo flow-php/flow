@@ -4,9 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Condition;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Expr, A_Expr_Kind, Node, PBString, SubLink, SubLinkType};
+use Flow\PostgreSql\Protobuf\AST\A_Expr;
+use Flow\PostgreSql\Protobuf\AST\A_Expr_Kind;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\SubLink;
+use Flow\PostgreSql\Protobuf\AST\SubLinkType;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
-use Flow\PostgreSql\QueryBuilder\Expression\{AliasedExpression, Expression, ExpressionFactory};
+use Flow\PostgreSql\QueryBuilder\Expression\AliasedExpression;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 
 final readonly class Any implements Condition
 {
@@ -14,10 +21,9 @@ final readonly class Any implements Condition
         public Expression $expression,
         public ComparisonOperator $operator,
         public Expression|Node $arrayOrSubquery,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         if ($node->hasSubLink()) {
             $subLink = $node->getSubLink();
@@ -27,7 +33,11 @@ final readonly class Any implements Condition
             }
 
             if ($subLink->getSubLinkType() !== SubLinkType::ANY_SUBLINK) {
-                throw InvalidAstException::invalidFieldValue('sub_link_type', 'SubLink', 'Expected ANY_SUBLINK for Any condition');
+                throw InvalidAstException::invalidFieldValue(
+                    'sub_link_type',
+                    'SubLink',
+                    'Expected ANY_SUBLINK for Any condition',
+                );
             }
 
             $testexpr = $subLink->getTestexpr();
@@ -64,14 +74,14 @@ final readonly class Any implements Condition
                 '<=' => ComparisonOperator::LTE,
                 '>' => ComparisonOperator::GT,
                 '>=' => ComparisonOperator::GTE,
-                default => throw InvalidAstException::invalidFieldValue('oper_name', 'SubLink', "Unsupported comparison operator: {$operatorString}"),
+                default => throw InvalidAstException::invalidFieldValue(
+                    'oper_name',
+                    'SubLink',
+                    "Unsupported comparison operator: {$operatorString}",
+                ),
             };
 
-            return new self(
-                ExpressionFactory::fromAst($testexpr),
-                $operator,
-                $subselect
-            );
+            return new self(ExpressionFactory::fromAst($testexpr), $operator, $subselect);
         }
 
         if ($node->hasAExpr()) {
@@ -82,7 +92,11 @@ final readonly class Any implements Condition
             }
 
             if ($aExpr->getKind() !== A_Expr_Kind::AEXPR_OP_ANY) {
-                throw InvalidAstException::invalidFieldValue('kind', 'A_Expr', 'Expected AEXPR_OP_ANY for Any condition');
+                throw InvalidAstException::invalidFieldValue(
+                    'kind',
+                    'A_Expr',
+                    'Expected AEXPR_OP_ANY for Any condition',
+                );
             }
 
             $lexpr = $aExpr->getLexpr();
@@ -119,40 +133,40 @@ final readonly class Any implements Condition
                 '<=' => ComparisonOperator::LTE,
                 '>' => ComparisonOperator::GT,
                 '>=' => ComparisonOperator::GTE,
-                default => throw InvalidAstException::invalidFieldValue('name', 'A_Expr', "Unsupported comparison operator: {$operatorString}"),
+                default => throw InvalidAstException::invalidFieldValue(
+                    'name',
+                    'A_Expr',
+                    "Unsupported comparison operator: {$operatorString}",
+                ),
             };
 
-            return new self(
-                ExpressionFactory::fromAst($lexpr),
-                $operator,
-                ExpressionFactory::fromAst($rexpr)
-            );
+            return new self(ExpressionFactory::fromAst($lexpr), $operator, ExpressionFactory::fromAst($rexpr));
         }
 
         throw InvalidAstException::unexpectedNodeType('SubLink or A_Expr', 'unknown');
     }
 
-    public function and(Condition $other) : AndCondition
+    public function and(Condition $other): AndCondition
     {
         return new AndCondition($this, $other);
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return new AliasedExpression($this, $alias);
     }
 
-    public function not() : NotCondition
+    public function not(): NotCondition
     {
         return new NotCondition($this);
     }
 
-    public function or(Condition $other) : OrCondition
+    public function or(Condition $other): OrCondition
     {
         return new OrCondition($this, $other);
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         if ($this->arrayOrSubquery instanceof Node) {
             $subLink = new SubLink([

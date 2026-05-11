@@ -8,8 +8,10 @@ use Flow\ETL\Schema;
 
 final class SchemaValidationException extends RuntimeException
 {
-    public function __construct(private readonly Schema $expected, private readonly Schema $given)
-    {
+    public function __construct(
+        private readonly Schema $expected,
+        private readonly Schema $given,
+    ) {
         /**
          * @var array<string> $missingDefinitions
          */
@@ -29,20 +31,40 @@ final class SchemaValidationException extends RuntimeException
             $givenDefinition = $this->given->findDefinition($expectedDefinition->entry());
 
             if ($givenDefinition === null) {
-                $missingDefinitions[] = $expectedDefinition->entry() . '<' . ($expectedDefinition->isNullable() ? '?' : '') . $expectedDefinition->type()->toString() . '>';
+                $missingDefinitions[] =
+                    $expectedDefinition->entry()
+                    . '<'
+                    . ($expectedDefinition->isNullable() ? '?' : '')
+                    . $expectedDefinition->type()->toString()
+                    . '>';
 
                 continue;
             }
 
             if (!$expectedDefinition->isCompatible($givenDefinition)) {
-                $mismatchedDefinitions[] = 'expected: ' . $expectedDefinition->entry()->name() . '<' . $expectedDefinition->type()->toString() . '>, ' .
-                    'given: ' . $givenDefinition->entry()->name() . '<' . ($givenDefinition->isNullable() ? '?' : '') . $givenDefinition->type()->toString() . '>';
+                $mismatchedDefinitions[] =
+                    'expected: '
+                    . $expectedDefinition->entry()->name()
+                    . '<'
+                    . $expectedDefinition->type()->toString()
+                    . '>, '
+                    . 'given: '
+                    . $givenDefinition->entry()->name()
+                    . '<'
+                    . ($givenDefinition->isNullable() ? '?' : '')
+                    . $givenDefinition->type()->toString()
+                    . '>';
             }
         }
 
         foreach ($this->given->definitions() as $givenDefinition) {
             if ($this->expected->findDefinition($givenDefinition->entry()) === null) {
-                $unexpectedDefinitions[] = $givenDefinition->entry() . '<' . ($givenDefinition->isNullable() ? '?' : '') . $givenDefinition->type()->toString() . '>';
+                $unexpectedDefinitions[] =
+                    $givenDefinition->entry()
+                    . '<'
+                    . ($givenDefinition->isNullable() ? '?' : '')
+                    . $givenDefinition->type()->toString()
+                    . '>';
             }
         }
 
@@ -78,7 +100,7 @@ final class SchemaValidationException extends RuntimeException
     /**
      * @return Schema
      */
-    public function given() : Schema
+    public function given(): Schema
     {
         return $this->given;
     }
@@ -86,7 +108,7 @@ final class SchemaValidationException extends RuntimeException
     /**
      * @return Schema
      */
-    public function schema() : Schema
+    public function schema(): Schema
     {
         return $this->expected;
     }

@@ -5,9 +5,16 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Meter\Instrument;
 
 use Flow\Telemetry\Attributes;
-use Flow\Telemetry\{InstrumentationScope, Resource};
-use Flow\Telemetry\Meter\{AggregationTemporality, Metric, MetricLimits, MetricType};
-use Flow\Telemetry\Meter\Exemplar\{ExemplarFilter, ExemplarReservoir, SimpleFixedSizeExemplarReservoir, TraceBasedExemplarFilter};
+use Flow\Telemetry\InstrumentationScope;
+use Flow\Telemetry\Meter\AggregationTemporality;
+use Flow\Telemetry\Meter\Exemplar\ExemplarFilter;
+use Flow\Telemetry\Meter\Exemplar\ExemplarReservoir;
+use Flow\Telemetry\Meter\Exemplar\SimpleFixedSizeExemplarReservoir;
+use Flow\Telemetry\Meter\Exemplar\TraceBasedExemplarFilter;
+use Flow\Telemetry\Meter\Metric;
+use Flow\Telemetry\Meter\MetricLimits;
+use Flow\Telemetry\Meter\MetricType;
+use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tracer\SpanContext;
 use Psr\Clock\ClockInterface;
 
@@ -74,7 +81,7 @@ final class Counter implements Instrument
      *
      * @throws \InvalidArgumentException If amount is negative
      */
-    public function add(int|float $amount, array|Attributes $attributes = [], ?SpanContext $context = null) : void
+    public function add(int|float $amount, array|Attributes $attributes = [], ?SpanContext $context = null): void
     {
         if ($amount < 0) {
             throw new \InvalidArgumentException('Counter amount must be >= 0, got ' . $amount);
@@ -82,7 +89,7 @@ final class Counter implements Instrument
 
         $normalized = $attributes instanceof Attributes ? $attributes->normalize() : $attributes;
         /** @var array<string, bool|float|int|string> $attrs */
-        $attrs = \array_filter($normalized, static fn ($v) : bool => \is_scalar($v));
+        $attrs = \array_filter($normalized, static fn($v): bool => \is_scalar($v));
         $key = Attributes::create($attrs)->id();
 
         if (!isset($this->aggregations[$key])) {
@@ -107,16 +114,11 @@ final class Counter implements Instrument
         $this->aggregations[$key]['sum'] += $amount;
 
         if ($context !== null && $this->exemplarFilter->shouldSample($context, $amount, $attrs)) {
-            $this->aggregations[$key]['reservoir']->offer(
-                $amount,
-                $attrs,
-                $context,
-                $this->clock->now(),
-            );
+            $this->aggregations[$key]['reservoir']->offer($amount, $attrs, $context, $this->clock->now());
         }
     }
 
-    public function collect() : array
+    public function collect(): array
     {
         $metrics = [];
 
@@ -143,17 +145,17 @@ final class Counter implements Instrument
         return $metrics;
     }
 
-    public function description() : ?string
+    public function description(): ?string
     {
         return $this->description;
     }
 
-    public function name() : string
+    public function name(): string
     {
         return $this->name;
     }
 
-    public function unit() : ?string
+    public function unit(): ?string
     {
         return $this->unit;
     }

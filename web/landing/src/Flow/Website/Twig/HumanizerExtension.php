@@ -18,8 +18,12 @@ final class HumanizerExtension extends AbstractExtension
         ];
     }
 
-    public function humanize(string $fileName, bool $capitalize = true, string $separator = '_', array $forbiddenWords = []) : string
-    {
+    public function humanize(
+        string $fileName,
+        bool $capitalize = true,
+        string $separator = '_',
+        array $forbiddenWords = [],
+    ): string {
         return StringHumanizer::humanize($fileName, $capitalize, $separator, $forbiddenWords);
     }
 }

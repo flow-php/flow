@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Schema;
 
-use Flow\PostgreSql\Protobuf\AST\{DropBehavior, DropStmt, Node, ObjectType, PBString};
+use Flow\PostgreSql\Protobuf\AST\DropBehavior;
+use Flow\PostgreSql\Protobuf\AST\DropStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class DropSchemaBuilder implements DropSchemaFinalStep
@@ -18,42 +22,29 @@ final readonly class DropSchemaBuilder implements DropSchemaFinalStep
         private array $names,
         private bool $ifExists = false,
         private int $behavior = DropBehavior::DROP_RESTRICT,
-    ) {
-    }
+    ) {}
 
-    public static function create(string ...$names) : DropSchemaFinalStep
+    public static function create(string ...$names): DropSchemaFinalStep
     {
         return new self(\array_values($names));
     }
 
-    public function cascade() : DropSchemaFinalStep
+    public function cascade(): DropSchemaFinalStep
     {
-        return new self(
-            $this->names,
-            $this->ifExists,
-            DropBehavior::DROP_CASCADE,
-        );
+        return new self($this->names, $this->ifExists, DropBehavior::DROP_CASCADE);
     }
 
-    public function ifExists() : DropSchemaFinalStep
+    public function ifExists(): DropSchemaFinalStep
     {
-        return new self(
-            $this->names,
-            true,
-            $this->behavior,
-        );
+        return new self($this->names, true, $this->behavior);
     }
 
-    public function restrict() : DropSchemaFinalStep
+    public function restrict(): DropSchemaFinalStep
     {
-        return new self(
-            $this->names,
-            $this->ifExists,
-            DropBehavior::DROP_RESTRICT,
-        );
+        return new self($this->names, $this->ifExists, DropBehavior::DROP_RESTRICT);
     }
 
-    public function toAst() : DropStmt
+    public function toAst(): DropStmt
     {
         $stmt = new DropStmt();
         $stmt->setRemoveType(ObjectType::OBJECT_SCHEMA);

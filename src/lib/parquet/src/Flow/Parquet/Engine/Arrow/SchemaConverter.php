@@ -6,14 +6,20 @@ namespace Flow\Parquet\Engine\Arrow;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\{Column, ConvertedType, FlatColumn, LogicalType, NestedColumn, PhysicalType, Repetition};
+use Flow\Parquet\ParquetFile\Schema\Column;
+use Flow\Parquet\ParquetFile\Schema\ConvertedType;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Flow\Parquet\ParquetFile\Schema\Repetition;
 
 final class SchemaConverter
 {
     /**
      * @return array<array<string, mixed>>
      */
-    public static function toExtension(Schema $schema) : array
+    public static function toExtension(Schema $schema): array
     {
         $result = [];
 
@@ -27,7 +33,7 @@ final class SchemaConverter
     /**
      * @return array<string, mixed>
      */
-    private static function columnToExtension(Column $column) : array
+    private static function columnToExtension(Column $column): array
     {
         if ($column instanceof FlatColumn) {
             return self::flatColumnToExtension($column);
@@ -43,7 +49,7 @@ final class SchemaConverter
     /**
      * @return array<string, mixed>
      */
-    private static function flatColumnToExtension(FlatColumn $column) : array
+    private static function flatColumnToExtension(FlatColumn $column): array
     {
         $entry = [
             'name' => $column->name(),
@@ -51,12 +57,19 @@ final class SchemaConverter
             'optional' => $column->repetition() === Repetition::OPTIONAL,
         ];
 
-        if ($column->logicalType()?->name() === LogicalType::DECIMAL || $column->convertedType() === ConvertedType::DECIMAL) {
+        if (
+            $column->logicalType()?->name() === LogicalType::DECIMAL
+            || $column->convertedType() === ConvertedType::DECIMAL
+        ) {
             $entry['precision'] = $column->precision();
             $entry['scale'] = $column->scale();
         }
 
-        if ($column->type() === PhysicalType::FIXED_LEN_BYTE_ARRAY && $column->logicalType()?->name() !== LogicalType::DECIMAL && $column->logicalType()?->name() !== LogicalType::UUID) {
+        if (
+            $column->type() === PhysicalType::FIXED_LEN_BYTE_ARRAY
+            && $column->logicalType()?->name() !== LogicalType::DECIMAL
+            && $column->logicalType()?->name() !== LogicalType::UUID
+        ) {
             $entry['length'] = $column->typeLength();
         }
 
@@ -66,7 +79,7 @@ final class SchemaConverter
     /**
      * @return array<string, mixed>
      */
-    private static function nestedColumnToExtension(NestedColumn $column) : array
+    private static function nestedColumnToExtension(NestedColumn $column): array
     {
         $entry = [
             'name' => $column->name(),
@@ -94,7 +107,7 @@ final class SchemaConverter
         return $entry;
     }
 
-    private static function resolveFlatType(FlatColumn $column) : string
+    private static function resolveFlatType(FlatColumn $column): string
     {
         $logicalName = $column->logicalType()?->name();
 
@@ -117,7 +130,7 @@ final class SchemaConverter
         return self::resolveFromConvertedOrPhysical($column);
     }
 
-    private static function resolveFromConvertedOrPhysical(FlatColumn $column) : string
+    private static function resolveFromConvertedOrPhysical(FlatColumn $column): string
     {
         $convertedType = $column->convertedType();
 
@@ -146,7 +159,7 @@ final class SchemaConverter
         return self::resolveFromPhysicalType($column);
     }
 
-    private static function resolveFromPhysicalType(FlatColumn $column) : string
+    private static function resolveFromPhysicalType(FlatColumn $column): string
     {
         return match ($column->type()) {
             PhysicalType::BOOLEAN => 'BOOLEAN',
@@ -160,7 +173,7 @@ final class SchemaConverter
         };
     }
 
-    private static function resolveIntegerType(FlatColumn $column) : string
+    private static function resolveIntegerType(FlatColumn $column): string
     {
         return match ($column->convertedType()) {
             ConvertedType::INT_8 => 'INT8',

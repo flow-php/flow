@@ -6,14 +6,13 @@ namespace Flow\Parquet\ParquetFile\Data;
 
 use Flow\Parquet\Exception\DataConversionException;
 use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\Data\Converter\{
-    Int32DateConverter,
-    Int32DateTimeConverter,
-    Int64DateTimeConverter,
-    Int96DateTimeConverter,
-    JsonConverter,
-    TimeConverter,
-    UuidConverter};
+use Flow\Parquet\ParquetFile\Data\Converter\Int32DateConverter;
+use Flow\Parquet\ParquetFile\Data\Converter\Int32DateTimeConverter;
+use Flow\Parquet\ParquetFile\Data\Converter\Int64DateTimeConverter;
+use Flow\Parquet\ParquetFile\Data\Converter\Int96DateTimeConverter;
+use Flow\Parquet\ParquetFile\Data\Converter\JsonConverter;
+use Flow\Parquet\ParquetFile\Data\Converter\TimeConverter;
+use Flow\Parquet\ParquetFile\Data\Converter\UuidConverter;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 final class DataConverter
@@ -26,28 +25,27 @@ final class DataConverter
     /**
      * @param array<Converter> $converters
      */
-    public function __construct(private readonly array $converters, private readonly Options $options)
-    {
+    public function __construct(
+        private readonly array $converters,
+        private readonly Options $options,
+    ) {
         $this->cache = [];
     }
 
-    public static function initialize(Options $options) : self
+    public static function initialize(Options $options): self
     {
-        return new self(
-            [
-                new TimeConverter(),
-                new Int32DateConverter(),
-                new Int32DateTimeConverter(),
-                new Int64DateTimeConverter(),
-                new Int96DateTimeConverter(),
-                new UuidConverter(),
-                new JsonConverter(),
-            ],
-            $options
-        );
+        return new self([
+            new TimeConverter(),
+            new Int32DateConverter(),
+            new Int32DateTimeConverter(),
+            new Int64DateTimeConverter(),
+            new Int96DateTimeConverter(),
+            new UuidConverter(),
+            new JsonConverter(),
+        ], $options);
     }
 
-    public function fromParquetType(FlatColumn $column, mixed $data) : mixed
+    public function fromParquetType(FlatColumn $column, mixed $data): mixed
     {
         if ($data === null) {
             return null;
@@ -73,7 +71,7 @@ final class DataConverter
                     throw new DataConversionException(
                         "Failed to convert data from parquet type for column '{$flatPath}'. {$e->getMessage()}",
                         0,
-                        $e
+                        $e,
                     );
                 }
             }
@@ -84,7 +82,7 @@ final class DataConverter
         return $data;
     }
 
-    public function resolveConverter(FlatColumn $column) : ?Converter
+    public function resolveConverter(FlatColumn $column): ?Converter
     {
         $flatPath = $column->flatPath();
 
@@ -105,7 +103,7 @@ final class DataConverter
         return null;
     }
 
-    public function toParquetType(FlatColumn $column, mixed $data) : mixed
+    public function toParquetType(FlatColumn $column, mixed $data): mixed
     {
         if ($data === null) {
             return null;

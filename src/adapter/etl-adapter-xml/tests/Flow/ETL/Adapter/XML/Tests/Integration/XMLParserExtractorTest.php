@@ -4,213 +4,185 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
-use function Flow\ETL\Adapter\XML\from_xml;
-use function Flow\ETL\DSL\config;
-use function Flow\ETL\DSL\{df, flow_context, ref, schema, xml_schema};
-use function Flow\Filesystem\DSL\path_real;
-use function Flow\Types\DSL\type_string;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
+use function Flow\ETL\Adapter\XML\from_xml;
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\xml_schema;
+use function Flow\Filesystem\DSL\path_real;
+use function Flow\Types\DSL\type_string;
+
 final class XMLParserExtractorTest extends FlowIntegrationTestCase
 {
-    public function test_limit() : void
+    public function test_limit(): void
     {
-        $extractor = from_xml(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'))
-            ->withXMLNodePath('root/row');
+        $extractor = from_xml(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'))->withXMLNodePath('root/row');
         $extractor->changeLimit(2);
 
-        $rows = df()
-            ->extract($extractor)
-            ->fetch()
-            ->toArray();
+        $rows = df()->extract($extractor)->fetch()->toArray();
 
-        self::assertCount(2, $rows);
+        static::assertCount(2, $rows);
     }
 
-    public function test_reading_deep_xml() : void
+    public function test_reading_deep_xml(): void
     {
-        self::assertSame(
+        static::assertSame(
             5,
             df()
                 ->read(from_xml(__DIR__ . '/../Fixtures/deepest_items_flat.xml', 'root/items/item/deep'))
                 ->fetch()
-                ->count()
+                ->count(),
         );
     }
 
-    public function test_reading_xml() : void
+    public function test_reading_xml(): void
     {
-        self::assertSame(
+        static::assertSame(
             1,
             df()
                 ->read(from_xml(__DIR__ . '/../Fixtures/simple_items.xml'))
                 ->fetch()
-                ->count()
+                ->count(),
         );
     }
 
-    public function test_reading_xml_each_collection_item() : void
+    public function test_reading_xml_each_collection_item(): void
     {
-        self::assertXmlStringEqualsXmlString(
-            <<<'XML'
-<item item_attribute_01="1">
-  <id id_attribute_01="1">1</id>
-</item>
-XML,
-            type_string()->cast(
-                df()
-                    ->read(from_xml(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
-                    ->fetch()[0]
-                    ->valueOf('node')
-            )
-        );
+        static::assertXmlStringEqualsXmlString(<<<'XML'
+            <item item_attribute_01="1">
+              <id id_attribute_01="1">1</id>
+            </item>
+            XML, type_string()->cast(df()
+            ->read(from_xml(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
+            ->fetch()[0]->valueOf('node')));
 
-        self::assertXmlStringEqualsXmlString(
-            <<<'XML'
-<item item_attribute_01="5">
-  <id id_attribute_01="5">5</id>
-</item>
-XML,
-            type_string()->cast(
-                df()
-                    ->read(from_xml(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
-                    ->fetch()[4]
-                    ->valueOf('node')
-            )
-        );
+        static::assertXmlStringEqualsXmlString(<<<'XML'
+            <item item_attribute_01="5">
+              <id id_attribute_01="5">5</id>
+            </item>
+            XML, type_string()->cast(df()
+            ->read(from_xml(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
+            ->fetch()[4]->valueOf('node')));
     }
 
-    public function test_reading_xml_from_path() : void
+    public function test_reading_xml_from_path(): void
     {
-        self::assertXmlStringEqualsXmlString(
-            <<<'XML'
-<items items_attribute_01="1" items_attribute_02="2">
-    <item item_attribute_01="1">
-        <id id_attribute_01="1">1</id>
-    </item>
-    <item item_attribute_01="2">
-        <id id_attribute_01="2">2</id>
-    </item>
-    <item item_attribute_01="3">
-        <id id_attribute_01="3">3</id>
-    </item>
-    <item item_attribute_01="4">
-        <id id_attribute_01="4">4</id>
-    </item>
-    <item item_attribute_01="5">
-        <id id_attribute_01="5">5</id>
-    </item>
-</items>
-XML,
-            type_string()->cast(
-                df()
-                    ->read(from_xml(__DIR__ . '/../Fixtures/simple_items.xml', 'root/items'))
-                    ->fetch()[0]->valueOf('node')
-            )
-        );
+        static::assertXmlStringEqualsXmlString(<<<'XML'
+            <items items_attribute_01="1" items_attribute_02="2">
+                <item item_attribute_01="1">
+                    <id id_attribute_01="1">1</id>
+                </item>
+                <item item_attribute_01="2">
+                    <id id_attribute_01="2">2</id>
+                </item>
+                <item item_attribute_01="3">
+                    <id id_attribute_01="3">3</id>
+                </item>
+                <item item_attribute_01="4">
+                    <id id_attribute_01="4">4</id>
+                </item>
+                <item item_attribute_01="5">
+                    <id id_attribute_01="5">5</id>
+                </item>
+            </items>
+            XML, type_string()->cast(df()
+            ->read(from_xml(__DIR__ . '/../Fixtures/simple_items.xml', 'root/items'))
+            ->fetch()[0]->valueOf('node')));
     }
 
-    public function test_reading_xml_with_ancestor_namespace_declaration() : void
+    public function test_reading_xml_with_ancestor_namespace_declaration(): void
     {
         $rows = df()
             ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_feed.xml', 'feed/entry'))
             ->withEntry('title', ref('node')->xpath('/entry/g:title')->domElementValue())
             ->fetch();
 
-        self::assertSame(
-            ['Product 1', 'Product 2'],
-            [$rows[0]->valueOf('title'), $rows[1]->valueOf('title')],
-        );
+        static::assertSame(['Product 1', 'Product 2'], [$rows[0]->valueOf('title'), $rows[1]->valueOf('title')]);
 
         $node = type_string()->cast($rows[0]->valueOf('node'));
 
-        self::assertStringContainsString('xmlns:g="http://base.google.com/ns/1.0"', $node);
-        self::assertStringContainsString('xmlns:c="http://example.com/custom"', $node);
+        static::assertStringContainsString('xmlns:g="http://base.google.com/ns/1.0"', $node);
+        static::assertStringContainsString('xmlns:c="http://example.com/custom"', $node);
     }
 
-    public function test_reading_xml_with_default_namespace_declaration() : void
+    public function test_reading_xml_with_default_namespace_declaration(): void
     {
         $node = type_string()->cast(df()
             ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_default.xml', 'feed/entry'))
-            ->fetch()[0]
-            ->valueOf('node'));
+            ->fetch()[0]->valueOf('node'));
 
-        self::assertStringContainsString('xmlns="http://example.com/default"', $node);
+        static::assertStringContainsString('xmlns="http://example.com/default"', $node);
     }
 
-    public function test_reading_xml_with_multi_ancestor_namespace_merge() : void
+    public function test_reading_xml_with_multi_ancestor_namespace_merge(): void
     {
         $node = type_string()->cast(df()
             ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_multi_ancestor.xml', 'feed/group/entry'))
-            ->fetch()[0]
-            ->valueOf('node'));
+            ->fetch()[0]->valueOf('node'));
 
-        self::assertStringContainsString('xmlns:a="http://example.com/a"', $node);
-        self::assertStringContainsString('xmlns:b="http://example.com/b"', $node);
+        static::assertStringContainsString('xmlns:a="http://example.com/a"', $node);
+        static::assertStringContainsString('xmlns:b="http://example.com/b"', $node);
     }
 
-    public function test_reading_xml_with_namespace_on_captured_root() : void
+    public function test_reading_xml_with_namespace_on_captured_root(): void
     {
         $rows = df()
             ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_on_captured_root.xml', 'feed/entry'))
             ->withEntry('title', ref('node')->xpath('/entry/g:title')->domElementValue())
             ->fetch();
 
-        self::assertSame('Product 1', $rows[0]->valueOf('title'));
-        self::assertStringContainsString(
+        static::assertSame('Product 1', $rows[0]->valueOf('title'));
+        static::assertStringContainsString(
             'xmlns:g="http://base.google.com/ns/1.0"',
             type_string()->cast($rows[0]->valueOf('node')),
         );
     }
 
-    public function test_reading_xml_with_prefixed_attribute() : void
+    public function test_reading_xml_with_prefixed_attribute(): void
     {
         $node = type_string()->cast(df()
             ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_prefixed_attribute.xml', 'feed/entry'))
-            ->fetch()[0]
-            ->valueOf('node'));
+            ->fetch()[0]->valueOf('node'));
 
-        self::assertStringContainsString('xmlns:g="http://base.google.com/ns/1.0"', $node);
-        self::assertStringContainsString('xml:lang="en"', $node);
-        self::assertStringContainsString('g:priority="high"', $node);
+        static::assertStringContainsString('xmlns:g="http://base.google.com/ns/1.0"', $node);
+        static::assertStringContainsString('xml:lang="en"', $node);
+        static::assertStringContainsString('g:priority="high"', $node);
     }
 
-    public function test_reading_xml_with_schema() : void
+    public function test_reading_xml_with_schema(): void
     {
         $rows = df()
-            ->extract(
-                from_xml(__DIR__ . '/../Fixtures/simple_items.xml')
-                    ->withSchema(
-                        schema(
-                            xml_schema('node'),
-                            xml_schema('missing'),
-                        )
-                    )
-            )
+            ->extract(from_xml(__DIR__ . '/../Fixtures/simple_items.xml')->withSchema(schema(
+                xml_schema('node'),
+                xml_schema('missing'),
+            )))
             ->fetch()
             ->toArray();
 
         foreach ($rows as $row) {
-            self::assertNotSame([], $row);
-            self::assertNotNull($row['node']);
-            self::assertNull($row['missing']);
+            static::assertNotSame([], $row);
+            static::assertNotNull($row['node']);
+            static::assertNull($row['missing']);
         }
     }
 
-    public function test_reading_xml_with_shadowed_namespace_declaration() : void
+    public function test_reading_xml_with_shadowed_namespace_declaration(): void
     {
         $node = type_string()->cast(df()
             ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_nested.xml', 'feed/group/entry'))
-            ->fetch()[0]
-            ->valueOf('node'));
+            ->fetch()[0]->valueOf('node'));
 
-        self::assertStringContainsString('xmlns:g="http://example.com/override"', $node);
-        self::assertStringContainsString('xmlns:x="http://example.com/extra"', $node);
-        self::assertStringNotContainsString('http://base.google.com/ns/1.0', $node);
+        static::assertStringContainsString('xmlns:g="http://example.com/override"', $node);
+        static::assertStringContainsString('xmlns:x="http://example.com/extra"', $node);
+        static::assertStringNotContainsString('http://base.google.com/ns/1.0', $node);
     }
 
-    public function test_reading_xml_with_sibling_namespace_isolation() : void
+    public function test_reading_xml_with_sibling_namespace_isolation(): void
     {
         $rows = df()
             ->read(from_xml(__DIR__ . '/../Fixtures/namespaced_sibling_isolation.xml', 'feed/entry'))
@@ -220,40 +192,34 @@ XML,
         $firstNode = type_string()->cast($rows[0]['node']);
         $secondNode = type_string()->cast($rows[1]['node']);
 
-        self::assertStringContainsString('xmlns:g="http://example.com/first"', $firstNode);
-        self::assertStringNotContainsString('xmlns:g', $secondNode);
-        self::assertStringNotContainsString('http://example.com/first', $secondNode);
+        static::assertStringContainsString('xmlns:g="http://example.com/first"', $firstNode);
+        static::assertStringNotContainsString('xmlns:g', $secondNode);
+        static::assertStringNotContainsString('http://example.com/first', $secondNode);
     }
 
-    public function test_reading_xml_without_namespaces_is_unchanged() : void
+    public function test_reading_xml_without_namespaces_is_unchanged(): void
     {
-        self::assertXmlStringEqualsXmlString(
-            <<<'XML'
-<item item_attribute_01="1">
-  <id id_attribute_01="1">1</id>
-</item>
-XML,
-            type_string()->cast(
-                df()
-                    ->read(from_xml(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
-                    ->fetch()[0]
-                    ->valueOf('node')
-            )
-        );
+        static::assertXmlStringEqualsXmlString(<<<'XML'
+            <item item_attribute_01="1">
+              <id id_attribute_01="1">1</id>
+            </item>
+            XML, type_string()->cast(df()
+            ->read(from_xml(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
+            ->fetch()[0]->valueOf('node')));
     }
 
-    public function test_signal_stop() : void
+    public function test_signal_stop(): void
     {
-        $extractor = (from_xml(path_real(__DIR__ . '/../Fixtures/flow_orders.xml')))->withXMLNodePath('root/row');
+        $extractor = from_xml(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'))->withXMLNodePath('root/row');
 
         $generator = $extractor->extract(flow_context(config()));
 
-        self::assertTrue($generator->valid());
+        static::assertTrue($generator->valid());
         $generator->next();
-        self::assertTrue($generator->valid());
+        static::assertTrue($generator->valid());
         $generator->next();
-        self::assertTrue($generator->valid());
+        static::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
-        self::assertFalse($generator->valid());
+        static::assertFalse($generator->valid());
     }
 }

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\ChartJS;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\{FlowContext, Loader, Rows};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
+use Flow\ETL\Rows;
 use Flow\Filesystem\Path;
 
 final class ChartJSLoader implements Closure, Loader
@@ -20,12 +22,13 @@ final class ChartJSLoader implements Closure, Loader
 
     private Path $template;
 
-    public function __construct(private readonly Chart $type)
-    {
+    public function __construct(
+        private readonly Chart $type,
+    ) {
         $this->template = \Flow\Filesystem\DSL\path(__DIR__ . '/Resources/template/full_page.html');
     }
 
-    public function closure(FlowContext $context) : void
+    public function closure(FlowContext $context): void
     {
         if ($this->output === null && $this->outputVar === null) {
             return;
@@ -46,7 +49,7 @@ final class ChartJSLoader implements Closure, Loader
             $content = \str_replace(
                 '%_CHART_DATA_%',
                 \json_encode($this->type->data(), JSON_THROW_ON_ERROR),
-                $template
+                $template,
             );
 
             $output->append($content);
@@ -59,7 +62,7 @@ final class ChartJSLoader implements Closure, Loader
         }
     }
 
-    public function load(Rows $rows, FlowContext $context) : void
+    public function load(Rows $rows, FlowContext $context): void
     {
         if (!$rows->count()) {
             return;
@@ -78,7 +81,7 @@ final class ChartJSLoader implements Closure, Loader
         }
     }
 
-    public function withOutputPath(Path $output) : self
+    public function withOutputPath(Path $output): self
     {
         $this->output = $output;
 
@@ -88,14 +91,14 @@ final class ChartJSLoader implements Closure, Loader
     /**
      * @param array<array-key, mixed> $outputVar
      */
-    public function withOutputVar(array &$outputVar) : self
+    public function withOutputVar(array &$outputVar): self
     {
         $this->outputVar = &$outputVar;
 
         return $this;
     }
 
-    public function withTemplate(Path $template) : self
+    public function withTemplate(Path $template): self
     {
         $this->template = $template;
 

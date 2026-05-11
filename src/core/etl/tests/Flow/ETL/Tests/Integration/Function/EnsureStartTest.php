@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\{df, from_array, ref};
 use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\ref;
 
 final class EnsureStartTest extends FlowTestCase
 {
-    public function test_ensure_start_in_dataframe_operations() : void
+    public function test_ensure_start_in_dataframe_operations(): void
     {
         $df = df()
             ->from(from_array([
@@ -19,13 +22,17 @@ final class EnsureStartTest extends FlowTestCase
             ]))
             ->withEntry('normalized_url', ref('url')->ensureStart(ref('prefix')));
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['url' => 'example.com', 'prefix' => 'https://', 'normalized_url' => 'https://example.com'],
                 ['url' => 'https://github.com', 'prefix' => 'https://', 'normalized_url' => 'https://github.com'],
-                ['url' => 'ftp://files.example.com', 'prefix' => 'https://', 'normalized_url' => 'https://ftp://files.example.com'],
+                [
+                    'url' => 'ftp://files.example.com',
+                    'prefix' => 'https://',
+                    'normalized_url' => 'https://ftp://files.example.com',
+                ],
             ],
-            $df->fetch()->toArray()
+            $df->fetch()->toArray(),
         );
     }
 }

@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Azure\SDK\BlobService\PutBlockBlobBlockList;
 
 use Flow\Azure\SDK\BlobService\BlockBlob\BlockList;
-use Flow\Azure\SDK\Exception\{Exception, InvalidArgumentException};
+use Flow\Azure\SDK\Exception\Exception;
+use Flow\Azure\SDK\Exception\InvalidArgumentException;
 use Flow\Azure\SDK\Serializer;
 
 final class SimpleXMLSerializer implements Serializer
@@ -17,7 +18,7 @@ final class SimpleXMLSerializer implements Serializer
         }
     }
 
-    public function serialize(mixed $data) : string
+    public function serialize(mixed $data): string
     {
         if (!$data instanceof BlockList) {
             throw new InvalidArgumentException('Data must be an instance of BlockList');

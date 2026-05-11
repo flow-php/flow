@@ -8,5 +8,5 @@ use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
 interface CreateViewAsStep extends CreateViewFinalStep
 {
-    public function as(SelectFinalStep $query) : CreateViewCheckOptionStep;
+    public function as(SelectFinalStep $query): CreateViewCheckOptionStep;
 }

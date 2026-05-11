@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Factory;
 
-use function Flow\CLI\{option_bool_nullable, option_string_nullable};
-use function Flow\ETL\Adapter\JSON\to_json;
 use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
+
+use function Flow\CLI\option_bool_nullable;
+use function Flow\CLI\option_string_nullable;
+use function Flow\ETL\Adapter\JSON\to_json;
 
 final readonly class JsonLoaderFactory
 {
@@ -16,10 +18,9 @@ final readonly class JsonLoaderFactory
         private Path $path,
         private string $dateTimeFormat = 'output-json-date-time-format',
         private string $putRowsInNewLine = 'output-json-rows-in-new-line',
-    ) {
-    }
+    ) {}
 
-    public function get(InputInterface $input) : JsonLoader
+    public function get(InputInterface $input): JsonLoader
     {
         $extractor = to_json($this->path);
 

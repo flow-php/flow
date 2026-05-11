@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Http;
 
-use function Flow\ETL\DSL\string_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\JsonEntry;
 use Psr\Http\Message\RequestInterface;
+
+use function Flow\ETL\DSL\string_entry;
 
 final class RequestEntriesFactory
 {
@@ -21,7 +22,7 @@ final class RequestEntriesFactory
      *
      * @return Row\Entries
      */
-    public function create(RequestInterface $request) : Entries
+    public function create(RequestInterface $request): Entries
     {
         $requestType = 'html';
 
@@ -60,7 +61,9 @@ final class RequestEntriesFactory
                             $decodedJson = \json_decode($requestBodyContent, true, 512, JSON_THROW_ON_ERROR);
 
                             if (!\is_array($decodedJson)) {
-                                throw new InvalidArgumentException('Invalid JSON request body, expected array or object');
+                                throw new InvalidArgumentException(
+                                    'Invalid JSON request body, expected array or object',
+                                );
                             }
 
                             $requestBodyEntry = new JsonEntry('request_body', $decodedJson);

@@ -5,8 +5,13 @@ declare(strict_types=1);
 namespace Flow\Doctrine\Bulk\QueryFactory;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Flow\Doctrine\Bulk\{BulkData, DbalPlatform, InsertOptions, QueryFactory, TableDefinition, UpdateOptions};
+use Flow\Doctrine\Bulk\BulkData;
+use Flow\Doctrine\Bulk\DbalPlatform;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
+use Flow\Doctrine\Bulk\InsertOptions;
+use Flow\Doctrine\Bulk\QueryFactory;
+use Flow\Doctrine\Bulk\TableDefinition;
+use Flow\Doctrine\Bulk\UpdateOptions;
 
 final class DbalQueryFactory implements QueryFactory
 {
@@ -19,9 +24,11 @@ final class DbalQueryFactory implements QueryFactory
      *
      * @return string
      */
-    public function delete(AbstractPlatform $platform, TableDefinition $table, BulkData $bulkData) : string
+    public function delete(AbstractPlatform $platform, TableDefinition $table, BulkData $bulkData): string
     {
-        return (new DbalPlatform($platform))->dialect()->prepareDelete($table, $bulkData);
+        return (new DbalPlatform($platform))
+            ->dialect()
+            ->prepareDelete($table, $bulkData);
     }
 
     /**
@@ -34,9 +41,15 @@ final class DbalQueryFactory implements QueryFactory
      *
      * @return string
      */
-    public function insert(AbstractPlatform $platform, TableDefinition $table, BulkData $bulkData, ?InsertOptions $options = null) : string
-    {
-        return (new DbalPlatform($platform))->dialect()->prepareInsert($table, $bulkData, $options);
+    public function insert(
+        AbstractPlatform $platform,
+        TableDefinition $table,
+        BulkData $bulkData,
+        ?InsertOptions $options = null,
+    ): string {
+        return (new DbalPlatform($platform))
+            ->dialect()
+            ->prepareInsert($table, $bulkData, $options);
     }
 
     /**
@@ -49,8 +62,14 @@ final class DbalQueryFactory implements QueryFactory
      *
      * @return string
      */
-    public function update(AbstractPlatform $platform, TableDefinition $table, BulkData $bulkData, ?UpdateOptions $options = null) : string
-    {
-        return (new DbalPlatform($platform))->dialect()->prepareUpdate($table, $bulkData, $options);
+    public function update(
+        AbstractPlatform $platform,
+        TableDefinition $table,
+        BulkData $bulkData,
+        ?UpdateOptions $options = null,
+    ): string {
+        return (new DbalPlatform($platform))
+            ->dialect()
+            ->prepareUpdate($table, $bulkData, $options);
     }
 }

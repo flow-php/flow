@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Dom\Element;
+use Dom\HTMLDocument;
+use Dom\HTMLElement;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RequiredPHPVersionException;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+
 use function Flow\Types\DSL\type_instance_of;
-use Dom\{Element, HTMLDocument, HTMLElement};
-use Flow\ETL\Exception\{InvalidArgumentException, RequiredPHPVersionException};
-use Flow\ETL\{FlowContext, Row};
 
 final class HTMLQuerySelector extends ScalarFunctionChain
 {
@@ -20,17 +25,26 @@ final class HTMLQuerySelector extends ScalarFunctionChain
         }
     }
 
-    public function eval(Row $row, FlowContext $context) : ?Element
+    public function eval(Row $row, FlowContext $context): ?Element
     {
-        $value = (new Parameter($this->value))->as($row, $context, type_instance_of(HTMLDocument::class), type_instance_of(HTMLElement::class));
+        $value = (new Parameter($this->value))->as(
+            $row,
+            $context,
+            type_instance_of(HTMLDocument::class),
+            type_instance_of(HTMLElement::class),
+        );
         $selector = (new Parameter($this->selector))->asString($row, $context);
 
         if (null === $value) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('HTMLQuerySelector requires non-null HTMLDocument'));
+            return $context
+                ->functions()
+                ->invalidResult(new InvalidArgumentException('HTMLQuerySelector requires non-null HTMLDocument'));
         }
 
         if (null === $selector) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('HTMLQuerySelector requires non-null selector'));
+            return $context
+                ->functions()
+                ->invalidResult(new InvalidArgumentException('HTMLQuerySelector requires non-null selector'));
         }
 
         return $value->querySelector($selector);

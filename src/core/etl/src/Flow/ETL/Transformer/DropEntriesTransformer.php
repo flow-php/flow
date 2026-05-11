@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\{FlowContext, Row, Rows, Transformer};
-use Flow\ETL\Row\{Reference, References};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
+use Flow\ETL\Rows;
+use Flow\ETL\Transformer;
 
 final readonly class DropEntriesTransformer implements Transformer
 {
@@ -17,12 +21,12 @@ final readonly class DropEntriesTransformer implements Transformer
         $this->refs = References::init(...$names);
     }
 
-    public function transform(Rows $rows, FlowContext $context) : Rows
+    public function transform(Rows $rows, FlowContext $context): Rows
     {
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $transformer = fn (Row $row) : Row => $row->remove(...$this->refs);
+            $transformer = fn(Row $row): Row => $row->remove(...$this->refs);
 
             $result = $rows->map($transformer);
 

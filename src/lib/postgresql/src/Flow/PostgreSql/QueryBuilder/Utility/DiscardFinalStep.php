@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface DiscardFinalStep extends Sql
 {
-    public function toAst() : DiscardStmt;
+    public function toAst(): DiscardStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

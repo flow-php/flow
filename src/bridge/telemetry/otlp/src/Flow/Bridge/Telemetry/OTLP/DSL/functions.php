@@ -5,16 +5,29 @@ declare(strict_types=1);
 namespace Flow\Bridge\Telemetry\OTLP\DSL;
 
 use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
-use Flow\Bridge\Telemetry\OTLP\Serializer\{JsonSerializer, ProtobufSerializer};
-use Flow\Bridge\Telemetry\OTLP\Transport\{CurlTransport, CurlTransportOptions, GrpcTransport, StreamTransport, Transport};
-use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
-use Flow\Telemetry\Context\{ContextStorage, MemoryContextStorage};
-use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
-use Flow\Telemetry\Logger\{LogProcessor, LoggerProvider};
-use Flow\Telemetry\Meter\{AggregationTemporality, MetricProcessor};
+use Flow\Bridge\Telemetry\OTLP\Serializer\JsonSerializer;
+use Flow\Bridge\Telemetry\OTLP\Serializer\ProtobufSerializer;
+use Flow\Bridge\Telemetry\OTLP\Transport\CurlTransport;
+use Flow\Bridge\Telemetry\OTLP\Transport\CurlTransportOptions;
+use Flow\Bridge\Telemetry\OTLP\Transport\GrpcTransport;
+use Flow\Bridge\Telemetry\OTLP\Transport\StreamTransport;
+use Flow\Bridge\Telemetry\OTLP\Transport\Transport;
+use Flow\ETL\Attribute\DocumentationDSL;
+use Flow\ETL\Attribute\Module;
+use Flow\ETL\Attribute\Type as DSLType;
+use Flow\Telemetry\Context\ContextStorage;
+use Flow\Telemetry\Context\MemoryContextStorage;
+use Flow\Telemetry\ErrorHandler\ErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
+use Flow\Telemetry\Logger\LoggerProvider;
+use Flow\Telemetry\Logger\LogProcessor;
+use Flow\Telemetry\Meter\AggregationTemporality;
 use Flow\Telemetry\Meter\MeterProvider;
-use Flow\Telemetry\Tracer\Sampler\{AlwaysOnSampler, Sampler};
-use Flow\Telemetry\Tracer\{SpanProcessor, TracerProvider};
+use Flow\Telemetry\Meter\MetricProcessor;
+use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
+use Flow\Telemetry\Tracer\Sampler\Sampler;
+use Flow\Telemetry\Tracer\SpanProcessor;
+use Flow\Telemetry\Tracer\TracerProvider;
 use Psr\Clock\ClockInterface;
 
 /**
@@ -30,7 +43,7 @@ use Psr\Clock\ClockInterface;
  * ```
  */
 #[DocumentationDSL(module: Module::TELEMETRY_OTLP, type: DSLType::HELPER)]
-function otlp_json_serializer() : JsonSerializer
+function otlp_json_serializer(): JsonSerializer
 {
     return new JsonSerializer();
 }
@@ -51,7 +64,7 @@ function otlp_json_serializer() : JsonSerializer
  * ```
  */
 #[DocumentationDSL(module: Module::TELEMETRY_OTLP, type: DSLType::HELPER)]
-function otlp_protobuf_serializer() : ProtobufSerializer
+function otlp_protobuf_serializer(): ProtobufSerializer
 {
     return new ProtobufSerializer();
 }
@@ -82,7 +95,7 @@ function otlp_grpc_transport(
     int $timeoutMs = GrpcTransport::DEFAULT_TIMEOUT_MS,
     int $shutdownTimeoutMs = GrpcTransport::DEFAULT_SHUTDOWN_TIMEOUT_MS,
     ?Transport $failover = null,
-) : Transport {
+): Transport {
     return new GrpcTransport($endpoint, $headers, $insecure, $timeoutMs, $shutdownTimeoutMs, $failover);
 }
 
@@ -90,7 +103,7 @@ function otlp_grpc_transport(
  * Create curl transport options for OTLP.
  */
 #[DocumentationDSL(module: Module::TELEMETRY_OTLP, type: DSLType::HELPER)]
-function otlp_curl_options() : CurlTransportOptions
+function otlp_curl_options(): CurlTransportOptions
 {
     return new CurlTransportOptions();
 }
@@ -115,7 +128,7 @@ function otlp_curl_transport(
     JsonSerializer|ProtobufSerializer $serializer = new JsonSerializer(),
     CurlTransportOptions $options = new CurlTransportOptions(),
     ?Transport $failover = null,
-) : Transport {
+): Transport {
     return new CurlTransport($endpoint, $serializer, $options, $failover);
 }
 
@@ -135,7 +148,7 @@ function otlp_stream_transport(
     string $destination,
     int $filePermissions = 0644,
     bool $createDirectories = true,
-) : Transport {
+): Transport {
     return new StreamTransport($destination, $filePermissions, $createDirectories);
 }
 
@@ -154,10 +167,8 @@ function otlp_stream_transport(
  * @param ErrorHandler $errorHandler Handler for Throwables raised by the transport
  */
 #[DocumentationDSL(module: Module::TELEMETRY_OTLP, type: DSLType::HELPER)]
-function otlp_exporter(
-    Transport $transport,
-    ErrorHandler $errorHandler = new ErrorLogHandler(),
-) : OTLPExporter {
+function otlp_exporter(Transport $transport, ErrorHandler $errorHandler = new ErrorLogHandler()): OTLPExporter
+{
     return new OTLPExporter($transport, $errorHandler);
 }
 
@@ -175,7 +186,7 @@ function otlp_tracer_provider(
     ClockInterface $clock,
     Sampler $sampler = new AlwaysOnSampler(),
     ContextStorage $contextStorage = new MemoryContextStorage(),
-) : TracerProvider {
+): TracerProvider {
     return new TracerProvider($processor, $clock, $contextStorage, $sampler);
 }
 
@@ -191,7 +202,7 @@ function otlp_meter_provider(
     MetricProcessor $processor,
     ClockInterface $clock,
     AggregationTemporality $temporality = AggregationTemporality::CUMULATIVE,
-) : MeterProvider {
+): MeterProvider {
     return new MeterProvider($processor, $clock, $temporality);
 }
 
@@ -207,6 +218,6 @@ function otlp_logger_provider(
     LogProcessor $processor,
     ClockInterface $clock,
     ContextStorage $contextStorage = new MemoryContextStorage(),
-) : LoggerProvider {
+): LoggerProvider {
     return new LoggerProvider($processor, $clock, $contextStorage);
 }

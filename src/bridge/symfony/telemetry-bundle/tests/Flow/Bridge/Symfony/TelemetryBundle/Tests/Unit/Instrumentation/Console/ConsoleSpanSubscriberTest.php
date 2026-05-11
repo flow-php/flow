@@ -9,21 +9,27 @@ use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Provider\Memory\{MemoryExporter, MemorySpanProcessor};
-use Flow\Telemetry\Provider\Void\{VoidLogProcessor, VoidMetricProcessor};
-use Flow\Telemetry\{Resource, Telemetry};
-use Flow\Telemetry\Tracer\{SpanKind, TracerProvider};
+use Flow\Telemetry\Provider\Memory\MemoryExporter;
+use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
+use Flow\Telemetry\Provider\Void\VoidLogProcessor;
+use Flow\Telemetry\Provider\Void\VoidMetricProcessor;
+use Flow\Telemetry\Resource;
+use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\Tracer\SpanKind;
+use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Event\{ConsoleCommandEvent, ConsoleErrorEvent, ConsoleTerminateEvent};
+use Symfony\Component\Console\Event\ConsoleCommandEvent;
+use Symfony\Component\Console\Event\ConsoleErrorEvent;
+use Symfony\Component\Console\Event\ConsoleTerminateEvent;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;
 
 #[CoversClass(ConsoleSpanSubscriber::class)]
 final class ConsoleSpanSubscriberTest extends TestCase
 {
-    public function test_exit_code_0_sets_ok_status() : void
+    public function test_exit_code_0_sets_ok_status(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -38,14 +44,14 @@ final class ConsoleSpanSubscriberTest extends TestCase
         $subscriber->onTerminate($terminateEvent);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $status = $spans[0]->status();
-        self::assertNotNull($status);
-        self::assertTrue($status->isOk());
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
     }
 
-    public function test_exit_code_nonzero_sets_error_status() : void
+    public function test_exit_code_nonzero_sets_error_status(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -60,30 +66,30 @@ final class ConsoleSpanSubscriberTest extends TestCase
         $subscriber->onTerminate($terminateEvent);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $status = $spans[0]->status();
-        self::assertNotNull($status);
-        self::assertTrue($status->isError());
-        self::assertSame('Exit code: 1', $status->description);
+        static::assertNotNull($status);
+        static::assertTrue($status->isError());
+        static::assertSame('Exit code: 1', $status->description);
     }
 
-    public function test_get_subscribed_events_returns_correct_events() : void
+    public function test_get_subscribed_events_returns_correct_events(): void
     {
         $events = ConsoleSpanSubscriber::getSubscribedEvents();
 
-        self::assertArrayHasKey('console.command', $events);
-        self::assertArrayHasKey('console.error', $events);
-        self::assertArrayHasKey('console.terminate', $events);
-        self::assertArrayHasKey('console.signal', $events);
+        static::assertArrayHasKey('console.command', $events);
+        static::assertArrayHasKey('console.error', $events);
+        static::assertArrayHasKey('console.terminate', $events);
+        static::assertArrayHasKey('console.signal', $events);
 
-        self::assertSame(['onCommand', 10000], $events['console.command']);
-        self::assertSame(['onError', 0], $events['console.error']);
-        self::assertSame(['onTerminate', -10000], $events['console.terminate']);
-        self::assertSame(['onSignal', 0], $events['console.signal']);
+        static::assertSame(['onCommand', 10000], $events['console.command']);
+        static::assertSame(['onError', 0], $events['console.error']);
+        static::assertSame(['onTerminate', -10000], $events['console.terminate']);
+        static::assertSame(['onSignal', 0], $events['console.signal']);
     }
 
-    public function test_matches_pattern_exact_match() : void
+    public function test_matches_pattern_exact_match(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -95,10 +101,10 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
         $subscriber->onCommand($event);
 
-        self::assertCount(0, $spanProcessor->endedSpans());
+        static::assertCount(0, $spanProcessor->endedSpans());
     }
 
-    public function test_matches_pattern_regex_match() : void
+    public function test_matches_pattern_regex_match(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -110,10 +116,10 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
         $subscriber->onCommand($event);
 
-        self::assertCount(0, $spanProcessor->endedSpans());
+        static::assertCount(0, $spanProcessor->endedSpans());
     }
 
-    public function test_on_error_does_nothing_when_no_active_span() : void
+    public function test_on_error_does_nothing_when_no_active_span(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -128,10 +134,10 @@ final class ConsoleSpanSubscriberTest extends TestCase
         $subscriber->onCommand($commandEvent);
         $subscriber->onError($errorEvent);
 
-        self::assertCount(0, $spanProcessor->endedSpans());
+        static::assertCount(0, $spanProcessor->endedSpans());
     }
 
-    public function test_on_error_records_exception() : void
+    public function test_on_error_records_exception(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -149,14 +155,14 @@ final class ConsoleSpanSubscriberTest extends TestCase
         $subscriber->onTerminate($terminateEvent);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $events = $spans[0]->events();
-        self::assertCount(1, $events);
-        self::assertSame('exception', $events[0]->name());
+        static::assertCount(1, $events);
+        static::assertSame('exception', $events[0]->name());
     }
 
-    public function test_on_terminate_does_nothing_when_no_active_span() : void
+    public function test_on_terminate_does_nothing_when_no_active_span(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -170,10 +176,10 @@ final class ConsoleSpanSubscriberTest extends TestCase
         $subscriber->onCommand($commandEvent);
         $subscriber->onTerminate($terminateEvent);
 
-        self::assertCount(0, $spanProcessor->endedSpans());
+        static::assertCount(0, $spanProcessor->endedSpans());
     }
 
-    public function test_should_trace_excludes_exact_matches() : void
+    public function test_should_trace_excludes_exact_matches(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -185,10 +191,10 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
         $subscriber->onCommand($event);
 
-        self::assertCount(0, $spanProcessor->endedSpans());
+        static::assertCount(0, $spanProcessor->endedSpans());
     }
 
-    public function test_should_trace_excludes_regex_matches() : void
+    public function test_should_trace_excludes_regex_matches(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -200,10 +206,10 @@ final class ConsoleSpanSubscriberTest extends TestCase
 
         $subscriber->onCommand($event);
 
-        self::assertCount(0, $spanProcessor->endedSpans());
+        static::assertCount(0, $spanProcessor->endedSpans());
     }
 
-    public function test_should_trace_includes_non_excluded() : void
+    public function test_should_trace_includes_non_excluded(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -218,11 +224,11 @@ final class ConsoleSpanSubscriberTest extends TestCase
         $subscriber->onTerminate($terminateEvent);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame('doctrine:migrations:migrate', $spans[0]->name());
+        static::assertCount(1, $spans);
+        static::assertSame('doctrine:migrations:migrate', $spans[0]->name());
     }
 
-    public function test_span_includes_command_class_attribute() : void
+    public function test_span_includes_command_class_attribute(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -237,11 +243,11 @@ final class ConsoleSpanSubscriberTest extends TestCase
         $subscriber->onTerminate($terminateEvent);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame(Command::class, $spans[0]->attributes()['command.class']);
+        static::assertCount(1, $spans);
+        static::assertSame(Command::class, $spans[0]->attributes()['command.class']);
     }
 
-    public function test_span_includes_command_name_attribute() : void
+    public function test_span_includes_command_name_attribute(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -256,11 +262,11 @@ final class ConsoleSpanSubscriberTest extends TestCase
         $subscriber->onTerminate($terminateEvent);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame('app:sync', $spans[0]->attributes()['command.name']);
+        static::assertCount(1, $spans);
+        static::assertSame('app:sync', $spans[0]->attributes()['command.name']);
     }
 
-    public function test_span_includes_exit_code_attribute() : void
+    public function test_span_includes_exit_code_attribute(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -275,11 +281,11 @@ final class ConsoleSpanSubscriberTest extends TestCase
         $subscriber->onTerminate($terminateEvent);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame(42, $spans[0]->attributes()['process.exit_code']);
+        static::assertCount(1, $spans);
+        static::assertSame(42, $spans[0]->attributes()['process.exit_code']);
     }
 
-    public function test_span_kind_is_internal() : void
+    public function test_span_kind_is_internal(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -294,11 +300,11 @@ final class ConsoleSpanSubscriberTest extends TestCase
         $subscriber->onTerminate($terminateEvent);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame(SpanKind::INTERNAL, $spans[0]->kind());
+        static::assertCount(1, $spans);
+        static::assertSame(SpanKind::INTERNAL, $spans[0]->kind());
     }
 
-    public function test_span_name_set_to_command_name() : void
+    public function test_span_name_set_to_command_name(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -313,11 +319,11 @@ final class ConsoleSpanSubscriberTest extends TestCase
         $subscriber->onTerminate($terminateEvent);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame('app:send-emails', $spans[0]->name());
+        static::assertCount(1, $spans);
+        static::assertSame('app:send-emails', $spans[0]->name());
     }
 
-    private function createTelemetry(MemorySpanProcessor $spanProcessor) : Telemetry
+    private function createTelemetry(MemorySpanProcessor $spanProcessor): Telemetry
     {
         $clock = new SystemClock();
         $contextStorage = new MemoryContextStorage();

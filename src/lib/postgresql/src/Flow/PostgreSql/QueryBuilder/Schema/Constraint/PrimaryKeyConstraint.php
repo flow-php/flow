@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Constraint;
 
-use Flow\PostgreSql\Protobuf\AST\{ConstrType, Constraint, Node, PBString};
+use Flow\PostgreSql\Protobuf\AST\Constraint;
+use Flow\PostgreSql\Protobuf\AST\ConstrType;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
 
 final readonly class PrimaryKeyConstraint implements TableConstraint
 {
@@ -14,20 +17,19 @@ final readonly class PrimaryKeyConstraint implements TableConstraint
     private function __construct(
         private array $columns,
         private ?string $name = null,
-    ) {
-    }
+    ) {}
 
-    public static function create(string ...$columns) : self
+    public static function create(string ...$columns): self
     {
         return new self(\array_values($columns));
     }
 
-    public function name(string $name) : self
+    public function name(string $name): self
     {
         return new self($this->columns, $name);
     }
 
-    public function toAst() : Constraint
+    public function toAst(): Constraint
     {
         $constraint = new Constraint();
         $constraint->setContype(ConstrType::CONSTR_PRIMARY);
@@ -47,7 +49,7 @@ final readonly class PrimaryKeyConstraint implements TableConstraint
         return $constraint;
     }
 
-    private function createStringNode(string $value) : Node
+    private function createStringNode(string $value): Node
     {
         $str = new PBString();
         $str->setSval($value);

@@ -20,7 +20,7 @@ final readonly class Transformations implements Transformation
         $this->transformations = \array_values($transformations);
     }
 
-    public function transform(DataFrame $dataFrame) : DataFrame
+    public function transform(DataFrame $dataFrame): DataFrame
     {
         foreach ($this->transformations as $transformation) {
             $dataFrame = $transformation->transform($dataFrame);

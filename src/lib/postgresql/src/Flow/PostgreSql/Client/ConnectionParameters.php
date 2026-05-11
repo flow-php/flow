@@ -17,8 +17,7 @@ final readonly class ConnectionParameters
         #[\SensitiveParameter]
         private ?string $password,
         private array $options,
-    ) {
-    }
+    ) {}
 
     /**
      * Create from individual parameters.
@@ -33,7 +32,7 @@ final readonly class ConnectionParameters
         #[\SensitiveParameter]
         ?string $password = null,
         array $options = [],
-    ) : self {
+    ): self {
         return new self(
             host: $host,
             port: $port,
@@ -52,7 +51,7 @@ final readonly class ConnectionParameters
      *
      * @throws \InvalidArgumentException if dbname is missing
      */
-    public static function fromString(#[\SensitiveParameter] string $connectionString) : self
+    public static function fromString(#[\SensitiveParameter] string $connectionString): self
     {
         $parts = [];
         $pattern = '/(\w+)=(?:\'([^\']*)\'|([^\s]*))/';
@@ -85,7 +84,7 @@ final readonly class ConnectionParameters
      *
      * @return array<string, mixed>
      */
-    public function __debugInfo() : array
+    public function __debugInfo(): array
     {
         return [
             'host' => $this->host,
@@ -97,12 +96,12 @@ final readonly class ConnectionParameters
         ];
     }
 
-    public function database() : string
+    public function database(): string
     {
         return $this->database;
     }
 
-    public function host() : string
+    public function host(): string
     {
         return $this->host;
     }
@@ -110,17 +109,17 @@ final readonly class ConnectionParameters
     /**
      * @return array<string, string>
      */
-    public function options() : array
+    public function options(): array
     {
         return $this->options;
     }
 
-    public function password() : ?string
+    public function password(): ?string
     {
         return $this->password;
     }
 
-    public function port() : int
+    public function port(): int
     {
         return $this->port;
     }
@@ -128,7 +127,7 @@ final readonly class ConnectionParameters
     /**
      * Convert connection parameters to a libpq connection string.
      */
-    public function toString() : string
+    public function toString(): string
     {
         $parts = [
             \sprintf('host=%s', $this->host),
@@ -151,12 +150,12 @@ final readonly class ConnectionParameters
         return \implode(' ', $parts);
     }
 
-    public function user() : ?string
+    public function user(): ?string
     {
         return $this->user;
     }
 
-    public function withDatabase(string $database) : self
+    public function withDatabase(string $database): self
     {
         return new self(
             host: $this->host,
@@ -168,7 +167,7 @@ final readonly class ConnectionParameters
         );
     }
 
-    public function withHost(string $host) : self
+    public function withHost(string $host): self
     {
         return new self(
             host: $host,
@@ -180,7 +179,7 @@ final readonly class ConnectionParameters
         );
     }
 
-    public function withOption(string $key, string $value) : self
+    public function withOption(string $key, string $value): self
     {
         return new self(
             host: $this->host,
@@ -195,7 +194,7 @@ final readonly class ConnectionParameters
     /**
      * @param array<string, string> $options
      */
-    public function withOptions(array $options) : self
+    public function withOptions(array $options): self
     {
         return new self(
             host: $this->host,
@@ -207,7 +206,7 @@ final readonly class ConnectionParameters
         );
     }
 
-    public function withPassword(#[\SensitiveParameter] ?string $password) : self
+    public function withPassword(#[\SensitiveParameter] ?string $password): self
     {
         return new self(
             host: $this->host,
@@ -219,7 +218,7 @@ final readonly class ConnectionParameters
         );
     }
 
-    public function withPort(int $port) : self
+    public function withPort(int $port): self
     {
         return new self(
             host: $this->host,
@@ -231,7 +230,7 @@ final readonly class ConnectionParameters
         );
     }
 
-    public function withUser(?string $user) : self
+    public function withUser(?string $user): self
     {
         return new self(
             host: $this->host,

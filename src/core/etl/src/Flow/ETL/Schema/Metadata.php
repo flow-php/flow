@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema;
 
-use function Flow\Types\DSL\type_array;
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Types\Type;
+
+use function Flow\Types\DSL\type_array;
 
 final readonly class Metadata
 {
@@ -16,12 +17,13 @@ final readonly class Metadata
     /**
      * @param array<string, array<array-key, mixed>|bool|float|int|string> $map
      */
-    private function __construct(private array $map)
-    {
+    private function __construct(
+        private array $map,
+    ) {
         $this->assertArray($this->map);
     }
 
-    public static function empty() : self
+    public static function empty(): self
     {
         return new self([]);
     }
@@ -29,7 +31,7 @@ final readonly class Metadata
     /**
      * @param array<string, array<array-key, mixed>|bool|float|int|string> $map
      */
-    public static function fromArray(array $map) : self
+    public static function fromArray(array $map): self
     {
         type_array()->assert($map);
 
@@ -40,7 +42,7 @@ final readonly class Metadata
      * @param string $key
      * @param array<array-key, mixed>|bool|float|int|string $value
      */
-    public static function with(string $key, int|string|bool|float|array $value) : self
+    public static function with(string $key, int|string|bool|float|array $value): self
     {
         return new self([$key => $value]);
     }
@@ -49,7 +51,7 @@ final readonly class Metadata
      * @param string $key
      * @param array<array-key, mixed>|bool|float|int|string $value
      */
-    public function add(string $key, int|string|bool|float|array $value) : self
+    public function add(string $key, int|string|bool|float|array $value): self
     {
         if (\is_array($value)) {
             $this->assertArray($value);
@@ -65,7 +67,7 @@ final readonly class Metadata
      *
      * @return array<array-key, mixed>|bool|float|int|string
      */
-    public function get(string $key) : int|string|bool|float|array
+    public function get(string $key): int|string|bool|float|array
     {
         if (!\array_key_exists($key, $this->map)) {
             throw new InvalidArgumentException("There no is key: {$key}");
@@ -83,7 +85,7 @@ final readonly class Metadata
      *
      * @return ?TType
      */
-    public function getAs(string $key, Type $type, mixed $default = null) : mixed
+    public function getAs(string $key, Type $type, mixed $default = null): mixed
     {
         if (!\array_key_exists($key, $this->map)) {
             return $default;
@@ -92,22 +94,22 @@ final readonly class Metadata
         return $type->cast($this->map[$key]);
     }
 
-    public function has(string $key) : bool
+    public function has(string $key): bool
     {
         return \array_key_exists($key, $this->map);
     }
 
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return !\count($this->map);
     }
 
-    public function isEqual(self $metadata) : bool
+    public function isEqual(self $metadata): bool
     {
         return (new ArrayComparison())->equals($this->map, $metadata->map);
     }
 
-    public function merge(self $metadata) : self
+    public function merge(self $metadata): self
     {
         return new self(\array_merge($this->map, $metadata->map));
     }
@@ -115,13 +117,13 @@ final readonly class Metadata
     /**
      * @return array<string, array<bool|float|int|string>|bool|float|int|string>
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         /** @var array<string, array<bool|float|int|string>|bool|float|int|string> */
         return $this->map;
     }
 
-    public function remove(string $key) : self
+    public function remove(string $key): self
     {
         $map = [];
 
@@ -137,7 +139,7 @@ final readonly class Metadata
     /**
      * @param array<array-key, mixed> $array
      */
-    private function assertArray(array $array) : void
+    private function assertArray(array $array): void
     {
         foreach ($array as $value) {
             if (\is_array($value)) {

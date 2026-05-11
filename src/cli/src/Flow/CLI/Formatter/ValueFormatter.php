@@ -6,11 +6,11 @@ namespace Flow\CLI\Formatter;
 
 final readonly class ValueFormatter
 {
-    public function __construct(private string $nullValue = '-')
-    {
-    }
+    public function __construct(
+        private string $nullValue = '-',
+    ) {}
 
-    public function format(string|float|int|bool|\DateTimeInterface|null $value) : string
+    public function format(string|float|int|bool|\DateTimeInterface|null $value): string
     {
         if ($value instanceof \DateTimeInterface) {
             return $value->format(\DateTimeInterface::ATOM);

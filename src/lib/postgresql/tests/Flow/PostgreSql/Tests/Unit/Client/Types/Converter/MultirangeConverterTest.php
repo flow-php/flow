@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 final class MultirangeConverterTest extends TestCase
 {
-    public static function provide_non_string_values() : \Generator
+    public static function provide_non_string_values(): \Generator
     {
         yield 'integer' => [12345, ''];
         yield 'array' => [['array'], ''];
@@ -20,7 +20,7 @@ final class MultirangeConverterTest extends TestCase
         yield 'object' => [new \stdClass(), ''];
     }
 
-    public static function provide_valid_values() : \Generator
+    public static function provide_valid_values(): \Generator
     {
         yield 'multirange' => ['{[1,5),[10,20)}', '{[1,5),[10,20)}'];
         yield 'empty multirange' => ['{}', '{}'];
@@ -31,32 +31,35 @@ final class MultirangeConverterTest extends TestCase
         yield 'unbounded upper' => ['{[1,)}', '{[1,)}'];
         yield 'unbounded lower' => ['{(,5]}', '{(,5]}'];
         yield 'fully unbounded' => ['{(,)}', '{(,)}'];
-        yield 'timestamp multirange' => ['{["2024-01-01","2024-06-01"),["2024-07-01","2024-12-31")}', '{["2024-01-01","2024-06-01"),["2024-07-01","2024-12-31")}'];
+        yield 'timestamp multirange' => [
+            '{["2024-01-01","2024-06-01"),["2024-07-01","2024-12-31")}',
+            '{["2024-01-01","2024-06-01"),["2024-07-01","2024-12-31")}',
+        ];
     }
 
     #[DataProvider('provide_non_string_values')]
-    public function test_non_string_returns_empty(mixed $input, string $expected) : void
+    public function test_non_string_returns_empty(mixed $input, string $expected): void
     {
         $converter = new MultirangeConverter();
-        self::assertSame($expected, $converter->toDatabase($input));
+        static::assertSame($expected, $converter->toDatabase($input));
     }
 
-    public function test_null_handling() : void
+    public function test_null_handling(): void
     {
         $converter = new MultirangeConverter();
-        self::assertNull($converter->toDatabase(null));
+        static::assertNull($converter->toDatabase(null));
     }
 
-    public function test_supported_types_empty() : void
+    public function test_supported_types_empty(): void
     {
         $converter = new MultirangeConverter();
-        self::assertSame([], $converter->supportedTypes());
+        static::assertSame([], $converter->supportedTypes());
     }
 
     #[DataProvider('provide_valid_values')]
-    public function test_to_database(string $input, string $expected) : void
+    public function test_to_database(string $input, string $expected): void
     {
         $converter = new MultirangeConverter();
-        self::assertSame($expected, $converter->toDatabase($input));
+        static::assertSame($expected, $converter->toDatabase($input));
     }
 }

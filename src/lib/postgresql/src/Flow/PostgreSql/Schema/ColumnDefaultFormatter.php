@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
 
 final readonly class ColumnDefaultFormatter
 {
-    public function format(bool|float|int|string|Expression|null $value) : ?string
+    public function format(bool|float|int|string|Expression|null $value): ?string
     {
         if ($value === null) {
             return null;

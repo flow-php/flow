@@ -9,13 +9,13 @@ use Flow\PostgreSql\Protobuf\AST\SortByDir;
 /**
  * Sort direction enum.
  */
-enum SortDirection : string
+enum SortDirection: string
 {
     case ASC = 'ASC';
     case DEFAULT = 'DEFAULT';
     case DESC = 'DESC';
 
-    public static function fromProtobuf(int $sortByDir) : self
+    public static function fromProtobuf(int $sortByDir): self
     {
         return match ($sortByDir) {
             SortByDir::SORTBY_ASC => self::ASC,
@@ -24,7 +24,7 @@ enum SortDirection : string
         };
     }
 
-    public function toProtobuf() : int
+    public function toProtobuf(): int
     {
         return match ($this) {
             self::ASC => SortByDir::SORTBY_ASC,

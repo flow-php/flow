@@ -7,7 +7,8 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Command;
 use Flow\Bridge\Symfony\PostgreSQLSession\FlowPostgreSqlSessionHandler;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\{InputInterface, InputOption};
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -20,14 +21,17 @@ final class SessionPurgeCommand extends Command
         parent::__construct();
     }
 
-    protected function configure() : void
+    protected function configure(): void
     {
-        $this
-            ->addOption('expired', null, InputOption::VALUE_NONE, 'Purge only expired sessions (default).')
-            ->addOption('all', null, InputOption::VALUE_NONE, 'Purge ALL sessions, including active ones.');
+        $this->addOption('expired', null, InputOption::VALUE_NONE, 'Purge only expired sessions (default).')->addOption(
+            'all',
+            null,
+            InputOption::VALUE_NONE,
+            'Purge ALL sessions, including active ones.',
+        );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output) : int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 

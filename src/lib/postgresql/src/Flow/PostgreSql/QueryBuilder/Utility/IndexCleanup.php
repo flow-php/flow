@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Utility;
 
-enum IndexCleanup : string
+enum IndexCleanup: string
 {
     case AUTO = 'auto';
     case OFF = 'off';

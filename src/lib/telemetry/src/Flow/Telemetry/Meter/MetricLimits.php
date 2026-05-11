@@ -35,13 +35,12 @@ final readonly class MetricLimits
      */
     public function __construct(
         public int $cardinalityLimit = self::DEFAULT_CARDINALITY_LIMIT,
-    ) {
-    }
+    ) {}
 
     /**
      * Create limits with default values.
      */
-    public static function default() : self
+    public static function default(): self
     {
         return new self();
     }
@@ -51,7 +50,7 @@ final readonly class MetricLimits
      *
      * Warning: This can lead to memory exhaustion with high-cardinality attributes.
      */
-    public static function unlimited() : self
+    public static function unlimited(): self
     {
         return new self(cardinalityLimit: PHP_INT_MAX);
     }

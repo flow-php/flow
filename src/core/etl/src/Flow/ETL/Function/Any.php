@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\{FlowContext, Row};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
 
 final readonly class Any implements ScalarFunction
 {
@@ -13,23 +14,22 @@ final readonly class Any implements ScalarFunction
      */
     private array $functions;
 
-    public function __construct(
-        ScalarFunction ...$functions,
-    ) {
+    public function __construct(ScalarFunction ...$functions)
+    {
         $this->functions = $functions;
     }
 
-    public function and(ScalarFunction $scalarFunction) : All
+    public function and(ScalarFunction $scalarFunction): All
     {
         return new All(...$this->functions, ...[$scalarFunction]);
     }
 
-    public function andNot(ScalarFunction $scalarFunction) : All
+    public function andNot(ScalarFunction $scalarFunction): All
     {
         return new All(...$this->functions, ...[new Not($scalarFunction)]);
     }
 
-    public function eval(Row $row, FlowContext $context) : mixed
+    public function eval(Row $row, FlowContext $context): mixed
     {
         foreach ($this->functions as $ref) {
             if ((new Parameter($ref))->eval($row, $context)) {
@@ -40,12 +40,12 @@ final readonly class Any implements ScalarFunction
         return false;
     }
 
-    public function or(ScalarFunction $scalarFunction) : self
+    public function or(ScalarFunction $scalarFunction): self
     {
         return new self(...$this->functions, ...[$scalarFunction]);
     }
 
-    public function orNot(ScalarFunction $scalarFunction) : self
+    public function orNot(ScalarFunction $scalarFunction): self
     {
         return new self(...$this->functions, ...[new Not($scalarFunction)]);
     }

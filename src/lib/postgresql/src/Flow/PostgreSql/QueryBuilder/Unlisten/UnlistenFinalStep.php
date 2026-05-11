@@ -9,5 +9,5 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface UnlistenFinalStep extends Sql
 {
-    public function toAst() : UnlistenStmt;
+    public function toAst(): UnlistenStmt;
 }

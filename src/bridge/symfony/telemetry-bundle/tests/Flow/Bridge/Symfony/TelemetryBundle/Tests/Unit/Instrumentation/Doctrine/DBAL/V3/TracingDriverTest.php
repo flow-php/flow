@@ -4,10 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Instrumentation\Doctrine\DBAL\V3;
 
+use Doctrine\DBAL\Driver;
 use Doctrine\DBAL\Driver\API\ExceptionConverter;
-use Doctrine\DBAL\Driver\{Connection, Result, Statement};
-use Doctrine\DBAL\{Driver, ParameterType};
-use Doctrine\DBAL\Platforms\{AbstractPlatform, DB2Platform, MariaDBPlatform, MySQL80Platform, OraclePlatform, PostgreSQLPlatform, SQLServerPlatform, SqlitePlatform};
+use Doctrine\DBAL\Driver\Connection;
+use Doctrine\DBAL\Driver\Result;
+use Doctrine\DBAL\Driver\Statement;
+use Doctrine\DBAL\ParameterType;
+use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Doctrine\DBAL\Platforms\DB2Platform;
+use Doctrine\DBAL\Platforms\MariaDBPlatform;
+use Doctrine\DBAL\Platforms\MySQL80Platform;
+use Doctrine\DBAL\Platforms\OraclePlatform;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\SqlitePlatform;
+use Doctrine\DBAL\Platforms\SQLServerPlatform;
 use Doctrine\DBAL\Schema\AbstractSchemaManager;
 use Doctrine\DBAL\VersionAwarePlatformDriver;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V3\TracingDriver;
@@ -15,9 +25,12 @@ use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Provider\Memory\{MemoryExporter, MemorySpanProcessor};
-use Flow\Telemetry\Provider\Void\{VoidLogProcessor, VoidMetricProcessor};
-use Flow\Telemetry\{Resource, Telemetry};
+use Flow\Telemetry\Provider\Memory\MemoryExporter;
+use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
+use Flow\Telemetry\Provider\Void\VoidLogProcessor;
+use Flow\Telemetry\Provider\Void\VoidMetricProcessor;
+use Flow\Telemetry\Resource;
+use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -25,14 +38,14 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(TracingDriver::class)]
 final class TracingDriverTest extends TestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\interface_exists('Doctrine\DBAL\VersionAwarePlatformDriver')) {
             self::markTestSkipped('Test requires Doctrine DBAL 3.x');
         }
     }
 
-    public function test_get_semantic_db_system_defaults_to_other_sql() : void
+    public function test_get_semantic_db_system_defaults_to_other_sql(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -45,11 +58,11 @@ final class TracingDriverTest extends TestCase
         $tracingDriver->connect([]);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame('other_sql', $spans[0]->attributes()['db.system.name']);
+        static::assertCount(1, $spans);
+        static::assertSame('other_sql', $spans[0]->attributes()['db.system.name']);
     }
 
-    public function test_get_semantic_db_system_detects_db2() : void
+    public function test_get_semantic_db_system_detects_db2(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -62,11 +75,11 @@ final class TracingDriverTest extends TestCase
         $tracingDriver->connect([]);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame('db2', $spans[0]->attributes()['db.system.name']);
+        static::assertCount(1, $spans);
+        static::assertSame('db2', $spans[0]->attributes()['db.system.name']);
     }
 
-    public function test_get_semantic_db_system_detects_mariadb_as_mysql() : void
+    public function test_get_semantic_db_system_detects_mariadb_as_mysql(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -79,11 +92,11 @@ final class TracingDriverTest extends TestCase
         $tracingDriver->connect([]);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame('mysql', $spans[0]->attributes()['db.system.name']);
+        static::assertCount(1, $spans);
+        static::assertSame('mysql', $spans[0]->attributes()['db.system.name']);
     }
 
-    public function test_get_semantic_db_system_detects_mssql() : void
+    public function test_get_semantic_db_system_detects_mssql(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -96,11 +109,11 @@ final class TracingDriverTest extends TestCase
         $tracingDriver->connect([]);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame('mssql', $spans[0]->attributes()['db.system.name']);
+        static::assertCount(1, $spans);
+        static::assertSame('mssql', $spans[0]->attributes()['db.system.name']);
     }
 
-    public function test_get_semantic_db_system_detects_mysql() : void
+    public function test_get_semantic_db_system_detects_mysql(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -113,11 +126,11 @@ final class TracingDriverTest extends TestCase
         $tracingDriver->connect([]);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame('mysql', $spans[0]->attributes()['db.system.name']);
+        static::assertCount(1, $spans);
+        static::assertSame('mysql', $spans[0]->attributes()['db.system.name']);
     }
 
-    public function test_get_semantic_db_system_detects_oracle() : void
+    public function test_get_semantic_db_system_detects_oracle(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -130,11 +143,11 @@ final class TracingDriverTest extends TestCase
         $tracingDriver->connect([]);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame('oracle', $spans[0]->attributes()['db.system.name']);
+        static::assertCount(1, $spans);
+        static::assertSame('oracle', $spans[0]->attributes()['db.system.name']);
     }
 
-    public function test_get_semantic_db_system_detects_postgresql() : void
+    public function test_get_semantic_db_system_detects_postgresql(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -147,11 +160,11 @@ final class TracingDriverTest extends TestCase
         $tracingDriver->connect([]);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame('postgresql', $spans[0]->attributes()['db.system.name']);
+        static::assertCount(1, $spans);
+        static::assertSame('postgresql', $spans[0]->attributes()['db.system.name']);
     }
 
-    public function test_get_semantic_db_system_detects_sqlite() : void
+    public function test_get_semantic_db_system_detects_sqlite(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -164,11 +177,11 @@ final class TracingDriverTest extends TestCase
         $tracingDriver->connect([]);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame('sqlite', $spans[0]->attributes()['db.system.name']);
+        static::assertCount(1, $spans);
+        static::assertSame('sqlite', $spans[0]->attributes()['db.system.name']);
     }
 
-    public function test_span_defaults_db_namespace_to_default() : void
+    public function test_span_defaults_db_namespace_to_default(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -181,11 +194,11 @@ final class TracingDriverTest extends TestCase
         $tracingDriver->connect([]);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame('default', $spans[0]->attributes()['db.namespace']);
+        static::assertCount(1, $spans);
+        static::assertSame('default', $spans[0]->attributes()['db.namespace']);
     }
 
-    public function test_span_includes_connection_name() : void
+    public function test_span_includes_connection_name(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -198,11 +211,11 @@ final class TracingDriverTest extends TestCase
         $tracingDriver->connect([]);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame('analytics', $spans[0]->attributes()['db.connection.name']);
+        static::assertCount(1, $spans);
+        static::assertSame('analytics', $spans[0]->attributes()['db.connection.name']);
     }
 
-    public function test_span_includes_db_namespace_from_params() : void
+    public function test_span_includes_db_namespace_from_params(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -215,98 +228,100 @@ final class TracingDriverTest extends TestCase
         $tracingDriver->connect(['dbname' => 'my_database']);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame('my_database', $spans[0]->attributes()['db.namespace']);
+        static::assertCount(1, $spans);
+        static::assertSame('my_database', $spans[0]->attributes()['db.namespace']);
     }
 
-    private function createMockDriverWithPlatform(AbstractPlatform $platform) : Driver
+    private function createMockDriverWithPlatform(AbstractPlatform $platform): Driver
     {
         return new readonly class($platform) implements VersionAwarePlatformDriver {
-            public function __construct(private AbstractPlatform $platform)
-            {
-            }
+            public function __construct(
+                private AbstractPlatform $platform,
+            ) {}
 
-            public function connect(array $params) : Connection
+            public function connect(array $params): Connection
             {
                 return new class implements Connection {
-                    public function beginTransaction() : bool
+                    public function beginTransaction(): bool
                     {
                         return true;
                     }
 
-                    public function commit() : bool
+                    public function commit(): bool
                     {
                         return true;
                     }
 
-                    public function exec(string $sql) : int
+                    public function exec(string $sql): int
                     {
                         return 0;
                     }
 
-                    public function getNativeConnection() : object
+                    public function getNativeConnection(): object
                     {
                         return new \stdClass();
                     }
 
-                    public function getServerVersion() : string
+                    public function getServerVersion(): string
                     {
                         return '1.0.0';
                     }
 
                     /** @phpstan-ignore missingType.parameter */
-                    public function lastInsertId($name = null) : string|int|false
+                    public function lastInsertId($name = null): string|int|false
                     {
                         return 0;
                     }
 
-                    public function prepare(string $sql) : Statement
+                    public function prepare(string $sql): Statement
                     {
                         throw new \RuntimeException('Not implemented');
                     }
 
-                    public function query(string $sql) : Result
+                    public function query(string $sql): Result
                     {
                         throw new \RuntimeException('Not implemented');
                     }
 
                     /** @phpstan-ignore missingType.parameter, missingType.parameter */
-                    public function quote($value, $type = ParameterType::STRING) : mixed
+                    public function quote($value, $type = ParameterType::STRING): mixed
                     {
                         return "'{$value}'";
                     }
 
-                    public function rollBack() : bool
+                    public function rollBack(): bool
                     {
                         return true;
                     }
                 };
             }
 
-            public function createDatabasePlatformForVersion($version) : AbstractPlatform
+            public function createDatabasePlatformForVersion($version): AbstractPlatform
             {
                 return $this->platform;
             }
 
-            public function getDatabasePlatform() : AbstractPlatform
+            public function getDatabasePlatform(): AbstractPlatform
             {
                 return $this->platform;
             }
 
             /** @phpstan-ignore missingType.parameter */
-            public function getSchemaManager(\Doctrine\DBAL\Connection $conn, AbstractPlatform $platform) : AbstractSchemaManager
-            {
+            public function getSchemaManager(
+                \Doctrine\DBAL\Connection $conn,
+                AbstractPlatform $platform,
+            ): AbstractSchemaManager {
                 throw new \RuntimeException('Not implemented');
             }
 
-            public function getExceptionConverter() : ExceptionConverter
+            public function getExceptionConverter(): ExceptionConverter
             {
                 throw new \RuntimeException('Not implemented');
             }
         };
     }
 
-    private function createTelemetry(MemorySpanProcessor $spanProcessor) : Telemetry
+    private function createTelemetry(MemorySpanProcessor $spanProcessor): Telemetry
     {
         $clock = new SystemClock();
         $contextStorage = new MemoryContextStorage();

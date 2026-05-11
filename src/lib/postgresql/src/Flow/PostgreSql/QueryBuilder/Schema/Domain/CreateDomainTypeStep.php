@@ -8,5 +8,5 @@ use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 
 interface CreateDomainTypeStep
 {
-    public function as(ColumnType $dataType) : CreateDomainOptionsStep;
+    public function as(ColumnType $dataType): CreateDomainOptionsStep;
 }

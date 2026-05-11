@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\QueryBuilder\Utility;
 
 use Flow\PostgreSql\Protobuf\AST\DiscardMode;
 
-enum DiscardType : int
+enum DiscardType: int
 {
     case ALL = DiscardMode::DISCARD_ALL;
     case PLANS = DiscardMode::DISCARD_PLANS;

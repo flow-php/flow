@@ -6,15 +6,19 @@ namespace Flow\Parquet\Tests\Unit\Writer;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Encodings;
-use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, DictionaryPageHeader, Type};
+use Flow\Parquet\ParquetFile\Page\Header\DataPageHeader;
+use Flow\Parquet\ParquetFile\Page\Header\DataPageHeaderV2;
+use Flow\Parquet\ParquetFile\Page\Header\DictionaryPageHeader;
+use Flow\Parquet\ParquetFile\Page\Header\Type;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
-use Flow\Parquet\Writer\{PageContainer, PageContainers};
+use Flow\Parquet\Writer\PageContainer;
+use Flow\Parquet\Writer\PageContainers;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class PageContainersTest extends TestCase
 {
-    public static function buffer_size_provider() : \Generator
+    public static function buffer_size_provider(): \Generator
     {
         yield 'small buffer' => [10, 20];
         yield 'medium buffer' => [100, 200];
@@ -22,7 +26,7 @@ final class PageContainersTest extends TestCase
         yield 'empty buffer' => [0, 0];
     }
 
-    public static function container_count_provider() : \Generator
+    public static function container_count_provider(): \Generator
     {
         yield 'empty' => [0];
         yield 'single' => [1];
@@ -30,7 +34,7 @@ final class PageContainersTest extends TestCase
         yield 'many' => [10];
     }
 
-    public static function encoding_types_provider() : \Generator
+    public static function encoding_types_provider(): \Generator
     {
         yield 'plain' => [Encodings::PLAIN];
         yield 'rle' => [Encodings::RLE];
@@ -39,37 +43,37 @@ final class PageContainersTest extends TestCase
         yield 'delta_binary_packed' => [Encodings::DELTA_BINARY_PACKED];
     }
 
-    public static function page_types_provider() : \Generator
+    public static function page_types_provider(): \Generator
     {
         yield 'data page' => [Type::DATA_PAGE, 'data page container'];
         yield 'data page v2' => [Type::DATA_PAGE_V2, 'data page v2 container'];
         yield 'dictionary page' => [Type::DICTIONARY_PAGE, 'dictionary page container'];
     }
 
-    public function test_add_data_page_container() : void
+    public function test_add_data_page_container(): void
     {
         $containers = new PageContainers();
         $pageContainer = $this->createDataPageContainer();
 
         $containers->add($pageContainer);
 
-        self::assertCount(1, $containers->dataPageContainers());
-        self::assertSame($pageContainer, $containers->dataPageContainers()[0]);
-        self::assertNull($containers->dictionaryPageContainer());
+        static::assertCount(1, $containers->dataPageContainers());
+        static::assertSame($pageContainer, $containers->dataPageContainers()[0]);
+        static::assertNull($containers->dictionaryPageContainer());
     }
 
-    public function test_add_dictionary_page_container() : void
+    public function test_add_dictionary_page_container(): void
     {
         $containers = new PageContainers();
         $pageContainer = $this->createDictionaryPageContainer();
 
         $containers->add($pageContainer);
 
-        self::assertSame($pageContainer, $containers->dictionaryPageContainer());
-        self::assertEmpty($containers->dataPageContainers());
+        static::assertSame($pageContainer, $containers->dictionaryPageContainer());
+        static::assertEmpty($containers->dataPageContainers());
     }
 
-    public function test_add_duplicate_dictionary_page_throws_exception() : void
+    public function test_add_duplicate_dictionary_page_throws_exception(): void
     {
         $containers = new PageContainers();
         $pageContainer1 = $this->createDictionaryPageContainer();
@@ -83,7 +87,7 @@ final class PageContainersTest extends TestCase
         $containers->add($pageContainer2);
     }
 
-    public function test_add_mixed_page_containers() : void
+    public function test_add_mixed_page_containers(): void
     {
         $containers = new PageContainers();
         $dataContainer1 = $this->createDataPageContainer();
@@ -94,13 +98,13 @@ final class PageContainersTest extends TestCase
         $containers->add($dictionaryContainer);
         $containers->add($dataContainer2);
 
-        self::assertCount(2, $containers->dataPageContainers());
-        self::assertSame($dictionaryContainer, $containers->dictionaryPageContainer());
-        self::assertSame($dataContainer1, $containers->dataPageContainers()[0]);
-        self::assertSame($dataContainer2, $containers->dataPageContainers()[1]);
+        static::assertCount(2, $containers->dataPageContainers());
+        static::assertSame($dictionaryContainer, $containers->dictionaryPageContainer());
+        static::assertSame($dataContainer1, $containers->dataPageContainers()[0]);
+        static::assertSame($dataContainer2, $containers->dataPageContainers()[1]);
     }
 
-    public function test_add_multiple_data_page_containers() : void
+    public function test_add_multiple_data_page_containers(): void
     {
         $containers = new PageContainers();
         $pageContainer1 = $this->createDataPageContainer(10);
@@ -111,13 +115,13 @@ final class PageContainersTest extends TestCase
         $containers->add($pageContainer2);
         $containers->add($pageContainer3);
 
-        self::assertCount(3, $containers->dataPageContainers());
-        self::assertSame($pageContainer1, $containers->dataPageContainers()[0]);
-        self::assertSame($pageContainer2, $containers->dataPageContainers()[1]);
-        self::assertSame($pageContainer3, $containers->dataPageContainers()[2]);
+        static::assertCount(3, $containers->dataPageContainers());
+        static::assertSame($pageContainer1, $containers->dataPageContainers()[0]);
+        static::assertSame($pageContainer2, $containers->dataPageContainers()[1]);
+        static::assertSame($pageContainer3, $containers->dataPageContainers()[2]);
     }
 
-    public function test_buffer_with_data_pages_only() : void
+    public function test_buffer_with_data_pages_only(): void
     {
         $containers = new PageContainers();
         $pageContainer1 = $this->createDataPageContainer(valuesCount: 10, pageBuffer: 'data1');
@@ -129,12 +133,12 @@ final class PageContainersTest extends TestCase
         $buffer = $containers->buffer();
 
         // Check that buffer contains both data pages in correct order
-        self::assertStringContainsString('data1', $buffer);
-        self::assertStringContainsString('data2', $buffer);
-        self::assertGreaterThan(strlen('data1data2'), strlen($buffer)); // Headers add to length
+        static::assertStringContainsString('data1', $buffer);
+        static::assertStringContainsString('data2', $buffer);
+        static::assertGreaterThan(strlen('data1data2'), strlen($buffer)); // Headers add to length
     }
 
-    public function test_buffer_with_dictionary_and_data_pages() : void
+    public function test_buffer_with_dictionary_and_data_pages(): void
     {
         $containers = new PageContainers();
         $dataContainer = $this->createDataPageContainer(valuesCount: 10, pageBuffer: 'datadata');
@@ -146,14 +150,14 @@ final class PageContainersTest extends TestCase
         $buffer = $containers->buffer();
 
         // Check that buffer contains dictionary page first, then data page
-        self::assertStringContainsString('dictdata', $buffer);
-        self::assertStringContainsString('datadata', $buffer);
+        static::assertStringContainsString('dictdata', $buffer);
+        static::assertStringContainsString('datadata', $buffer);
         $dictPos = strpos($buffer, 'dictdata');
         $dataPos = strpos($buffer, 'datadata');
-        self::assertLessThan($dataPos, $dictPos); // Dictionary comes before data
+        static::assertLessThan($dataPos, $dictPos); // Dictionary comes before data
     }
 
-    public function test_buffer_with_dictionary_page_only() : void
+    public function test_buffer_with_dictionary_page_only(): void
     {
         $containers = new PageContainers();
         $dictionaryContainer = $this->createDictionaryPageContainer(valuesCount: 5, pageBuffer: 'data');
@@ -163,20 +167,20 @@ final class PageContainersTest extends TestCase
         $buffer = $containers->buffer();
 
         // Check that buffer contains the dictionary data
-        self::assertStringContainsString('data', $buffer);
-        self::assertGreaterThan(strlen('data'), strlen($buffer)); // Header adds to length
+        static::assertStringContainsString('data', $buffer);
+        static::assertGreaterThan(strlen('data'), strlen($buffer)); // Header adds to length
     }
 
-    public function test_buffer_with_empty_containers() : void
+    public function test_buffer_with_empty_containers(): void
     {
         $containers = new PageContainers();
 
         $buffer = $containers->buffer();
 
-        self::assertSame('', $buffer);
+        static::assertSame('', $buffer);
     }
 
-    public function test_compressed_size_with_data_pages_only() : void
+    public function test_compressed_size_with_data_pages_only(): void
     {
         $containers = new PageContainers();
         $pageContainer1 = $this->createDataPageContainer(valuesCount: 10, pageBuffer: 'data1');
@@ -188,10 +192,10 @@ final class PageContainersTest extends TestCase
         $compressedSize = $containers->compressedSize();
 
         $expectedSize = $pageContainer1->totalCompressedSize() + $pageContainer2->totalCompressedSize();
-        self::assertSame($expectedSize, $compressedSize);
+        static::assertSame($expectedSize, $compressedSize);
     }
 
-    public function test_compressed_size_with_dictionary_and_data_pages() : void
+    public function test_compressed_size_with_dictionary_and_data_pages(): void
     {
         $containers = new PageContainers();
         $dataContainer = $this->createDataPageContainer();
@@ -203,19 +207,19 @@ final class PageContainersTest extends TestCase
         $compressedSize = $containers->compressedSize();
 
         $expectedSize = $dataContainer->totalCompressedSize() + $dictionaryContainer->totalCompressedSize();
-        self::assertSame($expectedSize, $compressedSize);
+        static::assertSame($expectedSize, $compressedSize);
     }
 
-    public function test_constructor_with_empty_array() : void
+    public function test_constructor_with_empty_array(): void
     {
         $containers = new PageContainers([]);
 
-        self::assertEmpty($containers->dataPageContainers());
-        self::assertNull($containers->dictionaryPageContainer());
-        self::assertSame(0, $containers->compressedSize());
+        static::assertEmpty($containers->dataPageContainers());
+        static::assertNull($containers->dictionaryPageContainer());
+        static::assertSame(0, $containers->compressedSize());
     }
 
-    public function test_constructor_with_multiple_data_containers() : void
+    public function test_constructor_with_multiple_data_containers(): void
     {
         $container1 = $this->createDataPageContainer(10);
         $container2 = $this->createDataPageContainer(20);
@@ -223,14 +227,14 @@ final class PageContainersTest extends TestCase
 
         $containers = new PageContainers([$container1, $container2, $container3]);
 
-        self::assertCount(3, $containers->dataPageContainers());
-        self::assertSame($container1, $containers->dataPageContainers()[0]);
-        self::assertSame($container2, $containers->dataPageContainers()[1]);
-        self::assertSame($container3, $containers->dataPageContainers()[2]);
+        static::assertCount(3, $containers->dataPageContainers());
+        static::assertSame($container1, $containers->dataPageContainers()[0]);
+        static::assertSame($container2, $containers->dataPageContainers()[1]);
+        static::assertSame($container3, $containers->dataPageContainers()[2]);
     }
 
     #[DataProvider('container_count_provider')]
-    public function test_constructor_with_varying_container_counts(int $count) : void
+    public function test_constructor_with_varying_container_counts(int $count): void
     {
         $pageContainers = [];
 
@@ -240,33 +244,33 @@ final class PageContainersTest extends TestCase
 
         $containers = new PageContainers($pageContainers);
 
-        self::assertCount($count, $containers->dataPageContainers());
+        static::assertCount($count, $containers->dataPageContainers());
 
         for ($i = 0; $i < $count; $i++) {
-            self::assertSame($pageContainers[$i], $containers->dataPageContainers()[$i]);
+            static::assertSame($pageContainers[$i], $containers->dataPageContainers()[$i]);
         }
     }
 
-    public function test_data_page_containers_returns_empty_array_initially() : void
+    public function test_data_page_containers_returns_empty_array_initially(): void
     {
         $containers = new PageContainers();
 
         $result = $containers->dataPageContainers();
 
-        self::assertIsArray($result);
-        self::assertEmpty($result);
+        static::assertIsArray($result);
+        static::assertEmpty($result);
     }
 
-    public function test_dictionary_page_container_returns_null_initially() : void
+    public function test_dictionary_page_container_returns_null_initially(): void
     {
         $containers = new PageContainers();
 
         $result = $containers->dictionaryPageContainer();
 
-        self::assertNull($result);
+        static::assertNull($result);
     }
 
-    public function test_encodings_with_data_page_header() : void
+    public function test_encodings_with_data_page_header(): void
     {
         $containers = new PageContainers();
         $pageContainer = $this->createDataPageContainer();
@@ -275,11 +279,11 @@ final class PageContainersTest extends TestCase
 
         $encodings = $containers->encodings();
 
-        self::assertContains(Encodings::PLAIN, $encodings);
-        self::assertContains(Encodings::RLE, $encodings);
+        static::assertContains(Encodings::PLAIN, $encodings);
+        static::assertContains(Encodings::RLE, $encodings);
     }
 
-    public function test_encodings_with_data_page_header_v2() : void
+    public function test_encodings_with_data_page_header_v2(): void
     {
         $containers = new PageContainers();
         $pageContainer = $this->createDataPageV2Container();
@@ -288,10 +292,10 @@ final class PageContainersTest extends TestCase
 
         $encodings = $containers->encodings();
 
-        self::assertContains(Encodings::PLAIN, $encodings);
+        static::assertContains(Encodings::PLAIN, $encodings);
     }
 
-    public function test_encodings_with_dictionary_page() : void
+    public function test_encodings_with_dictionary_page(): void
     {
         $containers = new PageContainers();
         $pageContainer = $this->createDictionaryPageContainer();
@@ -300,19 +304,19 @@ final class PageContainersTest extends TestCase
 
         $encodings = $containers->encodings();
 
-        self::assertContains(Encodings::RLE_DICTIONARY, $encodings);
+        static::assertContains(Encodings::RLE_DICTIONARY, $encodings);
     }
 
-    public function test_encodings_with_empty_containers() : void
+    public function test_encodings_with_empty_containers(): void
     {
         $containers = new PageContainers();
 
         $encodings = $containers->encodings();
 
-        self::assertEmpty($encodings);
+        static::assertEmpty($encodings);
     }
 
-    public function test_encodings_with_mixed_page_types() : void
+    public function test_encodings_with_mixed_page_types(): void
     {
         $containers = new PageContainers();
         $dataContainer = $this->createDataPageContainer();
@@ -325,12 +329,12 @@ final class PageContainersTest extends TestCase
 
         $encodings = $containers->encodings();
 
-        self::assertContains(Encodings::PLAIN, $encodings);
-        self::assertContains(Encodings::RLE, $encodings);
-        self::assertContains(Encodings::RLE_DICTIONARY, $encodings);
+        static::assertContains(Encodings::PLAIN, $encodings);
+        static::assertContains(Encodings::RLE, $encodings);
+        static::assertContains(Encodings::RLE_DICTIONARY, $encodings);
     }
 
-    public function test_encodings_with_multiple_data_pages() : void
+    public function test_encodings_with_multiple_data_pages(): void
     {
         $containers = new PageContainers();
         $pageContainer1 = $this->createDataPageContainer(encoding: Encodings::PLAIN);
@@ -341,12 +345,12 @@ final class PageContainersTest extends TestCase
 
         $encodings = $containers->encodings();
 
-        self::assertContains(Encodings::PLAIN, $encodings);
-        self::assertContains(Encodings::BIT_PACKED, $encodings);
-        self::assertContains(Encodings::RLE, $encodings);
+        static::assertContains(Encodings::PLAIN, $encodings);
+        static::assertContains(Encodings::BIT_PACKED, $encodings);
+        static::assertContains(Encodings::RLE, $encodings);
     }
 
-    public function test_encodings_with_unique_values_only() : void
+    public function test_encodings_with_unique_values_only(): void
     {
         $containers = new PageContainers();
         $pageContainer1 = $this->createDataPageContainer(encoding: Encodings::PLAIN);
@@ -357,11 +361,12 @@ final class PageContainersTest extends TestCase
 
         $encodings = $containers->encodings();
 
-        $plainCount = array_count_values(array_map(static fn ($e) => $e->value, $encodings))[Encodings::PLAIN->value] ?? 0;
-        self::assertSame(1, $plainCount);
+        $plainCount =
+            array_count_values(array_map(static fn($e) => $e->value, $encodings))[Encodings::PLAIN->value] ?? 0;
+        static::assertSame(1, $plainCount);
     }
 
-    public function test_uncompressed_size_with_data_pages_only() : void
+    public function test_uncompressed_size_with_data_pages_only(): void
     {
         $containers = new PageContainers();
         $pageContainer1 = $this->createDataPageContainer(valuesCount: 10, pageBuffer: 'data1');
@@ -373,10 +378,10 @@ final class PageContainersTest extends TestCase
         $uncompressedSize = $containers->uncompressedSize();
 
         $expectedSize = $pageContainer1->totalUncompressedSize() + $pageContainer2->totalUncompressedSize();
-        self::assertSame($expectedSize, $uncompressedSize);
+        static::assertSame($expectedSize, $uncompressedSize);
     }
 
-    public function test_uncompressed_size_with_dictionary_and_data_pages() : void
+    public function test_uncompressed_size_with_dictionary_and_data_pages(): void
     {
         $containers = new PageContainers();
         $dataContainer = $this->createDataPageContainer();
@@ -388,19 +393,19 @@ final class PageContainersTest extends TestCase
         $uncompressedSize = $containers->uncompressedSize();
 
         $expectedSize = $dataContainer->totalUncompressedSize() + $dictionaryContainer->totalUncompressedSize();
-        self::assertSame($expectedSize, $uncompressedSize);
+        static::assertSame($expectedSize, $uncompressedSize);
     }
 
-    public function test_uncompressed_size_with_empty_containers() : void
+    public function test_uncompressed_size_with_empty_containers(): void
     {
         $containers = new PageContainers();
 
         $uncompressedSize = $containers->uncompressedSize();
 
-        self::assertSame(0, $uncompressedSize);
+        static::assertSame(0, $uncompressedSize);
     }
 
-    public function test_values_count_with_data_pages_only() : void
+    public function test_values_count_with_data_pages_only(): void
     {
         $containers = new PageContainers();
         $pageContainer1 = $this->createDataPageContainer(valuesCount: 10);
@@ -413,10 +418,10 @@ final class PageContainersTest extends TestCase
 
         $valuesCount = $containers->valuesCount();
 
-        self::assertSame(60, $valuesCount);
+        static::assertSame(60, $valuesCount);
     }
 
-    public function test_values_count_with_dictionary_and_data_pages() : void
+    public function test_values_count_with_dictionary_and_data_pages(): void
     {
         $containers = new PageContainers();
         $dataContainer = $this->createDataPageContainer(valuesCount: 15);
@@ -427,19 +432,19 @@ final class PageContainersTest extends TestCase
 
         $valuesCount = $containers->valuesCount();
 
-        self::assertSame(15, $valuesCount);
+        static::assertSame(15, $valuesCount);
     }
 
-    public function test_values_count_with_empty_containers() : void
+    public function test_values_count_with_empty_containers(): void
     {
         $containers = new PageContainers();
 
         $valuesCount = $containers->valuesCount();
 
-        self::assertSame(0, $valuesCount);
+        static::assertSame(0, $valuesCount);
     }
 
-    public function test_values_count_with_zero_value_pages() : void
+    public function test_values_count_with_zero_value_pages(): void
     {
         $containers = new PageContainers();
         $pageContainer1 = $this->createDataPageContainer(valuesCount: 0);
@@ -450,10 +455,10 @@ final class PageContainersTest extends TestCase
 
         $valuesCount = $containers->valuesCount();
 
-        self::assertSame(0, $valuesCount);
+        static::assertSame(0, $valuesCount);
     }
 
-    public function test_workflow_add_dictionary_then_data_pages() : void
+    public function test_workflow_add_dictionary_then_data_pages(): void
     {
         $containers = new PageContainers();
         $dictionaryContainer = $this->createDictionaryPageContainer(valuesCount: 3);
@@ -464,15 +469,15 @@ final class PageContainersTest extends TestCase
         $containers->add($dataContainer1);
         $containers->add($dataContainer2);
 
-        self::assertSame($dictionaryContainer, $containers->dictionaryPageContainer());
-        self::assertCount(2, $containers->dataPageContainers());
-        self::assertSame(30, $containers->valuesCount());
-        self::assertNotEmpty($containers->buffer());
-        self::assertGreaterThan(0, $containers->compressedSize());
-        self::assertGreaterThan(0, $containers->uncompressedSize());
+        static::assertSame($dictionaryContainer, $containers->dictionaryPageContainer());
+        static::assertCount(2, $containers->dataPageContainers());
+        static::assertSame(30, $containers->valuesCount());
+        static::assertNotEmpty($containers->buffer());
+        static::assertGreaterThan(0, $containers->compressedSize());
+        static::assertGreaterThan(0, $containers->uncompressedSize());
     }
 
-    public function test_workflow_data_pages_only() : void
+    public function test_workflow_data_pages_only(): void
     {
         $containers = new PageContainers();
         $dataContainer1 = $this->createDataPageContainer(valuesCount: 5);
@@ -483,25 +488,25 @@ final class PageContainersTest extends TestCase
         $containers->add($dataContainer2);
         $containers->add($dataContainer3);
 
-        self::assertNull($containers->dictionaryPageContainer());
-        self::assertCount(3, $containers->dataPageContainers());
-        self::assertSame(30, $containers->valuesCount());
-        self::assertNotEmpty($containers->buffer());
-        self::assertGreaterThan(0, $containers->compressedSize());
-        self::assertGreaterThan(0, $containers->uncompressedSize());
-        self::assertNotEmpty($containers->encodings());
+        static::assertNull($containers->dictionaryPageContainer());
+        static::assertCount(3, $containers->dataPageContainers());
+        static::assertSame(30, $containers->valuesCount());
+        static::assertNotEmpty($containers->buffer());
+        static::assertGreaterThan(0, $containers->compressedSize());
+        static::assertGreaterThan(0, $containers->uncompressedSize());
+        static::assertNotEmpty($containers->encodings());
     }
 
     private function createDataPageContainer(
         int $valuesCount = 10,
         string $pageBuffer = 'pagedata',
         Encodings $encoding = Encodings::PLAIN,
-    ) : PageContainer {
+    ): PageContainer {
         $dataPageHeader = new DataPageHeader(
             encoding: $encoding,
             repetitionLevelEncoding: Encodings::RLE,
             definitionLevelEncoding: Encodings::RLE,
-            valuesCount: $valuesCount
+            valuesCount: $valuesCount,
         );
 
         $pageHeader = new PageHeader(
@@ -510,20 +515,17 @@ final class PageContainersTest extends TestCase
             strlen($pageBuffer),
             dataPageHeader: $dataPageHeader,
             dataPageHeaderV2: null,
-            dictionaryPageHeader: null
+            dictionaryPageHeader: null,
         );
 
-        return new PageContainer(
-            $pageBuffer,
-            $pageHeader
-        );
+        return new PageContainer($pageBuffer, $pageHeader);
     }
 
     private function createDataPageV2Container(
         int $valuesCount = 10,
         string $pageBuffer = 'pagedata',
         Encodings $encoding = Encodings::PLAIN,
-    ) : PageContainer {
+    ): PageContainer {
         $dataPageHeaderV2 = new DataPageHeaderV2(
             valuesCount: $valuesCount,
             nullsCount: 0,
@@ -532,7 +534,7 @@ final class PageContainersTest extends TestCase
             definitionsByteLength: 0,
             repetitionsByteLength: 0,
             isCompressed: false,
-            statistics: null
+            statistics: null,
         );
 
         $pageHeader = new PageHeader(
@@ -541,24 +543,18 @@ final class PageContainersTest extends TestCase
             strlen($pageBuffer),
             dataPageHeader: null,
             dataPageHeaderV2: $dataPageHeaderV2,
-            dictionaryPageHeader: null
+            dictionaryPageHeader: null,
         );
 
-        return new PageContainer(
-            $pageBuffer,
-            $pageHeader
-        );
+        return new PageContainer($pageBuffer, $pageHeader);
     }
 
     private function createDictionaryPageContainer(
         int $valuesCount = 5,
         string $pageBuffer = 'dictdata',
         Encodings $encoding = Encodings::RLE_DICTIONARY,
-    ) : PageContainer {
-        $dictionaryPageHeader = new DictionaryPageHeader(
-            encoding: $encoding,
-            valuesCount: $valuesCount
-        );
+    ): PageContainer {
+        $dictionaryPageHeader = new DictionaryPageHeader(encoding: $encoding, valuesCount: $valuesCount);
 
         $pageHeader = new PageHeader(
             Type::DICTIONARY_PAGE,
@@ -566,12 +562,9 @@ final class PageContainersTest extends TestCase
             strlen($pageBuffer),
             dataPageHeader: null,
             dataPageHeaderV2: null,
-            dictionaryPageHeader: $dictionaryPageHeader
+            dictionaryPageHeader: $dictionaryPageHeader,
         );
 
-        return new PageContainer(
-            $pageBuffer,
-            $pageHeader
-        );
+        return new PageContainer($pageBuffer, $pageHeader);
     }
 }

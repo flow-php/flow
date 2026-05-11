@@ -4,9 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql;
 
-use Flow\ETL\Adapter\PostgreSql\LoaderOptions\{DeleteOptions, InsertOptions, UpdateOptions};
-use Flow\ETL\Adapter\PostgreSql\Pagination\{Key, KeySet, Order};
-use Flow\ETL\{Attribute\DocumentationDSL, Attribute\Module, Attribute\Type as DSLType};
+use Flow\ETL\Adapter\PostgreSql\LoaderOptions\DeleteOptions;
+use Flow\ETL\Adapter\PostgreSql\LoaderOptions\InsertOptions;
+use Flow\ETL\Adapter\PostgreSql\LoaderOptions\UpdateOptions;
+use Flow\ETL\Adapter\PostgreSql\Pagination\Key;
+use Flow\ETL\Adapter\PostgreSql\Pagination\KeySet;
+use Flow\ETL\Adapter\PostgreSql\Pagination\Order;
+use Flow\ETL\Attribute\DocumentationDSL;
+use Flow\ETL\Attribute\Module;
+use Flow\ETL\Attribute\Type as DSLType;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\Sql;
 
@@ -23,11 +29,8 @@ use Flow\PostgreSql\QueryBuilder\Sql;
  * @param list<mixed> $parameters Values bound by position to $1, $2, ... placeholders; wrap with {@see \Flow\PostgreSql\DSL\typed()} to force a specific PostgreSQL type
  */
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::EXTRACTOR)]
-function from_pgsql_cursor(
-    Client $client,
-    string|Sql $query,
-    array $parameters = [],
-) : PostgreSqlCursorExtractor {
+function from_pgsql_cursor(Client $client, string|Sql $query, array $parameters = []): PostgreSqlCursorExtractor
+{
     return new PostgreSqlCursorExtractor($client, $query, $parameters);
 }
 
@@ -46,7 +49,7 @@ function from_pgsql_limit_offset(
     Client $client,
     string|Sql $query,
     array $parameters = [],
-) : PostgreSqlLimitOffsetExtractor {
+): PostgreSqlLimitOffsetExtractor {
     return new PostgreSqlLimitOffsetExtractor($client, $query, $parameters);
 }
 
@@ -67,33 +70,31 @@ function from_pgsql_key_set(
     string|Sql $query,
     KeySet $keySet,
     array $parameters = [],
-) : PostgreSqlKeySetExtractor {
+): PostgreSqlKeySetExtractor {
     return new PostgreSqlKeySetExtractor($client, $query, $keySet, $parameters);
 }
 
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::HELPER)]
-function pgsql_pagination_key_asc(string $column) : Key
+function pgsql_pagination_key_asc(string $column): Key
 {
     return new Key($column, Order::ASC);
 }
 
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::HELPER)]
-function pgsql_pagination_key_desc(string $column) : Key
+function pgsql_pagination_key_desc(string $column): Key
 {
     return new Key($column, Order::DESC);
 }
 
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::HELPER)]
-function pgsql_pagination_key_set(Key ...$keys) : KeySet
+function pgsql_pagination_key_set(Key ...$keys): KeySet
 {
     return new KeySet(...$keys);
 }
 
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::LOADER)]
-function to_pgsql_table(
-    Client $client,
-    string $table,
-) : PostgreSqlLoader {
+function to_pgsql_table(Client $client, string $table): PostgreSqlLoader
+{
     return new PostgreSqlLoader($client, $table);
 }
 
@@ -111,7 +112,7 @@ function pgsql_insert_options(
     array $conflictColumns = [],
     ?string $conflictConstraint = null,
     array $updateColumns = [],
-) : InsertOptions {
+): InsertOptions {
     return new InsertOptions($skipConflicts, $conflictColumns, $conflictConstraint, $updateColumns);
 }
 
@@ -121,7 +122,7 @@ function pgsql_insert_options(
  * @param list<string> $primaryKeys Columns to use in WHERE clause for matching rows
  */
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::HELPER)]
-function pgsql_update_options(array $primaryKeys) : UpdateOptions
+function pgsql_update_options(array $primaryKeys): UpdateOptions
 {
     return new UpdateOptions($primaryKeys);
 }
@@ -132,7 +133,7 @@ function pgsql_update_options(array $primaryKeys) : UpdateOptions
  * @param list<string> $primaryKeys Columns to use in WHERE clause for matching rows
  */
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::HELPER)]
-function pgsql_delete_options(array $primaryKeys) : DeleteOptions
+function pgsql_delete_options(array $primaryKeys): DeleteOptions
 {
     return new DeleteOptions($primaryKeys);
 }

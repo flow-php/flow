@@ -4,11 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Function;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Const, CreateFunctionStmt, DefElem, FunctionParameter, Node, PBList, PBString};
+use Flow\PostgreSql\Protobuf\AST\A_Const;
+use Flow\PostgreSql\Protobuf\AST\CreateFunctionStmt;
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\FunctionParameter;
 use Flow\PostgreSql\Protobuf\AST\Integer;
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBList;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
-final readonly class CreateProcedureBuilder implements CreateProcedureArgsStep, CreateProcedureFinalStep, CreateProcedureOptionsStep
+final readonly class CreateProcedureBuilder implements
+    CreateProcedureArgsStep,
+    CreateProcedureFinalStep,
+    CreateProcedureOptionsStep
 {
     use AstToSql;
 
@@ -22,49 +32,36 @@ final readonly class CreateProcedureBuilder implements CreateProcedureArgsStep, 
         private bool $replace = false,
         private array $arguments = [],
         private array $options = [],
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name) : CreateProcedureArgsStep
+    public static function create(string $name): CreateProcedureArgsStep
     {
         $identifier = QualifiedIdentifier::parse($name);
 
         return new self($identifier->name(), $identifier->schema());
     }
 
-    public function arguments(FunctionArgument ...$args) : CreateProcedureOptionsStep
+    public function arguments(FunctionArgument ...$args): CreateProcedureOptionsStep
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            $this->replace,
-            \array_values($args),
-            $this->options,
-        );
+        return new self($this->name, $this->schema, $this->replace, \array_values($args), $this->options);
     }
 
-    public function as(string $definition) : CreateProcedureFinalStep
+    public function as(string $definition): CreateProcedureFinalStep
     {
         return $this->withListOption('as', $definition);
     }
 
-    public function language(string $language) : CreateProcedureOptionsStep
+    public function language(string $language): CreateProcedureOptionsStep
     {
         return $this->withStringOption('language', $language);
     }
 
-    public function orReplace() : CreateProcedureArgsStep
+    public function orReplace(): CreateProcedureArgsStep
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            true,
-            $this->arguments,
-            $this->options,
-        );
+        return new self($this->name, $this->schema, true, $this->arguments, $this->options);
     }
 
-    public function securityDefiner() : CreateProcedureOptionsStep
+    public function securityDefiner(): CreateProcedureOptionsStep
     {
         $integer = new Integer();
         $integer->setIval(1);
@@ -76,7 +73,7 @@ final readonly class CreateProcedureBuilder implements CreateProcedureArgsStep, 
         return $this->withOption('security_definer', $argNode);
     }
 
-    public function securityInvoker() : CreateProcedureOptionsStep
+    public function securityInvoker(): CreateProcedureOptionsStep
     {
         $integer = new Integer();
         $integer->setIval(0);
@@ -88,7 +85,7 @@ final readonly class CreateProcedureBuilder implements CreateProcedureArgsStep, 
         return $this->withOption('security_definer', $argNode);
     }
 
-    public function set(string $parameter, string $value) : CreateProcedureOptionsStep
+    public function set(string $parameter, string $value): CreateProcedureOptionsStep
     {
         $defElem = new DefElem();
         $defElem->setDefname($parameter);
@@ -110,16 +107,10 @@ final readonly class CreateProcedureBuilder implements CreateProcedureArgsStep, 
         $newOptions = $this->options;
         $newOptions[] = ['name' => 'set', 'arg' => $setNode];
 
-        return new self(
-            $this->name,
-            $this->schema,
-            $this->replace,
-            $this->arguments,
-            $newOptions,
-        );
+        return new self($this->name, $this->schema, $this->replace, $this->arguments, $newOptions);
     }
 
-    public function toAst() : CreateFunctionStmt
+    public function toAst(): CreateFunctionStmt
     {
         $stmt = new CreateFunctionStmt();
         $stmt->setIsProcedure(true);
@@ -193,7 +184,7 @@ final readonly class CreateProcedureBuilder implements CreateProcedureArgsStep, 
         return $stmt;
     }
 
-    private function createDefaultExpr(string $default) : Node
+    private function createDefaultExpr(string $default): Node
     {
         $str = new PBString();
         $str->setSval($default);
@@ -207,7 +198,7 @@ final readonly class CreateProcedureBuilder implements CreateProcedureArgsStep, 
         return $node;
     }
 
-    private function withListOption(string $name, string $value) : self
+    private function withListOption(string $name, string $value): self
     {
         $str = new PBString();
         $str->setSval($value);
@@ -224,21 +215,15 @@ final readonly class CreateProcedureBuilder implements CreateProcedureArgsStep, 
         return $this->withOption($name, $argNode);
     }
 
-    private function withOption(string $name, ?Node $arg) : self
+    private function withOption(string $name, ?Node $arg): self
     {
         $newOptions = $this->options;
         $newOptions[] = ['name' => $name, 'arg' => $arg];
 
-        return new self(
-            $this->name,
-            $this->schema,
-            $this->replace,
-            $this->arguments,
-            $newOptions,
-        );
+        return new self($this->name, $this->schema, $this->replace, $this->arguments, $newOptions);
     }
 
-    private function withStringOption(string $name, string $value) : self
+    private function withStringOption(string $name, string $value): self
     {
         $str = new PBString();
         $str->setSval($value);

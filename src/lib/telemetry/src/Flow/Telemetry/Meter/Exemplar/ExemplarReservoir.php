@@ -31,7 +31,7 @@ interface ExemplarReservoir
      *
      * @return array<Exemplar>
      */
-    public function collect(bool $reset = true) : array;
+    public function collect(bool $reset = true): array;
 
     /**
      * Offer a measurement for potential storage as an exemplar.
@@ -51,10 +51,10 @@ interface ExemplarReservoir
         SpanContext $context,
         \DateTimeImmutable $timestamp,
         int $bucketIndex = 0,
-    ) : void;
+    ): void;
 
     /**
      * Clear all stored exemplars.
      */
-    public function reset() : void;
+    public function reset(): void;
 }

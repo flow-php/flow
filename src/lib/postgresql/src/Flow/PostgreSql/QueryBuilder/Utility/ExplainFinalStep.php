@@ -9,27 +9,27 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface ExplainFinalStep extends Sql
 {
-    public function analyze() : self;
+    public function analyze(): self;
 
-    public function buffers(bool $enabled = true) : self;
+    public function buffers(bool $enabled = true): self;
 
-    public function costs(bool $enabled = true) : self;
+    public function costs(bool $enabled = true): self;
 
-    public function format(ExplainFormat $format) : self;
+    public function format(ExplainFormat $format): self;
 
-    public function memory(bool $enabled = true) : self;
+    public function memory(bool $enabled = true): self;
 
-    public function settings(bool $enabled = true) : self;
+    public function settings(bool $enabled = true): self;
 
-    public function summary(bool $enabled = true) : self;
+    public function summary(bool $enabled = true): self;
 
-    public function timing(bool $enabled = true) : self;
+    public function timing(bool $enabled = true): self;
 
-    public function toAst() : ExplainStmt;
+    public function toAst(): ExplainStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 
-    public function verbose() : self;
+    public function verbose(): self;
 
-    public function wal(bool $enabled = true) : self;
+    public function wal(bool $enabled = true): self;
 }

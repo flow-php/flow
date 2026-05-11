@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{Node, ParamRef};
-use Flow\PostgreSql\QueryBuilder\Exception\{InvalidAstException, InvalidExpressionException};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ParamRef;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 
 /**
  * Represents a positional parameter in SQL (e.g., $1, $2, $3).
@@ -20,7 +22,7 @@ final readonly class Parameter implements Expression
         }
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $paramRef = $node->getParamRef();
 
@@ -40,22 +42,22 @@ final readonly class Parameter implements Expression
     /**
      * Create a parameter reference with the given position number.
      */
-    public static function positional(int $number) : self
+    public static function positional(int $number): self
     {
         return new self($number);
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return AliasedExpression::create($this, $alias);
     }
 
-    public function number() : int
+    public function number(): int
     {
         return $this->number;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $paramRef = new ParamRef();
         $paramRef->setNumber($this->number);

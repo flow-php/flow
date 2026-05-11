@@ -4,15 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Telemetry\Tests\Integration;
 
-use function Flow\Bridge\Monolog\Telemetry\DSL\{log_record_converter, severity_mapper, telemetry_handler};
-use Flow\Bridge\Monolog\Telemetry\{LogRecordConverter, SeverityMapper, TelemetryHandler, ValueNormalizer};
+use Flow\Bridge\Monolog\Telemetry\LogRecordConverter;
+use Flow\Bridge\Monolog\Telemetry\SeverityMapper;
+use Flow\Bridge\Monolog\Telemetry\TelemetryHandler;
+use Flow\Bridge\Monolog\Telemetry\ValueNormalizer;
 use Flow\Telemetry\Logger\Severity;
 use Flow\Telemetry\Resource;
 use Monolog\Handler\AbstractProcessingHandler;
-use Monolog\{Level, Logger as MonologLogger};
+use Monolog\Level;
+use Monolog\Logger as MonologLogger;
 use Monolog\LogRecord;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\Bridge\Monolog\Telemetry\DSL\log_record_converter;
+use function Flow\Bridge\Monolog\Telemetry\DSL\severity_mapper;
+use function Flow\Bridge\Monolog\Telemetry\DSL\telemetry_handler;
 
 #[CoversClass(TelemetryHandler::class)]
 #[CoversClass(LogRecordConverter::class)]
@@ -20,7 +27,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(SeverityMapper::class)]
 final class TelemetryHandlerIntegrationTest extends TestCase
 {
-    public function test_basic_logging_flow_through_all_components() : void
+    public function test_basic_logging_flow_through_all_components(): void
     {
         $context = TelemetryTestContext::create();
 
@@ -33,22 +40,22 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         $monolog->error('Error message');
 
         $entries = $context->processor->entries();
-        self::assertCount(4, $entries);
+        static::assertCount(4, $entries);
 
-        self::assertSame(Severity::DEBUG, $entries[0]->record->severity);
-        self::assertSame('Debug message', $entries[0]->record->body);
+        static::assertSame(Severity::DEBUG, $entries[0]->record->severity);
+        static::assertSame('Debug message', $entries[0]->record->body);
 
-        self::assertSame(Severity::INFO, $entries[1]->record->severity);
-        self::assertSame('Info message', $entries[1]->record->body);
+        static::assertSame(Severity::INFO, $entries[1]->record->severity);
+        static::assertSame('Info message', $entries[1]->record->body);
 
-        self::assertSame(Severity::WARN, $entries[2]->record->severity);
-        self::assertSame('Warning message', $entries[2]->record->body);
+        static::assertSame(Severity::WARN, $entries[2]->record->severity);
+        static::assertSame('Warning message', $entries[2]->record->body);
 
-        self::assertSame(Severity::ERROR, $entries[3]->record->severity);
-        self::assertSame('Error message', $entries[3]->record->body);
+        static::assertSame(Severity::ERROR, $entries[3]->record->severity);
+        static::assertSame('Error message', $entries[3]->record->body);
     }
 
-    public function test_context_and_extra_data_flow_through_pipeline() : void
+    public function test_context_and_extra_data_flow_through_pipeline(): void
     {
         $context = TelemetryTestContext::create();
 
@@ -68,17 +75,17 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         ]);
 
         $entries = $context->processor->entries();
-        self::assertCount(1, $entries);
+        static::assertCount(1, $entries);
 
         $attributes = $entries[0]->record->attributes;
-        self::assertSame(42, $attributes->get('context.user_id'));
-        self::assertSame('login', $attributes->get('context.action'));
-        self::assertSame('192.168.1.1', $attributes->get('context.ip_address'));
-        self::assertSame('req-abc-123', $attributes->get('extra.request_id'));
-        self::assertSame('web-01', $attributes->get('extra.server'));
+        static::assertSame(42, $attributes->get('context.user_id'));
+        static::assertSame('login', $attributes->get('context.action'));
+        static::assertSame('192.168.1.1', $attributes->get('context.ip_address'));
+        static::assertSame('req-abc-123', $attributes->get('extra.request_id'));
+        static::assertSame('web-01', $attributes->get('extra.server'));
     }
 
-    public function test_custom_converter_integration() : void
+    public function test_custom_converter_integration(): void
     {
         $context = TelemetryTestContext::create();
 
@@ -103,14 +110,14 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         $monolog->error('Error mapped to WARN');
 
         $entries = $context->processor->entries();
-        self::assertCount(3, $entries);
+        static::assertCount(3, $entries);
 
-        self::assertSame(Severity::TRACE, $entries[0]->record->severity);
-        self::assertSame(Severity::DEBUG, $entries[1]->record->severity);
-        self::assertSame(Severity::WARN, $entries[2]->record->severity);
+        static::assertSame(Severity::TRACE, $entries[0]->record->severity);
+        static::assertSame(Severity::DEBUG, $entries[1]->record->severity);
+        static::assertSame(Severity::WARN, $entries[2]->record->severity);
     }
 
-    public function test_datetime_values_preserved_in_context() : void
+    public function test_datetime_values_preserved_in_context(): void
     {
         $context = TelemetryTestContext::create();
 
@@ -124,14 +131,14 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         ]);
 
         $entries = $context->processor->entries();
-        self::assertCount(1, $entries);
+        static::assertCount(1, $entries);
 
         $contextEventTime = $entries[0]->record->attributes->get('context.event_time');
-        self::assertInstanceOf(\DateTimeInterface::class, $contextEventTime);
-        self::assertSame('2024-06-15 14:30:00', $contextEventTime->format('Y-m-d H:i:s'));
+        static::assertInstanceOf(\DateTimeInterface::class, $contextEventTime);
+        static::assertSame('2024-06-15 14:30:00', $contextEventTime->format('Y-m-d H:i:s'));
     }
 
-    public function test_empty_context_and_extra_handling() : void
+    public function test_empty_context_and_extra_handling(): void
     {
         $context = TelemetryTestContext::create();
 
@@ -141,14 +148,14 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         $monolog->info('Simple message without context');
 
         $entries = $context->processor->entries();
-        self::assertCount(1, $entries);
+        static::assertCount(1, $entries);
 
-        self::assertSame('Simple message without context', $entries[0]->record->body);
-        self::assertSame('application', $entries[0]->record->attributes->get('monolog.channel'));
-        self::assertSame('Info', $entries[0]->record->attributes->get('monolog.level_name'));
+        static::assertSame('Simple message without context', $entries[0]->record->body);
+        static::assertSame('application', $entries[0]->record->attributes->get('monolog.channel'));
+        static::assertSame('Info', $entries[0]->record->attributes->get('monolog.level_name'));
     }
 
-    public function test_exception_handling_flow() : void
+    public function test_exception_handling_flow(): void
     {
         $context = TelemetryTestContext::create();
 
@@ -163,16 +170,16 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         ]);
 
         $entries = $context->processor->entries();
-        self::assertCount(1, $entries);
+        static::assertCount(1, $entries);
 
         $attributes = $entries[0]->record->attributes;
-        self::assertSame(\RuntimeException::class, $attributes->get('exception.type'));
-        self::assertSame('Database connection failed', $attributes->get('exception.message'));
-        self::assertNotNull($attributes->get('exception.stacktrace'));
-        self::assertSame('db_query', $attributes->get('context.operation'));
+        static::assertSame(\RuntimeException::class, $attributes->get('exception.type'));
+        static::assertSame('Database connection failed', $attributes->get('exception.message'));
+        static::assertNotNull($attributes->get('exception.stacktrace'));
+        static::assertSame('db_query', $attributes->get('context.operation'));
     }
 
-    public function test_handler_bubble_behavior() : void
+    public function test_handler_bubble_behavior(): void
     {
         $context = TelemetryTestContext::create();
 
@@ -184,7 +191,7 @@ final class TelemetryHandlerIntegrationTest extends TestCase
                 parent::__construct();
             }
 
-            protected function write(LogRecord $record) : void
+            protected function write(LogRecord $record): void
             {
                 $this->callCount++;
             }
@@ -196,8 +203,8 @@ final class TelemetryHandlerIntegrationTest extends TestCase
 
         $monolog->info('Message that should bubble');
 
-        self::assertCount(1, $context->processor->entries());
-        self::assertSame(1, $callCount);
+        static::assertCount(1, $context->processor->entries());
+        static::assertSame(1, $callCount);
 
         $context->processor->reset();
         $callCount = 0;
@@ -208,14 +215,14 @@ final class TelemetryHandlerIntegrationTest extends TestCase
 
         $monolog2->info('Message that should not bubble');
 
-        self::assertCount(1, $context->processor->entries());
-        self::assertSame(0, $callCount);
+        static::assertCount(1, $context->processor->entries());
+        static::assertSame(0, $callCount);
     }
 
-    public function test_logs_after_span_completion_have_no_trace_context() : void
+    public function test_logs_after_span_completion_have_no_trace_context(): void
     {
         $context = TelemetryTestContext::createWithTracing();
-        self::assertNotNull($context->tracer);
+        static::assertNotNull($context->tracer);
 
         $monolog = new MonologLogger('application');
         $monolog->pushHandler(telemetry_handler($context->logger));
@@ -227,16 +234,16 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         $monolog->info('After span completed');
 
         $entries = $context->processor->entries();
-        self::assertCount(2, $entries);
+        static::assertCount(2, $entries);
 
-        self::assertNotNull($entries[0]->spanContext, 'Log inside span should have context');
-        self::assertNull($entries[1]->spanContext, 'Log after span should not have context');
+        static::assertNotNull($entries[0]->spanContext, 'Log inside span should have context');
+        static::assertNull($entries[1]->spanContext, 'Log after span should not have context');
     }
 
-    public function test_logs_within_active_span_include_trace_and_span_ids() : void
+    public function test_logs_within_active_span_include_trace_and_span_ids(): void
     {
         $context = TelemetryTestContext::createWithTracing();
-        self::assertNotNull($context->tracer);
+        static::assertNotNull($context->tracer);
 
         $monolog = new MonologLogger('application');
         $monolog->pushHandler(telemetry_handler($context->logger));
@@ -249,26 +256,26 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         $context->tracer->complete($span);
 
         $entries = $context->processor->entries();
-        self::assertCount(2, $entries);
+        static::assertCount(2, $entries);
 
-        self::assertNotNull($entries[0]->spanContext);
-        self::assertNotNull($entries[0]->spanContext->traceId);
-        self::assertNotNull($entries[0]->spanContext->spanId);
+        static::assertNotNull($entries[0]->spanContext);
+        static::assertNotNull($entries[0]->spanContext->traceId);
+        static::assertNotNull($entries[0]->spanContext->spanId);
 
-        self::assertNotNull($entries[1]->spanContext);
-        self::assertSame(
+        static::assertNotNull($entries[1]->spanContext);
+        static::assertSame(
             $entries[0]->spanContext->traceId->toHex(),
             $entries[1]->spanContext->traceId->toHex(),
-            'Both logs should share the same trace_id'
+            'Both logs should share the same trace_id',
         );
-        self::assertSame(
+        static::assertSame(
             $entries[0]->spanContext->spanId->toHex(),
             $entries[1]->spanContext->spanId->toHex(),
-            'Both logs should share the same span_id'
+            'Both logs should share the same span_id',
         );
     }
 
-    public function test_logs_without_active_span_have_no_trace_context() : void
+    public function test_logs_without_active_span_have_no_trace_context(): void
     {
         $context = TelemetryTestContext::createWithTracing();
 
@@ -278,12 +285,12 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         $monolog->info('Log without span context');
 
         $entries = $context->processor->entries();
-        self::assertCount(1, $entries);
+        static::assertCount(1, $entries);
 
-        self::assertNull($entries[0]->spanContext);
+        static::assertNull($entries[0]->spanContext);
     }
 
-    public function test_minimum_level_filtering() : void
+    public function test_minimum_level_filtering(): void
     {
         $context = TelemetryTestContext::create();
 
@@ -297,24 +304,23 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         $monolog->critical('This should pass as well');
 
         $entries = $context->processor->entries();
-        self::assertCount(3, $entries);
+        static::assertCount(3, $entries);
 
-        self::assertSame('This should pass', $entries[0]->record->body);
-        self::assertSame(Severity::WARN, $entries[0]->record->severity);
+        static::assertSame('This should pass', $entries[0]->record->body);
+        static::assertSame(Severity::WARN, $entries[0]->record->severity);
 
-        self::assertSame('This should also pass', $entries[1]->record->body);
-        self::assertSame(Severity::ERROR, $entries[1]->record->severity);
+        static::assertSame('This should also pass', $entries[1]->record->body);
+        static::assertSame(Severity::ERROR, $entries[1]->record->severity);
 
-        self::assertSame('This should pass as well', $entries[2]->record->body);
-        self::assertSame(Severity::FATAL, $entries[2]->record->severity);
+        static::assertSame('This should pass as well', $entries[2]->record->body);
+        static::assertSame(Severity::FATAL, $entries[2]->record->severity);
     }
 
-    public function test_multiple_channels_sharing_same_telemetry_logger() : void
+    public function test_multiple_channels_sharing_same_telemetry_logger(): void
     {
-        $context = TelemetryTestContext::create(
-            resource: Resource::create(['service.name' => 'multi-channel-service']),
-            scope: 'shared-logger',
-        );
+        $context = TelemetryTestContext::create(resource: Resource::create([
+            'service.name' => 'multi-channel-service',
+        ]), scope: 'shared-logger');
 
         $apiLogger = new MonologLogger('api');
         $apiLogger->pushHandler(telemetry_handler($context->logger));
@@ -330,19 +336,19 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         $cacheLogger->debug('Cache miss');
 
         $entries = $context->processor->entries();
-        self::assertCount(3, $entries);
+        static::assertCount(3, $entries);
 
-        self::assertSame('api', $entries[0]->record->attributes->get('monolog.channel'));
-        self::assertSame('API request received', $entries[0]->record->body);
+        static::assertSame('api', $entries[0]->record->attributes->get('monolog.channel'));
+        static::assertSame('API request received', $entries[0]->record->body);
 
-        self::assertSame('database', $entries[1]->record->attributes->get('monolog.channel'));
-        self::assertSame('Slow query detected', $entries[1]->record->body);
+        static::assertSame('database', $entries[1]->record->attributes->get('monolog.channel'));
+        static::assertSame('Slow query detected', $entries[1]->record->body);
 
-        self::assertSame('cache', $entries[2]->record->attributes->get('monolog.channel'));
-        self::assertSame('Cache miss', $entries[2]->record->body);
+        static::assertSame('cache', $entries[2]->record->attributes->get('monolog.channel'));
+        static::assertSame('Cache miss', $entries[2]->record->body);
     }
 
-    public function test_multiple_exceptions_last_one_wins() : void
+    public function test_multiple_exceptions_last_one_wins(): void
     {
         $context = TelemetryTestContext::create();
 
@@ -358,16 +364,16 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         ]);
 
         $entries = $context->processor->entries();
-        self::assertCount(1, $entries);
+        static::assertCount(1, $entries);
 
         $attributes = $entries[0]->record->attributes;
-        self::assertSame(\InvalidArgumentException::class, $attributes->get('exception.type'));
-        self::assertSame('Secondary error', $attributes->get('exception.message'));
-        self::assertNull($attributes->get('context.exception'));
-        self::assertNull($attributes->get('context.secondary_exception'));
+        static::assertSame(\InvalidArgumentException::class, $attributes->get('exception.type'));
+        static::assertSame('Secondary error', $attributes->get('exception.message'));
+        static::assertNull($attributes->get('context.exception'));
+        static::assertNull($attributes->get('context.secondary_exception'));
     }
 
-    public function test_nested_data_structures_in_context() : void
+    public function test_nested_data_structures_in_context(): void
     {
         $context = TelemetryTestContext::create();
 
@@ -395,27 +401,27 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         ]);
 
         $entries = $context->processor->entries();
-        self::assertCount(1, $entries);
+        static::assertCount(1, $entries);
 
         $userAttr = $entries[0]->record->attributes->get('context.user');
-        self::assertIsArray($userAttr);
+        static::assertIsArray($userAttr);
         /** @var array{id: int, name: string, roles: array<string>, metadata: array{created_at: string}} $userAttr */
-        self::assertSame(123, $userAttr['id']);
-        self::assertSame('John Doe', $userAttr['name']);
-        self::assertSame(['admin', 'user'], $userAttr['roles']);
-        self::assertSame('2024-01-15', $userAttr['metadata']['created_at']);
+        static::assertSame(123, $userAttr['id']);
+        static::assertSame('John Doe', $userAttr['name']);
+        static::assertSame(['admin', 'user'], $userAttr['roles']);
+        static::assertSame('2024-01-15', $userAttr['metadata']['created_at']);
 
         $requestAttr = $entries[0]->record->attributes->get('context.request');
-        self::assertIsArray($requestAttr);
+        static::assertIsArray($requestAttr);
         /** @var array{method: string, path: string} $requestAttr */
-        self::assertSame('POST', $requestAttr['method']);
-        self::assertSame('/api/users', $requestAttr['path']);
+        static::assertSame('POST', $requestAttr['method']);
+        static::assertSame('/api/users', $requestAttr['path']);
     }
 
-    public function test_nested_spans_propagate_child_span_id_to_logs() : void
+    public function test_nested_spans_propagate_child_span_id_to_logs(): void
     {
         $context = TelemetryTestContext::createWithTracing();
-        self::assertNotNull($context->tracer);
+        static::assertNotNull($context->tracer);
 
         $monolog = new MonologLogger('application');
         $monolog->pushHandler(telemetry_handler($context->logger));
@@ -432,32 +438,36 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         $context->tracer->complete($parentSpan);
 
         $entries = $context->processor->entries();
-        self::assertCount(3, $entries);
+        static::assertCount(3, $entries);
 
         $parentSpanId = $entries[0]->spanContext?->spanId->toHex();
         $childSpanId = $entries[1]->spanContext?->spanId->toHex();
         $backInParentSpanId = $entries[2]->spanContext?->spanId->toHex();
 
-        self::assertNotNull($parentSpanId);
-        self::assertNotNull($childSpanId);
-        self::assertNotNull($backInParentSpanId);
+        static::assertNotNull($parentSpanId);
+        static::assertNotNull($childSpanId);
+        static::assertNotNull($backInParentSpanId);
 
-        self::assertNotSame($parentSpanId, $childSpanId, 'Child span should have different span_id');
-        self::assertSame($parentSpanId, $backInParentSpanId, 'After child completes, should be back to parent span_id');
+        static::assertNotSame($parentSpanId, $childSpanId, 'Child span should have different span_id');
+        static::assertSame(
+            $parentSpanId,
+            $backInParentSpanId,
+            'After child completes, should be back to parent span_id',
+        );
 
-        self::assertSame(
+        static::assertSame(
             $entries[0]->spanContext->traceId->toHex(),
             $entries[1]->spanContext->traceId->toHex(),
-            'All logs should share the same trace_id'
+            'All logs should share the same trace_id',
         );
-        self::assertSame(
+        static::assertSame(
             $entries[1]->spanContext->traceId->toHex(),
             $entries[2]->spanContext->traceId->toHex(),
-            'All logs should share the same trace_id'
+            'All logs should share the same trace_id',
         );
     }
 
-    public function test_processor_filtering_by_body_content() : void
+    public function test_processor_filtering_by_body_content(): void
     {
         $context = TelemetryTestContext::create();
 
@@ -470,13 +480,13 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         $monolog->info('System initialized');
 
         $userEntries = $context->processor->entriesContaining('User');
-        self::assertCount(3, $userEntries);
+        static::assertCount(3, $userEntries);
 
         $loggedEntries = $context->processor->entriesContaining('logged');
-        self::assertCount(2, $loggedEntries);
+        static::assertCount(2, $loggedEntries);
     }
 
-    public function test_processor_filtering_by_severity() : void
+    public function test_processor_filtering_by_severity(): void
     {
         $context = TelemetryTestContext::create();
 
@@ -491,16 +501,16 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         $monolog->error('Error 2');
 
         $debugEntries = $context->processor->entriesWithSeverity(Severity::DEBUG);
-        self::assertCount(2, $debugEntries);
+        static::assertCount(2, $debugEntries);
 
         $errorEntries = $context->processor->entriesWithSeverity(Severity::ERROR);
-        self::assertCount(2, $errorEntries);
+        static::assertCount(2, $errorEntries);
 
         $warnEntries = $context->processor->entriesWithSeverity(Severity::WARN);
-        self::assertCount(1, $warnEntries);
+        static::assertCount(1, $warnEntries);
     }
 
-    public function test_processor_flush_exports_all_entries() : void
+    public function test_processor_flush_exports_all_entries(): void
     {
         $context = TelemetryTestContext::create();
 
@@ -511,14 +521,14 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         $monolog->info('Message 2');
         $monolog->info('Message 3');
 
-        self::assertCount(3, $context->processor->entries());
+        static::assertCount(3, $context->processor->entries());
 
         $result = $context->processor->flush();
 
-        self::assertTrue($result);
+        static::assertTrue($result);
     }
 
-    public function test_resource_attributes_are_preserved() : void
+    public function test_resource_attributes_are_preserved(): void
     {
         $context = TelemetryTestContext::create(
             resource: Resource::create([
@@ -536,12 +546,12 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         $monolog->info('Test message');
 
         $entries = $context->processor->entries();
-        self::assertCount(1, $entries);
+        static::assertCount(1, $entries);
 
-        self::assertSame('my-application', $entries[0]->resource->get('service.name'));
-        self::assertSame('1.2.3', $entries[0]->resource->get('service.version'));
-        self::assertSame('production', $entries[0]->resource->get('deployment.environment'));
-        self::assertSame('application-logger', $entries[0]->scope->name);
-        self::assertSame('2.0.0', $entries[0]->scope->version);
+        static::assertSame('my-application', $entries[0]->resource->get('service.name'));
+        static::assertSame('1.2.3', $entries[0]->resource->get('service.version'));
+        static::assertSame('production', $entries[0]->resource->get('deployment.environment'));
+        static::assertSame('application-logger', $entries[0]->scope->name);
+        static::assertSame('2.0.0', $entries[0]->scope->version);
     }
 }

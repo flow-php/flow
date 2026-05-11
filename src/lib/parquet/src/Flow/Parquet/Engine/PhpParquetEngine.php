@@ -4,23 +4,39 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Engine;
 
-use function Flow\Types\DSL\type_integer;
 use Composer\InstalledVersions;
-use Flow\Filesystem\{DestinationStream, SourceStream};
+use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Binary\ByteOrder;
-use Flow\Parquet\Dremel\{ColumnData\ReadFlatColumnValues, DremelAssembler, ReadColumnData};
+use Flow\Parquet\Dremel\ColumnData\ReadFlatColumnValues;
+use Flow\Parquet\Dremel\DremelAssembler;
 use Flow\Parquet\Dremel\DremelShredder;
-use Flow\Parquet\Dremel\Validator\{ColumnDataValidator, DisabledValidator};
-use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\Parquet\{Option, Options, ParquetEngine, ParquetFile};
-use Flow\Parquet\ParquetFile\{Compressions, Metadata, RowGroups, Schema};
+use Flow\Parquet\Dremel\ReadColumnData;
+use Flow\Parquet\Dremel\Validator\ColumnDataValidator;
+use Flow\Parquet\Dremel\Validator\DisabledValidator;
+use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\Exception\RuntimeException;
+use Flow\Parquet\Option;
+use Flow\Parquet\Options;
+use Flow\Parquet\ParquetEngine;
+use Flow\Parquet\ParquetFile;
+use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
-use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
-use Flow\Parquet\Reader\{ColumnChunkReader, PageReader};
-use Flow\Parquet\Thrift\{CompactProtocol, PhpFileStream};
+use Flow\Parquet\ParquetFile\Metadata;
+use Flow\Parquet\ParquetFile\RowGroups;
+use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Schema\Column;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\Reader\ColumnChunkReader;
+use Flow\Parquet\Reader\PageReader;
+use Flow\Parquet\Thrift\CompactProtocol;
 use Flow\Parquet\Thrift\MemoryBuffer;
+use Flow\Parquet\Thrift\PhpFileStream;
 use Flow\Parquet\ThriftModel\FileMetaData;
 use Flow\Parquet\Writer\RowGroupBuilder;
+
+use function Flow\Types\DSL\type_integer;
 
 final class PhpParquetEngine implements ParquetEngine
 {
@@ -35,10 +51,9 @@ final class PhpParquetEngine implements ParquetEngine
     public function __construct(
         private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
         private readonly Options $options = new Options(),
-    ) {
-    }
+    ) {}
 
-    public function closeWrite() : void
+    public function closeWrite(): void
     {
         if ($this->writeStream === null) {
             throw new RuntimeException('Writer is not open');
@@ -59,7 +74,10 @@ final class PhpParquetEngine implements ParquetEngine
             throw new RuntimeException('Cannot open temporary stream');
         }
 
-        $this->activeMetadata()->toThrift()->write(new CompactProtocol(new PhpFileStream($metadataHandle)));
+        $this
+            ->activeMetadata()
+            ->toThrift()
+            ->write(new CompactProtocol(new PhpFileStream($metadataHandle)));
         $metadataBytes = \stream_get_contents($metadataHandle, offset: 0);
 
         if ($metadataBytes === false) {
@@ -84,7 +102,7 @@ final class PhpParquetEngine implements ParquetEngine
         Schema $schema,
         Compressions $compression,
         Options $options,
-    ) : void {
+    ): void {
         $this->writeStream = $stream;
         $this->activeStream()->append(ParquetFile::PARQUET_MAGIC_NUMBER);
         $this->fileOffset = \strlen(ParquetFile::PARQUET_MAGIC_NUMBER);
@@ -98,9 +116,7 @@ final class PhpParquetEngine implements ParquetEngine
         );
 
         $dataConverter = DataConverter::initialize($options);
-        $validator = $options->getBool(Option::VALIDATE_DATA)
-            ? new ColumnDataValidator()
-            : new DisabledValidator();
+        $validator = $options->getBool(Option::VALIDATE_DATA) ? new ColumnDataValidator() : new DisabledValidator();
 
         $this->rowGroupBuilder = new RowGroupBuilder(
             $schema,
@@ -116,18 +132,15 @@ final class PhpParquetEngine implements ParquetEngine
         array $columns = [],
         ?int $limit = null,
         ?int $offset = null,
-    ) : \Generator {
+    ): \Generator {
         $dataConverter = DataConverter::initialize($this->options);
         $dremelAssembler = new DremelAssembler($dataConverter);
-        $chunkReader = new ColumnChunkReader(
-            new PageReader($this->byteOrder, $this->options),
-            $this->options,
-        );
+        $chunkReader = new ColumnChunkReader(new PageReader($this->byteOrder, $this->options), $this->options);
 
         $metadata = $this->readMetadata($stream);
 
         if (!\count($columns)) {
-            $columns = \array_map(static fn (Column $c) => $c->name(), $schema->columns());
+            $columns = \array_map(static fn(Column $c) => $c->name(), $schema->columns());
         }
 
         $totalRows = $metadata->rowsNumber();
@@ -154,7 +167,15 @@ final class PhpParquetEngine implements ParquetEngine
 
         foreach ($columns as $columnName) {
             $multipleIterator->attachIterator(
-                $this->readColumn($schema->get($columnName), $metadata, $stream, $chunkReader, $dremelAssembler, $limit, $offset),
+                $this->readColumn(
+                    $schema->get($columnName),
+                    $metadata,
+                    $stream,
+                    $chunkReader,
+                    $dremelAssembler,
+                    $limit,
+                    $offset,
+                ),
                 $columnName,
             );
         }
@@ -181,7 +202,7 @@ final class PhpParquetEngine implements ParquetEngine
         }
     }
 
-    public function writeBatch(iterable $rows) : void
+    public function writeBatch(iterable $rows): void
     {
         if (\is_array($rows)) {
             $this->activeRowGroupBuilder()->addRows($rows);
@@ -194,12 +215,15 @@ final class PhpParquetEngine implements ParquetEngine
         }
     }
 
-    public function writeRow(array $row) : void
+    public function writeRow(array $row): void
     {
         $this->activeRowGroupBuilder()->addRow($row);
         $interval = type_integer()->assert($this->options->get(Option::ROW_GROUP_SIZE_CHECK_INTERVAL));
 
-        if (($this->activeRowGroupBuilder()->rowsCount() % $interval === 0) && $this->activeRowGroupBuilder()->isFull()) {
+        if (
+            ($this->activeRowGroupBuilder()->rowsCount() % $interval) === 0
+            && $this->activeRowGroupBuilder()->isFull()
+        ) {
             $rowGroupContainer = $this->activeRowGroupBuilder()->flush($this->fileOffset);
             $this->activeStream()->append($rowGroupContainer->binaryBuffer);
             $this->activeMetadata()->rowGroups()->add($rowGroupContainer->rowGroup);
@@ -213,7 +237,7 @@ final class PhpParquetEngine implements ParquetEngine
         Compressions $compression,
         Options $options,
         iterable $rows,
-    ) : void {
+    ): void {
         $stream->append(ParquetFile::PARQUET_MAGIC_NUMBER);
         $fileOffset = \strlen(ParquetFile::PARQUET_MAGIC_NUMBER);
 
@@ -226,9 +250,7 @@ final class PhpParquetEngine implements ParquetEngine
         );
 
         $dataConverter = DataConverter::initialize($options);
-        $validator = $options->getBool(Option::VALIDATE_DATA)
-            ? new ColumnDataValidator()
-            : new DisabledValidator();
+        $validator = $options->getBool(Option::VALIDATE_DATA) ? new ColumnDataValidator() : new DisabledValidator();
 
         $rowGroupBuilder = new RowGroupBuilder(
             $schema,
@@ -241,7 +263,7 @@ final class PhpParquetEngine implements ParquetEngine
             $rowGroupBuilder->addRow($row);
             $interval = type_integer()->assert($options->get(Option::ROW_GROUP_SIZE_CHECK_INTERVAL));
 
-            if (($rowGroupBuilder->rowsCount() % $interval === 0) && $rowGroupBuilder->isFull()) {
+            if (($rowGroupBuilder->rowsCount() % $interval) === 0 && $rowGroupBuilder->isFull()) {
                 $rowGroupContainer = $rowGroupBuilder->flush($fileOffset);
                 $stream->append($rowGroupContainer->binaryBuffer);
                 $metadata->rowGroups()->add($rowGroupContainer->rowGroup);
@@ -277,7 +299,7 @@ final class PhpParquetEngine implements ParquetEngine
         $stream->close();
     }
 
-    private function activeMetadata() : Metadata
+    private function activeMetadata(): Metadata
     {
         if ($this->metadata === null) {
             throw new RuntimeException('Writer is not open');
@@ -286,7 +308,7 @@ final class PhpParquetEngine implements ParquetEngine
         return $this->metadata;
     }
 
-    private function activeRowGroupBuilder() : RowGroupBuilder
+    private function activeRowGroupBuilder(): RowGroupBuilder
     {
         if ($this->rowGroupBuilder === null) {
             throw new RuntimeException('Writer is not open');
@@ -295,7 +317,7 @@ final class PhpParquetEngine implements ParquetEngine
         return $this->rowGroupBuilder;
     }
 
-    private function activeStream() : DestinationStream
+    private function activeStream(): DestinationStream
     {
         if ($this->writeStream === null) {
             throw new RuntimeException('Writer is not open');
@@ -312,22 +334,26 @@ final class PhpParquetEngine implements ParquetEngine
         DremelAssembler $dremelAssembler,
         ?int $limit,
         ?int $offset,
-    ) : \Generator {
+    ): \Generator {
         $yieldedRows = 0;
         $rowGroupOffset = 0;
 
         foreach ($metadata->rowGroups()->all() as $rowGroup) {
             if ($offset !== null) {
-                if ($rowGroupOffset + $rowGroup->rowsCount() <= $offset) {
+                if (($rowGroupOffset + $rowGroup->rowsCount()) <= $offset) {
                     $rowGroupOffset += $rowGroup->rowsCount();
 
                     continue;
                 }
             }
-            $skipRows = ($offset !== null) ? $offset - $rowGroupOffset : 0;
+            $skipRows = $offset !== null ? $offset - $rowGroupOffset : 0;
 
             if ($column instanceof FlatColumn) {
-                foreach ($chunkReader->read($rowGroup->getColumnChunk($column), $column, $stream) as $flatColumnValues) {
+                foreach ($chunkReader->read(
+                    $rowGroup->getColumnChunk($column),
+                    $column,
+                    $stream,
+                ) as $flatColumnValues) {
                     $columnData = new ReadColumnData($column, [$flatColumnValues->flatPath() => $flatColumnValues]);
 
                     $rowsSkipped = 0;
@@ -397,7 +423,7 @@ final class PhpParquetEngine implements ParquetEngine
         }
     }
 
-    private function readMetadata(SourceStream $stream) : Metadata
+    private function readMetadata(SourceStream $stream): Metadata
     {
         $fileTotalSize = $stream->size();
 
@@ -413,11 +439,7 @@ final class PhpParquetEngine implements ParquetEngine
         $metadata = $stream->read($metadataLength, $fileTotalSize - ($metadataLength + 8));
 
         $thriftMetadata = new FileMetaData();
-        $thriftMetadata->read(
-            new CompactProtocol(
-                new MemoryBuffer($metadata),
-            ),
-        );
+        $thriftMetadata->read(new CompactProtocol(new MemoryBuffer($metadata)));
 
         return Metadata::fromThrift($thriftMetadata);
     }

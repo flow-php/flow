@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
-use Flow\PostgreSql\AST\Nodes\{Statement, StatementTrait};
-use Flow\PostgreSql\Protobuf\AST\{ConstraintsSetStmt, VariableSetStmt};
+use Flow\PostgreSql\AST\Nodes\Statement;
+use Flow\PostgreSql\AST\Nodes\StatementTrait;
+use Flow\PostgreSql\Protobuf\AST\ConstraintsSetStmt;
+use Flow\PostgreSql\Protobuf\AST\VariableSetStmt;
 
 /**
  * Represents SET statements (SET configuration_parameter = value, SET ROLE, SET SESSION, etc.)
@@ -19,10 +21,9 @@ final readonly class SetStatement implements Statement
 
     public function __construct(
         private VariableSetStmt|ConstraintsSetStmt $stmt,
-    ) {
-    }
+    ) {}
 
-    public function raw() : VariableSetStmt|ConstraintsSetStmt
+    public function raw(): VariableSetStmt|ConstraintsSetStmt
     {
         return $this->stmt;
     }

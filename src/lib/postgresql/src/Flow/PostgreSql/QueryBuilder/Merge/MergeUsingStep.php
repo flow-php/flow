@@ -8,5 +8,5 @@ use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
 interface MergeUsingStep
 {
-    public function using(string|SelectFinalStep $source, string $alias) : MergeOnStep;
+    public function using(string|SelectFinalStep $source, string $alias): MergeOnStep;
 }

@@ -4,43 +4,49 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\data_frame;
-use function Flow\ETL\DSL\{df, from_rows, int_entry, join_on, row, rows, str_entry};
-use Flow\ETL\{DataFrame, DataFrameFactory, Loader, Rows, Tests\FlowTestCase};
+use Flow\ETL\DataFrame;
+use Flow\ETL\DataFrameFactory;
 use Flow\ETL\Join\Expression;
+use Flow\ETL\Loader;
+use Flow\ETL\Rows;
+use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\join_on;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\str_entry;
 
 final class JoinEachTest extends FlowTestCase
 {
-    public function test_join_each() : void
+    public function test_join_each(): void
     {
         $loader = $this->createMock(Loader::class);
-        $loader->expects(self::exactly(2))
-            ->method('load');
+        $loader->expects(self::exactly(2))->method('load');
 
         $rows = df()
-            ->read(from_rows(
-                rows(
-                    row(int_entry('id', 1), str_entry('country', 'PL')),
-                    row(int_entry('id', 2), str_entry('country', 'PL')),
-                    row(int_entry('id', 3), str_entry('country', 'PL')),
-                    row(int_entry('id', 4), str_entry('country', 'PL')),
-                    row(int_entry('id', 5), str_entry('country', 'US')),
-                    row(int_entry('id', 6), str_entry('country', 'US')),
-                    row(int_entry('id', 7), str_entry('country', 'US')),
-                    row(int_entry('id', 9), str_entry('country', 'US')),
-                )
-            ))
+            ->read(from_rows(rows(
+                row(int_entry('id', 1), str_entry('country', 'PL')),
+                row(int_entry('id', 2), str_entry('country', 'PL')),
+                row(int_entry('id', 3), str_entry('country', 'PL')),
+                row(int_entry('id', 4), str_entry('country', 'PL')),
+                row(int_entry('id', 5), str_entry('country', 'US')),
+                row(int_entry('id', 6), str_entry('country', 'US')),
+                row(int_entry('id', 7), str_entry('country', 'US')),
+                row(int_entry('id', 9), str_entry('country', 'US')),
+            )))
             ->batchSize(4)
             ->joinEach(
                 new class implements DataFrameFactory {
-                    public function from(Rows $rows) : DataFrame
+                    public function from(Rows $rows): DataFrame
                     {
-                        return data_frame()->process(
-                            rows(
-                                row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                                row(str_entry('code', 'US'), str_entry('name', 'United States')),
-                            )
-                        );
+                        return data_frame()->process(rows(
+                            row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
+                            row(str_entry('code', 'US'), str_entry('name', 'United States')),
+                        ));
                     }
                 },
                 Expression::on(['country' => 'code'], 'joined_'),
@@ -48,7 +54,7 @@ final class JoinEachTest extends FlowTestCase
             ->write($loader)
             ->fetch();
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['id' => 1, 'country' => 'PL', 'joined_code' => 'PL', 'joined_name' => 'Poland'],
                 ['id' => 2, 'country' => 'PL', 'joined_code' => 'PL', 'joined_name' => 'Poland'],
@@ -59,40 +65,35 @@ final class JoinEachTest extends FlowTestCase
                 ['id' => 7, 'country' => 'US', 'joined_code' => 'US', 'joined_name' => 'United States'],
                 ['id' => 9, 'country' => 'US', 'joined_code' => 'US', 'joined_name' => 'United States'],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_join_each_without_prefix() : void
+    public function test_join_each_without_prefix(): void
     {
         $loader = $this->createMock(Loader::class);
-        $loader->expects(self::exactly(2))
-            ->method('load');
+        $loader->expects(self::exactly(2))->method('load');
 
         $rows = df()
-            ->read(from_rows(
-                rows(
-                    row(int_entry('id', 1), str_entry('country_code', 'PL')),
-                    row(int_entry('id', 2), str_entry('country_code', 'PL')),
-                    row(int_entry('id', 3), str_entry('country_code', 'PL')),
-                    row(int_entry('id', 4), str_entry('country_code', 'PL')),
-                    row(int_entry('id', 5), str_entry('country_code', 'US')),
-                    row(int_entry('id', 6), str_entry('country_code', 'US')),
-                    row(int_entry('id', 7), str_entry('country_code', 'US')),
-                    row(int_entry('id', 9), str_entry('country_code', 'US')),
-                )
-            ))
+            ->read(from_rows(rows(
+                row(int_entry('id', 1), str_entry('country_code', 'PL')),
+                row(int_entry('id', 2), str_entry('country_code', 'PL')),
+                row(int_entry('id', 3), str_entry('country_code', 'PL')),
+                row(int_entry('id', 4), str_entry('country_code', 'PL')),
+                row(int_entry('id', 5), str_entry('country_code', 'US')),
+                row(int_entry('id', 6), str_entry('country_code', 'US')),
+                row(int_entry('id', 7), str_entry('country_code', 'US')),
+                row(int_entry('id', 9), str_entry('country_code', 'US')),
+            )))
             ->batchSize(4)
             ->joinEach(
                 new class implements DataFrameFactory {
-                    public function from(Rows $rows) : DataFrame
+                    public function from(Rows $rows): DataFrame
                     {
-                        return data_frame()->process(
-                            rows(
-                                row(str_entry('country_code', 'PL'), str_entry('name', 'Poland')),
-                                row(str_entry('country_code', 'US'), str_entry('name', 'United States')),
-                            )
-                        );
+                        return data_frame()->process(rows(
+                            row(str_entry('country_code', 'PL'), str_entry('name', 'Poland')),
+                            row(str_entry('country_code', 'US'), str_entry('name', 'United States')),
+                        ));
                     }
                 },
                 join_on(['country_code' => 'country_code']),
@@ -100,7 +101,7 @@ final class JoinEachTest extends FlowTestCase
             ->write($loader)
             ->fetch();
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['id' => 1, 'country_code' => 'PL', 'name' => 'Poland'],
                 ['id' => 2, 'country_code' => 'PL', 'name' => 'Poland'],
@@ -111,7 +112,7 @@ final class JoinEachTest extends FlowTestCase
                 ['id' => 7, 'country_code' => 'US', 'name' => 'United States'],
                 ['id' => 9, 'country_code' => 'US', 'name' => 'United States'],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 }

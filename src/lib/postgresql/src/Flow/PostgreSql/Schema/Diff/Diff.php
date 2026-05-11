@@ -11,5 +11,5 @@ interface Diff
     /**
      * @return list<Sql>
      */
-    public function generate() : array;
+    public function generate(): array;
 }

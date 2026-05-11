@@ -11,6 +11,5 @@ final readonly class MigrationStatus
         public string $name,
         public MigrationState $state,
         public ?\DateTimeImmutable $executedAt,
-    ) {
-    }
+    ) {}
 }

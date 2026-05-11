@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Table;
 
-use Flow\PostgreSql\Protobuf\AST\{JoinExpr, Node, PBString};
-use Flow\PostgreSql\QueryBuilder\Condition\{Condition, ConditionFactory};
+use Flow\PostgreSql\Protobuf\AST\JoinExpr;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\QueryBuilder\Condition\Condition;
+use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 /**
@@ -23,10 +26,9 @@ final readonly class JoinedTable implements TableReference
         public ?Condition $onCondition = null,
         public ?array $usingColumns = null,
         public bool $natural = false,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $joinExpr = $node->getJoinExpr();
 
@@ -81,12 +83,12 @@ final readonly class JoinedTable implements TableReference
         return new self($left, $right, $joinType, $onCondition, $usingColumns, $natural);
     }
 
-    public function as(string $alias, ?array $columnAliases = null) : AliasedTable
+    public function as(string $alias, ?array $columnAliases = null): AliasedTable
     {
         return new AliasedTable($this, $alias, $columnAliases);
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $joinExpr = new JoinExpr([
             'jointype' => $this->joinType->toProtobuf(),
@@ -112,7 +114,7 @@ final readonly class JoinedTable implements TableReference
         return new Node(['join_expr' => $joinExpr]);
     }
 
-    private static function tableReferenceFromNode(Node $node) : TableReference
+    private static function tableReferenceFromNode(Node $node): TableReference
     {
         if ($node->hasRangeVar()) {
             $rangeVar = $node->getRangeVar();

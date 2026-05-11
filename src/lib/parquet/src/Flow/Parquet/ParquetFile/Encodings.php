@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile;
 
-enum Encodings : int
+enum Encodings: int
 {
     case BIT_PACKED = 4;
     case BYTE_STREAM_SPLIT = 9;

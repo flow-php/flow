@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Transformation;
 
-use function Flow\ETL\DSL\{df, drop, from_array, ref};
 use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\drop;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\ref;
 
 final class DropTest extends FlowTestCase
 {
-    public function test_drop_columns_with_references() : void
+    public function test_drop_columns_with_references(): void
     {
         $rows = df()
             ->read(from_array([
@@ -20,7 +24,7 @@ final class DropTest extends FlowTestCase
             ->fetch()
             ->toArray();
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['id' => 1, 'city' => 'New York'],
                 ['id' => 2, 'city' => 'Los Angeles'],
@@ -29,7 +33,7 @@ final class DropTest extends FlowTestCase
         );
     }
 
-    public function test_drop_columns_with_string_names() : void
+    public function test_drop_columns_with_string_names(): void
     {
         $rows = df()
             ->read(from_array([
@@ -40,7 +44,7 @@ final class DropTest extends FlowTestCase
             ->fetch()
             ->toArray();
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['id' => 1, 'name' => 'Alice'],
                 ['id' => 2, 'name' => 'Bob'],

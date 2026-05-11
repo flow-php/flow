@@ -9,9 +9,9 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 interface Converter
 {
-    public function fromParquetType(mixed $data) : mixed;
+    public function fromParquetType(mixed $data): mixed;
 
-    public function isFor(FlatColumn $column, Options $options) : bool;
+    public function isFor(FlatColumn $column, Options $options): bool;
 
-    public function toParquetType(mixed $data) : mixed;
+    public function toParquetType(mixed $data): mixed;
 }

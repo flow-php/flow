@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\Bridge\Psr3\Telemetry\Tests\Unit;
 
 use Flow\Bridge\Psr3\Telemetry\Exception\InvalidArgumentException;
-use Flow\Bridge\Psr3\Telemetry\{LogRecordConverter, SeverityMapper, TelemetryLogger};
+use Flow\Bridge\Psr3\Telemetry\LogRecordConverter;
+use Flow\Bridge\Psr3\Telemetry\SeverityMapper;
+use Flow\Bridge\Psr3\Telemetry\TelemetryLogger;
 use Flow\Telemetry\Context\MemoryContextStorage;
-use Flow\Telemetry\Logger\{LoggerProvider, Severity};
+use Flow\Telemetry\Logger\LoggerProvider;
+use Flow\Telemetry\Logger\Severity;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
 use Flow\Telemetry\Provider\Void\VoidExporter;
@@ -25,7 +28,7 @@ final class TelemetryLoggerTest extends TestCase
     /**
      * @return \Generator<string, array{string, Severity}>
      */
-    public static function level_to_severity_provider() : \Generator
+    public static function level_to_severity_provider(): \Generator
     {
         yield 'debug' => [LogLevel::DEBUG, Severity::DEBUG];
         yield 'info' => [LogLevel::INFO, Severity::INFO];
@@ -37,41 +40,39 @@ final class TelemetryLoggerTest extends TestCase
         yield 'emergency' => [LogLevel::EMERGENCY, Severity::FATAL];
     }
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         $this->processor = new MemoryLogProcessor(new VoidExporter());
 
-        $logger = (new LoggerProvider(
-            $this->processor,
-            new SystemClock(),
-            new MemoryContextStorage(),
-        ))->logger(Resource::empty(), 'psr3-test-scope');
+        $logger = (new LoggerProvider($this->processor, new SystemClock(), new MemoryContextStorage()))->logger(
+            Resource::empty(),
+            'psr3-test-scope',
+        );
 
         $this->psrLogger = new TelemetryLogger($logger);
     }
 
-    public function test_alert_emits_fatal_severity() : void
+    public function test_alert_emits_fatal_severity(): void
     {
         $this->psrLogger->alert('alarm');
 
-        self::assertSame(Severity::FATAL, $this->processor->entries()[0]->record->severity);
+        static::assertSame(Severity::FATAL, $this->processor->entries()[0]->record->severity);
     }
 
-    public function test_critical_emits_fatal_severity() : void
+    public function test_critical_emits_fatal_severity(): void
     {
         $this->psrLogger->critical('crit');
 
-        self::assertSame(Severity::FATAL, $this->processor->entries()[0]->record->severity);
+        static::assertSame(Severity::FATAL, $this->processor->entries()[0]->record->severity);
     }
 
-    public function test_custom_converter_is_used() : void
+    public function test_custom_converter_is_used(): void
     {
         $processor = new MemoryLogProcessor(new VoidExporter());
-        $logger = (new LoggerProvider(
-            $processor,
-            new SystemClock(),
-            new MemoryContextStorage(),
-        ))->logger(Resource::empty(), 'psr3-custom-scope');
+        $logger = (new LoggerProvider($processor, new SystemClock(), new MemoryContextStorage()))->logger(
+            Resource::empty(),
+            'psr3-custom-scope',
+        );
 
         $converter = new LogRecordConverter(new SeverityMapper([
             LogLevel::DEBUG => Severity::TRACE,
@@ -87,108 +88,108 @@ final class TelemetryLoggerTest extends TestCase
         $psrLogger = new TelemetryLogger($logger, $converter);
         $psrLogger->debug('trace-me');
 
-        self::assertSame(Severity::TRACE, $processor->entries()[0]->record->severity);
+        static::assertSame(Severity::TRACE, $processor->entries()[0]->record->severity);
     }
 
-    public function test_debug_emits_debug_severity() : void
+    public function test_debug_emits_debug_severity(): void
     {
         $this->psrLogger->debug('hello');
 
-        self::assertSame(Severity::DEBUG, $this->processor->entries()[0]->record->severity);
+        static::assertSame(Severity::DEBUG, $this->processor->entries()[0]->record->severity);
     }
 
-    public function test_emergency_emits_fatal_severity() : void
+    public function test_emergency_emits_fatal_severity(): void
     {
         $this->psrLogger->emergency('panic');
 
-        self::assertSame(Severity::FATAL, $this->processor->entries()[0]->record->severity);
+        static::assertSame(Severity::FATAL, $this->processor->entries()[0]->record->severity);
     }
 
-    public function test_error_emits_error_severity() : void
+    public function test_error_emits_error_severity(): void
     {
         $this->psrLogger->error('oops');
 
-        self::assertSame(Severity::ERROR, $this->processor->entries()[0]->record->severity);
+        static::assertSame(Severity::ERROR, $this->processor->entries()[0]->record->severity);
     }
 
-    public function test_exception_in_context_routes_to_set_exception() : void
+    public function test_exception_in_context_routes_to_set_exception(): void
     {
         $exception = new \RuntimeException('boom');
 
         $this->psrLogger->error('failure', ['exception' => $exception]);
 
         $entry = $this->processor->entries()[0];
-        self::assertSame(\RuntimeException::class, $entry->record->attributes->get('exception.type'));
-        self::assertSame('boom', $entry->record->attributes->get('exception.message'));
-        self::assertNotNull($entry->record->attributes->get('exception.stacktrace'));
-        self::assertFalse($entry->record->attributes->has('exception'));
+        static::assertSame(\RuntimeException::class, $entry->record->attributes->get('exception.type'));
+        static::assertSame('boom', $entry->record->attributes->get('exception.message'));
+        static::assertNotNull($entry->record->attributes->get('exception.stacktrace'));
+        static::assertFalse($entry->record->attributes->has('exception'));
     }
 
-    public function test_forwards_message_body_verbatim_when_no_placeholders() : void
+    public function test_forwards_message_body_verbatim_when_no_placeholders(): void
     {
         $this->psrLogger->info('Hello World');
 
-        self::assertSame('Hello World', $this->processor->entries()[0]->record->body);
+        static::assertSame('Hello World', $this->processor->entries()[0]->record->body);
     }
 
-    public function test_info_emits_info_severity() : void
+    public function test_info_emits_info_severity(): void
     {
         $this->psrLogger->info('hello');
 
-        self::assertSame(Severity::INFO, $this->processor->entries()[0]->record->severity);
+        static::assertSame(Severity::INFO, $this->processor->entries()[0]->record->severity);
     }
 
-    public function test_interpolates_placeholders_from_context() : void
+    public function test_interpolates_placeholders_from_context(): void
     {
         $this->psrLogger->info('User {user_id} logged in', ['user_id' => 123]);
 
         $entry = $this->processor->entries()[0];
-        self::assertSame('User 123 logged in', $entry->record->body);
-        self::assertSame(123, $entry->record->attributes->get('user_id'));
+        static::assertSame('User 123 logged in', $entry->record->body);
+        static::assertSame(123, $entry->record->attributes->get('user_id'));
     }
 
     #[DataProvider('level_to_severity_provider')]
-    public function test_log_maps_level_string_to_severity(string $level, Severity $expected) : void
+    public function test_log_maps_level_string_to_severity(string $level, Severity $expected): void
     {
         $this->psrLogger->log($level, 'msg');
 
-        self::assertSame($expected, $this->processor->entries()[0]->record->severity);
+        static::assertSame($expected, $this->processor->entries()[0]->record->severity);
     }
 
-    public function test_log_throws_on_non_string_level() : void
+    public function test_log_throws_on_non_string_level(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
         $this->psrLogger->log(42, 'msg');
     }
 
-    public function test_log_throws_on_unknown_level() : void
+    public function test_log_throws_on_unknown_level(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
         $this->psrLogger->log('verbose', 'msg');
     }
 
-    public function test_notice_emits_info_severity() : void
+    public function test_notice_emits_info_severity(): void
     {
         $this->psrLogger->notice('note');
 
-        self::assertSame(Severity::INFO, $this->processor->entries()[0]->record->severity);
+        static::assertSame(Severity::INFO, $this->processor->entries()[0]->record->severity);
     }
 
-    public function test_stores_context_under_raw_keys() : void
+    public function test_stores_context_under_raw_keys(): void
     {
         $this->psrLogger->info('msg', ['user_id' => 1, 'role' => 'admin']);
 
         $entry = $this->processor->entries()[0];
-        self::assertSame(1, $entry->record->attributes->get('user_id'));
-        self::assertSame('admin', $entry->record->attributes->get('role'));
+        static::assertSame(1, $entry->record->attributes->get('user_id'));
+        static::assertSame('admin', $entry->record->attributes->get('role'));
     }
 
-    public function test_stringable_message_is_supported() : void
+    public function test_stringable_message_is_supported(): void
     {
         $message = new class implements \Stringable {
-            public function __toString() : string
+            public function __toString(): string
             {
                 return 'rendered';
             }
@@ -196,13 +197,13 @@ final class TelemetryLoggerTest extends TestCase
 
         $this->psrLogger->info($message);
 
-        self::assertSame('rendered', $this->processor->entries()[0]->record->body);
+        static::assertSame('rendered', $this->processor->entries()[0]->record->body);
     }
 
-    public function test_warning_emits_warn_severity() : void
+    public function test_warning_emits_warn_severity(): void
     {
         $this->psrLogger->warning('careful');
 
-        self::assertSame(Severity::WARN, $this->processor->entries()[0]->record->severity);
+        static::assertSame(Severity::WARN, $this->processor->entries()[0]->record->severity);
     }
 }

@@ -44,11 +44,11 @@ final readonly class FlowPackageNavRenderer
         'extension' => 'extensions',
     ];
 
-    public function __construct(private Manifest $manifest)
-    {
-    }
+    public function __construct(
+        private Manifest $manifest,
+    ) {}
 
-    public function __invoke(DocumentParsedEvent $event) : void
+    public function __invoke(DocumentParsedEvent $event): void
     {
         $document = $event->getDocument();
         $frontMatter = $document->data->get('front_matter');
@@ -105,7 +105,7 @@ final readonly class FlowPackageNavRenderer
     /**
      * @param array<string, mixed> $package
      */
-    private function buildNavHtml(array $package, string $variant) : string
+    private function buildNavHtml(array $package, string $variant): string
     {
         $name = (string) $package['name'];
         $type = (string) $package['type'];
@@ -115,34 +115,27 @@ final readonly class FlowPackageNavRenderer
 
         $items = [];
         $autolinks = $variant === 'install'
-            ? (self::TYPE_AUTOLINKS_INSTALL[$type] ?? ['documentation', 'packagist', 'github'])
-            : (self::TYPE_AUTOLINKS[$type] ?? ['packagist', 'github', 'installation']);
+            ? self::TYPE_AUTOLINKS_INSTALL[$type] ?? ['documentation', 'packagist', 'github']
+            : self::TYPE_AUTOLINKS[$type] ?? ['packagist', 'github', 'installation'];
 
-        if (in_array('documentation', $autolinks, true) && isset($links['documentation']) && is_string($links['documentation'])) {
+        if (
+            in_array('documentation', $autolinks, true)
+            && isset($links['documentation'])
+            && is_string($links['documentation'])
+        ) {
             $items[] = $this->item($links['documentation'], 'Documentation');
         }
 
         if (in_array('packagist', $autolinks, true)) {
-            $items[] = $this->item(
-                href: 'https://packagist.org/packages/' . $name,
-                label: 'Packagist',
-                external: true,
-            );
+            $items[] = $this->item(href: 'https://packagist.org/packages/' . $name, label: 'Packagist', external: true);
         }
 
         if (in_array('github', $autolinks, true)) {
-            $items[] = $this->item(
-                href: 'https://github.com/' . $name,
-                label: 'GitHub',
-                external: true,
-            );
+            $items[] = $this->item(href: 'https://github.com/' . $name, label: 'GitHub', external: true);
         }
 
         if (in_array('installation', $autolinks, true)) {
-            $items[] = $this->item(
-                href: '/documentation/installation/packages/' . $slug,
-                label: 'Installation',
-            );
+            $items[] = $this->item(href: '/documentation/installation/packages/' . $slug, label: 'Installation');
         }
 
         if (isset($links['architecture']) && is_string($links['architecture'])) {
@@ -166,7 +159,7 @@ final readonly class FlowPackageNavRenderer
         return '<nav aria-label="Package links" class="package-nav">' . implode('', $items) . '</nav>';
     }
 
-    private function item(string $href, string $label, bool $external = false) : string
+    private function item(string $href, string $label, bool $external = false): string
     {
         $hrefAttr = htmlspecialchars($href, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $labelHtml = htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -176,7 +169,7 @@ final readonly class FlowPackageNavRenderer
         return '<a href="' . $hrefAttr . '"' . $extra . '>' . $labelHtml . $arrow . '</a>';
     }
 
-    private function slug(string $composerName) : string
+    private function slug(string $composerName): string
     {
         $slash = strrpos($composerName, '/');
 

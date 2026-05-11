@@ -21,12 +21,12 @@ use Flow\Telemetry\Tracer\Span;
  */
 final readonly class AlwaysOnSampler implements Sampler
 {
-    public function __toString() : string
+    public function __toString(): string
     {
         return 'AlwaysOnSampler';
     }
 
-    public function shouldSample(Span $span) : SamplingResult
+    public function shouldSample(Span $span): SamplingResult
     {
         return SamplingResult::recordAndSample();
     }

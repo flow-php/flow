@@ -12,7 +12,7 @@ final class PathTest extends FlowIntegrationTestCase
 {
     use OperatingSystem;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -21,11 +21,11 @@ final class PathTest extends FlowIntegrationTestCase
         }
     }
 
-    public function test_unix_home_directory_resolution() : void
+    public function test_unix_home_directory_resolution(): void
     {
         $path = UnixPath::realpath('~/test.txt');
 
-        self::assertStringContainsString('test.txt', $path->path());
-        self::assertStringStartsWith('/', $path->path());
+        static::assertStringContainsString('test.txt', $path->path());
+        static::assertStringStartsWith('/', $path->path());
     }
 }

@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Logger\Processor;
 
-use Flow\Telemetry\{InstrumentationScope, Resource};
-use Flow\Telemetry\Logger\{LogEntry, LogProcessor, LogRecord, Severity};
+use Flow\Telemetry\InstrumentationScope;
+use Flow\Telemetry\Logger\LogEntry;
+use Flow\Telemetry\Logger\LogProcessor;
+use Flow\Telemetry\Logger\LogRecord;
 use Flow\Telemetry\Logger\Processor\SeverityFilteringLogProcessor;
+use Flow\Telemetry\Logger\Severity;
+use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use PHPUnit\Framework\TestCase;
 
@@ -14,16 +18,15 @@ final class SeverityFilteringLogProcessorTest extends TestCase
 {
     private Resource $resource;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         $this->resource = ResourceMother::default();
     }
 
-    public function test_filters_multiple_entries_correctly() : void
+    public function test_filters_multiple_entries_correctly(): void
     {
         $wrappedProcessor = $this->createMock(LogProcessor::class);
-        $wrappedProcessor->expects(self::exactly(3))
-            ->method('process');
+        $wrappedProcessor->expects(self::exactly(3))->method('process');
 
         $processor = new SeverityFilteringLogProcessor($wrappedProcessor, Severity::WARN);
 
@@ -35,57 +38,50 @@ final class SeverityFilteringLogProcessorTest extends TestCase
         $processor->process($this->createEntry(Severity::FATAL, 'fatal message'));
     }
 
-    public function test_filters_out_log_below_minimum_severity_level() : void
+    public function test_filters_out_log_below_minimum_severity_level(): void
     {
         $wrappedProcessor = $this->createMock(LogProcessor::class);
-        $wrappedProcessor->expects(self::never())
-            ->method('process');
+        $wrappedProcessor->expects(self::never())->method('process');
 
         $processor = new SeverityFilteringLogProcessor($wrappedProcessor, Severity::WARN);
 
         $processor->process($this->createEntry(Severity::INFO, 'info message'));
     }
 
-    public function test_filters_trace_when_minimum_is_debug() : void
+    public function test_filters_trace_when_minimum_is_debug(): void
     {
         $wrappedProcessor = $this->createMock(LogProcessor::class);
-        $wrappedProcessor->expects(self::never())
-            ->method('process');
+        $wrappedProcessor->expects(self::never())->method('process');
 
         $processor = new SeverityFilteringLogProcessor($wrappedProcessor, Severity::DEBUG);
 
         $processor->process($this->createEntry(Severity::TRACE, 'trace message'));
     }
 
-    public function test_flush_delegates_to_wrapped_processor() : void
+    public function test_flush_delegates_to_wrapped_processor(): void
     {
         $wrappedProcessor = $this->createMock(LogProcessor::class);
-        $wrappedProcessor->expects(self::once())
-            ->method('flush')
-            ->willReturn(true);
+        $wrappedProcessor->expects(self::once())->method('flush')->willReturn(true);
 
         $processor = new SeverityFilteringLogProcessor($wrappedProcessor, Severity::INFO);
 
-        self::assertTrue($processor->flush());
+        static::assertTrue($processor->flush());
     }
 
-    public function test_flush_returns_false_when_wrapped_processor_fails() : void
+    public function test_flush_returns_false_when_wrapped_processor_fails(): void
     {
         $wrappedProcessor = $this->createMock(LogProcessor::class);
-        $wrappedProcessor->expects(self::once())
-            ->method('flush')
-            ->willReturn(false);
+        $wrappedProcessor->expects(self::once())->method('flush')->willReturn(false);
 
         $processor = new SeverityFilteringLogProcessor($wrappedProcessor, Severity::INFO);
 
-        self::assertFalse($processor->flush());
+        static::assertFalse($processor->flush());
     }
 
-    public function test_only_fatal_when_minimum_is_fatal() : void
+    public function test_only_fatal_when_minimum_is_fatal(): void
     {
         $wrappedProcessor = $this->createMock(LogProcessor::class);
-        $wrappedProcessor->expects(self::once())
-            ->method('process');
+        $wrappedProcessor->expects(self::once())->method('process');
 
         $processor = new SeverityFilteringLogProcessor($wrappedProcessor, Severity::FATAL);
 
@@ -97,11 +93,10 @@ final class SeverityFilteringLogProcessorTest extends TestCase
         $processor->process($this->createEntry(Severity::FATAL, 'fatal'));
     }
 
-    public function test_passes_all_levels_when_minimum_is_trace() : void
+    public function test_passes_all_levels_when_minimum_is_trace(): void
     {
         $wrappedProcessor = $this->createMock(LogProcessor::class);
-        $wrappedProcessor->expects(self::exactly(6))
-            ->method('process');
+        $wrappedProcessor->expects(self::exactly(6))->method('process');
 
         $processor = new SeverityFilteringLogProcessor($wrappedProcessor, Severity::TRACE);
 
@@ -113,32 +108,32 @@ final class SeverityFilteringLogProcessorTest extends TestCase
         $processor->process($this->createEntry(Severity::FATAL, 'fatal'));
     }
 
-    public function test_passes_through_log_above_minimum_severity_level() : void
+    public function test_passes_through_log_above_minimum_severity_level(): void
     {
         $wrappedProcessor = $this->createMock(LogProcessor::class);
-        $wrappedProcessor->expects(self::once())
-            ->method('process');
+        $wrappedProcessor->expects(self::once())->method('process');
 
         $processor = new SeverityFilteringLogProcessor($wrappedProcessor, Severity::WARN);
 
         $processor->process($this->createEntry(Severity::ERROR, 'error message'));
     }
 
-    public function test_passes_through_log_at_minimum_severity_level() : void
+    public function test_passes_through_log_at_minimum_severity_level(): void
     {
         $wrappedProcessor = $this->createMock(LogProcessor::class);
-        $wrappedProcessor->expects(self::once())
-            ->method('process');
+        $wrappedProcessor->expects(self::once())->method('process');
 
         $processor = new SeverityFilteringLogProcessor($wrappedProcessor, Severity::WARN);
 
         $processor->process($this->createEntry(Severity::WARN, 'warning message'));
     }
 
-    private function createEntry(Severity $severity, string $body) : LogEntry
+    private function createEntry(Severity $severity, string $body): LogEntry
     {
         return new LogEntry(
-            (new LogRecord())->setSeverity($severity)->setBody($body),
+            (new LogRecord())
+                ->setSeverity($severity)
+                ->setBody($body),
             $this->resource,
             new InstrumentationScope('test', '1.0.0'),
             new \DateTimeImmutable(),

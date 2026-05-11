@@ -18,51 +18,61 @@ final readonly class FrameBound implements AstConvertible
         private FrameBoundType $type,
         private ?Expression $offset = null,
     ) {
-        if (($this->type === FrameBoundType::PRECEDING || $this->type === FrameBoundType::FOLLOWING) && $this->offset === null) {
+        if (
+            ($this->type === FrameBoundType::PRECEDING || $this->type === FrameBoundType::FOLLOWING)
+            && $this->offset === null
+        ) {
             throw InvalidExpressionException::invalidValue('FrameBound offset', 'null for PRECEDING/FOLLOWING');
         }
 
-        if (($this->type === FrameBoundType::CURRENT_ROW || $this->type === FrameBoundType::UNBOUNDED_PRECEDING || $this->type === FrameBoundType::UNBOUNDED_FOLLOWING) && $this->offset !== null) {
+        if (
+            (
+                $this->type === FrameBoundType::CURRENT_ROW
+                || $this->type === FrameBoundType::UNBOUNDED_PRECEDING
+                || $this->type === FrameBoundType::UNBOUNDED_FOLLOWING
+            )
+            && $this->offset !== null
+        ) {
             throw InvalidExpressionException::invalidValue('FrameBound offset', 'non-null for CURRENT_ROW/UNBOUNDED');
         }
     }
 
-    public static function currentRow() : self
+    public static function currentRow(): self
     {
         return new self(FrameBoundType::CURRENT_ROW);
     }
 
-    public static function following(Expression $offset) : self
+    public static function following(Expression $offset): self
     {
         return new self(FrameBoundType::FOLLOWING, $offset);
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         return new self(FrameBoundType::CURRENT_ROW);
     }
 
-    public static function preceding(Expression $offset) : self
+    public static function preceding(Expression $offset): self
     {
         return new self(FrameBoundType::PRECEDING, $offset);
     }
 
-    public static function unboundedFollowing() : self
+    public static function unboundedFollowing(): self
     {
         return new self(FrameBoundType::UNBOUNDED_FOLLOWING);
     }
 
-    public static function unboundedPreceding() : self
+    public static function unboundedPreceding(): self
     {
         return new self(FrameBoundType::UNBOUNDED_PRECEDING);
     }
 
-    public function offset() : ?Expression
+    public function offset(): ?Expression
     {
         return $this->offset;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         if ($this->offset !== null) {
             return $this->offset->toAst();
@@ -71,7 +81,7 @@ final readonly class FrameBound implements AstConvertible
         return new Node();
     }
 
-    public function type() : FrameBoundType
+    public function type(): FrameBoundType
     {
         return $this->type;
     }

@@ -10,11 +10,11 @@ use Flow\PostgreSql\Schema\Catalog;
 
 final readonly class AstViewDependencyResolver implements ViewDependencyResolver
 {
-    public function __construct(private Parser $parser)
-    {
-    }
+    public function __construct(
+        private Parser $parser,
+    ) {}
 
-    public function resolve(Catalog $catalog, array $modifiedTableQualifiedNames) : DependentViews
+    public function resolve(Catalog $catalog, array $modifiedTableQualifiedNames): DependentViews
     {
         if ($modifiedTableQualifiedNames === []) {
             return DependentViews::empty();
@@ -35,7 +35,10 @@ final readonly class AstViewDependencyResolver implements ViewDependencyResolver
             foreach ($schema->materializedViews as $materializedView) {
                 $qualifiedName = $schema->name . '.' . $materializedView->name;
                 $allViews[$qualifiedName] = new DependentView($schema->name, $materializedView);
-                $viewDependsOn[$qualifiedName] = $this->extractDependencies($materializedView->definition, $schema->name);
+                $viewDependsOn[$qualifiedName] = $this->extractDependencies(
+                    $materializedView->definition,
+                    $schema->name,
+                );
             }
         }
 
@@ -48,14 +51,14 @@ final readonly class AstViewDependencyResolver implements ViewDependencyResolver
         $depths = $this->computeDepths($affected, $viewDependsOn, $allViews);
 
         $dropOrder = $affected;
-        \usort($dropOrder, static fn (string $a, string $b) : int => $depths[$b] <=> $depths[$a]);
+        \usort($dropOrder, static fn(string $a, string $b): int => $depths[$b] <=> $depths[$a]);
 
         $createOrder = $affected;
-        \usort($createOrder, static fn (string $a, string $b) : int => $depths[$a] <=> $depths[$b]);
+        \usort($createOrder, static fn(string $a, string $b): int => $depths[$a] <=> $depths[$b]);
 
         return new DependentViews(
-            \array_map(static fn (string $name) : DependentView => $allViews[$name], $dropOrder),
-            \array_map(static fn (string $name) : DependentView => $allViews[$name], $createOrder),
+            \array_map(static fn(string $name): DependentView => $allViews[$name], $dropOrder),
+            \array_map(static fn(string $name): DependentView => $allViews[$name], $createOrder),
         );
     }
 
@@ -66,12 +69,18 @@ final readonly class AstViewDependencyResolver implements ViewDependencyResolver
      *
      * @return array<string, int>
      */
-    private function computeDepths(array $affected, array $viewDependsOn, array $allViews) : array
+    private function computeDepths(array $affected, array $viewDependsOn, array $allViews): array
     {
         $depths = [];
         $affectedSet = \array_flip($affected);
 
-        $getDepth = static function (string $viewName) use (&$getDepth, &$depths, $viewDependsOn, $allViews, $affectedSet) : int {
+        $getDepth = static function (string $viewName) use (
+            &$getDepth,
+            &$depths,
+            $viewDependsOn,
+            $allViews,
+            $affectedSet,
+        ): int {
             if (\array_key_exists($viewName, $depths)) {
                 return $depths[$viewName];
             }
@@ -100,7 +109,7 @@ final readonly class AstViewDependencyResolver implements ViewDependencyResolver
     /**
      * @return list<string>
      */
-    private function extractDependencies(string $definition, string $defaultSchema) : array
+    private function extractDependencies(string $definition, string $defaultSchema): array
     {
         $parsedQuery = $this->parser->parse($definition);
         $tables = (new Tables($parsedQuery))->all();
@@ -119,7 +128,7 @@ final readonly class AstViewDependencyResolver implements ViewDependencyResolver
      *
      * @return list<string>
      */
-    private function findAffectedViews(array $modifiedTableQualifiedNames, array $viewDependsOn) : array
+    private function findAffectedViews(array $modifiedTableQualifiedNames, array $viewDependsOn): array
     {
         $affected = [];
         $queue = $modifiedTableQualifiedNames;

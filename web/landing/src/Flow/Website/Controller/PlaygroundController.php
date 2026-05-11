@@ -10,14 +10,11 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class PlaygroundController extends AbstractController
 {
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     #[Route('/playground', name: 'playground')]
-    public function index() : Response
+    public function index(): Response
     {
-        return $this->render('playground/index.html.twig', [
-        ]);
+        return $this->render('playground/index.html.twig', []);
     }
 }

@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 final class SpanStackTest extends TestCase
 {
-    public function test_clear_removes_all_spans() : void
+    public function test_clear_removes_all_spans(): void
     {
         $stack = new SpanStack();
         $span1 = SpanMother::create('span-1');
@@ -23,23 +23,23 @@ final class SpanStackTest extends TestCase
 
         $stack->clear();
 
-        self::assertTrue($stack->isEmpty());
-        self::assertNull($stack->getSuiteSpan('TestSuite'));
+        static::assertTrue($stack->isEmpty());
+        static::assertNull($stack->getSuiteSpan('TestSuite'));
     }
 
-    public function test_current_returns_top_without_removing() : void
+    public function test_current_returns_top_without_removing(): void
     {
         $stack = new SpanStack();
         $span = SpanMother::create('test-span');
 
         $stack->push($span);
 
-        self::assertSame($span, $stack->current());
-        self::assertSame($span, $stack->current());
-        self::assertFalse($stack->isEmpty());
+        static::assertSame($span, $stack->current());
+        static::assertSame($span, $stack->current());
+        static::assertFalse($stack->isEmpty());
     }
 
-    public function test_lifo_order() : void
+    public function test_lifo_order(): void
     {
         $stack = new SpanStack();
         $span1 = SpanMother::create('span-1');
@@ -50,26 +50,26 @@ final class SpanStackTest extends TestCase
         $stack->push($span2);
         $stack->push($span3);
 
-        self::assertSame($span3, $stack->pop());
-        self::assertSame($span2, $stack->pop());
-        self::assertSame($span1, $stack->pop());
-        self::assertTrue($stack->isEmpty());
+        static::assertSame($span3, $stack->pop());
+        static::assertSame($span2, $stack->pop());
+        static::assertSame($span1, $stack->pop());
+        static::assertTrue($stack->isEmpty());
     }
 
-    public function test_push_and_pop() : void
+    public function test_push_and_pop(): void
     {
         $stack = new SpanStack();
         $span = SpanMother::create('test-span');
 
         $stack->push($span);
 
-        self::assertFalse($stack->isEmpty());
-        self::assertSame($span, $stack->current());
-        self::assertSame($span, $stack->pop());
-        self::assertTrue($stack->isEmpty());
+        static::assertFalse($stack->isEmpty());
+        static::assertSame($span, $stack->current());
+        static::assertSame($span, $stack->pop());
+        static::assertTrue($stack->isEmpty());
     }
 
-    public function test_remove_suite_span() : void
+    public function test_remove_suite_span(): void
     {
         $stack = new SpanStack();
         $span = SpanMother::create('suite-span');
@@ -77,26 +77,26 @@ final class SpanStackTest extends TestCase
         $stack->setSuiteSpan('TestSuite', $span);
         $stack->removeSuiteSpan('TestSuite');
 
-        self::assertNull($stack->getSuiteSpan('TestSuite'));
+        static::assertNull($stack->getSuiteSpan('TestSuite'));
     }
 
-    public function test_set_and_get_suite_span() : void
+    public function test_set_and_get_suite_span(): void
     {
         $stack = new SpanStack();
         $span = SpanMother::create('suite-span');
 
         $stack->setSuiteSpan('TestSuite', $span);
 
-        self::assertSame($span, $stack->getSuiteSpan('TestSuite'));
-        self::assertNull($stack->getSuiteSpan('OtherSuite'));
+        static::assertSame($span, $stack->getSuiteSpan('TestSuite'));
+        static::assertNull($stack->getSuiteSpan('OtherSuite'));
     }
 
-    public function test_starts_empty() : void
+    public function test_starts_empty(): void
     {
         $stack = new SpanStack();
 
-        self::assertTrue($stack->isEmpty());
-        self::assertNull($stack->current());
-        self::assertNull($stack->pop());
+        static::assertTrue($stack->isEmpty());
+        static::assertNull($stack->current());
+        static::assertNull($stack->pop());
     }
 }

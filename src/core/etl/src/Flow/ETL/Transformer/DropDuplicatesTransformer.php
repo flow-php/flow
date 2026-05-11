@@ -6,8 +6,12 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Hash\Algorithm, Hash\NativePHPHash, Rows, Transformer};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Hash\Algorithm;
+use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Rows;
+use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\DropDuplicates\Hashes;
 
 final readonly class DropDuplicatesTransformer implements Transformer
@@ -32,7 +36,7 @@ final readonly class DropDuplicatesTransformer implements Transformer
         $this->hashAlgorithm = new NativePHPHash();
     }
 
-    public function transform(Rows $rows, FlowContext $context) : Rows
+    public function transform(Rows $rows, FlowContext $context): Rows
     {
         $context->telemetry()->transformationStarted($this);
 

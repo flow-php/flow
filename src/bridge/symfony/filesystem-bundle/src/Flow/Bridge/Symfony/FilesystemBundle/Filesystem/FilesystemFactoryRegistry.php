@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\FilesystemBundle\Filesystem;
 
-use Flow\Bridge\Symfony\FilesystemBundle\Exception\{InvalidArgumentException, LogicException};
+use Flow\Bridge\Symfony\FilesystemBundle\Exception\InvalidArgumentException;
+use Flow\Bridge\Symfony\FilesystemBundle\Exception\LogicException;
 
 final class FilesystemFactoryRegistry
 {
@@ -27,7 +28,7 @@ final class FilesystemFactoryRegistry
         }
     }
 
-    public function get(string $type) : FilesystemFactory
+    public function get(string $type): FilesystemFactory
     {
         if (!\array_key_exists($type, $this->factories)) {
             throw new InvalidArgumentException(\sprintf(
@@ -40,7 +41,7 @@ final class FilesystemFactoryRegistry
         return $this->factories[$type];
     }
 
-    public function has(string $type) : bool
+    public function has(string $type): bool
     {
         return \array_key_exists($type, $this->factories);
     }
@@ -48,7 +49,7 @@ final class FilesystemFactoryRegistry
     /**
      * @return list<string>
      */
-    public function types() : array
+    public function types(): array
     {
         return \array_keys($this->factories);
     }

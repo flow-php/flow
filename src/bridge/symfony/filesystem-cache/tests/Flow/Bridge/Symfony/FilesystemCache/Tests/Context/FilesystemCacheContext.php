@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\FilesystemCache\Tests\Context;
 
 use Flow\Bridge\Symfony\FilesystemCache\FlowFilesystemCacheAdapter;
-use Flow\Filesystem\{Filesystem, Path};
+use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
+use Flow\Filesystem\Path;
 use Symfony\Component\Cache\Marshaller\MarshallerInterface;
 
 final class FilesystemCacheContext
@@ -29,7 +30,7 @@ final class FilesystemCacheContext
         int $defaultLifetime = 0,
         ?MarshallerInterface $marshaller = null,
         ?Filesystem $filesystem = null,
-    ) : FlowFilesystemCacheAdapter {
+    ): FlowFilesystemCacheAdapter {
         return new FlowFilesystemCacheAdapter(
             $filesystem ?? $this->filesystem,
             $this->directory,
@@ -39,7 +40,7 @@ final class FilesystemCacheContext
         );
     }
 
-    public function cleanup() : void
+    public function cleanup(): void
     {
         if (\is_dir($this->directoryPath)) {
             $this->filesystem->rm(\Flow\Filesystem\DSL\path($this->directoryPath));
@@ -49,7 +50,7 @@ final class FilesystemCacheContext
     /**
      * Overwrite the only existing cache file with a custom body.
      */
-    public function corruptOnlyFile(string $body) : string
+    public function corruptOnlyFile(string $body): string
     {
         $path = $this->singleFilePath();
 
@@ -63,13 +64,15 @@ final class FilesystemCacheContext
     /**
      * @return list<string>
      */
-    public function listFiles() : array
+    public function listFiles(): array
     {
         if (!\is_dir($this->directoryPath)) {
             return [];
         }
 
-        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($this->directoryPath, \RecursiveDirectoryIterator::SKIP_DOTS));
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($this->directoryPath, \RecursiveDirectoryIterator::SKIP_DOTS),
+        );
         $files = [];
 
         foreach ($iterator as $entry) {
@@ -83,7 +86,7 @@ final class FilesystemCacheContext
         return $files;
     }
 
-    public function readFile(string $path) : string
+    public function readFile(string $path): string
     {
         $content = \file_get_contents($path);
 
@@ -94,17 +97,21 @@ final class FilesystemCacheContext
         return $content;
     }
 
-    public function readOnlyFile() : string
+    public function readOnlyFile(): string
     {
         return $this->readFile($this->singleFilePath());
     }
 
-    private function singleFilePath() : string
+    private function singleFilePath(): string
     {
         $files = $this->listFiles();
 
         if (\count($files) !== 1) {
-            throw new \RuntimeException(\sprintf('Expected exactly 1 file under %s, found %d.', $this->directoryPath, \count($files)));
+            throw new \RuntimeException(\sprintf(
+                'Expected exactly 1 file under %s, found %d.',
+                $this->directoryPath,
+                \count($files),
+            ));
         }
 
         return $files[0];

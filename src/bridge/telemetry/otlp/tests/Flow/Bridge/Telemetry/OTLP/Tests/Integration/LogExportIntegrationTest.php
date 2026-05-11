@@ -11,7 +11,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 final class LogExportIntegrationTest extends IntegrationTestCase
 {
     #[DataProvider('transportProvider')]
-    public function test_exports_log_with_attributes(TransportConfiguration $config) : void
+    public function test_exports_log_with_attributes(TransportConfiguration $config): void
     {
         $logsBefore = $this->otelContext->collectorMetrics()->getAcceptedLogRecords();
 
@@ -27,15 +27,15 @@ final class LogExportIntegrationTest extends IntegrationTestCase
 
         $telemetry->shutdown();
 
-        self::assertGreaterThan(
+        static::assertGreaterThan(
             $logsBefore,
             $this->otelContext->collectorMetrics()->waitForLogRecords($logsBefore),
-            'Collector should have received log with attributes'
+            'Collector should have received log with attributes',
         );
     }
 
     #[DataProvider('transportProvider')]
-    public function test_exports_log_with_resource_attributes(TransportConfiguration $config) : void
+    public function test_exports_log_with_resource_attributes(TransportConfiguration $config): void
     {
         $logsBefore = $this->otelContext->collectorMetrics()->getAcceptedLogRecords();
 
@@ -50,15 +50,15 @@ final class LogExportIntegrationTest extends IntegrationTestCase
 
         $telemetry->shutdown();
 
-        self::assertGreaterThan(
+        static::assertGreaterThan(
             $logsBefore,
             $this->otelContext->collectorMetrics()->waitForLogRecords($logsBefore),
-            'Collector should have received log with resource'
+            'Collector should have received log with resource',
         );
     }
 
     #[DataProvider('transportProvider')]
-    public function test_exports_log_with_severity(TransportConfiguration $config) : void
+    public function test_exports_log_with_severity(TransportConfiguration $config): void
     {
         $logsBefore = $this->otelContext->collectorMetrics()->getAcceptedLogRecords();
 
@@ -69,15 +69,15 @@ final class LogExportIntegrationTest extends IntegrationTestCase
 
         $telemetry->shutdown();
 
-        self::assertGreaterThan(
+        static::assertGreaterThan(
             $logsBefore,
             $this->otelContext->collectorMetrics()->waitForLogRecords($logsBefore),
-            'Collector should have received log with severity'
+            'Collector should have received log with severity',
         );
     }
 
     #[DataProvider('transportProvider')]
-    public function test_exports_log_with_trace_context(TransportConfiguration $config) : void
+    public function test_exports_log_with_trace_context(TransportConfiguration $config): void
     {
         $logsBefore = $this->otelContext->collectorMetrics()->getAcceptedLogRecords();
         $spansBefore = $this->otelContext->collectorMetrics()->getAcceptedSpans();
@@ -92,20 +92,20 @@ final class LogExportIntegrationTest extends IntegrationTestCase
 
         $telemetry->shutdown();
 
-        self::assertGreaterThan(
+        static::assertGreaterThan(
             $logsBefore,
             $this->otelContext->collectorMetrics()->waitForLogRecords($logsBefore),
-            'Collector should have received log with trace context'
+            'Collector should have received log with trace context',
         );
-        self::assertGreaterThan(
+        static::assertGreaterThan(
             $spansBefore,
             $this->otelContext->collectorMetrics()->waitForSpans($spansBefore),
-            'Collector should have received the span'
+            'Collector should have received the span',
         );
     }
 
     #[DataProvider('transportProvider')]
-    public function test_exports_multiple_logs_in_sequence(TransportConfiguration $config) : void
+    public function test_exports_multiple_logs_in_sequence(TransportConfiguration $config): void
     {
         $logsBefore = $this->otelContext->collectorMetrics()->getAcceptedLogRecords();
 
@@ -118,15 +118,15 @@ final class LogExportIntegrationTest extends IntegrationTestCase
 
         $telemetry->shutdown();
 
-        self::assertGreaterThanOrEqual(
+        static::assertGreaterThanOrEqual(
             $logsBefore + 3,
             $this->otelContext->collectorMetrics()->waitForLogRecords($logsBefore + 2),
-            'Collector should have received 3 logs'
+            'Collector should have received 3 logs',
         );
     }
 
     #[DataProvider('transportProvider')]
-    public function test_exports_single_log(TransportConfiguration $config) : void
+    public function test_exports_single_log(TransportConfiguration $config): void
     {
         $logsBefore = $this->otelContext->collectorMetrics()->getAcceptedLogRecords();
 
@@ -137,10 +137,10 @@ final class LogExportIntegrationTest extends IntegrationTestCase
 
         $telemetry->shutdown();
 
-        self::assertGreaterThan(
+        static::assertGreaterThan(
             $logsBefore,
             $this->otelContext->collectorMetrics()->waitForLogRecords($logsBefore),
-            'Collector should have received the log'
+            'Collector should have received the log',
         );
     }
 }

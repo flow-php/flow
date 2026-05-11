@@ -12,7 +12,7 @@ final class TestMessageHandler
 {
     public bool $handled = false;
 
-    public function __invoke(TestMessage $message) : void
+    public function __invoke(TestMessage $message): void
     {
         $this->handled = true;
     }

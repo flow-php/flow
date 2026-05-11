@@ -4,32 +4,37 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Symfony\Component\String\s;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Row};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+
+use function Symfony\Component\String\s;
 
 final class StringMatch extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction|string $haystack,
         private readonly ScalarFunction|string $pattern,
-    ) {
-    }
+    ) {}
 
     /**
      * @return null|array<int|string, string>
      */
-    public function eval(Row $row, FlowContext $context) : ?array
+    public function eval(Row $row, FlowContext $context): ?array
     {
         $haystack = (new Parameter($this->haystack))->asString($row, $context);
         $pattern = (new Parameter($this->pattern))->asString($row, $context);
 
         if ($haystack === null) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('StringMatch function requires non-null haystack'));
+            return $context
+                ->functions()
+                ->invalidResult(new InvalidArgumentException('StringMatch function requires non-null haystack'));
         }
 
         if ($pattern === null) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('StringMatch function requires non-null pattern'));
+            return $context
+                ->functions()
+                ->invalidResult(new InvalidArgumentException('StringMatch function requires non-null pattern'));
         }
 
         try {
@@ -38,7 +43,9 @@ final class StringMatch extends ScalarFunctionChain
 
             return \count($result) > 0 ? $result : null;
         } catch (\Throwable $e) {
-            $context->functions()->invalidResult(new InvalidArgumentException('StringMatch error: ' . $e->getMessage()));
+            $context
+                ->functions()
+                ->invalidResult(new InvalidArgumentException('StringMatch error: ' . $e->getMessage()));
 
             return null;
         }

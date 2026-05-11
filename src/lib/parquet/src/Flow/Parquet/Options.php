@@ -40,15 +40,15 @@ final class Options
         ];
     }
 
-    public static function default() : self
+    public static function default(): self
     {
-        return new self;
+        return new self();
     }
 
     /**
      * @return null|array<mixed>|bool|float|int|string
      */
-    public function get(Option $option) : bool|int|float|string|array|null
+    public function get(Option $option): bool|int|float|string|array|null
     {
         return $this->options[$option->name];
     }
@@ -56,7 +56,7 @@ final class Options
     /**
      * @return null|array<mixed>
      */
-    public function getArray(Option $option) : ?array
+    public function getArray(Option $option): ?array
     {
         $value = $this->options[$option->name] ?? null;
 
@@ -71,7 +71,7 @@ final class Options
         throw new InvalidArgumentException("Option {$option->name} is not an array, but: " . \gettype($value));
     }
 
-    public function getBool(Option $option) : bool
+    public function getBool(Option $option): bool
     {
         $value = $this->options[$option->name];
 
@@ -82,7 +82,7 @@ final class Options
         return $value;
     }
 
-    public function getInt(Option $option) : int
+    public function getInt(Option $option): int
     {
         $value = $this->options[$option->name];
 
@@ -93,7 +93,7 @@ final class Options
         return $value;
     }
 
-    public function getString(Option $option) : string
+    public function getString(Option $option): string
     {
         $value = $this->options[$option->name];
 
@@ -104,7 +104,7 @@ final class Options
         return $value;
     }
 
-    public function has(Option $option) : bool
+    public function has(Option $option): bool
     {
         $value = $this->options[$option->name] ?? null;
 
@@ -114,7 +114,7 @@ final class Options
     /**
      * @param null|array<mixed>|bool|float|int|string $value
      */
-    public function set(Option $option, bool|int|float|string|array|null $value) : self
+    public function set(Option $option, bool|int|float|string|array|null $value): self
     {
         $this->options[$option->name] = $value;
 

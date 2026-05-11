@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Processor;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Processor, Rows};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Processor;
+use Flow\ETL\Rows;
 
 /**
  * Skips the first N rows.
@@ -19,14 +21,15 @@ final readonly class OffsetProcessor implements Processor
      *
      * @throws InvalidArgumentException
      */
-    public function __construct(private int $offset)
-    {
+    public function __construct(
+        private int $offset,
+    ) {
         if ($this->offset < 0) {
             throw new InvalidArgumentException('Offset must be greater than or equal to 0, given: ' . $this->offset);
         }
     }
 
-    public function process(\Generator $rows, FlowContext $context) : \Generator
+    public function process(\Generator $rows, FlowContext $context): \Generator
     {
         if ($this->offset === 0) {
             yield from $rows;

@@ -9,6 +9,5 @@ final readonly class Configuration
     public function __construct(
         public string $account,
         public string $container,
-    ) {
-    }
+    ) {}
 }

@@ -8,15 +8,15 @@ use Symfony\Component\Console\Command\Command;
 
 final class GenerateDataFrameCompleterCommandTest extends CompleterCommandTestCase
 {
-    public function test_command_executes_successfully() : void
+    public function test_command_executes_successfully(): void
     {
         $commandTester = $this->executeCommand('app:generate:data-frame-completer');
 
-        self::assertSame(Command::SUCCESS, $commandTester->getStatusCode());
-        self::assertStringContainsString('Generated DataFrame completer', $commandTester->getDisplay());
+        static::assertSame(Command::SUCCESS, $commandTester->getStatusCode());
+        static::assertStringContainsString('Generated DataFrame completer', $commandTester->getDisplay());
     }
 
-    public function test_generated_js_contains_core_dataframe_methods() : void
+    public function test_generated_js_contains_core_dataframe_methods(): void
     {
         $this->executeCommand('app:generate:data-frame-completer');
 
@@ -25,31 +25,39 @@ final class GenerateDataFrameCompleterCommandTest extends CompleterCommandTestCa
         $coreMethods = ['write', 'collect', 'fetch', 'run', 'withEntry', 'select', 'drop', 'filter', 'limit'];
 
         foreach ($coreMethods as $method) {
-            self::assertStringContainsString('label: "' . $method . '"', $content, "Missing core DataFrame method: {$method}");
+            static::assertStringContainsString(
+                'label: "' . $method . '"',
+                $content,
+                "Missing core DataFrame method: {$method}",
+            );
         }
     }
 
-    public function test_generated_js_contains_required_structure() : void
+    public function test_generated_js_contains_required_structure(): void
     {
         $this->executeCommand('app:generate:data-frame-completer');
 
         $content = \file_get_contents($this->getOutputPath('dataframe.js'));
 
-        self::assertStringContainsString('CodeMirror Completer', $content);
-        self::assertStringContainsString('dataframeMethods', $content);
-        self::assertStringContainsString('import { CompletionContext, snippet }', $content);
-        self::assertStringContainsString('export function', $content);
+        static::assertStringContainsString('CodeMirror Completer', $content);
+        static::assertStringContainsString('dataframeMethods', $content);
+        static::assertStringContainsString('import { CompletionContext, snippet }', $content);
+        static::assertStringContainsString('export function', $content);
     }
 
-    public function test_generated_js_has_valid_completion_structure() : void
+    public function test_generated_js_has_valid_completion_structure(): void
     {
         $this->executeCommand('app:generate:data-frame-completer');
 
         $content = \file_get_contents($this->getOutputPath('dataframe.js'));
 
-        self::assertMatchesRegularExpression('/label:\s*"[a-zA-Z]+"/i', $content, 'Completions should have label property');
-        self::assertMatchesRegularExpression('/type:\s*"method"/i', $content, 'Completions should have type: method');
-        self::assertStringContainsString('ETL', $content);
-        self::assertStringContainsString('DataFrame"', $content, 'Completions should reference DataFrame class');
+        static::assertMatchesRegularExpression(
+            '/label:\s*"[a-zA-Z]+"/i',
+            $content,
+            'Completions should have label property',
+        );
+        static::assertMatchesRegularExpression('/type:\s*"method"/i', $content, 'Completions should have type: method');
+        static::assertStringContainsString('ETL', $content);
+        static::assertStringContainsString('DataFrame"', $content, 'Completions should reference DataFrame class');
     }
 }

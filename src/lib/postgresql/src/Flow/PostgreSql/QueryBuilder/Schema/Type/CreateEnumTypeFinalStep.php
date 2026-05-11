@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface CreateEnumTypeFinalStep extends Sql
 {
-    public function toAst() : CreateEnumStmt;
+    public function toAst(): CreateEnumStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

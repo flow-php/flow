@@ -19,16 +19,16 @@ final readonly class DSLDefinition
      *      doc_comment: null|string,
      *  } $data
      */
-    public function __construct(private array $data)
-    {
-    }
+    public function __construct(
+        private array $data,
+    ) {}
 
-    public function data() : array
+    public function data(): array
     {
         return $this->data;
     }
 
-    public function docComment() : string
+    public function docComment(): string
     {
         return \base64_decode((string) $this->data['doc_comment'], true);
     }
@@ -36,7 +36,7 @@ final readonly class DSLDefinition
     /**
      * @return array<Example>
      */
-    public function examples() : array
+    public function examples(): array
     {
         $examples = [];
 
@@ -53,19 +53,25 @@ final readonly class DSLDefinition
         return $examples;
     }
 
-    public function githubUrl(string $version = '1.x') : string
+    public function githubUrl(string $version = '1.x'): string
     {
         $startLine = $this->data['start_line_in_file'] ? '#L' . $this->data['start_line_in_file'] : '';
 
-        return 'https://github.com/flow-php/flow/blob/' . $version . '/' . \ltrim($this->data['repository_path'], '/') . $startLine;
+        return (
+            'https://github.com/flow-php/flow/blob/'
+            . $version
+            . '/'
+            . \ltrim($this->data['repository_path'], '/')
+            . $startLine
+        );
     }
 
-    public function hasDocComment() : bool
+    public function hasDocComment(): bool
     {
         return $this->data['doc_comment'] !== null;
     }
 
-    public function module() : ?Module
+    public function module(): ?Module
     {
         foreach ($this->data['attributes'] as $attribute) {
             if ($attribute['name'] === 'DocumentationDSL') {
@@ -80,22 +86,22 @@ final readonly class DSLDefinition
         return null;
     }
 
-    public function name() : string
+    public function name(): string
     {
         return $this->data['name'];
     }
 
-    public function path() : string
+    public function path(): string
     {
         return $this->data['repository_path'] . '/' . $this->data['name'];
     }
 
-    public function slug() : string
+    public function slug(): string
     {
         return $this->data['slug'];
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         if ($this->hasDocComment()) {
             $output = $this->docComment() . PHP_EOL;
@@ -122,7 +128,7 @@ final readonly class DSLDefinition
         return $output;
     }
 
-    public function type() : ?Type
+    public function type(): ?Type
     {
         foreach ($this->data['attributes'] as $attribute) {
             if ($attribute['name'] === 'DocumentationDSL') {
@@ -137,7 +143,7 @@ final readonly class DSLDefinition
         return null;
     }
 
-    private function parameterToString(array $parameter) : string
+    private function parameterToString(array $parameter): string
     {
         $output = $this->typeToString($parameter['type']);
         $output .= ' $' . $parameter['name'];
@@ -145,7 +151,7 @@ final readonly class DSLDefinition
         return $output;
     }
 
-    private function typeToString(array $type) : string
+    private function typeToString(array $type): string
     {
         $output = '';
 

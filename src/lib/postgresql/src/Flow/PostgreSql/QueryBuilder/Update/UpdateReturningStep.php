@@ -16,10 +16,10 @@ interface UpdateReturningStep extends UpdateFinalStep
      *
      * @param Expression ...$expressions Expressions to return
      */
-    public function returning(Expression ...$expressions) : UpdateFinalStep;
+    public function returning(Expression ...$expressions): UpdateFinalStep;
 
     /**
      * Add RETURNING * clause.
      */
-    public function returningAll() : UpdateFinalStep;
+    public function returningAll(): UpdateFinalStep;
 }

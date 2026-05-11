@@ -8,10 +8,13 @@ use AsyncAws\S3\Exception\NoSuchKeyException;
 use AsyncAws\S3\Input\CreateMultipartUploadRequest;
 use AsyncAws\S3\S3Client;
 use Flow\Filesystem\Bridge\AsyncAWS\AsyncAWSS3DesintationStream\AsyncAWSS3BlockLifecycle;
-use Flow\Filesystem\{DestinationStream, Path, SizeUnits};
+use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\Path;
+use Flow\Filesystem\SizeUnits;
 use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
-use Flow\Filesystem\Stream\{BlockFactory, Blocks};
+use Flow\Filesystem\Stream\BlockFactory;
+use Flow\Filesystem\Stream\Blocks;
 
 final class AsyncAWSS3DestinationStream implements DestinationStream
 {
@@ -34,8 +37,7 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
         Path $path,
         BlockFactory $blockFactory = new NativeLocalFileBlocksFactory(),
         int $blockSize = 1024 * 1024 * 4,
-    ) : self {
-
+    ): self {
         try {
             $objectHead = $s3Client->headObject([
                 'Bucket' => $bucket,
@@ -65,23 +67,23 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
                 $blocks = new Blocks(
                     $blockSize,
                     $blockFactory,
-                    new AsyncAWSS3BlockLifecycle($s3Client, $appendPath, $bucket, $uploadId, $blockList = new BlockList())
+                    new AsyncAWSS3BlockLifecycle(
+                        $s3Client,
+                        $appendPath,
+                        $bucket,
+                        $uploadId,
+                        $blockList = new BlockList(),
+                    ),
                 );
 
                 $blocks->append(
-                    $s3Client->getObject(['Bucket' => $bucket, 'Key' => ltrim($path->path(), '/')])
-                    ->getBody()
-                    ->getContentAsString()
+                    $s3Client
+                        ->getObject(['Bucket' => $bucket, 'Key' => ltrim($path->path(), '/')])
+                        ->getBody()
+                        ->getContentAsString(),
                 );
 
-                return new self(
-                    $s3Client,
-                    $uploadId,
-                    $bucket,
-                    $appendPath,
-                    $blocks,
-                    $blockList
-                );
+                return new self($s3Client, $uploadId, $bucket, $appendPath, $blocks, $blockList);
             }
 
             $partCopyResponse = $s3Client->uploadPartCopy([
@@ -103,9 +105,9 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
                 new Blocks(
                     $blockSize,
                     $blockFactory,
-                    new AsyncAWSS3BlockLifecycle($s3Client, $appendPath, $bucket, $uploadId, $blockList)
+                    new AsyncAWSS3BlockLifecycle($s3Client, $appendPath, $bucket, $uploadId, $blockList),
                 ),
-                $blockList
+                $blockList,
             );
         } catch (NoSuchKeyException) {
             return self::openBlank($s3Client, $bucket, $path, $blockFactory, $blockSize);
@@ -118,8 +120,7 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
         Path $path,
         BlockFactory $blockFactory = new NativeLocalFileBlocksFactory(),
         int $blockSize = 1024 * 1024 * 4,
-    ) : self {
-
+    ): self {
         $response = $s3Client->createMultipartUpload(new CreateMultipartUploadRequest([
             'Bucket' => $bucket,
             'Key' => \ltrim($path->path(), '/'),
@@ -137,23 +138,22 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
             new Blocks(
                 $blockSize,
                 $blockFactory,
-                new AsyncAWSS3BlockLifecycle($s3Client, $path, $bucket, $uploadId, $blockList = new BlockList())
+                new AsyncAWSS3BlockLifecycle($s3Client, $path, $bucket, $uploadId, $blockList = new BlockList()),
             ),
-            $blockList
+            $blockList,
         );
     }
 
-    public function append(string $data) : DestinationStream
+    public function append(string $data): DestinationStream
     {
         $this->blocks->append($data);
 
         return $this;
     }
 
-    public function close() : void
+    public function close(): void
     {
         if ($this->blocks->size() === 0) {
-
             $handle = \fopen($this->blocks->block()->path()->path(), 'rb');
 
             if ($handle === false) {
@@ -236,10 +236,12 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
         $this->closed = true;
     }
 
-    public function fromResource($resource) : DestinationStream
+    public function fromResource($resource): DestinationStream
     {
         if (!\is_resource($resource)) {
-            throw new InvalidArgumentException('DestinationStream::fromResource expects resource type, given: ' . \gettype($resource));
+            throw new InvalidArgumentException(
+                'DestinationStream::fromResource expects resource type, given: ' . \gettype($resource),
+            );
         }
 
         $meta = \stream_get_meta_data($resource);
@@ -253,12 +255,12 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
         return $this;
     }
 
-    public function isOpen() : bool
+    public function isOpen(): bool
     {
         return !$this->closed;
     }
 
-    public function path() : Path
+    public function path(): Path
     {
         return $this->path;
     }

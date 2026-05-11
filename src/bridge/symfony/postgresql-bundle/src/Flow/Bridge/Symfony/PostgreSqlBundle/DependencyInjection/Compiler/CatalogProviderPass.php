@@ -5,17 +5,20 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection\Compiler;
 
 use Flow\PostgreSql\Client\Context;
-use Flow\PostgreSql\Schema\{Catalog, ChainCatalogProvider};
+use Flow\PostgreSql\Schema\Catalog;
+use Flow\PostgreSql\Schema\ChainCatalogProvider;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
-use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Reference};
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Reference;
 
 final class CatalogProviderPass implements CompilerPassInterface
 {
-    public function process(ContainerBuilder $container) : void
+    public function process(ContainerBuilder $container): void
     {
         $providerRefs = [];
 
-        foreach ($container->findTaggedServiceIds('flow.postgresql.catalog_provider') as $serviceId => $tags) {
+        foreach ($container->findTaggedServiceIds('flow.postgresql.catalog_provider') as $serviceId => $_tags) {
             $providerRefs[] = new Reference($serviceId);
         }
 
@@ -29,7 +32,9 @@ final class CatalogProviderPass implements CompilerPassInterface
         }
 
         if ($providerRefs === [] && $container->hasParameter('flow.postgresql.migrations.connections')) {
-            throw new \LogicException('No catalog providers found. Register at least one catalog provider using #[AsCatalogProvider] attribute, "flow.postgresql.catalog_provider" tag, or "catalog_providers" configuration.');
+            throw new \LogicException(
+                'No catalog providers found. Register at least one catalog provider using #[AsCatalogProvider] attribute, "flow.postgresql.catalog_provider" tag, or "catalog_providers" configuration.',
+            );
         }
 
         if ($providerRefs === []) {
@@ -55,7 +60,7 @@ final class CatalogProviderPass implements CompilerPassInterface
         }
     }
 
-    private function attachCatalogToConnectionContext(ContainerBuilder $container, string $name) : void
+    private function attachCatalogToConnectionContext(ContainerBuilder $container, string $name): void
     {
         $contextId = "flow.postgresql.{$name}.context";
         $clientId = "flow.postgresql.{$name}.client";

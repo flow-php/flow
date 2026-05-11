@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ArrayDot\Tests\Unit;
 
-use function Flow\ArrayDot\array_dot_set;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\ArrayDot\array_dot_set;
 
 final class ArrayDotSetTest extends TestCase
 {
-    public function test_replace_value_on_non_empty_array() : void
+    public function test_replace_value_on_non_empty_array(): void
     {
-        self::assertSame(
+        static::assertSame(
             [
                 'foo' => [
                     'bar' => 'baz',
@@ -26,38 +27,38 @@ final class ArrayDotSetTest extends TestCase
                     'fos' => 1,
                 ],
                 'foo.bar',
-                'baz'
-            )
+                'baz',
+            ),
         );
     }
 
-    public function test_set_value_on_empty_array() : void
+    public function test_set_value_on_empty_array(): void
     {
-        self::assertSame(
+        static::assertSame(
             [
                 'foo' => [
                     'bar' => 'baz',
                 ],
             ],
-            array_dot_set([], 'foo.bar', 'baz')
+            array_dot_set([], 'foo.bar', 'baz'),
         );
     }
 
-    public function test_set_value_on_empty_array_using_escaped_wildcard() : void
+    public function test_set_value_on_empty_array_using_escaped_wildcard(): void
     {
-        self::assertSame(
+        static::assertSame(
             [
                 'foo' => [
                     '*' => 'baz',
                 ],
             ],
-            array_dot_set([], 'foo.\\*', 'baz')
+            array_dot_set([], 'foo.\\*', 'baz'),
         );
     }
 
-    public function test_set_value_on_existing_nested_array_each_element() : void
+    public function test_set_value_on_existing_nested_array_each_element(): void
     {
-        self::assertSame(
+        static::assertSame(
             [
                 'users' => [
                     [
@@ -82,8 +83,8 @@ final class ArrayDotSetTest extends TestCase
                     ],
                 ],
                 'users.*.status',
-                'active'
-            )
+                'active',
+            ),
         );
     }
 }

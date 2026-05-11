@@ -17,18 +17,19 @@ final class RowGroup
     public function __construct(
         private array $columnChunks,
         private int $rowsCount,
-    ) {
-    }
+    ) {}
 
-    public static function fromThrift(\Flow\Parquet\ThriftModel\RowGroup $thrift) : self
+    public static function fromThrift(\Flow\Parquet\ThriftModel\RowGroup $thrift): self
     {
         return new self(
-            \array_map(static fn (\Flow\Parquet\ThriftModel\ColumnChunk $columnChunk) => ColumnChunk::fromThrift($columnChunk), $thrift->columns),
-            (int) $thrift->num_rows
+            \array_map(static fn(\Flow\Parquet\ThriftModel\ColumnChunk $columnChunk) => ColumnChunk::fromThrift(
+                $columnChunk,
+            ), $thrift->columns),
+            (int) $thrift->num_rows,
         );
     }
 
-    public function addColumnChunk(ColumnChunk $columnChunk) : void
+    public function addColumnChunk(ColumnChunk $columnChunk): void
     {
         $this->columnChunks[] = $columnChunk;
     }
@@ -36,12 +37,12 @@ final class RowGroup
     /**
      * @return array<ColumnChunk>
      */
-    public function columnChunks() : array
+    public function columnChunks(): array
     {
         return $this->columnChunks;
     }
 
-    public function getColumnChunk(FlatColumn $column) : ColumnChunk
+    public function getColumnChunk(FlatColumn $column): ColumnChunk
     {
         foreach ($this->columnChunks as $chunk) {
             if ($chunk->flatPath() === $column->flatPath()) {
@@ -49,15 +50,17 @@ final class RowGroup
             }
         }
 
-        throw new InvalidArgumentException("Column chunk '{$column->flatPath()}' not found in row group, when looking for chunks for NestedColumns, look for chunks for each child.");
+        throw new InvalidArgumentException(
+            "Column chunk '{$column->flatPath()}' not found in row group, when looking for chunks for NestedColumns, look for chunks for each child.",
+        );
     }
 
-    public function rowsCount() : int
+    public function rowsCount(): int
     {
         return $this->rowsCount;
     }
 
-    public function setRowsCount(int $rowsCount) : void
+    public function setRowsCount(int $rowsCount): void
     {
         if ($rowsCount < 0) {
             throw new InvalidArgumentException('Rows count must be greater than 0');
@@ -66,19 +69,31 @@ final class RowGroup
         $this->rowsCount = $rowsCount;
     }
 
-    public function totalByteSize() : int
+    public function totalByteSize(): int
     {
-        return \array_sum(\array_map(static fn (ColumnChunk $chunk) => $chunk->totalUncompressedSize(), $this->columnChunks));
+        return \array_sum(\array_map(
+            static fn(ColumnChunk $chunk) => $chunk->totalUncompressedSize(),
+            $this->columnChunks,
+        ));
     }
 
-    public function toThrift() : \Flow\Parquet\ThriftModel\RowGroup
+    public function toThrift(): \Flow\Parquet\ThriftModel\RowGroup
     {
         $fileOffset = \count($this->columnChunks) ? \current($this->columnChunks)->fileOffset() : 0;
-        $chunksUncompressedSize = \array_map(static fn (ColumnChunk $chunk) => $chunk->totalUncompressedSize(), $this->columnChunks);
-        $chunksCompressedSize = \array_map(static fn (ColumnChunk $chunk) => $chunk->totalCompressedSize(), $this->columnChunks);
+        $chunksUncompressedSize = \array_map(
+            static fn(ColumnChunk $chunk) => $chunk->totalUncompressedSize(),
+            $this->columnChunks,
+        );
+        $chunksCompressedSize = \array_map(
+            static fn(ColumnChunk $chunk) => $chunk->totalCompressedSize(),
+            $this->columnChunks,
+        );
 
         return new \Flow\Parquet\ThriftModel\RowGroup([
-            'columns' => \array_map(static fn (ColumnChunk $columnChunk) => $columnChunk->toThrift(), $this->columnChunks),
+            'columns' => \array_map(
+                static fn(ColumnChunk $columnChunk) => $columnChunk->toThrift(),
+                $this->columnChunks,
+            ),
             'num_rows' => $this->rowsCount,
             'file_offset' => $fileOffset,
             'total_byte_size' => \array_sum($chunksUncompressedSize),

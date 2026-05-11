@@ -10,10 +10,9 @@ final readonly class Table
 {
     public function __construct(
         private RangeVar $rangeVar,
-    ) {
-    }
+    ) {}
 
-    public function alias() : ?string
+    public function alias(): ?string
     {
         $alias = $this->rangeVar->getAlias();
 
@@ -24,17 +23,17 @@ final readonly class Table
         return $alias->getAliasname() ?: null;
     }
 
-    public function name() : string
+    public function name(): string
     {
         return $this->rangeVar->getRelname();
     }
 
-    public function raw() : RangeVar
+    public function raw(): RangeVar
     {
         return $this->rangeVar;
     }
 
-    public function schema() : ?string
+    public function schema(): ?string
     {
         return $this->rangeVar->getSchemaname() ?: null;
     }

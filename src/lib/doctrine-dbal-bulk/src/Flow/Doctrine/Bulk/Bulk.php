@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk;
 
-use Doctrine\DBAL\{Connection, Exception};
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use Flow\Doctrine\Bulk\QueryFactory\DbalQueryFactory;
 
 final readonly class Bulk
 {
-    public function __construct(private QueryFactory $queryFactory, private TableDefinitions $tableDefinitions)
-    {
-    }
+    public function __construct(
+        private QueryFactory $queryFactory,
+        private TableDefinitions $tableDefinitions,
+    ) {}
 
-    public static function create() : self
+    public static function create(): self
     {
         return new self(new DbalQueryFactory(), new TableDefinitions());
     }
@@ -24,14 +26,14 @@ final readonly class Bulk
      *
      * @throws Exception|RuntimeException
      */
-    public function delete(Connection $connection, string $table, BulkData $bulkData) : void
+    public function delete(Connection $connection, string $table, BulkData $bulkData): void
     {
         $tableDefinition = $this->tableDefinitions->get($table, $connection);
 
         $connection->executeStatement(
             $this->queryFactory->delete($connection->getDatabasePlatform(), $tableDefinition, $bulkData),
             $bulkData->toSqlParameters($tableDefinition),
-            $tableDefinition->dbalParameterTypes($bulkData)
+            $tableDefinition->dbalParameterTypes($bulkData),
         );
     }
 
@@ -43,14 +45,18 @@ final readonly class Bulk
      *
      * @throws Exception|RuntimeException
      */
-    public function insert(Connection $connection, string $table, BulkData $bulkData, ?InsertOptions $options = null) : void
-    {
+    public function insert(
+        Connection $connection,
+        string $table,
+        BulkData $bulkData,
+        ?InsertOptions $options = null,
+    ): void {
         $tableDefinition = $this->tableDefinitions->get($table, $connection);
 
         $connection->executeStatement(
             $this->queryFactory->insert($connection->getDatabasePlatform(), $tableDefinition, $bulkData, $options),
             $bulkData->toSqlParameters($tableDefinition),
-            $bulkData->types()
+            $bulkData->types(),
         );
     }
 
@@ -61,14 +67,18 @@ final readonly class Bulk
      *
      * @throws Exception|RuntimeException
      */
-    public function update(Connection $connection, string $table, BulkData $bulkData, ?UpdateOptions $options = null) : void
-    {
+    public function update(
+        Connection $connection,
+        string $table,
+        BulkData $bulkData,
+        ?UpdateOptions $options = null,
+    ): void {
         $tableDefinition = $this->tableDefinitions->get($table, $connection);
 
         $connection->executeStatement(
             $this->queryFactory->update($connection->getDatabasePlatform(), $tableDefinition, $bulkData, $options),
             $bulkData->toSqlParameters($tableDefinition),
-            $bulkData->types()
+            $bulkData->types(),
         );
     }
 }

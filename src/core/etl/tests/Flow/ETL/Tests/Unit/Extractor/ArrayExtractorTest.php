@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
-use function Flow\ETL\DSL\{config, config_builder, execution_context, from_array};
 use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\execution_context;
+use function Flow\ETL\DSL\from_array;
 
 final class ArrayExtractorTest extends FlowTestCase
 {
-    public function test_array_extractor() : void
+    public function test_array_extractor(): void
     {
         $extractor = from_array([
             ['id' => 1, 'name' => 'Norbert'],
@@ -18,12 +22,12 @@ final class ArrayExtractorTest extends FlowTestCase
 
         $rows = \iterator_to_array($extractor->extract(execution_context(config_builder()->build())));
 
-        self::assertCount(2, $rows);
-        self::assertSame(['id' => 1, 'name' => 'Norbert'], $rows[0]->first()->toArray());
-        self::assertSame(['id' => 2, 'name' => 'Michal'], $rows[1]->first()->toArray());
+        static::assertCount(2, $rows);
+        static::assertSame(['id' => 1, 'name' => 'Norbert'], $rows[0]->first()->toArray());
+        static::assertSame(['id' => 2, 'name' => 'Michal'], $rows[1]->first()->toArray());
     }
 
-    public function test_generator_extraction() : void
+    public function test_generator_extraction(): void
     {
         $generator = static function () {
             yield ['id' => 1, 'name' => 'Norbert'];
@@ -34,8 +38,8 @@ final class ArrayExtractorTest extends FlowTestCase
 
         $rows = \iterator_to_array($extractor->extract(execution_context(config())));
 
-        self::assertCount(2, $rows);
-        self::assertSame(['id' => 1, 'name' => 'Norbert'], $rows[0]->first()->toArray());
-        self::assertSame(['id' => 2, 'name' => 'Michal'], $rows[1]->first()->toArray());
+        static::assertCount(2, $rows);
+        static::assertSame(['id' => 1, 'name' => 'Norbert'], $rows[0]->first()->toArray());
+        static::assertSame(['id' => 2, 'name' => 'Michal'], $rows[1]->first()->toArray());
     }
 }

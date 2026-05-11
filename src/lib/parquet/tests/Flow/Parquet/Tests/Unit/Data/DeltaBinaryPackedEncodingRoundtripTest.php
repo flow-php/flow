@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Data;
 
-use Flow\Parquet\Data\{DeltaBinaryPackedDecoder, DeltaBinaryPackedEncoder};
+use Flow\Parquet\Data\DeltaBinaryPackedDecoder;
+use Flow\Parquet\Data\DeltaBinaryPackedEncoder;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -13,7 +14,7 @@ final class DeltaBinaryPackedEncodingRoundtripTest extends TestCase
     /**
      * @return array<string, array<array<int>>>
      */
-    public static function problematicInt64ValuesProvider() : array
+    public static function problematicInt64ValuesProvider(): array
     {
         return [
             'large_positive_values' => [[7595602394150081560, 5962760613797072767, 6865028960044616023]],
@@ -31,11 +32,11 @@ final class DeltaBinaryPackedEncodingRoundtripTest extends TestCase
      * @param array<int> $values
      */
     #[DataProvider('problematicInt64ValuesProvider')]
-    public function test_roundtrip_problematic_int64_values(array $values) : void
+    public function test_roundtrip_problematic_int64_values(array $values): void
     {
         $encoded = (new DeltaBinaryPackedEncoder())->encode($values);
         $decoded = (new DeltaBinaryPackedDecoder())->decode($encoded, count($values));
 
-        self::assertSame($values, $decoded, 'Values should roundtrip correctly through delta encoding');
+        static::assertSame($values, $decoded, 'Values should roundtrip correctly through delta encoding');
     }
 }

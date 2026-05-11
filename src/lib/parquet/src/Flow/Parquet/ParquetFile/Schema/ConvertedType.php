@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Schema;
 
-enum ConvertedType : int
+enum ConvertedType: int
 {
     case BSON = 20;
     case DATE = 6;

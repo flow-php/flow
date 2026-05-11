@@ -4,26 +4,33 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Data;
 
-use function Flow\Parquet\Binary\{encode_decimal, encode_f32, encode_f64, encode_i32, encode_i64, encode_u32};
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\BinaryWriter;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+
+use function Flow\Parquet\Binary\encode_decimal;
+use function Flow\Parquet\Binary\encode_f32;
+use function Flow\Parquet\Binary\encode_f64;
+use function Flow\Parquet\Binary\encode_i32;
+use function Flow\Parquet\Binary\encode_i64;
+use function Flow\Parquet\Binary\encode_u32;
 
 final readonly class PlainValuesPacker
 {
     public function __construct(
         private BinaryWriter $writer,
         private ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<mixed> $values
      */
-    public function packValues(FlatColumn $column, array $values) : void
+    public function packValues(FlatColumn $column, array $values): void
     {
         /** @var array<mixed> $values */
-        $values = \array_filter($values, static fn (mixed $value) => $value !== null);
+        $values = \array_filter($values, static fn(mixed $value) => $value !== null);
 
         switch ($column->type()) {
             case PhysicalType::BOOLEAN:
@@ -67,7 +74,12 @@ final readonly class PlainValuesPacker
             case PhysicalType::FIXED_LEN_BYTE_ARRAY:
                 match ($column->logicalType()?->name()) {
                     LogicalType::UUID => $this->packUuids($values), // @phpstan-ignore argument.type
-                    LogicalType::DECIMAL => $this->packDecimals($values, (int) $column->typeLength(), (int) $column->precision(), (int) $column->scale()), // @phpstan-ignore argument.type
+                    LogicalType::DECIMAL => $this->packDecimals(
+                        $values, // @phpstan-ignore argument.type
+                        (int) $column->typeLength(),
+                        (int) $column->precision(),
+                        (int) $column->scale(),
+                    ),
                     default => $this->packFixedLenByteArrays($values), // @phpstan-ignore argument.type
                 };
 
@@ -81,14 +93,16 @@ final readonly class PlainValuesPacker
                 break;
 
             default:
-                throw new \RuntimeException('Writing physical type "' . $column->type()->name . '" is not implemented yet');
+                throw new \RuntimeException(
+                    'Writing physical type "' . $column->type()->name . '" is not implemented yet',
+                );
         }
     }
 
     /**
      * @param array<bool> $values
      */
-    private function packBooleans(array $values) : void
+    private function packBooleans(array $values): void
     {
         $bits = [];
 
@@ -101,7 +115,7 @@ final readonly class PlainValuesPacker
     /**
      * @param array<string> $values
      */
-    private function packByteArrays(array $values) : void
+    private function packByteArrays(array $values): void
     {
         foreach ($values as $value) {
             $this->writer->append(encode_u32($this->byteOrder, [\strlen($value)]));
@@ -112,7 +126,7 @@ final readonly class PlainValuesPacker
     /**
      * @param array<float> $decimals
      */
-    private function packDecimals(array $decimals, int $byteLength, int $precision, int $scale) : void
+    private function packDecimals(array $decimals, int $byteLength, int $precision, int $scale): void
     {
         foreach ($decimals as $decimal) {
             $this->writer->append(encode_decimal($this->byteOrder, $decimal, $byteLength, $precision, $scale));
@@ -122,7 +136,7 @@ final readonly class PlainValuesPacker
     /**
      * @param array<float> $doubles
      */
-    private function packDoubles(array $doubles) : void
+    private function packDoubles(array $doubles): void
     {
         $this->writer->append(encode_f64($this->byteOrder, $doubles));
     }
@@ -130,7 +144,7 @@ final readonly class PlainValuesPacker
     /**
      * @param array<string> $values
      */
-    private function packFixedLenByteArrays(array $values) : void
+    private function packFixedLenByteArrays(array $values): void
     {
         foreach ($values as $value) {
             $this->writer->append($value);
@@ -140,7 +154,7 @@ final readonly class PlainValuesPacker
     /**
      * @param array<float> $floats
      */
-    private function packFloats(array $floats) : void
+    private function packFloats(array $floats): void
     {
         $this->writer->append(encode_f32($this->byteOrder, $floats));
     }
@@ -148,7 +162,7 @@ final readonly class PlainValuesPacker
     /**
      * @param array<int> $ints
      */
-    private function packInt32s(array $ints) : void
+    private function packInt32s(array $ints): void
     {
         $this->writer->append(encode_i32($this->byteOrder, $ints));
     }
@@ -156,7 +170,7 @@ final readonly class PlainValuesPacker
     /**
      * @param array<int> $ints
      */
-    private function packInt64s(array $ints) : void
+    private function packInt64s(array $ints): void
     {
         $this->writer->append(encode_i64($this->byteOrder, $ints));
     }
@@ -164,7 +178,7 @@ final readonly class PlainValuesPacker
     /**
      * @param array<string> $strings
      */
-    private function packStrings(array $strings) : void
+    private function packStrings(array $strings): void
     {
         foreach ($strings as $string) {
             $this->writer->append(encode_u32($this->byteOrder, [\strlen($string)]));
@@ -175,7 +189,7 @@ final readonly class PlainValuesPacker
     /**
      * @param array<string> $uuids
      */
-    private function packUuids(array $uuids) : void
+    private function packUuids(array $uuids): void
     {
         foreach ($uuids as $uuid) {
             $hex = \str_replace('-', '', $uuid);

@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema;
 
-use function Flow\PostgreSql\DSL\{create, parsed_select};
-
 use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexMethod as QbIndexMethod;
 use Flow\PostgreSql\QueryBuilder\Sql;
+
+use function Flow\PostgreSql\DSL\create;
+use function Flow\PostgreSql\DSL\parsed_select;
 
 /**
  * @phpstan-import-type IndexShape from Index
@@ -23,43 +24,35 @@ final readonly class MaterializedView
         public string $name,
         public string $definition,
         public array $indexes = [],
-    ) {
-    }
+    ) {}
 
     /**
      * @param MaterializedViewShape $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
-        return new self(
-            name: $data['name'],
-            definition: $data['definition'],
-            indexes: \array_map(
-                static fn (array $index) : Index => Index::fromArray($index),
-                $data['indexes'] ?? [],
-            ),
-        );
+        return new self(name: $data['name'], definition: $data['definition'], indexes: \array_map(
+            static fn(array $index): Index => Index::fromArray($index),
+            $data['indexes'] ?? [],
+        ));
     }
 
     /**
      * @return MaterializedViewShape
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'name' => $this->name,
             'definition' => $this->definition,
-            'indexes' => \array_map(
-                static fn (Index $index) : array => $index->normalize(),
-                $this->indexes,
-            ),
+            'indexes' => \array_map(static fn(Index $index): array => $index->normalize(), $this->indexes),
         ];
     }
 
     /**
      * @return list<Sql>
      */
-    public function toSql() : array
+    public function toSql(): array
     {
         $sqls = [];
 

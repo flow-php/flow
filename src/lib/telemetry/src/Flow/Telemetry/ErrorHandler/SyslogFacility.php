@@ -7,7 +7,7 @@ namespace Flow\Telemetry\ErrorHandler;
 /**
  * RFC 5424 syslog facility codes.
  */
-enum SyslogFacility : int
+enum SyslogFacility: int
 {
     case Auth = 32;
     case Cron = 72;

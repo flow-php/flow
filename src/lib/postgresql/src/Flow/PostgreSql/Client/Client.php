@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Client;
 
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
-use Flow\PostgreSql\Client\Exception\{ConnectionException, NoResultException, QueryException, TooManyRowsException, TransactionException};
+use Flow\PostgreSql\Client\Exception\ConnectionException;
+use Flow\PostgreSql\Client\Exception\NoResultException;
+use Flow\PostgreSql\Client\Exception\QueryException;
+use Flow\PostgreSql\Client\Exception\TooManyRowsException;
+use Flow\PostgreSql\Client\Exception\TransactionException;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\Explain\Plan\Plan;
 use Flow\PostgreSql\QueryBuilder\Sql;
@@ -18,12 +22,12 @@ interface Client
      *
      * @throws TransactionException
      */
-    public function beginTransaction() : void;
+    public function beginTransaction(): void;
 
     /**
      * Close the connection.
      */
-    public function close() : void;
+    public function close(): void;
 
     /**
      * Commit the current transaction.
@@ -31,12 +35,12 @@ interface Client
      *
      * @throws TransactionException
      */
-    public function commit() : void;
+    public function commit(): void;
 
     /**
      * Get the value converters registry.
      */
-    public function converters() : ValueConverters;
+    public function converters(): ValueConverters;
 
     /**
      * Get a cursor for lazy iteration over large result sets.
@@ -48,7 +52,7 @@ interface Client
      *
      * @throws QueryException
      */
-    public function cursor(Sql|string $sql, array $parameters = []) : Cursor;
+    public function cursor(Sql|string $sql, array $parameters = []): Cursor;
 
     /**
      * Execute a statement that modifies data (INSERT, UPDATE, DELETE).
@@ -59,7 +63,7 @@ interface Client
      *
      * @throws QueryException
      */
-    public function execute(Sql|string $sql, array $parameters = []) : int;
+    public function execute(Sql|string $sql, array $parameters = []): int;
 
     /**
      * Execute EXPLAIN ANALYZE on a query and return the execution plan.
@@ -71,7 +75,7 @@ interface Client
      *
      * @throws QueryException
      */
-    public function explain(Sql|string $sql, array $parameters = [], ?ExplainConfig $config = null) : Plan;
+    public function explain(Sql|string $sql, array $parameters = [], ?ExplainConfig $config = null): Plan;
 
     /**
      * Fetch the first row from query result.
@@ -84,7 +88,7 @@ interface Client
      *
      * @return null|array<string, mixed>
      */
-    public function fetch(Sql|string $sql, array $parameters = []) : ?array;
+    public function fetch(Sql|string $sql, array $parameters = []): ?array;
 
     /**
      * Fetch all rows from query result.
@@ -96,7 +100,7 @@ interface Client
      *
      * @return array<int, array<string, mixed>>
      */
-    public function fetchAll(Sql|string $sql, array $parameters = []) : array;
+    public function fetchAll(Sql|string $sql, array $parameters = []): array;
 
     /**
      * Fetch all rows and map using the provided mapper.
@@ -111,11 +115,7 @@ interface Client
      *
      * @return list<T>
      */
-    public function fetchAllInto(
-        RowMapper $mapper,
-        Sql|string $sql,
-        array $parameters = [],
-    ) : array;
+    public function fetchAllInto(RowMapper $mapper, Sql|string $sql, array $parameters = []): array;
 
     /**
      * Fetch the first row and map using the provided mapper.
@@ -131,11 +131,7 @@ interface Client
      *
      * @return null|T
      */
-    public function fetchInto(
-        RowMapper $mapper,
-        Sql|string $sql,
-        array $parameters = [],
-    ) : mixed;
+    public function fetchInto(RowMapper $mapper, Sql|string $sql, array $parameters = []): mixed;
 
     /**
      * Fetch at most one row. Returns null when the result is empty, throws when it has more than one row.
@@ -149,7 +145,7 @@ interface Client
      *
      * @return null|array<string, mixed>
      */
-    public function fetchOne(Sql|string $sql, array $parameters = []) : ?array;
+    public function fetchOne(Sql|string $sql, array $parameters = []): ?array;
 
     /**
      * Fetch at most one row and map using the provided mapper.
@@ -166,11 +162,7 @@ interface Client
      *
      * @return null|T
      */
-    public function fetchOneInto(
-        RowMapper $mapper,
-        Sql|string $sql,
-        array $parameters = [],
-    ) : mixed;
+    public function fetchOneInto(RowMapper $mapper, Sql|string $sql, array $parameters = []): mixed;
 
     /**
      * Fetch a single scalar value from the first column of first row.
@@ -181,7 +173,7 @@ interface Client
      *
      * @throws QueryException
      */
-    public function fetchScalar(Sql|string $sql, array $parameters = []) : mixed;
+    public function fetchScalar(Sql|string $sql, array $parameters = []): mixed;
 
     /**
      * Fetch a single boolean value from the first column of first row.
@@ -191,7 +183,7 @@ interface Client
      *
      * @throws QueryException
      */
-    public function fetchScalarBool(Sql|string $sql, array $parameters = []) : bool;
+    public function fetchScalarBool(Sql|string $sql, array $parameters = []): bool;
 
     /**
      * Fetch a single float value from the first column of first row.
@@ -201,7 +193,7 @@ interface Client
      *
      * @throws QueryException
      */
-    public function fetchScalarFloat(Sql|string $sql, array $parameters = []) : float;
+    public function fetchScalarFloat(Sql|string $sql, array $parameters = []): float;
 
     /**
      * Fetch a single integer value from the first column of first row.
@@ -212,7 +204,7 @@ interface Client
      *
      * @throws QueryException
      */
-    public function fetchScalarInt(Sql|string $sql, array $parameters = []) : int;
+    public function fetchScalarInt(Sql|string $sql, array $parameters = []): int;
 
     /**
      * Fetch a single string value from the first column of first row.
@@ -222,7 +214,7 @@ interface Client
      *
      * @throws QueryException
      */
-    public function fetchScalarString(Sql|string $sql, array $parameters = []) : string;
+    public function fetchScalarString(Sql|string $sql, array $parameters = []): string;
 
     /**
      * Fetch exactly one row. Throws if result has 0 or more than 1 row.
@@ -237,7 +229,7 @@ interface Client
      *
      * @return array<string, mixed>
      */
-    public function fetchSingle(Sql|string $sql, array $parameters = []) : array;
+    public function fetchSingle(Sql|string $sql, array $parameters = []): array;
 
     /**
      * Fetch exactly one row and map using the provided mapper.
@@ -255,17 +247,13 @@ interface Client
      *
      * @return T
      */
-    public function fetchSingleInto(
-        RowMapper $mapper,
-        Sql|string $sql,
-        array $parameters = [],
-    ) : mixed;
+    public function fetchSingleInto(RowMapper $mapper, Sql|string $sql, array $parameters = []): mixed;
 
     /**
      * Get the current transaction nesting level.
      * 0 = no active transaction, 1 = top-level, 2+ = nested.
      */
-    public function getTransactionNestingLevel() : int;
+    public function getTransactionNestingLevel(): int;
 
     /**
      * Check if auto-commit mode is enabled.
@@ -273,12 +261,12 @@ interface Client
      * When disabled, a transaction is implicitly started and remains open until
      * commit() or rollBack() is called.
      */
-    public function isAutoCommit() : bool;
+    public function isAutoCommit(): bool;
 
     /**
      * Check if the connection is alive.
      */
-    public function isConnected() : bool;
+    public function isConnected(): bool;
 
     /**
      * Get the last inserted ID from a sequence.
@@ -291,7 +279,7 @@ interface Client
      *
      * @throws QueryException
      */
-    public function lastInsertId(string $sequenceName) : int|string;
+    public function lastInsertId(string $sequenceName): int|string;
 
     /**
      * Subscribe the current connection to a PostgreSQL notification channel.
@@ -302,12 +290,12 @@ interface Client
      *
      * @throws QueryException
      */
-    public function listen(string $channel) : void;
+    public function listen(string $channel): void;
 
     /**
      * Get the connection parameters used to establish this connection.
      */
-    public function parameters() : ConnectionParameters;
+    public function parameters(): ConnectionParameters;
 
     /**
      * Roll back the current transaction.
@@ -315,7 +303,7 @@ interface Client
      *
      * @throws TransactionException
      */
-    public function rollBack() : void;
+    public function rollBack(): void;
 
     /**
      * Set auto-commit mode.
@@ -325,7 +313,7 @@ interface Client
      *
      * @throws TransactionException
      */
-    public function setAutoCommit(bool $autoCommit) : void;
+    public function setAutoCommit(bool $autoCommit): void;
 
     /**
      * Execute a callback within a transaction.
@@ -340,7 +328,7 @@ interface Client
      *
      * @return T
      */
-    public function transaction(callable $callback) : mixed;
+    public function transaction(callable $callback): mixed;
 
     /**
      * Unsubscribe the current connection from a PostgreSQL notification
@@ -350,7 +338,7 @@ interface Client
      *
      * @throws QueryException
      */
-    public function unlisten(string $channel) : void;
+    public function unlisten(string $channel): void;
 
     /**
      * Block until a notification arrives on any channel the connection is
@@ -363,5 +351,5 @@ interface Client
      *
      * @throws ConnectionException when the underlying socket read fails
      */
-    public function wait(int $milliseconds) : ?Notification;
+    public function wait(int $milliseconds): ?Notification;
 }

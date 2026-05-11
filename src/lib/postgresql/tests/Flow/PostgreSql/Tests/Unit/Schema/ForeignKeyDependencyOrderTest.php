@@ -4,21 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Schema;
 
-use function Flow\PostgreSql\DSL\{
-    schema_column_integer,
-    schema_column_text,
-    schema_foreign_key,
-    schema_primary_key,
-    schema_table,
-};
-
 use Flow\PostgreSql\Schema\Exception\SchemaException;
 use Flow\PostgreSql\Schema\ForeignKeyDependencyOrder;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\PostgreSql\DSL\schema_column_integer;
+use function Flow\PostgreSql\DSL\schema_column_text;
+use function Flow\PostgreSql\DSL\schema_foreign_key;
+use function Flow\PostgreSql\DSL\schema_primary_key;
+use function Flow\PostgreSql\DSL\schema_table;
+
 final class ForeignKeyDependencyOrderTest extends TestCase
 {
-    public function test_circular_dependency_throws_exception() : void
+    public function test_circular_dependency_throws_exception(): void
     {
         $tableA = schema_table(
             'table_a',
@@ -42,14 +40,9 @@ final class ForeignKeyDependencyOrderTest extends TestCase
         (new ForeignKeyDependencyOrder())->order([$tableA, $tableB]);
     }
 
-    public function test_diamond_dependency() : void
+    public function test_diamond_dependency(): void
     {
-        $root = schema_table(
-            'root',
-            [schema_column_integer('id')],
-            schema_primary_key(['id']),
-            schema: 'public',
-        );
+        $root = schema_table('root', [schema_column_integer('id')], schema_primary_key(['id']), schema: 'public');
 
         $left = schema_table(
             'left_table',
@@ -80,22 +73,22 @@ final class ForeignKeyDependencyOrderTest extends TestCase
 
         $result = (new ForeignKeyDependencyOrder())->order([$bottom, $left, $right, $root]);
 
-        $names = \array_map(static fn ($t) => $t->name, $result);
+        $names = \array_map(static fn($t) => $t->name, $result);
 
-        self::assertSame('root', $names[0]);
+        static::assertSame('root', $names[0]);
         $leftIdx = \array_search('left_table', $names, true);
         $rightIdx = \array_search('right_table', $names, true);
         $bottomIdx = \array_search('bottom', $names, true);
-        self::assertGreaterThan($leftIdx, $bottomIdx);
-        self::assertGreaterThan($rightIdx, $bottomIdx);
+        static::assertGreaterThan($leftIdx, $bottomIdx);
+        static::assertGreaterThan($rightIdx, $bottomIdx);
     }
 
-    public function test_empty_list() : void
+    public function test_empty_list(): void
     {
-        self::assertSame([], (new ForeignKeyDependencyOrder())->order([]));
+        static::assertSame([], (new ForeignKeyDependencyOrder())->order([]));
     }
 
-    public function test_fk_referencing_table_outside_the_list_is_ignored() : void
+    public function test_fk_referencing_table_outside_the_list_is_ignored(): void
     {
         $independent = schema_table(
             'independent',
@@ -108,16 +101,21 @@ final class ForeignKeyDependencyOrderTest extends TestCase
             'child',
             [schema_column_integer('id'), schema_column_integer('external_id')],
             schema_primary_key(['id']),
-            foreignKeys: [schema_foreign_key(['external_id'], 'external_table', ['id'], referenceSchema: 'other_schema')],
+            foreignKeys: [schema_foreign_key(
+                ['external_id'],
+                'external_table',
+                ['id'],
+                referenceSchema: 'other_schema',
+            )],
             schema: 'public',
         );
 
         $result = (new ForeignKeyDependencyOrder())->order([$independent, $child]);
 
-        self::assertCount(2, $result);
+        static::assertCount(2, $result);
     }
 
-    public function test_linear_chain() : void
+    public function test_linear_chain(): void
     {
         $grandparent = schema_table(
             'grandparent',
@@ -144,12 +142,12 @@ final class ForeignKeyDependencyOrderTest extends TestCase
 
         $result = (new ForeignKeyDependencyOrder())->order([$child, $parent, $grandparent]);
 
-        $names = \array_map(static fn ($t) => $t->name, $result);
+        $names = \array_map(static fn($t) => $t->name, $result);
 
-        self::assertSame(['grandparent', 'parent', 'child'], $names);
+        static::assertSame(['grandparent', 'parent', 'child'], $names);
     }
 
-    public function test_self_referencing_fk() : void
+    public function test_self_referencing_fk(): void
     {
         $categories = schema_table(
             'categories',
@@ -169,12 +167,12 @@ final class ForeignKeyDependencyOrderTest extends TestCase
 
         $result = (new ForeignKeyDependencyOrder())->order([$products, $categories]);
 
-        $names = \array_map(static fn ($t) => $t->name, $result);
+        $names = \array_map(static fn($t) => $t->name, $result);
 
-        self::assertSame(['categories', 'products'], $names);
+        static::assertSame(['categories', 'products'], $names);
     }
 
-    public function test_single_table() : void
+    public function test_single_table(): void
     {
         $table = schema_table(
             'users',
@@ -185,37 +183,22 @@ final class ForeignKeyDependencyOrderTest extends TestCase
 
         $result = (new ForeignKeyDependencyOrder())->order([$table]);
 
-        self::assertCount(1, $result);
-        self::assertSame('users', $result[0]->name);
+        static::assertCount(1, $result);
+        static::assertSame('users', $result[0]->name);
     }
 
-    public function test_tables_without_fks_preserve_order() : void
+    public function test_tables_without_fks_preserve_order(): void
     {
-        $tableA = schema_table(
-            'alpha',
-            [schema_column_integer('id')],
-            schema_primary_key(['id']),
-            schema: 'public',
-        );
+        $tableA = schema_table('alpha', [schema_column_integer('id')], schema_primary_key(['id']), schema: 'public');
 
-        $tableB = schema_table(
-            'beta',
-            [schema_column_integer('id')],
-            schema_primary_key(['id']),
-            schema: 'public',
-        );
+        $tableB = schema_table('beta', [schema_column_integer('id')], schema_primary_key(['id']), schema: 'public');
 
-        $tableC = schema_table(
-            'gamma',
-            [schema_column_integer('id')],
-            schema_primary_key(['id']),
-            schema: 'public',
-        );
+        $tableC = schema_table('gamma', [schema_column_integer('id')], schema_primary_key(['id']), schema: 'public');
 
         $result = (new ForeignKeyDependencyOrder())->order([$tableA, $tableB, $tableC]);
 
-        $names = \array_map(static fn ($t) => $t->name, $result);
+        $names = \array_map(static fn($t) => $t->name, $result);
 
-        self::assertSame(['alpha', 'beta', 'gamma'], $names);
+        static::assertSame(['alpha', 'beta', 'gamma'], $names);
     }
 }

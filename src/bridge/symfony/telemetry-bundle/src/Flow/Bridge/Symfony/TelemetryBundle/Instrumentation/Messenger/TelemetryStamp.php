@@ -20,15 +20,14 @@ final readonly class TelemetryStamp implements StampInterface
      */
     public function __construct(
         private array $context = [],
-    ) {
-    }
+    ) {}
 
     /**
      * Get all context entries.
      *
      * @return array<string, string>
      */
-    public function all() : array
+    public function all(): array
     {
         return $this->context;
     }
@@ -38,7 +37,7 @@ final readonly class TelemetryStamp implements StampInterface
      *
      * Key lookup is case-insensitive for HTTP header compatibility.
      */
-    public function get(string $key) : ?string
+    public function get(string $key): ?string
     {
         $lowercaseKey = \strtolower($key);
 
@@ -54,7 +53,7 @@ final readonly class TelemetryStamp implements StampInterface
     /**
      * Create a new stamp with an additional context entry.
      */
-    public function with(string $key, string $value) : self
+    public function with(string $key, string $value): self
     {
         $context = $this->context;
         $context[$key] = $value;

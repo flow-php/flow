@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\PHPUnit\Telemetry\Subscriber;
 
-use Flow\Bridge\PHPUnit\Telemetry\{Configuration, SpanStack};
-use Flow\Telemetry\{PackageVersion, Telemetry};
+use Flow\Bridge\PHPUnit\Telemetry\Configuration;
+use Flow\Bridge\PHPUnit\Telemetry\SpanStack;
+use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanStatus;
-use PHPUnit\Event\TestSuite\{Finished, FinishedSubscriber};
+use PHPUnit\Event\TestSuite\Finished;
+use PHPUnit\Event\TestSuite\FinishedSubscriber;
 
 final readonly class TestSuiteFinishedSubscriber implements FinishedSubscriber
 {
@@ -15,16 +18,16 @@ final readonly class TestSuiteFinishedSubscriber implements FinishedSubscriber
         private Telemetry $telemetry,
         private SpanStack $spanStack,
         private Configuration $config,
-    ) {
-    }
+    ) {}
 
-    public function notify(Finished $event) : void
+    public function notify(Finished $event): void
     {
         try {
             $suite = $event->testSuite();
             $suiteName = $suite->name();
 
-            $isRoot = $suiteName === ''
+            $isRoot =
+                $suiteName === ''
                 || $suiteName === 'PHPUnit Test Suite'
                 || $suiteName === 'CLI Arguments'
                 || \str_ends_with((string) $suiteName, '.xml')
@@ -50,11 +53,13 @@ final readonly class TestSuiteFinishedSubscriber implements FinishedSubscriber
                 if ($this->config->emitMetrics && $duration !== null) {
                     $meter = $this->telemetry->meter('phpunit', $phpunitVersion);
 
-                    $meter->createHistogram('phpunit.suite.duration', 'ms')
-                        ->record($duration, ['test.suite' => $suiteName]);
+                    $meter->createHistogram('phpunit.suite.duration', 'ms')->record($duration, [
+                        'test.suite' => $suiteName,
+                    ]);
 
-                    $meter->createCounter('phpunit.suite.test_count')
-                        ->add($suite->count(), ['test.suite' => $suiteName]);
+                    $meter->createCounter('phpunit.suite.test_count')->add($suite->count(), [
+                        'test.suite' => $suiteName,
+                    ]);
                 }
 
                 $tracer->complete($span);

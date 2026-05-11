@@ -4,91 +4,95 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\DSL;
 
-use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
+use Flow\ETL\Attribute\DocumentationDSL;
+use Flow\ETL\Attribute\Module;
+use Flow\ETL\Attribute\Type as DSLType;
 use Flow\PostgreSql\Protobuf\AST\Node;
-use Flow\PostgreSql\QueryBuilder\Clause\{
-    CTE,
-    CTEMaterialization,
-    ConflictTarget,
-    FrameBound,
-    FrameExclusion,
-    FrameMode,
-    LockStrength,
-    LockWaitPolicy,
-    LockingClause,
-    NullsPosition,
-    OnConflictClause,
-    OrderBy,
-    ReturningClause,
-    SortDirection,
-    WindowDefinition,
-    WindowFrame
-};
+use Flow\PostgreSql\QueryBuilder\Clause\ConflictTarget;
+use Flow\PostgreSql\QueryBuilder\Clause\CTE;
+use Flow\PostgreSql\QueryBuilder\Clause\CTEMaterialization;
+use Flow\PostgreSql\QueryBuilder\Clause\FrameBound;
+use Flow\PostgreSql\QueryBuilder\Clause\FrameExclusion;
+use Flow\PostgreSql\QueryBuilder\Clause\FrameMode;
+use Flow\PostgreSql\QueryBuilder\Clause\LockingClause;
+use Flow\PostgreSql\QueryBuilder\Clause\LockStrength;
+use Flow\PostgreSql\QueryBuilder\Clause\LockWaitPolicy;
+use Flow\PostgreSql\QueryBuilder\Clause\NullsPosition;
+use Flow\PostgreSql\QueryBuilder\Clause\OnConflictClause;
+use Flow\PostgreSql\QueryBuilder\Clause\OrderBy;
+use Flow\PostgreSql\QueryBuilder\Clause\ReturningClause;
+use Flow\PostgreSql\QueryBuilder\Clause\SortDirection;
+use Flow\PostgreSql\QueryBuilder\Clause\WindowDefinition;
+use Flow\PostgreSql\QueryBuilder\Clause\WindowFrame;
 use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
-use Flow\PostgreSql\QueryBuilder\Cursor\{
-    CloseCursorBuilder,
-    CloseCursorFinalStep,
-    DeclareCursorBuilder,
-    DeclareCursorOptionsStep,
-    FetchCursorBuilder
-};
-use Flow\PostgreSql\QueryBuilder\Delete\{DeleteBuilder, DeleteFromStep};
+use Flow\PostgreSql\QueryBuilder\Cursor\CloseCursorBuilder;
+use Flow\PostgreSql\QueryBuilder\Cursor\CloseCursorFinalStep;
+use Flow\PostgreSql\QueryBuilder\Cursor\DeclareCursorBuilder;
+use Flow\PostgreSql\QueryBuilder\Cursor\DeclareCursorOptionsStep;
+use Flow\PostgreSql\QueryBuilder\Cursor\FetchCursorBuilder;
+use Flow\PostgreSql\QueryBuilder\Delete\DeleteBuilder;
+use Flow\PostgreSql\QueryBuilder\Delete\DeleteFromStep;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
-use Flow\PostgreSql\QueryBuilder\Expression\{
-    AggregateCall,
-    ArrayExpression,
-    BinaryExpression,
-    CaseExpression,
-    Coalesce,
-    Column,
-    Expression,
-    FunctionCall,
-    Greatest,
-    Least,
-    Literal,
-    NullIf,
-    Parameter,
-    RowExpression,
-    SQLValueFunctionExpression,
-    Star,
-    Subquery,
-    TypeCast,
-    WhenClause,
-    WindowFunction
-};
+use Flow\PostgreSql\QueryBuilder\Expression\AggregateCall;
+use Flow\PostgreSql\QueryBuilder\Expression\ArrayExpression;
+use Flow\PostgreSql\QueryBuilder\Expression\BinaryExpression;
+use Flow\PostgreSql\QueryBuilder\Expression\CaseExpression;
+use Flow\PostgreSql\QueryBuilder\Expression\Coalesce;
+use Flow\PostgreSql\QueryBuilder\Expression\Column;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Expression\FunctionCall;
+use Flow\PostgreSql\QueryBuilder\Expression\Greatest;
+use Flow\PostgreSql\QueryBuilder\Expression\Least;
+use Flow\PostgreSql\QueryBuilder\Expression\Literal;
+use Flow\PostgreSql\QueryBuilder\Expression\NullIf;
+use Flow\PostgreSql\QueryBuilder\Expression\Parameter;
+use Flow\PostgreSql\QueryBuilder\Expression\RowExpression;
+use Flow\PostgreSql\QueryBuilder\Expression\SQLValueFunctionExpression;
+use Flow\PostgreSql\QueryBuilder\Expression\Star;
+use Flow\PostgreSql\QueryBuilder\Expression\Subquery;
+use Flow\PostgreSql\QueryBuilder\Expression\TypeCast;
+use Flow\PostgreSql\QueryBuilder\Expression\WhenClause;
+use Flow\PostgreSql\QueryBuilder\Expression\WindowFunction;
 use Flow\PostgreSql\QueryBuilder\Factory\CopyFactory;
-use Flow\PostgreSql\QueryBuilder\Insert\{BulkInsert, InsertBuilder, InsertIntoStep};
-use Flow\PostgreSql\QueryBuilder\Listen\{ListenBuilder, ListenFinalStep};
-use Flow\PostgreSql\QueryBuilder\Merge\{MergeBuilder, MergeUsingStep};
-use Flow\PostgreSql\QueryBuilder\Notify\{NotifyBuilder, NotifyFinalStep};
-use Flow\PostgreSql\QueryBuilder\{QualifiedIdentifier, Sql};
+use Flow\PostgreSql\QueryBuilder\Insert\BulkInsert;
+use Flow\PostgreSql\QueryBuilder\Insert\InsertBuilder;
+use Flow\PostgreSql\QueryBuilder\Insert\InsertIntoStep;
+use Flow\PostgreSql\QueryBuilder\Listen\ListenBuilder;
+use Flow\PostgreSql\QueryBuilder\Listen\ListenFinalStep;
+use Flow\PostgreSql\QueryBuilder\Merge\MergeBuilder;
+use Flow\PostgreSql\QueryBuilder\Merge\MergeUsingStep;
+use Flow\PostgreSql\QueryBuilder\Notify\NotifyBuilder;
+use Flow\PostgreSql\QueryBuilder\Notify\NotifyFinalStep;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
-use Flow\PostgreSql\QueryBuilder\Select\{ParsedSelect, SelectBuilder, SelectFinalStep, SelectSelectStep};
-use Flow\PostgreSql\QueryBuilder\Table\{
-    DerivedTable,
-    Lateral,
-    Table,
-    TableFunction,
-    TableReference,
-    ValuesTable
-};
-use Flow\PostgreSql\QueryBuilder\Transaction\{
-    BeginBuilder,
-    BeginOptionsStep,
-    CommitBuilder,
-    CommitOptionsStep,
-    PreparedTransactionBuilder,
-    PreparedTransactionFinalStep,
-    RollbackBuilder,
-    RollbackOptionsStep,
-    SavepointBuilder,
-    SavepointFinalStep,
-    SetTransactionBuilder,
-    SetTransactionFinalStep,
-    SetTransactionOptionsStep
-};
-use Flow\PostgreSql\QueryBuilder\Unlisten\{UnlistenBuilder, UnlistenFinalStep};
-use Flow\PostgreSql\QueryBuilder\Update\{UpdateBuilder, UpdateTableStep};
+use Flow\PostgreSql\QueryBuilder\Select\ParsedSelect;
+use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
+use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
+use Flow\PostgreSql\QueryBuilder\Select\SelectSelectStep;
+use Flow\PostgreSql\QueryBuilder\Sql;
+use Flow\PostgreSql\QueryBuilder\Table\DerivedTable;
+use Flow\PostgreSql\QueryBuilder\Table\Lateral;
+use Flow\PostgreSql\QueryBuilder\Table\Table;
+use Flow\PostgreSql\QueryBuilder\Table\TableFunction;
+use Flow\PostgreSql\QueryBuilder\Table\TableReference;
+use Flow\PostgreSql\QueryBuilder\Table\ValuesTable;
+use Flow\PostgreSql\QueryBuilder\Transaction\BeginBuilder;
+use Flow\PostgreSql\QueryBuilder\Transaction\BeginOptionsStep;
+use Flow\PostgreSql\QueryBuilder\Transaction\CommitBuilder;
+use Flow\PostgreSql\QueryBuilder\Transaction\CommitOptionsStep;
+use Flow\PostgreSql\QueryBuilder\Transaction\PreparedTransactionBuilder;
+use Flow\PostgreSql\QueryBuilder\Transaction\PreparedTransactionFinalStep;
+use Flow\PostgreSql\QueryBuilder\Transaction\RollbackBuilder;
+use Flow\PostgreSql\QueryBuilder\Transaction\RollbackOptionsStep;
+use Flow\PostgreSql\QueryBuilder\Transaction\SavepointBuilder;
+use Flow\PostgreSql\QueryBuilder\Transaction\SavepointFinalStep;
+use Flow\PostgreSql\QueryBuilder\Transaction\SetTransactionBuilder;
+use Flow\PostgreSql\QueryBuilder\Transaction\SetTransactionFinalStep;
+use Flow\PostgreSql\QueryBuilder\Transaction\SetTransactionOptionsStep;
+use Flow\PostgreSql\QueryBuilder\Unlisten\UnlistenBuilder;
+use Flow\PostgreSql\QueryBuilder\Unlisten\UnlistenFinalStep;
+use Flow\PostgreSql\QueryBuilder\Update\UpdateBuilder;
+use Flow\PostgreSql\QueryBuilder\Update\UpdateTableStep;
 use Flow\PostgreSql\QueryBuilder\With\WithBuilder;
 
 /**
@@ -97,16 +101,15 @@ use Flow\PostgreSql\QueryBuilder\With\WithBuilder;
  * @param Expression|string ...$expressions Columns to select. If empty, returns SelectSelectStep.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function select(string|Expression ...$expressions) : SelectBuilder
+function select(string|Expression ...$expressions): SelectBuilder
 {
     if ($expressions === []) {
         return SelectBuilder::create();
     }
 
-    $expressions = \array_map(
-        static fn (string|Expression $e) : Expression => $e instanceof Expression ? $e : col($e),
-        $expressions,
-    );
+    $expressions = \array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+        ? $e
+        : col($e), $expressions);
 
     return SelectBuilder::create()->select(...$expressions);
 }
@@ -115,7 +118,7 @@ function select(string|Expression ...$expressions) : SelectBuilder
  * Create a SelectFinalStep from a raw SQL SELECT string.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function parsed_select(string $sql) : ParsedSelect
+function parsed_select(string $sql): ParsedSelect
 {
     return new ParsedSelect($sql);
 }
@@ -127,7 +130,7 @@ function parsed_select(string $sql) : ParsedSelect
  * Example: with(cte('a', $q1), cte('b', $q2))->recursive()->select(...)->from(table('a'))
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function with(CTE ...$ctes) : WithBuilder
+function with(CTE ...$ctes): WithBuilder
 {
     if ($ctes === []) {
         throw new \InvalidArgumentException('At least one CTE is required');
@@ -140,7 +143,7 @@ function with(CTE ...$ctes) : WithBuilder
  * Create a new INSERT query builder.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function insert() : InsertIntoStep
+function insert(): InsertIntoStep
 {
     return InsertBuilder::create();
 }
@@ -156,7 +159,7 @@ function insert() : InsertIntoStep
  * @param int $rowCount Number of rows to insert
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function bulk_insert(string $table, array $columns, int $rowCount) : BulkInsert
+function bulk_insert(string $table, array $columns, int $rowCount): BulkInsert
 {
     return BulkInsert::into($table, $columns, $rowCount);
 }
@@ -165,7 +168,7 @@ function bulk_insert(string $table, array $columns, int $rowCount) : BulkInsert
  * Create a new UPDATE query builder.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function update() : UpdateTableStep
+function update(): UpdateTableStep
 {
     return UpdateBuilder::create();
 }
@@ -174,7 +177,7 @@ function update() : UpdateTableStep
  * Create a new DELETE query builder.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function delete() : DeleteFromStep
+function delete(): DeleteFromStep
 {
     return DeleteBuilder::create();
 }
@@ -186,7 +189,7 @@ function delete() : DeleteFromStep
  * @param null|string $alias Optional table alias
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function merge(string $table, ?string $alias = null) : MergeUsingStep
+function merge(string $table, ?string $alias = null): MergeUsingStep
 {
     return MergeBuilder::create()->into($table, $alias);
 }
@@ -200,7 +203,7 @@ function merge(string $table, ?string $alias = null) : MergeUsingStep
  *   copy()->toQuery(select(...))->file('/tmp/data.csv')
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function copy() : CopyFactory
+function copy(): CopyFactory
 {
     return new CopyFactory();
 }
@@ -212,7 +215,7 @@ function copy() : CopyFactory
  *   listen('my_channel')->toSql()  // LISTEN my_channel
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function listen(string $channel) : ListenFinalStep
+function listen(string $channel): ListenFinalStep
 {
     return ListenBuilder::create($channel);
 }
@@ -224,7 +227,7 @@ function listen(string $channel) : ListenFinalStep
  *   unlisten('my_channel')->toSql()  // UNLISTEN my_channel
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function unlisten(string $channel) : UnlistenFinalStep
+function unlisten(string $channel): UnlistenFinalStep
 {
     return UnlistenBuilder::create($channel);
 }
@@ -237,7 +240,7 @@ function unlisten(string $channel) : UnlistenFinalStep
  *   notify('my_channel')->withPayload('hello')->toSql()     // NOTIFY my_channel, 'hello'
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function notify(string $channel) : NotifyFinalStep
+function notify(string $channel): NotifyFinalStep
 {
     return NotifyBuilder::create($channel);
 }
@@ -258,7 +261,7 @@ function notify(string $channel) : NotifyFinalStep
  * @throws InvalidExpressionException when $schema is provided without $table, or when $column contains dots in explicit mode
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function col(string $column, ?string $table = null, ?string $schema = null) : Column
+function col(string $column, ?string $table = null, ?string $schema = null): Column
 {
     if ($table !== null || $schema !== null) {
         if ($schema !== null && $table === null) {
@@ -266,7 +269,9 @@ function col(string $column, ?string $table = null, ?string $schema = null) : Co
         }
 
         if (\str_contains($column, '.')) {
-            throw new InvalidExpressionException('Column name cannot contain dots when table or schema is specified. Use col("table.column") or col("column", "table") but not both.');
+            throw new InvalidExpressionException(
+                'Column name cannot contain dots when table or schema is specified. Use col("table.column") or col("column", "table") but not both.',
+            );
         }
 
         if ($schema !== null && $table !== null) {
@@ -287,7 +292,7 @@ function col(string $column, ?string $table = null, ?string $schema = null) : Co
  * Create a SELECT * expression.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function star(?string $table = null) : Star
+function star(?string $table = null): Star
 {
     return $table !== null ? Star::fromTable($table) : Star::all();
 }
@@ -303,7 +308,7 @@ function star(?string $table = null) : Star
  * - literal(null) creates a NULL literal
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function literal(string|int|float|bool|null $value) : Literal
+function literal(string|int|float|bool|null $value): Literal
 {
     return match (true) {
         $value === null => Literal::null(),
@@ -318,7 +323,7 @@ function literal(string|int|float|bool|null $value) : Literal
  * Create a positional parameter ($1, $2, etc.).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function param(int $position) : Parameter
+function param(int $position): Parameter
 {
     return Parameter::positional($position);
 }
@@ -327,7 +332,7 @@ function param(int $position) : Parameter
  * @return list<Parameter>
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function parameters(int $count, int $startAt = 1) : array
+function parameters(int $count, int $startAt = 1): array
 {
     if ($count < 1) {
         throw new \InvalidArgumentException('Parameter count must be at least 1');
@@ -353,14 +358,11 @@ function parameters(int $count, int $startAt = 1) : array
  * @param list<Expression|string> $args Function arguments
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function func(string $name, array $args = []) : FunctionCall
+function func(string $name, array $args = []): FunctionCall
 {
     return new FunctionCall(
         QualifiedIdentifier::parse($name)->parts(),
-        \array_map(
-            static fn (string|Expression $e) : Expression => $e instanceof Expression ? $e : col($e),
-            $args,
-        ),
+        \array_map(static fn(string|Expression $e): Expression => $e instanceof Expression ? $e : col($e), $args),
     );
 }
 
@@ -372,14 +374,11 @@ function func(string $name, array $args = []) : FunctionCall
  * @param bool $distinct Use DISTINCT modifier
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function agg(string $name, array $args = [], bool $distinct = false) : AggregateCall
+function agg(string $name, array $args = [], bool $distinct = false): AggregateCall
 {
     return new AggregateCall(
         [$name],
-        \array_map(
-            static fn (string|Expression $e) : Expression => $e instanceof Expression ? $e : col($e),
-            $args,
-        ),
+        \array_map(static fn(string|Expression $e): Expression => $e instanceof Expression ? $e : col($e), $args),
         false,
         $distinct,
     );
@@ -389,7 +388,7 @@ function agg(string $name, array $args = [], bool $distinct = false) : Aggregate
  * Create COUNT(*) aggregate.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function agg_count(string|Expression|null $expr = null, bool $distinct = false) : AggregateCall
+function agg_count(string|Expression|null $expr = null, bool $distinct = false): AggregateCall
 {
     if ($expr === null) {
         return new AggregateCall(['count'], [], true, false);
@@ -402,7 +401,7 @@ function agg_count(string|Expression|null $expr = null, bool $distinct = false) 
  * Create COUNT(*) aggregate.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function count_all() : AggregateCall
+function count_all(): AggregateCall
 {
     return new AggregateCall(['count'], [], true, false);
 }
@@ -411,7 +410,7 @@ function count_all() : AggregateCall
  * Create SUM aggregate.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function agg_sum(string|Expression $expr, bool $distinct = false) : AggregateCall
+function agg_sum(string|Expression $expr, bool $distinct = false): AggregateCall
 {
     return new AggregateCall(['sum'], [$expr instanceof Expression ? $expr : col($expr)], false, $distinct);
 }
@@ -420,7 +419,7 @@ function agg_sum(string|Expression $expr, bool $distinct = false) : AggregateCal
  * Create AVG aggregate.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function agg_avg(string|Expression $expr, bool $distinct = false) : AggregateCall
+function agg_avg(string|Expression $expr, bool $distinct = false): AggregateCall
 {
     return new AggregateCall(['avg'], [$expr instanceof Expression ? $expr : col($expr)], false, $distinct);
 }
@@ -429,7 +428,7 @@ function agg_avg(string|Expression $expr, bool $distinct = false) : AggregateCal
  * Create MIN aggregate.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function agg_min(string|Expression $expr) : AggregateCall
+function agg_min(string|Expression $expr): AggregateCall
 {
     return new AggregateCall(['min'], [$expr instanceof Expression ? $expr : col($expr)]);
 }
@@ -438,7 +437,7 @@ function agg_min(string|Expression $expr) : AggregateCall
  * Create MAX aggregate.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function agg_max(string|Expression $expr) : AggregateCall
+function agg_max(string|Expression $expr): AggregateCall
 {
     return new AggregateCall(['max'], [$expr instanceof Expression ? $expr : col($expr)]);
 }
@@ -449,19 +448,18 @@ function agg_max(string|Expression $expr) : AggregateCall
  * @param Expression|string ...$expressions Expressions to coalesce
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function coalesce(string|Expression ...$expressions) : Coalesce
+function coalesce(string|Expression ...$expressions): Coalesce
 {
-    return new Coalesce(\array_map(
-        static fn (string|Expression $e) : Expression => $e instanceof Expression ? $e : col($e),
-        \array_values($expressions),
-    ));
+    return new Coalesce(\array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+        ? $e
+        : col($e), \array_values($expressions)));
 }
 
 /**
  * Create a NULLIF expression.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function nullif(string|Expression $expr1, string|Expression $expr2) : NullIf
+function nullif(string|Expression $expr1, string|Expression $expr2): NullIf
 {
     return new NullIf(
         $expr1 instanceof Expression ? $expr1 : col($expr1),
@@ -475,12 +473,11 @@ function nullif(string|Expression $expr1, string|Expression $expr2) : NullIf
  * @param Expression|string ...$expressions Expressions to compare
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function greatest(string|Expression ...$expressions) : Greatest
+function greatest(string|Expression ...$expressions): Greatest
 {
-    return new Greatest(\array_map(
-        static fn (string|Expression $e) : Expression => $e instanceof Expression ? $e : col($e),
-        \array_values($expressions),
-    ));
+    return new Greatest(\array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+        ? $e
+        : col($e), \array_values($expressions)));
 }
 
 /**
@@ -489,12 +486,11 @@ function greatest(string|Expression ...$expressions) : Greatest
  * @param Expression|string ...$expressions Expressions to compare
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function least(string|Expression ...$expressions) : Least
+function least(string|Expression ...$expressions): Least
 {
-    return new Least(\array_map(
-        static fn (string|Expression $e) : Expression => $e instanceof Expression ? $e : col($e),
-        \array_values($expressions),
-    ));
+    return new Least(\array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+        ? $e
+        : col($e), \array_values($expressions)));
 }
 
 /**
@@ -504,7 +500,7 @@ function least(string|Expression ...$expressions) : Least
  * @param ColumnType $dataType Target data type (use column_type_* functions)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function cast(string|Expression $expr, ColumnType $dataType) : TypeCast
+function cast(string|Expression $expr, ColumnType $dataType): TypeCast
 {
     return new TypeCast($expr instanceof Expression ? $expr : col($expr), $dataType);
 }
@@ -519,7 +515,7 @@ function cast(string|Expression $expr, ColumnType $dataType) : TypeCast
  * Example: select()->select(current_timestamp()->as('now'))
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function current_timestamp() : SQLValueFunctionExpression
+function current_timestamp(): SQLValueFunctionExpression
 {
     return SQLValueFunctionExpression::currentTimestamp();
 }
@@ -534,7 +530,7 @@ function current_timestamp() : SQLValueFunctionExpression
  * Example: select()->select(current_date()->as('today'))
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function current_date() : SQLValueFunctionExpression
+function current_date(): SQLValueFunctionExpression
 {
     return SQLValueFunctionExpression::currentDate();
 }
@@ -549,7 +545,7 @@ function current_date() : SQLValueFunctionExpression
  * Example: select()->select(current_time()->as('now_time'))
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function current_time() : SQLValueFunctionExpression
+function current_time(): SQLValueFunctionExpression
 {
     return SQLValueFunctionExpression::currentTime();
 }
@@ -562,8 +558,11 @@ function current_time() : SQLValueFunctionExpression
  * @param null|Expression|string $operand CASE operand for simple CASE (optional)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function case_when(array $whenClauses, string|Expression|null $elseResult = null, string|Expression|null $operand = null) : CaseExpression
-{
+function case_when(
+    array $whenClauses,
+    string|Expression|null $elseResult = null,
+    string|Expression|null $operand = null,
+): CaseExpression {
     return new CaseExpression(
         $operand === null ? null : ($operand instanceof Expression ? $operand : col($operand)),
         \array_values($whenClauses),
@@ -575,7 +574,7 @@ function case_when(array $whenClauses, string|Expression|null $elseResult = null
  * Create a WHEN clause for CASE expression.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function when(string|Expression $condition, string|Expression $result) : WhenClause
+function when(string|Expression $condition, string|Expression $result): WhenClause
 {
     return new WhenClause(
         $condition instanceof Expression ? $condition : col($condition),
@@ -587,7 +586,7 @@ function when(string|Expression $condition, string|Expression $result) : WhenCla
  * Create a subquery expression.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function sub_select(SelectFinalStep $query) : Subquery
+function sub_select(SelectFinalStep $query): Subquery
 {
     $node = new Node();
     $node->setSelectStmt($query->toAst());
@@ -601,12 +600,11 @@ function sub_select(SelectFinalStep $query) : Subquery
  * @param list<Expression|string> $elements Array elements
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function array_expr(array $elements) : ArrayExpression
+function array_expr(array $elements): ArrayExpression
 {
-    return new ArrayExpression(\array_map(
-        static fn (string|Expression $e) : Expression => $e instanceof Expression ? $e : col($e),
-        \array_values($elements),
-    ));
+    return new ArrayExpression(\array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+        ? $e
+        : col($e), \array_values($elements)));
 }
 
 /**
@@ -615,19 +613,18 @@ function array_expr(array $elements) : ArrayExpression
  * @param list<Expression|string> $elements Row elements
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function row_expr(array $elements) : RowExpression
+function row_expr(array $elements): RowExpression
 {
-    return new RowExpression(\array_map(
-        static fn (string|Expression $e) : Expression => $e instanceof Expression ? $e : col($e),
-        \array_values($elements),
-    ));
+    return new RowExpression(\array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+        ? $e
+        : col($e), \array_values($elements)));
 }
 
 /**
  * Create a binary expression (left op right).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function binary_expr(string|Expression $left, string $operator, string|Expression $right) : BinaryExpression
+function binary_expr(string|Expression $left, string $operator, string|Expression $right): BinaryExpression
 {
     return new BinaryExpression(
         $left instanceof Expression ? $left : col($left),
@@ -645,13 +642,9 @@ function binary_expr(string|Expression $left, string $operator, string|Expressio
  * @param list<OrderBy> $orderBy ORDER BY items
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function window_func(
-    string $name,
-    array $args = [],
-    array $partitionBy = [],
-    array $orderBy = [],
-) : WindowFunction {
-    $coerce = static fn (string|Expression $e) : Expression => $e instanceof Expression ? $e : col($e);
+function window_func(string $name, array $args = [], array $partitionBy = [], array $orderBy = []): WindowFunction
+{
+    $coerce = static fn(string|Expression $e): Expression => $e instanceof Expression ? $e : col($e);
 
     return new WindowFunction(
         [$name],
@@ -670,16 +663,15 @@ function window_func(
  * @param Expression|string ...$expressions At least 2 expressions to concatenate
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function concat(string|Expression ...$expressions) : BinaryExpression
+function concat(string|Expression ...$expressions): BinaryExpression
 {
     if (\count($expressions) < 2) {
         throw InvalidExpressionException::emptyArray('concat requires at least 2 expressions');
     }
 
-    $expressions = \array_map(
-        static fn (string|Expression $e) : Expression => $e instanceof Expression ? $e : col($e),
-        $expressions,
-    );
+    $expressions = \array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+        ? $e
+        : col($e), $expressions);
 
     $result = $expressions[0];
 
@@ -701,7 +693,7 @@ function concat(string|Expression ...$expressions) : BinaryExpression
  * @param null|string $schema Schema name (optional, overrides parsed schema)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function table(string $name, ?string $schema = null) : Table
+function table(string $name, ?string $schema = null): Table
 {
     if ($schema !== null) {
         return new Table($name, $schema);
@@ -716,7 +708,7 @@ function table(string $name, ?string $schema = null) : Table
  * Create a derived table (subquery in FROM clause).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function derived(SelectFinalStep $query, string $alias) : DerivedTable
+function derived(SelectFinalStep $query, string $alias): DerivedTable
 {
     $node = new Node();
     $node->setSelectStmt($query->toAst());
@@ -730,7 +722,7 @@ function derived(SelectFinalStep $query, string $alias) : DerivedTable
  * @param TableReference $reference The subquery or table function reference
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function lateral(TableReference $reference) : Lateral
+function lateral(TableReference $reference): Lateral
 {
     return new Lateral($reference);
 }
@@ -742,7 +734,7 @@ function lateral(TableReference $reference) : Lateral
  * @param bool $withOrdinality Whether to add WITH ORDINALITY
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function table_func(FunctionCall $function, bool $withOrdinality = false) : TableFunction
+function table_func(FunctionCall $function, bool $withOrdinality = false): TableFunction
 {
     return new TableFunction($function, $withOrdinality);
 }
@@ -761,7 +753,7 @@ function table_func(FunctionCall $function, bool $withOrdinality = false) : Tabl
  * Generates: SELECT * FROM (VALUES (1, 'Alice'), (2, 'Bob')) AS t(id, name)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function values_table(RowExpression ...$rows) : ValuesTable
+function values_table(RowExpression ...$rows): ValuesTable
 {
     return new ValuesTable($rows);
 }
@@ -774,7 +766,7 @@ function order_by(
     string|Expression $expr,
     SortDirection $direction = SortDirection::ASC,
     NullsPosition $nulls = NullsPosition::DEFAULT,
-) : OrderBy {
+): OrderBy {
     return new OrderBy($expr instanceof Expression ? $expr : col($expr), $direction, $nulls);
 }
 
@@ -782,7 +774,7 @@ function order_by(
  * Create an ORDER BY item with ASC direction.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function asc(string|Expression $expr, NullsPosition $nulls = NullsPosition::DEFAULT) : OrderBy
+function asc(string|Expression $expr, NullsPosition $nulls = NullsPosition::DEFAULT): OrderBy
 {
     return new OrderBy($expr instanceof Expression ? $expr : col($expr), SortDirection::ASC, $nulls);
 }
@@ -791,7 +783,7 @@ function asc(string|Expression $expr, NullsPosition $nulls = NullsPosition::DEFA
  * Create an ORDER BY item with DESC direction.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function desc(string|Expression $expr, NullsPosition $nulls = NullsPosition::DEFAULT) : OrderBy
+function desc(string|Expression $expr, NullsPosition $nulls = NullsPosition::DEFAULT): OrderBy
 {
     return new OrderBy($expr instanceof Expression ? $expr : col($expr), SortDirection::DESC, $nulls);
 }
@@ -811,7 +803,7 @@ function cte(
     array $columnNames = [],
     CTEMaterialization $materialization = CTEMaterialization::DEFAULT,
     bool $recursive = false,
-) : CTE {
+): CTE {
     $node = new Node();
     $node->setSelectStmt($query->toAst());
 
@@ -832,13 +824,12 @@ function window_def(
     array $partitionBy = [],
     array $orderBy = [],
     ?WindowFrame $frame = null,
-) : WindowDefinition {
+): WindowDefinition {
     return new WindowDefinition(
         $name,
-        \array_map(
-            static fn (string|Expression $e) : Expression => $e instanceof Expression ? $e : col($e),
-            \array_values($partitionBy),
-        ),
+        \array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+            ? $e
+            : col($e), \array_values($partitionBy)),
         \array_values($orderBy),
         $frame,
     );
@@ -853,7 +844,7 @@ function window_frame(
     FrameBound $start,
     ?FrameBound $end = null,
     FrameExclusion $exclusion = FrameExclusion::NO_OTHERS,
-) : WindowFrame {
+): WindowFrame {
     return new WindowFrame($mode, $start, $end, $exclusion);
 }
 
@@ -861,7 +852,7 @@ function window_frame(
  * Create a frame bound for CURRENT ROW.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function frame_current_row() : FrameBound
+function frame_current_row(): FrameBound
 {
     return FrameBound::currentRow();
 }
@@ -870,7 +861,7 @@ function frame_current_row() : FrameBound
  * Create a frame bound for UNBOUNDED PRECEDING.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function frame_unbounded_preceding() : FrameBound
+function frame_unbounded_preceding(): FrameBound
 {
     return FrameBound::unboundedPreceding();
 }
@@ -879,7 +870,7 @@ function frame_unbounded_preceding() : FrameBound
  * Create a frame bound for UNBOUNDED FOLLOWING.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function frame_unbounded_following() : FrameBound
+function frame_unbounded_following(): FrameBound
 {
     return FrameBound::unboundedFollowing();
 }
@@ -888,7 +879,7 @@ function frame_unbounded_following() : FrameBound
  * Create a frame bound for N PRECEDING.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function frame_preceding(string|Expression $offset) : FrameBound
+function frame_preceding(string|Expression $offset): FrameBound
 {
     return FrameBound::preceding($offset instanceof Expression ? $offset : col($offset));
 }
@@ -897,7 +888,7 @@ function frame_preceding(string|Expression $offset) : FrameBound
  * Create a frame bound for N FOLLOWING.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function frame_following(string|Expression $offset) : FrameBound
+function frame_following(string|Expression $offset): FrameBound
 {
     return FrameBound::following($offset instanceof Expression ? $offset : col($offset));
 }
@@ -914,7 +905,7 @@ function lock_for(
     LockStrength $strength,
     array $tables = [],
     LockWaitPolicy $waitPolicy = LockWaitPolicy::DEFAULT,
-) : LockingClause {
+): LockingClause {
     return new LockingClause($strength, \array_values($tables), $waitPolicy);
 }
 
@@ -924,7 +915,7 @@ function lock_for(
  * @param list<string> $tables Tables to lock (empty for all)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function for_update(array $tables = []) : LockingClause
+function for_update(array $tables = []): LockingClause
 {
     return LockingClause::forUpdate(\array_values($tables));
 }
@@ -935,7 +926,7 @@ function for_update(array $tables = []) : LockingClause
  * @param list<string> $tables Tables to lock (empty for all)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function for_share(array $tables = []) : LockingClause
+function for_share(array $tables = []): LockingClause
 {
     return LockingClause::forShare(\array_values($tables));
 }
@@ -944,7 +935,7 @@ function for_share(array $tables = []) : LockingClause
  * Create an ON CONFLICT DO NOTHING clause.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function on_conflict_nothing(?ConflictTarget $target = null) : OnConflictClause
+function on_conflict_nothing(?ConflictTarget $target = null): OnConflictClause
 {
     return OnConflictClause::doNothing($target);
 }
@@ -956,12 +947,12 @@ function on_conflict_nothing(?ConflictTarget $target = null) : OnConflictClause
  * @param array<string, Expression|string> $updates Column updates
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function on_conflict_update(ConflictTarget $target, array $updates) : OnConflictClause
+function on_conflict_update(ConflictTarget $target, array $updates): OnConflictClause
 {
-    return OnConflictClause::doUpdate($target, \array_map(
-        static fn (string|Expression $e) : Expression => $e instanceof Expression ? $e : col($e),
-        $updates,
-    ));
+    return OnConflictClause::doUpdate($target, \array_map(static fn(string|Expression $e): Expression => $e
+        instanceof Expression
+            ? $e
+            : col($e), $updates));
 }
 
 /**
@@ -970,7 +961,7 @@ function on_conflict_update(ConflictTarget $target, array $updates) : OnConflict
  * @param list<string> $columns Columns that define uniqueness
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function conflict_columns(array $columns) : ConflictTarget
+function conflict_columns(array $columns): ConflictTarget
 {
     return ConflictTarget::columns(\array_values($columns));
 }
@@ -979,7 +970,7 @@ function conflict_columns(array $columns) : ConflictTarget
  * Create a conflict target for ON CONFLICT ON CONSTRAINT.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function conflict_constraint(string $name) : ConflictTarget
+function conflict_constraint(string $name): ConflictTarget
 {
     return ConflictTarget::constraint($name);
 }
@@ -990,19 +981,18 @@ function conflict_constraint(string $name) : ConflictTarget
  * @param Expression|string ...$expressions Expressions to return
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function returning(string|Expression ...$expressions) : ReturningClause
+function returning(string|Expression ...$expressions): ReturningClause
 {
-    return new ReturningClause(\array_map(
-        static fn (string|Expression $e) : Expression => $e instanceof Expression ? $e : col($e),
-        \array_values($expressions),
-    ));
+    return new ReturningClause(\array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+        ? $e
+        : col($e), \array_values($expressions)));
 }
 
 /**
  * Create a RETURNING * clause.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function returning_all() : ReturningClause
+function returning_all(): ReturningClause
 {
     return ReturningClause::all();
 }
@@ -1014,7 +1004,7 @@ function returning_all() : ReturningClause
  * Produces: BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function begin() : BeginOptionsStep
+function begin(): BeginOptionsStep
 {
     return BeginBuilder::create();
 }
@@ -1026,7 +1016,7 @@ function begin() : BeginOptionsStep
  * Produces: COMMIT AND CHAIN
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function commit() : CommitOptionsStep
+function commit(): CommitOptionsStep
 {
     return CommitBuilder::create();
 }
@@ -1038,7 +1028,7 @@ function commit() : CommitOptionsStep
  * Produces: ROLLBACK TO SAVEPOINT my_savepoint
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function rollback() : RollbackOptionsStep
+function rollback(): RollbackOptionsStep
 {
     return RollbackBuilder::create();
 }
@@ -1050,7 +1040,7 @@ function rollback() : RollbackOptionsStep
  * Produces: SAVEPOINT my_savepoint
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function savepoint(string $name) : SavepointFinalStep
+function savepoint(string $name): SavepointFinalStep
 {
     return SavepointBuilder::create($name);
 }
@@ -1062,7 +1052,7 @@ function savepoint(string $name) : SavepointFinalStep
  * Produces: RELEASE my_savepoint
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function release_savepoint(string $name) : SavepointFinalStep
+function release_savepoint(string $name): SavepointFinalStep
 {
     return SavepointBuilder::release($name);
 }
@@ -1074,7 +1064,7 @@ function release_savepoint(string $name) : SavepointFinalStep
  * Produces: SET TRANSACTION ISOLATION LEVEL SERIALIZABLE, READ ONLY
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function set_transaction() : SetTransactionOptionsStep
+function set_transaction(): SetTransactionOptionsStep
 {
     return SetTransactionBuilder::create();
 }
@@ -1086,7 +1076,7 @@ function set_transaction() : SetTransactionOptionsStep
  * Produces: SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL SERIALIZABLE
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function set_session_transaction() : SetTransactionOptionsStep
+function set_session_transaction(): SetTransactionOptionsStep
 {
     return SetTransactionBuilder::session();
 }
@@ -1098,7 +1088,7 @@ function set_session_transaction() : SetTransactionOptionsStep
  * Produces: SET TRANSACTION SNAPSHOT '00000003-0000001A-1'
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function transaction_snapshot(string $snapshotId) : SetTransactionFinalStep
+function transaction_snapshot(string $snapshotId): SetTransactionFinalStep
 {
     return SetTransactionBuilder::create()->snapshot($snapshotId);
 }
@@ -1110,7 +1100,7 @@ function transaction_snapshot(string $snapshotId) : SetTransactionFinalStep
  * Produces: PREPARE TRANSACTION 'my_transaction'
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function prepare_transaction(string $transactionId) : PreparedTransactionFinalStep
+function prepare_transaction(string $transactionId): PreparedTransactionFinalStep
 {
     return PreparedTransactionBuilder::prepare($transactionId);
 }
@@ -1122,7 +1112,7 @@ function prepare_transaction(string $transactionId) : PreparedTransactionFinalSt
  * Produces: COMMIT PREPARED 'my_transaction'
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function commit_prepared(string $transactionId) : PreparedTransactionFinalStep
+function commit_prepared(string $transactionId): PreparedTransactionFinalStep
 {
     return PreparedTransactionBuilder::commitPrepared($transactionId);
 }
@@ -1134,7 +1124,7 @@ function commit_prepared(string $transactionId) : PreparedTransactionFinalStep
  * Produces: ROLLBACK PREPARED 'my_transaction'
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function rollback_prepared(string $transactionId) : PreparedTransactionFinalStep
+function rollback_prepared(string $transactionId): PreparedTransactionFinalStep
 {
     return PreparedTransactionBuilder::rollbackPrepared($transactionId);
 }
@@ -1157,7 +1147,7 @@ function rollback_prepared(string $transactionId) : PreparedTransactionFinalStep
  * @param SelectFinalStep|Sql|string $query Query to iterate over
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function declare_cursor(string $cursorName, SelectFinalStep|string|Sql $query) : DeclareCursorOptionsStep
+function declare_cursor(string $cursorName, SelectFinalStep|string|Sql $query): DeclareCursorOptionsStep
 {
     if ($query instanceof SelectFinalStep) {
         return DeclareCursorBuilder::create($cursorName, $query);
@@ -1178,7 +1168,7 @@ function declare_cursor(string $cursorName, SelectFinalStep|string|Sql $query) :
  * @param string $cursorName Cursor to fetch from
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function fetch(string $cursorName) : FetchCursorBuilder
+function fetch(string $cursorName): FetchCursorBuilder
 {
     return FetchCursorBuilder::create($cursorName);
 }
@@ -1195,7 +1185,7 @@ function fetch(string $cursorName) : FetchCursorBuilder
  * @param null|string $cursorName Cursor to close, or null to close all
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function close_cursor(?string $cursorName = null) : CloseCursorFinalStep
+function close_cursor(?string $cursorName = null): CloseCursorFinalStep
 {
     if ($cursorName === null) {
         return CloseCursorBuilder::closeAll();

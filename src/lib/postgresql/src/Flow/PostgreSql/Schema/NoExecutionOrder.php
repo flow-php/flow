@@ -11,7 +11,7 @@ namespace Flow\PostgreSql\Schema;
  */
 final readonly class NoExecutionOrder implements ExecutionOrderStrategy
 {
-    public function order(array $items) : array
+    public function order(array $items): array
     {
         return $items;
     }

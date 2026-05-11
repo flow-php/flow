@@ -13,7 +13,7 @@ namespace Flow\Telemetry\Tracer;
  *
  * @see https://opentelemetry.io/docs/specs/otel/trace/api/#spankind
  */
-enum SpanKind : string
+enum SpanKind: string
 {
     /**
      * Client-side of a synchronous RPC or HTTP request.

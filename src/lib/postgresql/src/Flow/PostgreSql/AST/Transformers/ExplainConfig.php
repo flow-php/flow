@@ -24,7 +24,7 @@ final readonly class ExplainConfig
         $this->validate();
     }
 
-    public static function forAnalysis() : self
+    public static function forAnalysis(): self
     {
         return new self(
             analyze: true,
@@ -40,7 +40,7 @@ final readonly class ExplainConfig
         );
     }
 
-    public static function forEstimate() : self
+    public static function forEstimate(): self
     {
         return new self(
             analyze: false,
@@ -70,7 +70,7 @@ final readonly class ExplainConfig
      *     format: string
      * } $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             analyze: $data['analyze'],
@@ -100,7 +100,7 @@ final readonly class ExplainConfig
      *     format: string
      * }
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'analyze' => $this->analyze,
@@ -116,7 +116,7 @@ final readonly class ExplainConfig
         ];
     }
 
-    public function withAnalyze() : self
+    public function withAnalyze(): self
     {
         return new self(
             analyze: true,
@@ -132,7 +132,7 @@ final readonly class ExplainConfig
         );
     }
 
-    public function withBuffers() : self
+    public function withBuffers(): self
     {
         return new self(
             analyze: $this->analyze,
@@ -148,7 +148,7 @@ final readonly class ExplainConfig
         );
     }
 
-    public function withCosts() : self
+    public function withCosts(): self
     {
         return new self(
             analyze: $this->analyze,
@@ -164,7 +164,7 @@ final readonly class ExplainConfig
         );
     }
 
-    public function withFormat(ExplainFormat $format) : self
+    public function withFormat(ExplainFormat $format): self
     {
         return new self(
             analyze: $this->analyze,
@@ -180,7 +180,7 @@ final readonly class ExplainConfig
         );
     }
 
-    public function withMemory() : self
+    public function withMemory(): self
     {
         return new self(
             analyze: $this->analyze,
@@ -196,7 +196,7 @@ final readonly class ExplainConfig
         );
     }
 
-    public function withoutAnalyze() : self
+    public function withoutAnalyze(): self
     {
         return new self(
             analyze: false,
@@ -212,7 +212,7 @@ final readonly class ExplainConfig
         );
     }
 
-    public function withoutBuffers() : self
+    public function withoutBuffers(): self
     {
         return new self(
             analyze: $this->analyze,
@@ -228,7 +228,7 @@ final readonly class ExplainConfig
         );
     }
 
-    public function withoutCosts() : self
+    public function withoutCosts(): self
     {
         return new self(
             analyze: $this->analyze,
@@ -244,7 +244,7 @@ final readonly class ExplainConfig
         );
     }
 
-    public function withoutMemory() : self
+    public function withoutMemory(): self
     {
         return new self(
             analyze: $this->analyze,
@@ -260,7 +260,7 @@ final readonly class ExplainConfig
         );
     }
 
-    public function withoutSettings() : self
+    public function withoutSettings(): self
     {
         return new self(
             analyze: $this->analyze,
@@ -276,7 +276,7 @@ final readonly class ExplainConfig
         );
     }
 
-    public function withoutSummary() : self
+    public function withoutSummary(): self
     {
         return new self(
             analyze: $this->analyze,
@@ -292,7 +292,7 @@ final readonly class ExplainConfig
         );
     }
 
-    public function withoutTiming() : self
+    public function withoutTiming(): self
     {
         return new self(
             analyze: $this->analyze,
@@ -308,7 +308,7 @@ final readonly class ExplainConfig
         );
     }
 
-    public function withoutVerbose() : self
+    public function withoutVerbose(): self
     {
         return new self(
             analyze: $this->analyze,
@@ -324,7 +324,7 @@ final readonly class ExplainConfig
         );
     }
 
-    public function withoutWal() : self
+    public function withoutWal(): self
     {
         return new self(
             analyze: $this->analyze,
@@ -340,7 +340,7 @@ final readonly class ExplainConfig
         );
     }
 
-    public function withSettings() : self
+    public function withSettings(): self
     {
         return new self(
             analyze: $this->analyze,
@@ -356,7 +356,7 @@ final readonly class ExplainConfig
         );
     }
 
-    public function withSummary() : self
+    public function withSummary(): self
     {
         return new self(
             analyze: $this->analyze,
@@ -372,7 +372,7 @@ final readonly class ExplainConfig
         );
     }
 
-    public function withTiming() : self
+    public function withTiming(): self
     {
         return new self(
             analyze: $this->analyze,
@@ -388,7 +388,7 @@ final readonly class ExplainConfig
         );
     }
 
-    public function withVerbose() : self
+    public function withVerbose(): self
     {
         return new self(
             analyze: $this->analyze,
@@ -404,7 +404,7 @@ final readonly class ExplainConfig
         );
     }
 
-    public function withWal() : self
+    public function withWal(): self
     {
         return new self(
             analyze: $this->analyze,
@@ -420,7 +420,7 @@ final readonly class ExplainConfig
         );
     }
 
-    private function validate() : void
+    private function validate(): void
     {
         if (!$this->analyze) {
             if ($this->buffers) {

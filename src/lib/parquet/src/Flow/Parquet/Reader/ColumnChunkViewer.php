@@ -9,18 +9,19 @@ use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
-use Flow\Parquet\Thrift\{CompactProtocol, PhpFileStream};
+use Flow\Parquet\Thrift\CompactProtocol;
+use Flow\Parquet\Thrift\PhpFileStream;
 
 final readonly class ColumnChunkViewer
 {
-    public function __construct(private Options $options)
-    {
-    }
+    public function __construct(
+        private Options $options,
+    ) {}
 
     /**
      * @return \Generator<PageHeader>
      */
-    public function view(ColumnChunk $columnChunk, SourceStream $stream) : \Generator
+    public function view(ColumnChunk $columnChunk, SourceStream $stream): \Generator
     {
         $pageStream = fopen('php://temp', 'rb+');
 
@@ -36,7 +37,9 @@ final readonly class ColumnChunkViewer
             $dictionaryHeader = $this->readHeader($pageStream);
 
             if ($dictionaryHeader === null) {
-                throw new RuntimeException('Dictionary page header not found in column chunk under offset: ' . $columnChunk->pageOffset());
+                throw new RuntimeException(
+                    'Dictionary page header not found in column chunk under offset: ' . $columnChunk->pageOffset(),
+                );
             }
 
             yield $dictionaryHeader;
@@ -61,7 +64,7 @@ final readonly class ColumnChunkViewer
     /**
      * @param resource $stream
      */
-    private function readHeader($stream) : ?PageHeader
+    private function readHeader($stream): ?PageHeader
     {
         $currentOffset = \ftell($stream);
 

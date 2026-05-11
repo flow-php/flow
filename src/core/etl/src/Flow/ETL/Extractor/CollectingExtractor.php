@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
-use Flow\ETL\{Extractor, FlowContext, Rows};
+use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 
 final readonly class CollectingExtractor implements Extractor, OverridingExtractor
 {
-    public function __construct(private Extractor $extractor)
-    {
-    }
+    public function __construct(
+        private Extractor $extractor,
+    ) {}
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         $collectedRows = new Rows();
 
@@ -23,7 +25,7 @@ final readonly class CollectingExtractor implements Extractor, OverridingExtract
         yield $collectedRows;
     }
 
-    public function extractors() : array
+    public function extractors(): array
     {
         return [$this->extractor];
     }

@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\DropTable;
 
-use Flow\PostgreSql\Protobuf\AST\{DropBehavior, DropStmt, Node, ObjectType, PBString};
+use Flow\PostgreSql\Protobuf\AST\DropBehavior;
+use Flow\PostgreSql\Protobuf\AST\DropStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\PBList;
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class DropTableBuilder implements DropTableFinalStep
 {
@@ -19,42 +24,29 @@ final readonly class DropTableBuilder implements DropTableFinalStep
         private array $tables,
         private bool $ifExists = false,
         private int $behavior = DropBehavior::DROP_BEHAVIOR_UNDEFINED,
-    ) {
-    }
+    ) {}
 
-    public static function create(string ...$tables) : DropTableFinalStep
+    public static function create(string ...$tables): DropTableFinalStep
     {
         return new self(\array_values($tables));
     }
 
-    public function cascade() : DropTableFinalStep
+    public function cascade(): DropTableFinalStep
     {
-        return new self(
-            $this->tables,
-            $this->ifExists,
-            DropBehavior::DROP_CASCADE,
-        );
+        return new self($this->tables, $this->ifExists, DropBehavior::DROP_CASCADE);
     }
 
-    public function ifExists() : DropTableFinalStep
+    public function ifExists(): DropTableFinalStep
     {
-        return new self(
-            $this->tables,
-            true,
-            $this->behavior,
-        );
+        return new self($this->tables, true, $this->behavior);
     }
 
-    public function restrict() : DropTableFinalStep
+    public function restrict(): DropTableFinalStep
     {
-        return new self(
-            $this->tables,
-            $this->ifExists,
-            DropBehavior::DROP_RESTRICT,
-        );
+        return new self($this->tables, $this->ifExists, DropBehavior::DROP_RESTRICT);
     }
 
-    public function toAst() : DropStmt
+    public function toAst(): DropStmt
     {
         $stmt = new DropStmt();
         $stmt->setRemoveType(ObjectType::OBJECT_TABLE);
@@ -78,7 +70,7 @@ final readonly class DropTableBuilder implements DropTableFinalStep
         return $stmt;
     }
 
-    private function createTableListNode(string $table) : Node
+    private function createTableListNode(string $table): Node
     {
         $identifier = QualifiedIdentifier::parse($table);
         $listItems = [];

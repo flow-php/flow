@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use Flow\Parquet\{ParquetEngine, Reader};
+use Flow\Parquet\ParquetEngine;
+use Flow\Parquet\Reader;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class EdgeCasesReadingTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
-    public function test_nonullable_impala(ParquetEngine $engine) : void
+    public function test_nonullable_impala(ParquetEngine $engine): void
     {
         $path = __DIR__ . '/Fixtures/EdgeCases/nonnullable.impala.parquet';
 
@@ -53,11 +54,11 @@ class EdgeCasesReadingTest extends ParquetIntegrationTestCase
                     ],
                 ],
             ],
-            \iterator_to_array($reader->values())
+            \iterator_to_array($reader->values()),
         );
     }
 
-    public function test_read_datapage_v2_snappy_list() : void
+    public function test_read_datapage_v2_snappy_list(): void
     {
         $this->expectExceptionMessage('Encoding RLE not supported');
 
@@ -75,12 +76,12 @@ class EdgeCasesReadingTest extends ParquetIntegrationTestCase
             [
                 ['emptylist' => null],
             ],
-            $rows
+            $rows,
         );
     }
 
     #[DataProvider('engine_provider')]
-    public function test_read_null_list(ParquetEngine $engine) : void
+    public function test_read_null_list(ParquetEngine $engine): void
     {
         $path = __DIR__ . '/Fixtures/EdgeCases/null_list.parquet';
 
@@ -96,7 +97,7 @@ class EdgeCasesReadingTest extends ParquetIntegrationTestCase
             [
                 ['emptylist' => []],
             ],
-            $rows
+            $rows,
         );
     }
 }

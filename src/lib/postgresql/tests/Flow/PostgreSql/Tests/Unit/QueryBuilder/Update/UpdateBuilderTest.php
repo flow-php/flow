@@ -4,28 +4,47 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Update;
 
-use function Flow\PostgreSql\DSL\{col, eq, literal, param, select, sub_select, table, update};
-use Flow\PostgreSql\{ParsedQuery, Parser};
-use Flow\PostgreSql\Protobuf\AST\{Node, RawStmt, UpdateStmt};
-use Flow\PostgreSql\QueryBuilder\Clause\{CTE, WithClause};
-use Flow\PostgreSql\QueryBuilder\Condition\{Comparison, ComparisonOperator};
-use Flow\PostgreSql\QueryBuilder\Exception\{InvalidAstException, InvalidExpressionException};
-use Flow\PostgreSql\QueryBuilder\Expression\{BinaryExpression, Column, FunctionCall, Literal};
+use Flow\PostgreSql\ParsedQuery;
+use Flow\PostgreSql\Parser;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RawStmt;
+use Flow\PostgreSql\Protobuf\AST\UpdateStmt;
+use Flow\PostgreSql\QueryBuilder\Clause\CTE;
+use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
+use Flow\PostgreSql\QueryBuilder\Condition\Comparison;
+use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
+use Flow\PostgreSql\QueryBuilder\Expression\BinaryExpression;
+use Flow\PostgreSql\QueryBuilder\Expression\Column;
+use Flow\PostgreSql\QueryBuilder\Expression\FunctionCall;
+use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
 use Flow\PostgreSql\QueryBuilder\Update\UpdateBuilder;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\eq;
+use function Flow\PostgreSql\DSL\literal;
+use function Flow\PostgreSql\DSL\param;
+use function Flow\PostgreSql\DSL\select;
+use function Flow\PostgreSql\DSL\sub_select;
+use function Flow\PostgreSql\DSL\table;
+use function Flow\PostgreSql\DSL\update;
+
 final class UpdateBuilderTest extends TestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('pg_query')) {
-            self::markTestSkipped('pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.');
+            self::markTestSkipped(
+                'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
+            );
         }
     }
 
-    public function test_chaining_set_methods() : void
+    public function test_chaining_set_methods(): void
     {
         $query = UpdateBuilder::create()
             ->update('users')
@@ -36,11 +55,11 @@ final class UpdateBuilderTest extends TestCase
 
         $ast = $query->toAst();
         $targetList = $ast->getTargetList();
-        self::assertNotNull($targetList);
-        self::assertCount(3, $targetList);
+        static::assertNotNull($targetList);
+        static::assertCount(3, $targetList);
     }
 
-    public function test_complex_update_with_all_clauses() : void
+    public function test_complex_update_with_all_clauses(): void
     {
         $query = UpdateBuilder::create()
             ->update('orders', 'o')
@@ -53,14 +72,14 @@ final class UpdateBuilderTest extends TestCase
 
         $ast = $query->toAst();
 
-        self::assertNotNull($ast->getRelation());
-        self::assertNotNull($ast->getTargetList());
-        self::assertNotNull($ast->getFromClause());
-        self::assertTrue($ast->hasWhereClause());
-        self::assertNotNull($ast->getReturningList());
+        static::assertNotNull($ast->getRelation());
+        static::assertNotNull($ast->getTargetList());
+        static::assertNotNull($ast->getFromClause());
+        static::assertTrue($ast->hasWhereClause());
+        static::assertNotNull($ast->getReturningList());
     }
 
-    public function test_from_ast_throws_on_empty_target_list() : void
+    public function test_from_ast_throws_on_empty_target_list(): void
     {
         $this->expectException(InvalidAstException::class);
 
@@ -71,7 +90,7 @@ final class UpdateBuilderTest extends TestCase
         UpdateBuilder::fromAst($updateStmt);
     }
 
-    public function test_from_ast_throws_on_missing_relation() : void
+    public function test_from_ast_throws_on_missing_relation(): void
     {
         $this->expectException(InvalidAstException::class);
 
@@ -80,63 +99,63 @@ final class UpdateBuilderTest extends TestCase
         UpdateBuilder::fromAst($updateStmt);
     }
 
-    public function test_immutability_from() : void
+    public function test_immutability_from(): void
     {
         $builder1 = UpdateBuilder::create()->update('users')->set('name', Literal::string('John'))->setAll([]);
         $builder2 = $builder1->from(new Table('other_table'));
 
-        self::assertNotSame($builder1, $builder2);
+        static::assertNotSame($builder1, $builder2);
     }
 
-    public function test_immutability_returning() : void
+    public function test_immutability_returning(): void
     {
         $builder1 = UpdateBuilder::create()->update('users')->set('name', Literal::string('John'))->setAll([]);
         $builder2 = $builder1->returning(Column::name('id'));
 
-        self::assertNotSame($builder1, $builder2);
+        static::assertNotSame($builder1, $builder2);
     }
 
-    public function test_immutability_returning_all() : void
+    public function test_immutability_returning_all(): void
     {
         $builder1 = UpdateBuilder::create()->update('users')->set('name', Literal::string('John'))->setAll([]);
         $builder2 = $builder1->returningAll();
 
-        self::assertNotSame($builder1, $builder2);
+        static::assertNotSame($builder1, $builder2);
     }
 
-    public function test_immutability_set() : void
+    public function test_immutability_set(): void
     {
         $builder1 = UpdateBuilder::create()->update('users');
         $builder2 = $builder1->set('name', Literal::string('John'));
 
-        self::assertNotSame($builder1, $builder2);
+        static::assertNotSame($builder1, $builder2);
     }
 
-    public function test_immutability_set_all() : void
+    public function test_immutability_set_all(): void
     {
         $builder1 = UpdateBuilder::create()->update('users')->set('name', Literal::string('John'));
         $builder2 = $builder1->setAll(['email' => Literal::string('john@example.com')]);
 
-        self::assertNotSame($builder1, $builder2);
+        static::assertNotSame($builder1, $builder2);
     }
 
-    public function test_immutability_update() : void
+    public function test_immutability_update(): void
     {
         $builder1 = UpdateBuilder::create();
         $builder2 = $builder1->update('users');
 
-        self::assertNotSame($builder1, $builder2);
+        static::assertNotSame($builder1, $builder2);
     }
 
-    public function test_immutability_where() : void
+    public function test_immutability_where(): void
     {
         $builder1 = UpdateBuilder::create()->update('users')->set('name', Literal::string('John'))->setAll([]);
         $builder2 = $builder1->where(new Comparison(Column::name('id'), ComparisonOperator::EQ, Literal::int(1)));
 
-        self::assertNotSame($builder1, $builder2);
+        static::assertNotSame($builder1, $builder2);
     }
 
-    public function test_round_trip_complex() : void
+    public function test_round_trip_complex(): void
     {
         $original = UpdateBuilder::create()
             ->update('orders', 'o')
@@ -152,19 +171,16 @@ final class UpdateBuilderTest extends TestCase
         $restored = UpdateBuilder::fromAst($ast);
         $restoredAst = $restored->toAst();
 
-        self::assertNotNull($restoredAst->getRelation());
-        self::assertNotNull($restoredAst->getTargetList());
-        self::assertNotNull($restoredAst->getFromClause());
-        self::assertTrue($restoredAst->hasWhereClause());
-        self::assertNotNull($restoredAst->getReturningList());
+        static::assertNotNull($restoredAst->getRelation());
+        static::assertNotNull($restoredAst->getTargetList());
+        static::assertNotNull($restoredAst->getFromClause());
+        static::assertTrue($restoredAst->hasWhereClause());
+        static::assertNotNull($restoredAst->getReturningList());
     }
 
-    public function test_round_trip_simple() : void
+    public function test_round_trip_simple(): void
     {
-        $original = UpdateBuilder::create()
-            ->update('users')
-            ->set('name', Literal::string('John'))
-            ->setAll([]);
+        $original = UpdateBuilder::create()->update('users')->set('name', Literal::string('John'))->setAll([]);
 
         $ast = $original->toAst();
 
@@ -172,19 +188,19 @@ final class UpdateBuilderTest extends TestCase
         $restoredAst = $restored->toAst();
 
         $originalRelation = $ast->getRelation();
-        self::assertNotNull($originalRelation);
+        static::assertNotNull($originalRelation);
 
         $restoredRelation = $restoredAst->getRelation();
-        self::assertNotNull($restoredRelation);
+        static::assertNotNull($restoredRelation);
 
-        self::assertSame($originalRelation->getRelname(), $restoredRelation->getRelname());
+        static::assertSame($originalRelation->getRelname(), $restoredRelation->getRelname());
 
         $originalTargetList = $ast->getTargetList();
         $restoredTargetList = $restoredAst->getTargetList();
-        self::assertCount(\count($originalTargetList), $restoredTargetList);
+        static::assertCount(\count($originalTargetList), $restoredTargetList);
     }
 
-    public function test_round_trip_with_from() : void
+    public function test_round_trip_with_from(): void
     {
         $original = UpdateBuilder::create()
             ->update('orders', 'o')
@@ -198,11 +214,11 @@ final class UpdateBuilderTest extends TestCase
         $restoredAst = $restored->toAst();
 
         $fromClause = $restoredAst->getFromClause();
-        self::assertNotNull($fromClause);
-        self::assertCount(1, $fromClause);
+        static::assertNotNull($fromClause);
+        static::assertCount(1, $fromClause);
     }
 
-    public function test_round_trip_with_returning() : void
+    public function test_round_trip_with_returning(): void
     {
         $original = UpdateBuilder::create()
             ->update('users')
@@ -216,11 +232,11 @@ final class UpdateBuilderTest extends TestCase
         $restoredAst = $restored->toAst();
 
         $returningList = $restoredAst->getReturningList();
-        self::assertNotNull($returningList);
-        self::assertCount(2, $returningList);
+        static::assertNotNull($returningList);
+        static::assertCount(2, $returningList);
     }
 
-    public function test_round_trip_with_where() : void
+    public function test_round_trip_with_where(): void
     {
         $original = UpdateBuilder::create()
             ->update('users')
@@ -233,10 +249,10 @@ final class UpdateBuilderTest extends TestCase
         $restored = UpdateBuilder::fromAst($ast);
         $restoredAst = $restored->toAst();
 
-        self::assertTrue($restoredAst->hasWhereClause());
+        static::assertTrue($restoredAst->hasWhereClause());
     }
 
-    public function test_simple_update() : void
+    public function test_simple_update(): void
     {
         $query = UpdateBuilder::create()
             ->update('users')
@@ -244,63 +260,54 @@ final class UpdateBuilderTest extends TestCase
             ->setAll(['email' => Literal::string('john@example.com')]);
 
         $ast = $query->toAst();
-        self::assertInstanceOf(UpdateStmt::class, $ast);
+        static::assertInstanceOf(UpdateStmt::class, $ast);
 
         $relation = $ast->getRelation();
-        self::assertNotNull($relation);
-        self::assertSame('users', $relation->getRelname());
-        self::assertFalse($relation->hasAlias());
+        static::assertNotNull($relation);
+        static::assertSame('users', $relation->getRelname());
+        static::assertFalse($relation->hasAlias());
 
         $targetList = $ast->getTargetList();
-        self::assertNotNull($targetList);
-        self::assertCount(2, $targetList);
+        static::assertNotNull($targetList);
+        static::assertCount(2, $targetList);
 
         $nameTarget = $targetList->offsetGet(0)->getResTarget();
-        self::assertNotNull($nameTarget);
-        self::assertSame('name', $nameTarget->getName());
+        static::assertNotNull($nameTarget);
+        static::assertSame('name', $nameTarget->getName());
 
         $emailTarget = $targetList->offsetGet(1)->getResTarget();
-        self::assertNotNull($emailTarget);
-        self::assertSame('email', $emailTarget->getName());
+        static::assertNotNull($emailTarget);
+        static::assertSame('email', $emailTarget->getName());
     }
 
-    public function test_simple_update_deparsed_output() : void
+    public function test_simple_update_deparsed_output(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
-        $update = UpdateBuilder::create()
-            ->update('users')
-            ->set('name', Literal::string('John'))
-            ->setAll([]);
+        $update = UpdateBuilder::create()->update('users')->set('name', Literal::string('John'))->setAll([]);
 
         $deparsed = $this->deparse($update->toAst());
-        self::assertSame("UPDATE users SET name = 'John'", $deparsed);
+        static::assertSame("UPDATE users SET name = 'John'", $deparsed);
     }
 
-    public function test_throws_on_empty_assignments() : void
+    public function test_throws_on_empty_assignments(): void
     {
         $this->expectException(InvalidExpressionException::class);
         $this->expectExceptionMessage('assignments cannot be empty');
 
-        UpdateBuilder::create()
-            ->update('users')
-            ->toAst();
+        UpdateBuilder::create()->update('users')->toAst();
     }
 
-    public function test_throws_on_missing_table() : void
+    public function test_throws_on_missing_table(): void
     {
         $this->expectException(InvalidExpressionException::class);
 
-        UpdateBuilder::create()
-            ->update('')
-            ->set('name', Literal::string('John'))
-            ->setAll([])
-            ->toAst();
+        UpdateBuilder::create()->update('')->set('name', Literal::string('John'))->setAll([])->toAst();
     }
 
-    public function test_update_combining_set_and_set_all() : void
+    public function test_update_combining_set_and_set_all(): void
     {
         $query = UpdateBuilder::create()
             ->update('users')
@@ -313,11 +320,11 @@ final class UpdateBuilderTest extends TestCase
 
         $ast = $query->toAst();
         $targetList = $ast->getTargetList();
-        self::assertNotNull($targetList);
-        self::assertCount(4, $targetList);
+        static::assertNotNull($targetList);
+        static::assertCount(4, $targetList);
     }
 
-    public function test_update_multiple_columns() : void
+    public function test_update_multiple_columns(): void
     {
         $query = UpdateBuilder::create()
             ->update('products')
@@ -329,26 +336,26 @@ final class UpdateBuilderTest extends TestCase
 
         $ast = $query->toAst();
         $targetList = $ast->getTargetList();
-        self::assertNotNull($targetList);
-        self::assertCount(3, $targetList);
+        static::assertNotNull($targetList);
+        static::assertCount(3, $targetList);
 
         $priceTarget = $targetList->offsetGet(0)->getResTarget();
-        self::assertNotNull($priceTarget);
-        self::assertSame('price', $priceTarget->getName());
+        static::assertNotNull($priceTarget);
+        static::assertSame('price', $priceTarget->getName());
 
         $updatedAtTarget = $targetList->offsetGet(1)->getResTarget();
-        self::assertNotNull($updatedAtTarget);
-        self::assertSame('updated_at', $updatedAtTarget->getName());
+        static::assertNotNull($updatedAtTarget);
+        static::assertSame('updated_at', $updatedAtTarget->getName());
 
         $versionTarget = $targetList->offsetGet(2)->getResTarget();
-        self::assertNotNull($versionTarget);
-        self::assertSame('version', $versionTarget->getName());
+        static::assertNotNull($versionTarget);
+        static::assertSame('version', $versionTarget->getName());
     }
 
-    public function test_update_multiple_columns_deparsed_output() : void
+    public function test_update_multiple_columns_deparsed_output(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
         $update = UpdateBuilder::create()
@@ -358,10 +365,10 @@ final class UpdateBuilderTest extends TestCase
             ->setAll([]);
 
         $deparsed = $this->deparse($update->toAst());
-        self::assertSame('UPDATE products SET price = 99.99, stock = 100', $deparsed);
+        static::assertSame('UPDATE products SET price = 99.99, stock = 100', $deparsed);
     }
 
-    public function test_update_only_with_set_all() : void
+    public function test_update_only_with_set_all(): void
     {
         $query = UpdateBuilder::create()
             ->update('users')
@@ -372,29 +379,26 @@ final class UpdateBuilderTest extends TestCase
 
         $ast = $query->toAst();
         $targetList = $ast->getTargetList();
-        self::assertNotNull($targetList);
-        self::assertCount(2, $targetList);
+        static::assertNotNull($targetList);
+        static::assertCount(2, $targetList);
     }
 
-    public function test_update_with_alias() : void
+    public function test_update_with_alias(): void
     {
-        $query = UpdateBuilder::create()
-            ->update('users', 'u')
-            ->set('name', Literal::string('Jane'))
-            ->setAll([]);
+        $query = UpdateBuilder::create()->update('users', 'u')->set('name', Literal::string('Jane'))->setAll([]);
 
         $ast = $query->toAst();
         $relation = $ast->getRelation();
-        self::assertNotNull($relation);
-        self::assertSame('users', $relation->getRelname());
-        self::assertTrue($relation->hasAlias());
+        static::assertNotNull($relation);
+        static::assertSame('users', $relation->getRelname());
+        static::assertTrue($relation->hasAlias());
 
         $alias = $relation->getAlias();
-        self::assertNotNull($alias);
-        self::assertSame('u', $alias->getAliasname());
+        static::assertNotNull($alias);
+        static::assertSame('u', $alias->getAliasname());
     }
 
-    public function test_update_with_binary_expression() : void
+    public function test_update_with_binary_expression(): void
     {
         $query = UpdateBuilder::create()
             ->update('counters')
@@ -403,21 +407,21 @@ final class UpdateBuilderTest extends TestCase
 
         $ast = $query->toAst();
         $targetList = $ast->getTargetList();
-        self::assertNotNull($targetList);
+        static::assertNotNull($targetList);
 
         $target = $targetList->offsetGet(0)->getResTarget();
-        self::assertNotNull($target);
-        self::assertSame('count', $target->getName());
+        static::assertNotNull($target);
+        static::assertSame('count', $target->getName());
 
         $val = $target->getVal();
-        self::assertNotNull($val);
-        self::assertTrue($val->hasAExpr());
+        static::assertNotNull($val);
+        static::assertTrue($val->hasAExpr());
     }
 
-    public function test_update_with_binary_expression_deparsed_output() : void
+    public function test_update_with_binary_expression_deparsed_output(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
         $update = UpdateBuilder::create()
@@ -426,20 +430,20 @@ final class UpdateBuilderTest extends TestCase
             ->setAll([]);
 
         $deparsed = $this->deparse($update->toAst());
-        self::assertSame('UPDATE counters SET count = count + 1', $deparsed);
+        static::assertSame('UPDATE counters SET count = count + 1', $deparsed);
     }
 
-    public function test_update_with_column_expression() : void
+    public function test_update_with_column_expression(): void
     {
         $query = update()
             ->update('products')
             ->set('price', col('price'))
             ->where(eq(col('id'), literal(1)));
 
-        self::assertSame('UPDATE products SET price = price WHERE id = 1', $query->toSql());
+        static::assertSame('UPDATE products SET price = price WHERE id = 1', $query->toSql());
     }
 
-    public function test_update_with_column_reference() : void
+    public function test_update_with_column_reference(): void
     {
         $query = UpdateBuilder::create()
             ->update('employees')
@@ -448,18 +452,18 @@ final class UpdateBuilderTest extends TestCase
 
         $ast = $query->toAst();
         $targetList = $ast->getTargetList();
-        self::assertNotNull($targetList);
+        static::assertNotNull($targetList);
 
         $target = $targetList->offsetGet(0)->getResTarget();
-        self::assertNotNull($target);
-        self::assertSame('manager_id', $target->getName());
+        static::assertNotNull($target);
+        static::assertSame('manager_id', $target->getName());
 
         $val = $target->getVal();
-        self::assertNotNull($val);
-        self::assertTrue($val->hasColumnRef());
+        static::assertNotNull($val);
+        static::assertTrue($val->hasColumnRef());
     }
 
-    public function test_update_with_from() : void
+    public function test_update_with_from(): void
     {
         $query = UpdateBuilder::create()
             ->update('orders', 'o')
@@ -470,25 +474,25 @@ final class UpdateBuilderTest extends TestCase
 
         $ast = $query->toAst();
         $fromClause = $ast->getFromClause();
-        self::assertNotNull($fromClause);
-        self::assertCount(1, $fromClause);
+        static::assertNotNull($fromClause);
+        static::assertCount(1, $fromClause);
 
         $fromNode = $fromClause->offsetGet(0);
-        self::assertTrue($fromNode->hasRangeVar());
+        static::assertTrue($fromNode->hasRangeVar());
 
         $rangeVar = $fromNode->getRangeVar();
-        self::assertNotNull($rangeVar);
-        self::assertSame('order_status', $rangeVar->getRelname());
+        static::assertNotNull($rangeVar);
+        static::assertSame('order_status', $rangeVar->getRelname());
 
         $alias = $rangeVar->getAlias();
-        self::assertNotNull($alias);
-        self::assertSame('s', $alias->getAliasname());
+        static::assertNotNull($alias);
+        static::assertSame('s', $alias->getAliasname());
     }
 
-    public function test_update_with_from_deparsed_output() : void
+    public function test_update_with_from_deparsed_output(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
         $update = UpdateBuilder::create()
@@ -496,13 +500,22 @@ final class UpdateBuilderTest extends TestCase
             ->set('status', Column::tableColumn('s', 'status'))
             ->setAll([])
             ->from((new Table('order_status'))->as('s'))
-            ->where(new Comparison(Column::tableColumn('o', 'status_id'), ComparisonOperator::EQ, Column::tableColumn('s', 'id')));
+            ->where(
+                new Comparison(
+                    Column::tableColumn('o', 'status_id'),
+                    ComparisonOperator::EQ,
+                    Column::tableColumn('s', 'id'),
+                ),
+            );
 
         $deparsed = $this->deparse($update->toAst());
-        self::assertSame('UPDATE orders o SET status = s.status FROM order_status s WHERE o.status_id = s.id', $deparsed);
+        static::assertSame(
+            'UPDATE orders o SET status = s.status FROM order_status s WHERE o.status_id = s.id',
+            $deparsed,
+        );
     }
 
-    public function test_update_with_function_call() : void
+    public function test_update_with_function_call(): void
     {
         $query = UpdateBuilder::create()
             ->update('logs')
@@ -511,35 +524,32 @@ final class UpdateBuilderTest extends TestCase
 
         $ast = $query->toAst();
         $targetList = $ast->getTargetList();
-        self::assertNotNull($targetList);
+        static::assertNotNull($targetList);
 
         $target = $targetList->offsetGet(0)->getResTarget();
-        self::assertNotNull($target);
-        self::assertSame('logged_at', $target->getName());
+        static::assertNotNull($target);
+        static::assertSame('logged_at', $target->getName());
 
         $val = $target->getVal();
-        self::assertNotNull($val);
-        self::assertTrue($val->hasFuncCall());
+        static::assertNotNull($val);
+        static::assertTrue($val->hasFuncCall());
     }
 
-    public function test_update_with_multiple_from_tables() : void
+    public function test_update_with_multiple_from_tables(): void
     {
         $query = UpdateBuilder::create()
             ->update('products', 'p')
             ->set('price', Column::name('pp.price'))
             ->setAll([])
-            ->from(
-                (new Table('product_prices'))->as('pp'),
-                (new Table('categories'))->as('c')
-            );
+            ->from((new Table('product_prices'))->as('pp'), (new Table('categories'))->as('c'));
 
         $ast = $query->toAst();
         $fromClause = $ast->getFromClause();
-        self::assertNotNull($fromClause);
-        self::assertCount(2, $fromClause);
+        static::assertNotNull($fromClause);
+        static::assertCount(2, $fromClause);
     }
 
-    public function test_update_with_multiple_set() : void
+    public function test_update_with_multiple_set(): void
     {
         $query = update()
             ->update('users')
@@ -547,20 +557,20 @@ final class UpdateBuilderTest extends TestCase
             ->set('email', literal('john@example.com'))
             ->where(eq(col('id'), literal(1)));
 
-        self::assertSame("UPDATE users SET name = 'John', email = 'john@example.com' WHERE id = 1", $query->toSql());
+        static::assertSame("UPDATE users SET name = 'John', email = 'john@example.com' WHERE id = 1", $query->toSql());
     }
 
-    public function test_update_with_parameters() : void
+    public function test_update_with_parameters(): void
     {
         $query = update()
             ->update('users')
             ->set('name', param(1))
             ->where(eq(col('id'), param(2)));
 
-        self::assertSame('UPDATE users SET name = $1 WHERE id = $2', $query->toSql());
+        static::assertSame('UPDATE users SET name = $1 WHERE id = $2', $query->toSql());
     }
 
-    public function test_update_with_returning() : void
+    public function test_update_with_returning(): void
     {
         $query = UpdateBuilder::create()
             ->update('users')
@@ -571,11 +581,11 @@ final class UpdateBuilderTest extends TestCase
 
         $ast = $query->toAst();
         $returningList = $ast->getReturningList();
-        self::assertNotNull($returningList);
-        self::assertCount(2, $returningList);
+        static::assertNotNull($returningList);
+        static::assertCount(2, $returningList);
     }
 
-    public function test_update_with_returning_all() : void
+    public function test_update_with_returning_all(): void
     {
         $query = UpdateBuilder::create()
             ->update('users')
@@ -585,28 +595,28 @@ final class UpdateBuilderTest extends TestCase
 
         $ast = $query->toAst();
         $returningList = $ast->getReturningList();
-        self::assertNotNull($returningList);
-        self::assertCount(1, $returningList);
+        static::assertNotNull($returningList);
+        static::assertCount(1, $returningList);
 
         $returningNode = $returningList->offsetGet(0);
         $resTarget = $returningNode->getResTarget();
-        self::assertNotNull($resTarget);
+        static::assertNotNull($resTarget);
         $val = $resTarget->getVal();
-        self::assertNotNull($val);
+        static::assertNotNull($val);
 
-        self::assertTrue($val->hasColumnRef());
+        static::assertTrue($val->hasColumnRef());
         $columnRef = $val->getColumnRef();
-        self::assertNotNull($columnRef);
+        static::assertNotNull($columnRef);
         $fields = $columnRef->getFields();
-        self::assertNotNull($fields);
-        self::assertCount(1, $fields);
-        self::assertTrue($fields[0]->hasAStar());
+        static::assertNotNull($fields);
+        static::assertCount(1, $fields);
+        static::assertTrue($fields[0]->hasAStar());
     }
 
-    public function test_update_with_returning_deparsed_output() : void
+    public function test_update_with_returning_deparsed_output(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
         $update = UpdateBuilder::create()
@@ -617,72 +627,60 @@ final class UpdateBuilderTest extends TestCase
             ->returning(Column::name('id'), Column::name('last_login'));
 
         $deparsed = $this->deparse($update->toAst());
-        self::assertSame('UPDATE users SET last_login = now() WHERE id = 1 RETURNING id, last_login', $deparsed);
+        static::assertSame('UPDATE users SET last_login = now() WHERE id = 1 RETURNING id, last_login', $deparsed);
     }
 
-    public function test_update_with_schema() : void
+    public function test_update_with_schema(): void
     {
-        $query = UpdateBuilder::create()
-            ->update('myschema.users')
-            ->set('name', Literal::string('John'))
-            ->setAll([]);
+        $query = UpdateBuilder::create()->update('myschema.users')->set('name', Literal::string('John'))->setAll([]);
 
         $ast = $query->toAst();
 
         $relation = $ast->getRelation();
-        self::assertNotNull($relation);
-        self::assertSame('users', $relation->getRelname());
-        self::assertSame('myschema', $relation->getSchemaname());
+        static::assertNotNull($relation);
+        static::assertSame('users', $relation->getRelname());
+        static::assertSame('myschema', $relation->getSchemaname());
     }
 
-    public function test_update_with_schema_deparsed_output() : void
+    public function test_update_with_schema_deparsed_output(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available.');
+            static::markTestSkipped('pg_query_deparse function not available.');
         }
 
-        $query = UpdateBuilder::create()
-            ->update('public.users')
-            ->set('name', Literal::string('John'))
-            ->setAll([]);
+        $query = UpdateBuilder::create()->update('public.users')->set('name', Literal::string('John'))->setAll([]);
 
         $deparsed = $this->deparse($query->toAst());
-        self::assertSame("UPDATE public.users SET name = 'John'", $deparsed);
+        static::assertSame("UPDATE public.users SET name = 'John'", $deparsed);
     }
 
-    public function test_update_with_schema_qualified_table_reference() : void
+    public function test_update_with_schema_qualified_table_reference(): void
     {
-        self::assertSame(
+        static::assertSame(
             "UPDATE public.users SET name = 'John'",
-            update()
-                ->update(table('users', 'public'))
-                ->set('name', literal('John'))
-                ->toSql()
+            update()->update(table('users', 'public'))->set('name', literal('John'))->toSql(),
         );
     }
 
-    public function test_update_with_schema_round_trip() : void
+    public function test_update_with_schema_round_trip(): void
     {
-        $original = UpdateBuilder::create()
-            ->update('myschema.users')
-            ->set('name', Literal::string('John'))
-            ->setAll([]);
+        $original = UpdateBuilder::create()->update('myschema.users')->set('name', Literal::string('John'))->setAll([]);
 
         $ast = $original->toAst();
         $restored = UpdateBuilder::fromAst($ast);
         $restoredAst = $restored->toAst();
 
         $originalRelation = $ast->getRelation();
-        self::assertNotNull($originalRelation);
+        static::assertNotNull($originalRelation);
 
         $restoredRelation = $restoredAst->getRelation();
-        self::assertNotNull($restoredRelation);
+        static::assertNotNull($restoredRelation);
 
-        self::assertSame($originalRelation->getRelname(), $restoredRelation->getRelname());
-        self::assertSame($originalRelation->getSchemaname(), $restoredRelation->getSchemaname());
+        static::assertSame($originalRelation->getRelname(), $restoredRelation->getRelname());
+        static::assertSame($originalRelation->getSchemaname(), $restoredRelation->getSchemaname());
     }
 
-    public function test_update_with_set_all() : void
+    public function test_update_with_set_all(): void
     {
         $query = update()
             ->update('users')
@@ -692,10 +690,10 @@ final class UpdateBuilderTest extends TestCase
             ])
             ->where(eq(col('id'), literal(1)));
 
-        self::assertSame("UPDATE users SET name = 'John', email = 'john@example.com' WHERE id = 1", $query->toSql());
+        static::assertSame("UPDATE users SET name = 'John', email = 'john@example.com' WHERE id = 1", $query->toSql());
     }
 
-    public function test_update_with_subquery_in_set() : void
+    public function test_update_with_subquery_in_set(): void
     {
         $subquery = select()
             ->select(col('avg_price'))
@@ -707,21 +705,21 @@ final class UpdateBuilderTest extends TestCase
             ->set('price', sub_select($subquery))
             ->where(eq(col('id'), literal(1)));
 
-        self::assertSame('UPDATE products SET price = (SELECT avg_price FROM price_stats WHERE category = products.category) WHERE id = 1', $query->toSql());
-    }
-
-    public function test_update_with_table_reference() : void
-    {
-        self::assertSame(
-            "UPDATE users SET name = 'John'",
-            update()
-                ->update(table('users'))
-                ->set('name', literal('John'))
-                ->toSql()
+        static::assertSame(
+            'UPDATE products SET price = (SELECT avg_price FROM price_stats WHERE category = products.category) WHERE id = 1',
+            $query->toSql(),
         );
     }
 
-    public function test_update_with_where() : void
+    public function test_update_with_table_reference(): void
+    {
+        static::assertSame(
+            "UPDATE users SET name = 'John'",
+            update()->update(table('users'))->set('name', literal('John'))->toSql(),
+        );
+    }
+
+    public function test_update_with_where(): void
     {
         $query = UpdateBuilder::create()
             ->update('users')
@@ -730,17 +728,17 @@ final class UpdateBuilderTest extends TestCase
             ->where(new Comparison(Column::name('last_login'), ComparisonOperator::LT, Literal::string('2024-01-01')));
 
         $ast = $query->toAst();
-        self::assertTrue($ast->hasWhereClause());
+        static::assertTrue($ast->hasWhereClause());
 
         $whereClause = $ast->getWhereClause();
-        self::assertNotNull($whereClause);
-        self::assertTrue($whereClause->hasAExpr());
+        static::assertNotNull($whereClause);
+        static::assertTrue($whereClause->hasAExpr());
     }
 
-    public function test_update_with_where_deparsed_output() : void
+    public function test_update_with_where_deparsed_output(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
         $update = UpdateBuilder::create()
@@ -750,10 +748,10 @@ final class UpdateBuilderTest extends TestCase
             ->where(new Comparison(Column::name('id'), ComparisonOperator::EQ, Literal::int(1)));
 
         $deparsed = $this->deparse($update->toAst());
-        self::assertSame("UPDATE users SET status = 'active' WHERE id = 1", $deparsed);
+        static::assertSame("UPDATE users SET status = 'active' WHERE id = 1", $deparsed);
     }
 
-    public function test_update_with_with_clause() : void
+    public function test_update_with_with_clause(): void
     {
         $selectStmt = SelectBuilder::create()
             ->select(Column::name('id'))
@@ -772,17 +770,17 @@ final class UpdateBuilderTest extends TestCase
             ->setAll([]);
 
         $ast = $query->toAst();
-        self::assertTrue($ast->hasWithClause());
+        static::assertTrue($ast->hasWithClause());
 
         $withClause = $ast->getWithClause();
-        self::assertNotNull($withClause);
+        static::assertNotNull($withClause);
 
         $ctes = $withClause->getCtes();
-        self::assertNotNull($ctes);
-        self::assertCount(1, $ctes);
+        static::assertNotNull($ctes);
+        static::assertCount(1, $ctes);
     }
 
-    private function deparse(UpdateStmt $updateStmt) : string
+    private function deparse(UpdateStmt $updateStmt): string
     {
         $parser = new Parser();
         $node = new Node();

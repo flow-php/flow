@@ -11,6 +11,5 @@ final readonly class DocumentationExample
         public string $topic,
         public string $example,
         public ?string $option = null,
-    ) {
-    }
+    ) {}
 }

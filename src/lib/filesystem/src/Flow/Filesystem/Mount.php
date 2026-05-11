@@ -13,13 +13,15 @@ final readonly class Mount
     public function __construct(string $protocol)
     {
         if (!\preg_match('/^[a-zA-Z][a-zA-Z0-9+.-]+$/', $protocol)) {
-            throw new InvalidArgumentException("Invalid mount protocol: '{$protocol}'. Only alphanumeric characters, dots, hyphens and plus signs are allowed.");
+            throw new InvalidArgumentException(
+                "Invalid mount protocol: '{$protocol}'. Only alphanumeric characters, dots, hyphens and plus signs are allowed.",
+            );
         }
 
         $this->protocol = $protocol;
     }
 
-    public function supports(Path|string $path) : bool
+    public function supports(Path|string $path): bool
     {
         return $this->protocol === ($path instanceof Path ? $path->protocol() : $path);
     }

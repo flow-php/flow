@@ -4,64 +4,75 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use function Flow\ETL\DSL\{refs, to_output};
 use Flow\ETL\DataFrame\GroupedDataFrame;
 use Flow\ETL\Dataset\Report;
-use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Execution\StatisticsCollector;
 use Flow\ETL\Extractor\FileExtractor;
-use Flow\ETL\Filesystem\{SaveMode, ScalarFunctionFilter};
+use Flow\ETL\Filesystem\SaveMode;
+use Flow\ETL\Filesystem\ScalarFunctionFilter;
 use Flow\ETL\Formatter\AsciiTableFormatter;
-use Flow\ETL\Function\{AggregatingFunction,
-    ExecutionMode,
-    ScalarFunction,
-    WindowFunction};
-use Flow\ETL\Join\{Expression, Join};
+use Flow\ETL\Function\AggregatingFunction;
+use Flow\ETL\Function\ExecutionMode;
+use Flow\ETL\Function\ScalarFunction;
+use Flow\ETL\Function\WindowFunction;
+use Flow\ETL\Join\Expression;
+use Flow\ETL\Join\Join;
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
-use Flow\ETL\Processor\{BatchingByProcessor,
-    BatchingProcessor,
-    CachingProcessor,
-    CollectingProcessor,
-    ConstrainedProcessor,
-    GroupByProcessor,
-    HashJoinProcessor,
-    OffsetProcessor,
-    PartitioningProcessor,
-    SortingProcessor,
-    VoidProcessor,
-    WindowProcessor};
-use Flow\ETL\Row\{EntryReference, Formatter\ASCIISchemaFormatter, Reference, References};
-use Flow\ETL\Schema\{Definition, SchemaFormatter};
+use Flow\ETL\Processor\BatchingByProcessor;
+use Flow\ETL\Processor\BatchingProcessor;
+use Flow\ETL\Processor\CachingProcessor;
+use Flow\ETL\Processor\CollectingProcessor;
+use Flow\ETL\Processor\ConstrainedProcessor;
+use Flow\ETL\Processor\GroupByProcessor;
+use Flow\ETL\Processor\HashJoinProcessor;
+use Flow\ETL\Processor\OffsetProcessor;
+use Flow\ETL\Processor\PartitioningProcessor;
+use Flow\ETL\Processor\SortingProcessor;
+use Flow\ETL\Processor\VoidProcessor;
+use Flow\ETL\Processor\WindowProcessor;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
+use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
+use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\SchemaFormatter;
 use Flow\ETL\Schema\Validator\StrictValidator;
-use Flow\ETL\Transformer\{AutoCastTransformer,
-    CallbackRowTransformer,
-    CrossJoinRowsTransformer,
-    DropDuplicatesTransformer,
-    DropEntriesTransformer,
-    DropPartitionsTransformer,
-    DuplicateRowTransformer,
-    JoinEachRowsTransformer,
-    LimitTransformer,
-    OrderEntriesTransformer,
-    OrderEntries\Comparator,
-    OrderEntries\TypeComparator,
-    RenameEachEntryTransformer,
-    RenameEntryTransformer,
-    Rename\RenameEntryStrategy,
-    ScalarFunctionFilterTransformer,
-    ScalarFunctionTransformer,
-    SelectEntriesTransformer,
-    UntilTransformer};
+use Flow\ETL\Transformer\AutoCastTransformer;
+use Flow\ETL\Transformer\CallbackRowTransformer;
+use Flow\ETL\Transformer\CrossJoinRowsTransformer;
+use Flow\ETL\Transformer\DropDuplicatesTransformer;
+use Flow\ETL\Transformer\DropEntriesTransformer;
+use Flow\ETL\Transformer\DropPartitionsTransformer;
+use Flow\ETL\Transformer\DuplicateRowTransformer;
+use Flow\ETL\Transformer\JoinEachRowsTransformer;
+use Flow\ETL\Transformer\LimitTransformer;
+use Flow\ETL\Transformer\OrderEntries\Comparator;
+use Flow\ETL\Transformer\OrderEntries\TypeComparator;
+use Flow\ETL\Transformer\OrderEntriesTransformer;
+use Flow\ETL\Transformer\Rename\RenameEntryStrategy;
+use Flow\ETL\Transformer\RenameEachEntryTransformer;
+use Flow\ETL\Transformer\RenameEntryTransformer;
+use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
+use Flow\ETL\Transformer\ScalarFunctionTransformer;
+use Flow\ETL\Transformer\SelectEntriesTransformer;
+use Flow\ETL\Transformer\UntilTransformer;
 use Flow\Filesystem\Path\Filter;
 use Flow\Types\Type\AutoCaster;
+
+use function Flow\ETL\DSL\refs;
+use function Flow\ETL\DSL\to_output;
 
 final class DataFrame
 {
     private readonly FlowContext $context;
 
-    public function __construct(private Pipeline $pipeline, Config|FlowContext $context)
-    {
+    public function __construct(
+        private Pipeline $pipeline,
+        Config|FlowContext $context,
+    ) {
         $this->context = $context instanceof FlowContext ? $context : new FlowContext($context);
         $this->context->telemetry()->dataFrameStarted($this->context);
     }
@@ -69,7 +80,7 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function aggregate(AggregatingFunction ...$aggregations) : self
+    public function aggregate(AggregatingFunction ...$aggregations): self
     {
         $groupBy = new GroupBy();
         $groupBy->aggregate(...$aggregations);
@@ -79,7 +90,7 @@ final class DataFrame
         return $this;
     }
 
-    public function autoCast() : self
+    public function autoCast(): self
     {
         $this->pipeline->add(new AutoCastTransformer(new AutoCaster()));
 
@@ -101,7 +112,7 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
-    public function batchBy(string|Reference $column, ?int $minSize = null) : self
+    public function batchBy(string|Reference $column, ?int $minSize = null): self
     {
         $this->pipeline->add(new BatchingByProcessor(EntryReference::init($column), $minSize));
 
@@ -121,7 +132,7 @@ final class DataFrame
      *
      * @lazy
      */
-    public function batchSize(int $size) : self
+    public function batchSize(int $size): self
     {
         if ($size === -1 || $size === 0) {
             return $this->collect();
@@ -148,7 +159,7 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
-    public function cache(?string $id = null, ?int $cacheBatchSize = null) : self
+    public function cache(?string $id = null, ?int $cacheBatchSize = null): self
     {
         if ($cacheBatchSize !== null && $cacheBatchSize < 1) {
             throw new InvalidArgumentException('Cache batch size must be greater than 0');
@@ -169,7 +180,7 @@ final class DataFrame
      *
      * @lazy
      */
-    public function collect() : self
+    public function collect(): self
     {
         $this->pipeline->add(new CollectingProcessor());
 
@@ -188,9 +199,9 @@ final class DataFrame
      *
      * @lazy
      */
-    public function collectRefs(References $references) : self
+    public function collectRefs(References $references): self
     {
-        $this->with(new CallbackRowTransformer(static function (Row $row) use ($references) : Row {
+        $this->with(new CallbackRowTransformer(static function (Row $row) use ($references): Row {
             foreach ($row->entries()->all() as $entry) {
                 $references->add($entry->ref());
             }
@@ -201,7 +212,7 @@ final class DataFrame
         return $this;
     }
 
-    public function constrain(Constraint $constraint, Constraint ...$constraints) : self
+    public function constrain(Constraint $constraint, Constraint ...$constraints): self
     {
         $constraints = \array_merge([$constraint], $constraints);
 
@@ -214,7 +225,7 @@ final class DataFrame
      * @trigger
      * Return total count of rows processed by this pipeline.
      */
-    public function count() : int
+    public function count(): int
     {
         $total = 0;
 
@@ -235,7 +246,7 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function crossJoin(self $dataFrame, string $prefix = '') : self
+    public function crossJoin(self $dataFrame, string $prefix = ''): self
     {
         $this->pipeline->add(new CrossJoinRowsTransformer($dataFrame, $prefix));
 
@@ -252,8 +263,11 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
-    public function display(int $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()) : string
-    {
+    public function display(
+        int $limit = 20,
+        int|bool $truncate = 20,
+        Formatter $formatter = new AsciiTableFormatter(),
+    ): string {
         $this->limit($limit);
 
         $output = '';
@@ -277,7 +291,7 @@ final class DataFrame
      *
      * @lazy
      */
-    public function drop(string|Reference ...$entries) : self
+    public function drop(string|Reference ...$entries): self
     {
         $this->pipeline->add(new DropEntriesTransformer(...$entries));
 
@@ -291,7 +305,7 @@ final class DataFrame
      *
      * @return $this
      */
-    public function dropDuplicates(string|Reference ...$entries) : self
+    public function dropDuplicates(string|Reference ...$entries): self
     {
         $this->pipeline->add(new DropDuplicatesTransformer(...$entries));
 
@@ -304,14 +318,14 @@ final class DataFrame
      *
      * @lazy
      */
-    public function dropPartitions(bool $dropPartitionColumns = false) : self
+    public function dropPartitions(bool $dropPartitionColumns = false): self
     {
         $this->pipeline->add(new DropPartitionsTransformer($dropPartitionColumns));
 
         return $this;
     }
 
-    public function duplicateRow(mixed $condition, WithEntry ...$entries) : self
+    public function duplicateRow(mixed $condition, WithEntry ...$entries): self
     {
         $this->pipeline->add(new DuplicateRowTransformer($condition, ...$entries));
 
@@ -331,7 +345,7 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
-    public function fetch(?int $limit = null) : Rows
+    public function fetch(?int $limit = null): Rows
     {
         if ($limit !== null) {
             $this->limit($limit);
@@ -356,7 +370,7 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function filter(ScalarFunction $function) : self
+    public function filter(ScalarFunction $function): self
     {
         $this->pipeline->add(new ScalarFunctionFilterTransformer($function));
 
@@ -368,12 +382,14 @@ final class DataFrame
      *
      * @throws RuntimeException
      */
-    public function filterPartitions(Filter|ScalarFunction $filter) : self
+    public function filterPartitions(Filter|ScalarFunction $filter): self
     {
         $extractor = $this->pipeline->extractor();
 
         if (!$extractor instanceof FileExtractor) {
-            throw new RuntimeException('filterPartitions can be used only with extractors that implement FileExtractor interface');
+            throw new RuntimeException(
+                'filterPartitions can be used only with extractors that implement FileExtractor interface',
+            );
         }
 
         if ($filter instanceof Filter) {
@@ -383,12 +399,7 @@ final class DataFrame
         }
 
         $extractor->withPathFilter(
-            new ScalarFunctionFilter(
-                $filter,
-                $this->context->entryFactory(),
-                new AutoCaster(),
-                $this->context
-            )
+            new ScalarFunctionFilter($filter, $this->context->entryFactory(), new AutoCaster(), $this->context),
         );
 
         return $this;
@@ -399,7 +410,7 @@ final class DataFrame
      *
      * @param array<ScalarFunction> $functions
      */
-    public function filters(array $functions) : self
+    public function filters(array $functions): self
     {
         foreach ($functions as $function) {
             $this->filter($function);
@@ -413,7 +424,7 @@ final class DataFrame
      *
      * @param null|callable(Rows $rows) : void $callback
      */
-    public function forEach(?callable $callback = null) : void
+    public function forEach(?callable $callback = null): void
     {
         $this->run($callback);
     }
@@ -425,7 +436,7 @@ final class DataFrame
      *
      * @return \Generator<Rows>
      */
-    public function get() : \Generator
+    public function get(): \Generator
     {
         try {
             foreach ($this->pipeline->process($this->context) as $rows) {
@@ -446,7 +457,7 @@ final class DataFrame
      *
      * @return \Generator<array<array<mixed>>>
      */
-    public function getAsArray() : \Generator
+    public function getAsArray(): \Generator
     {
         try {
             foreach ($this->pipeline->process($this->context) as $rows) {
@@ -467,7 +478,7 @@ final class DataFrame
      *
      * @return \Generator<Row>
      */
-    public function getEach() : \Generator
+    public function getEach(): \Generator
     {
         try {
             foreach ($this->pipeline->process($this->context) as $rows) {
@@ -490,7 +501,7 @@ final class DataFrame
      *
      * @return \Generator<array<mixed>>
      */
-    public function getEachAsArray() : \Generator
+    public function getEachAsArray(): \Generator
     {
         try {
             foreach ($this->pipeline->process($this->context) as $rows) {
@@ -509,7 +520,7 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function groupBy(string|Reference ...$entries) : GroupedDataFrame
+    public function groupBy(string|Reference ...$entries): GroupedDataFrame
     {
         return new GroupedDataFrame($this, new GroupBy(...$entries));
     }
@@ -517,7 +528,7 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function join(self $dataFrame, Expression $on, string|Join $type = Join::left) : self
+    public function join(self $dataFrame, Expression $on, string|Join $type = Join::left): self
     {
         if (\is_string($type)) {
             $type = Join::from($type);
@@ -533,7 +544,7 @@ final class DataFrame
      *
      * @psalm-param string|Join $type
      */
-    public function joinEach(DataFrameFactory $factory, Expression $on, string|Join $type = Join::left) : self
+    public function joinEach(DataFrameFactory $factory, Expression $on, string|Join $type = Join::left): self
     {
         if ($type instanceof Join) {
             $type = $type->name;
@@ -556,7 +567,7 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
-    public function limit(?int $limit) : self
+    public function limit(?int $limit): self
     {
         if ($limit === null) {
             return $this;
@@ -570,7 +581,7 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function load(Loader $loader) : self
+    public function load(Loader $loader): self
     {
         $this->pipeline = $this->context->config->optimizer()->optimize($loader, $this->pipeline);
 
@@ -582,7 +593,7 @@ final class DataFrame
      *
      * @param callable(Row $row) : Row $callback
      */
-    public function map(callable $callback) : self
+    public function map(callable $callback): self
     {
         $this->pipeline->add(new CallbackRowTransformer($callback));
 
@@ -594,7 +605,7 @@ final class DataFrame
      *
      * @param null|SchemaValidator $validator - when null, StrictValidator gets initialized
      */
-    public function match(Schema $schema, ?SchemaValidator $validator = null) : self
+    public function match(Schema $schema, ?SchemaValidator $validator = null): self
     {
         $this->pipeline->add(new SchemaValidationLoader($schema, $validator ?? new StrictValidator()));
 
@@ -612,7 +623,7 @@ final class DataFrame
      *
      * @return $this
      */
-    public function mode(SaveMode|ExecutionMode $mode) : self
+    public function mode(SaveMode|ExecutionMode $mode): self
     {
         if ($mode instanceof ExecutionMode) {
             $this->context->functions()->setMode($mode);
@@ -637,7 +648,7 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
-    public function offset(?int $offset) : self
+    public function offset(?int $offset): self
     {
         if ($offset === null) {
             return $this;
@@ -651,7 +662,7 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function onError(ErrorHandler $handler) : self
+    public function onError(ErrorHandler $handler): self
     {
         $this->context->setErrorHandler($handler);
 
@@ -661,7 +672,7 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function partitionBy(string|Reference $entry, string|Reference ...$entries) : self
+    public function partitionBy(string|Reference $entry, string|Reference ...$entries): self
     {
         \array_unshift($entries, $entry);
 
@@ -670,7 +681,7 @@ final class DataFrame
         return $this;
     }
 
-    public function pivot(Reference $ref) : self
+    public function pivot(Reference $ref): self
     {
         $processor = $this->pipeline->segments()->current()->processor();
 
@@ -686,8 +697,11 @@ final class DataFrame
     /**
      * @trigger
      */
-    public function printRows(?int $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()) : void
-    {
+    public function printRows(
+        ?int $limit = 20,
+        int|bool $truncate = 20,
+        Formatter $formatter = new AsciiTableFormatter(),
+    ): void {
         if ($limit !== null) {
             $this->limit($limit);
         }
@@ -700,7 +714,7 @@ final class DataFrame
     /**
      * @trigger
      */
-    public function printSchema(?int $limit = 20, SchemaFormatter $formatter = new ASCIISchemaFormatter()) : void
+    public function printSchema(?int $limit = 20, SchemaFormatter $formatter = new ASCIISchemaFormatter()): void
     {
         if ($limit !== null) {
             $this->limit($limit);
@@ -713,21 +727,21 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function rename(string $from, string $to) : self
+    public function rename(string $from, string $to): self
     {
         $this->pipeline->add(new RenameEntryTransformer($from, $to));
 
         return $this;
     }
 
-    public function renameEach(RenameEntryStrategy ...$strategies) : self
+    public function renameEach(RenameEntryStrategy ...$strategies): self
     {
         $this->pipeline->add(new RenameEachEntryTransformer(...$strategies));
 
         return $this;
     }
 
-    public function reorderEntries(Comparator $comparator = new TypeComparator()) : self
+    public function reorderEntries(Comparator $comparator = new TypeComparator()): self
     {
         $this->pipeline->add(new OrderEntriesTransformer($comparator));
 
@@ -738,7 +752,7 @@ final class DataFrame
      * @lazy
      * Alias for ETL::transform method.
      */
-    public function rows(Transformer|Transformation $transformer) : self
+    public function rows(Transformer|Transformation $transformer): self
     {
         return $this->with($transformer);
     }
@@ -756,7 +770,7 @@ final class DataFrame
      *
      * @return ($analyze is Analyze|true ? Report : null)
      */
-    public function run(?callable $callback = null, bool|Analyze $analyze = false) : ?Report
+    public function run(?callable $callback = null, bool|Analyze $analyze = false): ?Report
     {
         if ($analyze === false) {
             $analyze = $this->context->config->analyze();
@@ -788,7 +802,7 @@ final class DataFrame
      *
      * @lazy
      */
-    public function saveMode(SaveMode $mode) : self
+    public function saveMode(SaveMode $mode): self
     {
         return $this->mode($mode);
     }
@@ -798,7 +812,7 @@ final class DataFrame
      *
      * @return Schema
      */
-    public function schema() : Schema
+    public function schema(): Schema
     {
         $schema = new Schema();
 
@@ -820,7 +834,7 @@ final class DataFrame
      * @lazy
      * Keep only given entries.
      */
-    public function select(string|Reference ...$entries) : self
+    public function select(string|Reference ...$entries): self
     {
         $this->pipeline->add(new SelectEntriesTransformer(...$entries));
 
@@ -830,7 +844,7 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function sortBy(Reference ...$entries) : self
+    public function sortBy(Reference ...$entries): self
     {
         $this->pipeline->add(new SortingProcessor(refs(...$entries)));
 
@@ -842,7 +856,7 @@ final class DataFrame
      *
      * @lazy
      */
-    public function transform(Transformer|Transformation|Transformations|WithEntry $transformer) : self
+    public function transform(Transformer|Transformation|Transformations|WithEntry $transformer): self
     {
         return $this->with($transformer);
     }
@@ -853,7 +867,7 @@ final class DataFrame
      *
      * @lazy
      */
-    public function until(ScalarFunction $function) : self
+    public function until(ScalarFunction $function): self
     {
         $this->pipeline->add(new UntilTransformer($function));
 
@@ -867,7 +881,7 @@ final class DataFrame
      * removing code. All operations will get processed up to this point,
      * from here no rows are passed forward.
      */
-    public function void() : self
+    public function void(): self
     {
         $this->pipeline->add(new VoidProcessor());
 
@@ -877,7 +891,7 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function with(Transformer|Transformation|Transformations|WithEntry $transformer) : self
+    public function with(Transformer|Transformation|Transformations|WithEntry $transformer): self
     {
         if ($transformer instanceof Transformer) {
             $this->pipeline->add($transformer);
@@ -905,7 +919,7 @@ final class DataFrame
      *
      * @param array<int, WithEntry>|array<string, ScalarFunction|WindowFunction|WithEntry> $references
      */
-    public function withEntries(array $references) : self
+    public function withEntries(array $references): self
     {
         foreach ($references as $entryName => $ref) {
             if ($ref instanceof WithEntry) {
@@ -923,12 +937,12 @@ final class DataFrame
      *
      * @lazy
      */
-    public function withEntry(string|Definition $entry, ScalarFunction|WindowFunction $reference) : self
+    public function withEntry(string|Definition $entry, ScalarFunction|WindowFunction $reference): self
     {
         if ($reference instanceof WindowFunction) {
             if (\count($reference->window()->partitions())) {
                 $this->pipeline->add(
-                    new PartitioningProcessor($reference->window()->partitions(), $reference->window()->order())
+                    new PartitioningProcessor($reference->window()->partitions(), $reference->window()->order()),
                 );
             } else {
                 $this->collect();
@@ -950,7 +964,7 @@ final class DataFrame
      * @lazy
      * Alias for ETL::load function.
      */
-    public function write(Loader $loader) : self
+    public function write(Loader $loader): self
     {
         return $this->load($loader);
     }

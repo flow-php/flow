@@ -14,7 +14,7 @@ final class MethodCollector
     /**
      * @param class-string $className
      */
-    public function collect(string $className) : void
+    public function collect(string $className): void
     {
         $reflectionClass = new \ReflectionClass($className);
         $methods = $reflectionClass->getMethods(\ReflectionMethod::IS_PUBLIC);

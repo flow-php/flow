@@ -9,8 +9,11 @@ use PHPUnit\Framework\TestCase;
 
 final class ContextExceptionTest extends TestCase
 {
-    public function test_key_not_found_message() : void
+    public function test_key_not_found_message(): void
     {
-        self::assertStringContainsString('Context has no value for key "foo".', ContextException::keyNotFound('foo')->getMessage());
+        static::assertStringContainsString(
+            'Context has no value for key "foo".',
+            ContextException::keyNotFound('foo')->getMessage(),
+        );
     }
 }

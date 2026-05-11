@@ -15,11 +15,9 @@ final readonly class Statistics
         public ?string $minValue,
         public ?bool $isMaxValueExact = null,
         public ?bool $isMinValueExact = null,
-    ) {
+    ) {}
 
-    }
-
-    public static function fromThrift(\Flow\Parquet\ThriftModel\Statistics $thrift) : self
+    public static function fromThrift(\Flow\Parquet\ThriftModel\Statistics $thrift): self
     {
         return new self(
             $thrift->max,
@@ -33,7 +31,7 @@ final readonly class Statistics
         );
     }
 
-    public function toThrift() : \Flow\Parquet\ThriftModel\Statistics
+    public function toThrift(): \Flow\Parquet\ThriftModel\Statistics
     {
         return new \Flow\Parquet\ThriftModel\Statistics([
             'max' => $this->max,

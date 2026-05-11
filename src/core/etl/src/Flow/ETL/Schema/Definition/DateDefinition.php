@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema\Definition;
 
-use function Flow\Types\DSL\{type_date, type_equals};
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\{Entry, EntryReference, Reference};
-use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
+use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateType;
+
+use function Flow\Types\DSL\type_date;
+use function Flow\Types\DSL\type_equals;
 
 /**
  * @implements Definition<\DateTimeInterface>
@@ -38,19 +43,19 @@ final class DateDefinition implements Definition
     /**
      * @param array<array-key, mixed> $value
      */
-    public function addMetadata(string $key, int|string|bool|float|array $value) : static
+    public function addMetadata(string $key, int|string|bool|float|array $value): static
     {
         $this->metadata = $this->metadata->add($key, $value);
 
         return $this;
     }
 
-    public function entry() : Reference
+    public function entry(): Reference
     {
         return $this->ref;
     }
 
-    public function isCompatible(Definition $definition) : bool
+    public function isCompatible(Definition $definition): bool
     {
         if (!$this->ref->is($definition->entry())) {
             return false;
@@ -63,12 +68,12 @@ final class DateDefinition implements Definition
         return type_equals($this->type, $definition->type());
     }
 
-    public function isNullable() : bool
+    public function isNullable(): bool
     {
         return $this->nullable;
     }
 
-    public function isSame(Definition $definition) : bool
+    public function isSame(Definition $definition): bool
     {
         if ($this->nullable !== $definition->isNullable()) {
             return false;
@@ -81,12 +86,12 @@ final class DateDefinition implements Definition
         return $this->metadata->isEqual($definition->metadata());
     }
 
-    public function makeNullable(bool $nullable = true) : static
+    public function makeNullable(bool $nullable = true): static
     {
         return new self($this->ref, $nullable, $this->metadata);
     }
 
-    public function matches(Entry $entry) : bool
+    public function matches(Entry $entry): bool
     {
         if ($this->isNullable() && $entry->is($this->ref)) {
             return true;
@@ -99,13 +104,13 @@ final class DateDefinition implements Definition
         return $entry->type() instanceof DateType;
     }
 
-    public function merge(Definition $definition) : Definition
+    public function merge(Definition $definition): Definition
     {
         if (!$this->ref->is($definition->entry())) {
             throw new RuntimeException(\sprintf(
                 'Cannot merge different definitions, %s and %s',
                 $this->ref->name(),
-                $definition->entry()->name()
+                $definition->entry()->name(),
             ));
         }
 
@@ -113,20 +118,25 @@ final class DateDefinition implements Definition
         $defFromNull = $definition->metadata()->has(Metadata::FROM_NULL);
 
         if ($thisFromNull && $defFromNull) {
-            return $this->makeNullable()->setMetadata(
-                $this->metadata->merge($definition->metadata())
-            );
+            return $this->makeNullable()->setMetadata($this->metadata->merge($definition->metadata()));
         }
 
         if ($thisFromNull) {
-            return $definition->makeNullable()->setMetadata(
-                $definition->metadata()->remove(Metadata::FROM_NULL)->merge($this->metadata->remove(Metadata::FROM_NULL))
-            );
+            return $definition
+                ->makeNullable()
+                ->setMetadata(
+                    $definition
+                        ->metadata()
+                        ->remove(Metadata::FROM_NULL)
+                        ->merge($this->metadata->remove(Metadata::FROM_NULL)),
+                );
         }
 
         if ($defFromNull) {
             return $this->makeNullable()->setMetadata(
-                $this->metadata->remove(Metadata::FROM_NULL)->merge($definition->metadata()->remove(Metadata::FROM_NULL))
+                $this->metadata
+                    ->remove(Metadata::FROM_NULL)
+                    ->merge($definition->metadata()->remove(Metadata::FROM_NULL)),
             );
         }
 
@@ -134,7 +144,7 @@ final class DateDefinition implements Definition
             return new self(
                 $this->ref,
                 $this->nullable || $definition->nullable,
-                $this->metadata->merge($definition->metadata)
+                $this->metadata->merge($definition->metadata),
             );
         }
 
@@ -142,7 +152,7 @@ final class DateDefinition implements Definition
             return new DateTimeDefinition(
                 $this->ref,
                 $this->nullable || $definition->isNullable(),
-                $this->metadata->merge($definition->metadata())
+                $this->metadata->merge($definition->metadata()),
             );
         }
 
@@ -150,7 +160,7 @@ final class DateDefinition implements Definition
             return new StringDefinition(
                 $this->ref,
                 $this->nullable || $definition->isNullable(),
-                $this->metadata->merge($definition->metadata())
+                $this->metadata->merge($definition->metadata()),
             );
         }
 
@@ -158,7 +168,7 @@ final class DateDefinition implements Definition
             return new FloatDefinition(
                 $this->ref,
                 $this->nullable || $definition->isNullable(),
-                $this->metadata->merge($definition->metadata())
+                $this->metadata->merge($definition->metadata()),
             );
         }
 
@@ -166,18 +176,14 @@ final class DateDefinition implements Definition
             return new IntegerDefinition(
                 $this->ref,
                 $this->nullable || $definition->isNullable(),
-                $this->metadata->merge($definition->metadata())
+                $this->metadata->merge($definition->metadata()),
             );
         }
 
-        throw new RuntimeException(\sprintf(
-            'Cannot merge %s with %s',
-            self::class,
-            $definition::class
-        ));
+        throw new RuntimeException(\sprintf('Cannot merge %s with %s', self::class, $definition::class));
     }
 
-    public function metadata() : Metadata
+    public function metadata(): Metadata
     {
         return $this->metadata;
     }
@@ -185,7 +191,7 @@ final class DateDefinition implements Definition
     /**
      * @return array<string, mixed>
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'ref' => $this->ref->name(),
@@ -195,19 +201,19 @@ final class DateDefinition implements Definition
         ];
     }
 
-    public function rename(string $newName) : static
+    public function rename(string $newName): static
     {
         return new self($newName, $this->nullable, $this->metadata);
     }
 
-    public function setMetadata(Metadata $metadata) : static
+    public function setMetadata(Metadata $metadata): static
     {
         $this->metadata = $metadata;
 
         return $this;
     }
 
-    public function type() : Type
+    public function type(): Type
     {
         return $this->type;
     }

@@ -9,13 +9,13 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface AlterDomainFinalStep extends Sql
 {
-    public function cascade() : self;
+    public function cascade(): self;
 
-    public function ifExists() : self;
+    public function ifExists(): self;
 
-    public function restrict() : self;
+    public function restrict(): self;
 
-    public function toAst() : AlterDomainStmt;
+    public function toAst(): AlterDomainStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

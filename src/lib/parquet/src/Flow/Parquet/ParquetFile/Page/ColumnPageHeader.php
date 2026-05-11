@@ -13,6 +13,5 @@ final readonly class ColumnPageHeader
         public FlatColumn $column,
         public ColumnChunk $columnChunk,
         public PageHeader $pageHeader,
-    ) {
-    }
+    ) {}
 }

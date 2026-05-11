@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Provider\Memory;
 
-use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
+use Flow\Telemetry\ErrorHandler\ErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\Exporter\Exporter;
-use Flow\Telemetry\Meter\{Metric, MetricProcessor, MetricType};
+use Flow\Telemetry\Meter\Metric;
+use Flow\Telemetry\Meter\MetricProcessor;
+use Flow\Telemetry\Meter\MetricType;
 use Flow\Telemetry\Signal\Signals;
 
 /**
@@ -24,15 +27,14 @@ final class MemoryMetricProcessor implements MetricProcessor
     public function __construct(
         private readonly Exporter $metricExporter,
         private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
-    ) {
-    }
+    ) {}
 
-    public function countMetrics() : int
+    public function countMetrics(): int
     {
         return \count($this->metrics);
     }
 
-    public function flush() : bool
+    public function flush(): bool
     {
         if (\count($this->metrics) === 0) {
             return true;
@@ -50,7 +52,7 @@ final class MemoryMetricProcessor implements MetricProcessor
     /**
      * @return array<Metric>
      */
-    public function metrics() : array
+    public function metrics(): array
     {
         return $this->metrics;
     }
@@ -58,36 +60,30 @@ final class MemoryMetricProcessor implements MetricProcessor
     /**
      * @return array<Metric>
      */
-    public function metricsOfType(MetricType $type) : array
+    public function metricsOfType(MetricType $type): array
     {
-        return \array_values(\array_filter(
-            $this->metrics,
-            static fn (Metric $metric) : bool => $metric->type === $type,
-        ));
+        return \array_values(\array_filter($this->metrics, static fn(Metric $metric): bool => $metric->type === $type));
     }
 
     /**
      * @return array<Metric>
      */
-    public function metricsWithName(string $name) : array
+    public function metricsWithName(string $name): array
     {
-        return \array_values(\array_filter(
-            $this->metrics,
-            static fn (Metric $metric) : bool => $metric->name === $name,
-        ));
+        return \array_values(\array_filter($this->metrics, static fn(Metric $metric): bool => $metric->name === $name));
     }
 
-    public function process(Metric $metric) : void
+    public function process(Metric $metric): void
     {
         $this->metrics[] = $metric;
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->metrics = [];
     }
 
-    public function shutdown() : void
+    public function shutdown(): void
     {
         if ($this->isShutdown) {
             return;

@@ -15,8 +15,7 @@ final readonly class Plan
         private ?float $executionTime = null,
         private ?int $memoryUsed = null,
         private ?int $memoryPeak = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array{
@@ -27,7 +26,7 @@ final readonly class Plan
      *     memory_peak: ?int
      * } $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         /** @var PlanNodeShape $rootNodeData */
         $rootNodeData = $data['root_node'];
@@ -44,22 +43,22 @@ final readonly class Plan
     /**
      * @return array<PlanNode>
      */
-    public function allNodes() : array
+    public function allNodes(): array
     {
         return $this->flattenNodes($this->rootNode);
     }
 
-    public function executionTime() : ?float
+    public function executionTime(): ?float
     {
         return $this->executionTime;
     }
 
-    public function memoryPeak() : ?int
+    public function memoryPeak(): ?int
     {
         return $this->memoryPeak;
     }
 
-    public function memoryUsed() : ?int
+    public function memoryUsed(): ?int
     {
         return $this->memoryUsed;
     }
@@ -67,12 +66,9 @@ final readonly class Plan
     /**
      * @return array<PlanNode>
      */
-    public function nodesByType(PlanNodeType $type) : array
+    public function nodesByType(PlanNodeType $type): array
     {
-        return \array_filter(
-            $this->allNodes(),
-            static fn (PlanNode $node) : bool => $node->nodeType() === $type
-        );
+        return \array_filter($this->allNodes(), static fn(PlanNode $node): bool => $node->nodeType() === $type);
     }
 
     /**
@@ -84,7 +80,7 @@ final readonly class Plan
      *     memory_peak: ?int
      * }
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'root_node' => $this->rootNode->normalize(),
@@ -95,22 +91,22 @@ final readonly class Plan
         ];
     }
 
-    public function planningTime() : ?float
+    public function planningTime(): ?float
     {
         return $this->planningTime;
     }
 
-    public function rootNode() : PlanNode
+    public function rootNode(): PlanNode
     {
         return $this->rootNode;
     }
 
-    public function totalCost() : float
+    public function totalCost(): float
     {
         return $this->rootNode->cost()->totalCost();
     }
 
-    public function totalTime() : ?float
+    public function totalTime(): ?float
     {
         if ($this->planningTime === null || $this->executionTime === null) {
             return null;
@@ -122,7 +118,7 @@ final readonly class Plan
     /**
      * @return array<PlanNode>
      */
-    private function flattenNodes(PlanNode $node) : array
+    private function flattenNodes(PlanNode $node): array
     {
         $nodes = [$node];
 

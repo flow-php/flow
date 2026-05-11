@@ -4,27 +4,86 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\DSL;
 
-use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
-use Flow\Telemetry\{Attributes, Resource, Telemetry};
-use Flow\Telemetry\Context\{Baggage, Context, ContextStorage, MemoryContextStorage, SpanId, TraceId};
-use Flow\Telemetry\ErrorHandler\{CompositeErrorHandler, ErrorHandler, ErrorLogHandler, ErrorLogMessageType, NullErrorHandler, StreamHandler, SyslogFacility, SyslogHandler, SyslogSeverity, UdpSyslogHandler};
+use Flow\ETL\Attribute\DocumentationDSL;
+use Flow\ETL\Attribute\Module;
+use Flow\ETL\Attribute\Type as DSLType;
+use Flow\Telemetry\Attributes;
+use Flow\Telemetry\Context\Baggage;
+use Flow\Telemetry\Context\Context;
+use Flow\Telemetry\Context\ContextStorage;
+use Flow\Telemetry\Context\MemoryContextStorage;
+use Flow\Telemetry\Context\SpanId;
+use Flow\Telemetry\Context\TraceId;
+use Flow\Telemetry\ErrorHandler\CompositeErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogMessageType;
+use Flow\Telemetry\ErrorHandler\NullErrorHandler;
+use Flow\Telemetry\ErrorHandler\StreamHandler;
+use Flow\Telemetry\ErrorHandler\SyslogFacility;
+use Flow\Telemetry\ErrorHandler\SyslogHandler;
+use Flow\Telemetry\ErrorHandler\SyslogSeverity;
+use Flow\Telemetry\ErrorHandler\UdpSyslogHandler;
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\InstrumentationScope;
-use Flow\Telemetry\Logger\{LogProcessor, LogRecordLimits, LoggerProvider, Severity};
-use Flow\Telemetry\Logger\Processor\{BatchingLogProcessor, PassThroughLogProcessor, SeverityFilteringLogProcessor};
-use Flow\Telemetry\Meter\{AggregationTemporality, MeterProvider, MetricLimits, MetricProcessor};
-use Flow\Telemetry\Meter\Exemplar\{AlwaysOffExemplarFilter, AlwaysOnExemplarFilter, ExemplarFilter, TraceBasedExemplarFilter};
-use Flow\Telemetry\Meter\Processor\{BatchingMetricProcessor, PassThroughMetricProcessor};
-use Flow\Telemetry\Propagation\{ArrayCarrier, CompositePropagator, PropagationContext, Propagator, SuperglobalCarrier, W3CBaggage, W3CTraceContext};
+use Flow\Telemetry\Logger\LoggerProvider;
+use Flow\Telemetry\Logger\LogProcessor;
+use Flow\Telemetry\Logger\LogRecordLimits;
+use Flow\Telemetry\Logger\Processor\BatchingLogProcessor;
+use Flow\Telemetry\Logger\Processor\PassThroughLogProcessor;
+use Flow\Telemetry\Logger\Processor\SeverityFilteringLogProcessor;
+use Flow\Telemetry\Logger\Severity;
+use Flow\Telemetry\Meter\AggregationTemporality;
+use Flow\Telemetry\Meter\Exemplar\AlwaysOffExemplarFilter;
+use Flow\Telemetry\Meter\Exemplar\AlwaysOnExemplarFilter;
+use Flow\Telemetry\Meter\Exemplar\ExemplarFilter;
+use Flow\Telemetry\Meter\Exemplar\TraceBasedExemplarFilter;
+use Flow\Telemetry\Meter\MeterProvider;
+use Flow\Telemetry\Meter\MetricLimits;
+use Flow\Telemetry\Meter\MetricProcessor;
+use Flow\Telemetry\Meter\Processor\BatchingMetricProcessor;
+use Flow\Telemetry\Meter\Processor\PassThroughMetricProcessor;
+use Flow\Telemetry\Propagation\ArrayCarrier;
+use Flow\Telemetry\Propagation\CompositePropagator;
+use Flow\Telemetry\Propagation\PropagationContext;
+use Flow\Telemetry\Propagation\Propagator;
+use Flow\Telemetry\Propagation\SuperglobalCarrier;
+use Flow\Telemetry\Propagation\W3CBaggage;
+use Flow\Telemetry\Propagation\W3CTraceContext;
 use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Provider\Console\{ConsoleExporter, ConsoleLogOptions, ConsoleMetricOptions, ConsoleSpanOptions};
-use Flow\Telemetry\Provider\Memory\{MemoryExporter, MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
-use Flow\Telemetry\Provider\Void\{VoidExporter, VoidLogProcessor, VoidMetricProcessor, VoidSpanProcessor};
-use Flow\Telemetry\Resource\Detector\{CachingDetector, ChainDetector, ComposerDetector, EnvironmentDetector, HostDetector, ManualDetector, OsDetector, ProcessDetector};
+use Flow\Telemetry\Provider\Console\ConsoleExporter;
+use Flow\Telemetry\Provider\Console\ConsoleLogOptions;
+use Flow\Telemetry\Provider\Console\ConsoleMetricOptions;
+use Flow\Telemetry\Provider\Console\ConsoleSpanOptions;
+use Flow\Telemetry\Provider\Memory\MemoryExporter;
+use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
+use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
+use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
+use Flow\Telemetry\Provider\Void\VoidExporter;
+use Flow\Telemetry\Provider\Void\VoidLogProcessor;
+use Flow\Telemetry\Provider\Void\VoidMetricProcessor;
+use Flow\Telemetry\Provider\Void\VoidSpanProcessor;
+use Flow\Telemetry\Resource;
+use Flow\Telemetry\Resource\Detector\CachingDetector;
+use Flow\Telemetry\Resource\Detector\ChainDetector;
+use Flow\Telemetry\Resource\Detector\ComposerDetector;
+use Flow\Telemetry\Resource\Detector\EnvironmentDetector;
+use Flow\Telemetry\Resource\Detector\HostDetector;
+use Flow\Telemetry\Resource\Detector\ManualDetector;
+use Flow\Telemetry\Resource\Detector\OsDetector;
+use Flow\Telemetry\Resource\Detector\ProcessDetector;
 use Flow\Telemetry\Resource\ResourceDetector;
-use Flow\Telemetry\Tracer\{GenericEvent, SpanContext, SpanLimits, SpanLink, SpanProcessor, TracerProvider};
-use Flow\Telemetry\Tracer\Processor\{BatchingSpanProcessor, PassThroughSpanProcessor};
-use Flow\Telemetry\Tracer\Sampler\{AlwaysOnSampler, Sampler};
+use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\Tracer\GenericEvent;
+use Flow\Telemetry\Tracer\Processor\BatchingSpanProcessor;
+use Flow\Telemetry\Tracer\Processor\PassThroughSpanProcessor;
+use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
+use Flow\Telemetry\Tracer\Sampler\Sampler;
+use Flow\Telemetry\Tracer\SpanContext;
+use Flow\Telemetry\Tracer\SpanLimits;
+use Flow\Telemetry\Tracer\SpanLink;
+use Flow\Telemetry\Tracer\SpanProcessor;
+use Flow\Telemetry\Tracer\TracerProvider;
 use Psr\Clock\ClockInterface;
 
 /**
@@ -38,7 +97,7 @@ use Psr\Clock\ClockInterface;
  * @throws \InvalidArgumentException if the hex string is invalid
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::TYPE)]
-function trace_id(?string $hex = null) : TraceId
+function trace_id(?string $hex = null): TraceId
 {
     if ($hex !== null) {
         return TraceId::fromHex($hex);
@@ -58,7 +117,7 @@ function trace_id(?string $hex = null) : TraceId
  * @throws \InvalidArgumentException if the hex string is invalid
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::TYPE)]
-function span_id(?string $hex = null) : SpanId
+function span_id(?string $hex = null): SpanId
 {
     if ($hex !== null) {
         return SpanId::fromHex($hex);
@@ -73,7 +132,7 @@ function span_id(?string $hex = null) : SpanId
  * @param array<string, string> $entries Initial key-value entries
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::TYPE)]
-function baggage(array $entries = []) : Baggage
+function baggage(array $entries = []): Baggage
 {
     return new Baggage($entries);
 }
@@ -88,7 +147,7 @@ function baggage(array $entries = []) : Baggage
  * @param null|Baggage $baggage Optional Baggage to use
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::TYPE)]
-function context(?TraceId $traceId = null, ?Baggage $baggage = null) : Context
+function context(?TraceId $traceId = null, ?Baggage $baggage = null): Context
 {
     $traceId ??= TraceId::generate();
     $baggage ??= new Baggage();
@@ -105,7 +164,7 @@ function context(?TraceId $traceId = null, ?Baggage $baggage = null) : Context
  * @param null|Context $context Optional initial context
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function memory_context_storage(?Context $context = null) : MemoryContextStorage
+function memory_context_storage(?Context $context = null): MemoryContextStorage
 {
     return new MemoryContextStorage($context);
 }
@@ -116,7 +175,7 @@ function memory_context_storage(?Context $context = null) : MemoryContextStorage
  * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Resource attributes
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::TYPE)]
-function resource(array|Attributes $attributes = []) : Resource
+function resource(array|Attributes $attributes = []): Resource
 {
     return Resource::create($attributes);
 }
@@ -129,7 +188,7 @@ function resource(array|Attributes $attributes = []) : Resource
  * @param null|SpanId $parentSpanId Optional parent span ID
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::TYPE)]
-function span_context(TraceId $traceId, SpanId $spanId, ?SpanId $parentSpanId = null) : SpanContext
+function span_context(TraceId $traceId, SpanId $spanId, ?SpanId $parentSpanId = null): SpanContext
 {
     return SpanContext::create($traceId, $spanId, $parentSpanId);
 }
@@ -142,7 +201,7 @@ function span_context(TraceId $traceId, SpanId $spanId, ?SpanId $parentSpanId = 
  * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Event attributes
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::TYPE)]
-function span_event(string $name, \DateTimeImmutable $timestamp, array|Attributes $attributes = []) : GenericEvent
+function span_event(string $name, \DateTimeImmutable $timestamp, array|Attributes $attributes = []): GenericEvent
 {
     return GenericEvent::create($name, $timestamp, $attributes);
 }
@@ -154,7 +213,7 @@ function span_event(string $name, \DateTimeImmutable $timestamp, array|Attribute
  * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Link attributes
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::TYPE)]
-function span_link(SpanContext $context, array|Attributes $attributes = []) : SpanLink
+function span_link(SpanContext $context, array|Attributes $attributes = []): SpanLink
 {
     return SpanLink::create($context, $attributes);
 }
@@ -177,7 +236,7 @@ function span_limits(
     int $attributePerEventCountLimit = 128,
     int $attributePerLinkCountLimit = 128,
     ?int $attributeValueLengthLimit = null,
-) : SpanLimits {
+): SpanLimits {
     return new SpanLimits(
         $attributeCountLimit,
         $eventCountLimit,
@@ -195,14 +254,9 @@ function span_limits(
  * @param null|int $attributeValueLengthLimit Maximum length for string attribute values (null = unlimited)
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function log_record_limits(
-    int $attributeCountLimit = 128,
-    ?int $attributeValueLengthLimit = null,
-) : LogRecordLimits {
-    return new LogRecordLimits(
-        $attributeCountLimit,
-        $attributeValueLengthLimit,
-    );
+function log_record_limits(int $attributeCountLimit = 128, ?int $attributeValueLengthLimit = null): LogRecordLimits
+{
+    return new LogRecordLimits($attributeCountLimit, $attributeValueLengthLimit);
 }
 
 /**
@@ -211,12 +265,9 @@ function log_record_limits(
  * @param int $cardinalityLimit Maximum number of unique attribute combinations per instrument
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function metric_limits(
-    int $cardinalityLimit = 2000,
-) : MetricLimits {
-    return new MetricLimits(
-        $cardinalityLimit,
-    );
+function metric_limits(int $cardinalityLimit = 2000): MetricLimits
+{
+    return new MetricLimits($cardinalityLimit);
 }
 
 /**
@@ -225,7 +276,7 @@ function metric_limits(
  * No-op span processor that discards all data.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function void_span_processor() : VoidSpanProcessor
+function void_span_processor(): VoidSpanProcessor
 {
     return new VoidSpanProcessor();
 }
@@ -236,7 +287,7 @@ function void_span_processor() : VoidSpanProcessor
  * No-op metric processor that discards all data.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function void_metric_processor() : VoidMetricProcessor
+function void_metric_processor(): VoidMetricProcessor
 {
     return new VoidMetricProcessor();
 }
@@ -247,7 +298,7 @@ function void_metric_processor() : VoidMetricProcessor
  * No-op log processor that discards all data.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function void_log_processor() : VoidLogProcessor
+function void_log_processor(): VoidLogProcessor
 {
     return new VoidLogProcessor();
 }
@@ -258,7 +309,7 @@ function void_log_processor() : VoidLogProcessor
  * No-op unified exporter that discards logs, metrics, and spans.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function void_exporter() : VoidExporter
+function void_exporter(): VoidExporter
 {
     return new VoidExporter();
 }
@@ -270,7 +321,7 @@ function void_exporter() : VoidExporter
  * Useful for testing and inspection without serialization.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function memory_exporter() : MemoryExporter
+function memory_exporter(): MemoryExporter
 {
     return new MemoryExporter();
 }
@@ -285,7 +336,7 @@ function memory_exporter() : MemoryExporter
 function memory_span_processor(
     Exporter $exporter,
     ErrorHandler $errorHandler = new ErrorLogHandler(),
-) : MemorySpanProcessor {
+): MemorySpanProcessor {
     return new MemorySpanProcessor($exporter, $errorHandler);
 }
 
@@ -299,7 +350,7 @@ function memory_span_processor(
 function memory_metric_processor(
     Exporter $exporter,
     ErrorHandler $errorHandler = new ErrorLogHandler(),
-) : MemoryMetricProcessor {
+): MemoryMetricProcessor {
     return new MemoryMetricProcessor($exporter, $errorHandler);
 }
 
@@ -313,7 +364,7 @@ function memory_metric_processor(
 function memory_log_processor(
     Exporter $exporter,
     ErrorHandler $errorHandler = new ErrorLogHandler(),
-) : MemoryLogProcessor {
+): MemoryLogProcessor {
     return new MemoryLogProcessor($exporter, $errorHandler);
 }
 
@@ -335,15 +386,8 @@ function tracer_provider(
     Sampler $sampler = new AlwaysOnSampler(),
     SpanLimits $limits = new SpanLimits(),
     ErrorHandler $errorHandler = new ErrorLogHandler(),
-) : TracerProvider {
-    return new TracerProvider(
-        $processor,
-        $clock,
-        $contextStorage,
-        $sampler,
-        $limits,
-        $errorHandler,
-    );
+): TracerProvider {
+    return new TracerProvider($processor, $clock, $contextStorage, $sampler, $limits, $errorHandler);
 }
 
 /**
@@ -362,14 +406,8 @@ function logger_provider(
     ContextStorage $contextStorage,
     LogRecordLimits $limits = new LogRecordLimits(),
     ErrorHandler $errorHandler = new ErrorLogHandler(),
-) : LoggerProvider {
-    return new LoggerProvider(
-        $processor,
-        $clock,
-        $contextStorage,
-        $limits,
-        $errorHandler,
-    );
+): LoggerProvider {
+    return new LoggerProvider($processor, $clock, $contextStorage, $limits, $errorHandler);
 }
 
 /**
@@ -390,15 +428,8 @@ function meter_provider(
     ExemplarFilter $exemplarFilter = new TraceBasedExemplarFilter(),
     MetricLimits $limits = new MetricLimits(),
     ErrorHandler $errorHandler = new ErrorLogHandler(),
-) : MeterProvider {
-    return new MeterProvider(
-        $processor,
-        $clock,
-        $temporality,
-        $exemplarFilter,
-        $limits,
-        $errorHandler,
-    );
+): MeterProvider {
+    return new MeterProvider($processor, $clock, $temporality, $exemplarFilter, $limits, $errorHandler);
 }
 
 /**
@@ -419,15 +450,25 @@ function telemetry(
     ?MeterProvider $meterProvider = null,
     ?LoggerProvider $loggerProvider = null,
     ErrorHandler $errorHandler = new ErrorLogHandler(),
-) : Telemetry {
+): Telemetry {
     $clock = new SystemClock();
     $contextStorage = new MemoryContextStorage();
 
     return new Telemetry(
         $resource,
-        $tracerProvider ?? new TracerProvider(new VoidSpanProcessor(), $clock, $contextStorage, errorHandler: $errorHandler),
+        $tracerProvider ?? new TracerProvider(
+            new VoidSpanProcessor(),
+            $clock,
+            $contextStorage,
+            errorHandler: $errorHandler,
+        ),
         $meterProvider ?? new MeterProvider(new VoidMetricProcessor(), $clock, errorHandler: $errorHandler),
-        $loggerProvider ?? new LoggerProvider(new VoidLogProcessor(), $clock, $contextStorage, errorHandler: $errorHandler),
+        $loggerProvider ?? new LoggerProvider(
+            new VoidLogProcessor(),
+            $clock,
+            $contextStorage,
+            errorHandler: $errorHandler,
+        ),
     );
 }
 
@@ -444,7 +485,7 @@ function instrumentation_scope(
     string $version = 'unknown',
     ?string $schemaUrl = null,
     Attributes $attributes = new Attributes(),
-) : InstrumentationScope {
+): InstrumentationScope {
     return new InstrumentationScope($name, $version, $schemaUrl, $attributes);
 }
 
@@ -460,7 +501,7 @@ function batching_span_processor(
     Exporter $exporter,
     int $batchSize = 512,
     ErrorHandler $errorHandler = new ErrorLogHandler(),
-) : BatchingSpanProcessor {
+): BatchingSpanProcessor {
     return new BatchingSpanProcessor($exporter, $batchSize, $errorHandler);
 }
 
@@ -474,7 +515,7 @@ function batching_span_processor(
 function pass_through_span_processor(
     Exporter $exporter,
     ErrorHandler $errorHandler = new ErrorLogHandler(),
-) : PassThroughSpanProcessor {
+): PassThroughSpanProcessor {
     return new PassThroughSpanProcessor($exporter, $errorHandler);
 }
 
@@ -490,7 +531,7 @@ function batching_metric_processor(
     Exporter $exporter,
     int $batchSize = 512,
     ErrorHandler $errorHandler = new ErrorLogHandler(),
-) : BatchingMetricProcessor {
+): BatchingMetricProcessor {
     return new BatchingMetricProcessor($exporter, $batchSize, $errorHandler);
 }
 
@@ -504,7 +545,7 @@ function batching_metric_processor(
 function pass_through_metric_processor(
     Exporter $exporter,
     ErrorHandler $errorHandler = new ErrorLogHandler(),
-) : PassThroughMetricProcessor {
+): PassThroughMetricProcessor {
     return new PassThroughMetricProcessor($exporter, $errorHandler);
 }
 
@@ -520,7 +561,7 @@ function batching_log_processor(
     Exporter $exporter,
     int $batchSize = 512,
     ErrorHandler $errorHandler = new ErrorLogHandler(),
-) : BatchingLogProcessor {
+): BatchingLogProcessor {
     return new BatchingLogProcessor($exporter, $batchSize, $errorHandler);
 }
 
@@ -534,7 +575,7 @@ function batching_log_processor(
 function pass_through_log_processor(
     Exporter $exporter,
     ErrorHandler $errorHandler = new ErrorLogHandler(),
-) : PassThroughLogProcessor {
+): PassThroughLogProcessor {
     return new PassThroughLogProcessor($exporter, $errorHandler);
 }
 
@@ -548,7 +589,7 @@ function pass_through_log_processor(
 function severity_filtering_log_processor(
     LogProcessor $processor,
     Severity $minimumSeverity = Severity::INFO,
-) : SeverityFilteringLogProcessor {
+): SeverityFilteringLogProcessor {
     return new SeverityFilteringLogProcessor($processor, $minimumSeverity);
 }
 
@@ -570,7 +611,7 @@ function console_exporter(
     ConsoleLogOptions $logOptions = new ConsoleLogOptions(),
     ConsoleMetricOptions $metricOptions = new ConsoleMetricOptions(),
     ConsoleSpanOptions $spanOptions = new ConsoleSpanOptions(),
-) : ConsoleExporter {
+): ConsoleExporter {
     return new ConsoleExporter($colors, $maxLogBodyLength, null, $logOptions, $metricOptions, $spanOptions);
 }
 
@@ -578,7 +619,7 @@ function console_exporter(
  * Create ConsoleSpanOptions with all display options enabled (default behavior).
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function console_span_options() : ConsoleSpanOptions
+function console_span_options(): ConsoleSpanOptions
 {
     return ConsoleSpanOptions::default();
 }
@@ -587,7 +628,7 @@ function console_span_options() : ConsoleSpanOptions
  * Create ConsoleSpanOptions with minimal display (legacy compact format).
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function console_span_options_minimal() : ConsoleSpanOptions
+function console_span_options_minimal(): ConsoleSpanOptions
 {
     return ConsoleSpanOptions::minimal();
 }
@@ -596,7 +637,7 @@ function console_span_options_minimal() : ConsoleSpanOptions
  * Create ConsoleLogOptions with all display options enabled (default behavior).
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function console_log_options() : ConsoleLogOptions
+function console_log_options(): ConsoleLogOptions
 {
     return ConsoleLogOptions::default();
 }
@@ -605,7 +646,7 @@ function console_log_options() : ConsoleLogOptions
  * Create ConsoleLogOptions with minimal display (legacy compact format).
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function console_log_options_minimal() : ConsoleLogOptions
+function console_log_options_minimal(): ConsoleLogOptions
 {
     return ConsoleLogOptions::minimal();
 }
@@ -614,7 +655,7 @@ function console_log_options_minimal() : ConsoleLogOptions
  * Create ConsoleMetricOptions with all display options enabled (default behavior).
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function console_metric_options() : ConsoleMetricOptions
+function console_metric_options(): ConsoleMetricOptions
 {
     return ConsoleMetricOptions::default();
 }
@@ -623,7 +664,7 @@ function console_metric_options() : ConsoleMetricOptions
  * Create ConsoleMetricOptions with minimal display (legacy compact format).
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function console_metric_options_minimal() : ConsoleMetricOptions
+function console_metric_options_minimal(): ConsoleMetricOptions
 {
     return ConsoleMetricOptions::minimal();
 }
@@ -632,7 +673,7 @@ function console_metric_options_minimal() : ConsoleMetricOptions
  * Create an AlwaysOnExemplarFilter.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function always_on_exemplar_filter() : AlwaysOnExemplarFilter
+function always_on_exemplar_filter(): AlwaysOnExemplarFilter
 {
     return new AlwaysOnExemplarFilter();
 }
@@ -641,7 +682,7 @@ function always_on_exemplar_filter() : AlwaysOnExemplarFilter
  * Create an AlwaysOffExemplarFilter.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function always_off_exemplar_filter() : AlwaysOffExemplarFilter
+function always_off_exemplar_filter(): AlwaysOffExemplarFilter
 {
     return new AlwaysOffExemplarFilter();
 }
@@ -650,7 +691,7 @@ function always_off_exemplar_filter() : AlwaysOffExemplarFilter
  * Create a TraceBasedExemplarFilter.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function trace_based_exemplar_filter() : TraceBasedExemplarFilter
+function trace_based_exemplar_filter(): TraceBasedExemplarFilter
 {
     return new TraceBasedExemplarFilter();
 }
@@ -662,7 +703,7 @@ function trace_based_exemplar_filter() : TraceBasedExemplarFilter
  * @param null|Baggage $baggage Optional baggage
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::TYPE)]
-function propagation_context(?SpanContext $spanContext = null, ?Baggage $baggage = null) : PropagationContext
+function propagation_context(?SpanContext $spanContext = null, ?Baggage $baggage = null): PropagationContext
 {
     return new PropagationContext($spanContext, $baggage);
 }
@@ -673,7 +714,7 @@ function propagation_context(?SpanContext $spanContext = null, ?Baggage $baggage
  * @param array<string, string> $data Initial carrier data
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function array_carrier(array $data = []) : ArrayCarrier
+function array_carrier(array $data = []): ArrayCarrier
 {
     return new ArrayCarrier($data);
 }
@@ -682,7 +723,7 @@ function array_carrier(array $data = []) : ArrayCarrier
  * Create a SuperglobalCarrier.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function superglobal_carrier() : SuperglobalCarrier
+function superglobal_carrier(): SuperglobalCarrier
 {
     return new SuperglobalCarrier();
 }
@@ -691,7 +732,7 @@ function superglobal_carrier() : SuperglobalCarrier
  * Create a W3CTraceContext propagator.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function w3c_trace_context() : W3CTraceContext
+function w3c_trace_context(): W3CTraceContext
 {
     return new W3CTraceContext();
 }
@@ -700,7 +741,7 @@ function w3c_trace_context() : W3CTraceContext
  * Create a W3CBaggage propagator.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function w3c_baggage() : W3CBaggage
+function w3c_baggage(): W3CBaggage
 {
     return new W3CBaggage();
 }
@@ -711,7 +752,7 @@ function w3c_baggage() : W3CBaggage
  * @param Propagator ...$propagators The propagators to combine
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function composite_propagator(Propagator ...$propagators) : CompositePropagator
+function composite_propagator(Propagator ...$propagators): CompositePropagator
 {
     return new CompositePropagator($propagators);
 }
@@ -722,7 +763,7 @@ function composite_propagator(Propagator ...$propagators) : CompositePropagator
  * @param ResourceDetector ...$detectors The detectors to chain
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function chain_detector(ResourceDetector ...$detectors) : ChainDetector
+function chain_detector(ResourceDetector ...$detectors): ChainDetector
 {
     return new ChainDetector(...$detectors);
 }
@@ -731,7 +772,7 @@ function chain_detector(ResourceDetector ...$detectors) : ChainDetector
  * Create an OsDetector.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function os_detector() : OsDetector
+function os_detector(): OsDetector
 {
     return new OsDetector();
 }
@@ -740,7 +781,7 @@ function os_detector() : OsDetector
  * Create a HostDetector.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function host_detector() : HostDetector
+function host_detector(): HostDetector
 {
     return new HostDetector();
 }
@@ -749,7 +790,7 @@ function host_detector() : HostDetector
  * Create a ProcessDetector.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function process_detector() : ProcessDetector
+function process_detector(): ProcessDetector
 {
     return new ProcessDetector();
 }
@@ -758,7 +799,7 @@ function process_detector() : ProcessDetector
  * Create an EnvironmentDetector.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function environment_detector() : EnvironmentDetector
+function environment_detector(): EnvironmentDetector
 {
     return new EnvironmentDetector();
 }
@@ -767,7 +808,7 @@ function environment_detector() : EnvironmentDetector
  * Create a ComposerDetector.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function composer_detector() : ComposerDetector
+function composer_detector(): ComposerDetector
 {
     return new ComposerDetector();
 }
@@ -778,7 +819,7 @@ function composer_detector() : ComposerDetector
  * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Resource attributes
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function manual_detector(array $attributes) : ManualDetector
+function manual_detector(array $attributes): ManualDetector
 {
     return new ManualDetector($attributes);
 }
@@ -790,7 +831,7 @@ function manual_detector(array $attributes) : ManualDetector
  * @param null|string $cachePath Cache file path (default: sys_get_temp_dir()/flow_telemetry_resource.cache)
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function caching_detector(ResourceDetector $detector, ?string $cachePath = null) : CachingDetector
+function caching_detector(ResourceDetector $detector, ?string $cachePath = null): CachingDetector
 {
     return new CachingDetector($detector, $cachePath);
 }
@@ -801,7 +842,7 @@ function caching_detector(ResourceDetector $detector, ?string $cachePath = null)
  * @param array<ResourceDetector> $detectors Optional custom detectors (empty = use defaults)
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function resource_detector(array $detectors = []) : ChainDetector
+function resource_detector(array $detectors = []): ChainDetector
 {
     if (\count($detectors) === 0) {
         return new ChainDetector(
@@ -824,7 +865,7 @@ function error_log_handler(
     ErrorLogMessageType $messageType = ErrorLogMessageType::OperatingSystem,
     bool $expandNewlines = false,
     string $messagePrefix = '[flow-telemetry]',
-) : ErrorLogHandler {
+): ErrorLogHandler {
     return new ErrorLogHandler($messageType, $expandNewlines, $messagePrefix);
 }
 
@@ -838,7 +879,7 @@ function stream_error_handler(
     int $filePermissions = 0644,
     bool $createDirectories = true,
     string $messagePrefix = '[flow-telemetry]',
-) : StreamHandler {
+): StreamHandler {
     return new StreamHandler($destination, $filePermissions, $createDirectories, $messagePrefix);
 }
 
@@ -851,7 +892,7 @@ function syslog_error_handler(
     SyslogFacility $facility = SyslogFacility::User,
     int $logOpts = \LOG_PID,
     SyslogSeverity $severity = SyslogSeverity::Error,
-) : SyslogHandler {
+): SyslogHandler {
     return new SyslogHandler($ident, $facility, $logOpts, $severity);
 }
 
@@ -865,7 +906,7 @@ function udp_syslog_error_handler(
     string $ident = 'flow-telemetry',
     SyslogFacility $facility = SyslogFacility::User,
     SyslogSeverity $severity = SyslogSeverity::Error,
-) : UdpSyslogHandler {
+): UdpSyslogHandler {
     return new UdpSyslogHandler($host, $port, $ident, $facility, $severity);
 }
 
@@ -873,7 +914,7 @@ function udp_syslog_error_handler(
  * Fan errors out to multiple handlers.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function composite_error_handler(ErrorHandler ...$handlers) : CompositeErrorHandler
+function composite_error_handler(ErrorHandler ...$handlers): CompositeErrorHandler
 {
     return new CompositeErrorHandler(...$handlers);
 }
@@ -882,7 +923,7 @@ function composite_error_handler(ErrorHandler ...$handlers) : CompositeErrorHand
  * Discard every error. Use only in tests or for explicit silence.
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function null_error_handler() : NullErrorHandler
+function null_error_handler(): NullErrorHandler
 {
     return new NullErrorHandler();
 }

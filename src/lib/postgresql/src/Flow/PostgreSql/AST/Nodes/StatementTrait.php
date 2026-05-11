@@ -17,12 +17,14 @@ trait StatementTrait
      *
      * @return S
      */
-    public function assert(string $statementClass) : Statement
+    public function assert(string $statementClass): Statement
     {
         if (!$this instanceof $statementClass) {
-            throw new InvalidStatementException(
-                \sprintf('Expected statement of type %s, got %s', $statementClass, static::class)
-            );
+            throw new InvalidStatementException(\sprintf(
+                'Expected statement of type %s, got %s',
+                $statementClass,
+                static::class,
+            ));
         }
 
         return $this;

@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline\Optimizer;
 
-use Flow\ETL\{Loader, Pipeline, Processor, Transformer};
-use Flow\ETL\Processor\{BatchingProcessor, CollectingProcessor, PartitioningProcessor};
+use Flow\ETL\Loader;
+use Flow\ETL\Pipeline;
+use Flow\ETL\Processor;
+use Flow\ETL\Processor\BatchingProcessor;
+use Flow\ETL\Processor\CollectingProcessor;
+use Flow\ETL\Processor\PartitioningProcessor;
+use Flow\ETL\Transformer;
 
 /**
  * The goal of this optimizer is to detect if there is a loader that supports batching and optimize pipeline to use it.
@@ -44,14 +49,16 @@ final class BatchSizeOptimization implements Optimization
      * @param int<1, max> $batchSize
      * @param null|array<int, class-string<Loader>> $supportedLoaders
      */
-    public function __construct(private readonly int $batchSize = 1000, ?array $supportedLoaders = null)
-    {
+    public function __construct(
+        private readonly int $batchSize = 1000,
+        ?array $supportedLoaders = null,
+    ) {
         if ($supportedLoaders !== null) {
             $this->supportedLoaders = $supportedLoaders;
         }
     }
 
-    public function isFor(Loader|Transformer $element, Pipeline $pipeline) : bool
+    public function isFor(Loader|Transformer $element, Pipeline $pipeline): bool
     {
         if ($this->hasBatchingProcessor($pipeline)) {
             return false;
@@ -64,7 +71,7 @@ final class BatchSizeOptimization implements Optimization
         return false;
     }
 
-    public function optimize(Loader|Transformer $element, Pipeline $pipeline) : Pipeline
+    public function optimize(Loader|Transformer $element, Pipeline $pipeline): Pipeline
     {
         if ($this->hasBatchingProcessor($pipeline)) {
             return $pipeline->add($element);
@@ -76,7 +83,7 @@ final class BatchSizeOptimization implements Optimization
         return $pipeline;
     }
 
-    private function hasBatchingProcessor(Pipeline $pipeline) : bool
+    private function hasBatchingProcessor(Pipeline $pipeline): bool
     {
         foreach ($pipeline->segments()->steps() as $step) {
             if ($step instanceof Processor) {

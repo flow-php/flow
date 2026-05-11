@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
-use function Flow\Types\DSL\{type_from_array, type_string};
 use Dom\HTMLDocument;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Tests\Unit\Type\Fixtures\StringableObject;
-use PHPUnit\Framework\Attributes\{DataProvider, RequiresPhp};
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\Types\DSL\type_from_array;
+use function Flow\Types\DSL\type_string;
 
 final class StringTypeTest extends TestCase
 {
-    public static function assert_data_provider() : \Generator
+    public static function assert_data_provider(): \Generator
     {
         yield 'valid string 1234' => [
             'value' => '1234',
@@ -66,7 +69,7 @@ final class StringTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider() : \Generator
+    public static function cast_data_provider(): \Generator
     {
         yield 'string' => [
             'value' => 'string',
@@ -106,7 +109,7 @@ final class StringTypeTest extends TestCase
 
         yield 'Stringable' => [
             'value' => new class() implements \Stringable {
-                public function __toString() : string
+                public function __toString(): string
                 {
                     return 'stringable';
                 }
@@ -121,7 +124,7 @@ final class StringTypeTest extends TestCase
             'exceptionClass' => null,
         ];
 
-        $xml = (new \DOMDocument());
+        $xml = new \DOMDocument();
         $xml->loadXML('<xml>Some Happy XML</xml>');
 
         yield 'Not Empty DOMDocument' => [
@@ -143,7 +146,7 @@ final class StringTypeTest extends TestCase
         ];
     }
 
-    public static function is_stringable_data_provider() : \Generator
+    public static function is_stringable_data_provider(): \Generator
     {
         yield 'DateTimeImmutable' => [
             'value' => new \DateTimeImmutable(),
@@ -161,7 +164,7 @@ final class StringTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider() : \Generator
+    public static function is_valid_data_provider(): \Generator
     {
         yield 'valid string' => [
             'value' => 'string',
@@ -195,69 +198,72 @@ final class StringTypeTest extends TestCase
     }
 
     #[DataProvider('assert_data_provider')]
-    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
+    public function test_assert(mixed $value, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_string()->assert($value);
         } else {
-            self::assertIsString(type_string()->assert($value));
+            static::assertIsString(type_string()->assert($value));
         }
     }
 
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_string()->cast($value);
         } else {
-            self::assertSame($expected, \trim(type_string()->cast($value)));
+            static::assertSame($expected, \trim(type_string()->cast($value)));
         }
     }
 
     #[RequiresPhp('>= 8.4')]
-    public function test_cast_html_document() : void
+    public function test_cast_html_document(): void
     {
-        $element = HTMLDocument::createFromString('<p><span>foobar</span></p>', \LIBXML_HTML_NOIMPLIED | \LIBXML_NOERROR);
+        $element = HTMLDocument::createFromString(
+            '<p><span>foobar</span></p>',
+            \LIBXML_HTML_NOIMPLIED | \LIBXML_NOERROR,
+        );
 
-        self::assertSame('<p><span>foobar</span></p>', type_string()->cast($element));
+        static::assertSame('<p><span>foobar</span></p>', type_string()->cast($element));
     }
 
     #[RequiresPhp('>= 8.4')]
-    public function test_cast_html_element() : void
+    public function test_cast_html_element(): void
     {
-        $element = HTMLDocument::createFromString('<p><span>foobar</span></p>', \LIBXML_HTML_NOIMPLIED | \LIBXML_NOERROR);
+        $element = HTMLDocument::createFromString(
+            '<p><span>foobar</span></p>',
+            \LIBXML_HTML_NOIMPLIED | \LIBXML_NOERROR,
+        );
 
-        self::assertSame('<span>foobar</span>', type_string()->cast($element->documentElement));
+        static::assertSame('<span>foobar</span>', type_string()->cast($element->documentElement));
     }
 
     #[DataProvider('is_stringable_data_provider')]
-    public function test_is_stringable(mixed $value, bool $expected) : void
+    public function test_is_stringable(mixed $value, bool $expected): void
     {
-        self::assertSame($expected, type_string()->isStringable($value));
+        static::assertSame($expected, type_string()->isStringable($value));
     }
 
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(mixed $value, bool $expected) : void
+    public function test_is_valid(mixed $value, bool $expected): void
     {
-        self::assertSame($expected, type_string()->isValid($value));
+        static::assertSame($expected, type_string()->isValid($value));
     }
 
-    public function test_normalization() : void
+    public function test_normalization(): void
     {
         $type = type_string();
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
-    public function test_to_string() : void
+    public function test_to_string(): void
     {
-        self::assertSame(
-            'string',
-            type_string()->toString()
-        );
+        static::assertSame('string', type_string()->toString());
     }
 }

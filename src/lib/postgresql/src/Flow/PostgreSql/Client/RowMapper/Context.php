@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\RowMapper;
 
-use Flow\PostgreSql\Client\{Client, Context as ClientContext, Query};
+use Flow\PostgreSql\Client\Client;
+use Flow\PostgreSql\Client\Context as ClientContext;
 use Flow\PostgreSql\Client\Exception\ContextException;
+use Flow\PostgreSql\Client\Query;
 use Flow\PostgreSql\Schema\Catalog;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
@@ -16,28 +18,27 @@ final readonly class Context
         private Query $query,
         private Client $client,
         private ClientContext $clientContext,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<string, mixed>
      */
-    public function all() : array
+    public function all(): array
     {
         return $this->clientContext->all();
     }
 
-    public function catalog() : ?Catalog
+    public function catalog(): ?Catalog
     {
         return $this->clientContext->catalog();
     }
 
-    public function client() : Client
+    public function client(): Client
     {
         return $this->client;
     }
 
-    public function clientContext() : ClientContext
+    public function clientContext(): ClientContext
     {
         return $this->clientContext;
     }
@@ -52,17 +53,17 @@ final readonly class Context
      *
      * @return T
      */
-    public function get(string $key, Type $type) : mixed
+    public function get(string $key, Type $type): mixed
     {
         return $this->clientContext->get($key, $type);
     }
 
-    public function has(string $key) : bool
+    public function has(string $key): bool
     {
         return $this->clientContext->has($key);
     }
 
-    public function merge(self $other) : self
+    public function merge(self $other): self
     {
         return new self(
             query: $other->query,
@@ -71,12 +72,12 @@ final readonly class Context
         );
     }
 
-    public function query() : Query
+    public function query(): Query
     {
         return $this->query;
     }
 
-    public function with(string $key, mixed $value) : self
+    public function with(string $key, mixed $value): self
     {
         return new self(
             query: $this->query,

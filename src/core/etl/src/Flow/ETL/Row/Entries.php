@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
-use Flow\ETL\Exception\{DuplicatedEntriesException, InvalidArgumentException, InvalidLogicException, RuntimeException};
+use Flow\ETL\Exception\DuplicatedEntriesException;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\InvalidLogicException;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\Types\Value\Json;
 
 /**
@@ -33,7 +36,10 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
             }
 
             if (\count($this->entries) !== \count($entries)) {
-                throw InvalidArgumentException::because(\sprintf('Entry names must be unique, given: [%s]', \implode(', ', \array_map(static fn (Entry $entry) => $entry->name(), $entries))));
+                throw InvalidArgumentException::because(\sprintf('Entry names must be unique, given: [%s]', \implode(', ', \array_map(
+                    static fn(Entry $entry) => $entry->name(),
+                    $entries,
+                ))));
             }
         }
     }
@@ -43,7 +49,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @throws InvalidArgumentException
      */
-    public function add(Entry ...$entries) : self
+    public function add(Entry ...$entries): self
     {
         $newEntries = [];
 
@@ -53,14 +59,12 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
 
         $mergedEntries = \array_merge($this->entries, $newEntries);
 
-        if (\count($mergedEntries) !== \count($entries) + \count($this->entries)) {
-            throw InvalidArgumentException::because(
-                \sprintf(
-                    'Added entries names must be unique, given: [%s] + [%s]',
-                    \implode(', ', \array_map(static fn (Entry $entry) => $entry->name(), $this->entries)),
-                    \implode(', ', \array_map(static fn (Entry $entry) => $entry->name(), $newEntries)),
-                )
-            );
+        if (\count($mergedEntries) !== (\count($entries) + \count($this->entries))) {
+            throw InvalidArgumentException::because(\sprintf(
+                'Added entries names must be unique, given: [%s] + [%s]',
+                \implode(', ', \array_map(static fn(Entry $entry) => $entry->name(), $this->entries)),
+                \implode(', ', \array_map(static fn(Entry $entry) => $entry->name(), $newEntries)),
+            ));
         }
 
         return self::recreate($mergedEntries);
@@ -69,17 +73,17 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @return array<Entry<mixed>>
      */
-    public function all() : array
+    public function all(): array
     {
         return \array_values($this->entries);
     }
 
-    public function count() : int
+    public function count(): int
     {
         return \count($this->entries);
     }
 
-    public function duplicate() : self
+    public function duplicate(): self
     {
         $entries = [];
 
@@ -95,18 +99,22 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @return Entry<mixed>
      */
-    public function get(string|Reference $reference) : Entry
+    public function get(string|Reference $reference): Entry
     {
         $entry = $this->find($reference);
 
         if ($entry === null) {
-            throw new InvalidArgumentException("Entry \"{$reference}\" does not exist. Did you mean one of the following? [\"" . \implode('", "', \array_map(static fn (Entry $entry) => $entry->name(), $this->entries)) . '"]');
+            throw new InvalidArgumentException(
+                "Entry \"{$reference}\" does not exist. Did you mean one of the following? [\""
+                . \implode('", "', \array_map(static fn(Entry $entry) => $entry->name(), $this->entries))
+                . '"]',
+            );
         }
 
         return $entry;
     }
 
-    public function getAll(string|Reference ...$references) : self
+    public function getAll(string|Reference ...$references): self
     {
         $entries = [];
 
@@ -120,12 +128,12 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @return \Iterator<string, Entry<mixed>>
      */
-    public function getIterator() : \Iterator
+    public function getIterator(): \Iterator
     {
         return new \ArrayIterator($this->all());
     }
 
-    public function has(string|Reference ...$references) : bool
+    public function has(string|Reference ...$references): bool
     {
         foreach ($references as $ref) {
             if ($ref instanceof Reference) {
@@ -142,7 +150,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
         return true;
     }
 
-    public function isEqual(self $entries) : bool
+    public function isEqual(self $entries): bool
     {
         if ($this->count() !== $entries->count()) {
             return false;
@@ -170,7 +178,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @return array<int, ReturnType>
      */
-    public function map(callable $callable) : array
+    public function map(callable $callable): array
     {
         $returnValues = [];
 
@@ -181,18 +189,16 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
         return $returnValues;
     }
 
-    public function merge(self $entries) : self
+    public function merge(self $entries): self
     {
         $newEntries = \array_merge($this->entries, $entries->entries);
 
-        if (\count($newEntries) !== $this->count() + $entries->count()) {
-            throw new DuplicatedEntriesException(
-                \sprintf(
-                    'Merged entries names must be unique, given: [%s] + [%s]',
-                    \implode(', ', \array_map(static fn (Entry $entry) => $entry->name(), $this->entries)),
-                    \implode(', ', \array_map(static fn (Entry $entry) => $entry->name(), $entries->all())),
-                )
-            );
+        if (\count($newEntries) !== ($this->count() + $entries->count())) {
+            throw new DuplicatedEntriesException(\sprintf(
+                'Merged entries names must be unique, given: [%s] + [%s]',
+                \implode(', ', \array_map(static fn(Entry $entry) => $entry->name(), $this->entries)),
+                \implode(', ', \array_map(static fn(Entry $entry) => $entry->name(), $entries->all())),
+            ));
         }
 
         return self::recreate($newEntries);
@@ -203,7 +209,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @throws InvalidArgumentException
      */
-    public function offsetExists($offset) : bool
+    public function offsetExists($offset): bool
     {
         if (!\is_string($offset)) {
             throw new InvalidArgumentException('Entries accepts only string offsets');
@@ -219,7 +225,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @return Entry<mixed>
      */
-    public function offsetGet($offset) : Entry
+    public function offsetGet($offset): Entry
     {
         if (!\is_string($offset)) {
             throw new InvalidArgumentException('Entries accepts only string offsets');
@@ -232,7 +238,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
         throw new InvalidArgumentException("Entry {$offset} does not exists.");
     }
 
-    public function offsetSet(mixed $offset, mixed $value) : void
+    public function offsetSet(mixed $offset, mixed $value): void
     {
         throw new RuntimeException('In order to add new rows use Entries::add(Entry $entry) : self');
     }
@@ -242,34 +248,32 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @throws RuntimeException
      */
-    public function offsetUnset(mixed $offset) : void
+    public function offsetUnset(mixed $offset): void
     {
         throw new RuntimeException('In order to add new rows use Entries::remove(string $name) : self');
     }
 
-    public function order(string|Reference ...$references) : self
+    public function order(string|Reference ...$references): self
     {
         $sortedEntries = [];
 
         if (\count($references) !== \count($this->entries)) {
-            throw InvalidArgumentException::because(
-                \sprintf(
-                    'In order to sort entries in a given order you need to provide all entry names, given: "%s", expected: "%s"',
-                    \implode('", "', \array_map(static fn (Reference|string $ref) : string => $ref instanceof Reference ? $ref->base() : $ref, $references)),
-                    \implode('", "', \array_map(static fn (Entry $entry) => $entry->name(), $this->entries)),
-                )
-            );
+            throw InvalidArgumentException::because(\sprintf(
+                'In order to sort entries in a given order you need to provide all entry names, given: "%s", expected: "%s"',
+                \implode('", "', \array_map(static fn(Reference|string $ref): string => $ref instanceof Reference
+                    ? $ref->base()
+                    : $ref, $references)),
+                \implode('", "', \array_map(static fn(Entry $entry) => $entry->name(), $this->entries)),
+            ));
         }
 
         foreach ($references as $ref) {
             if (!$this->has($ref)) {
-                throw InvalidArgumentException::because(
-                    \sprintf(
-                        'There is no entry with name \"%s\" in the dataset, available names: \"%s\"',
-                        $ref instanceof Reference ? $ref->base() : $ref,
-                        \implode('", "', \array_map(static fn (Entry $entry) => $entry->name(), $this->entries)),
-                    )
-                );
+                throw InvalidArgumentException::because(\sprintf(
+                    'There is no entry with name \"%s\" in the dataset, available names: \"%s\"',
+                    $ref instanceof Reference ? $ref->base() : $ref,
+                    \implode('", "', \array_map(static fn(Entry $entry) => $entry->name(), $this->entries)),
+                ));
             }
 
             if ($ref instanceof Reference) {
@@ -282,7 +286,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
         return self::recreate($sortedEntries);
     }
 
-    public function remove(string|Reference ...$references) : self
+    public function remove(string|Reference ...$references): self
     {
         $entries = $this->entries;
 
@@ -305,10 +309,13 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
         return self::recreate($entries);
     }
 
-    public function rename(string|Reference $current, string|Reference $new) : self
+    public function rename(string|Reference $current, string|Reference $new): self
     {
         if (!$this->has($current)) {
-            throw InvalidLogicException::because(\sprintf('Entry "%s" does not exist', $current instanceof Reference ? $current->base() : $current));
+            throw InvalidLogicException::because(\sprintf(
+                'Entry "%s" does not exist',
+                $current instanceof Reference ? $current->base() : $current,
+            ));
         }
 
         $entries = $this->entries;
@@ -335,7 +342,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @param array<string, string> $renames Map of old_name => new_name
      */
-    public function renameMany(array $renames) : self
+    public function renameMany(array $renames): self
     {
         if ($renames === []) {
             return $this;
@@ -363,7 +370,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @param Entry<mixed> ...$entries
      */
-    public function set(Entry ...$entries) : self
+    public function set(Entry ...$entries): self
     {
         $newEntries = $this->entries;
 
@@ -374,10 +381,10 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
         return self::recreate($newEntries);
     }
 
-    public function sort() : self
+    public function sort(): self
     {
         $entries = \array_values($this->entries);
-        \usort($entries, static fn (Entry $a, Entry $b) => $a->name() <=> $b->name());
+        \usort($entries, static fn(Entry $a, Entry $b) => $a->name() <=> $b->name());
 
         return new self(...$entries);
     }
@@ -385,7 +392,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @return array<array-key, mixed>
      */
-    public function toArray(bool $withKeys = true) : array
+    public function toArray(bool $withKeys = true): array
     {
         $data = [];
 
@@ -396,9 +403,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
                 $value = $value->toArray();
             }
 
-            $withKeys
-                ? $data[$entry->name()] = $value
-                : $data[] = $value;
+            $withKeys ? ($data[$entry->name()] = $value) : ($data[] = $value);
         }
 
         return $data;
@@ -407,7 +412,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @return ?Entry<mixed>
      */
-    private function find(string|Reference $reference) : ?Entry
+    private function find(string|Reference $reference): ?Entry
     {
         if ($this->has($reference)) {
             /** @var null|Entry<mixed> */
@@ -423,7 +428,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @param array<string, Entry<mixed>> $entries
      */
-    private static function recreate(array $entries) : self
+    private static function recreate(array $entries): self
     {
         $instance = new self();
         $instance->entries = $entries;

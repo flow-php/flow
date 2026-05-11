@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Infrastructure\PgSql;
 
-use Flow\PostgreSql\Client\{Cursor, RowMapper};
+use Flow\PostgreSql\Client\Cursor;
+use Flow\PostgreSql\Client\RowMapper;
 use Flow\PostgreSql\Client\RowMapper\Context;
 use Flow\PostgreSql\Client\Types\ResultCaster;
 use PgSql\Result;
@@ -30,7 +31,7 @@ final class PgSqlCursor implements Cursor
     /**
      * @return int<0, max>
      */
-    public function count() : int
+    public function count(): int
     {
         if ($this->result === null) {
             return 0;
@@ -39,7 +40,7 @@ final class PgSqlCursor implements Cursor
         return \max(0, \pg_num_rows($this->result));
     }
 
-    public function free() : void
+    public function free(): void
     {
         if ($this->result !== null) {
             \pg_free_result($this->result);
@@ -47,12 +48,12 @@ final class PgSqlCursor implements Cursor
         }
     }
 
-    public function getIterator() : \Traversable
+    public function getIterator(): \Traversable
     {
         return $this->iterate();
     }
 
-    public function iterate() : \Generator
+    public function iterate(): \Generator
     {
         while (($row = $this->next()) !== null) {
             yield $row;
@@ -61,14 +62,14 @@ final class PgSqlCursor implements Cursor
         $this->free();
     }
 
-    public function map(RowMapper $mapper) : \Generator
+    public function map(RowMapper $mapper): \Generator
     {
         foreach ($this->iterate() as $row) {
             yield $mapper->map($row, $this->context);
         }
     }
 
-    public function next() : ?array
+    public function next(): ?array
     {
         if ($this->result === null || $this->position >= \pg_num_rows($this->result)) {
             return null;
@@ -88,7 +89,7 @@ final class PgSqlCursor implements Cursor
     /**
      * @return list<array{name: string, type: string}>
      */
-    private function columnMeta() : array
+    private function columnMeta(): array
     {
         if ($this->columnMetaCache !== null) {
             return $this->columnMetaCache;
@@ -118,7 +119,7 @@ final class PgSqlCursor implements Cursor
      *
      * @return array<string, mixed>
      */
-    private function convertRow(array $row) : array
+    private function convertRow(array $row): array
     {
         $meta = $this->columnMeta();
         $converted = [];

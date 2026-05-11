@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 final class MoneyConverterTest extends TestCase
 {
-    public static function provide_invalid_values() : \Generator
+    public static function provide_invalid_values(): \Generator
     {
         yield 'integer' => [100];
         yield 'float' => [123.45];
@@ -22,7 +22,7 @@ final class MoneyConverterTest extends TestCase
         yield 'object' => [new \stdClass()];
     }
 
-    public static function provide_valid_values() : \Generator
+    public static function provide_valid_values(): \Generator
     {
         yield 'money with symbol' => ['$99.99', '$99.99'];
         yield 'money with comma' => ['$1,234.56', '$1,234.56'];
@@ -39,29 +39,29 @@ final class MoneyConverterTest extends TestCase
     }
 
     #[DataProvider('provide_invalid_values')]
-    public function test_invalid_value_throws_exception(mixed $value) : void
+    public function test_invalid_value_throws_exception(mixed $value): void
     {
         $converter = new MoneyConverter();
         $this->expectException(ValueConversionException::class);
         $converter->toDatabase($value);
     }
 
-    public function test_null_handling() : void
+    public function test_null_handling(): void
     {
         $converter = new MoneyConverter();
-        self::assertNull($converter->toDatabase(null));
+        static::assertNull($converter->toDatabase(null));
     }
 
-    public function test_supported_types() : void
+    public function test_supported_types(): void
     {
         $converter = new MoneyConverter();
-        self::assertContains(ValueType::MONEY, $converter->supportedTypes());
+        static::assertContains(ValueType::MONEY, $converter->supportedTypes());
     }
 
     #[DataProvider('provide_valid_values')]
-    public function test_to_database(string $input, string $expected) : void
+    public function test_to_database(string $input, string $expected): void
     {
         $converter = new MoneyConverter();
-        self::assertSame($expected, $converter->toDatabase($input));
+        static::assertSame($expected, $converter->toDatabase($input));
     }
 }

@@ -14,5 +14,5 @@ interface DeleteWhereStep extends DeleteReturningStep
     /**
      * Add a WHERE clause to filter which rows to delete.
      */
-    public function where(Condition $condition) : DeleteReturningStep;
+    public function where(Condition $condition): DeleteReturningStep;
 }

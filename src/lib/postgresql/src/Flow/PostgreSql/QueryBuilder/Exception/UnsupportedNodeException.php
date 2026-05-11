@@ -9,12 +9,12 @@ namespace Flow\PostgreSql\QueryBuilder\Exception;
  */
 final class UnsupportedNodeException extends QueryBuilderException
 {
-    public static function cannotReconstruct(string $className) : self
+    public static function cannotReconstruct(string $className): self
     {
         return new self(\sprintf('Cannot reconstruct %s from AST', $className));
     }
 
-    public static function forNodeType(string $nodeType) : self
+    public static function forNodeType(string $nodeType): self
     {
         return new self(\sprintf('Unsupported node type: %s', $nodeType));
     }

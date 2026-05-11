@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Index;
 
-enum IndexMethod : string
+enum IndexMethod: string
 {
     case BRIN = 'brin';
     case BTREE = 'btree';

@@ -11,11 +11,12 @@ final readonly class ResourceContext
     /**
      * @param array<mixed> $options
      */
-    private function __construct(private string $scheme, private array $options)
-    {
-    }
+    private function __construct(
+        private string $scheme,
+        private array $options,
+    ) {}
 
-    public static function from(Path $path) : self
+    public static function from(Path $path): self
     {
         return new self($path->protocol() . '://', $path->options());
     }
@@ -25,8 +26,6 @@ final readonly class ResourceContext
      */
     public function resource()
     {
-        return \count($this->options)
-            ? \stream_context_create([$this->scheme => $this->options])
-            : null;
+        return \count($this->options) ? \stream_context_create([$this->scheme => $this->options]) : null;
     }
 }

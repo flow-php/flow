@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Stream;
 
-use Flow\Filesystem\{Exception\InvalidArgumentException, Exception\RuntimeException, Path, SourceStream};
+use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\Exception\RuntimeException;
+use Flow\Filesystem\Path;
+use Flow\Filesystem\SourceStream;
 
 final class NativeLocalSourceStream implements SourceStream
 {
@@ -17,8 +20,10 @@ final class NativeLocalSourceStream implements SourceStream
      * @param Path $path
      * @param resource $handle
      */
-    public function __construct(private readonly Path $path, $handle)
-    {
+    public function __construct(
+        private readonly Path $path,
+        $handle,
+    ) {
         if (!\is_resource($handle)) {
             throw new InvalidArgumentException('SourceStream expects resource type, given: ' . \gettype($handle));
         }
@@ -26,7 +31,7 @@ final class NativeLocalSourceStream implements SourceStream
         $this->handle = $handle;
     }
 
-    public static function open(Path $path) : self
+    public static function open(Path $path): self
     {
         $resource = \fopen($path->path(), 'rb', false, $path->context()->resource());
 
@@ -37,7 +42,7 @@ final class NativeLocalSourceStream implements SourceStream
         return new self($path, $resource);
     }
 
-    public function close() : void
+    public function close(): void
     {
         if (!\is_resource($this->handle)) {
             $this->handle = null;
@@ -49,7 +54,7 @@ final class NativeLocalSourceStream implements SourceStream
         $this->handle = null;
     }
 
-    public function content() : string
+    public function content(): string
     {
         if (!$this->isOpen()) {
             throw new RuntimeException('Cannot read from closed stream');
@@ -66,7 +71,7 @@ final class NativeLocalSourceStream implements SourceStream
         return $content;
     }
 
-    public function isOpen() : bool
+    public function isOpen(): bool
     {
         return \is_resource($this->handle);
     }
@@ -76,7 +81,7 @@ final class NativeLocalSourceStream implements SourceStream
      *
      * @return \Generator<string>
      */
-    public function iterate(int $length = 1) : \Generator
+    public function iterate(int $length = 1): \Generator
     {
         if (!$this->isOpen()) {
             throw new RuntimeException('Cannot read from closed stream');
@@ -95,12 +100,12 @@ final class NativeLocalSourceStream implements SourceStream
         }
     }
 
-    public function path() : Path
+    public function path(): Path
     {
         return $this->path;
     }
 
-    public function read(int $length, int $offset) : string
+    public function read(int $length, int $offset): string
     {
         if (!$this->isOpen()) {
             throw new RuntimeException('Cannot read from closed stream');
@@ -118,7 +123,7 @@ final class NativeLocalSourceStream implements SourceStream
      *
      * @return \Generator<string>
      */
-    public function readLines(string $separator = "\n", ?int $length = null) : \Generator
+    public function readLines(string $separator = "\n", ?int $length = null): \Generator
     {
         if (!$this->isOpen()) {
             throw new RuntimeException('Cannot read from closed stream');
@@ -137,7 +142,7 @@ final class NativeLocalSourceStream implements SourceStream
         }
     }
 
-    public function size() : int
+    public function size(): int
     {
         $size = \filesize($this->path->path());
 

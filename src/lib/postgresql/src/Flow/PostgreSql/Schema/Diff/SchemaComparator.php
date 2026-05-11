@@ -5,7 +5,19 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Schema\Diff;
 
 use Flow\PostgreSql\Parser;
-use Flow\PostgreSql\Schema\{Domain, ExecutionOrderStrategy, Extension, ForeignKeyDependencyOrder, Func, MaterializedView, MaterializedViewDependencyOrder, Procedure, Schema, Sequence, Table, View, ViewDependencyOrder};
+use Flow\PostgreSql\Schema\Domain;
+use Flow\PostgreSql\Schema\ExecutionOrderStrategy;
+use Flow\PostgreSql\Schema\Extension;
+use Flow\PostgreSql\Schema\ForeignKeyDependencyOrder;
+use Flow\PostgreSql\Schema\Func;
+use Flow\PostgreSql\Schema\MaterializedView;
+use Flow\PostgreSql\Schema\MaterializedViewDependencyOrder;
+use Flow\PostgreSql\Schema\Procedure;
+use Flow\PostgreSql\Schema\Schema;
+use Flow\PostgreSql\Schema\Sequence;
+use Flow\PostgreSql\Schema\Table;
+use Flow\PostgreSql\Schema\View;
+use Flow\PostgreSql\Schema\ViewDependencyOrder;
 
 final readonly class SchemaComparator
 {
@@ -21,11 +33,12 @@ final readonly class SchemaComparator
         private TableStructureComparator $tableStructureComparator,
         private ExecutionOrderStrategy $tableOrderStrategy = new ForeignKeyDependencyOrder(),
         private ExecutionOrderStrategy $viewOrderStrategy = new ViewDependencyOrder(new Parser()),
-        private ExecutionOrderStrategy $materializedViewOrderStrategy = new MaterializedViewDependencyOrder(new Parser()),
-    ) {
-    }
+        private ExecutionOrderStrategy $materializedViewOrderStrategy = new MaterializedViewDependencyOrder(
+            new Parser(),
+        ),
+    ) {}
 
-    public function compare(Schema $source, Schema $target) : SchemaDiff
+    public function compare(Schema $source, Schema $target): SchemaDiff
     {
         $tables = $this->diffTables($source->tables, $target->tables);
         $materializedViews = $this->diffMaterializedViews($source->materializedViews, $target->materializedViews);
@@ -35,8 +48,8 @@ final readonly class SchemaComparator
         $sequences = ChangeSet::fromNamedObjects(
             $source->sequences,
             $target->sequences,
-            static fn (Sequence $s) : string => $s->name,
-            static fn (Sequence $a, Sequence $b) : ?SequenceDiff => $a->dataType === $b->dataType
+            static fn(Sequence $s): string => $s->name,
+            static fn(Sequence $a, Sequence $b): ?SequenceDiff => $a->dataType === $b->dataType
                 && $a->startValue === $b->startValue
                 && $a->minValue === $b->minValue
                 && $a->maxValue === $b->maxValue
@@ -53,8 +66,8 @@ final readonly class SchemaComparator
         $views = ChangeSet::fromNamedObjects(
             $source->views,
             $target->views,
-            static fn (View $v) : string => $v->name,
-            static fn (View $a, View $b) : ?ViewDiff => $a->definition === $b->definition
+            static fn(View $v): string => $v->name,
+            static fn(View $a, View $b): ?ViewDiff => $a->definition === $b->definition
                 && $a->isUpdatable === $b->isUpdatable
                     ? null
                     : new ViewDiff($a, $b),
@@ -64,8 +77,8 @@ final readonly class SchemaComparator
         $functions = ChangeSet::fromNamedObjects(
             $source->functions,
             $target->functions,
-            static fn (Func $f) : string => $f->name,
-            static fn (Func $a, Func $b) : ?FuncDiff => $a->returnType === $b->returnType
+            static fn(Func $f): string => $f->name,
+            static fn(Func $a, Func $b): ?FuncDiff => $a->returnType === $b->returnType
                 && $a->argumentTypes === $b->argumentTypes
                 && $a->language === $b->language
                 && $a->definition === $b->definition
@@ -79,8 +92,8 @@ final readonly class SchemaComparator
         $procedures = ChangeSet::fromNamedObjects(
             $source->procedures,
             $target->procedures,
-            static fn (Procedure $p) : string => $p->name,
-            static fn (Procedure $a, Procedure $b) : ?ProcedureDiff => $a->argumentTypes === $b->argumentTypes
+            static fn(Procedure $p): string => $p->name,
+            static fn(Procedure $a, Procedure $b): ?ProcedureDiff => $a->argumentTypes === $b->argumentTypes
                 && $a->language === $b->language
                 && $a->definition === $b->definition
                     ? null
@@ -91,8 +104,8 @@ final readonly class SchemaComparator
         $extensions = ChangeSet::fromNamedObjects(
             $source->extensions,
             $target->extensions,
-            static fn (Extension $e) : string => $e->name,
-            static fn (Extension $a, Extension $b) : ?ExtensionDiff => $a->version === $b->version
+            static fn(Extension $e): string => $e->name,
+            static fn(Extension $a, Extension $b): ?ExtensionDiff => $a->version === $b->version
                 ? null
                 : new ExtensionDiff($a, $b),
         );
@@ -137,17 +150,21 @@ final readonly class SchemaComparator
      *
      * @return ChangeSet<Domain, DomainDiff>
      */
-    private function diffDomains(array $sourceDomains, array $targetDomains) : ChangeSet
+    private function diffDomains(array $sourceDomains, array $targetDomains): ChangeSet
     {
         /** @var ChangeSet<Domain, DomainDiff> */
         return ChangeSet::fromNamedObjects(
             $sourceDomains,
             $targetDomains,
-            static fn (Domain $d) : string => $d->name,
-            function (Domain $a, Domain $b) : ?DomainDiff {
-                $checkDiff = $this->constraintComparator->diffCheckConstraints($a->checkConstraints, $b->checkConstraints);
+            static fn(Domain $d): string => $d->name,
+            function (Domain $a, Domain $b): ?DomainDiff {
+                $checkDiff = $this->constraintComparator->diffCheckConstraints(
+                    $a->checkConstraints,
+                    $b->checkConstraints,
+                );
 
-                $hasPropertyChange = !$a->baseType->isEqual($b->baseType)
+                $hasPropertyChange =
+                    !$a->baseType->isEqual($b->baseType)
                     || $a->nullable !== $b->nullable
                     || $a->default !== $b->default;
 
@@ -166,17 +183,22 @@ final readonly class SchemaComparator
      *
      * @return ChangeSet<MaterializedView, MaterializedViewDiff>
      */
-    private function diffMaterializedViews(array $sourceMViews, array $targetMViews) : ChangeSet
+    private function diffMaterializedViews(array $sourceMViews, array $targetMViews): ChangeSet
     {
         /** @var ChangeSet<MaterializedView, MaterializedViewDiff> */
         return ChangeSet::fromNamedObjects(
             $sourceMViews,
             $targetMViews,
-            static fn (MaterializedView $mv) : string => $mv->name,
-            function (MaterializedView $a, MaterializedView $b) : ?MaterializedViewDiff {
+            static fn(MaterializedView $mv): string => $mv->name,
+            function (MaterializedView $a, MaterializedView $b): ?MaterializedViewDiff {
                 $indexChanges = $this->indexComparator->compare($a->indexes, $b->indexes);
 
-                if ($a->definition === $b->definition && $indexChanges->added === [] && $indexChanges->removed === [] && ($indexChanges->renamed === null || $indexChanges->renamed === [])) {
+                if (
+                    $a->definition === $b->definition
+                    && $indexChanges->added === []
+                    && $indexChanges->removed === []
+                    && ($indexChanges->renamed === null || $indexChanges->renamed === [])
+                ) {
                     return null;
                 }
 
@@ -191,25 +213,20 @@ final readonly class SchemaComparator
      *
      * @return ChangeSet<Table, TableDiff>
      */
-    private function diffTables(array $sourceTables, array $targetTables) : ChangeSet
+    private function diffTables(array $sourceTables, array $targetTables): ChangeSet
     {
         /** @var ChangeSet<Table, TableDiff> $initial */
         $initial = ChangeSet::fromNamedObjects(
             $sourceTables,
             $targetTables,
-            static fn (Table $t) : string => $t->name,
-            fn (Table $a, Table $b) : ?TableDiff => ($diff = $this->tableComparator->compare($a, $b))->isEmpty()
+            static fn(Table $t): string => $t->name,
+            fn(Table $a, Table $b): ?TableDiff => ($diff = $this->tableComparator->compare($a, $b))->isEmpty()
                 ? null
                 : $diff,
         );
 
         $renameResult = $this->tableStructureComparator->detectTableRenames($initial->added, $initial->removed);
 
-        return new ChangeSet(
-            $renameResult->added,
-            $renameResult->removed,
-            $initial->modified,
-            $renameResult->renamed,
-        );
+        return new ChangeSet($renameResult->added, $renameResult->removed, $initial->modified, $renameResult->renamed);
     }
 }

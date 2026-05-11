@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger\Processor;
 
-use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
+use Flow\Telemetry\ErrorHandler\ErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\Exporter\Exporter;
-use Flow\Telemetry\Logger\{LogEntry, LogProcessor};
+use Flow\Telemetry\Logger\LogEntry;
+use Flow\Telemetry\Logger\LogProcessor;
 use Flow\Telemetry\Signal\Signals;
 
 /**
@@ -21,15 +23,14 @@ final readonly class PassThroughLogProcessor implements LogProcessor
     public function __construct(
         private Exporter $exporter,
         private ErrorHandler $errorHandler = new ErrorLogHandler(),
-    ) {
-    }
+    ) {}
 
-    public function flush() : bool
+    public function flush(): bool
     {
         return true;
     }
 
-    public function process(LogEntry $entry) : void
+    public function process(LogEntry $entry): void
     {
         try {
             $this->exporter->export(Signals::logs([$entry]));
@@ -38,7 +39,7 @@ final readonly class PassThroughLogProcessor implements LogProcessor
         }
     }
 
-    public function shutdown() : void
+    public function shutdown(): void
     {
         try {
             $this->exporter->shutdown();

@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformation;
 
-use function Flow\ETL\DSL\{df, from_array};
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformation\MaskColumns;
 
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_array;
+
 final class MaskColumnTest extends FlowTestCase
 {
-    public function test_masking_columns_transformation() : void
+    public function test_masking_columns_transformation(): void
     {
         $output = df()
             ->read(from_array([
@@ -23,14 +25,14 @@ final class MaskColumnTest extends FlowTestCase
             ->fetch()
             ->toArray();
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['id' => 1, 'name' => 'John Doe', 'salary' => '******', 'currency' => 'USD'],
                 ['id' => 2, 'name' => 'Jane Doe', 'salary' => '******', 'currency' => 'USD'],
                 ['id' => 3, 'name' => 'John Smith', 'salary' => '******', 'currency' => 'USD'],
                 ['id' => 4, 'name' => 'Jane Smith', 'salary' => '******', 'currency' => 'USD'],
             ],
-            $output
+            $output,
         );
     }
 }

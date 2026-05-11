@@ -14,10 +14,9 @@ final readonly class TelemetryOptions
         public bool $traceCache = false,
         public bool $collectMetrics = false,
         public FilesystemTelemetryOptions $filesystem = new FilesystemTelemetryOptions(),
-    ) {
-    }
+    ) {}
 
-    public function collectMetrics(bool $collect = true) : self
+    public function collectMetrics(bool $collect = true): self
     {
         return new self(
             traceLoading: $this->traceLoading,
@@ -28,7 +27,7 @@ final readonly class TelemetryOptions
         );
     }
 
-    public function filesystem(FilesystemTelemetryOptions $options) : self
+    public function filesystem(FilesystemTelemetryOptions $options): self
     {
         return new self(
             traceLoading: $this->traceLoading,
@@ -39,7 +38,7 @@ final readonly class TelemetryOptions
         );
     }
 
-    public function traceCache(bool $trace = true) : self
+    public function traceCache(bool $trace = true): self
     {
         return new self(
             traceLoading: $this->traceLoading,
@@ -50,7 +49,7 @@ final readonly class TelemetryOptions
         );
     }
 
-    public function traceLoading(bool $trace = true) : self
+    public function traceLoading(bool $trace = true): self
     {
         return new self(
             traceLoading: $trace,
@@ -61,7 +60,7 @@ final readonly class TelemetryOptions
         );
     }
 
-    public function traceTransformations(bool $trace = true) : self
+    public function traceTransformations(bool $trace = true): self
     {
         return new self(
             traceLoading: $this->traceLoading,

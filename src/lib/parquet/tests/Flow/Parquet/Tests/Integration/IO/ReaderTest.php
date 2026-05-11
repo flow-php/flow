@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use Flow\Parquet\{ParquetEngine, Reader};
+use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Page\ColumnPageHeader;
+use Flow\Parquet\Reader;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class ReaderTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
-    public function test_reading_columns_with_multiple_data_pages(ParquetEngine $engine) : void
+    public function test_reading_columns_with_multiple_data_pages(ParquetEngine $engine): void
     {
         // File generated with  https://gist.github.com/norberttech/325df9166bbdb33e18dffa94c1a033c4
         $reader = new Reader(engine: $engine);
@@ -31,12 +32,18 @@ class ReaderTest extends ParquetIntegrationTestCase
         static::assertCount(79, $headers);
         static::assertSame(128, $headers[0]->pageHeader->dataValuesCount());
         static::assertSame(16, $headers[78]->pageHeader->dataValuesCount());
-        static::assertSame(10_000, \array_sum(\array_map(static fn (ColumnPageHeader $header) => $header->pageHeader->dataValuesCount(), $headers)));
+        static::assertSame(
+            10_000,
+            \array_sum(\array_map(
+                static fn(ColumnPageHeader $header) => $header->pageHeader->dataValuesCount(),
+                $headers,
+            )),
+        );
         static::assertSame(10_000, $rows);
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_required_columns(ParquetEngine $engine) : void
+    public function test_reading_required_columns(ParquetEngine $engine): void
     {
         // File generated with https://gist.github.com/norberttech/01322f61dca77cfde5161e31e94463ef
         $reader = new Reader(engine: $engine);

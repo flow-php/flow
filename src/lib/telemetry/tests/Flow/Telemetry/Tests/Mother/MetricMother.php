@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Mother;
 
 use Flow\Telemetry\Attributes;
-use Flow\Telemetry\Meter\{Metric, MetricType};
+use Flow\Telemetry\Meter\Metric;
+use Flow\Telemetry\Meter\MetricType;
 
 final class MetricMother
 {
-    public static function counter(string $name, int|float $value, ?string $unit = null, ?string $description = null) : Metric
-    {
+    public static function counter(
+        string $name,
+        int|float $value,
+        ?string $unit = null,
+        ?string $description = null,
+    ): Metric {
         return new Metric(
             name: $name,
             type: MetricType::COUNTER,
@@ -24,8 +29,12 @@ final class MetricMother
         );
     }
 
-    public static function deterministicCounter(string $name, int|float $value, ?string $unit = null, ?string $description = null) : Metric
-    {
+    public static function deterministicCounter(
+        string $name,
+        int|float $value,
+        ?string $unit = null,
+        ?string $description = null,
+    ): Metric {
         return new Metric(
             name: $name,
             type: MetricType::COUNTER,
@@ -39,8 +48,12 @@ final class MetricMother
         );
     }
 
-    public static function deterministicGauge(string $name, int|float $value, ?string $unit = null, ?string $description = null) : Metric
-    {
+    public static function deterministicGauge(
+        string $name,
+        int|float $value,
+        ?string $unit = null,
+        ?string $description = null,
+    ): Metric {
         return new Metric(
             name: $name,
             type: MetricType::GAUGE,

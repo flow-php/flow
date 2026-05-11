@@ -6,20 +6,20 @@ namespace Flow\Filesystem;
 
 interface SourceStream extends Stream
 {
-    public function content() : string;
+    public function content(): string;
 
     /**
      * @param int<1, max> $length number of bytes to read from the stream
      *
      * @return \Generator<string>
      */
-    public function iterate(int $length = 1) : \Generator;
+    public function iterate(int $length = 1): \Generator;
 
     /**
      * @param int<1, max> $length number of bytes to read from the stream
      * @param int $offset The offset where to start reading from the stream. If negative, reading will start from the end of the stream.
      */
-    public function read(int $length, int $offset) : string;
+    public function read(int $length, int $offset): string;
 
     /**
      * @param string $separator The line separator, content will be read until the first occurrence of the separator
@@ -29,10 +29,10 @@ interface SourceStream extends Stream
      *
      * @return \Generator<string>
      */
-    public function readLines(string $separator = "\n", ?int $length = null) : \Generator;
+    public function readLines(string $separator = "\n", ?int $length = null): \Generator;
 
     /**
      * @return null|int The size of the stream in bytes
      */
-    public function size() : ?int;
+    public function size(): ?int;
 }

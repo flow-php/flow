@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Bridge\Valinor;
 
-use CuyZ\Valinor\Mapper\{MappingError, TreeMapper};
+use CuyZ\Valinor\Mapper\MappingError;
+use CuyZ\Valinor\Mapper\TreeMapper;
 use Flow\PostgreSql\Client\Exception\MappingException;
 use Flow\PostgreSql\Client\RowMapper;
 use Flow\PostgreSql\Client\RowMapper\Context;
@@ -22,15 +23,14 @@ final readonly class ValinorTreeMapper implements RowMapper
     public function __construct(
         private TreeMapper $mapper,
         private string $class,
-    ) {
-    }
+    ) {}
 
     /**
      * @throws MappingException
      *
      * @return T
      */
-    public function map(array $row, Context $context) : mixed
+    public function map(array $row, Context $context): mixed
     {
         try {
             return $this->mapper->map($this->class, $row);

@@ -19,16 +19,16 @@ use Symfony\Component\Console\Output\BufferedOutput;
 final class ConsoleFlushSubscriberTest extends KernelTestCase
 {
     #[\Override]
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         restore_exception_handler();
         parent::tearDown();
     }
 
-    public function test_flush_is_called_on_terminate() : void
+    public function test_flush_is_called_on_terminate(): void
     {
         $kernel = $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestBundle(FrameworkBundle::class);
                 $kernel->addTestExtensionConfig('framework', [
                     'router' => [
@@ -67,20 +67,20 @@ final class ConsoleFlushSubscriberTest extends KernelTestCase
 
         $exitCode = $application->run($input, $output);
 
-        self::assertSame(0, $exitCode);
+        static::assertSame(0, $exitCode);
 
         $container = $this->getContainer();
         /** @var MemoryExporter $exporter */
         $exporter = $container->get('flow.telemetry.exporter.memory');
         $spans = $exporter->spans();
 
-        self::assertCount(1, $spans, 'Spans should be exported after console terminate when flush is called');
+        static::assertCount(1, $spans, 'Spans should be exported after console terminate when flush is called');
     }
 
-    public function test_flush_is_not_called_when_console_instrumentation_is_disabled() : void
+    public function test_flush_is_not_called_when_console_instrumentation_is_disabled(): void
     {
         $kernel = $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestBundle(FrameworkBundle::class);
                 $kernel->addTestExtensionConfig('framework', [
                     'router' => [
@@ -124,6 +124,6 @@ final class ConsoleFlushSubscriberTest extends KernelTestCase
         $exporter = $container->get('flow.telemetry.exporter.memory');
         $spans = $exporter->spans();
 
-        self::assertCount(0, $spans, 'No spans should be exported when instrumentation is disabled');
+        static::assertCount(0, $spans, 'No spans should be exported when instrumentation is disabled');
     }
 }

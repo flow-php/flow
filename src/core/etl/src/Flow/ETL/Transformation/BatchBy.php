@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformation;
 
-use Flow\ETL\{DataFrame, Transformation};
+use Flow\ETL\DataFrame;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Transformation;
 
 final readonly class BatchBy implements Transformation
 {
@@ -24,7 +25,7 @@ final readonly class BatchBy implements Transformation
         }
     }
 
-    public function transform(DataFrame $dataFrame) : DataFrame
+    public function transform(DataFrame $dataFrame): DataFrame
     {
         return $dataFrame->batchBy($this->column, $this->minSize);
     }

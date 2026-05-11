@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Thrift;
 
-use Thrift\Exception\{TProtocolException, TTransportException};
+use Thrift\Exception\TProtocolException;
+use Thrift\Exception\TTransportException;
 use Thrift\Type\TType;
 
 class CompactProtocol
@@ -114,26 +115,26 @@ class CompactProtocol
 
     protected array $structs = [];
 
-    public function __construct(private readonly Transport $transport)
-    {
-    }
+    public function __construct(
+        private readonly Transport $transport,
+    ) {}
 
-    public function fromZigZag(int $n) : int
+    public function fromZigZag(int $n): int
     {
         return ($n >> 1) ^ -($n & 1);
     }
 
-    public function getTransport() : Transport
+    public function getTransport(): Transport
     {
         return $this->transport;
     }
 
-    public function getTType(int $byte) : int
+    public function getTType(int $byte): int
     {
         return self::$ttypes[$byte & 0x0F];
     }
 
-    public function getVarint(int $data) : string
+    public function getVarint(int $data): string
     {
         $out = '';
 
@@ -145,13 +146,12 @@ class CompactProtocol
             }
             $out .= chr(($data & 0xFF) | 0x80);
             $data >>= 7;
-
         }
 
         return $out;
     }
 
-    public function readBool(&$bool) : int
+    public function readBool(&$bool): int
     {
         if ($this->state === self::STATE_BOOL_READ) {
             $bool = $this->boolValue;
@@ -164,10 +164,9 @@ class CompactProtocol
         }
 
         throw new TProtocolException('Invalid state in compact protocol');
-
     }
 
-    public function readByte(&$byte) : int
+    public function readByte(&$byte): int
     {
         $data = $this->transport->read(1);
         $readByte = ord($data[0]);
@@ -176,7 +175,7 @@ class CompactProtocol
         return 1;
     }
 
-    public function readCollectionBegin(&$type, &$size) : int
+    public function readCollectionBegin(&$type, &$size): int
     {
         $sizeType = 0;
         $result = $this->readUByte($sizeType);
@@ -192,14 +191,14 @@ class CompactProtocol
         return $result;
     }
 
-    public function readCollectionEnd() : int
+    public function readCollectionEnd(): int
     {
         $this->state = array_pop($this->containers);
 
         return 0;
     }
 
-    public function readDouble(&$dub) : int
+    public function readDouble(&$dub): int
     {
         $data = $this->transport->read(8);
         $arr = unpack('d', $data);
@@ -208,7 +207,7 @@ class CompactProtocol
         return 8;
     }
 
-    public function readFieldBegin(&$name, &$fieldType, &$fieldId) : int
+    public function readFieldBegin(&$name, &$fieldType, &$fieldId): int
     {
         $result = $this->readUByte($compactTypeAndDelta);
 
@@ -243,19 +242,19 @@ class CompactProtocol
         return $result;
     }
 
-    public function readFieldEnd() : int
+    public function readFieldEnd(): int
     {
         $this->state = self::STATE_FIELD_READ;
 
         return 0;
     }
 
-    public function readI16(&$i16) : int
+    public function readI16(&$i16): int
     {
         return $this->readZigZag($i16);
     }
 
-    public function readI32(&$i32) : int
+    public function readI32(&$i32): int
     {
         return $this->readZigZag($i32);
     }
@@ -269,7 +268,7 @@ class CompactProtocol
      *
      * @throws TTransportException
      */
-    public function readI64(&$i64) : int
+    public function readI64(&$i64): int
     {
         // Read varint from wire
         $hi = 0;
@@ -285,12 +284,12 @@ class CompactProtocol
 
             // Shift hi and lo together.
             if ($shift < 28) {
-                $lo |= (($byte & 0x7F) << $shift);
+                $lo |= ($byte & 0x7F) << $shift;
             } elseif ($shift === 28) {
-                $lo |= (($byte & 0x0F) << 28);
-                $hi |= (($byte & 0x70) >> 4);
+                $lo |= ($byte & 0x0F) << 28;
+                $hi |= ($byte & 0x70) >> 4;
             } else {
-                $hi |= (($byte & 0x7F) << ($shift - 32));
+                $hi |= ($byte & 0x7F) << ($shift - 32);
             }
 
             if (($byte >> 7) === 0) {
@@ -306,7 +305,7 @@ class CompactProtocol
             $xorer = (int) 0xFFFFFFFF;
         }
         $lo = ($lo >> 1) & 0x7FFFFFFF;
-        $lo |= (($hi & 1) << 31);
+        $lo |= ($hi & 1) << 31;
         $hi = ($hi >> 1) ^ $xorer;
         $lo ^= $xorer;
 
@@ -339,7 +338,7 @@ class CompactProtocol
         }
 
         // Create as negative value first, since we can store -2^63 but not 2^63
-        $i64 = -$hi * 4294967296 - $lo;
+        $i64 = (-$hi * 4294967296) - $lo;
 
         if (!$isNeg) {
             $i64 = -$i64;
@@ -348,17 +347,17 @@ class CompactProtocol
         return $idx;
     }
 
-    public function readListBegin(&$elemType, &$size) : int
+    public function readListBegin(&$elemType, &$size): int
     {
         return $this->readCollectionBegin($elemType, $size);
     }
 
-    public function readListEnd() : int
+    public function readListEnd(): int
     {
         return $this->readCollectionEnd();
     }
 
-    public function readMapBegin(&$keyType, &$valType, &$size) : int
+    public function readMapBegin(&$keyType, &$valType, &$size): int
     {
         $result = $this->readVarint($size);
         $types = 0;
@@ -374,12 +373,12 @@ class CompactProtocol
         return $result;
     }
 
-    public function readMapEnd() : int
+    public function readMapEnd(): int
     {
         return $this->readCollectionEnd();
     }
 
-    public function readMessageBegin(&$name, &$type, &$seqid) : int
+    public function readMessageBegin(&$name, &$type, &$seqid): int
     {
         $protoId = 0;
         $result = $this->readUByte($protoId);
@@ -401,22 +400,22 @@ class CompactProtocol
         return $result;
     }
 
-    public function readMessageEnd() : int
+    public function readMessageEnd(): int
     {
         return 0;
     }
 
-    public function readSetBegin(&$elemType, &$size) : int
+    public function readSetBegin(&$elemType, &$size): int
     {
         return $this->readCollectionBegin($elemType, $size);
     }
 
-    public function readSetEnd() : int
+    public function readSetEnd(): int
     {
         return $this->readCollectionEnd();
     }
 
-    public function readString(&$str) : int
+    public function readString(&$str): int
     {
         $result = $this->readVarint($len);
 
@@ -429,7 +428,7 @@ class CompactProtocol
         return $result + $len;
     }
 
-    public function readStructBegin(&$name) : int
+    public function readStructBegin(&$name): int
     {
         $name = ''; // unused
         $this->structs[] = [$this->state, $this->lastFid];
@@ -439,7 +438,7 @@ class CompactProtocol
         return 0;
     }
 
-    public function readStructEnd() : int
+    public function readStructEnd(): int
     {
         $last = array_pop($this->structs);
         $this->state = $last[0];
@@ -448,7 +447,7 @@ class CompactProtocol
         return 0;
     }
 
-    public function readUByte(&$value) : int
+    public function readUByte(&$value): int
     {
         $data = $this->transport->read(1);
         $value = ord($data[0]);
@@ -456,7 +455,7 @@ class CompactProtocol
         return 1;
     }
 
-    public function readVarint(&$result) : int
+    public function readVarint(&$result): int
     {
         $idx = 0;
         $shift = 0;
@@ -475,7 +474,7 @@ class CompactProtocol
         }
     }
 
-    public function readZigZag(&$value) : int
+    public function readZigZag(&$value): int
     {
         $result = $this->readVarint($value);
         $value = $this->fromZigZag($value);
@@ -548,19 +547,16 @@ class CompactProtocol
                 return $result;
 
             default:
-                throw new TProtocolException(
-                    'Unknown field type: ' . $type,
-                    TProtocolException::INVALID_DATA
-                );
+                throw new TProtocolException('Unknown field type: ' . $type, TProtocolException::INVALID_DATA);
         }
     }
 
-    public function toZigZag($n, $bits) : int
+    public function toZigZag($n, $bits): int
     {
         return ($n << 1) ^ ($n >> ($bits - 1));
     }
 
-    public function writeBool($bool) : int
+    public function writeBool($bool): int
     {
         if ($this->state === self::STATE_BOOL_WRITE) {
             $ctype = self::COMPACT_FALSE;
@@ -577,10 +573,9 @@ class CompactProtocol
         }
 
         throw new TProtocolException('Invalid state in compact protocol');
-
     }
 
-    public function writeByte(int $byte) : int
+    public function writeByte(int $byte): int
     {
         $data = pack('c', $byte);
         $this->transport->write($data, 1);
@@ -588,15 +583,12 @@ class CompactProtocol
         return 1;
     }
 
-    public function writeCollectionBegin(int $etype, int $size) : int
+    public function writeCollectionBegin(int $etype, int $size): int
     {
         if ($size <= 14) {
-            $written = $this->writeUByte($size << 4 |
-                self::$ctypes[$etype]);
+            $written = $this->writeUByte(($size << 4) | self::$ctypes[$etype]);
         } else {
-            $written = $this->writeUByte(0xF0 |
-                    self::$ctypes[$etype]) +
-                $this->writeVarint($size);
+            $written = $this->writeUByte(0xF0 | self::$ctypes[$etype]) + $this->writeVarint($size);
         }
         $this->containers[] = $this->state;
         $this->state = self::STATE_CONTAINER_WRITE;
@@ -604,14 +596,14 @@ class CompactProtocol
         return $written;
     }
 
-    public function writeCollectionEnd() : int
+    public function writeCollectionEnd(): int
     {
         $this->state = array_pop($this->containers);
 
         return 0;
     }
 
-    public function writeDouble(float $dub) : int
+    public function writeDouble(float $dub): int
     {
         $data = pack('d', $dub);
         $this->transport->write($data, 8);
@@ -619,7 +611,7 @@ class CompactProtocol
         return 8;
     }
 
-    public function writeFieldBegin(string $fieldName, int $fieldType, int $fieldId) : int
+    public function writeFieldBegin(string $fieldName, int $fieldType, int $fieldId): int
     {
         if ($fieldType === TTYPE::BOOL) {
             $this->state = self::STATE_BOOL_WRITE;
@@ -630,54 +622,52 @@ class CompactProtocol
         $this->state = self::STATE_VALUE_WRITE;
 
         return $this->writeFieldHeader(self::$ctypes[$fieldType], $fieldId);
-
     }
 
-    public function writeFieldEnd() : int
+    public function writeFieldEnd(): int
     {
         $this->state = self::STATE_FIELD_WRITE;
 
         return 0;
     }
 
-    public function writeFieldHeader(int $type, int $fid) : int
+    public function writeFieldHeader(int $type, int $fid): int
     {
         $delta = $fid - $this->lastFid;
 
         if (0 < $delta && $delta <= 15) {
             $written = $this->writeUByte(($delta << 4) | $type);
         } else {
-            $written = $this->writeByte($type) +
-                $this->writeI16($fid);
+            $written = $this->writeByte($type) + $this->writeI16($fid);
         }
         $this->lastFid = $fid;
 
         return $written;
     }
 
-    public function writeFieldStop() : int
+    public function writeFieldStop(): int
     {
         return $this->writeByte(0);
     }
 
-    public function writeI16(int $value) : int
+    public function writeI16(int $value): int
     {
         $thing = $this->toZigZag($value, 16);
 
         return $this->writeVarint($thing);
     }
 
-    public function writeI32(int $value) : int
+    public function writeI32(int $value): int
     {
         $thing = $this->toZigZag($value, 32);
 
         return $this->writeVarint($thing);
     }
 
-    public function writeI64(int $value) : int
+    public function writeI64(int $value): int
     {
         // If we are in an I32 range, use the easy method below.
-        if (($value > 4294967296) || ($value < -4294967296)) {
+        if ($value > 4294967296 || $value < -4294967296) {
             // Convert $value to $hi and $lo
             $neg = $value < 0;
 
@@ -716,19 +706,17 @@ class CompactProtocol
             $out = '';
 
             while (true) {
-                if (($lo & ~0x7F) === 0
-                    && $hi === 0) {
+                if (($lo & ~0x7F) === 0 && $hi === 0) {
                     $out .= chr($lo);
 
                     break;
                 }
                 $out .= chr(($lo & 0xFF) | 0x80);
                 $lo >>= 7;
-                $lo |= ($hi << 25);
+                $lo |= $hi << 25;
                 $hi >>= 7;
                 // Right shift carries sign, but we don't want it to.
-                $hi &= (127 << 25);
-
+                $hi &= 127 << 25;
             }
 
             $ret = \strlen($out);
@@ -738,67 +726,66 @@ class CompactProtocol
         }
 
         return $this->writeVarint($this->toZigZag($value, 64));
-
     }
 
-    public function writeListBegin($elemType, $size) : int
+    public function writeListBegin($elemType, $size): int
     {
         return $this->writeCollectionBegin($elemType, $size);
     }
 
-    public function writeListEnd() : int
+    public function writeListEnd(): int
     {
         return $this->writeCollectionEnd();
     }
 
-    public function writeMapBegin(int $keyType, int $valType, int $size) : int
+    public function writeMapBegin(int $keyType, int $valType, int $size): int
     {
         if ($size === 0) {
             $written = $this->writeByte(0);
         } else {
-            $written = $this->writeVarint($size) + $this->writeUByte(self::$ctypes[$keyType] << 4 | self::$ctypes[$valType]);
+            $written =
+                $this->writeVarint($size) + $this->writeUByte((self::$ctypes[$keyType] << 4) | self::$ctypes[$valType]);
         }
         $this->containers[] = $this->state;
 
         return $written;
     }
 
-    public function writeMapEnd() : int
+    public function writeMapEnd(): int
     {
         return $this->writeCollectionEnd();
     }
 
-    public function writeMessageBegin(string $name, int $type, int $seqid) : int
+    public function writeMessageBegin(string $name, int $type, int $seqid): int
     {
         $written =
-            $this->writeUByte(self::PROTOCOL_ID) +
-            $this->writeUByte(self::VERSION |
-                ($type << self::TYPE_SHIFT_AMOUNT)) +
-            $this->writeVarint($seqid) +
-            $this->writeString($name);
+            $this->writeUByte(self::PROTOCOL_ID)
+            + $this->writeUByte(self::VERSION | ($type << self::TYPE_SHIFT_AMOUNT))
+            + $this->writeVarint($seqid)
+            + $this->writeString($name);
         $this->state = self::STATE_VALUE_WRITE;
 
         return $written;
     }
 
-    public function writeMessageEnd() : int
+    public function writeMessageEnd(): int
     {
         $this->state = self::STATE_CLEAR;
 
         return 0;
     }
 
-    public function writeSetBegin(int $elemType, int $size) : int
+    public function writeSetBegin(int $elemType, int $size): int
     {
         return $this->writeCollectionBegin($elemType, $size);
     }
 
-    public function writeSetEnd() : int
+    public function writeSetEnd(): int
     {
         return $this->writeCollectionEnd();
     }
 
-    public function writeString(string $value) : int
+    public function writeString(string $value): int
     {
         $len = \strlen($value);
         $result = $this->writeVarint($len);
@@ -810,7 +797,7 @@ class CompactProtocol
         return $result + $len;
     }
 
-    public function writeStructBegin() : int
+    public function writeStructBegin(): int
     {
         $this->structs[] = [$this->state, $this->lastFid];
         $this->state = self::STATE_FIELD_WRITE;
@@ -819,7 +806,7 @@ class CompactProtocol
         return 0;
     }
 
-    public function writeStructEnd() : int
+    public function writeStructEnd(): int
     {
         $oldValues = array_pop($this->structs);
         $this->state = $oldValues[0];
@@ -828,14 +815,14 @@ class CompactProtocol
         return 0;
     }
 
-    public function writeUByte(int $byte) : int
+    public function writeUByte(int $byte): int
     {
         $this->transport->write(pack('C', $byte), 1);
 
         return 1;
     }
 
-    public function writeVarint(int $data) : int
+    public function writeVarint(int $data): int
     {
         $out = $this->getVarint($data);
         $result = \strlen($out);

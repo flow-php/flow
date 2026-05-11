@@ -6,20 +6,31 @@ namespace Flow\Telemetry\Tests\Unit\Meter\Processor;
 
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Exporter\Exporter;
-use Flow\Telemetry\Meter\{Metric, MetricType};
+use Flow\Telemetry\Meter\Metric;
+use Flow\Telemetry\Meter\MetricType;
 use Flow\Telemetry\Meter\Processor\PassThroughMetricProcessor;
-use Flow\Telemetry\Signal\{SignalType, Signals};
-use Flow\Telemetry\Tests\Mother\{ErrorHandlerSpy, InstrumentationScopeMother, ResourceMother};
+use Flow\Telemetry\Signal\Signals;
+use Flow\Telemetry\Signal\SignalType;
+use Flow\Telemetry\Tests\Mother\ErrorHandlerSpy;
+use Flow\Telemetry\Tests\Mother\InstrumentationScopeMother;
+use Flow\Telemetry\Tests\Mother\ResourceMother;
 use PHPUnit\Framework\TestCase;
 
 final class PassThroughMetricProcessorTest extends TestCase
 {
-    public function test_exports_each_metric_individually() : void
+    public function test_exports_each_metric_individually(): void
     {
         $exporter = $this->createMock(Exporter::class);
-        $exporter->expects(self::exactly(3))
+        $exporter
+            ->expects(self::exactly(3))
             ->method('export')
-            ->with(self::callback(static fn (mixed $signal) => $signal instanceof Signals && $signal->type === SignalType::METRICS && $signal->count() === 1))
+            ->with(static::callback(
+                static fn(mixed $signal) => (
+                    $signal instanceof Signals
+                    && $signal->type === SignalType::METRICS
+                    && $signal->count() === 1
+                ),
+            ))
             ->willReturn(true);
 
         $processor = new PassThroughMetricProcessor($exporter);
@@ -28,29 +39,36 @@ final class PassThroughMetricProcessorTest extends TestCase
         $processor->process($this->createMetric());
     }
 
-    public function test_exports_metric_immediately_on_process() : void
+    public function test_exports_metric_immediately_on_process(): void
     {
         $exporter = $this->createMock(Exporter::class);
-        $exporter->expects(self::once())
+        $exporter
+            ->expects(self::once())
             ->method('export')
-            ->with(self::callback(static fn (mixed $signal) => $signal instanceof Signals && $signal->type === SignalType::METRICS && $signal->count() === 1))
+            ->with(static::callback(
+                static fn(mixed $signal) => (
+                    $signal instanceof Signals
+                    && $signal->type === SignalType::METRICS
+                    && $signal->count() === 1
+                ),
+            ))
             ->willReturn(true);
 
         $processor = new PassThroughMetricProcessor($exporter);
         $processor->process($this->createMetric());
     }
 
-    public function test_flush_returns_true() : void
+    public function test_flush_returns_true(): void
     {
         $exporter = $this->createMock(Exporter::class);
         $processor = new PassThroughMetricProcessor($exporter);
 
         $result = $processor->flush();
 
-        self::assertTrue($result);
+        static::assertTrue($result);
     }
 
-    public function test_process_routes_exporter_throwable_to_error_handler() : void
+    public function test_process_routes_exporter_throwable_to_error_handler(): void
     {
         $exporter = $this->createMock(Exporter::class);
         $exporter->method('export')->willThrowException(new \RuntimeException('exporter exploded'));
@@ -59,11 +77,11 @@ final class PassThroughMetricProcessorTest extends TestCase
         $processor = new PassThroughMetricProcessor($exporter, $spy);
         $processor->process($this->createMetric());
 
-        self::assertSame(1, $spy->count());
-        self::assertSame('exporter exploded', $spy->last()?->getMessage());
+        static::assertSame(1, $spy->count());
+        static::assertSame('exporter exploded', $spy->last()?->getMessage());
     }
 
-    private function createMetric() : Metric
+    private function createMetric(): Metric
     {
         return new Metric(
             'test.counter',

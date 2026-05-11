@@ -5,19 +5,21 @@ declare(strict_types=1);
 namespace Flow\Website\Service\Markdown;
 
 use League\CommonMark\Event\DocumentParsedEvent;
-use League\CommonMark\Extension\CommonMark\Node\Block\{FencedCode, HtmlBlock};
-use League\CommonMark\Extension\CommonMark\Node\Inline\{Code, HtmlInline};
+use League\CommonMark\Extension\CommonMark\Node\Block\FencedCode;
+use League\CommonMark\Extension\CommonMark\Node\Block\HtmlBlock;
+use League\CommonMark\Extension\CommonMark\Node\Inline\Code;
+use League\CommonMark\Extension\CommonMark\Node\Inline\HtmlInline;
 use League\CommonMark\Node\Inline\Text;
 
 final readonly class FlowVersionReplacer
 {
     private const string VERSION_PLACEHOLDER = '--FLOW_PHP_VERSION--';
 
-    public function __construct(private string $flowVersion)
-    {
-    }
+    public function __construct(
+        private string $flowVersion,
+    ) {}
 
-    public function __invoke(DocumentParsedEvent $event) : void
+    public function __invoke(DocumentParsedEvent $event): void
     {
         $walker = $event->getDocument()->walker();
 
@@ -34,29 +36,21 @@ final readonly class FlowVersionReplacer
         }
     }
 
-    private function replaceInHtml($node) : void
+    private function replaceInHtml($node): void
     {
         $html = $node->getLiteral();
 
         if (str_contains((string) $html, self::VERSION_PLACEHOLDER)) {
-            $node->setLiteral(str_replace(
-                self::VERSION_PLACEHOLDER,
-                $this->flowVersion,
-                $html
-            ));
+            $node->setLiteral(str_replace(self::VERSION_PLACEHOLDER, $this->flowVersion, $html));
         }
     }
 
-    private function replaceInLiteral($node) : void
+    private function replaceInLiteral($node): void
     {
         $literal = $node->getLiteral();
 
         if (str_contains((string) $literal, self::VERSION_PLACEHOLDER)) {
-            $node->setLiteral(str_replace(
-                self::VERSION_PLACEHOLDER,
-                $this->flowVersion,
-                $literal
-            ));
+            $node->setLiteral(str_replace(self::VERSION_PLACEHOLDER, $this->flowVersion, $literal));
         }
     }
 }

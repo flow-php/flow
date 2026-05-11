@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
-use Flow\ETL\{Extractor, FlowContext, Rows};
+use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 
 final readonly class BatchExtractor implements Extractor, OverridingExtractor
 {
@@ -14,13 +16,12 @@ final readonly class BatchExtractor implements Extractor, OverridingExtractor
     public function __construct(
         private Extractor $extractor,
         private int $chunkSize,
-    ) {
-    }
+    ) {}
 
     /**
      * @return \Generator<int, Rows, mixed, mixed>
      */
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         $chunk = new Rows();
         $chunkSize = 0;
@@ -31,7 +32,6 @@ final readonly class BatchExtractor implements Extractor, OverridingExtractor
                 $chunkSize++;
 
                 if ($chunkSize === $this->chunkSize) {
-
                     $signal = yield $chunk;
 
                     if ($signal === Signal::STOP) {
@@ -42,7 +42,6 @@ final readonly class BatchExtractor implements Extractor, OverridingExtractor
                 }
 
                 if ($chunkSize > $this->chunkSize) {
-
                     $signal = yield $chunk->dropRight($chunk->count() - $this->chunkSize);
 
                     if ($signal === Signal::STOP) {
@@ -59,7 +58,7 @@ final readonly class BatchExtractor implements Extractor, OverridingExtractor
         }
     }
 
-    public function extractors() : array
+    public function extractors(): array
     {
         return [$this->extractor];
     }

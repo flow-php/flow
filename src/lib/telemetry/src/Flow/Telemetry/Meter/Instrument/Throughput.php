@@ -5,9 +5,17 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Meter\Instrument;
 
 use Flow\Telemetry\Attributes;
-use Flow\Telemetry\{InstrumentationScope, Resource};
-use Flow\Telemetry\Meter\{AggregationTemporality, Metric, MetricLimits, MetricType, TimeUnit};
-use Flow\Telemetry\Meter\Exemplar\{ExemplarFilter, ExemplarReservoir, SimpleFixedSizeExemplarReservoir, TraceBasedExemplarFilter};
+use Flow\Telemetry\InstrumentationScope;
+use Flow\Telemetry\Meter\AggregationTemporality;
+use Flow\Telemetry\Meter\Exemplar\ExemplarFilter;
+use Flow\Telemetry\Meter\Exemplar\ExemplarReservoir;
+use Flow\Telemetry\Meter\Exemplar\SimpleFixedSizeExemplarReservoir;
+use Flow\Telemetry\Meter\Exemplar\TraceBasedExemplarFilter;
+use Flow\Telemetry\Meter\Metric;
+use Flow\Telemetry\Meter\MetricLimits;
+use Flow\Telemetry\Meter\MetricType;
+use Flow\Telemetry\Meter\TimeUnit;
+use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tracer\SpanContext;
 use Psr\Clock\ClockInterface;
 
@@ -76,11 +84,11 @@ final class Throughput implements Instrument
      * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Categorization attributes
      * @param null|SpanContext $context Optional span context for exemplar capture
      */
-    public function add(int $count, array|Attributes $attributes = [], ?SpanContext $context = null) : void
+    public function add(int $count, array|Attributes $attributes = [], ?SpanContext $context = null): void
     {
         $normalized = $attributes instanceof Attributes ? $attributes->normalize() : $attributes;
         /** @var array<string, bool|float|int|string> $attrs */
-        $attrs = \array_filter($normalized, static fn ($v) : bool => \is_scalar($v));
+        $attrs = \array_filter($normalized, static fn($v): bool => \is_scalar($v));
         $key = Attributes::create($attrs)->id();
 
         if (!isset($this->aggregations[$key])) {
@@ -107,32 +115,21 @@ final class Throughput implements Instrument
         $this->aggregations[$key]['count'] += $count;
 
         if ($context !== null && $this->exemplarFilter->shouldSample($context, $count, $attrs)) {
-            $this->aggregations[$key]['reservoir']->offer(
-                $count,
-                $attrs,
-                $context,
-                $this->clock->now(),
-            );
+            $this->aggregations[$key]['reservoir']->offer($count, $attrs, $context, $this->clock->now());
         }
     }
 
-    public function collect() : array
+    public function collect(): array
     {
         $metrics = [];
-        $fullUnit = $this->unit !== null
-            ? $this->unit . '/' . $this->timeUnit->value
-            : null;
+        $fullUnit = $this->unit !== null ? $this->unit . '/' . $this->timeUnit->value : null;
 
         foreach ($this->aggregations as $data) {
             $durationNs = \hrtime(true) - $data['startTimeNs'];
             $durationInTimeUnit = $this->timeUnit->fromNanoseconds($durationNs);
-            $rawRate = $durationInTimeUnit > 0
-                ? $data['count'] / $durationInTimeUnit
-                : 0.0;
+            $rawRate = $durationInTimeUnit > 0 ? $data['count'] / $durationInTimeUnit : 0.0;
 
-            $rate = $this->ratePrecision !== null
-                ? \round($rawRate, $this->ratePrecision)
-                : $rawRate;
+            $rate = $this->ratePrecision !== null ? \round($rawRate, $this->ratePrecision) : $rawRate;
 
             $exemplars = $data['reservoir']->collect();
 
@@ -157,20 +154,18 @@ final class Throughput implements Instrument
         return $metrics;
     }
 
-    public function description() : ?string
+    public function description(): ?string
     {
         return $this->description;
     }
 
-    public function name() : string
+    public function name(): string
     {
         return $this->name;
     }
 
-    public function unit() : ?string
+    public function unit(): ?string
     {
-        return $this->unit !== null
-            ? $this->unit . '/' . $this->timeUnit->value
-            : null;
+        return $this->unit !== null ? $this->unit . '/' . $this->timeUnit->value : null;
     }
 }

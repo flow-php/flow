@@ -34,7 +34,7 @@ interface Sampler
      * - "TraceIdRatioBasedSampler{0.001}"
      * - "ParentBased{root=AlwaysOnSampler}"
      */
-    public function __toString() : string;
+    public function __toString(): string;
 
     /**
      * Determine if a span should be sampled.
@@ -43,5 +43,5 @@ interface Sampler
      *
      * @return SamplingResult The sampling decision
      */
-    public function shouldSample(Span $span) : SamplingResult;
+    public function shouldSample(Span $span): SamplingResult;
 }

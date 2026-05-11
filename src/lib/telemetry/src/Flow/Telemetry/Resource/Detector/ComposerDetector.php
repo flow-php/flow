@@ -27,7 +27,7 @@ use Flow\Telemetry\Resource\ResourceDetector;
  */
 final readonly class ComposerDetector implements ResourceDetector
 {
-    public function detect() : Resource
+    public function detect(): Resource
     {
         if (!\class_exists(InstalledVersions::class)) {
             return Resource::empty();
@@ -53,7 +53,7 @@ final readonly class ComposerDetector implements ResourceDetector
         return Resource::create($attributes);
     }
 
-    private function detectVersion(string $packageName) : ?string
+    private function detectVersion(string $packageName): ?string
     {
         try {
             $version = InstalledVersions::getPrettyVersion($packageName);
@@ -74,7 +74,7 @@ final readonly class ComposerDetector implements ResourceDetector
         }
     }
 
-    private function extractServiceName(string $packageName) : string
+    private function extractServiceName(string $packageName): string
     {
         $parts = \explode('/', $packageName, 2);
 

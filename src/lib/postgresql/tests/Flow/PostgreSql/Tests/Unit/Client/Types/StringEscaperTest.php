@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 final class StringEscaperTest extends TestCase
 {
-    public static function provide_escape_always_quoted_cases() : \Generator
+    public static function provide_escape_always_quoted_cases(): \Generator
     {
         yield 'simple string' => ['hello', '"hello"'];
         yield 'empty string' => ['', '""'];
@@ -20,7 +20,7 @@ final class StringEscaperTest extends TestCase
         yield 'json with backslash' => ['{"path":"c:\\\\dir"}', '"{\"path\":\"c:\\\\\\\\dir\"}"'];
     }
 
-    public static function provide_escape_cases() : \Generator
+    public static function provide_escape_cases(): \Generator
     {
         yield 'simple string' => ['hello', 'hello'];
         yield 'numeric string' => ['123', '123'];
@@ -52,14 +52,14 @@ final class StringEscaperTest extends TestCase
     }
 
     #[DataProvider('provide_escape_cases')]
-    public function test_escape(string $input, string $expected) : void
+    public function test_escape(string $input, string $expected): void
     {
-        self::assertSame($expected, StringEscaper::escape($input));
+        static::assertSame($expected, StringEscaper::escape($input));
     }
 
     #[DataProvider('provide_escape_always_quoted_cases')]
-    public function test_escape_always_quoted(string $input, string $expected) : void
+    public function test_escape_always_quoted(string $input, string $expected): void
     {
-        self::assertSame($expected, StringEscaper::escapeAlwaysQuoted($input));
+        static::assertSame($expected, StringEscaper::escapeAlwaysQuoted($input));
     }
 }

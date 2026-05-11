@@ -5,34 +5,34 @@ declare(strict_types=1);
 namespace Flow\ETL\Schema\Formatter\PHPFormatter;
 
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\{DateTimeType,
-    DateType,
-    HTMLElementType,
-    HTMLType,
-    JsonType,
-    ListType,
-    MapType,
-    OptionalType,
-    StructureType,
-    TimeType,
-    UuidType,
-    XMLElementType,
-    XMLType};
-use Flow\Types\Type\Native\{ArrayType,
-    BooleanType,
-    CallableType,
-    FloatType,
-    IntegerType,
-    NullType,
-    ResourceType,
-    StringType};
+use Flow\Types\Type\Logical\DateTimeType;
+use Flow\Types\Type\Logical\DateType;
+use Flow\Types\Type\Logical\HTMLElementType;
+use Flow\Types\Type\Logical\HTMLType;
+use Flow\Types\Type\Logical\JsonType;
+use Flow\Types\Type\Logical\ListType;
+use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\OptionalType;
+use Flow\Types\Type\Logical\StructureType;
+use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\UuidType;
+use Flow\Types\Type\Logical\XMLElementType;
+use Flow\Types\Type\Logical\XMLType;
+use Flow\Types\Type\Native\ArrayType;
+use Flow\Types\Type\Native\BooleanType;
+use Flow\Types\Type\Native\CallableType;
+use Flow\Types\Type\Native\FloatType;
+use Flow\Types\Type\Native\IntegerType;
+use Flow\Types\Type\Native\NullType;
+use Flow\Types\Type\Native\ResourceType;
+use Flow\Types\Type\Native\StringType;
 
 final class TypeFormatter
 {
     /**
      * @param Type<mixed> $type
      */
-    public function format(Type $type, bool $nullable = false) : string
+    public function format(Type $type, bool $nullable = false): string
     {
         return match ($type::class) {
             MapType::class => $this->formatMapType($type, $nullable),
@@ -46,7 +46,7 @@ final class TypeFormatter
     /**
      * @param ListType<mixed> $type
      */
-    private function formatListType(ListType $type, bool $nullable) : string
+    private function formatListType(ListType $type, bool $nullable): string
     {
         $reflection = new \ReflectionFunction('\\Flow\\Types\\DSL\\type_list');
 
@@ -60,12 +60,14 @@ final class TypeFormatter
     /**
      * @param MapType<array-key, mixed> $type
      */
-    private function formatMapType(MapType $type, bool $nullable) : string
+    private function formatMapType(MapType $type, bool $nullable): string
     {
         $reflection = new \ReflectionFunction('\\Flow\\Types\\DSL\\type_map');
 
         return \sprintf(
-            $nullable ? '\\Flow\\Types\\DSL\\type_optional(\%s(key_type: %s, value_type: %s))' : '\%s(key_type: %s, value_type: %s)',
+            $nullable
+                ? '\\Flow\\Types\\DSL\\type_optional(\%s(key_type: %s, value_type: %s))'
+                : '\%s(key_type: %s, value_type: %s)',
             $reflection->getName(),
             $this->format($type->key()),
             $this->format($type->value()),
@@ -75,7 +77,7 @@ final class TypeFormatter
     /**
      * @param Type<mixed> $type
      */
-    private function formatSimpleType(Type $type, bool $nullable) : string
+    private function formatSimpleType(Type $type, bool $nullable): string
     {
         $reflection = match ($type::class) {
             ArrayType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_array'),
@@ -102,16 +104,13 @@ final class TypeFormatter
             return \sprintf('\%s()', $reflection->getName());
         }
 
-        return \sprintf(
-            $nullable ? '\\Flow\\Types\\DSL\\type_optional(\%s())' : '\%s()',
-            $reflection->getName(),
-        );
+        return \sprintf($nullable ? '\\Flow\\Types\\DSL\\type_optional(\%s())' : '\%s()', $reflection->getName());
     }
 
     /**
      * @param StructureType<array<string, Type<mixed>>> $type
      */
-    private function formatStructureType(StructureType $type, bool $nullable) : string
+    private function formatStructureType(StructureType $type, bool $nullable): string
     {
         $reflection = new \ReflectionFunction('\\Flow\\Types\\DSL\\type_structure');
 

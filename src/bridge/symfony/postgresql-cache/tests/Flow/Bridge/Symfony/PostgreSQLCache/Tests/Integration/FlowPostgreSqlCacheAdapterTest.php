@@ -8,7 +8,7 @@ use Flow\Bridge\Symfony\PostgreSQLCache\FlowPostgreSqlCacheAdapter;
 
 final class FlowPostgreSqlCacheAdapterTest extends CacheIntegrationTestCase
 {
-    public function test_clear_with_namespace_only_deletes_matching_keys() : void
+    public function test_clear_with_namespace_only_deletes_matching_keys(): void
     {
         $adapter = new FlowPostgreSqlCacheAdapter($this->cacheContext()->connectionParameters, namespace: 'app');
         $other = new FlowPostgreSqlCacheAdapter($this->cacheContext()->connectionParameters, namespace: 'other');
@@ -21,13 +21,13 @@ final class FlowPostgreSqlCacheAdapterTest extends CacheIntegrationTestCase
         $o->set('other-one');
         $other->save($o);
 
-        self::assertTrue($adapter->clear());
+        static::assertTrue($adapter->clear());
 
-        self::assertFalse($adapter->getItem('one')->isHit());
-        self::assertTrue($other->getItem('one')->isHit());
+        static::assertFalse($adapter->getItem('one')->isHit());
+        static::assertTrue($other->getItem('one')->isHit());
     }
 
-    public function test_delete_removes_value() : void
+    public function test_delete_removes_value(): void
     {
         $adapter = new FlowPostgreSqlCacheAdapter($this->cacheContext()->connectionParameters);
 
@@ -35,19 +35,19 @@ final class FlowPostgreSqlCacheAdapterTest extends CacheIntegrationTestCase
         $item->set('present');
         $adapter->save($item);
 
-        self::assertTrue($adapter->getItem('to_delete')->isHit());
-        self::assertTrue($adapter->deleteItem('to_delete'));
-        self::assertFalse($adapter->getItem('to_delete')->isHit());
+        static::assertTrue($adapter->getItem('to_delete')->isHit());
+        static::assertTrue($adapter->deleteItem('to_delete'));
+        static::assertFalse($adapter->getItem('to_delete')->isHit());
     }
 
-    public function test_get_returns_miss_for_unknown_key() : void
+    public function test_get_returns_miss_for_unknown_key(): void
     {
         $adapter = new FlowPostgreSqlCacheAdapter($this->cacheContext()->connectionParameters);
 
-        self::assertFalse($adapter->getItem('never_saved')->isHit());
+        static::assertFalse($adapter->getItem('never_saved')->isHit());
     }
 
-    public function test_prune_removes_expired_items() : void
+    public function test_prune_removes_expired_items(): void
     {
         $adapter = new FlowPostgreSqlCacheAdapter($this->cacheContext()->connectionParameters);
 
@@ -62,13 +62,13 @@ final class FlowPostgreSqlCacheAdapterTest extends CacheIntegrationTestCase
 
         $this->cacheContext()->expireAllExpirableCacheItems();
 
-        self::assertTrue($adapter->prune());
+        static::assertTrue($adapter->prune());
 
-        self::assertFalse($adapter->getItem('will_expire')->isHit());
-        self::assertTrue($adapter->getItem('still_here')->isHit());
+        static::assertFalse($adapter->getItem('will_expire')->isHit());
+        static::assertTrue($adapter->getItem('still_here')->isHit());
     }
 
-    public function test_save_overwrites_existing_value() : void
+    public function test_save_overwrites_existing_value(): void
     {
         $adapter = new FlowPostgreSqlCacheAdapter($this->cacheContext()->connectionParameters);
 
@@ -80,19 +80,19 @@ final class FlowPostgreSqlCacheAdapterTest extends CacheIntegrationTestCase
         $second->set('second');
         $adapter->save($second);
 
-        self::assertSame('second', $adapter->getItem('key')->get());
+        static::assertSame('second', $adapter->getItem('key')->get());
     }
 
-    public function test_save_then_get_round_trip() : void
+    public function test_save_then_get_round_trip(): void
     {
         $adapter = new FlowPostgreSqlCacheAdapter($this->cacheContext()->connectionParameters);
 
         $item = $adapter->getItem('hello');
         $item->set(['greeting' => 'world', 'count' => 7]);
-        self::assertTrue($adapter->save($item));
+        static::assertTrue($adapter->save($item));
 
         $fetched = $adapter->getItem('hello');
-        self::assertTrue($fetched->isHit());
-        self::assertSame(['greeting' => 'world', 'count' => 7], $fetched->get());
+        static::assertTrue($fetched->isHit());
+        static::assertSame(['greeting' => 'world', 'count' => 7], $fetched->get());
     }
 }

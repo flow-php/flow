@@ -17,5 +17,5 @@ interface UpdateTableStep
      * @param string|Table $table The table name, "schema.table" string, or Table reference
      * @param null|string $alias Optional table alias
      */
-    public function update(string|Table $table, ?string $alias = null) : UpdateSetStep;
+    public function update(string|Table $table, ?string $alias = null): UpdateSetStep;
 }

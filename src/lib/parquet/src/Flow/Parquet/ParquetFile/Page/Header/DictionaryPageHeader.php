@@ -11,23 +11,19 @@ final readonly class DictionaryPageHeader
     public function __construct(
         private Encodings $encoding,
         private int $valuesCount,
-    ) {
-    }
+    ) {}
 
-    public static function fromThrift(\Flow\Parquet\ThriftModel\DictionaryPageHeader $thrift) : self
+    public static function fromThrift(\Flow\Parquet\ThriftModel\DictionaryPageHeader $thrift): self
     {
-        return new self(
-            Encodings::from($thrift->encoding),
-            (int) $thrift->num_values
-        );
+        return new self(Encodings::from($thrift->encoding), (int) $thrift->num_values);
     }
 
-    public function encoding() : Encodings
+    public function encoding(): Encodings
     {
         return $this->encoding;
     }
 
-    public function toThrift() : \Flow\Parquet\ThriftModel\DictionaryPageHeader
+    public function toThrift(): \Flow\Parquet\ThriftModel\DictionaryPageHeader
     {
         return new \Flow\Parquet\ThriftModel\DictionaryPageHeader([
             'encoding' => $this->encoding->value,
@@ -36,7 +32,7 @@ final readonly class DictionaryPageHeader
         ]);
     }
 
-    public function valuesCount() : int
+    public function valuesCount(): int
     {
         return $this->valuesCount;
     }

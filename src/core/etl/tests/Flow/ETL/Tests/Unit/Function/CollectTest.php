@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{collect, config, flow_context, ref, str_entry};
-use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\collect;
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\str_entry;
 
 final class CollectTest extends FlowTestCase
 {
-    public function test_aggregation_collect_entry_values() : void
+    public function test_aggregation_collect_entry_values(): void
     {
         $aggregator = collect(ref('data'));
 
@@ -19,11 +24,14 @@ final class CollectTest extends FlowTestCase
         $aggregator->aggregate(row(str_entry('data', 'b')), flow_context());
         $aggregator->aggregate(row(str_entry('data', 'c')), flow_context());
 
-        self::assertSame(
+        static::assertSame(
             [
-                'a', 'b', 'b', 'c',
+                'a',
+                'b',
+                'b',
+                'c',
             ],
-            $aggregator->result(flow_context(config())->entryFactory())->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value(),
         );
     }
 }

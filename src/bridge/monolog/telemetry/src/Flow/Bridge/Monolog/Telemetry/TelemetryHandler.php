@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Telemetry;
 
-use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
+use Flow\Telemetry\ErrorHandler\ErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\Logger\Logger;
 use Monolog\Handler\AbstractProcessingHandler;
-use Monolog\{Level, LogRecord};
+use Monolog\Level;
+use Monolog\LogRecord;
 
 /**
  * Monolog handler that forwards log records to Flow Telemetry.
@@ -49,7 +51,7 @@ final class TelemetryHandler extends AbstractProcessingHandler
         parent::__construct($level, $bubble);
     }
 
-    protected function write(LogRecord $record) : void
+    protected function write(LogRecord $record): void
     {
         try {
             $this->logger->emit($this->converter->convert($record));

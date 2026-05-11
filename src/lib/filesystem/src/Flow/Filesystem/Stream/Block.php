@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Stream;
 
-use Flow\Filesystem\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Path;
 
 class Block
@@ -49,10 +50,16 @@ class Block
     /**
      * @throws RuntimeException when we try to append more data than block can handle
      */
-    public function append(string $data) : void
+    public function append(string $data): void
     {
         if ($this->spaceLeft() < strlen($data)) {
-            throw new RuntimeException('Block is full, space left: ' . $this->spaceLeft() . ' bytes, trying to append: ' . strlen($data) . ' bytes.');
+            throw new RuntimeException(
+                'Block is full, space left: '
+                . $this->spaceLeft()
+                . ' bytes, trying to append: '
+                . strlen($data)
+                . ' bytes.',
+            );
         }
 
         try {
@@ -62,7 +69,12 @@ class Block
         }
 
         if ($written === false || $written !== \strlen($data)) {
-            throw new RuntimeException('Failed to write all bytes to block, expected ' . \strlen($data) . ' bytes, written: ' . ($written === false ? '0' : $written));
+            throw new RuntimeException(
+                'Failed to write all bytes to block, expected '
+                . \strlen($data)
+                . ' bytes, written: '
+                . ($written === false ? '0' : $written),
+            );
         }
 
         $this->size += $written;
@@ -71,14 +83,17 @@ class Block
     /**
      * @param resource $resource
      */
-    public function fromResource($resource, int $offset = 0) : int
+    public function fromResource($resource, int $offset = 0): int
     {
         if (!\is_resource($resource)) {
-            throw new InvalidArgumentException('Block::fromResource expects resource type, given: ' . \gettype($resource));
+            throw new InvalidArgumentException(
+                'Block::fromResource expects resource type, given: ' . \gettype($resource),
+            );
         }
 
         if ($offset < 0) {
-            throw new InvalidArgumentException('Block::fromResource expects offset to be greater or equal to 0, given: ' . $offset);
+            throw new InvalidArgumentException('Block::fromResource expects offset to be greater or equal to 0, given: '
+            . $offset);
         }
 
         $result = \stream_copy_to_stream($resource, $this->handle, $this->spaceLeft(), $offset);
@@ -92,12 +107,12 @@ class Block
         return $result;
     }
 
-    public function id() : string
+    public function id(): string
     {
         return $this->id;
     }
 
-    public function path() : Path
+    public function path(): Path
     {
         return $this->path;
     }
@@ -105,12 +120,12 @@ class Block
     /**
      * Current block size in bytes.
      */
-    public function size() : int
+    public function size(): int
     {
         return $this->size;
     }
 
-    public function spaceLeft() : int
+    public function spaceLeft(): int
     {
         return $this->totalSize - $this->size;
     }

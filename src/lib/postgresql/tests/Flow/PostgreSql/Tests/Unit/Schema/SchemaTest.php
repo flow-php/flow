@@ -4,70 +4,72 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Schema;
 
-use function Flow\PostgreSql\DSL\{
-    agg_count,
-    col,
-    column_type_array,
-    column_type_custom,
-    column_type_integer,
-    eq,
-    func,
-    literal,
-    schema,
-    schema_check,
-    schema_column,
-    schema_column_big_serial,
-    schema_column_bigint,
-    schema_column_boolean,
-    schema_column_bytea,
-    schema_column_char,
-    schema_column_cidr,
-    schema_column_date,
-    schema_column_double_precision,
-    schema_column_inet,
-    schema_column_integer,
-    schema_column_interval,
-    schema_column_json,
-    schema_column_jsonb,
-    schema_column_macaddr,
-    schema_column_numeric,
-    schema_column_real,
-    schema_column_serial,
-    schema_column_small_serial,
-    schema_column_smallint,
-    schema_column_text,
-    schema_column_time,
-    schema_column_timestamp,
-    schema_column_timestamp_tz,
-    schema_column_uuid,
-    schema_column_varchar,
-    schema_domain,
-    schema_exclude,
-    schema_extension,
-    schema_foreign_key,
-    schema_function,
-    schema_index,
-    schema_materialized_view,
-    schema_primary_key,
-    schema_procedure,
-    schema_sequence,
-    schema_table,
-    schema_trigger,
-    schema_unique,
-    schema_view,
-    select,
-    star,
-    table,
-};
 use Flow\PostgreSql\QueryBuilder\Schema\ReferentialAction;
-use Flow\PostgreSql\Schema\Exception\{SchemaException, TableNotFoundException};
-use Flow\PostgreSql\Schema\{FunctionVolatility, IndexMethod, TriggerEvent, TriggerTiming};
-
+use Flow\PostgreSql\Schema\Exception\SchemaException;
+use Flow\PostgreSql\Schema\Exception\TableNotFoundException;
+use Flow\PostgreSql\Schema\FunctionVolatility;
+use Flow\PostgreSql\Schema\IndexMethod;
+use Flow\PostgreSql\Schema\TriggerEvent;
+use Flow\PostgreSql\Schema\TriggerTiming;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\PostgreSql\DSL\agg_count;
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\column_type_array;
+use function Flow\PostgreSql\DSL\column_type_custom;
+use function Flow\PostgreSql\DSL\column_type_integer;
+use function Flow\PostgreSql\DSL\eq;
+use function Flow\PostgreSql\DSL\func;
+use function Flow\PostgreSql\DSL\literal;
+use function Flow\PostgreSql\DSL\schema;
+use function Flow\PostgreSql\DSL\schema_check;
+use function Flow\PostgreSql\DSL\schema_column;
+use function Flow\PostgreSql\DSL\schema_column_big_serial;
+use function Flow\PostgreSql\DSL\schema_column_bigint;
+use function Flow\PostgreSql\DSL\schema_column_boolean;
+use function Flow\PostgreSql\DSL\schema_column_bytea;
+use function Flow\PostgreSql\DSL\schema_column_char;
+use function Flow\PostgreSql\DSL\schema_column_cidr;
+use function Flow\PostgreSql\DSL\schema_column_date;
+use function Flow\PostgreSql\DSL\schema_column_double_precision;
+use function Flow\PostgreSql\DSL\schema_column_inet;
+use function Flow\PostgreSql\DSL\schema_column_integer;
+use function Flow\PostgreSql\DSL\schema_column_interval;
+use function Flow\PostgreSql\DSL\schema_column_json;
+use function Flow\PostgreSql\DSL\schema_column_jsonb;
+use function Flow\PostgreSql\DSL\schema_column_macaddr;
+use function Flow\PostgreSql\DSL\schema_column_numeric;
+use function Flow\PostgreSql\DSL\schema_column_real;
+use function Flow\PostgreSql\DSL\schema_column_serial;
+use function Flow\PostgreSql\DSL\schema_column_small_serial;
+use function Flow\PostgreSql\DSL\schema_column_smallint;
+use function Flow\PostgreSql\DSL\schema_column_text;
+use function Flow\PostgreSql\DSL\schema_column_time;
+use function Flow\PostgreSql\DSL\schema_column_timestamp;
+use function Flow\PostgreSql\DSL\schema_column_timestamp_tz;
+use function Flow\PostgreSql\DSL\schema_column_uuid;
+use function Flow\PostgreSql\DSL\schema_column_varchar;
+use function Flow\PostgreSql\DSL\schema_domain;
+use function Flow\PostgreSql\DSL\schema_exclude;
+use function Flow\PostgreSql\DSL\schema_extension;
+use function Flow\PostgreSql\DSL\schema_foreign_key;
+use function Flow\PostgreSql\DSL\schema_function;
+use function Flow\PostgreSql\DSL\schema_index;
+use function Flow\PostgreSql\DSL\schema_materialized_view;
+use function Flow\PostgreSql\DSL\schema_primary_key;
+use function Flow\PostgreSql\DSL\schema_procedure;
+use function Flow\PostgreSql\DSL\schema_sequence;
+use function Flow\PostgreSql\DSL\schema_table;
+use function Flow\PostgreSql\DSL\schema_trigger;
+use function Flow\PostgreSql\DSL\schema_unique;
+use function Flow\PostgreSql\DSL\schema_view;
+use function Flow\PostgreSql\DSL\select;
+use function Flow\PostgreSql\DSL\star;
+use function Flow\PostgreSql\DSL\table;
 
 final class SchemaTest extends TestCase
 {
-    public function test_comprehensive_schema_with_all_object_types() : void
+    public function test_comprehensive_schema_with_all_object_types(): void
     {
         $schema = schema(
             'app',
@@ -144,12 +146,21 @@ final class SchemaTest extends TestCase
                 schema_sequence('invoice_number_seq', dataType: 'integer', startValue: 1000, incrementBy: 1),
             ],
             views: [
-                schema_view('active_users', select(col('id'), col('email'))->from(table('users', 'app'))->where(eq(col('active'), literal(true)))->toSql()),
+                schema_view(
+                    'active_users',
+                    select(col('id'), col('email'))
+                        ->from(table('users', 'app'))
+                        ->where(eq(col('active'), literal(true)))
+                        ->toSql(),
+                ),
             ],
             materializedViews: [
                 schema_materialized_view(
                     'user_post_counts',
-                    select(col('user_id'), agg_count()->as('post_count'))->from(table('posts', 'app'))->groupBy(col('user_id'))->toSql(),
+                    select(col('user_id'), agg_count()->as('post_count'))
+                        ->from(table('posts', 'app'))
+                        ->groupBy(col('user_id'))
+                        ->toSql(),
                     indexes: [schema_index('idx_upc_user_id', ['user_id'], unique: true)],
                 ),
             ],
@@ -171,71 +182,69 @@ final class SchemaTest extends TestCase
                 ),
             ],
             domains: [
-                schema_domain(
-                    'positive_int',
-                    column_type_integer(),
-                    nullable: false,
-                    checkConstraints: [schema_check('VALUE > 0', 'chk_positive')],
-                ),
+                schema_domain('positive_int', column_type_integer(), nullable: false, checkConstraints: [schema_check(
+                    'VALUE > 0',
+                    'chk_positive',
+                )]),
             ],
             extensions: [
                 schema_extension('pgcrypto', '1.3'),
             ],
         );
 
-        self::assertSame('app', $schema->name);
-        self::assertCount(3, $schema->tables);
-        self::assertCount(1, $schema->sequences);
-        self::assertCount(1, $schema->views);
-        self::assertCount(1, $schema->materializedViews);
-        self::assertCount(1, $schema->functions);
-        self::assertCount(1, $schema->procedures);
-        self::assertCount(1, $schema->domains);
-        self::assertCount(1, $schema->extensions);
+        static::assertSame('app', $schema->name);
+        static::assertCount(3, $schema->tables);
+        static::assertCount(1, $schema->sequences);
+        static::assertCount(1, $schema->views);
+        static::assertCount(1, $schema->materializedViews);
+        static::assertCount(1, $schema->functions);
+        static::assertCount(1, $schema->procedures);
+        static::assertCount(1, $schema->domains);
+        static::assertCount(1, $schema->extensions);
 
         $usersTable = $schema->table('users');
-        self::assertCount(7, $usersTable->columns);
-        self::assertNotNull($usersTable->primaryKey);
-        self::assertCount(3, $usersTable->indexes);
-        self::assertCount(1, $usersTable->uniqueConstraints);
-        self::assertCount(1, $usersTable->checkConstraints);
+        static::assertCount(7, $usersTable->columns);
+        static::assertNotNull($usersTable->primaryKey);
+        static::assertCount(3, $usersTable->indexes);
+        static::assertCount(1, $usersTable->uniqueConstraints);
+        static::assertCount(1, $usersTable->checkConstraints);
 
         $postsTable = $schema->table('posts');
-        self::assertCount(1, $postsTable->foreignKeys);
-        self::assertSame(ReferentialAction::CASCADE, $postsTable->foreignKeys[0]->onDelete);
-        self::assertCount(1, $postsTable->triggers);
-        self::assertTrue($postsTable->triggers[0]->forEachRow);
+        static::assertCount(1, $postsTable->foreignKeys);
+        static::assertSame(ReferentialAction::CASCADE, $postsTable->foreignKeys[0]->onDelete);
+        static::assertCount(1, $postsTable->triggers);
+        static::assertTrue($postsTable->triggers[0]->forEachRow);
 
         $auditTable = $schema->table('audit_log');
-        self::assertCount(1, $auditTable->excludeConstraints);
+        static::assertCount(1, $auditTable->excludeConstraints);
     }
 
-    public function test_has_table() : void
+    public function test_has_table(): void
     {
         $schema = schema('public', tables: [
             schema_table('users', [schema_column_integer('id', nullable: false)]),
         ]);
 
-        self::assertTrue($schema->hasTable('users'));
-        self::assertFalse($schema->hasTable('missing'));
+        static::assertTrue($schema->hasTable('users'));
+        static::assertFalse($schema->hasTable('missing'));
     }
 
-    public function test_merge_empty_schemas() : void
+    public function test_merge_empty_schemas(): void
     {
         $result = schema('public')->merge(schema('public'));
 
-        self::assertSame('public', $result->name);
-        self::assertSame([], $result->tables);
-        self::assertSame([], $result->sequences);
-        self::assertSame([], $result->views);
-        self::assertSame([], $result->materializedViews);
-        self::assertSame([], $result->functions);
-        self::assertSame([], $result->procedures);
-        self::assertSame([], $result->domains);
-        self::assertSame([], $result->extensions);
+        static::assertSame('public', $result->name);
+        static::assertSame([], $result->tables);
+        static::assertSame([], $result->sequences);
+        static::assertSame([], $result->views);
+        static::assertSame([], $result->materializedViews);
+        static::assertSame([], $result->functions);
+        static::assertSame([], $result->procedures);
+        static::assertSame([], $result->domains);
+        static::assertSame([], $result->extensions);
     }
 
-    public function test_merge_schemas_preserves_all_entity_types() : void
+    public function test_merge_schemas_preserves_all_entity_types(): void
     {
         $first = schema(
             'public',
@@ -251,13 +260,13 @@ final class SchemaTest extends TestCase
 
         $result = $first->merge($second);
 
-        self::assertCount(1, $result->tables);
-        self::assertCount(2, $result->sequences);
-        self::assertCount(1, $result->views);
-        self::assertCount(1, $result->extensions);
+        static::assertCount(1, $result->tables);
+        static::assertCount(2, $result->sequences);
+        static::assertCount(1, $result->views);
+        static::assertCount(1, $result->extensions);
     }
 
-    public function test_merge_schemas_same_sequence_later_overrides() : void
+    public function test_merge_schemas_same_sequence_later_overrides(): void
     {
         $first = schema('public', sequences: [
             schema_sequence('my_seq', dataType: 'integer', startValue: 1),
@@ -268,12 +277,12 @@ final class SchemaTest extends TestCase
 
         $result = $first->merge($second);
 
-        self::assertCount(1, $result->sequences);
-        self::assertSame('bigint', $result->sequence('my_seq')->dataType);
-        self::assertSame(100, $result->sequence('my_seq')->startValue);
+        static::assertCount(1, $result->sequences);
+        static::assertSame('bigint', $result->sequence('my_seq')->dataType);
+        static::assertSame(100, $result->sequence('my_seq')->startValue);
     }
 
-    public function test_merge_schemas_same_table_later_overrides() : void
+    public function test_merge_schemas_same_table_later_overrides(): void
     {
         $first = schema('public', tables: [
             schema_table('users', [schema_column_integer('id', nullable: false)]),
@@ -287,11 +296,11 @@ final class SchemaTest extends TestCase
 
         $result = $first->merge($second);
 
-        self::assertCount(2, $result->table('users')->columns);
-        self::assertSame('name', $result->table('users')->columns[1]->name);
+        static::assertCount(2, $result->table('users')->columns);
+        static::assertSame('name', $result->table('users')->columns[1]->name);
     }
 
-    public function test_merge_schemas_with_different_tables() : void
+    public function test_merge_schemas_with_different_tables(): void
     {
         $first = schema('public', tables: [
             schema_table('users', [schema_column_integer('id', nullable: false)]),
@@ -302,12 +311,12 @@ final class SchemaTest extends TestCase
 
         $result = $first->merge($second);
 
-        self::assertSame('public', $result->name);
-        self::assertTrue($result->hasTable('users'));
-        self::assertTrue($result->hasTable('posts'));
+        static::assertSame('public', $result->name);
+        static::assertTrue($result->hasTable('users'));
+        static::assertTrue($result->hasTable('posts'));
     }
 
-    public function test_schema_column_type_shortcuts_all_types() : void
+    public function test_schema_column_type_shortcuts_all_types(): void
     {
         $table = schema_table('all_types', [
             schema_column_integer('col_integer'),
@@ -339,38 +348,38 @@ final class SchemaTest extends TestCase
             schema_column('col_custom', column_type_custom('hstore')),
         ]);
 
-        self::assertCount(27, $table->columns);
-        self::assertFalse($table->column('col_serial')->nullable);
-        self::assertFalse($table->column('col_smallserial')->nullable);
-        self::assertFalse($table->column('col_bigserial')->nullable);
-        self::assertTrue($table->column('col_text')->nullable);
+        static::assertCount(27, $table->columns);
+        static::assertFalse($table->column('col_serial')->nullable);
+        static::assertFalse($table->column('col_smallserial')->nullable);
+        static::assertFalse($table->column('col_bigserial')->nullable);
+        static::assertTrue($table->column('col_text')->nullable);
     }
 
-    public function test_schema_construction() : void
+    public function test_schema_construction(): void
     {
         $schema = schema('public', tables: [
             schema_table('users', [schema_column_integer('id', nullable: false)]),
         ]);
 
-        self::assertSame('public', $schema->name);
-        self::assertCount(1, $schema->tables);
+        static::assertSame('public', $schema->name);
+        static::assertCount(1, $schema->tables);
     }
 
-    public function test_schema_empty() : void
+    public function test_schema_empty(): void
     {
         $s = schema('public');
 
-        self::assertSame([], $s->tables);
-        self::assertSame([], $s->sequences);
-        self::assertSame([], $s->views);
-        self::assertSame([], $s->materializedViews);
-        self::assertSame([], $s->functions);
-        self::assertSame([], $s->procedures);
-        self::assertSame([], $s->domains);
-        self::assertSame([], $s->extensions);
+        static::assertSame([], $s->tables);
+        static::assertSame([], $s->sequences);
+        static::assertSame([], $s->views);
+        static::assertSame([], $s->materializedViews);
+        static::assertSame([], $s->functions);
+        static::assertSame([], $s->procedures);
+        static::assertSame([], $s->domains);
+        static::assertSame([], $s->extensions);
     }
 
-    public function test_schema_with_domains() : void
+    public function test_schema_with_domains(): void
     {
         $s = schema('public', domains: [
             schema_domain('email', column_type_custom('text'), checkConstraints: [
@@ -378,33 +387,39 @@ final class SchemaTest extends TestCase
             ]),
         ]);
 
-        self::assertCount(1, $s->domains);
-        self::assertCount(1, $s->domains[0]->checkConstraints);
+        static::assertCount(1, $s->domains);
+        static::assertCount(1, $s->domains[0]->checkConstraints);
     }
 
-    public function test_schema_with_extensions() : void
+    public function test_schema_with_extensions(): void
     {
         $s = schema('public', extensions: [
             schema_extension('uuid-ossp', '1.1'),
         ]);
 
-        self::assertCount(1, $s->extensions);
-        self::assertSame('uuid-ossp', $s->extensions[0]->name);
-        self::assertSame('1.1', $s->extensions[0]->version);
+        static::assertCount(1, $s->extensions);
+        static::assertSame('uuid-ossp', $s->extensions[0]->name);
+        static::assertSame('1.1', $s->extensions[0]->version);
     }
 
-    public function test_schema_with_functions() : void
+    public function test_schema_with_functions(): void
     {
         $s = schema('public', functions: [
-            schema_function('add', 'integer', argumentTypes: ['integer', 'integer'], isStrict: true, volatility: FunctionVolatility::IMMUTABLE),
+            schema_function(
+                'add',
+                'integer',
+                argumentTypes: ['integer', 'integer'],
+                isStrict: true,
+                volatility: FunctionVolatility::IMMUTABLE,
+            ),
         ]);
 
-        self::assertCount(1, $s->functions);
-        self::assertTrue($s->functions[0]->isStrict);
-        self::assertSame(FunctionVolatility::IMMUTABLE, $s->functions[0]->volatility);
+        static::assertCount(1, $s->functions);
+        static::assertTrue($s->functions[0]->isStrict);
+        static::assertSame(FunctionVolatility::IMMUTABLE, $s->functions[0]->volatility);
     }
 
-    public function test_schema_with_materialized_views() : void
+    public function test_schema_with_materialized_views(): void
     {
         $s = schema('public', materializedViews: [
             schema_materialized_view(
@@ -414,73 +429,80 @@ final class SchemaTest extends TestCase
             ),
         ]);
 
-        self::assertCount(1, $s->materializedViews);
-        self::assertCount(1, $s->materializedViews[0]->indexes);
+        static::assertCount(1, $s->materializedViews);
+        static::assertCount(1, $s->materializedViews[0]->indexes);
     }
 
-    public function test_schema_with_procedures() : void
+    public function test_schema_with_procedures(): void
     {
         $s = schema('public', procedures: [
             schema_procedure('cleanup', argumentTypes: ['integer'], language: 'plpgsql'),
         ]);
 
-        self::assertCount(1, $s->procedures);
-        self::assertSame('plpgsql', $s->procedures[0]->language);
+        static::assertCount(1, $s->procedures);
+        static::assertSame('plpgsql', $s->procedures[0]->language);
     }
 
-    public function test_schema_with_sequences() : void
+    public function test_schema_with_sequences(): void
     {
         $s = schema('public', sequences: [
             schema_sequence('users_id_seq'),
         ]);
 
-        self::assertTrue($s->hasSequence('users_id_seq'));
-        self::assertFalse($s->hasSequence('missing'));
-        self::assertSame('users_id_seq', $s->sequence('users_id_seq')->name);
+        static::assertTrue($s->hasSequence('users_id_seq'));
+        static::assertFalse($s->hasSequence('missing'));
+        static::assertSame('users_id_seq', $s->sequence('users_id_seq')->name);
     }
 
-    public function test_schema_with_views() : void
+    public function test_schema_with_views(): void
     {
         $s = schema('public', views: [
-            schema_view('active_users', select(star())->from(table('users'))->where(eq(col('active'), literal(true)))->toSql(), isUpdatable: true),
+            schema_view(
+                'active_users',
+                select(star())
+                    ->from(table('users'))
+                    ->where(eq(col('active'), literal(true)))
+                    ->toSql(),
+                isUpdatable: true,
+            ),
         ]);
 
-        self::assertCount(1, $s->views);
-        self::assertTrue($s->views[0]->isUpdatable);
+        static::assertCount(1, $s->views);
+        static::assertTrue($s->views[0]->isUpdatable);
     }
 
-    public function test_sequence_not_found_throws() : void
+    public function test_sequence_not_found_throws(): void
     {
         $this->expectException(SchemaException::class);
         schema('public')->sequence('missing');
     }
 
-    public function test_table_lookup() : void
+    public function test_table_lookup(): void
     {
         $s = schema('public', tables: [
             schema_table('users', [schema_column_integer('id', nullable: false)]),
         ]);
 
-        self::assertSame('users', $s->table('users')->name);
+        static::assertSame('users', $s->table('users')->name);
     }
 
-    public function test_table_names() : void
+    public function test_table_names(): void
     {
         $s = schema('public', tables: [
             schema_table('users', [schema_column_integer('id', nullable: false)]),
             schema_table('posts', [schema_column_integer('id', nullable: false)]),
         ]);
 
-        self::assertSame(['users', 'posts'], $s->tableNames());
+        static::assertSame(['users', 'posts'], $s->tableNames());
     }
 
-    public function test_table_not_found_throws() : void
+    public function test_table_not_found_throws(): void
     {
         $this->expectException(TableNotFoundException::class);
         schema('public')->table('missing');
     }
 
-    public function test_table_with_all_constraint_types() : void
+    public function test_table_with_all_constraint_types(): void
     {
         $table = schema_table(
             'orders',
@@ -507,38 +529,52 @@ final class SchemaTest extends TestCase
             excludeConstraints: [schema_exclude('USING gist (tsrange WITH &&)')],
         );
 
-        self::assertNotNull($table->primaryKey);
-        self::assertSame('orders_pkey', $table->primaryKey->name);
-        self::assertCount(1, $table->foreignKeys);
-        self::assertTrue($table->foreignKeys[0]->deferrable);
-        self::assertTrue($table->foreignKeys[0]->initiallyDeferred);
-        self::assertCount(1, $table->uniqueConstraints);
-        self::assertTrue($table->uniqueConstraints[0]->nullsNotDistinct);
-        self::assertCount(1, $table->checkConstraints);
-        self::assertTrue($table->checkConstraints[0]->noInherit);
-        self::assertCount(1, $table->excludeConstraints);
+        static::assertNotNull($table->primaryKey);
+        static::assertSame('orders_pkey', $table->primaryKey->name);
+        static::assertCount(1, $table->foreignKeys);
+        static::assertTrue($table->foreignKeys[0]->deferrable);
+        static::assertTrue($table->foreignKeys[0]->initiallyDeferred);
+        static::assertCount(1, $table->uniqueConstraints);
+        static::assertTrue($table->uniqueConstraints[0]->nullsNotDistinct);
+        static::assertCount(1, $table->checkConstraints);
+        static::assertTrue($table->checkConstraints[0]->noInherit);
+        static::assertCount(1, $table->excludeConstraints);
     }
 
-    public function test_table_with_multiple_triggers_and_events() : void
+    public function test_table_with_multiple_triggers_and_events(): void
     {
         $table = schema_table(
             'orders',
             [schema_column_serial('id')],
             triggers: [
-                schema_trigger('trg_before_insert', 'orders', TriggerTiming::BEFORE, [TriggerEvent::INSERT], 'validate_fn', forEachRow: true),
-                schema_trigger('trg_after_changes', 'orders', TriggerTiming::AFTER, [TriggerEvent::INSERT, TriggerEvent::UPDATE, TriggerEvent::DELETE], 'audit_fn', whenCondition: 'NEW.amount > 100'),
+                schema_trigger(
+                    'trg_before_insert',
+                    'orders',
+                    TriggerTiming::BEFORE,
+                    [TriggerEvent::INSERT],
+                    'validate_fn',
+                    forEachRow: true,
+                ),
+                schema_trigger(
+                    'trg_after_changes',
+                    'orders',
+                    TriggerTiming::AFTER,
+                    [TriggerEvent::INSERT, TriggerEvent::UPDATE, TriggerEvent::DELETE],
+                    'audit_fn',
+                    whenCondition: 'NEW.amount > 100',
+                ),
                 schema_trigger('trg_truncate', 'orders', TriggerTiming::AFTER, [TriggerEvent::TRUNCATE], 'cleanup_fn'),
             ],
         );
 
-        self::assertCount(3, $table->triggers);
-        self::assertSame(TriggerTiming::BEFORE, $table->triggers[0]->timing);
-        self::assertCount(3, $table->triggers[1]->events);
-        self::assertSame('NEW.amount > 100', $table->triggers[1]->whenCondition);
-        self::assertFalse($table->triggers[2]->forEachRow);
+        static::assertCount(3, $table->triggers);
+        static::assertSame(TriggerTiming::BEFORE, $table->triggers[0]->timing);
+        static::assertCount(3, $table->triggers[1]->events);
+        static::assertSame('NEW.amount > 100', $table->triggers[1]->whenCondition);
+        static::assertFalse($table->triggers[2]->forEachRow);
     }
 
-    public function test_to_sql_includes_all_object_types() : void
+    public function test_to_sql_includes_all_object_types(): void
     {
         $sqls = schema(
             'public',
@@ -552,25 +588,13 @@ final class SchemaTest extends TestCase
                 schema_view('active_users', select(star())->from(table('users'))->toSql()),
             ],
             materializedViews: [
-                schema_materialized_view(
-                    'user_counts',
-                    select(agg_count())->from(table('users'))->toSql(),
-                ),
+                schema_materialized_view('user_counts', select(agg_count())->from(table('users'))->toSql()),
             ],
             functions: [
-                schema_function(
-                    'get_one',
-                    'integer',
-                    language: 'sql',
-                    definition: 'SELECT 1',
-                ),
+                schema_function('get_one', 'integer', language: 'sql', definition: 'SELECT 1'),
             ],
             procedures: [
-                schema_procedure(
-                    'do_cleanup',
-                    language: 'plpgsql',
-                    definition: 'BEGIN END;',
-                ),
+                schema_procedure('do_cleanup', language: 'plpgsql', definition: 'BEGIN END;'),
             ],
             domains: [
                 schema_domain('positive_int', column_type_integer(), nullable: false),
@@ -580,71 +604,74 @@ final class SchemaTest extends TestCase
             ],
         )->toSql();
 
-        self::assertSame('CREATE EXTENSION pgcrypto', $sqls[0]->toSql());
-        self::assertSame('CREATE DOMAIN positive_int AS int NOT NULL', $sqls[1]->toSql());
-        self::assertSame('CREATE SEQUENCE users_id_seq AS bigint START 1 INCREMENT 1 MINVALUE 1 CACHE 1 NO MAXVALUE', $sqls[2]->toSql());
-        self::assertSame('CREATE OR REPLACE FUNCTION get_one() RETURNS int LANGUAGE sql AS $$SELECT 1$$', $sqls[3]->toSql());
-        self::assertSame('CREATE OR REPLACE PROCEDURE do_cleanup() LANGUAGE plpgsql AS $$BEGIN END;$$', $sqls[4]->toSql());
-        self::assertSame('CREATE TABLE public.users (id int NOT NULL)', $sqls[5]->toSql());
-        self::assertSame('CREATE VIEW active_users AS SELECT * FROM users', $sqls[6]->toSql());
-        self::assertSame('CREATE MATERIALIZED VIEW user_counts AS SELECT count(*) FROM users', $sqls[7]->toSql());
-        self::assertCount(8, $sqls);
+        static::assertSame('CREATE EXTENSION pgcrypto', $sqls[0]->toSql());
+        static::assertSame('CREATE DOMAIN positive_int AS int NOT NULL', $sqls[1]->toSql());
+        static::assertSame(
+            'CREATE SEQUENCE users_id_seq AS bigint START 1 INCREMENT 1 MINVALUE 1 CACHE 1 NO MAXVALUE',
+            $sqls[2]->toSql(),
+        );
+        static::assertSame(
+            'CREATE OR REPLACE FUNCTION get_one() RETURNS int LANGUAGE sql AS $$SELECT 1$$',
+            $sqls[3]->toSql(),
+        );
+        static::assertSame(
+            'CREATE OR REPLACE PROCEDURE do_cleanup() LANGUAGE plpgsql AS $$BEGIN END;$$',
+            $sqls[4]->toSql(),
+        );
+        static::assertSame('CREATE TABLE public.users (id int NOT NULL)', $sqls[5]->toSql());
+        static::assertSame('CREATE VIEW active_users AS SELECT * FROM users', $sqls[6]->toSql());
+        static::assertSame('CREATE MATERIALIZED VIEW user_counts AS SELECT count(*) FROM users', $sqls[7]->toSql());
+        static::assertCount(8, $sqls);
     }
 
-    public function test_to_sql_includes_materialized_view_with_indexes() : void
+    public function test_to_sql_includes_materialized_view_with_indexes(): void
     {
-        $sqls = schema(
-            'public',
-            materializedViews: [
-                schema_materialized_view(
-                    'user_counts',
-                    select(col('id'), agg_count())->from(table('users'))->groupBy(col('id'))->toSql(),
-                    indexes: [schema_index('idx_uc_id', ['id'], unique: true)],
-                ),
-            ],
-        )->toSql();
+        $sqls = schema('public', materializedViews: [
+            schema_materialized_view(
+                'user_counts',
+                select(col('id'), agg_count())->from(table('users'))->groupBy(col('id'))->toSql(),
+                indexes: [schema_index('idx_uc_id', ['id'], unique: true)],
+            ),
+        ])->toSql();
 
-        self::assertSame('CREATE MATERIALIZED VIEW user_counts AS SELECT id, count(*) FROM users GROUP BY id', $sqls[0]->toSql());
-        self::assertSame('CREATE UNIQUE INDEX idx_uc_id ON user_counts (id)', $sqls[1]->toSql());
-        self::assertCount(2, $sqls);
+        static::assertSame(
+            'CREATE MATERIALIZED VIEW user_counts AS SELECT id, count(*) FROM users GROUP BY id',
+            $sqls[0]->toSql(),
+        );
+        static::assertSame('CREATE UNIQUE INDEX idx_uc_id ON user_counts (id)', $sqls[1]->toSql());
+        static::assertCount(2, $sqls);
     }
 
-    public function test_to_sql_mixes_functions_with_and_without_definitions() : void
+    public function test_to_sql_mixes_functions_with_and_without_definitions(): void
     {
-        $sqls = schema(
-            'public',
-            functions: [
-                schema_function('builtin_fn', 'integer'),
-                schema_function('my_fn', 'integer', language: 'sql', definition: 'SELECT 42'),
-                schema_function('another_builtin', 'text'),
-            ],
-        )->toSql();
+        $sqls = schema('public', functions: [
+            schema_function('builtin_fn', 'integer'),
+            schema_function('my_fn', 'integer', language: 'sql', definition: 'SELECT 42'),
+            schema_function('another_builtin', 'text'),
+        ])->toSql();
 
-        self::assertCount(1, $sqls);
-        self::assertSame('CREATE OR REPLACE FUNCTION my_fn() RETURNS int LANGUAGE sql AS $$SELECT 42$$', $sqls[0]->toSql());
+        static::assertCount(1, $sqls);
+        static::assertSame(
+            'CREATE OR REPLACE FUNCTION my_fn() RETURNS int LANGUAGE sql AS $$SELECT 42$$',
+            $sqls[0]->toSql(),
+        );
     }
 
-    public function test_to_sql_skips_function_with_null_definition() : void
+    public function test_to_sql_skips_function_with_null_definition(): void
     {
-        $sqls = schema(
-            'public',
-            functions: [
-                schema_function('builtin_fn', 'integer'),
-            ],
-        )->toSql();
+        $sqls = schema('public', functions: [
+            schema_function('builtin_fn', 'integer'),
+        ])->toSql();
 
-        self::assertSame([], $sqls);
+        static::assertSame([], $sqls);
     }
 
-    public function test_to_sql_skips_procedure_with_null_definition() : void
+    public function test_to_sql_skips_procedure_with_null_definition(): void
     {
-        $sqls = schema(
-            'public',
-            procedures: [
-                schema_procedure('builtin_proc'),
-            ],
-        )->toSql();
+        $sqls = schema('public', procedures: [
+            schema_procedure('builtin_proc'),
+        ])->toSql();
 
-        self::assertSame([], $sqls);
+        static::assertSame([], $sqls);
     }
 }

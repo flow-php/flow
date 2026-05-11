@@ -12,14 +12,15 @@ final class Consumption
 
     private Unit $min;
 
-    public function __construct(private readonly bool $realMemory = true)
-    {
+    public function __construct(
+        private readonly bool $realMemory = true,
+    ) {
         $this->initial = Unit::fromBytes(\memory_get_usage($this->realMemory));
         $this->min = $this->initial;
         $this->max = $this->initial;
     }
 
-    public function capture() : Unit
+    public function capture(): Unit
     {
         $current = Unit::fromBytes(\memory_get_usage($this->realMemory));
 
@@ -34,32 +35,32 @@ final class Consumption
         return $current;
     }
 
-    public function currentDiff() : Unit
+    public function currentDiff(): Unit
     {
         return $this->capture()->diff($this->initial);
     }
 
-    public function initial() : Unit
+    public function initial(): Unit
     {
         return $this->initial;
     }
 
-    public function max() : Unit
+    public function max(): Unit
     {
         return $this->max;
     }
 
-    public function maxDiff() : Unit
+    public function maxDiff(): Unit
     {
         return $this->max()->diff($this->initial());
     }
 
-    public function min() : Unit
+    public function min(): Unit
     {
         return $this->min;
     }
 
-    public function minDiff() : Unit
+    public function minDiff(): Unit
     {
         return $this->min()->diff($this->initial());
     }

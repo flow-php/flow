@@ -5,8 +5,14 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Schema\Diff;
 
 use Flow\PostgreSql\Parser;
-use Flow\PostgreSql\Schema\{Catalog, ExecutionOrderStrategy, ForeignKeyDependencyOrder, MaterializedView, MaterializedViewDependencyOrder, View, ViewDependencyOrder};
+use Flow\PostgreSql\Schema\Catalog;
+use Flow\PostgreSql\Schema\ExecutionOrderStrategy;
+use Flow\PostgreSql\Schema\ForeignKeyDependencyOrder;
+use Flow\PostgreSql\Schema\MaterializedView;
+use Flow\PostgreSql\Schema\MaterializedViewDependencyOrder;
 use Flow\PostgreSql\Schema\Table;
+use Flow\PostgreSql\Schema\View;
+use Flow\PostgreSql\Schema\ViewDependencyOrder;
 
 final readonly class CatalogComparator
 {
@@ -20,9 +26,10 @@ final readonly class CatalogComparator
         private ViewDependencyResolver $viewDependencyResolver = new AstViewDependencyResolver(new Parser()),
         private ExecutionOrderStrategy $tableOrderStrategy = new ForeignKeyDependencyOrder(),
         private ExecutionOrderStrategy $viewOrderStrategy = new ViewDependencyOrder(new Parser()),
-        private ExecutionOrderStrategy $materializedViewOrderStrategy = new MaterializedViewDependencyOrder(new Parser()),
-    ) {
-    }
+        private ExecutionOrderStrategy $materializedViewOrderStrategy = new MaterializedViewDependencyOrder(
+            new Parser(),
+        ),
+    ) {}
 
     /**
      * @param null|ExecutionOrderStrategy<Table> $tableOrderStrategy
@@ -35,7 +42,7 @@ final readonly class CatalogComparator
         ?ExecutionOrderStrategy $tableOrderStrategy = null,
         ?ExecutionOrderStrategy $viewOrderStrategy = null,
         ?ExecutionOrderStrategy $materializedViewOrderStrategy = null,
-    ) : self {
+    ): self {
         $renameStrategy ??= new GreedySimilarityRenameStrategy(new SimilarTextStrategy());
         $constraintComparator = new ConstraintComparator();
         $indexComparator = new IndexComparator($renameStrategy);
@@ -47,7 +54,15 @@ final readonly class CatalogComparator
         $materializedViewOrderStrategy ??= new MaterializedViewDependencyOrder(new Parser());
 
         return new self(
-            new SchemaComparator($tableComparator, $indexComparator, $constraintComparator, $tableStructureComparator, $tableOrderStrategy, $viewOrderStrategy, $materializedViewOrderStrategy),
+            new SchemaComparator(
+                $tableComparator,
+                $indexComparator,
+                $constraintComparator,
+                $tableStructureComparator,
+                $tableOrderStrategy,
+                $viewOrderStrategy,
+                $materializedViewOrderStrategy,
+            ),
             $viewDependencyResolver ?? new AstViewDependencyResolver(new Parser()),
             $tableOrderStrategy,
             $viewOrderStrategy,
@@ -55,7 +70,7 @@ final readonly class CatalogComparator
         );
     }
 
-    public function compare(Catalog $source, Catalog $target) : CatalogDiff
+    public function compare(Catalog $source, Catalog $target): CatalogDiff
     {
         $sourceNames = $source->names();
         $targetNames = $target->names();
@@ -88,6 +103,16 @@ final readonly class CatalogComparator
             }
         }
 
-        return new CatalogDiff($source, $target, $addedSchemas, $removedSchemas, $modifiedSchemas, $this->viewDependencyResolver, $this->tableOrderStrategy, $this->viewOrderStrategy, $this->materializedViewOrderStrategy);
+        return new CatalogDiff(
+            $source,
+            $target,
+            $addedSchemas,
+            $removedSchemas,
+            $modifiedSchemas,
+            $this->viewDependencyResolver,
+            $this->tableOrderStrategy,
+            $this->viewOrderStrategy,
+            $this->materializedViewOrderStrategy,
+        );
     }
 }

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\PHPUnit\Telemetry;
 
-use Flow\Telemetry\ErrorHandler\{SyslogFacility, SyslogSeverity};
+use Flow\Telemetry\ErrorHandler\SyslogFacility;
+use Flow\Telemetry\ErrorHandler\SyslogSeverity;
 
 final readonly class SyslogErrorHandlerConfig
 {
@@ -13,6 +14,5 @@ final readonly class SyslogErrorHandlerConfig
         public SyslogFacility $facility,
         public int $logOpts,
         public SyslogSeverity $severity,
-    ) {
-    }
+    ) {}
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Migrations;
 
-enum VersionAlias : string
+enum VersionAlias: string
 {
     case FIRST = 'first';
     case LATEST = 'latest';

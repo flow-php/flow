@@ -4,22 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\FilesystemBundle\Command;
 
-use function Flow\Types\DSL\{type_null, type_string, type_union};
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+
+use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
 
 #[AsCommand(name: 'flow:filesystem:cat', description: 'Stream a file URI to STDOUT.', aliases: ['flow:fs:cat'])]
 final class CatCommand extends Command
 {
-    public function __construct(private readonly FstabResolver $resolver)
-    {
+    public function __construct(
+        private readonly FstabResolver $resolver,
+    ) {
         parent::__construct();
     }
 
-    protected function configure() : void
+    protected function configure(): void
     {
         $this
             ->addArgument('path', InputArgument::REQUIRED, 'File URI, e.g. memory://hello.txt')
@@ -27,7 +33,7 @@ final class CatCommand extends Command
             ->setHelp('Stream the contents of a file URI to STDOUT. Refuses on directories.');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output) : int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 

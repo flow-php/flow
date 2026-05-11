@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface SetTransactionFinalStep extends Sql
 {
-    public function toAst() : VariableSetStmt;
+    public function toAst(): VariableSetStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

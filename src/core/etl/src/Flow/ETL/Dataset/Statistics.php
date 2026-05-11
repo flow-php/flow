@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Dataset;
 
 use Flow\ETL\Dataset\Memory\Consumption;
-use Flow\ETL\Dataset\Statistics\{Columns, ExecutionTime};
+use Flow\ETL\Dataset\Statistics\Columns;
+use Flow\ETL\Dataset\Statistics\ExecutionTime;
 
 final readonly class Statistics
 {
@@ -14,10 +15,9 @@ final readonly class Statistics
         public ExecutionTime $executionTime,
         public Consumption $memory,
         public ?Columns $columns,
-    ) {
-    }
+    ) {}
 
-    public function totalRows() : int
+    public function totalRows(): int
     {
         return $this->totalRows;
     }

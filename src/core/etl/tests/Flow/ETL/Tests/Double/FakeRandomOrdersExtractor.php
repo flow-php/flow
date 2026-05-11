@@ -4,26 +4,33 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use function Flow\ETL\DSL\{array_to_rows,
-    datetime_schema,
-    float_schema,
-    list_schema,
-    schema,
-    string_schema,
-    structure_schema,
-    uuid_schema};
-use function Flow\Types\DSL\{type_float, type_integer, type_list, type_string, type_structure};
 use Faker\Factory;
+use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Extractor, FlowContext, Schema};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Schema;
+
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\string_schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\ETL\DSL\uuid_schema;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final readonly class FakeRandomOrdersExtractor implements Extractor
 {
-    public function __construct(private int $count = 1_000)
-    {
-    }
+    public function __construct(
+        private int $count = 1_000,
+    ) {}
 
-    public static function schema() : Schema
+    public static function schema(): Schema
     {
         return schema(
             uuid_schema('order_id'),
@@ -34,27 +41,25 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
             float_schema('discount', true),
             string_schema('email'),
             string_schema('customer'),
-            structure_schema(
-                'address',
-                type_structure([
-                    'street' => type_string(),
-                    'city' => type_string(),
-                    'zip' => type_string(),
-                    'country' => type_string(),
-                ])
-            ),
+            structure_schema('address', type_structure([
+                'street' => type_string(),
+                'city' => type_string(),
+                'zip' => type_string(),
+                'country' => type_string(),
+            ])),
             list_schema('notes', type_list(type_string())),
-            list_schema('items', type_list(
-                type_structure([
+            list_schema(
+                'items',
+                type_list(type_structure([
                     'sku' => type_string(),
                     'quantity' => type_integer(),
                     'price' => type_float(),
-                ])
-            ))
+                ])),
+            ),
         );
     }
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         foreach ($this->rawData() as $row) {
             yield array_to_rows($row, $context->entryFactory(), schema: self::schema());
@@ -64,7 +69,7 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
     /**
      * @return \Generator<array<string, mixed>>
      */
-    public function rawData() : \Generator
+    public function rawData(): \Generator
     {
         $faker = Factory::create();
 
@@ -85,20 +90,17 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
         ];
 
         for ($i = 0; $i < $this->count; $i++) {
-
             $createdAt = \DateTimeImmutable::createFromMutable($faker->dateTimeThisYear);
-            $cancelledAt = \random_int(1, 10) === 1 ? $createdAt->modify('+' . $faker->numberBetween(
-                1,
-                5
-            ) . ' hours') : null;
+            $cancelledAt = \random_int(1, 10) === 1
+                ? $createdAt->modify('+' . $faker->numberBetween(1, 5) . ' hours')
+                : null;
 
             if ($cancelledAt) {
                 $updatedAt = $cancelledAt;
             } else {
-                $updatedAt = \random_int(1, 3) === 1 ? $createdAt->modify('+' . $faker->numberBetween(
-                    1,
-                    3
-                ) . ' days') : null;
+                $updatedAt = \random_int(1, 3) === 1
+                    ? $createdAt->modify('+' . $faker->numberBetween(1, 3) . ' days')
+                    : null;
             }
 
             $signal = yield [
@@ -116,17 +118,14 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
                     'zip' => $faker->postcode,
                     'country' => $faker->country,
                 ],
-                'notes' => \array_map(
-                    static fn ($i) => $faker->sentence,
-                    \range(1, $faker->numberBetween(1, 5))
-                ),
+                'notes' => \array_map(static fn($i) => $faker->sentence, \range(1, $faker->numberBetween(1, 5))),
                 'items' => \array_map(
-                    static fn (int $index) => [
+                    static fn(int $index) => [
                         'sku' => $skus[$skuIndex = $faker->numberBetween(1, 4)]['sku'],
                         'quantity' => $faker->numberBetween(1, 10),
                         'price' => $skus[$skuIndex]['price'],
                     ],
-                    \range(1, $faker->numberBetween(1, 4))
+                    \range(1, $faker->numberBetween(1, 4)),
                 ),
             ];
 

@@ -5,13 +5,18 @@ declare(strict_types=1);
 namespace Flow\Doctrine\Bulk\Dialect;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Flow\Doctrine\Bulk\{BulkData, Columns, Exception\RuntimeException, InsertOptions, TableDefinition, UpdateOptions};
+use Flow\Doctrine\Bulk\BulkData;
+use Flow\Doctrine\Bulk\Columns;
+use Flow\Doctrine\Bulk\Exception\RuntimeException;
+use Flow\Doctrine\Bulk\InsertOptions;
+use Flow\Doctrine\Bulk\TableDefinition;
+use Flow\Doctrine\Bulk\UpdateOptions;
 
 final readonly class SqliteDialect implements Dialect
 {
-    public function __construct(private AbstractPlatform $platform)
-    {
-    }
+    public function __construct(
+        private AbstractPlatform $platform,
+    ) {}
 
     /**
      * @param TableDefinition $table
@@ -19,38 +24,46 @@ final readonly class SqliteDialect implements Dialect
      *
      * @return string
      */
-    public function prepareDelete(TableDefinition $table, BulkData $bulkData) : string
+    public function prepareDelete(TableDefinition $table, BulkData $bulkData): string
     {
         $columns = $bulkData->columns()->all();
 
         return \sprintf(
             'DELETE FROM %s WHERE (%s) IN (%s)',
             $table->name(),
-            \implode(', ', \array_map(fn ($column) => $this->platform->quoteIdentifier($column), $columns)),
-            $bulkData->toSqlPlaceholders()
+            \implode(', ', \array_map(fn($column) => $this->platform->quoteIdentifier($column), $columns)),
+            $bulkData->toSqlPlaceholders(),
         );
     }
 
-    public function prepareInsert(TableDefinition $table, BulkData $bulkData, ?InsertOptions $options = null) : string
+    public function prepareInsert(TableDefinition $table, BulkData $bulkData, ?InsertOptions $options = null): string
     {
         if ($options === null) {
             $options = new SqliteInsertOptions();
         }
 
         if (!$options instanceof SqliteInsertOptions) {
-            throw new RuntimeException('Invalid insert options provided, expected MySQLInsertOptions got: ' . $options::class);
+            throw new RuntimeException('Invalid insert options provided, expected MySQLInsertOptions got: '
+            . $options::class);
         }
 
         if ($options->conflictColumns) {
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT (%s) DO UPDATE SET %s',
                 $table->name(),
-                \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
+                \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+                    $column,
+                ), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders(),
                 \implode(',', $options->conflictColumns),
                 \count($options->updateColumns)
-                    ? $this->updateSelectedColumns($options->updateColumns, $bulkData->columns(), $table->name(), $options->preserveExistingValues)
-                    : $this->updateAllColumns($bulkData->columns())
+                    ? $this->updateSelectedColumns(
+                        $options->updateColumns,
+                        $bulkData->columns(),
+                        $table->name(),
+                        $options->preserveExistingValues,
+                    )
+                    : $this->updateAllColumns($bulkData->columns()),
             );
         }
 
@@ -58,54 +71,71 @@ final readonly class SqliteDialect implements Dialect
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT DO NOTHING',
                 $table->name(),
-                \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
-                $bulkData->toSqlPlaceholders()
+                \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+                    $column,
+                ), $bulkData->columns()->all())),
+                $bulkData->toSqlPlaceholders(),
             );
         }
 
         return \sprintf(
             'INSERT INTO %s (%s) VALUES %s',
             $table->name(),
-            \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
-            $bulkData->toSqlPlaceholders()
+            \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+                $column,
+            ), $bulkData->columns()->all())),
+            $bulkData->toSqlPlaceholders(),
         );
     }
 
-    public function prepareUpdate(TableDefinition $table, BulkData $bulkData, ?UpdateOptions $options = null) : string
+    public function prepareUpdate(TableDefinition $table, BulkData $bulkData, ?UpdateOptions $options = null): string
     {
         return \sprintf(
             'REPLACE INTO %s (%s) VALUES %s',
             $table->name(),
-            \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
-            $bulkData->toSqlPlaceholders()
+            \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+                $column,
+            ), $bulkData->columns()->all())),
+            $bulkData->toSqlPlaceholders(),
         );
     }
 
-    private function updateAllColumns(Columns $columns) : string
+    private function updateAllColumns(Columns $columns): string
     {
         return \implode(
             ',',
             $columns->map(
-                fn (string $column) : string => "{$this->platform->quoteIdentifier($column)} = {$this->platform->quoteIdentifier('excluded.' . $column)}"
-            )
+                fn(string $column): string => "{$this->platform->quoteIdentifier(
+                    $column,
+                )} = {$this->platform->quoteIdentifier('excluded.' . $column)}",
+            ),
         );
     }
 
     /**
      * @param array<string> $updateColumns
      */
-    private function updateSelectedColumns(array $updateColumns, Columns $columns, string $tableName, ?bool $preserveExistingValues = null) : string
-    {
-        return [] !== $updateColumns
-            ? \implode(',', \array_map(function (string $column) use ($tableName, $preserveExistingValues) : string {
+    private function updateSelectedColumns(
+        array $updateColumns,
+        Columns $columns,
+        string $tableName,
+        ?bool $preserveExistingValues = null,
+    ): string {
+        return [] !== $updateColumns ? \implode(',', \array_map(function (string $column) use (
+                $tableName,
+                $preserveExistingValues,
+            ): string {
                 $clause = "{$this->platform->quoteIdentifier($column)} = ";
 
                 if (true === $preserveExistingValues) {
-                    return $clause . "COALESCE({$this->platform->quoteIdentifier('excluded.' . $column)}, {$tableName}.{$this->platform->quoteIdentifier($column)})";
+                    return (
+                        $clause
+                        . "COALESCE({$this->platform->quoteIdentifier('excluded.'
+                        . $column)}, {$tableName}.{$this->platform->quoteIdentifier($column)})"
+                    );
                 }
 
                 return $clause . "{$this->platform->quoteIdentifier('excluded.' . $column)}";
-            }, $updateColumns))
-            : $this->updateAllColumns($columns);
+            }, $updateColumns)) : $this->updateAllColumns($columns);
     }
 }

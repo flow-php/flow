@@ -29,10 +29,9 @@ final readonly class TypeMapper implements RowMapper
     public function __construct(
         private Type $type,
         private ?RowMapper $next = null,
-    ) {
-    }
+    ) {}
 
-    public function map(array $row, Context $context) : mixed
+    public function map(array $row, Context $context): mixed
     {
         try {
             $result = $this->type->cast($row);

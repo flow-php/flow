@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Constraint;
 
+use Flow\ETL\Constraint;
+use Flow\ETL\Constraint\UniqueConstraint\InMemoryStorage;
+use Flow\ETL\Constraint\UniqueConstraint\Storage;
+use Flow\ETL\Row;
+use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
+
 use function Flow\ETL\DSL\refs;
-use Flow\ETL\Constraint\UniqueConstraint\{InMemoryStorage, Storage};
-use Flow\ETL\{Constraint, Row};
-use Flow\ETL\Row\{Reference, References};
 
 final class UniqueConstraint implements Constraint
 {
@@ -21,7 +25,7 @@ final class UniqueConstraint implements Constraint
         $this->storage = new InMemoryStorage();
     }
 
-    public function isSatisfiedBy(Row $row) : bool
+    public function isSatisfiedBy(Row $row): bool
     {
         $key = $row->keep(...$this->reference)->hash();
 
@@ -34,15 +38,15 @@ final class UniqueConstraint implements Constraint
         return true;
     }
 
-    public function toString() : string
+    public function toString(): string
     {
-        return sprintf(
-            'Unique constraint on [%s]',
-            implode(', ', array_map(static fn (Reference $r) => $r->name(), $this->reference->all()))
-        );
+        return sprintf('Unique constraint on [%s]', implode(', ', array_map(
+            static fn(Reference $r) => $r->name(),
+            $this->reference->all(),
+        )));
     }
 
-    public function violation(Row $row) : string
+    public function violation(Row $row): string
     {
         $violations = [];
 
@@ -50,13 +54,10 @@ final class UniqueConstraint implements Constraint
             $violations[] = $entry->name() . '<' . $entry->type()->toString() . '> = ' . $entry->toString();
         }
 
-        return sprintf(
-            'Values: [%s]',
-            implode(', ', $violations)
-        );
+        return sprintf('Values: [%s]', implode(', ', $violations));
     }
 
-    public function withStorage(Storage $storage) : self
+    public function withStorage(Storage $storage): self
     {
         $this->storage = $storage;
 

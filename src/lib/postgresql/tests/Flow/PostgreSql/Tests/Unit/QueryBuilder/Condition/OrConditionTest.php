@@ -4,23 +4,31 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Condition;
 
-use function Flow\PostgreSql\DSL\{col, eq, literal};
-use Flow\PostgreSql\Protobuf\AST\{BoolExpr, BoolExprType, Node};
-use Flow\PostgreSql\QueryBuilder\Condition\{AndCondition, NotCondition, OrCondition};
+use Flow\PostgreSql\Protobuf\AST\BoolExpr;
+use Flow\PostgreSql\Protobuf\AST\BoolExprType;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\QueryBuilder\Condition\AndCondition;
+use Flow\PostgreSql\QueryBuilder\Condition\NotCondition;
+use Flow\PostgreSql\QueryBuilder\Condition\OrCondition;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
-
 use PHPUnit\Framework\TestCase;
+
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\eq;
+use function Flow\PostgreSql\DSL\literal;
 
 final class OrConditionTest extends TestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('pg_query')) {
-            self::markTestSkipped('pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.');
+            self::markTestSkipped(
+                'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
+            );
         }
     }
 
-    public function test_and_returns_and_condition() : void
+    public function test_and_returns_and_condition(): void
     {
         $cond1 = eq(col('x'), literal(1));
         $cond2 = eq(col('y'), literal(2));
@@ -29,23 +37,23 @@ final class OrConditionTest extends TestCase
         $or = new OrCondition($cond1, $cond2);
         $and = $or->and($cond3);
 
-        self::assertInstanceOf(AndCondition::class, $and);
+        static::assertInstanceOf(AndCondition::class, $and);
     }
 
-    public function test_empty_or_condition() : void
+    public function test_empty_or_condition(): void
     {
         $or = new OrCondition();
         $ast = $or->toAst();
 
-        self::assertTrue($ast->hasBoolExpr());
+        static::assertTrue($ast->hasBoolExpr());
 
         $boolExpr = $ast->getBoolExpr();
-        self::assertNotNull($boolExpr);
-        self::assertSame(BoolExprType::OR_EXPR, $boolExpr->getBoolop());
-        self::assertCount(0, $boolExpr->getArgs());
+        static::assertNotNull($boolExpr);
+        static::assertSame(BoolExprType::OR_EXPR, $boolExpr->getBoolop());
+        static::assertCount(0, $boolExpr->getArgs());
     }
 
-    public function test_from_ast_reconstructs_or_condition() : void
+    public function test_from_ast_reconstructs_or_condition(): void
     {
         $cond1 = eq(col('x'), literal(1));
         $cond2 = eq(col('y'), literal(2));
@@ -55,17 +63,17 @@ final class OrConditionTest extends TestCase
 
         $reconstructed = OrCondition::fromAst($ast);
 
-        self::assertInstanceOf(OrCondition::class, $reconstructed);
+        static::assertInstanceOf(OrCondition::class, $reconstructed);
 
         $reconstructedAst = $reconstructed->toAst();
-        self::assertTrue($reconstructedAst->hasBoolExpr());
+        static::assertTrue($reconstructedAst->hasBoolExpr());
 
         $boolExpr = $reconstructedAst->getBoolExpr();
-        self::assertNotNull($boolExpr);
-        self::assertCount(2, $boolExpr->getArgs());
+        static::assertNotNull($boolExpr);
+        static::assertCount(2, $boolExpr->getArgs());
     }
 
-    public function test_from_ast_throws_on_non_bool_expr() : void
+    public function test_from_ast_throws_on_non_bool_expr(): void
     {
         $this->expectException(InvalidAstException::class);
         $this->expectExceptionMessage('Expected BoolExpr node, got unknown');
@@ -74,7 +82,7 @@ final class OrConditionTest extends TestCase
         OrCondition::fromAst($node);
     }
 
-    public function test_from_ast_throws_on_wrong_bool_type() : void
+    public function test_from_ast_throws_on_wrong_bool_type(): void
     {
         $this->expectException(InvalidAstException::class);
         $this->expectExceptionMessage('Expected BoolExpr with OR_EXPR');
@@ -88,7 +96,7 @@ final class OrConditionTest extends TestCase
         OrCondition::fromAst($node);
     }
 
-    public function test_not_returns_not_condition() : void
+    public function test_not_returns_not_condition(): void
     {
         $cond1 = eq(col('x'), literal(1));
         $cond2 = eq(col('y'), literal(2));
@@ -96,10 +104,10 @@ final class OrConditionTest extends TestCase
         $or = new OrCondition($cond1, $cond2);
         $not = $or->not();
 
-        self::assertInstanceOf(NotCondition::class, $not);
+        static::assertInstanceOf(NotCondition::class, $not);
     }
 
-    public function test_or_flattens_multiple_or_conditions() : void
+    public function test_or_flattens_multiple_or_conditions(): void
     {
         $cond1 = eq(col('x'), literal(1));
         $cond2 = eq(col('y'), literal(2));
@@ -110,15 +118,15 @@ final class OrConditionTest extends TestCase
 
         $ast = $or2->toAst();
 
-        self::assertTrue($ast->hasBoolExpr());
+        static::assertTrue($ast->hasBoolExpr());
 
         $boolExpr = $ast->getBoolExpr();
-        self::assertNotNull($boolExpr);
-        self::assertSame(BoolExprType::OR_EXPR, $boolExpr->getBoolop());
-        self::assertCount(3, $boolExpr->getArgs());
+        static::assertNotNull($boolExpr);
+        static::assertSame(BoolExprType::OR_EXPR, $boolExpr->getBoolop());
+        static::assertCount(3, $boolExpr->getArgs());
     }
 
-    public function test_or_method_returns_new_instance() : void
+    public function test_or_method_returns_new_instance(): void
     {
         $cond1 = eq(col('x'), literal(1));
         $cond2 = eq(col('y'), literal(2));
@@ -126,10 +134,10 @@ final class OrConditionTest extends TestCase
         $original = new OrCondition($cond1);
         $modified = $original->or($cond2);
 
-        self::assertNotSame($original, $modified);
+        static::assertNotSame($original, $modified);
     }
 
-    public function test_or_with_another_or_condition_flattens() : void
+    public function test_or_with_another_or_condition_flattens(): void
     {
         $cond1 = eq(col('a'), literal(1));
         $cond2 = eq(col('b'), literal(2));
@@ -142,14 +150,14 @@ final class OrConditionTest extends TestCase
 
         $ast = $combined->toAst();
 
-        self::assertTrue($ast->hasBoolExpr());
+        static::assertTrue($ast->hasBoolExpr());
 
         $boolExpr = $ast->getBoolExpr();
-        self::assertNotNull($boolExpr);
-        self::assertCount(4, $boolExpr->getArgs());
+        static::assertNotNull($boolExpr);
+        static::assertCount(4, $boolExpr->getArgs());
     }
 
-    public function test_or_with_single_condition() : void
+    public function test_or_with_single_condition(): void
     {
         $cond1 = eq(col('x'), literal(1));
         $cond2 = eq(col('y'), literal(2));
@@ -157,15 +165,15 @@ final class OrConditionTest extends TestCase
         $or = new OrCondition($cond1, $cond2);
         $ast = $or->toAst();
 
-        self::assertTrue($ast->hasBoolExpr());
+        static::assertTrue($ast->hasBoolExpr());
 
         $boolExpr = $ast->getBoolExpr();
-        self::assertNotNull($boolExpr);
-        self::assertSame(BoolExprType::OR_EXPR, $boolExpr->getBoolop());
-        self::assertCount(2, $boolExpr->getArgs());
+        static::assertNotNull($boolExpr);
+        static::assertSame(BoolExprType::OR_EXPR, $boolExpr->getBoolop());
+        static::assertCount(2, $boolExpr->getArgs());
     }
 
-    public function test_to_ast_creates_bool_expr() : void
+    public function test_to_ast_creates_bool_expr(): void
     {
         $cond1 = eq(col('x'), literal(1));
         $cond2 = eq(col('y'), literal(2));
@@ -173,11 +181,11 @@ final class OrConditionTest extends TestCase
         $or = new OrCondition($cond1, $cond2);
         $ast = $or->toAst();
 
-        self::assertInstanceOf(Node::class, $ast);
-        self::assertTrue($ast->hasBoolExpr());
+        static::assertInstanceOf(Node::class, $ast);
+        static::assertTrue($ast->hasBoolExpr());
 
         $boolExpr = $ast->getBoolExpr();
-        self::assertNotNull($boolExpr);
-        self::assertSame(BoolExprType::OR_EXPR, $boolExpr->getBoolop());
+        static::assertNotNull($boolExpr);
+        static::assertSame(BoolExprType::OR_EXPR, $boolExpr->getBoolop());
     }
 }

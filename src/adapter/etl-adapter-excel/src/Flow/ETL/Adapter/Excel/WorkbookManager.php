@@ -8,8 +8,10 @@ use OpenSpout\Common\Entity\Row as OpenSpoutRow;
 use OpenSpout\Common\Entity\Style\Style;
 use OpenSpout\Writer\AbstractWriterMultiSheets;
 use OpenSpout\Writer\Common\Entity\Sheet;
-use OpenSpout\Writer\ODS\{Options as OdsOptions, Writer as OdsWriter};
-use OpenSpout\Writer\XLSX\{Options as XlsxOptions, Writer as XlsxWriter};
+use OpenSpout\Writer\ODS\Options as OdsOptions;
+use OpenSpout\Writer\ODS\Writer as OdsWriter;
+use OpenSpout\Writer\XLSX\Options as XlsxOptions;
+use OpenSpout\Writer\XLSX\Writer as XlsxWriter;
 
 final class WorkbookManager
 {
@@ -33,10 +35,9 @@ final class WorkbookManager
     public function __construct(
         private readonly ExcelWriter $writerType = ExcelWriter::XLSX,
         private readonly OdsOptions|XlsxOptions|null $options = null,
-    ) {
-    }
+    ) {}
 
-    public function close() : void
+    public function close(): void
     {
         foreach ($this->writers as $writer) {
             $writer->close();
@@ -48,12 +49,12 @@ final class WorkbookManager
         $this->currentFilePath = null;
     }
 
-    public function isHeaderWritten(string $sheetName) : bool
+    public function isHeaderWritten(string $sheetName): bool
     {
         return $this->headersWritten[$this->sheetKey($sheetName)] ?? false;
     }
 
-    public function open(string $filePath) : void
+    public function open(string $filePath): void
     {
         if (\array_key_exists($filePath, $this->writers)) {
             $this->currentFilePath = $filePath;
@@ -75,7 +76,7 @@ final class WorkbookManager
     /**
      * @param array<string> $headers
      */
-    public function writeHeader(string $sheetName, array $headers, ?Style $style = null) : void
+    public function writeHeader(string $sheetName, array $headers, ?Style $style = null): void
     {
         $writer = $this->writers[$this->currentFilePath];
 
@@ -85,9 +86,7 @@ final class WorkbookManager
         }
 
         $writer->addRow(
-            $style !== null
-                ? OpenSpoutRow::fromValuesWithStyle($headers, $style)
-                : OpenSpoutRow::fromValues($headers)
+            $style !== null ? OpenSpoutRow::fromValuesWithStyle($headers, $style) : OpenSpoutRow::fromValues($headers),
         );
 
         $key = $this->sheetKey($sheetName);
@@ -98,7 +97,7 @@ final class WorkbookManager
      * @param array<int, null|bool|float|int|string> $values
      * @param null|array<int, null|Style> $styles
      */
-    public function writeRow(string $sheetName, array $values, ?array $styles = null) : void
+    public function writeRow(string $sheetName, array $values, ?array $styles = null): void
     {
         $writer = $this->writers[$this->currentFilePath];
 
@@ -107,20 +106,18 @@ final class WorkbookManager
             $writer->setCurrentSheet($sheet);
         }
 
-        $writer->addRow(
-            OpenSpoutRow::fromValuesWithStyles(
-                $values,
-                $styles ? \array_filter($styles, static fn (?Style $style) : bool => $style !== null) : []
-            )
-        );
+        $writer->addRow(OpenSpoutRow::fromValuesWithStyles(
+            $values,
+            $styles ? \array_filter($styles, static fn(?Style $style): bool => $style !== null) : [],
+        ));
     }
 
-    private function countSheetsForCurrentFile() : int
+    private function countSheetsForCurrentFile(): int
     {
         $prefix = $this->currentFilePath . ':';
         $count = 0;
 
-        foreach ($this->sheets as $key => $sheet) {
+        foreach ($this->sheets as $key => $_sheet) {
             if (\str_starts_with($key, $prefix)) {
                 $count++;
             }
@@ -129,21 +126,21 @@ final class WorkbookManager
         return $count;
     }
 
-    private function createOdsWriter() : OdsWriter
+    private function createOdsWriter(): OdsWriter
     {
         $options = $this->options instanceof OdsOptions ? $this->options : new OdsOptions();
 
         return new OdsWriter($options);
     }
 
-    private function createXlsxWriter() : XlsxWriter
+    private function createXlsxWriter(): XlsxWriter
     {
         $options = $this->options instanceof XlsxOptions ? $this->options : new XlsxOptions();
 
         return new XlsxWriter($options);
     }
 
-    private function getOrCreateSheet(string $sheetName) : Sheet
+    private function getOrCreateSheet(string $sheetName): Sheet
     {
         $key = $this->sheetKey($sheetName);
 
@@ -176,7 +173,7 @@ final class WorkbookManager
         return $newSheet;
     }
 
-    private function sheetKey(string $sheetName) : string
+    private function sheetKey(string $sheetName): string
     {
         return $this->currentFilePath . ':' . $sheetName;
     }

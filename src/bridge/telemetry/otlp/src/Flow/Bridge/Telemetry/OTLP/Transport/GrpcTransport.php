@@ -4,14 +4,34 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Transport;
 
-use const Grpc\{STATUS_ABORTED, STATUS_ALREADY_EXISTS, STATUS_CANCELLED, STATUS_DATA_LOSS, STATUS_DEADLINE_EXCEEDED, STATUS_FAILED_PRECONDITION, STATUS_INTERNAL, STATUS_INVALID_ARGUMENT, STATUS_NOT_FOUND, STATUS_OK, STATUS_OUT_OF_RANGE, STATUS_PERMISSION_DENIED, STATUS_RESOURCE_EXHAUSTED, STATUS_UNAUTHENTICATED, STATUS_UNAVAILABLE, STATUS_UNIMPLEMENTED, STATUS_UNKNOWN};
-use Flow\Bridge\Telemetry\OTLP\Serializer\{GrpcRequestFactory, ProtobufSerializer};
-use Flow\Telemetry\Signal\{SignalType, Signals};
+use Flow\Bridge\Telemetry\OTLP\Serializer\GrpcRequestFactory;
+use Flow\Bridge\Telemetry\OTLP\Serializer\ProtobufSerializer;
+use Flow\Telemetry\Signal\Signals;
+use Flow\Telemetry\Signal\SignalType;
 use Google\Protobuf\Internal\Message;
-use Grpc\{ChannelCredentials, UnaryCall};
+use Grpc\ChannelCredentials;
+use Grpc\UnaryCall;
 use Opentelemetry\Proto\Collector\Logs\V1\LogsServiceClient;
 use Opentelemetry\Proto\Collector\Metrics\V1\MetricsServiceClient;
 use Opentelemetry\Proto\Collector\Trace\V1\TraceServiceClient;
+
+use const Grpc\STATUS_ABORTED;
+use const Grpc\STATUS_ALREADY_EXISTS;
+use const Grpc\STATUS_CANCELLED;
+use const Grpc\STATUS_DATA_LOSS;
+use const Grpc\STATUS_DEADLINE_EXCEEDED;
+use const Grpc\STATUS_FAILED_PRECONDITION;
+use const Grpc\STATUS_INTERNAL;
+use const Grpc\STATUS_INVALID_ARGUMENT;
+use const Grpc\STATUS_NOT_FOUND;
+use const Grpc\STATUS_OK;
+use const Grpc\STATUS_OUT_OF_RANGE;
+use const Grpc\STATUS_PERMISSION_DENIED;
+use const Grpc\STATUS_RESOURCE_EXHAUSTED;
+use const Grpc\STATUS_UNAUTHENTICATED;
+use const Grpc\STATUS_UNAVAILABLE;
+use const Grpc\STATUS_UNIMPLEMENTED;
+use const Grpc\STATUS_UNKNOWN;
 
 /**
  * Asynchronous gRPC transport for OTLP using the grpc PHP extension.
@@ -62,10 +82,8 @@ final class GrpcTransport implements Transport
         private readonly ?Transport $failover = null,
     ) {
         if (!\extension_loaded('grpc')) {
-            throw new \RuntimeException(
-                'The grpc PHP extension is required for GrpcTransport. '
-                . 'Install it via: pecl install grpc'
-            );
+            throw new \RuntimeException('The grpc PHP extension is required for GrpcTransport. '
+            . 'Install it via: pecl install grpc');
         }
 
         if ($timeoutMs < 0) {
@@ -79,7 +97,7 @@ final class GrpcTransport implements Transport
         $this->requestFactory = new ProtobufSerializer();
     }
 
-    public function send(Signals $signal) : void
+    public function send(Signals $signal): void
     {
         if ($this->isShutdown) {
             throw new TransportException('Cannot send after shutdown');
@@ -119,7 +137,7 @@ final class GrpcTransport implements Transport
         }
     }
 
-    public function shutdown() : void
+    public function shutdown(): void
     {
         if ($this->isShutdown) {
             return;
@@ -166,7 +184,7 @@ final class GrpcTransport implements Transport
     /**
      * @return array<string, array<string>>
      */
-    private function buildMetadata() : array
+    private function buildMetadata(): array
     {
         $metadata = [];
 
@@ -177,7 +195,7 @@ final class GrpcTransport implements Transport
         return $metadata;
     }
 
-    private function buildShutdownTimeoutError() : TransportException
+    private function buildShutdownTimeoutError(): TransportException
     {
         return new TransportException(\sprintf(
             'OTLP gRPC shutdown: call cancelled when configured shutdown_timeout=%dms expired',
@@ -185,7 +203,7 @@ final class GrpcTransport implements Transport
         ));
     }
 
-    private function closeClients() : void
+    private function closeClients(): void
     {
         if ($this->tracesClient !== null) {
             $this->tracesClient->close();
@@ -203,7 +221,7 @@ final class GrpcTransport implements Transport
         }
     }
 
-    private function createChannel() : mixed
+    private function createChannel(): mixed
     {
         if ($this->insecure) {
             return ChannelCredentials::createInsecure();
@@ -212,7 +230,7 @@ final class GrpcTransport implements Transport
         return ChannelCredentials::createSsl();
     }
 
-    private function drainPending(?float $deadlineMicrotime = null) : void
+    private function drainPending(?float $deadlineMicrotime = null): void
     {
         foreach ($this->iteratePending($deadlineMicrotime) as $item) {
             if ($item['primaryError'] === null) {
@@ -233,37 +251,28 @@ final class GrpcTransport implements Transport
         }
     }
 
-    private function getLogsClient() : LogsServiceClient
+    private function getLogsClient(): LogsServiceClient
     {
         if ($this->logsClient === null) {
-            $this->logsClient = new LogsServiceClient(
-                $this->endpoint,
-                ['credentials' => $this->createChannel()]
-            );
+            $this->logsClient = new LogsServiceClient($this->endpoint, ['credentials' => $this->createChannel()]);
         }
 
         return $this->logsClient;
     }
 
-    private function getMetricsClient() : MetricsServiceClient
+    private function getMetricsClient(): MetricsServiceClient
     {
         if ($this->metricsClient === null) {
-            $this->metricsClient = new MetricsServiceClient(
-                $this->endpoint,
-                ['credentials' => $this->createChannel()]
-            );
+            $this->metricsClient = new MetricsServiceClient($this->endpoint, ['credentials' => $this->createChannel()]);
         }
 
         return $this->metricsClient;
     }
 
-    private function getTracesClient() : TraceServiceClient
+    private function getTracesClient(): TraceServiceClient
     {
         if ($this->tracesClient === null) {
-            $this->tracesClient = new TraceServiceClient(
-                $this->endpoint,
-                ['credentials' => $this->createChannel()]
-            );
+            $this->tracesClient = new TraceServiceClient($this->endpoint, ['credentials' => $this->createChannel()]);
         }
 
         return $this->tracesClient;
@@ -272,7 +281,7 @@ final class GrpcTransport implements Transport
     /**
      * @return \Generator<int, array{primaryError: ?\Throwable, entry: array{call: UnaryCall<covariant Message>, signals: ?Signals}}>
      */
-    private function iteratePending(?float $deadlineMicrotime = null) : \Generator
+    private function iteratePending(?float $deadlineMicrotime = null): \Generator
     {
         $pending = $this->pending;
         $this->pending = [];
@@ -306,7 +315,7 @@ final class GrpcTransport implements Transport
         }
     }
 
-    private function shutdownWithoutFailover(?float $deadlineMicrotime) : void
+    private function shutdownWithoutFailover(?float $deadlineMicrotime): void
     {
         /** @var list<\Throwable> $failures */
         $failures = [];
@@ -332,7 +341,7 @@ final class GrpcTransport implements Transport
         throw new TransportException($message, 0, $first);
     }
 
-    private static function grpcStatusName(int $code) : string
+    private static function grpcStatusName(int $code): string
     {
         return match ($code) {
             STATUS_OK => 'OK',

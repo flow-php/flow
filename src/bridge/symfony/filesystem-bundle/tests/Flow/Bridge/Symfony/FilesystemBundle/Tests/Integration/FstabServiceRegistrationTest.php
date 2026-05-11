@@ -9,10 +9,10 @@ use Flow\Filesystem\FilesystemTable;
 
 final class FstabServiceRegistrationTest extends KernelTestCase
 {
-    public function test_fqcn_alias_resolves_to_default_fstab() : void
+    public function test_fqcn_alias_resolves_to_default_fstab(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestExtensionConfig('flow_filesystem', [
                     'default_fstab' => 'secondary',
                     'fstabs' => [
@@ -33,13 +33,13 @@ final class FstabServiceRegistrationTest extends KernelTestCase
 
         $table = $this->symfonyContext()->getService(FilesystemTable::class, FilesystemTable::class);
 
-        self::assertSame('memory', $table->for('memory')->mount()->protocol);
+        static::assertSame('memory', $table->for('memory')->mount()->protocol);
     }
 
-    public function test_named_argument_alias_resolves_to_fstab() : void
+    public function test_named_argument_alias_resolves_to_fstab(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestExtensionConfig('flow_filesystem', [
                     'fstabs' => [
                         'default' => [
@@ -55,13 +55,13 @@ final class FstabServiceRegistrationTest extends KernelTestCase
         $aliasId = FilesystemTable::class . ' $defaultFstab';
         $table = $this->symfonyContext()->getService($aliasId, FilesystemTable::class);
 
-        self::assertSame('memory', $table->for('memory')->mount()->protocol);
+        static::assertSame('memory', $table->for('memory')->mount()->protocol);
     }
 
-    public function test_registers_default_fstab_with_multiple_filesystems() : void
+    public function test_registers_default_fstab_with_multiple_filesystems(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestExtensionConfig('flow_filesystem', [
                     'fstabs' => [
                         'default' => [
@@ -77,14 +77,14 @@ final class FstabServiceRegistrationTest extends KernelTestCase
 
         $table = $this->symfonyContext()->getService(FilesystemTable::class . ' $defaultFstab', FilesystemTable::class);
 
-        self::assertSame('file', $table->for('file')->mount()->protocol);
-        self::assertSame('memory', $table->for('memory')->mount()->protocol);
+        static::assertSame('file', $table->for('file')->mount()->protocol);
+        static::assertSame('memory', $table->for('memory')->mount()->protocol);
     }
 
-    public function test_registers_secondary_fstab_separately() : void
+    public function test_registers_secondary_fstab_separately(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestExtensionConfig('flow_filesystem', [
                     'fstabs' => [
                         'default' => [
@@ -103,11 +103,17 @@ final class FstabServiceRegistrationTest extends KernelTestCase
             },
         ]);
 
-        $default = $this->symfonyContext()->getService(FilesystemTable::class . ' $defaultFstab', FilesystemTable::class);
-        $secondary = $this->symfonyContext()->getService(FilesystemTable::class . ' $secondaryFstab', FilesystemTable::class);
+        $default = $this->symfonyContext()->getService(
+            FilesystemTable::class . ' $defaultFstab',
+            FilesystemTable::class,
+        );
+        $secondary = $this->symfonyContext()->getService(
+            FilesystemTable::class . ' $secondaryFstab',
+            FilesystemTable::class,
+        );
 
-        self::assertNotSame($default, $secondary);
-        self::assertCount(2, $default->filesystems());
-        self::assertCount(1, $secondary->filesystems());
+        static::assertNotSame($default, $secondary);
+        static::assertCount(2, $default->filesystems());
+        static::assertCount(1, $secondary->filesystems());
     }
 }

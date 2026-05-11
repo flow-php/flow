@@ -39,7 +39,7 @@ final readonly class EnvironmentDetector implements ResourceDetector
 
     private const string OTEL_SERVICE_NAME = 'OTEL_SERVICE_NAME';
 
-    public function detect() : Resource
+    public function detect(): Resource
     {
         $attributes = $this->parseResourceAttributes();
 
@@ -52,7 +52,7 @@ final readonly class EnvironmentDetector implements ResourceDetector
         return Resource::create($attributes);
     }
 
-    private function getEnv(string $name) : ?string
+    private function getEnv(string $name): ?string
     {
         $value = \getenv($name);
 
@@ -66,7 +66,7 @@ final readonly class EnvironmentDetector implements ResourceDetector
     /**
      * @return array<string, string>
      */
-    private function parseResourceAttributes() : array
+    private function parseResourceAttributes(): array
     {
         $rawAttributes = $this->getEnv(self::OTEL_RESOURCE_ATTRIBUTES);
 
@@ -109,7 +109,7 @@ final readonly class EnvironmentDetector implements ResourceDetector
      *
      * @return array<string>
      */
-    private function splitByComma(string $input) : array
+    private function splitByComma(string $input): array
     {
         $result = [];
         $current = '';
@@ -119,7 +119,7 @@ final readonly class EnvironmentDetector implements ResourceDetector
         while ($i < $length) {
             $char = $input[$i];
 
-            if ($char === '\\' && $i + 1 < $length) {
+            if ($char === '\\' && ($i + 1) < $length) {
                 $current .= $char . $input[$i + 1];
                 $i += 2;
 

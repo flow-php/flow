@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function\ScalarFunction;
 
-use function Flow\Types\DSL\type_optional;
 use Flow\Types\Type;
 use Flow\Types\Type\TypeDetector;
+
+use function Flow\Types\DSL\type_optional;
 
 final readonly class ScalarResult
 {
@@ -30,7 +31,7 @@ final readonly class ScalarResult
         }
     }
 
-    public static function from(mixed $value) : self
+    public static function from(mixed $value): self
     {
         return new self($value, (new TypeDetector())->detectType($value));
     }

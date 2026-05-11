@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Clause;
 
-use Flow\PostgreSql\Protobuf\AST\{Node, OnConflictClause as ProtobufOnConflictClause, ResTarget};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\OnConflictClause as ProtobufOnConflictClause;
+use Flow\PostgreSql\Protobuf\AST\ResTarget;
 use Flow\PostgreSql\QueryBuilder\Bridge\AstConvertible;
-use Flow\PostgreSql\QueryBuilder\Condition\{Condition, ConditionFactory};
+use Flow\PostgreSql\QueryBuilder\Condition\Condition;
+use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
-use Flow\PostgreSql\QueryBuilder\Expression\{Expression, ExpressionFactory};
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 
 /**
  * Represents an ON CONFLICT clause for INSERT statements.
@@ -23,10 +27,9 @@ final readonly class OnConflictClause implements AstConvertible
         private ?ConflictTarget $target = null,
         private array $updates = [],
         private ?Condition $whereClause = null,
-    ) {
-    }
+    ) {}
 
-    public static function doNothing(?ConflictTarget $target = null) : self
+    public static function doNothing(?ConflictTarget $target = null): self
     {
         return new self(ConflictAction::NOTHING, $target);
     }
@@ -34,12 +37,12 @@ final readonly class OnConflictClause implements AstConvertible
     /**
      * @param array<string, Expression> $updates
      */
-    public static function doUpdate(ConflictTarget $target, array $updates) : self
+    public static function doUpdate(ConflictTarget $target, array $updates): self
     {
         return new self(ConflictAction::UPDATE, $target, $updates);
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $onConflictClause = $node->getOnConflictClause();
 
@@ -86,17 +89,17 @@ final readonly class OnConflictClause implements AstConvertible
         return new self($action, $target, $updates, $whereClause);
     }
 
-    public function action() : ConflictAction
+    public function action(): ConflictAction
     {
         return $this->action;
     }
 
-    public function target() : ?ConflictTarget
+    public function target(): ?ConflictTarget
     {
         return $this->target;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $onConflictClause = new ProtobufOnConflictClause();
         $onConflictClause->setAction($this->action->toProtobuf());
@@ -140,17 +143,17 @@ final readonly class OnConflictClause implements AstConvertible
     /**
      * @return array<string, Expression>
      */
-    public function updates() : array
+    public function updates(): array
     {
         return $this->updates;
     }
 
-    public function where(Condition $condition) : self
+    public function where(Condition $condition): self
     {
         return new self($this->action, $this->target, $this->updates, $condition);
     }
 
-    public function whereClause() : ?Condition
+    public function whereClause(): ?Condition
     {
         return $this->whereClause;
     }

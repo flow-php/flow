@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Bridge\Telemetry\OTLP\Exporter;
 
 use Flow\Bridge\Telemetry\OTLP\Transport\Transport;
-use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
+use Flow\Telemetry\ErrorHandler\ErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Signal\Signals;
 
@@ -17,10 +18,9 @@ final readonly class OTLPExporter implements Exporter
     public function __construct(
         private Transport $transport,
         private ErrorHandler $errorHandler = new ErrorLogHandler(),
-    ) {
-    }
+    ) {}
 
-    public function export(Signals $signal) : bool
+    public function export(Signals $signal): bool
     {
         if ($signal->count() === 0) {
             return true;
@@ -37,7 +37,7 @@ final readonly class OTLPExporter implements Exporter
         }
     }
 
-    public function shutdown() : void
+    public function shutdown(): void
     {
         try {
             $this->transport->shutdown();

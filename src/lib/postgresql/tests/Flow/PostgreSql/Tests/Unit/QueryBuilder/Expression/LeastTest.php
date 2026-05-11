@@ -4,30 +4,35 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{MinMaxExpr, MinMaxOp, Node};
+use Flow\PostgreSql\Protobuf\AST\MinMaxExpr;
+use Flow\PostgreSql\Protobuf\AST\MinMaxOp;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
-use Flow\PostgreSql\QueryBuilder\Expression\{AliasedExpression, Least};
+use Flow\PostgreSql\QueryBuilder\Expression\AliasedExpression;
+use Flow\PostgreSql\QueryBuilder\Expression\Least;
 use PHPUnit\Framework\TestCase;
 
 final class LeastTest extends TestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('pg_query')) {
-            self::markTestSkipped('pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.');
+            self::markTestSkipped(
+                'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
+            );
         }
     }
 
-    public function test_as_returns_aliased_expression() : void
+    public function test_as_returns_aliased_expression(): void
     {
         $expr = new Least([new MockExpression(), new MockExpression()]);
 
         $aliased = $expr->as('min_value');
 
-        self::assertInstanceOf(AliasedExpression::class, $aliased);
+        static::assertInstanceOf(AliasedExpression::class, $aliased);
     }
 
-    public function test_constructor_throws_on_less_than_two_expressions() : void
+    public function test_constructor_throws_on_less_than_two_expressions(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('LEAST requires at least 2 expressions');
@@ -35,7 +40,7 @@ final class LeastTest extends TestCase
         new Least([new MockExpression()]);
     }
 
-    public function test_expressions_getter() : void
+    public function test_expressions_getter(): void
     {
         $expr1 = new MockExpression();
         $expr2 = new MockExpression();
@@ -45,13 +50,13 @@ final class LeastTest extends TestCase
 
         $expressions = $least->expressions();
 
-        self::assertCount(3, $expressions);
-        self::assertSame($expr1, $expressions[0]);
-        self::assertSame($expr2, $expressions[1]);
-        self::assertSame($expr3, $expressions[2]);
+        static::assertCount(3, $expressions);
+        static::assertSame($expr1, $expressions[0]);
+        static::assertSame($expr2, $expressions[1]);
+        static::assertSame($expr3, $expressions[2]);
     }
 
-    public function test_from_ast_throws_on_insufficient_args() : void
+    public function test_from_ast_throws_on_insufficient_args(): void
     {
         $this->expectException(InvalidAstException::class);
         $this->expectExceptionMessage('must have at least 2 arguments');
@@ -66,7 +71,7 @@ final class LeastTest extends TestCase
         Least::fromAst($node);
     }
 
-    public function test_from_ast_throws_on_non_min_max_expr() : void
+    public function test_from_ast_throws_on_non_min_max_expr(): void
     {
         $this->expectException(InvalidAstException::class);
         $this->expectExceptionMessage('Expected MinMaxExpr node, got unknown');
@@ -75,7 +80,7 @@ final class LeastTest extends TestCase
         Least::fromAst($node);
     }
 
-    public function test_from_ast_throws_on_wrong_op() : void
+    public function test_from_ast_throws_on_wrong_op(): void
     {
         $this->expectException(InvalidAstException::class);
         $this->expectExceptionMessage('must be IS_LEAST');
@@ -90,7 +95,7 @@ final class LeastTest extends TestCase
         Least::fromAst($node);
     }
 
-    public function test_to_ast_creates_min_max_expr() : void
+    public function test_to_ast_creates_min_max_expr(): void
     {
         $expr = new Least([
             new MockExpression('first'),
@@ -100,27 +105,27 @@ final class LeastTest extends TestCase
 
         $ast = $expr->toAst();
 
-        self::assertInstanceOf(Node::class, $ast);
-        self::assertTrue($ast->hasMinMaxExpr());
+        static::assertInstanceOf(Node::class, $ast);
+        static::assertTrue($ast->hasMinMaxExpr());
 
         $minMaxExpr = $ast->getMinMaxExpr();
-        self::assertNotNull($minMaxExpr);
-        self::assertSame(MinMaxOp::IS_LEAST, $minMaxExpr->getOp());
+        static::assertNotNull($minMaxExpr);
+        static::assertSame(MinMaxOp::IS_LEAST, $minMaxExpr->getOp());
 
         $args = $minMaxExpr->getArgs();
-        self::assertCount(3, $args);
+        static::assertCount(3, $args);
     }
 
-    public function test_with_minimum_expressions() : void
+    public function test_with_minimum_expressions(): void
     {
         $expr = new Least([new MockExpression(), new MockExpression()]);
 
         $ast = $expr->toAst();
 
-        self::assertTrue($ast->hasMinMaxExpr());
+        static::assertTrue($ast->hasMinMaxExpr());
 
         $minMaxExpr = $ast->getMinMaxExpr();
-        self::assertNotNull($minMaxExpr);
-        self::assertCount(2, $minMaxExpr->getArgs());
+        static::assertNotNull($minMaxExpr);
+        static::assertCount(2, $minMaxExpr->getArgs());
     }
 }

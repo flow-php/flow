@@ -10,14 +10,14 @@ use Flow\Types\Type\Comparison\Operator;
 
 final readonly class ValueComparator
 {
-    public function __construct(private Comparator $comparator = new Comparator())
-    {
-    }
+    public function __construct(
+        private Comparator $comparator = new Comparator(),
+    ) {}
 
     /**
      * @param array<array-key, Type<mixed>> $types
      */
-    public function assertAllTypesComparable(array $types, Operator|string $operator) : void
+    public function assertAllTypesComparable(array $types, Operator|string $operator): void
     {
         $operator = \is_string($operator) ? Operator::from($operator) : $operator;
 
@@ -25,7 +25,12 @@ final readonly class ValueComparator
             foreach ($types as $nextType) {
                 foreach ($types as $baseType) {
                     if (!$this->comparator->comparable($baseType, $nextType)) {
-                        throw new InvalidArgumentException(\sprintf("Can't compare '(%s %s %s)' due to data type mismatch.", $baseType->toString(), $operator->value, $nextType->toString()));
+                        throw new InvalidArgumentException(\sprintf(
+                            "Can't compare '(%s %s %s)' due to data type mismatch.",
+                            $baseType->toString(),
+                            $operator->value,
+                            $nextType->toString(),
+                        ));
                     }
                 }
             }
@@ -36,12 +41,17 @@ final readonly class ValueComparator
      * @param Type<mixed> $left
      * @param Type<mixed> $right
      */
-    public function assertComparableTypes(Type $left, Type $right, Operator|string $operator) : void
+    public function assertComparableTypes(Type $left, Type $right, Operator|string $operator): void
     {
         $operator = \is_string($operator) ? Operator::from($operator) : $operator;
 
         if (!$this->comparator->comparable($left, $right)) {
-            throw new InvalidArgumentException(\sprintf("Can't compare '(%s %s %s)' due to data type mismatch.", $left->toString(), $operator->value, $right->toString()));
+            throw new InvalidArgumentException(\sprintf(
+                "Can't compare '(%s %s %s)' due to data type mismatch.",
+                $left->toString(),
+                $operator->value,
+                $right->toString(),
+            ));
         }
     }
 }

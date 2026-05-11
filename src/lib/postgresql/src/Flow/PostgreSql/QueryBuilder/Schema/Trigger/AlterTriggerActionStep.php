@@ -6,9 +6,9 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Trigger;
 
 interface AlterTriggerActionStep
 {
-    public function dependsOnExtension(string $extension) : AlterTriggerFinalStep;
+    public function dependsOnExtension(string $extension): AlterTriggerFinalStep;
 
-    public function noDependsOnExtension(string $extension) : AlterTriggerFinalStep;
+    public function noDependsOnExtension(string $extension): AlterTriggerFinalStep;
 
-    public function renameTo(string $newName) : AlterTriggerFinalStep;
+    public function renameTo(string $newName): AlterTriggerFinalStep;
 }

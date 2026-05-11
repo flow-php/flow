@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Index\Reindex;
 
-use Flow\PostgreSql\Protobuf\AST\{DefElem, Node, PBString, RangeVar, ReindexObjectType, ReindexStmt};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\Protobuf\AST\ReindexObjectType;
+use Flow\PostgreSql\Protobuf\AST\ReindexStmt;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class ReindexBuilder implements ReindexFinalStep
 {
@@ -17,62 +23,52 @@ final readonly class ReindexBuilder implements ReindexFinalStep
         private bool $concurrent = false,
         private ?string $tablespace = null,
         private bool $verbose = false,
-    ) {
-    }
+    ) {}
 
-    public static function database(string $name) : ReindexFinalStep
+    public static function database(string $name): ReindexFinalStep
     {
         return new self(ReindexObjectType::REINDEX_OBJECT_DATABASE, $name);
     }
 
-    public static function index(string $name) : ReindexFinalStep
+    public static function index(string $name): ReindexFinalStep
     {
         return new self(ReindexObjectType::REINDEX_OBJECT_INDEX, $name);
     }
 
-    public static function schema(string $name) : ReindexFinalStep
+    public static function schema(string $name): ReindexFinalStep
     {
         return new self(ReindexObjectType::REINDEX_OBJECT_SCHEMA, $name);
     }
 
-    public static function system(string $name) : ReindexFinalStep
+    public static function system(string $name): ReindexFinalStep
     {
         return new self(ReindexObjectType::REINDEX_OBJECT_SYSTEM, $name);
     }
 
-    public static function table(string $name) : ReindexFinalStep
+    public static function table(string $name): ReindexFinalStep
     {
         return new self(ReindexObjectType::REINDEX_OBJECT_TABLE, $name);
     }
 
-    public function concurrently() : ReindexFinalStep
+    public function concurrently(): ReindexFinalStep
     {
-        return new self(
-            $this->kind,
-            $this->name,
-            true,
-            $this->tablespace,
-            $this->verbose,
-        );
+        return new self($this->kind, $this->name, true, $this->tablespace, $this->verbose);
     }
 
-    public function tablespace(string $tablespace) : ReindexFinalStep
+    public function tablespace(string $tablespace): ReindexFinalStep
     {
-        return new self(
-            $this->kind,
-            $this->name,
-            $this->concurrent,
-            $tablespace,
-            $this->verbose,
-        );
+        return new self($this->kind, $this->name, $this->concurrent, $tablespace, $this->verbose);
     }
 
-    public function toAst() : ReindexStmt
+    public function toAst(): ReindexStmt
     {
         $stmt = new ReindexStmt();
         $stmt->setKind($this->kind);
 
-        if ($this->kind === ReindexObjectType::REINDEX_OBJECT_INDEX || $this->kind === ReindexObjectType::REINDEX_OBJECT_TABLE) {
+        if (
+            $this->kind === ReindexObjectType::REINDEX_OBJECT_INDEX
+            || $this->kind === ReindexObjectType::REINDEX_OBJECT_TABLE
+        ) {
             $rangeVar = new RangeVar();
 
             $identifier = QualifiedIdentifier::parse($this->name);
@@ -111,18 +107,12 @@ final readonly class ReindexBuilder implements ReindexFinalStep
         return $stmt;
     }
 
-    public function verbose() : ReindexFinalStep
+    public function verbose(): ReindexFinalStep
     {
-        return new self(
-            $this->kind,
-            $this->name,
-            $this->concurrent,
-            $this->tablespace,
-            true,
-        );
+        return new self($this->kind, $this->name, $this->concurrent, $this->tablespace, true);
     }
 
-    private function createDefElemBool(string $name) : Node
+    private function createDefElemBool(string $name): Node
     {
         $defElem = new DefElem();
         $defElem->setDefname($name);
@@ -133,7 +123,7 @@ final readonly class ReindexBuilder implements ReindexFinalStep
         return $node;
     }
 
-    private function createDefElemString(string $name, string $value) : Node
+    private function createDefElemString(string $name, string $value): Node
     {
         $defElem = new DefElem();
         $defElem->setDefname($name);

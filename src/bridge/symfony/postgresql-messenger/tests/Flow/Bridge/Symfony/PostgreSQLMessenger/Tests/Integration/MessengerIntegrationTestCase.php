@@ -10,7 +10,7 @@ abstract class MessengerIntegrationTestCase extends TestCase
 {
     private ?MessengerTestContext $context = null;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('pgsql')) {
             static::markTestSkipped('ext-pgsql is not available');
@@ -21,7 +21,7 @@ abstract class MessengerIntegrationTestCase extends TestCase
         $this->context->createMessengerTable('messenger_messages');
     }
 
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         if ($this->context !== null) {
             $this->context->dropMessengerTable('messenger_messages');
@@ -30,7 +30,7 @@ abstract class MessengerIntegrationTestCase extends TestCase
         }
     }
 
-    protected function messengerContext() : MessengerTestContext
+    protected function messengerContext(): MessengerTestContext
     {
         if ($this->context === null) {
             static::fail('MessengerTestContext not initialized. Ensure setUp() was called.');

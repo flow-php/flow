@@ -4,20 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Explain\Analyzer;
 
-use Flow\PostgreSql\Explain\Plan\{Plan, PlanNode};
+use Flow\PostgreSql\Explain\Plan\Plan;
+use Flow\PostgreSql\Explain\Plan\PlanNode;
 
 final readonly class PlanAnalyzer
 {
-    public function __construct(private Plan $plan)
-    {
-    }
+    public function __construct(
+        private Plan $plan,
+    ) {}
 
     /**
      * Get all insights at once.
      *
      * @return array<Insight>
      */
-    public function allInsights() : array
+    public function allInsights(): array
     {
         return [
             ...$this->slowestNodes(),
@@ -35,7 +36,7 @@ final readonly class PlanAnalyzer
      *
      * @return array<Insight>
      */
-    public function diskReads() : array
+    public function diskReads(): array
     {
         $insights = [];
 
@@ -68,7 +69,7 @@ final readonly class PlanAnalyzer
                     $node->nodeType()->value,
                     $this->nodeIdentifier($node),
                     $blocksRead,
-                    $diskRatio * 100
+                    $diskRatio * 100,
                 ),
                 node: $node,
                 metrics: [
@@ -87,7 +88,7 @@ final readonly class PlanAnalyzer
      *
      * @return array<Insight>
      */
-    public function estimateMismatches(float $threshold = 2.0) : array
+    public function estimateMismatches(float $threshold = 2.0): array
     {
         $insights = [];
 
@@ -121,7 +122,7 @@ final readonly class PlanAnalyzer
                     $direction,
                     $mismatchRatio,
                     $node->estimatedRows(),
-                    $node->actualRows()
+                    $node->actualRows(),
                 ),
                 node: $node,
                 metrics: [
@@ -133,7 +134,10 @@ final readonly class PlanAnalyzer
             );
         }
 
-        \usort($insights, static fn (Insight $a, Insight $b) : int => $b->metrics['mismatch_ratio'] <=> $a->metrics['mismatch_ratio']);
+        \usort(
+            $insights,
+            static fn(Insight $a, Insight $b): int => $b->metrics['mismatch_ratio'] <=> $a->metrics['mismatch_ratio'],
+        );
 
         return $insights;
     }
@@ -143,7 +147,7 @@ final readonly class PlanAnalyzer
      *
      * @return array<Insight>
      */
-    public function externalSorts() : array
+    public function externalSorts(): array
     {
         $insights = [];
 
@@ -159,7 +163,7 @@ final readonly class PlanAnalyzer
                 severity: InsightSeverity::WARNING,
                 description: \sprintf(
                     'Sort operation spilled to disk using %s KB',
-                    $spaceUsed !== null ? \number_format($spaceUsed) : 'unknown'
+                    $spaceUsed !== null ? \number_format($spaceUsed) : 'unknown',
                 ),
                 node: $node,
                 metrics: [
@@ -178,7 +182,7 @@ final readonly class PlanAnalyzer
      *
      * @return array<Insight>
      */
-    public function inefficientFilters(float $threshold = 0.5) : array
+    public function inefficientFilters(float $threshold = 0.5): array
     {
         $insights = [];
 
@@ -217,7 +221,7 @@ final readonly class PlanAnalyzer
                     $this->nodeIdentifier($node),
                     $rowsRemoved,
                     $totalRows,
-                    $removalRatio * 100
+                    $removalRatio * 100,
                 ),
                 node: $node,
                 metrics: [
@@ -230,7 +234,10 @@ final readonly class PlanAnalyzer
             );
         }
 
-        \usort($insights, static fn (Insight $a, Insight $b) : int => $b->metrics['removal_ratio'] <=> $a->metrics['removal_ratio']);
+        \usort(
+            $insights,
+            static fn(Insight $a, Insight $b): int => $b->metrics['removal_ratio'] <=> $a->metrics['removal_ratio'],
+        );
 
         return $insights;
     }
@@ -240,7 +247,7 @@ final readonly class PlanAnalyzer
      *
      * @return array<Insight>
      */
-    public function lowCacheHits(float $threshold = 0.9) : array
+    public function lowCacheHits(float $threshold = 0.9): array
     {
         $insights = [];
 
@@ -276,7 +283,7 @@ final readonly class PlanAnalyzer
                     $this->nodeIdentifier($node),
                     $hitRatio * 100,
                     $buffers->sharedHit(),
-                    $buffers->sharedRead()
+                    $buffers->sharedRead(),
                 ),
                 node: $node,
                 metrics: [
@@ -287,7 +294,10 @@ final readonly class PlanAnalyzer
             );
         }
 
-        \usort($insights, static fn (Insight $a, Insight $b) : int => $a->metrics['hit_ratio'] <=> $b->metrics['hit_ratio']);
+        \usort(
+            $insights,
+            static fn(Insight $a, Insight $b): int => $a->metrics['hit_ratio'] <=> $b->metrics['hit_ratio'],
+        );
 
         return $insights;
     }
@@ -297,7 +307,7 @@ final readonly class PlanAnalyzer
      *
      * @return array<Insight>
      */
-    public function sequentialScans() : array
+    public function sequentialScans(): array
     {
         $insights = [];
 
@@ -321,7 +331,7 @@ final readonly class PlanAnalyzer
                 description: \sprintf(
                     'Sequential scan on %s (%s rows)',
                     $this->nodeIdentifier($node),
-                    $actualRows !== null ? \number_format($actualRows) : \number_format($estimatedRows) . ' estimated'
+                    $actualRows !== null ? \number_format($actualRows) : \number_format($estimatedRows) . ' estimated',
                 ),
                 node: $node,
                 metrics: [
@@ -341,7 +351,7 @@ final readonly class PlanAnalyzer
      *
      * @return array<Insight>
      */
-    public function slowestNodes(int $limit = 5) : array
+    public function slowestNodes(int $limit = 5): array
     {
         $nodesWithTiming = [];
 
@@ -357,7 +367,9 @@ final readonly class PlanAnalyzer
 
         \usort(
             $nodesWithTiming,
-            static fn (PlanNode $a, PlanNode $b) : int => (int) ($b->timing()?->totalActualTime() ?? 0.0) <=> (int) ($a->timing()?->totalActualTime() ?? 0.0)
+            static fn(PlanNode $a, PlanNode $b): int => (
+                (int) ($b->timing()?->totalActualTime() ?? 0.0) <=> (int) ($a->timing()?->totalActualTime() ?? 0.0)
+            ),
         );
 
         $topNodes = \array_slice($nodesWithTiming, 0, $limit);
@@ -373,9 +385,7 @@ final readonly class PlanAnalyzer
             }
 
             $nodeTime = $timing->totalActualTime();
-            $percentage = $executionTime !== null && $executionTime > 0
-                ? ($nodeTime / $executionTime) * 100
-                : null;
+            $percentage = $executionTime !== null && $executionTime > 0 ? ($nodeTime / $executionTime) * 100 : null;
 
             $severity = match (true) {
                 $percentage !== null && $percentage >= 50.0 => InsightSeverity::CRITICAL,
@@ -391,7 +401,7 @@ final readonly class PlanAnalyzer
                     $node->nodeType()->value,
                     $this->nodeIdentifier($node),
                     $nodeTime,
-                    $percentage !== null ? \sprintf(' (%.1f%% of total)', $percentage) : ''
+                    $percentage !== null ? \sprintf(' (%.1f%% of total)', $percentage) : '',
                 ),
                 node: $node,
                 metrics: [
@@ -408,7 +418,7 @@ final readonly class PlanAnalyzer
     /**
      * Get summary statistics for the plan.
      */
-    public function summary() : PlanSummary
+    public function summary(): PlanSummary
     {
         $nodes = $this->plan->allNodes();
         $sequentialScanCount = 0;
@@ -489,7 +499,7 @@ final readonly class PlanAnalyzer
         );
     }
 
-    private function nodeIdentifier(PlanNode $node) : string
+    private function nodeIdentifier(PlanNode $node): string
     {
         if ($node->relationName() !== null) {
             $identifier = $node->relationName();

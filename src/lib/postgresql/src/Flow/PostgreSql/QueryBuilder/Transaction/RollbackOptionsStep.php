@@ -6,9 +6,9 @@ namespace Flow\PostgreSql\QueryBuilder\Transaction;
 
 interface RollbackOptionsStep extends RollbackFinalStep
 {
-    public function andChain() : RollbackFinalStep;
+    public function andChain(): RollbackFinalStep;
 
-    public function andNoChain() : RollbackFinalStep;
+    public function andNoChain(): RollbackFinalStep;
 
-    public function toSavepoint(string $name) : RollbackFinalStep;
+    public function toSavepoint(string $name): RollbackFinalStep;
 }

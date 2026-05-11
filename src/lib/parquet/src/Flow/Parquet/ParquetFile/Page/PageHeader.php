@@ -6,7 +6,10 @@ namespace Flow\Parquet\ParquetFile\Page;
 
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Encodings;
-use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, DictionaryPageHeader, Type};
+use Flow\Parquet\ParquetFile\Page\Header\DataPageHeader;
+use Flow\Parquet\ParquetFile\Page\Header\DataPageHeaderV2;
+use Flow\Parquet\ParquetFile\Page\Header\DictionaryPageHeader;
+use Flow\Parquet\ParquetFile\Page\Header\Type;
 
 final readonly class PageHeader
 {
@@ -17,37 +20,40 @@ final readonly class PageHeader
         private ?DataPageHeader $dataPageHeader,
         private ?DataPageHeaderV2 $dataPageHeaderV2,
         private ?DictionaryPageHeader $dictionaryPageHeader,
-    ) {
-    }
+    ) {}
 
-    public static function fromThrift(\Flow\Parquet\ThriftModel\PageHeader $thrift, Options $options) : self
+    public static function fromThrift(\Flow\Parquet\ThriftModel\PageHeader $thrift, Options $options): self
     {
         return new self(
             Type::from($thrift->type),
             (int) $thrift->compressed_page_size,
             (int) $thrift->uncompressed_page_size,
             $thrift->data_page_header !== null ? DataPageHeader::fromThrift($thrift->data_page_header) : null,
-            $thrift->data_page_header_v2 !== null ? DataPageHeaderV2::fromThrift($thrift->data_page_header_v2, $options) : null,
-            $thrift->dictionary_page_header !== null ? DictionaryPageHeader::fromThrift($thrift->dictionary_page_header) : null
+            $thrift->data_page_header_v2 !== null
+                ? DataPageHeaderV2::fromThrift($thrift->data_page_header_v2, $options)
+                : null,
+            $thrift->dictionary_page_header !== null
+                ? DictionaryPageHeader::fromThrift($thrift->dictionary_page_header)
+                : null,
         );
     }
 
-    public function compressedPageSize() : int
+    public function compressedPageSize(): int
     {
         return $this->compressedPageSize;
     }
 
-    public function dataPageHeader() : ?DataPageHeader
+    public function dataPageHeader(): ?DataPageHeader
     {
         return $this->dataPageHeader;
     }
 
-    public function dataPageHeaderV2() : ?DataPageHeaderV2
+    public function dataPageHeaderV2(): ?DataPageHeaderV2
     {
         return $this->dataPageHeaderV2;
     }
 
-    public function dataValuesCount() : ?int
+    public function dataValuesCount(): ?int
     {
         if ($this->dataPageHeader !== null) {
             return $this->dataPageHeader->valuesCount();
@@ -60,12 +66,12 @@ final readonly class PageHeader
         return null;
     }
 
-    public function dictionaryPageHeader() : ?DictionaryPageHeader
+    public function dictionaryPageHeader(): ?DictionaryPageHeader
     {
         return $this->dictionaryPageHeader;
     }
 
-    public function dictionaryValuesCount() : ?int
+    public function dictionaryValuesCount(): ?int
     {
         if ($this->dictionaryPageHeader !== null) {
             return $this->dictionaryPageHeader->valuesCount();
@@ -74,7 +80,7 @@ final readonly class PageHeader
         return null;
     }
 
-    public function encoding() : Encodings
+    public function encoding(): Encodings
     {
         if ($this->dictionaryPageHeader) {
             return $this->dictionaryPageHeader->encoding();
@@ -90,7 +96,7 @@ final readonly class PageHeader
         return $this->dataPageHeader->encoding();
     }
 
-    public function toThrift() : \Flow\Parquet\ThriftModel\PageHeader
+    public function toThrift(): \Flow\Parquet\ThriftModel\PageHeader
     {
         return new \Flow\Parquet\ThriftModel\PageHeader([
             'type' => $this->type->value,
@@ -104,12 +110,12 @@ final readonly class PageHeader
         ]);
     }
 
-    public function type() : Type
+    public function type(): Type
     {
         return $this->type;
     }
 
-    public function uncompressedPageSize() : int
+    public function uncompressedPageSize(): int
     {
         return $this->uncompressedPageSize;
     }

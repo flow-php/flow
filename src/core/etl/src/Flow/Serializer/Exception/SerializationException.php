@@ -6,6 +6,4 @@ namespace Flow\Serializer\Exception;
 
 use Flow\ETL\Exception\Exception;
 
-final class SerializationException extends Exception
-{
-}
+final class SerializationException extends Exception {}

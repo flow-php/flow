@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+
 use function Flow\Types\DSL\type_integer;
 use function Symfony\Component\String\u;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Row};
 
 final class IndexOfLast extends ScalarFunctionChain
 {
@@ -16,10 +18,9 @@ final class IndexOfLast extends ScalarFunctionChain
         private readonly ScalarFunction|string $needle,
         private readonly ScalarFunction|bool $ignoreCase = false,
         private readonly ScalarFunction|int $offset = 0,
-    ) {
-    }
+    ) {}
 
-    public function eval(Row $row, FlowContext $context) : int|false|null
+    public function eval(Row $row, FlowContext $context): int|false|null
     {
         $string = (new Parameter($this->string))->asString($row, $context);
         $needle = (new Parameter($this->needle))->asString($row, $context);
@@ -27,7 +28,11 @@ final class IndexOfLast extends ScalarFunctionChain
         $ignoreCase = (new Parameter($this->ignoreCase))->asBoolean($row, $context);
 
         if ($string === null || $needle === null) {
-            $context->functions()->invalidResult(new InvalidArgumentException('IndexOfLast function requires non-null string and needle'));
+            $context
+                ->functions()
+                ->invalidResult(
+                    new InvalidArgumentException('IndexOfLast function requires non-null string and needle'),
+                );
 
             return false;
         }

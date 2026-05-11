@@ -4,54 +4,44 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row;
 
-use function Flow\ETL\DSL\{flow_context, int_entry, ref};
-use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
 
 final class EntryReferenceTest extends FlowTestCase
 {
-    public function test_executing_equals_expression() : void
+    public function test_executing_equals_expression(): void
     {
         $ref = ref('a')->equals(ref('b'));
 
-        self::assertTrue(
-            $ref->eval(row(int_entry('a', 1), int_entry('b', 1)), flow_context())
-        );
+        static::assertTrue($ref->eval(row(int_entry('a', 1), int_entry('b', 1)), flow_context()));
     }
 
-    public function test_executing_expression() : void
+    public function test_executing_expression(): void
     {
         $ref = ref('b')->literal(100);
 
-        self::assertSame(
-            100,
-            $ref->eval(row(int_entry('a', 1)), flow_context())
-        );
+        static::assertSame(100, $ref->eval(row(int_entry('a', 1)), flow_context()));
     }
 
-    public function test_is_even() : void
+    public function test_is_even(): void
     {
         $ref = ref('a')->isEven();
 
-        self::assertFalse(
-            $ref->eval(row(int_entry('a', 1)), flow_context())
-        );
+        static::assertFalse($ref->eval(row(int_entry('a', 1)), flow_context()));
 
-        self::assertTrue(
-            $ref->eval(row(int_entry('a', 2)), flow_context())
-        );
+        static::assertTrue($ref->eval(row(int_entry('a', 2)), flow_context()));
     }
 
-    public function test_is_odd() : void
+    public function test_is_odd(): void
     {
         $ref = ref('a')->isOdd();
 
-        self::assertTrue(
-            $ref->eval(row(int_entry('a', 1)), flow_context())
-        );
+        static::assertTrue($ref->eval(row(int_entry('a', 1)), flow_context()));
 
-        self::assertFalse(
-            $ref->eval(row(int_entry('a', 2)), flow_context())
-        );
+        static::assertFalse($ref->eval(row(int_entry('a', 2)), flow_context()));
     }
 }

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\{FlowContext, Row};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
 use Flow\Types\Type;
 use Flow\Types\Type\TypeFactory;
 
@@ -22,11 +23,10 @@ final class IsType extends ScalarFunctionChain
         private readonly mixed $value,
         string|Type ...$types,
     ) {
-
         $this->types = $types;
     }
 
-    public function eval(Row $row, FlowContext $context) : bool
+    public function eval(Row $row, FlowContext $context): bool
     {
         $value = (new Parameter($this->value))->eval($row, $context);
 

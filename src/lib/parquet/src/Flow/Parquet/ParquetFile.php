@@ -7,10 +7,14 @@ namespace Flow\Parquet;
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\ParquetFile\{Metadata, Page\ColumnPageHeader, Schema};
-use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn};
+use Flow\Parquet\ParquetFile\Metadata;
+use Flow\Parquet\ParquetFile\Page\ColumnPageHeader;
+use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Schema\Column;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Reader\ColumnChunkViewer;
-use Flow\Parquet\Thrift\{CompactProtocol, MemoryBuffer};
+use Flow\Parquet\Thrift\CompactProtocol;
+use Flow\Parquet\Thrift\MemoryBuffer;
 use Flow\Parquet\ThriftModel\FileMetaData;
 
 final class ParquetFile
@@ -24,15 +28,14 @@ final class ParquetFile
         private readonly ByteOrder $byteOrder,
         private readonly Options $options,
         private readonly ParquetEngine $engine,
-    ) {
-    }
+    ) {}
 
     public function __destruct()
     {
         $this->stream->close();
     }
 
-    public function metadata() : Metadata
+    public function metadata(): Metadata
     {
         if ($this->metadata !== null) {
             return $this->metadata;
@@ -52,11 +55,7 @@ final class ParquetFile
         $metadata = $this->stream->read($metadataLength, $fileTotalSize - ($metadataLength + 8));
 
         $thriftMetadata = new FileMetaData();
-        $thriftMetadata->read(
-            new CompactProtocol(
-                new MemoryBuffer($metadata)
-            )
-        );
+        $thriftMetadata->read(new CompactProtocol(new MemoryBuffer($metadata)));
 
         $this->metadata = Metadata::fromThrift($thriftMetadata);
 
@@ -66,7 +65,7 @@ final class ParquetFile
     /**
      * @return \Generator<ColumnPageHeader>
      */
-    public function pageHeaders() : \Generator
+    public function pageHeaders(): \Generator
     {
         foreach ($this->schema()->columnsFlat() as $column) {
             foreach ($this->viewChunksPages($column) as $pageHeader) {
@@ -75,7 +74,7 @@ final class ParquetFile
         }
     }
 
-    public function schema() : Schema
+    public function schema(): Schema
     {
         return $this->metadata()->schema();
     }
@@ -85,7 +84,7 @@ final class ParquetFile
      *
      * @return \Generator<int, array<string, mixed>>
      */
-    public function values(array $columns = [], ?int $limit = null, ?int $offset = null) : \Generator
+    public function values(array $columns = [], ?int $limit = null, ?int $offset = null): \Generator
     {
         if ($limit !== null && $limit <= 0) {
             throw new InvalidArgumentException('Limit must be greater than 0');
@@ -96,7 +95,7 @@ final class ParquetFile
         }
 
         if (!\count($columns)) {
-            $columns = \array_map(static fn (Column $c) => $c->name(), $this->schema()->columns());
+            $columns = \array_map(static fn(Column $c) => $c->name(), $this->schema()->columns());
         }
 
         foreach ($columns as $columnName) {
@@ -111,7 +110,7 @@ final class ParquetFile
     /**
      * @return \Generator<ColumnPageHeader>
      */
-    private function viewChunksPages(FlatColumn $column) : \Generator
+    private function viewChunksPages(FlatColumn $column): \Generator
     {
         $viewer = new ColumnChunkViewer($this->options);
 

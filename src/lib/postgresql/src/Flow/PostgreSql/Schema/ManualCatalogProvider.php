@@ -8,10 +8,9 @@ final readonly class ManualCatalogProvider implements CatalogProvider
 {
     public function __construct(
         private Catalog $catalog,
-    ) {
-    }
+    ) {}
 
-    public function get() : Catalog
+    public function get(): Catalog
     {
         return $this->catalog;
     }

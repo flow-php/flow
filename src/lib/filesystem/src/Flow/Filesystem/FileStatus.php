@@ -11,15 +11,14 @@ final readonly class FileStatus
         private bool $isFile,
         public ?int $size = null,
         public ?\DateTimeImmutable $lastModifiedAt = null,
-    ) {
-    }
+    ) {}
 
-    public function isDirectory() : bool
+    public function isDirectory(): bool
     {
         return !$this->isFile;
     }
 
-    public function isFile() : bool
+    public function isFile(): bool
     {
         return $this->isFile;
     }

@@ -9,7 +9,7 @@ use Flow\Filesystem\Path\Filter;
 
 final class RejectingFilter implements Filter
 {
-    public function accept(FileStatus $status) : bool
+    public function accept(FileStatus $status): bool
     {
         return false;
     }

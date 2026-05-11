@@ -6,11 +6,11 @@ namespace Flow\Parquet\ParquetFile\Schema;
 
 final readonly class ListElement
 {
-    public function __construct(public Column $element)
-    {
-    }
+    public function __construct(
+        public Column $element,
+    ) {}
 
-    public static function boolean(bool $required = false) : self
+    public static function boolean(bool $required = false): self
     {
         if ($required) {
             return new self(FlatColumn::boolean('element')->makeRequired());
@@ -19,7 +19,7 @@ final readonly class ListElement
         return new self(FlatColumn::boolean('element'));
     }
 
-    public static function date(bool $required = false) : self
+    public static function date(bool $required = false): self
     {
         if ($required) {
             return new self(FlatColumn::date('element')->makeRequired());
@@ -28,7 +28,7 @@ final readonly class ListElement
         return new self(FlatColumn::date('element'));
     }
 
-    public static function datetime(bool $required = false) : self
+    public static function datetime(bool $required = false): self
     {
         if ($required) {
             return new self(FlatColumn::dateTime('element')->makeRequired());
@@ -37,7 +37,7 @@ final readonly class ListElement
         return new self(FlatColumn::dateTime('element'));
     }
 
-    public static function decimal(int $precision, int $scale, bool $required = false) : self
+    public static function decimal(int $precision, int $scale, bool $required = false): self
     {
         if ($required) {
             return new self(FlatColumn::decimal('element', $scale, $precision)->makeRequired());
@@ -46,7 +46,7 @@ final readonly class ListElement
         return new self(FlatColumn::decimal('element', $scale, $precision));
     }
 
-    public static function double(bool $required = false) : self
+    public static function double(bool $required = false): self
     {
         if ($required) {
             return new self(FlatColumn::double('element')->makeRequired());
@@ -55,7 +55,7 @@ final readonly class ListElement
         return new self(FlatColumn::double('element'));
     }
 
-    public static function float(bool $required = false) : self
+    public static function float(bool $required = false): self
     {
         if ($required) {
             return new self(FlatColumn::float('element')->makeRequired());
@@ -64,7 +64,7 @@ final readonly class ListElement
         return new self(FlatColumn::float('element'));
     }
 
-    public static function int32(bool $required = false) : self
+    public static function int32(bool $required = false): self
     {
         if ($required) {
             return new self(FlatColumn::int32('element')->makeRequired());
@@ -73,7 +73,7 @@ final readonly class ListElement
         return new self(FlatColumn::int32('element'));
     }
 
-    public static function int64(bool $required = false) : self
+    public static function int64(bool $required = false): self
     {
         if ($required) {
             return new self(FlatColumn::int64('element')->makeRequired());
@@ -82,7 +82,7 @@ final readonly class ListElement
         return new self(FlatColumn::int64('element'));
     }
 
-    public static function json(bool $required = false) : self
+    public static function json(bool $required = false): self
     {
         if ($required) {
             return new self(FlatColumn::json('element')->makeRequired());
@@ -91,7 +91,7 @@ final readonly class ListElement
         return new self(FlatColumn::json('element'));
     }
 
-    public static function list(self $element, bool $required = false) : self
+    public static function list(self $element, bool $required = false): self
     {
         if ($required) {
             return new self(NestedColumn::list('element', $element)->makeRequired());
@@ -100,7 +100,7 @@ final readonly class ListElement
         return new self(NestedColumn::list('element', $element));
     }
 
-    public static function map(MapKey $key, MapValue $value, bool $required = false) : self
+    public static function map(MapKey $key, MapValue $value, bool $required = false): self
     {
         if ($required) {
             return new self(NestedColumn::map('element', $key, $value)->makeRequired());
@@ -109,7 +109,7 @@ final readonly class ListElement
         return new self(NestedColumn::map('element', $key, $value));
     }
 
-    public static function string(bool $required = false) : self
+    public static function string(bool $required = false): self
     {
         if ($required) {
             return new self(FlatColumn::string('element')->makeRequired());
@@ -121,7 +121,7 @@ final readonly class ListElement
     /**
      * @param array<Column> $columns
      */
-    public static function structure(array $columns, bool $required = false) : self
+    public static function structure(array $columns, bool $required = false): self
     {
         if ($required) {
             return new self(NestedColumn::create('element', $columns)->makeRequired());
@@ -130,7 +130,7 @@ final readonly class ListElement
         return new self(NestedColumn::create('element', $columns));
     }
 
-    public static function time(bool $required = false) : self
+    public static function time(bool $required = false): self
     {
         if ($required) {
             return new self(FlatColumn::time('element')->makeRequired());
@@ -139,7 +139,7 @@ final readonly class ListElement
         return new self(FlatColumn::time('element'));
     }
 
-    public static function uuid(bool $required = false) : self
+    public static function uuid(bool $required = false): self
     {
         if ($required) {
             return new self(FlatColumn::uuid('element')->makeRequired());

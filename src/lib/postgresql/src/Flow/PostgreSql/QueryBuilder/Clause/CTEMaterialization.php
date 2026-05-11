@@ -9,13 +9,13 @@ use Flow\PostgreSql\Protobuf\AST\CTEMaterialize;
 /**
  * CTE materialization enum.
  */
-enum CTEMaterialization : string
+enum CTEMaterialization: string
 {
     case DEFAULT = 'DEFAULT';
     case MATERIALIZED = 'MATERIALIZED';
     case NOT_MATERIALIZED = 'NOT MATERIALIZED';
 
-    public static function fromProtobuf(int $materialize) : self
+    public static function fromProtobuf(int $materialize): self
     {
         return match ($materialize) {
             CTEMaterialize::CTEMaterializeAlways => self::MATERIALIZED,
@@ -24,7 +24,7 @@ enum CTEMaterialization : string
         };
     }
 
-    public function toProtobuf() : int
+    public function toProtobuf(): int
     {
         return match ($this) {
             self::DEFAULT => CTEMaterialize::CTEMaterializeDefault,

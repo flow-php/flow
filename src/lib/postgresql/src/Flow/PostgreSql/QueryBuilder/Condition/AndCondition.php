@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Condition;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Expr_Kind, SubLinkType};
-use Flow\PostgreSql\Protobuf\AST\{BoolExpr, BoolExprType, Node};
-use Flow\PostgreSql\QueryBuilder\Exception\{InvalidAstException, UnsupportedNodeException};
+use Flow\PostgreSql\Protobuf\AST\A_Expr_Kind;
+use Flow\PostgreSql\Protobuf\AST\BoolExpr;
+use Flow\PostgreSql\Protobuf\AST\BoolExprType;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\SubLinkType;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\Exception\UnsupportedNodeException;
 use Flow\PostgreSql\QueryBuilder\Expression\AliasedExpression;
 
 final readonly class AndCondition implements Condition
@@ -16,13 +20,12 @@ final readonly class AndCondition implements Condition
      */
     private array $conditions;
 
-    public function __construct(
-        Condition ...$conditions,
-    ) {
+    public function __construct(Condition ...$conditions)
+    {
         $this->conditions = $conditions;
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         if (!$node->hasBoolExpr()) {
             throw InvalidAstException::unexpectedNodeType('BoolExpr', 'unknown');
@@ -37,7 +40,7 @@ final readonly class AndCondition implements Condition
         if ($boolExpr->getBoolop() !== BoolExprType::AND_EXPR) {
             throw InvalidAstException::unexpectedNodeType(
                 'BoolExpr with AND_EXPR',
-                'BoolExpr with ' . BoolExprType::name($boolExpr->getBoolop())
+                'BoolExpr with ' . BoolExprType::name($boolExpr->getBoolop()),
             );
         }
 
@@ -50,7 +53,7 @@ final readonly class AndCondition implements Condition
         return new self(...$conditions);
     }
 
-    public function and(Condition $other) : self
+    public function and(Condition $other): self
     {
         if ($other instanceof self) {
             return new self(...[...$this->conditions, ...$other->conditions]);
@@ -59,22 +62,22 @@ final readonly class AndCondition implements Condition
         return new self(...[...$this->conditions, $other]);
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return new AliasedExpression($this, $alias);
     }
 
-    public function not() : NotCondition
+    public function not(): NotCondition
     {
         return new NotCondition($this);
     }
 
-    public function or(Condition $other) : OrCondition
+    public function or(Condition $other): OrCondition
     {
         return new OrCondition($this, $other);
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $boolExpr = new BoolExpr();
         $boolExpr->setBoolop(BoolExprType::AND_EXPR);
@@ -93,7 +96,7 @@ final readonly class AndCondition implements Condition
         return $node;
     }
 
-    private static function conditionFromNode(Node $node) : Condition
+    private static function conditionFromNode(Node $node): Condition
     {
         if ($node->hasBoolExpr()) {
             $boolExpr = $node->getBoolExpr();
@@ -106,7 +109,9 @@ final readonly class AndCondition implements Condition
                 BoolExprType::AND_EXPR => self::fromAst($node),
                 BoolExprType::OR_EXPR => OrCondition::fromAst($node),
                 BoolExprType::NOT_EXPR => NotCondition::fromAst($node),
-                default => throw UnsupportedNodeException::forNodeType('BoolExpr with ' . BoolExprType::name($boolExpr->getBoolop())),
+                default => throw UnsupportedNodeException::forNodeType(
+                    'BoolExpr with ' . BoolExprType::name($boolExpr->getBoolop()),
+                ),
             };
         }
 
@@ -130,7 +135,9 @@ final readonly class AndCondition implements Condition
                 A_Expr_Kind::AEXPR_NOT_BETWEEN => Between::fromAst($node),
                 A_Expr_Kind::AEXPR_BETWEEN_SYM => Between::fromAst($node),
                 A_Expr_Kind::AEXPR_NOT_BETWEEN_SYM => Between::fromAst($node),
-                default => throw UnsupportedNodeException::forNodeType('A_Expr with kind: ' . A_Expr_Kind::name($aExpr->getKind())),
+                default => throw UnsupportedNodeException::forNodeType(
+                    'A_Expr with kind: ' . A_Expr_Kind::name($aExpr->getKind()),
+                ),
             };
         }
 
@@ -145,7 +152,9 @@ final readonly class AndCondition implements Condition
                 SubLinkType::EXISTS_SUBLINK => Exists::fromAst($node),
                 SubLinkType::ANY_SUBLINK => Any::fromAst($node),
                 SubLinkType::ALL_SUBLINK => All::fromAst($node),
-                default => throw UnsupportedNodeException::forNodeType('SubLink with type: ' . SubLinkType::name($subLink->getSubLinkType())),
+                default => throw UnsupportedNodeException::forNodeType(
+                    'SubLink with type: ' . SubLinkType::name($subLink->getSubLinkType()),
+                ),
             };
         }
 

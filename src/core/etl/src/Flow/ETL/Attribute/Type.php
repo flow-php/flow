@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Attribute;
 
-enum Type : string
+enum Type: string
 {
     case AGGREGATING_FUNCTION = 'AGGREGATING_FUNCTION';
     case COMPARISON = 'COMPARISON';

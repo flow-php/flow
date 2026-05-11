@@ -24,7 +24,7 @@ final class ArrayKeyConverter
      *
      * @return array<mixed>
      */
-    public function convert(array $array) : array
+    public function convert(array $array): array
     {
         $newArray = [];
 

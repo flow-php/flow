@@ -19,7 +19,7 @@ use Psr\Log\LogLevel;
 
 final class TelemetryLoggerErrorHandlingTest extends TestCase
 {
-    public function test_continues_emitting_after_normal_log_call() : void
+    public function test_continues_emitting_after_normal_log_call(): void
     {
         $loggerProvider = new LoggerProvider(
             new MemoryLogProcessor(new VoidExporter()),
@@ -33,10 +33,10 @@ final class TelemetryLoggerErrorHandlingTest extends TestCase
 
         $psr3->log(LogLevel::INFO, 'hello');
 
-        self::assertSame(0, $spy->count());
+        static::assertSame(0, $spy->count());
     }
 
-    public function test_invalid_level_is_not_routed_to_error_handler() : void
+    public function test_invalid_level_is_not_routed_to_error_handler(): void
     {
         $loggerProvider = new LoggerProvider(
             new MemoryLogProcessor(new VoidExporter()),
@@ -53,13 +53,13 @@ final class TelemetryLoggerErrorHandlingTest extends TestCase
         } catch (InvalidArgumentException) {
         }
 
-        self::assertSame(0, $spy->count());
+        static::assertSame(0, $spy->count());
     }
 
-    public function test_routes_emit_failures_to_error_handler() : void
+    public function test_routes_emit_failures_to_error_handler(): void
     {
         $throwingClock = new class implements ClockInterface {
-            public function now() : \DateTimeImmutable
+            public function now(): \DateTimeImmutable
             {
                 throw new \RuntimeException('clock blew up');
             }
@@ -77,11 +77,11 @@ final class TelemetryLoggerErrorHandlingTest extends TestCase
 
         $psr3->info('hello');
 
-        self::assertSame(1, $spy->count());
-        self::assertSame('clock blew up', $spy->last()?->getMessage());
+        static::assertSame(1, $spy->count());
+        static::assertSame('clock blew up', $spy->last()?->getMessage());
     }
 
-    public function test_still_throws_on_invalid_level_per_psr3() : void
+    public function test_still_throws_on_invalid_level_per_psr3(): void
     {
         $loggerProvider = new LoggerProvider(
             new MemoryLogProcessor(new VoidExporter()),

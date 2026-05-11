@@ -4,23 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Writer\PageBuilder;
 
-use function Flow\Parquet\Binary\encode_i32;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
-use Flow\Parquet\Data\{BitWidth, RLEBitPackedHybrid};
+use Flow\Parquet\Data\BitWidth;
+use Flow\Parquet\Data\RLEBitPackedHybrid;
+
+use function Flow\Parquet\Binary\encode_i32;
 
 final readonly class RLEBitPackedPacker
 {
     public function __construct(
         private RLEBitPackedHybrid $bitPackedHybrid,
         private ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<int> $values
      */
-    public function pack(int $bitWidth, array $values) : string
+    public function pack(int $bitWidth, array $values): string
     {
         $dataBuffer = '';
         $this->bitPackedHybrid->encodeHybrid(new BinaryBufferWriter($dataBuffer), $bitWidth, $values);
@@ -31,7 +32,7 @@ final readonly class RLEBitPackedPacker
     /**
      * @param array<int> $values
      */
-    public function packWithBitWidth(int $bitWidth, array $values) : string
+    public function packWithBitWidth(int $bitWidth, array $values): string
     {
         $dataBuffer = '';
         $this->bitPackedHybrid->encodeHybrid(new BinaryBufferWriter($dataBuffer), $bitWidth, $values);
@@ -46,7 +47,7 @@ final readonly class RLEBitPackedPacker
     /**
      * @param array<int> $values
      */
-    public function packWithLength(int $bitWidth, array $values) : string
+    public function packWithLength(int $bitWidth, array $values): string
     {
         $dataBuffer = '';
         $this->bitPackedHybrid->encodeHybrid(new BinaryBufferWriter($dataBuffer), $bitWidth, $values);

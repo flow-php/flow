@@ -6,5 +6,5 @@ namespace Flow\Telemetry\Context;
 
 interface Scope
 {
-    public function detach() : int;
+    public function detach(): int;
 }

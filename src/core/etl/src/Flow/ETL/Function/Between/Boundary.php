@@ -11,7 +11,7 @@ enum Boundary
     case LEFT_INCLUSIVE;
     case RIGHT_INCLUSIVE;
 
-    public function compare(mixed $value, mixed $lowerBound, mixed $upperbound) : bool
+    public function compare(mixed $value, mixed $lowerBound, mixed $upperbound): bool
     {
         return match ($this) {
             self::INCLUSIVE => $value >= $lowerBound && $value <= $upperbound,

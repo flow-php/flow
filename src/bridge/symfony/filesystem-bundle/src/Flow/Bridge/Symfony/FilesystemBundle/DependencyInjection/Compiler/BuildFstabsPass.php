@@ -7,9 +7,12 @@ namespace Flow\Bridge\Symfony\FilesystemBundle\DependencyInjection\Compiler;
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\LogicException;
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FstabBuilder;
 use Flow\Filesystem\FilesystemTable;
-use Flow\Filesystem\Telemetry\{FilesystemTelemetryConfig, FilesystemTelemetryOptions};
+use Flow\Filesystem\Telemetry\FilesystemTelemetryConfig;
+use Flow\Filesystem\Telemetry\FilesystemTelemetryOptions;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
-use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Reference};
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Reference;
 
 final class BuildFstabsPass implements CompilerPassInterface
 {
@@ -19,7 +22,7 @@ final class BuildFstabsPass implements CompilerPassInterface
 
     public const string TELEMETRY_CONFIG_SERVICE_PREFIX = '.flow.filesystem.telemetry_config.';
 
-    public function process(ContainerBuilder $container) : void
+    public function process(ContainerBuilder $container): void
     {
         if (!$container->hasParameter(self::CONFIG_PARAMETER)) {
             return;
@@ -58,7 +61,11 @@ final class BuildFstabsPass implements CompilerPassInterface
                 $resolvedFilesystems[$mountName] = $this->resolveServiceReferences($entry);
             }
 
-            $telemetryReference = $this->buildTelemetryConfigReference($container, $fstabName, $fstabConfig['telemetry'] ?? []);
+            $telemetryReference = $this->buildTelemetryConfigReference(
+                $container,
+                $fstabName,
+                $fstabConfig['telemetry'] ?? [],
+            );
 
             $definition = new Definition(FilesystemTable::class);
             $definition->setFactory([FstabBuilder::class, 'build']);
@@ -85,8 +92,11 @@ final class BuildFstabsPass implements CompilerPassInterface
     /**
      * @param array<string, mixed> $telemetry
      */
-    private function buildTelemetryConfigReference(ContainerBuilder $container, string $fstabName, array $telemetry) : ?Reference
-    {
+    private function buildTelemetryConfigReference(
+        ContainerBuilder $container,
+        string $fstabName,
+        array $telemetry,
+    ): ?Reference {
         if (($telemetry['enabled'] ?? false) !== true) {
             return null;
         }
@@ -95,11 +105,17 @@ final class BuildFstabsPass implements CompilerPassInterface
         $clockServiceId = $telemetry['clock_service_id'] ?? null;
 
         if (!\is_string($telemetryServiceId) || $telemetryServiceId === '') {
-            throw new LogicException(\sprintf('Fstab "%s" telemetry: telemetry_service_id must be a non-empty string when enabled.', $fstabName));
+            throw new LogicException(\sprintf(
+                'Fstab "%s" telemetry: telemetry_service_id must be a non-empty string when enabled.',
+                $fstabName,
+            ));
         }
 
         if (!\is_string($clockServiceId) || $clockServiceId === '') {
-            throw new LogicException(\sprintf('Fstab "%s" telemetry: clock_service_id must be a non-empty string when enabled.', $fstabName));
+            throw new LogicException(\sprintf(
+                'Fstab "%s" telemetry: clock_service_id must be a non-empty string when enabled.',
+                $fstabName,
+            ));
         }
 
         /** @var array<string, mixed> $optionsConfig */
@@ -125,7 +141,7 @@ final class BuildFstabsPass implements CompilerPassInterface
         return new Reference($configServiceId);
     }
 
-    private function camelCase(string $name) : string
+    private function camelCase(string $name): string
     {
         return \lcfirst(\str_replace(' ', '', \ucwords(\str_replace('_', ' ', $name))));
     }
@@ -133,7 +149,7 @@ final class BuildFstabsPass implements CompilerPassInterface
     /**
      * @return array<string, string>
      */
-    private function collectAvailableTypes(ContainerBuilder $container) : array
+    private function collectAvailableTypes(ContainerBuilder $container): array
     {
         $types = [];
 
@@ -153,9 +169,13 @@ final class BuildFstabsPass implements CompilerPassInterface
      *
      * @return array<string, mixed>&array{type: string}
      */
-    private function resolveAwsS3References(array $entry) : array
+    private function resolveAwsS3References(array $entry): array
     {
-        if (\array_key_exists('client_service_id', $entry) && \is_string($entry['client_service_id']) && $entry['client_service_id'] !== '') {
+        if (
+            \array_key_exists('client_service_id', $entry)
+            && \is_string($entry['client_service_id'])
+            && $entry['client_service_id'] !== ''
+        ) {
             $entry['client'] = new Reference($entry['client_service_id']);
             unset($entry['client_service_id']);
         }
@@ -163,12 +183,20 @@ final class BuildFstabsPass implements CompilerPassInterface
         if (\array_key_exists('client', $entry) && \is_array($entry['client'])) {
             $client = $entry['client'];
 
-            if (\array_key_exists('http_client_service_id', $client) && \is_string($client['http_client_service_id']) && $client['http_client_service_id'] !== '') {
+            if (
+                \array_key_exists('http_client_service_id', $client)
+                && \is_string($client['http_client_service_id'])
+                && $client['http_client_service_id'] !== ''
+            ) {
                 $client['http_client'] = new Reference($client['http_client_service_id']);
                 unset($client['http_client_service_id']);
             }
 
-            if (\array_key_exists('logger_service_id', $client) && \is_string($client['logger_service_id']) && $client['logger_service_id'] !== '') {
+            if (
+                \array_key_exists('logger_service_id', $client)
+                && \is_string($client['logger_service_id'])
+                && $client['logger_service_id'] !== ''
+            ) {
                 $client['logger'] = new Reference($client['logger_service_id']);
                 unset($client['logger_service_id']);
             }
@@ -184,9 +212,13 @@ final class BuildFstabsPass implements CompilerPassInterface
      *
      * @return array<string, mixed>&array{type: string}
      */
-    private function resolveAzureBlobReferences(array $entry) : array
+    private function resolveAzureBlobReferences(array $entry): array
     {
-        if (\array_key_exists('client_service_id', $entry) && \is_string($entry['client_service_id']) && $entry['client_service_id'] !== '') {
+        if (
+            \array_key_exists('client_service_id', $entry)
+            && \is_string($entry['client_service_id'])
+            && $entry['client_service_id'] !== ''
+        ) {
             $entry['client'] = new Reference($entry['client_service_id']);
             unset($entry['client_service_id']);
         }
@@ -202,7 +234,11 @@ final class BuildFstabsPass implements CompilerPassInterface
             ];
 
             foreach ($serviceKeyMap as $configKey => $resolvedKey) {
-                if (\array_key_exists($configKey, $client) && \is_string($client[$configKey]) && $client[$configKey] !== '') {
+                if (
+                    \array_key_exists($configKey, $client)
+                    && \is_string($client[$configKey])
+                    && $client[$configKey] !== ''
+                ) {
                     $client[$resolvedKey] = new Reference($client[$configKey]);
                     unset($client[$configKey]);
                 }
@@ -219,7 +255,7 @@ final class BuildFstabsPass implements CompilerPassInterface
      *
      * @return array<string, mixed>&array{type: string}
      */
-    private function resolveServiceReferences(array $entry) : array
+    private function resolveServiceReferences(array $entry): array
     {
         return match ($entry['type']) {
             'aws_s3' => $this->resolveAwsS3References($entry),

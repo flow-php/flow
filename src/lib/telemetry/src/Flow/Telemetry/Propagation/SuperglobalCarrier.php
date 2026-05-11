@@ -68,14 +68,14 @@ final readonly class SuperglobalCarrier implements Carrier
         $this->data = $data;
     }
 
-    public function get(string $key) : ?string
+    public function get(string $key): ?string
     {
         $lowerKey = \strtolower($key);
 
         return $this->data[$lowerKey] ?? null;
     }
 
-    public function set(string $key, string $value) : static
+    public function set(string $key, string $value): static
     {
         throw new RuntimeException('SuperglobalCarrier is read-only');
     }
@@ -83,7 +83,7 @@ final readonly class SuperglobalCarrier implements Carrier
     /**
      * @return array<string, string>
      */
-    public function unwrap() : array
+    public function unwrap(): array
     {
         return $this->data;
     }

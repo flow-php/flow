@@ -17,15 +17,14 @@ final readonly class ScopeSerializer
 {
     public function __construct(
         private AttributeSerializer $attributeSerializer = new AttributeSerializer(),
-    ) {
-    }
+    ) {}
 
     /**
      * Serialize an InstrumentationScope to OTLP format.
      *
      * @return array{name: string, version?: string, attributes?: array<array{key: string, value: array<string, mixed>}>}
      */
-    public function serialize(InstrumentationScope $scope) : array
+    public function serialize(InstrumentationScope $scope): array
     {
         $result = [
             'name' => $scope->name,

@@ -10,15 +10,12 @@ use Ramsey\Uuid\Uuid;
 
 final class UuidConverterTest extends TestCase
 {
-    public function test_converting_uuid() : void
+    public function test_converting_uuid(): void
     {
         $uuid = Uuid::uuid4()->toString();
 
         $converter = new UuidConverter();
 
-        self::assertEquals(
-            $uuid,
-            $converter->fromParquetType($converter->toParquetType($uuid))
-        );
+        static::assertEquals($uuid, $converter->fromParquetType($converter->toParquetType($uuid)));
     }
 }

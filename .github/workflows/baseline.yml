@@ -45,7 +45,7 @@ jobs:
           pie-extensions: "flow-php/pg-query-ext:1.x-dev"
 
       - name: "Build PHAR file"
-        run: "composer build:phar"
+        run: "just phar"
 
       - name: "Validate Flow PHAR"
         run: |
@@ -121,10 +121,10 @@ jobs:
           pie-extensions: "flow-php/pg-query-ext:1.x-dev"
 
       - name: "Generate documentation"
-        run: "composer build:docs"
+        run: "just docs"
 
       - name: "Build latest version Flow Phar for playground"
-        run: "composer build:phar"
+        run: "just phar"
 
       - name: "Install Landing dependencies"
         run: "composer install --no-interaction --no-progress "
@@ -143,7 +143,7 @@ jobs:
         working-directory: "web/landing"
 
       - name: "Generate Api References"
-        run: "composer build:docs:api"
+        run: "just docs-api"
 
       - name: "Setup Node.js"
         uses: actions/setup-node@v4

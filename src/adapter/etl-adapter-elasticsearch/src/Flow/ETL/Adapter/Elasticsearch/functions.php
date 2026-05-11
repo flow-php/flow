@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch;
 
-use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\{DocumentDataSource,
-    ElasticsearchExtractor,
-    ElasticsearchLoader,
-    HitsIntoRowsTransformer};
-use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\{EntryIdFactory, HashIdFactory};
-use Flow\ETL\Attribute\{DocumentationDSL, DocumentationExample, Module, Type};
+use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\DocumentDataSource;
+use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\ElasticsearchExtractor;
+use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\ElasticsearchLoader;
+use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\HitsIntoRowsTransformer;
+use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
+use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\HashIdFactory;
+use Flow\ETL\Attribute\DocumentationDSL;
+use Flow\ETL\Attribute\DocumentationExample;
+use Flow\ETL\Attribute\Module;
+use Flow\ETL\Attribute\Type;
 
 /**
  * https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html.
@@ -38,19 +42,19 @@ function to_es_bulk_index(
     string $index,
     IdFactory $id_factory,
     array $parameters = [],
-) : ElasticsearchLoader {
+): ElasticsearchLoader {
     return (new ElasticsearchLoader($config, $index, $id_factory))->withParameters($parameters);
 }
 
 #[DocumentationDSL(module: Module::ELASTIC_SEARCH, type: Type::HELPER)]
 #[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'elasticsearch')]
-function entry_id_factory(string $entry_name) : IdFactory
+function entry_id_factory(string $entry_name): IdFactory
 {
     return new EntryIdFactory($entry_name);
 }
 
 #[DocumentationDSL(module: Module::ELASTIC_SEARCH, type: Type::HELPER)]
-function hash_id_factory(string ...$entry_names) : IdFactory
+function hash_id_factory(string ...$entry_names): IdFactory
 {
     return new HashIdFactory(...$entry_names);
 }
@@ -81,7 +85,7 @@ function to_es_bulk_update(
     string $index,
     IdFactory $id_factory,
     array $parameters = [],
-) : ElasticsearchLoader {
+): ElasticsearchLoader {
     return ElasticsearchLoader::update($config, $index, $id_factory)->withParameters($parameters);
 }
 
@@ -92,7 +96,7 @@ function to_es_bulk_update(
  */
 #[DocumentationDSL(module: Module::ELASTIC_SEARCH, type: Type::HELPER)]
 #[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'elasticsearch')]
-function es_hits_to_rows(DocumentDataSource $source = DocumentDataSource::source) : HitsIntoRowsTransformer
+function es_hits_to_rows(DocumentDataSource $source = DocumentDataSource::source): HitsIntoRowsTransformer
 {
     return new HitsIntoRowsTransformer($source);
 }
@@ -121,7 +125,7 @@ function es_hits_to_rows(DocumentDataSource $source = DocumentDataSource::source
  */
 #[DocumentationDSL(module: Module::ELASTIC_SEARCH, type: Type::EXTRACTOR)]
 #[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'elasticsearch')]
-function from_es(array $config, array $parameters, ?array $pit_params = null) : ElasticsearchExtractor
+function from_es(array $config, array $parameters, ?array $pit_params = null): ElasticsearchExtractor
 {
     $extractor = new ElasticsearchExtractor($config, $parameters);
 

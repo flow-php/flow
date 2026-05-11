@@ -6,17 +6,17 @@ namespace Flow\ETL\Join\Comparison;
 
 use Flow\ETL\Join\Comparison;
 use Flow\ETL\Row;
-use Flow\ETL\Row\{EntryReference, Reference};
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 
 final readonly class Equal implements Comparison
 {
     public function __construct(
         private string|Reference $entryLeft,
         private string|Reference $entryRight,
-    ) {
-    }
+    ) {}
 
-    public function compare(Row $left, Row $right) : bool
+    public function compare(Row $left, Row $right): bool
     {
         return $left->valueOf($this->entryLeft) == $right->valueOf($this->entryRight);
     }
@@ -24,7 +24,7 @@ final readonly class Equal implements Comparison
     /**
      * @return array<Reference>
      */
-    public function left() : array
+    public function left(): array
     {
         return [\is_string($this->entryLeft) ? EntryReference::init($this->entryLeft) : $this->entryLeft];
     }
@@ -32,7 +32,7 @@ final readonly class Equal implements Comparison
     /**
      * @return array<Reference>
      */
-    public function right() : array
+    public function right(): array
     {
         return [\is_string($this->entryRight) ? EntryReference::init($this->entryRight) : $this->entryRight];
     }

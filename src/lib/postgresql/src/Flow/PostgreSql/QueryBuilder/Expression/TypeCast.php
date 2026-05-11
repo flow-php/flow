@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{Node, TypeCast as AstTypeCast};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\TypeCast as AstTypeCast;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 
@@ -20,10 +21,9 @@ final readonly class TypeCast implements Expression
     public function __construct(
         private Expression $expression,
         private ColumnType $dataType,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $typeCast = $node->getTypeCast();
 
@@ -50,22 +50,22 @@ final readonly class TypeCast implements Expression
         return new self($expression, $dataType);
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return new AliasedExpression($this, $alias);
     }
 
-    public function getColumnType() : ColumnType
+    public function getColumnType(): ColumnType
     {
         return $this->dataType;
     }
 
-    public function getExpression() : Expression
+    public function getExpression(): Expression
     {
         return $this->expression;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $typeCast = new AstTypeCast();
         $typeCast->setArg($this->expression->toAst());
@@ -77,12 +77,12 @@ final readonly class TypeCast implements Expression
         return $node;
     }
 
-    public function withColumnType(ColumnType $dataType) : self
+    public function withColumnType(ColumnType $dataType): self
     {
         return new self($this->expression, $dataType);
     }
 
-    public function withExpression(Expression $expression) : self
+    public function withExpression(Expression $expression): self
     {
         return new self($expression, $this->dataType);
     }

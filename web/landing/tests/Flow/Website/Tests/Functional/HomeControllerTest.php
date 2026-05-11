@@ -9,27 +9,27 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class HomeControllerTest extends WebTestCase
 {
-    public function test_homepage_examples_link_to_topics() : void
+    public function test_homepage_examples_link_to_topics(): void
     {
         $client = self::createClient();
         $crawler = $client->request('GET', '/');
 
         self::assertResponseIsSuccessful();
         $topicLinks = $crawler->filter('nav a[href*="#example"]');
-        self::assertGreaterThan(0, $topicLinks->count());
+        static::assertGreaterThan(0, $topicLinks->count());
     }
 
-    public function test_homepage_has_playground_link() : void
+    public function test_homepage_has_playground_link(): void
     {
         $client = self::createClient();
         $crawler = $client->request('GET', '/');
 
         self::assertResponseIsSuccessful();
         $link = $crawler->filter('a[href="/playground"]');
-        self::assertGreaterThan(0, $link->count());
+        static::assertGreaterThan(0, $link->count());
     }
 
-    public function test_homepage_returns_200() : void
+    public function test_homepage_returns_200(): void
     {
         $client = self::createClient();
         $client->request('GET', '/');
@@ -37,7 +37,7 @@ final class HomeControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
     }
 
-    public function test_homepage_topic_link_works() : void
+    public function test_homepage_topic_link_works(): void
     {
         $client = self::createClient();
         $crawler = $client->request('GET', '/');
@@ -49,7 +49,7 @@ final class HomeControllerTest extends WebTestCase
     }
 
     #[\Override]
-    protected static function getKernelClass() : string
+    protected static function getKernelClass(): string
     {
         return Kernel::class;
     }

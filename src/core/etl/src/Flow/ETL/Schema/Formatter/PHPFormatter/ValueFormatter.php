@@ -8,7 +8,7 @@ use Flow\ETL\Exception\RuntimeException;
 
 final class ValueFormatter
 {
-    public function format(mixed $value) : string
+    public function format(mixed $value): string
     {
         if (null === $value) {
             return 'null';
@@ -36,7 +36,7 @@ final class ValueFormatter
     /**
      * @param array<array-key, mixed> $array
      */
-    private function formatArray(array $array) : string
+    private function formatArray(array $array): string
     {
         $formattedArray = [];
 

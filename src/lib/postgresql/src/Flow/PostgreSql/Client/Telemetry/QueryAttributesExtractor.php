@@ -19,11 +19,15 @@ final readonly class QueryAttributesExtractor
      * (SELECT, INSERT, etc.) and target table name. This method is optimized
      * to minimize regex operations per query.
      */
-    public function extract(string $query) : QueryAttributes
+    public function extract(string $query): QueryAttributes
     {
         $operation = null;
 
-        if (\preg_match('/^\s*(SELECT|INSERT|UPDATE|DELETE|MERGE|WITH|EXPLAIN|COPY|CREATE|ALTER|DROP|TRUNCATE|BEGIN|COMMIT|ROLLBACK)\b/i', $query, $matches)) {
+        if (\preg_match(
+            '/^\s*(SELECT|INSERT|UPDATE|DELETE|MERGE|WITH|EXPLAIN|COPY|CREATE|ALTER|DROP|TRUNCATE|BEGIN|COMMIT|ROLLBACK)\b/i',
+            $query,
+            $matches,
+        )) {
             $operation = \strtoupper($matches[1]);
         }
 
@@ -44,7 +48,7 @@ final readonly class QueryAttributesExtractor
      *
      * @deprecated Use extract() instead for better performance
      */
-    public function extractOperation(string $query) : ?string
+    public function extractOperation(string $query): ?string
     {
         return $this->extract($query)->operation;
     }
@@ -57,7 +61,7 @@ final readonly class QueryAttributesExtractor
      *
      * @deprecated Use extract() instead for better performance
      */
-    public function extractTarget(string $query) : ?string
+    public function extractTarget(string $query): ?string
     {
         return $this->extract($query)->target;
     }

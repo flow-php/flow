@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Value\Uuid;
 
@@ -13,7 +14,7 @@ use Flow\Types\Value\Uuid;
  */
 final readonly class UuidType implements Type
 {
-    public function assert(mixed $value) : Uuid
+    public function assert(mixed $value): Uuid
     {
         if ($this->isValid($value)) {
             return $value;
@@ -22,7 +23,7 @@ final readonly class UuidType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
-    public function cast(mixed $value) : mixed
+    public function cast(mixed $value): mixed
     {
         if ($this->isValid($value)) {
             return $value;
@@ -47,7 +48,7 @@ final readonly class UuidType implements Type
         throw new CastingException($value, $this);
     }
 
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         if ($value instanceof Uuid) {
             return true;
@@ -56,14 +57,14 @@ final readonly class UuidType implements Type
         return false;
     }
 
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'uuid',
         ];
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return 'uuid';
     }

@@ -11,15 +11,14 @@ final readonly class ConsoleLogOptions
         public bool $showInstrumentationScope = true,
         public bool $showObservedTimestamp = false,
         public bool $showDroppedAttributeCount = false,
-    ) {
-    }
+    ) {}
 
-    public static function default() : self
+    public static function default(): self
     {
         return new self();
     }
 
-    public static function minimal() : self
+    public static function minimal(): self
     {
         return new self(
             showResourceAttributes: false,
@@ -29,23 +28,43 @@ final readonly class ConsoleLogOptions
         );
     }
 
-    public function withDroppedAttributeCount(bool $show = true) : self
+    public function withDroppedAttributeCount(bool $show = true): self
     {
-        return new self($this->showResourceAttributes, $this->showInstrumentationScope, $this->showObservedTimestamp, $show);
+        return new self(
+            $this->showResourceAttributes,
+            $this->showInstrumentationScope,
+            $this->showObservedTimestamp,
+            $show,
+        );
     }
 
-    public function withInstrumentationScope(bool $show = true) : self
+    public function withInstrumentationScope(bool $show = true): self
     {
-        return new self($this->showResourceAttributes, $show, $this->showObservedTimestamp, $this->showDroppedAttributeCount);
+        return new self(
+            $this->showResourceAttributes,
+            $show,
+            $this->showObservedTimestamp,
+            $this->showDroppedAttributeCount,
+        );
     }
 
-    public function withObservedTimestamp(bool $show = true) : self
+    public function withObservedTimestamp(bool $show = true): self
     {
-        return new self($this->showResourceAttributes, $this->showInstrumentationScope, $show, $this->showDroppedAttributeCount);
+        return new self(
+            $this->showResourceAttributes,
+            $this->showInstrumentationScope,
+            $show,
+            $this->showDroppedAttributeCount,
+        );
     }
 
-    public function withResourceAttributes(bool $show = true) : self
+    public function withResourceAttributes(bool $show = true): self
     {
-        return new self($show, $this->showInstrumentationScope, $this->showObservedTimestamp, $this->showDroppedAttributeCount);
+        return new self(
+            $show,
+            $this->showInstrumentationScope,
+            $this->showObservedTimestamp,
+            $this->showDroppedAttributeCount,
+        );
     }
 }

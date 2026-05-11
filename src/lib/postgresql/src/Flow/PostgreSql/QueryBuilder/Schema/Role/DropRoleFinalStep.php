@@ -9,9 +9,9 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface DropRoleFinalStep extends Sql
 {
-    public function ifExists() : self;
+    public function ifExists(): self;
 
-    public function toAst() : DropRoleStmt;
+    public function toAst(): DropRoleStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

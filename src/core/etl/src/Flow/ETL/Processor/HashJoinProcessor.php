@@ -4,13 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor;
 
-use function Flow\ETL\DSL\{refs, row, rows, schema};
-use Flow\ETL\{DataFrame, FlowContext, Processor, Row, Rows};
-use Flow\ETL\Exception\{DuplicatedEntriesException, JoinException};
+use Flow\ETL\DataFrame;
+use Flow\ETL\Exception\DuplicatedEntriesException;
+use Flow\ETL\Exception\JoinException;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Hash\NativePHPHash;
-use Flow\ETL\Join\{Expression, Join};
+use Flow\ETL\Join\Expression;
+use Flow\ETL\Join\Join;
+use Flow\ETL\Processor;
 use Flow\ETL\Processor\HashJoin\HashTable;
+use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Rows;
+
+use function Flow\ETL\DSL\refs;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 
 /**
  * Performs hash join between upstream data and a DataFrame.
@@ -23,10 +33,9 @@ final readonly class HashJoinProcessor implements Processor
         private DataFrame $right,
         private Expression $expression,
         private Join $join,
-    ) {
-    }
+    ) {}
 
-    public function process(\Generator $rows, FlowContext $context) : \Generator
+    public function process(\Generator $rows, FlowContext $context): \Generator
     {
         $leftReferences = refs(...$this->expression->left());
         $rightReferences = refs(...$this->expression->right());
@@ -47,7 +56,11 @@ final readonly class HashJoinProcessor implements Processor
 
         if ($this->join === Join::left) {
             foreach ($rightSchema->definitions() as $rightEntryDefinition) {
-                $rightEntries[] = $context->entryFactory()->create($rightEntryDefinition->entry()->name(), null, $rightEntryDefinition->makeNullable());
+                $rightEntries[] = $context->entryFactory()->create(
+                    $rightEntryDefinition->entry()->name(),
+                    null,
+                    $rightEntryDefinition->makeNullable(),
+                );
             }
         }
 
@@ -88,7 +101,11 @@ final readonly class HashJoinProcessor implements Processor
 
         if ($this->join === Join::right) {
             foreach ($leftSchema->definitions() as $leftEntryDefinition) {
-                $leftEntries[] = $context->entryFactory()->create($leftEntryDefinition->entry()->name(), null, $leftEntryDefinition->makeNullable());
+                $leftEntries[] = $context->entryFactory()->create(
+                    $leftEntryDefinition->entry()->name(),
+                    null,
+                    $leftEntryDefinition->makeNullable(),
+                );
             }
 
             foreach ($hashTable->unmatchedRows() as $unmatchedRow) {
@@ -98,17 +115,27 @@ final readonly class HashJoinProcessor implements Processor
         }
     }
 
-    private function createRows(Row $leftRow, Row $rightRow, FlowContext $context) : Rows
+    private function createRows(Row $leftRow, Row $rightRow, FlowContext $context): Rows
     {
         try {
             return match ($this->join) {
                 Join::inner => rows($leftRow->merge($rightRow, $this->expression->prefix())),
-                Join::left => rows($leftRow->merge($this->expression->dropDuplicateRightEntries($rightRow), $this->expression->prefix())),
-                Join::right => rows($this->expression->dropDuplicateLeftEntries($leftRow)->merge($rightRow, $this->expression->prefix())),
+                Join::left => rows($leftRow->merge(
+                    $this->expression->dropDuplicateRightEntries($rightRow),
+                    $this->expression->prefix(),
+                )),
+                Join::right => rows($this->expression->dropDuplicateLeftEntries($leftRow)->merge(
+                    $rightRow,
+                    $this->expression->prefix(),
+                )),
                 Join::left_anti => rows(),
             };
         } catch (DuplicatedEntriesException $e) {
-            throw new JoinException($e->getMessage() . ' try to use a different join prefix than: "' . $this->expression->prefix() . '"', $e->getCode(), $e);
+            throw new JoinException(
+                $e->getMessage() . ' try to use a different join prefix than: "' . $this->expression->prefix() . '"',
+                $e->getCode(),
+                $e,
+            );
         }
     }
 }

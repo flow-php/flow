@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\PHPUnit\Telemetry;
 
-use Flow\Telemetry\ErrorHandler\{ErrorLogMessageType, SyslogFacility, SyslogSeverity};
+use Flow\Telemetry\ErrorHandler\ErrorLogMessageType;
+use Flow\Telemetry\ErrorHandler\SyslogFacility;
+use Flow\Telemetry\ErrorHandler\SyslogSeverity;
 use PHPUnit\Runner\Extension\ParameterCollection;
 
 final readonly class Configuration
@@ -110,17 +112,21 @@ final readonly class Configuration
         public bool $emitTestCaseSpans,
         public int $batchSize,
         public ErrorLogHandlerConfig|NullErrorHandlerConfig|StreamErrorHandlerConfig|SyslogErrorHandlerConfig|UdpSyslogErrorHandlerConfig $errorHandler,
-    ) {
-    }
+    ) {}
 
-    public static function fromParameters(ParameterCollection $parameters) : self
+    public static function fromParameters(ParameterCollection $parameters): self
     {
         $legacyUrl = self::resolveLegacyCollectorUrl($parameters);
 
         if ($legacyUrl !== null) {
             self::rejectParams(
                 $parameters,
-                \array_merge(self::SHARED_PARAMS, self::CURL_SPECIFIC_PARAMS, self::GRPC_SPECIFIC_PARAMS, self::STREAM_TRANSPORT_PARAMS),
+                \array_merge(
+                    self::SHARED_PARAMS,
+                    self::CURL_SPECIFIC_PARAMS,
+                    self::GRPC_SPECIFIC_PARAMS,
+                    self::STREAM_TRANSPORT_PARAMS,
+                ),
                 'Deprecated parameter "otel_collector_url" cannot be mixed with new parameter "%s", migrate fully to the new parameter shape.',
             );
             @\trigger_error(
@@ -141,7 +147,7 @@ final readonly class Configuration
         );
     }
 
-    private static function buildErrorLogHandlerConfig(ParameterCollection $parameters) : ErrorLogHandlerConfig
+    private static function buildErrorLogHandlerConfig(ParameterCollection $parameters): ErrorLogHandlerConfig
     {
         self::rejectForeignHandlerParams($parameters, self::ERROR_HANDLER_LOG, self::ERROR_LOG_HANDLER_PARAMS);
 
@@ -152,21 +158,23 @@ final readonly class Configuration
         );
     }
 
-    private static function buildNullErrorHandlerConfig(ParameterCollection $parameters) : NullErrorHandlerConfig
+    private static function buildNullErrorHandlerConfig(ParameterCollection $parameters): NullErrorHandlerConfig
     {
         self::rejectForeignHandlerParams($parameters, self::ERROR_HANDLER_NOOP, []);
 
         return new NullErrorHandlerConfig();
     }
 
-    private static function buildStreamErrorHandlerConfig(ParameterCollection $parameters) : StreamErrorHandlerConfig
+    private static function buildStreamErrorHandlerConfig(ParameterCollection $parameters): StreamErrorHandlerConfig
     {
         self::rejectForeignHandlerParams($parameters, self::ERROR_HANDLER_STREAM, self::STREAM_HANDLER_PARAMS);
 
         $destination = self::resolve($parameters, 'error_handler_destination');
 
         if ($destination === null || $destination === '') {
-            throw new \InvalidArgumentException('Parameter "error_handler_destination" is required for error_handler "stream".');
+            throw new \InvalidArgumentException(
+                'Parameter "error_handler_destination" is required for error_handler "stream".',
+            );
         }
 
         return new StreamErrorHandlerConfig(
@@ -177,7 +185,7 @@ final readonly class Configuration
         );
     }
 
-    private static function buildSyslogErrorHandlerConfig(ParameterCollection $parameters) : SyslogErrorHandlerConfig
+    private static function buildSyslogErrorHandlerConfig(ParameterCollection $parameters): SyslogErrorHandlerConfig
     {
         self::rejectForeignHandlerParams($parameters, self::ERROR_HANDLER_SYSLOG, self::SYSLOG_HANDLER_PARAMS);
 
@@ -189,14 +197,16 @@ final readonly class Configuration
         );
     }
 
-    private static function buildUdpSyslogErrorHandlerConfig(ParameterCollection $parameters) : UdpSyslogErrorHandlerConfig
+    private static function buildUdpSyslogErrorHandlerConfig(ParameterCollection $parameters): UdpSyslogErrorHandlerConfig
     {
         self::rejectForeignHandlerParams($parameters, self::ERROR_HANDLER_UDP_SYSLOG, self::UDP_SYSLOG_HANDLER_PARAMS);
 
         $host = self::resolve($parameters, 'error_handler_host');
 
         if ($host === null || $host === '') {
-            throw new \InvalidArgumentException('Parameter "error_handler_host" is required for error_handler "udp_syslog".');
+            throw new \InvalidArgumentException(
+                'Parameter "error_handler_host" is required for error_handler "udp_syslog".',
+            );
         }
 
         return new UdpSyslogErrorHandlerConfig(
@@ -211,7 +221,7 @@ final readonly class Configuration
     /**
      * @return array<string, string>
      */
-    private static function parseHeaders(string $raw) : array
+    private static function parseHeaders(string $raw): array
     {
         if ($raw === '') {
             return [];
@@ -246,7 +256,7 @@ final readonly class Configuration
         return $headers;
     }
 
-    private static function readEnv(string $fullName) : ?string
+    private static function readEnv(string $fullName): ?string
     {
         $value = $_ENV[$fullName] ?? $_SERVER[$fullName] ?? \getenv($fullName);
 
@@ -260,8 +270,11 @@ final readonly class Configuration
     /**
      * @param list<string> $allowedParams
      */
-    private static function rejectForeignHandlerParams(ParameterCollection $parameters, string $type, array $allowedParams) : void
-    {
+    private static function rejectForeignHandlerParams(
+        ParameterCollection $parameters,
+        string $type,
+        array $allowedParams,
+    ): void {
         $foreign = \array_values(\array_diff(
             \array_values(\array_unique(\array_merge(
                 self::ERROR_LOG_HANDLER_PARAMS,
@@ -281,8 +294,11 @@ final readonly class Configuration
     /**
      * @param list<string> $forbidden
      */
-    private static function rejectParams(ParameterCollection $parameters, array $forbidden, string $messageTemplate) : void
-    {
+    private static function rejectParams(
+        ParameterCollection $parameters,
+        array $forbidden,
+        string $messageTemplate,
+    ): void {
         foreach ($forbidden as $name) {
             if (self::resolve($parameters, $name) !== null) {
                 throw new \InvalidArgumentException(\sprintf($messageTemplate, $name));
@@ -290,7 +306,7 @@ final readonly class Configuration
         }
     }
 
-    private static function resolve(ParameterCollection $parameters, string $name) : ?string
+    private static function resolve(ParameterCollection $parameters, string $name): ?string
     {
         $env = self::readEnv(self::ENV_PREFIX . \strtoupper($name));
 
@@ -305,7 +321,7 @@ final readonly class Configuration
         return null;
     }
 
-    private static function resolveBool(ParameterCollection $parameters, string $name, bool $default) : bool
+    private static function resolveBool(ParameterCollection $parameters, string $name, bool $default): bool
     {
         $value = self::resolve($parameters, $name);
 
@@ -330,9 +346,8 @@ final readonly class Configuration
         ));
     }
 
-    private static function resolveErrorHandler(
-        ParameterCollection $parameters,
-    ) : ErrorLogHandlerConfig|NullErrorHandlerConfig|StreamErrorHandlerConfig|SyslogErrorHandlerConfig|UdpSyslogErrorHandlerConfig {
+    private static function resolveErrorHandler(ParameterCollection $parameters): ErrorLogHandlerConfig|NullErrorHandlerConfig|StreamErrorHandlerConfig|SyslogErrorHandlerConfig|UdpSyslogErrorHandlerConfig
+    {
         $type = self::resolve($parameters, 'error_handler') ?? self::ERROR_HANDLER_LOG;
 
         return match ($type) {
@@ -355,7 +370,7 @@ final readonly class Configuration
         };
     }
 
-    private static function resolveErrorLogMessageType(ParameterCollection $parameters) : ErrorLogMessageType
+    private static function resolveErrorLogMessageType(ParameterCollection $parameters): ErrorLogMessageType
     {
         $value = self::resolve($parameters, 'error_handler_message_type');
 
@@ -375,7 +390,7 @@ final readonly class Configuration
         };
     }
 
-    private static function resolveFilePermissions(ParameterCollection $parameters, string $name) : int
+    private static function resolveFilePermissions(ParameterCollection $parameters, string $name): int
     {
         $raw = self::resolve($parameters, $name);
 
@@ -399,7 +414,7 @@ final readonly class Configuration
         return $value;
     }
 
-    private static function resolveInt(ParameterCollection $parameters, string $name, int $default) : int
+    private static function resolveInt(ParameterCollection $parameters, string $name, int $default): int
     {
         $value = self::resolve($parameters, $name);
 
@@ -418,7 +433,7 @@ final readonly class Configuration
         return (int) $value;
     }
 
-    private static function resolveLegacyCollectorUrl(ParameterCollection $parameters) : ?string
+    private static function resolveLegacyCollectorUrl(ParameterCollection $parameters): ?string
     {
         $env = self::readEnv(self::ENV_PREFIX . 'COLLECTOR_URL');
 
@@ -433,7 +448,7 @@ final readonly class Configuration
         return null;
     }
 
-    private static function resolveSerializer(ParameterCollection $parameters) : SerializerType
+    private static function resolveSerializer(ParameterCollection $parameters): SerializerType
     {
         $value = self::resolve($parameters, 'curl_serializer');
 
@@ -453,7 +468,7 @@ final readonly class Configuration
         return $serializer;
     }
 
-    private static function resolveSyslogFacility(ParameterCollection $parameters) : SyslogFacility
+    private static function resolveSyslogFacility(ParameterCollection $parameters): SyslogFacility
     {
         $value = self::resolve($parameters, 'error_handler_facility');
 
@@ -484,7 +499,7 @@ final readonly class Configuration
         };
     }
 
-    private static function resolveSyslogSeverity(ParameterCollection $parameters) : SyslogSeverity
+    private static function resolveSyslogSeverity(ParameterCollection $parameters): SyslogSeverity
     {
         $value = self::resolve($parameters, 'error_handler_severity');
 
@@ -508,7 +523,7 @@ final readonly class Configuration
     private static function resolveTransport(
         ParameterCollection $parameters,
         ?string $legacyUrl,
-    ) : CurlTransportConfig|GrpcTransportConfig|StreamTransportConfig {
+    ): CurlTransportConfig|GrpcTransportConfig|StreamTransportConfig {
         $transportType = self::resolve($parameters, 'transport') ?? self::TRANSPORT_CURL;
 
         if (!\in_array($transportType, [self::TRANSPORT_CURL, self::TRANSPORT_GRPC, self::TRANSPORT_STREAM], true)) {
@@ -521,22 +536,36 @@ final readonly class Configuration
             ));
         }
 
-        $endpoint = $legacyUrl
-            ?? self::resolve($parameters, 'endpoint')
-            ?? self::DEFAULT_ENDPOINT;
+        $endpoint = $legacyUrl ?? self::resolve($parameters, 'endpoint') ?? self::DEFAULT_ENDPOINT;
 
         $headers = self::parseHeaders(self::resolve($parameters, 'headers') ?? '');
 
         if ($transportType === self::TRANSPORT_CURL) {
-            self::rejectParams($parameters, self::GRPC_SPECIFIC_PARAMS, 'Parameter "%s" cannot be used with transport "curl".');
-            self::rejectParams($parameters, self::STREAM_TRANSPORT_PARAMS, 'Parameter "%s" cannot be used with transport "curl".');
+            self::rejectParams(
+                $parameters,
+                self::GRPC_SPECIFIC_PARAMS,
+                'Parameter "%s" cannot be used with transport "curl".',
+            );
+            self::rejectParams(
+                $parameters,
+                self::STREAM_TRANSPORT_PARAMS,
+                'Parameter "%s" cannot be used with transport "curl".',
+            );
 
             return new CurlTransportConfig(
                 endpoint: $endpoint,
                 headers: $headers,
                 timeoutMs: self::resolveInt($parameters, 'curl_timeout_ms', self::DEFAULT_TIMEOUT_MS),
-                connectTimeoutMs: self::resolveInt($parameters, 'curl_connect_timeout_ms', self::DEFAULT_CONNECT_TIMEOUT_MS),
-                shutdownTimeoutMs: self::resolveInt($parameters, 'shutdown_timeout_ms', self::DEFAULT_SHUTDOWN_TIMEOUT_MS),
+                connectTimeoutMs: self::resolveInt(
+                    $parameters,
+                    'curl_connect_timeout_ms',
+                    self::DEFAULT_CONNECT_TIMEOUT_MS,
+                ),
+                shutdownTimeoutMs: self::resolveInt(
+                    $parameters,
+                    'shutdown_timeout_ms',
+                    self::DEFAULT_SHUTDOWN_TIMEOUT_MS,
+                ),
                 compression: self::resolveBool($parameters, 'curl_compression', false),
                 followRedirects: self::resolveBool($parameters, 'curl_follow_redirects', true),
                 maxRedirects: self::resolveInt($parameters, 'curl_max_redirects', 3),
@@ -551,26 +580,52 @@ final readonly class Configuration
         }
 
         if ($transportType === self::TRANSPORT_GRPC) {
-            self::rejectParams($parameters, self::CURL_SPECIFIC_PARAMS, 'Parameter "%s" cannot be used with transport "grpc".');
-            self::rejectParams($parameters, self::STREAM_TRANSPORT_PARAMS, 'Parameter "%s" cannot be used with transport "grpc".');
+            self::rejectParams(
+                $parameters,
+                self::CURL_SPECIFIC_PARAMS,
+                'Parameter "%s" cannot be used with transport "grpc".',
+            );
+            self::rejectParams(
+                $parameters,
+                self::STREAM_TRANSPORT_PARAMS,
+                'Parameter "%s" cannot be used with transport "grpc".',
+            );
 
             return new GrpcTransportConfig(
                 endpoint: $endpoint,
                 headers: $headers,
                 insecure: self::resolveBool($parameters, 'grpc_insecure', true),
                 timeoutMs: self::resolveInt($parameters, 'grpc_timeout_ms', self::DEFAULT_TIMEOUT_MS),
-                shutdownTimeoutMs: self::resolveInt($parameters, 'shutdown_timeout_ms', self::DEFAULT_SHUTDOWN_TIMEOUT_MS),
+                shutdownTimeoutMs: self::resolveInt(
+                    $parameters,
+                    'shutdown_timeout_ms',
+                    self::DEFAULT_SHUTDOWN_TIMEOUT_MS,
+                ),
             );
         }
 
-        self::rejectParams($parameters, self::CURL_SPECIFIC_PARAMS, 'Parameter "%s" cannot be used with transport "stream".');
-        self::rejectParams($parameters, self::GRPC_SPECIFIC_PARAMS, 'Parameter "%s" cannot be used with transport "stream".');
-        self::rejectParams($parameters, ['headers', 'shutdown_timeout_ms'], 'Parameter "%s" cannot be used with transport "stream".');
+        self::rejectParams(
+            $parameters,
+            self::CURL_SPECIFIC_PARAMS,
+            'Parameter "%s" cannot be used with transport "stream".',
+        );
+        self::rejectParams(
+            $parameters,
+            self::GRPC_SPECIFIC_PARAMS,
+            'Parameter "%s" cannot be used with transport "stream".',
+        );
+        self::rejectParams(
+            $parameters,
+            ['headers', 'shutdown_timeout_ms'],
+            'Parameter "%s" cannot be used with transport "stream".',
+        );
 
         $rawEndpoint = self::resolve($parameters, 'endpoint');
 
         if ($rawEndpoint === null || $rawEndpoint === '') {
-            throw new \InvalidArgumentException('Parameter "endpoint" is required for transport "stream" (file path or php:// stream wrapper URI).');
+            throw new \InvalidArgumentException(
+                'Parameter "endpoint" is required for transport "stream" (file path or php:// stream wrapper URI).',
+            );
         }
 
         return new StreamTransportConfig(

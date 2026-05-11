@@ -4,24 +4,29 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Dremel;
 
-use function Flow\Parquet\{array_iterate_at_level, dremel_array_combine_recursive};
-use function Flow\Parquet\array_merge_recursive;
-use Flow\Parquet\Dremel\ColumnData\{DefinitionConverter, NullLevel, Stack};
+use Flow\Parquet\Dremel\ColumnData\DefinitionConverter;
+use Flow\Parquet\Dremel\ColumnData\NullLevel;
+use Flow\Parquet\Dremel\ColumnData\Stack;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
-use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
+use Flow\Parquet\ParquetFile\Schema\Column;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+
+use function Flow\Parquet\array_iterate_at_level;
+use function Flow\Parquet\array_merge_recursive;
+use function Flow\Parquet\dremel_array_combine_recursive;
 
 final readonly class DremelAssembler
 {
     public function __construct(
         private DataConverter $dataConverter,
         private DefinitionConverter $definitionConverter = new DefinitionConverter(),
-    ) {
-    }
+    ) {}
 
     /**
      * @return \Generator<array-key, mixed>
      */
-    public function assemble(Column $column, ReadColumnData $flatData) : \Generator
+    public function assemble(Column $column, ReadColumnData $flatData): \Generator
     {
         $depth = 0;
 
@@ -60,7 +65,7 @@ final readonly class DremelAssembler
     /**
      * @return \Generator<array-key, mixed>
      */
-    private function assemblyFlat(FlatColumn $column, ReadColumnData $flatData) : \Generator
+    private function assemblyFlat(FlatColumn $column, ReadColumnData $flatData): \Generator
     {
         if ($column->repetitions()->maxRepetitionLevel() === 0) {
             yield from $flatData->flatValues[$column->flatPath()]->assembleFlat($this->dataConverter);
@@ -83,8 +88,8 @@ final readonly class DremelAssembler
                 $this->definitionConverter->toValue(
                     $column->repetitions(),
                     $value->definitionLevel,
-                    $this->dataConverter->fromParquetType($column, $value->value)
-                )
+                    $this->dataConverter->fromParquetType($column, $value->value),
+                ),
             );
         }
 
@@ -96,7 +101,7 @@ final readonly class DremelAssembler
     /**
      * @return \Generator<mixed>
      */
-    private function assemblyList(NestedColumn $column, ReadColumnData $flatData, int $depth) : \Generator
+    private function assemblyList(NestedColumn $column, ReadColumnData $flatData, int $depth): \Generator
     {
         $depth++;
 
@@ -137,7 +142,7 @@ final readonly class DremelAssembler
     /**
      * @return \Generator<mixed>
      */
-    private function assemblyMap(NestedColumn $column, ReadColumnData $flatData, int $depth) : \Generator
+    private function assemblyMap(NestedColumn $column, ReadColumnData $flatData, int $depth): \Generator
     {
         $depth++;
         $mapKeyColumn = $column->getMapKeyColumn();
@@ -230,7 +235,10 @@ final readonly class DremelAssembler
 
         $iterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
         $iterator->attachIterator($this->assemblyFlat($mapKeyColumn, $flatData), 'key');
-        $iterator->attachIterator($this->assemblyStructure($mapValueColumn, $flatData, $depth, repeated: true), 'value');
+        $iterator->attachIterator(
+            $this->assemblyStructure($mapValueColumn, $flatData, $depth, repeated: true),
+            'value',
+        );
 
         foreach ($iterator as $iteration) {
             if ($iteration['key'] instanceof NullLevel) {
@@ -246,8 +254,12 @@ final readonly class DremelAssembler
     /**
      * @return \Generator<array-key, mixed>
      */
-    private function assemblyStructure(NestedColumn $column, ReadColumnData $flatData, int $depth, bool $repeated = false) : \Generator
-    {
+    private function assemblyStructure(
+        NestedColumn $column,
+        ReadColumnData $flatData,
+        int $depth,
+        bool $repeated = false,
+    ): \Generator {
         $depth++;
         $iterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
 
@@ -281,7 +293,6 @@ final readonly class DremelAssembler
                 $structure = [];
 
                 foreach ($iteration as $propertyName => $propertyValue) {
-
                     if ($propertyValue instanceof NullLevel && $propertyValue->level < $depth) {
                         yield new NullLevel($propertyValue->level);
 
@@ -301,7 +312,6 @@ final readonly class DremelAssembler
             $structures = [];
 
             foreach ($iteration as $propertyName => $propertyValues) {
-
                 if ($propertyValues instanceof NullLevel && $propertyValues->level <= $depth) {
                     yield new NullLevel($propertyValues->level);
 
@@ -311,14 +321,16 @@ final readonly class DremelAssembler
                 array_iterate_at_level(
                     $propertyValues,
                     $column->repetitions()->maxRepetitionLevel(),
-                    static function (mixed &$value) use ($propertyName, $column) : void {
-
-                        if ($value instanceof NullLevel && $value->level + 1 === $column->repetitions()->maxDefinitionLevel()) {
+                    static function (mixed &$value) use ($propertyName, $column): void {
+                        if (
+                            $value instanceof NullLevel
+                            && ($value->level + 1) === $column->repetitions()->maxDefinitionLevel()
+                        ) {
                             return;
                         }
 
                         $value = [$propertyName => $value];
-                    }
+                    },
                 );
 
                 $structures = array_merge_recursive($structures, $propertyValues);
@@ -333,7 +345,7 @@ final readonly class DremelAssembler
      *
      * @return array<array-key, mixed>
      */
-    private function processRowNullLevels(array $row) : array
+    private function processRowNullLevels(array $row): array
     {
         foreach ($row as &$value) {
             if (is_array($value)) {

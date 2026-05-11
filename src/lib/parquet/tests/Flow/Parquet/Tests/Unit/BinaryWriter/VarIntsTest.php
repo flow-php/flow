@@ -14,7 +14,7 @@ final class VarIntsTest extends TestCase
     /**
      * @return array<string, array{int}>
      */
-    public static function negativeValuesProvider() : array
+    public static function negativeValuesProvider(): array
     {
         return [
             'negative_one' => [-1],
@@ -27,7 +27,7 @@ final class VarIntsTest extends TestCase
     /**
      * @return array<string, array{int, array<int>}>
      */
-    public static function positiveValuesProvider() : array
+    public static function positiveValuesProvider(): array
     {
         return [
             'zero' => [0, [0x00]],
@@ -42,7 +42,7 @@ final class VarIntsTest extends TestCase
     /**
      * @return array<string, array{int}>
      */
-    public static function uleb128ValuesProvider() : array
+    public static function uleb128ValuesProvider(): array
     {
         return [
             'zero' => [0],
@@ -59,7 +59,7 @@ final class VarIntsTest extends TestCase
     }
 
     #[DataProvider('positiveValuesProvider')]
-    public function test_uleb128_encoding_format_for_positive_values(int $value, array $expectedBytes) : void
+    public function test_uleb128_encoding_format_for_positive_values(int $value, array $expectedBytes): void
     {
         $buffer = '';
         $writer = new BinaryBufferWriter($buffer);
@@ -68,11 +68,11 @@ final class VarIntsTest extends TestCase
 
         $actualBytes = array_values(unpack('C*', $buffer));
 
-        self::assertSame($expectedBytes, $actualBytes, "Value {$value} should encode to specific byte sequence");
+        static::assertSame($expectedBytes, $actualBytes, "Value {$value} should encode to specific byte sequence");
     }
 
     #[DataProvider('negativeValuesProvider')]
-    public function test_uleb128_handles_negative_values_as_unsigned(int $negativeValue) : void
+    public function test_uleb128_handles_negative_values_as_unsigned(int $negativeValue): void
     {
         $buffer = '';
         $writer = new BinaryBufferWriter($buffer);
@@ -82,18 +82,22 @@ final class VarIntsTest extends TestCase
         $reader = new BinaryBufferReader($buffer);
         $decoded = $reader->readVarInt();
 
-        self::assertSame($negativeValue, $decoded, "Negative value {$negativeValue} should roundtrip correctly when treated as unsigned");
+        static::assertSame(
+            $negativeValue,
+            $decoded,
+            "Negative value {$negativeValue} should roundtrip correctly when treated as unsigned",
+        );
     }
 
-    public function test_uleb128_handles_zigzag_encoded_values() : void
+    public function test_uleb128_handles_zigzag_encoded_values(): void
     {
         // These are ZigZag encoded values that may appear negative after encoding
         $zigzagValues = [
-            0,    // 0 -> 0
-            1,    // -1 -> 1
-            2,    // 1 -> 2
-            3,    // -2 -> 3
-            4,    // 2 -> 4
+            0, // 0 -> 0
+            1, // -1 -> 1
+            2, // 1 -> 2
+            3, // -2 -> 3
+            4, // 2 -> 4
         ];
 
         foreach ($zigzagValues as $zigzagEncoded) {
@@ -105,11 +109,15 @@ final class VarIntsTest extends TestCase
             $reader = new BinaryBufferReader($buffer);
             $decoded = $reader->readVarInt();
 
-            self::assertSame($zigzagEncoded, $decoded, "ZigZag encoded value {$zigzagEncoded} should roundtrip correctly");
+            static::assertSame(
+                $zigzagEncoded,
+                $decoded,
+                "ZigZag encoded value {$zigzagEncoded} should roundtrip correctly",
+            );
         }
     }
 
-    public function test_uleb128_is_same_as_varint_for_positive_values() : void
+    public function test_uleb128_is_same_as_varint_for_positive_values(): void
     {
         $testValues = [0, 1, 127, 128, 255, 16383, 16384, 65535, 65536];
 
@@ -122,12 +130,16 @@ final class VarIntsTest extends TestCase
             $varintWriter = new BinaryBufferWriter($varintBuffer);
             $varintWriter->writeVarInts([$value]);
 
-            self::assertSame($varintBuffer, $uleb128Buffer, "ULEB128 and VarInt should produce same encoding for value {$value}");
+            static::assertSame(
+                $varintBuffer,
+                $uleb128Buffer,
+                "ULEB128 and VarInt should produce same encoding for value {$value}",
+            );
         }
     }
 
     #[DataProvider('uleb128ValuesProvider')]
-    public function test_uleb128_roundtrip(int $value) : void
+    public function test_uleb128_roundtrip(int $value): void
     {
         $buffer = '';
         $writer = new BinaryBufferWriter($buffer);
@@ -137,6 +149,6 @@ final class VarIntsTest extends TestCase
         $reader = new BinaryBufferReader($buffer);
         $decoded = $reader->readVarInt();
 
-        self::assertSame($value, $decoded, "Value {$value} should roundtrip correctly through ULEB128");
+        static::assertSame($value, $decoded, "Value {$value} should roundtrip correctly through ULEB128");
     }
 }

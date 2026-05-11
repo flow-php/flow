@@ -31,12 +31,12 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
         }
     }
 
-    public static function init(string|Reference ...$references) : self
+    public static function init(string|Reference ...$references): self
     {
         return new self(...$references);
     }
 
-    public function add(string|Reference $ref) : self
+    public function add(string|Reference $ref): self
     {
         $reference = EntryReference::init($ref);
 
@@ -52,17 +52,17 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @return array<Reference>
      */
-    public function all() : array
+    public function all(): array
     {
         return \array_values($this->refs);
     }
 
-    public function count() : int
+    public function count(): int
     {
         return \count($this->refs);
     }
 
-    public function first() : Reference
+    public function first(): Reference
     {
         if (!\count($this->refs)) {
             throw new InvalidArgumentException('References are empty.');
@@ -74,12 +74,12 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @return \Traversable<string, Reference>
      */
-    public function getIterator() : \Traversable
+    public function getIterator(): \Traversable
     {
         return new \ArrayIterator($this->refs);
     }
 
-    public function has(string|Reference $reference) : bool
+    public function has(string|Reference $reference): bool
     {
         $reference = EntryReference::init($reference);
 
@@ -95,7 +95,7 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @return array<string>
      */
-    public function names() : array
+    public function names(): array
     {
         $names = [];
 
@@ -111,7 +111,7 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @return bool
      */
-    public function offsetExists($offset) : bool
+    public function offsetExists($offset): bool
     {
         return \array_key_exists($offset, $this->refs);
     }
@@ -123,7 +123,7 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @return Reference
      */
-    public function offsetGet($offset) : Reference
+    public function offsetGet($offset): Reference
     {
         if ($this->offsetExists($offset)) {
             return $this->refs[$offset];
@@ -132,22 +132,22 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
         throw new InvalidArgumentException("Reference {$offset} does not exists.");
     }
 
-    public function offsetSet(mixed $offset, mixed $value) : void
+    public function offsetSet(mixed $offset, mixed $value): void
     {
         throw new InvalidArgumentException('Method not implemented.');
     }
 
-    public function offsetUnset(mixed $offset) : void
+    public function offsetUnset(mixed $offset): void
     {
         throw new InvalidArgumentException('Method not implemented.');
     }
 
-    public function reverse() : self
+    public function reverse(): self
     {
         return new self(...\array_reverse($this->refs));
     }
 
-    public function without(string|Reference ...$reference) : self
+    public function without(string|Reference ...$reference): self
     {
         foreach ($reference as $ref) {
             $refName = $ref instanceof Reference ? $ref->name() : $ref;

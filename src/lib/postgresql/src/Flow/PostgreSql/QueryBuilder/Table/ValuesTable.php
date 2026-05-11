@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Table;
 
-use Flow\PostgreSql\Protobuf\AST\{Node, RangeSubselect, SelectStmt, SetOperation};
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBList;
+use Flow\PostgreSql\Protobuf\AST\RangeSubselect;
+use Flow\PostgreSql\Protobuf\AST\SelectStmt;
+use Flow\PostgreSql\Protobuf\AST\SetOperation;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
-use Flow\PostgreSql\QueryBuilder\Expression\{ExpressionFactory, RowExpression};
+use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
+use Flow\PostgreSql\QueryBuilder\Expression\RowExpression;
 
 /**
  * Represents a VALUES clause as a table reference: (VALUES (expr, expr), (expr, expr)).
@@ -31,7 +35,7 @@ final readonly class ValuesTable implements TableReference
         }
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $rangeSubselect = $node->getRangeSubselect();
 
@@ -79,12 +83,12 @@ final readonly class ValuesTable implements TableReference
         return new self($rows);
     }
 
-    public function as(string $alias, ?array $columnAliases = null) : AliasedTable
+    public function as(string $alias, ?array $columnAliases = null): AliasedTable
     {
         return new AliasedTable($this, $alias, $columnAliases);
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $valuesLists = [];
 
@@ -109,7 +113,7 @@ final readonly class ValuesTable implements TableReference
         return $node;
     }
 
-    private function rowToListNode(RowExpression $row) : Node
+    private function rowToListNode(RowExpression $row): Node
     {
         $items = [];
 

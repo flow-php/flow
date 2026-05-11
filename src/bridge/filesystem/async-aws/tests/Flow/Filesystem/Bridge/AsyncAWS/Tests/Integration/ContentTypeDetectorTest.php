@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\AsyncAWS\Tests\Integration;
 
-use function Flow\Filesystem\DSL\path;
 use Flow\Filesystem\Bridge\AsyncAWS\ContentTypeDetector;
+use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
-use Flow\Filesystem\Path\{Option, Options};
+use Flow\Filesystem\Path\Options;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Filesystem\DSL\path;
+
 final class ContentTypeDetectorTest extends TestCase
 {
-    public static function provide_content_type_enum_values() : \Generator
+    public static function provide_content_type_enum_values(): \Generator
     {
         yield 'CSV enum' => [ContentType::CSV, 'text/csv'];
         yield 'JSON enum' => [ContentType::JSON, 'application/json'];
@@ -27,7 +29,7 @@ final class ContentTypeDetectorTest extends TestCase
         yield 'BINARY enum' => [ContentType::BINARY, 'application/octet-stream'];
     }
 
-    public static function provide_file_extensions() : \Generator
+    public static function provide_file_extensions(): \Generator
     {
         yield 'csv extension' => ['file.csv', 'text/csv'];
         yield 'json extension' => ['file.json', 'application/json'];
@@ -42,7 +44,7 @@ final class ContentTypeDetectorTest extends TestCase
         yield 'no extension' => ['file', 'application/octet-stream'];
     }
 
-    public static function provide_string_content_types() : \Generator
+    public static function provide_string_content_types(): \Generator
     {
         yield 'custom text/html' => ['text/html', 'text/html'];
         yield 'custom application/pdf' => ['application/pdf', 'application/pdf'];
@@ -50,7 +52,7 @@ final class ContentTypeDetectorTest extends TestCase
         yield 'custom video/mp4' => ['video/mp4', 'video/mp4'];
     }
 
-    public function test_all_enum_values_are_supported() : void
+    public function test_all_enum_values_are_supported(): void
     {
         $detector = new ContentTypeDetector();
 
@@ -62,11 +64,11 @@ final class ContentTypeDetectorTest extends TestCase
 
             $result = $detector->from($path);
 
-            self::assertNotEmpty($result);
+            static::assertNotEmpty($result);
         }
     }
 
-    public function test_all_supported_extensions_have_unique_mime_types() : void
+    public function test_all_supported_extensions_have_unique_mime_types(): void
     {
         $detector = new ContentTypeDetector();
 
@@ -86,11 +88,11 @@ final class ContentTypeDetectorTest extends TestCase
             $path = path("aws-s3://bucket/file.{$ext}");
             $result = $detector->from($path);
 
-            self::assertSame($expectedMimeType, $result, "Extension '{$ext}' should map to '{$expectedMimeType}'");
+            static::assertSame($expectedMimeType, $result, "Extension '{$ext}' should map to '{$expectedMimeType}'");
         }
     }
 
-    public function test_content_type_option_with_mixed_case_key() : void
+    public function test_content_type_option_with_mixed_case_key(): void
     {
         $detector = new ContentTypeDetector();
         $options = new Options(['Content-Type' => 'application/json']);
@@ -98,61 +100,61 @@ final class ContentTypeDetectorTest extends TestCase
 
         $result = $detector->from($path);
 
-        self::assertSame('application/json', $result);
+        static::assertSame('application/json', $result);
     }
 
-    public function test_detects_binary_content_type_for_unknown_extension() : void
+    public function test_detects_binary_content_type_for_unknown_extension(): void
     {
         $detector = new ContentTypeDetector();
         $path = path('aws-s3://bucket/file.xyz');
 
         $result = $detector->from($path);
 
-        self::assertSame('application/octet-stream', $result);
+        static::assertSame('application/octet-stream', $result);
     }
 
-    public function test_detects_content_type_for_local_path() : void
+    public function test_detects_content_type_for_local_path(): void
     {
         $detector = new ContentTypeDetector();
         $path = path('file:///tmp/data.json');
 
         $result = $detector->from($path);
 
-        self::assertSame('application/json', $result);
+        static::assertSame('application/json', $result);
     }
 
-    public function test_detects_content_type_for_nested_path() : void
+    public function test_detects_content_type_for_nested_path(): void
     {
         $detector = new ContentTypeDetector();
         $path = path('aws-s3://bucket/dir1/dir2/dir3/file.parquet');
 
         $result = $detector->from($path);
 
-        self::assertSame('application/vnd.apache.parquet', $result);
+        static::assertSame('application/vnd.apache.parquet', $result);
     }
 
-    public function test_detects_content_type_for_path_with_multiple_dots() : void
+    public function test_detects_content_type_for_path_with_multiple_dots(): void
     {
         $detector = new ContentTypeDetector();
         $path = path('aws-s3://bucket/file.backup.csv');
 
         $result = $detector->from($path);
 
-        self::assertSame('text/csv', $result);
+        static::assertSame('text/csv', $result);
     }
 
-    public function test_detects_content_type_for_path_without_trailing_slash() : void
+    public function test_detects_content_type_for_path_without_trailing_slash(): void
     {
         $detector = new ContentTypeDetector();
         $path = path('aws-s3://bucket/file.xml');
 
         $result = $detector->from($path);
 
-        self::assertSame('application/xml', $result);
+        static::assertSame('application/xml', $result);
     }
 
     #[DataProvider('provide_content_type_enum_values')]
-    public function test_detects_content_type_from_enum_option(ContentType $contentType, string $expectedMimeType) : void
+    public function test_detects_content_type_from_enum_option(ContentType $contentType, string $expectedMimeType): void
     {
         $detector = new ContentTypeDetector();
         $options = new Options([Option::CONTENT_TYPE->value => $contentType]);
@@ -160,22 +162,22 @@ final class ContentTypeDetectorTest extends TestCase
 
         $result = $detector->from($path);
 
-        self::assertSame($expectedMimeType, $result);
+        static::assertSame($expectedMimeType, $result);
     }
 
     #[DataProvider('provide_file_extensions')]
-    public function test_detects_content_type_from_file_extension(string $fileName, string $expectedMimeType) : void
+    public function test_detects_content_type_from_file_extension(string $fileName, string $expectedMimeType): void
     {
         $detector = new ContentTypeDetector();
         $path = path('aws-s3://bucket/' . $fileName);
 
         $result = $detector->from($path);
 
-        self::assertSame($expectedMimeType, $result);
+        static::assertSame($expectedMimeType, $result);
     }
 
     #[DataProvider('provide_string_content_types')]
-    public function test_detects_content_type_from_string_option(string $contentType, string $expectedMimeType) : void
+    public function test_detects_content_type_from_string_option(string $contentType, string $expectedMimeType): void
     {
         $detector = new ContentTypeDetector();
         $options = new Options([Option::CONTENT_TYPE->value => $contentType]);
@@ -183,30 +185,30 @@ final class ContentTypeDetectorTest extends TestCase
 
         $result = $detector->from($path);
 
-        self::assertSame($expectedMimeType, $result);
+        static::assertSame($expectedMimeType, $result);
     }
 
-    public function test_detects_content_type_with_empty_options() : void
+    public function test_detects_content_type_with_empty_options(): void
     {
         $detector = new ContentTypeDetector();
         $path = path('aws-s3://bucket/file.json', new Options([]));
 
         $result = $detector->from($path);
 
-        self::assertSame('application/json', $result);
+        static::assertSame('application/json', $result);
     }
 
-    public function test_detects_content_type_with_uppercase_extension() : void
+    public function test_detects_content_type_with_uppercase_extension(): void
     {
         $detector = new ContentTypeDetector();
         $path = path('aws-s3://bucket/file.CSV');
 
         $result = $detector->from($path);
 
-        self::assertSame('text/csv', $result);
+        static::assertSame('text/csv', $result);
     }
 
-    public function test_enum_option_takes_precedence_over_extension() : void
+    public function test_enum_option_takes_precedence_over_extension(): void
     {
         $detector = new ContentTypeDetector();
         $options = new Options([Option::CONTENT_TYPE->value => ContentType::JSON]);
@@ -214,10 +216,10 @@ final class ContentTypeDetectorTest extends TestCase
 
         $result = $detector->from($path);
 
-        self::assertSame('application/json', $result);
+        static::assertSame('application/json', $result);
     }
 
-    public function test_string_option_takes_precedence_over_extension() : void
+    public function test_string_option_takes_precedence_over_extension(): void
     {
         $detector = new ContentTypeDetector();
         $options = new Options([Option::CONTENT_TYPE->value => 'application/pdf']);
@@ -225,6 +227,6 @@ final class ContentTypeDetectorTest extends TestCase
 
         $result = $detector->from($path);
 
-        self::assertSame('application/pdf', $result);
+        static::assertSame('application/pdf', $result);
     }
 }

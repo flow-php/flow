@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Azure\SDK\BlobService\GetContainerProperties;
 
-use Flow\Azure\SDK\{BlobService, EndpointOptions, Endpoints\UserAgentHeader};
+use Flow\Azure\SDK\BlobService;
+use Flow\Azure\SDK\EndpointOptions;
+use Flow\Azure\SDK\Endpoints\UserAgentHeader;
 
 final class GetContainerPropertiesOptions implements EndpointOptions
 {
@@ -23,7 +25,7 @@ final class GetContainerPropertiesOptions implements EndpointOptions
     /**
      * @return array<string, string>
      */
-    public function toHeaders() : array
+    public function toHeaders(): array
     {
         $headers = [];
 
@@ -44,7 +46,7 @@ final class GetContainerPropertiesOptions implements EndpointOptions
     /**
      * @return array<string, int|string>
      */
-    public function toURIParameters() : array
+    public function toURIParameters(): array
     {
         $uriParameters = [];
 
@@ -59,35 +61,35 @@ final class GetContainerPropertiesOptions implements EndpointOptions
         return $uriParameters;
     }
 
-    public function withLeaseId(string $leaseId) : self
+    public function withLeaseId(string $leaseId): self
     {
         $this->leaseId = $leaseId;
 
         return $this;
     }
 
-    public function withRequestId(string $requestId) : self
+    public function withRequestId(string $requestId): self
     {
         $this->requestId = $requestId;
 
         return $this;
     }
 
-    public function withTimeoutSeconds(int $timeoutSeconds) : self
+    public function withTimeoutSeconds(int $timeoutSeconds): self
     {
         $this->timeoutSeconds = $timeoutSeconds;
 
         return $this;
     }
 
-    public function withVersion(string $version) : self
+    public function withVersion(string $version): self
     {
         $this->version = $version;
 
         return $this;
     }
 
-    public function withVersionId(string $versionId) : self
+    public function withVersionId(string $versionId): self
     {
         $this->versionId = $versionId;
 

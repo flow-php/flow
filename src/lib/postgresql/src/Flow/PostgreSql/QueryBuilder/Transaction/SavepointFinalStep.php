@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface SavepointFinalStep extends Sql
 {
-    public function toAst() : TransactionStmt;
+    public function toAst(): TransactionStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

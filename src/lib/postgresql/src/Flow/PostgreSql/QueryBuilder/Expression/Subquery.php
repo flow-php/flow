@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{Node, SubLink, SubLinkType};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\SubLink;
+use Flow\PostgreSql\Protobuf\AST\SubLinkType;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 final readonly class Subquery implements Expression
 {
     public function __construct(
         private Node $selectStatement,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $subLink = $node->getSubLink();
 
@@ -26,7 +27,7 @@ final readonly class Subquery implements Expression
             throw InvalidAstException::invalidFieldValue(
                 'subLinkType',
                 'SubLink',
-                \sprintf('expected EXPR_SUBLINK (%d), got %d', SubLinkType::EXPR_SUBLINK, $subLink->getSubLinkType())
+                \sprintf('expected EXPR_SUBLINK (%d), got %d', SubLinkType::EXPR_SUBLINK, $subLink->getSubLinkType()),
             );
         }
 
@@ -39,17 +40,17 @@ final readonly class Subquery implements Expression
         return new self($subselectNode);
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return new AliasedExpression($this, $alias);
     }
 
-    public function getSelectStatement() : Node
+    public function getSelectStatement(): Node
     {
         return $this->selectStatement;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $subLink = new SubLink();
         $subLink->setSubLinkType(SubLinkType::EXPR_SUBLINK);

@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Pipeline;
 
-use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
-use function Flow\ETL\DSL\{df, from_array, lit};
 use Flow\ETL\Loader;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+
+use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\Adapter\CSV\to_csv;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\lit;
 
 final class SynchronousPipelineTest extends FlowIntegrationTestCase
 {
     #[\Override]
-    protected function setUp() : void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -21,7 +25,7 @@ final class SynchronousPipelineTest extends FlowIntegrationTestCase
         }
     }
 
-    public function test_limit() : void
+    public function test_limit(): void
     {
         $path = __DIR__ . '/var/synchronous_pipeline_' . __FUNCTION__ . '.csv';
 
@@ -41,16 +45,10 @@ final class SynchronousPipelineTest extends FlowIntegrationTestCase
             ->write(to_csv($path))
             ->run();
 
-        self::assertSame(
-            3,
-            df()
-                ->read(from_csv($path))
-                ->limit(3)
-                ->count()
-        );
+        static::assertSame(3, df()->read(from_csv($path))->limit(3)->count());
     }
 
-    public function test_not_calling_loader_when_rows_are_empty() : void
+    public function test_not_calling_loader_when_rows_are_empty(): void
     {
         $loader = $this->createMock(Loader::class);
         $loader->expects(self::never())->method('load');

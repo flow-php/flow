@@ -9,28 +9,28 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class ExamplesControllerTest extends WebTestCase
 {
-    public function test_back_to_example_link_exists_on_playground_page() : void
+    public function test_back_to_example_link_exists_on_playground_page(): void
     {
         $client = self::createClient();
         $crawler = $client->request('GET', '/playground/data_frame/cache');
 
         self::assertResponseIsSuccessful();
         $link = $crawler->filter('a:contains("Back to Example")');
-        self::assertCount(1, $link);
+        static::assertCount(1, $link);
     }
 
-    public function test_code_is_displayed_on_example_page() : void
+    public function test_code_is_displayed_on_example_page(): void
     {
         $client = self::createClient();
         $crawler = $client->request('GET', '/data_frame/cache/');
 
         self::assertResponseIsSuccessful();
         $code = $crawler->filter('#code-php');
-        self::assertCount(1, $code);
-        self::assertStringContainsString('<?php', $code->text());
+        static::assertCount(1, $code);
+        static::assertStringContainsString('<?php', $code->text());
     }
 
-    public function test_example_option_page_returns_200() : void
+    public function test_example_option_page_returns_200(): void
     {
         $client = self::createClient();
         $client->request('GET', '/data_frame/data_reading/csv/');
@@ -39,7 +39,7 @@ final class ExamplesControllerTest extends WebTestCase
         self::assertSelectorExists('a[href*="/playground/"]');
     }
 
-    public function test_example_option_playground_page_returns_200() : void
+    public function test_example_option_playground_page_returns_200(): void
     {
         $client = self::createClient();
         $client->request('GET', '/playground/data_frame/data_reading/csv');
@@ -48,7 +48,7 @@ final class ExamplesControllerTest extends WebTestCase
         self::assertSelectorTextContains('h1', 'Playground');
     }
 
-    public function test_example_page_displays_correct_title() : void
+    public function test_example_page_displays_correct_title(): void
     {
         $client = self::createClient();
         $client->request('GET', '/data_frame/cache/');
@@ -58,7 +58,7 @@ final class ExamplesControllerTest extends WebTestCase
         self::assertSelectorTextContains('title', 'Cache');
     }
 
-    public function test_example_page_returns_200() : void
+    public function test_example_page_returns_200(): void
     {
         $client = self::createClient();
         $client->request('GET', '/data_frame/cache/');
@@ -67,7 +67,7 @@ final class ExamplesControllerTest extends WebTestCase
         self::assertSelectorExists('a[href*="/playground/"]');
     }
 
-    public function test_example_playground_page_returns_200() : void
+    public function test_example_playground_page_returns_200(): void
     {
         $client = self::createClient();
         $client->request('GET', '/playground/data_frame/cache');
@@ -77,29 +77,29 @@ final class ExamplesControllerTest extends WebTestCase
         self::assertSelectorExists('a[href="/data_frame/cache/"]');
     }
 
-    public function test_options_navigation_shows_on_example_with_options() : void
+    public function test_options_navigation_shows_on_example_with_options(): void
     {
         $client = self::createClient();
         $crawler = $client->request('GET', '/data_frame/data_reading/');
 
         self::assertResponseIsSuccessful();
         $options = $crawler->filter('a:contains("Csv")');
-        self::assertGreaterThan(0, $options->count());
+        static::assertGreaterThan(0, $options->count());
     }
 
-    public function test_try_it_in_playground_link_exists_on_example_page() : void
+    public function test_try_it_in_playground_link_exists_on_example_page(): void
     {
         $client = self::createClient();
         $crawler = $client->request('GET', '/data_frame/cache/');
 
         self::assertResponseIsSuccessful();
         $link = $crawler->filter('a[title="Try in Playground"]');
-        self::assertCount(1, $link);
-        self::assertStringContainsString('/playground/', $link->attr('href'));
+        static::assertCount(1, $link);
+        static::assertStringContainsString('/playground/', $link->attr('href'));
     }
 
     #[\Override]
-    protected static function getKernelClass() : string
+    protected static function getKernelClass(): string
     {
         return Kernel::class;
     }

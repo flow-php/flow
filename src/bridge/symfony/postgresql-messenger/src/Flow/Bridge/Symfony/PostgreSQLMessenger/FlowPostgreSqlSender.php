@@ -6,7 +6,8 @@ namespace Flow\Bridge\Symfony\PostgreSQLMessenger;
 
 use Flow\Bridge\Symfony\PostgreSQLMessenger\Exception\TransportException;
 use Symfony\Component\Messenger\Envelope;
-use Symfony\Component\Messenger\Stamp\{DelayStamp, TransportMessageIdStamp};
+use Symfony\Component\Messenger\Stamp\DelayStamp;
+use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
 use Symfony\Component\Messenger\Transport\Sender\SenderInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 
@@ -15,10 +16,9 @@ final readonly class FlowPostgreSqlSender implements SenderInterface
     public function __construct(
         private Connection $connection,
         private SerializerInterface $serializer,
-    ) {
-    }
+    ) {}
 
-    public function send(Envelope $envelope) : Envelope
+    public function send(Envelope $envelope): Envelope
     {
         $encodedMessage = $this->serializer->encode($envelope);
 

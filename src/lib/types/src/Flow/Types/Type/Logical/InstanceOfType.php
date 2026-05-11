@@ -4,9 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use function Flow\Types\DSL\{type_class_string, type_instance_of, type_literal, type_structure};
-use Flow\Types\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidArgumentException;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+
+use function Flow\Types\DSL\type_class_string;
+use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_literal;
+use function Flow\Types\DSL\type_structure;
 
 /**
  * @template T of object
@@ -18,8 +24,9 @@ final readonly class InstanceOfType implements Type
     /**
      * @param class-string<T> $class
      */
-    public function __construct(public string $class)
-    {
+    public function __construct(
+        public string $class,
+    ) {
         if (!\class_exists($class) && !\interface_exists($class)) {
             throw new InvalidArgumentException("Class {$class} not found");
         }
@@ -30,7 +37,7 @@ final readonly class InstanceOfType implements Type
      *
      * @return InstanceOfType<object>
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         $data = type_structure([
             'type' => type_literal('instance_of'),
@@ -40,7 +47,7 @@ final readonly class InstanceOfType implements Type
         return new self($data['class']);
     }
 
-    public function assert(mixed $value) : object
+    public function assert(mixed $value): object
     {
         if ($this->isValid($value)) {
             return $value;
@@ -49,7 +56,7 @@ final readonly class InstanceOfType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
-    public function cast(mixed $value) : object
+    public function cast(mixed $value): object
     {
         if (\is_object($value) && \is_a($value, $this->class, true)) {
             return $value;
@@ -68,12 +75,12 @@ final readonly class InstanceOfType implements Type
         }
     }
 
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return (\is_object($value) || \is_string($value)) && \is_a($value, $this->class, true);
     }
 
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'instance_of',
@@ -81,7 +88,7 @@ final readonly class InstanceOfType implements Type
         ];
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return 'object<' . $this->class . '>';
     }

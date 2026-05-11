@@ -4,29 +4,44 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Integration;
 
-use function Flow\ETL\Adapter\PostgreSql\{from_pgsql_key_set, pgsql_pagination_key_asc, pgsql_pagination_key_desc, pgsql_pagination_key_set};
-use function Flow\ETL\DSL\df;
-use function Flow\PostgreSql\DSL\{col, column, column_type_integer, column_type_text, create, delete, insert, literal, select, star, table};
 use Flow\ETL\Adapter\PostgreSql\Tests\IntegrationTestCase;
+
+use function Flow\ETL\Adapter\PostgreSql\from_pgsql_key_set;
+use function Flow\ETL\Adapter\PostgreSql\pgsql_pagination_key_asc;
+use function Flow\ETL\Adapter\PostgreSql\pgsql_pagination_key_desc;
+use function Flow\ETL\Adapter\PostgreSql\pgsql_pagination_key_set;
+use function Flow\ETL\DSL\df;
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\column;
+use function Flow\PostgreSql\DSL\column_type_integer;
+use function Flow\PostgreSql\DSL\column_type_text;
+use function Flow\PostgreSql\DSL\create;
+use function Flow\PostgreSql\DSL\delete;
+use function Flow\PostgreSql\DSL\insert;
+use function Flow\PostgreSql\DSL\literal;
+use function Flow\PostgreSql\DSL\select;
+use function Flow\PostgreSql\DSL\star;
+use function Flow\PostgreSql\DSL\table;
 
 final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
 {
     private string $tableName = 'flow_postgresql_keyset_test';
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         parent::setUp();
 
         $this->client->execute(
-            create()->table($this->tableName)
+            create()
+                ->table($this->tableName)
                 ->column(column('id', column_type_integer())->primaryKey())
-                ->column(column('name', column_type_text()))
+                ->column(column('name', column_type_text())),
         );
 
         $this->insertTestData(25);
     }
 
-    public function test_extracts_all_rows_with_keyset_pagination() : void
+    public function test_extracts_all_rows_with_keyset_pagination(): void
     {
         $rows = df()
             ->read(from_pgsql_key_set(
@@ -37,30 +52,34 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(25, $rows);
-        self::assertSame(1, $rows[0]['id']);
-        self::assertSame(25, $rows[24]['id']);
-        self::assertSame(\range(1, 25), \array_column($rows, 'id'));
+        static::assertCount(25, $rows);
+        static::assertSame(1, $rows[0]['id']);
+        static::assertSame(25, $rows[24]['id']);
+        static::assertSame(\range(1, 25), \array_column($rows, 'id'));
     }
 
-    public function test_extracts_limited_rows_with_maximum() : void
+    public function test_extracts_limited_rows_with_maximum(): void
     {
         $rows = df()
-            ->read(from_pgsql_key_set(
-                $this->client,
-                select(col('id'), col('name'))->from(table($this->tableName)),
-                pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
-            )->withPageSize(5)->withMaximum(12))
+            ->read(
+                from_pgsql_key_set(
+                    $this->client,
+                    select(col('id'), col('name'))->from(table($this->tableName)),
+                    pgsql_pagination_key_set(pgsql_pagination_key_asc('id')),
+                )
+                    ->withPageSize(5)
+                    ->withMaximum(12),
+            )
             ->fetch()
             ->toArray();
 
-        self::assertCount(12, $rows);
-        self::assertSame(1, $rows[0]['id']);
-        self::assertSame(12, $rows[11]['id']);
-        self::assertSame(\range(1, 12), \array_column($rows, 'id'));
+        static::assertCount(12, $rows);
+        static::assertSame(1, $rows[0]['id']);
+        static::assertSame(12, $rows[11]['id']);
+        static::assertSame(\range(1, 12), \array_column($rows, 'id'));
     }
 
-    public function test_extracts_with_descending_order() : void
+    public function test_extracts_with_descending_order(): void
     {
         $rows = df()
             ->read(from_pgsql_key_set(
@@ -71,13 +90,13 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(25, $rows);
-        self::assertSame(25, $rows[0]['id']);
-        self::assertSame(1, $rows[24]['id']);
-        self::assertSame(\range(25, 1), \array_column($rows, 'id'));
+        static::assertCount(25, $rows);
+        static::assertSame(25, $rows[0]['id']);
+        static::assertSame(1, $rows[24]['id']);
+        static::assertSame(\range(25, 1), \array_column($rows, 'id'));
     }
 
-    public function test_extracts_with_multiple_positional_parameters() : void
+    public function test_extracts_with_multiple_positional_parameters(): void
     {
         $rows = df()
             ->read(from_pgsql_key_set(
@@ -89,13 +108,13 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(11, $rows);
-        self::assertSame(5, $rows[0]['id']);
-        self::assertSame(15, $rows[10]['id']);
-        self::assertSame(\range(5, 15), \array_column($rows, 'id'));
+        static::assertCount(11, $rows);
+        static::assertSame(5, $rows[0]['id']);
+        static::assertSame(15, $rows[10]['id']);
+        static::assertSame(\range(5, 15), \array_column($rows, 'id'));
     }
 
-    public function test_extracts_with_raw_sql() : void
+    public function test_extracts_with_raw_sql(): void
     {
         $rows = df()
             ->read(from_pgsql_key_set(
@@ -106,13 +125,13 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(25, $rows);
-        self::assertSame(1, $rows[0]['id']);
-        self::assertSame(25, $rows[24]['id']);
-        self::assertSame(\range(1, 25), \array_column($rows, 'id'));
+        static::assertCount(25, $rows);
+        static::assertSame(1, $rows[0]['id']);
+        static::assertSame(25, $rows[24]['id']);
+        static::assertSame(\range(1, 25), \array_column($rows, 'id'));
     }
 
-    public function test_extracts_with_single_positional_parameter() : void
+    public function test_extracts_with_single_positional_parameter(): void
     {
         $rows = df()
             ->read(from_pgsql_key_set(
@@ -124,13 +143,13 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(15, $rows);
-        self::assertSame(11, $rows[0]['id']);
-        self::assertSame(25, $rows[14]['id']);
-        self::assertSame(\range(11, 25), \array_column($rows, 'id'));
+        static::assertCount(15, $rows);
+        static::assertSame(11, $rows[0]['id']);
+        static::assertSame(25, $rows[14]['id']);
+        static::assertSame(\range(11, 25), \array_column($rows, 'id'));
     }
 
-    public function test_extracts_with_three_positional_parameters() : void
+    public function test_extracts_with_three_positional_parameters(): void
     {
         $rows = df()
             ->read(from_pgsql_key_set(
@@ -142,13 +161,13 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertCount(11, $rows);
-        self::assertSame(5, $rows[0]['id']);
-        self::assertSame(15, $rows[10]['id']);
-        self::assertSame(\range(5, 15), \array_column($rows, 'id'));
+        static::assertCount(11, $rows);
+        static::assertSame(5, $rows[0]['id']);
+        static::assertSame(15, $rows[10]['id']);
+        static::assertSame(\range(5, 15), \array_column($rows, 'id'));
     }
 
-    public function test_returns_empty_for_empty_table() : void
+    public function test_returns_empty_for_empty_table(): void
     {
         $this->client->execute(delete()->from($this->tableName));
 
@@ -161,10 +180,10 @@ final class PostgreSqlKeySetExtractorIntegrationTest extends IntegrationTestCase
             ->fetch()
             ->toArray();
 
-        self::assertSame([], $rows);
+        static::assertSame([], $rows);
     }
 
-    private function insertTestData(int $count) : void
+    private function insertTestData(int $count): void
     {
         $insert = insert()->into($this->tableName)->columns('id', 'name');
 

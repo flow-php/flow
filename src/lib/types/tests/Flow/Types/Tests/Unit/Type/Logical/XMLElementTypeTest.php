@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\{type_from_array, type_xml_element};
 use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_from_array;
+use function Flow\Types\DSL\type_xml_element;
+
 final class XMLElementTypeTest extends TestCase
 {
-    public static function assert_data_provider() : \Generator
+    public static function assert_data_provider(): \Generator
     {
         yield 'valid DOMElement' => [
             'value' => new \DOMElement('xml'),
@@ -59,7 +61,7 @@ final class XMLElementTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider() : \Generator
+    public static function cast_data_provider(): \Generator
     {
         yield 'DOMElement stays as is' => [
             'value' => $element = new \DOMElement('xml'),
@@ -74,7 +76,7 @@ final class XMLElementTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider() : \Generator
+    public static function is_valid_data_provider(): \Generator
     {
         yield 'valid DOMElement' => [
             'value' => new \DOMElement('xml'),
@@ -98,18 +100,18 @@ final class XMLElementTypeTest extends TestCase
     }
 
     #[DataProvider('assert_data_provider')]
-    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
+    public function test_assert(mixed $value, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_xml_element()->assert($value);
         } else {
-            self::assertInstanceOf(\DOMElement::class, type_xml_element()->assert($value));
+            static::assertInstanceOf(\DOMElement::class, type_xml_element()->assert($value));
         }
     }
 
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
@@ -118,33 +120,30 @@ final class XMLElementTypeTest extends TestCase
             $result = type_xml_element()->cast($value);
 
             if ($result instanceof \DOMElement && $expected instanceof \DOMElement) {
-                self::assertEquals($expected->nodeName, $result->nodeName);
+                static::assertEquals($expected->nodeName, $result->nodeName);
             } else {
-                self::assertSame($expected, $result);
+                static::assertSame($expected, $result);
             }
         }
     }
 
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(mixed $value, bool $expected) : void
+    public function test_is_valid(mixed $value, bool $expected): void
     {
-        self::assertSame($expected, type_xml_element()->isValid($value));
+        static::assertSame($expected, type_xml_element()->isValid($value));
     }
 
-    public function test_normalization() : void
+    public function test_normalization(): void
     {
         $type = type_xml_element();
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
-    public function test_to_string() : void
+    public function test_to_string(): void
     {
-        self::assertSame(
-            'xml_element',
-            type_xml_element()->toString()
-        );
+        static::assertSame('xml_element', type_xml_element()->toString());
     }
 }

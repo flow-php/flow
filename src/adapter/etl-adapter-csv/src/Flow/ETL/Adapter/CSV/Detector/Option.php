@@ -33,7 +33,7 @@ final class Option
         $this->rows = [];
     }
 
-    public function isValid() : bool
+    public function isValid(): bool
     {
         $columnsCount = null;
 
@@ -60,17 +60,17 @@ final class Option
         return true;
     }
 
-    public function parse(string $line) : void
+    public function parse(string $line): void
     {
         $this->rows[] = \str_getcsv($line, $this->separator, $this->enclosure, '\\');
     }
 
-    public function reset() : self
+    public function reset(): self
     {
         return new self($this->separator, $this->enclosure);
     }
 
-    public function score() : int
+    public function score(): int
     {
         if (!$this->isValid()) {
             return 0;
@@ -89,15 +89,16 @@ final class Option
         $columnScore = \count($firstRow) * self::COLUMN_SCORE_WEIGHT;
         $totalLength = \array_reduce(
             $this->rows,
-            static fn (int $carry, array $row) : int => $carry + \array_reduce(
+            static fn(int $carry, array $row): int => $carry
+            + \array_reduce(
                 $row,
-                static fn (int $carry, mixed $column) : int => $carry + (\is_string($column) ? \mb_strlen($column) : 0),
-                0
+                static fn(int $carry, mixed $column): int => $carry + (\is_string($column) ? \mb_strlen($column) : 0),
+                0,
             ),
-            0
+            0,
         );
 
-        $lengthScore = (int) \round((1 / ($totalLength + 1) * self::COLUMNS_LENGTH_WEIGHT));
+        $lengthScore = (int) \round((1 / ($totalLength + 1)) * self::COLUMNS_LENGTH_WEIGHT);
 
         return $columnScore + $lengthScore;
     }

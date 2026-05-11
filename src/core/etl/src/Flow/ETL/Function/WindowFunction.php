@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\{FlowContext, Row, Rows, Window};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
+use Flow\ETL\Window;
 
 interface WindowFunction
 {
-    public function apply(Row $row, Rows $partition, FlowContext $context) : mixed;
+    public function apply(Row $row, Rows $partition, FlowContext $context): mixed;
 
-    public function over(Window $window) : self;
+    public function over(Window $window): self;
 
-    public function toString() : string;
+    public function toString(): string;
 
-    public function window() : Window;
+    public function window(): Window;
 }

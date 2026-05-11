@@ -4,36 +4,42 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\DSL;
 
-use Flow\ETL\Attribute\{DocumentationDSL, Module, Type};
-use Flow\Filesystem\{Filesystem,
-    FilesystemTable,
-    Local\MemoryFilesystem,
-    Local\StdOutFilesystem,
-    Mount,
-    Partition,
-    Partitions,
-    Path};
+use Flow\ETL\Attribute\DocumentationDSL;
+use Flow\ETL\Attribute\Module;
+use Flow\ETL\Attribute\Type;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\FilesystemTable;
+use Flow\Filesystem\Local\MemoryFilesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
-use Flow\Filesystem\Operations\{Copy, Move, OperationOptions};
+use Flow\Filesystem\Local\StdOutFilesystem;
+use Flow\Filesystem\Mount;
+use Flow\Filesystem\Operations\Copy;
+use Flow\Filesystem\Operations\Move;
+use Flow\Filesystem\Operations\OperationOptions;
+use Flow\Filesystem\Partition;
+use Flow\Filesystem\Partitions;
+use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Options;
-use Flow\Filesystem\Telemetry\{FilesystemTelemetryConfig, FilesystemTelemetryOptions, TraceableFilesystem};
+use Flow\Filesystem\Telemetry\FilesystemTelemetryConfig;
+use Flow\Filesystem\Telemetry\FilesystemTelemetryOptions;
+use Flow\Filesystem\Telemetry\TraceableFilesystem;
 use Flow\Telemetry\Telemetry;
 use Psr\Clock\ClockInterface;
 
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function mount(string $protocol) : Mount
+function mount(string $protocol): Mount
 {
     return new Mount($protocol);
 }
 
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function partition(string $name, string $value) : Partition
+function partition(string $name, string $value): Partition
 {
     return new Partition($name, $value);
 }
 
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function partitions(Partition ...$partition) : Partitions
+function partitions(Partition ...$partition): Partitions
 {
     return new Partitions(...$partition);
 }
@@ -52,7 +58,7 @@ function partitions(Partition ...$partition) : Partitions
  * @param array<string, null|bool|float|int|string|\UnitEnum>|Path\Options $options
  */
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function path(string $path, array|Options $options = []) : Path
+function path(string $path, array|Options $options = []): Path
 {
     return Path::from($path, $options);
 }
@@ -63,13 +69,13 @@ function path(string $path, array|Options $options = []) : Path
  * @param array<string, null|bool|float|int|string|\UnitEnum> $options
  */
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function path_real(string $path, array $options = []) : Path
+function path_real(string $path, array $options = []): Path
 {
     return Path::realpath($path, $options);
 }
 
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function native_local_filesystem(string $protocol = 'file') : NativeLocalFilesystem
+function native_local_filesystem(string $protocol = 'file'): NativeLocalFilesystem
 {
     return new NativeLocalFilesystem(new Mount($protocol));
 }
@@ -79,7 +85,7 @@ function native_local_filesystem(string $protocol = 'file') : NativeLocalFilesys
  * The main use case is for streaming datasets over http.
  */
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function stdout_filesystem(string $protocol = 'stdout') : StdOutFilesystem
+function stdout_filesystem(string $protocol = 'stdout'): StdOutFilesystem
 {
     return new StdOutFilesystem(new Mount($protocol));
 }
@@ -88,7 +94,7 @@ function stdout_filesystem(string $protocol = 'stdout') : StdOutFilesystem
  * Create a new memory filesystem and writes data to it in memory.
  */
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function memory_filesystem(string $protocol = 'memory') : MemoryFilesystem
+function memory_filesystem(string $protocol = 'memory'): MemoryFilesystem
 {
     return new MemoryFilesystem(new Mount($protocol));
 }
@@ -99,7 +105,7 @@ function memory_filesystem(string $protocol = 'memory') : MemoryFilesystem
  * If no filesystems are provided, local filesystem is mounted.
  */
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function fstab(Filesystem ...$filesystems) : FilesystemTable
+function fstab(Filesystem ...$filesystems): FilesystemTable
 {
     if (!\count($filesystems)) {
         $filesystems[] = native_local_filesystem();
@@ -115,10 +121,8 @@ function fstab(Filesystem ...$filesystems) : FilesystemTable
  * All filesystem and stream operations will be traced according to the configuration.
  */
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function traceable_filesystem(
-    Filesystem $filesystem,
-    FilesystemTelemetryConfig $telemetryConfig,
-) : TraceableFilesystem {
+function traceable_filesystem(Filesystem $filesystem, FilesystemTelemetryConfig $telemetryConfig): TraceableFilesystem
+{
     return new TraceableFilesystem($filesystem, $telemetryConfig);
 }
 
@@ -130,7 +134,7 @@ function filesystem_telemetry_config(
     Telemetry $telemetry,
     ClockInterface $clock,
     ?FilesystemTelemetryOptions $options = null,
-) : FilesystemTelemetryConfig {
+): FilesystemTelemetryConfig {
     return new FilesystemTelemetryConfig($telemetry, $clock, $options ?? new FilesystemTelemetryOptions());
 }
 
@@ -144,11 +148,8 @@ function filesystem_telemetry_config(
 function filesystem_telemetry_options(
     bool $traceStreams = true,
     bool $collectMetrics = true,
-) : FilesystemTelemetryOptions {
-    return new FilesystemTelemetryOptions(
-        $traceStreams,
-        $collectMetrics,
-    );
+): FilesystemTelemetryOptions {
+    return new FilesystemTelemetryOptions($traceStreams, $collectMetrics);
 }
 
 /**
@@ -157,7 +158,7 @@ function filesystem_telemetry_options(
  * because `Filesystem::mv` is a move, not a copy.
  */
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function file_copy(FilesystemTable $table, ?OperationOptions $options = null) : Copy
+function file_copy(FilesystemTable $table, ?OperationOptions $options = null): Copy
 {
     return new Copy($table, $options ?? new OperationOptions());
 }
@@ -168,7 +169,7 @@ function file_copy(FilesystemTable $table, ?OperationOptions $options = null) : 
  * cross-filesystem moves stream-copy then remove the source (non-atomic).
  */
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function file_move(FilesystemTable $table, ?OperationOptions $options = null) : Move
+function file_move(FilesystemTable $table, ?OperationOptions $options = null): Move
 {
     return new Move($table, $options ?? new OperationOptions());
 }
@@ -179,7 +180,7 @@ function file_move(FilesystemTable $table, ?OperationOptions $options = null) : 
  * @param int $chunkSize Number of bytes read/written per iteration when streaming across filesystems (default: 8192)
  */
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function operation_options(int $chunkSize = 8192) : OperationOptions
+function operation_options(int $chunkSize = 8192): OperationOptions
 {
     return new OperationOptions($chunkSize);
 }

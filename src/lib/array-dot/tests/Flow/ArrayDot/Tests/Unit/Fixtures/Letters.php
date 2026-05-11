@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ArrayDot\Tests\Unit\Fixtures;
 
-enum Letters : string
+enum Letters: string
 {
     case A = 'A';
     case B = 'B';

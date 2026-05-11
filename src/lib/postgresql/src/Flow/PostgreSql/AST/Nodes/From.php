@@ -27,12 +27,12 @@ final readonly class From implements \Countable
         $this->nodes = $nodes;
     }
 
-    public function count() : int
+    public function count(): int
     {
         return \count($this->nodes);
     }
 
-    public function hasFunction() : bool
+    public function hasFunction(): bool
     {
         foreach ($this->nodes as $fromNode) {
             if ($fromNode->getRangeFunction() !== null) {
@@ -43,7 +43,7 @@ final readonly class From implements \Countable
         return false;
     }
 
-    public function hasValues() : bool
+    public function hasValues(): bool
     {
         foreach ($this->nodes as $fromNode) {
             $rangeSubselect = $fromNode->getRangeSubselect();
@@ -68,12 +68,12 @@ final readonly class From implements \Countable
         return false;
     }
 
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return $this->count() === 0;
     }
 
-    public function tables() : Tables
+    public function tables(): Tables
     {
         $tables = [];
 
@@ -88,14 +88,16 @@ final readonly class From implements \Countable
         return new Tables($tables);
     }
 
-    private function isValidFromNode(Node $node) : bool
+    private function isValidFromNode(Node $node): bool
     {
-        return $node->getRangeVar() !== null
+        return (
+            $node->getRangeVar() !== null
             || $node->getRangeSubselect() !== null
             || $node->getJoinExpr() !== null
             || $node->getRangeFunction() !== null
             || $node->getRangeTableFunc() !== null
             || $node->getRangeTableSample() !== null
-            || $node->getJsonTable() !== null;
+            || $node->getJsonTable() !== null
+        );
     }
 }

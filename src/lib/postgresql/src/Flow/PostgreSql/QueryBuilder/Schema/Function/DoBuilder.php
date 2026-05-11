@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Function;
 
-use Flow\PostgreSql\Protobuf\AST\{DefElem, DoStmt, Node, PBString};
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\DoStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class DoBuilder implements DoFinalStep
@@ -14,23 +17,19 @@ final readonly class DoBuilder implements DoFinalStep
     private function __construct(
         private string $code,
         private string $language = 'plpgsql',
-    ) {
-    }
+    ) {}
 
-    public static function create(string $code) : DoFinalStep
+    public static function create(string $code): DoFinalStep
     {
         return new self($code);
     }
 
-    public function language(string $language) : DoFinalStep
+    public function language(string $language): DoFinalStep
     {
-        return new self(
-            $this->code,
-            $language,
-        );
+        return new self($this->code, $language);
     }
 
-    public function toAst() : DoStmt
+    public function toAst(): DoStmt
     {
         $stmt = new DoStmt();
 

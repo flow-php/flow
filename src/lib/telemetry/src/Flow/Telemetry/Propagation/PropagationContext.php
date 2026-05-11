@@ -30,24 +30,20 @@ final readonly class PropagationContext
     public function __construct(
         public ?SpanContext $spanContext = null,
         public ?Baggage $baggage = null,
-    ) {
-    }
+    ) {}
 
     /**
      * Merge this context with another, preferring values from the other context.
      */
-    public function merge(self $other) : self
+    public function merge(self $other): self
     {
-        return new self(
-            $other->spanContext ?? $this->spanContext,
-            $other->baggage ?? $this->baggage,
-        );
+        return new self($other->spanContext ?? $this->spanContext, $other->baggage ?? $this->baggage);
     }
 
     /**
      * Create a new context with a different baggage.
      */
-    public function withBaggage(?Baggage $baggage) : self
+    public function withBaggage(?Baggage $baggage): self
     {
         return new self($this->spanContext, $baggage);
     }
@@ -55,7 +51,7 @@ final readonly class PropagationContext
     /**
      * Create a new context with a different span context.
      */
-    public function withSpanContext(?SpanContext $spanContext) : self
+    public function withSpanContext(?SpanContext $spanContext): self
     {
         return new self($spanContext, $this->baggage);
     }

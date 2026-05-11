@@ -4,104 +4,80 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
-use function Flow\ETL\DSL\{enum_entry, enum_schema};
 use Flow\ETL\Schema\Metadata;
-use Flow\ETL\Tests\Fixtures\Enum\{BackedIntEnum, BackedStringEnum, BasicEnum};
+use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
+use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
+use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\enum_entry;
+use function Flow\ETL\DSL\enum_schema;
 
 final class EnumEntryTest extends FlowTestCase
 {
-    public function test_creating_backed_int_enum_entry() : void
+    public function test_creating_backed_int_enum_entry(): void
     {
         $enum = enum_entry('enum', BackedIntEnum::one);
 
-        self::assertSame(
-            BackedIntEnum::one,
-            $enum->value(),
-        );
-        self::assertSame(
-            1,
-            $enum->value()->value,
-        );
+        static::assertSame(BackedIntEnum::one, $enum->value());
+        static::assertSame(1, $enum->value()->value);
     }
 
-    public function test_creating_backed_string_enum_entry() : void
+    public function test_creating_backed_string_enum_entry(): void
     {
         $enum = enum_entry('enum', BackedStringEnum::one);
 
-        self::assertSame(
-            BackedStringEnum::one,
-            $enum->value(),
-        );
-        self::assertSame(
-            'one',
-            $enum->value()->value,
-        );
+        static::assertSame(BackedStringEnum::one, $enum->value());
+        static::assertSame('one', $enum->value()->value);
     }
 
-    public function test_creating_basic_enum_entry() : void
+    public function test_creating_basic_enum_entry(): void
     {
         $enum = enum_entry('enum', BasicEnum::one);
 
-        self::assertSame(
-            BasicEnum::one,
-            $enum->value(),
-        );
-        self::assertSame('enum', $enum->name());
+        static::assertSame(BasicEnum::one, $enum->value());
+        static::assertSame('enum', $enum->name());
     }
 
-    public function test_definition() : void
+    public function test_definition(): void
     {
-        self::assertEquals(
+        static::assertEquals(
             enum_schema('enum', BackedStringEnum::class),
-            (enum_entry('enum', BackedStringEnum::one))->definition()
+            enum_entry('enum', BackedStringEnum::one)->definition(),
         );
     }
 
-    public function test_duplicating_entry() : void
+    public function test_duplicating_entry(): void
     {
         $entry = enum_entry('enum', BackedIntEnum::one);
         $duplicated = $entry->duplicate();
 
-        self::assertNotSame($entry, $duplicated);
-        self::assertEquals($entry, $duplicated);
+        static::assertNotSame($entry, $duplicated);
+        static::assertEquals($entry, $duplicated);
     }
 
-    public function test_is_equal() : void
+    public function test_is_equal(): void
     {
-        self::assertTrue(
-            (enum_entry('enum', BasicEnum::one))->isEqual(enum_entry('enum', BasicEnum::one)),
-        );
-        self::assertFalse(
-            (enum_entry('enum', BasicEnum::one))->isEqual(enum_entry('enum', BackedStringEnum::one)),
-        );
+        static::assertTrue(enum_entry('enum', BasicEnum::one)->isEqual(enum_entry('enum', BasicEnum::one)));
+        static::assertFalse(enum_entry('enum', BasicEnum::one)->isEqual(enum_entry('enum', BackedStringEnum::one)));
     }
 
-    public function test_rename_preserves_metadata() : void
+    public function test_rename_preserves_metadata(): void
     {
         $metadata = Metadata::fromArray(['description' => 'test metadata', 'priority' => 1]);
         $entry = enum_entry('old_name', BasicEnum::one, $metadata);
 
         $renamedEntry = $entry->rename('new_name');
 
-        self::assertSame('new_name', $renamedEntry->name());
-        self::assertSame(BasicEnum::one, $renamedEntry->value());
-        self::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
+        static::assertSame('new_name', $renamedEntry->name());
+        static::assertSame(BasicEnum::one, $renamedEntry->value());
+        static::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
 
-    public function test_to_string() : void
+    public function test_to_string(): void
     {
-        self::assertSame(
-            'one',
-            (enum_entry('enum', BasicEnum::one))->toString()
-        );
-        self::assertSame(
-            'one',
-            (enum_entry('enum', BackedStringEnum::one))->toString()
-        );
-        self::assertSame(
-            'one',
-            (enum_entry('enum', BackedIntEnum::one))->toString()
-        );
+        static::assertSame('one', enum_entry('enum', BasicEnum::one)->toString());
+        static::assertSame('one', enum_entry('enum', BackedStringEnum::one)->toString());
+        static::assertSame('one', enum_entry('enum', BackedIntEnum::one)->toString());
     }
 }

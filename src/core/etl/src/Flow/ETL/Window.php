@@ -27,12 +27,12 @@ final class Window
     /**
      * @return array<Reference>
      */
-    public function order() : array
+    public function order(): array
     {
         return $this->orderBy;
     }
 
-    public function orderBy(Reference $ref, Reference ...$refs) : self
+    public function orderBy(Reference $ref, Reference ...$refs): self
     {
         \array_unshift($refs, $ref);
 
@@ -41,7 +41,7 @@ final class Window
         return $this;
     }
 
-    public function partitionBy(Reference $ref, Reference ...$refs) : self
+    public function partitionBy(Reference $ref, Reference ...$refs): self
     {
         \array_unshift($refs, $ref);
 
@@ -54,7 +54,7 @@ final class Window
     /**
      * @return array<Reference>
      */
-    public function partitions() : array
+    public function partitions(): array
     {
         return $this->partitions;
     }

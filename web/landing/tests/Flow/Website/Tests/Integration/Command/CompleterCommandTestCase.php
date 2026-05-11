@@ -13,7 +13,7 @@ abstract class CompleterCommandTestCase extends KernelTestCase
 {
     protected Application $application;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -21,7 +21,7 @@ abstract class CompleterCommandTestCase extends KernelTestCase
         $this->application = new Application(self::$kernel);
     }
 
-    protected function executeCommand(string $commandName) : CommandTester
+    protected function executeCommand(string $commandName): CommandTester
     {
         $command = $this->application->find($commandName);
         $commandTester = new CommandTester($command);
@@ -30,13 +30,13 @@ abstract class CompleterCommandTestCase extends KernelTestCase
         return $commandTester;
     }
 
-    protected function getOutputPath(string $filename) : string
+    protected function getOutputPath(string $filename): string
     {
         return self::$kernel->getProjectDir() . '/assets/codemirror/completions/' . $filename;
     }
 
     #[\Override]
-    protected static function getKernelClass() : string
+    protected static function getKernelClass(): string
     {
         return Kernel::class;
     }

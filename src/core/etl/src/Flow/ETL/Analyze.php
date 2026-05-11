@@ -10,28 +10,26 @@ final class Analyze
 
     private bool $collectSchema = false;
 
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
-    public function collectColumnStatistics() : bool
+    public function collectColumnStatistics(): bool
     {
         return $this->collectColumnStatistics;
     }
 
-    public function collectSchema() : bool
+    public function collectSchema(): bool
     {
         return $this->collectSchema;
     }
 
-    public function withColumnStatistics() : self
+    public function withColumnStatistics(): self
     {
         $this->collectColumnStatistics = true;
 
         return $this;
     }
 
-    public function withSchema() : self
+    public function withSchema(): self
     {
         $this->collectSchema = true;
 

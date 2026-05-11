@@ -16,5 +16,5 @@ interface UpdateFromStep extends UpdateWhereStep
      *
      * @param TableReference ...$tables Tables to reference in FROM clause
      */
-    public function from(string|TableReference ...$tables) : UpdateWhereStep;
+    public function from(string|TableReference ...$tables): UpdateWhereStep;
 }

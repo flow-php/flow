@@ -10,7 +10,7 @@ final class RequiredPHPVersionException extends RuntimeException
     {
         parent::__construct(
             "To use {$className} class, you need to upgrade your PHP version to: {$version}+.",
-            previous: $previous
+            previous: $previous,
         );
     }
 }

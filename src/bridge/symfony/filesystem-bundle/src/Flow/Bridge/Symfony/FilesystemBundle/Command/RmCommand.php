@@ -4,22 +4,33 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\FilesystemBundle\Command;
 
-use function Flow\Types\DSL\{type_boolean, type_null, type_string, type_union};
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-#[AsCommand(name: 'flow:filesystem:rm', description: 'Delete a file or directory URI on a configured fstab.', aliases: ['flow:fs:rm'])]
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
+
+#[AsCommand(
+    name: 'flow:filesystem:rm',
+    description: 'Delete a file or directory URI on a configured fstab.',
+    aliases: ['flow:fs:rm'],
+)]
 final class RmCommand extends Command
 {
-    public function __construct(private readonly FstabResolver $resolver)
-    {
+    public function __construct(
+        private readonly FstabResolver $resolver,
+    ) {
         parent::__construct();
     }
 
-    protected function configure() : void
+    protected function configure(): void
     {
         $this
             ->addArgument('path', InputArgument::REQUIRED, 'File or directory URI')
@@ -28,7 +39,7 @@ final class RmCommand extends Command
             ->setHelp('Removes a file or directory URI. Use --recursive to delete a directory.');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output) : int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 
@@ -50,7 +61,10 @@ final class RmCommand extends Command
             }
 
             if ($status->isDirectory() && !$recursive) {
-                $io->getErrorStyle()->error(\sprintf('%s is a directory; pass --recursive to delete it.', $path->uri()));
+                $io->getErrorStyle()->error(\sprintf(
+                    '%s is a directory; pass --recursive to delete it.',
+                    $path->uri(),
+                ));
 
                 return Command::FAILURE;
             }

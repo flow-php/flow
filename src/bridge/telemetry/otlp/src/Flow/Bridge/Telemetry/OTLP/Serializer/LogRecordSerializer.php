@@ -19,8 +19,7 @@ final readonly class LogRecordSerializer
 {
     public function __construct(
         private AttributeSerializer $attributeSerializer = new AttributeSerializer(),
-    ) {
-    }
+    ) {}
 
     /**
      * Serialize a log record to OTLP format.
@@ -35,7 +34,7 @@ final readonly class LogRecordSerializer
      *
      * @return array<string, mixed>
      */
-    public function serialize(array $record) : array
+    public function serialize(array $record): array
     {
         $result = [
             'timeUnixNano' => $this->floatToNanoseconds($record['timestamp']),
@@ -63,7 +62,7 @@ final readonly class LogRecordSerializer
     /**
      * Convert timestamp float to nanoseconds string.
      */
-    private function floatToNanoseconds(float $timestamp) : string
+    private function floatToNanoseconds(float $timestamp): string
     {
         $seconds = (int) $timestamp;
         $fraction = $timestamp - $seconds;

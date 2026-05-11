@@ -4,24 +4,34 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\RowsNormalizer;
 
-use function Flow\ETL\DSL\date_interval_to_microseconds;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\{DateEntry, DateTimeEntry, EnumEntry, JsonEntry, ListEntry, MapEntry, StructureEntry, TimeEntry, UuidEntry, XMLElementEntry, XMLEntry};
+use Flow\ETL\Row\Entry\DateEntry;
+use Flow\ETL\Row\Entry\DateTimeEntry;
+use Flow\ETL\Row\Entry\EnumEntry;
+use Flow\ETL\Row\Entry\JsonEntry;
+use Flow\ETL\Row\Entry\ListEntry;
+use Flow\ETL\Row\Entry\MapEntry;
+use Flow\ETL\Row\Entry\StructureEntry;
+use Flow\ETL\Row\Entry\TimeEntry;
+use Flow\ETL\Row\Entry\UuidEntry;
+use Flow\ETL\Row\Entry\XMLElementEntry;
+use Flow\ETL\Row\Entry\XMLEntry;
+
+use function Flow\ETL\DSL\date_interval_to_microseconds;
 
 final readonly class EntryNormalizer
 {
     public function __construct(
         private string $dateTimeFormat = \DateTimeInterface::ATOM,
         private string $dateFormat = 'Y-m-d',
-    ) {
-    }
+    ) {}
 
     /**
      * @param Entry<mixed> $entry
      *
      * @return null|array<string, mixed>|bool|float|int|string
      */
-    public function normalize(Entry $entry) : string|float|int|bool|array|null
+    public function normalize(Entry $entry): string|float|int|bool|array|null
     {
         return match ($entry::class) {
             UuidEntry::class => $entry->toString(),
@@ -30,10 +40,7 @@ final readonly class EntryNormalizer
             TimeEntry::class => $entry->value() ? date_interval_to_microseconds($entry->value()) : null,
             EnumEntry::class => $entry->value()?->name,
             JsonEntry::class => $this->normalizeJsonValue($entry->value()?->toArray()),
-            ListEntry::class,
-            MapEntry::class,
-            StructureEntry::class,
-            XMLElementEntry::class => $entry->toString(),
+            ListEntry::class, MapEntry::class, StructureEntry::class, XMLElementEntry::class => $entry->toString(),
             XMLEntry::class => $entry->toString(),
             default => $this->normalizeValue($entry->value()),
         };
@@ -42,7 +49,7 @@ final readonly class EntryNormalizer
     /**
      * @return null|array<string, mixed>|bool|float|int|string
      */
-    private function normalizeJsonValue(mixed $value) : string|float|int|bool|array|null
+    private function normalizeJsonValue(mixed $value): string|float|int|bool|array|null
     {
         if (\is_array($value)) {
             /** @var array<string, mixed> $normalizedArray */
@@ -61,7 +68,7 @@ final readonly class EntryNormalizer
     /**
      * @return null|array<string, mixed>|bool|float|int|string
      */
-    private function normalizeValue(mixed $value) : string|float|int|bool|array|null
+    private function normalizeValue(mixed $value): string|float|int|bool|array|null
     {
         if (\is_string($value) || \is_float($value) || \is_int($value) || \is_bool($value) || $value === null) {
             return $value;

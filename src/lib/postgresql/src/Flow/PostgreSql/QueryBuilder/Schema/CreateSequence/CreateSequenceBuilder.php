@@ -4,8 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\CreateSequence;
 
-use Flow\PostgreSql\Protobuf\AST\{Boolean, CreateSeqStmt, DefElem, Integer, Node, PBList, PBString, RangeVar, TypeName};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\Boolean;
+use Flow\PostgreSql\Protobuf\AST\CreateSeqStmt;
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBList;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\Protobuf\AST\TypeName;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class CreateSequenceBuilder implements CreateSequenceNameStep, CreateSequenceOptionsStep
 {
@@ -21,30 +30,29 @@ final readonly class CreateSequenceBuilder implements CreateSequenceNameStep, Cr
         private bool $temporary = false,
         private bool $unlogged = false,
         private array $options = [],
-    ) {
-    }
+    ) {}
 
-    public static function create() : CreateSequenceNameStep
+    public static function create(): CreateSequenceNameStep
     {
         return new self();
     }
 
-    public static function createIfNotExists() : CreateSequenceNameStep
+    public static function createIfNotExists(): CreateSequenceNameStep
     {
         return new self(ifNotExists: true);
     }
 
-    public static function createTemporary() : CreateSequenceNameStep
+    public static function createTemporary(): CreateSequenceNameStep
     {
         return new self(temporary: true);
     }
 
-    public static function createUnlogged() : CreateSequenceNameStep
+    public static function createUnlogged(): CreateSequenceNameStep
     {
         return new self(unlogged: true);
     }
 
-    public function asType(string $dataType) : CreateSequenceOptionsStep
+    public function asType(string $dataType): CreateSequenceOptionsStep
     {
         $typeMap = [
             'smallint' => 'int2',
@@ -81,59 +89,52 @@ final readonly class CreateSequenceBuilder implements CreateSequenceNameStep, Cr
         return $this->withOption('as', $argNode);
     }
 
-    public function cache(int $cache) : CreateSequenceOptionsStep
+    public function cache(int $cache): CreateSequenceOptionsStep
     {
         return $this->withIntegerOption('cache', $cache);
     }
 
-    public function cycle() : CreateSequenceOptionsStep
+    public function cycle(): CreateSequenceOptionsStep
     {
         return $this->withBooleanOption('cycle', true);
     }
 
-    public function ifNotExists() : self
+    public function ifNotExists(): self
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            true,
-            $this->temporary,
-            $this->unlogged,
-            $this->options,
-        );
+        return new self($this->name, $this->schema, true, $this->temporary, $this->unlogged, $this->options);
     }
 
-    public function incrementBy(int $increment) : CreateSequenceOptionsStep
+    public function incrementBy(int $increment): CreateSequenceOptionsStep
     {
         return $this->withIntegerOption('increment', $increment);
     }
 
-    public function maxValue(int $maxValue) : CreateSequenceOptionsStep
+    public function maxValue(int $maxValue): CreateSequenceOptionsStep
     {
         return $this->withIntegerOption('maxvalue', $maxValue);
     }
 
-    public function minValue(int $minValue) : CreateSequenceOptionsStep
+    public function minValue(int $minValue): CreateSequenceOptionsStep
     {
         return $this->withIntegerOption('minvalue', $minValue);
     }
 
-    public function noCycle() : CreateSequenceOptionsStep
+    public function noCycle(): CreateSequenceOptionsStep
     {
         return $this->withBooleanOption('cycle', false);
     }
 
-    public function noMaxValue() : CreateSequenceOptionsStep
+    public function noMaxValue(): CreateSequenceOptionsStep
     {
         return $this->withOption('maxvalue', null);
     }
 
-    public function noMinValue() : CreateSequenceOptionsStep
+    public function noMinValue(): CreateSequenceOptionsStep
     {
         return $this->withOption('minvalue', null);
     }
 
-    public function ownedBy(string $table, string $column) : CreateSequenceOptionsStep
+    public function ownedBy(string $table, string $column): CreateSequenceOptionsStep
     {
         $list = new PBList();
         $items = [];
@@ -162,7 +163,7 @@ final readonly class CreateSequenceBuilder implements CreateSequenceNameStep, Cr
         return $this->withOption('owned_by', $argNode);
     }
 
-    public function ownedByNone() : CreateSequenceOptionsStep
+    public function ownedByNone(): CreateSequenceOptionsStep
     {
         $list = new PBList();
         $items = [];
@@ -181,36 +182,22 @@ final readonly class CreateSequenceBuilder implements CreateSequenceNameStep, Cr
         return $this->withOption('owned_by', $argNode);
     }
 
-    public function sequence(string $name, ?string $schema = null) : CreateSequenceOptionsStep
+    public function sequence(string $name, ?string $schema = null): CreateSequenceOptionsStep
     {
-        return new self(
-            $name,
-            $schema,
-            $this->ifNotExists,
-            $this->temporary,
-            $this->unlogged,
-            $this->options,
-        );
+        return new self($name, $schema, $this->ifNotExists, $this->temporary, $this->unlogged, $this->options);
     }
 
-    public function startWith(int $start) : CreateSequenceOptionsStep
+    public function startWith(int $start): CreateSequenceOptionsStep
     {
         return $this->withIntegerOption('start', $start);
     }
 
-    public function temporary() : self
+    public function temporary(): self
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            $this->ifNotExists,
-            true,
-            false,
-            $this->options,
-        );
+        return new self($this->name, $this->schema, $this->ifNotExists, true, false, $this->options);
     }
 
-    public function toAst() : CreateSeqStmt
+    public function toAst(): CreateSeqStmt
     {
         $stmt = new CreateSeqStmt();
 
@@ -258,19 +245,12 @@ final readonly class CreateSequenceBuilder implements CreateSequenceNameStep, Cr
         return $stmt;
     }
 
-    public function unlogged() : self
+    public function unlogged(): self
     {
-        return new self(
-            $this->name,
-            $this->schema,
-            $this->ifNotExists,
-            false,
-            true,
-            $this->options,
-        );
+        return new self($this->name, $this->schema, $this->ifNotExists, false, true, $this->options);
     }
 
-    private function withBooleanOption(string $name, bool $value) : self
+    private function withBooleanOption(string $name, bool $value): self
     {
         $boolean = new Boolean();
         $boolean->setBoolval($value);
@@ -282,7 +262,7 @@ final readonly class CreateSequenceBuilder implements CreateSequenceNameStep, Cr
         return $this->withOption($name, $argNode);
     }
 
-    private function withIntegerOption(string $name, int $value) : self
+    private function withIntegerOption(string $name, int $value): self
     {
         $integer = new Integer();
         $integer->setIval($value);
@@ -294,18 +274,11 @@ final readonly class CreateSequenceBuilder implements CreateSequenceNameStep, Cr
         return $this->withOption($name, $argNode);
     }
 
-    private function withOption(string $name, ?Node $arg) : self
+    private function withOption(string $name, ?Node $arg): self
     {
         $newOptions = $this->options;
         $newOptions[] = ['name' => $name, 'arg' => $arg];
 
-        return new self(
-            $this->name,
-            $this->schema,
-            $this->ifNotExists,
-            $this->temporary,
-            $this->unlogged,
-            $newOptions,
-        );
+        return new self($this->name, $this->schema, $this->ifNotExists, $this->temporary, $this->unlogged, $newOptions);
     }
 }

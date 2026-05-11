@@ -17,12 +17,12 @@ final class RangeVarCollector implements NodeVisitor
      */
     private array $rangeVars = [];
 
-    public static function nodeClasses() : array
+    public static function nodeClasses(): array
     {
         return [RangeVar::class];
     }
 
-    public function enter(object $node) : ?int
+    public function enter(object $node): ?int
     {
         /** @var RangeVar $node */
         $this->rangeVars[] = $node;
@@ -33,17 +33,17 @@ final class RangeVarCollector implements NodeVisitor
     /**
      * @return array<RangeVar>
      */
-    public function getRangeVars() : array
+    public function getRangeVars(): array
     {
         return $this->rangeVars;
     }
 
-    public function leave(object $node) : ?int
+    public function leave(object $node): ?int
     {
         return null;
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->rangeVars = [];
     }

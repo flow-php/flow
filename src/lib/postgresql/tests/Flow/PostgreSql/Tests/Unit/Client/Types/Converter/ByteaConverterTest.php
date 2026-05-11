@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 final class ByteaConverterTest extends TestCase
 {
-    public static function provide_invalid_values() : \Generator
+    public static function provide_invalid_values(): \Generator
     {
         yield 'integer' => [12345];
         yield 'array' => [['array']];
@@ -22,7 +22,7 @@ final class ByteaConverterTest extends TestCase
         yield 'object' => [new \stdClass()];
     }
 
-    public static function provide_valid_values() : \Generator
+    public static function provide_valid_values(): \Generator
     {
         yield 'simple text' => ['simple text', '\x' . \bin2hex('simple text')];
         yield 'hello' => ['hello', '\x' . \bin2hex('hello')];
@@ -38,29 +38,29 @@ final class ByteaConverterTest extends TestCase
     }
 
     #[DataProvider('provide_invalid_values')]
-    public function test_invalid_value_throws_exception(mixed $value) : void
+    public function test_invalid_value_throws_exception(mixed $value): void
     {
         $converter = new ByteaConverter();
         $this->expectException(ValueConversionException::class);
         $converter->toDatabase($value);
     }
 
-    public function test_null_handling() : void
+    public function test_null_handling(): void
     {
         $converter = new ByteaConverter();
-        self::assertNull($converter->toDatabase(null));
+        static::assertNull($converter->toDatabase(null));
     }
 
-    public function test_supported_types() : void
+    public function test_supported_types(): void
     {
         $converter = new ByteaConverter();
-        self::assertContains(ValueType::BYTEA, $converter->supportedTypes());
+        static::assertContains(ValueType::BYTEA, $converter->supportedTypes());
     }
 
     #[DataProvider('provide_valid_values')]
-    public function test_to_database(string $input, string $expected) : void
+    public function test_to_database(string $input, string $expected): void
     {
         $converter = new ByteaConverter();
-        self::assertSame($expected, $converter->toDatabase($input));
+        static::assertSame($expected, $converter->toDatabase($input));
     }
 }

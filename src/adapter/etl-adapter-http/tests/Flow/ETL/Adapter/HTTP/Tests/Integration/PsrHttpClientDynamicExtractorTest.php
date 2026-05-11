@@ -4,19 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\HTTP\Tests\Integration;
 
-use function Flow\ETL\Adapter\Http\from_dynamic_http_requests;
-use function Flow\ETL\DSL\{config, flow_context};
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Json;
 use Http\Mock\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Response;
-use Psr\Http\Message\{RequestInterface, ResponseInterface};
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+
+use function Flow\ETL\Adapter\Http\from_dynamic_http_requests;
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\flow_context;
 
 final class PsrHttpClientDynamicExtractorTest extends FlowTestCase
 {
-    public function test_http_extractor() : void
+    public function test_http_extractor(): void
     {
         $psr17Factory = new Psr17Factory();
         $psr18Client = new Client($psr17Factory);
@@ -28,13 +31,17 @@ final class PsrHttpClientDynamicExtractorTest extends FlowTestCase
         }
 
         $psr18Client->addResponse(
-            new Response(200, [
-                'Server' => 'GitHub.com',
-            ], $fixtureContent),
+            new Response(
+                200,
+                [
+                    'Server' => 'GitHub.com',
+                ],
+                $fixtureContent,
+            ),
         );
 
         $extractor = from_dynamic_http_requests($psr18Client, new class implements NextRequestFactory {
-            public function create(?ResponseInterface $previousResponse = null) : ?RequestInterface
+            public function create(?ResponseInterface $previousResponse = null): ?RequestInterface
             {
                 $psr17Factory = new Psr17Factory();
 
@@ -56,18 +63,18 @@ final class PsrHttpClientDynamicExtractorTest extends FlowTestCase
         $body = \json_decode($bodyJson, true, 512, JSON_THROW_ON_ERROR);
         \assert(\is_array($body));
 
-        self::assertSame(1, $rows->current()->count());
-        self::assertSame('flow-php', $body['login'], \json_encode($body, JSON_THROW_ON_ERROR));
-        self::assertSame(73_495_297, $body['id'], \json_encode($body, JSON_THROW_ON_ERROR));
+        static::assertSame(1, $rows->current()->count());
+        static::assertSame('flow-php', $body['login'], \json_encode($body, JSON_THROW_ON_ERROR));
+        static::assertSame(73_495_297, $body['id'], \json_encode($body, JSON_THROW_ON_ERROR));
 
         $responseHeadersValue = $rows->current()->first()->valueOf('response_headers');
-        self::assertInstanceOf(Json::class, $responseHeadersValue);
+        static::assertInstanceOf(Json::class, $responseHeadersValue);
         $responseHeaders = $responseHeadersValue->toArray();
-        self::assertSame(['GitHub.com'], $responseHeaders['Server']);
-        self::assertSame(200, $rows->current()->first()->valueOf('response_status_code'));
-        self::assertSame('1.1', $rows->current()->first()->valueOf('response_protocol_version'));
-        self::assertSame('OK', $rows->current()->first()->valueOf('response_reason_phrase'));
-        self::assertSame('https://api.github.com/orgs/flow-php', $rows->current()->first()->valueOf('request_uri'));
-        self::assertSame('GET', $rows->current()->first()->valueOf('request_method'));
+        static::assertSame(['GitHub.com'], $responseHeaders['Server']);
+        static::assertSame(200, $rows->current()->first()->valueOf('response_status_code'));
+        static::assertSame('1.1', $rows->current()->first()->valueOf('response_protocol_version'));
+        static::assertSame('OK', $rows->current()->first()->valueOf('response_reason_phrase'));
+        static::assertSame('https://api.github.com/orgs/flow-php', $rows->current()->first()->valueOf('request_uri'));
+        static::assertSame('GET', $rows->current()->first()->valueOf('request_method'));
     }
 }

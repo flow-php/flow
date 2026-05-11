@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Transaction;
 
-use Flow\PostgreSql\Protobuf\AST\{TransactionStmt, TransactionStmtKind};
+use Flow\PostgreSql\Protobuf\AST\TransactionStmt;
+use Flow\PostgreSql\Protobuf\AST\TransactionStmtKind;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class RollbackBuilder implements RollbackOptionsStep
@@ -14,31 +15,24 @@ final readonly class RollbackBuilder implements RollbackOptionsStep
     private function __construct(
         private ?string $savepointName = null,
         private ?bool $chain = null,
-    ) {
-    }
+    ) {}
 
-    public static function create() : RollbackOptionsStep
+    public static function create(): RollbackOptionsStep
     {
         return new self();
     }
 
-    public function andChain() : RollbackFinalStep
+    public function andChain(): RollbackFinalStep
     {
-        return new self(
-            $this->savepointName,
-            true,
-        );
+        return new self($this->savepointName, true);
     }
 
-    public function andNoChain() : RollbackFinalStep
+    public function andNoChain(): RollbackFinalStep
     {
-        return new self(
-            $this->savepointName,
-            false,
-        );
+        return new self($this->savepointName, false);
     }
 
-    public function toAst() : TransactionStmt
+    public function toAst(): TransactionStmt
     {
         $stmt = new TransactionStmt();
 
@@ -56,11 +50,8 @@ final readonly class RollbackBuilder implements RollbackOptionsStep
         return $stmt;
     }
 
-    public function toSavepoint(string $name) : RollbackFinalStep
+    public function toSavepoint(string $name): RollbackFinalStep
     {
-        return new self(
-            $name,
-            $this->chain,
-        );
+        return new self($name, $this->chain);
     }
 }

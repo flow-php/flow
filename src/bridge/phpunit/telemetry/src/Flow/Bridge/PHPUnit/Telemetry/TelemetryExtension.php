@@ -4,8 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\PHPUnit\Telemetry;
 
-use Flow\Bridge\PHPUnit\Telemetry\Subscriber\{TestErroredSubscriber, TestFailedSubscriber, TestFinishedSubscriber, TestMarkedIncompleteSubscriber, TestPassedSubscriber, TestPreparationStartedSubscriber, TestSkippedSubscriber, TestSuiteFinishedSubscriber, TestSuiteStartedSubscriber};
-use PHPUnit\Runner\Extension\{Extension, Facade, ParameterCollection};
+use Flow\Bridge\PHPUnit\Telemetry\Subscriber\TestErroredSubscriber;
+use Flow\Bridge\PHPUnit\Telemetry\Subscriber\TestFailedSubscriber;
+use Flow\Bridge\PHPUnit\Telemetry\Subscriber\TestFinishedSubscriber;
+use Flow\Bridge\PHPUnit\Telemetry\Subscriber\TestMarkedIncompleteSubscriber;
+use Flow\Bridge\PHPUnit\Telemetry\Subscriber\TestPassedSubscriber;
+use Flow\Bridge\PHPUnit\Telemetry\Subscriber\TestPreparationStartedSubscriber;
+use Flow\Bridge\PHPUnit\Telemetry\Subscriber\TestSkippedSubscriber;
+use Flow\Bridge\PHPUnit\Telemetry\Subscriber\TestSuiteFinishedSubscriber;
+use Flow\Bridge\PHPUnit\Telemetry\Subscriber\TestSuiteStartedSubscriber;
+use PHPUnit\Runner\Extension\Extension;
+use PHPUnit\Runner\Extension\Facade;
+use PHPUnit\Runner\Extension\ParameterCollection;
 use PHPUnit\TextUI\Configuration\Configuration as PHPUnitConfiguration;
 
 final class TelemetryExtension implements Extension
@@ -14,7 +24,7 @@ final class TelemetryExtension implements Extension
         PHPUnitConfiguration $configuration,
         Facade $facade,
         ParameterCollection $parameters,
-    ) : void {
+    ): void {
         try {
             $config = Configuration::fromParameters($parameters);
             $telemetry = TelemetryFactory::create($config);

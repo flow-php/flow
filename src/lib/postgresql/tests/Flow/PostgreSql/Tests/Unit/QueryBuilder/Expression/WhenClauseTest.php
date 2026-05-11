@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{CaseWhen, Node};
-use Flow\PostgreSql\QueryBuilder\Expression\{Literal, WhenClause};
+use Flow\PostgreSql\Protobuf\AST\CaseWhen;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\QueryBuilder\Expression\Literal;
+use Flow\PostgreSql\QueryBuilder\Expression\WhenClause;
 use PHPUnit\Framework\TestCase;
 
 final class WhenClauseTest extends TestCase
 {
-    public function test_converts_to_ast() : void
+    public function test_converts_to_ast(): void
     {
         $condition = Literal::bool(true);
         $result = Literal::int(1);
@@ -18,25 +20,25 @@ final class WhenClauseTest extends TestCase
         $whenClause = new WhenClause($condition, $result);
         $node = $whenClause->toAst();
 
-        self::assertNotNull($node->getCaseWhen());
+        static::assertNotNull($node->getCaseWhen());
 
         $caseWhen = $node->getCaseWhen();
-        self::assertNotNull($caseWhen->getExpr());
-        self::assertNotNull($caseWhen->getResult());
+        static::assertNotNull($caseWhen->getExpr());
+        static::assertNotNull($caseWhen->getResult());
     }
 
-    public function test_creates_when_clause() : void
+    public function test_creates_when_clause(): void
     {
         $condition = Literal::bool(true);
         $result = Literal::string('yes');
 
         $whenClause = new WhenClause($condition, $result);
 
-        self::assertSame($condition, $whenClause->getCondition());
-        self::assertSame($result, $whenClause->getResult());
+        static::assertSame($condition, $whenClause->getCondition());
+        static::assertSame($result, $whenClause->getResult());
     }
 
-    public function test_recreates_from_ast() : void
+    public function test_recreates_from_ast(): void
     {
         $condition = Literal::int(1);
         $result = Literal::string('one');
@@ -50,10 +52,10 @@ final class WhenClauseTest extends TestCase
 
         $whenClause = WhenClause::fromAst($node);
 
-        self::assertInstanceOf(WhenClause::class, $whenClause);
+        static::assertInstanceOf(WhenClause::class, $whenClause);
     }
 
-    public function test_round_trip_conversion() : void
+    public function test_round_trip_conversion(): void
     {
         $condition = Literal::bool(false);
         $result = Literal::int(0);
@@ -62,6 +64,6 @@ final class WhenClauseTest extends TestCase
         $node = $whenClause->toAst();
         $restored = WhenClause::fromAst($node);
 
-        self::assertInstanceOf(WhenClause::class, $restored);
+        static::assertInstanceOf(WhenClause::class, $restored);
     }
 }

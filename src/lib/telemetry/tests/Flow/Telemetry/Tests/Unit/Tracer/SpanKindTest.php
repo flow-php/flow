@@ -9,35 +9,35 @@ use PHPUnit\Framework\TestCase;
 
 final class SpanKindTest extends TestCase
 {
-    public function test_all_cases_exist() : void
+    public function test_all_cases_exist(): void
     {
         $cases = SpanKind::cases();
 
-        self::assertCount(5, $cases);
+        static::assertCount(5, $cases);
     }
 
-    public function test_client_has_correct_value() : void
+    public function test_client_has_correct_value(): void
     {
-        self::assertSame('client', SpanKind::CLIENT->value);
+        static::assertSame('client', SpanKind::CLIENT->value);
     }
 
-    public function test_consumer_has_correct_value() : void
+    public function test_consumer_has_correct_value(): void
     {
-        self::assertSame('consumer', SpanKind::CONSUMER->value);
+        static::assertSame('consumer', SpanKind::CONSUMER->value);
     }
 
-    public function test_internal_has_correct_value() : void
+    public function test_internal_has_correct_value(): void
     {
-        self::assertSame('internal', SpanKind::INTERNAL->value);
+        static::assertSame('internal', SpanKind::INTERNAL->value);
     }
 
-    public function test_producer_has_correct_value() : void
+    public function test_producer_has_correct_value(): void
     {
-        self::assertSame('producer', SpanKind::PRODUCER->value);
+        static::assertSame('producer', SpanKind::PRODUCER->value);
     }
 
-    public function test_server_has_correct_value() : void
+    public function test_server_has_correct_value(): void
     {
-        self::assertSame('server', SpanKind::SERVER->value);
+        static::assertSame('server', SpanKind::SERVER->value);
     }
 }

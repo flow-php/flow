@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type;
 
-use function Flow\Types\DSL\{type_equals, type_null};
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Native\UnionType;
+
+use function Flow\Types\DSL\type_equals;
+use function Flow\Types\DSL\type_null;
 
 /**
  * Unique collection of types.
@@ -35,7 +37,7 @@ final readonly class Types implements \Countable, \Stringable
         $this->first = $types[0] ?? null;
     }
 
-    public function __toString() : string
+    public function __toString(): string
     {
         $types = [];
 
@@ -49,12 +51,12 @@ final readonly class Types implements \Countable, \Stringable
     /**
      * @return array<Type<T>>
      */
-    public function all() : array
+    public function all(): array
     {
         return $this->types;
     }
 
-    public function count() : int
+    public function count(): int
     {
         return \count($this->types);
     }
@@ -62,7 +64,7 @@ final readonly class Types implements \Countable, \Stringable
     /**
      * @return Types<T>
      */
-    public function deduplicate() : self
+    public function deduplicate(): self
     {
         $types = [];
 
@@ -76,7 +78,7 @@ final readonly class Types implements \Countable, \Stringable
     /**
      * @return ?Type<T>
      */
-    public function first() : ?Type
+    public function first(): ?Type
     {
         return $this->first;
     }
@@ -84,7 +86,7 @@ final readonly class Types implements \Countable, \Stringable
     /**
      * @param Type<mixed> $type
      */
-    public function has(Type $type) : bool
+    public function has(Type $type): bool
     {
         foreach ($this->types as $existingType) {
             if (type_equals($existingType, $type)) {
@@ -98,7 +100,7 @@ final readonly class Types implements \Countable, \Stringable
     /**
      * @param Type<mixed> ...$types
      */
-    public function hasAll(Type ...$types) : bool
+    public function hasAll(Type ...$types): bool
     {
         foreach ($types as $type) {
             if (!$this->has($type)) {
@@ -112,7 +114,7 @@ final readonly class Types implements \Countable, \Stringable
     /**
      * @param Type<mixed> ...$types
      */
-    public function hasAny(Type ...$types) : bool
+    public function hasAny(Type ...$types): bool
     {
         foreach ($this->types as $existingType) {
             foreach ($types as $type) {
@@ -130,9 +132,9 @@ final readonly class Types implements \Countable, \Stringable
      *
      * @return Types<T>
      */
-    public function only(Type ...$types) : self
+    public function only(Type ...$types): self
     {
-        $filteredTypes = \array_filter($this->types, static function (Type $type) use ($types) : bool {
+        $filteredTypes = \array_filter($this->types, static function (Type $type) use ($types): bool {
             foreach ($types as $keepType) {
                 if (type_equals($type, $keepType)) {
                     return true;
@@ -150,7 +152,7 @@ final readonly class Types implements \Countable, \Stringable
      *
      * @return Types<mixed>
      */
-    public function reduceOptionals() : self
+    public function reduceOptionals(): self
     {
         $types = [];
 
@@ -172,9 +174,9 @@ final readonly class Types implements \Countable, \Stringable
      *
      * @return Types<T>
      */
-    public function without(Type ...$types) : self
+    public function without(Type ...$types): self
     {
-        $filteredTypes = \array_filter($this->types, static function (Type $type) use ($types) : bool {
+        $filteredTypes = \array_filter($this->types, static function (Type $type) use ($types): bool {
             foreach ($types as $withoutType) {
                 if (type_equals($type, $withoutType)) {
                     return false;

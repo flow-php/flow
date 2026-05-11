@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Config\Cache;
 
-use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\Cache;
-use Flow\ETL\Cache\Implementation\{FilesystemCache, TraceableCache};
+use Flow\ETL\Cache\Implementation\FilesystemCache;
+use Flow\ETL\Cache\Implementation\TraceableCache;
 use Flow\ETL\Config\Telemetry\TelemetryConfig;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Filesystem\FilesystemTable;
 use Flow\Serializer\Serializer;
+
+use function Flow\Filesystem\DSL\path_real;
 
 final class CacheConfigBuilder
 {
@@ -23,15 +25,19 @@ final class CacheConfigBuilder
 
     private string $filesystemProtocol = 'file';
 
-    public function build(FilesystemTable $fstab, Serializer $serializer, ?TelemetryConfig $telemetryConfig = null, string $dataframeName = 'flow_dataframe') : CacheConfig
-    {
+    public function build(
+        FilesystemTable $fstab,
+        Serializer $serializer,
+        ?TelemetryConfig $telemetryConfig = null,
+        string $dataframeName = 'flow_dataframe',
+    ): CacheConfig {
         $cachePath = \getenv(CacheConfig::CACHE_DIR_ENV) ?: '';
         $cachePath = path_real($cachePath !== '' ? $cachePath : \sys_get_temp_dir() . '/flow_php/cache');
 
         $cache = $this->cache ?? new FilesystemCache(
             $fstab->for($this->filesystemProtocol),
             $serializer,
-            cacheDir: $cachePath
+            cacheDir: $cachePath,
         );
 
         if ($telemetryConfig !== null && $telemetryConfig->options->traceCache) {
@@ -46,7 +52,7 @@ final class CacheConfigBuilder
         );
     }
 
-    public function cache(Cache $cache) : self
+    public function cache(Cache $cache): self
     {
         $this->cache = $cache;
 
@@ -56,7 +62,7 @@ final class CacheConfigBuilder
     /**
      * @param int<1, max> $externalSortBucketsCount
      */
-    public function externalSortBucketsCount(int $externalSortBucketsCount) : self
+    public function externalSortBucketsCount(int $externalSortBucketsCount): self
     {
         if ($externalSortBucketsCount < 1) {
             throw new InvalidArgumentException('External sort buckets count must be greater than 0');
@@ -67,7 +73,7 @@ final class CacheConfigBuilder
         return $this;
     }
 
-    public function filesystemProtocol(string $protocol) : self
+    public function filesystemProtocol(string $protocol): self
     {
         $this->filesystemProtocol = $protocol;
 

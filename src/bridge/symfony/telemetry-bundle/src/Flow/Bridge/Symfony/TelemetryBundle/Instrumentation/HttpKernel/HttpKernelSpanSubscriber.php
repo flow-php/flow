@@ -4,13 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel;
 
-use Flow\Telemetry\Context\{Context, ContextStorage};
-use Flow\Telemetry\{PackageVersion, Telemetry};
-use Flow\Telemetry\Propagation\{ArrayCarrier, Propagator};
-use Flow\Telemetry\Tracer\{Span, SpanKind, SpanStatus, Tracer};
+use Flow\Telemetry\Context\Context;
+use Flow\Telemetry\Context\ContextStorage;
+use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\Propagation\ArrayCarrier;
+use Flow\Telemetry\Propagation\Propagator;
+use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\Tracer\Span;
+use Flow\Telemetry\Tracer\SpanKind;
+use Flow\Telemetry\Tracer\SpanStatus;
+use Flow\Telemetry\Tracer\Tracer;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Event\{ControllerEvent, ExceptionEvent, RequestEvent, ResponseEvent, TerminateEvent};
+use Symfony\Component\HttpKernel\Event\ControllerEvent;
+use Symfony\Component\HttpKernel\Event\ExceptionEvent;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
+use Symfony\Component\HttpKernel\Event\TerminateEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterface
@@ -33,12 +43,12 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         private bool $extractContext = true,
     ) {
         $this->excludePathRules = \array_map(
-            static fn (array $config) : PathExclusionRule => PathExclusionRule::fromConfig($config),
-            $excludePaths
+            static fn(array $config): PathExclusionRule => PathExclusionRule::fromConfig($config),
+            $excludePaths,
         );
     }
 
-    public static function getSubscribedEvents() : array
+    public static function getSubscribedEvents(): array
     {
         return [
             KernelEvents::REQUEST => ['onRequest', 10000],
@@ -49,7 +59,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         ];
     }
 
-    public function onController(ControllerEvent $event) : void
+    public function onController(ControllerEvent $event): void
     {
         $request = $event->getRequest();
         $span = $request->attributes->get(self::SPAN_ATTRIBUTE);
@@ -72,7 +82,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         }
     }
 
-    public function onException(ExceptionEvent $event) : void
+    public function onException(ExceptionEvent $event): void
     {
         $request = $event->getRequest();
         $span = $request->attributes->get(self::SPAN_ATTRIBUTE);
@@ -84,7 +94,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         $span->recordException($event->getThrowable(), new \DateTimeImmutable());
     }
 
-    public function onRequest(RequestEvent $event) : void
+    public function onRequest(RequestEvent $event): void
     {
         $request = $event->getRequest();
         $method = $request->getMethod();
@@ -101,23 +111,19 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         $kind = $event->isMainRequest() ? SpanKind::SERVER : SpanKind::INTERNAL;
 
         $tracer = $this->telemetry->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'));
-        $span = $tracer->span(
-            "{$method} {$path}",
-            $kind,
-            [
-                'http.request.method' => $method,
-                'url.full' => $request->getUri(),
-                'url.path' => $request->getRequestUri(),
-                'url.scheme' => $request->getScheme(),
-                'server.address' => $request->getHost(),
-            ],
-        );
+        $span = $tracer->span("{$method} {$path}", $kind, [
+            'http.request.method' => $method,
+            'url.full' => $request->getUri(),
+            'url.path' => $request->getRequestUri(),
+            'url.scheme' => $request->getScheme(),
+            'server.address' => $request->getHost(),
+        ]);
 
         $request->attributes->set(self::SPAN_ATTRIBUTE, $span);
         $request->attributes->set(self::TRACER_ATTRIBUTE, $tracer);
     }
 
-    public function onResponse(ResponseEvent $event) : void
+    public function onResponse(ResponseEvent $event): void
     {
         $request = $event->getRequest();
         $span = $request->attributes->get(self::SPAN_ATTRIBUTE);
@@ -138,7 +144,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         }
     }
 
-    public function onTerminate(TerminateEvent $event) : void
+    public function onTerminate(TerminateEvent $event): void
     {
         $request = $event->getRequest();
         $span = $request->attributes->get(self::SPAN_ATTRIBUTE);
@@ -154,7 +160,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         $request->attributes->remove(self::TRACER_ATTRIBUTE);
     }
 
-    private function extractContextFromRequest(Request $request) : void
+    private function extractContextFromRequest(Request $request): void
     {
         $headers = [];
 
@@ -182,12 +188,14 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
     /**
      * @param array<int, object|string>|callable|object $controller
      */
-    private function resolveControllerName(callable|object|array $controller) : ?string
+    private function resolveControllerName(callable|object|array $controller): ?string
     {
         if (\is_array($controller) && \count($controller) === 2) {
             $firstElement = $controller[0];
             $secondElement = $controller[1];
-            $class = \is_object($firstElement) ? $firstElement::class : (\is_string($firstElement) ? $firstElement : '');
+            $class = \is_object($firstElement)
+                ? $firstElement::class
+                : (\is_string($firstElement) ? $firstElement : '');
             $method = \is_string($secondElement) ? $secondElement : '';
 
             return "{$class}::{$method}";
@@ -208,7 +216,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         return null;
     }
 
-    private function shouldTraceByPath(string $path, string $method) : bool
+    private function shouldTraceByPath(string $path, string $method): bool
     {
         foreach ($this->excludePathRules as $rule) {
             if ($rule->matches($path, $method)) {

@@ -9,6 +9,4 @@ namespace Flow\Bridge\Telemetry\OTLP\Transport;
  *
  * This includes network errors, serialization failures, or backend rejections.
  */
-class TransportException extends \RuntimeException
-{
-}
+class TransportException extends \RuntimeException {}

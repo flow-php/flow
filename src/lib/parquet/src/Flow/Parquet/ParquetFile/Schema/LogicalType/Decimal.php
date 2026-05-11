@@ -11,23 +11,19 @@ final readonly class Decimal
     public function __construct(
         private int $scale,
         private int $precision,
-    ) {
-    }
+    ) {}
 
-    public static function fromThrift(DecimalType $thrift) : self
+    public static function fromThrift(DecimalType $thrift): self
     {
-        return new self(
-            (int) $thrift->scale,
-            (int) $thrift->precision
-        );
+        return new self((int) $thrift->scale, (int) $thrift->precision);
     }
 
-    public function precision() : int
+    public function precision(): int
     {
         return $this->precision;
     }
 
-    public function scale() : int
+    public function scale(): int
     {
         return $this->scale;
     }

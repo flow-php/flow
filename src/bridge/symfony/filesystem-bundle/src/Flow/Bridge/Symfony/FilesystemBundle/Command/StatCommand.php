@@ -4,32 +4,50 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\FilesystemBundle\Command;
 
-use function Flow\Types\DSL\{type_null, type_string, type_union};
 use Flow\Filesystem\SizeUnits;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-#[AsCommand(name: 'flow:filesystem:stat', description: 'Print metadata about a file or directory URI.', aliases: ['flow:fs:stat'])]
+use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
+
+#[AsCommand(
+    name: 'flow:filesystem:stat',
+    description: 'Print metadata about a file or directory URI.',
+    aliases: ['flow:fs:stat'],
+)]
 final class StatCommand extends Command
 {
-    public function __construct(private readonly FstabResolver $resolver)
-    {
+    public function __construct(
+        private readonly FstabResolver $resolver,
+    ) {
         parent::__construct();
     }
 
-    protected function configure() : void
+    protected function configure(): void
     {
         $this
             ->addArgument('path', InputArgument::REQUIRED, 'File or directory URI')
             ->addOption('fstab', 'f', InputOption::VALUE_REQUIRED, 'Fstab name; defaults to the bundle default fstab.')
-            ->addOption('format', null, InputOption::VALUE_REQUIRED, 'Output format: "human" (default) or "json".', 'human')
-            ->setHelp('Prints metadata (URI, protocol, type, size, modified) for the given URI. Size and modified come from the backend listing/head response — no extra stream is opened.');
+            ->addOption(
+                'format',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Output format: "human" (default) or "json".',
+                'human',
+            )
+            ->setHelp(
+                'Prints metadata (URI, protocol, type, size, modified) for the given URI. Size and modified come from the backend listing/head response — no extra stream is opened.',
+            );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output) : int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 

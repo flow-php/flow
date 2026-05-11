@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface CreateRoleFinalStep extends Sql
 {
-    public function toAst() : CreateRoleStmt;
+    public function toAst(): CreateRoleStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

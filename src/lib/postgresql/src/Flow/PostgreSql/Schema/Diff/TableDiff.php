@@ -4,17 +4,36 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Diff;
 
-use function Flow\PostgreSql\DSL\{alter, column, create, drop};
-
-use Flow\PostgreSql\Parser\{ExcludeDefinitionParser, ExpressionParser};
+use Flow\PostgreSql\Parser\ExcludeDefinitionParser;
+use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
 use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
-use Flow\PostgreSql\QueryBuilder\Schema\Constraint\{CheckConstraint as CheckConstraintBuilder, ExcludeConstraint as ExcludeConstraintBuilder, ForeignKeyConstraint, PrimaryKeyConstraint, UniqueConstraint as UniqueConstraintBuilder};
+use Flow\PostgreSql\QueryBuilder\Schema\Constraint\CheckConstraint as CheckConstraintBuilder;
+use Flow\PostgreSql\QueryBuilder\Schema\Constraint\ExcludeConstraint as ExcludeConstraintBuilder;
+use Flow\PostgreSql\QueryBuilder\Schema\Constraint\ForeignKeyConstraint;
+use Flow\PostgreSql\QueryBuilder\Schema\Constraint\PrimaryKeyConstraint;
+use Flow\PostgreSql\QueryBuilder\Schema\Constraint\UniqueConstraint as UniqueConstraintBuilder;
 use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexMethod as QbIndexMethod;
 use Flow\PostgreSql\QueryBuilder\Schema\Trigger\TriggerEvent as QbTriggerEvent;
 use Flow\PostgreSql\QueryBuilder\Sql;
-use Flow\PostgreSql\Schema\{Column, IdentityGeneration, Index, IndexMethod, Table, Trigger, TriggerEvent, TriggerTiming};
-use Flow\PostgreSql\Schema\Constraint\{CheckConstraint, ExcludeConstraint, ForeignKey, PrimaryKey, UniqueConstraint};
+use Flow\PostgreSql\Schema\Column;
+use Flow\PostgreSql\Schema\Constraint\CheckConstraint;
+use Flow\PostgreSql\Schema\Constraint\ExcludeConstraint;
+use Flow\PostgreSql\Schema\Constraint\ForeignKey;
+use Flow\PostgreSql\Schema\Constraint\PrimaryKey;
+use Flow\PostgreSql\Schema\Constraint\UniqueConstraint;
+use Flow\PostgreSql\Schema\IdentityGeneration;
+use Flow\PostgreSql\Schema\Index;
+use Flow\PostgreSql\Schema\IndexMethod;
+use Flow\PostgreSql\Schema\Table;
+use Flow\PostgreSql\Schema\Trigger;
+use Flow\PostgreSql\Schema\TriggerEvent;
+use Flow\PostgreSql\Schema\TriggerTiming;
+
+use function Flow\PostgreSql\DSL\alter;
+use function Flow\PostgreSql\DSL\column;
+use function Flow\PostgreSql\DSL\create;
+use function Flow\PostgreSql\DSL\drop;
 
 final readonly class TableDiff implements Diff
 {
@@ -64,13 +83,12 @@ final readonly class TableDiff implements Diff
         public array $addedInherits = [],
         public array $removedInherits = [],
         public bool $tablespaceChanged = false,
-    ) {
-    }
+    ) {}
 
     /**
      * @return list<Sql>
      */
-    public function generate() : array
+    public function generate(): array
     {
         $sqls = [];
         $qualifiedName = $this->target->qualifiedName();
@@ -94,7 +112,10 @@ final readonly class TableDiff implements Diff
 
         foreach ($this->removedForeignKeys as $fk) {
             if ($fk->name === null) {
-                throw new \RuntimeException(\sprintf('Cannot drop unnamed foreign key on table "%s". Constraint names are required for reversible migrations.', $qualifiedName));
+                throw new \RuntimeException(\sprintf(
+                    'Cannot drop unnamed foreign key on table "%s". Constraint names are required for reversible migrations.',
+                    $qualifiedName,
+                ));
             }
             $sqls[] = alter()->table($qualifiedName)->dropConstraint($fk->name);
         }
@@ -105,28 +126,40 @@ final readonly class TableDiff implements Diff
 
         foreach ($this->removedUniqueConstraints as $uc) {
             if ($uc->name === null) {
-                throw new \RuntimeException(\sprintf('Cannot drop unnamed unique constraint on table "%s". Constraint names are required for reversible migrations.', $qualifiedName));
+                throw new \RuntimeException(\sprintf(
+                    'Cannot drop unnamed unique constraint on table "%s". Constraint names are required for reversible migrations.',
+                    $qualifiedName,
+                ));
             }
             $sqls[] = alter()->table($qualifiedName)->dropConstraint($uc->name);
         }
 
         foreach ($this->removedCheckConstraints as $cc) {
             if ($cc->name === null) {
-                throw new \RuntimeException(\sprintf('Cannot drop unnamed check constraint on table "%s". Constraint names are required for reversible migrations.', $qualifiedName));
+                throw new \RuntimeException(\sprintf(
+                    'Cannot drop unnamed check constraint on table "%s". Constraint names are required for reversible migrations.',
+                    $qualifiedName,
+                ));
             }
             $sqls[] = alter()->table($qualifiedName)->dropConstraint($cc->name);
         }
 
         foreach ($this->removedExcludeConstraints as $ec) {
             if ($ec->name === null) {
-                throw new \RuntimeException(\sprintf('Cannot drop unnamed exclude constraint on table "%s". Constraint names are required for reversible migrations.', $qualifiedName));
+                throw new \RuntimeException(\sprintf(
+                    'Cannot drop unnamed exclude constraint on table "%s". Constraint names are required for reversible migrations.',
+                    $qualifiedName,
+                ));
             }
             $sqls[] = alter()->table($qualifiedName)->dropConstraint($ec->name);
         }
 
         if ($this->removedPrimaryKey !== null) {
             if ($this->removedPrimaryKey->name === null) {
-                throw new \RuntimeException(\sprintf('Cannot drop unnamed primary key on table "%s". Constraint names are required for reversible migrations.', $qualifiedName));
+                throw new \RuntimeException(\sprintf(
+                    'Cannot drop unnamed primary key on table "%s". Constraint names are required for reversible migrations.',
+                    $qualifiedName,
+                ));
             }
             $sqls[] = alter()->table($qualifiedName)->dropConstraint($this->removedPrimaryKey->name);
         }
@@ -222,7 +255,10 @@ final readonly class TableDiff implements Diff
 
         foreach ($this->addedExcludeConstraints as $ec) {
             if ($ec->name === null) {
-                throw new \RuntimeException(\sprintf('Cannot add unnamed exclude constraint on table "%s". Constraint names are required for reversible migrations.', $qualifiedName));
+                throw new \RuntimeException(\sprintf(
+                    'Cannot add unnamed exclude constraint on table "%s". Constraint names are required for reversible migrations.',
+                    $qualifiedName,
+                ));
             }
 
             $expressionParser = new ExpressionParser();
@@ -237,9 +273,7 @@ final readonly class TableDiff implements Diff
             }
 
             if ($parsed->predicate !== null) {
-                $constraint = $constraint->where(
-                    ConditionFactory::fromAst($expressionParser->parse($parsed->predicate)),
-                );
+                $constraint = $constraint->where(ConditionFactory::fromAst($expressionParser->parse($parsed->predicate)));
             }
 
             if ($parsed->deferrable) {
@@ -268,7 +302,7 @@ final readonly class TableDiff implements Diff
 
         foreach ($this->addedTriggers as $trigger) {
             $qbEvents = \array_map(
-                static fn (TriggerEvent $e) : QbTriggerEvent => QbTriggerEvent::{$e->name},
+                static fn(TriggerEvent $e): QbTriggerEvent => QbTriggerEvent::{$e->name},
                 $trigger->events,
             );
 
@@ -300,9 +334,10 @@ final readonly class TableDiff implements Diff
         return $sqls;
     }
 
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
-        return $this->addedColumns === []
+        return (
+            $this->addedColumns === []
             && $this->removedColumns === []
             && $this->modifiedColumns === []
             && $this->addedPrimaryKey === null
@@ -324,10 +359,11 @@ final readonly class TableDiff implements Diff
             && !$this->partitionChanged
             && $this->addedInherits === []
             && $this->removedInherits === []
-            && !$this->tablespaceChanged;
+            && !$this->tablespaceChanged
+        );
     }
 
-    public function requiresViewRebuild() : bool
+    public function requiresViewRebuild(): bool
     {
         if ($this->removedColumns !== []) {
             return true;

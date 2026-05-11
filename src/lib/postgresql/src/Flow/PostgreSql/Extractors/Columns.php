@@ -10,32 +10,29 @@ use Flow\PostgreSql\ParsedQuery;
 
 final readonly class Columns
 {
-    public function __construct(private ParsedQuery $query)
-    {
-    }
+    public function __construct(
+        private ParsedQuery $query,
+    ) {}
 
     /**
      * @return array<Column>
      */
-    public function all() : array
+    public function all(): array
     {
         $collector = new ColumnRefCollector();
         $this->query->traverse($collector);
 
         return \array_values(\array_filter(
-            \array_map(static fn ($ref) => new Column($ref), $collector->getColumnRefs()),
-            static fn ($col) => $col->name() !== null
+            \array_map(static fn($ref) => new Column($ref), $collector->getColumnRefs()),
+            static fn($col) => $col->name() !== null,
         ));
     }
 
     /**
      * @return array<Column>
      */
-    public function forTable(string $tableName) : array
+    public function forTable(string $tableName): array
     {
-        return \array_values(\array_filter(
-            $this->all(),
-            static fn ($col) => $col->table() === $tableName
-        ));
+        return \array_values(\array_filter($this->all(), static fn($col) => $col->table() === $tableName));
     }
 }

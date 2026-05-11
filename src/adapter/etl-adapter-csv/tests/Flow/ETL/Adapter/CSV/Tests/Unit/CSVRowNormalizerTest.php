@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class CSVRowNormalizerTest extends TestCase
 {
-    public function test_normalize_complex_scenario_with_expansion_truncation_and_empty_conversion() : void
+    public function test_normalize_complex_scenario_with_expansion_truncation_and_empty_conversion(): void
     {
         $normalizer = new CSVRowNormalizer(true);
         $rowData = ['value1', '', 'value3', '', 'extraValue'];
@@ -17,11 +17,11 @@ final class CSVRowNormalizerTest extends TestCase
 
         $result = $normalizer->normalize($rowData, $headersCount);
 
-        self::assertSame(['value1', null, 'value3', null], $result);
-        self::assertCount(4, $result);
+        static::assertSame(['value1', null, 'value3', null], $result);
+        static::assertCount(4, $result);
     }
 
-    public function test_normalize_converts_empty_strings_to_null_when_enabled() : void
+    public function test_normalize_converts_empty_strings_to_null_when_enabled(): void
     {
         $normalizer = new CSVRowNormalizer(true);
         $rowData = ['value1', '', 'value3', ''];
@@ -29,10 +29,10 @@ final class CSVRowNormalizerTest extends TestCase
 
         $result = $normalizer->normalize($rowData, $headersCount);
 
-        self::assertSame(['value1', null, 'value3', null], $result);
+        static::assertSame(['value1', null, 'value3', null], $result);
     }
 
-    public function test_normalize_handles_whitespace_strings_when_empty_to_null_enabled() : void
+    public function test_normalize_handles_whitespace_strings_when_empty_to_null_enabled(): void
     {
         $normalizer = new CSVRowNormalizer(true);
         $rowData = ['value1', '   ', 'value3', "\t"];
@@ -40,10 +40,10 @@ final class CSVRowNormalizerTest extends TestCase
 
         $result = $normalizer->normalize($rowData, $headersCount);
 
-        self::assertSame(['value1', '   ', 'value3', "\t"], $result);
+        static::assertSame(['value1', '   ', 'value3', "\t"], $result);
     }
 
-    public function test_normalize_mixed_types_in_row_data() : void
+    public function test_normalize_mixed_types_in_row_data(): void
     {
         $normalizer = new CSVRowNormalizer(true);
         $rowData = ['string', '', null, '0', 'false'];
@@ -51,10 +51,10 @@ final class CSVRowNormalizerTest extends TestCase
 
         $result = $normalizer->normalize($rowData, $headersCount);
 
-        self::assertSame(['string', null, null, '0', 'false'], $result);
+        static::assertSame(['string', null, null, '0', 'false'], $result);
     }
 
-    public function test_normalize_preserves_array_keys_when_truncating() : void
+    public function test_normalize_preserves_array_keys_when_truncating(): void
     {
         $normalizer = new CSVRowNormalizer(true);
         $rowData = [0 => 'value1', 1 => 'value2', 2 => 'value3', 3 => 'value4'];
@@ -62,13 +62,13 @@ final class CSVRowNormalizerTest extends TestCase
 
         $result = $normalizer->normalize($rowData, $headersCount);
 
-        self::assertSame([0 => 'value1', 1 => 'value2'], $result);
-        self::assertArrayHasKey(0, $result);
-        self::assertArrayHasKey(1, $result);
-        self::assertArrayNotHasKey(2, $result);
+        static::assertSame([0 => 'value1', 1 => 'value2'], $result);
+        static::assertArrayHasKey(0, $result);
+        static::assertArrayHasKey(1, $result);
+        static::assertArrayNotHasKey(2, $result);
     }
 
-    public function test_normalize_preserves_empty_strings_when_disabled() : void
+    public function test_normalize_preserves_empty_strings_when_disabled(): void
     {
         $normalizer = new CSVRowNormalizer(false);
         $rowData = ['value1', '', 'value3', ''];
@@ -76,10 +76,10 @@ final class CSVRowNormalizerTest extends TestCase
 
         $result = $normalizer->normalize($rowData, $headersCount);
 
-        self::assertSame(['value1', '', 'value3', ''], $result);
+        static::assertSame(['value1', '', 'value3', ''], $result);
     }
 
-    public function test_normalize_preserves_null_values() : void
+    public function test_normalize_preserves_null_values(): void
     {
         $normalizer = new CSVRowNormalizer(true);
         $rowData = ['value1', null, 'value3'];
@@ -87,10 +87,10 @@ final class CSVRowNormalizerTest extends TestCase
 
         $result = $normalizer->normalize($rowData, $headersCount);
 
-        self::assertSame(['value1', null, 'value3'], $result);
+        static::assertSame(['value1', null, 'value3'], $result);
     }
 
-    public function test_normalize_row_data_fewer_columns_than_headers_with_empty_to_empty_string() : void
+    public function test_normalize_row_data_fewer_columns_than_headers_with_empty_to_empty_string(): void
     {
         $normalizer = new CSVRowNormalizer(false);
         $rowData = ['value1', 'value2'];
@@ -98,11 +98,11 @@ final class CSVRowNormalizerTest extends TestCase
 
         $result = $normalizer->normalize($rowData, $headersCount);
 
-        self::assertSame(['value1', 'value2', '', ''], $result);
-        self::assertCount(4, $result);
+        static::assertSame(['value1', 'value2', '', ''], $result);
+        static::assertCount(4, $result);
     }
 
-    public function test_normalize_row_data_fewer_columns_than_headers_with_empty_to_null() : void
+    public function test_normalize_row_data_fewer_columns_than_headers_with_empty_to_null(): void
     {
         $normalizer = new CSVRowNormalizer(true);
         $rowData = ['value1', 'value2'];
@@ -110,11 +110,11 @@ final class CSVRowNormalizerTest extends TestCase
 
         $result = $normalizer->normalize($rowData, $headersCount);
 
-        self::assertSame(['value1', 'value2', null, null], $result);
-        self::assertCount(4, $result);
+        static::assertSame(['value1', 'value2', null, null], $result);
+        static::assertCount(4, $result);
     }
 
-    public function test_normalize_row_data_more_columns_than_headers() : void
+    public function test_normalize_row_data_more_columns_than_headers(): void
     {
         $normalizer = new CSVRowNormalizer(true);
         $rowData = ['value1', 'value2', 'value3', 'value4', 'value5'];
@@ -122,11 +122,11 @@ final class CSVRowNormalizerTest extends TestCase
 
         $result = $normalizer->normalize($rowData, $headersCount);
 
-        self::assertSame(['value1', 'value2', 'value3'], $result);
-        self::assertCount(3, $result);
+        static::assertSame(['value1', 'value2', 'value3'], $result);
+        static::assertCount(3, $result);
     }
 
-    public function test_normalize_row_data_same_columns_as_headers() : void
+    public function test_normalize_row_data_same_columns_as_headers(): void
     {
         $normalizer = new CSVRowNormalizer(true);
         $rowData = ['value1', 'value2', 'value3'];
@@ -134,11 +134,11 @@ final class CSVRowNormalizerTest extends TestCase
 
         $result = $normalizer->normalize($rowData, $headersCount);
 
-        self::assertSame(['value1', 'value2', 'value3'], $result);
-        self::assertCount(3, $result);
+        static::assertSame(['value1', 'value2', 'value3'], $result);
+        static::assertCount(3, $result);
     }
 
-    public function test_normalize_with_empty_row_data() : void
+    public function test_normalize_with_empty_row_data(): void
     {
         $normalizer = new CSVRowNormalizer(true);
         $rowData = [];
@@ -146,11 +146,11 @@ final class CSVRowNormalizerTest extends TestCase
 
         $result = $normalizer->normalize($rowData, $headersCount);
 
-        self::assertSame([null, null, null], $result);
-        self::assertCount(3, $result);
+        static::assertSame([null, null, null], $result);
+        static::assertCount(3, $result);
     }
 
-    public function test_normalize_with_empty_row_data_and_empty_to_false() : void
+    public function test_normalize_with_empty_row_data_and_empty_to_false(): void
     {
         $normalizer = new CSVRowNormalizer(false);
         $rowData = [];
@@ -158,11 +158,11 @@ final class CSVRowNormalizerTest extends TestCase
 
         $result = $normalizer->normalize($rowData, $headersCount);
 
-        self::assertSame(['', '', ''], $result);
-        self::assertCount(3, $result);
+        static::assertSame(['', '', ''], $result);
+        static::assertCount(3, $result);
     }
 
-    public function test_normalize_with_zero_headers() : void
+    public function test_normalize_with_zero_headers(): void
     {
         $normalizer = new CSVRowNormalizer(true);
         $rowData = ['value1', 'value2'];
@@ -170,7 +170,7 @@ final class CSVRowNormalizerTest extends TestCase
 
         $result = $normalizer->normalize($rowData, $headersCount);
 
-        self::assertSame([], $result);
-        self::assertCount(0, $result);
+        static::assertSame([], $result);
+        static::assertCount(0, $result);
     }
 }

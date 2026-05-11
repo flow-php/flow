@@ -10,6 +10,5 @@ final readonly class FlowColumnChunk
         public ColumnChunk $chunk,
         public int $rowsOffset,
         public int $rowsInGroup,
-    ) {
-    }
+    ) {}
 }

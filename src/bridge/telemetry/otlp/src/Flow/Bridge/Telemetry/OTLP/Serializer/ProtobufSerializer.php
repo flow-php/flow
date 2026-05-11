@@ -4,20 +4,47 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Serializer;
 
-use Flow\Telemetry\{InstrumentationScope, Resource};
-use Flow\Telemetry\Logger\{LogEntry, Severity};
-use Flow\Telemetry\Meter\{Exemplar, Metric, MetricType};
-use Flow\Telemetry\Tracer\{Span, SpanEvent, SpanKind, SpanLink, SpanStatusCode};
+use Flow\Telemetry\InstrumentationScope;
+use Flow\Telemetry\Logger\LogEntry;
+use Flow\Telemetry\Logger\Severity;
+use Flow\Telemetry\Meter\Exemplar;
+use Flow\Telemetry\Meter\Metric;
+use Flow\Telemetry\Meter\MetricType;
+use Flow\Telemetry\Resource;
+use Flow\Telemetry\Tracer\Span;
+use Flow\Telemetry\Tracer\SpanEvent;
+use Flow\Telemetry\Tracer\SpanKind;
+use Flow\Telemetry\Tracer\SpanLink;
+use Flow\Telemetry\Tracer\SpanStatusCode;
 use Opentelemetry\Proto\Collector\Logs\V1\ExportLogsServiceRequest;
 use Opentelemetry\Proto\Collector\Metrics\V1\ExportMetricsServiceRequest;
 use Opentelemetry\Proto\Collector\Trace\V1\ExportTraceServiceRequest;
-use Opentelemetry\Proto\Common\V1\{AnyValue, ArrayValue, InstrumentationScope as ProtoInstrumentationScope, KeyValue};
-use Opentelemetry\Proto\Logs\V1\{LogRecord, ResourceLogs, ScopeLogs, SeverityNumber};
-use Opentelemetry\Proto\Metrics\V1\{AggregationTemporality, Gauge, Histogram, HistogramDataPoint, Metric as ProtoMetric, NumberDataPoint, ResourceMetrics, ScopeMetrics, Sum};
+use Opentelemetry\Proto\Common\V1\AnyValue;
+use Opentelemetry\Proto\Common\V1\ArrayValue;
+use Opentelemetry\Proto\Common\V1\InstrumentationScope as ProtoInstrumentationScope;
+use Opentelemetry\Proto\Common\V1\KeyValue;
+use Opentelemetry\Proto\Logs\V1\LogRecord;
+use Opentelemetry\Proto\Logs\V1\ResourceLogs;
+use Opentelemetry\Proto\Logs\V1\ScopeLogs;
+use Opentelemetry\Proto\Logs\V1\SeverityNumber;
+use Opentelemetry\Proto\Metrics\V1\AggregationTemporality;
 use Opentelemetry\Proto\Metrics\V1\Exemplar as ProtoExemplar;
+use Opentelemetry\Proto\Metrics\V1\Gauge;
+use Opentelemetry\Proto\Metrics\V1\Histogram;
+use Opentelemetry\Proto\Metrics\V1\HistogramDataPoint;
+use Opentelemetry\Proto\Metrics\V1\Metric as ProtoMetric;
+use Opentelemetry\Proto\Metrics\V1\NumberDataPoint;
+use Opentelemetry\Proto\Metrics\V1\ResourceMetrics;
+use Opentelemetry\Proto\Metrics\V1\ScopeMetrics;
+use Opentelemetry\Proto\Metrics\V1\Sum;
 use Opentelemetry\Proto\Resource\V1\Resource as ProtoResource;
-use Opentelemetry\Proto\Trace\V1\{ResourceSpans, ScopeSpans, Span as ProtoSpan, Status};
-use Opentelemetry\Proto\Trace\V1\Span\{Event, Link, SpanKind as ProtoSpanKind};
+use Opentelemetry\Proto\Trace\V1\ResourceSpans;
+use Opentelemetry\Proto\Trace\V1\ScopeSpans;
+use Opentelemetry\Proto\Trace\V1\Span as ProtoSpan;
+use Opentelemetry\Proto\Trace\V1\Span\Event;
+use Opentelemetry\Proto\Trace\V1\Span\Link;
+use Opentelemetry\Proto\Trace\V1\Span\SpanKind as ProtoSpanKind;
+use Opentelemetry\Proto\Trace\V1\Status;
 use Opentelemetry\Proto\Trace\V1\Status\StatusCode;
 
 /**
@@ -30,10 +57,8 @@ final class ProtobufSerializer implements GrpcRequestFactory
     public function __construct()
     {
         if (!\class_exists('Google\Protobuf\Internal\Message')) {
-            throw new \RuntimeException(
-                'The google/protobuf package is required for ProtobufSerializer. '
-                . 'Install it via: composer require google/protobuf'
-            );
+            throw new \RuntimeException('The google/protobuf package is required for ProtobufSerializer. '
+            . 'Install it via: composer require google/protobuf');
         }
     }
 
@@ -42,7 +67,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
      *
      * @param array<LogEntry> $entries
      */
-    public function createLogsRequest(array $entries) : ExportLogsServiceRequest
+    public function createLogsRequest(array $entries): ExportLogsServiceRequest
     {
         $request = new ExportLogsServiceRequest();
         $resourceLogsList = [];
@@ -81,7 +106,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
      *
      * @param array<Metric> $metrics
      */
-    public function createMetricsRequest(array $metrics) : ExportMetricsServiceRequest
+    public function createMetricsRequest(array $metrics): ExportMetricsServiceRequest
     {
         $request = new ExportMetricsServiceRequest();
         $resourceMetricsList = [];
@@ -120,7 +145,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
      *
      * @param array<Span> $spans
      */
-    public function createSpansRequest(array $spans) : ExportTraceServiceRequest
+    public function createSpansRequest(array $spans): ExportTraceServiceRequest
     {
         $request = new ExportTraceServiceRequest();
         $resourceSpansList = [];
@@ -157,7 +182,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
     /**
      * @param array<LogEntry> $entries
      */
-    public function serializeLogs(array $entries) : string
+    public function serializeLogs(array $entries): string
     {
         return $this->createLogsRequest($entries)->serializeToString();
     }
@@ -165,7 +190,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
     /**
      * @param array<Metric> $metrics
      */
-    public function serializeMetrics(array $metrics) : string
+    public function serializeMetrics(array $metrics): string
     {
         return $this->createMetricsRequest($metrics)->serializeToString();
     }
@@ -173,7 +198,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
     /**
      * @param array<Span> $spans
      */
-    public function serializeSpans(array $spans) : string
+    public function serializeSpans(array $spans): string
     {
         return $this->createSpansRequest($spans)->serializeToString();
     }
@@ -181,7 +206,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
     /**
      * @param array<bool|float|int|string>|bool|float|int|string $value
      */
-    private function createAnyValue(string|int|float|bool|array $value) : AnyValue
+    private function createAnyValue(string|int|float|bool|array $value): AnyValue
     {
         $anyValue = new AnyValue();
 
@@ -208,7 +233,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         return $anyValue;
     }
 
-    private function createHistogramDataPoint(Metric $metric) : HistogramDataPoint
+    private function createHistogramDataPoint(Metric $metric): HistogramDataPoint
     {
         $dataPoint = new HistogramDataPoint();
         $timestamp = $this->toNanoseconds($metric->timestamp);
@@ -238,7 +263,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
 
         $userAttributes = \array_filter(
             $attributesArray,
-            static fn (string $key) : bool => !\str_starts_with($key, 'histogram.'),
+            static fn(string $key): bool => !\str_starts_with($key, 'histogram.'),
             \ARRAY_FILTER_USE_KEY,
         );
 
@@ -246,7 +271,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         $dataPoint->setCount($count);
         $dataPoint->setSum(\is_int($sum) ? (float) $sum : $sum);
         $dataPoint->setBucketCounts($bucketCounts);
-        $dataPoint->setExplicitBounds(\array_map(static fn (int|float $b) : float => (float) $b, $explicitBounds));
+        $dataPoint->setExplicitBounds(\array_map(static fn(int|float $b): float => (float) $b, $explicitBounds));
 
         if ($min !== null) {
             $dataPoint->setMin(\is_int($min) ? (float) $min : $min);
@@ -274,7 +299,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
      *
      * @return array<KeyValue>
      */
-    private function createKeyValues(array $attributes) : array
+    private function createKeyValues(array $attributes): array
     {
         $result = [];
 
@@ -288,7 +313,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         return $result;
     }
 
-    private function createLogRecord(LogEntry $entry) : LogRecord
+    private function createLogRecord(LogEntry $entry): LogRecord
     {
         $logRecord = new LogRecord();
 
@@ -317,7 +342,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         return $logRecord;
     }
 
-    private function createNumberDataPoint(Metric $metric) : NumberDataPoint
+    private function createNumberDataPoint(Metric $metric): NumberDataPoint
     {
         $dataPoint = new NumberDataPoint();
         $timestamp = $this->toNanoseconds($metric->timestamp);
@@ -345,7 +370,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         return $dataPoint;
     }
 
-    private function createProtoExemplar(Exemplar $exemplar) : ProtoExemplar
+    private function createProtoExemplar(Exemplar $exemplar): ProtoExemplar
     {
         $protoExemplar = new ProtoExemplar();
         $protoExemplar->setTimeUnixNano($this->toNanoseconds($exemplar->timestamp));
@@ -369,7 +394,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         return $protoExemplar;
     }
 
-    private function createProtoMetric(Metric $metric) : ProtoMetric
+    private function createProtoMetric(Metric $metric): ProtoMetric
     {
         $protoMetric = new ProtoMetric();
         $protoMetric->setName($metric->name);
@@ -390,7 +415,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         };
     }
 
-    private function createProtoResource(Resource $resource) : ProtoResource
+    private function createProtoResource(Resource $resource): ProtoResource
     {
         $protoResource = new ProtoResource();
         $protoResource->setAttributes($this->createKeyValues($resource->all()));
@@ -398,7 +423,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         return $protoResource;
     }
 
-    private function createProtoScope(InstrumentationScope $scope) : ProtoInstrumentationScope
+    private function createProtoScope(InstrumentationScope $scope): ProtoInstrumentationScope
     {
         $protoScope = new ProtoInstrumentationScope();
         $protoScope->setName($scope->name);
@@ -414,7 +439,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         return $protoScope;
     }
 
-    private function createProtoSpan(Span $span) : ProtoSpan
+    private function createProtoSpan(Span $span): ProtoSpan
     {
         $protoSpan = new ProtoSpan();
         $context = $span->context();
@@ -462,7 +487,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         return $protoSpan;
     }
 
-    private function createSpanEvent(SpanEvent $event) : Event
+    private function createSpanEvent(SpanEvent $event): Event
     {
         $protoEvent = new Event();
         $protoEvent->setName($event->name());
@@ -472,7 +497,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         return $protoEvent;
     }
 
-    private function createSpanLink(SpanLink $link) : ?Link
+    private function createSpanLink(SpanLink $link): ?Link
     {
         if (!$link->context->isValid()) {
             return null;
@@ -486,7 +511,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         return $protoLink;
     }
 
-    private function createSpanStatus(Span $span) : Status
+    private function createSpanStatus(Span $span): Status
     {
         $status = new Status();
         $spanStatus = $span->status();
@@ -517,7 +542,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
      *
      * @return array<string, array{resource: resource, entries: array<LogEntry>}>
      */
-    private function groupLogsByResource(array $entries) : array
+    private function groupLogsByResource(array $entries): array
     {
         $grouped = [];
 
@@ -540,7 +565,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
      *
      * @return array<string, array{scope: InstrumentationScope, entries: array<LogEntry>}>
      */
-    private function groupLogsByScope(array $entries) : array
+    private function groupLogsByScope(array $entries): array
     {
         $grouped = [];
 
@@ -564,7 +589,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
      *
      * @return array<string, array{resource: resource, metrics: array<Metric>}>
      */
-    private function groupMetricsByResource(array $metrics) : array
+    private function groupMetricsByResource(array $metrics): array
     {
         $grouped = [];
 
@@ -587,7 +612,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
      *
      * @return array<string, array{scope: InstrumentationScope, metrics: array<Metric>}>
      */
-    private function groupMetricsByScope(array $metrics) : array
+    private function groupMetricsByScope(array $metrics): array
     {
         $grouped = [];
 
@@ -611,7 +636,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
      *
      * @return array<string, array{resource: resource, spans: array<Span>}>
      */
-    private function groupSpansByResource(array $spans) : array
+    private function groupSpansByResource(array $spans): array
     {
         $grouped = [];
 
@@ -634,7 +659,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
      *
      * @return array<string, array{scope: InstrumentationScope, spans: array<Span>}>
      */
-    private function groupSpansByScope(array $spans) : array
+    private function groupSpansByScope(array $spans): array
     {
         $grouped = [];
 
@@ -651,7 +676,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         return $grouped;
     }
 
-    private function mapSeverityNumber(Severity $severity) : int
+    private function mapSeverityNumber(Severity $severity): int
     {
         return match ($severity) {
             Severity::TRACE => SeverityNumber::SEVERITY_NUMBER_TRACE,
@@ -663,7 +688,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         };
     }
 
-    private function mapSpanKind(SpanKind $kind) : int
+    private function mapSpanKind(SpanKind $kind): int
     {
         return match ($kind) {
             SpanKind::INTERNAL => ProtoSpanKind::SPAN_KIND_INTERNAL,
@@ -674,7 +699,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         };
     }
 
-    private function mapTemporality(Metric $metric) : int
+    private function mapTemporality(Metric $metric): int
     {
         return match ($metric->temporality->value) {
             1 => AggregationTemporality::AGGREGATION_TEMPORALITY_DELTA,
@@ -683,7 +708,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         };
     }
 
-    private function resourceKey(Resource $resource) : string
+    private function resourceKey(Resource $resource): string
     {
         $attributes = $resource->all();
         \ksort($attributes);
@@ -691,7 +716,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         return \md5(\json_encode($attributes, \JSON_THROW_ON_ERROR));
     }
 
-    private function setCounterData(ProtoMetric $protoMetric, Metric $metric, bool $isMonotonic) : ProtoMetric
+    private function setCounterData(ProtoMetric $protoMetric, Metric $metric, bool $isMonotonic): ProtoMetric
     {
         $sum = new Sum();
         $sum->setIsMonotonic($isMonotonic);
@@ -704,7 +729,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         return $protoMetric;
     }
 
-    private function setGaugeData(ProtoMetric $protoMetric, Metric $metric) : ProtoMetric
+    private function setGaugeData(ProtoMetric $protoMetric, Metric $metric): ProtoMetric
     {
         $gauge = new Gauge();
 
@@ -715,7 +740,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         return $protoMetric;
     }
 
-    private function setHistogramData(ProtoMetric $protoMetric, Metric $metric) : ProtoMetric
+    private function setHistogramData(ProtoMetric $protoMetric, Metric $metric): ProtoMetric
     {
         $histogram = new Histogram();
         $histogram->setAggregationTemporality($this->mapTemporality($metric));
@@ -727,7 +752,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         return $protoMetric;
     }
 
-    private function toNanoseconds(\DateTimeImmutable $dateTime) : int
+    private function toNanoseconds(\DateTimeImmutable $dateTime): int
     {
         $seconds = (int) $dateTime->format('U');
         $microseconds = (int) $dateTime->format('u');

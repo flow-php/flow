@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class SyslogHandlerIntegrationTest extends TestCase
 {
-    public function test_does_not_throw_when_writing_to_syslog() : void
+    public function test_does_not_throw_when_writing_to_syslog(): void
     {
         $this->expectNotToPerformAssertions();
 

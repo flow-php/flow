@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface RenameSequenceFinalStep extends Sql
 {
-    public function toAst() : RenameStmt;
+    public function toAst(): RenameStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

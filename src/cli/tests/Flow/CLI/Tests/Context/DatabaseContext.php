@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Tests\Context;
 
-use Doctrine\DBAL\{Connection, DriverManager};
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Tools\DsnParser;
 
@@ -14,13 +15,12 @@ final readonly class DatabaseContext
 
     public function __construct()
     {
-        $this->connection = DriverManager::getConnection(
-            (new DsnParser(['postgresql' => 'pdo_pgsql']))
-                ->parse(\getenv('PGSQL_DATABASE_URL') ?: '')
-        );
+        $this->connection = DriverManager::getConnection((new DsnParser(['postgresql' => 'pdo_pgsql']))->parse(
+            \getenv('PGSQL_DATABASE_URL') ?: '',
+        ));
     }
 
-    public function createTable(Table $table) : void
+    public function createTable(Table $table): void
     {
         $schemaManager = $this->connection->createSchemaManager();
 
@@ -31,7 +31,7 @@ final readonly class DatabaseContext
         $schemaManager->createTable($table);
     }
 
-    public function dropAllTables() : void
+    public function dropAllTables(): void
     {
         $schemaManager = $this->connection->createSchemaManager();
 

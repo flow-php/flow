@@ -4,57 +4,62 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
-use function Flow\ETL\DSL\{bool_entry,
-    date_entry,
-    datetime_entry,
-    enum_entry,
-    float_entry,
-    html_element_entry,
-    html_entry,
-    int_entry,
-    json_entry,
-    json_object_entry,
-    list_entry,
-    map_entry,
-    string_entry,
-    struct_entry,
-    time_entry,
-    uuid_entry,
-    xml_element_entry,
-    xml_entry};
-use function Flow\Types\DSL\{type_optional, type_string};
-use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException};
-use Flow\ETL\Row\Entry\{ListEntry, MapEntry, StringEntry, StructureEntry};
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Row\Entry\ListEntry;
+use Flow\ETL\Row\Entry\MapEntry;
+use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Schema;
-use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\Metadata;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\{DateTimeType,
-    DateType,
-    HTMLElementType,
-    HTMLType,
-    InstanceOfType,
-    JsonType,
-    ListType,
-    MapType,
-    OptionalType,
-    StructureType,
-    TimeType,
-    TimeZoneType,
-    UuidType,
-    XMLElementType,
-    XMLType};
-use Flow\Types\Type\Native\{
-    ArrayType,
-    BooleanType,
-    EnumType,
-    FloatType,
-    IntegerType,
-    NullType,
-    StringType,
-    UnionType
-};
+use Flow\Types\Type\Logical\DateTimeType;
+use Flow\Types\Type\Logical\DateType;
+use Flow\Types\Type\Logical\HTMLElementType;
+use Flow\Types\Type\Logical\HTMLType;
+use Flow\Types\Type\Logical\InstanceOfType;
+use Flow\Types\Type\Logical\JsonType;
+use Flow\Types\Type\Logical\ListType;
+use Flow\Types\Type\Logical\MapType;
+use Flow\Types\Type\Logical\OptionalType;
+use Flow\Types\Type\Logical\StructureType;
+use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Logical\TimeZoneType;
+use Flow\Types\Type\Logical\UuidType;
+use Flow\Types\Type\Logical\XMLElementType;
+use Flow\Types\Type\Logical\XMLType;
+use Flow\Types\Type\Native\ArrayType;
+use Flow\Types\Type\Native\BooleanType;
+use Flow\Types\Type\Native\EnumType;
+use Flow\Types\Type\Native\FloatType;
+use Flow\Types\Type\Native\IntegerType;
+use Flow\Types\Type\Native\NullType;
+use Flow\Types\Type\Native\StringType;
+use Flow\Types\Type\Native\UnionType;
 use Flow\Types\Type\TypeDetector;
+
+use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\date_entry;
+use function Flow\ETL\DSL\datetime_entry;
+use function Flow\ETL\DSL\enum_entry;
+use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\html_element_entry;
+use function Flow\ETL\DSL\html_entry;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\json_entry;
+use function Flow\ETL\DSL\json_object_entry;
+use function Flow\ETL\DSL\list_entry;
+use function Flow\ETL\DSL\map_entry;
+use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\struct_entry;
+use function Flow\ETL\DSL\time_entry;
+use function Flow\ETL\DSL\uuid_entry;
+use function Flow\ETL\DSL\xml_element_entry;
+use function Flow\ETL\DSL\xml_entry;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
 
 final readonly class EntryFactory
 {
@@ -66,7 +71,7 @@ final readonly class EntryFactory
      *
      * @return Entry<mixed>
      */
-    public function create(string $entryName, mixed $value, Schema|Definition|null $schema = null) : Entry
+    public function create(string $entryName, mixed $value, Schema|Definition|null $schema = null): Entry
     {
         if ($schema instanceof Definition) {
             return $this->createAs($schema->entry()->name(), $value, $schema, $schema->metadata());
@@ -92,8 +97,12 @@ final readonly class EntryFactory
      *
      * @return Entry<mixed>
      */
-    public function createAs(string $entryName, mixed $value, Definition|Type $definition, ?Metadata $metadata = null) : Entry
-    {
+    public function createAs(
+        string $entryName,
+        mixed $value,
+        Definition|Type $definition,
+        ?Metadata $metadata = null,
+    ): Entry {
         if ($definition instanceof Definition) {
             if ($definition->isNullable()) {
                 $type = type_optional($definition->type());
@@ -180,7 +189,11 @@ final readonly class EntryFactory
             if ($type instanceof EnumType) {
                 $castValue = type_optional($type)->cast($value);
 
-                return enum_entry($entryName, (\is_object($castValue) && $castValue instanceof \UnitEnum) ? $castValue : null, $metadata);
+                return enum_entry(
+                    $entryName,
+                    \is_object($castValue) && $castValue instanceof \UnitEnum ? $castValue : null,
+                    $metadata,
+                );
             }
 
             if ($type instanceof JsonType) {
@@ -212,31 +225,38 @@ final readonly class EntryFactory
             }
 
             if ($type instanceof InstanceOfType) {
-                throw new InvalidArgumentException("{$entryName}: {$type->toString()} can't be converted to any known Entry, please normalize that object first.");
+                throw new InvalidArgumentException(
+                    "{$entryName}: {$type->toString()} can't be converted to any known Entry, please normalize that object first.",
+                );
             }
 
             if ($type instanceof MapType) {
-                $processedValue = ($value === null) ? null : $type->cast($value);
+                $processedValue = $value === null ? null : $type->cast($value);
 
                 return new MapEntry($entryName, $processedValue, $type, $metadata);
             }
 
             if ($type instanceof StructureType) {
-                $processedValue = ($value === null) ? null : $type->cast($value);
+                $processedValue = $value === null ? null : $type->cast($value);
 
                 return new StructureEntry($entryName, $processedValue, $type, $metadata);
             }
 
             if ($type instanceof ListType) {
-                $processedValue = ($value === null) ? null : $type->cast($value);
+                $processedValue = $value === null ? null : $type->cast($value);
 
                 return new ListEntry($entryName, $processedValue, $type, $metadata);
             }
         } catch (InvalidArgumentException|CastingException|\TypeError $e) {
-            throw new InvalidArgumentException("Entry \"{$entryName}\" conversion exception. {$e->getMessage()}", previous: $e);
+            throw new InvalidArgumentException(
+                "Entry \"{$entryName}\" conversion exception. {$e->getMessage()}",
+                previous: $e,
+            );
         }
 
         /** @var Type<mixed> $type */
-        throw new InvalidArgumentException("Can't convert " . get_debug_type($value) . " value into type \"{$type->toString()}\"");
+        throw new InvalidArgumentException(
+            "Can't convert " . get_debug_type($value) . " value into type \"{$type->toString()}\"",
+        );
     }
 }

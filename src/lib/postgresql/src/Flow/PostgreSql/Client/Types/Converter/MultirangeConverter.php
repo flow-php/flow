@@ -11,12 +11,12 @@ use Flow\PostgreSql\Client\Types\ValueConverter;
  */
 final class MultirangeConverter implements ValueConverter
 {
-    public function supportedTypes() : array
+    public function supportedTypes(): array
     {
         return [];
     }
 
-    public function toDatabase(mixed $value) : ?string
+    public function toDatabase(mixed $value): ?string
     {
         if ($value === null) {
             return null;

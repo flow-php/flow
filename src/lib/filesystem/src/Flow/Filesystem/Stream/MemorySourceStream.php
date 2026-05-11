@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Stream;
 
-use Flow\Filesystem\{Exception\InvalidArgumentException, Path, SourceStream};
+use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\Path;
+use Flow\Filesystem\SourceStream;
 
 final readonly class MemorySourceStream implements SourceStream
 {
@@ -13,45 +15,44 @@ final readonly class MemorySourceStream implements SourceStream
      *
      * @throws InvalidArgumentException
      */
-    public function __construct(private string $content)
-    {
+    public function __construct(
+        private string $content,
+    ) {
         if (!\strlen($this->content)) {
             throw new InvalidArgumentException('MemorySourceStream expects non-empty content');
         }
     }
 
-    public function close() : void
-    {
-    }
+    public function close(): void {}
 
-    public function content() : string
+    public function content(): string
     {
         return $this->content;
     }
 
-    public function isOpen() : bool
+    public function isOpen(): bool
     {
         return true;
     }
 
-    public function iterate(int $length = 1) : \Generator
+    public function iterate(int $length = 1): \Generator
     {
         foreach (\str_split($this->content, $length) as $chunk) {
             yield $chunk;
         }
     }
 
-    public function path() : Path
+    public function path(): Path
     {
         return \Flow\Filesystem\DSL\path('memory://');
     }
 
-    public function read(int $length, int $offset) : string
+    public function read(int $length, int $offset): string
     {
         return \substr($this->content, $offset, $length);
     }
 
-    public function readLines(string $separator = "\n", ?int $length = null) : \Generator
+    public function readLines(string $separator = "\n", ?int $length = null): \Generator
     {
         /** @phpstan-ignore-next-line */
         foreach (\explode($separator, $this->content) as $line) {
@@ -61,7 +62,7 @@ final readonly class MemorySourceStream implements SourceStream
         }
     }
 
-    public function size() : int
+    public function size(): int
     {
         return \strlen($this->content);
     }

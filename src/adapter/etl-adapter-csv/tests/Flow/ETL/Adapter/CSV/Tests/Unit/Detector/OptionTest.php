@@ -10,21 +10,21 @@ use Flow\ETL\Tests\FlowTestCase;
 
 final class OptionTest extends FlowTestCase
 {
-    public function test_empty_enclosure() : void
+    public function test_empty_enclosure(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
         new Option(',', '');
     }
 
-    public function test_empty_separator() : void
+    public function test_empty_separator(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
         new Option('', '"');
     }
 
-    public function test_score() : void
+    public function test_score(): void
     {
         $option = new Option(',', "'");
 
@@ -32,6 +32,6 @@ final class OptionTest extends FlowTestCase
         $option->parse('a,b,c');
         $option->parse('a,b,c');
 
-        self::assertSame(301000, $option->score());
+        static::assertSame(301000, $option->score());
     }
 }

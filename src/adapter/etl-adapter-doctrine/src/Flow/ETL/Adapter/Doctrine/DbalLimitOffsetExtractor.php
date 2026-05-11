@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
-use function Flow\ETL\DSL\array_to_rows;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Extractor, FlowContext, Schema};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Schema;
+
+use function Flow\ETL\DSL\array_to_rows;
 
 final class DbalLimitOffsetExtractor implements Extractor
 {
@@ -24,22 +27,19 @@ final class DbalLimitOffsetExtractor implements Extractor
     public function __construct(
         private readonly Connection $connection,
         private readonly QueryBuilder $queryBuilder,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<OrderBy> $orderBy
      */
-    public static function table(
-        Connection $connection,
-        Table $table,
-        array $orderBy,
-    ) : self {
+    public static function table(Connection $connection, Table $table, array $orderBy): self
+    {
         if (!\count($orderBy)) {
             throw new InvalidArgumentException('There must be at least one column to order by, zero given');
         }
 
-        $queryBuilder = $connection->createQueryBuilder()
+        $queryBuilder = $connection
+            ->createQueryBuilder()
             ->select(...$table->columns ?: ['*'])
             ->from($table->name);
 
@@ -47,13 +47,10 @@ final class DbalLimitOffsetExtractor implements Extractor
             $queryBuilder = $queryBuilder->addOrderBy($order->column, $order->order->name);
         }
 
-        return new self(
-            $connection,
-            $queryBuilder,
-        );
+        return new self($connection, $queryBuilder);
     }
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         if ($this->maximum === null && $this->queryBuilder->getMaxResults()) {
             $this->maximum = $this->queryBuilder->getMaxResults();
@@ -66,13 +63,11 @@ final class DbalLimitOffsetExtractor implements Extractor
         if (isset($this->maximum)) {
             $total = $this->maximum;
         } else {
-
             $countQuery = (clone $this->queryBuilder)->select('COUNT(*)');
 
-            /**
-             * @phpstan-ignore-next-line
-             */
-            $nonGroupByQuery = \method_exists($countQuery, 'resetGroupBy') ? (clone $this->queryBuilder)->select('COUNT(*)')->resetGroupBy() : $countQuery->resetQueryPart('groupBy');
+            $nonGroupByQuery = \method_exists($countQuery, 'resetGroupBy')
+                ? (clone $this->queryBuilder)->select('COUNT(*)')->resetGroupBy()
+                : $countQuery->resetQueryPart('groupBy');
 
             if ($countQuery->getSQL() === $nonGroupByQuery->getSQL()) {
                 /**
@@ -90,16 +85,18 @@ final class DbalLimitOffsetExtractor implements Extractor
                 $totalValue = $this->connection->fetchOne(
                     $countQuery->getSQL(),
                     $countQuery->getParameters(),
-                    $countQuery->getParameterTypes()
+                    $countQuery->getParameterTypes(),
                 );
                 $total = \is_numeric($totalValue) ? (int) $totalValue : 0;
             } else {
                 // For grouped queries, wrap in a subquery to get accurate count
-                $totalValue = $this->connection->executeQuery(
-                    'SELECT COUNT(*) FROM (' . $countQuery->getSQL() . ') as count_query',
-                    $countQuery->getParameters(),
-                    $countQuery->getParameterTypes()
-                )->fetchOne();
+                $totalValue = $this->connection
+                    ->executeQuery(
+                        'SELECT COUNT(*) FROM (' . $countQuery->getSQL() . ') as count_query',
+                        $countQuery->getParameters(),
+                        $countQuery->getParameterTypes(),
+                    )
+                    ->fetchOne();
                 $total = \is_numeric($totalValue) ? (int) $totalValue : 0;
             }
         }
@@ -107,17 +104,13 @@ final class DbalLimitOffsetExtractor implements Extractor
         $totalFetched = 0;
 
         for ($page = 0; $page < (new Pages($total, $this->pageSize))->pages(); $page++) {
-            $offset = $page * $this->pageSize + $this->offset;
+            $offset = ($page * $this->pageSize) + $this->offset;
 
-            $pageQuery = $this->queryBuilder
-                ->setMaxResults($this->pageSize)
-                ->setFirstResult($offset);
+            $pageQuery = $this->queryBuilder->setMaxResults($this->pageSize)->setFirstResult($offset);
 
-            $pageResults = $this->connection->executeQuery(
-                $pageQuery->getSQL(),
-                $pageQuery->getParameters(),
-                $pageQuery->getParameterTypes()
-            )->fetchAllAssociative();
+            $pageResults = $this->connection
+                ->executeQuery($pageQuery->getSQL(), $pageQuery->getParameters(), $pageQuery->getParameterTypes())
+                ->fetchAllAssociative();
 
             foreach ($pageResults as $row) {
                 $signal = yield array_to_rows($row, $context->entryFactory(), [], $this->schema);
@@ -135,7 +128,7 @@ final class DbalLimitOffsetExtractor implements Extractor
         }
     }
 
-    public function withMaximum(int $maximum) : self
+    public function withMaximum(int $maximum): self
     {
         if ($maximum <= 0) {
             throw new InvalidArgumentException('Maximum must be greater than 0, got ' . $maximum);
@@ -146,7 +139,7 @@ final class DbalLimitOffsetExtractor implements Extractor
         return $this;
     }
 
-    public function withOffset(int $offset) : self
+    public function withOffset(int $offset): self
     {
         if ($offset < 0) {
             throw new InvalidArgumentException('Offset must be greater than 0, got ' . $offset);
@@ -157,7 +150,7 @@ final class DbalLimitOffsetExtractor implements Extractor
         return $this;
     }
 
-    public function withPageSize(int $pageSize) : self
+    public function withPageSize(int $pageSize): self
     {
         if ($pageSize <= 0) {
             throw new InvalidArgumentException('Page size must be greater than 0, got ' . $pageSize);
@@ -168,7 +161,7 @@ final class DbalLimitOffsetExtractor implements Extractor
         return $this;
     }
 
-    public function withSchema(Schema $schema) : self
+    public function withSchema(Schema $schema): self
     {
         $this->schema = $schema;
 

@@ -4,16 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\Binary;
 
-use function Flow\Parquet\Binary\{decode_decimal, decode_f32, decode_i16, decode_i32, decode_i64, decode_u32, encode_decimal, encode_f32, encode_i16, encode_i32, encode_i64, encode_u32};
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Parquet\Binary\decode_decimal;
+use function Flow\Parquet\Binary\decode_f32;
+use function Flow\Parquet\Binary\decode_i16;
+use function Flow\Parquet\Binary\decode_i32;
+use function Flow\Parquet\Binary\decode_i64;
+use function Flow\Parquet\Binary\decode_u32;
+use function Flow\Parquet\Binary\encode_decimal;
+use function Flow\Parquet\Binary\encode_f32;
+use function Flow\Parquet\Binary\encode_i16;
+use function Flow\Parquet\Binary\encode_i32;
+use function Flow\Parquet\Binary\encode_i64;
+use function Flow\Parquet\Binary\encode_u32;
+
 final class BinaryReaderWriterTest extends TestCase
 {
-    public static function decimalProvider() : array
+    public static function decimalProvider(): array
     {
         return [
             ['decimals' => [10.24, 10.25], 'precision' => 10, 'scale' => 2],
@@ -39,7 +51,7 @@ final class BinaryReaderWriterTest extends TestCase
         ];
     }
 
-    public function test_reading_and_writing_bytes() : void
+    public function test_reading_and_writing_bytes(): void
     {
         $buffer = '';
         $writer = new BinaryBufferWriter($buffer);
@@ -47,24 +59,24 @@ final class BinaryReaderWriterTest extends TestCase
 
         $reader = new BinaryBufferReader($buffer);
 
-        self::assertEquals([1, 2, 3, 4, 5], \array_values(\unpack('C*', $reader->readBytes(5))));
+        static::assertEquals([1, 2, 3, 4, 5], \array_values(\unpack('C*', $reader->readBytes(5))));
     }
 
-    public function test_reading_and_writing_varint() : void
+    public function test_reading_and_writing_varint(): void
     {
         $buffer = '';
         $writer = new BinaryBufferWriter($buffer);
         $writer->writeVarInts([300, 1, 0, 127, 128]);
 
         $reader = new BinaryBufferReader($buffer);
-        self::assertEquals(300, $reader->readVarInt());
-        self::assertEquals(1, $reader->readVarInt());
-        self::assertEquals(0, $reader->readVarInt());
-        self::assertEquals(127, $reader->readVarInt());
-        self::assertEquals(128, $reader->readVarInt());
+        static::assertEquals(300, $reader->readVarInt());
+        static::assertEquals(1, $reader->readVarInt());
+        static::assertEquals(0, $reader->readVarInt());
+        static::assertEquals(127, $reader->readVarInt());
+        static::assertEquals(128, $reader->readVarInt());
     }
 
-    public function test_writing_and_reading_big_integers_with_functions() : void
+    public function test_writing_and_reading_big_integers_with_functions(): void
     {
         $byteOrder = ByteOrder::LITTLE_ENDIAN;
         $buffer = '';
@@ -82,11 +94,11 @@ final class BinaryReaderWriterTest extends TestCase
 
         $reader = new BinaryBufferReader($buffer);
 
-        self::assertEquals($ints, decode_i64($byteOrder, $reader->readBytes(\count($ints) * 8)));
+        static::assertEquals($ints, decode_i64($byteOrder, $reader->readBytes(\count($ints) * 8)));
     }
 
     #[DataProvider('decimalProvider')]
-    public function test_writing_and_reading_decimals_with_functions(array $decimals, int $precision, int $scale) : void
+    public function test_writing_and_reading_decimals_with_functions(array $decimals, int $precision, int $scale): void
     {
         $byteOrder = ByteOrder::LITTLE_ENDIAN;
         $bitsNeeded = \ceil(\log(10 ** $precision, 2));
@@ -102,14 +114,14 @@ final class BinaryReaderWriterTest extends TestCase
         $reader = new BinaryBufferReader($buffer);
         $decoded = [];
 
-        foreach ($decimals as $ignored) {
+        foreach ($decimals as $_ignored) {
             $decoded[] = decode_decimal($byteOrder, $reader->readBytes($byteLength), $precision, $scale);
         }
 
-        self::assertSame($decimals, $decoded);
+        static::assertSame($decimals, $decoded);
     }
 
-    public function test_writing_and_reading_floats_with_functions() : void
+    public function test_writing_and_reading_floats_with_functions(): void
     {
         $byteOrder = ByteOrder::LITTLE_ENDIAN;
         $buffer = '';
@@ -122,10 +134,14 @@ final class BinaryReaderWriterTest extends TestCase
 
         $reader = new BinaryBufferReader($buffer);
 
-        self::assertEqualsWithDelta($floats, decode_f32($byteOrder, $reader->readBytes(\count($floats) * 4)), 0.000001);
+        static::assertEqualsWithDelta(
+            $floats,
+            decode_f32($byteOrder, $reader->readBytes(\count($floats) * 4)),
+            0.000001,
+        );
     }
 
-    public function test_writing_and_reading_integers_with_functions() : void
+    public function test_writing_and_reading_integers_with_functions(): void
     {
         $byteOrder = ByteOrder::LITTLE_ENDIAN;
         $buffer = '';
@@ -143,10 +159,10 @@ final class BinaryReaderWriterTest extends TestCase
 
         $reader = new BinaryBufferReader($buffer);
 
-        self::assertEquals($ints, decode_i32($byteOrder, $reader->readBytes(\count($ints) * 4)));
+        static::assertEquals($ints, decode_i32($byteOrder, $reader->readBytes(\count($ints) * 4)));
     }
 
-    public function test_writing_and_reading_small_integers_with_functions() : void
+    public function test_writing_and_reading_small_integers_with_functions(): void
     {
         $byteOrder = ByteOrder::LITTLE_ENDIAN;
         $buffer = '';
@@ -164,10 +180,10 @@ final class BinaryReaderWriterTest extends TestCase
 
         $reader = new BinaryBufferReader($buffer);
 
-        self::assertEquals($ints, decode_i16($byteOrder, $reader->readBytes(\count($ints) * 2)));
+        static::assertEquals($ints, decode_i16($byteOrder, $reader->readBytes(\count($ints) * 2)));
     }
 
-    public function test_writing_and_reading_strings_with_functions() : void
+    public function test_writing_and_reading_strings_with_functions(): void
     {
         $byteOrder = ByteOrder::LITTLE_ENDIAN;
         $buffer = '';
@@ -182,11 +198,11 @@ final class BinaryReaderWriterTest extends TestCase
         $reader = new BinaryBufferReader($buffer);
         $decoded = [];
 
-        foreach ($strings as $ignored) {
+        foreach ($strings as $_ignored) {
             $length = decode_u32($byteOrder, $reader->readBytes(4))[0];
             $decoded[] = $reader->readBytes($length);
         }
 
-        self::assertSame($strings, $decoded);
+        static::assertSame($strings, $decoded);
     }
 }

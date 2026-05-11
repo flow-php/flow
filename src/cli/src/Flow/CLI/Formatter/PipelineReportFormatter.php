@@ -4,20 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Formatter;
 
-use function Flow\CLI\option_bool;
 use Flow\ETL\Dataset\Report;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function Flow\CLI\option_bool;
+
 final readonly class PipelineReportFormatter
 {
-    public function __construct(private Report $report, private SymfonyStyle $style, private InputInterface $input)
-    {
+    public function __construct(
+        private Report $report,
+        private SymfonyStyle $style,
+        private InputInterface $input,
+    ) {}
 
-    }
-
-    public function format() : void
+    public function format(): void
     {
         $schema = $this->report->schema();
 
@@ -32,11 +34,14 @@ final readonly class PipelineReportFormatter
                     'name' => $definition->entry()->name(),
                     'type' => $definition->type()->toString(),
                     'nullable' => $definition->isNullable() ? 'true' : 'false',
-                    'metadata' => $definition->metadata() !== null ? json_encode($definition->metadata(), JSON_PRETTY_PRINT) : null,
+                    'metadata' => $definition->metadata() !== null
+                        ? json_encode($definition->metadata(), JSON_PRETTY_PRINT)
+                        : null,
                 ];
             }
 
-            $this->style->createTable()
+            $this->style
+                ->createTable()
                 ->setHeaders(['Name', 'Type', 'Nullable', 'Metadata'])
                 ->setRows($normalizedSchema)
                 ->setStyle('box')
@@ -68,8 +73,20 @@ final readonly class PipelineReportFormatter
             $this->style->newLine();
             $this->style->section('Columns');
 
-            $this->style->createTable()
-                ->setHeaders(['Name', 'Type', 'Nulls', 'Distinct Values', 'Min', 'Max', 'Min Length', 'Max Length', 'Min Elements Count', 'Max Elements Count'])
+            $this->style
+                ->createTable()
+                ->setHeaders([
+                    'Name',
+                    'Type',
+                    'Nulls',
+                    'Distinct Values',
+                    'Min',
+                    'Max',
+                    'Min Length',
+                    'Max Length',
+                    'Min Elements Count',
+                    'Max Elements Count',
+                ])
                 ->setRows($normalizedColumnStatistics)
                 ->setStyle('box')
                 ->render();
@@ -80,7 +97,7 @@ final readonly class PipelineReportFormatter
             'Statistics',
             new TableSeparator(),
             ['Analyzed Rows' => \number_format($this->report->statistics()->totalRows())],
-            ['Execution Time' => $this->report->statistics()->executionTime->highResolutionTime->toString()]
+            ['Execution Time' => $this->report->statistics()->executionTime->highResolutionTime->toString()],
         );
     }
 }

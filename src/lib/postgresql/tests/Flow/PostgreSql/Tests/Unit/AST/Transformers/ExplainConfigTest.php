@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 
 final class ExplainConfigTest extends TestCase
 {
-    public function test_chaining_fluent_methods() : void
+    public function test_chaining_fluent_methods(): void
     {
         $config = ExplainConfig::forEstimate()
             ->withAnalyze()
@@ -20,14 +20,14 @@ final class ExplainConfigTest extends TestCase
             ->withVerbose()
             ->withFormat(ExplainFormat::TEXT);
 
-        self::assertTrue($config->analyze);
-        self::assertTrue($config->buffers);
-        self::assertTrue($config->timing);
-        self::assertTrue($config->verbose);
-        self::assertSame(ExplainFormat::TEXT, $config->format);
+        static::assertTrue($config->analyze);
+        static::assertTrue($config->buffers);
+        static::assertTrue($config->timing);
+        static::assertTrue($config->verbose);
+        static::assertSame(ExplainFormat::TEXT, $config->format);
     }
 
-    public function test_constructor_throws_when_buffers_enabled_without_analyze() : void
+    public function test_constructor_throws_when_buffers_enabled_without_analyze(): void
     {
         $this->expectException(InvalidExplainConfigException::class);
         $this->expectExceptionMessage('BUFFERS option requires ANALYZE to be enabled');
@@ -35,7 +35,7 @@ final class ExplainConfigTest extends TestCase
         new ExplainConfig(analyze: false, buffers: true);
     }
 
-    public function test_constructor_throws_when_timing_enabled_without_analyze() : void
+    public function test_constructor_throws_when_timing_enabled_without_analyze(): void
     {
         $this->expectException(InvalidExplainConfigException::class);
         $this->expectExceptionMessage('TIMING option requires ANALYZE to be enabled');
@@ -43,7 +43,7 @@ final class ExplainConfigTest extends TestCase
         new ExplainConfig(analyze: false, buffers: false, timing: true);
     }
 
-    public function test_constructor_throws_when_wal_enabled_without_analyze() : void
+    public function test_constructor_throws_when_wal_enabled_without_analyze(): void
     {
         $this->expectException(InvalidExplainConfigException::class);
         $this->expectExceptionMessage('WAL option requires ANALYZE to be enabled');
@@ -51,103 +51,91 @@ final class ExplainConfigTest extends TestCase
         new ExplainConfig(analyze: false, buffers: false, timing: false, wal: true);
     }
 
-    public function test_constructor_with_valid_config_without_analyze() : void
+    public function test_constructor_with_valid_config_without_analyze(): void
     {
-        $config = new ExplainConfig(
-            analyze: false,
-            costs: true,
-            buffers: false,
-            timing: false,
-            wal: false
-        );
+        $config = new ExplainConfig(analyze: false, costs: true, buffers: false, timing: false, wal: false);
 
-        self::assertFalse($config->analyze);
-        self::assertTrue($config->costs);
-        self::assertFalse($config->buffers);
-        self::assertFalse($config->timing);
-        self::assertFalse($config->wal);
+        static::assertFalse($config->analyze);
+        static::assertTrue($config->costs);
+        static::assertFalse($config->buffers);
+        static::assertFalse($config->timing);
+        static::assertFalse($config->wal);
     }
 
-    public function test_for_analysis_can_be_customized_with_fluent_methods() : void
+    public function test_for_analysis_can_be_customized_with_fluent_methods(): void
     {
-        $config = ExplainConfig::forAnalysis()
-            ->withVerbose()
-            ->withMemory()
-            ->withSettings();
+        $config = ExplainConfig::forAnalysis()->withVerbose()->withMemory()->withSettings();
 
-        self::assertTrue($config->verbose);
-        self::assertTrue($config->memory);
-        self::assertTrue($config->settings);
+        static::assertTrue($config->verbose);
+        static::assertTrue($config->memory);
+        static::assertTrue($config->settings);
     }
 
-    public function test_for_analysis_is_static_factory() : void
+    public function test_for_analysis_is_static_factory(): void
     {
         $config = ExplainConfig::forAnalysis();
 
-        self::assertTrue($config->analyze);
-        self::assertFalse($config->verbose);
-        self::assertTrue($config->costs);
-        self::assertTrue($config->buffers);
-        self::assertTrue($config->timing);
-        self::assertTrue($config->summary);
-        self::assertFalse($config->memory);
-        self::assertFalse($config->settings);
-        self::assertFalse($config->wal);
+        static::assertTrue($config->analyze);
+        static::assertFalse($config->verbose);
+        static::assertTrue($config->costs);
+        static::assertTrue($config->buffers);
+        static::assertTrue($config->timing);
+        static::assertTrue($config->summary);
+        static::assertFalse($config->memory);
+        static::assertFalse($config->settings);
+        static::assertFalse($config->wal);
     }
 
-    public function test_for_analysis_returns_config_with_analyze_options() : void
+    public function test_for_analysis_returns_config_with_analyze_options(): void
     {
         $config = ExplainConfig::forAnalysis();
 
-        self::assertTrue($config->analyze);
-        self::assertTrue($config->costs);
-        self::assertTrue($config->buffers);
-        self::assertTrue($config->timing);
-        self::assertTrue($config->summary);
-        self::assertFalse($config->wal);
+        static::assertTrue($config->analyze);
+        static::assertTrue($config->costs);
+        static::assertTrue($config->buffers);
+        static::assertTrue($config->timing);
+        static::assertTrue($config->summary);
+        static::assertFalse($config->wal);
     }
 
-    public function test_for_estimate_can_be_customized_with_fluent_methods() : void
+    public function test_for_estimate_can_be_customized_with_fluent_methods(): void
     {
-        $config = ExplainConfig::forEstimate()
-            ->withVerbose()
-            ->withMemory()
-            ->withSettings();
+        $config = ExplainConfig::forEstimate()->withVerbose()->withMemory()->withSettings();
 
-        self::assertTrue($config->verbose);
-        self::assertTrue($config->memory);
-        self::assertTrue($config->settings);
-        self::assertFalse($config->analyze);
+        static::assertTrue($config->verbose);
+        static::assertTrue($config->memory);
+        static::assertTrue($config->settings);
+        static::assertFalse($config->analyze);
     }
 
-    public function test_for_estimate_is_static_factory() : void
+    public function test_for_estimate_is_static_factory(): void
     {
         $config = ExplainConfig::forEstimate();
 
-        self::assertFalse($config->analyze);
-        self::assertFalse($config->verbose);
-        self::assertTrue($config->costs);
-        self::assertFalse($config->buffers);
-        self::assertFalse($config->timing);
-        self::assertFalse($config->summary);
-        self::assertFalse($config->memory);
-        self::assertFalse($config->settings);
-        self::assertFalse($config->wal);
+        static::assertFalse($config->analyze);
+        static::assertFalse($config->verbose);
+        static::assertTrue($config->costs);
+        static::assertFalse($config->buffers);
+        static::assertFalse($config->timing);
+        static::assertFalse($config->summary);
+        static::assertFalse($config->memory);
+        static::assertFalse($config->settings);
+        static::assertFalse($config->wal);
     }
 
-    public function test_for_estimate_returns_config_without_analyze() : void
+    public function test_for_estimate_returns_config_without_analyze(): void
     {
         $config = ExplainConfig::forEstimate();
 
-        self::assertFalse($config->analyze);
-        self::assertTrue($config->costs);
-        self::assertFalse($config->buffers);
-        self::assertFalse($config->timing);
-        self::assertFalse($config->summary);
-        self::assertFalse($config->wal);
+        static::assertFalse($config->analyze);
+        static::assertTrue($config->costs);
+        static::assertFalse($config->buffers);
+        static::assertFalse($config->timing);
+        static::assertFalse($config->summary);
+        static::assertFalse($config->wal);
     }
 
-    public function test_from_array_and_normalize_are_inverse() : void
+    public function test_from_array_and_normalize_are_inverse(): void
     {
         $original = new ExplainConfig(
             analyze: true,
@@ -165,10 +153,10 @@ final class ExplainConfigTest extends TestCase
         $normalized = $original->normalize();
         $restored = ExplainConfig::fromArray($normalized);
 
-        self::assertEquals($original, $restored);
+        static::assertEquals($original, $restored);
     }
 
-    public function test_from_array_creates_instance() : void
+    public function test_from_array_creates_instance(): void
     {
         $data = [
             'analyze' => true,
@@ -185,19 +173,19 @@ final class ExplainConfigTest extends TestCase
 
         $config = ExplainConfig::fromArray($data);
 
-        self::assertTrue($config->analyze);
-        self::assertTrue($config->verbose);
-        self::assertTrue($config->costs);
-        self::assertTrue($config->buffers);
-        self::assertTrue($config->timing);
-        self::assertTrue($config->summary);
-        self::assertTrue($config->memory);
-        self::assertTrue($config->settings);
-        self::assertTrue($config->wal);
-        self::assertSame(ExplainFormat::TEXT, $config->format);
+        static::assertTrue($config->analyze);
+        static::assertTrue($config->verbose);
+        static::assertTrue($config->costs);
+        static::assertTrue($config->buffers);
+        static::assertTrue($config->timing);
+        static::assertTrue($config->summary);
+        static::assertTrue($config->memory);
+        static::assertTrue($config->settings);
+        static::assertTrue($config->wal);
+        static::assertSame(ExplainFormat::TEXT, $config->format);
     }
 
-    public function test_from_array_validates_config() : void
+    public function test_from_array_validates_config(): void
     {
         $data = [
             'analyze' => false,
@@ -218,16 +206,16 @@ final class ExplainConfigTest extends TestCase
         ExplainConfig::fromArray($data);
     }
 
-    public function test_from_array_with_for_estimate_config() : void
+    public function test_from_array_with_for_estimate_config(): void
     {
         $original = ExplainConfig::forEstimate();
         $normalized = $original->normalize();
         $restored = ExplainConfig::fromArray($normalized);
 
-        self::assertEquals($original, $restored);
+        static::assertEquals($original, $restored);
     }
 
-    public function test_normalize_returns_all_fields() : void
+    public function test_normalize_returns_all_fields(): void
     {
         $config = ExplainConfig::forAnalysis()
             ->withVerbose()
@@ -238,19 +226,19 @@ final class ExplainConfigTest extends TestCase
 
         $normalized = $config->normalize();
 
-        self::assertTrue($normalized['analyze']);
-        self::assertTrue($normalized['verbose']);
-        self::assertTrue($normalized['costs']);
-        self::assertTrue($normalized['buffers']);
-        self::assertTrue($normalized['timing']);
-        self::assertTrue($normalized['summary']);
-        self::assertTrue($normalized['memory']);
-        self::assertTrue($normalized['settings']);
-        self::assertTrue($normalized['wal']);
-        self::assertSame('yaml', $normalized['format']);
+        static::assertTrue($normalized['analyze']);
+        static::assertTrue($normalized['verbose']);
+        static::assertTrue($normalized['costs']);
+        static::assertTrue($normalized['buffers']);
+        static::assertTrue($normalized['timing']);
+        static::assertTrue($normalized['summary']);
+        static::assertTrue($normalized['memory']);
+        static::assertTrue($normalized['settings']);
+        static::assertTrue($normalized['wal']);
+        static::assertSame('yaml', $normalized['format']);
     }
 
-    public function test_normalize_returns_expected_keys() : void
+    public function test_normalize_returns_expected_keys(): void
     {
         $config = ExplainConfig::forAnalysis();
 
@@ -269,20 +257,20 @@ final class ExplainConfigTest extends TestCase
             'format',
         ];
 
-        self::assertSame($expectedKeys, \array_keys($normalized));
+        static::assertSame($expectedKeys, \array_keys($normalized));
     }
 
-    public function test_with_analyze_returns_new_instance() : void
+    public function test_with_analyze_returns_new_instance(): void
     {
         $original = ExplainConfig::forEstimate();
         $modified = $original->withAnalyze();
 
-        self::assertNotSame($original, $modified);
-        self::assertFalse($original->analyze);
-        self::assertTrue($modified->analyze);
+        static::assertNotSame($original, $modified);
+        static::assertFalse($original->analyze);
+        static::assertTrue($modified->analyze);
     }
 
-    public function test_with_buffers_requires_analyze() : void
+    public function test_with_buffers_requires_analyze(): void
     {
         $config = ExplainConfig::forEstimate();
 
@@ -292,61 +280,61 @@ final class ExplainConfigTest extends TestCase
         $config->withBuffers();
     }
 
-    public function test_with_buffers_works_with_analyze() : void
+    public function test_with_buffers_works_with_analyze(): void
     {
         $config = ExplainConfig::forEstimate();
         $modified = $config->withAnalyze()->withBuffers();
 
-        self::assertTrue($modified->analyze);
-        self::assertTrue($modified->buffers);
+        static::assertTrue($modified->analyze);
+        static::assertTrue($modified->buffers);
     }
 
-    public function test_with_costs_returns_new_instance() : void
+    public function test_with_costs_returns_new_instance(): void
     {
         $config = ExplainConfig::forAnalysis()->withoutCosts();
         $modified = $config->withCosts();
 
-        self::assertFalse($config->costs);
-        self::assertTrue($modified->costs);
+        static::assertFalse($config->costs);
+        static::assertTrue($modified->costs);
     }
 
-    public function test_with_format_returns_new_instance() : void
+    public function test_with_format_returns_new_instance(): void
     {
         $original = ExplainConfig::forAnalysis();
         $modified = $original->withFormat(ExplainFormat::TEXT);
 
-        self::assertSame(ExplainFormat::JSON, $original->format);
-        self::assertSame(ExplainFormat::TEXT, $modified->format);
+        static::assertSame(ExplainFormat::JSON, $original->format);
+        static::assertSame(ExplainFormat::TEXT, $modified->format);
     }
 
-    public function test_with_memory_returns_new_instance() : void
+    public function test_with_memory_returns_new_instance(): void
     {
         $original = ExplainConfig::forAnalysis();
         $modified = $original->withMemory();
 
-        self::assertFalse($original->memory);
-        self::assertTrue($modified->memory);
+        static::assertFalse($original->memory);
+        static::assertTrue($modified->memory);
     }
 
-    public function test_with_settings_returns_new_instance() : void
+    public function test_with_settings_returns_new_instance(): void
     {
         $original = ExplainConfig::forAnalysis();
         $modified = $original->withSettings();
 
-        self::assertFalse($original->settings);
-        self::assertTrue($modified->settings);
+        static::assertFalse($original->settings);
+        static::assertTrue($modified->settings);
     }
 
-    public function test_with_summary_returns_new_instance() : void
+    public function test_with_summary_returns_new_instance(): void
     {
         $original = ExplainConfig::forEstimate();
         $modified = $original->withSummary();
 
-        self::assertFalse($original->summary);
-        self::assertTrue($modified->summary);
+        static::assertFalse($original->summary);
+        static::assertTrue($modified->summary);
     }
 
-    public function test_with_timing_requires_analyze() : void
+    public function test_with_timing_requires_analyze(): void
     {
         $config = ExplainConfig::forEstimate();
 
@@ -356,25 +344,25 @@ final class ExplainConfigTest extends TestCase
         $config->withTiming();
     }
 
-    public function test_with_timing_works_with_analyze() : void
+    public function test_with_timing_works_with_analyze(): void
     {
         $config = ExplainConfig::forEstimate();
         $modified = $config->withAnalyze()->withTiming();
 
-        self::assertTrue($modified->analyze);
-        self::assertTrue($modified->timing);
+        static::assertTrue($modified->analyze);
+        static::assertTrue($modified->timing);
     }
 
-    public function test_with_verbose_returns_new_instance() : void
+    public function test_with_verbose_returns_new_instance(): void
     {
         $original = ExplainConfig::forAnalysis();
         $modified = $original->withVerbose();
 
-        self::assertFalse($original->verbose);
-        self::assertTrue($modified->verbose);
+        static::assertFalse($original->verbose);
+        static::assertTrue($modified->verbose);
     }
 
-    public function test_with_wal_requires_analyze() : void
+    public function test_with_wal_requires_analyze(): void
     {
         $config = ExplainConfig::forEstimate();
 
@@ -384,99 +372,99 @@ final class ExplainConfigTest extends TestCase
         $config->withWal();
     }
 
-    public function test_with_wal_works_with_analyze() : void
+    public function test_with_wal_works_with_analyze(): void
     {
         $config = ExplainConfig::forAnalysis();
         $modified = $config->withWal();
 
-        self::assertTrue($modified->analyze);
-        self::assertTrue($modified->wal);
+        static::assertTrue($modified->analyze);
+        static::assertTrue($modified->wal);
     }
 
-    public function test_without_analyze_disables_dependent_options() : void
+    public function test_without_analyze_disables_dependent_options(): void
     {
         $original = ExplainConfig::forAnalysis();
         $modified = $original->withoutAnalyze();
 
-        self::assertTrue($original->analyze);
-        self::assertTrue($original->buffers);
-        self::assertTrue($original->timing);
+        static::assertTrue($original->analyze);
+        static::assertTrue($original->buffers);
+        static::assertTrue($original->timing);
 
-        self::assertFalse($modified->analyze);
-        self::assertFalse($modified->buffers);
-        self::assertFalse($modified->timing);
-        self::assertFalse($modified->wal);
+        static::assertFalse($modified->analyze);
+        static::assertFalse($modified->buffers);
+        static::assertFalse($modified->timing);
+        static::assertFalse($modified->wal);
     }
 
-    public function test_without_buffers_returns_new_instance() : void
+    public function test_without_buffers_returns_new_instance(): void
     {
         $original = ExplainConfig::forAnalysis();
         $modified = $original->withoutBuffers();
 
-        self::assertTrue($original->buffers);
-        self::assertFalse($modified->buffers);
+        static::assertTrue($original->buffers);
+        static::assertFalse($modified->buffers);
     }
 
-    public function test_without_costs_returns_new_instance() : void
+    public function test_without_costs_returns_new_instance(): void
     {
         $original = ExplainConfig::forAnalysis();
         $modified = $original->withoutCosts();
 
-        self::assertTrue($original->costs);
-        self::assertFalse($modified->costs);
+        static::assertTrue($original->costs);
+        static::assertFalse($modified->costs);
     }
 
-    public function test_without_memory_returns_new_instance() : void
+    public function test_without_memory_returns_new_instance(): void
     {
         $original = ExplainConfig::forAnalysis()->withMemory();
         $modified = $original->withoutMemory();
 
-        self::assertTrue($original->memory);
-        self::assertFalse($modified->memory);
+        static::assertTrue($original->memory);
+        static::assertFalse($modified->memory);
     }
 
-    public function test_without_settings_returns_new_instance() : void
+    public function test_without_settings_returns_new_instance(): void
     {
         $original = ExplainConfig::forAnalysis()->withSettings();
         $modified = $original->withoutSettings();
 
-        self::assertTrue($original->settings);
-        self::assertFalse($modified->settings);
+        static::assertTrue($original->settings);
+        static::assertFalse($modified->settings);
     }
 
-    public function test_without_summary_returns_new_instance() : void
+    public function test_without_summary_returns_new_instance(): void
     {
         $original = ExplainConfig::forAnalysis();
         $modified = $original->withoutSummary();
 
-        self::assertTrue($original->summary);
-        self::assertFalse($modified->summary);
+        static::assertTrue($original->summary);
+        static::assertFalse($modified->summary);
     }
 
-    public function test_without_timing_returns_new_instance() : void
+    public function test_without_timing_returns_new_instance(): void
     {
         $original = ExplainConfig::forAnalysis();
         $modified = $original->withoutTiming();
 
-        self::assertTrue($original->timing);
-        self::assertFalse($modified->timing);
+        static::assertTrue($original->timing);
+        static::assertFalse($modified->timing);
     }
 
-    public function test_without_verbose_returns_new_instance() : void
+    public function test_without_verbose_returns_new_instance(): void
     {
         $original = ExplainConfig::forAnalysis()->withVerbose();
         $modified = $original->withoutVerbose();
 
-        self::assertTrue($original->verbose);
-        self::assertFalse($modified->verbose);
+        static::assertTrue($original->verbose);
+        static::assertFalse($modified->verbose);
     }
 
-    public function test_without_wal_returns_new_instance() : void
+    public function test_without_wal_returns_new_instance(): void
     {
         $config = ExplainConfig::forAnalysis()->withWal();
         $modified = $config->withoutWal();
 
-        self::assertTrue($config->wal);
-        self::assertFalse($modified->wal);
+        static::assertTrue($config->wal);
+        static::assertFalse($modified->wal);
     }
 }

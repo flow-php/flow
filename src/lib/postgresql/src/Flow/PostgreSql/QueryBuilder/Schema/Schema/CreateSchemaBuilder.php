@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Schema;
 
-use Flow\PostgreSql\Protobuf\AST\{CreateSchemaStmt, RoleSpec, RoleSpecType};
+use Flow\PostgreSql\Protobuf\AST\CreateSchemaStmt;
+use Flow\PostgreSql\Protobuf\AST\RoleSpec;
+use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class CreateSchemaBuilder implements CreateSchemaFinalStep, CreateSchemaOptionsStep
@@ -15,33 +17,24 @@ final readonly class CreateSchemaBuilder implements CreateSchemaFinalStep, Creat
         private ?string $name = null,
         private ?string $authRole = null,
         private bool $ifNotExists = false,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name) : CreateSchemaOptionsStep
+    public static function create(string $name): CreateSchemaOptionsStep
     {
         return new self($name);
     }
 
-    public function authorization(string $role) : CreateSchemaFinalStep
+    public function authorization(string $role): CreateSchemaFinalStep
     {
-        return new self(
-            $this->name,
-            $role,
-            $this->ifNotExists,
-        );
+        return new self($this->name, $role, $this->ifNotExists);
     }
 
-    public function ifNotExists() : CreateSchemaOptionsStep
+    public function ifNotExists(): CreateSchemaOptionsStep
     {
-        return new self(
-            $this->name,
-            $this->authRole,
-            true,
-        );
+        return new self($this->name, $this->authRole, true);
     }
 
-    public function toAst() : CreateSchemaStmt
+    public function toAst(): CreateSchemaStmt
     {
         $stmt = new CreateSchemaStmt();
 

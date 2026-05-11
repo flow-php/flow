@@ -20,7 +20,7 @@ final readonly class All implements Comparison
         $this->comparisons = \array_merge([$comparison], $comparisons);
     }
 
-    public function compare(Row $left, Row $right) : bool
+    public function compare(Row $left, Row $right): bool
     {
         foreach ($this->comparisons as $comparison) {
             if (!$comparison->compare($left, $right)) {
@@ -34,7 +34,7 @@ final readonly class All implements Comparison
     /**
      * @return array<Reference>
      */
-    public function left() : array
+    public function left(): array
     {
         $entries = [];
 
@@ -48,7 +48,7 @@ final readonly class All implements Comparison
     /**
      * @return array<Reference>
      */
-    public function right() : array
+    public function right(): array
     {
         $entries = [];
 

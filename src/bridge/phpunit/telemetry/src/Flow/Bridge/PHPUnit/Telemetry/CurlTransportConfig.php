@@ -25,6 +25,5 @@ final readonly class CurlTransportConfig
         public ?string $sslKeyPath,
         public ?string $caInfoPath,
         public SerializerType $serializer,
-    ) {
-    }
+    ) {}
 }

@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Bridge\Monolog\Http\Config;
 
 use Flow\Bridge\Monolog\Http\Exception\InvalidArgumentException;
-use Flow\Bridge\Monolog\Http\Sanitization\{Sanitizer, SanitizerFactory};
+use Flow\Bridge\Monolog\Http\Sanitization\Sanitizer;
+use Flow\Bridge\Monolog\Http\Sanitization\SanitizerFactory;
 
 final readonly class RequestConfig
 {
@@ -39,22 +40,29 @@ final readonly class RequestConfig
                 try {
                     $initializedSanitizers[$key] = SanitizerFactory::fromArray($sanitizer);
                 } catch (InvalidArgumentException $e) {
-                    throw new InvalidArgumentException(\sprintf('Sanitizer for key "%s" could not be created from array: %s', $key, $e->getMessage()), 0, $e);
+                    throw new InvalidArgumentException(
+                        \sprintf('Sanitizer for key "%s" could not be created from array: %s', $key, $e->getMessage()),
+                        0,
+                        $e,
+                    );
                 }
             } else {
-                throw new InvalidArgumentException(\sprintf('Sanitizer for key "%s" must be an instance of Sanitizer or an array that can be converted to a Sanitizer', $key));
+                throw new InvalidArgumentException(\sprintf(
+                    'Sanitizer for key "%s" must be an instance of Sanitizer or an array that can be converted to a Sanitizer',
+                    $key,
+                ));
             }
         }
 
         $this->sanitizers = $initializedSanitizers;
     }
 
-    public function bodySizeLimit() : int
+    public function bodySizeLimit(): int
     {
         return $this->bodySizeLimit;
     }
 
-    public function includeBody() : bool
+    public function includeBody(): bool
     {
         return $this->withBody;
     }
@@ -62,17 +70,17 @@ final readonly class RequestConfig
     /**
      * @return array<string>
      */
-    public function includeHeaders() : array
+    public function includeHeaders(): array
     {
         return $this->headers;
     }
 
-    public function includeMethod() : bool
+    public function includeMethod(): bool
     {
         return $this->withMethod;
     }
 
-    public function includeUri() : bool
+    public function includeUri(): bool
     {
         return $this->withUri;
     }
@@ -80,7 +88,7 @@ final readonly class RequestConfig
     /**
      * @return array<string, Sanitizer>
      */
-    public function sanitizers() : array
+    public function sanitizers(): array
     {
         return $this->sanitizers;
     }

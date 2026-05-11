@@ -4,17 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Command;
 
-use function Flow\PostgreSql\DSL\{agg_count, and_, col, drop, eq, func, ne, param, select};
-
-use function Flow\Types\DSL\{type_instance_of, type_string};
 use Flow\PostgreSql\Client\ConnectionParameters;
 use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\{InputInterface, InputOption};
-
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+
+use function Flow\PostgreSql\DSL\agg_count;
+use function Flow\PostgreSql\DSL\and_;
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\drop;
+use function Flow\PostgreSql\DSL\eq;
+use function Flow\PostgreSql\DSL\func;
+use function Flow\PostgreSql\DSL\ne;
+use function Flow\PostgreSql\DSL\param;
+use function Flow\PostgreSql\DSL\select;
+use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_string;
 
 #[AsCommand(name: 'flow:database:drop', description: 'Drop the configured database')]
 final class DropDatabaseCommand extends Command
@@ -26,7 +35,7 @@ final class DropDatabaseCommand extends Command
         parent::__construct();
     }
 
-    protected function configure() : void
+    protected function configure(): void
     {
         $this
             ->addOption('connection', 'c', InputOption::VALUE_OPTIONAL, 'The connection to use', null)
@@ -34,7 +43,7 @@ final class DropDatabaseCommand extends Command
             ->addOption('force', null, InputOption::VALUE_NONE, 'Required to actually execute the drop');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output) : int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $connection = type_string()->assert($input->getOption('connection') ?? $this->defaultConnection);
 
@@ -44,14 +53,17 @@ final class DropDatabaseCommand extends Command
             return Command::FAILURE;
         }
 
-        $params = type_instance_of(ConnectionParameters::class)->assert($this->container->get("flow.postgresql.{$connection}.connection_parameters"));
+        $params = type_instance_of(ConnectionParameters::class)->assert($this->container->get(
+            "flow.postgresql.{$connection}.connection_parameters",
+        ));
 
         $maintenanceClient = PgSqlClient::connect($params->withDatabase('postgres'));
 
-        $exists = $maintenanceClient->fetchScalarInt(
-            select(agg_count())->from('pg_database')->where(eq(col('datname'), param(1))),
-            [$params->database()]
-        ) > 0;
+        $exists =
+            $maintenanceClient->fetchScalarInt(
+                select(agg_count())->from('pg_database')->where(eq(col('datname'), param(1))),
+                [$params->database()],
+            ) > 0;
 
         if (!$exists) {
             $maintenanceClient->close();
@@ -71,7 +83,7 @@ final class DropDatabaseCommand extends Command
             select(func('pg_terminate_backend', [col('pid')]))
                 ->from('pg_stat_activity')
                 ->where(and_(eq(col('datname'), param(1)), ne(col('pid'), func('pg_backend_pid')))),
-            [$params->database()]
+            [$params->database()],
         );
         $maintenanceClient->execute(drop()->database($params->database()));
         $maintenanceClient->close();

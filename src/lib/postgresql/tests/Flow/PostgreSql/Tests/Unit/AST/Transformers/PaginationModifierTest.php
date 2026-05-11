@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\AST\Transformers;
 
-use function Flow\PostgreSql\DSL\sql_parse;
-use Flow\PostgreSql\AST\Transformers\{PaginationConfig, PaginationModifier};
+use Flow\PostgreSql\AST\Transformers\PaginationConfig;
+use Flow\PostgreSql\AST\Transformers\PaginationModifier;
 use Flow\PostgreSql\Exception\PaginationException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\PostgreSql\DSL\sql_parse;
+
 final class PaginationModifierTest extends TestCase
 {
-    public static function paginationProvider() : \Generator
+    public static function paginationProvider(): \Generator
     {
         yield 'simple select with order by - limit only' => [
             'SELECT * FROM users ORDER BY id',
@@ -177,14 +179,16 @@ final class PaginationModifierTest extends TestCase
         ];
     }
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('pg_query')) {
-            self::markTestSkipped('pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.');
+            self::markTestSkipped(
+                'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
+            );
         }
     }
 
-    public function test_offset_without_order_by_throws_exception() : void
+    public function test_offset_without_order_by_throws_exception(): void
     {
         $this->expectException(PaginationException::class);
         $this->expectExceptionMessage('OFFSET without ORDER BY produces non-deterministic results');
@@ -194,27 +198,27 @@ final class PaginationModifierTest extends TestCase
     }
 
     #[DataProvider('paginationProvider')]
-    public function test_pagination(string $inputSql, PaginationConfig $config, string $expectedSql) : void
+    public function test_pagination(string $inputSql, PaginationConfig $config, string $expectedSql): void
     {
         $parsed = sql_parse($inputSql);
         $parsed->traverse(new PaginationModifier($config));
 
-        self::assertSame($expectedSql, $parsed->deparse());
+        static::assertSame($expectedSql, $parsed->deparse());
     }
 
-    public function test_pagination_config_default_offset() : void
+    public function test_pagination_config_default_offset(): void
     {
         $config = new PaginationConfig(20);
 
-        self::assertSame(20, $config->limit);
-        self::assertSame(0, $config->offset);
+        static::assertSame(20, $config->limit);
+        static::assertSame(0, $config->offset);
     }
 
-    public function test_pagination_config_returns_config_object() : void
+    public function test_pagination_config_returns_config_object(): void
     {
         $config = new PaginationConfig(10, 5);
 
-        self::assertSame(10, $config->limit);
-        self::assertSame(5, $config->offset);
+        static::assertSame(10, $config->limit);
+        static::assertSame(5, $config->offset);
     }
 }

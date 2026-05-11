@@ -11,6 +11,5 @@ final readonly class BucketRow
     public function __construct(
         public Row $row,
         public string $bucketId,
-    ) {
-    }
+    ) {}
 }

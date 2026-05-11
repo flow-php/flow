@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Processor;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Processor, Row, Rows};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Processor;
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
 
 /**
  * Re-batches rows into fixed-size batches.
@@ -19,14 +22,15 @@ final readonly class BatchingProcessor implements Processor
      *
      * @throws InvalidArgumentException
      */
-    public function __construct(private int $size)
-    {
+    public function __construct(
+        private int $size,
+    ) {
         if ($this->size <= 0) {
             throw new InvalidArgumentException('Batch size must be greater than 0, given: ' . $this->size);
         }
     }
 
-    public function process(\Generator $rows, FlowContext $context) : \Generator
+    public function process(\Generator $rows, FlowContext $context): \Generator
     {
         /** @var array<Row> $buffer */
         $buffer = [];

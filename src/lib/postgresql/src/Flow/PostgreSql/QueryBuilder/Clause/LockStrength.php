@@ -9,14 +9,14 @@ use Flow\PostgreSql\Protobuf\AST\LockClauseStrength;
 /**
  * Lock strength enum for SELECT FOR UPDATE/SHARE.
  */
-enum LockStrength : string
+enum LockStrength: string
 {
     case KEY_SHARE = 'KEY SHARE';
     case NO_KEY_UPDATE = 'NO KEY UPDATE';
     case SHARE = 'SHARE';
     case UPDATE = 'UPDATE';
 
-    public static function fromProtobuf(int $strength) : self
+    public static function fromProtobuf(int $strength): self
     {
         return match ($strength) {
             LockClauseStrength::LCS_FORUPDATE => self::UPDATE,
@@ -27,7 +27,7 @@ enum LockStrength : string
         };
     }
 
-    public function toProtobuf() : int
+    public function toProtobuf(): int
     {
         return match ($this) {
             self::UPDATE => LockClauseStrength::LCS_FORUPDATE,

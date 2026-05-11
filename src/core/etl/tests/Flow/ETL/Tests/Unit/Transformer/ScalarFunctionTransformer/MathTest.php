@@ -4,16 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer\ScalarFunctionTransformer;
 
-use function Flow\ETL\DSL\{float_entry, flow_context, int_entry, integer_entry, ref, row, rows};
 use Flow\Calculator\Rounding;
-use Flow\ETL\Row\Entry\{FloatEntry, IntegerEntry};
+use Flow\ETL\Row\Entry\FloatEntry;
+use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\integer_entry;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+
 final class MathTest extends FlowTestCase
 {
-    public static function divide_data_provider() : \Generator
+    public static function divide_data_provider(): \Generator
     {
         yield [
             float_entry('a', 0.3),
@@ -32,7 +40,7 @@ final class MathTest extends FlowTestCase
         ];
     }
 
-    public static function minus_data_provider() : \Generator
+    public static function minus_data_provider(): \Generator
     {
         yield [
             float_entry('a', 0.3),
@@ -52,7 +60,7 @@ final class MathTest extends FlowTestCase
         ];
     }
 
-    public static function multiply_data_provider() : \Generator
+    public static function multiply_data_provider(): \Generator
     {
         yield [
             float_entry('a', 0.3),
@@ -67,7 +75,7 @@ final class MathTest extends FlowTestCase
         ];
     }
 
-    public static function plus_data_provider() : \Generator
+    public static function plus_data_provider(): \Generator
     {
         yield [
             float_entry('a', 0.3),
@@ -82,7 +90,7 @@ final class MathTest extends FlowTestCase
         ];
     }
 
-    public static function power_data_provider() : \Generator
+    public static function power_data_provider(): \Generator
     {
         yield [
             float_entry('a', -0.3),
@@ -101,19 +109,21 @@ final class MathTest extends FlowTestCase
      * @param array<string, mixed> $result
      */
     #[DataProvider('divide_data_provider')]
-    public function test_divide(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, ?int $scale, ?Rounding $rounding, array $result) : void
-    {
-        $rows = (new ScalarFunctionTransformer('result', ref($a->name())->divide(ref($b->name()), $scale, $rounding)))
-            ->transform(
-                rows(row($a, $b)),
-                flow_context()
-            );
+    public function test_divide(
+        IntegerEntry|FloatEntry $a,
+        IntegerEntry|FloatEntry $b,
+        ?int $scale,
+        ?Rounding $rounding,
+        array $result,
+    ): void {
+        $rows = (new ScalarFunctionTransformer('result', ref($a->name())
+            ->divide(ref($b->name()), $scale, $rounding)))->transform(rows(row($a, $b)), flow_context());
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 $result,
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
@@ -121,19 +131,18 @@ final class MathTest extends FlowTestCase
      * @param array<string, mixed> $result
      */
     #[DataProvider('minus_data_provider')]
-    public function test_minus(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, array $result) : void
+    public function test_minus(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, array $result): void
     {
-        $rows = (new ScalarFunctionTransformer('result', ref($a->name())->minus(ref($b->name()))))
-            ->transform(
-                rows(row($a, $b)),
-                flow_context()
-            );
+        $rows = (new ScalarFunctionTransformer('result', ref($a->name())->minus(ref($b->name()))))->transform(
+            rows(row($a, $b)),
+            flow_context(),
+        );
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 $result,
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
@@ -141,19 +150,18 @@ final class MathTest extends FlowTestCase
      * @param array<string, mixed> $result
      */
     #[DataProvider('multiply_data_provider')]
-    public function test_multiply(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, array $result) : void
+    public function test_multiply(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, array $result): void
     {
-        $rows = (new ScalarFunctionTransformer('result', ref($a->name())->multiply(ref($b->name()))))
-            ->transform(
-                rows(row($a, $b)),
-                flow_context()
-            );
+        $rows = (new ScalarFunctionTransformer('result', ref($a->name())->multiply(ref($b->name()))))->transform(
+            rows(row($a, $b)),
+            flow_context(),
+        );
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 $result,
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
@@ -161,19 +169,18 @@ final class MathTest extends FlowTestCase
      * @param array<string, mixed> $result
      */
     #[DataProvider('plus_data_provider')]
-    public function test_plus(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, array $result) : void
+    public function test_plus(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, array $result): void
     {
-        $rows = (new ScalarFunctionTransformer('result', ref($a->name())->plus(ref($b->name()))))
-            ->transform(
-                rows(row($a, $b)),
-                flow_context()
-            );
+        $rows = (new ScalarFunctionTransformer('result', ref($a->name())->plus(ref($b->name()))))->transform(
+            rows(row($a, $b)),
+            flow_context(),
+        );
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 $result,
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
@@ -181,19 +188,18 @@ final class MathTest extends FlowTestCase
      * @param array<string, mixed> $result
      */
     #[DataProvider('power_data_provider')]
-    public function test_power(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, array $result) : void
+    public function test_power(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, array $result): void
     {
-        $rows = (new ScalarFunctionTransformer('result', ref($a->name())->power(ref($b->name()))))
-            ->transform(
-                rows(row($a, $b)),
-                flow_context()
-            );
+        $rows = (new ScalarFunctionTransformer('result', ref($a->name())->power(ref($b->name()))))->transform(
+            rows(row($a, $b)),
+            flow_context(),
+        );
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 $result,
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 }

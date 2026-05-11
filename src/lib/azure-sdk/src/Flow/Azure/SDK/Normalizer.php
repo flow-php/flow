@@ -9,5 +9,5 @@ interface Normalizer
     /**
      * @return array<array-key, mixed>
      */
-    public function toArray(string $data) : array;
+    public function toArray(string $data): array;
 }

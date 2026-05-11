@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Migrations\Tests\Double;
 
-use Flow\PostgreSql\Migrations\{ExecutedMigration, Version};
-use Flow\PostgreSql\Migrations\Store\{ExecutedMigrations, MigrationStore};
+use Flow\PostgreSql\Migrations\ExecutedMigration;
+use Flow\PostgreSql\Migrations\Store\ExecutedMigrations;
+use Flow\PostgreSql\Migrations\Store\MigrationStore;
+use Flow\PostgreSql\Migrations\Version;
 
 final class FakeMigrationStore implements MigrationStore
 {
@@ -16,7 +18,7 @@ final class FakeMigrationStore implements MigrationStore
      */
     private array $migrations = [];
 
-    public function complete(Version $version, int $executionTimeMs) : void
+    public function complete(Version $version, int $executionTimeMs): void
     {
         $this->migrations[(string) $version] = new ExecutedMigration(
             $version,
@@ -25,27 +27,27 @@ final class FakeMigrationStore implements MigrationStore
         );
     }
 
-    public function executedMigrations() : ExecutedMigrations
+    public function executedMigrations(): ExecutedMigrations
     {
         return new ExecutedMigrations(...\array_values($this->migrations));
     }
 
-    public function initialize() : void
+    public function initialize(): void
     {
         $this->initialized = true;
     }
 
-    public function isInitialized() : bool
+    public function isInitialized(): bool
     {
         return $this->initialized;
     }
 
-    public function remove(Version $version) : void
+    public function remove(Version $version): void
     {
         unset($this->migrations[(string) $version]);
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->migrations = [];
     }

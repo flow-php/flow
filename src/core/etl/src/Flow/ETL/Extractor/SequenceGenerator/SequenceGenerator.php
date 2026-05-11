@@ -9,5 +9,5 @@ interface SequenceGenerator
     /**
      * @return \Generator<mixed>
      */
-    public function generate() : \Generator;
+    public function generate(): \Generator;
 }

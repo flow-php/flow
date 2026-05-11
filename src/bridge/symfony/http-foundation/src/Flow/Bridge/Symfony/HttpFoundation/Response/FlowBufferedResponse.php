@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\HttpFoundation\Response;
 
+use Flow\Bridge\Symfony\HttpFoundation\Output;
+use Flow\ETL\Config;
+use Flow\ETL\Config\ConfigBuilder;
+use Flow\ETL\Extractor;
+use Flow\ETL\Transformation;
+use Flow\ETL\Transformations;
+use Symfony\Component\HttpFoundation\Response;
+
 use function Flow\ETL\DSL\df;
 use function Flow\Filesystem\DSL\path;
-use Flow\Bridge\Symfony\HttpFoundation\Output;
-use Flow\ETL\Config\ConfigBuilder;
-use Flow\ETL\{Config, Extractor, Transformation, Transformations};
-use Symfony\Component\HttpFoundation\Response;
 
 final class FlowBufferedResponse extends Response
 {
@@ -35,7 +39,7 @@ final class FlowBufferedResponse extends Response
     }
 
     #[\Override]
-    public function getContent() : string
+    public function getContent(): string
     {
         $this->evaluate();
 
@@ -43,7 +47,7 @@ final class FlowBufferedResponse extends Response
     }
 
     #[\Override]
-    public function sendContent() : static
+    public function sendContent(): static
     {
         $this->evaluate();
 
@@ -52,7 +56,7 @@ final class FlowBufferedResponse extends Response
         return $this;
     }
 
-    private function evaluate() : void
+    private function evaluate(): void
     {
         if ($this->buffered) {
             return;

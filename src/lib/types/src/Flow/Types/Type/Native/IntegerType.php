@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native;
 
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 
 /**
@@ -12,7 +13,7 @@ use Flow\Types\Type;
  */
 final readonly class IntegerType implements Type
 {
-    public function assert(mixed $value) : int
+    public function assert(mixed $value): int
     {
         if ($this->isValid($value)) {
             return $value;
@@ -21,14 +22,13 @@ final readonly class IntegerType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
-    public function cast(mixed $value) : int
+    public function cast(mixed $value): int
     {
         if ($this->isValid($value)) {
             return $value;
         }
 
         try {
-
             if ($value instanceof \DOMElement) {
                 return (int) $value->nodeValue;
             }
@@ -41,7 +41,7 @@ final readonly class IntegerType implements Type
                 $reference = new \DateTimeImmutable();
                 $endTime = $reference->add($value);
 
-                return (int) ($endTime->format('Uu')) - (int) ($reference->format('Uu'));
+                return (int) $endTime->format('Uu') - (int) $reference->format('Uu');
             }
 
             if (\is_object($value)) {
@@ -58,19 +58,19 @@ final readonly class IntegerType implements Type
         }
     }
 
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return \is_int($value);
     }
 
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'integer',
         ];
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return 'integer';
     }

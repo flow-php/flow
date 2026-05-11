@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
-use function Flow\ETL\Adapter\Parquet\from_parquet;
-use function Flow\ETL\DSL\{config, flow_context};
-use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Parquet\Reader;
 
+use function Flow\ETL\Adapter\Parquet\from_parquet;
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\Filesystem\DSL\path_real;
+
 final class PaginationTest extends FlowTestCase
 {
-    public function test_multifile_pagination_from_beginning() : void
+    public function test_multifile_pagination_from_beginning(): void
     {
-        $extractor = (from_parquet(path_real(__DIR__ . '/Fixtures/Pagination/*.parquet')))->withOffset(0);
+        $extractor = from_parquet(path_real(__DIR__ . '/Fixtures/Pagination/*.parquet'))->withOffset(0);
 
         $extractedRows = 0;
 
@@ -22,15 +24,12 @@ final class PaginationTest extends FlowTestCase
             $extractedRows += $rows->count();
         }
 
-        self::assertSame(
-            (1000 + 500 + 350 + 2000 + 15),
-            $extractedRows
-        );
+        static::assertSame(1000 + 500 + 350 + 2000 + 15, $extractedRows);
     }
 
-    public function test_multifile_pagination_from_middle() : void
+    public function test_multifile_pagination_from_middle(): void
     {
-        $extractor = (from_parquet(path_real(__DIR__ . '/Fixtures/Pagination/*.parquet')))->withOffset(2500);
+        $extractor = from_parquet(path_real(__DIR__ . '/Fixtures/Pagination/*.parquet'))->withOffset(2500);
 
         $extractedRows = 0;
 
@@ -38,15 +37,13 @@ final class PaginationTest extends FlowTestCase
             $extractedRows += $rows->count();
         }
 
-        self::assertSame(
-            (1000 + 500 + 350 + 2000 + 15) - 2500,
-            $extractedRows
-        );
+        static::assertSame(1000 + 500 + 350 + 2000 + 15 - 2500, $extractedRows);
     }
 
-    public function test_multifile_pagination_from_middle_partitioned() : void
+    public function test_multifile_pagination_from_middle_partitioned(): void
     {
-        $extractor = (from_parquet(path_real(__DIR__ . '/Fixtures/Pagination/partitioned/date=*/*.parquet')))->withOffset(2500);
+        $extractor = from_parquet(path_real(__DIR__ . '/Fixtures/Pagination/partitioned/date=*/*.parquet'))
+            ->withOffset(2500);
 
         $extractedRows = 0;
 
@@ -54,15 +51,12 @@ final class PaginationTest extends FlowTestCase
             $extractedRows += $rows->count();
         }
 
-        self::assertSame(
-            (1000 + 500 + 350 + 2000 + 15) - 2500,
-            $extractedRows
-        );
+        static::assertSame(1000 + 500 + 350 + 2000 + 15 - 2500, $extractedRows);
     }
 
-    public function test_multifile_pagination_from_offset_bigger_than_total_rows() : void
+    public function test_multifile_pagination_from_offset_bigger_than_total_rows(): void
     {
-        $extractor = (from_parquet(path_real(__DIR__ . '/Fixtures/Pagination/*.parquet')))->withOffset(10_000);
+        $extractor = from_parquet(path_real(__DIR__ . '/Fixtures/Pagination/*.parquet'))->withOffset(10_000);
 
         $extractedRows = 0;
 
@@ -70,21 +64,18 @@ final class PaginationTest extends FlowTestCase
             $extractedRows += $rows->count();
         }
 
-        self::assertSame(
-            0,
-            $extractedRows
-        );
+        static::assertSame(0, $extractedRows);
     }
 
-    public function test_reading_file_from_given_offset() : void
+    public function test_reading_file_from_given_offset(): void
     {
-        $totalRows = (new Reader())->read(__DIR__ . '/Fixtures/orders_1k.parquet')->metadata()->rowsNumber();
+        $totalRows = (new Reader())
+            ->read(__DIR__ . '/Fixtures/orders_1k.parquet')
+            ->metadata()
+            ->rowsNumber();
 
-        $extractor = (from_parquet(path_real(__DIR__ . '/Fixtures/orders_1k.parquet')))->withOffset($totalRows - 100);
+        $extractor = from_parquet(path_real(__DIR__ . '/Fixtures/orders_1k.parquet'))->withOffset($totalRows - 100);
 
-        self::assertCount(
-            100,
-            \iterator_to_array($extractor->extract(flow_context(config())))
-        );
+        static::assertCount(100, \iterator_to_array($extractor->extract(flow_context(config()))));
     }
 }

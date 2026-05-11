@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Dremel;
 
-use Flow\Parquet\Dremel\ColumnData\{FlatValue, ReadFlatColumnValues};
+use Flow\Parquet\Dremel\ColumnData\FlatValue;
+use Flow\Parquet\Dremel\ColumnData\ReadFlatColumnValues;
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
+use Flow\Parquet\ParquetFile\Schema\Column;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 
 final readonly class ReadColumnData
 {
@@ -38,7 +41,9 @@ final readonly class ReadColumnData
         if ($column instanceof NestedColumn) {
             foreach ($column->childrenFlat() as $columnChild) {
                 if (!\array_key_exists($columnChild->flatPath(), $indexedFlatValues)) {
-                    throw new InvalidArgumentException("Flat column '{$columnChild->flatPath()}' is missing in flat values.");
+                    throw new InvalidArgumentException(
+                        "Flat column '{$columnChild->flatPath()}' is missing in flat values.",
+                    );
                 }
             }
         }
@@ -50,7 +55,7 @@ final readonly class ReadColumnData
     /**
      * @return \Iterator<array-key, FlatValue>
      */
-    public function iterator(FlatColumn $column) : \Iterator
+    public function iterator(FlatColumn $column): \Iterator
     {
         return $this->flatValues[$column->flatPath()]->iterator();
     }

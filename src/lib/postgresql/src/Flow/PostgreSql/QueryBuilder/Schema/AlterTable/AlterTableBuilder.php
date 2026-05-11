@@ -4,11 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\AlterTable;
 
-use Flow\PostgreSql\Protobuf\AST\{AlterTableCmd, AlterTableStmt, AlterTableType, DropBehavior, Node, ObjectType, RangeVar};
+use Flow\PostgreSql\Protobuf\AST\AlterTableCmd;
+use Flow\PostgreSql\Protobuf\AST\AlterTableStmt;
+use Flow\PostgreSql\Protobuf\AST\AlterTableType;
 use Flow\PostgreSql\Protobuf\AST\ColumnDef;
+use Flow\PostgreSql\Protobuf\AST\DropBehavior;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
-use Flow\PostgreSql\QueryBuilder\Schema\{ColumnDefinition, ColumnType};
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnDefinition;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\TableConstraint;
 
 final readonly class AlterTableBuilder implements AlterTableFinalStep
@@ -23,15 +30,14 @@ final readonly class AlterTableBuilder implements AlterTableFinalStep
         private ?string $schema,
         private array $commands = [],
         private bool $ifExists = false,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $table, ?string $schema = null) : AlterTableFinalStep
+    public static function create(string $table, ?string $schema = null): AlterTableFinalStep
     {
         return new self($table, $schema);
     }
 
-    public function addColumn(ColumnDefinition $column) : AlterTableFinalStep
+    public function addColumn(ColumnDefinition $column): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_AddColumn);
@@ -40,15 +46,10 @@ final readonly class AlterTableBuilder implements AlterTableFinalStep
         $node->setColumnDef($column->toAst());
         $cmd->setDef($node);
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function addConstraint(TableConstraint $constraint) : AlterTableFinalStep
+    public function addConstraint(TableConstraint $constraint): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_AddConstraint);
@@ -57,15 +58,10 @@ final readonly class AlterTableBuilder implements AlterTableFinalStep
         $node->setConstraint($constraint->toAst());
         $cmd->setDef($node);
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function addInherit(string $table) : AlterTableFinalStep
+    public function addInherit(string $table): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_AddInherit);
@@ -79,43 +75,28 @@ final readonly class AlterTableBuilder implements AlterTableFinalStep
         $node->setRangeVar($rangeVar);
         $cmd->setDef($node);
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function alterColumnDropDefault(string $column) : AlterTableFinalStep
+    public function alterColumnDropDefault(string $column): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_ColumnDefault);
         $cmd->setName($column);
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function alterColumnDropNotNull(string $column) : AlterTableFinalStep
+    public function alterColumnDropNotNull(string $column): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_DropNotNull);
         $cmd->setName($column);
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function alterColumnSetDefault(string $column, Expression $defaultExpression) : AlterTableFinalStep
+    public function alterColumnSetDefault(string $column, Expression $defaultExpression): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_ColumnDefault);
@@ -123,29 +104,19 @@ final readonly class AlterTableBuilder implements AlterTableFinalStep
 
         $cmd->setDef($defaultExpression->toAst());
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function alterColumnSetNotNull(string $column) : AlterTableFinalStep
+    public function alterColumnSetNotNull(string $column): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_SetNotNull);
         $cmd->setName($column);
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function alterColumnType(string $column, ColumnType $type) : AlterTableFinalStep
+    public function alterColumnType(string $column, ColumnType $type): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_AlterColumnType);
@@ -158,55 +129,35 @@ final readonly class AlterTableBuilder implements AlterTableFinalStep
         $node->setColumnDef($columnDef);
         $cmd->setDef($node);
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function disableTrigger(string $trigger) : AlterTableFinalStep
+    public function disableTrigger(string $trigger): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_DisableTrig);
         $cmd->setName($trigger);
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function disableTriggerAll() : AlterTableFinalStep
+    public function disableTriggerAll(): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_DisableTrigAll);
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function disableTriggerUser() : AlterTableFinalStep
+    public function disableTriggerUser(): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_DisableTrigUser);
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function dropColumn(string $column, bool $cascade = false) : AlterTableFinalStep
+    public function dropColumn(string $column, bool $cascade = false): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_DropColumn);
@@ -216,15 +167,10 @@ final readonly class AlterTableBuilder implements AlterTableFinalStep
             $cmd->setBehavior(DropBehavior::DROP_CASCADE);
         }
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function dropColumnIfExists(string $column, bool $cascade = false) : AlterTableFinalStep
+    public function dropColumnIfExists(string $column, bool $cascade = false): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_DropColumn);
@@ -235,15 +181,10 @@ final readonly class AlterTableBuilder implements AlterTableFinalStep
             $cmd->setBehavior(DropBehavior::DROP_CASCADE);
         }
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function dropConstraint(string $constraintName, bool $cascade = false) : AlterTableFinalStep
+    public function dropConstraint(string $constraintName, bool $cascade = false): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_DropConstraint);
@@ -253,15 +194,10 @@ final readonly class AlterTableBuilder implements AlterTableFinalStep
             $cmd->setBehavior(DropBehavior::DROP_CASCADE);
         }
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function dropConstraintIfExists(string $constraintName, bool $cascade = false) : AlterTableFinalStep
+    public function dropConstraintIfExists(string $constraintName, bool $cascade = false): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_DropConstraint);
@@ -272,15 +208,10 @@ final readonly class AlterTableBuilder implements AlterTableFinalStep
             $cmd->setBehavior(DropBehavior::DROP_CASCADE);
         }
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function dropInherit(string $table) : AlterTableFinalStep
+    public function dropInherit(string $table): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_DropInherit);
@@ -294,137 +225,97 @@ final readonly class AlterTableBuilder implements AlterTableFinalStep
         $node->setRangeVar($rangeVar);
         $cmd->setDef($node);
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function enableTrigger(string $trigger) : AlterTableFinalStep
+    public function enableTrigger(string $trigger): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_EnableTrig);
         $cmd->setName($trigger);
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function enableTriggerAll() : AlterTableFinalStep
+    public function enableTriggerAll(): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_EnableTrigAll);
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function enableTriggerAlways(string $trigger) : AlterTableFinalStep
+    public function enableTriggerAlways(string $trigger): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_EnableAlwaysTrig);
         $cmd->setName($trigger);
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function enableTriggerReplica(string $trigger) : AlterTableFinalStep
+    public function enableTriggerReplica(string $trigger): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_EnableReplicaTrig);
         $cmd->setName($trigger);
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function enableTriggerUser() : AlterTableFinalStep
+    public function enableTriggerUser(): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_EnableTrigUser);
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function ifExists() : AlterTableFinalStep
+    public function ifExists(): AlterTableFinalStep
     {
-        return new self(
-            $this->table,
-            $this->schema,
-            $this->commands,
-            true,
-        );
+        return new self($this->table, $this->schema, $this->commands, true);
     }
 
-    public function renameColumn(string $oldName, string $newName) : RenameTableBuilder
+    public function renameColumn(string $oldName, string $newName): RenameTableBuilder
     {
         return RenameTableBuilder::renameColumn($this->table, $this->schema, $oldName, $newName, $this->ifExists);
     }
 
-    public function renameConstraint(string $oldName, string $newName) : RenameTableBuilder
+    public function renameConstraint(string $oldName, string $newName): RenameTableBuilder
     {
         return RenameTableBuilder::renameConstraint($this->table, $this->schema, $oldName, $newName, $this->ifExists);
     }
 
-    public function renameTo(string $newName) : RenameTableBuilder
+    public function renameTo(string $newName): RenameTableBuilder
     {
         return RenameTableBuilder::renameTo($this->table, $this->schema, $newName, $this->ifExists);
     }
 
-    public function setLogged() : AlterTableLoggingFinalStep
+    public function setLogged(): AlterTableLoggingFinalStep
     {
         return AlterTableLoggingBuilder::createLogged($this->table, $this->schema, $this->ifExists);
     }
 
-    public function setSchema(string $schema) : AlterTableSchemaBuilder
+    public function setSchema(string $schema): AlterTableSchemaBuilder
     {
         return AlterTableSchemaBuilder::create($this->table, $this->schema, $schema, $this->ifExists);
     }
 
-    public function setTablespace(string $tablespace) : AlterTableFinalStep
+    public function setTablespace(string $tablespace): AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
         $cmd->setSubtype(AlterTableType::AT_SetTableSpace);
         $cmd->setName($tablespace);
 
-        return new self(
-            $this->table,
-            $this->schema,
-            [...$this->commands, $cmd],
-            $this->ifExists,
-        );
+        return new self($this->table, $this->schema, [...$this->commands, $cmd], $this->ifExists);
     }
 
-    public function setUnlogged() : AlterTableLoggingFinalStep
+    public function setUnlogged(): AlterTableLoggingFinalStep
     {
         return AlterTableLoggingBuilder::createUnlogged($this->table, $this->schema, $this->ifExists);
     }
 
-    public function toAst() : AlterTableStmt
+    public function toAst(): AlterTableStmt
     {
         $stmt = new AlterTableStmt();
 

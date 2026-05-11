@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ArrayDot\Tests\Unit;
 
-use function Flow\ArrayDot\array_dot_rename;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\ArrayDot\array_dot_rename;
 
 final class ArrayDotRenameTest extends TestCase
 {
-    public function test_renames_array_by_path() : void
+    public function test_renames_array_by_path(): void
     {
-        self::assertSame(
+        static::assertSame(
             [
                 'users' => [
                     ['id' => 1, 'user_name' => 'John'],
@@ -26,14 +27,14 @@ final class ArrayDotRenameTest extends TestCase
                     ],
                 ],
                 'users.0.name',
-                'user_name'
-            )
+                'user_name',
+            ),
         );
     }
 
-    public function test_renames_array_by_path_with_asterix() : void
+    public function test_renames_array_by_path_with_asterix(): void
     {
-        self::assertSame(
+        static::assertSame(
             [
                 'users' => [
                     ['id' => 1, 'user_name' => 'John'],
@@ -48,14 +49,14 @@ final class ArrayDotRenameTest extends TestCase
                     ],
                 ],
                 'users.*.name',
-                'user_name'
-            )
+                'user_name',
+            ),
         );
     }
 
-    public function test_renames_array_by_path_with_asterix_as_a_key() : void
+    public function test_renames_array_by_path_with_asterix_as_a_key(): void
     {
-        self::assertSame(
+        static::assertSame(
             [
                 'users' => [
                     'john' => ['id' => 1],
@@ -72,14 +73,14 @@ final class ArrayDotRenameTest extends TestCase
                     ],
                 ],
                 'users.\\*.id',
-                'asterix_id'
-            )
+                'asterix_id',
+            ),
         );
     }
 
-    public function test_renames_array_by_path_with_multiple_asterix() : void
+    public function test_renames_array_by_path_with_multiple_asterix(): void
     {
-        self::assertSame(
+        static::assertSame(
             [
                 'transactions' => [
                     [
@@ -128,14 +129,14 @@ final class ArrayDotRenameTest extends TestCase
                     ],
                 ],
                 'transactions.*.packages.*.id',
-                'label_id'
+                'label_id',
             ),
         );
     }
 
-    public function test_renames_array_root_key_name() : void
+    public function test_renames_array_root_key_name(): void
     {
-        self::assertEquals(
+        static::assertEquals(
             [
                 'admins' => [
                     ['id' => 1, 'name' => 'John'],
@@ -152,8 +153,8 @@ final class ArrayDotRenameTest extends TestCase
                     'status' => 'active',
                 ],
                 'users',
-                'admins'
-            )
+                'admins',
+            ),
         );
     }
 }

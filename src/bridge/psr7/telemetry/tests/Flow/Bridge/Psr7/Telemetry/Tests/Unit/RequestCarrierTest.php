@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 
 final class RequestCarrierTest extends TestCase
 {
-    public function test_extract_baggage_from_request() : void
+    public function test_extract_baggage_from_request(): void
     {
         $request = new ServerRequest('GET', '/api/users', [
             'baggage' => 'userId=alice,serverNode=DF28',
@@ -19,10 +19,10 @@ final class RequestCarrierTest extends TestCase
 
         $carrier = new RequestCarrier($request);
 
-        self::assertSame('userId=alice,serverNode=DF28', $carrier->get('baggage'));
+        static::assertSame('userId=alice,serverNode=DF28', $carrier->get('baggage'));
     }
 
-    public function test_extract_traceparent_from_request() : void
+    public function test_extract_traceparent_from_request(): void
     {
         $request = new ServerRequest('GET', '/api/users', [
             'traceparent' => '00-0af7651916cd43dd8448eb211c80319c-00f067aa0ba902b7-01',
@@ -30,13 +30,10 @@ final class RequestCarrierTest extends TestCase
 
         $carrier = new RequestCarrier($request);
 
-        self::assertSame(
-            '00-0af7651916cd43dd8448eb211c80319c-00f067aa0ba902b7-01',
-            $carrier->get('traceparent'),
-        );
+        static::assertSame('00-0af7651916cd43dd8448eb211c80319c-00f067aa0ba902b7-01', $carrier->get('traceparent'));
     }
 
-    public function test_get_is_case_insensitive() : void
+    public function test_get_is_case_insensitive(): void
     {
         $request = new ServerRequest('GET', '/api/users', [
             'X-Custom-Header' => 'custom-value',
@@ -44,12 +41,12 @@ final class RequestCarrierTest extends TestCase
 
         $carrier = new RequestCarrier($request);
 
-        self::assertSame('custom-value', $carrier->get('x-custom-header'));
-        self::assertSame('custom-value', $carrier->get('X-CUSTOM-HEADER'));
-        self::assertSame('custom-value', $carrier->get('X-Custom-Header'));
+        static::assertSame('custom-value', $carrier->get('x-custom-header'));
+        static::assertSame('custom-value', $carrier->get('X-CUSTOM-HEADER'));
+        static::assertSame('custom-value', $carrier->get('X-Custom-Header'));
     }
 
-    public function test_get_returns_header_value() : void
+    public function test_get_returns_header_value(): void
     {
         $request = new ServerRequest('GET', '/api/users', [
             'X-Custom-Header' => 'custom-value',
@@ -57,19 +54,19 @@ final class RequestCarrierTest extends TestCase
 
         $carrier = new RequestCarrier($request);
 
-        self::assertSame('custom-value', $carrier->get('X-Custom-Header'));
+        static::assertSame('custom-value', $carrier->get('X-Custom-Header'));
     }
 
-    public function test_get_returns_null_for_missing_header() : void
+    public function test_get_returns_null_for_missing_header(): void
     {
         $request = new ServerRequest('GET', '/api/users');
 
         $carrier = new RequestCarrier($request);
 
-        self::assertNull($carrier->get('nonexistent'));
+        static::assertNull($carrier->get('nonexistent'));
     }
 
-    public function test_set_throws_runtime_exception() : void
+    public function test_set_throws_runtime_exception(): void
     {
         $request = new ServerRequest('GET', '/api/users');
 
@@ -81,7 +78,7 @@ final class RequestCarrierTest extends TestCase
         $carrier->set('key', 'value');
     }
 
-    public function test_unwrap_returns_original_request() : void
+    public function test_unwrap_returns_original_request(): void
     {
         $request = new ServerRequest('GET', '/api/users', [
             'X-Custom-Header' => 'custom-value',
@@ -89,6 +86,6 @@ final class RequestCarrierTest extends TestCase
 
         $carrier = new RequestCarrier($request);
 
-        self::assertSame($request, $carrier->unwrap());
+        static::assertSame($request, $carrier->unwrap());
     }
 }

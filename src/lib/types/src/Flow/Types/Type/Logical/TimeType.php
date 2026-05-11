@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use function Flow\Types\DSL\type_time;
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+
+use function Flow\Types\DSL\type_time;
 
 /**
  * @implements Type<\DateInterval>
  */
 final readonly class TimeType implements Type
 {
-    public function assert(mixed $value) : \DateInterval
+    public function assert(mixed $value): \DateInterval
     {
         if ($this->isValid($value)) {
             return $value;
@@ -22,7 +24,7 @@ final readonly class TimeType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
-    public function cast(mixed $value) : \DateInterval
+    public function cast(mixed $value): \DateInterval
     {
         if ($this->isValid($value)) {
             return $value;
@@ -47,19 +49,19 @@ final readonly class TimeType implements Type
         throw new CastingException($value, $this);
     }
 
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return $value instanceof \DateInterval;
     }
 
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'time',
         ];
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return 'time';
     }

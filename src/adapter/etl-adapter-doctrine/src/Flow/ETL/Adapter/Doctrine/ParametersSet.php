@@ -22,7 +22,7 @@ final readonly class ParametersSet
     /**
      * @return array<array<string, mixed>>|array<list<mixed>>
      */
-    public function all() : array
+    public function all(): array
     {
         return $this->parameters;
     }

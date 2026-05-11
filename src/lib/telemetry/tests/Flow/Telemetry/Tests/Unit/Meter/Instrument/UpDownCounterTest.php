@@ -6,12 +6,14 @@ namespace Flow\Telemetry\Tests\Unit\Meter\Instrument;
 
 use Flow\Telemetry\Meter\Instrument\UpDownCounter;
 use Flow\Telemetry\Meter\MetricType;
-use Flow\Telemetry\Tests\Mother\{ClockMother, InstrumentationScopeMother, ResourceMother};
+use Flow\Telemetry\Tests\Mother\ClockMother;
+use Flow\Telemetry\Tests\Mother\InstrumentationScopeMother;
+use Flow\Telemetry\Tests\Mother\ResourceMother;
 use PHPUnit\Framework\TestCase;
 
 final class UpDownCounterTest extends TestCase
 {
-    public function test_add_multiple_values_aggregates() : void
+    public function test_add_multiple_values_aggregates(): void
     {
         $counter = new UpDownCounter(
             'test.updowncounter',
@@ -26,11 +28,11 @@ final class UpDownCounterTest extends TestCase
 
         $metrics = $counter->collect();
 
-        self::assertCount(1, $metrics);
-        self::assertSame(12, $metrics[0]->value);
+        static::assertCount(1, $metrics);
+        static::assertSame(12, $metrics[0]->value);
     }
 
-    public function test_add_negative_value() : void
+    public function test_add_negative_value(): void
     {
         $counter = new UpDownCounter(
             'test.updowncounter',
@@ -44,11 +46,11 @@ final class UpDownCounterTest extends TestCase
 
         $metrics = $counter->collect();
 
-        self::assertCount(1, $metrics);
-        self::assertSame(70, $metrics[0]->value);
+        static::assertCount(1, $metrics);
+        static::assertSame(70, $metrics[0]->value);
     }
 
-    public function test_add_positive_value() : void
+    public function test_add_positive_value(): void
     {
         $counter = new UpDownCounter(
             'test.updowncounter',
@@ -61,11 +63,11 @@ final class UpDownCounterTest extends TestCase
 
         $metrics = $counter->collect();
 
-        self::assertCount(1, $metrics);
-        self::assertSame(42, $metrics[0]->value);
+        static::assertCount(1, $metrics);
+        static::assertSame(42, $metrics[0]->value);
     }
 
-    public function test_collect_resets_counter() : void
+    public function test_collect_resets_counter(): void
     {
         $counter = new UpDownCounter(
             'test.updowncounter',
@@ -80,11 +82,11 @@ final class UpDownCounterTest extends TestCase
         $counter->add(50);
         $metrics = $counter->collect();
 
-        self::assertCount(1, $metrics);
-        self::assertSame(50, $metrics[0]->value);
+        static::assertCount(1, $metrics);
+        static::assertSame(50, $metrics[0]->value);
     }
 
-    public function test_different_attributes_create_separate_aggregations() : void
+    public function test_different_attributes_create_separate_aggregations(): void
     {
         $counter = new UpDownCounter(
             'test.updowncounter',
@@ -99,18 +101,21 @@ final class UpDownCounterTest extends TestCase
 
         $metrics = $counter->collect();
 
-        self::assertCount(2, $metrics);
+        static::assertCount(2, $metrics);
 
-        $tasksMetrics = \array_values(\array_filter($metrics, static fn ($m) => $m->attributes->get('queue') === 'tasks'));
-        $jobsMetrics = \array_values(\array_filter($metrics, static fn ($m) => $m->attributes->get('queue') === 'jobs'));
+        $tasksMetrics = \array_values(\array_filter(
+            $metrics,
+            static fn($m) => $m->attributes->get('queue') === 'tasks',
+        ));
+        $jobsMetrics = \array_values(\array_filter($metrics, static fn($m) => $m->attributes->get('queue') === 'jobs'));
 
-        self::assertCount(1, $tasksMetrics);
-        self::assertCount(1, $jobsMetrics);
-        self::assertSame(5, $tasksMetrics[0]->value);
-        self::assertSame(3, $jobsMetrics[0]->value);
+        static::assertCount(1, $tasksMetrics);
+        static::assertCount(1, $jobsMetrics);
+        static::assertSame(5, $tasksMetrics[0]->value);
+        static::assertSame(3, $jobsMetrics[0]->value);
     }
 
-    public function test_up_down_counter_returns_correct_metric_type() : void
+    public function test_up_down_counter_returns_correct_metric_type(): void
     {
         $counter = new UpDownCounter(
             'test.updowncounter',
@@ -122,10 +127,10 @@ final class UpDownCounterTest extends TestCase
         $counter->add(1);
         $metrics = $counter->collect();
 
-        self::assertSame(MetricType::UP_DOWN_COUNTER, $metrics[0]->type);
+        static::assertSame(MetricType::UP_DOWN_COUNTER, $metrics[0]->type);
     }
 
-    public function test_up_down_counter_starts_at_zero() : void
+    public function test_up_down_counter_starts_at_zero(): void
     {
         $counter = new UpDownCounter(
             'test.updowncounter',
@@ -136,6 +141,6 @@ final class UpDownCounterTest extends TestCase
 
         $metrics = $counter->collect();
 
-        self::assertCount(0, $metrics);
+        static::assertCount(0, $metrics);
     }
 }

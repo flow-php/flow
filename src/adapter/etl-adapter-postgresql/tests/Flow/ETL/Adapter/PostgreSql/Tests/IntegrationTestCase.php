@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\Tests;
 
-use function Flow\Bridge\PHPUnit\PostgreSQL\DSL\static_pgsql_client;
-use function Flow\PostgreSql\DSL\pgsql_connection_dsn;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\PostgreSql\Client\Client;
+
+use function Flow\Bridge\PHPUnit\PostgreSQL\DSL\static_pgsql_client;
+use function Flow\PostgreSql\DSL\pgsql_connection_dsn;
 
 abstract class IntegrationTestCase extends FlowTestCase
 {
     protected Client $client;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('pgsql')) {
             static::markTestSkipped('ext-pgsql is not available');

@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql;
 
-use function Flow\ETL\DSL\array_to_rows;
-use function Flow\PostgreSql\DSL\{sql_parse, sql_query_order_by, sql_to_count_query, sql_to_paginated_query};
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Extractor, FlowContext, Schema};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\Sql;
+
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\PostgreSql\DSL\sql_parse;
+use function Flow\PostgreSql\DSL\sql_query_order_by;
+use function Flow\PostgreSql\DSL\sql_to_count_query;
+use function Flow\PostgreSql\DSL\sql_to_paginated_query;
 
 final class PostgreSqlLimitOffsetExtractor implements Extractor
 {
@@ -27,17 +33,15 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
         private readonly Client $client,
         private readonly string|Sql $query,
         private readonly array $parameters = [],
-    ) {
-    }
+    ) {}
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
-        $uri = 'postgresql://limit-offset';
         $sql = $this->query instanceof Sql ? $this->query->toSql() : $this->query;
 
         if (!sql_query_order_by(sql_parse($sql))->hasOrderBy()) {
             throw new InvalidArgumentException(
-                'LIMIT/OFFSET pagination requires ORDER BY clause for deterministic results'
+                'LIMIT/OFFSET pagination requires ORDER BY clause for deterministic results',
             );
         }
 
@@ -79,7 +83,7 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
         }
     }
 
-    public function withMaximum(int $maximum) : self
+    public function withMaximum(int $maximum): self
     {
         if ($maximum <= 0) {
             throw new InvalidArgumentException('Maximum must be greater than 0, got ' . $maximum);
@@ -90,7 +94,7 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
         return $this;
     }
 
-    public function withPageSize(int $pageSize) : self
+    public function withPageSize(int $pageSize): self
     {
         if ($pageSize <= 0) {
             throw new InvalidArgumentException('Page size must be greater than 0, got ' . $pageSize);
@@ -101,19 +105,19 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
         return $this;
     }
 
-    public function withSchema(Schema $schema) : self
+    public function withSchema(Schema $schema): self
     {
         $this->schema = $schema;
 
         return $this;
     }
 
-    private function applyPagination(string $sql, int $limit, int $offset) : string
+    private function applyPagination(string $sql, int $limit, int $offset): string
     {
         return sql_to_paginated_query($sql, $limit, $offset);
     }
 
-    private function countTotal(string $sql) : int
+    private function countTotal(string $sql): int
     {
         return $this->client->fetchScalarInt(sql_to_count_query($sql), $this->parameters);
     }

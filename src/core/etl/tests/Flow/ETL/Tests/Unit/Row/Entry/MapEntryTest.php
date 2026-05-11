@@ -4,15 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
-use function Flow\ETL\DSL\{map_entry, map_schema};
-use function Flow\Types\DSL\{type_boolean, type_datetime, type_float, type_integer, type_map, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\map_entry;
+use function Flow\ETL\DSL\map_schema;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
+
 final class MapEntryTest extends FlowTestCase
 {
-    public function test_create_with_empty_name() : void
+    public function test_create_with_empty_name(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Entry name cannot be empty');
@@ -20,7 +27,7 @@ final class MapEntryTest extends FlowTestCase
         map_entry('', ['one', 'two', 'three'], type_map(type_integer(), type_string()));
     }
 
-    public function test_creating_boolean_map_from_wrong_value_types() : void
+    public function test_creating_boolean_map_from_wrong_value_types(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected map<integer, boolean> got different types: array<mixed>');
@@ -28,7 +35,7 @@ final class MapEntryTest extends FlowTestCase
         map_entry('map', ['string', false], type_map(type_integer(), type_boolean()));
     }
 
-    public function test_creating_datetime_map_from_wrong_value_types() : void
+    public function test_creating_datetime_map_from_wrong_value_types(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected map<integer, datetime> got different types: array<mixed>');
@@ -36,7 +43,7 @@ final class MapEntryTest extends FlowTestCase
         map_entry('map', ['string', new \DateTimeImmutable()], type_map(type_integer(), type_datetime()));
     }
 
-    public function test_creating_float_map_from_wrong_value_types() : void
+    public function test_creating_float_map_from_wrong_value_types(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected map<integer, float> got different types: array<mixed>');
@@ -44,7 +51,7 @@ final class MapEntryTest extends FlowTestCase
         map_entry('map', ['string', 1.3], type_map(type_integer(), type_float()));
     }
 
-    public function test_creating_integer_map_from_wrong_value_types() : void
+    public function test_creating_integer_map_from_wrong_value_types(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected map<integer, integer> got different types: array<mixed>');
@@ -52,7 +59,7 @@ final class MapEntryTest extends FlowTestCase
         map_entry('map', ['string', 1], type_map(type_integer(), type_integer()));
     }
 
-    public function test_creating_map_from_not_map_array() : void
+    public function test_creating_map_from_not_map_array(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected map<integer, integer> got different types: map<string, integer>');
@@ -60,7 +67,7 @@ final class MapEntryTest extends FlowTestCase
         map_entry('map', ['a' => 1, 'b' => 2], type_map(type_integer(), type_integer()));
     }
 
-    public function test_creating_string_map_from_wrong_value_types() : void
+    public function test_creating_string_map_from_wrong_value_types(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected map<integer, string> got different types: array<mixed>');
@@ -68,92 +75,99 @@ final class MapEntryTest extends FlowTestCase
         map_entry('map', ['string', 1], type_map(type_integer(), type_string()));
     }
 
-    public function test_definition() : void
+    public function test_definition(): void
     {
-        self::assertEquals(
+        static::assertEquals(
             map_schema('strings', type_map(type_integer(), type_string())),
-            (map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string())))->definition()
+            map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string()))->definition(),
         );
     }
 
-    public function test_duplicating_entry() : void
+    public function test_duplicating_entry(): void
     {
         $entry = map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string()));
         $duplicated = $entry->duplicate();
 
-        self::assertNotSame($entry, $duplicated);
-        self::assertEquals($entry, $duplicated);
+        static::assertNotSame($entry, $duplicated);
+        static::assertEquals($entry, $duplicated);
     }
 
-    public function test_is_equal() : void
+    public function test_is_equal(): void
     {
-        self::assertTrue(
-            (map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string())))
-                ->isEqual((map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string()))))
-        );
-        self::assertFalse(
-            (map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string())))
-                ->isEqual(map_entry('strings', [1, 2, 3], type_map(type_integer(), type_integer())))
-        );
-        self::assertTrue(
-            (map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string())))
-                ->isEqual((map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string()))))
-        );
+        static::assertTrue(map_entry(
+            'strings',
+            ['one', 'two', 'three'],
+            type_map(type_integer(), type_string()),
+        )->isEqual(map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string()))));
+        static::assertFalse(map_entry(
+            'strings',
+            ['one', 'two', 'three'],
+            type_map(type_integer(), type_string()),
+        )->isEqual(map_entry('strings', [1, 2, 3], type_map(type_integer(), type_integer()))));
+        static::assertTrue(map_entry(
+            'strings',
+            ['one', 'two', 'three'],
+            type_map(type_integer(), type_string()),
+        )->isEqual(map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string()))));
     }
 
-    public function test_map() : void
+    public function test_map(): void
     {
-        self::assertEquals(
-            (map_entry('strings', ['one, two, three'], type_map(type_integer(), type_string()))),
-            (map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string())))->map(static fn (array $value) : array => [\implode(', ', $value)])
+        static::assertEquals(
+            map_entry('strings', ['one, two, three'], type_map(type_integer(), type_string())),
+            map_entry(
+                'strings',
+                ['one', 'two', 'three'],
+                type_map(type_integer(), type_string()),
+            )->map(static fn(array $value): array => [\implode(', ', $value)]),
         );
     }
 
-    public function test_rename() : void
+    public function test_rename(): void
     {
-        self::assertEquals(
-            (map_entry('new_name', ['one', 'two', 'three'], type_map(type_integer(), type_string()))),
-            (map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string())))->rename('new_name')
+        static::assertEquals(
+            map_entry('new_name', ['one', 'two', 'three'], type_map(type_integer(), type_string())),
+            map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string()))->rename('new_name'),
         );
     }
 
-    public function test_rename_preserves_metadata() : void
+    public function test_rename_preserves_metadata(): void
     {
         $metadata = Metadata::fromArray(['description' => 'test metadata', 'priority' => 1]);
         $entry = map_entry('old_name', ['one', 'two', 'three'], type_map(type_integer(), type_string()), $metadata);
 
         $renamedEntry = $entry->rename('new_name');
 
-        self::assertSame('new_name', $renamedEntry->name());
-        self::assertEquals(['one', 'two', 'three'], $renamedEntry->value());
-        self::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
+        static::assertSame('new_name', $renamedEntry->name());
+        static::assertEquals(['one', 'two', 'three'], $renamedEntry->value());
+        static::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
 
-    public function test_to_string() : void
+    public function test_to_string(): void
     {
-        self::assertSame(
+        static::assertSame(
             '["one","two","three"]',
-            (map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string())))->toString()
+            map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string()))->toString(),
         );
     }
 
-    public function test_type() : void
+    public function test_type(): void
     {
-        self::assertEquals(
+        static::assertEquals(
             type_map(type_integer(), type_string()),
-            (map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string())))->type()
+            map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string()))->type(),
         );
     }
 
-    public function test_value() : void
+    public function test_value(): void
     {
-        self::assertSame(
+        static::assertSame(
             ['one', 'two', 'three'],
-            (map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string())))->value()
+            map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string()))->value(),
         );
-        self::assertSame(
+        static::assertSame(
             ['one' => 'two'],
-            (map_entry('strings', ['one' => 'two'], type_map(type_string(), type_string())))->value()
+            map_entry('strings', ['one' => 'two'], type_map(type_string(), type_string()))->value(),
         );
     }
 }

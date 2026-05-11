@@ -4,12 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
-use function Flow\ETL\DSL\{array_to_row, rows};
-use Flow\ETL\{Exception\InvalidArgumentException, Extractor, FlowContext};
-use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PathFiltering, Signal};
-use Flow\Filesystem\{Path, SourceStream};
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\FileExtractor;
+use Flow\ETL\Extractor\Limitable;
+use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\PathFiltering;
+use Flow\ETL\Extractor\Signal;
+use Flow\ETL\FlowContext;
+use Flow\Filesystem\Path;
+use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Binary\ByteOrder;
-use Flow\Parquet\{Options, ParquetFile, Reader};
+use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile;
+use Flow\Parquet\Reader;
+
+use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\rows;
 
 final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -32,14 +43,15 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     /**
      * @param Path $path
      */
-    public function __construct(private readonly Path $path)
-    {
+    public function __construct(
+        private readonly Path $path,
+    ) {
         $this->resetLimit();
         $this->schemaConverter = new SchemaConverter();
         $this->options = Options::default();
     }
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
@@ -66,7 +78,12 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
                     $row['_input_file_uri'] = $uri;
                 }
 
-                $signal = yield rows(array_to_row($row, $context->entryFactory(), $fileData['stream']->path()->partitions(), $flowSchema));
+                $signal = yield rows(array_to_row(
+                    $row,
+                    $context->entryFactory(),
+                    $fileData['stream']->path()->partitions(),
+                    $flowSchema,
+                ));
 
                 $this->incrementReturnedRows();
 
@@ -82,12 +99,12 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
         }
     }
 
-    public function source() : Path
+    public function source(): Path
     {
         return $this->path;
     }
 
-    public function withByteOrder(ByteOrder $byteOrder) : self
+    public function withByteOrder(ByteOrder $byteOrder): self
     {
         $this->byteOrder = $byteOrder;
 
@@ -97,14 +114,14 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     /**
      * @param array<string> $columns
      */
-    public function withColumns(array $columns) : self
+    public function withColumns(array $columns): self
     {
         $this->columns = $columns;
 
         return $this;
     }
 
-    public function withOffset(int $offset) : self
+    public function withOffset(int $offset): self
     {
         if ($offset < 0) {
             throw new InvalidArgumentException('Offset must be greater or equal to 0');
@@ -115,7 +132,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
         return $this;
     }
 
-    public function withOptions(Options $options) : self
+    public function withOptions(Options $options): self
     {
         $this->options = $options;
 
@@ -125,12 +142,11 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     /**
      * @return \Generator<int, array{file: ParquetFile, stream: SourceStream}>
      */
-    private function readers(FlowContext $context) : \Generator
+    private function readers(FlowContext $context): \Generator
     {
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
             yield [
-                'file' => (new Reader(byteOrder: $this->byteOrder, options: $this->options))
-                    ->readStream($stream),
+                'file' => (new Reader(byteOrder: $this->byteOrder, options: $this->options))->readStream($stream),
                 'stream' => $stream,
             ];
         }

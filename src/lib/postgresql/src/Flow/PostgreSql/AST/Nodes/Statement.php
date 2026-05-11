@@ -20,7 +20,7 @@ interface Statement
      *
      * @return S
      */
-    public function assert(string $statementClass) : self;
+    public function assert(string $statementClass): self;
 
     /**
      * @return T

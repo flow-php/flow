@@ -16,7 +16,7 @@ final class DistinctCounter
         $this->hashSet = [];
     }
 
-    public function add(string|float|int|\DateTimeInterface|bool $value) : void
+    public function add(string|float|int|\DateTimeInterface|bool $value): void
     {
         // Normalize value to string for hashing
         if ($value instanceof \DateTimeInterface) {
@@ -30,7 +30,7 @@ final class DistinctCounter
         }
     }
 
-    public function count() : int
+    public function count(): int
     {
         return \count($this->hashSet);
     }

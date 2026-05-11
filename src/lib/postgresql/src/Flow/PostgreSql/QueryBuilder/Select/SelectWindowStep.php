@@ -8,5 +8,5 @@ use Flow\PostgreSql\QueryBuilder\Clause\WindowDefinition;
 
 interface SelectWindowStep extends SelectSetOperationStep
 {
-    public function window(WindowDefinition ...$windows) : SelectSetOperationStep;
+    public function window(WindowDefinition ...$windows): SelectSetOperationStep;
 }

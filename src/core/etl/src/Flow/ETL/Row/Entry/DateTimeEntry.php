@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_equals, type_optional};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition\DateTimeDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
+
+use function Flow\Types\DSL\type_equals;
+use function Flow\Types\DSL\type_optional;
 
 /**
  * @implements Entry<?\DateTimeInterface>
@@ -38,7 +41,10 @@ final class DateTimeEntry implements Entry
             try {
                 $this->value = new \DateTimeImmutable($value);
             } catch (\Exception $e) {
-                throw new InvalidArgumentException("Invalid value given: '{$value}', reason: " . $e->getMessage(), previous: $e);
+                throw new InvalidArgumentException(
+                    "Invalid value given: '{$value}', reason: " . $e->getMessage(),
+                    previous: $e,
+                );
             }
         } elseif ($value instanceof \DateTime) {
             $this->value = \DateTimeImmutable::createFromMutable($value);
@@ -49,22 +55,22 @@ final class DateTimeEntry implements Entry
         $this->definition = new DateTimeDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
-    public function __toString() : string
+    public function __toString(): string
     {
         return $this->toString();
     }
 
-    public function definition() : DateTimeDefinition
+    public function definition(): DateTimeDefinition
     {
         return $this->definition;
     }
 
-    public function duplicate() : static
+    public function duplicate(): static
     {
         return new self($this->name, $this->value ? clone $this->value : null, $this->definition->metadata());
     }
 
-    public function is(string|Reference $name) : bool
+    public function is(string|Reference $name): bool
     {
         if ($name instanceof Reference) {
             return $this->name === $name->name();
@@ -73,27 +79,32 @@ final class DateTimeEntry implements Entry
         return $this->name === $name;
     }
 
-    public function isEqual(Entry $entry) : bool
+    public function isEqual(Entry $entry): bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type(), $entry->type()) && $this->value() == $entry->value();
+        return (
+            $this->is($entry->name())
+            && $entry instanceof self
+            && type_equals($this->type(), $entry->type())
+            && $this->value() == $entry->value()
+        );
     }
 
-    public function map(callable $mapper) : static
+    public function map(callable $mapper): static
     {
         return new self($this->name, $mapper($this->value));
     }
 
-    public function name() : string
+    public function name(): string
     {
         return $this->name;
     }
 
-    public function rename(string $name) : static
+    public function rename(string $name): static
     {
         return new self($name, $this->value, $this->definition->metadata());
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         $value = $this->value;
 
@@ -104,17 +115,17 @@ final class DateTimeEntry implements Entry
         return $value->format(\DateTimeInterface::ATOM);
     }
 
-    public function type() : Type
+    public function type(): Type
     {
         return $this->definition->type();
     }
 
-    public function value() : ?\DateTimeInterface
+    public function value(): ?\DateTimeInterface
     {
         return $this->value;
     }
 
-    public function withValue(mixed $value) : static
+    public function withValue(mixed $value): static
     {
         return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }

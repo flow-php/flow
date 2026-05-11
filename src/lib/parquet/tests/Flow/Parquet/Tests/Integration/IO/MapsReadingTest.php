@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use Flow\Parquet\{ParquetEngine, Reader};
+use Flow\Parquet\ParquetEngine;
+use Flow\Parquet\Reader;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class MapsReadingTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
-    public function test_reading_map_column(ParquetEngine $engine) : void
+    public function test_reading_map_column(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/maps.parquet');
@@ -30,7 +31,7 @@ class MapsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_map_nullable_column(ParquetEngine $engine) : void
+    public function test_reading_map_nullable_column(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/maps.parquet');
@@ -41,7 +42,7 @@ class MapsReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['map_nullable']) as $rowIndex => $row) {
-            if ($rowIndex % 2 === 0) {
+            if (($rowIndex % 2) === 0) {
                 static::assertIsString(\array_key_first($row['map_nullable']));
                 static::assertIsInt($row['map_nullable'][\array_key_first($row['map_nullable'])]);
             } else {
@@ -54,7 +55,7 @@ class MapsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_map_of_complex_lists(ParquetEngine $engine) : void
+    public function test_reading_map_of_complex_lists(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/maps.parquet');
@@ -77,13 +78,16 @@ class MapsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_map_of_list_of_map_of_lists(ParquetEngine $engine) : void
+    public function test_reading_map_of_list_of_map_of_lists(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/maps.parquet');
 
         static::assertNull($file->metadata()->schema()->get('map_of_list_of_map_of_lists')->type());
-        static::assertEquals('MAP', $file->metadata()->schema()->get('map_of_list_of_map_of_lists')->logicalType()->name());
+        static::assertEquals(
+            'MAP',
+            $file->metadata()->schema()->get('map_of_list_of_map_of_lists')->logicalType()->name(),
+        );
 
         $count = 0;
 
@@ -101,7 +105,7 @@ class MapsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_map_of_lists(ParquetEngine $engine) : void
+    public function test_reading_map_of_lists(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/maps.parquet');
@@ -123,7 +127,7 @@ class MapsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_map_of_maps_column(ParquetEngine $engine) : void
+    public function test_reading_map_of_maps_column(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/maps.parquet');
@@ -144,13 +148,16 @@ class MapsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_map_of_struct_of_structs_column(ParquetEngine $engine) : void
+    public function test_reading_map_of_struct_of_structs_column(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/maps.parquet');
 
         static::assertNull($file->metadata()->schema()->get('map_of_struct_of_structs')->type());
-        static::assertEquals('MAP', $file->metadata()->schema()->get('map_of_struct_of_structs')->logicalType()->name());
+        static::assertEquals(
+            'MAP',
+            $file->metadata()->schema()->get('map_of_struct_of_structs')->logicalType()->name(),
+        );
 
         $count = 0;
 
@@ -166,13 +173,16 @@ class MapsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_map_of_struct_of_structs_column_with_limit(ParquetEngine $engine) : void
+    public function test_reading_map_of_struct_of_structs_column_with_limit(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/maps.parquet');
 
         static::assertNull($file->metadata()->schema()->get('map_of_struct_of_structs')->type());
-        static::assertEquals('MAP', $file->metadata()->schema()->get('map_of_struct_of_structs')->logicalType()->name());
+        static::assertEquals(
+            'MAP',
+            $file->metadata()->schema()->get('map_of_struct_of_structs')->logicalType()->name(),
+        );
 
         $count = 0;
 
@@ -187,7 +197,7 @@ class MapsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_map_of_structs_column(ParquetEngine $engine) : void
+    public function test_reading_map_of_structs_column(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/maps.parquet');

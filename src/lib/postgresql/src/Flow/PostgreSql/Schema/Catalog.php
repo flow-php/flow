@@ -18,31 +18,25 @@ final readonly class Catalog
      */
     public function __construct(
         private array $schemas,
-    ) {
-    }
+    ) {}
 
     /**
      * @param CatalogShape $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
-        return new self(
-            schemas: \array_map(
-                static fn (array $s) : Schema => Schema::fromArray($s),
-                $data['schemas'],
-            ),
-        );
+        return new self(schemas: \array_map(static fn(array $s): Schema => Schema::fromArray($s), $data['schemas']));
     }
 
     /**
      * @return list<Schema>
      */
-    public function all() : array
+    public function all(): array
     {
         return $this->schemas;
     }
 
-    public function get(string $name) : Schema
+    public function get(string $name): Schema
     {
         foreach ($this->schemas as $schema) {
             if ($schema->name === $name) {
@@ -53,7 +47,7 @@ final readonly class Catalog
         throw new SchemaException(\sprintf('Schema "%s" not found in catalog.', $name));
     }
 
-    public function has(string $name) : bool
+    public function has(string $name): bool
     {
         foreach ($this->schemas as $schema) {
             if ($schema->name === $name) {
@@ -64,7 +58,7 @@ final readonly class Catalog
         return false;
     }
 
-    public function merge(self $other) : self
+    public function merge(self $other): self
     {
         $schemas = [];
 
@@ -84,24 +78,18 @@ final readonly class Catalog
     /**
      * @return list<string>
      */
-    public function names() : array
+    public function names(): array
     {
-        return \array_map(
-            static fn (Schema $s) : string => $s->name,
-            $this->schemas,
-        );
+        return \array_map(static fn(Schema $s): string => $s->name, $this->schemas);
     }
 
     /**
      * @return CatalogShape
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
-            'schemas' => \array_map(
-                static fn (Schema $s) : array => $s->normalize(),
-                $this->schemas,
-            ),
+            'schemas' => \array_map(static fn(Schema $s): array => $s->normalize(), $this->schemas),
         ];
     }
 }

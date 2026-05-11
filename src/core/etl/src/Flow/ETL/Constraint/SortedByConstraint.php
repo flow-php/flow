@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Constraint;
 
-use Flow\ETL\{Constraint, Row};
-use Flow\ETL\Row\{Reference, References};
+use Flow\ETL\Constraint;
+use Flow\ETL\Row;
+use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
 use Flow\ETL\Row\SortOrder;
 
 final class SortedByConstraint implements Constraint
@@ -24,7 +26,7 @@ final class SortedByConstraint implements Constraint
         $this->references = new References($column, ...$columns);
     }
 
-    public function isSatisfiedBy(Row $row) : bool
+    public function isSatisfiedBy(Row $row): bool
     {
         if ($this->firstRow) {
             foreach ($this->references->all() as $reference) {
@@ -64,7 +66,7 @@ final class SortedByConstraint implements Constraint
         return true;
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         $columns = [];
 
@@ -72,13 +74,10 @@ final class SortedByConstraint implements Constraint
             $columns[] = $reference->name() . ' ' . $reference->sort()->name;
         }
 
-        return sprintf(
-            'Sorted constraint on [%s]',
-            \implode(', ', $columns)
-        );
+        return sprintf('Sorted constraint on [%s]', \implode(', ', $columns));
     }
 
-    public function violation(Row $row) : string
+    public function violation(Row $row): string
     {
         $violations = [];
 
@@ -92,7 +91,7 @@ final class SortedByConstraint implements Constraint
                 $entry->type()->toString(),
                 $reference->sort()->name,
                 $entry->toString(),
-                $previousValue === null ? 'null' : \var_export($previousValue, true)
+                $previousValue === null ? 'null' : \var_export($previousValue, true),
             );
         }
 

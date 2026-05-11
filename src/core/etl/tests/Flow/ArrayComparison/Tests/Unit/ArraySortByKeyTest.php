@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 final class ArraySortByKeyTest extends TestCase
 {
-    public static function arrays() : \Generator
+    public static function arrays(): \Generator
     {
         yield 'simple array' => [
             ['name' => 'one', 'priority' => 'high', 'id' => 1, 'color' => 'red', 'active' => true],
@@ -115,13 +115,13 @@ final class ArraySortByKeyTest extends TestCase
      * @param array<array-key, mixed> $sorted
      */
     #[DataProvider('arrays')]
-    public function test_sorts_array_by_key(array $origin, array $sorted) : void
+    public function test_sorts_array_by_key(array $origin, array $sorted): void
     {
         // serialize to JSON to be sure that array is sorted exactly as expected
 
-        self::assertEquals(
+        static::assertEquals(
             \json_encode($sorted, JSON_THROW_ON_ERROR),
-            \json_encode((new ArraySortByKey)($origin), JSON_THROW_ON_ERROR),
+            \json_encode((new ArraySortByKey())($origin), JSON_THROW_ON_ERROR),
         );
     }
 }

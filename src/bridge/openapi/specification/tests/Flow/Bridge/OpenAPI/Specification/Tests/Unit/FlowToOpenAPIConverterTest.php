@@ -4,17 +4,41 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\OpenAPI\Specification\Tests\Unit;
 
-use function Flow\Bridge\OpenAPI\Specification\DSL\schema_to_openapi_specification;
-use function Flow\ETL\DSL\{bool_schema, date_schema, datetime_schema, definition_from_type, enum_schema, float_schema, int_schema, json_schema, list_schema, map_schema, schema, str_schema, structure_schema, time_schema, uuid_schema, xml_element_schema, xml_schema};
-use function Flow\Types\DSL\{type_array, type_callable, type_integer, type_list, type_map, type_string, type_structure};
 use Flow\Bridge\OpenAPI\Specification\OpenAPIConverter;
-use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\Metadata;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Bridge\OpenAPI\Specification\DSL\schema_to_openapi_specification;
+use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\date_schema;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\definition_from_type;
+use function Flow\ETL\DSL\enum_schema;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\json_schema;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\ETL\DSL\time_schema;
+use function Flow\ETL\DSL\uuid_schema;
+use function Flow\ETL\DSL\xml_element_schema;
+use function Flow\ETL\DSL\xml_schema;
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_callable;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
+
 final class FlowToOpenAPIConverterTest extends TestCase
 {
-    public static function basic_types_provider() : \Generator
+    public static function basic_types_provider(): \Generator
     {
         yield 'boolean non-nullable' => [
             bool_schema('active', false),
@@ -57,7 +81,7 @@ final class FlowToOpenAPIConverterTest extends TestCase
         ];
     }
 
-    public static function special_types_provider() : \Generator
+    public static function special_types_provider(): \Generator
     {
         yield 'date non-nullable' => [
             date_schema('birth_date', false),
@@ -130,7 +154,7 @@ final class FlowToOpenAPIConverterTest extends TestCase
         ];
     }
 
-    public function test_to_open_api_enum_edge_cases() : void
+    public function test_to_open_api_enum_edge_cases(): void
     {
         $converter = new OpenAPIConverter();
         $definition = enum_schema('single_enum', FlowTestSingleEnum::class, false);
@@ -138,34 +162,33 @@ final class FlowToOpenAPIConverterTest extends TestCase
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'single_enum' => [
-                    'type' => 'string',
-                    'enum' => ['ONLY'],
-                    'nullable' => false,
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'single_enum' => [
+                        'type' => 'string',
+                        'enum' => ['ONLY'],
+                        'nullable' => false,
+                    ],
                 ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
-    public function test_to_open_api_preserves_definition_order() : void
+    public function test_to_open_api_preserves_definition_order(): void
     {
         $converter = new OpenAPIConverter();
-        $schema = schema(
-            str_schema('c'),
-            str_schema('a'),
-            str_schema('b')
-        );
+        $schema = schema(str_schema('c'), str_schema('a'), str_schema('b'));
 
         $result = $converter->toOpenAPI($schema);
 
         $properties = type_array()->assert($result['properties']);
-        self::assertSame(['c', 'a', 'b'], \array_keys($properties));
+        static::assertSame(['c', 'a', 'b'], \array_keys($properties));
     }
 
-    public function test_to_open_api_with_array_type() : void
+    public function test_to_open_api_with_array_type(): void
     {
         $converter = new OpenAPIConverter();
         $arrayType = type_array();
@@ -174,19 +197,22 @@ final class FlowToOpenAPIConverterTest extends TestCase
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'items' => [
-                    'type' => 'string',
-                    'format' => 'json',
-                    'nullable' => false,
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'items' => [
+                        'type' => 'string',
+                        'format' => 'json',
+                        'nullable' => false,
+                    ],
                 ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
-    public function test_to_open_api_with_backed_enum() : void
+    public function test_to_open_api_with_backed_enum(): void
     {
         $converter = new OpenAPIConverter();
         $definition = enum_schema('priority', FlowTestBackedEnum::class, false);
@@ -194,19 +220,22 @@ final class FlowToOpenAPIConverterTest extends TestCase
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'priority' => [
-                    'type' => 'string',
-                    'enum' => ['high', 'low', 'medium'],
-                    'nullable' => false,
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'priority' => [
+                        'type' => 'string',
+                        'enum' => ['high', 'low', 'medium'],
+                        'nullable' => false,
+                    ],
                 ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
-    public function test_to_open_api_with_backed_enum_different_types() : void
+    public function test_to_open_api_with_backed_enum_different_types(): void
     {
         $converter = new OpenAPIConverter();
         $definition = enum_schema('int_enum', FlowTestIntBackedEnum::class, false);
@@ -214,16 +243,19 @@ final class FlowToOpenAPIConverterTest extends TestCase
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'int_enum' => [
-                    'type' => 'string',
-                    'enum' => [1, 2, 3],
-                    'nullable' => false,
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'int_enum' => [
+                        'type' => 'string',
+                        'enum' => [1, 2, 3],
+                        'nullable' => false,
+                    ],
                 ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
     /**
@@ -231,22 +263,25 @@ final class FlowToOpenAPIConverterTest extends TestCase
      * @param array<string, mixed> $expected
      */
     #[DataProvider('basic_types_provider')]
-    public function test_to_open_api_with_basic_types(Definition $definition, array $expected) : void
+    public function test_to_open_api_with_basic_types(Definition $definition, array $expected): void
     {
         $converter = new OpenAPIConverter();
         $schema = schema($definition);
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                $definition->entry()->name() => $expected,
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    $definition->entry()->name() => $expected,
+                ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
-    public function test_to_open_api_with_complex_schema() : void
+    public function test_to_open_api_with_complex_schema(): void
     {
         $converter = new OpenAPIConverter();
         $schema = schema(
@@ -255,89 +290,106 @@ final class FlowToOpenAPIConverterTest extends TestCase
             bool_schema('active', false, Metadata::empty()->add('example', true)),
             enum_schema('status', FlowTestUnitEnum::class, false),
             list_schema('tags', type_list(type_string()), true),
-            structure_schema('address', type_structure([
-                'street' => type_string(),
-            ], [
-                'city' => type_string(),
-            ]), false)
+            structure_schema(
+                'address',
+                type_structure([
+                    'street' => type_string(),
+                ], [
+                    'city' => type_string(),
+                ]),
+                false,
+            ),
         );
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'id' => ['type' => 'integer', 'nullable' => false],
-                'name' => ['type' => 'string', 'nullable' => true, 'description' => 'User name'],
-                'active' => ['type' => 'boolean', 'nullable' => false, 'example' => true],
-                'status' => ['type' => 'string', 'enum' => ['ACTIVE', 'INACTIVE', 'PENDING'], 'nullable' => false],
-                'tags' => ['type' => 'array', 'items' => ['type' => 'string'], 'nullable' => true],
-                'address' => [
-                    'type' => 'object',
-                    'properties' => [
-                        'street' => ['type' => 'string', 'nullable' => false],
-                        'city' => ['type' => 'string', 'nullable' => true],
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'id' => ['type' => 'integer', 'nullable' => false],
+                    'name' => ['type' => 'string', 'nullable' => true, 'description' => 'User name'],
+                    'active' => ['type' => 'boolean', 'nullable' => false, 'example' => true],
+                    'status' => ['type' => 'string', 'enum' => ['ACTIVE', 'INACTIVE', 'PENDING'], 'nullable' => false],
+                    'tags' => ['type' => 'array', 'items' => ['type' => 'string'], 'nullable' => true],
+                    'address' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'street' => ['type' => 'string', 'nullable' => false],
+                            'city' => ['type' => 'string', 'nullable' => true],
+                        ],
+                        'nullable' => false,
                     ],
-                    'nullable' => false,
                 ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
-    public function test_to_open_api_with_deeply_nested_structures() : void
+    public function test_to_open_api_with_deeply_nested_structures(): void
     {
         $converter = new OpenAPIConverter();
-        $definition = structure_schema('nested', type_structure([
-            'level1' => type_structure([
-                'level2' => type_structure([
-                    'value' => type_integer(),
+        $definition = structure_schema(
+            'nested',
+            type_structure([
+                'level1' => type_structure([
+                    'level2' => type_structure([
+                        'value' => type_integer(),
+                    ]),
                 ]),
             ]),
-        ]), false);
+            false,
+        );
         $schema = schema($definition);
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'nested' => [
-                    'type' => 'object',
-                    'properties' => [
-                        'level1' => [
-                            'type' => 'object',
-                            'properties' => [
-                                'level2' => [
-                                    'type' => 'object',
-                                    'properties' => [
-                                        'value' => ['type' => 'integer', 'nullable' => false],
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'nested' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'level1' => [
+                                'type' => 'object',
+                                'properties' => [
+                                    'level2' => [
+                                        'type' => 'object',
+                                        'properties' => [
+                                            'value' => ['type' => 'integer', 'nullable' => false],
+                                        ],
+                                        'nullable' => false,
                                     ],
-                                    'nullable' => false,
                                 ],
+                                'nullable' => false,
                             ],
-                            'nullable' => false,
                         ],
+                        'nullable' => false,
                     ],
-                    'nullable' => false,
                 ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
-    public function test_to_open_api_with_empty_schema() : void
+    public function test_to_open_api_with_empty_schema(): void
     {
         $converter = new OpenAPIConverter();
         $schema = schema();
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [],
-        ], $result);
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [],
+            ],
+            $result,
+        );
     }
 
-    public function test_to_open_api_with_list_type() : void
+    public function test_to_open_api_with_list_type(): void
     {
         $converter = new OpenAPIConverter();
         $definition = list_schema('tags', type_list(type_string()), false);
@@ -345,19 +397,22 @@ final class FlowToOpenAPIConverterTest extends TestCase
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'tags' => [
-                    'type' => 'array',
-                    'items' => ['type' => 'string'],
-                    'nullable' => false,
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'tags' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'string'],
+                        'nullable' => false,
+                    ],
                 ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
-    public function test_to_open_api_with_map_type() : void
+    public function test_to_open_api_with_map_type(): void
     {
         $converter = new OpenAPIConverter();
         $definition = map_schema('metadata', type_map(type_string(), type_integer()), false);
@@ -365,117 +420,118 @@ final class FlowToOpenAPIConverterTest extends TestCase
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'metadata' => [
-                    'type' => 'object',
-                    'additionalProperties' => ['type' => 'integer'],
-                    'nullable' => false,
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'metadata' => [
+                        'type' => 'object',
+                        'additionalProperties' => ['type' => 'integer'],
+                        'nullable' => false,
+                    ],
                 ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
-    public function test_to_open_api_with_metadata() : void
+    public function test_to_open_api_with_metadata(): void
     {
         $converter = new OpenAPIConverter();
         $definition = str_schema(
             'name',
             false,
-            Metadata::empty()
-                ->add('description', 'User full name')
-                ->add('example', 'John Doe')
+            Metadata::empty()->add('description', 'User full name')->add('example', 'John Doe'),
         );
         $schema = schema($definition);
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'name' => [
-                    'type' => 'string',
-                    'nullable' => false,
-                    'description' => 'User full name',
-                    'example' => 'John Doe',
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'name' => [
+                        'type' => 'string',
+                        'nullable' => false,
+                        'description' => 'User full name',
+                        'example' => 'John Doe',
+                    ],
                 ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
-    public function test_to_open_api_with_metadata_description_only() : void
+    public function test_to_open_api_with_metadata_description_only(): void
     {
         $converter = new OpenAPIConverter();
-        $definition = str_schema(
-            'name',
-            false,
-            Metadata::empty()->add('description', 'User name')
-        );
+        $definition = str_schema('name', false, Metadata::empty()->add('description', 'User name'));
         $schema = schema($definition);
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'name' => [
-                    'type' => 'string',
-                    'nullable' => false,
-                    'description' => 'User name',
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'name' => [
+                        'type' => 'string',
+                        'nullable' => false,
+                        'description' => 'User name',
+                    ],
                 ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
-    public function test_to_open_api_with_metadata_example_only() : void
+    public function test_to_open_api_with_metadata_example_only(): void
     {
         $converter = new OpenAPIConverter();
-        $definition = int_schema(
-            'age',
-            false,
-            Metadata::empty()->add('example', 25)
-        );
+        $definition = int_schema('age', false, Metadata::empty()->add('example', 25));
         $schema = schema($definition);
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'age' => [
-                    'type' => 'integer',
-                    'nullable' => false,
-                    'example' => 25,
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'age' => [
+                        'type' => 'integer',
+                        'nullable' => false,
+                        'example' => 25,
+                    ],
                 ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
-    public function test_to_open_api_with_metadata_other_keys() : void
+    public function test_to_open_api_with_metadata_other_keys(): void
     {
         $converter = new OpenAPIConverter();
-        $definition = str_schema(
-            'name',
-            false,
-            Metadata::empty()->add('custom_key', 'custom_value')
-        );
+        $definition = str_schema('name', false, Metadata::empty()->add('custom_key', 'custom_value'));
         $schema = schema($definition);
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'name' => [
-                    'type' => 'string',
-                    'nullable' => false,
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'name' => [
+                        'type' => 'string',
+                        'nullable' => false,
+                    ],
                 ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
-    public function test_to_open_api_with_mixed_metadata_values() : void
+    public function test_to_open_api_with_mixed_metadata_values(): void
     {
         $converter = new OpenAPIConverter();
         $definition = str_schema(
@@ -485,49 +541,55 @@ final class FlowToOpenAPIConverterTest extends TestCase
                 ->add('description', 'A description')
                 ->add('example', 42) // Integer example for string field
                 ->add('other_prop', ['array', 'value'])
-                ->add('bool_prop', true)
+                ->add('bool_prop', true),
         );
         $schema = schema($definition);
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'mixed_meta' => [
-                    'type' => 'string',
-                    'nullable' => false,
-                    'description' => 'A description',
-                    'example' => 42,
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'mixed_meta' => [
+                        'type' => 'string',
+                        'nullable' => false,
+                        'description' => 'A description',
+                        'example' => 42,
+                    ],
                 ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
-    public function test_to_open_api_with_multiple_definitions() : void
+    public function test_to_open_api_with_multiple_definitions(): void
     {
         $converter = new OpenAPIConverter();
         $schema = schema(
             int_schema('id', false),
             str_schema('name', true),
             bool_schema('active', false),
-            float_schema('price', true)
+            float_schema('price', true),
         );
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'id' => ['type' => 'integer', 'nullable' => false],
-                'name' => ['type' => 'string', 'nullable' => true],
-                'active' => ['type' => 'boolean', 'nullable' => false],
-                'price' => ['type' => 'number', 'nullable' => true],
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'id' => ['type' => 'integer', 'nullable' => false],
+                    'name' => ['type' => 'string', 'nullable' => true],
+                    'active' => ['type' => 'boolean', 'nullable' => false],
+                    'price' => ['type' => 'number', 'nullable' => true],
+                ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
-    public function test_to_open_api_with_nested_list_type() : void
+    public function test_to_open_api_with_nested_list_type(): void
     {
         $converter = new OpenAPIConverter();
         $definition = list_schema('nested_tags', type_list(type_list(type_integer())), false);
@@ -535,22 +597,25 @@ final class FlowToOpenAPIConverterTest extends TestCase
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'nested_tags' => [
-                    'type' => 'array',
-                    'items' => [
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'nested_tags' => [
                         'type' => 'array',
-                        'items' => ['type' => 'integer'],
+                        'items' => [
+                            'type' => 'array',
+                            'items' => ['type' => 'integer'],
+                        ],
+                        'nullable' => false,
                     ],
-                    'nullable' => false,
                 ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
-    public function test_to_open_api_with_special_field_names() : void
+    public function test_to_open_api_with_special_field_names(): void
     {
         $converter = new OpenAPIConverter();
         $schema = schema(
@@ -565,12 +630,12 @@ final class FlowToOpenAPIConverterTest extends TestCase
         $result = $converter->toOpenAPI($schema);
 
         $properties = type_array()->assert($result['properties']);
-        self::assertArrayHasKey('field-with-dashes', $properties);
-        self::assertArrayHasKey('field_with_underscores', $properties);
-        self::assertArrayHasKey('fieldWithCamelCase', $properties);
-        self::assertArrayHasKey('FIELD_WITH_CAPS', $properties);
-        self::assertArrayHasKey('field123', $properties);
-        self::assertArrayHasKey('123field', $properties);
+        static::assertArrayHasKey('field-with-dashes', $properties);
+        static::assertArrayHasKey('field_with_underscores', $properties);
+        static::assertArrayHasKey('fieldWithCamelCase', $properties);
+        static::assertArrayHasKey('FIELD_WITH_CAPS', $properties);
+        static::assertArrayHasKey('field123', $properties);
+        static::assertArrayHasKey('123field', $properties);
     }
 
     /**
@@ -578,96 +643,116 @@ final class FlowToOpenAPIConverterTest extends TestCase
      * @param array<string, mixed> $expected
      */
     #[DataProvider('special_types_provider')]
-    public function test_to_open_api_with_special_types(Definition $definition, array $expected) : void
+    public function test_to_open_api_with_special_types(Definition $definition, array $expected): void
     {
         $converter = new OpenAPIConverter();
         $schema = schema($definition);
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                $definition->entry()->name() => $expected,
-            ],
-        ], $result);
-    }
-
-    public function test_to_open_api_with_structure_only_optional_elements() : void
-    {
-        $converter = new OpenAPIConverter();
-        $definition = structure_schema('optional_only', type_structure([], [
-            'optional_field' => type_string(),
-        ]), false);
-        $schema = schema($definition);
-
-        $result = $converter->toOpenAPI($schema);
-
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'optional_only' => [
-                    'type' => 'object',
-                    'properties' => [
-                        'optional_field' => ['type' => 'string', 'nullable' => true],
-                    ],
-                    'nullable' => false,
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    $definition->entry()->name() => $expected,
                 ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
-    public function test_to_open_api_with_structure_type() : void
+    public function test_to_open_api_with_structure_only_optional_elements(): void
     {
         $converter = new OpenAPIConverter();
-        $definition = structure_schema('address', type_structure([
-            'street' => type_string(),
-            'city' => type_string(),
-        ], [
-            'postal_code' => type_string(),
-        ]), false);
+        $definition = structure_schema(
+            'optional_only',
+            type_structure([], [
+                'optional_field' => type_string(),
+            ]),
+            false,
+        );
         $schema = schema($definition);
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'address' => [
-                    'type' => 'object',
-                    'properties' => [
-                        'street' => ['type' => 'string', 'nullable' => false],
-                        'city' => ['type' => 'string', 'nullable' => false],
-                        'postal_code' => ['type' => 'string', 'nullable' => true],
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'optional_only' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'optional_field' => ['type' => 'string', 'nullable' => true],
+                        ],
+                        'nullable' => false,
                     ],
-                    'nullable' => false,
                 ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
-    public function test_to_open_api_with_task_example_schema() : void
+    public function test_to_open_api_with_structure_type(): void
+    {
+        $converter = new OpenAPIConverter();
+        $definition = structure_schema(
+            'address',
+            type_structure([
+                'street' => type_string(),
+                'city' => type_string(),
+            ], [
+                'postal_code' => type_string(),
+            ]),
+            false,
+        );
+        $schema = schema($definition);
+
+        $result = $converter->toOpenAPI($schema);
+
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'address' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'street' => ['type' => 'string', 'nullable' => false],
+                            'city' => ['type' => 'string', 'nullable' => false],
+                            'postal_code' => ['type' => 'string', 'nullable' => true],
+                        ],
+                        'nullable' => false,
+                    ],
+                ],
+            ],
+            $result,
+        );
+    }
+
+    public function test_to_open_api_with_task_example_schema(): void
     {
         $converter = new OpenAPIConverter();
         $schema = schema(
             int_schema('id', false),
             str_schema('name', true),
-            bool_schema('active', false, Metadata::empty()->add('key', 'value'))
+            bool_schema('active', false, Metadata::empty()->add('key', 'value')),
         );
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'id' => ['type' => 'integer', 'nullable' => false],
-                'name' => ['type' => 'string', 'nullable' => true],
-                'active' => ['type' => 'boolean', 'nullable' => false],
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'id' => ['type' => 'integer', 'nullable' => false],
+                    'name' => ['type' => 'string', 'nullable' => true],
+                    'active' => ['type' => 'boolean', 'nullable' => false],
+                ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
-    public function test_to_open_api_with_unit_enum() : void
+    public function test_to_open_api_with_unit_enum(): void
     {
         $converter = new OpenAPIConverter();
         $definition = enum_schema('status', FlowTestUnitEnum::class, false);
@@ -675,19 +760,22 @@ final class FlowToOpenAPIConverterTest extends TestCase
 
         $result = $converter->toOpenAPI($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'status' => [
-                    'type' => 'string',
-                    'enum' => ['ACTIVE', 'INACTIVE', 'PENDING'],
-                    'nullable' => false,
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'status' => [
+                        'type' => 'string',
+                        'enum' => ['ACTIVE', 'INACTIVE', 'PENDING'],
+                        'nullable' => false,
+                    ],
                 ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
-    public function test_to_open_api_with_unsupported_type() : void
+    public function test_to_open_api_with_unsupported_type(): void
     {
         $converter = new OpenAPIConverter();
         $unsupportedType = type_callable();
@@ -698,25 +786,25 @@ final class FlowToOpenAPIConverterTest extends TestCase
         $converter->toOpenAPI($schema);
     }
 
-    public function test_to_openapi_spec_dsl_function() : void
+    public function test_to_openapi_spec_dsl_function(): void
     {
-        $schema = schema(
-            int_schema('id', false),
-            str_schema('name', true)
-        );
+        $schema = schema(int_schema('id', false), str_schema('name', true));
 
         $result = schema_to_openapi_specification($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'id' => ['type' => 'integer', 'nullable' => false],
-                'name' => ['type' => 'string', 'nullable' => true],
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'id' => ['type' => 'integer', 'nullable' => false],
+                    'name' => ['type' => 'string', 'nullable' => true],
+                ],
             ],
-        ], $result);
+            $result,
+        );
     }
 
-    public function test_to_openapi_spec_dsl_usage_example() : void
+    public function test_to_openapi_spec_dsl_usage_example(): void
     {
         // This test demonstrates practical usage of the DSL function
         // for creating API documentation from Flow schemas
@@ -724,117 +812,108 @@ final class FlowToOpenAPIConverterTest extends TestCase
             int_schema(
                 'id',
                 false,
-                Metadata::empty()
-                ->add('description', 'Unique user identifier')
-                ->add('example', 123)
+                Metadata::empty()->add('description', 'Unique user identifier')->add('example', 123),
             ),
             str_schema(
                 'username',
                 false,
-                Metadata::empty()
-                ->add('description', 'Username for login')
-                ->add('example', 'johndoe')
+                Metadata::empty()->add('description', 'Username for login')->add('example', 'johndoe'),
             ),
             str_schema(
                 'email',
                 false,
-                Metadata::empty()
-                ->add('description', 'User email address')
-                ->add('example', 'john@example.com')
+                Metadata::empty()->add('description', 'User email address')->add('example', 'john@example.com'),
             ),
             bool_schema(
                 'is_active',
                 false,
-                Metadata::empty()
-                ->add('description', 'Whether the user account is active')
-                ->add('example', true)
+                Metadata::empty()->add('description', 'Whether the user account is active')->add('example', true),
             ),
             enum_schema(
                 'role',
                 FlowTestBackedEnum::class,
                 false,
-                Metadata::empty()
-                ->add('description', 'User role level')
+                Metadata::empty()->add('description', 'User role level'),
             ),
             list_schema(
                 'permissions',
                 type_list(type_string()),
                 true,
-                Metadata::empty()
-                ->add('description', 'List of user permissions')
-                ->add('example', ['read', 'write'])
-            )
+                Metadata::empty()->add('description', 'List of user permissions')->add('example', ['read', 'write']),
+            ),
         );
 
         $openApiSpec = schema_to_openapi_specification($userSchema);
 
-        self::assertSame('object', $openApiSpec['type']);
+        static::assertSame('object', $openApiSpec['type']);
         $properties = type_array()->assert($openApiSpec['properties']);
-        self::assertCount(6, $properties);
+        static::assertCount(6, $properties);
 
         $id = type_array()->assert($properties['id']);
-        self::assertSame('integer', $id['type']);
-        self::assertSame('Unique user identifier', $id['description']);
-        self::assertSame(123, $id['example']);
+        static::assertSame('integer', $id['type']);
+        static::assertSame('Unique user identifier', $id['description']);
+        static::assertSame(123, $id['example']);
 
         $role = type_array()->assert($properties['role']);
-        self::assertSame('string', $role['type']);
-        self::assertSame(['high', 'low', 'medium'], $role['enum']);
-        self::assertSame('User role level', $role['description']);
+        static::assertSame('string', $role['type']);
+        static::assertSame(['high', 'low', 'medium'], $role['enum']);
+        static::assertSame('User role level', $role['description']);
 
         $permissions = type_array()->assert($properties['permissions']);
-        self::assertSame('array', $permissions['type']);
-        self::assertTrue($permissions['nullable']);
-        self::assertSame('List of user permissions', $permissions['description']);
+        static::assertSame('array', $permissions['type']);
+        static::assertTrue($permissions['nullable']);
+        static::assertSame('List of user permissions', $permissions['description']);
     }
 
-    public function test_to_openapi_spec_dsl_with_complex_schema() : void
+    public function test_to_openapi_spec_dsl_with_complex_schema(): void
     {
         $schema = schema(
             int_schema('id', false),
             str_schema('name', true, Metadata::empty()->add('description', 'User name')),
             enum_schema('status', FlowTestUnitEnum::class, false),
-            list_schema('tags', type_list(type_string()), true)
+            list_schema('tags', type_list(type_string()), true),
         );
 
         $result = schema_to_openapi_specification($schema);
 
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'id' => ['type' => 'integer', 'nullable' => false],
-                'name' => ['type' => 'string', 'nullable' => true, 'description' => 'User name'],
-                'status' => ['type' => 'string', 'enum' => ['ACTIVE', 'INACTIVE', 'PENDING'], 'nullable' => false],
-                'tags' => ['type' => 'array', 'items' => ['type' => 'string'], 'nullable' => true],
-            ],
-        ], $result);
-    }
-
-    public function test_to_openapi_spec_dsl_with_metadata() : void
-    {
-        $schema = schema(
-            str_schema(
-                'email',
-                false,
-                Metadata::empty()
-                ->add('description', 'User email address')
-                ->add('example', 'user@example.com')
-            )
-        );
-
-        $result = schema_to_openapi_specification($schema);
-
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'email' => [
-                    'type' => 'string',
-                    'nullable' => false,
-                    'description' => 'User email address',
-                    'example' => 'user@example.com',
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'id' => ['type' => 'integer', 'nullable' => false],
+                    'name' => ['type' => 'string', 'nullable' => true, 'description' => 'User name'],
+                    'status' => ['type' => 'string', 'enum' => ['ACTIVE', 'INACTIVE', 'PENDING'], 'nullable' => false],
+                    'tags' => ['type' => 'array', 'items' => ['type' => 'string'], 'nullable' => true],
                 ],
             ],
-        ], $result);
+            $result,
+        );
+    }
+
+    public function test_to_openapi_spec_dsl_with_metadata(): void
+    {
+        $schema = schema(str_schema(
+            'email',
+            false,
+            Metadata::empty()->add('description', 'User email address')->add('example', 'user@example.com'),
+        ));
+
+        $result = schema_to_openapi_specification($schema);
+
+        static::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'email' => [
+                        'type' => 'string',
+                        'nullable' => false,
+                        'description' => 'User email address',
+                        'example' => 'user@example.com',
+                    ],
+                ],
+            ],
+            $result,
+        );
     }
 }
 
@@ -845,7 +924,7 @@ enum FlowTestUnitEnum
     case PENDING;
 }
 
-enum FlowTestBackedEnum : string
+enum FlowTestBackedEnum: string
 {
     case HIGH = 'high';
     case LOW = 'low';
@@ -857,7 +936,7 @@ enum FlowTestSingleEnum
     case ONLY;
 }
 
-enum FlowTestIntBackedEnum : int
+enum FlowTestIntBackedEnum: int
 {
     case FIRST = 1;
     case SECOND = 2;

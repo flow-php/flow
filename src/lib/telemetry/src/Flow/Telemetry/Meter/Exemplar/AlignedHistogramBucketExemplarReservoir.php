@@ -36,7 +36,7 @@ final class AlignedHistogramBucketExemplarReservoir implements ExemplarReservoir
         $this->buckets = \array_fill(0, $bucketCount, null);
     }
 
-    public function collect(bool $reset = true) : array
+    public function collect(bool $reset = true): array
     {
         $result = [];
 
@@ -59,7 +59,7 @@ final class AlignedHistogramBucketExemplarReservoir implements ExemplarReservoir
         SpanContext $context,
         \DateTimeImmutable $timestamp,
         int $bucketIndex = 0,
-    ) : void {
+    ): void {
         if ($bucketIndex < 0 || $bucketIndex >= $this->bucketCount) {
             return;
         }
@@ -75,7 +75,7 @@ final class AlignedHistogramBucketExemplarReservoir implements ExemplarReservoir
         );
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->buckets = \array_fill(0, $this->bucketCount, null);
     }
@@ -87,7 +87,7 @@ final class AlignedHistogramBucketExemplarReservoir implements ExemplarReservoir
      *
      * @return array<string, bool|float|int|string>
      */
-    private function filterAttributes(array $attributes) : array
+    private function filterAttributes(array $attributes): array
     {
         $filtered = [];
 

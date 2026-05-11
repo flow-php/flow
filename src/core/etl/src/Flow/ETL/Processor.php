@@ -22,5 +22,5 @@ interface Processor
      *
      * @return \Generator<Rows>
      */
-    public function process(\Generator $rows, FlowContext $context) : \Generator;
+    public function process(\Generator $rows, FlowContext $context): \Generator;
 }

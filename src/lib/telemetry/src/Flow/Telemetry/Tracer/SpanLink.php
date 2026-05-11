@@ -28,8 +28,7 @@ final readonly class SpanLink
         public SpanContext $context,
         public Attributes $attributes = new Attributes(),
         public int $droppedAttributeCount = 0,
-    ) {
-    }
+    ) {}
 
     /**
      * Create a SpanLink with the given context and optional attributes.
@@ -38,9 +37,16 @@ final readonly class SpanLink
      * @param Attributes|TAttributeValueMap $attributes Link attributes
      * @param int $droppedAttributeCount Number of attributes dropped due to limits
      */
-    public static function create(SpanContext $context, Attributes|array $attributes = [], int $droppedAttributeCount = 0) : self
-    {
-        return new self($context, $attributes instanceof Attributes ? $attributes : Attributes::create($attributes), $droppedAttributeCount);
+    public static function create(
+        SpanContext $context,
+        Attributes|array $attributes = [],
+        int $droppedAttributeCount = 0,
+    ): self {
+        return new self(
+            $context,
+            $attributes instanceof Attributes ? $attributes : Attributes::create($attributes),
+            $droppedAttributeCount,
+        );
     }
 
     /**
@@ -48,7 +54,7 @@ final readonly class SpanLink
      *
      * @param array{context: array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool}, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount?: int} $data Normalized SpanLink data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             SpanContext::fromArray($data['context']),
@@ -62,7 +68,7 @@ final readonly class SpanLink
      *
      * @return array{context: array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool}, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount: int}
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'context' => $this->context->normalize(),

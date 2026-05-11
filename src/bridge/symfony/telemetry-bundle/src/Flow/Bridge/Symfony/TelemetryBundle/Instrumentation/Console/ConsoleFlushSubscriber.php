@@ -13,17 +13,16 @@ final readonly class ConsoleFlushSubscriber implements EventSubscriberInterface
 {
     public function __construct(
         private Telemetry $telemetry,
-    ) {
-    }
+    ) {}
 
-    public static function getSubscribedEvents() : array
+    public static function getSubscribedEvents(): array
     {
         return [
             ConsoleEvents::TERMINATE => ['onTerminate', -20000],
         ];
     }
 
-    public function onTerminate(ConsoleTerminateEvent $event) : void
+    public function onTerminate(ConsoleTerminateEvent $event): void
     {
         $this->telemetry->shutdown();
     }

@@ -4,24 +4,27 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\Partitioned;
 
-use function Flow\ETL\DSL\exception_if_exists;
-use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
 use Flow\Filesystem\Partition;
 
+use function Flow\ETL\DSL\exception_if_exists;
+use function Flow\Filesystem\DSL\path;
+
 final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
 {
     #[\Override]
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         parent::tearDown();
         $this->cleanFiles();
     }
 
-    public function test_open_stream_for_existing_partition_with_existing_file() : void
+    public function test_open_stream_for_existing_partition_with_existing_file(): void
     {
-        $this->expectExceptionMessageMatches('/Destination path (.*) already exists, please change path to different or set different SaveMode/');
+        $this->expectExceptionMessageMatches(
+            '/Destination path (.*) already exists, please change path to different or set different SaveMode/',
+        );
         $streams = $this->streams();
 
         $this->setupFiles([
@@ -36,7 +39,7 @@ final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
         $streams->writeTo($file, partitions: [new Partition('partition', 'value')]);
     }
 
-    public function test_open_stream_for_existing_partition_without_existing_file() : void
+    public function test_open_stream_for_existing_partition_without_existing_file(): void
     {
         $streams = $this->streams();
 
@@ -53,13 +56,13 @@ final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
 
         $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/**/*.txt')));
 
-        self::assertCount(1, $files);
+        static::assertCount(1, $files);
 
-        self::assertSame('file.txt', $files[0]->path->basename());
-        self::assertSame('file content', \file_get_contents($files[0]->path->path()));
+        static::assertSame('file.txt', $files[0]->path->basename());
+        static::assertSame('file content', \file_get_contents($files[0]->path->path()));
     }
 
-    public function test_open_stream_for_non_existing_partition() : void
+    public function test_open_stream_for_non_existing_partition(): void
     {
         $streams = $this->streams();
 
@@ -73,13 +76,13 @@ final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
         $streams->closeStreams($file);
         $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/partition=value/*')));
 
-        self::assertCount(1, $files);
+        static::assertCount(1, $files);
 
-        self::assertSame('file.txt', $files[0]->path->basename());
-        self::assertSame('file content', \file_get_contents($files[0]->path->path()));
+        static::assertSame('file.txt', $files[0]->path->basename());
+        static::assertSame('file content', \file_get_contents($files[0]->path->path()));
     }
 
-    protected function streams() : FilesystemStreams
+    protected function streams(): FilesystemStreams
     {
         $streams = new FilesystemStreams($this->fstab());
         $streams->setMode(exception_if_exists());

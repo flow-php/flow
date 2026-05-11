@@ -9,15 +9,15 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface DropIndexFinalStep extends Sql
 {
-    public function cascade() : self;
+    public function cascade(): self;
 
-    public function concurrently() : self;
+    public function concurrently(): self;
 
-    public function ifExists() : self;
+    public function ifExists(): self;
 
-    public function restrict() : self;
+    public function restrict(): self;
 
-    public function toAst() : DropStmt;
+    public function toAst(): DropStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

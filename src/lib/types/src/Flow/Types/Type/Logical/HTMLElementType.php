@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use function Flow\Types\DSL\type_instance_of;
-use Dom\{HTMLDocument, HTMLElement};
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Dom\HTMLDocument;
+use Dom\HTMLElement;
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+
+use function Flow\Types\DSL\type_instance_of;
 
 /**
  * @implements Type<HTMLElement>
  */
 final readonly class HTMLElementType implements Type
 {
-    public function assert(mixed $value) : HTMLElement
+    public function assert(mixed $value): HTMLElement
     {
         if ($this->isValid($value)) {
             return $value;
@@ -23,7 +26,7 @@ final readonly class HTMLElementType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
-    public function cast(mixed $value) : HTMLElement
+    public function cast(mixed $value): HTMLElement
     {
         if ($this->isValid($value)) {
             return $value;
@@ -38,19 +41,19 @@ final readonly class HTMLElementType implements Type
         throw new CastingException($value, $this);
     }
 
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return $value instanceof HTMLElement;
     }
 
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'html_element',
         ];
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return 'html_element';
     }

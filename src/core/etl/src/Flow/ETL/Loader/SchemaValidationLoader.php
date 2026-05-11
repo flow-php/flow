@@ -6,18 +6,20 @@ namespace Flow\ETL\Loader;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\SchemaValidationException;
-use Flow\ETL\{FlowContext, Loader, Rows, SchemaValidator};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Loader;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Flow\ETL\SchemaValidator;
 
 final readonly class SchemaValidationLoader implements Loader
 {
     public function __construct(
         private Schema $expected,
         private SchemaValidator $validator,
-    ) {
-    }
+    ) {}
 
-    public function load(Rows $rows, FlowContext $context) : void
+    public function load(Rows $rows, FlowContext $context): void
     {
         $context->telemetry()->loadingStarted($this);
 

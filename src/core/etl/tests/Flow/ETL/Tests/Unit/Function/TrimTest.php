@@ -4,34 +4,32 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{flow_context, ref, str_entry};
-use function Flow\ETL\DSL\row;
 use Flow\ETL\Function\Trim\Type;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\str_entry;
+
 final class TrimTest extends FlowTestCase
 {
-    public function test_trim_both_valid_string() : void
+    public function test_trim_both_valid_string(): void
     {
-        self::assertSame(
-            'value',
-            ref('string')->trim()->eval(row(str_entry('string', '   value')), flow_context())
-        );
+        static::assertSame('value', ref('string')->trim()->eval(row(str_entry('string', '   value')), flow_context()));
     }
 
-    public function test_trim_left_valid_string() : void
+    public function test_trim_left_valid_string(): void
     {
-        self::assertSame(
-            'value   ',
-            ref('string')->trim(Type::LEFT)->eval(row(str_entry('string', '   value   ')), flow_context())
-        );
+        static::assertSame('value   ', ref('string')
+            ->trim(Type::LEFT)
+            ->eval(row(str_entry('string', '   value   ')), flow_context()));
     }
 
-    public function test_trim_right_valid_string() : void
+    public function test_trim_right_valid_string(): void
     {
-        self::assertSame(
-            '   value',
-            ref('string')->trim(Type::RIGHT)->eval(row(str_entry('string', '   value   ')), flow_context())
-        );
+        static::assertSame('   value', ref('string')
+            ->trim(Type::RIGHT)
+            ->eval(row(str_entry('string', '   value   ')), flow_context()));
     }
 }

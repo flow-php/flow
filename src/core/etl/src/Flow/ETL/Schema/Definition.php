@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema;
 
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Reference;
 use Flow\Types\Type;
 
 /**
@@ -17,9 +18,9 @@ interface Definition
      *
      * @return static
      */
-    public function addMetadata(string $key, int|string|bool|float|array $value) : static;
+    public function addMetadata(string $key, int|string|bool|float|array $value): static;
 
-    public function entry() : Reference;
+    public function entry(): Reference;
 
     /**
      * Checks if another type is compatible with this type. Nullability is validated from a schema evolution perspective.
@@ -28,51 +29,51 @@ interface Definition
      *
      * @param Definition<mixed> $definition
      */
-    public function isCompatible(self $definition) : bool;
+    public function isCompatible(self $definition): bool;
 
-    public function isNullable() : bool;
+    public function isNullable(): bool;
 
     /**
      * @param Definition<mixed> $definition
      */
-    public function isSame(self $definition) : bool;
+    public function isSame(self $definition): bool;
 
     /**
      * @return static
      */
-    public function makeNullable(bool $nullable = true) : static;
+    public function makeNullable(bool $nullable = true): static;
 
     /**
      * @param Entry<mixed> $entry
      */
-    public function matches(Entry $entry) : bool;
+    public function matches(Entry $entry): bool;
 
     /**
      * @param Definition<mixed> $definition
      *
      * @return Definition<mixed>
      */
-    public function merge(self $definition) : self;
+    public function merge(self $definition): self;
 
-    public function metadata() : Metadata;
+    public function metadata(): Metadata;
 
     /**
      * @return array<string, mixed>
      */
-    public function normalize() : array;
+    public function normalize(): array;
 
     /**
      * @return static
      */
-    public function rename(string $newName) : static;
+    public function rename(string $newName): static;
 
     /**
      * @return static
      */
-    public function setMetadata(Metadata $metadata) : static;
+    public function setMetadata(Metadata $metadata): static;
 
     /**
      * @return Type<T>
      */
-    public function type() : Type;
+    public function type(): Type;
 }

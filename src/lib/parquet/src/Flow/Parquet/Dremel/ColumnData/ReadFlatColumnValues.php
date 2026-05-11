@@ -20,13 +20,12 @@ final readonly class ReadFlatColumnValues
         private \Generator $values,
         private array $repetitionLevels,
         private array $definitionLevels,
-    ) {
-    }
+    ) {}
 
     /**
      * @return \Generator<array-key, mixed>
      */
-    public function assembleFlat(DataConverter $dataConverter) : \Generator
+    public function assembleFlat(DataConverter $dataConverter): \Generator
     {
         $maxDefinitionLevel = $this->column->repetitions()->maxDefinitionLevel();
 
@@ -45,17 +44,17 @@ final readonly class ReadFlatColumnValues
     /**
      * @return array<int>
      */
-    public function definitionLevels() : array
+    public function definitionLevels(): array
     {
         return $this->definitionLevels;
     }
 
-    public function flatPath() : string
+    public function flatPath(): string
     {
         return $this->column->flatPath();
     }
 
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return !\count($this->repetitionLevels) && !\count($this->definitionLevels);
     }
@@ -63,7 +62,7 @@ final readonly class ReadFlatColumnValues
     /**
      * @return \Generator<array-key, FlatValue>
      */
-    public function iterator() : \Generator
+    public function iterator(): \Generator
     {
         $maxDefinitionLevel = $this->column->repetitions()->maxDefinitionLevel();
 
@@ -76,19 +75,14 @@ final readonly class ReadFlatColumnValues
                 $value = null;
             }
 
-            yield new FlatValue(
-                $this->column,
-                $this->repetitionLevels[$index],
-                $definitionLevel,
-                $value
-            );
+            yield new FlatValue($this->column, $this->repetitionLevels[$index], $definitionLevel, $value);
         }
     }
 
     /**
      * @return \Generator<mixed>
      */
-    public function rawValues() : \Generator
+    public function rawValues(): \Generator
     {
         yield from $this->values;
     }
@@ -96,12 +90,12 @@ final readonly class ReadFlatColumnValues
     /**
      * @return array<int>
      */
-    public function repetitionLevels() : array
+    public function repetitionLevels(): array
     {
         return $this->repetitionLevels;
     }
 
-    public function rowsCount() : int
+    public function rowsCount(): int
     {
         $rowsCount = 0;
 

@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Bridge\Telemetry\OTLP\Transport;
 
 use Flow\Bridge\Telemetry\OTLP\Serializer\JsonSerializer;
-use Flow\Telemetry\Signal\{SignalType, Signals};
+use Flow\Telemetry\Signal\Signals;
+use Flow\Telemetry\Signal\SignalType;
 
 /**
  * OTLP File Exporter transport — writes JSONL to either a file path or a php://
@@ -56,7 +57,7 @@ final class StreamTransport implements Transport
             $directory = \dirname($destination);
 
             if (!\is_dir($directory)) {
-                $created = $this->captureError(static fn () : bool => \mkdir($directory, 0755, true));
+                $created = $this->captureError(static fn(): bool => \mkdir($directory, 0755, true));
 
                 if ($created === false && !\is_dir($directory)) {
                     throw new TransportException(\sprintf(
@@ -68,7 +69,7 @@ final class StreamTransport implements Transport
             }
         }
 
-        $handle = $this->captureError(static fn () => \fopen($destination, 'a+b'));
+        $handle = $this->captureError(static fn() => \fopen($destination, 'a+b'));
 
         if (!\is_resource($handle)) {
             throw new TransportException(\sprintf(
@@ -87,7 +88,7 @@ final class StreamTransport implements Transport
         }
     }
 
-    public function send(Signals $signal) : void
+    public function send(Signals $signal): void
     {
         if ($this->isShutdown) {
             throw new TransportException('Cannot send after shutdown');
@@ -97,18 +98,19 @@ final class StreamTransport implements Transport
             return;
         }
 
-        $payload = match ($signal->type) {
-            SignalType::LOGS => $this->serializer->serializeLogs($signal->allLogs()),
-            SignalType::METRICS => $this->serializer->serializeMetrics($signal->allMetrics()),
-            SignalType::TRACES => $this->serializer->serializeSpans($signal->allSpans()),
-        } . "\n";
+        $payload =
+            match ($signal->type) {
+                SignalType::LOGS => $this->serializer->serializeLogs($signal->allLogs()),
+                SignalType::METRICS => $this->serializer->serializeMetrics($signal->allMetrics()),
+                SignalType::TRACES => $this->serializer->serializeSpans($signal->allSpans()),
+            } . "\n";
 
         $stream = $this->stream;
 
         @\flock($stream, \LOCK_EX);
 
         try {
-            $written = $this->captureError(static fn () : false|int => \fwrite($stream, $payload));
+            $written = $this->captureError(static fn(): false|int => \fwrite($stream, $payload));
         } finally {
             @\flock($stream, \LOCK_UN);
         }
@@ -131,7 +133,7 @@ final class StreamTransport implements Transport
         }
     }
 
-    public function shutdown() : void
+    public function shutdown(): void
     {
         if ($this->isShutdown) {
             return;
@@ -149,10 +151,10 @@ final class StreamTransport implements Transport
         return $this->stream;
     }
 
-    private function captureError(\Closure $operation) : mixed
+    private function captureError(\Closure $operation): mixed
     {
         $this->errorMessage = null;
-        \set_error_handler(function (int $code, string $message) : bool {
+        \set_error_handler(function (int $code, string $message): bool {
             $this->errorMessage = \preg_replace('{^\w+\(.*?\): }', '', $message);
 
             return true;

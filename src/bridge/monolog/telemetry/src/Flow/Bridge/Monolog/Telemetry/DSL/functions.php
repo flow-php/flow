@@ -4,10 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Telemetry\DSL;
 
-use Flow\Bridge\Monolog\Telemetry\{LogRecordConverter, SeverityMapper, TelemetryHandler, ValueNormalizer};
-use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
-use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
-use Flow\Telemetry\Logger\{Logger, Severity};
+use Flow\Bridge\Monolog\Telemetry\LogRecordConverter;
+use Flow\Bridge\Monolog\Telemetry\SeverityMapper;
+use Flow\Bridge\Monolog\Telemetry\TelemetryHandler;
+use Flow\Bridge\Monolog\Telemetry\ValueNormalizer;
+use Flow\ETL\Attribute\DocumentationDSL;
+use Flow\ETL\Attribute\Module;
+use Flow\ETL\Attribute\Type as DSLType;
+use Flow\Telemetry\ErrorHandler\ErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
+use Flow\Telemetry\Logger\Logger;
+use Flow\Telemetry\Logger\Severity;
 use Monolog\Level;
 
 /**
@@ -30,7 +37,7 @@ use Monolog\Level;
  * ```
  */
 #[DocumentationDSL(module: Module::MONOLOG_TELEMETRY_BRIDGE, type: DSLType::HELPER)]
-function value_normalizer() : ValueNormalizer
+function value_normalizer(): ValueNormalizer
 {
     return new ValueNormalizer();
 }
@@ -63,7 +70,7 @@ function value_normalizer() : ValueNormalizer
  * ```
  */
 #[DocumentationDSL(module: Module::MONOLOG_TELEMETRY_BRIDGE, type: DSLType::HELPER)]
-function severity_mapper(?array $customMapping = null) : SeverityMapper
+function severity_mapper(?array $customMapping = null): SeverityMapper
 {
     return new SeverityMapper($customMapping);
 }
@@ -100,11 +107,8 @@ function severity_mapper(?array $customMapping = null) : SeverityMapper
 function log_record_converter(
     ?SeverityMapper $severityMapper = null,
     ?ValueNormalizer $valueNormalizer = null,
-) : LogRecordConverter {
-    return new LogRecordConverter(
-        $severityMapper ?? new SeverityMapper(),
-        $valueNormalizer ?? new ValueNormalizer(),
-    );
+): LogRecordConverter {
+    return new LogRecordConverter($severityMapper ?? new SeverityMapper(), $valueNormalizer ?? new ValueNormalizer());
 }
 
 /**
@@ -148,6 +152,6 @@ function telemetry_handler(
     Level $level = Level::Debug,
     bool $bubble = true,
     ErrorHandler $errorHandler = new ErrorLogHandler(),
-) : TelemetryHandler {
+): TelemetryHandler {
     return new TelemetryHandler($logger, $converter, $level, $bubble, $errorHandler);
 }

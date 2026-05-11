@@ -12,7 +12,7 @@ enum Type
     case TEXT;
     case XML;
 
-    public function toContentTypeHeader() : string
+    public function toContentTypeHeader(): string
     {
         return match ($this) {
             self::JSON => 'application/json',

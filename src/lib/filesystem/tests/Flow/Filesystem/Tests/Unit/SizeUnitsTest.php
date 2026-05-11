@@ -10,47 +10,47 @@ use PHPUnit\Framework\TestCase;
 
 final class SizeUnitsTest extends TestCase
 {
-    public function test_gb_to_bytes() : void
+    public function test_gb_to_bytes(): void
     {
-        self::assertSame(1073741824, SizeUnits::gbToBytes(1));
-        self::assertSame(2147483648, SizeUnits::gbToBytes(2));
+        static::assertSame(1073741824, SizeUnits::gbToBytes(1));
+        static::assertSame(2147483648, SizeUnits::gbToBytes(2));
     }
 
-    public function test_human_readable_caps_at_pib_for_huge_values() : void
+    public function test_human_readable_caps_at_pib_for_huge_values(): void
     {
         $eib = SizeUnits::GiB_SIZE * 1024 * 1024 * 1024;
-        self::assertStringEndsWith(' PiB', SizeUnits::humanReadable($eib));
+        static::assertStringEndsWith(' PiB', SizeUnits::humanReadable($eib));
     }
 
     #[TestWith([0, '0 B'])]
     #[TestWith([1, '1 B'])]
     #[TestWith([512, '512 B'])]
     #[TestWith([1023, '1,023 B'])]
-    public function test_human_readable_prints_raw_bytes_below_1_kib(int $bytes, string $expected) : void
+    public function test_human_readable_prints_raw_bytes_below_1_kib(int $bytes, string $expected): void
     {
-        self::assertSame($expected, SizeUnits::humanReadable($bytes));
+        static::assertSame($expected, SizeUnits::humanReadable($bytes));
     }
 
-    public function test_human_readable_respects_decimals_argument() : void
+    public function test_human_readable_respects_decimals_argument(): void
     {
-        self::assertSame('1.50000 KiB', SizeUnits::humanReadable(1536, decimals: 5));
-        self::assertSame('2 KiB', SizeUnits::humanReadable(2048, decimals: 0));
+        static::assertSame('1.50000 KiB', SizeUnits::humanReadable(1536, decimals: 5));
+        static::assertSame('2 KiB', SizeUnits::humanReadable(2048, decimals: 0));
     }
 
-    public function test_human_readable_respects_separators() : void
+    public function test_human_readable_respects_separators(): void
     {
-        self::assertSame('1,50 KiB', SizeUnits::humanReadable(1536, decimalSeparator: ','));
-        self::assertSame('1 023 B', SizeUnits::humanReadable(1023, thousandsSeparator: ' '));
+        static::assertSame('1,50 KiB', SizeUnits::humanReadable(1536, decimalSeparator: ','));
+        static::assertSame('1 023 B', SizeUnits::humanReadable(1023, thousandsSeparator: ' '));
     }
 
-    public function test_human_readable_returns_custom_placeholder_when_null() : void
+    public function test_human_readable_returns_custom_placeholder_when_null(): void
     {
-        self::assertSame('n/a', SizeUnits::humanReadable(null, null: 'n/a'));
+        static::assertSame('n/a', SizeUnits::humanReadable(null, null: 'n/a'));
     }
 
-    public function test_human_readable_returns_placeholder_when_null() : void
+    public function test_human_readable_returns_placeholder_when_null(): void
     {
-        self::assertSame('-', SizeUnits::humanReadable(null));
+        static::assertSame('-', SizeUnits::humanReadable(null));
     }
 
     #[TestWith([1024, '1.00 KiB'])]
@@ -59,20 +59,20 @@ final class SizeUnitsTest extends TestCase
     #[TestWith([SizeUnits::GiB_SIZE, '1.00 GiB'])]
     #[TestWith([SizeUnits::GiB_SIZE * 1024, '1.00 TiB'])]
     #[TestWith([SizeUnits::GiB_SIZE * 1024 * 1024, '1.00 PiB'])]
-    public function test_human_readable_scales_up_through_binary_units(int $bytes, string $expected) : void
+    public function test_human_readable_scales_up_through_binary_units(int $bytes, string $expected): void
     {
-        self::assertSame($expected, SizeUnits::humanReadable($bytes));
+        static::assertSame($expected, SizeUnits::humanReadable($bytes));
     }
 
-    public function test_kb_to_bytes() : void
+    public function test_kb_to_bytes(): void
     {
-        self::assertSame(1024, SizeUnits::kbToBytes(1));
-        self::assertSame(2048, SizeUnits::kbToBytes(2));
+        static::assertSame(1024, SizeUnits::kbToBytes(1));
+        static::assertSame(2048, SizeUnits::kbToBytes(2));
     }
 
-    public function test_mb_to_bytes() : void
+    public function test_mb_to_bytes(): void
     {
-        self::assertSame(1048576, SizeUnits::mbToBytes(1));
-        self::assertSame(5242880, SizeUnits::mbToBytes(5));
+        static::assertSame(1048576, SizeUnits::mbToBytes(1));
+        static::assertSame(5242880, SizeUnits::mbToBytes(5));
     }
 }

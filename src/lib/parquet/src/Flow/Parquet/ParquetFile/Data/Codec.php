@@ -5,16 +5,17 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile\Data;
 
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\{Option, Options, ParquetFile\Compressions};
+use Flow\Parquet\Option;
+use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Compressions;
 
 final readonly class Codec
 {
     public function __construct(
         private Options $options,
-    ) {
-    }
+    ) {}
 
-    public function compress(string $data, Compressions $compression) : string
+    public function compress(string $data, Compressions $compression): string
     {
         /**
          * @var false|string $result
@@ -25,7 +26,10 @@ final readonly class Codec
             Compressions::BROTLI => \brotli_compress($data, $this->options->getInt(Option::BROTLI_COMPRESSION_LEVEL)),
             Compressions::GZIP => \gzencode($data, $this->options->getInt(Option::GZIP_COMPRESSION_LEVEL)),
             Compressions::LZ4 => \lz4_compress($data, $this->options->getInt(Option::LZ4_COMPRESSION_LEVEL)),
-            Compressions::LZ4_RAW => \substr((string) \lz4_compress($data, $this->options->getInt(Option::LZ4_COMPRESSION_LEVEL)), 4),
+            Compressions::LZ4_RAW => \substr(
+                (string) \lz4_compress($data, $this->options->getInt(Option::LZ4_COMPRESSION_LEVEL)),
+                4,
+            ),
             Compressions::ZSTD => \zstd_compress($data, $this->options->getInt(Option::ZSTD_COMPRESSION_LEVEL)),
             default => throw new RuntimeException('Compression ' . $compression->name . ' is not supported yet'),
         };
@@ -37,7 +41,7 @@ final readonly class Codec
         return $result;
     }
 
-    public function decompress(string $data, Compressions $compression, ?int $uncompressedSize = null) : string
+    public function decompress(string $data, Compressions $compression, ?int $uncompressedSize = null): string
     {
         /** @var false|string $result */
         $result = match ($compression) {

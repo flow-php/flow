@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\QueryBuilder\Merge;
 
 use Flow\PostgreSql\Protobuf\AST\MergeMatchKind as ProtoMergeMatchKind;
 
-enum MergeMatchKind : int
+enum MergeMatchKind: int
 {
     case MATCHED = ProtoMergeMatchKind::MERGE_WHEN_MATCHED;
     case NOT_MATCHED_BY_SOURCE = ProtoMergeMatchKind::MERGE_WHEN_NOT_MATCHED_BY_SOURCE;

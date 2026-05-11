@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Context;
 
-use function Flow\Types\DSL\type_instance_of;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\TestKernel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Filesystem\Filesystem;
+
+use function Flow\Types\DSL\type_instance_of;
 
 final class SymfonyContext
 {
@@ -16,7 +17,7 @@ final class SymfonyContext
     /**
      * @param array{config?: callable(TestKernel): void} $options
      */
-    public function bootKernel(array $options = []) : TestKernel
+    public function bootKernel(array $options = []): TestKernel
     {
         if ($this->kernel !== null) {
             $this->shutdown();
@@ -33,7 +34,7 @@ final class SymfonyContext
         return $this->kernel;
     }
 
-    public function getContainer() : ContainerInterface
+    public function getContainer(): ContainerInterface
     {
         if ($this->kernel === null) {
             throw new \LogicException('Kernel has not been booted. Call bootKernel() first.');
@@ -42,7 +43,7 @@ final class SymfonyContext
         return $this->kernel->getContainer();
     }
 
-    public function getKernel() : TestKernel
+    public function getKernel(): TestKernel
     {
         if ($this->kernel === null) {
             throw new \LogicException('Kernel has not been booted. Call bootKernel() first.');
@@ -58,7 +59,7 @@ final class SymfonyContext
      *
      * @return T
      */
-    public function getService(string $serviceId, string $typeClass) : object
+    public function getService(string $serviceId, string $typeClass): object
     {
         return type_instance_of($typeClass)->assert($this->getContainer()->get($serviceId));
     }
@@ -67,12 +68,12 @@ final class SymfonyContext
      * Useful for verifying that the bundle wired the right collaborator
      * into a service whose collaborator is not exposed via a getter.
      */
-    public function readPrivateProperty(object $service, string $propertyName) : mixed
+    public function readPrivateProperty(object $service, string $propertyName): mixed
     {
         return (new \ReflectionProperty($service, $propertyName))->getValue($service);
     }
 
-    public function shutdown() : void
+    public function shutdown(): void
     {
         if ($this->kernel === null) {
             return;

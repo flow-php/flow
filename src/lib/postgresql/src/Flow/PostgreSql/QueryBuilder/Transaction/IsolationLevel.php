@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Transaction;
 
-enum IsolationLevel : string
+enum IsolationLevel: string
 {
     case READ_COMMITTED = 'read committed';
     case READ_UNCOMMITTED = 'read uncommitted';

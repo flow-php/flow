@@ -18,7 +18,7 @@ interface SpanProcessor
      * Forces immediate export of any buffered spans. Returns true
      * if all spans were successfully exported.
      */
-    public function flush() : bool;
+    public function flush(): bool;
 
     /**
      * Called when a span ends.
@@ -26,7 +26,7 @@ interface SpanProcessor
      * This is invoked synchronously when the span completes. The span
      * is fully populated at this point (end time, status, all attributes).
      */
-    public function onEnd(Span $span) : void;
+    public function onEnd(Span $span): void;
 
     /**
      * Called when a span starts.
@@ -34,7 +34,7 @@ interface SpanProcessor
      * This is invoked synchronously when the span begins. Implementations
      * should avoid blocking operations in this method.
      */
-    public function onStart(Span $span) : void;
+    public function onStart(Span $span): void;
 
     /**
      * Shutdown the processor.
@@ -42,5 +42,5 @@ interface SpanProcessor
      * Implementations SHOULD flush() pending data before delegating shutdown
      * to the underlying exporter. MUST be idempotent and MUST NOT throw.
      */
-    public function shutdown() : void;
+    public function shutdown(): void;
 }

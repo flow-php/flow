@@ -29,7 +29,7 @@ final readonly class Columns
     /**
      * @return array<string>
      */
-    public function all() : array
+    public function all(): array
     {
         return $this->columns;
     }
@@ -39,7 +39,7 @@ final readonly class Columns
      *
      * @return bool
      */
-    public function has(string ...$columnNames) : bool
+    public function has(string ...$columnNames): bool
     {
         return \count(\array_unique(\array_merge($this->columns, $columnNames))) === \count($this->columns);
     }
@@ -51,7 +51,7 @@ final readonly class Columns
      *
      * @return array<ReturnType>
      */
-    public function map(callable $callable) : array
+    public function map(callable $callable): array
     {
         /** @var array<ReturnType> $columns */
         $columns = [];
@@ -63,28 +63,20 @@ final readonly class Columns
         return $columns;
     }
 
-    public function prefix(string $prefix) : self
+    public function prefix(string $prefix): self
     {
-        return new self(
-            ...$this->map(
-                static fn (string $column) : string => $prefix . $column
-            )
-        );
+        return new self(...$this->map(static fn(string $column): string => $prefix . $column));
     }
 
-    public function suffix(string $suffix) : self
+    public function suffix(string $suffix): self
     {
-        return new self(
-            ...$this->map(
-                static fn (string $column) : string => $column . $suffix
-            )
-        );
+        return new self(...$this->map(static fn(string $column): string => $column . $suffix));
     }
 
     /**
      * @throws RuntimeException
      */
-    public function without(string ...$columnNames) : self
+    public function without(string ...$columnNames): self
     {
         $columns = [];
 

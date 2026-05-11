@@ -42,7 +42,7 @@ final readonly class W3CBaggage implements Propagator
     /**
      * @param Carrier<mixed> $carrier
      */
-    public function extract(Carrier $carrier) : PropagationContext
+    public function extract(Carrier $carrier): PropagationContext
     {
         $baggageHeader = $carrier->get(self::HEADER_BAGGAGE);
 
@@ -88,7 +88,7 @@ final readonly class W3CBaggage implements Propagator
     /**
      * @return array<string>
      */
-    public function fields() : array
+    public function fields(): array
     {
         return [self::HEADER_BAGGAGE];
     }
@@ -96,7 +96,7 @@ final readonly class W3CBaggage implements Propagator
     /**
      * @param Carrier<mixed> $carrier
      */
-    public function inject(PropagationContext $context, Carrier $carrier) : void
+    public function inject(PropagationContext $context, Carrier $carrier): void
     {
         if ($context->baggage === null || $context->baggage->isEmpty()) {
             return;

@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Type;
 
-use Flow\PostgreSql\Protobuf\AST\{DropBehavior, DropStmt, Node, ObjectType, PBString, TypeName};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\DropBehavior;
+use Flow\PostgreSql\Protobuf\AST\DropStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\TypeName;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class DropTypeBuilder implements DropTypeFinalStep
 {
@@ -18,42 +24,29 @@ final readonly class DropTypeBuilder implements DropTypeFinalStep
         private array $names,
         private bool $ifExists = false,
         private int $behavior = DropBehavior::DROP_RESTRICT,
-    ) {
-    }
+    ) {}
 
-    public static function create(string ...$names) : DropTypeFinalStep
+    public static function create(string ...$names): DropTypeFinalStep
     {
         return new self(\array_values($names));
     }
 
-    public function cascade() : DropTypeFinalStep
+    public function cascade(): DropTypeFinalStep
     {
-        return new self(
-            $this->names,
-            $this->ifExists,
-            DropBehavior::DROP_CASCADE,
-        );
+        return new self($this->names, $this->ifExists, DropBehavior::DROP_CASCADE);
     }
 
-    public function ifExists() : DropTypeFinalStep
+    public function ifExists(): DropTypeFinalStep
     {
-        return new self(
-            $this->names,
-            true,
-            $this->behavior,
-        );
+        return new self($this->names, true, $this->behavior);
     }
 
-    public function restrict() : DropTypeFinalStep
+    public function restrict(): DropTypeFinalStep
     {
-        return new self(
-            $this->names,
-            $this->ifExists,
-            DropBehavior::DROP_RESTRICT,
-        );
+        return new self($this->names, $this->ifExists, DropBehavior::DROP_RESTRICT);
     }
 
-    public function toAst() : DropStmt
+    public function toAst(): DropStmt
     {
         $stmt = new DropStmt();
         $stmt->setRemoveType(ObjectType::OBJECT_TYPE);

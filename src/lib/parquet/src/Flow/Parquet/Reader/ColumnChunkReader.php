@@ -11,20 +11,20 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\Thrift\{CompactProtocol, PhpFileStream};
+use Flow\Parquet\Thrift\CompactProtocol;
+use Flow\Parquet\Thrift\PhpFileStream;
 
 final readonly class ColumnChunkReader
 {
     public function __construct(
         private PageReader $pageReader,
         private Options $options,
-    ) {
-    }
+    ) {}
 
     /**
      * @return \Generator<ReadFlatColumnValues>
      */
-    public function read(ColumnChunk $columnChunk, FlatColumn $column, SourceStream $stream) : \Generator
+    public function read(ColumnChunk $columnChunk, FlatColumn $column, SourceStream $stream): \Generator
     {
         $pageStream = fopen('php://temp', 'rb+');
 
@@ -50,16 +50,14 @@ final readonly class ColumnChunkReader
                 /** @var int<1, max> $dictHeaderSize */
                 $dictHeaderSize = (int) \ftell($pageStream);
                 \fseek($pageStream, 0, \SEEK_END);
-                \fwrite($pageStream, $stream->read($dictHeaderSize, $columnChunk->pageOffset() + $columnChunk->totalCompressedSize()));
+                \fwrite($pageStream, $stream->read(
+                    $dictHeaderSize,
+                    $columnChunk->pageOffset() + $columnChunk->totalCompressedSize(),
+                ));
                 \fseek($pageStream, $dictHeaderSize);
             }
 
-            $dictionary = $this->pageReader->readDictionary(
-                $column,
-                $header,
-                $columnChunk->codec(),
-                $pageStream
-            );
+            $dictionary = $this->pageReader->readDictionary($column, $header, $columnChunk->codec(), $pageStream);
         } else {
             $dictionary = null;
         }
@@ -79,13 +77,7 @@ final readonly class ColumnChunkReader
                 break;
             }
 
-            $data = $this->pageReader->readData(
-                $column,
-                $dataHeader,
-                $columnChunk->codec(),
-                $dictionary,
-                $pageStream
-            );
+            $data = $this->pageReader->readData($column, $dataHeader, $columnChunk->codec(), $dictionary, $pageStream);
 
             $yieldedRows += $data->rowsCount();
 
@@ -102,7 +94,7 @@ final readonly class ColumnChunkReader
     /**
      * @param resource $stream
      */
-    private function readHeader($stream) : ?PageHeader
+    private function readHeader($stream): ?PageHeader
     {
         $currentOffset = \ftell($stream);
 

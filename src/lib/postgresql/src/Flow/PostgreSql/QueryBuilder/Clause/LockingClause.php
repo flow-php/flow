@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Clause;
 
-use Flow\PostgreSql\Protobuf\AST\{LockingClause as ProtobufLockingClause, Node, RangeVar};
+use Flow\PostgreSql\Protobuf\AST\LockingClause as ProtobufLockingClause;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\QueryBuilder\Bridge\AstConvertible;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
@@ -20,13 +22,12 @@ final readonly class LockingClause implements AstConvertible
         private LockStrength $strength,
         private array $tables = [],
         private LockWaitPolicy $waitPolicy = LockWaitPolicy::DEFAULT,
-    ) {
-    }
+    ) {}
 
     /**
      * @param list<string> $tables
      */
-    public static function forKeyShare(array $tables = []) : self
+    public static function forKeyShare(array $tables = []): self
     {
         return new self(LockStrength::KEY_SHARE, $tables);
     }
@@ -34,7 +35,7 @@ final readonly class LockingClause implements AstConvertible
     /**
      * @param list<string> $tables
      */
-    public static function forNoKeyUpdate(array $tables = []) : self
+    public static function forNoKeyUpdate(array $tables = []): self
     {
         return new self(LockStrength::NO_KEY_UPDATE, $tables);
     }
@@ -42,7 +43,7 @@ final readonly class LockingClause implements AstConvertible
     /**
      * @param list<string> $tables
      */
-    public static function forShare(array $tables = []) : self
+    public static function forShare(array $tables = []): self
     {
         return new self(LockStrength::SHARE, $tables);
     }
@@ -50,12 +51,12 @@ final readonly class LockingClause implements AstConvertible
     /**
      * @param list<string> $tables
      */
-    public static function forUpdate(array $tables = []) : self
+    public static function forUpdate(array $tables = []): self
     {
         return new self(LockStrength::UPDATE, $tables);
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $lockingClause = $node->getLockingClause();
 
@@ -86,17 +87,17 @@ final readonly class LockingClause implements AstConvertible
         return new self($strength, $tables, $waitPolicy);
     }
 
-    public function nowait() : self
+    public function nowait(): self
     {
         return new self($this->strength, $this->tables, LockWaitPolicy::NOWAIT);
     }
 
-    public function skipLocked() : self
+    public function skipLocked(): self
     {
         return new self($this->strength, $this->tables, LockWaitPolicy::SKIP_LOCKED);
     }
 
-    public function strength() : LockStrength
+    public function strength(): LockStrength
     {
         return $this->strength;
     }
@@ -104,12 +105,12 @@ final readonly class LockingClause implements AstConvertible
     /**
      * @return list<string>
      */
-    public function tables() : array
+    public function tables(): array
     {
         return $this->tables;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $lockingClause = new ProtobufLockingClause();
         $lockingClause->setStrength($this->strength->toProtobuf());
@@ -137,7 +138,7 @@ final readonly class LockingClause implements AstConvertible
         return $node;
     }
 
-    public function waitPolicy() : LockWaitPolicy
+    public function waitPolicy(): LockWaitPolicy
     {
         return $this->waitPolicy;
     }

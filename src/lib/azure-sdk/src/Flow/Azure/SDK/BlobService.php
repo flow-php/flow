@@ -4,30 +4,32 @@ declare(strict_types=1);
 
 namespace Flow\Azure\SDK;
 
-use Flow\Azure\SDK\BlobService\{
-    BlockBlob\Block,
-    BlockBlob\BlockList,
-    BlockBlob\BlockState,
-    Configuration,
-    CopyBlob\CopyBlobOptions,
-    CreateContainer\CreateContainerOptions,
-    DeleteBlob\DeleteBlobOptions,
-    DeleteContainer\DeleteContainerOptions,
-    GetBlobProperties\BlobProperties,
-    GetBlobProperties\GetBlobPropertiesOptions,
-    GetBlockBlobBlockList\GetBlockBlobBlockListOptions,
-    GetContainerProperties\ContainerProperties,
-    GetContainerProperties\GetContainerPropertiesOptions,
-    PutBlockBlobBlockList\PutBlockBlobBlockListOptions,
-    PutBlockBlobBlockList\SimpleXMLSerializer,
-    PutBlockBlobBlock\PutBlockBlobBlockOptions,
-    PutBlockBlob\PutBlockBlobOptions
-};
-use Flow\Azure\SDK\BlobService\GetBlob\{BlobContent, GetBlobOptions};
-use Flow\Azure\SDK\BlobService\ListBlobs\{Blob, ListBlobOptions};
-use Flow\Azure\SDK\Exception\{AzureException, InvalidArgumentException};
+use Flow\Azure\SDK\BlobService\BlockBlob\Block;
+use Flow\Azure\SDK\BlobService\BlockBlob\BlockList;
+use Flow\Azure\SDK\BlobService\BlockBlob\BlockState;
+use Flow\Azure\SDK\BlobService\Configuration;
+use Flow\Azure\SDK\BlobService\CopyBlob\CopyBlobOptions;
+use Flow\Azure\SDK\BlobService\CreateContainer\CreateContainerOptions;
+use Flow\Azure\SDK\BlobService\DeleteBlob\DeleteBlobOptions;
+use Flow\Azure\SDK\BlobService\DeleteContainer\DeleteContainerOptions;
+use Flow\Azure\SDK\BlobService\GetBlob\BlobContent;
+use Flow\Azure\SDK\BlobService\GetBlob\GetBlobOptions;
+use Flow\Azure\SDK\BlobService\GetBlobProperties\BlobProperties;
+use Flow\Azure\SDK\BlobService\GetBlobProperties\GetBlobPropertiesOptions;
+use Flow\Azure\SDK\BlobService\GetBlockBlobBlockList\GetBlockBlobBlockListOptions;
+use Flow\Azure\SDK\BlobService\GetContainerProperties\ContainerProperties;
+use Flow\Azure\SDK\BlobService\GetContainerProperties\GetContainerPropertiesOptions;
+use Flow\Azure\SDK\BlobService\ListBlobs\Blob;
+use Flow\Azure\SDK\BlobService\ListBlobs\ListBlobOptions;
+use Flow\Azure\SDK\BlobService\PutBlockBlob\PutBlockBlobOptions;
+use Flow\Azure\SDK\BlobService\PutBlockBlobBlock\PutBlockBlobBlockOptions;
+use Flow\Azure\SDK\BlobService\PutBlockBlobBlockList\PutBlockBlobBlockListOptions;
+use Flow\Azure\SDK\BlobService\PutBlockBlobBlockList\SimpleXMLSerializer;
+use Flow\Azure\SDK\Exception\AzureException;
+use Flow\Azure\SDK\Exception\InvalidArgumentException;
 use Flow\Azure\SDK\Normalizer\SimpleXMLNormalizer;
-use Psr\Http\Client\{ClientExceptionInterface, ClientInterface};
+use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Client\ClientInterface;
 use Psr\Log\LoggerInterface;
 
 final readonly class BlobService implements BlobServiceInterface
@@ -41,29 +43,24 @@ final readonly class BlobService implements BlobServiceInterface
         private URLFactory $urlFactory,
         private AuthorizationFactory $authorizationFactory,
         private LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     /**
      * @throws AzureException
      * @throws ClientExceptionInterface
      */
-    public function copyBlob(string $fromBlob, string $toBlob, CopyBlobOptions $options = new CopyBlobOptions()) : void
+    public function copyBlob(string $fromBlob, string $toBlob, CopyBlobOptions $options = new CopyBlobOptions()): void
     {
-        $request = $this->httpFactory->put(
-            $this->urlFactory->create(
-                $this->configuration,
-                $toBlob,
-                $options->toURIParameters(),
-            )
-        );
+        $request = $this->httpFactory->put($this->urlFactory->create(
+            $this->configuration,
+            $toBlob,
+            $options->toURIParameters(),
+        ));
 
-        $request = $request
-            ->withHeader('date', \gmdate('D, d M Y H:i:s T', time()))
-            ->withHeader('x-ms-copy-source', $this->urlFactory->create(
-                $this->configuration,
-                $fromBlob,
-            ));
+        $request = $request->withHeader('date', \gmdate(
+            'D, d M Y H:i:s T',
+            time(),
+        ))->withHeader('x-ms-copy-source', $this->urlFactory->create($this->configuration, $fromBlob));
 
         foreach ($options->toHeaders() as $header => $value) {
             $request = $request->withHeader($header, (string) $value);
@@ -89,15 +86,13 @@ final readonly class BlobService implements BlobServiceInterface
      * @throws AzureException
      * @throws ClientExceptionInterface
      */
-    public function deleteBlob(string $blob, DeleteBlobOptions $options = new DeleteBlobOptions()) : void
+    public function deleteBlob(string $blob, DeleteBlobOptions $options = new DeleteBlobOptions()): void
     {
-        $request = $this->httpFactory->delete(
-            $this->urlFactory->create(
-                $this->configuration,
-                $blob,
-                $options->toURIParameters(),
-            )
-        );
+        $request = $this->httpFactory->delete($this->urlFactory->create(
+            $this->configuration,
+            $blob,
+            $options->toURIParameters(),
+        ));
 
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
@@ -124,15 +119,13 @@ final readonly class BlobService implements BlobServiceInterface
      * @throws AzureException
      * @throws ClientExceptionInterface
      */
-    public function deleteContainer(DeleteContainerOptions $options = new DeleteContainerOptions()) : void
+    public function deleteContainer(DeleteContainerOptions $options = new DeleteContainerOptions()): void
     {
-        $request = $this->httpFactory->delete(
-            $this->urlFactory->create(
-                $this->configuration,
-                null,
-                $options->toURIParameters(),
-            )
-        );
+        $request = $this->httpFactory->delete($this->urlFactory->create(
+            $this->configuration,
+            null,
+            $options->toURIParameters(),
+        ));
 
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
@@ -159,15 +152,13 @@ final readonly class BlobService implements BlobServiceInterface
      * @throws AzureException
      * @throws ClientExceptionInterface
      */
-    public function getBlob(string $blob, GetBlobOptions $options = new GetBlobOptions()) : BlobContent
+    public function getBlob(string $blob, GetBlobOptions $options = new GetBlobOptions()): BlobContent
     {
-        $request = $this->httpFactory->get(
-            $this->urlFactory->create(
-                $this->configuration,
-                $blob,
-                $options->toURIParameters(),
-            )
-        );
+        $request = $this->httpFactory->get($this->urlFactory->create(
+            $this->configuration,
+            $blob,
+            $options->toURIParameters(),
+        ));
 
         $request = $request->withHeader('content-type', 'application/x-www-form-urlencoded');
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
@@ -197,15 +188,15 @@ final readonly class BlobService implements BlobServiceInterface
      * @throws AzureException
      * @throws ClientExceptionInterface
      */
-    public function getBlobProperties(string $blob, GetBlobPropertiesOptions $options = new GetBlobPropertiesOptions()) : ?BlobProperties
-    {
-        $request = $this->httpFactory->get(
-            $this->urlFactory->create(
-                $this->configuration,
-                $blob,
-                $options->toURIParameters(),
-            )
-        );
+    public function getBlobProperties(
+        string $blob,
+        GetBlobPropertiesOptions $options = new GetBlobPropertiesOptions(),
+    ): ?BlobProperties {
+        $request = $this->httpFactory->get($this->urlFactory->create(
+            $this->configuration,
+            $blob,
+            $options->toURIParameters(),
+        ));
 
         $request = $request->withHeader('content-type', 'application/x-www-form-urlencoded');
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
@@ -235,18 +226,15 @@ final readonly class BlobService implements BlobServiceInterface
         return new BlobProperties($response);
     }
 
-    public function getBlockBlobBlockList(string $blob, GetBlockBlobBlockListOptions $options = new GetBlockBlobBlockListOptions()) : BlockList
-    {
-        $request = $this->httpFactory->get(
-            $this->urlFactory->create(
-                $this->configuration,
-                $blob,
-                \array_merge(
-                    $options->toURIParameters(),
-                    ['comp' => 'blocklist']
-                )
-            )
-        );
+    public function getBlockBlobBlockList(
+        string $blob,
+        GetBlockBlobBlockListOptions $options = new GetBlockBlobBlockListOptions(),
+    ): BlockList {
+        $request = $this->httpFactory->get($this->urlFactory->create(
+            $this->configuration,
+            $blob,
+            \array_merge($options->toURIParameters(), ['comp' => 'blocklist']),
+        ));
 
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
@@ -278,7 +266,11 @@ final readonly class BlobService implements BlobServiceInterface
             if (\array_key_exists('Block', $committedBlocks)) {
                 $blockData = $committedBlocks['Block'];
 
-                if (\is_array($blockData) && \array_key_exists('Name', $blockData) && \array_key_exists('Size', $blockData)) {
+                if (
+                    \is_array($blockData)
+                    && \array_key_exists('Name', $blockData)
+                    && \array_key_exists('Size', $blockData)
+                ) {
                     // Single block case
                     $name = $blockData['Name'];
                     $size = $blockData['Size'];
@@ -289,7 +281,11 @@ final readonly class BlobService implements BlobServiceInterface
                 } elseif (\is_array($blockData)) {
                     // Multiple blocks case
                     foreach ($blockData as $block) {
-                        if (\is_array($block) && \array_key_exists('Name', $block) && \array_key_exists('Size', $block)) {
+                        if (
+                            \is_array($block)
+                            && \array_key_exists('Name', $block)
+                            && \array_key_exists('Size', $block)
+                        ) {
                             $name = $block['Name'];
                             $size = $block['Size'];
 
@@ -308,7 +304,11 @@ final readonly class BlobService implements BlobServiceInterface
             if (\array_key_exists('Block', $uncommittedBlocks)) {
                 $blockData = $uncommittedBlocks['Block'];
 
-                if (\is_array($blockData) && \array_key_exists('Name', $blockData) && \array_key_exists('Size', $blockData)) {
+                if (
+                    \is_array($blockData)
+                    && \array_key_exists('Name', $blockData)
+                    && \array_key_exists('Size', $blockData)
+                ) {
                     // Single block case
                     $name = $blockData['Name'];
                     $size = $blockData['Size'];
@@ -319,7 +319,11 @@ final readonly class BlobService implements BlobServiceInterface
                 } elseif (\is_array($blockData)) {
                     // Multiple blocks case
                     foreach ($blockData as $block) {
-                        if (\is_array($block) && \array_key_exists('Name', $block) && \array_key_exists('Size', $block)) {
+                        if (
+                            \is_array($block)
+                            && \array_key_exists('Name', $block)
+                            && \array_key_exists('Size', $block)
+                        ) {
                             $name = $block['Name'];
                             $size = $block['Size'];
 
@@ -339,18 +343,13 @@ final readonly class BlobService implements BlobServiceInterface
      * @throws AzureException
      * @throws ClientExceptionInterface
      */
-    public function getContainerProperties(GetContainerPropertiesOptions $options = new GetContainerPropertiesOptions()) : ?ContainerProperties
+    public function getContainerProperties(GetContainerPropertiesOptions $options = new GetContainerPropertiesOptions()): ?ContainerProperties
     {
-        $request = $this->httpFactory->get(
-            $this->urlFactory->create(
-                $this->configuration,
-                null,
-                array_merge(
-                    $options->toURIParameters(),
-                    ['restype' => 'container']
-                )
-            )
-        );
+        $request = $this->httpFactory->get($this->urlFactory->create(
+            $this->configuration,
+            null,
+            array_merge($options->toURIParameters(), ['restype' => 'container']),
+        ));
 
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
@@ -384,17 +383,12 @@ final readonly class BlobService implements BlobServiceInterface
      *
      * @return \Generator<Blob>
      */
-    public function listBlobs(ListBlobOptions $options = new ListBlobOptions()) : \Generator
+    public function listBlobs(ListBlobOptions $options = new ListBlobOptions()): \Generator
     {
-        $request = $this->httpFactory->get(
-            $this->urlFactory->create(
-                $this->configuration,
-                queryParameters: \array_merge(
-                    $options->toURIParameters(),
-                    ['restype' => 'container', 'comp' => 'list']
-                )
-            )
-        );
+        $request = $this->httpFactory->get($this->urlFactory->create(
+            $this->configuration,
+            queryParameters: \array_merge($options->toURIParameters(), ['restype' => 'container', 'comp' => 'list']),
+        ));
 
         $request = $request->withHeader('content-type', 'application/x-www-form-urlencoded');
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
@@ -455,8 +449,12 @@ final readonly class BlobService implements BlobServiceInterface
      *
      * @throws AzureException
      */
-    public function putBlockBlob(string $path, $content = null, ?int $size = null, PutBlockBlobOptions $options = new PutBlockBlobOptions()) : void
-    {
+    public function putBlockBlob(
+        string $path,
+        $content = null,
+        ?int $size = null,
+        PutBlockBlobOptions $options = new PutBlockBlobOptions(),
+    ): void {
         if ($content !== null) {
             if (!\is_resource($content) && !\is_string($content)) {
                 throw new InvalidArgumentException('Content must be a resource or a string');
@@ -467,13 +465,11 @@ final readonly class BlobService implements BlobServiceInterface
             }
         }
 
-        $request = $this->httpFactory->put(
-            $this->urlFactory->create(
-                $this->configuration,
-                $path,
-                $options->toURIParameters(),
-            )
-        );
+        $request = $this->httpFactory->put($this->urlFactory->create(
+            $this->configuration,
+            $path,
+            $options->toURIParameters(),
+        ));
 
         $request = $request
             ->withHeader('content-type', 'application/octet-stream')
@@ -515,18 +511,18 @@ final readonly class BlobService implements BlobServiceInterface
      * @throws AzureException
      * @throws ClientExceptionInterface
      */
-    public function putBlockBlobBlock(string $path, string $blockId, $content, int $size, PutBlockBlobBlockOptions $options = new PutBlockBlobBlockOptions()) : void
-    {
-        $request = $this->httpFactory->put(
-            $this->urlFactory->create(
-                $this->configuration,
-                $path,
-                \array_merge(
-                    $options->toURIParameters(),
-                    ['comp' => 'block', 'blockid' => $blockId]
-                )
-            )
-        );
+    public function putBlockBlobBlock(
+        string $path,
+        string $blockId,
+        $content,
+        int $size,
+        PutBlockBlobBlockOptions $options = new PutBlockBlobBlockOptions(),
+    ): void {
+        $request = $this->httpFactory->put($this->urlFactory->create(
+            $this->configuration,
+            $path,
+            \array_merge($options->toURIParameters(), ['comp' => 'block', 'blockid' => $blockId]),
+        ));
 
         $request = $request
             ->withHeader('content-type', 'application/x-www-form-urlencoded')
@@ -537,9 +533,10 @@ final readonly class BlobService implements BlobServiceInterface
             $request = $request->withHeader($header, (string) $value);
         }
 
-        $request = $request
-            ->withBody($this->httpFactory->stream($content))
-            ->withHeader('authorization', $this->authorizationFactory->for($request));
+        $request = $request->withBody($this->httpFactory->stream($content))->withHeader(
+            'authorization',
+            $this->authorizationFactory->for($request),
+        );
 
         $this->logger->info('Azure - Blob Service - Put Block Blob Block', ['request' => $request]);
 
@@ -558,30 +555,30 @@ final readonly class BlobService implements BlobServiceInterface
      * @throws AzureException
      * @throws ClientExceptionInterface
      */
-    public function putBlockBlobBlockList(string $path, BlockList $blockList, PutBlockBlobBlockListOptions $options = new PutBlockBlobBlockListOptions(), Serializer $serializer = new SimpleXMLSerializer()) : void
-    {
-        $request = $this->httpFactory->put(
-            $this->urlFactory->create(
-                $this->configuration,
-                $path,
-                queryParameters: \array_merge(
-                    $options->toURIParameters(),
-                    ['comp' => 'blocklist']
-                )
-            )
-        );
+    public function putBlockBlobBlockList(
+        string $path,
+        BlockList $blockList,
+        PutBlockBlobBlockListOptions $options = new PutBlockBlobBlockListOptions(),
+        Serializer $serializer = new SimpleXMLSerializer(),
+    ): void {
+        $request = $this->httpFactory->put($this->urlFactory->create(
+            $this->configuration,
+            $path,
+            queryParameters: \array_merge($options->toURIParameters(), ['comp' => 'blocklist']),
+        ));
 
-        $request = $request
-            ->withHeader('content-type', 'application/x-www-form-urlencoded')
-            ->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
+        $request = $request->withHeader(
+            'content-type',
+            'application/x-www-form-urlencoded',
+        )->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
             $request = $request->withHeader($header, (string) $value);
         }
 
-        $request = $request
-            ->withBody($this->httpFactory->stream($blockListString = $serializer->serialize($blockList)))
-            ->withHeader('content-length', (string) \strlen($blockListString));
+        $request = $request->withBody($this->httpFactory->stream(
+            $blockListString = $serializer->serialize($blockList),
+        ))->withHeader('content-length', (string) \strlen($blockListString));
 
         $this->logger->info('Azure - Blob Service - Put Block Blob Block List', ['request' => $request]);
 
@@ -602,18 +599,13 @@ final readonly class BlobService implements BlobServiceInterface
      * @throws AzureException
      * @throws ClientExceptionInterface
      */
-    public function putContainer(CreateContainerOptions $options = new CreateContainerOptions()) : void
+    public function putContainer(CreateContainerOptions $options = new CreateContainerOptions()): void
     {
-        $request = $this->httpFactory->put(
-            $this->urlFactory->create(
-                $this->configuration,
-                null,
-                \array_merge(
-                    $options->toURIParameters(),
-                    ['restype' => 'container']
-                )
-            )
-        );
+        $request = $this->httpFactory->put($this->urlFactory->create(
+            $this->configuration,
+            null,
+            \array_merge($options->toURIParameters(), ['restype' => 'container']),
+        ));
 
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 

@@ -9,11 +9,11 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface RevokeFinalStep extends Sql
 {
-    public function cascade() : self;
+    public function cascade(): self;
 
-    public function restrict() : self;
+    public function restrict(): self;
 
-    public function toAst() : GrantStmt;
+    public function toAst(): GrantStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

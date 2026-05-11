@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Processor;
 
-use function Flow\ETL\DSL\{flow_context, int_entry, row, rows};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Processor\OffsetProcessor;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+
 final class OffsetProcessorTest extends FlowTestCase
 {
-    public function test_offset_greater_than_total_rows_yields_nothing() : void
+    public function test_offset_greater_than_total_rows_yields_nothing(): void
     {
         $processor = new OffsetProcessor(10);
 
@@ -26,19 +30,15 @@ final class OffsetProcessorTest extends FlowTestCase
             $totalRows += $batch->count();
         }
 
-        self::assertSame(0, $totalRows);
+        static::assertSame(0, $totalRows);
     }
 
-    public function test_offset_within_single_batch() : void
+    public function test_offset_within_single_batch(): void
     {
         $processor = new OffsetProcessor(1);
 
         $generator = (static function () {
-            yield rows(
-                row(int_entry('id', 1)),
-                row(int_entry('id', 2)),
-                row(int_entry('id', 3))
-            );
+            yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
         })();
 
         $result = iterator_to_array($processor->process($generator, flow_context()));
@@ -50,16 +50,16 @@ final class OffsetProcessorTest extends FlowTestCase
             }
         }
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['id' => 2],
                 ['id' => 3],
             ],
-            $allRows
+            $allRows,
         );
     }
 
-    public function test_offset_zero_yields_all_rows() : void
+    public function test_offset_zero_yields_all_rows(): void
     {
         $processor = new OffsetProcessor(0);
 
@@ -74,10 +74,10 @@ final class OffsetProcessorTest extends FlowTestCase
             $totalRows += $batch->count();
         }
 
-        self::assertSame(2, $totalRows);
+        static::assertSame(2, $totalRows);
     }
 
-    public function test_skips_first_n_rows() : void
+    public function test_skips_first_n_rows(): void
     {
         $processor = new OffsetProcessor(2);
 
@@ -95,16 +95,16 @@ final class OffsetProcessorTest extends FlowTestCase
             }
         }
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['id' => 3],
                 ['id' => 4],
             ],
-            $allRows
+            $allRows,
         );
     }
 
-    public function test_throws_exception_for_negative_offset() : void
+    public function test_throws_exception_for_negative_offset(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Offset must be greater than or equal to 0');

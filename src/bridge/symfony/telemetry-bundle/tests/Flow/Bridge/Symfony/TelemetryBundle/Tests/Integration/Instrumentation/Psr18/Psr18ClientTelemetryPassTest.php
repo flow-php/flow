@@ -6,7 +6,8 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\Instrumentation\
 
 use Flow\Bridge\Psr18\Telemetry\PSR18TraceableClient;
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\Psr18ClientTelemetryPass;
-use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Psr18\{FailingPsr18Client, MockPsr18Client};
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Psr18\FailingPsr18Client;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Psr18\MockPsr18Client;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\KernelTestCase;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
@@ -20,7 +21,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 #[CoversClass(Psr18ClientTelemetryPass::class)]
 final class Psr18ClientTelemetryPassTest extends KernelTestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\interface_exists(ClientInterface::class)) {
             self::markTestSkipped('psr/http-client is not installed');
@@ -33,16 +34,15 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
         parent::setUp();
     }
 
-    public function test_all_psr18_clients_are_wrapped_when_enabled() : void
+    public function test_all_psr18_clients_are_wrapped_when_enabled(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
-                    $container->register('test.api_client', MockPsr18Client::class)
-                        ->addArgument(200)
-                        ->setPublic(true);
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container->register('test.api_client', MockPsr18Client::class)->addArgument(200)->setPublic(true);
 
-                    $container->register('test.internal_client', MockPsr18Client::class)
+                    $container
+                        ->register('test.internal_client', MockPsr18Client::class)
                         ->addArgument(200)
                         ->setPublic(true);
                 });
@@ -62,18 +62,16 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
 
         $container = $this->getContainer();
 
-        self::assertInstanceOf(PSR18TraceableClient::class, $container->get('test.api_client'));
-        self::assertInstanceOf(PSR18TraceableClient::class, $container->get('test.internal_client'));
+        static::assertInstanceOf(PSR18TraceableClient::class, $container->get('test.api_client'));
+        static::assertInstanceOf(PSR18TraceableClient::class, $container->get('test.internal_client'));
     }
 
-    public function test_decorator_not_registered_when_feature_disabled() : void
+    public function test_decorator_not_registered_when_feature_disabled(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
-                    $container->register('test.api_client', MockPsr18Client::class)
-                        ->addArgument(200)
-                        ->setPublic(true);
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container->register('test.api_client', MockPsr18Client::class)->addArgument(200)->setPublic(true);
                 });
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
@@ -88,19 +86,18 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
 
         $container = $this->getContainer();
 
-        self::assertInstanceOf(MockPsr18Client::class, $container->get('test.api_client'));
+        static::assertInstanceOf(MockPsr18Client::class, $container->get('test.api_client'));
     }
 
-    public function test_excluded_client_by_exact_id_is_not_wrapped() : void
+    public function test_excluded_client_by_exact_id_is_not_wrapped(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
-                    $container->register('test.api_client', MockPsr18Client::class)
-                        ->addArgument(200)
-                        ->setPublic(true);
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container->register('test.api_client', MockPsr18Client::class)->addArgument(200)->setPublic(true);
 
-                    $container->register('test.internal_client', MockPsr18Client::class)
+                    $container
+                        ->register('test.internal_client', MockPsr18Client::class)
                         ->addArgument(200)
                         ->setPublic(true);
                 });
@@ -123,24 +120,24 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
 
         $container = $this->getContainer();
 
-        self::assertInstanceOf(PSR18TraceableClient::class, $container->get('test.api_client'));
-        self::assertInstanceOf(MockPsr18Client::class, $container->get('test.internal_client'));
+        static::assertInstanceOf(PSR18TraceableClient::class, $container->get('test.api_client'));
+        static::assertInstanceOf(MockPsr18Client::class, $container->get('test.internal_client'));
     }
 
-    public function test_excluded_clients_by_regex_pattern_are_not_wrapped() : void
+    public function test_excluded_clients_by_regex_pattern_are_not_wrapped(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
-                    $container->register('test.api_client', MockPsr18Client::class)
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container->register('test.api_client', MockPsr18Client::class)->addArgument(200)->setPublic(true);
+
+                    $container
+                        ->register('test.debug.client', MockPsr18Client::class)
                         ->addArgument(200)
                         ->setPublic(true);
 
-                    $container->register('test.debug.client', MockPsr18Client::class)
-                        ->addArgument(200)
-                        ->setPublic(true);
-
-                    $container->register('test.debug.another', MockPsr18Client::class)
+                    $container
+                        ->register('test.debug.another', MockPsr18Client::class)
                         ->addArgument(200)
                         ->setPublic(true);
                 });
@@ -163,17 +160,18 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
 
         $container = $this->getContainer();
 
-        self::assertInstanceOf(PSR18TraceableClient::class, $container->get('test.api_client'));
-        self::assertInstanceOf(MockPsr18Client::class, $container->get('test.debug.client'));
-        self::assertInstanceOf(MockPsr18Client::class, $container->get('test.debug.another'));
+        static::assertInstanceOf(PSR18TraceableClient::class, $container->get('test.api_client'));
+        static::assertInstanceOf(MockPsr18Client::class, $container->get('test.debug.client'));
+        static::assertInstanceOf(MockPsr18Client::class, $container->get('test.debug.another'));
     }
 
-    public function test_wrapped_client_creates_error_span_for_http_error_response() : void
+    public function test_wrapped_client_creates_error_span_for_http_error_response(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
-                    $container->register('test.error_client', MockPsr18Client::class)
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container
+                        ->register('test.error_client', MockPsr18Client::class)
                         ->addArgument(500)
                         ->setPublic(true);
                 });
@@ -207,26 +205,24 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('POST localhost', $span->name());
-        self::assertSame(500, $span->attributes()['http.response.status_code']);
+        static::assertSame('POST localhost', $span->name());
+        static::assertSame(500, $span->attributes()['http.response.status_code']);
 
         $status = $span->status();
-        self::assertNotNull($status);
-        self::assertTrue($status->isError());
-        self::assertSame('HTTP 500', $status->description);
+        static::assertNotNull($status);
+        static::assertTrue($status->isError());
+        static::assertSame('HTTP 500', $status->description);
     }
 
-    public function test_wrapped_client_creates_span_with_correct_attributes() : void
+    public function test_wrapped_client_creates_span_with_correct_attributes(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
-                    $container->register('test.api_client', MockPsr18Client::class)
-                        ->addArgument(200)
-                        ->setPublic(true);
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container->register('test.api_client', MockPsr18Client::class)->addArgument(200)->setPublic(true);
                 });
 
                 $kernel->addTestExtensionConfig('flow_telemetry', [
@@ -258,30 +254,31 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('GET api.example.com', $span->name());
-        self::assertSame(SpanKind::CLIENT, $span->kind());
+        static::assertSame('GET api.example.com', $span->name());
+        static::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
-        self::assertSame('GET', $attributes['http.request.method']);
-        self::assertSame('https://api.example.com/users?page=1', $attributes['url.full']);
-        self::assertSame('https', $attributes['url.scheme']);
-        self::assertSame('api.example.com', $attributes['server.address']);
-        self::assertSame(200, $attributes['http.response.status_code']);
+        static::assertSame('GET', $attributes['http.request.method']);
+        static::assertSame('https://api.example.com/users?page=1', $attributes['url.full']);
+        static::assertSame('https', $attributes['url.scheme']);
+        static::assertSame('api.example.com', $attributes['server.address']);
+        static::assertSame(200, $attributes['http.response.status_code']);
 
         $status = $span->status();
-        self::assertNotNull($status);
-        self::assertTrue($status->isOk());
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
     }
 
-    public function test_wrapped_client_records_exception_and_creates_error_span() : void
+    public function test_wrapped_client_records_exception_and_creates_error_span(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
-                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container) : void {
-                    $container->register('test.failing_client', FailingPsr18Client::class)
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container
+                        ->register('test.failing_client', FailingPsr18Client::class)
                         ->addArgument('Connection refused')
                         ->setPublic(true);
                 });
@@ -316,27 +313,27 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
             $client->sendRequest(new Request('GET', 'https://unreachable.example.com/'));
         } catch (\RuntimeException $e) {
             $exceptionThrown = true;
-            self::assertSame('Connection refused', $e->getMessage());
+            static::assertSame('Connection refused', $e->getMessage());
         }
 
-        self::assertTrue($exceptionThrown, 'Expected exception was not thrown');
+        static::assertTrue($exceptionThrown, 'Expected exception was not thrown');
 
         /** @var MemorySpanProcessor $processor */
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('GET unreachable.example.com', $span->name());
+        static::assertSame('GET unreachable.example.com', $span->name());
 
         $status = $span->status();
-        self::assertNotNull($status);
-        self::assertTrue($status->isError());
-        self::assertSame('Connection refused', $status->description);
+        static::assertNotNull($status);
+        static::assertTrue($status->isError());
+        static::assertSame('Connection refused', $status->description);
 
         $events = $span->events();
-        self::assertCount(1, $events);
-        self::assertSame('exception', $events[0]->name());
+        static::assertCount(1, $events);
+        static::assertSame('exception', $events[0]->name());
     }
 }

@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Clause;
 
-use Flow\PostgreSql\Protobuf\AST\{Node, ResTarget};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ResTarget;
 use Flow\PostgreSql\QueryBuilder\Bridge\AstConvertible;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
-use Flow\PostgreSql\QueryBuilder\Expression\{Column, Expression, ExpressionFactory, Star};
+use Flow\PostgreSql\QueryBuilder\Expression\Column;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
+use Flow\PostgreSql\QueryBuilder\Expression\Star;
 
 /**
  * Represents a RETURNING clause for INSERT/UPDATE/DELETE statements.
@@ -19,15 +23,14 @@ final readonly class ReturningClause implements AstConvertible
      */
     public function __construct(
         private array $expressions,
-    ) {
-    }
+    ) {}
 
-    public static function all() : self
+    public static function all(): self
     {
         return new self([Star::all()]);
     }
 
-    public static function columns(string ...$columns) : self
+    public static function columns(string ...$columns): self
     {
         $expressions = [];
 
@@ -38,7 +41,7 @@ final readonly class ReturningClause implements AstConvertible
         return new self($expressions);
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $resTarget = $node->getResTarget();
 
@@ -60,7 +63,7 @@ final readonly class ReturningClause implements AstConvertible
     /**
      * @return list<Node>
      */
-    public static function toAstNodes(self $clause) : array
+    public static function toAstNodes(self $clause): array
     {
         $nodes = [];
 
@@ -80,12 +83,12 @@ final readonly class ReturningClause implements AstConvertible
     /**
      * @return list<Expression>
      */
-    public function expressions() : array
+    public function expressions(): array
     {
         return $this->expressions;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         if ($this->expressions === []) {
             throw InvalidAstException::missingRequiredField('expressions', 'ReturningClause');

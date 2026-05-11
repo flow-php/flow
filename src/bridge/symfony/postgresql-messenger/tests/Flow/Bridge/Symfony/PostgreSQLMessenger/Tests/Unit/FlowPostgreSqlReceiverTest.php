@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit;
 
-use Flow\Bridge\Symfony\PostgreSQLMessenger\{Connection, FlowPostgreSqlReceiver};
-use Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit\Double\{FakeSerializer, SpyClient};
+use Flow\Bridge\Symfony\PostgreSQLMessenger\Connection;
+use Flow\Bridge\Symfony\PostgreSQLMessenger\FlowPostgreSqlReceiver;
+use Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit\Double\FakeSerializer;
+use Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit\Double\SpyClient;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Messenger\Envelope;
-use Symfony\Component\Messenger\Exception\{MessageDecodingFailedException, TransportException};
+use Symfony\Component\Messenger\Exception\MessageDecodingFailedException;
+use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
 
 final class FlowPostgreSqlReceiverTest extends TestCase
 {
-    public function test_ack_delegates_to_connection_with_stamp_id() : void
+    public function test_ack_delegates_to_connection_with_stamp_id(): void
     {
         $client = new SpyClient();
         $client->executeReturn = 1;
@@ -23,10 +26,10 @@ final class FlowPostgreSqlReceiverTest extends TestCase
         $envelope = (new Envelope((object) []))->with(new TransportMessageIdStamp('42'));
         $receiver->ack($envelope);
 
-        self::assertSame([42], $client->executedQueries[0]['parameters']);
+        static::assertSame([42], $client->executedQueries[0]['parameters']);
     }
 
-    public function test_ack_throws_transport_exception_without_stamp() : void
+    public function test_ack_throws_transport_exception_without_stamp(): void
     {
         $receiver = new FlowPostgreSqlReceiver(new Connection(new SpyClient()), new FakeSerializer());
 
@@ -35,7 +38,7 @@ final class FlowPostgreSqlReceiverTest extends TestCase
         $receiver->ack(new Envelope((object) []));
     }
 
-    public function test_all_with_limit_passes_limit_to_connection() : void
+    public function test_all_with_limit_passes_limit_to_connection(): void
     {
         $client = new SpyClient();
         $client->fetchAllReturn = [];
@@ -43,10 +46,10 @@ final class FlowPostgreSqlReceiverTest extends TestCase
 
         \iterator_to_array($receiver->all(5), false);
 
-        self::assertStringContainsString('LIMIT 5', $client->executedQueries[0]['sql']);
+        static::assertStringContainsString('LIMIT 5', $client->executedQueries[0]['sql']);
     }
 
-    public function test_all_without_limit_returns_decoded_envelopes() : void
+    public function test_all_without_limit_returns_decoded_envelopes(): void
     {
         $client = new SpyClient();
         $client->fetchAllReturn = [
@@ -57,19 +60,19 @@ final class FlowPostgreSqlReceiverTest extends TestCase
 
         $envelopes = \iterator_to_array($receiver->all(), false);
 
-        self::assertCount(2, $envelopes);
+        static::assertCount(2, $envelopes);
         $stamp0 = $envelopes[0]->last(TransportMessageIdStamp::class);
-        self::assertNotNull($stamp0);
-        self::assertSame('1', $stamp0->getId());
+        static::assertNotNull($stamp0);
+        static::assertSame('1', $stamp0->getId());
         $stamp1 = $envelopes[1]->last(TransportMessageIdStamp::class);
-        self::assertNotNull($stamp1);
-        self::assertSame('2', $stamp1->getId());
+        static::assertNotNull($stamp1);
+        static::assertSame('2', $stamp1->getId());
     }
 
-    public function test_all_wraps_connection_exceptions() : void
+    public function test_all_wraps_connection_exceptions(): void
     {
         $client = new class() extends SpyClient {
-            public function fetchAll(Sql|string $sql, array $parameters = []) : array
+            public function fetchAll(Sql|string $sql, array $parameters = []): array
             {
                 throw new \RuntimeException('db failed');
             }
@@ -80,7 +83,7 @@ final class FlowPostgreSqlReceiverTest extends TestCase
         \iterator_to_array($receiver->all(), false);
     }
 
-    public function test_find_returns_decoded_envelope_with_stamp() : void
+    public function test_find_returns_decoded_envelope_with_stamp(): void
     {
         $client = new SpyClient();
         $client->fetchReturn = ['id' => 5, 'body' => 'hello', 'headers' => '{"type":"App\\\\Foo"}'];
@@ -88,22 +91,22 @@ final class FlowPostgreSqlReceiverTest extends TestCase
 
         $envelope = $receiver->find('5');
 
-        self::assertNotNull($envelope);
+        static::assertNotNull($envelope);
         $stamp = $envelope->last(TransportMessageIdStamp::class);
-        self::assertNotNull($stamp);
-        self::assertSame('5', $stamp->getId());
+        static::assertNotNull($stamp);
+        static::assertSame('5', $stamp->getId());
     }
 
-    public function test_find_returns_null_when_not_found() : void
+    public function test_find_returns_null_when_not_found(): void
     {
         $client = new SpyClient();
         $client->fetchReturn = null;
         $receiver = new FlowPostgreSqlReceiver(new Connection($client), new FakeSerializer());
 
-        self::assertNull($receiver->find('999'));
+        static::assertNull($receiver->find('999'));
     }
 
-    public function test_find_throws_on_unexpected_id_shape() : void
+    public function test_find_throws_on_unexpected_id_shape(): void
     {
         $client = new SpyClient();
         $client->fetchReturn = ['id' => null, 'body' => 'x', 'headers' => '{}'];
@@ -114,10 +117,10 @@ final class FlowPostgreSqlReceiverTest extends TestCase
         $receiver->find('1');
     }
 
-    public function test_find_wraps_connection_exceptions() : void
+    public function test_find_wraps_connection_exceptions(): void
     {
         $client = new class() extends SpyClient {
-            public function fetch(Sql|string $sql, array $parameters = []) : ?array
+            public function fetch(Sql|string $sql, array $parameters = []): ?array
             {
                 throw new \RuntimeException('db failed');
             }
@@ -128,7 +131,7 @@ final class FlowPostgreSqlReceiverTest extends TestCase
         $receiver->find('1');
     }
 
-    public function test_get_decodes_row_and_adds_stamps() : void
+    public function test_get_decodes_row_and_adds_stamps(): void
     {
         $client = new SpyClient();
         $client->fetchReturn = ['id' => 7, 'body' => 'hello', 'headers' => '{"type":"App\\\\Foo"}'];
@@ -137,28 +140,28 @@ final class FlowPostgreSqlReceiverTest extends TestCase
 
         $envelopes = \iterator_to_array($receiver->get(), false);
 
-        self::assertCount(1, $envelopes);
-        self::assertCount(1, $serializer->decodeCalls);
-        self::assertSame('hello', $serializer->decodeCalls[0]['body']);
-        self::assertSame(['type' => 'App\\Foo'], $serializer->decodeCalls[0]['headers']);
+        static::assertCount(1, $envelopes);
+        static::assertCount(1, $serializer->decodeCalls);
+        static::assertSame('hello', $serializer->decodeCalls[0]['body']);
+        static::assertSame(['type' => 'App\\Foo'], $serializer->decodeCalls[0]['headers']);
         $stamp = $envelopes[0]->last(TransportMessageIdStamp::class);
-        self::assertNotNull($stamp);
-        self::assertSame('7', $stamp->getId());
+        static::assertNotNull($stamp);
+        static::assertSame('7', $stamp->getId());
     }
 
-    public function test_get_message_count_delegates_to_connection() : void
+    public function test_get_message_count_delegates_to_connection(): void
     {
         $client = new SpyClient();
         $client->fetchScalarIntReturn = 99;
         $receiver = new FlowPostgreSqlReceiver(new Connection($client), new FakeSerializer());
 
-        self::assertSame(99, $receiver->getMessageCount());
+        static::assertSame(99, $receiver->getMessageCount());
     }
 
-    public function test_get_message_count_wraps_exceptions() : void
+    public function test_get_message_count_wraps_exceptions(): void
     {
         $client = new class() extends SpyClient {
-            public function fetchScalarInt(Sql|string $sql, array $parameters = []) : int
+            public function fetchScalarInt(Sql|string $sql, array $parameters = []): int
             {
                 throw new \RuntimeException('db down');
             }
@@ -169,16 +172,16 @@ final class FlowPostgreSqlReceiverTest extends TestCase
         $receiver->getMessageCount();
     }
 
-    public function test_get_returns_empty_when_no_messages() : void
+    public function test_get_returns_empty_when_no_messages(): void
     {
         $client = new SpyClient();
         $client->fetchReturn = null;
         $receiver = new FlowPostgreSqlReceiver(new Connection($client), new FakeSerializer());
 
-        self::assertSame([], \iterator_to_array($receiver->get(), false));
+        static::assertSame([], \iterator_to_array($receiver->get(), false));
     }
 
-    public function test_get_throws_on_malformed_headers_json() : void
+    public function test_get_throws_on_malformed_headers_json(): void
     {
         $client = new SpyClient();
         $client->fetchReturn = ['id' => 1, 'body' => 'x', 'headers' => 'not json'];
@@ -189,7 +192,7 @@ final class FlowPostgreSqlReceiverTest extends TestCase
         \iterator_to_array($receiver->get(), false);
     }
 
-    public function test_get_throws_on_non_array_headers() : void
+    public function test_get_throws_on_non_array_headers(): void
     {
         $client = new SpyClient();
         $client->fetchReturn = ['id' => 1, 'body' => 'x', 'headers' => '"plain-string"'];
@@ -200,7 +203,7 @@ final class FlowPostgreSqlReceiverTest extends TestCase
         \iterator_to_array($receiver->get(), false);
     }
 
-    public function test_get_throws_on_unexpected_body_shape() : void
+    public function test_get_throws_on_unexpected_body_shape(): void
     {
         $client = new SpyClient();
         $client->fetchReturn = ['id' => 1, 'body' => 123, 'headers' => '{}'];
@@ -211,7 +214,7 @@ final class FlowPostgreSqlReceiverTest extends TestCase
         \iterator_to_array($receiver->get(), false);
     }
 
-    public function test_get_throws_on_unexpected_headers_shape() : void
+    public function test_get_throws_on_unexpected_headers_shape(): void
     {
         $client = new SpyClient();
         $client->fetchReturn = ['id' => 1, 'body' => 'x', 'headers' => 123];
@@ -222,7 +225,7 @@ final class FlowPostgreSqlReceiverTest extends TestCase
         \iterator_to_array($receiver->get(), false);
     }
 
-    public function test_get_throws_on_unexpected_id_shape() : void
+    public function test_get_throws_on_unexpected_id_shape(): void
     {
         $client = new SpyClient();
         $client->fetchReturn = ['id' => null, 'body' => 'x', 'headers' => '{}'];
@@ -233,10 +236,10 @@ final class FlowPostgreSqlReceiverTest extends TestCase
         \iterator_to_array($receiver->get(), false);
     }
 
-    public function test_get_wraps_connection_exceptions() : void
+    public function test_get_wraps_connection_exceptions(): void
     {
         $client = new class() extends SpyClient {
-            public function transaction(callable $callback) : mixed
+            public function transaction(callable $callback): mixed
             {
                 throw new \RuntimeException('tx failed');
             }
@@ -247,7 +250,7 @@ final class FlowPostgreSqlReceiverTest extends TestCase
         \iterator_to_array($receiver->get(), false);
     }
 
-    public function test_keepalive_delegates_with_stamp_id_and_seconds() : void
+    public function test_keepalive_delegates_with_stamp_id_and_seconds(): void
     {
         $client = new SpyClient();
         $receiver = new FlowPostgreSqlReceiver(new Connection($client), new FakeSerializer());
@@ -255,13 +258,13 @@ final class FlowPostgreSqlReceiverTest extends TestCase
         $envelope = (new Envelope((object) []))->with(new TransportMessageIdStamp('42'));
         $receiver->keepalive($envelope, 60);
 
-        self::assertSame([42], [$client->executedQueries[0]['parameters'][1]]);
+        static::assertSame([42], [$client->executedQueries[0]['parameters'][1]]);
     }
 
-    public function test_keepalive_wraps_exceptions() : void
+    public function test_keepalive_wraps_exceptions(): void
     {
         $client = new class() extends SpyClient {
-            public function execute(Sql|string $sql, array $parameters = []) : int
+            public function execute(Sql|string $sql, array $parameters = []): int
             {
                 throw new \RuntimeException('oops');
             }
@@ -274,7 +277,7 @@ final class FlowPostgreSqlReceiverTest extends TestCase
         $receiver->keepalive($envelope);
     }
 
-    public function test_reject_delegates_to_connection() : void
+    public function test_reject_delegates_to_connection(): void
     {
         $client = new SpyClient();
         $client->executeReturn = 1;
@@ -283,13 +286,13 @@ final class FlowPostgreSqlReceiverTest extends TestCase
         $envelope = (new Envelope((object) []))->with(new TransportMessageIdStamp('42'));
         $receiver->reject($envelope);
 
-        self::assertSame([42], $client->executedQueries[0]['parameters']);
+        static::assertSame([42], $client->executedQueries[0]['parameters']);
     }
 
-    public function test_reject_wraps_connection_exceptions() : void
+    public function test_reject_wraps_connection_exceptions(): void
     {
         $client = new class() extends SpyClient {
-            public function execute(Sql|string $sql, array $parameters = []) : int
+            public function execute(Sql|string $sql, array $parameters = []): int
             {
                 throw new \RuntimeException('delete failed');
             }

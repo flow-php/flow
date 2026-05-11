@@ -19,7 +19,7 @@ interface LogProcessor
      *
      * @return bool True if all records were successfully exported
      */
-    public function flush() : bool;
+    public function flush(): bool;
 
     /**
      * Process a log entry.
@@ -30,7 +30,7 @@ interface LogProcessor
      *
      * @param LogEntry $entry The complete log entry to process
      */
-    public function process(LogEntry $entry) : void;
+    public function process(LogEntry $entry): void;
 
     /**
      * Shutdown the processor.
@@ -38,5 +38,5 @@ interface LogProcessor
      * Implementations SHOULD flush() pending data before delegating shutdown
      * to the underlying exporter. MUST be idempotent and MUST NOT throw.
      */
-    public function shutdown() : void;
+    public function shutdown(): void;
 }

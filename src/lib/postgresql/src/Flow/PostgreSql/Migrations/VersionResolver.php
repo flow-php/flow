@@ -13,10 +13,9 @@ final readonly class VersionResolver
     public function __construct(
         private MigrationRepository $repository,
         private MigrationStore $store,
-    ) {
-    }
+    ) {}
 
-    public function resolve(VersionAlias|string $alias) : Version
+    public function resolve(VersionAlias|string $alias): Version
     {
         $versionAlias = $alias instanceof VersionAlias ? $alias : VersionAlias::tryFrom($alias);
 
@@ -32,7 +31,7 @@ final readonly class VersionResolver
         };
     }
 
-    private function resolveFirst() : Version
+    private function resolveFirst(): Version
     {
         $first = $this->repository->all()->first();
 
@@ -43,7 +42,7 @@ final readonly class VersionResolver
         return $first->version;
     }
 
-    private function resolveLatest() : Version
+    private function resolveLatest(): Version
     {
         $last = $this->repository->all()->last();
 
@@ -54,7 +53,7 @@ final readonly class VersionResolver
         return $last->version;
     }
 
-    private function resolveNext() : Version
+    private function resolveNext(): Version
     {
         $latest = $this->store->executedMigrations()->latest();
         $available = $this->repository->all();
@@ -78,7 +77,7 @@ final readonly class VersionResolver
         return $next->version;
     }
 
-    private function resolvePrev() : Version
+    private function resolvePrev(): Version
     {
         $latest = $this->store->executedMigrations()->latest();
 

@@ -9,20 +9,19 @@ use Flow\Azure\SDK\URLFactory;
 
 final readonly class AzureURLFactory implements URLFactory
 {
-    public function __construct(private string $host = 'blob.core.windows.net')
-    {
+    public function __construct(
+        private string $host = 'blob.core.windows.net',
+    ) {}
 
-    }
-
-    public function create(Configuration $configuration, ?string $path = null, array $queryParameters = []) : string
+    public function create(Configuration $configuration, ?string $path = null, array $queryParameters = []): string
     {
         return \sprintf(
             'https://%s.%s/%s%s%s',
             $configuration->account,
             $this->host,
             $configuration->container,
-            $path ? ('/' . \trim($path, '/')) : '',
-            $queryParameters ? ('?' . \http_build_query($queryParameters)) : ''
+            $path ? '/' . \trim($path, '/') : '',
+            $queryParameters ? '?' . \http_build_query($queryParameters) : '',
         );
     }
 }

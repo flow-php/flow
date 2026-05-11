@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native;
 
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 
 /**
@@ -12,7 +13,7 @@ use Flow\Types\Type;
  */
 final readonly class CallableType implements Type
 {
-    public function assert(mixed $value) : callable
+    public function assert(mixed $value): callable
     {
         if ($this->isValid($value)) {
             return $value;
@@ -21,7 +22,7 @@ final readonly class CallableType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
-    public function cast(mixed $value) : callable
+    public function cast(mixed $value): callable
     {
         if ($this->isValid($value)) {
             return $value;
@@ -30,19 +31,19 @@ final readonly class CallableType implements Type
         throw new CastingException($value, $this);
     }
 
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return \is_callable($value);
     }
 
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'callable',
         ];
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return 'callable';
     }

@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use Flow\Parquet\{ParquetEngine, Reader};
+use Flow\Parquet\ParquetEngine;
+use Flow\Parquet\Reader;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class ListsReadingTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
-    public function test_reading_list_column(ParquetEngine $engine) : void
+    public function test_reading_list_column(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
@@ -31,7 +32,7 @@ class ListsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_list_column_with_limit(ParquetEngine $engine) : void
+    public function test_reading_list_column_with_limit(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
@@ -51,7 +52,7 @@ class ListsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_list_nested_column(ParquetEngine $engine) : void
+    public function test_reading_list_nested_column(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
@@ -75,7 +76,7 @@ class ListsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_list_nullable_column(ParquetEngine $engine) : void
+    public function test_reading_list_nullable_column(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
@@ -86,7 +87,7 @@ class ListsReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['list_nullable']) as $rowIndex => $row) {
-            if ($rowIndex % 2 === 0) {
+            if (($rowIndex % 2) === 0) {
                 static::assertContainsOnly('int', $row['list_nullable']);
                 static::assertCount(3, $row['list_nullable']);
             } else {
@@ -100,7 +101,7 @@ class ListsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_list_of_structures_column(ParquetEngine $engine) : void
+    public function test_reading_list_of_structures_column(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
@@ -133,18 +134,21 @@ class ListsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_list_of_structures_nullable_column(ParquetEngine $engine) : void
+    public function test_reading_list_of_structures_nullable_column(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
 
         static::assertNull($file->metadata()->schema()->get('list_of_structs_nullable')->type());
-        static::assertEquals('LIST', $file->metadata()->schema()->get('list_of_structs_nullable')->logicalType()->name());
+        static::assertEquals(
+            'LIST',
+            $file->metadata()->schema()->get('list_of_structs_nullable')->logicalType()->name(),
+        );
 
         $count = 0;
 
         foreach ($file->values(['list_of_structs_nullable']) as $rowIndex => $row) {
-            if ($rowIndex % 2 === 0) {
+            if (($rowIndex % 2) === 0) {
                 static::assertIsArray($row['list_of_structs_nullable']);
 
                 foreach ($row['list_of_structs_nullable'] as $rowList) {

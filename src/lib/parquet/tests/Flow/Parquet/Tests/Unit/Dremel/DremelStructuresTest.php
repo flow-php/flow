@@ -5,13 +5,18 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\Dremel;
 
 use Flow\Parquet\Dremel\ColumnData\ReadFlatColumnValues;
-use Flow\Parquet\Dremel\{DremelAssembler, DremelShredder, ReadColumnData};
+use Flow\Parquet\Dremel\DremelAssembler;
+use Flow\Parquet\Dremel\DremelShredder;
+use Flow\Parquet\Dremel\ReadColumnData;
 use Flow\Parquet\Dremel\Validator\ColumnDataValidator;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn};
-use Flow\Parquet\ParquetFile\Schema\{MapKey, MapValue};
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\ListElement;
+use Flow\Parquet\ParquetFile\Schema\MapKey;
+use Flow\Parquet\ParquetFile\Schema\MapValue;
+use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
@@ -91,33 +96,31 @@ final class DremelStructuresTest extends TestCase
             ],
         ],
     ])]
-    public function test_optional_struct_optional_int_optional_string_optional_bool(array $row, array $flatData, ?string $exceptionMessage = null) : void
-    {
-        $schema = Schema::with(
-            NestedColumn::struct(
-                's',
-                [
-                    FlatColumn::int32('int32'),
-                    FlatColumn::string('string'),
-                    FlatColumn::boolean('bool'),
-                ]
-            )
-        );
+    public function test_optional_struct_optional_int_optional_string_optional_bool(
+        array $row,
+        array $flatData,
+        ?string $exceptionMessage = null,
+    ): void {
+        $schema = Schema::with(NestedColumn::struct('s', [
+            FlatColumn::int32('int32'),
+            FlatColumn::string('string'),
+            FlatColumn::boolean('bool'),
+        ]));
 
         $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
-        self::assertEquals('OPTIONAL,OPTIONAL', $schema->get('s.int32')->repetitions());
-        self::assertEquals('OPTIONAL,OPTIONAL', $schema->get('s.string')->repetitions());
-        self::assertEquals('OPTIONAL,OPTIONAL', $schema->get('s.bool')->repetitions());
+        static::assertEquals('OPTIONAL,OPTIONAL', $schema->get('s.int32')->repetitions());
+        static::assertEquals('OPTIONAL,OPTIONAL', $schema->get('s.string')->repetitions());
+        static::assertEquals('OPTIONAL,OPTIONAL', $schema->get('s.bool')->repetitions());
 
-        self::assertEquals(2, $schema->get('s.int32')->repetitions()->maxDefinitionLevel());
-        self::assertEquals(0, $schema->get('s.int32')->repetitions()->maxRepetitionLevel());
+        static::assertEquals(2, $schema->get('s.int32')->repetitions()->maxDefinitionLevel());
+        static::assertEquals(0, $schema->get('s.int32')->repetitions()->maxRepetitionLevel());
 
-        self::assertEquals(2, $schema->get('s.string')->repetitions()->maxDefinitionLevel());
-        self::assertEquals(0, $schema->get('s.string')->repetitions()->maxRepetitionLevel());
+        static::assertEquals(2, $schema->get('s.string')->repetitions()->maxDefinitionLevel());
+        static::assertEquals(0, $schema->get('s.string')->repetitions()->maxRepetitionLevel());
 
-        self::assertEquals(2, $schema->get('s.bool')->repetitions()->maxDefinitionLevel());
-        self::assertEquals(0, $schema->get('s.bool')->repetitions()->maxRepetitionLevel());
+        static::assertEquals(2, $schema->get('s.bool')->repetitions()->maxDefinitionLevel());
+        static::assertEquals(0, $schema->get('s.bool')->repetitions()->maxRepetitionLevel());
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
@@ -135,7 +138,7 @@ final class DremelStructuresTest extends TestCase
                 ];
             }
 
-            self::assertEquals($flatData, $normalized);
+            static::assertEquals($flatData, $normalized);
 
             $readFlatValues = [];
 
@@ -149,15 +152,18 @@ final class DremelStructuresTest extends TestCase
                     $flatValue->column,
                     $valuesGenerator,
                     $flatValue->repetitionLevels(),
-                    $flatValue->definitionLevels()
+                    $flatValue->definitionLevels(),
                 );
             }
 
-            self::assertEquals(
+            static::assertEquals(
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), new ReadColumnData($schema->get('s'), $readFlatValues)))
+                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                    $schema->get('s'),
+                    new ReadColumnData($schema->get('s'), $readFlatValues),
+                )),
             );
         }
     }
@@ -230,23 +236,21 @@ final class DremelStructuresTest extends TestCase
             ],
         ],
     ])]
-    public function test_optional_struct_optional_list_optional_int(array $row, array $flatData, ?string $exceptionMessage = null) : void
-    {
-        $schema = Schema::with(
-            NestedColumn::struct(
-                's',
-                [
-                    NestedColumn::list('l', ListElement::int32()),
-                ]
-            )
-        );
+    public function test_optional_struct_optional_list_optional_int(
+        array $row,
+        array $flatData,
+        ?string $exceptionMessage = null,
+    ): void {
+        $schema = Schema::with(NestedColumn::struct('s', [
+            NestedColumn::list('l', ListElement::int32()),
+        ]));
 
         $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
-        self::assertEquals('OPTIONAL,OPTIONAL,REPEATED,OPTIONAL', $schema->get('s.l.list.element')->repetitions());
+        static::assertEquals('OPTIONAL,OPTIONAL,REPEATED,OPTIONAL', $schema->get('s.l.list.element')->repetitions());
 
-        self::assertEquals(4, $schema->get('s.l.list.element')->repetitions()->maxDefinitionLevel());
-        self::assertEquals(1, $schema->get('s.l.list.element')->repetitions()->maxRepetitionLevel());
+        static::assertEquals(4, $schema->get('s.l.list.element')->repetitions()->maxDefinitionLevel());
+        static::assertEquals(1, $schema->get('s.l.list.element')->repetitions()->maxRepetitionLevel());
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
@@ -264,7 +268,7 @@ final class DremelStructuresTest extends TestCase
                 ];
             }
 
-            self::assertEquals($flatData, $normalized);
+            static::assertEquals($flatData, $normalized);
 
             $readFlatValues = [];
 
@@ -278,15 +282,18 @@ final class DremelStructuresTest extends TestCase
                     $flatValue->column,
                     $valuesGenerator,
                     $flatValue->repetitionLevels(),
-                    $flatValue->definitionLevels()
+                    $flatValue->definitionLevels(),
                 );
             }
 
-            self::assertEquals(
+            static::assertEquals(
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), new ReadColumnData($schema->get('s'), $readFlatValues)))
+                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                    $schema->get('s'),
+                    new ReadColumnData($schema->get('s'), $readFlatValues),
+                )),
             );
         }
     }
@@ -384,27 +391,25 @@ final class DremelStructuresTest extends TestCase
             ],
         ],
     ])]
-    public function test_optional_struct_optional_map_string_optional_int(array $row, array $flatData, ?string $exceptionMessage = null) : void
-    {
-        $schema = Schema::with(
-            NestedColumn::struct(
-                's',
-                [
-                    NestedColumn::map('m', MapKey::string(), MapValue::int32()),
-                ]
-            )
-        );
+    public function test_optional_struct_optional_map_string_optional_int(
+        array $row,
+        array $flatData,
+        ?string $exceptionMessage = null,
+    ): void {
+        $schema = Schema::with(NestedColumn::struct('s', [
+            NestedColumn::map('m', MapKey::string(), MapValue::int32()),
+        ]));
 
         $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
-        self::assertEquals('OPTIONAL,OPTIONAL,REPEATED,REQUIRED', $schema->get('s.m.key_value.key')->repetitions());
-        self::assertEquals('OPTIONAL,OPTIONAL,REPEATED,OPTIONAL', $schema->get('s.m.key_value.value')->repetitions());
+        static::assertEquals('OPTIONAL,OPTIONAL,REPEATED,REQUIRED', $schema->get('s.m.key_value.key')->repetitions());
+        static::assertEquals('OPTIONAL,OPTIONAL,REPEATED,OPTIONAL', $schema->get('s.m.key_value.value')->repetitions());
 
-        self::assertEquals(3, $schema->get('s.m.key_value.key')->repetitions()->maxDefinitionLevel());
-        self::assertEquals(1, $schema->get('s.m.key_value.key')->repetitions()->maxRepetitionLevel());
+        static::assertEquals(3, $schema->get('s.m.key_value.key')->repetitions()->maxDefinitionLevel());
+        static::assertEquals(1, $schema->get('s.m.key_value.key')->repetitions()->maxRepetitionLevel());
 
-        self::assertEquals(4, $schema->get('s.m.key_value.value')->repetitions()->maxDefinitionLevel());
-        self::assertEquals(1, $schema->get('s.m.key_value.value')->repetitions()->maxRepetitionLevel());
+        static::assertEquals(4, $schema->get('s.m.key_value.value')->repetitions()->maxDefinitionLevel());
+        static::assertEquals(1, $schema->get('s.m.key_value.value')->repetitions()->maxRepetitionLevel());
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
@@ -422,7 +427,7 @@ final class DremelStructuresTest extends TestCase
                 ];
             }
 
-            self::assertEquals($flatData, $normalized);
+            static::assertEquals($flatData, $normalized);
 
             $readFlatValues = [];
 
@@ -436,15 +441,18 @@ final class DremelStructuresTest extends TestCase
                     $flatValue->column,
                     $valuesGenerator,
                     $flatValue->repetitionLevels(),
-                    $flatValue->definitionLevels()
+                    $flatValue->definitionLevels(),
                 );
             }
 
-            self::assertEquals(
+            static::assertEquals(
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), new ReadColumnData($schema->get('s'), $readFlatValues)))
+                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                    $schema->get('s'),
+                    new ReadColumnData($schema->get('s'), $readFlatValues),
+                )),
             );
         }
     }
@@ -523,33 +531,28 @@ final class DremelStructuresTest extends TestCase
             ],
         ],
     ])]
-    public function test_optional_struct_optional_struct_optional_int32_optional_string(array $row, array $flatData, ?string $exceptionMessage = null) : void
-    {
-        $schema = Schema::with(
-            NestedColumn::struct(
-                's',
-                [
-                    NestedColumn::struct(
-                        's1',
-                        [
-                            FlatColumn::int32('int32'),
-                            FlatColumn::string('string'),
-                        ]
-                    ),
-                ]
-            )
-        );
+    public function test_optional_struct_optional_struct_optional_int32_optional_string(
+        array $row,
+        array $flatData,
+        ?string $exceptionMessage = null,
+    ): void {
+        $schema = Schema::with(NestedColumn::struct('s', [
+            NestedColumn::struct('s1', [
+                FlatColumn::int32('int32'),
+                FlatColumn::string('string'),
+            ]),
+        ]));
 
         $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
-        self::assertEquals('OPTIONAL,OPTIONAL,OPTIONAL', $schema->get('s.s1.int32')->repetitions());
-        self::assertEquals('OPTIONAL,OPTIONAL,OPTIONAL', $schema->get('s.s1.string')->repetitions());
+        static::assertEquals('OPTIONAL,OPTIONAL,OPTIONAL', $schema->get('s.s1.int32')->repetitions());
+        static::assertEquals('OPTIONAL,OPTIONAL,OPTIONAL', $schema->get('s.s1.string')->repetitions());
 
-        self::assertEquals(3, $schema->get('s.s1.int32')->repetitions()->maxDefinitionLevel());
-        self::assertEquals(0, $schema->get('s.s1.int32')->repetitions()->maxRepetitionLevel());
+        static::assertEquals(3, $schema->get('s.s1.int32')->repetitions()->maxDefinitionLevel());
+        static::assertEquals(0, $schema->get('s.s1.int32')->repetitions()->maxRepetitionLevel());
 
-        self::assertEquals(3, $schema->get('s.s1.string')->repetitions()->maxDefinitionLevel());
-        self::assertEquals(0, $schema->get('s.s1.string')->repetitions()->maxRepetitionLevel());
+        static::assertEquals(3, $schema->get('s.s1.string')->repetitions()->maxDefinitionLevel());
+        static::assertEquals(0, $schema->get('s.s1.string')->repetitions()->maxRepetitionLevel());
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
@@ -567,7 +570,7 @@ final class DremelStructuresTest extends TestCase
                 ];
             }
 
-            self::assertEquals($flatData, $normalized);
+            static::assertEquals($flatData, $normalized);
 
             $readFlatValues = [];
 
@@ -581,15 +584,18 @@ final class DremelStructuresTest extends TestCase
                     $flatValue->column,
                     $valuesGenerator,
                     $flatValue->repetitionLevels(),
-                    $flatValue->definitionLevels()
+                    $flatValue->definitionLevels(),
                 );
             }
 
-            self::assertEquals(
+            static::assertEquals(
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), new ReadColumnData($schema->get('s'), $readFlatValues)))
+                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                    $schema->get('s'),
+                    new ReadColumnData($schema->get('s'), $readFlatValues),
+                )),
             );
         }
     }
@@ -598,32 +604,28 @@ final class DremelStructuresTest extends TestCase
         [
             's' => null,
         ],
-        [
-        ],
+        [],
         'Column "s" is required',
     ])]
     #[TestWith([
         [
             's' => [],
         ],
-        [
-        ],
+        [],
         'Column "s.int32" is required',
     ])]
     #[TestWith([
         [
             's' => ['int32' => 1],
         ],
-        [
-        ],
+        [],
         'Column "s.string" is required',
     ])]
     #[TestWith([
         [
             's' => ['int32' => 1, 'string' => 'a'],
         ],
-        [
-        ],
+        [],
         'Column "s.bool" is required',
     ])]
     #[TestWith([
@@ -652,33 +654,33 @@ final class DremelStructuresTest extends TestCase
             ],
         ],
     ])]
-    public function test_required_struct_required_int_required_string_required_bool(array $row, array $flatData, ?string $exceptionMessage = null) : void
-    {
+    public function test_required_struct_required_int_required_string_required_bool(
+        array $row,
+        array $flatData,
+        ?string $exceptionMessage = null,
+    ): void {
         $schema = Schema::with(
-            NestedColumn::struct(
-                's',
-                [
-                    FlatColumn::int32('int32')->makeRequired(),
-                    FlatColumn::string('string')->makeRequired(),
-                    FlatColumn::boolean('bool')->makeRequired(),
-                ]
-            )->makeRequired()
+            NestedColumn::struct('s', [
+                FlatColumn::int32('int32')->makeRequired(),
+                FlatColumn::string('string')->makeRequired(),
+                FlatColumn::boolean('bool')->makeRequired(),
+            ])->makeRequired(),
         );
 
         $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
-        self::assertEquals('REQUIRED,REQUIRED', $schema->get('s.int32')->repetitions());
-        self::assertEquals('REQUIRED,REQUIRED', $schema->get('s.string')->repetitions());
-        self::assertEquals('REQUIRED,REQUIRED', $schema->get('s.bool')->repetitions());
+        static::assertEquals('REQUIRED,REQUIRED', $schema->get('s.int32')->repetitions());
+        static::assertEquals('REQUIRED,REQUIRED', $schema->get('s.string')->repetitions());
+        static::assertEquals('REQUIRED,REQUIRED', $schema->get('s.bool')->repetitions());
 
-        self::assertEquals(0, $schema->get('s.int32')->repetitions()->maxDefinitionLevel());
-        self::assertEquals(0, $schema->get('s.int32')->repetitions()->maxRepetitionLevel());
+        static::assertEquals(0, $schema->get('s.int32')->repetitions()->maxDefinitionLevel());
+        static::assertEquals(0, $schema->get('s.int32')->repetitions()->maxRepetitionLevel());
 
-        self::assertEquals(0, $schema->get('s.string')->repetitions()->maxDefinitionLevel());
-        self::assertEquals(0, $schema->get('s.string')->repetitions()->maxRepetitionLevel());
+        static::assertEquals(0, $schema->get('s.string')->repetitions()->maxDefinitionLevel());
+        static::assertEquals(0, $schema->get('s.string')->repetitions()->maxRepetitionLevel());
 
-        self::assertEquals(0, $schema->get('s.bool')->repetitions()->maxDefinitionLevel());
-        self::assertEquals(0, $schema->get('s.bool')->repetitions()->maxRepetitionLevel());
+        static::assertEquals(0, $schema->get('s.bool')->repetitions()->maxDefinitionLevel());
+        static::assertEquals(0, $schema->get('s.bool')->repetitions()->maxRepetitionLevel());
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
@@ -696,7 +698,7 @@ final class DremelStructuresTest extends TestCase
                 ];
             }
 
-            self::assertEquals($flatData, $normalized);
+            static::assertEquals($flatData, $normalized);
 
             $readFlatValues = [];
 
@@ -710,15 +712,18 @@ final class DremelStructuresTest extends TestCase
                     $flatValue->column,
                     $valuesGenerator,
                     $flatValue->repetitionLevels(),
-                    $flatValue->definitionLevels()
+                    $flatValue->definitionLevels(),
                 );
             }
 
-            self::assertEquals(
+            static::assertEquals(
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), new ReadColumnData($schema->get('s'), $readFlatValues)))
+                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                    $schema->get('s'),
+                    new ReadColumnData($schema->get('s'), $readFlatValues),
+                )),
             );
         }
     }
@@ -727,32 +732,28 @@ final class DremelStructuresTest extends TestCase
         [
             's' => null,
         ],
-        [
-        ],
+        [],
         'Column "s" is required',
     ])]
     #[TestWith([
         [
             's' => [],
         ],
-        [
-        ],
+        [],
         'Column "s.l" is required',
     ])]
     #[TestWith([
         [
             's' => ['l' => null],
         ],
-        [
-        ],
+        [],
         'Column "s.l" is required',
     ])]
     #[TestWith([
         [
             's' => ['l' => [null]],
         ],
-        [
-        ],
+        [],
         'Column "s.l.list.element" is required',
     ])]
     #[TestWith([
@@ -767,23 +768,23 @@ final class DremelStructuresTest extends TestCase
             ],
         ],
     ])]
-    public function test_required_struct_required_list_required_int(array $row, array $flatData, ?string $exceptionMessage = null) : void
-    {
+    public function test_required_struct_required_list_required_int(
+        array $row,
+        array $flatData,
+        ?string $exceptionMessage = null,
+    ): void {
         $schema = Schema::with(
-            NestedColumn::struct(
-                's',
-                [
-                    NestedColumn::list('l', ListElement::int32(true))->makeRequired(),
-                ]
-            )->makeRequired()
+            NestedColumn::struct('s', [
+                NestedColumn::list('l', ListElement::int32(true))->makeRequired(),
+            ])->makeRequired(),
         );
 
         $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
-        self::assertEquals('REQUIRED,REQUIRED,REPEATED,REQUIRED', $schema->get('s.l.list.element')->repetitions());
+        static::assertEquals('REQUIRED,REQUIRED,REPEATED,REQUIRED', $schema->get('s.l.list.element')->repetitions());
 
-        self::assertEquals(1, $schema->get('s.l.list.element')->repetitions()->maxDefinitionLevel());
-        self::assertEquals(1, $schema->get('s.l.list.element')->repetitions()->maxRepetitionLevel());
+        static::assertEquals(1, $schema->get('s.l.list.element')->repetitions()->maxDefinitionLevel());
+        static::assertEquals(1, $schema->get('s.l.list.element')->repetitions()->maxRepetitionLevel());
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
@@ -801,7 +802,7 @@ final class DremelStructuresTest extends TestCase
                 ];
             }
 
-            self::assertEquals($flatData, $normalized);
+            static::assertEquals($flatData, $normalized);
 
             $readFlatValues = [];
 
@@ -815,15 +816,18 @@ final class DremelStructuresTest extends TestCase
                     $flatValue->column,
                     $valuesGenerator,
                     $flatValue->repetitionLevels(),
-                    $flatValue->definitionLevels()
+                    $flatValue->definitionLevels(),
                 );
             }
 
-            self::assertEquals(
+            static::assertEquals(
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), new ReadColumnData($schema->get('s'), $readFlatValues)))
+                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                    $schema->get('s'),
+                    new ReadColumnData($schema->get('s'), $readFlatValues),
+                )),
             );
         }
     }
@@ -832,32 +836,28 @@ final class DremelStructuresTest extends TestCase
         [
             's' => null,
         ],
-        [
-        ],
+        [],
         'Column "s" is required',
     ])]
     #[TestWith([
         [
             's' => [],
         ],
-        [
-        ],
+        [],
         'Column "s.m" is required',
     ])]
     #[TestWith([
         [
             's' => ['m' => null],
         ],
-        [
-        ],
+        [],
         'Column "s.m" is required',
     ])]
     #[TestWith([
         [
             's' => ['m' => ['a' => null]],
         ],
-        [
-        ],
+        [],
         'Column "s.m.key_value.value" is required',
     ])]
     #[TestWith([
@@ -883,27 +883,27 @@ final class DremelStructuresTest extends TestCase
             ],
         ],
     ])]
-    public function test_required_struct_required_map_string_required_int(array $row, array $flatData, ?string $exceptionMessage = null) : void
-    {
+    public function test_required_struct_required_map_string_required_int(
+        array $row,
+        array $flatData,
+        ?string $exceptionMessage = null,
+    ): void {
         $schema = Schema::with(
-            NestedColumn::struct(
-                's',
-                [
-                    NestedColumn::map('m', MapKey::string(), MapValue::int32(true))->makeRequired(),
-                ]
-            )->makeRequired()
+            NestedColumn::struct('s', [
+                NestedColumn::map('m', MapKey::string(), MapValue::int32(true))->makeRequired(),
+            ])->makeRequired(),
         );
 
         $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
-        self::assertEquals('REQUIRED,REQUIRED,REPEATED,REQUIRED', $schema->get('s.m.key_value.key')->repetitions());
-        self::assertEquals('REQUIRED,REQUIRED,REPEATED,REQUIRED', $schema->get('s.m.key_value.value')->repetitions());
+        static::assertEquals('REQUIRED,REQUIRED,REPEATED,REQUIRED', $schema->get('s.m.key_value.key')->repetitions());
+        static::assertEquals('REQUIRED,REQUIRED,REPEATED,REQUIRED', $schema->get('s.m.key_value.value')->repetitions());
 
-        self::assertEquals(1, $schema->get('s.m.key_value.key')->repetitions()->maxDefinitionLevel());
-        self::assertEquals(1, $schema->get('s.m.key_value.key')->repetitions()->maxRepetitionLevel());
+        static::assertEquals(1, $schema->get('s.m.key_value.key')->repetitions()->maxDefinitionLevel());
+        static::assertEquals(1, $schema->get('s.m.key_value.key')->repetitions()->maxRepetitionLevel());
 
-        self::assertEquals(1, $schema->get('s.m.key_value.value')->repetitions()->maxDefinitionLevel());
-        self::assertEquals(1, $schema->get('s.m.key_value.value')->repetitions()->maxRepetitionLevel());
+        static::assertEquals(1, $schema->get('s.m.key_value.value')->repetitions()->maxDefinitionLevel());
+        static::assertEquals(1, $schema->get('s.m.key_value.value')->repetitions()->maxRepetitionLevel());
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
@@ -921,7 +921,7 @@ final class DremelStructuresTest extends TestCase
                 ];
             }
 
-            self::assertEquals($flatData, $normalized);
+            static::assertEquals($flatData, $normalized);
 
             $readFlatValues = [];
 
@@ -935,15 +935,18 @@ final class DremelStructuresTest extends TestCase
                     $flatValue->column,
                     $valuesGenerator,
                     $flatValue->repetitionLevels(),
-                    $flatValue->definitionLevels()
+                    $flatValue->definitionLevels(),
                 );
             }
 
-            self::assertEquals(
+            static::assertEquals(
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), new ReadColumnData($schema->get('s'), $readFlatValues)))
+                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                    $schema->get('s'),
+                    new ReadColumnData($schema->get('s'), $readFlatValues),
+                )),
             );
         }
     }
@@ -952,40 +955,35 @@ final class DremelStructuresTest extends TestCase
         [
             's' => null,
         ],
-        [
-        ],
+        [],
         'Column "s" is required',
     ])]
     #[TestWith([
         [
             's' => [],
         ],
-        [
-        ],
+        [],
         'Column "s.s1" is required',
     ])]
     #[TestWith([
         [
             's' => ['s1' => null],
         ],
-        [
-        ],
+        [],
         'Column "s.s1" is required',
     ])]
     #[TestWith([
         [
             's' => ['s1' => ['int32' => null, 'string' => null]],
         ],
-        [
-        ],
+        [],
         'Column "s.s1.int32" is required',
     ])]
     #[TestWith([
         [
             's' => ['s1' => ['int32' => 1, 'string' => null]],
         ],
-        [
-        ],
+        [],
         'Column "s.s1.string" is required',
     ])]
     #[TestWith([
@@ -1005,33 +1003,30 @@ final class DremelStructuresTest extends TestCase
             ],
         ],
     ])]
-    public function test_required_struct_required_struct_required_int32_required_string(array $row, array $flatData, ?string $exceptionMessage = null) : void
-    {
+    public function test_required_struct_required_struct_required_int32_required_string(
+        array $row,
+        array $flatData,
+        ?string $exceptionMessage = null,
+    ): void {
         $schema = Schema::with(
-            NestedColumn::struct(
-                's',
-                [
-                    NestedColumn::struct(
-                        's1',
-                        [
-                            FlatColumn::int32('int32')->makeRequired(),
-                            FlatColumn::string('string')->makeRequired(),
-                        ]
-                    )->makeRequired(),
-                ]
-            )->makeRequired()
+            NestedColumn::struct('s', [
+                NestedColumn::struct('s1', [
+                    FlatColumn::int32('int32')->makeRequired(),
+                    FlatColumn::string('string')->makeRequired(),
+                ])->makeRequired(),
+            ])->makeRequired(),
         );
 
         $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
-        self::assertEquals('REQUIRED,REQUIRED,REQUIRED', $schema->get('s.s1.int32')->repetitions());
-        self::assertEquals('REQUIRED,REQUIRED,REQUIRED', $schema->get('s.s1.string')->repetitions());
+        static::assertEquals('REQUIRED,REQUIRED,REQUIRED', $schema->get('s.s1.int32')->repetitions());
+        static::assertEquals('REQUIRED,REQUIRED,REQUIRED', $schema->get('s.s1.string')->repetitions());
 
-        self::assertEquals(0, $schema->get('s.s1.int32')->repetitions()->maxDefinitionLevel());
-        self::assertEquals(0, $schema->get('s.s1.int32')->repetitions()->maxRepetitionLevel());
+        static::assertEquals(0, $schema->get('s.s1.int32')->repetitions()->maxDefinitionLevel());
+        static::assertEquals(0, $schema->get('s.s1.int32')->repetitions()->maxRepetitionLevel());
 
-        self::assertEquals(0, $schema->get('s.s1.int32')->repetitions()->maxDefinitionLevel());
-        self::assertEquals(0, $schema->get('s.s1.int32')->repetitions()->maxRepetitionLevel());
+        static::assertEquals(0, $schema->get('s.s1.int32')->repetitions()->maxDefinitionLevel());
+        static::assertEquals(0, $schema->get('s.s1.int32')->repetitions()->maxRepetitionLevel());
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
@@ -1049,7 +1044,7 @@ final class DremelStructuresTest extends TestCase
                 ];
             }
 
-            self::assertEquals($flatData, $normalized);
+            static::assertEquals($flatData, $normalized);
 
             $readFlatValues = [];
 
@@ -1063,15 +1058,18 @@ final class DremelStructuresTest extends TestCase
                     $flatValue->column,
                     $valuesGenerator,
                     $flatValue->repetitionLevels(),
-                    $flatValue->definitionLevels()
+                    $flatValue->definitionLevels(),
                 );
             }
 
-            self::assertEquals(
+            static::assertEquals(
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), new ReadColumnData($schema->get('s'), $readFlatValues)))
+                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                    $schema->get('s'),
+                    new ReadColumnData($schema->get('s'), $readFlatValues),
+                )),
             );
         }
     }

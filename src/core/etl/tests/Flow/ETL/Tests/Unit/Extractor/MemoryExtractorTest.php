@@ -4,19 +4,33 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
-use function Flow\ETL\DSL\{config, flow_context, from_memory, int_entry, row, rows, str_entry, to_memory};
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_memory;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\to_memory;
+
 final class MemoryExtractorTest extends FlowTestCase
 {
-    public function test_memory_extractor() : void
+    public function test_memory_extractor(): void
     {
-        $rows = rows(row(int_entry('number', 1), str_entry('name', 'one')), row(int_entry('number', 2), str_entry('name', 'two')), row(int_entry('number', 3), str_entry('name', 'tree')), row(int_entry('number', 4), str_entry('name', 'four')), row(int_entry('number', 5), str_entry('name', 'five')));
+        $rows = rows(
+            row(int_entry('number', 1), str_entry('name', 'one')),
+            row(int_entry('number', 2), str_entry('name', 'two')),
+            row(int_entry('number', 3), str_entry('name', 'tree')),
+            row(int_entry('number', 4), str_entry('name', 'four')),
+            row(int_entry('number', 5), str_entry('name', 'five')),
+        );
 
         $memory = new ArrayMemory();
 
-        (to_memory($memory))->load($rows, flow_context(config()));
+        to_memory($memory)->load($rows, flow_context(config()));
 
         $extractor = from_memory($memory);
 
@@ -28,7 +42,7 @@ final class MemoryExtractorTest extends FlowTestCase
                 ['number' => 4, 'name' => 'four'],
                 ['number' => 5, 'name' => 'five'],
             ],
-            $extractor
+            $extractor,
         );
     }
 }

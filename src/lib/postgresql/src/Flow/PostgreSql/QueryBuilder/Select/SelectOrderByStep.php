@@ -8,5 +8,5 @@ use Flow\PostgreSql\QueryBuilder\Clause\OrderBy;
 
 interface SelectOrderByStep extends SelectLimitStep
 {
-    public function orderBy(OrderBy ...$items) : SelectLimitStep;
+    public function orderBy(OrderBy ...$items): SelectLimitStep;
 }

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger\Processor;
 
-use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
+use Flow\Telemetry\ErrorHandler\ErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\Exporter\Exporter;
-use Flow\Telemetry\Logger\{LogEntry, LogProcessor};
+use Flow\Telemetry\Logger\LogEntry;
+use Flow\Telemetry\Logger\LogProcessor;
 use Flow\Telemetry\Signal\Signals;
 
 /**
@@ -30,10 +32,9 @@ final class BatchingLogProcessor implements LogProcessor
         private readonly Exporter $exporter,
         private readonly int $batchSize = 512,
         private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
-    ) {
-    }
+    ) {}
 
-    public function flush() : bool
+    public function flush(): bool
     {
         if (\count($this->buffer) === 0) {
             return true;
@@ -51,7 +52,7 @@ final class BatchingLogProcessor implements LogProcessor
         }
     }
 
-    public function process(LogEntry $entry) : void
+    public function process(LogEntry $entry): void
     {
         $this->buffer[] = $entry;
 
@@ -60,7 +61,7 @@ final class BatchingLogProcessor implements LogProcessor
         }
     }
 
-    public function shutdown() : void
+    public function shutdown(): void
     {
         if ($this->isShutdown) {
             return;

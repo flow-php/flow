@@ -11,6 +11,5 @@ final readonly class RowGroupContainer
     public function __construct(
         public string $binaryBuffer,
         public RowGroup $rowGroup,
-    ) {
-    }
+    ) {}
 }

@@ -4,132 +4,142 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{bool_entry, boolean_entry, datetime_entry, int_entry, integer_schema, json_schema, list_entry, list_schema, ref, row, rows, rows_partitioned, str_entry, string_entry, string_schema};
-use function Flow\ETL\DSL\schema;
-use function Flow\Filesystem\DSL\{partition, partitions};
-use function Flow\Types\DSL\{type_integer, type_list, type_string};
-use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Row;
 use Flow\ETL\Row\Comparator;
 use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\{Row, Rows, Tests\FlowTestCase};
+use Flow\ETL\Rows;
+use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+
+use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\boolean_entry;
+use function Flow\ETL\DSL\datetime_entry;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\integer_schema;
+use function Flow\ETL\DSL\json_schema;
+use function Flow\ETL\DSL\list_entry;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\rows_partitioned;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\string_schema;
+use function Flow\Filesystem\DSL\partition;
+use function Flow\Filesystem\DSL\partitions;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_string;
 
 final class RowsTest extends FlowTestCase
 {
-    public static function rows_diff_left_provider() : \Generator
+    public static function rows_diff_left_provider(): \Generator
     {
         yield 'one entry identical row' => [
-            $expected = rows(),
-            $left = rows(row(int_entry('number', 1))),
-            $right = rows(row(int_entry('number', 1))),
+            rows(),
+            rows(row(int_entry('number', 1))),
+            rows(row(int_entry('number', 1))),
         ];
 
         yield 'one entry right different - missing entry' => [
-            $expected = rows(row(int_entry('number', 1))),
-            $left = rows(row(int_entry('number', 1))),
-            $right = rows(),
+            rows(row(int_entry('number', 1))),
+            rows(row(int_entry('number', 1))),
+            rows(),
         ];
 
         yield 'one entry left different - missing entry' => [
-            $expected = rows(),
-            $left = rows(),
-            $right = rows(row(int_entry('number', 1))),
+            rows(),
+            rows(),
+            rows(row(int_entry('number', 1))),
         ];
 
         yield 'one entry right different - different entry' => [
-            $expected = rows(row(int_entry('number', 1))),
-            $left = rows(row(int_entry('number', 1))),
-            $right = rows(row(int_entry('number', 2))),
+            rows(row(int_entry('number', 1))),
+            rows(row(int_entry('number', 1))),
+            rows(row(int_entry('number', 2))),
         ];
 
         yield 'one entry left different - different entry' => [
-            $expected = rows(row(int_entry('number', 2))),
-            $left = rows(row(int_entry('number', 2))),
-            $right = rows(row(int_entry('number', 1))),
+            rows(row(int_entry('number', 2))),
+            rows(row(int_entry('number', 2))),
+            rows(row(int_entry('number', 1))),
         ];
     }
 
-    public static function rows_diff_right_provider() : \Generator
+    public static function rows_diff_right_provider(): \Generator
     {
         yield 'one entry identical row' => [
-            $expected = rows(),
-            $left = rows(row(int_entry('number', 1))),
-            $right = rows(row(int_entry('number', 1))),
+            rows(),
+            rows(row(int_entry('number', 1))),
+            rows(row(int_entry('number', 1))),
         ];
 
         yield 'one entry right different - missing entry' => [
-            $expected = rows(),
-            $left = rows(row(int_entry('number', 1))),
-            $right = rows(),
+            rows(),
+            rows(row(int_entry('number', 1))),
+            rows(),
         ];
 
         yield 'one entry left different - missing entry' => [
-            $expected = rows(row(int_entry('number', 1))),
-            $left = rows(),
-            $right = rows(row(int_entry('number', 1))),
+            rows(row(int_entry('number', 1))),
+            rows(),
+            rows(row(int_entry('number', 1))),
         ];
 
         yield 'one entry right different - different entry' => [
-            $expected = rows(row(int_entry('number', 2))),
-            $left = rows(row(int_entry('number', 1))),
-            $right = rows(row(int_entry('number', 2))),
+            rows(row(int_entry('number', 2))),
+            rows(row(int_entry('number', 1))),
+            rows(row(int_entry('number', 2))),
         ];
 
         yield 'one entry left different - different entry' => [
-            $expected = rows(row(int_entry('number', 1))),
-            $left = rows(row(int_entry('number', 2))),
-            $right = rows(row(int_entry('number', 1))),
+            rows(row(int_entry('number', 1))),
+            rows(row(int_entry('number', 2))),
+            rows(row(int_entry('number', 1))),
         ];
     }
 
-    public static function unique_rows_provider() : \Generator
+    public static function unique_rows_provider(): \Generator
     {
         yield 'simple identical rows' => [
-            $expected = rows(row(int_entry('number', 1))),
-            $notUnique = rows(
-                row(int_entry('number', 1)),
-                row(int_entry('number', 1))
-            ),
-            $comparator = new NativeComparator(),
+            rows(row(int_entry('number', 1))),
+            rows(row(int_entry('number', 1)), row(int_entry('number', 1))),
+            new NativeComparator(),
         ];
     }
 
-    public function test_adding_multiple_rows() : void
+    public function test_adding_multiple_rows(): void
     {
         $one = row(int_entry('number', 1), string_entry('name', 'one'));
         $two = row(int_entry('number', 2), string_entry('name', 'two'));
-        $rows = (rows())->add($one, $two);
+        $rows = rows()->add($one, $two);
 
-        self::assertEquals(rows($one, $two), $rows);
+        static::assertEquals(rows($one, $two), $rows);
     }
 
-    public function test_array_access_exists() : void
+    public function test_array_access_exists(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
-        self::assertTrue(isset($rows[0]));
-        self::assertFalse(isset($rows[3]));
+        static::assertTrue(isset($rows[0]));
+        static::assertFalse(isset($rows[3]));
     }
 
-    public function test_array_access_get() : void
+    public function test_array_access_get(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
-        self::assertSame(1, $rows[0]->valueOf('id'));
-        self::assertSame(2, $rows[1]->valueOf('id'));
-        self::assertSame(3, $rows[2]->valueOf('id'));
+        static::assertSame(1, $rows[0]->valueOf('id'));
+        static::assertSame(2, $rows[1]->valueOf('id'));
+        static::assertSame(3, $rows[2]->valueOf('id'));
     }
 
-    public function test_array_access_set() : void
+    public function test_array_access_set(): void
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('In order to add new rows use Rows::add(Row $row) : self');
@@ -137,7 +147,7 @@ final class RowsTest extends FlowTestCase
         $rows[0] = row(int_entry('id', 1));
     }
 
-    public function test_array_access_unset() : void
+    public function test_array_access_unset(): void
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('In order to remove rows use Rows::remove(int $offset) : self');
@@ -145,7 +155,7 @@ final class RowsTest extends FlowTestCase
         unset($rows[0]);
     }
 
-    public function test_chunks_with_less() : void
+    public function test_chunks_with_less(): void
     {
         $rows = rows(
             row(int_entry('id', 1)),
@@ -159,11 +169,11 @@ final class RowsTest extends FlowTestCase
 
         $chunk = \iterator_to_array($rows->chunks(10));
 
-        self::assertCount(1, $chunk);
-        self::assertSame([1, 2, 3, 4, 5, 6, 7], $chunk[0]->reduceToArray('id'));
+        static::assertCount(1, $chunk);
+        static::assertSame([1, 2, 3, 4, 5, 6, 7], $chunk[0]->reduceToArray('id'));
     }
 
-    public function test_chunks_with_more_than_expected_in_chunk_rows() : void
+    public function test_chunks_with_more_than_expected_in_chunk_rows(): void
     {
         $rows = rows(
             row(int_entry('id', 1)),
@@ -180,214 +190,176 @@ final class RowsTest extends FlowTestCase
 
         $chunk = \iterator_to_array($rows->chunks(5));
 
-        self::assertCount(2, $chunk);
-        self::assertSame([1, 2, 3, 4, 5], $chunk[0]->reduceToArray('id'));
-        self::assertSame([6, 7, 8, 9, 10], $chunk[1]->reduceToArray('id'));
+        static::assertCount(2, $chunk);
+        static::assertSame([1, 2, 3, 4, 5], $chunk[0]->reduceToArray('id'));
+        static::assertSame([6, 7, 8, 9, 10], $chunk[1]->reduceToArray('id'));
     }
 
-    public function test_drop() : void
+    public function test_drop(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $rows = $rows->drop(1);
 
-        self::assertCount(2, $rows);
-        self::assertSame(2, $rows[0]->valueOf('id'));
-        self::assertSame(3, $rows[1]->valueOf('id'));
+        static::assertCount(2, $rows);
+        static::assertSame(2, $rows[0]->valueOf('id'));
+        static::assertSame(3, $rows[1]->valueOf('id'));
     }
 
-    public function test_drop_all() : void
+    public function test_drop_all(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $rows = $rows->drop(3);
 
-        self::assertCount(0, $rows);
+        static::assertCount(0, $rows);
     }
 
-    public function test_drop_more_than_exists() : void
+    public function test_drop_more_than_exists(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $rows = $rows->drop(4);
 
-        self::assertCount(0, $rows);
+        static::assertCount(0, $rows);
     }
 
-    public function test_drop_right() : void
+    public function test_drop_right(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $rows = $rows->dropRight(1);
 
-        self::assertCount(2, $rows);
-        self::assertSame(1, $rows[0]->valueOf('id'));
-        self::assertSame(2, $rows[1]->valueOf('id'));
+        static::assertCount(2, $rows);
+        static::assertSame(1, $rows[0]->valueOf('id'));
+        static::assertSame(2, $rows[1]->valueOf('id'));
     }
 
-    public function test_drop_right_all() : void
+    public function test_drop_right_all(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $rows = $rows->dropRight(3);
 
-        self::assertCount(0, $rows);
+        static::assertCount(0, $rows);
     }
 
-    public function test_drop_right_more_than_available() : void
+    public function test_drop_right_more_than_available(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $rows = $rows->dropRight(5);
 
-        self::assertCount(0, $rows);
+        static::assertCount(0, $rows);
     }
 
-    public function test_drop_right_more_than_exists() : void
+    public function test_drop_right_more_than_exists(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $rows = $rows->dropRight(4);
 
-        self::assertCount(0, $rows);
+        static::assertCount(0, $rows);
     }
 
-    public function test_empty_rows() : void
+    public function test_empty_rows(): void
     {
-        self::assertTrue((rows())->empty());
-        self::assertFalse((rows(row(int_entry('id', 1))))->empty());
+        static::assertTrue(rows()->empty());
+        static::assertFalse(rows(row(int_entry('id', 1)))->empty());
     }
 
-    public function test_filters_out_rows() : void
+    public function test_filters_out_rows(): void
     {
         $rows = rows(
             $one = row(int_entry('number', 1), string_entry('name', 'one')),
             $two = row(int_entry('number', 2), string_entry('name', 'two')),
             $three = row(int_entry('number', 3), string_entry('name', 'three')),
             $four = row(int_entry('number', 4), string_entry('name', 'four')),
-            $five = row(int_entry('number', 5), string_entry('name', 'five'))
+            $five = row(int_entry('number', 5), string_entry('name', 'five')),
         );
 
-        $evenRows = static function (Row $row) : bool {
+        $evenRows = static function (Row $row): bool {
             $value = $row->get('number')->value();
             \assert(\is_int($value));
 
-            return $value % 2 === 0;
+            return ($value % 2) === 0;
         };
-        $oddRows = static function (Row $row) : bool {
+        $oddRows = static function (Row $row): bool {
             $value = $row->get('number')->value();
             \assert(\is_int($value));
 
-            return $value % 2 === 1;
+            return ($value % 2) === 1;
         };
 
-        self::assertEquals(rows($two, $four), $rows->filter($evenRows));
-        self::assertEquals(rows($one, $three, $five), $rows->filter($oddRows));
+        static::assertEquals(rows($two, $four), $rows->filter($evenRows));
+        static::assertEquals(rows($one, $three, $five), $rows->filter($oddRows));
     }
 
-    public function test_find() : void
+    public function test_find(): void
     {
         $rows = rows(
             $one = row(int_entry('number', 1), string_entry('name', 'one')),
-            $two = row(int_entry('number', 2), string_entry('name', 'two')),
+            row(int_entry('number', 2), string_entry('name', 'two')),
             $three = row(int_entry('number', 3), string_entry('name', 'one')),
-            $four = row(int_entry('number', 4), string_entry('name', 'four')),
-            $three1 = row(int_entry('number', 3), string_entry('name', 'three')),
+            row(int_entry('number', 4), string_entry('name', 'four')),
+            row(int_entry('number', 3), string_entry('name', 'three')),
         );
 
-        self::assertEquals(
-            rows(
-                $one,
-                $three
-            ),
-            $rows->find(static fn (Row $row) : bool => $row->valueOf('name') === 'one')
+        static::assertEquals(
+            rows($one, $three),
+            $rows->find(static fn(Row $row): bool => $row->valueOf('name') === 'one'),
         );
     }
 
-    public function test_find_on_empty_rows() : void
+    public function test_find_on_empty_rows(): void
     {
-        self::assertEquals(rows(), (rows())->find(static fn (Row $row) => false));
+        static::assertEquals(rows(), rows()->find(static fn(Row $row) => false));
     }
 
-    public function test_find_one() : void
+    public function test_find_one(): void
     {
         $rows = rows(
-            $one = row(int_entry('number', 1), string_entry('name', 'one')),
-            $two = row(int_entry('number', 2), string_entry('name', 'two')),
+            row(int_entry('number', 1), string_entry('name', 'one')),
+            row(int_entry('number', 2), string_entry('name', 'two')),
             $three = row(int_entry('number', 3), string_entry('name', 'three')),
-            $four = row(int_entry('number', 4), string_entry('name', 'four')),
+            row(int_entry('number', 4), string_entry('name', 'four')),
             $three1 = row(int_entry('number', 3), string_entry('name', 'three')),
         );
 
-        self::assertSame($three, $rows->findOne(static fn (Row $row) : bool => $row->valueOf('number') === 3));
-        self::assertNotSame($three1, $rows->findOne(static fn (Row $row) : bool => $row->valueOf('number') === 3));
+        static::assertSame($three, $rows->findOne(static fn(Row $row): bool => $row->valueOf('number') === 3));
+        static::assertNotSame($three1, $rows->findOne(static fn(Row $row): bool => $row->valueOf('number') === 3));
     }
 
-    public function test_find_one_on_empty_rows() : void
+    public function test_find_one_on_empty_rows(): void
     {
-        self::assertNull((rows())->findOne(static fn (Row $row) => false));
+        static::assertNull(rows()->findOne(static fn(Row $row) => false));
     }
 
-    public function test_find_without_results() : void
+    public function test_find_without_results(): void
     {
         $rows = rows(
-            $one = row(int_entry('number', 1), string_entry('name', 'one')),
-            $two = row(int_entry('number', 2), string_entry('name', 'two')),
-            $three = row(int_entry('number', 3), string_entry('name', 'three')),
-            $four = row(int_entry('number', 4), string_entry('name', 'four')),
-            $three1 = row(int_entry('number', 3), string_entry('name', 'three')),
+            row(int_entry('number', 1), string_entry('name', 'one')),
+            row(int_entry('number', 2), string_entry('name', 'two')),
+            row(int_entry('number', 3), string_entry('name', 'three')),
+            row(int_entry('number', 4), string_entry('name', 'four')),
+            row(int_entry('number', 3), string_entry('name', 'three')),
         );
 
-        self::assertNull($rows->findOne(static fn (Row $row) : bool => $row->valueOf('number') === 5));
+        static::assertNull($rows->findOne(static fn(Row $row): bool => $row->valueOf('number') === 5));
     }
 
-    public function test_first_on_empty_rows() : void
+    public function test_first_on_empty_rows(): void
     {
         $this->expectException(RuntimeException::class);
 
-        (rows())->first();
+        rows()->first();
     }
 
-    public function test_flat_map() : void
+    public function test_flat_map(): void
     {
-        $rows = rows(
-            row(
-                int_entry('id', 1234),
-            ),
-            row(
-                int_entry('id', 4567),
-            )
-        );
+        $rows = rows(row(int_entry('id', 1234)), row(int_entry('id', 4567)));
 
-        $rows = $rows->flatMap(static function (Row $row) : array {
+        $rows = $rows->flatMap(static function (Row $row): array {
             $id = $row->valueOf('id');
             \assert(\is_int($id));
 
@@ -397,86 +369,83 @@ final class RowsTest extends FlowTestCase
             ];
         });
 
-        self::assertSame(
+        static::assertSame(
             [
                 ['id' => 1234, 'name' => '1234-name-01'],
                 ['id' => 1234, 'name' => '1234-name-02'],
                 ['id' => 4567, 'name' => '4567-name-01'],
                 ['id' => 4567, 'name' => '4567-name-02'],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_hash() : void
+    public function test_hash(): void
     {
         $rows = rows(
             row(int_entry('id', 1), bool_entry('bool', false)),
             row(int_entry('id', 2), bool_entry('bool', false)),
             row(int_entry('id', 3), bool_entry('bool', false)),
-            row(int_entry('id', 4), bool_entry('bool', false))
+            row(int_entry('id', 4), bool_entry('bool', false)),
         );
 
-        self::assertSame(
+        static::assertSame(
             $rows->hash(),
             rows(
                 row(bool_entry('bool', false), int_entry('id', 1)),
                 row(bool_entry('bool', false), int_entry('id', 2)),
                 row(bool_entry('bool', false), int_entry('id', 3)),
-                row(bool_entry('bool', false), int_entry('id', 4))
-            )->hash()
+                row(bool_entry('bool', false), int_entry('id', 4)),
+            )->hash(),
         );
     }
 
-    public function test_hash_empty_rows() : void
+    public function test_hash_empty_rows(): void
     {
-        self::assertSame(
-            rows()->hash(),
-            rows()->hash(),
-        );
+        static::assertSame(rows()->hash(), rows()->hash());
     }
 
-    public function test_hash_rows_with_different_columns() : void
+    public function test_hash_rows_with_different_columns(): void
     {
         $rows = rows(
             row(int_entry('id', 1), bool_entry('bool', false)),
             row(int_entry('id', 3), bool_entry('bool', false)),
             row(int_entry('id', 2), bool_entry('bool', false)),
-            row(int_entry('id', 4), bool_entry('bool', false))
+            row(int_entry('id', 4), bool_entry('bool', false)),
         );
 
-        self::assertNotSame(
+        static::assertNotSame(
             $rows->hash(),
             rows(
                 row(bool_entry('bool', false)),
                 row(bool_entry('bool', false)),
                 row(bool_entry('bool', false)),
-                row(bool_entry('bool', false))
-            )->hash()
+                row(bool_entry('bool', false)),
+            )->hash(),
         );
     }
 
-    public function test_hash_rows_with_different_order() : void
+    public function test_hash_rows_with_different_order(): void
     {
         $rows = rows(
             row(int_entry('id', 1), bool_entry('bool', false)),
             row(int_entry('id', 3), bool_entry('bool', false)),
             row(int_entry('id', 2), bool_entry('bool', false)),
-            row(int_entry('id', 4), bool_entry('bool', false))
+            row(int_entry('id', 4), bool_entry('bool', false)),
         );
 
-        self::assertNotSame(
+        static::assertNotSame(
             $rows->hash(),
             rows(
                 row(bool_entry('bool', false), int_entry('id', 1)),
                 row(bool_entry('bool', false), int_entry('id', 2)),
                 row(bool_entry('bool', false), int_entry('id', 3)),
-                row(bool_entry('bool', false), int_entry('id', 4))
-            )->hash()
+                row(bool_entry('bool', false), int_entry('id', 4)),
+            )->hash(),
         );
     }
 
-    public function test_head() : void
+    public function test_head(): void
     {
         $rows = rows(
             row(int_entry('id', 1)),
@@ -488,156 +457,127 @@ final class RowsTest extends FlowTestCase
 
         $head = $rows->head(3);
 
-        self::assertCount(3, $head);
-        self::assertSame(1, $head[0]->valueOf('id'));
-        self::assertSame(2, $head[1]->valueOf('id'));
-        self::assertSame(3, $head[2]->valueOf('id'));
+        static::assertCount(3, $head);
+        static::assertSame(1, $head[0]->valueOf('id'));
+        static::assertSame(2, $head[1]->valueOf('id'));
+        static::assertSame(3, $head[2]->valueOf('id'));
     }
 
-    public function test_head_on_empty_rows() : void
+    public function test_head_on_empty_rows(): void
     {
-        $head = (rows())->head(5);
+        $head = rows()->head(5);
 
-        self::assertCount(0, $head);
+        static::assertCount(0, $head);
     }
 
-    public function test_head_preserves_partitions() : void
+    public function test_head_preserves_partitions(): void
     {
-        $rows = rows_partitioned(
-            [
-                row(int_entry('id', 1), str_entry('group', 'a')),
-                row(int_entry('id', 2), str_entry('group', 'a')),
-                row(int_entry('id', 3), str_entry('group', 'a')),
-            ],
-            [partition('group', 'a')]
-        );
+        $rows = rows_partitioned([
+            row(int_entry('id', 1), str_entry('group', 'a')),
+            row(int_entry('id', 2), str_entry('group', 'a')),
+            row(int_entry('id', 3), str_entry('group', 'a')),
+        ], [partition('group', 'a')]);
 
         $head = $rows->head(2);
 
-        self::assertEquals(partitions(partition('group', 'a')), $head->partitions());
-        self::assertCount(2, $head);
+        static::assertEquals(partitions(partition('group', 'a')), $head->partitions());
+        static::assertCount(2, $head);
     }
 
-    public function test_head_with_count_larger_than_available() : void
+    public function test_head_with_count_larger_than_available(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $head = $rows->head(10);
 
-        self::assertCount(3, $head);
-        self::assertSame(1, $head[0]->valueOf('id'));
-        self::assertSame(2, $head[1]->valueOf('id'));
-        self::assertSame(3, $head[2]->valueOf('id'));
+        static::assertCount(3, $head);
+        static::assertSame(1, $head[0]->valueOf('id'));
+        static::assertSame(2, $head[1]->valueOf('id'));
+        static::assertSame(3, $head[2]->valueOf('id'));
     }
 
-    public function test_head_with_negative_count() : void
+    public function test_head_with_negative_count(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Count must be greater than or equal to 0');
 
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $rows->head(-1);
     }
 
-    public function test_head_with_zero_count() : void
+    public function test_head_with_zero_count(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $head = $rows->head(0);
 
-        self::assertCount(0, $head);
+        static::assertCount(0, $head);
     }
 
-    public function test_last() : void
+    public function test_last(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $lastRow = $rows->last();
 
-        self::assertNotNull($lastRow);
-        self::assertSame(3, $lastRow->valueOf('id'));
+        static::assertNotNull($lastRow);
+        static::assertSame(3, $lastRow->valueOf('id'));
     }
 
-    public function test_last_on_empty_rows() : void
+    public function test_last_on_empty_rows(): void
     {
-        $lastRow = (rows())->last();
+        $lastRow = rows()->last();
 
-        self::assertNull($lastRow);
+        static::assertNull($lastRow);
     }
 
-    public function test_last_on_single_row() : void
+    public function test_last_on_single_row(): void
     {
         $rows = rows(row(int_entry('id', 42)));
 
         $lastRow = $rows->last();
 
-        self::assertNotNull($lastRow);
-        self::assertSame(42, $lastRow->valueOf('id'));
+        static::assertNotNull($lastRow);
+        static::assertSame(42, $lastRow->valueOf('id'));
     }
 
-    public function test_merge_empty_rows_with_partitioned_rows() : void
+    public function test_merge_empty_rows_with_partitioned_rows(): void
     {
         $rows1 = rows(row(int_entry('id', 1), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
         $rows2 = rows();
 
-        self::assertEquals(
-            partitions(partition('group', 'a')),
-            $rows1->merge($rows2)->partitions()
-        );
-        self::assertCount(1, $rows1->merge($rows2));
+        static::assertEquals(partitions(partition('group', 'a')), $rows1->merge($rows2)->partitions());
+        static::assertCount(1, $rows1->merge($rows2));
     }
 
-    public function test_merge_row_with_another_row_that_has_duplicated_entries() : void
+    public function test_merge_row_with_another_row_that_has_duplicated_entries(): void
     {
         $this->expectExceptionMessage('Merged entries names must be unique, given: [id] + [id]');
         $this->expectException(InvalidArgumentException::class);
 
-        row(int_entry('id', 1))
-            ->merge(row(int_entry('id', 2)), $prefix = '');
+        row(int_entry('id', 1))->merge(row(int_entry('id', 2)), '');
     }
 
-    public function test_merge_rows_from_different_partition() : void
+    public function test_merge_rows_from_different_partition(): void
     {
         $rows1 = rows(row(int_entry('id', 1), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
         $rows2 = rows(row(int_entry('id', 2), str_entry('group', 'b')))->partitionBy(ref('group'))[0];
 
-        self::assertEquals(
-            partitions(),
-            $rows1->merge($rows2)->partitions()
-        );
-        self::assertCount(2, $rows1->merge($rows2));
+        static::assertEquals(partitions(), $rows1->merge($rows2)->partitions());
+        static::assertCount(2, $rows1->merge($rows2));
     }
 
-    public function test_merge_rows_from_same_partition() : void
+    public function test_merge_rows_from_same_partition(): void
     {
         $rows1 = rows(row(int_entry('id', 1), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
         $rows2 = rows(row(int_entry('id', 2), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
 
-        self::assertEquals(
-            partitions(partition('group', 'a')),
-            $rows1->merge($rows2)->partitions()
-        );
-        self::assertCount(2, $rows1->merge($rows2));
+        static::assertEquals(partitions(partition('group', 'a')), $rows1->merge($rows2)->partitions());
+        static::assertCount(2, $rows1->merge($rows2));
     }
 
-    public function test_merge_rows_from_same_partitions() : void
+    public function test_merge_rows_from_same_partitions(): void
     {
         $rows1 = rows(row(int_entry('id', 1), str_entry('group', 'a'), str_entry('sub_group', '1')))
             ->partitionBy(ref('group'), ref('sub_group'))[0];
@@ -645,33 +585,23 @@ final class RowsTest extends FlowTestCase
         $rows2 = rows(row(int_entry('id', 2), str_entry('group', 'a'), str_entry('sub_group', '1')))
             ->partitionBy(ref('sub_group'), ref('group'))[0];
 
-        self::assertEquals(
+        static::assertEquals(
             partitions(partition('group', 'a'), partition('sub_group', '1')),
-            $rows1->merge($rows2)->partitions()
+            $rows1->merge($rows2)->partitions(),
         );
-        self::assertCount(2, $rows1->merge($rows2));
+        static::assertCount(2, $rows1->merge($rows2));
     }
 
-    public function test_merges_collection_together() : void
+    public function test_merges_collection_together(): void
     {
-        $rowsOne = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-        );
-        $rowsTwo = rows(
-            row(int_entry('id', 3)),
-            row(int_entry('id', 4)),
-            row(int_entry('id', 5))
-        );
+        $rowsOne = rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
+        $rowsTwo = rows(row(int_entry('id', 3)), row(int_entry('id', 4)), row(int_entry('id', 5)));
 
-        $rowsThree = rows(
-            row(int_entry('id', 6)),
-            row(int_entry('id', 7)),
-        );
+        $rowsThree = rows(row(int_entry('id', 6)), row(int_entry('id', 7)));
 
         $merged = $rowsOne->merge($rowsTwo)->merge($rowsThree);
 
-        self::assertEquals(
+        static::assertEquals(
             rows(
                 row(int_entry('id', 1)),
                 row(int_entry('id', 2)),
@@ -679,221 +609,183 @@ final class RowsTest extends FlowTestCase
                 row(int_entry('id', 4)),
                 row(int_entry('id', 5)),
                 row(int_entry('id', 6)),
-                row(int_entry('id', 7))
+                row(int_entry('id', 7)),
             ),
-            $merged
+            $merged,
         );
     }
 
-    public function test_offset_exists_with_non_int_offset() : void
+    public function test_offset_exists_with_non_int_offset(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
         /** @phpstan-ignore-next-line */
-        (rows())->offsetExists('a');
+        rows()->offsetExists('a');
     }
 
-    public function test_offset_get_on_empty_rows() : void
+    public function test_offset_get_on_empty_rows(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (rows())[5];
+        rows()[5];
     }
 
-    public function test_partition_rows_by_multiple_duplicated_entries() : void
+    public function test_partition_rows_by_multiple_duplicated_entries(): void
     {
-        self::assertEquals(
+        static::assertEquals(
             [
-                rows_partitioned(
-                    [
-                        row(int_entry('num', 1), str_entry('cat', 'a')),
-                        row(int_entry('num', 1), str_entry('cat', 'a')),
-                    ],
-                    [
-                        partition('num', '1'),
-                        partition('cat', 'a'),
-                    ]
-                ),
-                rows_partitioned(
-                    [row(int_entry('num', 1), str_entry('cat', 'b'))],
-                    [
-                        partition('num', '1'),
-                        partition('cat', 'b'),
-                    ]
-                ),
-                rows_partitioned(
-                    [row(int_entry('num', 3), str_entry('cat', 'a'))],
-                    [
-                        partition('num', '3'),
-                        partition('cat', 'a'),
-                    ]
-                ),
-                rows_partitioned(
-                    [row(int_entry('num', 2), str_entry('cat', 'b'))],
-                    [
-                        partition('num', '2'),
-                        partition('cat', 'b'),
-                    ]
-                ),
+                rows_partitioned([
+                    row(int_entry('num', 1), str_entry('cat', 'a')),
+                    row(int_entry('num', 1), str_entry('cat', 'a')),
+                ], [
+                    partition('num', '1'),
+                    partition('cat', 'a'),
+                ]),
+                rows_partitioned([row(int_entry('num', 1), str_entry('cat', 'b'))], [
+                    partition('num', '1'),
+                    partition('cat', 'b'),
+                ]),
+                rows_partitioned([row(int_entry('num', 3), str_entry('cat', 'a'))], [
+                    partition('num', '3'),
+                    partition('cat', 'a'),
+                ]),
+                rows_partitioned([row(int_entry('num', 2), str_entry('cat', 'b'))], [
+                    partition('num', '2'),
+                    partition('cat', 'b'),
+                ]),
             ],
-            (rows(
+            rows(
                 row(int_entry('num', 1), str_entry('cat', 'a')),
                 row(int_entry('num', 3), str_entry('cat', 'a')),
                 row(int_entry('num', 1), str_entry('cat', 'b')),
                 row(int_entry('num', 2), str_entry('cat', 'b')),
                 row(int_entry('num', 1), str_entry('cat', 'a')),
-            ))->partitionBy('num', 'num', 'cat')
+            )->partitionBy('num', 'num', 'cat'),
         );
     }
 
-    public function test_partition_rows_by_multiple_entries() : void
+    public function test_partition_rows_by_multiple_entries(): void
     {
-        self::assertEquals(
+        static::assertEquals(
             [
-                rows_partitioned(
-                    [
-                        row(int_entry('num', 1), str_entry('cat', 'a')),
-                        row(int_entry('num', 1), str_entry('cat', 'a')),
-                    ],
-                    [
-                        partition('num', '1'),
-                        partition('cat', 'a'),
-                    ]
-                ),
-                rows_partitioned(
-                    [row(int_entry('num', 1), str_entry('cat', 'b'))],
-                    [
-                        partition('num', '1'),
-                        partition('cat', 'b'),
-                    ]
-                ),
-                rows_partitioned(
-                    [row(int_entry('num', 3), str_entry('cat', 'a'))],
-                    [
-                        partition('num', '3'),
-                        partition('cat', 'a'),
-                    ]
-                ),
-                rows_partitioned(
-                    [row(int_entry('num', 2), str_entry('cat', 'b'))],
-                    [
-                        partition('num', '2'),
-                        partition('cat', 'b'),
-                    ]
-                ),
+                rows_partitioned([
+                    row(int_entry('num', 1), str_entry('cat', 'a')),
+                    row(int_entry('num', 1), str_entry('cat', 'a')),
+                ], [
+                    partition('num', '1'),
+                    partition('cat', 'a'),
+                ]),
+                rows_partitioned([row(int_entry('num', 1), str_entry('cat', 'b'))], [
+                    partition('num', '1'),
+                    partition('cat', 'b'),
+                ]),
+                rows_partitioned([row(int_entry('num', 3), str_entry('cat', 'a'))], [
+                    partition('num', '3'),
+                    partition('cat', 'a'),
+                ]),
+                rows_partitioned([row(int_entry('num', 2), str_entry('cat', 'b'))], [
+                    partition('num', '2'),
+                    partition('cat', 'b'),
+                ]),
             ],
-            (rows(
+            rows(
                 row(int_entry('num', 1), str_entry('cat', 'a')),
                 row(int_entry('num', 3), str_entry('cat', 'a')),
                 row(int_entry('num', 1), str_entry('cat', 'b')),
                 row(int_entry('num', 2), str_entry('cat', 'b')),
                 row(int_entry('num', 1), str_entry('cat', 'a')),
-            ))->partitionBy('num', 'cat')
+            )->partitionBy('num', 'cat'),
         );
     }
 
-    public function test_partition_rows_by_non_existing_entry() : void
+    public function test_partition_rows_by_non_existing_entry(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Entry "test" does not exist');
 
-        (rows(
+        rows(
             row(int_entry('number', 1)),
             row(int_entry('number', 1)),
             row(int_entry('number', 3)),
             row(int_entry('number', 2)),
             row(int_entry('number', 4)),
-        ))->partitionBy('test');
+        )->partitionBy('test');
     }
 
-    public function test_partition_rows_by_single_entry() : void
+    public function test_partition_rows_by_single_entry(): void
     {
-        self::assertEquals(
+        static::assertEquals(
             [
-                rows_partitioned(
-                    [row(int_entry('number', 1)), row(int_entry('number', 1))],
-                    [partition('number', '1')]
-                ),
+                rows_partitioned([row(int_entry('number', 1)), row(int_entry('number', 1))], [partition(
+                    'number',
+                    '1',
+                )]),
                 rows_partitioned([row(int_entry('number', 3))], [partition('number', '3')]),
                 rows_partitioned([row(int_entry('number', 2))], [partition('number', '2')]),
                 rows_partitioned([row(int_entry('number', 4))], [partition('number', '4')]),
             ],
-            (rows(
+            rows(
                 row(int_entry('number', 1)),
                 row(int_entry('number', 1)),
                 row(int_entry('number', 3)),
                 row(int_entry('number', 2)),
                 row(int_entry('number', 4)),
-            ))->partitionBy('number')
+            )->partitionBy('number'),
         );
     }
 
-    public function test_partition_rows_date_entry() : void
+    public function test_partition_rows_date_entry(): void
     {
-        self::assertEquals(
+        static::assertEquals(
             [
-                rows_partitioned(
-                    [row(datetime_entry('date', '2023-01-01 00:00:00 UTC'))],
-                    partitions(
-                        partition('date', '2023-01-01')
-                    )
-                ),
-                rows_partitioned(
-                    [
-                        row(datetime_entry('date', '2023-01-02 00:00:00 UTC')),
-                        row(datetime_entry('date', '2023-01-02 00:00:00 UTC')),
-                    ],
-                    partitions(
-                        partition('date', '2023-01-02')
-                    )
-                ),
+                rows_partitioned([row(datetime_entry(
+                    'date',
+                    '2023-01-01 00:00:00 UTC',
+                ))], partitions(partition('date', '2023-01-01'))),
+                rows_partitioned([
+                    row(datetime_entry('date', '2023-01-02 00:00:00 UTC')),
+                    row(datetime_entry('date', '2023-01-02 00:00:00 UTC')),
+                ], partitions(partition('date', '2023-01-02'))),
             ],
             rows(
                 row(datetime_entry('date', '2023-01-01 00:00:00 UTC')),
                 row(datetime_entry('date', '2023-01-02 00:00:00 UTC')),
-                row(datetime_entry('date', '2023-01-02 00:00:00 UTC'))
-            )->partitionBy(ref('date'))
+                row(datetime_entry('date', '2023-01-02 00:00:00 UTC')),
+            )->partitionBy(ref('date')),
         );
     }
 
-    public function test_partitions() : void
+    public function test_partitions(): void
     {
-        $rows = (rows(
+        $rows = rows(
             row(int_entry('number', 1), str_entry('group', 'a')),
             row(int_entry('number', 2), str_entry('group', 'a')),
             row(int_entry('number', 3), str_entry('group', 'a')),
             row(int_entry('number', 4), str_entry('group', 'a')),
-        ))->partitionBy('group');
+        )->partitionBy('group');
 
-        self::assertEquals(
-            partitions(partition('group', 'a')),
-            $rows[0]->partitions()
-        );
+        static::assertEquals(partitions(partition('group', 'a')), $rows[0]->partitions());
     }
 
-    public function test_remove() : void
+    public function test_remove(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $rows = $rows->remove(1);
 
-        self::assertCount(2, $rows);
-        self::assertSame(1, $rows[0]->valueOf('id'));
-        self::assertSame(3, $rows[1]->valueOf('id'));
+        static::assertCount(2, $rows);
+        static::assertSame(1, $rows[0]->valueOf('id'));
+        static::assertSame(3, $rows[1]->valueOf('id'));
     }
 
-    public function test_remove_on_empty_rows() : void
+    public function test_remove_on_empty_rows(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (rows())->remove(1);
+        rows()->remove(1);
     }
 
-    public function test_returns_first_row() : void
+    public function test_returns_first_row(): void
     {
         $rows = rows(
             $first = row(int_entry('number', 3), string_entry('name', 'three')),
@@ -901,38 +793,34 @@ final class RowsTest extends FlowTestCase
             row(int_entry('number', 2), string_entry('name', 'two')),
         );
 
-        self::assertEquals($first, $rows->first());
+        static::assertEquals($first, $rows->first());
     }
 
-    public function test_reverse() : void
+    public function test_reverse(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $rows = $rows->reverse();
 
-        self::assertCount(3, $rows);
-        self::assertSame(3, $rows[0]->valueOf('id'));
-        self::assertSame(2, $rows[1]->valueOf('id'));
-        self::assertSame(1, $rows[2]->valueOf('id'));
+        static::assertCount(3, $rows);
+        static::assertSame(3, $rows[0]->valueOf('id'));
+        static::assertSame(2, $rows[1]->valueOf('id'));
+        static::assertSame(1, $rows[2]->valueOf('id'));
     }
 
     #[DataProvider('rows_diff_left_provider')]
-    public function test_rows_diff_left(Rows $expected, Rows $left, Rows $right) : void
+    public function test_rows_diff_left(Rows $expected, Rows $left, Rows $right): void
     {
-        self::assertEquals($expected->toArray(), $left->diffLeft($right)->toArray());
+        static::assertEquals($expected->toArray(), $left->diffLeft($right)->toArray());
     }
 
     #[DataProvider('rows_diff_right_provider')]
-    public function test_rows_diff_right(Rows $expected, Rows $left, Rows $right) : void
+    public function test_rows_diff_right(Rows $expected, Rows $left, Rows $right): void
     {
-        self::assertEquals($expected->toArray(), $left->diffRight($right)->toArray());
+        static::assertEquals($expected->toArray(), $left->diffRight($right)->toArray());
     }
 
-    public function test_rows_schema() : void
+    public function test_rows_schema(): void
     {
         $rows = rows(
             row(int_entry('id', 1), str_entry('name', 'foo')),
@@ -941,50 +829,51 @@ final class RowsTest extends FlowTestCase
             row(int_entry('id', 1), int_entry('name', 25)),
         );
 
-        self::assertEquals(
-            schema(integer_schema('id'), string_schema('name', true), list_schema('tags', type_list(type_string()), true), list_schema('list', type_list(type_integer()), true)),
-            $rows->schema()
+        static::assertEquals(
+            schema(
+                integer_schema('id'),
+                string_schema('name', true),
+                list_schema('tags', type_list(type_string()), true),
+                list_schema('list', type_list(type_integer()), true),
+            ),
+            $rows->schema(),
         );
     }
 
-    public function test_rows_schema_when_rows_have_different_list_types() : void
+    public function test_rows_schema_when_rows_have_different_list_types(): void
     {
         $rows = rows(
             row(list_entry('list', ['one', 'two'], type_list(type_string()))),
             row(list_entry('list', [1, 2], type_list(type_integer()))),
         );
 
-        self::assertEquals(
-            schema(json_schema('list')),
-            $rows->schema()
-        );
+        static::assertEquals(schema(json_schema('list')), $rows->schema());
     }
 
-    public function test_rows_serialization() : void
+    public function test_rows_serialization(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $serialized = \serialize($rows);
 
         /** @var Rows $unserialized */
         $unserialized = \unserialize($serialized);
 
-        self::assertTrue($unserialized[0]->isEqual($rows[0]));
-        self::assertTrue($unserialized[1]->isEqual($rows[1]));
-        self::assertTrue($unserialized[2]->isEqual($rows[2]));
+        static::assertTrue($unserialized[0]->isEqual($rows[0]));
+        static::assertTrue($unserialized[1]->isEqual($rows[1]));
+        static::assertTrue($unserialized[2]->isEqual($rows[2]));
     }
 
     #[DataProvider('unique_rows_provider')]
-    public function test_rows_unique(Rows $expected, Rows $notUnique, Comparator $comparator = new NativeComparator()) : void
-    {
-        self::assertEquals($expected, $notUnique->unique($comparator));
+    public function test_rows_unique(
+        Rows $expected,
+        Rows $notUnique,
+        Comparator $comparator = new NativeComparator(),
+    ): void {
+        static::assertEquals($expected, $notUnique->unique($comparator));
     }
 
-    public function test_sort() : void
+    public function test_sort(): void
     {
         $rows = rows(
             $three = row(int_entry('number', 3), string_entry('name', 'three')),
@@ -994,7 +883,7 @@ final class RowsTest extends FlowTestCase
             $four = row(int_entry('number', 4), string_entry('name', 'four')),
         );
 
-        $sort = $rows->sort(static function (mixed $row, mixed $nextRow) : int {
+        $sort = $rows->sort(static function (mixed $row, mixed $nextRow): int {
             \assert($row instanceof \Flow\ETL\Row);
             \assert($nextRow instanceof \Flow\ETL\Row);
 
@@ -1006,11 +895,11 @@ final class RowsTest extends FlowTestCase
             return (int) $rowValue <=> (int) $nextRowValue;
         });
 
-        self::assertEquals(rows($one, $two, $three, $four, $five), $sort);
-        self::assertNotEquals($sort, $rows);
+        static::assertEquals(rows($one, $two, $three, $four, $five), $sort);
+        static::assertNotEquals($sort, $rows);
     }
 
-    public function test_sort_rows_by_not_existing_column() : void
+    public function test_sort_rows_by_not_existing_column(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Entry "c" does not exist');
@@ -1027,7 +916,7 @@ final class RowsTest extends FlowTestCase
         $rows->sortBy(ref('c'), ref('b')->desc());
     }
 
-    public function test_sort_rows_by_two_columns() : void
+    public function test_sort_rows_by_two_columns(): void
     {
         $rows = rows(
             row(int_entry('a', 3), int_entry('b', 2)),
@@ -1041,21 +930,31 @@ final class RowsTest extends FlowTestCase
         $ascending = $rows->sortBy(ref('a'), ref('b')->desc());
         $descending = $rows->sortBy(ref('a')->desc(), ref('b'));
 
-        self::assertSame(
+        static::assertSame(
             [
-                ['a' => 1, 'b' => 5], ['a' => 1, 'b' => 4], ['a' => 2, 'b' => 7], ['a' => 2, 'b' => 4], ['a' => 3, 'b' => 10], ['a' => 3, 'b' => 2],
+                ['a' => 1, 'b' => 5],
+                ['a' => 1, 'b' => 4],
+                ['a' => 2, 'b' => 7],
+                ['a' => 2, 'b' => 4],
+                ['a' => 3, 'b' => 10],
+                ['a' => 3, 'b' => 2],
             ],
-            $ascending->toArray()
+            $ascending->toArray(),
         );
-        self::assertSame(
+        static::assertSame(
             [
-                ['a' => 3, 'b' => 2], ['a' => 3, 'b' => 10], ['a' => 2, 'b' => 4], ['a' => 2, 'b' => 7], ['a' => 1, 'b' => 4], ['a' => 1, 'b' => 5],
+                ['a' => 3, 'b' => 2],
+                ['a' => 3, 'b' => 10],
+                ['a' => 2, 'b' => 4],
+                ['a' => 2, 'b' => 7],
+                ['a' => 1, 'b' => 4],
+                ['a' => 1, 'b' => 5],
             ],
-            $descending->toArray()
+            $descending->toArray(),
         );
     }
 
-    public function test_sort_rows_without_changing_original_collection() : void
+    public function test_sort_rows_without_changing_original_collection(): void
     {
         $rows = rows(
             $three = row(int_entry('number', 3), string_entry('name', 'three')),
@@ -1068,51 +967,51 @@ final class RowsTest extends FlowTestCase
         $ascending = $rows->sortAscending(ref('number'));
         $descending = $rows->sortDescending(ref('number'));
 
-        self::assertEquals(rows($one, $two, $three, $four, $five), $ascending);
-        self::assertEquals(rows($five, $four, $three, $two, $one), $descending);
-        self::assertNotEquals($ascending, $rows);
-        self::assertNotEquals($descending, $rows);
+        static::assertEquals(rows($one, $two, $three, $four, $five), $ascending);
+        static::assertEquals(rows($five, $four, $three, $two, $one), $descending);
+        static::assertNotEquals($ascending, $rows);
+        static::assertNotEquals($descending, $rows);
     }
 
-    public function test_sorts_entries_in_all_rows() : void
+    public function test_sorts_entries_in_all_rows(): void
     {
         $rows = rows(
             row(
-                $rowOneId = int_entry('id', 1),
-                $rowOneDeleted = boolean_entry('deleted', true),
-                $rowOnePhase = string_entry('phase', null),
-                $rowOneCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
+                int_entry('id', 1),
+                boolean_entry('deleted', true),
+                string_entry('phase', null),
+                new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
             ),
             row(
-                $rowTwoDeleted = boolean_entry('deleted', true),
-                $rowTwoCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
-                $rowTwoId = int_entry('id', 1),
-                $rowTwoPhase = string_entry('phase', null),
+                boolean_entry('deleted', true),
+                new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
+                int_entry('id', 1),
+                string_entry('phase', null),
             ),
         );
 
         $sorted = $rows->sortEntries();
 
-        self::assertEquals(
+        static::assertEquals(
             rows(
                 row(
-                    $rowOneCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
-                    $rowOneDeleted = boolean_entry('deleted', true),
-                    $rowOneId = int_entry('id', 1),
-                    $rowOnePhase = string_entry('phase', null),
+                    new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
+                    boolean_entry('deleted', true),
+                    int_entry('id', 1),
+                    string_entry('phase', null),
                 ),
                 row(
-                    $rowTwoCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
-                    $rowTwoDeleted = boolean_entry('deleted', true),
-                    $rowTwoId = int_entry('id', 1),
-                    $rowTwoPhase = string_entry('phase', null),
-                )
+                    new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
+                    boolean_entry('deleted', true),
+                    int_entry('id', 1),
+                    string_entry('phase', null),
+                ),
             ),
-            $sorted
+            $sorted,
         );
     }
 
-    public function test_tail() : void
+    public function test_tail(): void
     {
         $rows = rows(
             row(int_entry('id', 1)),
@@ -1124,13 +1023,13 @@ final class RowsTest extends FlowTestCase
 
         $tail = $rows->tail(3);
 
-        self::assertCount(3, $tail);
-        self::assertSame(3, $tail[0]->valueOf('id'));
-        self::assertSame(4, $tail[1]->valueOf('id'));
-        self::assertSame(5, $tail[2]->valueOf('id'));
+        static::assertCount(3, $tail);
+        static::assertSame(3, $tail[0]->valueOf('id'));
+        static::assertSame(4, $tail[1]->valueOf('id'));
+        static::assertSame(5, $tail[2]->valueOf('id'));
     }
 
-    public function test_tail_maintains_correct_order() : void
+    public function test_tail_maintains_correct_order(): void
     {
         $rows = rows(
             row(int_entry('id', 1)),
@@ -1142,215 +1041,160 @@ final class RowsTest extends FlowTestCase
 
         $tail = $rows->tail(2);
 
-        self::assertCount(2, $tail);
-        self::assertSame(4, $tail[0]->valueOf('id'));
-        self::assertSame(5, $tail[1]->valueOf('id'));
+        static::assertCount(2, $tail);
+        static::assertSame(4, $tail[0]->valueOf('id'));
+        static::assertSame(5, $tail[1]->valueOf('id'));
     }
 
-    public function test_tail_on_empty_rows() : void
+    public function test_tail_on_empty_rows(): void
     {
-        $tail = (rows())->tail(5);
+        $tail = rows()->tail(5);
 
-        self::assertCount(0, $tail);
+        static::assertCount(0, $tail);
     }
 
-    public function test_tail_preserves_partitions() : void
+    public function test_tail_preserves_partitions(): void
     {
-        $rows = rows_partitioned(
-            [
-                row(int_entry('id', 1), str_entry('group', 'a')),
-                row(int_entry('id', 2), str_entry('group', 'a')),
-                row(int_entry('id', 3), str_entry('group', 'a')),
-            ],
-            [partition('group', 'a')]
-        );
+        $rows = rows_partitioned([
+            row(int_entry('id', 1), str_entry('group', 'a')),
+            row(int_entry('id', 2), str_entry('group', 'a')),
+            row(int_entry('id', 3), str_entry('group', 'a')),
+        ], [partition('group', 'a')]);
 
         $tail = $rows->tail(2);
 
-        self::assertEquals(partitions(partition('group', 'a')), $tail->partitions());
-        self::assertCount(2, $tail);
+        static::assertEquals(partitions(partition('group', 'a')), $tail->partitions());
+        static::assertCount(2, $tail);
     }
 
-    public function test_tail_with_count_larger_than_available() : void
+    public function test_tail_with_count_larger_than_available(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $tail = $rows->tail(10);
 
-        self::assertCount(3, $tail);
-        self::assertSame(1, $tail[0]->valueOf('id'));
-        self::assertSame(2, $tail[1]->valueOf('id'));
-        self::assertSame(3, $tail[2]->valueOf('id'));
+        static::assertCount(3, $tail);
+        static::assertSame(1, $tail[0]->valueOf('id'));
+        static::assertSame(2, $tail[1]->valueOf('id'));
+        static::assertSame(3, $tail[2]->valueOf('id'));
     }
 
-    public function test_tail_with_negative_count() : void
+    public function test_tail_with_negative_count(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Count must be greater than or equal to 0');
 
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $rows->tail(-1);
     }
 
-    public function test_tail_with_zero_count() : void
+    public function test_tail_with_zero_count(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $tail = $rows->tail(0);
 
-        self::assertCount(0, $tail);
+        static::assertCount(0, $tail);
     }
 
-    public function test_take() : void
+    public function test_take(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $rows = $rows->take(1);
 
-        self::assertCount(1, $rows);
-        self::assertSame(1, $rows[0]->valueOf('id'));
+        static::assertCount(1, $rows);
+        static::assertSame(1, $rows[0]->valueOf('id'));
     }
 
-    public function test_take_all() : void
+    public function test_take_all(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $rows = $rows->take(3);
 
-        self::assertCount(3, $rows);
-        self::assertSame(1, $rows[0]->valueOf('id'));
-        self::assertSame(2, $rows[1]->valueOf('id'));
-        self::assertSame(3, $rows[2]->valueOf('id'));
+        static::assertCount(3, $rows);
+        static::assertSame(1, $rows[0]->valueOf('id'));
+        static::assertSame(2, $rows[1]->valueOf('id'));
+        static::assertSame(3, $rows[2]->valueOf('id'));
     }
 
-    public function test_take_more_than_exists() : void
+    public function test_take_more_than_exists(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $rows = $rows->take(4);
 
-        self::assertCount(3, $rows);
-        self::assertSame(1, $rows[0]->valueOf('id'));
-        self::assertSame(2, $rows[1]->valueOf('id'));
-        self::assertSame(3, $rows[2]->valueOf('id'));
+        static::assertCount(3, $rows);
+        static::assertSame(1, $rows[0]->valueOf('id'));
+        static::assertSame(2, $rows[1]->valueOf('id'));
+        static::assertSame(3, $rows[2]->valueOf('id'));
     }
 
-    public function test_take_right() : void
+    public function test_take_right(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $rows = $rows->takeRight(1);
 
-        self::assertCount(1, $rows);
-        self::assertSame(3, $rows[0]->valueOf('id'));
+        static::assertCount(1, $rows);
+        static::assertSame(3, $rows[0]->valueOf('id'));
     }
 
-    public function test_take_right_all() : void
+    public function test_take_right_all(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $rows = $rows->takeRight(3);
 
-        self::assertCount(3, $rows);
-        self::assertSame(3, $rows[0]->valueOf('id'));
-        self::assertSame(2, $rows[1]->valueOf('id'));
-        self::assertSame(1, $rows[2]->valueOf('id'));
+        static::assertCount(3, $rows);
+        static::assertSame(3, $rows[0]->valueOf('id'));
+        static::assertSame(2, $rows[1]->valueOf('id'));
+        static::assertSame(1, $rows[2]->valueOf('id'));
     }
 
-    public function test_take_right_more_than_exists() : void
+    public function test_take_right_more_than_exists(): void
     {
-        $rows = rows(
-            row(int_entry('id', 1)),
-            row(int_entry('id', 2)),
-            row(int_entry('id', 3)),
-        );
+        $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
         $rows = $rows->takeRight(4);
 
-        self::assertCount(3, $rows);
-        self::assertSame(3, $rows[0]->valueOf('id'));
-        self::assertSame(2, $rows[1]->valueOf('id'));
-        self::assertSame(1, $rows[2]->valueOf('id'));
+        static::assertCount(3, $rows);
+        static::assertSame(3, $rows[0]->valueOf('id'));
+        static::assertSame(2, $rows[1]->valueOf('id'));
+        static::assertSame(1, $rows[2]->valueOf('id'));
     }
 
-    public function test_transforms_rows_to_array() : void
+    public function test_transforms_rows_to_array(): void
     {
         $rows = rows(
-            row(
-                int_entry('id', 1234),
-                boolean_entry('deleted', false),
-                string_entry('phase', null),
-            ),
-            row(
-                int_entry('id', 4321),
-                boolean_entry('deleted', true),
-                string_entry('phase', 'launch'),
-            )
+            row(int_entry('id', 1234), boolean_entry('deleted', false), string_entry('phase', null)),
+            row(int_entry('id', 4321), boolean_entry('deleted', true), string_entry('phase', 'launch')),
         );
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['id' => 1234, 'deleted' => false, 'phase' => null],
                 ['id' => 4321, 'deleted' => true, 'phase' => 'launch'],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_transforms_rows_to_array_without_keys() : void
+    public function test_transforms_rows_to_array_without_keys(): void
     {
         $rows = rows(
-            row(
-                int_entry('id', 1234),
-                boolean_entry('deleted', false),
-                string_entry('phase', null),
-            ),
-            row(
-                int_entry('id', 4321),
-                boolean_entry('deleted', true),
-                string_entry('phase', 'launch'),
-            )
+            row(int_entry('id', 1234), boolean_entry('deleted', false), string_entry('phase', null)),
+            row(int_entry('id', 4321), boolean_entry('deleted', true), string_entry('phase', 'launch')),
         );
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 [1234, false, null],
-                [4321, true, 'launch'],
+                [4321, true,  'launch'],
             ],
-            $rows->toArray(withKeys: false)
+            $rows->toArray(withKeys: false),
         );
     }
 }

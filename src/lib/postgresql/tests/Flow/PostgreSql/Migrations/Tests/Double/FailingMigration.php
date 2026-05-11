@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Migrations\Tests\Double;
 
-use Flow\PostgreSql\Migrations\{Migration, MigrationContext};
+use Flow\PostgreSql\Migrations\Migration;
+use Flow\PostgreSql\Migrations\MigrationContext;
 
 final class FailingMigration implements Migration
 {
-    public function migrate(MigrationContext $context) : void
+    public function migrate(MigrationContext $context): void
     {
         throw new \RuntimeException('Migration failed');
     }
 
-    public function transactional() : bool
+    public function transactional(): bool
     {
         return true;
     }

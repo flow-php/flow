@@ -4,12 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Trigger;
 
-use Flow\PostgreSql\Protobuf\AST\{CreateTrigStmt, Node, PBString, RangeVar, TriggerTransition};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\CreateTrigStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\Protobuf\AST\TriggerTransition;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
-final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, CreateTriggerOnStep, CreateTriggerOptionsStep, CreateTriggerTimingStep
+final readonly class CreateTriggerBuilder implements
+    CreateTriggerFinalStep,
+    CreateTriggerOnStep,
+    CreateTriggerOptionsStep,
+    CreateTriggerTimingStep
 {
     use AstToSql;
 
@@ -36,15 +45,14 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         private ?Condition $when = null,
         private ?string $functionName = null,
         private array $functionArgs = [],
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name) : CreateTriggerTimingStep
+    public static function create(string $name): CreateTriggerTimingStep
     {
         return new self($name);
     }
 
-    public function after(TriggerEvent ...$events) : CreateTriggerOnStep
+    public function after(TriggerEvent ...$events): CreateTriggerOnStep
     {
         return new self(
             $this->name,
@@ -66,7 +74,7 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         );
     }
 
-    public function afterUpdateOf(string ...$columns) : CreateTriggerOnStep
+    public function afterUpdateOf(string ...$columns): CreateTriggerOnStep
     {
         return new self(
             $this->name,
@@ -88,7 +96,7 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         );
     }
 
-    public function before(TriggerEvent ...$events) : CreateTriggerOnStep
+    public function before(TriggerEvent ...$events): CreateTriggerOnStep
     {
         return new self(
             $this->name,
@@ -110,7 +118,7 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         );
     }
 
-    public function beforeUpdateOf(string ...$columns) : CreateTriggerOnStep
+    public function beforeUpdateOf(string ...$columns): CreateTriggerOnStep
     {
         return new self(
             $this->name,
@@ -132,7 +140,7 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         );
     }
 
-    public function constraint() : CreateTriggerTimingStep
+    public function constraint(): CreateTriggerTimingStep
     {
         return new self(
             $this->name,
@@ -154,7 +162,7 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         );
     }
 
-    public function deferrable() : CreateTriggerOptionsStep
+    public function deferrable(): CreateTriggerOptionsStep
     {
         return new self(
             $this->name,
@@ -176,7 +184,7 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         );
     }
 
-    public function execute(string $functionName, Expression ...$args) : CreateTriggerFinalStep
+    public function execute(string $functionName, Expression ...$args): CreateTriggerFinalStep
     {
         return new self(
             $this->name,
@@ -198,7 +206,7 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         );
     }
 
-    public function forEachRow() : CreateTriggerOptionsStep
+    public function forEachRow(): CreateTriggerOptionsStep
     {
         return new self(
             $this->name,
@@ -220,7 +228,7 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         );
     }
 
-    public function forEachStatement() : CreateTriggerOptionsStep
+    public function forEachStatement(): CreateTriggerOptionsStep
     {
         return new self(
             $this->name,
@@ -242,7 +250,7 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         );
     }
 
-    public function from(string $referencedTable) : CreateTriggerOptionsStep
+    public function from(string $referencedTable): CreateTriggerOptionsStep
     {
         return new self(
             $this->name,
@@ -264,7 +272,7 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         );
     }
 
-    public function initiallyDeferred() : CreateTriggerOptionsStep
+    public function initiallyDeferred(): CreateTriggerOptionsStep
     {
         return new self(
             $this->name,
@@ -286,7 +294,7 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         );
     }
 
-    public function initiallyImmediate() : CreateTriggerOptionsStep
+    public function initiallyImmediate(): CreateTriggerOptionsStep
     {
         return new self(
             $this->name,
@@ -308,7 +316,7 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         );
     }
 
-    public function insteadOf(TriggerEvent ...$events) : CreateTriggerOnStep
+    public function insteadOf(TriggerEvent ...$events): CreateTriggerOnStep
     {
         return new self(
             $this->name,
@@ -330,7 +338,7 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         );
     }
 
-    public function notDeferrable() : CreateTriggerOptionsStep
+    public function notDeferrable(): CreateTriggerOptionsStep
     {
         return new self(
             $this->name,
@@ -352,7 +360,7 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         );
     }
 
-    public function on(string $table, ?string $schema = null) : CreateTriggerOptionsStep
+    public function on(string $table, ?string $schema = null): CreateTriggerOptionsStep
     {
         $identifier = QualifiedIdentifier::parse($table);
 
@@ -376,7 +384,7 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         );
     }
 
-    public function orReplace() : CreateTriggerTimingStep
+    public function orReplace(): CreateTriggerTimingStep
     {
         return new self(
             $this->name,
@@ -398,7 +406,7 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         );
     }
 
-    public function referencingNewTableAs(string $name) : CreateTriggerOptionsStep
+    public function referencingNewTableAs(string $name): CreateTriggerOptionsStep
     {
         return new self(
             $this->name,
@@ -420,7 +428,7 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         );
     }
 
-    public function referencingOldTableAs(string $name) : CreateTriggerOptionsStep
+    public function referencingOldTableAs(string $name): CreateTriggerOptionsStep
     {
         return new self(
             $this->name,
@@ -442,7 +450,7 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         );
     }
 
-    public function toAst() : CreateTrigStmt
+    public function toAst(): CreateTrigStmt
     {
         $stmt = new CreateTrigStmt();
 
@@ -545,7 +553,7 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         return $stmt;
     }
 
-    public function when(Condition $condition) : CreateTriggerOptionsStep
+    public function when(Condition $condition): CreateTriggerOptionsStep
     {
         return new self(
             $this->name,

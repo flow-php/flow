@@ -150,11 +150,12 @@ possible use cases.
 
 The Types library is part of the Flow PHP framework for data processing.  
 It is developed in a monorepository alongside other framework libraries and components.  
-All tools, such as Composer, PHPUnit, PHPStan, Rector, and CS Fixer, are available in the same location.
+All tools, such as Composer, PHPUnit, PHPStan, and Mago, are available in the same location.
 
 Tests can be executed using the following command at the monorepo root level:
 
-```php
-composer test:lib:types
-composer static:analyze
+```shell
+just test --testsuite=lib-types-unit
+just lint
+just analyze
 ```

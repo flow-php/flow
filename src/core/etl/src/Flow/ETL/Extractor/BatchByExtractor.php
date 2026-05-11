@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Extractor;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{Extractor, FlowContext, Rows};
+use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Rows;
 
 final readonly class BatchByExtractor implements Extractor, OverridingExtractor
 {
@@ -28,7 +30,7 @@ final readonly class BatchByExtractor implements Extractor, OverridingExtractor
     /**
      * @return \Generator<int, Rows, mixed, mixed>
      */
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         $buffer = [];
         $currentGroupValue = null;
@@ -62,7 +64,7 @@ final readonly class BatchByExtractor implements Extractor, OverridingExtractor
         }
     }
 
-    public function extractors() : array
+    public function extractors(): array
     {
         return [$this->extractor];
     }

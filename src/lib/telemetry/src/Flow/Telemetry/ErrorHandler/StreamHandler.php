@@ -40,7 +40,7 @@ final class StreamHandler implements ErrorHandler
         }
     }
 
-    public function handle(\Throwable $error) : void
+    public function handle(\Throwable $error): void
     {
         try {
             $stream = $this->openStream();

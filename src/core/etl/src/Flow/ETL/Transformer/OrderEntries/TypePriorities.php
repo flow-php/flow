@@ -5,8 +5,19 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer\OrderEntries;
 
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, EnumEntry, FloatEntry, JsonEntry, ListEntry, MapEntry, StringEntry, StructureEntry, XMLElementEntry, XMLEntry};
-use Flow\ETL\Row\Entry\{IntegerEntry, UuidEntry};
+use Flow\ETL\Row\Entry\BooleanEntry;
+use Flow\ETL\Row\Entry\DateTimeEntry;
+use Flow\ETL\Row\Entry\EnumEntry;
+use Flow\ETL\Row\Entry\FloatEntry;
+use Flow\ETL\Row\Entry\IntegerEntry;
+use Flow\ETL\Row\Entry\JsonEntry;
+use Flow\ETL\Row\Entry\ListEntry;
+use Flow\ETL\Row\Entry\MapEntry;
+use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Row\Entry\StructureEntry;
+use Flow\ETL\Row\Entry\UuidEntry;
+use Flow\ETL\Row\Entry\XMLElementEntry;
+use Flow\ETL\Row\Entry\XMLEntry;
 
 final readonly class TypePriorities
 {
@@ -32,15 +43,14 @@ final readonly class TypePriorities
     /**
      * @param array<class-string<Entry<mixed>>,int> $priorities
      */
-    public function __construct(private array $priorities = self::PRIORITIES)
-    {
-
-    }
+    public function __construct(
+        private array $priorities = self::PRIORITIES,
+    ) {}
 
     /**
      * @param Entry<mixed> $entry
      */
-    public function for(Entry $entry) : int
+    public function for(Entry $entry): int
     {
         if (!\array_key_exists($entry::class, $this->priorities)) {
             return 99999;

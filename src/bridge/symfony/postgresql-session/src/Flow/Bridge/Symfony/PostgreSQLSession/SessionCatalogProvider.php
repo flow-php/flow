@@ -4,9 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSQLSession;
 
-use function Flow\PostgreSql\DSL\{schema, schema_column_bytea, schema_column_integer, schema_column_varchar, schema_index, schema_primary_key, schema_table};
+use Flow\PostgreSql\Schema\Catalog;
+use Flow\PostgreSql\Schema\CatalogProvider;
 
-use Flow\PostgreSql\Schema\{Catalog, CatalogProvider};
+use function Flow\PostgreSql\DSL\schema;
+use function Flow\PostgreSql\DSL\schema_column_bytea;
+use function Flow\PostgreSql\DSL\schema_column_integer;
+use function Flow\PostgreSql\DSL\schema_column_varchar;
+use function Flow\PostgreSql\DSL\schema_index;
+use function Flow\PostgreSql\DSL\schema_primary_key;
+use function Flow\PostgreSql\DSL\schema_table;
 
 final readonly class SessionCatalogProvider implements CatalogProvider
 {
@@ -17,10 +24,9 @@ final readonly class SessionCatalogProvider implements CatalogProvider
         private string $dataCol = 'sess_data',
         private string $lifetimeCol = 'sess_lifetime',
         private string $timeCol = 'sess_time',
-    ) {
-    }
+    ) {}
 
-    public function get() : Catalog
+    public function get(): Catalog
     {
         return new Catalog([
             schema($this->schemaName, [

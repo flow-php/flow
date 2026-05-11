@@ -9,7 +9,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 final class UpToDateCommandTest extends CommandTestCase
 {
-    public function test_returns_failure_when_pending() : void
+    public function test_returns_failure_when_pending(): void
     {
         $this->context->generateDiffMigration();
 
@@ -18,11 +18,11 @@ final class UpToDateCommandTest extends CommandTestCase
         $tester = new CommandTester($command);
         $tester->execute([]);
 
-        self::assertSame(Command::FAILURE, $tester->getStatusCode());
-        self::assertStringContainsString('1 pending', $tester->getDisplay());
+        static::assertSame(Command::FAILURE, $tester->getStatusCode());
+        static::assertStringContainsString('1 pending', $tester->getDisplay());
     }
 
-    public function test_returns_success_when_up_to_date() : void
+    public function test_returns_success_when_up_to_date(): void
     {
         $this->context->generateDiffMigration();
         $this->context->runMigrate();
@@ -32,7 +32,7 @@ final class UpToDateCommandTest extends CommandTestCase
         $tester = new CommandTester($command);
         $tester->execute([]);
 
-        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('up to date', $tester->getDisplay());
+        static::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        static::assertStringContainsString('up to date', $tester->getDisplay());
     }
 }

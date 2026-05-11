@@ -10,7 +10,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 final class CreateDatabaseCommandTest extends TestCase
 {
-    public function test_create_fails_when_database_already_exists() : void
+    public function test_create_fails_when_database_already_exists(): void
     {
         $context = new CommandTestContext();
         $testDbName = 'flow_test_create_' . \bin2hex(\random_bytes(4));
@@ -24,15 +24,15 @@ final class CreateDatabaseCommandTest extends TestCase
             $tester = new CommandTester($command);
             $tester->execute([]);
 
-            self::assertSame(Command::FAILURE, $tester->getStatusCode());
-            self::assertStringContainsString('already exists', $tester->getDisplay());
+            static::assertSame(Command::FAILURE, $tester->getStatusCode());
+            static::assertStringContainsString('already exists', $tester->getDisplay());
         } finally {
             $context->dropDatabase($testDbName);
             $context->shutdown();
         }
     }
 
-    public function test_create_with_if_not_exists_succeeds_when_database_already_exists() : void
+    public function test_create_with_if_not_exists_succeeds_when_database_already_exists(): void
     {
         $context = new CommandTestContext();
         $testDbName = 'flow_test_create_' . \bin2hex(\random_bytes(4));
@@ -46,15 +46,15 @@ final class CreateDatabaseCommandTest extends TestCase
             $tester = new CommandTester($command);
             $tester->execute(['--if-not-exists' => true]);
 
-            self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-            self::assertTrue($context->databaseExists($testDbName));
+            static::assertSame(Command::SUCCESS, $tester->getStatusCode());
+            static::assertTrue($context->databaseExists($testDbName));
         } finally {
             $context->dropDatabase($testDbName);
             $context->shutdown();
         }
     }
 
-    public function test_creates_database() : void
+    public function test_creates_database(): void
     {
         $context = new CommandTestContext();
         $testDbName = 'flow_test_create_' . \bin2hex(\random_bytes(4));
@@ -67,9 +67,9 @@ final class CreateDatabaseCommandTest extends TestCase
             $tester = new CommandTester($command);
             $tester->execute([]);
 
-            self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-            self::assertStringContainsString($testDbName, $tester->getDisplay());
-            self::assertTrue($context->databaseExists($testDbName));
+            static::assertSame(Command::SUCCESS, $tester->getStatusCode());
+            static::assertStringContainsString($testDbName, $tester->getDisplay());
+            static::assertTrue($context->databaseExists($testDbName));
         } finally {
             $context->dropDatabase($testDbName);
             $context->shutdown();

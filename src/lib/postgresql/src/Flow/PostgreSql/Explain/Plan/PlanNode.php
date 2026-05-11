@@ -70,13 +70,12 @@ final readonly class PlanNode
         private ?int $sortSpaceUsed = null,
         private ?string $sortSpaceType = null,
         private array $rawData = [],
-    ) {
-    }
+    ) {}
 
     /**
      * @param PlanNodeShape $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         $children = [];
 
@@ -115,22 +114,22 @@ final readonly class PlanNode
         );
     }
 
-    public function actualLoops() : ?int
+    public function actualLoops(): ?int
     {
         return $this->actualLoops;
     }
 
-    public function actualRows() : ?int
+    public function actualRows(): ?int
     {
         return $this->actualRows;
     }
 
-    public function alias() : ?string
+    public function alias(): ?string
     {
         return $this->alias;
     }
 
-    public function buffers() : ?Buffers
+    public function buffers(): ?Buffers
     {
         return $this->buffers;
     }
@@ -138,94 +137,95 @@ final readonly class PlanNode
     /**
      * @return array<PlanNode>
      */
-    public function children() : array
+    public function children(): array
     {
         return $this->children;
     }
 
-    public function cost() : Cost
+    public function cost(): Cost
     {
         return $this->cost;
     }
 
-    public function estimatedRows() : int
+    public function estimatedRows(): int
     {
         return $this->estimatedRows;
     }
 
-    public function filter() : ?string
+    public function filter(): ?string
     {
         return $this->filter;
     }
 
-    public function hasChildren() : bool
+    public function hasChildren(): bool
     {
         return $this->children !== [];
     }
 
-    public function hashCond() : ?string
+    public function hashCond(): ?string
     {
         return $this->hashCond;
     }
 
-    public function indexCond() : ?string
+    public function indexCond(): ?string
     {
         return $this->indexCond;
     }
 
-    public function indexName() : ?string
+    public function indexName(): ?string
     {
         return $this->indexName;
     }
 
-    public function isBitmapScan() : bool
+    public function isBitmapScan(): bool
     {
-        return $this->nodeType === PlanNodeType::BITMAP_HEAP_SCAN
-            || $this->nodeType === PlanNodeType::BITMAP_INDEX_SCAN;
+        return (
+            $this->nodeType === PlanNodeType::BITMAP_HEAP_SCAN
+            || $this->nodeType === PlanNodeType::BITMAP_INDEX_SCAN
+        );
     }
 
-    public function isHashJoin() : bool
+    public function isHashJoin(): bool
     {
         return $this->nodeType === PlanNodeType::HASH_JOIN;
     }
 
-    public function isIndexOnlyScan() : bool
+    public function isIndexOnlyScan(): bool
     {
         return $this->nodeType === PlanNodeType::INDEX_ONLY_SCAN;
     }
 
-    public function isIndexScan() : bool
+    public function isIndexScan(): bool
     {
-        return $this->nodeType === PlanNodeType::INDEX_SCAN
-            || $this->nodeType === PlanNodeType::INDEX_ONLY_SCAN;
+        return $this->nodeType === PlanNodeType::INDEX_SCAN || $this->nodeType === PlanNodeType::INDEX_ONLY_SCAN;
     }
 
-    public function isMergeJoin() : bool
+    public function isMergeJoin(): bool
     {
         return $this->nodeType === PlanNodeType::MERGE_JOIN;
     }
 
-    public function isNestedLoop() : bool
+    public function isNestedLoop(): bool
     {
         return $this->nodeType === PlanNodeType::NESTED_LOOP;
     }
 
-    public function isSequentialScan() : bool
+    public function isSequentialScan(): bool
     {
         return $this->nodeType === PlanNodeType::SEQ_SCAN;
     }
 
-    public function isSort() : bool
+    public function isSort(): bool
     {
         return $this->nodeType->isSort();
     }
 
-    public function joinType() : ?string
+    public function joinType(): ?string
     {
         return $this->joinType;
     }
 
-    public function nodeType() : PlanNodeType
+    public function nodeType(): PlanNodeType
     {
         return $this->nodeType;
     }
@@ -233,17 +233,14 @@ final readonly class PlanNode
     /**
      * @return PlanNodeShape
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'node_type' => $this->nodeType->value,
             'cost' => $this->cost->normalize(),
             'estimated_rows' => $this->estimatedRows,
             'row_width' => $this->rowWidth,
-            'children' => \array_map(
-                static fn (self $child) : array => $child->normalize(),
-                $this->children
-            ),
+            'children' => \array_map(static fn(self $child): array => $child->normalize(), $this->children),
             'relation_name' => $this->relationName,
             'schema' => $this->schema,
             'alias' => $this->alias,
@@ -268,7 +265,7 @@ final readonly class PlanNode
         ];
     }
 
-    public function parentRelationship() : ?string
+    public function parentRelationship(): ?string
     {
         return $this->parentRelationship;
     }
@@ -276,17 +273,17 @@ final readonly class PlanNode
     /**
      * @return array<string, mixed>
      */
-    public function rawData() : array
+    public function rawData(): array
     {
         return $this->rawData;
     }
 
-    public function relationName() : ?string
+    public function relationName(): ?string
     {
         return $this->relationName;
     }
 
-    public function rowEstimateAccuracy() : ?float
+    public function rowEstimateAccuracy(): ?float
     {
         if ($this->actualRows === null || $this->estimatedRows === 0) {
             return null;
@@ -295,57 +292,57 @@ final readonly class PlanNode
         return $this->actualRows / $this->estimatedRows;
     }
 
-    public function rowsRemovedByFilter() : ?int
+    public function rowsRemovedByFilter(): ?int
     {
         return $this->rowsRemovedByFilter;
     }
 
-    public function rowsRemovedByIndexRecheck() : ?int
+    public function rowsRemovedByIndexRecheck(): ?int
     {
         return $this->rowsRemovedByIndexRecheck;
     }
 
-    public function rowWidth() : int
+    public function rowWidth(): int
     {
         return $this->rowWidth;
     }
 
-    public function scanDirection() : ?string
+    public function scanDirection(): ?string
     {
         return $this->scanDirection;
     }
 
-    public function schema() : ?string
+    public function schema(): ?string
     {
         return $this->schema;
     }
 
-    public function sortKey() : ?string
+    public function sortKey(): ?string
     {
         return $this->sortKey;
     }
 
-    public function sortMethod() : ?string
+    public function sortMethod(): ?string
     {
         return $this->sortMethod;
     }
 
-    public function sortSpaceType() : ?string
+    public function sortSpaceType(): ?string
     {
         return $this->sortSpaceType;
     }
 
-    public function sortSpaceUsed() : ?int
+    public function sortSpaceUsed(): ?int
     {
         return $this->sortSpaceUsed;
     }
 
-    public function timing() : ?Timing
+    public function timing(): ?Timing
     {
         return $this->timing;
     }
 
-    public function usesExternalSort() : bool
+    public function usesExternalSort(): bool
     {
         if (!$this->isSort()) {
             return false;

@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql;
 
-use function Flow\ETL\DSL\array_to_rows;
-use function Flow\PostgreSql\DSL\{close_cursor, declare_cursor, fetch};
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Extractor, FlowContext, Schema};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\Sql;
+
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\PostgreSql\DSL\close_cursor;
+use function Flow\PostgreSql\DSL\declare_cursor;
+use function Flow\PostgreSql\DSL\fetch;
 
 /**
  * PostgreSQL extractor using server-side cursors for memory-efficient extraction.
@@ -38,12 +43,10 @@ final class PostgreSqlCursorExtractor implements Extractor
         private readonly Client $client,
         private readonly string|Sql $query,
         private readonly array $parameters = [],
-    ) {
-    }
+    ) {}
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
-        $uri = 'postgresql://cursor';
         $cursorName = $this->cursorName ?? 'flow_cursor_' . \bin2hex(\random_bytes(8));
 
         $ownTransaction = $this->client->getTransactionNestingLevel() === 0;
@@ -53,10 +56,7 @@ final class PostgreSqlCursorExtractor implements Extractor
         }
 
         try {
-            $this->client->execute(
-                declare_cursor($cursorName, $this->query),
-                $this->parameters
-            );
+            $this->client->execute(declare_cursor($cursorName, $this->query), $this->parameters);
 
             $totalFetched = 0;
 
@@ -103,14 +103,14 @@ final class PostgreSqlCursorExtractor implements Extractor
         }
     }
 
-    public function withCursorName(string $cursorName) : self
+    public function withCursorName(string $cursorName): self
     {
         $this->cursorName = $cursorName;
 
         return $this;
     }
 
-    public function withFetchSize(int $fetchSize) : self
+    public function withFetchSize(int $fetchSize): self
     {
         if ($fetchSize <= 0) {
             throw new InvalidArgumentException('Fetch size must be greater than 0, got ' . $fetchSize);
@@ -121,7 +121,7 @@ final class PostgreSqlCursorExtractor implements Extractor
         return $this;
     }
 
-    public function withMaximum(int $maximum) : self
+    public function withMaximum(int $maximum): self
     {
         if ($maximum <= 0) {
             throw new InvalidArgumentException('Maximum must be greater than 0, got ' . $maximum);
@@ -132,7 +132,7 @@ final class PostgreSqlCursorExtractor implements Extractor
         return $this;
     }
 
-    public function withSchema(Schema $schema) : self
+    public function withSchema(Schema $schema): self
     {
         $this->schema = $schema;
 

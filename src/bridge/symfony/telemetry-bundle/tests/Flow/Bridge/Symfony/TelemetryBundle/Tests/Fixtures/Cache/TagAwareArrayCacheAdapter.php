@@ -6,10 +6,16 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Cache;
 
 use Psr\Cache\CacheItemInterface;
 use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
-use Symfony\Component\Cache\{CacheItem, PruneableInterface, ResettableInterface};
+use Symfony\Component\Cache\CacheItem;
+use Symfony\Component\Cache\PruneableInterface;
+use Symfony\Component\Cache\ResettableInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
-final class TagAwareArrayCacheAdapter implements PruneableInterface, ResettableInterface, TagAwareAdapterInterface, TagAwareCacheInterface
+final class TagAwareArrayCacheAdapter implements
+    PruneableInterface,
+    ResettableInterface,
+    TagAwareAdapterInterface,
+    TagAwareCacheInterface
 {
     /** @var array<string, mixed> */
     private array $cache = [];
@@ -20,7 +26,7 @@ final class TagAwareArrayCacheAdapter implements PruneableInterface, ResettableI
     /** @var array<string, array<string>> */
     private array $tags = [];
 
-    public function clear(string $prefix = '') : bool
+    public function clear(string $prefix = ''): bool
     {
         if ($prefix === '') {
             $this->cache = [];
@@ -38,7 +44,7 @@ final class TagAwareArrayCacheAdapter implements PruneableInterface, ResettableI
         return true;
     }
 
-    public function commit() : bool
+    public function commit(): bool
     {
         foreach ($this->deferred as $item) {
             $this->save($item);
@@ -48,14 +54,14 @@ final class TagAwareArrayCacheAdapter implements PruneableInterface, ResettableI
         return true;
     }
 
-    public function delete(string $key) : bool
+    public function delete(string $key): bool
     {
         unset($this->cache[$key], $this->tags[$key]);
 
         return true;
     }
 
-    public function deleteItem(mixed $key) : bool
+    public function deleteItem(mixed $key): bool
     {
         unset($this->cache[$key], $this->tags[$key]);
 
@@ -65,7 +71,7 @@ final class TagAwareArrayCacheAdapter implements PruneableInterface, ResettableI
     /**
      * @param array<string> $keys
      */
-    public function deleteItems(array $keys) : bool
+    public function deleteItems(array $keys): bool
     {
         foreach ($keys as $key) {
             unset($this->cache[$key], $this->tags[$key]);
@@ -74,7 +80,7 @@ final class TagAwareArrayCacheAdapter implements PruneableInterface, ResettableI
         return true;
     }
 
-    public function get(string $key, callable $callback, ?float $beta = null, ?array &$metadata = null) : mixed
+    public function get(string $key, callable $callback, ?float $beta = null, ?array &$metadata = null): mixed
     {
         if (isset($this->cache[$key])) {
             return $this->cache[$key];
@@ -91,7 +97,7 @@ final class TagAwareArrayCacheAdapter implements PruneableInterface, ResettableI
         return $value;
     }
 
-    public function getItem(mixed $key) : CacheItem
+    public function getItem(mixed $key): CacheItem
     {
         $item = new CacheItem();
         $reflection = new \ReflectionClass($item);
@@ -115,14 +121,14 @@ final class TagAwareArrayCacheAdapter implements PruneableInterface, ResettableI
      *
      * @return iterable<string, CacheItem>
      */
-    public function getItems(array $keys = []) : iterable
+    public function getItems(array $keys = []): iterable
     {
         foreach ($keys as $key) {
             yield $key => $this->getItem($key);
         }
     }
 
-    public function hasItem(mixed $key) : bool
+    public function hasItem(mixed $key): bool
     {
         return isset($this->cache[$key]);
     }
@@ -130,7 +136,7 @@ final class TagAwareArrayCacheAdapter implements PruneableInterface, ResettableI
     /**
      * @param array<string> $tags
      */
-    public function invalidateTags(array $tags) : bool
+    public function invalidateTags(array $tags): bool
     {
         $tagsSet = \array_flip($tags);
 
@@ -147,19 +153,19 @@ final class TagAwareArrayCacheAdapter implements PruneableInterface, ResettableI
         return true;
     }
 
-    public function prune() : bool
+    public function prune(): bool
     {
         return true;
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->cache = [];
         $this->tags = [];
         $this->deferred = [];
     }
 
-    public function save(CacheItemInterface $item) : bool
+    public function save(CacheItemInterface $item): bool
     {
         $reflection = new \ReflectionClass($item);
         $valueProperty = $reflection->getProperty('value');
@@ -168,7 +174,7 @@ final class TagAwareArrayCacheAdapter implements PruneableInterface, ResettableI
         return true;
     }
 
-    public function saveDeferred(CacheItemInterface $item) : bool
+    public function saveDeferred(CacheItemInterface $item): bool
     {
         $this->deferred[$item->getKey()] = $item;
 

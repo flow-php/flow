@@ -4,17 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Telemetry;
 
-use function Flow\PostgreSql\DSL\{listen, unlisten};
 use Flow\PostgreSql\AST\Transformers\ExplainConfig;
-use Flow\PostgreSql\Client\{Client, ConnectionParameters, Cursor, Notification, RowMapper};
+use Flow\PostgreSql\Client\Client;
+use Flow\PostgreSql\Client\ConnectionParameters;
+use Flow\PostgreSql\Client\Cursor;
 use Flow\PostgreSql\Client\Exception\QueryException;
+use Flow\PostgreSql\Client\Notification;
+use Flow\PostgreSql\Client\RowMapper;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\Explain\Plan\Plan;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\Telemetry\Logger\Logger;
 use Flow\Telemetry\Meter\Instrument\Histogram;
 use Flow\Telemetry\PackageVersion;
-use Flow\Telemetry\Tracer\{Span, SpanKind, SpanStatus, Tracer};
+use Flow\Telemetry\Tracer\Span;
+use Flow\Telemetry\Tracer\SpanKind;
+use Flow\Telemetry\Tracer\SpanStatus;
+use Flow\Telemetry\Tracer\Tracer;
+
+use function Flow\PostgreSql\DSL\listen;
+use function Flow\PostgreSql\DSL\unlisten;
 
 /**
  * Decorator that adds telemetry instrumentation to a PostgreSQL client.
@@ -80,7 +89,7 @@ final class TraceableClient implements Client
         }
     }
 
-    public function beginTransaction() : void
+    public function beginTransaction(): void
     {
         $startTime = \hrtime(true);
         $nestingLevel = $this->client->getTransactionNestingLevel() + 1;
@@ -105,12 +114,12 @@ final class TraceableClient implements Client
         }
     }
 
-    public function close() : void
+    public function close(): void
     {
         $this->client->close();
     }
 
-    public function commit() : void
+    public function commit(): void
     {
         $startTime = \hrtime(true);
         $nestingLevel = $this->client->getTransactionNestingLevel();
@@ -128,12 +137,12 @@ final class TraceableClient implements Client
         }
     }
 
-    public function converters() : ValueConverters
+    public function converters(): ValueConverters
     {
         return $this->client->converters();
     }
 
-    public function cursor(Sql|string $sql, array $parameters = []) : Cursor
+    public function cursor(Sql|string $sql, array $parameters = []): Cursor
     {
         $query = $sql instanceof Sql ? $sql->toSql() : $sql;
         $cursor = $this->client->cursor($sql, $parameters);
@@ -147,296 +156,280 @@ final class TraceableClient implements Client
         return new TraceableCursor($cursor, $this->telemetryConfig, $this->client->parameters(), $query, $parameters);
     }
 
-    public function execute(Sql|string $sql, array $parameters = []) : int
+    public function execute(Sql|string $sql, array $parameters = []): int
     {
         $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
             $parameters,
-            function () use ($sql, $parameters, $query) : int {
+            function () use ($sql, $parameters, $query): int {
                 $this->logQuery($query, $parameters);
 
                 return $this->client->execute($sql, $parameters);
             },
-            static fn (int $affected) => $affected,
+            static fn(int $affected) => $affected,
         );
     }
 
-    public function explain(Sql|string $sql, array $parameters = [], ?ExplainConfig $config = null) : Plan
+    public function explain(Sql|string $sql, array $parameters = [], ?ExplainConfig $config = null): Plan
+    {
+        $query = $sql instanceof Sql ? $sql->toSql() : $sql;
+
+        return $this->traceQuery($query, $parameters, fn() => $this->client->explain($sql, $parameters, $config));
+    }
+
+    public function fetch(Sql|string $sql, array $parameters = []): ?array
     {
         $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
             $parameters,
-            fn () => $this->client->explain($sql, $parameters, $config),
-        );
-    }
-
-    public function fetch(Sql|string $sql, array $parameters = []) : ?array
-    {
-        $query = $sql instanceof Sql ? $sql->toSql() : $sql;
-
-        return $this->traceQuery(
-            $query,
-            $parameters,
-            function () use ($sql, $parameters, $query) : ?array {
+            function () use ($sql, $parameters, $query): ?array {
                 $this->logQuery($query, $parameters);
 
                 return $this->client->fetch($sql, $parameters);
             },
-            static fn (?array $row) => $row !== null ? 1 : 0,
+            static fn(?array $row) => $row !== null ? 1 : 0,
         );
     }
 
-    public function fetchAll(Sql|string $sql, array $parameters = []) : array
+    public function fetchAll(Sql|string $sql, array $parameters = []): array
     {
         $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
             $parameters,
-            function () use ($sql, $parameters, $query) : array {
+            function () use ($sql, $parameters, $query): array {
                 $this->logQuery($query, $parameters);
 
                 return $this->client->fetchAll($sql, $parameters);
             },
-            static fn (array $rows) => \count($rows),
+            static fn(array $rows) => \count($rows),
         );
     }
 
-    public function fetchAllInto(
-        RowMapper $mapper,
-        Sql|string $sql,
-        array $parameters = [],
-    ) : array {
+    public function fetchAllInto(RowMapper $mapper, Sql|string $sql, array $parameters = []): array
+    {
         $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
             $parameters,
-            function () use ($mapper, $sql, $parameters, $query) : array {
+            function () use ($mapper, $sql, $parameters, $query): array {
                 $this->logQuery($query, $parameters);
 
                 return $this->client->fetchAllInto($mapper, $sql, $parameters);
             },
-            static fn (array $rows) => \count($rows),
+            static fn(array $rows) => \count($rows),
         );
     }
 
-    public function fetchInto(
-        RowMapper $mapper,
-        Sql|string $sql,
-        array $parameters = [],
-    ) : mixed {
+    public function fetchInto(RowMapper $mapper, Sql|string $sql, array $parameters = []): mixed
+    {
         $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
             $parameters,
-            function () use ($mapper, $sql, $parameters, $query) : mixed {
+            function () use ($mapper, $sql, $parameters, $query): mixed {
                 $this->logQuery($query, $parameters);
 
                 return $this->client->fetchInto($mapper, $sql, $parameters);
             },
-            static fn (mixed $result) => $result !== null ? 1 : 0,
+            static fn(mixed $result) => $result !== null ? 1 : 0,
         );
     }
 
-    public function fetchOne(Sql|string $sql, array $parameters = []) : ?array
+    public function fetchOne(Sql|string $sql, array $parameters = []): ?array
     {
         $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
             $parameters,
-            function () use ($sql, $parameters, $query) : ?array {
+            function () use ($sql, $parameters, $query): ?array {
                 $this->logQuery($query, $parameters);
 
                 return $this->client->fetchOne($sql, $parameters);
             },
-            static fn (?array $row) => $row !== null ? 1 : 0,
+            static fn(?array $row) => $row !== null ? 1 : 0,
         );
     }
 
-    public function fetchOneInto(
-        RowMapper $mapper,
-        Sql|string $sql,
-        array $parameters = [],
-    ) : mixed {
+    public function fetchOneInto(RowMapper $mapper, Sql|string $sql, array $parameters = []): mixed
+    {
         $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
             $parameters,
-            function () use ($mapper, $sql, $parameters, $query) : mixed {
+            function () use ($mapper, $sql, $parameters, $query): mixed {
                 $this->logQuery($query, $parameters);
 
                 return $this->client->fetchOneInto($mapper, $sql, $parameters);
             },
-            static fn (mixed $result) => $result !== null ? 1 : 0,
+            static fn(mixed $result) => $result !== null ? 1 : 0,
         );
     }
 
-    public function fetchScalar(Sql|string $sql, array $parameters = []) : mixed
+    public function fetchScalar(Sql|string $sql, array $parameters = []): mixed
     {
         $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
             $parameters,
-            function () use ($sql, $parameters, $query) : mixed {
+            function () use ($sql, $parameters, $query): mixed {
                 $this->logQuery($query, $parameters);
 
                 return $this->client->fetchScalar($sql, $parameters);
             },
-            static fn (mixed $value) => $value !== null ? 1 : 0,
+            static fn(mixed $value) => $value !== null ? 1 : 0,
         );
     }
 
-    public function fetchScalarBool(Sql|string $sql, array $parameters = []) : bool
+    public function fetchScalarBool(Sql|string $sql, array $parameters = []): bool
     {
         $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
             $parameters,
-            function () use ($sql, $parameters, $query) : bool {
+            function () use ($sql, $parameters, $query): bool {
                 $this->logQuery($query, $parameters);
 
                 return $this->client->fetchScalarBool($sql, $parameters);
             },
-            static fn (bool $value) => 1,
+            static fn(bool $value) => 1,
         );
     }
 
-    public function fetchScalarFloat(Sql|string $sql, array $parameters = []) : float
+    public function fetchScalarFloat(Sql|string $sql, array $parameters = []): float
     {
         $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
             $parameters,
-            function () use ($sql, $parameters, $query) : float {
+            function () use ($sql, $parameters, $query): float {
                 $this->logQuery($query, $parameters);
 
                 return $this->client->fetchScalarFloat($sql, $parameters);
             },
-            static fn (float $value) => 1,
+            static fn(float $value) => 1,
         );
     }
 
-    public function fetchScalarInt(Sql|string $sql, array $parameters = []) : int
+    public function fetchScalarInt(Sql|string $sql, array $parameters = []): int
     {
         $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
             $parameters,
-            function () use ($sql, $parameters, $query) : int {
+            function () use ($sql, $parameters, $query): int {
                 $this->logQuery($query, $parameters);
 
                 return $this->client->fetchScalarInt($sql, $parameters);
             },
-            static fn (int $value) => 1,
+            static fn(int $value) => 1,
         );
     }
 
-    public function fetchScalarString(Sql|string $sql, array $parameters = []) : string
+    public function fetchScalarString(Sql|string $sql, array $parameters = []): string
     {
         $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
             $parameters,
-            function () use ($sql, $parameters, $query) : string {
+            function () use ($sql, $parameters, $query): string {
                 $this->logQuery($query, $parameters);
 
                 return $this->client->fetchScalarString($sql, $parameters);
             },
-            static fn (string $value) => 1,
+            static fn(string $value) => 1,
         );
     }
 
-    public function fetchSingle(Sql|string $sql, array $parameters = []) : array
+    public function fetchSingle(Sql|string $sql, array $parameters = []): array
     {
         $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
             $parameters,
-            function () use ($sql, $parameters, $query) : array {
+            function () use ($sql, $parameters, $query): array {
                 $this->logQuery($query, $parameters);
 
                 return $this->client->fetchSingle($sql, $parameters);
             },
-            static fn (array $row) => 1,
+            static fn(array $row) => 1,
         );
     }
 
-    public function fetchSingleInto(
-        RowMapper $mapper,
-        Sql|string $sql,
-        array $parameters = [],
-    ) : mixed {
+    public function fetchSingleInto(RowMapper $mapper, Sql|string $sql, array $parameters = []): mixed
+    {
         $query = $sql instanceof Sql ? $sql->toSql() : $sql;
 
         return $this->traceQuery(
             $query,
             $parameters,
-            function () use ($mapper, $sql, $parameters, $query) : mixed {
+            function () use ($mapper, $sql, $parameters, $query): mixed {
                 $this->logQuery($query, $parameters);
 
                 return $this->client->fetchSingleInto($mapper, $sql, $parameters);
             },
-            static fn (mixed $result) => 1,
+            static fn(mixed $result) => 1,
         );
     }
 
-    public function getTransactionNestingLevel() : int
+    public function getTransactionNestingLevel(): int
     {
         return $this->client->getTransactionNestingLevel();
     }
 
-    public function isAutoCommit() : bool
+    public function isAutoCommit(): bool
     {
         return $this->client->isAutoCommit();
     }
 
-    public function isConnected() : bool
+    public function isConnected(): bool
     {
         return $this->client->isConnected();
     }
 
-    public function lastInsertId(string $sequenceName) : int|string
+    public function lastInsertId(string $sequenceName): int|string
     {
         return $this->client->lastInsertId($sequenceName);
     }
 
-    public function listen(string $channel) : void
+    public function listen(string $channel): void
     {
         $query = listen($channel)->toSql();
 
         $this->traceQuery(
             $query,
             [],
-            function () use ($channel, $query) : int {
+            function () use ($channel, $query): int {
                 $this->logQuery($query, []);
                 $this->client->listen($channel);
 
                 return 0;
             },
-            static fn (int $_) => 0,
+            static fn(int $_) => 0,
         );
     }
 
-    public function parameters() : ConnectionParameters
+    public function parameters(): ConnectionParameters
     {
         return $this->client->parameters();
     }
 
-    public function rollBack() : void
+    public function rollBack(): void
     {
         $startTime = \hrtime(true);
         $nestingLevel = $this->client->getTransactionNestingLevel();
@@ -454,12 +447,12 @@ final class TraceableClient implements Client
         }
     }
 
-    public function setAutoCommit(bool $autoCommit) : void
+    public function setAutoCommit(bool $autoCommit): void
     {
         $this->client->setAutoCommit($autoCommit);
     }
 
-    public function transaction(callable $callback) : mixed
+    public function transaction(callable $callback): mixed
     {
         $this->beginTransaction();
 
@@ -475,24 +468,24 @@ final class TraceableClient implements Client
         }
     }
 
-    public function unlisten(string $channel) : void
+    public function unlisten(string $channel): void
     {
         $query = unlisten($channel)->toSql();
 
         $this->traceQuery(
             $query,
             [],
-            function () use ($channel, $query) : int {
+            function () use ($channel, $query): int {
                 $this->logQuery($query, []);
                 $this->client->unlisten($channel);
 
                 return 0;
             },
-            static fn (int $_) => 0,
+            static fn(int $_) => 0,
         );
     }
 
-    public function wait(int $milliseconds) : ?Notification
+    public function wait(int $milliseconds): ?Notification
     {
         return $this->client->wait($milliseconds);
     }
@@ -502,7 +495,7 @@ final class TraceableClient implements Client
      *
      * @return array<string, array<bool|float|int|string>|bool|float|int|string>
      */
-    private function buildQueryAttributes(string $query, array $parameters, QueryAttributes $queryAttrs) : array
+    private function buildQueryAttributes(string $query, array $parameters, QueryAttributes $queryAttrs): array
     {
         $attributes = [
             PostgreSqlTelemetryAttributes::DB_SYSTEM_NAME => PostgreSqlTelemetryAttributes::DB_SYSTEM_POSTGRESQL,
@@ -525,9 +518,8 @@ final class TraceableClient implements Client
         }
 
         $maxLength = $this->telemetryConfig->options->maxQueryLength;
-        $queryText = ($maxLength !== null && \strlen($query) > $maxLength)
-            ? \substr($query, 0, $maxLength) . '...'
-            : $query;
+        $queryText =
+            $maxLength !== null && \strlen($query) > $maxLength ? \substr($query, 0, $maxLength) . '...' : $query;
         $attributes[PostgreSqlTelemetryAttributes::DB_QUERY_TEXT] = $queryText;
 
         if ($this->telemetryConfig->options->includeParameters && $parameters !== []) {
@@ -548,7 +540,7 @@ final class TraceableClient implements Client
         return $attributes;
     }
 
-    private function buildSpanName(QueryAttributes $queryAttrs) : string
+    private function buildSpanName(QueryAttributes $queryAttrs): string
     {
         if ($queryAttrs->operation !== null && $queryAttrs->target !== null) {
             return $queryAttrs->operation . ' ' . $queryAttrs->target;
@@ -564,7 +556,7 @@ final class TraceableClient implements Client
     /**
      * @return array<string, array<bool|float|int|string>|bool|float|int|string>
      */
-    private function buildTransactionAttributes(int $nestingLevel) : array
+    private function buildTransactionAttributes(int $nestingLevel): array
     {
         $attributes = [
             PostgreSqlTelemetryAttributes::DB_SYSTEM_NAME => PostgreSqlTelemetryAttributes::DB_SYSTEM_POSTGRESQL,
@@ -586,7 +578,7 @@ final class TraceableClient implements Client
         return $attributes;
     }
 
-    private function buildTransactionSpanName(string $operation, int $nestingLevel) : string
+    private function buildTransactionSpanName(string $operation, int $nestingLevel): string
     {
         if ($nestingLevel > 1) {
             return $operation . ' SAVEPOINT';
@@ -595,14 +587,17 @@ final class TraceableClient implements Client
         return $operation . ' TRANSACTION';
     }
 
-    private function completeAllTransactionSpans(int $fromLevel, SpanStatus $status, ?\Throwable $exception = null) : void
-    {
+    private function completeAllTransactionSpans(
+        int $fromLevel,
+        SpanStatus $status,
+        ?\Throwable $exception = null,
+    ): void {
         for ($level = $fromLevel; $level >= 1; $level--) {
             $this->completeTransactionSpan($level, $status, $exception);
         }
     }
 
-    private function completeTransactionSpan(int $nestingLevel, SpanStatus $status, ?\Throwable $exception = null) : void
+    private function completeTransactionSpan(int $nestingLevel, SpanStatus $status, ?\Throwable $exception = null): void
     {
         $tracer = $this->tracer;
 
@@ -625,7 +620,7 @@ final class TraceableClient implements Client
     /**
      * @param list<mixed> $parameters
      */
-    private function logQuery(string $query, array $parameters) : void
+    private function logQuery(string $query, array $parameters): void
     {
         if ($this->logger === null) {
             return;
@@ -633,16 +628,13 @@ final class TraceableClient implements Client
 
         $queryAttrs = $this->queryAttributesExtractor->extract($query);
 
-        $this->logger->debug(
-            'Executing query',
-            $this->buildQueryAttributes($query, $parameters, $queryAttrs),
-        );
+        $this->logger->debug('Executing query', $this->buildQueryAttributes($query, $parameters, $queryAttrs));
     }
 
     /**
      * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes
      */
-    private function recordDuration(int $startTime, array $attributes) : void
+    private function recordDuration(int $startTime, array $attributes): void
     {
         if ($this->operationDuration === null) {
             return;
@@ -652,22 +644,19 @@ final class TraceableClient implements Client
         $this->operationDuration->record($duration, $attributes);
     }
 
-    private function recordFailure(Span $span, \Throwable $e) : void
+    private function recordFailure(Span $span, \Throwable $e): void
     {
         $span->recordException($e, $this->telemetryConfig->clock->now());
         $span->setAttribute(PostgreSqlTelemetryAttributes::ERROR_TYPE, $e::class);
 
         if ($e instanceof QueryException) {
-            $span->setAttribute(
-                PostgreSqlTelemetryAttributes::DB_RESPONSE_STATUS_CODE,
-                $e->error()->sqlState,
-            );
+            $span->setAttribute(PostgreSqlTelemetryAttributes::DB_RESPONSE_STATUS_CODE, $e->error()->sqlState);
         }
 
         $span->setStatus(SpanStatus::error($e->getMessage()));
     }
 
-    private function recordRowCount(int $rowCount, QueryAttributes $queryAttrs) : void
+    private function recordRowCount(int $rowCount, QueryAttributes $queryAttrs): void
     {
         if ($this->returnedRows === null) {
             return;
@@ -694,19 +683,19 @@ final class TraceableClient implements Client
      *
      * @return T
      */
-    private function traceQuery(string $query, array $parameters, callable $operation, ?callable $rowCountExtractor = null) : mixed
-    {
+    private function traceQuery(
+        string $query,
+        array $parameters,
+        callable $operation,
+        ?callable $rowCountExtractor = null,
+    ): mixed {
         $startTime = \hrtime(true);
         $queryAttrs = $this->queryAttributesExtractor->extract($query);
         $attributes = $this->buildQueryAttributes($query, $parameters, $queryAttrs);
         $span = null;
 
         if ($this->telemetryConfig->options->traceQueries && $this->tracer !== null) {
-            $span = $this->tracer->span(
-                $this->buildSpanName($queryAttrs),
-                SpanKind::CLIENT,
-                $attributes,
-            );
+            $span = $this->tracer->span($this->buildSpanName($queryAttrs), SpanKind::CLIENT, $attributes);
         }
 
         try {

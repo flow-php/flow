@@ -8,15 +8,16 @@ use Flow\ETL\Row\Entry;
 
 final readonly class TypeComparator implements Comparator
 {
-    public function __construct(private TypePriorities $priorities = new TypePriorities(), private Order $order = Order::ASC)
-    {
-    }
+    public function __construct(
+        private TypePriorities $priorities = new TypePriorities(),
+        private Order $order = Order::ASC,
+    ) {}
 
     /**
      * @param Entry<mixed> $left
      * @param Entry<mixed> $right
      */
-    public function compare(Entry $left, Entry $right) : int
+    public function compare(Entry $left, Entry $right): int
     {
         $leftTypePriority = $this->priorities->for($left);
         $rightTypePriority = $this->priorities->for($right);

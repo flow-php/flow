@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Calculator\Tests\Unit;
 
-use Flow\Calculator\Exception\{InvalidScaleException, NonNumericValueException};
+use Flow\Calculator\Exception\InvalidScaleException;
+use Flow\Calculator\Exception\NonNumericValueException;
 use Flow\Calculator\NumberNormalizer;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
 
 final class NumberNormalizerTest extends FlowTestCase
 {
-    public function test_normalize_invalid_numbers_to_string() : void
+    public function test_normalize_invalid_numbers_to_string(): void
     {
         $this->expectException(NonNumericValueException::class);
         $this->expectExceptionMessage('foo');
@@ -39,16 +40,16 @@ final class NumberNormalizerTest extends FlowTestCase
      * @param int $scale
      * @param string $output
      */
-    public function test_normalize_numbers_to_string(int|string|float $input, int $scale, string $output) : void
+    public function test_normalize_numbers_to_string(int|string|float $input, int $scale, string $output): void
     {
         if (is_string($input)) {
             assert(is_numeric($input), 'String parameter $input must be numeric');
         }
 
-        self::assertSame($output, NumberNormalizer::toString($input, scale: $scale));
+        static::assertSame($output, NumberNormalizer::toString($input, scale: $scale));
     }
 
-    public function test_using_invalid_scale() : void
+    public function test_using_invalid_scale(): void
     {
         $this->expectException(InvalidScaleException::class);
         $this->expectExceptionMessage('Scale "17" is invalid. It must be between 0 and 16.');

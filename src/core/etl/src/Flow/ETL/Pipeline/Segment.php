@@ -6,8 +6,12 @@ namespace Flow\ETL\Pipeline;
 
 use Flow\ETL\Exception\LimitReachedException;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{FlowContext, Loader, Processor, Rows, Transformer};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
+use Flow\ETL\Processor;
+use Flow\ETL\Rows;
+use Flow\ETL\Transformer;
 
 /**
  * A segment of the pipeline containing Transformers/Loaders until a Processor boundary.
@@ -19,17 +23,18 @@ final readonly class Segment
     /** @var \SplObjectStorage<Loader|Transformer, null> */
     private \SplObjectStorage $steps;
 
-    public function __construct(private ?Processor $processor = null)
-    {
+    public function __construct(
+        private ?Processor $processor = null,
+    ) {
         $this->steps = new \SplObjectStorage();
     }
 
-    public function add(Transformer|Loader $step) : void
+    public function add(Transformer|Loader $step): void
     {
         $this->steps->attach($step);
     }
 
-    public function contains(Transformer|Loader|Processor $step) : bool
+    public function contains(Transformer|Loader|Processor $step): bool
     {
         if ($step instanceof Processor) {
             return $this->processor === $step;
@@ -45,7 +50,7 @@ final readonly class Segment
      *
      * @return \Generator<Rows>
      */
-    public function execute(\Generator $input, FlowContext $context) : \Generator
+    public function execute(\Generator $input, FlowContext $context): \Generator
     {
         $loaders = [];
 
@@ -65,7 +70,10 @@ final readonly class Segment
                         try {
                             $rows = $step->transform($rows, $context);
                         } catch (LimitReachedException $e) {
-                            $context->telemetry()->logger()->debug('Limit reached, stopping the pipeline execution.', ['limit_exception' => $e]);
+                            $context
+                                ->telemetry()
+                                ->logger()
+                                ->debug('Limit reached, stopping the pipeline execution.', ['limit_exception' => $e]);
                             $rows = new Rows();
                             $input->send(Signal::STOP);
                         }
@@ -74,13 +82,21 @@ final readonly class Segment
                     }
                 } catch (\Throwable $exception) {
                     if ($context->errorHandler()->throw($exception, $rows)) {
-                        $context->telemetry()->logger()->error('Error during ETL segment execution.', ['exception' => $exception]);
+                        $context
+                            ->telemetry()
+                            ->logger()
+                            ->error('Error during ETL segment execution.', ['exception' => $exception]);
 
                         throw $exception;
                     }
 
                     if ($context->errorHandler()->skipRows($exception, $rows)) {
-                        $context->telemetry()->logger()->debug('Skipping rows due to error during ETL segment execution.', ['exception' => $exception]);
+                        $context
+                            ->telemetry()
+                            ->logger()
+                            ->debug('Skipping rows due to error during ETL segment execution.', [
+                                'exception' => $exception,
+                            ]);
 
                         break;
                     }
@@ -104,7 +120,7 @@ final readonly class Segment
      *
      * @param class-string<Loader|Processor|Transformer> $class
      */
-    public function has(string $class) : bool
+    public function has(string $class): bool
     {
         if ($this->processor instanceof $class) {
             return true;
@@ -119,7 +135,7 @@ final readonly class Segment
         return false;
     }
 
-    public function processor() : ?Processor
+    public function processor(): ?Processor
     {
         return $this->processor;
     }
@@ -127,12 +143,12 @@ final readonly class Segment
     /**
      * @return array<Loader|Transformer>
      */
-    public function steps() : array
+    public function steps(): array
     {
         return iterator_to_array($this->steps);
     }
 
-    public function withProcessor(Processor $processor) : self
+    public function withProcessor(Processor $processor): self
     {
         $segment = new self($processor);
 

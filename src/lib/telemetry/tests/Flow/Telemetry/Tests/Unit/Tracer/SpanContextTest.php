@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Tracer;
 
-use Flow\Telemetry\Context\{SpanId, TraceFlags, TraceId, TraceState};
+use Flow\Telemetry\Context\SpanId;
+use Flow\Telemetry\Context\TraceFlags;
+use Flow\Telemetry\Context\TraceId;
+use Flow\Telemetry\Context\TraceState;
 use Flow\Telemetry\Tracer\SpanContext;
 use PHPUnit\Framework\TestCase;
 
 final class SpanContextTest extends TestCase
 {
-    public function test_constructor_creates_span_context() : void
+    public function test_constructor_creates_span_context(): void
     {
         $traceId = TraceId::generate();
         $spanId = SpanId::generate();
@@ -18,69 +21,59 @@ final class SpanContextTest extends TestCase
 
         $context = new SpanContext($traceId, $spanId, $parentSpanId, true);
 
-        self::assertTrue($context->traceId->equals($traceId));
-        self::assertTrue($context->spanId->equals($spanId));
-        self::assertNotNull($context->parentSpanId);
-        self::assertTrue($context->parentSpanId->equals($parentSpanId));
-        self::assertTrue($context->isRemote);
+        static::assertTrue($context->traceId->equals($traceId));
+        static::assertTrue($context->spanId->equals($spanId));
+        static::assertNotNull($context->parentSpanId);
+        static::assertTrue($context->parentSpanId->equals($parentSpanId));
+        static::assertTrue($context->isRemote);
     }
 
-    public function test_constructor_defaults_trace_flags_and_trace_state() : void
+    public function test_constructor_defaults_trace_flags_and_trace_state(): void
     {
-        $context = new SpanContext(
-            TraceId::generate(),
-            SpanId::generate(),
-        );
+        $context = new SpanContext(TraceId::generate(), SpanId::generate());
 
-        self::assertFalse($context->traceFlags->isSampled());
-        self::assertTrue($context->traceState->isEmpty());
+        static::assertFalse($context->traceFlags->isSampled());
+        static::assertTrue($context->traceState->isEmpty());
     }
 
-    public function test_constructor_with_defaults() : void
+    public function test_constructor_with_defaults(): void
     {
         $traceId = TraceId::generate();
         $spanId = SpanId::generate();
 
         $context = new SpanContext($traceId, $spanId);
 
-        self::assertNull($context->parentSpanId);
-        self::assertFalse($context->isRemote);
+        static::assertNull($context->parentSpanId);
+        static::assertFalse($context->isRemote);
     }
 
-    public function test_constructor_with_trace_flags_and_trace_state() : void
+    public function test_constructor_with_trace_flags_and_trace_state(): void
     {
         $traceId = TraceId::generate();
         $spanId = SpanId::generate();
         $traceFlags = TraceFlags::sampled();
         $traceState = TraceState::empty()->with('vendor', 'value');
 
-        $context = new SpanContext(
-            $traceId,
-            $spanId,
-            null,
-            false,
-            $traceFlags,
-            $traceState,
-        );
+        $context = new SpanContext($traceId, $spanId, null, false, $traceFlags, $traceState);
 
-        self::assertTrue($context->traceFlags->isSampled());
-        self::assertSame('value', $context->traceState->get('vendor'));
+        static::assertTrue($context->traceFlags->isSampled());
+        static::assertSame('value', $context->traceState->get('vendor'));
     }
 
-    public function test_create_creates_local_span_context() : void
+    public function test_create_creates_local_span_context(): void
     {
         $traceId = TraceId::generate();
         $spanId = SpanId::generate();
 
         $context = SpanContext::create($traceId, $spanId);
 
-        self::assertTrue($context->traceId->equals($traceId));
-        self::assertTrue($context->spanId->equals($spanId));
-        self::assertNull($context->parentSpanId);
-        self::assertFalse($context->isRemote);
+        static::assertTrue($context->traceId->equals($traceId));
+        static::assertTrue($context->spanId->equals($spanId));
+        static::assertNull($context->parentSpanId);
+        static::assertFalse($context->isRemote);
     }
 
-    public function test_create_creates_local_span_context_with_parent() : void
+    public function test_create_creates_local_span_context_with_parent(): void
     {
         $traceId = TraceId::generate();
         $spanId = SpanId::generate();
@@ -88,25 +81,25 @@ final class SpanContextTest extends TestCase
 
         $context = SpanContext::create($traceId, $spanId, $parentSpanId);
 
-        self::assertNotNull($context->parentSpanId);
-        self::assertTrue($context->parentSpanId->equals($parentSpanId));
-        self::assertFalse($context->isRemote);
+        static::assertNotNull($context->parentSpanId);
+        static::assertTrue($context->parentSpanId->equals($parentSpanId));
+        static::assertFalse($context->isRemote);
     }
 
-    public function test_create_remote_creates_remote_span_context() : void
+    public function test_create_remote_creates_remote_span_context(): void
     {
         $traceId = TraceId::generate();
         $spanId = SpanId::generate();
 
         $context = SpanContext::createRemote($traceId, $spanId);
 
-        self::assertTrue($context->traceId->equals($traceId));
-        self::assertTrue($context->spanId->equals($spanId));
-        self::assertNull($context->parentSpanId);
-        self::assertTrue($context->isRemote);
+        static::assertTrue($context->traceId->equals($traceId));
+        static::assertTrue($context->spanId->equals($spanId));
+        static::assertNull($context->parentSpanId);
+        static::assertTrue($context->isRemote);
     }
 
-    public function test_create_remote_creates_remote_span_context_with_parent() : void
+    public function test_create_remote_creates_remote_span_context_with_parent(): void
     {
         $traceId = TraceId::generate();
         $spanId = SpanId::generate();
@@ -114,47 +107,35 @@ final class SpanContextTest extends TestCase
 
         $context = SpanContext::createRemote($traceId, $spanId, $parentSpanId);
 
-        self::assertNotNull($context->parentSpanId);
-        self::assertTrue($context->parentSpanId->equals($parentSpanId));
-        self::assertTrue($context->isRemote);
+        static::assertNotNull($context->parentSpanId);
+        static::assertTrue($context->parentSpanId->equals($parentSpanId));
+        static::assertTrue($context->isRemote);
     }
 
-    public function test_create_remote_with_trace_flags_and_trace_state() : void
+    public function test_create_remote_with_trace_flags_and_trace_state(): void
     {
         $traceFlags = TraceFlags::sampled();
         $traceState = TraceState::empty()->with('key', 'val');
 
-        $context = SpanContext::createRemote(
-            TraceId::generate(),
-            SpanId::generate(),
-            null,
-            $traceFlags,
-            $traceState,
-        );
+        $context = SpanContext::createRemote(TraceId::generate(), SpanId::generate(), null, $traceFlags, $traceState);
 
-        self::assertTrue($context->isRemote);
-        self::assertTrue($context->traceFlags->isSampled());
-        self::assertSame('val', $context->traceState->get('key'));
+        static::assertTrue($context->isRemote);
+        static::assertTrue($context->traceFlags->isSampled());
+        static::assertSame('val', $context->traceState->get('key'));
     }
 
-    public function test_create_with_trace_flags_and_trace_state() : void
+    public function test_create_with_trace_flags_and_trace_state(): void
     {
         $traceFlags = TraceFlags::sampled();
         $traceState = TraceState::empty()->with('key', 'val');
 
-        $context = SpanContext::create(
-            TraceId::generate(),
-            SpanId::generate(),
-            null,
-            $traceFlags,
-            $traceState,
-        );
+        $context = SpanContext::create(TraceId::generate(), SpanId::generate(), null, $traceFlags, $traceState);
 
-        self::assertTrue($context->traceFlags->isSampled());
-        self::assertSame('val', $context->traceState->get('key'));
+        static::assertTrue($context->traceFlags->isSampled());
+        static::assertSame('val', $context->traceState->get('key'));
     }
 
-    public function test_from_array_creates_span_context_with_parent() : void
+    public function test_from_array_creates_span_context_with_parent(): void
     {
         $data = [
             'traceId' => ['hex' => '0af7651916cd43dd8448eb211c80319c'],
@@ -165,14 +146,14 @@ final class SpanContextTest extends TestCase
 
         $context = SpanContext::fromArray($data);
 
-        self::assertSame('0af7651916cd43dd8448eb211c80319c', $context->traceId->toHex());
-        self::assertSame('00f067aa0ba902b7', $context->spanId->toHex());
-        self::assertNotNull($context->parentSpanId);
-        self::assertSame('11f067aa0ba902b8', $context->parentSpanId->toHex());
-        self::assertTrue($context->isRemote);
+        static::assertSame('0af7651916cd43dd8448eb211c80319c', $context->traceId->toHex());
+        static::assertSame('00f067aa0ba902b7', $context->spanId->toHex());
+        static::assertNotNull($context->parentSpanId);
+        static::assertSame('11f067aa0ba902b8', $context->parentSpanId->toHex());
+        static::assertTrue($context->isRemote);
     }
 
-    public function test_from_array_creates_span_context_without_parent() : void
+    public function test_from_array_creates_span_context_without_parent(): void
     {
         $data = [
             'traceId' => ['hex' => '0af7651916cd43dd8448eb211c80319c'],
@@ -183,13 +164,13 @@ final class SpanContextTest extends TestCase
 
         $context = SpanContext::fromArray($data);
 
-        self::assertSame('0af7651916cd43dd8448eb211c80319c', $context->traceId->toHex());
-        self::assertSame('00f067aa0ba902b7', $context->spanId->toHex());
-        self::assertNull($context->parentSpanId);
-        self::assertFalse($context->isRemote);
+        static::assertSame('0af7651916cd43dd8448eb211c80319c', $context->traceId->toHex());
+        static::assertSame('00f067aa0ba902b7', $context->spanId->toHex());
+        static::assertNull($context->parentSpanId);
+        static::assertFalse($context->isRemote);
     }
 
-    public function test_from_array_restores_trace_flags_and_trace_state() : void
+    public function test_from_array_restores_trace_flags_and_trace_state(): void
     {
         $data = [
             'traceId' => ['hex' => '0af7651916cd43dd8448eb211c80319c'],
@@ -202,97 +183,77 @@ final class SpanContextTest extends TestCase
 
         $context = SpanContext::fromArray($data);
 
-        self::assertTrue($context->traceFlags->isSampled());
-        self::assertSame('data', $context->traceState->get('vendor'));
+        static::assertTrue($context->traceFlags->isSampled());
+        static::assertSame('data', $context->traceState->get('vendor'));
     }
 
-    public function test_get_invalid_returns_invalid_context() : void
+    public function test_get_invalid_returns_invalid_context(): void
     {
         $context = SpanContext::getInvalid();
 
-        self::assertFalse($context->traceId->isValid());
-        self::assertFalse($context->spanId->isValid());
-        self::assertFalse($context->isValid());
+        static::assertFalse($context->traceId->isValid());
+        static::assertFalse($context->spanId->isValid());
+        static::assertFalse($context->isValid());
     }
 
-    public function test_is_root_returns_false_when_parent_exists() : void
+    public function test_is_root_returns_false_when_parent_exists(): void
     {
-        $context = SpanContext::create(
-            TraceId::generate(),
-            SpanId::generate(),
-            SpanId::generate(),
-        );
+        $context = SpanContext::create(TraceId::generate(), SpanId::generate(), SpanId::generate());
 
-        self::assertFalse($context->isRoot());
+        static::assertFalse($context->isRoot());
     }
 
-    public function test_is_root_returns_true_when_no_parent() : void
+    public function test_is_root_returns_true_when_no_parent(): void
     {
-        $context = SpanContext::create(
-            TraceId::generate(),
-            SpanId::generate(),
-        );
+        $context = SpanContext::create(TraceId::generate(), SpanId::generate());
 
-        self::assertTrue($context->isRoot());
+        static::assertTrue($context->isRoot());
     }
 
-    public function test_is_valid_returns_false_for_invalid_context() : void
+    public function test_is_valid_returns_false_for_invalid_context(): void
     {
         $context = SpanContext::getInvalid();
 
-        self::assertFalse($context->isValid());
+        static::assertFalse($context->isValid());
     }
 
-    public function test_is_valid_returns_false_with_invalid_span_id() : void
+    public function test_is_valid_returns_false_with_invalid_span_id(): void
     {
-        $context = SpanContext::create(
-            TraceId::generate(),
-            SpanId::invalid(),
-        );
+        $context = SpanContext::create(TraceId::generate(), SpanId::invalid());
 
-        self::assertFalse($context->isValid());
+        static::assertFalse($context->isValid());
     }
 
-    public function test_is_valid_returns_false_with_invalid_trace_id() : void
+    public function test_is_valid_returns_false_with_invalid_trace_id(): void
     {
-        $context = SpanContext::create(
-            TraceId::invalid(),
-            SpanId::generate(),
-        );
+        $context = SpanContext::create(TraceId::invalid(), SpanId::generate());
 
-        self::assertFalse($context->isValid());
+        static::assertFalse($context->isValid());
     }
 
-    public function test_is_valid_returns_true_for_valid_context() : void
+    public function test_is_valid_returns_true_for_valid_context(): void
     {
-        $context = SpanContext::create(
-            TraceId::generate(),
-            SpanId::generate(),
-        );
+        $context = SpanContext::create(TraceId::generate(), SpanId::generate());
 
-        self::assertTrue($context->isValid());
+        static::assertTrue($context->isValid());
     }
 
-    public function test_normalize_from_array_round_trip_with_parent() : void
+    public function test_normalize_from_array_round_trip_with_parent(): void
     {
-        $original = SpanContext::create(
-            TraceId::generate(),
-            SpanId::generate(),
-            SpanId::generate(),
-        );
+        $original = SpanContext::create(TraceId::generate(), SpanId::generate(), SpanId::generate());
 
         $normalized = $original->normalize();
         $restored = SpanContext::fromArray($normalized);
 
-        self::assertTrue($original->traceId->equals($restored->traceId));
-        self::assertTrue($original->spanId->equals($restored->spanId));
-        self::assertNotNull($original->parentSpanId);
-        self::assertNotNull($restored->parentSpanId);
-        self::assertTrue($original->parentSpanId->equals($restored->parentSpanId));
-        self::assertSame($original->isRemote, $restored->isRemote);
+        static::assertTrue($original->traceId->equals($restored->traceId));
+        static::assertTrue($original->spanId->equals($restored->spanId));
+        static::assertNotNull($original->parentSpanId);
+        static::assertNotNull($restored->parentSpanId);
+        static::assertTrue($original->parentSpanId->equals($restored->parentSpanId));
+        static::assertSame($original->isRemote, $restored->isRemote);
     }
 
-    public function test_normalize_from_array_round_trip_with_trace_flags_and_state() : void
+    public function test_normalize_from_array_round_trip_with_trace_flags_and_state(): void
     {
         $original = SpanContext::create(
             TraceId::generate(),
@@ -305,29 +266,26 @@ final class SpanContextTest extends TestCase
         $normalized = $original->normalize();
         $restored = SpanContext::fromArray($normalized);
 
-        self::assertTrue($original->traceId->equals($restored->traceId));
-        self::assertTrue($original->spanId->equals($restored->spanId));
-        self::assertSame($original->traceFlags->toByte(), $restored->traceFlags->toByte());
-        self::assertSame($original->traceState->get('rojo'), $restored->traceState->get('rojo'));
+        static::assertTrue($original->traceId->equals($restored->traceId));
+        static::assertTrue($original->spanId->equals($restored->spanId));
+        static::assertSame($original->traceFlags->toByte(), $restored->traceFlags->toByte());
+        static::assertSame($original->traceState->get('rojo'), $restored->traceState->get('rojo'));
     }
 
-    public function test_normalize_from_array_round_trip_without_parent() : void
+    public function test_normalize_from_array_round_trip_without_parent(): void
     {
-        $original = SpanContext::create(
-            TraceId::generate(),
-            SpanId::generate(),
-        );
+        $original = SpanContext::create(TraceId::generate(), SpanId::generate());
 
         $normalized = $original->normalize();
         $restored = SpanContext::fromArray($normalized);
 
-        self::assertTrue($original->traceId->equals($restored->traceId));
-        self::assertTrue($original->spanId->equals($restored->spanId));
-        self::assertNull($restored->parentSpanId);
-        self::assertSame($original->isRemote, $restored->isRemote);
+        static::assertTrue($original->traceId->equals($restored->traceId));
+        static::assertTrue($original->spanId->equals($restored->spanId));
+        static::assertNull($restored->parentSpanId);
+        static::assertSame($original->isRemote, $restored->isRemote);
     }
 
-    public function test_normalize_includes_trace_flags_and_trace_state() : void
+    public function test_normalize_includes_trace_flags_and_trace_state(): void
     {
         $context = SpanContext::create(
             TraceId::fromHex('0af7651916cd43dd8448eb211c80319c'),
@@ -339,13 +297,13 @@ final class SpanContextTest extends TestCase
 
         $normalized = $context->normalize();
 
-        self::assertArrayHasKey('traceFlags', $normalized);
-        self::assertSame(1, $normalized['traceFlags']['byte']);
-        self::assertArrayHasKey('traceState', $normalized);
-        self::assertSame(['key' => 'value'], $normalized['traceState']['entries']);
+        static::assertArrayHasKey('traceFlags', $normalized);
+        static::assertSame(1, $normalized['traceFlags']['byte']);
+        static::assertArrayHasKey('traceState', $normalized);
+        static::assertSame(['key' => 'value'], $normalized['traceState']['entries']);
     }
 
-    public function test_normalize_returns_array_with_parent() : void
+    public function test_normalize_returns_array_with_parent(): void
     {
         $context = new SpanContext(
             TraceId::fromHex('0af7651916cd43dd8448eb211c80319c'),
@@ -356,16 +314,16 @@ final class SpanContextTest extends TestCase
 
         $normalized = $context->normalize();
 
-        self::assertSame('0af7651916cd43dd8448eb211c80319c', $normalized['traceId']['hex']);
-        self::assertSame('00f067aa0ba902b7', $normalized['spanId']['hex']);
-        self::assertIsArray($normalized['parentSpanId']);
-        self::assertSame('11f067aa0ba902b8', $normalized['parentSpanId']['hex']);
-        self::assertTrue($normalized['isRemote']);
-        self::assertArrayHasKey('traceFlags', $normalized);
-        self::assertArrayHasKey('traceState', $normalized);
+        static::assertSame('0af7651916cd43dd8448eb211c80319c', $normalized['traceId']['hex']);
+        static::assertSame('00f067aa0ba902b7', $normalized['spanId']['hex']);
+        static::assertIsArray($normalized['parentSpanId']);
+        static::assertSame('11f067aa0ba902b8', $normalized['parentSpanId']['hex']);
+        static::assertTrue($normalized['isRemote']);
+        static::assertArrayHasKey('traceFlags', $normalized);
+        static::assertArrayHasKey('traceState', $normalized);
     }
 
-    public function test_normalize_returns_array_without_parent() : void
+    public function test_normalize_returns_array_without_parent(): void
     {
         $context = SpanContext::create(
             TraceId::fromHex('0af7651916cd43dd8448eb211c80319c'),
@@ -374,37 +332,31 @@ final class SpanContextTest extends TestCase
 
         $normalized = $context->normalize();
 
-        self::assertSame('0af7651916cd43dd8448eb211c80319c', $normalized['traceId']['hex']);
-        self::assertSame('00f067aa0ba902b7', $normalized['spanId']['hex']);
-        self::assertNull($normalized['parentSpanId']);
-        self::assertFalse($normalized['isRemote']);
+        static::assertSame('0af7651916cd43dd8448eb211c80319c', $normalized['traceId']['hex']);
+        static::assertSame('00f067aa0ba902b7', $normalized['spanId']['hex']);
+        static::assertNull($normalized['parentSpanId']);
+        static::assertFalse($normalized['isRemote']);
     }
 
-    public function test_with_trace_flags_returns_new_instance() : void
+    public function test_with_trace_flags_returns_new_instance(): void
     {
-        $original = SpanContext::create(
-            TraceId::generate(),
-            SpanId::generate(),
-        );
+        $original = SpanContext::create(TraceId::generate(), SpanId::generate());
         $modified = $original->withTraceFlags(TraceFlags::sampled());
 
-        self::assertNotSame($original, $modified);
-        self::assertFalse($original->traceFlags->isSampled());
-        self::assertTrue($modified->traceFlags->isSampled());
-        self::assertTrue($original->traceId->equals($modified->traceId));
+        static::assertNotSame($original, $modified);
+        static::assertFalse($original->traceFlags->isSampled());
+        static::assertTrue($modified->traceFlags->isSampled());
+        static::assertTrue($original->traceId->equals($modified->traceId));
     }
 
-    public function test_with_trace_state_returns_new_instance() : void
+    public function test_with_trace_state_returns_new_instance(): void
     {
-        $original = SpanContext::create(
-            TraceId::generate(),
-            SpanId::generate(),
-        );
+        $original = SpanContext::create(TraceId::generate(), SpanId::generate());
         $newState = TraceState::empty()->with('vendor', 'data');
         $modified = $original->withTraceState($newState);
 
-        self::assertNotSame($original, $modified);
-        self::assertTrue($original->traceState->isEmpty());
-        self::assertSame('data', $modified->traceState->get('vendor'));
+        static::assertNotSame($original, $modified);
+        static::assertTrue($original->traceState->isEmpty());
+        static::assertSame('data', $modified->traceState->get('vendor'));
     }
 }

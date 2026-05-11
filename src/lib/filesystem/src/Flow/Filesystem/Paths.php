@@ -19,7 +19,7 @@ final class Paths
         $this->partitions = null;
     }
 
-    public function partitions() : Partitions
+    public function partitions(): Partitions
     {
         if ($this->partitions === null) {
             $partitions = [];

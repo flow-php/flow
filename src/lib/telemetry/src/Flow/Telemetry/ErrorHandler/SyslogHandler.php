@@ -20,17 +20,14 @@ final readonly class SyslogHandler implements ErrorHandler
         }
     }
 
-    public function handle(\Throwable $error) : void
+    public function handle(\Throwable $error): void
     {
         try {
             \openlog($this->ident, $this->logOpts, $this->facility->value);
-            \syslog($this->severity->value, \sprintf(
-                '%s: %s in %s:%d',
-                $error::class,
-                $error->getMessage(),
-                $error->getFile(),
-                $error->getLine(),
-            ));
+            \syslog(
+                $this->severity->value,
+                \sprintf('%s: %s in %s:%d', $error::class, $error->getMessage(), $error->getFile(), $error->getLine()),
+            );
             \closelog();
         } catch (\Throwable) {
         }

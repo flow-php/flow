@@ -6,9 +6,9 @@ namespace Flow\ETL\Adapter\CSV;
 
 final readonly class CSVRowNormalizer
 {
-    public function __construct(private bool $emptyToNull = true)
-    {
-    }
+    public function __construct(
+        private bool $emptyToNull = true,
+    ) {}
 
     /**
      * Normalize CSV row data to match the expected number of headers.
@@ -21,7 +21,7 @@ final readonly class CSVRowNormalizer
      *
      * @return array<int, null|string>
      */
-    public function normalize(array $rowData, int $headersCount) : array
+    public function normalize(array $rowData, int $headersCount): array
     {
         $rowDataCount = \count($rowData);
 

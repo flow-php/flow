@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger;
 
-use Flow\Telemetry\{AttributeLimitsEnforcer, Attributes};
+use Flow\Telemetry\AttributeLimitsEnforcer;
+use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Context\ContextStorage;
-use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
-use Flow\Telemetry\{InstrumentationScope, Resource};
+use Flow\Telemetry\ErrorHandler\ErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
+use Flow\Telemetry\InstrumentationScope;
+use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tracer\SpanContext;
 use Psr\Clock\ClockInterface;
 
@@ -41,8 +44,7 @@ final class Logger
         private readonly ContextStorage $contextStorage,
         private readonly LogRecordLimits $limits = new LogRecordLimits(),
         private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
-    ) {
-    }
+    ) {}
 
     /**
      * Emit a DEBUG level log.
@@ -62,7 +64,7 @@ final class Logger
         ?\DateTimeImmutable $timestamp = null,
         ?\DateTimeImmutable $observedTimestamp = null,
         ?SpanContext $spanContext = null,
-    ) : void {
+    ): void {
         $this->emit(
             new LogRecord(
                 Severity::DEBUG,
@@ -84,11 +86,14 @@ final class Logger
      * @param LogRecord $record The log record to emit
      * @param null|SpanContext $spanContext Span context for trace correlation (defaults to current active span)
      */
-    public function emit(LogRecord $record, ?SpanContext $spanContext = null) : void
+    public function emit(LogRecord $record, ?SpanContext $spanContext = null): void
     {
         $droppedAttributeCount = 0;
 
-        if ($record->attributes->count() > $this->limits->attributeCountLimit || $this->limits->attributeValueLengthLimit !== null) {
+        if (
+            $record->attributes->count() > $this->limits->attributeCountLimit
+            || $this->limits->attributeValueLengthLimit !== null
+        ) {
             $enforcer = new AttributeLimitsEnforcer();
             $result = $enforcer->enforce(
                 $record->attributes,
@@ -140,7 +145,7 @@ final class Logger
         ?\DateTimeImmutable $timestamp = null,
         ?\DateTimeImmutable $observedTimestamp = null,
         ?SpanContext $spanContext = null,
-    ) : void {
+    ): void {
         $this->emit(
             new LogRecord(
                 Severity::ERROR,
@@ -171,7 +176,7 @@ final class Logger
         ?\DateTimeImmutable $timestamp = null,
         ?\DateTimeImmutable $observedTimestamp = null,
         ?SpanContext $spanContext = null,
-    ) : void {
+    ): void {
         $this->emit(
             new LogRecord(
                 Severity::FATAL,
@@ -187,7 +192,7 @@ final class Logger
     /**
      * Flush all pending logs to the exporter.
      */
-    public function flush() : bool
+    public function flush(): bool
     {
         try {
             return $this->processor->flush();
@@ -216,7 +221,7 @@ final class Logger
         ?\DateTimeImmutable $timestamp = null,
         ?\DateTimeImmutable $observedTimestamp = null,
         ?SpanContext $spanContext = null,
-    ) : void {
+    ): void {
         $this->emit(
             new LogRecord(
                 Severity::INFO,
@@ -232,7 +237,7 @@ final class Logger
     /**
      * Get the instrumentation scope.
      */
-    public function instrumentationScope() : InstrumentationScope
+    public function instrumentationScope(): InstrumentationScope
     {
         return $this->scope;
     }
@@ -240,7 +245,7 @@ final class Logger
     /**
      * Get the processor used by this logger.
      */
-    public function processor() : LogProcessor
+    public function processor(): LogProcessor
     {
         return $this->processor;
     }
@@ -263,7 +268,7 @@ final class Logger
         ?\DateTimeImmutable $timestamp = null,
         ?\DateTimeImmutable $observedTimestamp = null,
         ?SpanContext $spanContext = null,
-    ) : void {
+    ): void {
         $this->emit(
             new LogRecord(
                 Severity::TRACE,
@@ -294,7 +299,7 @@ final class Logger
         ?\DateTimeImmutable $timestamp = null,
         ?\DateTimeImmutable $observedTimestamp = null,
         ?SpanContext $spanContext = null,
-    ) : void {
+    ): void {
         $this->emit(
             new LogRecord(
                 Severity::WARN,
@@ -312,14 +317,14 @@ final class Logger
      *
      * This mutates the logger instance and returns it for method chaining.
      */
-    public function withInstrumentationScope(InstrumentationScope $scope) : self
+    public function withInstrumentationScope(InstrumentationScope $scope): self
     {
         $this->scope = $scope;
 
         return $this;
     }
 
-    private function resolveSpanContext() : ?SpanContext
+    private function resolveSpanContext(): ?SpanContext
     {
         $context = $this->contextStorage->current();
         $activeSpanId = $context->activeSpanId();

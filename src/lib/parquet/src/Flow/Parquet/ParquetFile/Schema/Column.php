@@ -8,48 +8,48 @@ use Flow\Parquet\ThriftModel\SchemaElement;
 
 interface Column
 {
-    public function convertedType() : ?ConvertedType;
+    public function convertedType(): ?ConvertedType;
 
     /**
      * @return array<array-key, mixed>
      */
-    public function ddl() : array;
+    public function ddl(): array;
 
-    public function flatPath() : string;
+    public function flatPath(): string;
 
-    public function isList() : bool;
+    public function isList(): bool;
 
-    public function isMap() : bool;
+    public function isMap(): bool;
 
-    public function isStruct() : bool;
+    public function isStruct(): bool;
 
-    public function logicalType() : ?LogicalType;
+    public function logicalType(): ?LogicalType;
 
-    public function maxDefinitionsLevel() : int;
+    public function maxDefinitionsLevel(): int;
 
-    public function maxRepetitionsLevel() : int;
+    public function maxRepetitionsLevel(): int;
 
-    public function name() : string;
+    public function name(): string;
 
-    public function parent() : ?NestedColumn;
+    public function parent(): ?NestedColumn;
 
     /**
      * @return array<string>
      */
-    public function path() : array;
+    public function path(): array;
 
-    public function repetition() : ?Repetition;
+    public function repetition(): ?Repetition;
 
-    public function repetitions() : Repetitions;
+    public function repetitions(): Repetitions;
 
-    public function setParent(NestedColumn $parent) : void;
+    public function setParent(NestedColumn $parent): void;
 
     /**
      * @return array<array-key, mixed>|SchemaElement
      */
-    public function toThrift() : SchemaElement|array;
+    public function toThrift(): SchemaElement|array;
 
-    public function type() : ?PhysicalType;
+    public function type(): ?PhysicalType;
 
-    public function typeLength() : ?int;
+    public function typeLength(): ?int;
 }

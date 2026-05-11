@@ -4,19 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Condition;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Expr_Kind, SubLinkType};
-use Flow\PostgreSql\Protobuf\AST\{BoolExpr, BoolExprType, Node};
-use Flow\PostgreSql\QueryBuilder\Exception\{InvalidAstException, UnsupportedNodeException};
-use Flow\PostgreSql\QueryBuilder\Expression\{AliasedExpression, Expression, ExpressionFactory};
+use Flow\PostgreSql\Protobuf\AST\A_Expr_Kind;
+use Flow\PostgreSql\Protobuf\AST\BoolExpr;
+use Flow\PostgreSql\Protobuf\AST\BoolExprType;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\SubLinkType;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\Exception\UnsupportedNodeException;
+use Flow\PostgreSql\QueryBuilder\Expression\AliasedExpression;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 
 final readonly class NotCondition implements Condition
 {
     public function __construct(
         private Expression $expression,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         if (!$node->hasBoolExpr()) {
             throw InvalidAstException::unexpectedNodeType('BoolExpr', 'unknown');
@@ -31,7 +36,7 @@ final readonly class NotCondition implements Condition
         if ($boolExpr->getBoolop() !== BoolExprType::NOT_EXPR) {
             throw InvalidAstException::unexpectedNodeType(
                 'BoolExpr with NOT_EXPR',
-                'BoolExpr with ' . BoolExprType::name($boolExpr->getBoolop())
+                'BoolExpr with ' . BoolExprType::name($boolExpr->getBoolop()),
             );
         }
 
@@ -41,7 +46,7 @@ final readonly class NotCondition implements Condition
             throw InvalidAstException::invalidFieldValue(
                 'args',
                 'BoolExpr',
-                'NOT_EXPR must have exactly one argument, got ' . \count($args)
+                'NOT_EXPR must have exactly one argument, got ' . \count($args),
             );
         }
 
@@ -50,27 +55,27 @@ final readonly class NotCondition implements Condition
         return new self(self::expressionFromNode($argNode));
     }
 
-    public function and(Condition $other) : AndCondition
+    public function and(Condition $other): AndCondition
     {
         return new AndCondition($this, $other);
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return new AliasedExpression($this, $alias);
     }
 
-    public function not() : self
+    public function not(): self
     {
         return new self($this);
     }
 
-    public function or(Condition $other) : OrCondition
+    public function or(Condition $other): OrCondition
     {
         return new OrCondition($this, $other);
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $boolExpr = new BoolExpr();
         $boolExpr->setBoolop(BoolExprType::NOT_EXPR);
@@ -82,7 +87,7 @@ final readonly class NotCondition implements Condition
         return $node;
     }
 
-    private static function expressionFromNode(Node $node) : Expression
+    private static function expressionFromNode(Node $node): Expression
     {
         if ($node->hasBoolExpr()) {
             $boolExpr = $node->getBoolExpr();
@@ -95,7 +100,9 @@ final readonly class NotCondition implements Condition
                 BoolExprType::AND_EXPR => AndCondition::fromAst($node),
                 BoolExprType::OR_EXPR => OrCondition::fromAst($node),
                 BoolExprType::NOT_EXPR => self::fromAst($node),
-                default => throw UnsupportedNodeException::forNodeType('BoolExpr with ' . BoolExprType::name($boolExpr->getBoolop())),
+                default => throw UnsupportedNodeException::forNodeType(
+                    'BoolExpr with ' . BoolExprType::name($boolExpr->getBoolop()),
+                ),
             };
         }
 
@@ -119,7 +126,9 @@ final readonly class NotCondition implements Condition
                 A_Expr_Kind::AEXPR_NOT_BETWEEN => Between::fromAst($node),
                 A_Expr_Kind::AEXPR_BETWEEN_SYM => Between::fromAst($node),
                 A_Expr_Kind::AEXPR_NOT_BETWEEN_SYM => Between::fromAst($node),
-                default => throw UnsupportedNodeException::forNodeType('A_Expr with kind: ' . A_Expr_Kind::name($aExpr->getKind())),
+                default => throw UnsupportedNodeException::forNodeType(
+                    'A_Expr with kind: ' . A_Expr_Kind::name($aExpr->getKind()),
+                ),
             };
         }
 
@@ -134,7 +143,9 @@ final readonly class NotCondition implements Condition
                 SubLinkType::EXISTS_SUBLINK => Exists::fromAst($node),
                 SubLinkType::ANY_SUBLINK => Any::fromAst($node),
                 SubLinkType::ALL_SUBLINK => All::fromAst($node),
-                default => throw UnsupportedNodeException::forNodeType('SubLink with type: ' . SubLinkType::name($subLink->getSubLinkType())),
+                default => throw UnsupportedNodeException::forNodeType(
+                    'SubLink with type: ' . SubLinkType::name($subLink->getSubLinkType()),
+                ),
             };
         }
 

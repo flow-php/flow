@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Select;
 
-use Flow\PostgreSql\{ParsedQuery, Parser};
-use Flow\PostgreSql\Protobuf\AST\{Node, ParseResult, RawStmt, SelectStmt};
+use Flow\PostgreSql\ParsedQuery;
+use Flow\PostgreSql\Parser;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ParseResult;
+use Flow\PostgreSql\Protobuf\AST\RawStmt;
+use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 
 final readonly class ParsedSelect implements SelectFinalStep
 {
@@ -31,12 +35,12 @@ final readonly class ParsedSelect implements SelectFinalStep
         $this->ast = $selectStmt;
     }
 
-    public function toAst() : SelectStmt
+    public function toAst(): SelectStmt
     {
         return $this->ast;
     }
 
-    public function toSql() : string
+    public function toSql(): string
     {
         $node = new Node();
         $node->setSelectStmt($this->ast);

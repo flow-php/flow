@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\Azure\Tests\Integration;
 
-use function Flow\Filesystem\Bridge\Azure\DSL\{azure_filesystem, azure_filesystem_options};
-use function Flow\Filesystem\DSL\path;
 use Flow\Filesystem\Bridge\Azure\Options;
+
+use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
+use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem_options;
+use function Flow\Filesystem\DSL\path;
 
 final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
 {
-    public function test_appending_to_existing_blob() : void
+    public function test_appending_to_existing_blob(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
@@ -22,27 +24,20 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
         $stream->append("This is second line\n");
         $stream->close();
 
-        self::assertTrue($fs->status(path('azure-blob://file.txt'))?->isFile());
-        self::assertFalse($fs->status(path('azure-blob://file.txt'))->isDirectory());
-        self::assertSame(
-            <<<'TXT'
-This is first line
-This is second line
+        static::assertTrue($fs->status(path('azure-blob://file.txt'))?->isFile());
+        static::assertFalse($fs->status(path('azure-blob://file.txt'))->isDirectory());
+        static::assertSame(<<<'TXT'
+            This is first line
+            This is second line
 
-TXT
-            ,
-            $fs->readFrom(path('azure-blob://file.txt'))->content()
-        );
+            TXT, $fs->readFrom(path('azure-blob://file.txt'))->content());
 
         $fs->rm(path('azure-blob://file.txt'));
     }
 
-    public function test_appending_to_existing_block_blob_new_blocks() : void
+    public function test_appending_to_existing_block_blob_new_blocks(): void
     {
-        $fs = azure_filesystem(
-            $this->blobService('flow-php'),
-            (new Options())->withBlockSize(1024)
-        );
+        $fs = azure_filesystem($this->blobService('flow-php'), (new Options())->withBlockSize(1024));
 
         $stream = $fs->writeTo(path('azure-blob://file.txt'));
         $output = '';
@@ -61,22 +56,16 @@ TXT
         }
         $stream->close();
 
-        self::assertTrue($fs->status(path('azure-blob://file.txt'))?->isFile());
-        self::assertFalse($fs->status(path('azure-blob://file.txt'))->isDirectory());
-        self::assertSame(
-            $output,
-            $fs->readFrom(path('azure-blob://file.txt'))->content()
-        );
+        static::assertTrue($fs->status(path('azure-blob://file.txt'))?->isFile());
+        static::assertFalse($fs->status(path('azure-blob://file.txt'))->isDirectory());
+        static::assertSame($output, $fs->readFrom(path('azure-blob://file.txt'))->content());
 
         $fs->rm(path('azure-blob://file.txt'));
     }
 
-    public function test_appending_to_existing_non_block_blob_new_blocks() : void
+    public function test_appending_to_existing_non_block_blob_new_blocks(): void
     {
-        $fs = azure_filesystem(
-            $this->blobService('flow-php'),
-            (new Options())->withBlockSize(1024)
-        );
+        $fs = azure_filesystem($this->blobService('flow-php'), (new Options())->withBlockSize(1024));
 
         $stream = $fs->writeTo(path('azure-blob://file.txt'));
         $stream->append("This is first line\n");
@@ -91,91 +80,91 @@ TXT
         }
         $stream->close();
 
-        self::assertTrue($fs->status(path('azure-blob://file.txt'))?->isFile());
-        self::assertFalse($fs->status(path('azure-blob://file.txt'))->isDirectory());
-        self::assertSame(
-            $output,
-            $fs->readFrom(path('azure-blob://file.txt'))->content()
-        );
+        static::assertTrue($fs->status(path('azure-blob://file.txt'))?->isFile());
+        static::assertFalse($fs->status(path('azure-blob://file.txt'))->isDirectory());
+        static::assertSame($output, $fs->readFrom(path('azure-blob://file.txt'))->content());
 
         $fs->rm(path('azure-blob://file.txt'));
     }
 
-    public function test_file_status_on_existing_file() : void
+    public function test_file_status_on_existing_file(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
         $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
-        self::assertIsResource($resource);
+        static::assertIsResource($resource);
         $fs->writeTo(path('azure-blob://file.txt'))->fromResource($resource)->close();
 
-        self::assertTrue($fs->status(path('azure-blob://file.txt'))?->isFile());
+        static::assertTrue($fs->status(path('azure-blob://file.txt'))?->isFile());
     }
 
-    public function test_file_status_on_existing_folder() : void
+    public function test_file_status_on_existing_folder(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
         $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
-        self::assertIsResource($resource);
+        static::assertIsResource($resource);
         $fs->writeTo(path('azure-blob://nested/orders/orders.txt'))->fromResource($resource)->close();
 
-        self::assertTrue($fs->status(path('azure-blob://nested/orders'))?->isDirectory());
-        self::assertTrue($fs->status(path('azure-blob://nested/orders/'))?->isDirectory());
+        static::assertTrue($fs->status(path('azure-blob://nested/orders'))?->isDirectory());
+        static::assertTrue($fs->status(path('azure-blob://nested/orders/'))?->isDirectory());
     }
 
-    public function test_file_status_on_non_existing_file() : void
+    public function test_file_status_on_non_existing_file(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        self::assertNull($fs->status(path('azure-blob://non-existing-file.txt')));
+        static::assertNull($fs->status(path('azure-blob://non-existing-file.txt')));
     }
 
-    public function test_file_status_on_non_existing_folder() : void
+    public function test_file_status_on_non_existing_folder(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        self::assertNull($fs->status(path('azure-blob://non-existing-folder/')));
+        static::assertNull($fs->status(path('azure-blob://non-existing-folder/')));
     }
 
-    public function test_file_status_on_non_existing_pattern() : void
+    public function test_file_status_on_non_existing_pattern(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        self::assertNull($fs->status(path('azure-blob://non-existing-folder/*')));
+        static::assertNull($fs->status(path('azure-blob://non-existing-folder/*')));
     }
 
-    public function test_file_status_on_partial_path() : void
-    {
-        $fs = azure_filesystem($this->blobService('flow-php'));
-
-        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
-        self::assertIsResource($resource);
-        $fs->writeTo(path('azure-blob://some_path_to/file.txt'))->fromResource($resource)->close();
-
-        self::assertNull($fs->status(path('azure-blob://some_path')));
-    }
-
-    public function test_file_status_on_pattern() : void
+    public function test_file_status_on_partial_path(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
         $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
-        self::assertIsResource($resource);
+        static::assertIsResource($resource);
         $fs->writeTo(path('azure-blob://some_path_to/file.txt'))->fromResource($resource)->close();
 
-        self::assertTrue($fs->status(path('azure-blob://some_path_to/*.txt'))?->isFile());
-        self::assertSame('azure-blob://some_path_to/file.txt', $fs->status(path('azure-blob://some_path_to/*.txt'))->path->uri());
+        static::assertNull($fs->status(path('azure-blob://some_path')));
     }
 
-    public function test_file_status_on_root_folder() : void
+    public function test_file_status_on_pattern(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        self::assertTrue($fs->status(path('azure-blob://'))?->isDirectory());
+        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        static::assertIsResource($resource);
+        $fs->writeTo(path('azure-blob://some_path_to/file.txt'))->fromResource($resource)->close();
+
+        static::assertTrue($fs->status(path('azure-blob://some_path_to/*.txt'))?->isFile());
+        static::assertSame(
+            'azure-blob://some_path_to/file.txt',
+            $fs->status(path('azure-blob://some_path_to/*.txt'))->path->uri(),
+        );
     }
 
-    public function test_move_blob() : void
+    public function test_file_status_on_root_folder(): void
+    {
+        $fs = azure_filesystem($this->blobService('flow-php'));
+
+        static::assertTrue($fs->status(path('azure-blob://'))?->isDirectory());
+    }
+
+    public function test_move_blob(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
@@ -183,114 +172,117 @@ TXT
 
         $fs->mv(path('azure-blob://file.txt'), path('azure-blob://file_mv.txt'));
 
-        self::assertNull($fs->status(path('azure-blob://file.txt')));
-        self::assertSame('Hello, World!', $fs->readFrom(path('azure-blob://file_mv.txt'))->content());
+        static::assertNull($fs->status(path('azure-blob://file.txt')));
+        static::assertSame('Hello, World!', $fs->readFrom(path('azure-blob://file_mv.txt'))->content());
     }
 
-    public function test_not_removing_a_content_when_its_not_a_full_folder_path_pattern() : void
+    public function test_not_removing_a_content_when_its_not_a_full_folder_path_pattern(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
         $resource1 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
-        self::assertIsResource($resource1);
+        static::assertIsResource($resource1);
         $fs->writeTo(path('azure-blob://nested/orders/orders.txt'))->fromResource($resource1)->close();
         $resource2 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
-        self::assertIsResource($resource2);
+        static::assertIsResource($resource2);
         $fs->writeTo(path('azure-blob://nested/orders/orders.csv'))->fromResource($resource2)->close();
         $resource3 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
-        self::assertIsResource($resource3);
+        static::assertIsResource($resource3);
         $fs->writeTo(path('azure-blob://nested/orders/orders_01.csv'))->fromResource($resource3)->close();
 
-        self::assertTrue($fs->status(path('azure-blob://nested/orders/orders.csv'))?->isFile());
-        self::assertTrue($fs->status(path('azure-blob://nested/orders/orders_01.csv'))?->isFile());
+        static::assertTrue($fs->status(path('azure-blob://nested/orders/orders.csv'))?->isFile());
+        static::assertTrue($fs->status(path('azure-blob://nested/orders/orders_01.csv'))?->isFile());
 
-        self::assertFalse($fs->rm(path('azure-blob://nested/orders/ord')));
+        static::assertFalse($fs->rm(path('azure-blob://nested/orders/ord')));
     }
 
-    public function test_removing_folder() : void
+    public function test_removing_folder(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
         $resource1 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
-        self::assertIsResource($resource1);
+        static::assertIsResource($resource1);
         $fs->writeTo(path('azure-blob://orders.csv'))->fromResource($resource1)->close();
         $resource2 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
-        self::assertIsResource($resource2);
+        static::assertIsResource($resource2);
         $fs->writeTo(path('azure-blob://nested/orders/orders.csv'))->fromResource($resource2)->close();
         $resource3 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
-        self::assertIsResource($resource3);
+        static::assertIsResource($resource3);
         $fs->writeTo(path('azure-blob://nested/orders/orders_01.csv'))->fromResource($resource3)->close();
 
-        self::assertTrue($fs->status(path('azure-blob://nested/orders/orders.csv'))?->isFile());
-        self::assertTrue($fs->status(path('azure-blob://nested/orders/orders_01.csv'))?->isFile());
+        static::assertTrue($fs->status(path('azure-blob://nested/orders/orders.csv'))?->isFile());
+        static::assertTrue($fs->status(path('azure-blob://nested/orders/orders_01.csv'))?->isFile());
 
         $fs->rm(path('azure-blob://nested/orders'));
 
-        self::assertTrue($fs->status(path('azure-blob://orders.csv'))?->isFile());
-        self::assertNull($fs->status(path('azure-blob://nested/orders/orders.csv')));
-        self::assertNull($fs->status(path('azure-blob://nested/orders/orders_01.csv')));
+        static::assertTrue($fs->status(path('azure-blob://orders.csv'))?->isFile());
+        static::assertNull($fs->status(path('azure-blob://nested/orders/orders.csv')));
+        static::assertNull($fs->status(path('azure-blob://nested/orders/orders_01.csv')));
     }
 
-    public function test_removing_folder_pattern() : void
+    public function test_removing_folder_pattern(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
         $resource1 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
-        self::assertIsResource($resource1);
+        static::assertIsResource($resource1);
         $fs->writeTo(path('azure-blob://nested/orders/orders.txt'))->fromResource($resource1)->close();
         $resource2 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
-        self::assertIsResource($resource2);
+        static::assertIsResource($resource2);
         $fs->writeTo(path('azure-blob://nested/orders/orders.csv'))->fromResource($resource2)->close();
         $resource3 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
-        self::assertIsResource($resource3);
+        static::assertIsResource($resource3);
         $fs->writeTo(path('azure-blob://nested/orders/orders_01.csv'))->fromResource($resource3)->close();
 
-        self::assertTrue($fs->status(path('azure-blob://nested/orders/orders.csv'))?->isFile());
-        self::assertTrue($fs->status(path('azure-blob://nested/orders/orders_01.csv'))?->isFile());
+        static::assertTrue($fs->status(path('azure-blob://nested/orders/orders.csv'))?->isFile());
+        static::assertTrue($fs->status(path('azure-blob://nested/orders/orders_01.csv'))?->isFile());
 
         $fs->rm(path('azure-blob://nested/orders/*.csv'));
 
-        self::assertTrue($fs->status(path('azure-blob://nested/orders/orders.txt'))?->isFile());
-        self::assertNull($fs->status(path('azure-blob://nested/orders/orders.csv')));
-        self::assertNull($fs->status(path('azure-blob://nested/orders/orders_01.csv')));
+        static::assertTrue($fs->status(path('azure-blob://nested/orders/orders.txt'))?->isFile());
+        static::assertNull($fs->status(path('azure-blob://nested/orders/orders.csv')));
+        static::assertNull($fs->status(path('azure-blob://nested/orders/orders_01.csv')));
     }
 
-    public function test_rm_tmp_dir() : void
+    public function test_rm_tmp_dir(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        self::assertFalse($fs->rm($fs->getSystemTmpDir()));
+        static::assertFalse($fs->rm($fs->getSystemTmpDir()));
     }
 
-    public function test_tmp_dir() : void
+    public function test_tmp_dir(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        self::assertSame('azure-blob://_$azure_flow_tmp$/', $fs->getSystemTmpDir()->uri());
+        static::assertSame('azure-blob://_$azure_flow_tmp$/', $fs->getSystemTmpDir()->uri());
     }
 
-    public function test_tmp_dir_status() : void
+    public function test_tmp_dir_status(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        self::assertTrue($fs->status($fs->getSystemTmpDir())?->isDirectory());
+        static::assertTrue($fs->status($fs->getSystemTmpDir())?->isDirectory());
     }
 
-    public function test_write_to_custom_tmp_dir() : void
+    public function test_write_to_custom_tmp_dir(): void
     {
-        $fs = azure_filesystem($this->blobService('flow-php'), azure_filesystem_options()->withTmpDir(path('azure-blob://custom-tmp-dir/')));
+        $fs = azure_filesystem(
+            $this->blobService('flow-php'),
+            azure_filesystem_options()->withTmpDir(path('azure-blob://custom-tmp-dir/')),
+        );
 
         $stream = $fs->writeTo($fs->getSystemTmpDir()->suffix('file.txt'));
         $stream->append('Hello, World!');
         $stream->close();
 
-        self::assertTrue($fs->status(path('azure-blob://custom-tmp-dir/file.txt'))?->isFile());
-        self::assertSame('Hello, World!', $fs->readFrom(path('azure-blob://custom-tmp-dir/file.txt'))->content());
+        static::assertTrue($fs->status(path('azure-blob://custom-tmp-dir/file.txt'))?->isFile());
+        static::assertSame('Hello, World!', $fs->readFrom(path('azure-blob://custom-tmp-dir/file.txt'))->content());
 
         $fs->rm($fs->getSystemTmpDir()->suffix('file.txt'));
     }
 
-    public function test_write_to_tmp_dir() : void
+    public function test_write_to_tmp_dir(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
@@ -298,13 +290,13 @@ TXT
         $stream->append('Hello, World!');
         $stream->close();
 
-        self::assertTrue($fs->status($fs->getSystemTmpDir()->suffix('file.txt'))?->isFile());
-        self::assertSame('Hello, World!', $fs->readFrom($fs->getSystemTmpDir()->suffix('file.txt'))->content());
+        static::assertTrue($fs->status($fs->getSystemTmpDir()->suffix('file.txt'))?->isFile());
+        static::assertSame('Hello, World!', $fs->readFrom($fs->getSystemTmpDir()->suffix('file.txt'))->content());
 
         $fs->rm($fs->getSystemTmpDir()->suffix('file.txt'));
     }
 
-    public function test_write_to_tmp_dir_as_to_a_file() : void
+    public function test_write_to_tmp_dir_as_to_a_file(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
@@ -313,7 +305,7 @@ TXT
         $fs->writeTo($fs->getSystemTmpDir());
     }
 
-    public function test_writing_to_azure_blob_storage() : void
+    public function test_writing_to_azure_blob_storage(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
@@ -321,36 +313,36 @@ TXT
         $stream->append('Hello, World!');
         $stream->close();
 
-        self::assertTrue($fs->status(path('azure-blob://file.txt'))?->isFile());
-        self::assertFalse($fs->status(path('azure-blob://file.txt'))->isDirectory());
-        self::assertSame('Hello, World!', $fs->readFrom(path('azure-blob://file.txt'))->content());
+        static::assertTrue($fs->status(path('azure-blob://file.txt'))?->isFile());
+        static::assertFalse($fs->status(path('azure-blob://file.txt'))->isDirectory());
+        static::assertSame('Hello, World!', $fs->readFrom(path('azure-blob://file.txt'))->content());
 
         $fs->rm(path('azure-blob://file.txt'));
     }
 
-    public function test_writing_to_to_azure_from_resources() : void
+    public function test_writing_to_to_azure_from_resources(): void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
         $stream = $fs->writeTo(path('azure-blob://orders.csv'));
         $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
-        self::assertIsResource($resource);
+        static::assertIsResource($resource);
         $stream->fromResource($resource);
         $stream->close();
 
-        self::assertTrue($fs->status(path('azure-blob://orders.csv'))?->isFile());
-        self::assertFalse($fs->status(path('azure-blob://orders.csv'))->isDirectory());
-        self::assertSame(\file_get_contents(__DIR__ . '/Fixtures/orders.csv'), $fs->readFrom(path('azure-blob://orders.csv'))->content());
+        static::assertTrue($fs->status(path('azure-blob://orders.csv'))?->isFile());
+        static::assertFalse($fs->status(path('azure-blob://orders.csv'))->isDirectory());
+        static::assertSame(
+            \file_get_contents(__DIR__ . '/Fixtures/orders.csv'),
+            $fs->readFrom(path('azure-blob://orders.csv'))->content(),
+        );
 
         $fs->rm(path('azure-blob://orders.csv'));
     }
 
-    public function test_writing_to_to_azure_using_blocks() : void
+    public function test_writing_to_to_azure_using_blocks(): void
     {
-        $fs = azure_filesystem(
-            $this->blobService('flow-php'),
-            (new Options())->withBlockSize(1024)
-        );
+        $fs = azure_filesystem($this->blobService('flow-php'), (new Options())->withBlockSize(1024));
 
         $stream = $fs->writeTo(path('azure-blob://block_blob.csv'));
 
@@ -360,8 +352,8 @@ TXT
 
         $stream->close();
 
-        self::assertTrue($fs->status(path('azure-blob://block_blob.csv'))?->isFile());
-        self::assertFalse($fs->status(path('azure-blob://block_blob.csv'))->isDirectory());
+        static::assertTrue($fs->status(path('azure-blob://block_blob.csv'))?->isFile());
+        static::assertFalse($fs->status(path('azure-blob://block_blob.csv'))->isDirectory());
 
         $fs->rm(path('azure-blob://block_blob.csv'));
     }

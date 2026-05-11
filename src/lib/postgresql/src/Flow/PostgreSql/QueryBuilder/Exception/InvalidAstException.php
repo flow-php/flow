@@ -9,17 +9,17 @@ namespace Flow\PostgreSql\QueryBuilder\Exception;
  */
 final class InvalidAstException extends QueryBuilderException
 {
-    public static function invalidFieldValue(string $field, string $nodeType, string $reason) : self
+    public static function invalidFieldValue(string $field, string $nodeType, string $reason): self
     {
         return new self(\sprintf('Invalid value for field "%s" in %s node: %s', $field, $nodeType, $reason));
     }
 
-    public static function missingRequiredField(string $field, string $nodeType) : self
+    public static function missingRequiredField(string $field, string $nodeType): self
     {
         return new self(\sprintf('Missing required field "%s" in %s node', $field, $nodeType));
     }
 
-    public static function unexpectedNodeType(string $expected, string $actual) : self
+    public static function unexpectedNodeType(string $expected, string $actual): self
     {
         return new self(\sprintf('Expected %s node, got %s', $expected, $actual));
     }

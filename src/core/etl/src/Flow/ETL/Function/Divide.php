@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\Calculator\{Calculator, Rounding};
+use Flow\Calculator\Calculator;
+use Flow\Calculator\Rounding;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Row};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
 
 final class Divide extends ScalarFunctionChain
 {
@@ -15,10 +17,9 @@ final class Divide extends ScalarFunctionChain
         private readonly ScalarFunction|int|float|string $right,
         private readonly ScalarFunction|int|null $scale = null,
         private readonly ScalarFunction|Rounding|null $rounding = null,
-    ) {
-    }
+    ) {}
 
-    public function eval(Row $row, FlowContext $context) : int|float|null
+    public function eval(Row $row, FlowContext $context): int|float|null
     {
         $leftValue = (new Parameter($this->left))->asNumber($row, $context);
         $rightValue = (new Parameter($this->right))->asNumber($row, $context);
@@ -26,11 +27,15 @@ final class Divide extends ScalarFunctionChain
         $rounding = (new Parameter($this->rounding))->asEnum($row, $context, Rounding::class);
 
         if ($leftValue === null || $rightValue === null) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('Divide function requires non-null values'));
+            return $context
+                ->functions()
+                ->invalidResult(new InvalidArgumentException('Divide function requires non-null values'));
         }
 
         if ($rightValue === 0) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('Divide function cannot divide by zero'));
+            return $context
+                ->functions()
+                ->invalidResult(new InvalidArgumentException('Divide function cannot divide by zero'));
         }
 
         return (new Calculator())->divide($leftValue, $rightValue, $scale, $rounding);

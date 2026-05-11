@@ -14,20 +14,22 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
         private string $account,
         #[\SensitiveParameter]
         private string $accountKey,
-    ) {
-    }
+    ) {}
 
-    public function for(RequestInterface $request) : string
+    public function for(RequestInterface $request): string
     {
         $signature = $this->computeSignature(
             $this->normalizeHeaders($request),
             (string) $request->getUri(),
             $this->parseQueryPart($request->getUri()->getQuery()),
-            $request->getMethod()
+            $request->getMethod(),
         );
 
-        return 'SharedKey ' . $this->account . ':' . base64_encode(
-            hash_hmac('sha256', $signature, (string) base64_decode($this->accountKey, true), true)
+        return (
+            'SharedKey '
+            . $this->account
+            . ':'
+            . base64_encode(hash_hmac('sha256', $signature, (string) base64_decode($this->accountKey, true), true))
         );
     }
 
@@ -36,7 +38,7 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
      *
      * @return array<int, string>
      */
-    private function computeCanonicalizedHeaders(array $headers) : array
+    private function computeCanonicalizedHeaders(array $headers): array
     {
         $canonicalizedHeaders = [];
         $normalizedHeaders = [];
@@ -75,7 +77,7 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
     /**
      * @param array<string, mixed> $queryParams
      */
-    private function computeCanonicalizedResource(string $url, array $queryParams) : string
+    private function computeCanonicalizedResource(string $url, array $queryParams): string
     {
         $queryParams = array_change_key_case($queryParams);
 
@@ -108,7 +110,7 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
      * @param array<string, mixed> $headers
      * @param array<string, mixed> $queryParams
      */
-    private function computeSignature(array $headers, string $url, array $queryParams, string $httpMethod) : string
+    private function computeSignature(array $headers, string $url, array $queryParams, string $httpMethod): string
     {
         $canonicalizedHeaders = $this->computeCanonicalizedHeaders($headers);
         $canonicalizedResource = $this->computeCanonicalizedResource($url, $queryParams);
@@ -116,7 +118,19 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
         $stringToSign = [];
         $stringToSign[] = \strtoupper($httpMethod);
 
-        $includedHeaders = ['content-encoding', 'content-language', 'content-length', 'content-md5', 'content-type', 'date', 'if-modified-since', 'if-match', 'if-none-match', 'if-unmodified-since', 'range'];
+        $includedHeaders = [
+            'content-encoding',
+            'content-language',
+            'content-length',
+            'content-md5',
+            'content-type',
+            'date',
+            'if-modified-since',
+            'if-match',
+            'if-none-match',
+            'if-unmodified-since',
+            'range',
+        ];
 
         $lowercaseHeaders = array_change_key_case($headers);
 
@@ -137,7 +151,7 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
     /**
      * @return array<string, string>
      */
-    private function normalizeHeaders(RequestInterface $request) : array
+    private function normalizeHeaders(RequestInterface $request): array
     {
         $headers = [];
 
@@ -157,7 +171,7 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
     /**
      * @return array<string, string>
      */
-    private function parseQueryPart(string $queryPart, bool $urlEncoding = true) : array
+    private function parseQueryPart(string $queryPart, bool $urlEncoding = true): array
     {
         /** @var array<string, string> $result */
         $result = [];
@@ -167,9 +181,9 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
         }
 
         if ($urlEncoding === true) {
-            $decoder = static fn (string $value) : string => rawurldecode(str_replace('+', ' ', $value));
+            $decoder = static fn(string $value): string => rawurldecode(str_replace('+', ' ', $value));
         } else {
-            $decoder = static fn (string $str) : string => $str;
+            $decoder = static fn(string $str): string => $str;
         }
 
         /** @var array<string, array<string>|string> $temporaryResult */

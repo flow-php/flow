@@ -12,88 +12,86 @@ use Flow\Types\Exception\InvalidTypeException;
 
 final class RequestConfigTest extends FlowTestCase
 {
-    public function test_constructor_accepts_sanitizer_instance() : void
+    public function test_constructor_accepts_sanitizer_instance(): void
     {
         $sanitizer = $this->createMock(Sanitizer::class);
 
-        $config = new RequestConfig(
-            sanitizers: [
-                'valid' => $sanitizer,
-            ]
-        );
+        $config = new RequestConfig(sanitizers: [
+            'valid' => $sanitizer,
+        ]);
 
-        self::assertCount(1, $config->sanitizers());
+        static::assertCount(1, $config->sanitizers());
     }
 
-    public function test_constructor_accepts_valid_sanitizer_array() : void
+    public function test_constructor_accepts_valid_sanitizer_array(): void
     {
-        $config = new RequestConfig(
-            sanitizers: [
-                'valid' => ['type' => 'mask', 'character' => '#', 'offset' => 2],
-            ]
-        );
+        $config = new RequestConfig(sanitizers: [
+            'valid' => ['type' => 'mask', 'character' => '#', 'offset' => 2],
+        ]);
 
-        self::assertCount(1, $config->sanitizers());
+        static::assertCount(1, $config->sanitizers());
     }
 
-    public function test_constructor_throws_exception_when_mask_sanitizer_has_invalid_character() : void
+    public function test_constructor_throws_exception_when_mask_sanitizer_has_invalid_character(): void
     {
         $this->expectException(InvalidTypeException::class);
-        $this->expectExceptionMessage('Expected type "structure{type: \'mask\', character?: string, offset?: integer}", got "structure{type: string, character: integer}"');
-
-        new RequestConfig(
-            sanitizers: [
-                'invalid' => ['type' => 'mask', 'character' => 123],
-            ]
+        $this->expectExceptionMessage(
+            'Expected type "structure{type: \'mask\', character?: string, offset?: integer}", got "structure{type: string, character: integer}"',
         );
+
+        new RequestConfig(sanitizers: [
+            'invalid' => ['type' => 'mask', 'character' => 123],
+        ]);
     }
 
-    public function test_constructor_throws_exception_when_mask_sanitizer_has_invalid_offset() : void
+    public function test_constructor_throws_exception_when_mask_sanitizer_has_invalid_offset(): void
     {
         $this->expectException(InvalidTypeException::class);
-        $this->expectExceptionMessage('Expected type "structure{type: \'mask\', character?: string, offset?: integer}", got "map<string, string>"');
-
-        new RequestConfig(
-            sanitizers: [
-                'invalid' => ['type' => 'mask', 'character' => '*', 'offset' => '2'],
-            ]
+        $this->expectExceptionMessage(
+            'Expected type "structure{type: \'mask\', character?: string, offset?: integer}", got "map<string, string>"',
         );
+
+        new RequestConfig(sanitizers: [
+            'invalid' => ['type' => 'mask', 'character' => '*', 'offset' => '2'],
+        ]);
     }
 
-    public function test_constructor_throws_exception_when_sanitizer_array_has_invalid_type() : void
+    public function test_constructor_throws_exception_when_sanitizer_array_has_invalid_type(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Sanitizer for key "invalid" could not be created from array: Unsupported sanitizer type: invalid');
-
-        new RequestConfig(
-            sanitizers: [
-                'invalid' => ['type' => 'invalid'],
-            ]
+        $this->expectExceptionMessage(
+            'Sanitizer for key "invalid" could not be created from array: Unsupported sanitizer type: invalid',
         );
+
+        new RequestConfig(sanitizers: [
+            'invalid' => ['type' => 'invalid'],
+        ]);
     }
 
-    public function test_constructor_throws_exception_when_sanitizer_array_is_invalid() : void
+    public function test_constructor_throws_exception_when_sanitizer_array_is_invalid(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Sanitizer for key "invalid" could not be created from array: Sanitizer type is required');
-
-        new RequestConfig(
-            sanitizers: [
-                'invalid' => [],
-            ]
+        $this->expectExceptionMessage(
+            'Sanitizer for key "invalid" could not be created from array: Sanitizer type is required',
         );
+
+        new RequestConfig(sanitizers: [
+            'invalid' => [],
+        ]);
     }
 
-    public function test_constructor_throws_exception_when_sanitizer_is_not_an_instance_of_sanitizer_or_array() : void
+    public function test_constructor_throws_exception_when_sanitizer_is_not_an_instance_of_sanitizer_or_array(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Sanitizer for key "invalid" must be an instance of Sanitizer or an array that can be converted to a Sanitizer');
+        $this->expectExceptionMessage(
+            'Sanitizer for key "invalid" must be an instance of Sanitizer or an array that can be converted to a Sanitizer',
+        );
 
         new RequestConfig(
             /** @phpstan-ignore-next-line  */
             sanitizers: [
                 'invalid' => 'not a sanitizer',
-            ]
+            ],
         );
     }
 }

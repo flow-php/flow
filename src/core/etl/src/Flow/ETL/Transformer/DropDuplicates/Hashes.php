@@ -11,16 +11,14 @@ final class Hashes
      */
     private array $hashes = [];
 
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
-    public function add(string $hash) : void
+    public function add(string $hash): void
     {
         $this->hashes[$hash] = true;
     }
 
-    public function exists(string $hash) : bool
+    public function exists(string $hash): bool
     {
         return isset($this->hashes[$hash]);
     }

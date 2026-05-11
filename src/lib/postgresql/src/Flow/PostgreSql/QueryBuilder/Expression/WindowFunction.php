@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{FuncCall, Node, PBString, WindowDef};
+use Flow\PostgreSql\Protobuf\AST\FuncCall;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\WindowDef;
 use Flow\PostgreSql\QueryBuilder\Clause\OrderBy;
-use Flow\PostgreSql\QueryBuilder\Exception\{InvalidAstException, InvalidExpressionException};
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 
 final readonly class WindowFunction implements Expression
 {
@@ -27,7 +31,7 @@ final readonly class WindowFunction implements Expression
         }
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $funcCall = $node->getFuncCall();
 
@@ -97,7 +101,7 @@ final readonly class WindowFunction implements Expression
         return new self($funcName, $args, $partitionBy, $orderBy);
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return new AliasedExpression($this, $alias);
     }
@@ -105,7 +109,7 @@ final readonly class WindowFunction implements Expression
     /**
      * @return list<Expression>
      */
-    public function getArgs() : array
+    public function getArgs(): array
     {
         return $this->args;
     }
@@ -113,7 +117,7 @@ final readonly class WindowFunction implements Expression
     /**
      * @return non-empty-list<string>
      */
-    public function getFuncName() : array
+    public function getFuncName(): array
     {
         return $this->funcName;
     }
@@ -121,7 +125,7 @@ final readonly class WindowFunction implements Expression
     /**
      * @return list<OrderBy>
      */
-    public function getOrderBy() : array
+    public function getOrderBy(): array
     {
         return $this->orderBy;
     }
@@ -129,12 +133,12 @@ final readonly class WindowFunction implements Expression
     /**
      * @return list<Expression>
      */
-    public function getPartitionBy() : array
+    public function getPartitionBy(): array
     {
         return $this->partitionBy;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $funcCall = new FuncCall();
         $funcNameNodes = [];
@@ -189,17 +193,17 @@ final readonly class WindowFunction implements Expression
         return $node;
     }
 
-    public function withArgs(Expression ...$args) : self
+    public function withArgs(Expression ...$args): self
     {
         return new self($this->funcName, \array_values($args), $this->partitionBy, $this->orderBy);
     }
 
-    public function withOrderBy(OrderBy ...$orderBy) : self
+    public function withOrderBy(OrderBy ...$orderBy): self
     {
         return new self($this->funcName, $this->args, $this->partitionBy, \array_values($orderBy));
     }
 
-    public function withPartitionBy(Expression ...$partitionBy) : self
+    public function withPartitionBy(Expression ...$partitionBy): self
     {
         return new self($this->funcName, $this->args, \array_values($partitionBy), $this->orderBy);
     }

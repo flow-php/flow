@@ -6,11 +6,9 @@ namespace Flow\Snappy;
 
 final class Snappy
 {
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
-    public function compress(string $plainText) : string
+    public function compress(string $plainText): string
     {
         if ($plainText === '') {
             return $plainText;
@@ -24,7 +22,7 @@ final class Snappy
         return \pack('C*', ...$outputBuffer);
     }
 
-    public function uncompress(string $compressedText) : string
+    public function uncompress(string $compressedText): string
     {
         if ($compressedText === '') {
             return $compressedText;

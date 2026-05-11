@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface AlterSchemaOwnerFinalStep extends Sql
 {
-    public function toAst() : AlterOwnerStmt;
+    public function toAst(): AlterOwnerStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

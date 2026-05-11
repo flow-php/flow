@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Const, Node, PBString};
-use Flow\PostgreSql\QueryBuilder\Expression\{AliasedExpression, Expression};
+use Flow\PostgreSql\Protobuf\AST\A_Const;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\QueryBuilder\Expression\AliasedExpression;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 
 /**
  * Mock expression for testing - represents a simple string literal.
@@ -14,10 +17,9 @@ final readonly class MockExpression implements Expression
 {
     public function __construct(
         private string $value = 'mock_value',
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $aConst = $node->getAConst();
 
@@ -34,12 +36,12 @@ final readonly class MockExpression implements Expression
         return new self($sval->getSval());
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return new AliasedExpression($this, $alias);
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $sval = new PBString();
         $sval->setSval($this->value);
@@ -54,7 +56,7 @@ final readonly class MockExpression implements Expression
         return $node;
     }
 
-    public function value() : string
+    public function value(): string
     {
         return $this->value;
     }

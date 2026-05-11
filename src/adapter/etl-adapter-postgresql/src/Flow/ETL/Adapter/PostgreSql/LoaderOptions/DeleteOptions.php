@@ -14,6 +14,5 @@ final readonly class DeleteOptions
      */
     public function __construct(
         public array $primaryKeys,
-    ) {
-    }
+    ) {}
 }

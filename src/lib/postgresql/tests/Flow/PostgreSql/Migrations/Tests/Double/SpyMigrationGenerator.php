@@ -25,17 +25,16 @@ final class SpyMigrationGenerator implements MigrationGenerator
 
     public function __construct(
         public Version $returnVersion,
-    ) {
-    }
+    ) {}
 
-    public function generateDataMigration(?string $name = null) : Version
+    public function generateDataMigration(?string $name = null): Version
     {
         $this->lastDataName = $name;
 
         return $this->returnVersion;
     }
 
-    public function generateSchemaMigration(?string $name, array $upSql, ?array $downSql = null) : Version
+    public function generateSchemaMigration(?string $name, array $upSql, ?array $downSql = null): Version
     {
         $this->lastSchemaName = $name;
         $this->lastUpSql = $upSql;

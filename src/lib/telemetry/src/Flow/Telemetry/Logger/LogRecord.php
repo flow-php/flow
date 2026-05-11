@@ -61,7 +61,7 @@ final readonly class LogRecord
      *     observedTimestamp: null|string
      * } $data Normalized LogRecord data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             Severity::from($data['severity']),
@@ -83,7 +83,7 @@ final readonly class LogRecord
      *     observedTimestamp: null|string
      * }
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'severity' => $this->severity->value,
@@ -104,7 +104,7 @@ final readonly class LogRecord
      *
      * @return self New instance with attribute set
      */
-    public function setAttribute(string $key, string|int|float|bool|\DateTimeInterface|\Throwable|array $value) : self
+    public function setAttribute(string $key, string|int|float|bool|\DateTimeInterface|\Throwable|array $value): self
     {
         return new self(
             $this->severity,
@@ -122,7 +122,7 @@ final readonly class LogRecord
      *
      * @return self New instance with attributes set
      */
-    public function setAttributes(Attributes|array $attributes) : self
+    public function setAttributes(Attributes|array $attributes): self
     {
         $attrs = $attributes instanceof Attributes ? $attributes : Attributes::create($attributes);
 
@@ -144,15 +144,9 @@ final readonly class LogRecord
      *
      * @return self New instance with body set
      */
-    public function setBody(string $body) : self
+    public function setBody(string $body): self
     {
-        return new self(
-            $this->severity,
-            $body,
-            $this->attributes,
-            $this->timestamp,
-            $this->observedTimestamp,
-        );
+        return new self($this->severity, $body, $this->attributes, $this->timestamp, $this->observedTimestamp);
     }
 
     /**
@@ -165,7 +159,7 @@ final readonly class LogRecord
      *
      * @return self New instance with exception attributes set
      */
-    public function setException(\Throwable $exception) : self
+    public function setException(\Throwable $exception): self
     {
         return $this->setAttributes([
             'exception.type' => $exception::class,
@@ -185,15 +179,9 @@ final readonly class LogRecord
      *
      * @return self New instance with observed timestamp set
      */
-    public function setObservedTimestamp(\DateTimeImmutable $observedTimestamp) : self
+    public function setObservedTimestamp(\DateTimeImmutable $observedTimestamp): self
     {
-        return new self(
-            $this->severity,
-            $this->body,
-            $this->attributes,
-            $this->timestamp,
-            $observedTimestamp,
-        );
+        return new self($this->severity, $this->body, $this->attributes, $this->timestamp, $observedTimestamp);
     }
 
     /**
@@ -203,15 +191,9 @@ final readonly class LogRecord
      *
      * @return self New instance with severity set
      */
-    public function setSeverity(Severity $severity) : self
+    public function setSeverity(Severity $severity): self
     {
-        return new self(
-            $severity,
-            $this->body,
-            $this->attributes,
-            $this->timestamp,
-            $this->observedTimestamp,
-        );
+        return new self($severity, $this->body, $this->attributes, $this->timestamp, $this->observedTimestamp);
     }
 
     /**
@@ -224,14 +206,8 @@ final readonly class LogRecord
      *
      * @return self New instance with timestamp set
      */
-    public function setTimestamp(\DateTimeImmutable $timestamp) : self
+    public function setTimestamp(\DateTimeImmutable $timestamp): self
     {
-        return new self(
-            $this->severity,
-            $this->body,
-            $this->attributes,
-            $timestamp,
-            $this->observedTimestamp,
-        );
+        return new self($this->severity, $this->body, $this->attributes, $timestamp, $this->observedTimestamp);
     }
 }

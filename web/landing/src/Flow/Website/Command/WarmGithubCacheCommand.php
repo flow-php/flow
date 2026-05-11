@@ -11,10 +11,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-#[AsCommand(
-    name: 'app:github:warm-cache',
-    description: 'Fetch GitHub contributors and warm the cache'
-)]
+#[AsCommand(name: 'app:github:warm-cache', description: 'Fetch GitHub contributors and warm the cache')]
 final class WarmGithubCacheCommand extends Command
 {
     public function __construct(
@@ -23,7 +20,7 @@ final class WarmGithubCacheCommand extends Command
         parent::__construct();
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output) : int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 

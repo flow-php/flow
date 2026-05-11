@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use function Flow\Types\DSL\dom_element_to_string;
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+
+use function Flow\Types\DSL\dom_element_to_string;
 
 /**
  * @implements Type<non-empty-string>
  */
 final class NonEmptyStringType implements Type
 {
-    public function assert(mixed $value) : string
+    public function assert(mixed $value): string
     {
         if ($this->isValid($value)) {
             return $value;
@@ -22,7 +24,7 @@ final class NonEmptyStringType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
-    public function cast(mixed $value) : string
+    public function cast(mixed $value): string
     {
         if ($this->isValid($value)) {
             return $value;
@@ -61,7 +63,7 @@ final class NonEmptyStringType implements Type
                 throw new CastingException($value, $this);
             }
 
-            if (\is_scalar($value) || (\is_object($value) && method_exists($value, '__toString'))) {
+            if (\is_scalar($value) || \is_object($value) && method_exists($value, '__toString')) {
                 return $this->assert((string) $value);
             }
 
@@ -71,24 +73,28 @@ final class NonEmptyStringType implements Type
         }
     }
 
-    public function isStringable(mixed $value) : bool
+    public function isStringable(mixed $value): bool
     {
-        return \is_string($value) || (\is_object($value) && method_exists($value, '__toString')) || $value instanceof \Stringable;
+        return (
+            \is_string($value)
+            || \is_object($value) && method_exists($value, '__toString')
+            || $value instanceof \Stringable
+        );
     }
 
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return \is_string($value) && $value !== '';
     }
 
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'non_empty_string',
         ];
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return 'non_empty_string';
     }

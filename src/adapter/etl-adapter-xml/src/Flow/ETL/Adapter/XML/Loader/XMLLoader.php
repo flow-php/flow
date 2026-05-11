@@ -4,13 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Loader;
 
+use Flow\ETL\Adapter\XML\RowsNormalizer;
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer;
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
-use Flow\ETL\Adapter\XML\{RowsNormalizer, XMLWriter};
+use Flow\ETL\Adapter\XML\XMLWriter;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\{FlowContext, Loader, Rows};
-use Flow\ETL\Loader\{Closure, FileLoader};
-use Flow\Filesystem\{DestinationStream, Partition, Path, Path\Option, Path\Option\ContentType};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Loader;
+use Flow\ETL\Loader\Closure;
+use Flow\ETL\Loader\FileLoader;
+use Flow\ETL\Rows;
+use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Partition;
+use Flow\Filesystem\Path;
+use Flow\Filesystem\Path\Option;
+use Flow\Filesystem\Path\Option\ContentType;
 
 final class XMLLoader implements Closure, FileLoader, Loader
 {
@@ -49,7 +57,7 @@ final class XMLLoader implements Closure, FileLoader, Loader
         $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE, ContentType::XML);
     }
 
-    public function closure(FlowContext $context) : void
+    public function closure(FlowContext $context): void
     {
         foreach ($context->streams()->listOpenStreams($this->path) as $stream) {
             $stream->append('</' . $this->rootElementName . '>');
@@ -58,12 +66,12 @@ final class XMLLoader implements Closure, FileLoader, Loader
         $context->streams()->closeStreams($this->path);
     }
 
-    public function destination() : Path
+    public function destination(): Path
     {
         return $this->path;
     }
 
-    public function load(Rows $rows, FlowContext $context) : void
+    public function load(Rows $rows, FlowContext $context): void
     {
         if (!$rows->count()) {
             return;
@@ -82,10 +90,10 @@ final class XMLLoader implements Closure, FileLoader, Loader
                         $this->listElementName,
                         $this->mapElementName,
                         $this->mapElementKeyName,
-                        $this->mapElementValueName
+                        $this->mapElementValueName,
                     ),
                 ),
-                $this->rowElementName
+                $this->rowElementName,
             );
 
             $this->write($rows, $rows->partitions()->toArray(), $context, $normalizer);
@@ -98,56 +106,56 @@ final class XMLLoader implements Closure, FileLoader, Loader
         }
     }
 
-    public function withAttributePrefix(string $attributePrefix) : self
+    public function withAttributePrefix(string $attributePrefix): self
     {
         $this->attributePrefix = $attributePrefix;
 
         return $this;
     }
 
-    public function withDateTimeFormat(string $dateTimeFormat) : self
+    public function withDateTimeFormat(string $dateTimeFormat): self
     {
         $this->dateTimeFormat = $dateTimeFormat;
 
         return $this;
     }
 
-    public function withListElementName(string $listElementName) : self
+    public function withListElementName(string $listElementName): self
     {
         $this->listElementName = $listElementName;
 
         return $this;
     }
 
-    public function withMapElementKeyName(string $mapElementKeyName) : self
+    public function withMapElementKeyName(string $mapElementKeyName): self
     {
         $this->mapElementKeyName = $mapElementKeyName;
 
         return $this;
     }
 
-    public function withMapElementName(string $mapElementName) : self
+    public function withMapElementName(string $mapElementName): self
     {
         $this->mapElementName = $mapElementName;
 
         return $this;
     }
 
-    public function withMapElementValueName(string $mapElementValueName) : self
+    public function withMapElementValueName(string $mapElementValueName): self
     {
         $this->mapElementValueName = $mapElementValueName;
 
         return $this;
     }
 
-    public function withRootElementName(string $rootElementName) : self
+    public function withRootElementName(string $rootElementName): self
     {
         $this->rootElementName = $rootElementName;
 
         return $this;
     }
 
-    public function withRowElementName(string $rowElementName) : self
+    public function withRowElementName(string $rowElementName): self
     {
         $this->rowElementName = $rowElementName;
 
@@ -157,7 +165,7 @@ final class XMLLoader implements Closure, FileLoader, Loader
     /**
      * @param array<string, string> $xmlAttributes
      */
-    public function withXMLAttributes(array $xmlAttributes) : self
+    public function withXMLAttributes(array $xmlAttributes): self
     {
         $this->xmlAttributes = $xmlAttributes;
 
@@ -167,7 +175,7 @@ final class XMLLoader implements Closure, FileLoader, Loader
     /**
      * @param array<Partition> $partitions
      */
-    public function write(Rows $nextRows, array $partitions, FlowContext $context, RowsNormalizer $normalizer) : void
+    public function write(Rows $nextRows, array $partitions, FlowContext $context, RowsNormalizer $normalizer): void
     {
         $streams = $context->streams();
 
@@ -178,7 +186,11 @@ final class XMLLoader implements Closure, FileLoader, Loader
                 $this->writes[$stream->path()->path()] = 0;
             }
 
-            $xmlAttributes = \implode(' ', \array_map(static fn (string $key, string $value) => $key . '="' . $value . '"', \array_keys($this->xmlAttributes), \array_values($this->xmlAttributes)));
+            $xmlAttributes = \implode(' ', \array_map(
+                static fn(string $key, string $value) => $key . '="' . $value . '"',
+                \array_keys($this->xmlAttributes),
+                \array_values($this->xmlAttributes),
+            ));
 
             $stream->append('<?xml ' . $xmlAttributes . "?>\n<" . $this->rootElementName . ">\n");
         } else {
@@ -192,7 +204,7 @@ final class XMLLoader implements Closure, FileLoader, Loader
      * @param Rows $rows
      * @param DestinationStream $stream
      */
-    public function writeXML(Rows $rows, DestinationStream $stream, RowsNormalizer $normalizer) : void
+    public function writeXML(Rows $rows, DestinationStream $stream, RowsNormalizer $normalizer): void
     {
         if (!\count($rows)) {
             return;

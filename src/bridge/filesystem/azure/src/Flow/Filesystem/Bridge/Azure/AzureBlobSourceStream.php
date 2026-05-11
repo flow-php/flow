@@ -4,35 +4,38 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\Azure;
 
-use Flow\Azure\SDK\BlobService\GetBlob\{GetBlobOptions, Range};
+use Flow\Azure\SDK\BlobService\GetBlob\GetBlobOptions;
+use Flow\Azure\SDK\BlobService\GetBlob\Range;
 use Flow\Azure\SDK\BlobService\GetBlobProperties\BlobProperties;
 use Flow\Azure\SDK\BlobServiceInterface;
-use Flow\Filesystem\{Path, SourceStream};
+use Flow\Filesystem\Path;
+use Flow\Filesystem\SourceStream;
 
 final class AzureBlobSourceStream implements SourceStream
 {
     private ?BlobProperties $blobProperties = null;
 
-    public function __construct(private readonly Path $path, private readonly BlobServiceInterface $blobService)
-    {
-    }
+    public function __construct(
+        private readonly Path $path,
+        private readonly BlobServiceInterface $blobService,
+    ) {}
 
-    public function close() : void
+    public function close(): void
     {
         // do nothing as we can't close Azure Blob since we are just reading parts of it at once
     }
 
-    public function content() : string
+    public function content(): string
     {
         return $this->blobService->getBlob($this->path->path())->content();
     }
 
-    public function isOpen() : bool
+    public function isOpen(): bool
     {
         return true;
     }
 
-    public function iterate(int $length = 1) : \Generator
+    public function iterate(int $length = 1): \Generator
     {
         $offset = 0;
 
@@ -42,29 +45,28 @@ final class AzureBlobSourceStream implements SourceStream
         }
     }
 
-    public function path() : Path
+    public function path(): Path
     {
         return $this->path;
     }
 
-    public function read(int $length, int $offset) : string
+    public function read(int $length, int $offset): string
     {
         $offset = $offset < 0 ? $this->size() + $offset : $offset;
 
-        return $this->blobService->getBlob(
-            $this->path->path(),
-            (new GetBlobOptions())->withRange(new Range($offset, $offset + $length - 1))
-        )->content();
+        return $this->blobService
+            ->getBlob($this->path->path(), (new GetBlobOptions())->withRange(new Range($offset, $offset + $length - 1)))
+            ->content();
     }
 
-    public function readLines(string $separator = "\n", ?int $length = null) : \Generator
+    public function readLines(string $separator = "\n", ?int $length = null): \Generator
     {
         $offset = 0;
         $content = '';
 
         while ($offset < $this->size()) {
             // Read a chunk of the file
-            $chunk = $this->read($length ?? 1024 * 1024 * 9, $offset);
+            $chunk = $this->read($length ?? (1024 * 1024 * 9), $offset);
             $offset += \strlen($chunk);
             $content .= $chunk;
 
@@ -100,7 +102,7 @@ final class AzureBlobSourceStream implements SourceStream
         }
     }
 
-    public function size() : ?int
+    public function size(): ?int
     {
         if ($this->blobProperties === null) {
             $this->blobProperties = $this->blobService->getBlobProperties($this->path->path());

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
-use Flow\PostgreSql\AST\Nodes\{Statement, StatementTrait};
+use Flow\PostgreSql\AST\Nodes\Statement;
+use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\CheckPointStmt;
 
 /**
@@ -16,10 +17,9 @@ final readonly class CheckpointStatement implements Statement
 
     public function __construct(
         private CheckPointStmt $stmt,
-    ) {
-    }
+    ) {}
 
-    public function raw() : CheckPointStmt
+    public function raw(): CheckPointStmt
     {
         return $this->stmt;
     }

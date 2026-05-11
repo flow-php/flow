@@ -4,19 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Http;
 
-use function Flow\Types\DSL\type_array;
 use Flow\Bridge\Monolog\Http\Sanitization\Sanitizer;
 use Monolog\LogRecord;
 use Monolog\Processor\ProcessorInterface;
-use Psr\Http\Message\{RequestInterface, ResponseInterface};
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+
+use function Flow\Types\DSL\type_array;
 
 final readonly class PSR7Processor implements ProcessorInterface
 {
-    public function __construct(private Config $config = new Config())
-    {
-    }
+    public function __construct(
+        private Config $config = new Config(),
+    ) {}
 
-    public function __invoke(LogRecord $record) : LogRecord
+    public function __invoke(LogRecord $record): LogRecord
     {
         $context = type_array()->assert($record->context);
 
@@ -41,7 +43,7 @@ final readonly class PSR7Processor implements ProcessorInterface
         return $record->with(context: $context);
     }
 
-    private function isJson(string $body) : bool
+    private function isJson(string $body): bool
     {
         try {
             json_decode($body, false, 512, JSON_THROW_ON_ERROR);
@@ -55,7 +57,7 @@ final readonly class PSR7Processor implements ProcessorInterface
     /**
      * @return array<string, mixed>
      */
-    private function normalizeRequest(RequestInterface $request) : array
+    private function normalizeRequest(RequestInterface $request): array
     {
         $requestData = [];
 
@@ -78,9 +80,17 @@ final readonly class PSR7Processor implements ProcessorInterface
                 $sanitizedBody = \array_is_list($decodedBody) ? [] : $decodedBody;
                 $body = $this->recursiveSanitize($sanitizedBody, $this->config->request->sanitizers());
 
-                $requestData['body'] = \substr(\json_encode($body, JSON_THROW_ON_ERROR), 0, $this->config->request->bodySizeLimit());
+                $requestData['body'] = \substr(
+                    \json_encode($body, JSON_THROW_ON_ERROR),
+                    0,
+                    $this->config->request->bodySizeLimit(),
+                );
             } else {
-                $requestData['body'] = \substr($request->getBody()->getContents(), 0, $this->config->request->bodySizeLimit());
+                $requestData['body'] = \substr(
+                    $request->getBody()->getContents(),
+                    0,
+                    $this->config->request->bodySizeLimit(),
+                );
             }
 
             if ($requestData['body'] === '') {
@@ -91,8 +101,8 @@ final readonly class PSR7Processor implements ProcessorInterface
         if ($this->config->request->includeHeaders()) {
             $requestData['headers'] = \array_filter(
                 $request->getHeaders(),
-                fn (string $header) => \in_array(\strtolower($header), $this->config->request->includeHeaders(), true),
-                ARRAY_FILTER_USE_KEY
+                fn(string $header) => \in_array(\strtolower($header), $this->config->request->includeHeaders(), true),
+                ARRAY_FILTER_USE_KEY,
             );
         }
 
@@ -102,7 +112,7 @@ final readonly class PSR7Processor implements ProcessorInterface
     /**
      * @return array<string, mixed>
      */
-    private function normalizeResponse(ResponseInterface $response) : array
+    private function normalizeResponse(ResponseInterface $response): array
     {
         $responseData = [];
 
@@ -129,9 +139,17 @@ final readonly class PSR7Processor implements ProcessorInterface
                 $sanitizedBody = \array_is_list($decodedBody) ? [] : $decodedBody;
                 $body = $this->recursiveSanitize($sanitizedBody, $this->config->response->sanitizers());
 
-                $responseData['body'] = \substr(\json_encode($body, JSON_THROW_ON_ERROR), 0, $this->config->response->bodySizeLimit());
+                $responseData['body'] = \substr(
+                    \json_encode($body, JSON_THROW_ON_ERROR),
+                    0,
+                    $this->config->response->bodySizeLimit(),
+                );
             } else {
-                $responseData['body'] = \substr($response->getBody()->getContents(), 0, $this->config->response->bodySizeLimit());
+                $responseData['body'] = \substr(
+                    $response->getBody()->getContents(),
+                    0,
+                    $this->config->response->bodySizeLimit(),
+                );
             }
 
             if ($responseData['body'] === '') {
@@ -142,8 +160,8 @@ final readonly class PSR7Processor implements ProcessorInterface
         if ($this->config->response->includeHeaders()) {
             $responseData['headers'] = \array_filter(
                 $response->getHeaders(),
-                fn (string $header) => \in_array(\strtolower($header), $this->config->response->includeHeaders(), true),
-                ARRAY_FILTER_USE_KEY
+                fn(string $header) => \in_array(\strtolower($header), $this->config->response->includeHeaders(), true),
+                ARRAY_FILTER_USE_KEY,
             );
         }
 
@@ -158,7 +176,7 @@ final readonly class PSR7Processor implements ProcessorInterface
      *
      * @return array<string, mixed>
      */
-    private function recursiveSanitize(array $data, array $sanitizers) : array
+    private function recursiveSanitize(array $data, array $sanitizers): array
     {
         if (!\count($sanitizers)) {
             return $data;

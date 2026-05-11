@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Cache\Implementation;
 
+use Flow\ETL\Cache;
 use Flow\ETL\Cache\CacheIndex;
-use Flow\ETL\{Cache, Row, Rows};
 use Flow\ETL\Exception\KeyNotInCacheException;
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Flow\Telemetry\Meter\Instrument\Counter;
-use Flow\Telemetry\{PackageVersion, Telemetry};
-use Flow\Telemetry\Tracer\{SpanKind, SpanStatus, Tracer};
+use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\Tracer\SpanKind;
+use Flow\Telemetry\Tracer\SpanStatus;
+use Flow\Telemetry\Tracer\Tracer;
 
 final readonly class TraceableCache implements Cache
 {
@@ -30,15 +35,11 @@ final readonly class TraceableCache implements Cache
         $this->missCounter = $meter->createCounter('cache_misses', 'operations', 'Number of cache misses');
     }
 
-    public function clear() : void
+    public function clear(): void
     {
-        $span = $this->tracer->span(
-            'Cache Clear',
-            SpanKind::CLIENT,
-            [
-                'cache.operation' => 'clear',
-            ]
-        );
+        $span = $this->tracer->span('Cache Clear', SpanKind::CLIENT, [
+            'cache.operation' => 'clear',
+        ]);
 
         try {
             $this->cache->clear();
@@ -53,16 +54,12 @@ final readonly class TraceableCache implements Cache
         }
     }
 
-    public function delete(string $key) : void
+    public function delete(string $key): void
     {
-        $span = $this->tracer->span(
-            "Cache Delete {$key}",
-            SpanKind::CLIENT,
-            [
-                'cache.operation' => 'delete',
-                'cache.key' => $key,
-            ]
-        );
+        $span = $this->tracer->span("Cache Delete {$key}", SpanKind::CLIENT, [
+            'cache.operation' => 'delete',
+            'cache.key' => $key,
+        ]);
 
         try {
             $this->cache->delete($key);
@@ -77,7 +74,7 @@ final readonly class TraceableCache implements Cache
         }
     }
 
-    public function get(string $key) : Row|Rows|CacheIndex
+    public function get(string $key): Row|Rows|CacheIndex
     {
         $attributes = ['dataframe.name' => $this->dataframeName];
 
@@ -93,7 +90,7 @@ final readonly class TraceableCache implements Cache
         }
     }
 
-    public function has(string $key) : bool
+    public function has(string $key): bool
     {
         $attributes = ['dataframe.name' => $this->dataframeName];
         $exists = $this->cache->has($key);
@@ -107,7 +104,7 @@ final readonly class TraceableCache implements Cache
         return $exists;
     }
 
-    public function set(string $key, Row|Rows|CacheIndex $value) : void
+    public function set(string $key, Row|Rows|CacheIndex $value): void
     {
         $valueType = match (true) {
             $value instanceof Row => 'Row',
@@ -115,15 +112,11 @@ final readonly class TraceableCache implements Cache
             $value instanceof CacheIndex => 'CacheIndex',
         };
 
-        $span = $this->tracer->span(
-            "Cache Set {$key}",
-            SpanKind::CLIENT,
-            [
-                'cache.operation' => 'set',
-                'cache.key' => $key,
-                'cache.value_type' => $valueType,
-            ]
-        );
+        $span = $this->tracer->span("Cache Set {$key}", SpanKind::CLIENT, [
+            'cache.operation' => 'set',
+            'cache.key' => $key,
+            'cache.value_type' => $valueType,
+        ]);
 
         try {
             $this->cache->set($key, $value);

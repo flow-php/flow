@@ -28,17 +28,15 @@ final class Writer
         string $compression = 'SNAPPY',
         array $options = [],
     ) {
-        throw new \RuntimeException('The arrow PHP extension is not loaded. Install ext-arrow to use Flow\Arrow\Parquet\Writer.');
+        throw new \RuntimeException(
+            'The arrow PHP extension is not loaded. Install ext-arrow to use Flow\Arrow\Parquet\Writer.',
+        );
     }
 
-    public function close() : void
-    {
-    }
+    public function close(): void {}
 
     /**
      * @param array<string, array<mixed>> $batch
      */
-    public function writeBatch(array $batch) : void
-    {
-    }
+    public function writeBatch(array $batch): void {}
 }

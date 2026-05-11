@@ -4,26 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Transformers;
 
-use Flow\PostgreSql\AST\{ModificationContext, NodeModifier};
-use Flow\PostgreSql\Protobuf\AST\{
-    A_ArrayExpr,
-    A_Expr,
-    A_Indirection,
-    BoolExpr,
-    BooleanTest,
-    CaseExpr,
-    CaseWhen,
-    CoalesceExpr,
-    FuncCall,
-    MinMaxExpr,
-    NamedArgExpr,
-    Node,
-    NullTest,
-    ResTarget,
-    RowExpr,
-    SubLink,
-    XmlExpr
-};
+use Flow\PostgreSql\AST\ModificationContext;
+use Flow\PostgreSql\AST\NodeModifier;
+use Flow\PostgreSql\Protobuf\AST\A_ArrayExpr;
+use Flow\PostgreSql\Protobuf\AST\A_Expr;
+use Flow\PostgreSql\Protobuf\AST\A_Indirection;
+use Flow\PostgreSql\Protobuf\AST\BooleanTest;
+use Flow\PostgreSql\Protobuf\AST\BoolExpr;
+use Flow\PostgreSql\Protobuf\AST\CaseExpr;
+use Flow\PostgreSql\Protobuf\AST\CaseWhen;
+use Flow\PostgreSql\Protobuf\AST\CoalesceExpr;
+use Flow\PostgreSql\Protobuf\AST\FuncCall;
+use Flow\PostgreSql\Protobuf\AST\MinMaxExpr;
+use Flow\PostgreSql\Protobuf\AST\NamedArgExpr;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\NullTest;
+use Flow\PostgreSql\Protobuf\AST\ResTarget;
+use Flow\PostgreSql\Protobuf\AST\RowExpr;
+use Flow\PostgreSql\Protobuf\AST\SubLink;
+use Flow\PostgreSql\Protobuf\AST\XmlExpr;
 
 /**
  * Strips TypeCast wrappers from a protobuf expression AST.
@@ -37,7 +36,7 @@ use Flow\PostgreSql\Protobuf\AST\{
  */
 final readonly class TypeCastStripper implements NodeModifier
 {
-    public static function nodeClasses() : array
+    public static function nodeClasses(): array
     {
         return [
             ResTarget::class,
@@ -59,7 +58,7 @@ final readonly class TypeCastStripper implements NodeModifier
         ];
     }
 
-    public function modify(object $node, ModificationContext $context) : int|object|null
+    public function modify(object $node, ModificationContext $context): int|object|null
     {
         match (true) {
             $node instanceof ResTarget => $this->stripResTarget($node),
@@ -78,13 +77,16 @@ final readonly class TypeCastStripper implements NodeModifier
             $node instanceof NamedArgExpr => $this->stripNamedArgExpr($node),
             $node instanceof SubLink => $this->stripSubLink($node),
             $node instanceof XmlExpr => $this->stripXmlExpr($node),
-            default => throw new \LogicException(\sprintf('TypeCastStripper dispatched for unhandled node type %s', $node::class)),
+            default => throw new \LogicException(\sprintf(
+                'TypeCastStripper dispatched for unhandled node type %s',
+                $node::class,
+            )),
         };
 
         return null;
     }
 
-    private function stripAExpr(A_Expr $node) : void
+    private function stripAExpr(A_Expr $node): void
     {
         if ($node->getLexpr() !== null) {
             $node->setLexpr($this->unwrap($node->getLexpr()));
@@ -95,24 +97,24 @@ final readonly class TypeCastStripper implements NodeModifier
         }
     }
 
-    private function stripArrayExpr(A_ArrayExpr $node) : void
+    private function stripArrayExpr(A_ArrayExpr $node): void
     {
         $node->setElements($this->unwrapAll($node->getElements()));
     }
 
-    private function stripBooleanTest(BooleanTest $node) : void
+    private function stripBooleanTest(BooleanTest $node): void
     {
         if ($node->getArg() !== null) {
             $node->setArg($this->unwrap($node->getArg()));
         }
     }
 
-    private function stripBoolExpr(BoolExpr $node) : void
+    private function stripBoolExpr(BoolExpr $node): void
     {
         $node->setArgs($this->unwrapAll($node->getArgs()));
     }
 
-    private function stripCaseExpr(CaseExpr $node) : void
+    private function stripCaseExpr(CaseExpr $node): void
     {
         if ($node->getArg() !== null) {
             $node->setArg($this->unwrap($node->getArg()));
@@ -123,7 +125,7 @@ final readonly class TypeCastStripper implements NodeModifier
         }
     }
 
-    private function stripCaseWhen(CaseWhen $node) : void
+    private function stripCaseWhen(CaseWhen $node): void
     {
         if ($node->getExpr() !== null) {
             $node->setExpr($this->unwrap($node->getExpr()));
@@ -134,12 +136,12 @@ final readonly class TypeCastStripper implements NodeModifier
         }
     }
 
-    private function stripCoalesceExpr(CoalesceExpr $node) : void
+    private function stripCoalesceExpr(CoalesceExpr $node): void
     {
         $node->setArgs($this->unwrapAll($node->getArgs()));
     }
 
-    private function stripFuncCall(FuncCall $node) : void
+    private function stripFuncCall(FuncCall $node): void
     {
         $node->setArgs($this->unwrapAll($node->getArgs()));
         $node->setAggOrder($this->unwrapAll($node->getAggOrder()));
@@ -149,52 +151,52 @@ final readonly class TypeCastStripper implements NodeModifier
         }
     }
 
-    private function stripIndirection(A_Indirection $node) : void
+    private function stripIndirection(A_Indirection $node): void
     {
         if ($node->getArg() !== null) {
             $node->setArg($this->unwrap($node->getArg()));
         }
     }
 
-    private function stripMinMaxExpr(MinMaxExpr $node) : void
+    private function stripMinMaxExpr(MinMaxExpr $node): void
     {
         $node->setArgs($this->unwrapAll($node->getArgs()));
     }
 
-    private function stripNamedArgExpr(NamedArgExpr $node) : void
+    private function stripNamedArgExpr(NamedArgExpr $node): void
     {
         if ($node->getArg() !== null) {
             $node->setArg($this->unwrap($node->getArg()));
         }
     }
 
-    private function stripNullTest(NullTest $node) : void
+    private function stripNullTest(NullTest $node): void
     {
         if ($node->getArg() !== null) {
             $node->setArg($this->unwrap($node->getArg()));
         }
     }
 
-    private function stripResTarget(ResTarget $node) : void
+    private function stripResTarget(ResTarget $node): void
     {
         if ($node->getVal() !== null) {
             $node->setVal($this->unwrap($node->getVal()));
         }
     }
 
-    private function stripRowExpr(RowExpr $node) : void
+    private function stripRowExpr(RowExpr $node): void
     {
         $node->setArgs($this->unwrapAll($node->getArgs()));
     }
 
-    private function stripSubLink(SubLink $node) : void
+    private function stripSubLink(SubLink $node): void
     {
         if ($node->getTestexpr() !== null) {
             $node->setTestexpr($this->unwrap($node->getTestexpr()));
         }
     }
 
-    private function stripXmlExpr(XmlExpr $node) : void
+    private function stripXmlExpr(XmlExpr $node): void
     {
         $node->setArgs($this->unwrapAll($node->getArgs()));
         $node->setNamedArgs($this->unwrapAll($node->getNamedArgs()));
@@ -204,7 +206,7 @@ final readonly class TypeCastStripper implements NodeModifier
      * Unwrap any TypeCast wrappers at the top of $node, returning the inner arg.
      * Stacked TypeCasts are fully collapsed.
      */
-    private function unwrap(Node $node) : Node
+    private function unwrap(Node $node): Node
     {
         while ($node->hasTypeCast()) {
             $inner = $node->getTypeCast()?->getArg();
@@ -224,7 +226,7 @@ final readonly class TypeCastStripper implements NodeModifier
      *
      * @return array<Node>
      */
-    private function unwrapAll(iterable $nodes) : array
+    private function unwrapAll(iterable $nodes): array
     {
         $result = [];
 

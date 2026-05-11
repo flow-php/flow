@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroup;
 
-use Flow\Parquet\ParquetFile\{Compressions, Encodings, Statistics};
+use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Flow\Parquet\ParquetFile\Statistics;
 use Flow\Parquet\ThriftModel\ColumnMetaData;
 
 final readonly class ColumnChunk
@@ -36,10 +38,9 @@ final readonly class ColumnChunk
         private ?int $dataPageOffset,
         private ?int $indexPageOffset,
         private ?Statistics $statistics,
-    ) {
-    }
+    ) {}
 
-    public static function fromThrift(\Flow\Parquet\ThriftModel\ColumnChunk $thrift) : self
+    public static function fromThrift(\Flow\Parquet\ThriftModel\ColumnChunk $thrift): self
     {
         return new self(
             PhysicalType::from($thrift->meta_data->type),
@@ -47,27 +48,29 @@ final readonly class ColumnChunk
             (int) $thrift->meta_data->num_values,
             (int) $thrift->file_offset,
             $thrift->meta_data->path_in_schema,
-            \array_map(static fn ($encoding) => Encodings::from($encoding), $thrift->meta_data->encodings),
+            \array_map(static fn($encoding) => Encodings::from($encoding), $thrift->meta_data->encodings),
             (int) $thrift->meta_data->total_compressed_size,
             (int) $thrift->meta_data->total_uncompressed_size,
-            $thrift->meta_data->dictionary_page_offset !== null ? (int) $thrift->meta_data->dictionary_page_offset : null,
+            $thrift->meta_data->dictionary_page_offset !== null
+                ? (int) $thrift->meta_data->dictionary_page_offset
+                : null,
             $thrift->meta_data->data_page_offset !== null ? (int) $thrift->meta_data->data_page_offset : null,
             $thrift->meta_data->index_page_offset !== null ? (int) $thrift->meta_data->index_page_offset : null,
             $thrift->meta_data->statistics ? Statistics::fromThrift($thrift->meta_data->statistics) : null,
         );
     }
 
-    public function codec() : Compressions
+    public function codec(): Compressions
     {
         return $this->codec;
     }
 
-    public function dataPageOffset() : ?int
+    public function dataPageOffset(): ?int
     {
         return $this->dataPageOffset;
     }
 
-    public function dictionaryPageOffset() : ?int
+    public function dictionaryPageOffset(): ?int
     {
         return $this->dictionaryPageOffset;
     }
@@ -75,36 +78,34 @@ final readonly class ColumnChunk
     /**
      * @return array<Encodings>
      */
-    public function encodings() : array
+    public function encodings(): array
     {
         return $this->encodings;
     }
 
-    public function fileOffset() : int
+    public function fileOffset(): int
     {
         return $this->fileOffset;
     }
 
-    public function flatPath() : string
+    public function flatPath(): string
     {
         return \implode('.', $this->path);
     }
 
-    public function pageOffset() : int
+    public function pageOffset(): int
     {
         return \min(
             // @phpstan-ignore-next-line
-            \array_filter(
-                [
-                    $this->dictionaryPageOffset,
-                    $this->dataPageOffset,
-                    $this->indexPageOffset,
-                ],
-            )
+            \array_filter([
+                $this->dictionaryPageOffset,
+                $this->dataPageOffset,
+                $this->indexPageOffset,
+            ]),
         );
     }
 
-    public function statistics() : ?StatisticsReader
+    public function statistics(): ?StatisticsReader
     {
         if ($this->statistics === null) {
             return null;
@@ -113,23 +114,23 @@ final readonly class ColumnChunk
         return new StatisticsReader($this->statistics);
     }
 
-    public function totalCompressedSize() : int
+    public function totalCompressedSize(): int
     {
         return $this->totalCompressedSize;
     }
 
-    public function totalUncompressedSize() : int
+    public function totalUncompressedSize(): int
     {
         return $this->totalUncompressedSize;
     }
 
-    public function toThrift() : \Flow\Parquet\ThriftModel\ColumnChunk
+    public function toThrift(): \Flow\Parquet\ThriftModel\ColumnChunk
     {
         return new \Flow\Parquet\ThriftModel\ColumnChunk([
             'file_offset' => $this->fileOffset,
             'meta_data' => new ColumnMetaData([
                 'type' => $this->type->value,
-                'encodings' => \array_map(static fn (Encodings $encoding) => $encoding->value, $this->encodings),
+                'encodings' => \array_map(static fn(Encodings $encoding) => $encoding->value, $this->encodings),
                 'path_in_schema' => $this->path,
                 'codec' => $this->codec->value,
                 'num_values' => $this->valuesCount,
@@ -143,12 +144,12 @@ final readonly class ColumnChunk
         ]);
     }
 
-    public function type() : PhysicalType
+    public function type(): PhysicalType
     {
         return $this->type;
     }
 
-    public function valuesCount() : int
+    public function valuesCount(): int
     {
         return $this->valuesCount;
     }

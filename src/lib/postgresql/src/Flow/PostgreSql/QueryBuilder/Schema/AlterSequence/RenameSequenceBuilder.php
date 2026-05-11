@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\AlterSequence;
 
-use Flow\PostgreSql\Protobuf\AST\{DropBehavior, ObjectType, RangeVar, RenameStmt};
+use Flow\PostgreSql\Protobuf\AST\DropBehavior;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\Protobuf\AST\RenameStmt;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class RenameSequenceBuilder implements RenameSequenceFinalStep
@@ -16,15 +19,14 @@ final readonly class RenameSequenceBuilder implements RenameSequenceFinalStep
         private ?string $schema,
         private string $newName,
         private bool $ifExists,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $sequence, ?string $schema, string $newName, bool $ifExists) : self
+    public static function create(string $sequence, ?string $schema, string $newName, bool $ifExists): self
     {
         return new self($sequence, $schema, $newName, $ifExists);
     }
 
-    public function toAst() : RenameStmt
+    public function toAst(): RenameStmt
     {
         $stmt = new RenameStmt();
         $stmt->setRenameType(ObjectType::OBJECT_SEQUENCE);

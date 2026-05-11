@@ -4,27 +4,36 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use function Flow\ETL\DSL\{array_to_rows,
-    datetime_schema,
-    float_schema,
-    integer_schema,
-    list_schema,
-    rows,
-    schema,
-    string_schema,
-    structure_schema,
-    uuid_schema};
-use function Flow\Types\DSL\{type_float, type_integer, type_list, type_string, type_structure};
+use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Extractor, FlowContext, Row\EntryFactory, Rows, Schema};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Rows;
+use Flow\ETL\Schema;
+
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\integer_schema;
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\string_schema;
+use function Flow\ETL\DSL\structure_schema;
+use function Flow\ETL\DSL\uuid_schema;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final readonly class FakeStaticOrdersExtractor implements Extractor
 {
-    public function __construct(private int $count = 1_000)
-    {
-    }
+    public function __construct(
+        private int $count = 1_000,
+    ) {}
 
-    public static function schema() : Schema
+    public static function schema(): Schema
     {
         return schema(
             integer_schema('index'),
@@ -34,27 +43,25 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
             float_schema('discount', true),
             string_schema('email'),
             string_schema('customer'),
-            structure_schema(
-                'address',
-                type_structure([
-                    'street' => type_string(),
-                    'city' => type_string(),
-                    'zip' => type_string(),
-                    'country' => type_string(),
-                ])
-            ),
+            structure_schema('address', type_structure([
+                'street' => type_string(),
+                'city' => type_string(),
+                'zip' => type_string(),
+                'country' => type_string(),
+            ])),
             list_schema('notes', type_list(type_string())),
-            list_schema('items', type_list(
-                type_structure([
+            list_schema(
+                'items',
+                type_list(type_structure([
                     'sku' => type_string(),
                     'quantity' => type_integer(),
                     'price' => type_float(),
-                ])
-            ))
+                ])),
+            ),
         );
     }
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         foreach ($this->rawData() as $row) {
             yield array_to_rows($row, $context->entryFactory(), schema: self::schema());
@@ -64,7 +71,7 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
     /**
      * @return \Generator<array<string, mixed>>
      */
-    public function rawData() : \Generator
+    public function rawData(): \Generator
     {
         $skus = [
             ['sku' => 'SKU_0001', 'name' => 'Product 1', 'price' => 0.14],
@@ -114,7 +121,7 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
         }
     }
 
-    public function toRows(EntryFactory $entryFactory = new EntryFactory()) : Rows
+    public function toRows(EntryFactory $entryFactory = new EntryFactory()): Rows
     {
         $rows = rows();
 

@@ -4,26 +4,30 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
-use function Flow\ETL\Adapter\CSV\from_csv;
-use function Flow\ETL\DSL\{df, ref, schema_to_ascii};
-use function Flow\ETL\DSL\flow_context;
-use function Flow\Filesystem\DSL\path_real;
-use Flow\ETL\{Config, Row, Rows, Tests\FlowTestCase};
+use Flow\ETL\Config;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
+use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Tests\OperatingSystem;
+
+use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\schema_to_ascii;
+use function Flow\Filesystem\DSL\path_real;
 
 final class CSVExtractorTest extends FlowTestCase
 {
     use OperatingSystem;
 
-    public function test_bom_removal_utf16_be() : void
+    public function test_bom_removal_utf16_be(): void
     {
-        $extractor = from_csv(
-            $path = path_real(__DIR__ . '/../Fixtures/with_utf16be_bom.csv'),
-        );
-        self::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf16be_bom.csv', "\xFE\xFF"));
+        $extractor = from_csv($path = path_real(__DIR__ . '/../Fixtures/with_utf16be_bom.csv'));
+        static::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf16be_bom.csv', "\xFE\xFF"));
 
-        self::assertSame(
+        static::assertSame(
             [
                 [
                     [
@@ -35,20 +39,18 @@ final class CSVExtractorTest extends FlowTestCase
                 ],
             ],
             \array_map(
-                static fn (Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build())))
-            )
+                static fn(Rows $r) => $r->toArray(),
+                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+            ),
         );
     }
 
-    public function test_bom_removal_utf16_le() : void
+    public function test_bom_removal_utf16_le(): void
     {
-        $extractor = from_csv(
-            $path = path_real(__DIR__ . '/../Fixtures/with_utf16le_bom.csv'),
-        );
-        self::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf16le_bom.csv', "\xFF\xFE"));
+        $extractor = from_csv($path = path_real(__DIR__ . '/../Fixtures/with_utf16le_bom.csv'));
+        static::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf16le_bom.csv', "\xFF\xFE"));
 
-        self::assertSame(
+        static::assertSame(
             [
                 [
                     [
@@ -60,21 +62,19 @@ final class CSVExtractorTest extends FlowTestCase
                 ],
             ],
             \array_map(
-                static fn (Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build())))
-            )
+                static fn(Rows $r) => $r->toArray(),
+                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+            ),
         );
     }
 
-    public function test_bom_removal_utf32_be() : void
+    public function test_bom_removal_utf32_be(): void
     {
-        $extractor = from_csv(
-            $path = path_real(__DIR__ . '/../Fixtures/with_utf32be_bom.csv'),
-        );
+        $extractor = from_csv($path = path_real(__DIR__ . '/../Fixtures/with_utf32be_bom.csv'));
 
-        self::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf32be_bom.csv', "\x00\x00\xFE\xFF"));
+        static::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf32be_bom.csv', "\x00\x00\xFE\xFF"));
 
-        self::assertSame(
+        static::assertSame(
             [
                 [
                     [
@@ -86,21 +86,19 @@ final class CSVExtractorTest extends FlowTestCase
                 ],
             ],
             \array_map(
-                static fn (Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build())))
-            )
+                static fn(Rows $r) => $r->toArray(),
+                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+            ),
         );
     }
 
-    public function test_bom_removal_utf32_le() : void
+    public function test_bom_removal_utf32_le(): void
     {
-        $extractor = from_csv(
-            $path = path_real(__DIR__ . '/../Fixtures/with_utf32le_bom.csv'),
-        );
+        $extractor = from_csv($path = path_real(__DIR__ . '/../Fixtures/with_utf32le_bom.csv'));
 
-        self::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf32le_bom.csv', "\xFF\xFE\x00\x00"));
+        static::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf32le_bom.csv', "\xFF\xFE\x00\x00"));
 
-        self::assertSame(
+        static::assertSame(
             [
                 [
                     [
@@ -112,21 +110,19 @@ final class CSVExtractorTest extends FlowTestCase
                 ],
             ],
             \array_map(
-                static fn (Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build())))
-            )
+                static fn(Rows $r) => $r->toArray(),
+                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+            ),
         );
     }
 
-    public function test_bom_removal_utf8() : void
+    public function test_bom_removal_utf8(): void
     {
-        $extractor = from_csv(
-            $path = path_real(__DIR__ . '/../Fixtures/with_utf8_bom.csv'),
-        );
+        $extractor = from_csv($path = path_real(__DIR__ . '/../Fixtures/with_utf8_bom.csv'));
 
-        self::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf8_bom.csv', "\xEF\xBB\xBF"));
+        static::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf8_bom.csv', "\xEF\xBB\xBF"));
 
-        self::assertSame(
+        static::assertSame(
             [
                 [
                     [
@@ -138,20 +134,20 @@ final class CSVExtractorTest extends FlowTestCase
                 ],
             ],
             \array_map(
-                static fn (Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build())))
-            )
+                static fn(Rows $r) => $r->toArray(),
+                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+            ),
         );
     }
 
-    public function test_extracting_csv_empty_columns_as_empty_strings() : void
+    public function test_extracting_csv_empty_columns_as_empty_strings(): void
     {
         $extractor = from_csv(
             $path = path_real(__DIR__ . '/../Fixtures/file_with_empty_columns.csv'),
             empty_to_null: false,
         );
 
-        self::assertSame(
+        static::assertSame(
             [
                 [
                     [
@@ -171,19 +167,17 @@ final class CSVExtractorTest extends FlowTestCase
                 ],
             ],
             \array_map(
-                static fn (Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build())))
-            )
+                static fn(Rows $r) => $r->toArray(),
+                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+            ),
         );
     }
 
-    public function test_extracting_csv_empty_columns_as_null() : void
+    public function test_extracting_csv_empty_columns_as_null(): void
     {
-        $extractor = from_csv(
-            __DIR__ . '/../Fixtures/file_with_empty_columns.csv'
-        );
+        $extractor = from_csv(__DIR__ . '/../Fixtures/file_with_empty_columns.csv');
 
-        self::assertSame(
+        static::assertSame(
             [
                 [
                     [
@@ -201,19 +195,17 @@ final class CSVExtractorTest extends FlowTestCase
                 ],
             ],
             \array_map(
-                static fn (Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(flow_context(\Flow\ETL\DSL\config())))
-            )
+                static fn(Rows $r) => $r->toArray(),
+                \iterator_to_array($extractor->extract(flow_context(\Flow\ETL\DSL\config()))),
+            ),
         );
     }
 
-    public function test_extracting_csv_empty_headers() : void
+    public function test_extracting_csv_empty_headers(): void
     {
-        $extractor = from_csv(
-            __DIR__ . '/../Fixtures/file_with_empty_headers.csv'
-        );
+        $extractor = from_csv(__DIR__ . '/../Fixtures/file_with_empty_headers.csv');
 
-        self::assertSame(
+        static::assertSame(
             [
                 [
                     ['e00' => null, 'name' => null, 'active' => 'false'],
@@ -223,22 +215,20 @@ final class CSVExtractorTest extends FlowTestCase
                 ],
             ],
             \array_map(
-                static fn (Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(flow_context(\Flow\ETL\DSL\config())))
-            )
+                static fn(Rows $r) => $r->toArray(),
+                \iterator_to_array($extractor->extract(flow_context(\Flow\ETL\DSL\config()))),
+            ),
         );
     }
 
-    public function test_extracting_csv_files_with_header() : void
+    public function test_extracting_csv_files_with_header(): void
     {
         $path = __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv';
 
-        $rows = df()
-            ->read(from_csv($path))
-            ->fetch();
+        $rows = df()->read(from_csv($path))->fetch();
 
         foreach ($rows as $row) {
-            self::assertSame(
+            static::assertSame(
                 [
                     'Year',
                     'Industry_aggregation_NZSIOC',
@@ -250,30 +240,24 @@ final class CSVExtractorTest extends FlowTestCase
                     'Variable_category',
                     'Value',
                     'Industry_code_ANZSIC06',
-
                 ],
-                \array_keys($row->toArray())
+                \array_keys($row->toArray()),
             );
         }
 
-        self::assertSame(998, $rows->count());
+        static::assertSame(998, $rows->count());
     }
 
-    public function test_extracting_csv_files_with_schema() : void
+    public function test_extracting_csv_files_with_schema(): void
     {
         $path = __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv';
 
         $rows = df()
-            ->read(
-                from_csv($path, schema: $schema = df()
-                ->read(from_csv($path))
-                ->autoCast()
-                ->schema())
-            )
+            ->read(from_csv($path, schema: $schema = df()->read(from_csv($path))->autoCast()->schema()))
             ->fetch();
 
         foreach ($rows as $row) {
-            self::assertSame(
+            static::assertSame(
                 [
                     'Year',
                     'Industry_aggregation_NZSIOC',
@@ -285,176 +269,154 @@ final class CSVExtractorTest extends FlowTestCase
                     'Variable_category',
                     'Value',
                     'Industry_code_ANZSIC06',
-
                 ],
-                \array_keys($row->toArray())
+                \array_keys($row->toArray()),
             );
         }
 
-        self::assertSame(998, $rows->count());
-        self::assertEquals($schema, $rows->schema());
+        static::assertSame(998, $rows->count());
+        static::assertEquals($schema, $rows->schema());
 
-        self::assertSame(
-            <<<'SCHEMA'
-schema
-|-- Year: integer
-|-- Industry_aggregation_NZSIOC: string
-|-- Industry_code_NZSIOC: string
-|-- Industry_name_NZSIOC: string
-|-- Units: string
-|-- Variable_code: string
-|-- Variable_name: string
-|-- Variable_category: string
-|-- Value: string
-|-- Industry_code_ANZSIC06: string
+        static::assertSame(<<<'SCHEMA'
+            schema
+            |-- Year: integer
+            |-- Industry_aggregation_NZSIOC: string
+            |-- Industry_code_NZSIOC: string
+            |-- Industry_name_NZSIOC: string
+            |-- Units: string
+            |-- Variable_code: string
+            |-- Variable_name: string
+            |-- Variable_category: string
+            |-- Value: string
+            |-- Industry_code_ANZSIC06: string
 
-SCHEMA,
-            schema_to_ascii($rows->schema())
-        );
-
+            SCHEMA, schema_to_ascii($rows->schema()));
     }
 
-    public function test_extracting_csv_files_without_header() : void
+    public function test_extracting_csv_files_without_header(): void
     {
         $extractor = from_csv(
             __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv',
-            false
+            false,
         );
 
         $total = 0;
 
         /** @var Rows $rows */
         foreach ($extractor->extract(flow_context(\Flow\ETL\DSL\config())) as $rows) {
-            $rows->each(function (Row $row) : void {
+            $rows->each(function (Row $row): void {
                 $this->assertSame(
                     ['e00', 'e01', 'e02', 'e03', 'e04', 'e05', 'e06', 'e07', 'e08', 'e09'],
-                    \array_keys($row->toArray())
+                    \array_keys($row->toArray()),
                 );
             });
             $total += $rows->count();
         }
 
-        self::assertSame(999, $total);
+        static::assertSame(999, $total);
     }
 
-    public function test_extracting_csv_with_corrupted_row() : void
+    public function test_extracting_csv_with_corrupted_row(): void
     {
-        $rows = df()
-            ->extract(from_csv(__DIR__ . '/../Fixtures/corrupted_row.csv'))
-            ->fetch();
+        $rows = df()->extract(from_csv(__DIR__ . '/../Fixtures/corrupted_row.csv'))->fetch();
 
-        self::assertSame(3, $rows->count());
+        static::assertSame(3, $rows->count());
     }
 
-    public function test_extracting_csv_with_more_columns_than_headers() : void
+    public function test_extracting_csv_with_more_columns_than_headers(): void
     {
-        $extractor = from_csv(
-            __DIR__ . '/../Fixtures/more_columns_than_headers.csv'
-        );
+        $extractor = from_csv(__DIR__ . '/../Fixtures/more_columns_than_headers.csv');
 
         $total = 0;
 
         /** @var Rows $rows */
         foreach ($extractor->extract(flow_context(\Flow\ETL\DSL\config())) as $rows) {
-            $rows->each(function (Row $row) : void {
-                $this->assertSame(
-                    ['id', 'name'],
-                    \array_keys($row->toArray())
-                );
+            $rows->each(function (Row $row): void {
+                $this->assertSame(['id', 'name'], \array_keys($row->toArray()));
             });
             $total += $rows->count();
         }
 
-        self::assertSame(1, $total);
+        static::assertSame(1, $total);
     }
 
-    public function test_extracting_csv_with_more_headers_than_columns() : void
+    public function test_extracting_csv_with_more_headers_than_columns(): void
     {
-        $extractor = from_csv(
-            path_real(__DIR__ . '/../Fixtures/more_headers_than_columns.csv')
-        );
+        $extractor = from_csv(path_real(__DIR__ . '/../Fixtures/more_headers_than_columns.csv'));
 
         $total = 0;
 
         /** @var Rows $rows */
         foreach ($extractor->extract(flow_context(\Flow\ETL\DSL\config())) as $rows) {
-            $rows->each(function (Row $row) : void {
-                $this->assertSame(
-                    ['id', 'name', 'active'],
-                    \array_keys($row->toArray())
-                );
+            $rows->each(function (Row $row): void {
+                $this->assertSame(['id', 'name', 'active'], \array_keys($row->toArray()));
             });
             $total += $rows->count();
         }
 
-        self::assertSame(1, $total);
+        static::assertSame(1, $total);
     }
 
-    public function test_extracting_csv_with_more_than_1000_characters_per_line_splits_rows() : void
+    public function test_extracting_csv_with_more_than_1000_characters_per_line_splits_rows(): void
     {
-        self::assertCount(
+        static::assertCount(
             1,
             df()
                 ->read(from_csv(__DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv'))
                 ->fetch()
                 ->toArray(),
-            'Long line was broken down into two rows.'
+            'Long line was broken down into two rows.',
         );
     }
 
-    public function test_extracting_csv_with_more_than_1000_characters_per_line_with_increased_read_in_line_option() : void
+    public function test_extracting_csv_with_more_than_1000_characters_per_line_with_increased_read_in_line_option(): void
     {
-        self::assertCount(
+        static::assertCount(
             1,
             df()
-                ->read(from_csv(__DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv', characters_read_in_line: 2000))
+                ->read(from_csv(
+                    __DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv',
+                    characters_read_in_line: 2000,
+                ))
                 ->fetch()
                 ->toArray(),
-            'Long line was read as one row.'
+            'Long line was read as one row.',
         );
     }
 
-    public function test_extracting_csv_with_multiline_strings() : void
+    public function test_extracting_csv_with_multiline_strings(): void
     {
         if ($this->isWindows()) {
-            self::markTestSkipped('This test is failing on windows due to different new line characters.');
+            static::markTestSkipped('This test is failing on windows due to different new line characters.');
         }
 
-        $extractor = from_csv(
-            __DIR__ . '/../Fixtures/multiline_strings.csv'
-        );
+        $extractor = from_csv(__DIR__ . '/../Fixtures/multiline_strings.csv');
 
-        $rows = df()
-            ->read($extractor)
-            ->fetch();
+        $rows = df()->read($extractor)->fetch();
 
-        self::assertSame(1, $rows->count());
+        static::assertSame(1, $rows->count());
 
         $row = $rows->first();
-        self::assertSame('ABBA', $row->valueOf('artist'));
-        self::assertSame("Ahe's My Kind Of Girl", $row->valueOf('song'));
-        self::assertSame('/a/abba/ahes+my+kind+of+girl_20598417.html', $row->valueOf('link'));
+        static::assertSame('ABBA', $row->valueOf('artist'));
+        static::assertSame("Ahe's My Kind Of Girl", $row->valueOf('song'));
+        static::assertSame('/a/abba/ahes+my+kind+of+girl_20598417.html', $row->valueOf('link'));
 
         $expectedText = "Look at her face, it's a wonderful face  \nAnd it means something special to me  \nLook at the way that she smiles when she sees me  \nHow lucky can one fellow be?  \n  \nShe's just my kind of girl, she makes me feel fine  \nWho could ever believe that she could be mine?  \nShe's just my kind of girl, without her I'm blue  \nAnd if she ever leaves me what could I do, what could I do?  \n  \nAnd when we go for a walk in the park  \nAnd she holds me and squeezes my hand  \nWe'll go on walking for hours and talking  \nAbout all the things that we plan  \n  \nShe's just my kind of girl, she makes me feel fine  \nWho could ever believe that she could be mine?  \nShe's just my kind of girl, without her I'm blue  \nAnd if she ever leaves me what could I do, what could I do?\n\n";
 
-        self::assertSame($expectedText, $row->valueOf('text'));
+        static::assertSame($expectedText, $row->valueOf('text'));
     }
 
-    public function test_limit() : void
+    public function test_limit(): void
     {
-
         $extractor = from_csv(path_real(__DIR__ . '/../Fixtures/orders_flow.csv'));
         $extractor->changeLimit(2);
 
-        self::assertCount(
-            2,
-            \iterator_to_array($extractor->extract(flow_context(\Flow\ETL\DSL\config())))
-        );
+        static::assertCount(2, \iterator_to_array($extractor->extract(flow_context(\Flow\ETL\DSL\config()))));
     }
 
-    public function test_loading_data_from_all_partitions() : void
+    public function test_loading_data_from_all_partitions(): void
     {
-        self::assertSame(
+        static::assertSame(
             [
                 ['group' => '1', 'id' => 1, 'value' => 'a'],
                 ['group' => '1', 'id' => 2, 'value' => 'b'],
@@ -470,36 +432,34 @@ SCHEMA,
                 ->withEntry('id', ref('id')->cast('int'))
                 ->sortBy(ref('id'))
                 ->fetch()
-                ->toArray()
+                ->toArray(),
         );
     }
 
-    public function test_signal_stop() : void
+    public function test_signal_stop(): void
     {
         $extractor = from_csv(path_real(__DIR__ . '/../Fixtures/orders_flow.csv'));
 
         $generator = $extractor->extract(flow_context(\Flow\ETL\DSL\config()));
 
-        self::assertTrue($generator->valid());
+        static::assertTrue($generator->valid());
         $generator->next();
-        self::assertTrue($generator->valid());
+        static::assertTrue($generator->valid());
         $generator->next();
-        self::assertTrue($generator->valid());
+        static::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
-        self::assertFalse($generator->valid());
+        static::assertFalse($generator->valid());
     }
 
-    public function test_without_bom_removal_utf8() : void
+    public function test_without_bom_removal_utf8(): void
     {
-        $extractor = from_csv(
-            $path = path_real(__DIR__ . '/../Fixtures/with_utf8_bom.csv'),
-        );
+        $extractor = from_csv($path = path_real(__DIR__ . '/../Fixtures/with_utf8_bom.csv'));
 
         $extractor = $extractor->withBOMRemoval(false);
 
-        self::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf8_bom.csv', "\xEF\xBB\xBF"));
+        static::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf8_bom.csv', "\xEF\xBB\xBF"));
 
-        self::assertSame(
+        static::assertSame(
             [
                 [
                     [
@@ -511,13 +471,13 @@ SCHEMA,
                 ],
             ],
             \array_map(
-                static fn (Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build())))
-            )
+                static fn(Rows $r) => $r->toArray(),
+                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+            ),
         );
     }
 
-    private function ensureBOMExists(string $path, string $BOM) : bool
+    private function ensureBOMExists(string $path, string $BOM): bool
     {
         $handle = fopen($path, 'rb');
 

@@ -43,7 +43,7 @@ final readonly class ChainDetector implements ResourceDetector
         $this->detectors = $detectors;
     }
 
-    public function detect() : Resource
+    public function detect(): Resource
     {
         $resource = Resource::empty();
 

@@ -4,22 +4,27 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Transformers;
 
-use Flow\PostgreSql\AST\{ModificationContext, NodeModifier};
-use Flow\PostgreSql\Protobuf\AST\{DefElem, ExplainStmt, Integer, Node, PBString, SelectStmt};
+use Flow\PostgreSql\AST\ModificationContext;
+use Flow\PostgreSql\AST\NodeModifier;
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\ExplainStmt;
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 
 final readonly class ExplainModifier implements NodeModifier
 {
     public function __construct(
         private ExplainConfig $config,
-    ) {
-    }
+    ) {}
 
-    public static function nodeClasses() : array
+    public static function nodeClasses(): array
     {
         return [SelectStmt::class];
     }
 
-    public function modify(object $node, ModificationContext $context) : ?object
+    public function modify(object $node, ModificationContext $context): ?object
     {
         if (!$context->isTopLevel()) {
             return null;
@@ -32,7 +37,7 @@ final readonly class ExplainModifier implements NodeModifier
         return $this->wrapWithExplain($node);
     }
 
-    private function createDefElemBool(string $name) : Node
+    private function createDefElemBool(string $name): Node
     {
         $defElem = new DefElem();
         $defElem->setDefname($name);
@@ -43,7 +48,7 @@ final readonly class ExplainModifier implements NodeModifier
         return $node;
     }
 
-    private function createDefElemInt(string $name, int $value) : Node
+    private function createDefElemInt(string $name, int $value): Node
     {
         $defElem = new DefElem();
         $defElem->setDefname($name);
@@ -62,7 +67,7 @@ final readonly class ExplainModifier implements NodeModifier
         return $node;
     }
 
-    private function createDefElemString(string $name, string $value) : Node
+    private function createDefElemString(string $name, string $value): Node
     {
         $defElem = new DefElem();
         $defElem->setDefname($name);
@@ -80,7 +85,7 @@ final readonly class ExplainModifier implements NodeModifier
         return $node;
     }
 
-    private function wrapWithExplain(SelectStmt $stmt) : Node
+    private function wrapWithExplain(SelectStmt $stmt): Node
     {
         $explainStmt = new ExplainStmt();
 

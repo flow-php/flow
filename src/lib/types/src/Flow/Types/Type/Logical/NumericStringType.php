@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 
 /**
@@ -12,7 +13,7 @@ use Flow\Types\Type;
  */
 final class NumericStringType implements Type
 {
-    public function assert(mixed $value) : mixed
+    public function assert(mixed $value): mixed
     {
         if ($this->isValid($value)) {
             return $value;
@@ -21,7 +22,7 @@ final class NumericStringType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
-    public function cast(mixed $value) : string
+    public function cast(mixed $value): string
     {
         if ($this->isValid($value)) {
             return $value;
@@ -40,19 +41,19 @@ final class NumericStringType implements Type
         throw new CastingException($value, $this);
     }
 
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return \is_string($value) && \is_numeric($value);
     }
 
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'numeric-string',
         ];
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return 'numeric-string';
     }

@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer;
 
-use Flow\Telemetry\{Attributes, InstrumentationScope, Resource};
+use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Context\ContextStorage;
-use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
-use Flow\Telemetry\Tracer\Sampler\{AlwaysOnSampler, Sampler};
+use Flow\Telemetry\ErrorHandler\ErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
+use Flow\Telemetry\InstrumentationScope;
+use Flow\Telemetry\Resource;
+use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
+use Flow\Telemetry\Tracer\Sampler\Sampler;
 use Psr\Clock\ClockInterface;
 
 /**
@@ -43,8 +47,7 @@ final readonly class TracerProvider
         private Sampler $sampler = new AlwaysOnSampler(),
         private SpanLimits $limits = new SpanLimits(),
         private ErrorHandler $errorHandler = new ErrorLogHandler(),
-    ) {
-    }
+    ) {}
 
     /**
      * Create a tracer for the given instrumentation scope.
@@ -58,8 +61,13 @@ final readonly class TracerProvider
      * @param null|string $schemaUrl Schema URL for semantic conventions
      * @param null|Attributes $attributes Additional scope attributes
      */
-    public function tracer(Resource $resource, string $name, string $version = 'unknown', ?string $schemaUrl = null, ?Attributes $attributes = null) : Tracer
-    {
+    public function tracer(
+        Resource $resource,
+        string $name,
+        string $version = 'unknown',
+        ?string $schemaUrl = null,
+        ?Attributes $attributes = null,
+    ): Tracer {
         return new Tracer(
             $resource,
             new InstrumentationScope($name, $version, $schemaUrl, $attributes ?? new Attributes()),

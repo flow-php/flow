@@ -17,7 +17,7 @@ final readonly class ValueNormalizer
      *
      * @return array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable
      */
-    public function normalize(mixed $value) : string|int|float|bool|\DateTimeInterface|\Throwable|array
+    public function normalize(mixed $value): string|int|float|bool|\DateTimeInterface|\Throwable|array
     {
         if ($value === null) {
             return 'null';
@@ -36,10 +36,8 @@ final readonly class ValueNormalizer
         }
 
         if (\is_array($value)) {
-            /** @var array<bool|\DateTimeInterface|float|int|string|\Throwable> $result */
-            $result = \array_map(fn ($v) => $this->normalize($v), $value);
-
-            return $result;
+            /** @phpstan-ignore return.type */
+            return \array_map(fn($v) => $this->normalize($v), $value);
         }
 
         if (\is_object($value)) {

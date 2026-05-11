@@ -7,7 +7,8 @@ namespace Flow\Telemetry\Provider\Memory;
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Meter\Metric;
-use Flow\Telemetry\Signal\{SignalType, Signals};
+use Flow\Telemetry\Signal\Signals;
+use Flow\Telemetry\Signal\SignalType;
 use Flow\Telemetry\Tracer\Span;
 
 /**
@@ -33,7 +34,7 @@ final class MemoryExporter implements Exporter
      */
     private array $spans = [];
 
-    public function export(Signals $signal) : bool
+    public function export(Signals $signal): bool
     {
         match ($signal->type) {
             SignalType::LOGS => $this->logs = [...$this->logs, ...$signal->allLogs()],
@@ -47,7 +48,7 @@ final class MemoryExporter implements Exporter
     /**
      * @return array<LogEntry>
      */
-    public function logs() : array
+    public function logs(): array
     {
         return $this->logs;
     }
@@ -55,26 +56,24 @@ final class MemoryExporter implements Exporter
     /**
      * @return array<Metric>
      */
-    public function metrics() : array
+    public function metrics(): array
     {
         return $this->metrics;
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->logs = [];
         $this->metrics = [];
         $this->spans = [];
     }
 
-    public function shutdown() : void
-    {
-    }
+    public function shutdown(): void {}
 
     /**
      * @return array<Span>
      */
-    public function spans() : array
+    public function spans(): array
     {
         return $this->spans;
     }

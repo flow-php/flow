@@ -4,10 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML;
 
-use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\{Exception\InvalidArgumentException, Extractor, FlowContext};
-use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PathFiltering, Signal};
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\FileExtractor;
+use Flow\ETL\Extractor\Limitable;
+use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\PathFiltering;
+use Flow\ETL\Extractor\Signal;
+use Flow\ETL\FlowContext;
 use Flow\Filesystem\Path;
+
+use function Flow\ETL\DSL\array_to_rows;
 
 final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -36,12 +43,14 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
         private readonly string $xmlNodePath = '',
     ) {
         if (!$this->path->isLocal()) {
-            throw new InvalidArgumentException('XMLReaderExtractor supports only local files, please use XMLParserExtractor that depends on php-xml extension.');
+            throw new InvalidArgumentException(
+                'XMLReaderExtractor supports only local files, please use XMLParserExtractor that depends on php-xml extension.',
+            );
         }
         $this->resetLimit();
     }
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
@@ -70,7 +79,7 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
 
                     $currentPath = \implode('/', $currentPathBreadCrumbs);
 
-                    if ($currentPath === $this->xmlNodePath || ($this->xmlNodePath === '' && $xmlReader->depth === 0)) {
+                    if ($currentPath === $this->xmlNodePath || $this->xmlNodePath === '' && $xmlReader->depth === 0) {
                         $dom = new \DOMDocument('1.0', '');
                         $node = $xmlReader->expand($dom);
 
@@ -83,7 +92,11 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
                             $rowData = ['node' => $node];
                         }
 
-                        $signal = yield array_to_rows($rowData, $context->entryFactory(), $stream->path()->partitions());
+                        $signal = yield array_to_rows(
+                            $rowData,
+                            $context->entryFactory(),
+                            $stream->path()->partitions(),
+                        );
 
                         $this->incrementReturnedRows();
 
@@ -103,7 +116,7 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
         }
     }
 
-    public function source() : Path
+    public function source(): Path
     {
         return $this->path;
     }

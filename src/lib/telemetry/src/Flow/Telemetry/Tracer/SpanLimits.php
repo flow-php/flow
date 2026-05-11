@@ -49,13 +49,12 @@ final readonly class SpanLimits
         public int $attributePerEventCountLimit = self::DEFAULT_ATTRIBUTE_PER_EVENT_COUNT_LIMIT,
         public int $attributePerLinkCountLimit = self::DEFAULT_ATTRIBUTE_PER_LINK_COUNT_LIMIT,
         public ?int $attributeValueLengthLimit = null,
-    ) {
-    }
+    ) {}
 
     /**
      * Create SpanLimits with default values.
      */
-    public static function default() : self
+    public static function default(): self
     {
         return new self();
     }
@@ -63,7 +62,7 @@ final readonly class SpanLimits
     /**
      * Create SpanLimits with unlimited values (for development/debugging).
      */
-    public function unlimited() : self
+    public function unlimited(): self
     {
         return new self(
             attributeCountLimit: PHP_INT_MAX,

@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Trigger;
 
 interface DropTriggerOnStep
 {
-    public function ifExists() : self;
+    public function ifExists(): self;
 
-    public function on(string $table, ?string $schema = null) : DropTriggerFinalStep;
+    public function on(string $table, ?string $schema = null): DropTriggerFinalStep;
 }

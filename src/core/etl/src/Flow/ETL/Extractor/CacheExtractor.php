@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
-use Flow\ETL\{Cache\CacheIndex, Extractor, FlowContext, Rows};
+use Flow\ETL\Cache\CacheIndex;
+use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 
 final class CacheExtractor implements Extractor
 {
@@ -14,10 +17,9 @@ final class CacheExtractor implements Extractor
 
     public function __construct(
         private readonly string $id,
-    ) {
-    }
+    ) {}
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         if (!$context->cache()->has($this->id)) {
             if ($this->fallbackExtractor !== null) {
@@ -54,14 +56,14 @@ final class CacheExtractor implements Extractor
         }
     }
 
-    public function withClearOnFinish(bool $clear) : self
+    public function withClearOnFinish(bool $clear): self
     {
         $this->clear = $clear;
 
         return $this;
     }
 
-    public function withFallbackExtractor(Extractor $fallbackExtractor) : self
+    public function withFallbackExtractor(Extractor $fallbackExtractor): self
     {
         $this->fallbackExtractor = $fallbackExtractor;
 

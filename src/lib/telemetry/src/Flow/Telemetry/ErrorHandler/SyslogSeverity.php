@@ -7,7 +7,7 @@ namespace Flow\Telemetry\ErrorHandler;
 /**
  * RFC 5424 syslog severity levels.
  */
-enum SyslogSeverity : int
+enum SyslogSeverity: int
 {
     case Alert = 1;
     case Critical = 2;

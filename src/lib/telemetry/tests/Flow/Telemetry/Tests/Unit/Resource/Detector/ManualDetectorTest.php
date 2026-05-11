@@ -9,15 +9,15 @@ use PHPUnit\Framework\TestCase;
 
 final class ManualDetectorTest extends TestCase
 {
-    public function test_detect_returns_empty_resource_for_empty_attributes() : void
+    public function test_detect_returns_empty_resource_for_empty_attributes(): void
     {
         $detector = new ManualDetector([]);
         $resource = $detector->detect();
 
-        self::assertTrue($resource->isEmpty());
+        static::assertTrue($resource->isEmpty());
     }
 
-    public function test_detect_returns_provided_attributes() : void
+    public function test_detect_returns_provided_attributes(): void
     {
         $detector = new ManualDetector([
             'service.name' => 'my-service',
@@ -25,21 +25,21 @@ final class ManualDetectorTest extends TestCase
         ]);
         $resource = $detector->detect();
 
-        self::assertSame('my-service', $resource->get('service.name'));
-        self::assertSame('1.0.0', $resource->get('service.version'));
+        static::assertSame('my-service', $resource->get('service.name'));
+        static::assertSame('1.0.0', $resource->get('service.version'));
     }
 
-    public function test_detect_supports_array_values() : void
+    public function test_detect_supports_array_values(): void
     {
         $detector = new ManualDetector([
             'tags' => ['production', 'web'],
         ]);
         $resource = $detector->detect();
 
-        self::assertSame(['production', 'web'], $resource->get('tags'));
+        static::assertSame(['production', 'web'], $resource->get('tags'));
     }
 
-    public function test_detect_supports_boolean_values() : void
+    public function test_detect_supports_boolean_values(): void
     {
         $detector = new ManualDetector([
             'enabled' => true,
@@ -47,11 +47,11 @@ final class ManualDetectorTest extends TestCase
         ]);
         $resource = $detector->detect();
 
-        self::assertTrue($resource->get('enabled'));
-        self::assertFalse($resource->get('debug'));
+        static::assertTrue($resource->get('enabled'));
+        static::assertFalse($resource->get('debug'));
     }
 
-    public function test_detect_supports_numeric_values() : void
+    public function test_detect_supports_numeric_values(): void
     {
         $detector = new ManualDetector([
             'port' => 8080,
@@ -59,7 +59,7 @@ final class ManualDetectorTest extends TestCase
         ]);
         $resource = $detector->detect();
 
-        self::assertSame(8080, $resource->get('port'));
-        self::assertSame(0.5, $resource->get('ratio'));
+        static::assertSame(8080, $resource->get('port'));
+        static::assertSame(0.5, $resource->get('ratio'));
     }
 }

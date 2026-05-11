@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_equals, type_optional};
 use Dom\HTMLDocument;
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition\HTMLDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
+
+use function Flow\Types\DSL\type_equals;
+use function Flow\Types\DSL\type_optional;
 
 /**
  * @implements Entry<?HTMLDocument>
@@ -36,22 +39,22 @@ final class HTMLEntry implements Entry
         $this->definition = new HTMLDefinition($this->name, null === $this->value, $metadata ?: Metadata::empty());
     }
 
-    public function __toString() : string
+    public function __toString(): string
     {
         return $this->toString();
     }
 
-    public function definition() : HTMLDefinition
+    public function definition(): HTMLDefinition
     {
         return $this->definition;
     }
 
-    public function duplicate() : static
+    public function duplicate(): static
     {
         return new self($this->name, $this->value ? clone $this->value : null, $this->definition->metadata());
     }
 
-    public function is(Reference|string $name) : bool
+    public function is(Reference|string $name): bool
     {
         if ($name instanceof Reference) {
             return $this->name === $name->name();
@@ -60,7 +63,7 @@ final class HTMLEntry implements Entry
         return $this->name === $name;
     }
 
-    public function isEqual(Entry $entry) : bool
+    public function isEqual(Entry $entry): bool
     {
         if (!$entry instanceof self || !$this->is($entry->name())) {
             return false;
@@ -73,22 +76,22 @@ final class HTMLEntry implements Entry
         return $entry->value()?->saveHtml() === $this->value?->saveHtml();
     }
 
-    public function map(callable $mapper) : static
+    public function map(callable $mapper): static
     {
         return new self($this->name, $mapper($this->value));
     }
 
-    public function name() : string
+    public function name(): string
     {
         return $this->name;
     }
 
-    public function rename(string $name) : static
+    public function rename(string $name): static
     {
         return new self($name, $this->value, $this->definition->metadata());
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         if (null === $this->value) {
             return '';
@@ -97,17 +100,17 @@ final class HTMLEntry implements Entry
         return $this->value->saveHtml();
     }
 
-    public function type() : Type
+    public function type(): Type
     {
         return $this->definition->type();
     }
 
-    public function value() : ?HTMLDocument
+    public function value(): ?HTMLDocument
     {
         return $this->value;
     }
 
-    public function withValue(mixed $value) : static
+    public function withValue(mixed $value): static
     {
         return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }

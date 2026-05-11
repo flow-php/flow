@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Reader;
 
-use Flow\Parquet\{
-    Dremel\ColumnData\ReadFlatColumnValues,
-    Options,
-    ParquetFile\Compressions,
-    ParquetFile\Data\Codec
-};
 use Flow\Parquet\Binary\ByteOrder;
+use Flow\Parquet\Dremel\ColumnData\ReadFlatColumnValues;
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\ParquetFile\Page\{Dictionary, PageHeader};
+use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\ParquetFile\Data\Codec;
+use Flow\Parquet\ParquetFile\Page\Dictionary;
 use Flow\Parquet\ParquetFile\Page\Header\Type;
+use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 final readonly class PageReader
@@ -21,8 +20,7 @@ final readonly class PageReader
     public function __construct(
         private ByteOrder $byteOrder,
         private Options $options,
-    ) {
-    }
+    ) {}
 
     /**
      * @param resource $stream
@@ -33,23 +31,28 @@ final readonly class PageReader
         Compressions $codec,
         ?Dictionary $dictionary,
         $stream,
-    ) : ReadFlatColumnValues {
+    ): ReadFlatColumnValues {
         switch ($pageHeader->type()) {
             case Type::DATA_PAGE:
-                $data = (new Codec($this->options))
-                    ->decompress(
-                        /** @phpstan-ignore-next-line */
-                        \fread($stream, $pageHeader->compressedPageSize()),
-                        $codec,
-                        $pageHeader->uncompressedPageSize()
-                    );
+                $data = (new Codec($this->options))->decompress(
+                    /** @phpstan-ignore-next-line */
+                    \fread($stream, $pageHeader->compressedPageSize()),
+                    $codec,
+                    $pageHeader->uncompressedPageSize(),
+                );
 
-                /** @phpstan-ignore-next-line  */
-                return (new ColumnDataDecoder($this->byteOrder))->decodeData($data, $column, $pageHeader->dataPageHeader(), $dictionary);
+                return (new ColumnDataDecoder($this->byteOrder))->decodeData(
+                    $data,
+                    $column,
+                    /** @phpstan-ignore-next-line */
+                    $pageHeader->dataPageHeader(),
+                    $dictionary,
+                );
             case Type::DATA_PAGE_V2:
-
-                /* @phpstan-ignore-next-line */
-                $levelsLength = $pageHeader->dataPageHeaderV2()->repetitionsByteLength() + $pageHeader->dataPageHeaderV2()->definitionsByteLength();
+                $levelsLength =
+                    /** @phpstan-ignore-next-line */
+                    $pageHeader->dataPageHeaderV2()->repetitionsByteLength() /** @phpstan-ignore-next-line */
+                    + $pageHeader->dataPageHeaderV2()->definitionsByteLength();
 
                 if ($levelsLength) {
                     /* @phpstan-ignore-next-line */
@@ -58,13 +61,12 @@ final readonly class PageReader
                     $levels = '';
                 }
 
-                $data = (new Codec($this->options))
-                    ->decompress(
-                        /** @phpstan-ignore-next-line */
-                        \fread($stream, $pageHeader->compressedPageSize() - $levelsLength),
-                        $codec,
-                        $pageHeader->uncompressedPageSize() - $levelsLength
-                    );
+                $data = (new Codec($this->options))->decompress(
+                    /** @phpstan-ignore-next-line */
+                    \fread($stream, $pageHeader->compressedPageSize() - $levelsLength),
+                    $codec,
+                    $pageHeader->uncompressedPageSize() - $levelsLength,
+                );
 
                 return (new ColumnDataDecoder($this->byteOrder))
                     /** @phpstan-ignore-next-line */
@@ -78,23 +80,21 @@ final readonly class PageReader
     /**
      * @param resource $stream
      */
-    public function readDictionary(FlatColumn $column, PageHeader $pageHeader, Compressions $codec, $stream) : Dictionary
+    public function readDictionary(FlatColumn $column, PageHeader $pageHeader, Compressions $codec, $stream): Dictionary
     {
         if (!$pageHeader->dictionaryPageHeader()) {
             throw new RuntimeException("Can't read dictionary from non dictionary page header");
         }
 
-        return (new ColumnDataDecoder($this->byteOrder))
-            ->decodeDictionary(
-                (new Codec($this->options))
-                    ->decompress(
-                        /** @phpstan-ignore-next-line */
-                        $pageHeader->compressedPageSize() === 0 ? '' : \fread($stream, $pageHeader->compressedPageSize()),
-                        $codec,
-                        $pageHeader->uncompressedPageSize()
-                    ),
-                $column,
-                $pageHeader->dictionaryPageHeader()
-            );
+        return (new ColumnDataDecoder($this->byteOrder))->decodeDictionary(
+            (new Codec($this->options))->decompress(
+                /** @phpstan-ignore-next-line */
+                $pageHeader->compressedPageSize() === 0 ? '' : \fread($stream, $pageHeader->compressedPageSize()),
+                $codec,
+                $pageHeader->uncompressedPageSize(),
+            ),
+            $column,
+            $pageHeader->dictionaryPageHeader(),
+        );
     }
 }

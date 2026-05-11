@@ -4,13 +4,33 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Select;
 
-use Flow\PostgreSql\Protobuf\AST\{LimitOption, Node, ResTarget, SelectStmt as ProtobufSelectStmt};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
-use Flow\PostgreSql\QueryBuilder\Clause\{LockingClause, OrderBy, WindowDefinition, WithClause};
-use Flow\PostgreSql\QueryBuilder\Condition\{Condition, ConditionBuilder, ConditionFactory};
-use Flow\PostgreSql\QueryBuilder\Exception\{InvalidAstException, InvalidBuilderStateException};
-use Flow\PostgreSql\QueryBuilder\Expression\{AliasedExpression, Column, Expression, ExpressionFactory, Literal};
-use Flow\PostgreSql\QueryBuilder\Table\{AliasedTable, DerivedTable, JoinType, JoinedTable, Table, TableFunction, TableReference};
+use Flow\PostgreSql\Protobuf\AST\LimitOption;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ResTarget;
+use Flow\PostgreSql\Protobuf\AST\SelectStmt as ProtobufSelectStmt;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\Clause\LockingClause;
+use Flow\PostgreSql\QueryBuilder\Clause\OrderBy;
+use Flow\PostgreSql\QueryBuilder\Clause\WindowDefinition;
+use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
+use Flow\PostgreSql\QueryBuilder\Condition\Condition;
+use Flow\PostgreSql\QueryBuilder\Condition\ConditionBuilder;
+use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidBuilderStateException;
+use Flow\PostgreSql\QueryBuilder\Expression\AliasedExpression;
+use Flow\PostgreSql\QueryBuilder\Expression\Column;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
+use Flow\PostgreSql\QueryBuilder\Expression\Literal;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
+use Flow\PostgreSql\QueryBuilder\Table\AliasedTable;
+use Flow\PostgreSql\QueryBuilder\Table\DerivedTable;
+use Flow\PostgreSql\QueryBuilder\Table\JoinedTable;
+use Flow\PostgreSql\QueryBuilder\Table\JoinType;
+use Flow\PostgreSql\QueryBuilder\Table\Table;
+use Flow\PostgreSql\QueryBuilder\Table\TableFunction;
+use Flow\PostgreSql\QueryBuilder\Table\TableReference;
 
 final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, SelectSelectStep
 {
@@ -43,15 +63,14 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         private ?int $limit = null,
         private ?int $offset = null,
         private array $locks = [],
-    ) {
-    }
+    ) {}
 
-    public static function create() : self
+    public static function create(): self
     {
         return new self();
     }
 
-    public static function fromAst(ProtobufSelectStmt $selectStmt) : static
+    public static function fromAst(ProtobufSelectStmt $selectStmt): static
     {
         $with = null;
         $withClause = $selectStmt->getWithClause();
@@ -216,23 +235,19 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public static function with(WithClause $with) : SelectSelectStep
+    public static function with(WithClause $with): SelectSelectStep
     {
         return new self(with: $with);
     }
 
-    public function crossJoin(string|TableReference $table) : SelectJoinStep
+    public function crossJoin(string|TableReference $table): SelectJoinStep
     {
         if (\is_string($table)) {
             $id = QualifiedIdentifier::parse($table);
             $table = new Table($id->name(), $id->schema());
         }
 
-        $join = new JoinedTable(
-            left: $this->from[\count($this->from) - 1],
-            right: $table,
-            joinType: JoinType::CROSS,
-        );
+        $join = new JoinedTable(left: $this->from[\count($this->from) - 1], right: $table, joinType: JoinType::CROSS);
 
         return new self(
             with: $this->with,
@@ -254,7 +269,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function except(SelectFinalStep $other) : SelectOrderByStep
+    public function except(SelectFinalStep $other): SelectOrderByStep
     {
         return new self(
             with: $this->with,
@@ -272,7 +287,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function exceptAll(SelectFinalStep $other) : SelectOrderByStep
+    public function exceptAll(SelectFinalStep $other): SelectOrderByStep
     {
         return new self(
             with: $this->with,
@@ -290,7 +305,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function forKeyShare(string ...$tables) : SelectFinalStep
+    public function forKeyShare(string ...$tables): SelectFinalStep
     {
         $lock = LockingClause::forKeyShare(\array_values($tables));
 
@@ -314,7 +329,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function forNoKeyUpdate(string ...$tables) : SelectFinalStep
+    public function forNoKeyUpdate(string ...$tables): SelectFinalStep
     {
         $lock = LockingClause::forNoKeyUpdate(\array_values($tables));
 
@@ -338,7 +353,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function forShare(string ...$tables) : SelectFinalStep
+    public function forShare(string ...$tables): SelectFinalStep
     {
         $lock = LockingClause::forShare(\array_values($tables));
 
@@ -362,7 +377,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function forUpdate(string ...$tables) : SelectFinalStep
+    public function forUpdate(string ...$tables): SelectFinalStep
     {
         $lock = LockingClause::forUpdate(\array_values($tables));
 
@@ -386,7 +401,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function forUpdateSkipLocked(string ...$tables) : SelectFinalStep
+    public function forUpdateSkipLocked(string ...$tables): SelectFinalStep
     {
         $lock = LockingClause::forUpdate(\array_values($tables))->skipLocked();
 
@@ -410,19 +425,16 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function from(string|TableReference ...$tables) : SelectJoinStep
+    public function from(string|TableReference ...$tables): SelectJoinStep
     {
-        $tables = \array_map(
-            static function (string|TableReference $t) : TableReference {
-                if ($t instanceof TableReference) {
-                    return $t;
-                }
-                $id = QualifiedIdentifier::parse($t);
+        $tables = \array_map(static function (string|TableReference $t): TableReference {
+            if ($t instanceof TableReference) {
+                return $t;
+            }
+            $id = QualifiedIdentifier::parse($t);
 
-                return new Table($id->name(), $id->schema());
-            },
-            $tables,
-        );
+            return new Table($id->name(), $id->schema());
+        }, $tables);
 
         return new self(
             with: $this->with,
@@ -443,7 +455,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function fullJoin(string|TableReference $table, Condition $on) : SelectJoinStep
+    public function fullJoin(string|TableReference $table, Condition $on): SelectJoinStep
     {
         if (\is_string($table)) {
             $id = QualifiedIdentifier::parse($table);
@@ -477,12 +489,11 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function groupBy(string|Expression ...$expressions) : SelectHavingStep
+    public function groupBy(string|Expression ...$expressions): SelectHavingStep
     {
-        $expressions = \array_map(
-            static fn (string|Expression $e) : Expression => $e instanceof Expression ? $e : Column::fromParts(QualifiedIdentifier::parse($e)->parts()),
-            $expressions,
-        );
+        $expressions = \array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+            ? $e
+            : Column::fromParts(QualifiedIdentifier::parse($e)->parts()), $expressions);
 
         return new self(
             with: $this->with,
@@ -504,7 +515,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function having(Condition $condition) : SelectWindowStep
+    public function having(Condition $condition): SelectWindowStep
     {
         return new self(
             with: $this->with,
@@ -526,7 +537,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function intersect(SelectFinalStep $other) : SelectOrderByStep
+    public function intersect(SelectFinalStep $other): SelectOrderByStep
     {
         return new self(
             with: $this->with,
@@ -544,7 +555,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function intersectAll(SelectFinalStep $other) : SelectOrderByStep
+    public function intersectAll(SelectFinalStep $other): SelectOrderByStep
     {
         return new self(
             with: $this->with,
@@ -562,7 +573,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function join(string|TableReference $table, Condition $on) : SelectJoinStep
+    public function join(string|TableReference $table, Condition $on): SelectJoinStep
     {
         if (\is_string($table)) {
             $id = QualifiedIdentifier::parse($table);
@@ -596,7 +607,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function leftJoin(string|TableReference $table, Condition $on) : SelectJoinStep
+    public function leftJoin(string|TableReference $table, Condition $on): SelectJoinStep
     {
         if (\is_string($table)) {
             $id = QualifiedIdentifier::parse($table);
@@ -630,7 +641,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function limit(int $limit) : SelectOffsetStep
+    public function limit(int $limit): SelectOffsetStep
     {
         return new self(
             with: $this->with,
@@ -652,7 +663,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function offset(int $offset) : SelectLockingStep
+    public function offset(int $offset): SelectLockingStep
     {
         return new self(
             with: $this->with,
@@ -674,7 +685,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function orderBy(OrderBy ...$items) : SelectLimitStep
+    public function orderBy(OrderBy ...$items): SelectLimitStep
     {
         return new self(
             with: $this->with,
@@ -696,7 +707,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function rightJoin(string|TableReference $table, Condition $on) : SelectJoinStep
+    public function rightJoin(string|TableReference $table, Condition $on): SelectJoinStep
     {
         if (\is_string($table)) {
             $id = QualifiedIdentifier::parse($table);
@@ -730,12 +741,11 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function select(string|Expression ...$expressions) : self
+    public function select(string|Expression ...$expressions): self
     {
-        $expressions = \array_map(
-            static fn (string|Expression $e) : Expression => $e instanceof Expression ? $e : Column::fromParts(QualifiedIdentifier::parse($e)->parts()),
-            $expressions,
-        );
+        $expressions = \array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+            ? $e
+            : Column::fromParts(QualifiedIdentifier::parse($e)->parts()), $expressions);
 
         return new self(
             with: $this->with,
@@ -756,12 +766,11 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function selectDistinct(string|Expression ...$expressions) : SelectFromStep
+    public function selectDistinct(string|Expression ...$expressions): SelectFromStep
     {
-        $expressions = \array_map(
-            static fn (string|Expression $e) : Expression => $e instanceof Expression ? $e : Column::fromParts(QualifiedIdentifier::parse($e)->parts()),
-            $expressions,
-        );
+        $expressions = \array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+            ? $e
+            : Column::fromParts(QualifiedIdentifier::parse($e)->parts()), $expressions);
 
         return new self(
             with: $this->with,
@@ -782,9 +791,13 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function selectDistinctOn(array $distinctExpressions, string|Expression ...$selectExpressions) : SelectFromStep
-    {
-        $coerce = static fn (string|Expression $e) : Expression => $e instanceof Expression ? $e : Column::fromParts(QualifiedIdentifier::parse($e)->parts());
+    public function selectDistinctOn(
+        array $distinctExpressions,
+        string|Expression ...$selectExpressions,
+    ): SelectFromStep {
+        $coerce = static fn(string|Expression $e): Expression => $e instanceof Expression
+            ? $e
+            : Column::fromParts(QualifiedIdentifier::parse($e)->parts());
 
         return new self(
             with: $this->with,
@@ -806,7 +819,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function toAst() : ProtobufSelectStmt
+    public function toAst(): ProtobufSelectStmt
     {
         if ($this->setOp !== null && $this->setOpRhs !== null) {
             return $this->buildSetOperationAst();
@@ -815,7 +828,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         return $this->buildSimpleSelectAst();
     }
 
-    public function union(SelectFinalStep $other) : SelectOrderByStep
+    public function union(SelectFinalStep $other): SelectOrderByStep
     {
         return new self(
             with: $this->with,
@@ -833,7 +846,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function unionAll(SelectFinalStep $other) : SelectOrderByStep
+    public function unionAll(SelectFinalStep $other): SelectOrderByStep
     {
         return new self(
             with: $this->with,
@@ -851,7 +864,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function where(Condition|ConditionBuilder $condition) : SelectGroupByStep
+    public function where(Condition|ConditionBuilder $condition): SelectGroupByStep
     {
         if ($condition instanceof ConditionBuilder) {
             $resolved = $condition->getCondition();
@@ -883,7 +896,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function window(WindowDefinition ...$windows) : SelectSetOperationStep
+    public function window(WindowDefinition ...$windows): SelectSetOperationStep
     {
         return new self(
             with: $this->with,
@@ -905,7 +918,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    private function buildSetOperationAst() : ProtobufSelectStmt
+    private function buildSetOperationAst(): ProtobufSelectStmt
     {
         $selectStmt = new ProtobufSelectStmt();
 
@@ -963,7 +976,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         return $selectStmt;
     }
 
-    private function buildSimpleSelectAst() : ProtobufSelectStmt
+    private function buildSimpleSelectAst(): ProtobufSelectStmt
     {
         $selectStmt = new ProtobufSelectStmt();
 
@@ -1102,7 +1115,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
     /**
      * @return array{base: null|TableReference, joins: array<JoinedTable>}
      */
-    private static function flattenJoins(Node $joinNode) : array
+    private static function flattenJoins(Node $joinNode): array
     {
         $joined = JoinedTable::fromAst($joinNode);
         $joins = [];
@@ -1126,7 +1139,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         ];
     }
 
-    private static function fromSetOperation(ProtobufSelectStmt $selectStmt, ?WithClause $with) : static
+    private static function fromSetOperation(ProtobufSelectStmt $selectStmt, ?WithClause $with): static
     {
         $op = $selectStmt->getOp();
         $all = $selectStmt->getAll();
@@ -1214,7 +1227,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    private static function tableReferenceFromNode(Node $node) : TableReference
+    private static function tableReferenceFromNode(Node $node): TableReference
     {
         if ($node->hasRangeVar()) {
             $rangeVar = $node->getRangeVar();

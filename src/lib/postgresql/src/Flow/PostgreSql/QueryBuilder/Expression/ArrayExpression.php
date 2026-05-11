@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{A_ArrayExpr, Node};
+use Flow\PostgreSql\Protobuf\AST\A_ArrayExpr;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 /**
@@ -17,10 +18,9 @@ final readonly class ArrayExpression implements Expression
      */
     public function __construct(
         private array $elements,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $arrayExpr = $node->getAArrayExpr();
 
@@ -41,7 +41,7 @@ final readonly class ArrayExpression implements Expression
         return new self($expressions);
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return new AliasedExpression($this, $alias);
     }
@@ -49,12 +49,12 @@ final readonly class ArrayExpression implements Expression
     /**
      * @return array<Expression>
      */
-    public function elements() : array
+    public function elements(): array
     {
         return $this->elements;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $elementNodes = [];
 
@@ -72,7 +72,7 @@ final readonly class ArrayExpression implements Expression
         return $node;
     }
 
-    private static function expressionFromNode(Node $node) : Expression
+    private static function expressionFromNode(Node $node): Expression
     {
         return ExpressionFactory::fromAst($node);
     }

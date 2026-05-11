@@ -8,5 +8,5 @@ use Flow\ETL\Time\Duration;
 
 interface DelayFactory
 {
-    public function delay(int $attempt) : Duration;
+    public function delay(int $attempt): Duration;
 }

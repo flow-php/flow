@@ -17,7 +17,7 @@ final class ParsedExcludeDefinitionMother
         ?string $predicate = null,
         bool $deferrable = false,
         bool $initiallyDeferred = false,
-    ) : ParsedExcludeDefinition {
+    ): ParsedExcludeDefinition {
         return new ParsedExcludeDefinition($accessMethod, $elements, $predicate, $deferrable, $initiallyDeferred);
     }
 }

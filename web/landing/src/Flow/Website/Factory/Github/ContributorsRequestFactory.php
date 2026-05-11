@@ -6,24 +6,28 @@ namespace Flow\Website\Factory\Github;
 
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Nyholm\Psr7\Factory\Psr17Factory;
-use Psr\Http\Message\{RequestInterface, ResponseInterface};
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 final readonly class ContributorsRequestFactory implements NextRequestFactory
 {
     public function __construct(
+        #[\SensitiveParameter]
         public string $githubToken,
         private Psr17Factory $factory = new Psr17Factory(),
-    ) {
-    }
+    ) {}
 
-    public function create(?ResponseInterface $previousResponse = null) : ?RequestInterface
+    public function create(?ResponseInterface $previousResponse = null): ?RequestInterface
     {
         if ($previousResponse instanceof ResponseInterface) {
             return null;
         }
 
         return $this->factory
-            ->createRequest('GET', 'https://api.github.com/repos/flow-php/flow/contributors?q=contributions&order=desc&per_page=50')
+            ->createRequest(
+                'GET',
+                'https://api.github.com/repos/flow-php/flow/contributors?q=contributions&order=desc&per_page=50',
+            )
             ->withHeader('Accept', 'application/vnd.github+json')
             ->withHeader('Authorization', 'Bearer ' . $this->githubToken)
             ->withHeader('X-GitHub-Api-Version', '2022-11-28')

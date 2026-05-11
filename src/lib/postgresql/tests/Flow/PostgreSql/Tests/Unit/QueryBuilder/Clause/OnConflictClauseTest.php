@@ -4,32 +4,37 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Clause;
 
-use Flow\PostgreSql\QueryBuilder\Clause\{ConflictAction, ConflictTarget, OnConflictClause};
-use Flow\PostgreSql\QueryBuilder\Condition\{Comparison, ComparisonOperator};
-use Flow\PostgreSql\QueryBuilder\Expression\{Column, FunctionCall, Literal};
+use Flow\PostgreSql\QueryBuilder\Clause\ConflictAction;
+use Flow\PostgreSql\QueryBuilder\Clause\ConflictTarget;
+use Flow\PostgreSql\QueryBuilder\Clause\OnConflictClause;
+use Flow\PostgreSql\QueryBuilder\Condition\Comparison;
+use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
+use Flow\PostgreSql\QueryBuilder\Expression\Column;
+use Flow\PostgreSql\QueryBuilder\Expression\FunctionCall;
+use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use PHPUnit\Framework\TestCase;
 
 final class OnConflictClauseTest extends TestCase
 {
-    public function test_do_nothing() : void
+    public function test_do_nothing(): void
     {
         $conflict = OnConflictClause::doNothing();
 
-        self::assertSame(ConflictAction::NOTHING, $conflict->action());
-        self::assertNull($conflict->target());
-        self::assertEmpty($conflict->updates());
+        static::assertSame(ConflictAction::NOTHING, $conflict->action());
+        static::assertNull($conflict->target());
+        static::assertEmpty($conflict->updates());
     }
 
-    public function test_do_nothing_with_target() : void
+    public function test_do_nothing_with_target(): void
     {
         $target = ConflictTarget::columns(['email']);
         $conflict = OnConflictClause::doNothing($target);
 
-        self::assertSame(ConflictAction::NOTHING, $conflict->action());
-        self::assertNotNull($conflict->target());
+        static::assertSame(ConflictAction::NOTHING, $conflict->action());
+        static::assertNotNull($conflict->target());
     }
 
-    public function test_do_update() : void
+    public function test_do_update(): void
     {
         $target = ConflictTarget::columns(['email']);
         $conflict = OnConflictClause::doUpdate($target, [
@@ -37,12 +42,12 @@ final class OnConflictClauseTest extends TestCase
             'updated_at' => new FunctionCall(['now']),
         ]);
 
-        self::assertSame(ConflictAction::UPDATE, $conflict->action());
-        self::assertNotNull($conflict->target());
-        self::assertCount(2, $conflict->updates());
+        static::assertSame(ConflictAction::UPDATE, $conflict->action());
+        static::assertNotNull($conflict->target());
+        static::assertCount(2, $conflict->updates());
     }
 
-    public function test_to_ast() : void
+    public function test_to_ast(): void
     {
         $target = ConflictTarget::columns(['email']);
         $conflict = OnConflictClause::doUpdate($target, [
@@ -51,10 +56,10 @@ final class OnConflictClauseTest extends TestCase
         $node = $conflict->toAst();
         $onConflictClause = $node->getOnConflictClause();
 
-        self::assertNotNull($onConflictClause);
+        static::assertNotNull($onConflictClause);
     }
 
-    public function test_to_ast_and_from_ast() : void
+    public function test_to_ast_and_from_ast(): void
     {
         $target = ConflictTarget::columns(['email']);
         $conflict = OnConflictClause::doUpdate($target, [
@@ -63,11 +68,11 @@ final class OnConflictClauseTest extends TestCase
         $node = $conflict->toAst();
         $restored = OnConflictClause::fromAst($node);
 
-        self::assertSame($conflict->action(), $restored->action());
-        self::assertCount(1, $restored->updates());
+        static::assertSame($conflict->action(), $restored->action());
+        static::assertCount(1, $restored->updates());
     }
 
-    public function test_where() : void
+    public function test_where(): void
     {
         $target = ConflictTarget::columns(['email']);
         $conflict = OnConflictClause::doUpdate($target, [
@@ -76,7 +81,7 @@ final class OnConflictClauseTest extends TestCase
         $condition = new Comparison(Column::name('deleted_at'), ComparisonOperator::EQ, Literal::null());
         $conflictWithWhere = $conflict->where($condition);
 
-        self::assertNull($conflict->whereClause());
-        self::assertNotNull($conflictWithWhere->whereClause());
+        static::assertNull($conflict->whereClause());
+        static::assertNotNull($conflictWithWhere->whereClause());
     }
 }

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
-use Flow\ETL\Row\Entry\{XMLElementEntry, XMLEntry};
+use Flow\ETL\Row\Entry\XMLElementEntry;
+use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\ETL\Rows;
 
 final class RowsNormalizer
@@ -14,7 +15,7 @@ final class RowsNormalizer
      *
      * @return array<int, array<string, mixed>>
      */
-    public function normalize(Rows $rows) : array
+    public function normalize(Rows $rows): array
     {
         $normalizedData = [];
 

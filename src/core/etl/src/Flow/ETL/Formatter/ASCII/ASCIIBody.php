@@ -8,11 +8,12 @@ use Flow\ETL\Exception\InvalidArgumentException;
 
 final readonly class ASCIIBody
 {
-    public function __construct(private Headers $headers, private Body $body)
-    {
-    }
+    public function __construct(
+        private Headers $headers,
+        private Body $body,
+    ) {}
 
-    public function print(int|bool $truncate = 20) : string
+    public function print(int|bool $truncate = 20): string
     {
         $buffer = '';
 

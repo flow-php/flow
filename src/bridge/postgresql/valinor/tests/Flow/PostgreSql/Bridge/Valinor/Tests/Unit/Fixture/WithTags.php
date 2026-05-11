@@ -12,6 +12,5 @@ final readonly class WithTags
     public function __construct(
         public int $id,
         public array $tags,
-    ) {
-    }
+    ) {}
 }

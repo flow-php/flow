@@ -6,5 +6,5 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Type;
 
 interface CreateRangeTypeSubtypeStep
 {
-    public function subtype(string $type) : CreateRangeTypeOptionsStep;
+    public function subtype(string $type): CreateRangeTypeOptionsStep;
 }

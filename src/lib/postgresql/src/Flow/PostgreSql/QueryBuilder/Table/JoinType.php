@@ -9,7 +9,7 @@ use Flow\PostgreSql\Protobuf\AST\JoinType as ProtobufJoinType;
 /**
  * Join types enum.
  */
-enum JoinType : string
+enum JoinType: string
 {
     case CROSS = 'CROSS';
     case FULL = 'FULL';
@@ -20,7 +20,7 @@ enum JoinType : string
     case RIGHT = 'RIGHT';
     case RIGHT_OUTER = 'RIGHT OUTER';
 
-    public static function fromProtobuf(int $joinType) : self
+    public static function fromProtobuf(int $joinType): self
     {
         return match ($joinType) {
             ProtobufJoinType::JOIN_INNER => self::INNER,
@@ -31,7 +31,7 @@ enum JoinType : string
         };
     }
 
-    public function toProtobuf() : int
+    public function toProtobuf(): int
     {
         return match ($this) {
             self::INNER => ProtobufJoinType::JOIN_INNER,

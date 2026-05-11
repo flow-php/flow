@@ -8,5 +8,5 @@ use Flow\PostgreSql\QueryBuilder\Schema\ColumnDefinition;
 
 interface CreateTableColumnsStep extends CreateTableFinalStep
 {
-    public function column(ColumnDefinition $column) : self;
+    public function column(ColumnDefinition $column): self;
 }

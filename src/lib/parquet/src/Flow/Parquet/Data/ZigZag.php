@@ -11,9 +11,9 @@ final readonly class ZigZag
      *
      * Implementation follows Protocol Buffers specification using logical right shift
      */
-    public function decode(int $value) : int
+    public function decode(int $value): int
     {
-        return $this->logicalRightShift($value, 1) ^ (-($value & 1));
+        return $this->logicalRightShift($value, 1) ^ -($value & 1);
     }
 
     /**
@@ -26,7 +26,7 @@ final readonly class ZigZag
      *
      * @see https://protobuf.dev/programming-guides/encoding/
      */
-    public function encode(int $value) : int
+    public function encode(int $value): int
     {
         if ($value >= 0) {
             return $this->safeLeftShift($value, 1);
@@ -41,17 +41,16 @@ final readonly class ZigZag
         }
 
         return $this->safeLeftShift(-$value, 1) - 1;
-
     }
 
     /**
      * Perform logical (unsigned) right shift.
      */
-    private function logicalRightShift(int $value, int $bits) : int
+    private function logicalRightShift(int $value, int $bits): int
     {
         if (PHP_INT_SIZE === 8 && $bits === 1) {
             if ($value < 0) {
-                return (($value & 0x7FFFFFFFFFFFFFFF) >> 1) | (0x4000000000000000);
+                return (($value & 0x7FFFFFFFFFFFFFFF) >> 1) | 0x4000000000000000;
             }
         }
 
@@ -61,7 +60,7 @@ final readonly class ZigZag
     /**
      * Safely perform left shift that handles overflow for large values.
      */
-    private function safeLeftShift(int $value, int $bits) : int
+    private function safeLeftShift(int $value, int $bits): int
     {
         if (PHP_INT_SIZE === 8 && $bits === 1) {
             if ($value > (PHP_INT_MAX >> 1)) {
@@ -79,7 +78,7 @@ final readonly class ZigZag
      *
      * @param numeric-string $value
      */
-    private function wrapTo64BitSigned(string $value) : int
+    private function wrapTo64BitSigned(string $value): int
     {
         while (\bccomp($value, '9223372036854775807', 0) > 0) {
             $value = \bcsub($value, '18446744073709551616', 0); // 2^64

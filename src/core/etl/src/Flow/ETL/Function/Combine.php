@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Row};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
 
 final class Combine extends ScalarFunctionChain
 {
@@ -16,19 +17,20 @@ final class Combine extends ScalarFunctionChain
     public function __construct(
         private readonly ScalarFunction|array $keys,
         private readonly ScalarFunction|array $values,
-    ) {
-    }
+    ) {}
 
     /**
      * @return null|array<int|string, mixed>
      */
-    public function eval(Row $row, FlowContext $context) : ?array
+    public function eval(Row $row, FlowContext $context): ?array
     {
         $keys = (new Parameter($this->keys))->asArray($row, $context);
         $values = (new Parameter($this->values))->asArray($row, $context);
 
         if (null === $keys || null === $values) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('Combine function requires non-null arrays'));
+            return $context
+                ->functions()
+                ->invalidResult(new InvalidArgumentException('Combine function requires non-null arrays'));
         }
 
         if ([] === $keys) {
@@ -36,15 +38,27 @@ final class Combine extends ScalarFunctionChain
         }
 
         if (!\array_is_list($keys)) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('Combine function requires keys to be a list'));
+            return $context
+                ->functions()
+                ->invalidResult(new InvalidArgumentException('Combine function requires keys to be a list'));
         }
 
         if (\count($keys) !== \count($values)) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('Combine function requires keys and values arrays to have the same length'));
+            return $context
+                ->functions()
+                ->invalidResult(
+                    new InvalidArgumentException(
+                        'Combine function requires keys and values arrays to have the same length',
+                    ),
+                );
         }
 
         if (!\is_string($keys[0] ?? null) && !\is_int($keys[0] ?? null)) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('Combine function requires keys to be strings or integers'));
+            return $context
+                ->functions()
+                ->invalidResult(
+                    new InvalidArgumentException('Combine function requires keys to be strings or integers'),
+                );
         }
 
         /** @var array<array-key, array-key> $keys */

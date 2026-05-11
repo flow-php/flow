@@ -12,22 +12,23 @@ use Flow\Telemetry\Provider\Memory\MemoryExporter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\{Route, Router};
+use Symfony\Component\Routing\Route;
+use Symfony\Component\Routing\Router;
 
 #[CoversClass(HttpKernelFlushSubscriber::class)]
 final class HttpKernelFlushSubscriberTest extends KernelTestCase
 {
     #[\Override]
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         restore_exception_handler();
         parent::tearDown();
     }
 
-    public function test_flush_is_called_on_terminate() : void
+    public function test_flush_is_called_on_terminate(): void
     {
         $kernel = $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestBundle(FrameworkBundle::class);
                 $kernel->addTestExtensionConfig('framework', [
                     'router' => [
@@ -70,19 +71,19 @@ final class HttpKernelFlushSubscriberTest extends KernelTestCase
         $exporter = $container->get('flow.telemetry.exporter.memory');
         $spansBeforeTerminate = $exporter->spans();
 
-        self::assertCount(0, $spansBeforeTerminate, 'Spans should not be exported before terminate (batching)');
+        static::assertCount(0, $spansBeforeTerminate, 'Spans should not be exported before terminate (batching)');
 
         $kernel->terminate($request, $response);
 
         $spansAfterTerminate = $exporter->spans();
 
-        self::assertCount(1, $spansAfterTerminate, 'Spans should be exported after terminate when flush is called');
+        static::assertCount(1, $spansAfterTerminate, 'Spans should be exported after terminate when flush is called');
     }
 
-    public function test_flush_is_not_called_when_http_kernel_instrumentation_is_disabled() : void
+    public function test_flush_is_not_called_when_http_kernel_instrumentation_is_disabled(): void
     {
         $kernel = $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestBundle(FrameworkBundle::class);
                 $kernel->addTestExtensionConfig('framework', [
                     'router' => [
@@ -126,6 +127,6 @@ final class HttpKernelFlushSubscriberTest extends KernelTestCase
         $exporter = $container->get('flow.telemetry.exporter.memory');
         $spans = $exporter->spans();
 
-        self::assertCount(0, $spans, 'No spans should be exported when instrumentation is disabled');
+        static::assertCount(0, $spans, 'No spans should be exported when instrumentation is disabled');
     }
 }

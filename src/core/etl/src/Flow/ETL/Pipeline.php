@@ -13,12 +13,13 @@ final readonly class Pipeline
 {
     private Segments $segments;
 
-    public function __construct(private Extractor $extractor)
-    {
+    public function __construct(
+        private Extractor $extractor,
+    ) {
         $this->segments = new Segments();
     }
 
-    public function add(Transformer|Loader|Processor $step) : self
+    public function add(Transformer|Loader|Processor $step): self
     {
         $this->segments->add($step);
 
@@ -28,7 +29,7 @@ final readonly class Pipeline
     /**
      * Get the pipeline extractor.
      */
-    public function extractor() : Extractor
+    public function extractor(): Extractor
     {
         return $this->extractor;
     }
@@ -38,7 +39,7 @@ final readonly class Pipeline
      *
      * @param class-string<Loader|Processor|Transformer> $class
      */
-    public function has(string $class) : bool
+    public function has(string $class): bool
     {
         return $this->segments->has($class);
     }
@@ -48,7 +49,7 @@ final readonly class Pipeline
      *
      * @return \Generator<int, Rows>
      */
-    public function process(FlowContext $context) : \Generator
+    public function process(FlowContext $context): \Generator
     {
         $generator = $this->extractor->extract($context);
 
@@ -68,7 +69,7 @@ final readonly class Pipeline
     /**
      * Get the pipeline stages.
      */
-    public function segments() : Segments
+    public function segments(): Segments
     {
         return $this->segments;
     }

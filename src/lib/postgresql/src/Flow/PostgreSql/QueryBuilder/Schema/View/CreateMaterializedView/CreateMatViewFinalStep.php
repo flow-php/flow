@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface CreateMatViewFinalStep extends Sql
 {
-    public function toAst() : CreateTableAsStmt;
+    public function toAst(): CreateTableAsStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

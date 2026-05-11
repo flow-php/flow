@@ -19,7 +19,7 @@ final readonly class FlatValue
         $this->flatPath = $column->flatPath();
     }
 
-    public function __debugInfo() : array
+    public function __debugInfo(): array
     {
         return [
             'column' => [

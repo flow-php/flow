@@ -25,10 +25,9 @@ final readonly class LeagueCommonMarkConverterFactory
         private ContainerBagInterface $parameters,
         private Packages $packages,
         private Manifest $manifest,
-    ) {
-    }
+    ) {}
 
-    public function __invoke() : CommonMarkConverter
+    public function __invoke(): CommonMarkConverter
     {
         $config = [
             'external_link' => [
@@ -68,7 +67,8 @@ final readonly class LeagueCommonMarkConverterFactory
 
         $converter = new CommonMarkConverter($config);
 
-        $converter->getEnvironment()
+        $converter
+            ->getEnvironment()
             ->addExtension(new HeadingPermalinkExtension())
             ->addExtension(new TableOfContentsExtension())
             ->addExtension(new ExternalLinkExtension())
@@ -79,7 +79,10 @@ final readonly class LeagueCommonMarkConverterFactory
             ->addRenderer(FencedCode::class, new FlowCodeRenderer(), 0)
             ->addRenderer(Link::class, new FlowLinkRenderer(), 0)
             ->addRenderer(TableOfContents::class, new TableOfContentsRenderer(), 10)
-            ->addEventListener(DocumentParsedEvent::class, new FlowVersionReplacer($this->parameters->get('flow_version')))
+            ->addEventListener(
+                DocumentParsedEvent::class,
+                new FlowVersionReplacer($this->parameters->get('flow_version')),
+            )
             ->addEventListener(DocumentParsedEvent::class, new FlowManifestRenderer($this->manifest))
             ->addEventListener(DocumentParsedEvent::class, new FlowPackageNavRenderer($this->manifest))
             ->addEventListener(DocumentParsedEvent::class, new FlowDocLinkRenderer());

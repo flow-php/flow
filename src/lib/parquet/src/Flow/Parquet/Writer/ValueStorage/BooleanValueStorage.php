@@ -17,16 +17,16 @@ final class BooleanValueStorage implements ValueStorage
     /**
      * @param array<bool> $values
      */
-    public function addValues(FlatColumn $column, array $values) : void
+    public function addValues(FlatColumn $column, array $values): void
     {
-        $nonNullValues = \array_filter($values, static fn (?bool $value) => $value !== null);
+        $nonNullValues = \array_filter($values, static fn(?bool $value) => $value !== null);
 
         foreach ($nonNullValues as $value) {
             $this->values[] = $value;
         }
     }
 
-    public function getBuffer() : string
+    public function getBuffer(): string
     {
         if (empty($this->values)) {
             return '';
@@ -44,17 +44,17 @@ final class BooleanValueStorage implements ValueStorage
         return $buffer;
     }
 
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return !\count($this->values);
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->values = [];
     }
 
-    public function size() : int
+    public function size(): int
     {
         return \count($this->values);
     }

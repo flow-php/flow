@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\{type_from_array, type_uuid};
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 
+use function Flow\Types\DSL\type_from_array;
+use function Flow\Types\DSL\type_uuid;
+
 final class UuidTypeTest extends TestCase
 {
-    public static function assert_data_provider() : \Generator
+    public static function assert_data_provider(): \Generator
     {
         yield 'valid Uuid' => [
             'value' => new \Flow\Types\Value\Uuid('49e952c8-80ec-4910-a1d6-a19bd46b163d'),
@@ -65,7 +68,7 @@ final class UuidTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider() : \Generator
+    public static function cast_data_provider(): \Generator
     {
         yield 'string to uuid' => [
             'value' => '6c2f6e0e-8d8e-4e9e-8f0e-5a2d9c1c4f6e',
@@ -92,7 +95,7 @@ final class UuidTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider() : \Generator
+    public static function is_valid_data_provider(): \Generator
     {
         yield 'valid Flow Uuid' => [
             'value' => new \Flow\Types\Value\Uuid(Uuid::uuid4()),
@@ -126,47 +129,44 @@ final class UuidTypeTest extends TestCase
     }
 
     #[DataProvider('assert_data_provider')]
-    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
+    public function test_assert(mixed $value, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_uuid()->assert($value);
         } else {
-            self::assertInstanceOf(\Flow\Types\Value\Uuid::class, type_uuid()->assert($value));
+            static::assertInstanceOf(\Flow\Types\Value\Uuid::class, type_uuid()->assert($value));
         }
     }
 
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_uuid()->cast($value);
         } else {
-            self::assertEquals($expected, type_uuid()->cast($value));
+            static::assertEquals($expected, type_uuid()->cast($value));
         }
     }
 
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(mixed $value, bool $expected) : void
+    public function test_is_valid(mixed $value, bool $expected): void
     {
-        self::assertSame($expected, type_uuid()->isValid($value));
+        static::assertSame($expected, type_uuid()->isValid($value));
     }
 
-    public function test_normalization() : void
+    public function test_normalization(): void
     {
         $type = type_uuid();
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
-    public function test_to_string() : void
+    public function test_to_string(): void
     {
-        self::assertSame(
-            'uuid',
-            type_uuid()->toString()
-        );
+        static::assertSame('uuid', type_uuid()->toString());
     }
 }

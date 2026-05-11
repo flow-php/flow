@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{MinMaxExpr, MinMaxOp, Node};
+use Flow\PostgreSql\Protobuf\AST\MinMaxExpr;
+use Flow\PostgreSql\Protobuf\AST\MinMaxOp;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 /**
@@ -23,7 +25,7 @@ final readonly class Greatest implements Expression
         }
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $minMaxExpr = $node->getMinMaxExpr();
 
@@ -50,7 +52,7 @@ final readonly class Greatest implements Expression
         return new self($expressions);
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return new AliasedExpression($this, $alias);
     }
@@ -58,12 +60,12 @@ final readonly class Greatest implements Expression
     /**
      * @return array<Expression>
      */
-    public function expressions() : array
+    public function expressions(): array
     {
         return $this->expressions;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $args = [];
 
@@ -85,7 +87,7 @@ final readonly class Greatest implements Expression
         return $node;
     }
 
-    private static function expressionFromNode(Node $node) : Expression
+    private static function expressionFromNode(Node $node): Expression
     {
         return ExpressionFactory::fromAst($node);
     }

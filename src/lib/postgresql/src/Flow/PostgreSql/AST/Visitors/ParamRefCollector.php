@@ -21,12 +21,12 @@ final class ParamRefCollector implements NodeVisitor
      */
     private array $paramRefs = [];
 
-    public static function nodeClasses() : array
+    public static function nodeClasses(): array
     {
         return [ParamRef::class];
     }
 
-    public function enter(object $node) : ?int
+    public function enter(object $node): ?int
     {
         /** @var ParamRef $node */
         $this->paramRefs[] = $node;
@@ -34,32 +34,29 @@ final class ParamRefCollector implements NodeVisitor
         return null;
     }
 
-    public function getMaxParamNumber() : int
+    public function getMaxParamNumber(): int
     {
         if ($this->paramRefs === []) {
             return 0;
         }
 
-        return \max(\array_map(
-            static fn (ParamRef $ref) : int => $ref->getNumber(),
-            $this->paramRefs
-        ));
+        return \max(\array_map(static fn(ParamRef $ref): int => $ref->getNumber(), $this->paramRefs));
     }
 
     /**
      * @return array<ParamRef>
      */
-    public function getParamRefs() : array
+    public function getParamRefs(): array
     {
         return $this->paramRefs;
     }
 
-    public function leave(object $node) : ?int
+    public function leave(object $node): ?int
     {
         return null;
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->paramRefs = [];
     }

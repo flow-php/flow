@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace Flow\Doctrine\Bulk\Dialect;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Flow\Doctrine\Bulk\{BulkData, Columns, InsertOptions, TableDefinition, UpdateOptions};
+use Flow\Doctrine\Bulk\BulkData;
+use Flow\Doctrine\Bulk\Columns;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
+use Flow\Doctrine\Bulk\InsertOptions;
+use Flow\Doctrine\Bulk\TableDefinition;
+use Flow\Doctrine\Bulk\UpdateOptions;
 
 final readonly class PostgreSQLDialect implements Dialect
 {
-    public function __construct(private AbstractPlatform $platform)
-    {
-    }
+    public function __construct(
+        private AbstractPlatform $platform,
+    ) {}
 
     /**
      * @param TableDefinition $table
@@ -20,15 +24,15 @@ final readonly class PostgreSQLDialect implements Dialect
      *
      * @return string
      */
-    public function prepareDelete(TableDefinition $table, BulkData $bulkData) : string
+    public function prepareDelete(TableDefinition $table, BulkData $bulkData): string
     {
         $columns = $bulkData->columns()->all();
 
         return \sprintf(
             'DELETE FROM %s WHERE (%s) IN (%s)',
             $table->name(),
-            \implode(', ', \array_map(fn ($column) => $this->platform->quoteIdentifier($column), $columns)),
-            $bulkData->toSqlCastedPlaceholders($table)
+            \implode(', ', \array_map(fn($column) => $this->platform->quoteIdentifier($column), $columns)),
+            $bulkData->toSqlCastedPlaceholders($table),
         );
     }
 
@@ -38,26 +42,34 @@ final readonly class PostgreSQLDialect implements Dialect
      *
      * @return string
      */
-    public function prepareInsert(TableDefinition $table, BulkData $bulkData, ?InsertOptions $options = null) : string
+    public function prepareInsert(TableDefinition $table, BulkData $bulkData, ?InsertOptions $options = null): string
     {
         if ($options === null) {
             $options = new PostgreSQLInsertOptions();
         }
 
         if (!$options instanceof PostgreSQLInsertOptions) {
-            throw new RuntimeException('Invalid insert options provided, expected PostgreSQLInsertOptions got: ' . $options::class);
+            throw new RuntimeException('Invalid insert options provided, expected PostgreSQLInsertOptions got: '
+            . $options::class);
         }
 
         if (\count($options->conflictColumns)) {
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT (%s) DO UPDATE SET %s',
                 $table->name(),
-                \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
+                \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+                    $column,
+                ), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders(),
                 \implode(',', $options->conflictColumns),
                 \count($options->updateColumns)
-                    ? $this->updatedSelectedColumns($options->updateColumns, $bulkData->columns(), $table->name(), $options->preserveExistingValues)
-                    : $this->updateAllColumns($bulkData->columns())
+                    ? $this->updatedSelectedColumns(
+                        $options->updateColumns,
+                        $bulkData->columns(),
+                        $table->name(),
+                        $options->preserveExistingValues,
+                    )
+                    : $this->updateAllColumns($bulkData->columns()),
             );
         }
 
@@ -65,12 +77,19 @@ final readonly class PostgreSQLDialect implements Dialect
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT ON CONSTRAINT %s DO UPDATE SET %s',
                 $table->name(),
-                \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
+                \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+                    $column,
+                ), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders(),
                 $options->constraint,
                 \count($options->updateColumns)
-                    ? $this->updatedSelectedColumns($options->updateColumns, $bulkData->columns(), $table->name(), $options->preserveExistingValues)
-                    : $this->updateAllColumns($bulkData->columns())
+                    ? $this->updatedSelectedColumns(
+                        $options->updateColumns,
+                        $bulkData->columns(),
+                        $table->name(),
+                        $options->preserveExistingValues,
+                    )
+                    : $this->updateAllColumns($bulkData->columns()),
             );
         }
 
@@ -78,16 +97,20 @@ final readonly class PostgreSQLDialect implements Dialect
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT DO NOTHING',
                 $table->name(),
-                \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
-                $bulkData->toSqlPlaceholders()
+                \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+                    $column,
+                ), $bulkData->columns()->all())),
+                $bulkData->toSqlPlaceholders(),
             );
         }
 
         return \sprintf(
             'INSERT INTO %s (%s) VALUES %s',
             $table->name(),
-            \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
-            $bulkData->toSqlPlaceholders()
+            \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+                $column,
+            ), $bulkData->columns()->all())),
+            $bulkData->toSqlPlaceholders(),
         );
     }
 
@@ -99,14 +122,15 @@ final readonly class PostgreSQLDialect implements Dialect
      *
      * @return string
      */
-    public function prepareUpdate(TableDefinition $table, BulkData $bulkData, ?UpdateOptions $options = null) : string
+    public function prepareUpdate(TableDefinition $table, BulkData $bulkData, ?UpdateOptions $options = null): string
     {
         if ($options === null) {
             $options = new PostgreSQLUpdateOptions();
         }
 
         if (!$options instanceof PostgreSQLUpdateOptions) {
-            throw new RuntimeException('Invalid update options provided, expected UpdateOptions got: ' . $options::class);
+            throw new RuntimeException('Invalid update options provided, expected UpdateOptions got: '
+            . $options::class);
         }
 
         if (!\count($options->primaryKeyColumns)) {
@@ -121,15 +145,22 @@ final readonly class PostgreSQLDialect implements Dialect
             'UPDATE %s as existing_table SET %s FROM (VALUES %s) as excluded (%s) WHERE %s',
             $table->name(),
             \count($options->updateColumns)
-                ? $this->updatedSelectedColumns($options->updateColumns, $bulkData->columns()->without(...$options->primaryKeyColumns), $table->name(), $options->preserveExistingValues)
+                ? $this->updatedSelectedColumns(
+                    $options->updateColumns,
+                    $bulkData->columns()->without(...$options->primaryKeyColumns),
+                    $table->name(),
+                    $options->preserveExistingValues,
+                )
                 : $this->updateAllColumns($bulkData->columns()->without(...$options->primaryKeyColumns)),
             $bulkData->toSqlCastedPlaceholders($table),
-            \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
-            $this->updatedIndexColumns($options->primaryKeyColumns)
+            \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+                $column,
+            ), $bulkData->columns()->all())),
+            $this->updatedIndexColumns($options->primaryKeyColumns),
         );
     }
 
-    private function updateAllColumns(Columns $columns) : string
+    private function updateAllColumns(Columns $columns): string
     {
         /**
          * https://www.postgresql.org/docs/9.5/sql-insert.html#SQL-ON-CONFLICT
@@ -139,39 +170,54 @@ final readonly class PostgreSQLDialect implements Dialect
         return \implode(
             ',',
             $columns->map(
-                fn (string $column) : string => "{$this->platform->quoteIdentifier($column)} = {$this->platform->quoteIdentifier('excluded.' . $column)}"
-            )
+                fn(string $column): string => "{$this->platform->quoteIdentifier(
+                    $column,
+                )} = {$this->platform->quoteIdentifier('excluded.' . $column)}",
+            ),
         );
     }
 
     /**
      * @param array<string> $updateColumns
      */
-    private function updatedIndexColumns(array $updateColumns) : string
+    private function updatedIndexColumns(array $updateColumns): string
     {
-        return \implode(' AND ', \array_map(fn (string $column) : string => "{$this->platform->quoteIdentifier('existing_table.' . $column)} = {$this->platform->quoteIdentifier('excluded.' . $column)}", $updateColumns));
+        return \implode(' AND ', \array_map(
+            fn(string $column): string => "{$this->platform->quoteIdentifier('existing_table.'
+            . $column)} = {$this->platform->quoteIdentifier('excluded.' . $column)}",
+            $updateColumns,
+        ));
     }
 
     /**
      * @param array<string> $updateColumns
      */
-    private function updatedSelectedColumns(array $updateColumns, Columns $columns, string $tableName, ?bool $preserveExistingValues = null) : string
-    {
+    private function updatedSelectedColumns(
+        array $updateColumns,
+        Columns $columns,
+        string $tableName,
+        ?bool $preserveExistingValues = null,
+    ): string {
         /**
          * https://www.postgresql.org/docs/9.5/sql-insert.html#SQL-ON-CONFLICT
          * The SET and WHERE clauses in ON CONFLICT DO UPDATE have access to the existing row using the
          * table's name (or an alias), and to rows proposed for insertion using the special EXCLUDED table.
          */
-        return \count($updateColumns)
-            ? \implode(',', \array_map(function (string $column) use ($tableName, $preserveExistingValues) : string {
+        return \count($updateColumns) ? \implode(',', \array_map(function (string $column) use (
+                $tableName,
+                $preserveExistingValues,
+            ): string {
                 $clause = "{$this->platform->quoteIdentifier($column)} = ";
 
                 if (true === $preserveExistingValues) {
-                    return $clause . "COALESCE({$this->platform->quoteIdentifier('excluded.' . $column)}, {$tableName}.{$this->platform->quoteIdentifier($column)})";
+                    return (
+                        $clause
+                        . "COALESCE({$this->platform->quoteIdentifier('excluded.'
+                        . $column)}, {$tableName}.{$this->platform->quoteIdentifier($column)})"
+                    );
                 }
 
                 return $clause . "{$this->platform->quoteIdentifier('excluded.' . $column)}";
-            }, $updateColumns))
-            : $this->updateAllColumns($columns);
+            }, $updateColumns)) : $this->updateAllColumns($columns);
     }
 }

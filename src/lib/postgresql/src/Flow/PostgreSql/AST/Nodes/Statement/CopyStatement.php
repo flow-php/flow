@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
-use Flow\PostgreSql\AST\Nodes\{Statement, StatementTrait};
+use Flow\PostgreSql\AST\Nodes\Statement;
+use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\CopyStmt;
 
 /**
@@ -16,10 +17,9 @@ final readonly class CopyStatement implements Statement
 
     public function __construct(
         private CopyStmt $stmt,
-    ) {
-    }
+    ) {}
 
-    public function raw() : CopyStmt
+    public function raw(): CopyStmt
     {
         return $this->stmt;
     }

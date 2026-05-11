@@ -5,9 +5,16 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Meter\Instrument;
 
 use Flow\Telemetry\Attributes;
-use Flow\Telemetry\{InstrumentationScope, Resource};
-use Flow\Telemetry\Meter\{AggregationTemporality, Metric, MetricLimits, MetricType};
-use Flow\Telemetry\Meter\Exemplar\{AlignedHistogramBucketExemplarReservoir, ExemplarFilter, ExemplarReservoir, TraceBasedExemplarFilter};
+use Flow\Telemetry\InstrumentationScope;
+use Flow\Telemetry\Meter\AggregationTemporality;
+use Flow\Telemetry\Meter\Exemplar\AlignedHistogramBucketExemplarReservoir;
+use Flow\Telemetry\Meter\Exemplar\ExemplarFilter;
+use Flow\Telemetry\Meter\Exemplar\ExemplarReservoir;
+use Flow\Telemetry\Meter\Exemplar\TraceBasedExemplarFilter;
+use Flow\Telemetry\Meter\Metric;
+use Flow\Telemetry\Meter\MetricLimits;
+use Flow\Telemetry\Meter\MetricType;
+use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tracer\SpanContext;
 use Psr\Clock\ClockInterface;
 
@@ -34,7 +41,23 @@ final class Histogram implements Instrument
      *
      * @var array<float>
      */
-    public const array DEFAULT_BOUNDARIES = [0.0, 5.0, 10.0, 25.0, 50.0, 75.0, 100.0, 250.0, 500.0, 750.0, 1000.0, 2500.0, 5000.0, 7500.0, 10000.0];
+    public const array DEFAULT_BOUNDARIES = [
+        0.0,
+        5.0,
+        10.0,
+        25.0,
+        50.0,
+        75.0,
+        100.0,
+        250.0,
+        500.0,
+        750.0,
+        1000.0,
+        2500.0,
+        5000.0,
+        7500.0,
+        10000.0,
+    ];
 
     /**
      * Aggregations by attribute key.
@@ -80,12 +103,12 @@ final class Histogram implements Instrument
      *
      * @return array<float>
      */
-    public function boundaries() : array
+    public function boundaries(): array
     {
         return $this->boundaries;
     }
 
-    public function collect() : array
+    public function collect(): array
     {
         $metrics = [];
 
@@ -119,12 +142,12 @@ final class Histogram implements Instrument
         return $metrics;
     }
 
-    public function description() : ?string
+    public function description(): ?string
     {
         return $this->description;
     }
 
-    public function name() : string
+    public function name(): string
     {
         return $this->name;
     }
@@ -136,11 +159,11 @@ final class Histogram implements Instrument
      * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Categorization attributes
      * @param null|SpanContext $context Optional span context for exemplar capture
      */
-    public function record(int|float $value, array|Attributes $attributes = [], ?SpanContext $context = null) : void
+    public function record(int|float $value, array|Attributes $attributes = [], ?SpanContext $context = null): void
     {
         $normalized = $attributes instanceof Attributes ? $attributes->normalize() : $attributes;
         /** @var array<string, bool|float|int|string> $attrs */
-        $attrs = \array_filter($normalized, static fn ($v) : bool => \is_scalar($v));
+        $attrs = \array_filter($normalized, static fn($v): bool => \is_scalar($v));
         $key = Attributes::create($attrs)->id();
         $floatValue = (float) $value;
 
@@ -186,7 +209,7 @@ final class Histogram implements Instrument
         }
     }
 
-    public function unit() : ?string
+    public function unit(): ?string
     {
         return $this->unit;
     }
@@ -199,7 +222,7 @@ final class Histogram implements Instrument
      * - Bucket i: (bounds[i-1], bounds[i]]
      * - Bucket N: (bounds[N-1], +∞)
      */
-    private function findBucketIndex(float $value) : int
+    private function findBucketIndex(float $value): int
     {
         foreach ($this->boundaries as $index => $boundary) {
             if ($value <= $boundary) {

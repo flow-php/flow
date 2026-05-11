@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Provider\Console;
 
 use Flow\Telemetry\Exporter\Exporter;
-use Flow\Telemetry\Logger\{LogEntry, Severity};
-use Flow\Telemetry\Meter\{Metric, MetricType};
+use Flow\Telemetry\Logger\LogEntry;
+use Flow\Telemetry\Logger\Severity;
+use Flow\Telemetry\Meter\Metric;
+use Flow\Telemetry\Meter\MetricType;
 use Flow\Telemetry\Resource as TelemetryResource;
-use Flow\Telemetry\Signal\{SignalType, Signals};
-use Flow\Telemetry\Tracer\{Span, SpanStatusCode};
+use Flow\Telemetry\Signal\Signals;
+use Flow\Telemetry\Signal\SignalType;
+use Flow\Telemetry\Tracer\Span;
+use Flow\Telemetry\Tracer\SpanStatusCode;
 
 /**
  * Unified console exporter for logs, metrics, and spans.
@@ -50,7 +54,7 @@ final readonly class ConsoleExporter implements Exporter
         $this->output = new ConsoleOutput($colors, $outputStream);
     }
 
-    public function export(Signals $signal) : bool
+    public function export(Signals $signal): bool
     {
         return match ($signal->type) {
             SignalType::LOGS => $this->exportLogs($signal->allLogs()),
@@ -59,11 +63,9 @@ final readonly class ConsoleExporter implements Exporter
         };
     }
 
-    public function shutdown() : void
-    {
-    }
+    public function shutdown(): void {}
 
-    private function appendMetricExemplarInfo(string &$line, Metric $metric) : void
+    private function appendMetricExemplarInfo(string &$line, Metric $metric): void
     {
         if (\count($metric->exemplars) === 0) {
             return;
@@ -86,7 +88,7 @@ final readonly class ConsoleExporter implements Exporter
     /**
      * @return array<string>
      */
-    private function buildFullResourceLines(TelemetryResource $resource) : array
+    private function buildFullResourceLines(TelemetryResource $resource): array
     {
         $lines = [];
         $lines[] = $this->output->bold('Resource:');
@@ -107,7 +109,7 @@ final readonly class ConsoleExporter implements Exporter
         return $lines;
     }
 
-    private function buildLogHeaderLine(int $bodyWidth, bool $hasTrace) : string
+    private function buildLogHeaderLine(int $bodyWidth, bool $hasTrace): string
     {
         $timestamp = $this->output->pad('Timestamp', self::LOG_TIMESTAMP_WIDTH);
         $level = $this->output->pad('Level', self::LOG_SEVERITY_WIDTH);
@@ -128,7 +130,7 @@ final readonly class ConsoleExporter implements Exporter
     /**
      * @param array{timestamp: string, severity: string, severityRaw: Severity, body: string, trace: string, droppedAttributeCount: int} $record
      */
-    private function buildLogLine(array $record, int $bodyWidth, bool $hasTrace) : string
+    private function buildLogLine(array $record, int $bodyWidth, bool $hasTrace): string
     {
         $timestamp = $this->output->pad($record['timestamp'], self::LOG_TIMESTAMP_WIDTH);
         $severity = $this->output->pad($record['severity'], self::LOG_SEVERITY_WIDTH);
@@ -154,7 +156,7 @@ final readonly class ConsoleExporter implements Exporter
     /**
      * @return array<string>
      */
-    private function buildLogResourceLines(TelemetryResource $resource) : array
+    private function buildLogResourceLines(TelemetryResource $resource): array
     {
         if ($resource->isEmpty()) {
             return [];
@@ -167,7 +169,7 @@ final readonly class ConsoleExporter implements Exporter
         return $this->buildFullResourceLines($resource);
     }
 
-    private function buildLogScopeLine(LogEntry $entry) : ?string
+    private function buildLogScopeLine(LogEntry $entry): ?string
     {
         if (!$this->logOptions->showInstrumentationScope) {
             return null;
@@ -183,7 +185,7 @@ final readonly class ConsoleExporter implements Exporter
      *
      * @return array<string>
      */
-    private function buildMetricLines(array $metrics) : array
+    private function buildMetricLines(array $metrics): array
     {
         $maxNameLength = 0;
         $maxValueLength = 0;
@@ -214,7 +216,8 @@ final readonly class ConsoleExporter implements Exporter
                 $attrParts = [];
 
                 foreach ($metric->attributes->normalize() as $key => $attrValue) {
-                    $attrParts[] = $key . '=' . (\is_scalar($attrValue) ? (string) $attrValue : \json_encode($attrValue));
+                    $attrParts[] =
+                        $key . '=' . (\is_scalar($attrValue) ? (string) $attrValue : \json_encode($attrValue));
                 }
                 $line .= '  ' . $this->output->dim('{' . \implode(', ', $attrParts) . '}');
             }
@@ -237,7 +240,7 @@ final readonly class ConsoleExporter implements Exporter
     /**
      * @return array<string>
      */
-    private function buildMetricResourceLines(TelemetryResource $resource) : array
+    private function buildMetricResourceLines(TelemetryResource $resource): array
     {
         if ($resource->isEmpty()) {
             return [];
@@ -250,7 +253,7 @@ final readonly class ConsoleExporter implements Exporter
         return $this->buildFullResourceLines($resource);
     }
 
-    private function buildMetricScopeLine(Metric $metric) : ?string
+    private function buildMetricScopeLine(Metric $metric): ?string
     {
         if (!$this->metricOptions->showInstrumentationScope) {
             return null;
@@ -264,7 +267,7 @@ final readonly class ConsoleExporter implements Exporter
     /**
      * @return array<string>
      */
-    private function buildShortResourceLines(TelemetryResource $resource) : array
+    private function buildShortResourceLines(TelemetryResource $resource): array
     {
         $parts = [];
         $serviceName = $resource->get('service.name');
@@ -289,7 +292,7 @@ final readonly class ConsoleExporter implements Exporter
     /**
      * @return array<string>
      */
-    private function buildSpanAttributeLines(Span $span) : array
+    private function buildSpanAttributeLines(Span $span): array
     {
         $attributes = $span->attributes();
 
@@ -318,7 +321,7 @@ final readonly class ConsoleExporter implements Exporter
     /**
      * @return array<string>
      */
-    private function buildSpanDroppedCountsLines(Span $span) : array
+    private function buildSpanDroppedCountsLines(Span $span): array
     {
         if (!$this->spanOptions->showDroppedCounts) {
             return [];
@@ -353,7 +356,7 @@ final readonly class ConsoleExporter implements Exporter
     /**
      * @return array<string>
      */
-    private function buildSpanEventLines(Span $span) : array
+    private function buildSpanEventLines(Span $span): array
     {
         $events = $span->events();
 
@@ -377,7 +380,7 @@ final readonly class ConsoleExporter implements Exporter
     /**
      * @return array<string>
      */
-    private function buildSpanHeaderLines(Span $span) : array
+    private function buildSpanHeaderLines(Span $span): array
     {
         $context = $span->context();
         $lines = [];
@@ -410,7 +413,7 @@ final readonly class ConsoleExporter implements Exporter
     /**
      * @return array<string>
      */
-    private function buildSpanLinkLines(Span $span) : array
+    private function buildSpanLinkLines(Span $span): array
     {
         if (!$this->spanOptions->showLinks) {
             return [];
@@ -428,7 +431,11 @@ final readonly class ConsoleExporter implements Exporter
         foreach ($links as $link) {
             $traceId = $link->context->traceId->toHex();
             $spanId = $link->context->spanId->toHex();
-            $lines[] = '  -> ' . $this->output->dim('trace:' . \mb_substr($traceId, 0, 12) . '... span:' . \mb_substr($spanId, 0, 12) . '...');
+            $lines[] =
+                '  -> '
+                . $this->output->dim(
+                    'trace:' . \mb_substr($traceId, 0, 12) . '... span:' . \mb_substr($spanId, 0, 12) . '...',
+                );
         }
 
         return $lines;
@@ -437,7 +444,7 @@ final readonly class ConsoleExporter implements Exporter
     /**
      * @return array<string>
      */
-    private function buildSpanResourceLines(TelemetryResource $resource) : array
+    private function buildSpanResourceLines(TelemetryResource $resource): array
     {
         if ($resource->isEmpty()) {
             return [];
@@ -453,7 +460,7 @@ final readonly class ConsoleExporter implements Exporter
     /**
      * @return array<string>
      */
-    private function buildSpanScopeLines(Span $span) : array
+    private function buildSpanScopeLines(Span $span): array
     {
         if (!$this->spanOptions->showInstrumentationScope) {
             return [];
@@ -467,7 +474,7 @@ final readonly class ConsoleExporter implements Exporter
     /**
      * @param array<string> $lines
      */
-    private function calculateLineWidth(array $lines, int $minWidth) : int
+    private function calculateLineWidth(array $lines, int $minWidth): int
     {
         $maxLength = 0;
 
@@ -482,7 +489,7 @@ final readonly class ConsoleExporter implements Exporter
     /**
      * @param array<array{timestamp: string, severity: string, severityRaw: Severity, body: string, trace: string, droppedAttributeCount: int}> $records
      */
-    private function calculateLogBodyWidth(array $records) : int
+    private function calculateLogBodyWidth(array $records): int
     {
         $maxLength = 0;
 
@@ -497,7 +504,7 @@ final readonly class ConsoleExporter implements Exporter
         return $maxLength;
     }
 
-    private function calculateLogTotalWidth(int $bodyWidth, bool $hasTrace) : int
+    private function calculateLogTotalWidth(int $bodyWidth, bool $hasTrace): int
     {
         $width = 4;
         $width += self::LOG_TIMESTAMP_WIDTH;
@@ -514,7 +521,7 @@ final readonly class ConsoleExporter implements Exporter
         return \max(self::LOG_MIN_WIDTH, $width);
     }
 
-    private function colorBySeverity(string $text, Severity $severity) : string
+    private function colorBySeverity(string $text, Severity $severity): string
     {
         return match ($severity) {
             Severity::TRACE => $this->output->dim($text),
@@ -529,7 +536,7 @@ final readonly class ConsoleExporter implements Exporter
     /**
      * @param array<LogEntry> $entries
      */
-    private function exportLogs(array $entries) : bool
+    private function exportLogs(array $entries): bool
     {
         if (\count($entries) === 0) {
             return true;
@@ -578,7 +585,7 @@ final readonly class ConsoleExporter implements Exporter
     /**
      * @param array<Metric> $metrics
      */
-    private function exportMetrics(array $metrics) : bool
+    private function exportMetrics(array $metrics): bool
     {
         if (\count($metrics) === 0) {
             return true;
@@ -627,7 +634,7 @@ final readonly class ConsoleExporter implements Exporter
     /**
      * @param array<Span> $spans
      */
-    private function exportSpans(array $spans) : bool
+    private function exportSpans(array $spans): bool
     {
         foreach ($spans as $span) {
             $this->printSpan($span);
@@ -639,7 +646,7 @@ final readonly class ConsoleExporter implements Exporter
     /**
      * @param array<string, array<bool|\DateTimeImmutable|float|int|string>|bool|\DateTimeImmutable|float|int|string> $attributes
      */
-    private function formatLogAttributes(array $attributes) : string
+    private function formatLogAttributes(array $attributes): string
     {
         if (\count($attributes) === 0) {
             return '';
@@ -659,7 +666,7 @@ final readonly class ConsoleExporter implements Exporter
      *
      * @return array<array{timestamp: string, severity: string, severityRaw: Severity, body: string, trace: string, droppedAttributeCount: int}>
      */
-    private function formatLogEntries(array $entries) : array
+    private function formatLogEntries(array $entries): array
     {
         $formatted = [];
 
@@ -674,7 +681,10 @@ final readonly class ConsoleExporter implements Exporter
             $trace = '';
 
             if ($entry->spanContext !== null) {
-                $trace = \mb_substr($entry->spanContext->traceId->toHex(), 0, 8) . '/' . \mb_substr($entry->spanContext->spanId->toHex(), 0, 8);
+                $trace =
+                    \mb_substr($entry->spanContext->traceId->toHex(), 0, 8)
+                    . '/'
+                    . \mb_substr($entry->spanContext->spanId->toHex(), 0, 8);
             }
 
             $timestamp = $entry->timestamp->format('Y-m-d H:i:s.u');
@@ -696,7 +706,7 @@ final readonly class ConsoleExporter implements Exporter
         return $formatted;
     }
 
-    private function formatMetricValue(Metric $metric) : string
+    private function formatMetricValue(Metric $metric): string
     {
         $value = $metric->value;
 
@@ -723,7 +733,7 @@ final readonly class ConsoleExporter implements Exporter
         return (string) $value;
     }
 
-    private function formatSpanStatusIcon(Span $span) : string
+    private function formatSpanStatusIcon(Span $span): string
     {
         $status = $span->status();
 
@@ -737,7 +747,11 @@ final readonly class ConsoleExporter implements Exporter
             SpanStatusCode::UNSET => $this->output->yellow('UNSET'),
         };
 
-        if ($this->spanOptions->showStatusDescription && $status->code === SpanStatusCode::ERROR && $status->description !== null) {
+        if (
+            $this->spanOptions->showStatusDescription
+            && $status->code === SpanStatusCode::ERROR
+            && $status->description !== null
+        ) {
             $statusText .= ' ' . $this->output->dim('(' . $status->description . ')');
         }
 
@@ -747,7 +761,7 @@ final readonly class ConsoleExporter implements Exporter
     /**
      * @param array<LogEntry> $entries
      */
-    private function hasAnySpanContext(array $entries) : bool
+    private function hasAnySpanContext(array $entries): bool
     {
         foreach ($entries as $entry) {
             if ($entry->spanContext !== null) {
@@ -758,7 +772,7 @@ final readonly class ConsoleExporter implements Exporter
         return false;
     }
 
-    private function metricTypeIcon(MetricType $type) : string
+    private function metricTypeIcon(MetricType $type): string
     {
         return match ($type) {
             MetricType::COUNTER => '^',
@@ -773,25 +787,22 @@ final readonly class ConsoleExporter implements Exporter
      *
      * @return array<bool|float|int|string>|bool|float|int|string
      */
-    private function normalizeLogAttributeValue(mixed $value) : array|bool|float|int|string
+    private function normalizeLogAttributeValue(mixed $value): array|bool|float|int|string
     {
         if ($value instanceof \DateTimeImmutable) {
             return $value->format(\DateTimeInterface::RFC3339_EXTENDED);
         }
 
         if (\is_array($value)) {
-            return \array_map(
-                static fn ($item) => $item instanceof \DateTimeImmutable
-                    ? $item->format(\DateTimeInterface::RFC3339_EXTENDED)
-                    : $item,
-                $value
-            );
+            return \array_map(static fn($item) => $item instanceof \DateTimeImmutable
+                ? $item->format(\DateTimeInterface::RFC3339_EXTENDED)
+                : $item, $value);
         }
 
         return $value;
     }
 
-    private function printSpan(Span $span) : void
+    private function printSpan(Span $span): void
     {
         $headerLines = $this->buildSpanHeaderLines($span);
         $resourceLines = $this->buildSpanResourceLines($span->resource());
@@ -801,7 +812,15 @@ final readonly class ConsoleExporter implements Exporter
         $linkLines = $this->buildSpanLinkLines($span);
         $droppedLines = $this->buildSpanDroppedCountsLines($span);
 
-        $allLines = \array_merge($headerLines, $resourceLines, $scopeLines, $attributeLines, $eventLines, $linkLines, $droppedLines);
+        $allLines = \array_merge(
+            $headerLines,
+            $resourceLines,
+            $scopeLines,
+            $attributeLines,
+            $eventLines,
+            $linkLines,
+            $droppedLines,
+        );
         $width = $this->calculateLineWidth($allLines, self::SPAN_MIN_WIDTH);
 
         $buffer = $this->output->border($width) . PHP_EOL;

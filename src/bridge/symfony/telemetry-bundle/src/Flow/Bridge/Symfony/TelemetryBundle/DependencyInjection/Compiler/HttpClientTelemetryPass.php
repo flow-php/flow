@@ -7,11 +7,13 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpClient\TracableHttpClient;
 use Flow\Telemetry\Telemetry;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
-use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Reference};
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Reference;
 
 final class HttpClientTelemetryPass implements CompilerPassInterface
 {
-    public function process(ContainerBuilder $container) : void
+    public function process(ContainerBuilder $container): void
     {
         if (!$container->hasParameter('flow.telemetry.http_client.enabled')) {
             return;
@@ -28,7 +30,7 @@ final class HttpClientTelemetryPass implements CompilerPassInterface
 
         $taggedServices = $container->findTaggedServiceIds('http_client.client');
 
-        foreach ($taggedServices as $serviceId => $tags) {
+        foreach ($taggedServices as $serviceId => $_tags) {
             if ($this->isExcluded($serviceId, $excludeClients)) {
                 continue;
             }
@@ -49,7 +51,7 @@ final class HttpClientTelemetryPass implements CompilerPassInterface
     /**
      * @param array<string> $patterns
      */
-    private function isExcluded(string $serviceId, array $patterns) : bool
+    private function isExcluded(string $serviceId, array $patterns): bool
     {
         foreach ($patterns as $pattern) {
             if ($this->matchesPattern($serviceId, $pattern)) {
@@ -60,7 +62,7 @@ final class HttpClientTelemetryPass implements CompilerPassInterface
         return false;
     }
 
-    private function matchesPattern(string $serviceId, string $pattern) : bool
+    private function matchesPattern(string $serviceId, string $pattern): bool
     {
         $result = @\preg_match($pattern, $serviceId);
 

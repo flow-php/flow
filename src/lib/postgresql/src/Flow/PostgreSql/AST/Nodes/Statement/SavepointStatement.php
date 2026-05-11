@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
-use Flow\PostgreSql\AST\Nodes\{Statement, StatementTrait};
+use Flow\PostgreSql\AST\Nodes\Statement;
+use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\TransactionStmt;
 
 /**
@@ -19,10 +20,9 @@ final readonly class SavepointStatement implements Statement
 
     public function __construct(
         private TransactionStmt $stmt,
-    ) {
-    }
+    ) {}
 
-    public function raw() : TransactionStmt
+    public function raw(): TransactionStmt
     {
         return $this->stmt;
     }

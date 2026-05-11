@@ -11,7 +11,7 @@ use Thrift\Exception\TTransportException;
 
 final class MemoryBufferTest extends TestCase
 {
-    public static function read_length_provider() : \Generator
+    public static function read_length_provider(): \Generator
     {
         yield 'read less than available' => [10, 5, 5];
         yield 'read exact amount available' => [10, 10, 10];
@@ -20,7 +20,7 @@ final class MemoryBufferTest extends TestCase
         yield 'read zero bytes' => [10, 0, 0];
     }
 
-    public static function write_data_provider() : \Generator
+    public static function write_data_provider(): \Generator
     {
         yield 'empty string' => ['', 'empty string'];
         yield 'simple text' => ['hello', 'simple text'];
@@ -35,40 +35,40 @@ final class MemoryBufferTest extends TestCase
         yield 'repeated characters' => [\str_repeat('X', 100), 'repeated characters'];
     }
 
-    public function test_available_after_write() : void
+    public function test_available_after_write(): void
     {
         $buffer = new MemoryBuffer();
 
-        self::assertSame(0, $buffer->available());
+        static::assertSame(0, $buffer->available());
 
         $buffer->write('hello');
-        self::assertSame(5, $buffer->available());
+        static::assertSame(5, $buffer->available());
 
         $buffer->write(' world');
-        self::assertSame(11, $buffer->available());
+        static::assertSame(11, $buffer->available());
     }
 
-    public function test_available_returns_correct_count() : void
+    public function test_available_returns_correct_count(): void
     {
         $buffer = new MemoryBuffer('hello world');
 
-        self::assertSame(11, $buffer->available());
+        static::assertSame(11, $buffer->available());
 
         $buffer->read(5);
-        self::assertSame(6, $buffer->available());
+        static::assertSame(6, $buffer->available());
 
         $buffer->read(6);
-        self::assertSame(0, $buffer->available());
+        static::assertSame(0, $buffer->available());
     }
 
-    public function test_available_with_empty_buffer() : void
+    public function test_available_with_empty_buffer(): void
     {
         $buffer = new MemoryBuffer();
 
-        self::assertSame(0, $buffer->available());
+        static::assertSame(0, $buffer->available());
     }
 
-    public function test_close_method_does_nothing() : void
+    public function test_close_method_does_nothing(): void
     {
         $buffer = new MemoryBuffer('test');
         $originalData = $buffer->data();
@@ -76,91 +76,91 @@ final class MemoryBufferTest extends TestCase
 
         $buffer->close();
 
-        self::assertSame($originalData, $buffer->data());
-        self::assertSame($originalAvailable, $buffer->available());
+        static::assertSame($originalData, $buffer->data());
+        static::assertSame($originalAvailable, $buffer->available());
     }
 
-    public function test_constructor_with_binary_data() : void
+    public function test_constructor_with_binary_data(): void
     {
         $binaryData = "\x00\x01\x02\x03\xFF";
         $buffer = new MemoryBuffer($binaryData);
 
-        self::assertSame($binaryData, $buffer->data());
-        self::assertSame(5, $buffer->available());
+        static::assertSame($binaryData, $buffer->data());
+        static::assertSame(5, $buffer->available());
     }
 
-    public function test_constructor_with_empty_string() : void
+    public function test_constructor_with_empty_string(): void
     {
         $buffer = new MemoryBuffer();
 
-        self::assertSame('', $buffer->data());
-        self::assertSame(0, $buffer->available());
+        static::assertSame('', $buffer->data());
+        static::assertSame(0, $buffer->available());
     }
 
-    public function test_constructor_with_initial_data() : void
+    public function test_constructor_with_initial_data(): void
     {
         $initialData = 'hello world';
         $buffer = new MemoryBuffer($initialData);
 
-        self::assertSame($initialData, $buffer->data());
-        self::assertSame(\strlen($initialData), $buffer->available());
+        static::assertSame($initialData, $buffer->data());
+        static::assertSame(\strlen($initialData), $buffer->available());
     }
 
-    public function test_constructor_with_unicode_data() : void
+    public function test_constructor_with_unicode_data(): void
     {
         $unicodeData = 'Hello 世界 🌟';
         $buffer = new MemoryBuffer($unicodeData);
 
-        self::assertSame($unicodeData, $buffer->data());
-        self::assertSame(\strlen($unicodeData), $buffer->available());
+        static::assertSame($unicodeData, $buffer->data());
+        static::assertSame(\strlen($unicodeData), $buffer->available());
     }
 
-    public function test_data_method_returns_current_buffer_content() : void
+    public function test_data_method_returns_current_buffer_content(): void
     {
         $buffer = new MemoryBuffer('initial');
 
-        self::assertSame('initial', $buffer->data());
+        static::assertSame('initial', $buffer->data());
 
         $buffer->write(' data');
-        self::assertSame('initial data', $buffer->data());
+        static::assertSame('initial data', $buffer->data());
     }
 
-    public function test_data_method_unchanged_after_read() : void
+    public function test_data_method_unchanged_after_read(): void
     {
         $buffer = new MemoryBuffer('hello world');
 
         $buffer->read(5);
 
         // data() should still return the full buffer content
-        self::assertSame('hello world', $buffer->data());
+        static::assertSame('hello world', $buffer->data());
     }
 
-    public function test_is_open_always_returns_true() : void
+    public function test_is_open_always_returns_true(): void
     {
         $buffer = new MemoryBuffer();
-        self::assertTrue($buffer->isOpen());
+        static::assertTrue($buffer->isOpen());
 
         $buffer = new MemoryBuffer('some data');
-        self::assertTrue($buffer->isOpen());
+        static::assertTrue($buffer->isOpen());
     }
 
-    public function test_large_data_handling() : void
+    public function test_large_data_handling(): void
     {
         $largeData = \str_repeat('A', 10000);
         $buffer = new MemoryBuffer($largeData);
 
-        self::assertSame(10000, $buffer->available());
+        static::assertSame(10000, $buffer->available());
 
         $chunk1 = $buffer->read(5000);
-        self::assertSame(\str_repeat('A', 5000), $chunk1);
-        self::assertSame(5000, $buffer->available());
+        static::assertSame(\str_repeat('A', 5000), $chunk1);
+        static::assertSame(5000, $buffer->available());
 
         $chunk2 = $buffer->read(5000);
-        self::assertSame(\str_repeat('A', 5000), $chunk2);
-        self::assertSame(0, $buffer->available());
+        static::assertSame(\str_repeat('A', 5000), $chunk2);
+        static::assertSame(0, $buffer->available());
     }
 
-    public function test_open_method_does_nothing() : void
+    public function test_open_method_does_nothing(): void
     {
         $buffer = new MemoryBuffer('test');
         $originalData = $buffer->data();
@@ -168,22 +168,22 @@ final class MemoryBufferTest extends TestCase
 
         $buffer->open();
 
-        self::assertSame($originalData, $buffer->data());
-        self::assertSame($originalAvailable, $buffer->available());
+        static::assertSame($originalData, $buffer->data());
+        static::assertSame($originalAvailable, $buffer->available());
     }
 
-    public function test_read_binary_data() : void
+    public function test_read_binary_data(): void
     {
         $binaryData = "\x00\x01\x02\x03\xFF";
         $buffer = new MemoryBuffer($binaryData);
 
         $result = $buffer->read(5);
 
-        self::assertSame($binaryData, $result);
-        self::assertSame(0, $buffer->available());
+        static::assertSame($binaryData, $result);
+        static::assertSame(0, $buffer->available());
     }
 
-    public function test_read_from_empty_buffer_throws_exception() : void
+    public function test_read_from_empty_buffer_throws_exception(): void
     {
         $buffer = new MemoryBuffer();
 
@@ -193,7 +193,7 @@ final class MemoryBufferTest extends TestCase
         $buffer->read(5);
     }
 
-    public function test_read_from_exhausted_buffer_throws_exception() : void
+    public function test_read_from_exhausted_buffer_throws_exception(): void
     {
         $buffer = new MemoryBuffer('test');
         $buffer->read(4); // Exhaust the buffer
@@ -204,48 +204,48 @@ final class MemoryBufferTest extends TestCase
         $buffer->read(3);
     }
 
-    public function test_read_full_buffer() : void
+    public function test_read_full_buffer(): void
     {
         $buffer = new MemoryBuffer('hello');
 
         $result = $buffer->read(5);
 
-        self::assertSame('hello', $result);
-        self::assertSame(0, $buffer->available());
+        static::assertSame('hello', $result);
+        static::assertSame(0, $buffer->available());
     }
 
-    public function test_read_more_than_available() : void
+    public function test_read_more_than_available(): void
     {
         $buffer = new MemoryBuffer('hello');
 
         $result = $buffer->read(10);
 
-        self::assertSame('hello', $result);
-        self::assertSame(0, $buffer->available());
+        static::assertSame('hello', $result);
+        static::assertSame(0, $buffer->available());
     }
 
-    public function test_read_negative_length_behavior() : void
+    public function test_read_negative_length_behavior(): void
     {
         $buffer = new MemoryBuffer('hello');
 
         // With substr($data, 0, -1), PHP returns 'hell' (all chars except the last one)
         $result = $buffer->read(-1);
 
-        self::assertSame('hell', $result);
-        self::assertSame(6, $buffer->available()); // Position becomes -1, so available = 5 - (-1) = 6
+        static::assertSame('hell', $result);
+        static::assertSame(6, $buffer->available()); // Position becomes -1, so available = 5 - (-1) = 6
     }
 
-    public function test_read_partial_buffer() : void
+    public function test_read_partial_buffer(): void
     {
         $buffer = new MemoryBuffer('hello world');
 
         $result = $buffer->read(5);
 
-        self::assertSame('hello', $result);
-        self::assertSame(6, $buffer->available());
+        static::assertSame('hello', $result);
+        static::assertSame(6, $buffer->available());
     }
 
-    public function test_read_sequential_operations() : void
+    public function test_read_sequential_operations(): void
     {
         $buffer = new MemoryBuffer('hello world');
 
@@ -253,35 +253,35 @@ final class MemoryBufferTest extends TestCase
         $second = $buffer->read(1);
         $third = $buffer->read(5);
 
-        self::assertSame('hello', $first);
-        self::assertSame(' ', $second);
-        self::assertSame('world', $third);
-        self::assertSame(0, $buffer->available());
+        static::assertSame('hello', $first);
+        static::assertSame(' ', $second);
+        static::assertSame('world', $third);
+        static::assertSame(0, $buffer->available());
     }
 
     #[DataProvider('read_length_provider')]
-    public function test_read_various_lengths(int $dataLength, int $readLength, int $expectedReadLength) : void
+    public function test_read_various_lengths(int $dataLength, int $readLength, int $expectedReadLength): void
     {
         $data = \str_repeat('A', $dataLength);
         $buffer = new MemoryBuffer($data);
 
         $result = $buffer->read($readLength);
 
-        self::assertSame($expectedReadLength, \strlen($result));
-        self::assertSame(\str_repeat('A', $expectedReadLength), $result);
+        static::assertSame($expectedReadLength, \strlen($result));
+        static::assertSame(\str_repeat('A', $expectedReadLength), $result);
     }
 
-    public function test_read_zero_bytes() : void
+    public function test_read_zero_bytes(): void
     {
         $buffer = new MemoryBuffer('hello');
 
         $result = $buffer->read(0);
 
-        self::assertSame('', $result);
-        self::assertSame(5, $buffer->available());
+        static::assertSame('', $result);
+        static::assertSame(5, $buffer->available());
     }
 
-    public function test_write_and_read_integration() : void
+    public function test_write_and_read_integration(): void
     {
         $buffer = new MemoryBuffer();
 
@@ -289,44 +289,44 @@ final class MemoryBufferTest extends TestCase
         $buffer->write(' ');
         $buffer->write('World');
 
-        self::assertSame('Hello World', $buffer->data());
-        self::assertSame(11, $buffer->available());
+        static::assertSame('Hello World', $buffer->data());
+        static::assertSame(11, $buffer->available());
 
         $first = $buffer->read(5);
-        self::assertSame('Hello', $first);
-        self::assertSame(6, $buffer->available());
+        static::assertSame('Hello', $first);
+        static::assertSame(6, $buffer->available());
 
         $buffer->write('!');
-        self::assertSame('Hello World!', $buffer->data());
-        self::assertSame(7, $buffer->available());
+        static::assertSame('Hello World!', $buffer->data());
+        static::assertSame(7, $buffer->available());
 
         $remaining = $buffer->read(7);
-        self::assertSame(' World!', $remaining);
-        self::assertSame(0, $buffer->available());
+        static::assertSame(' World!', $remaining);
+        static::assertSame(0, $buffer->available());
     }
 
-    public function test_write_appends_data() : void
+    public function test_write_appends_data(): void
     {
         $buffer = new MemoryBuffer('initial');
 
         $buffer->write(' data');
 
-        self::assertSame('initial data', $buffer->data());
-        self::assertSame(12, $buffer->available());
+        static::assertSame('initial data', $buffer->data());
+        static::assertSame(12, $buffer->available());
     }
 
-    public function test_write_binary_data() : void
+    public function test_write_binary_data(): void
     {
         $buffer = new MemoryBuffer();
         $binaryData = "\x00\x01\x02\x03";
 
         $buffer->write($binaryData);
 
-        self::assertSame($binaryData, $buffer->data());
-        self::assertSame(4, $buffer->available());
+        static::assertSame($binaryData, $buffer->data());
+        static::assertSame(4, $buffer->available());
     }
 
-    public function test_write_empty_string() : void
+    public function test_write_empty_string(): void
     {
         $buffer = new MemoryBuffer('test');
         $originalData = $buffer->data();
@@ -334,11 +334,11 @@ final class MemoryBufferTest extends TestCase
 
         $buffer->write('');
 
-        self::assertSame($originalData, $buffer->data());
-        self::assertSame($originalAvailable, $buffer->available());
+        static::assertSame($originalData, $buffer->data());
+        static::assertSame($originalAvailable, $buffer->available());
     }
 
-    public function test_write_multiple_times() : void
+    public function test_write_multiple_times(): void
     {
         $buffer = new MemoryBuffer();
 
@@ -346,18 +346,18 @@ final class MemoryBufferTest extends TestCase
         $buffer->write(' ');
         $buffer->write('World');
 
-        self::assertSame('Hello World', $buffer->data());
-        self::assertSame(11, $buffer->available());
+        static::assertSame('Hello World', $buffer->data());
+        static::assertSame(11, $buffer->available());
     }
 
     #[DataProvider('write_data_provider')]
-    public function test_write_various_data_types(string $data) : void
+    public function test_write_various_data_types(string $data): void
     {
         $buffer = new MemoryBuffer();
 
         $buffer->write($data);
 
-        self::assertSame($data, $buffer->data());
-        self::assertSame(\strlen($data), $buffer->available());
+        static::assertSame($data, $buffer->data());
+        static::assertSame(\strlen($data), $buffer->available());
     }
 }

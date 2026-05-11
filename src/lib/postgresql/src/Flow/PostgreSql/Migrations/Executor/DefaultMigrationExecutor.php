@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Migrations\Executor;
 
-use Flow\PostgreSql\Migrations\{Direction, MigrationContext, MigrationPlan};
+use Flow\PostgreSql\Migrations\Direction;
 use Flow\PostgreSql\Migrations\Exception\MigrationException;
+use Flow\PostgreSql\Migrations\MigrationContext;
+use Flow\PostgreSql\Migrations\MigrationPlan;
 
 final readonly class DefaultMigrationExecutor implements MigrationExecutor
 {
-    public function execute(MigrationPlan $plan, MigrationContext $context) : ExecutionResult
+    public function execute(MigrationPlan $plan, MigrationContext $context): ExecutionResult
     {
         $start = \hrtime(true);
 
@@ -37,14 +39,14 @@ final readonly class DefaultMigrationExecutor implements MigrationExecutor
         );
     }
 
-    private function executeDown(MigrationPlan $plan, MigrationContext $context) : void
+    private function executeDown(MigrationPlan $plan, MigrationContext $context): void
     {
         if ($plan->rollback === null) {
             throw MigrationException::irreversibleMigration($plan->version);
         }
 
         if ($plan->rollback->transactional()) {
-            $context->client->transaction(static function () use ($plan, $context) : void {
+            $context->client->transaction(static function () use ($plan, $context): void {
                 $plan->rollback->rollback($context);
             });
 
@@ -54,10 +56,10 @@ final readonly class DefaultMigrationExecutor implements MigrationExecutor
         $plan->rollback->rollback($context);
     }
 
-    private function executeUp(MigrationPlan $plan, MigrationContext $context) : void
+    private function executeUp(MigrationPlan $plan, MigrationContext $context): void
     {
         if ($plan->migration->transactional()) {
-            $context->client->transaction(static function () use ($plan, $context) : void {
+            $context->client->transaction(static function () use ($plan, $context): void {
                 $plan->migration->migrate($context);
             });
 

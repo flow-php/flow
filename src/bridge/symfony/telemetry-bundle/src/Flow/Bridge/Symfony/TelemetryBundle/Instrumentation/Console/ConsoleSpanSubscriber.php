@@ -4,10 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Console;
 
-use Flow\Telemetry\{PackageVersion, Telemetry};
-use Flow\Telemetry\Tracer\{Span, SpanKind, SpanStatus, Tracer};
+use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\Tracer\Span;
+use Flow\Telemetry\Tracer\SpanKind;
+use Flow\Telemetry\Tracer\SpanStatus;
+use Flow\Telemetry\Tracer\Tracer;
 use Symfony\Component\Console\ConsoleEvents;
-use Symfony\Component\Console\Event\{ConsoleCommandEvent, ConsoleErrorEvent, ConsoleSignalEvent, ConsoleTerminateEvent};
+use Symfony\Component\Console\Event\ConsoleCommandEvent;
+use Symfony\Component\Console\Event\ConsoleErrorEvent;
+use Symfony\Component\Console\Event\ConsoleSignalEvent;
+use Symfony\Component\Console\Event\ConsoleTerminateEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 final class ConsoleSpanSubscriber implements EventSubscriberInterface
@@ -22,10 +29,9 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
     public function __construct(
         private readonly Telemetry $telemetry,
         private readonly array $excludeCommands = [],
-    ) {
-    }
+    ) {}
 
-    public static function getSubscribedEvents() : array
+    public static function getSubscribedEvents(): array
     {
         return [
             ConsoleEvents::COMMAND => ['onCommand', 10000],
@@ -35,7 +41,7 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
         ];
     }
 
-    public function onCommand(ConsoleCommandEvent $event) : void
+    public function onCommand(ConsoleCommandEvent $event): void
     {
         $command = $event->getCommand();
         $commandName = $command?->getName() ?? 'unknown';
@@ -54,14 +60,10 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
             $attributes['command.class'] = $command::class;
         }
 
-        $this->span = $this->tracer->span(
-            $commandName,
-            SpanKind::INTERNAL,
-            $attributes,
-        );
+        $this->span = $this->tracer->span($commandName, SpanKind::INTERNAL, $attributes);
     }
 
-    public function onError(ConsoleErrorEvent $event) : void
+    public function onError(ConsoleErrorEvent $event): void
     {
         if ($this->span === null) {
             return;
@@ -70,7 +72,7 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
         $this->span->recordException($event->getError(), new \DateTimeImmutable());
     }
 
-    public function onSignal(ConsoleSignalEvent $event) : void
+    public function onSignal(ConsoleSignalEvent $event): void
     {
         if ($this->span === null) {
             return;
@@ -79,7 +81,7 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
         $this->span->setAttribute('process.signal', $event->getHandlingSignal());
     }
 
-    public function onTerminate(ConsoleTerminateEvent $event) : void
+    public function onTerminate(ConsoleTerminateEvent $event): void
     {
         if ($this->span === null || $this->tracer === null) {
             return;
@@ -100,7 +102,7 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
         $this->tracer = null;
     }
 
-    private function matchesPattern(string $command, string $pattern) : bool
+    private function matchesPattern(string $command, string $pattern): bool
     {
         $result = @\preg_match($pattern, $command);
 
@@ -111,7 +113,7 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
         return $command === $pattern;
     }
 
-    private function shouldTrace(string $commandName) : bool
+    private function shouldTrace(string $commandName): bool
     {
         foreach ($this->excludeCommands as $pattern) {
             if ($this->matchesPattern($commandName, $pattern)) {

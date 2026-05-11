@@ -5,16 +5,22 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Logger;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\{FlowContext, Loader, Row, Rows};
-use Psr\Log\{LogLevel, LoggerInterface};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Loader;
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 
 final readonly class PsrLoggerLoader implements Loader
 {
-    public function __construct(private LoggerInterface $logger, private string $message, private string $logLevel = LogLevel::DEBUG)
-    {
-    }
+    public function __construct(
+        private LoggerInterface $logger,
+        private string $message,
+        private string $logLevel = LogLevel::DEBUG,
+    ) {}
 
-    public function load(Rows $rows, FlowContext $context) : void
+    public function load(Rows $rows, FlowContext $context): void
     {
         if (!$rows->count()) {
             return;
@@ -23,7 +29,7 @@ final readonly class PsrLoggerLoader implements Loader
         $context->telemetry()->loadingStarted($this);
 
         try {
-            $loader = function (Row $row) : void {
+            $loader = function (Row $row): void {
                 $this->logger->log($this->logLevel, $this->message, $row->toArray());
             };
 

@@ -8,16 +8,16 @@ use Psr\Http\Message\ResponseInterface;
 
 final readonly class BlobProperties
 {
-    public function __construct(private ResponseInterface $response)
-    {
-    }
+    public function __construct(
+        private ResponseInterface $response,
+    ) {}
 
-    public function content() : string
+    public function content(): string
     {
         return (string) $this->response->getBody();
     }
 
-    public function lastModifiedAt() : ?\DateTimeImmutable
+    public function lastModifiedAt(): ?\DateTimeImmutable
     {
         $raw = $this->response->getHeaderLine('Last-Modified');
 
@@ -30,7 +30,7 @@ final readonly class BlobProperties
         return $parsed === false ? null : $parsed;
     }
 
-    public function size() : int
+    public function size(): int
     {
         return (int) $this->response->getHeaderLine('Content-Length');
     }

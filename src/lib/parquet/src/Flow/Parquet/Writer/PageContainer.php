@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Parquet\Writer;
 
 use Flow\Parquet\ParquetFile\Page\PageHeader;
-use Flow\Parquet\Thrift\{CompactProtocol, MemoryBuffer};
+use Flow\Parquet\Thrift\CompactProtocol;
+use Flow\Parquet\Thrift\MemoryBuffer;
 
 final class PageContainer
 {
@@ -18,20 +19,19 @@ final class PageContainer
     public function __construct(
         public string $compressedData,
         public PageHeader $pageHeader,
-    ) {
-    }
+    ) {}
 
-    public function dataSize() : int
+    public function dataSize(): int
     {
         return \strlen($this->compressedData);
     }
 
-    public function headerSize() : int
+    public function headerSize(): int
     {
         return \strlen($this->serializedHeader());
     }
 
-    public function serializedHeader() : string
+    public function serializedHeader(): string
     {
         if ($this->serializedHeader !== null) {
             return $this->serializedHeader;
@@ -44,12 +44,12 @@ final class PageContainer
         return $this->serializedHeader;
     }
 
-    public function totalCompressedSize() : int
+    public function totalCompressedSize(): int
     {
         return $this->headerSize() + $this->pageHeader->compressedPageSize();
     }
 
-    public function totalUncompressedSize() : int
+    public function totalUncompressedSize(): int
     {
         return $this->headerSize() + $this->pageHeader->uncompressedPageSize();
     }

@@ -8,5 +8,5 @@ use Flow\Filesystem\FileStatus;
 
 interface Filter
 {
-    public function accept(FileStatus $status) : bool;
+    public function accept(FileStatus $status): bool;
 }

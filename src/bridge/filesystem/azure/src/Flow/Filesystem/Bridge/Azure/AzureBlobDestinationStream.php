@@ -6,13 +6,14 @@ namespace Flow\Filesystem\Bridge\Azure;
 
 use Flow\Azure\SDK\BlobService\BlockBlob\BlockList;
 use Flow\Azure\SDK\BlobServiceInterface;
-use Flow\Filesystem\{Bridge\Azure\AzureBlobDestinationStream\AzureBlobBlockLifecycle,
-    DestinationStream,
-    Exception\RuntimeException,
-    Path};
+use Flow\Filesystem\Bridge\Azure\AzureBlobDestinationStream\AzureBlobBlockLifecycle;
+use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\Exception\RuntimeException;
+use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
-use Flow\Filesystem\Stream\{BlockFactory, Blocks};
+use Flow\Filesystem\Stream\BlockFactory;
+use Flow\Filesystem\Stream\Blocks;
 
 final class AzureBlobDestinationStream implements DestinationStream
 {
@@ -23,35 +24,29 @@ final class AzureBlobDestinationStream implements DestinationStream
         private readonly Path $path,
         private readonly Blocks $blocks,
         private readonly BlockList $blockList,
-    ) {
-    }
+    ) {}
 
     public static function openAppend(
         BlobServiceInterface $blobService,
         Path $path,
         BlockFactory $blockFactory = new NativeLocalFileBlocksFactory(),
         int $blockSize = 1024 * 1024 * 4,
-    ) : self {
+    ): self {
         $blocks = new Blocks(
             $blockSize,
             $blockFactory,
             new AzureBlobBlockLifecycle(
                 $blobService,
                 $path,
-                $blockList = $blobService->getBlockBlobBlockList($path->path())
-            )
+                $blockList = $blobService->getBlockBlobBlockList($path->path()),
+            ),
         );
 
         if (\count($blockList->all()) === 0) {
             $blocks->append($blobService->getBlob($path->path())->content());
         }
 
-        return new self(
-            $blobService,
-            $path,
-            $blocks,
-            $blockList
-        );
+        return new self($blobService, $path, $blocks, $blockList);
     }
 
     public static function openBlank(
@@ -59,27 +54,27 @@ final class AzureBlobDestinationStream implements DestinationStream
         Path $path,
         BlockFactory $blockFactory = new NativeLocalFileBlocksFactory(),
         int $blockSize = 1024 * 1024 * 4,
-    ) : self {
+    ): self {
         return new self(
             $blobService,
             $path,
             new Blocks(
                 $blockSize,
                 $blockFactory,
-                new AzureBlobBlockLifecycle($blobService, $path, $blockList = new BlockList())
+                new AzureBlobBlockLifecycle($blobService, $path, $blockList = new BlockList()),
             ),
-            $blockList
+            $blockList,
         );
     }
 
-    public function append(string $data) : self
+    public function append(string $data): self
     {
         $this->blocks->append($data);
 
         return $this;
     }
 
-    public function close() : void
+    public function close(): void
     {
         if ($this->blocks->size() === 0) {
             $this->blobService->putBlockBlob($this->path->path());
@@ -90,10 +85,7 @@ final class AzureBlobDestinationStream implements DestinationStream
 
         if ($this->blocks->count() > 1) {
             $this->blocks->done();
-            $this->blobService->putBlockBlobBlockList(
-                $this->path->path(),
-                $this->blockList
-            );
+            $this->blobService->putBlockBlobBlockList($this->path->path(), $this->blockList);
         } else {
             $handle = \fopen($this->blocks->block()->path()->path(), 'rb');
 
@@ -113,10 +105,12 @@ final class AzureBlobDestinationStream implements DestinationStream
         $this->closed = true;
     }
 
-    public function fromResource($resource) : self
+    public function fromResource($resource): self
     {
         if (!\is_resource($resource)) {
-            throw new InvalidArgumentException('DestinationStream::fromResource expects resource type, given: ' . \gettype($resource));
+            throw new InvalidArgumentException(
+                'DestinationStream::fromResource expects resource type, given: ' . \gettype($resource),
+            );
         }
 
         $meta = \stream_get_meta_data($resource);
@@ -130,12 +124,12 @@ final class AzureBlobDestinationStream implements DestinationStream
         return $this;
     }
 
-    public function isOpen() : bool
+    public function isOpen(): bool
     {
         return !$this->closed;
     }
 
-    public function path() : Path
+    public function path(): Path
     {
         return $this->path;
     }

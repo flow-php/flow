@@ -5,15 +5,20 @@ declare(strict_types=1);
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Integration;
 
 use Flow\Bridge\Telemetry\OTLP\Tests\Context\TransportConfiguration;
-use Flow\Telemetry\Context\{SpanId, TraceId};
+use Flow\Telemetry\Context\SpanId;
+use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\Resource;
-use Flow\Telemetry\Tracer\{GenericEvent, SpanContext, SpanKind, SpanLink, SpanStatus};
+use Flow\Telemetry\Tracer\GenericEvent;
+use Flow\Telemetry\Tracer\SpanContext;
+use Flow\Telemetry\Tracer\SpanKind;
+use Flow\Telemetry\Tracer\SpanLink;
+use Flow\Telemetry\Tracer\SpanStatus;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class SpanExportIntegrationTest extends IntegrationTestCase
 {
     #[DataProvider('transportProvider')]
-    public function test_exports_nested_spans_with_parent_relationship(TransportConfiguration $config) : void
+    public function test_exports_nested_spans_with_parent_relationship(TransportConfiguration $config): void
     {
         $spansBefore = $this->otelContext->collectorMetrics()->getAcceptedSpans();
 
@@ -27,15 +32,15 @@ final class SpanExportIntegrationTest extends IntegrationTestCase
 
         $telemetry->shutdown();
 
-        self::assertGreaterThanOrEqual(
+        static::assertGreaterThanOrEqual(
             $spansBefore + 2,
             $this->otelContext->collectorMetrics()->waitForSpans($spansBefore + 1),
-            'Collector should have received 2 spans'
+            'Collector should have received 2 spans',
         );
     }
 
     #[DataProvider('transportProvider')]
-    public function test_exports_single_span(TransportConfiguration $config) : void
+    public function test_exports_single_span(TransportConfiguration $config): void
     {
         $spansBefore = $this->otelContext->collectorMetrics()->getAcceptedSpans();
 
@@ -47,15 +52,15 @@ final class SpanExportIntegrationTest extends IntegrationTestCase
 
         $telemetry->shutdown();
 
-        self::assertGreaterThan(
+        static::assertGreaterThan(
             $spansBefore,
             $this->otelContext->collectorMetrics()->waitForSpans($spansBefore),
-            'Collector should have received the span'
+            'Collector should have received the span',
         );
     }
 
     #[DataProvider('transportProvider')]
-    public function test_exports_span_with_attributes(TransportConfiguration $config) : void
+    public function test_exports_span_with_attributes(TransportConfiguration $config): void
     {
         $spansBefore = $this->otelContext->collectorMetrics()->getAcceptedSpans();
 
@@ -72,15 +77,15 @@ final class SpanExportIntegrationTest extends IntegrationTestCase
 
         $telemetry->shutdown();
 
-        self::assertGreaterThan(
+        static::assertGreaterThan(
             $spansBefore,
             $this->otelContext->collectorMetrics()->waitForSpans($spansBefore),
-            'Collector should have received span with attributes'
+            'Collector should have received span with attributes',
         );
     }
 
     #[DataProvider('transportProvider')]
-    public function test_exports_span_with_events(TransportConfiguration $config) : void
+    public function test_exports_span_with_events(TransportConfiguration $config): void
     {
         $spansBefore = $this->otelContext->collectorMetrics()->getAcceptedSpans();
 
@@ -89,20 +94,22 @@ final class SpanExportIntegrationTest extends IntegrationTestCase
 
         $span = $tracer->span('event-test');
         $span->recordEvent(GenericEvent::create('cache.hit', new \DateTimeImmutable(), ['cache.key' => 'user:123']));
-        $span->recordEvent(GenericEvent::create('db.query', new \DateTimeImmutable(), ['db.statement' => 'SELECT * FROM users']));
+        $span->recordEvent(GenericEvent::create('db.query', new \DateTimeImmutable(), [
+            'db.statement' => 'SELECT * FROM users',
+        ]));
         $tracer->complete($span);
 
         $telemetry->shutdown();
 
-        self::assertGreaterThan(
+        static::assertGreaterThan(
             $spansBefore,
             $this->otelContext->collectorMetrics()->waitForSpans($spansBefore),
-            'Collector should have received span with events'
+            'Collector should have received span with events',
         );
     }
 
     #[DataProvider('transportProvider')]
-    public function test_exports_span_with_kind(TransportConfiguration $config) : void
+    public function test_exports_span_with_kind(TransportConfiguration $config): void
     {
         $spansBefore = $this->otelContext->collectorMetrics()->getAcceptedSpans();
 
@@ -114,42 +121,44 @@ final class SpanExportIntegrationTest extends IntegrationTestCase
 
         $telemetry->shutdown();
 
-        self::assertGreaterThan(
+        static::assertGreaterThan(
             $spansBefore,
             $this->otelContext->collectorMetrics()->waitForSpans($spansBefore),
-            'Collector should have received span with kind'
+            'Collector should have received span with kind',
         );
     }
 
     #[DataProvider('transportProvider')]
-    public function test_exports_span_with_links(TransportConfiguration $config) : void
+    public function test_exports_span_with_links(TransportConfiguration $config): void
     {
         $spansBefore = $this->otelContext->collectorMetrics()->getAcceptedSpans();
 
         $telemetry = $this->otelContext->createTelemetry($config);
         $tracer = $telemetry->tracer('test-component');
 
-        $linkedContext = SpanContext::create(
-            TraceId::generate(),
-            SpanId::generate(),
-        );
+        $linkedContext = SpanContext::create(TraceId::generate(), SpanId::generate());
 
-        $span = $tracer->span('link-test', SpanKind::INTERNAL, [], [
-            SpanLink::create($linkedContext, ['link.reason' => 'batch-trigger']),
-        ]);
+        $span = $tracer->span(
+            'link-test',
+            SpanKind::INTERNAL,
+            [],
+            [
+                SpanLink::create($linkedContext, ['link.reason' => 'batch-trigger']),
+            ],
+        );
         $tracer->complete($span);
 
         $telemetry->shutdown();
 
-        self::assertGreaterThan(
+        static::assertGreaterThan(
             $spansBefore,
             $this->otelContext->collectorMetrics()->waitForSpans($spansBefore),
-            'Collector should have received span with links'
+            'Collector should have received span with links',
         );
     }
 
     #[DataProvider('transportProvider')]
-    public function test_exports_span_with_resource_attributes(TransportConfiguration $config) : void
+    public function test_exports_span_with_resource_attributes(TransportConfiguration $config): void
     {
         $spansBefore = $this->otelContext->collectorMetrics()->getAcceptedSpans();
 
@@ -165,15 +174,15 @@ final class SpanExportIntegrationTest extends IntegrationTestCase
 
         $telemetry->shutdown();
 
-        self::assertGreaterThan(
+        static::assertGreaterThan(
             $spansBefore,
             $this->otelContext->collectorMetrics()->waitForSpans($spansBefore),
-            'Collector should have received span with resource'
+            'Collector should have received span with resource',
         );
     }
 
     #[DataProvider('transportProvider')]
-    public function test_exports_span_with_status(TransportConfiguration $config) : void
+    public function test_exports_span_with_status(TransportConfiguration $config): void
     {
         $spansBefore = $this->otelContext->collectorMetrics()->getAcceptedSpans();
 
@@ -186,10 +195,10 @@ final class SpanExportIntegrationTest extends IntegrationTestCase
 
         $telemetry->shutdown();
 
-        self::assertGreaterThan(
+        static::assertGreaterThan(
             $spansBefore,
             $this->otelContext->collectorMetrics()->waitForSpans($spansBefore),
-            'Collector should have received span with status'
+            'Collector should have received span with status',
         );
     }
 }

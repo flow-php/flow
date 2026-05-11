@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Function;
 
-use Flow\PostgreSql\Protobuf\AST\{DropBehavior, DropStmt, Node, ObjectType, ObjectWithArgs, PBString};
+use Flow\PostgreSql\Protobuf\AST\DropBehavior;
+use Flow\PostgreSql\Protobuf\AST\DropStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\ObjectWithArgs;
+use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class DropFunctionBuilder implements DropFunctionFinalStep
@@ -19,55 +24,34 @@ final readonly class DropFunctionBuilder implements DropFunctionFinalStep
         private array $arguments = [],
         private bool $ifExists = false,
         private int $behavior = DropBehavior::DROP_BEHAVIOR_UNDEFINED,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name) : DropFunctionFinalStep
+    public static function create(string $name): DropFunctionFinalStep
     {
         return new self($name);
     }
 
-    public function arguments(FunctionArgument ...$args) : DropFunctionFinalStep
+    public function arguments(FunctionArgument ...$args): DropFunctionFinalStep
     {
-        return new self(
-            $this->name,
-            \array_values($args),
-            $this->ifExists,
-            $this->behavior,
-        );
+        return new self($this->name, \array_values($args), $this->ifExists, $this->behavior);
     }
 
-    public function cascade() : DropFunctionFinalStep
+    public function cascade(): DropFunctionFinalStep
     {
-        return new self(
-            $this->name,
-            $this->arguments,
-            $this->ifExists,
-            DropBehavior::DROP_CASCADE,
-        );
+        return new self($this->name, $this->arguments, $this->ifExists, DropBehavior::DROP_CASCADE);
     }
 
-    public function ifExists() : DropFunctionFinalStep
+    public function ifExists(): DropFunctionFinalStep
     {
-        return new self(
-            $this->name,
-            $this->arguments,
-            true,
-            $this->behavior,
-        );
+        return new self($this->name, $this->arguments, true, $this->behavior);
     }
 
-    public function restrict() : DropFunctionFinalStep
+    public function restrict(): DropFunctionFinalStep
     {
-        return new self(
-            $this->name,
-            $this->arguments,
-            $this->ifExists,
-            DropBehavior::DROP_RESTRICT,
-        );
+        return new self($this->name, $this->arguments, $this->ifExists, DropBehavior::DROP_RESTRICT);
     }
 
-    public function toAst() : DropStmt
+    public function toAst(): DropStmt
     {
         $stmt = new DropStmt();
         $stmt->setRemoveType(ObjectType::OBJECT_FUNCTION);

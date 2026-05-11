@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
-use function Flow\Types\DSL\{type_array, type_boolean, type_optional, type_string, type_structure};
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final readonly class ParameterModel
 {
@@ -22,13 +26,12 @@ final readonly class ParameterModel
         public bool $isNullable,
         public bool $isVariadic,
         public ?string $defaultValue = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<string, mixed> $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         $data = type_structure([
             'name' => type_string(),
@@ -52,7 +55,7 @@ final readonly class ParameterModel
         );
     }
 
-    public static function fromReflection(\ReflectionParameter $reflectionParameter) : self
+    public static function fromReflection(\ReflectionParameter $reflectionParameter): self
     {
         $defaultValue = null;
         $hasDefaultValue = false;
@@ -84,7 +87,7 @@ final readonly class ParameterModel
     /**
      * @return array<string, mixed>
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'name' => $this->name,
@@ -96,7 +99,7 @@ final readonly class ParameterModel
         ];
     }
 
-    private static function exportDefaultValue(mixed $value) : string
+    private static function exportDefaultValue(mixed $value): string
     {
         if ($value === null) {
             return 'null';

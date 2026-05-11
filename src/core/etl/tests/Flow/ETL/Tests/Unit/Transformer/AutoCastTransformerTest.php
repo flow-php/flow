@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use function Flow\ETL\DSL\{array_to_rows, config, flow_context};
 use Flow\ETL\Transformer\AutoCastTransformer;
 use Flow\Types\Type\AutoCaster;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\flow_context;
+
 final class AutoCastTransformerTest extends TestCase
 {
-    public function test_transforming_row() : void
+    public function test_transforming_row(): void
     {
         $transformer = new AutoCastTransformer(new AutoCaster());
 
@@ -27,7 +30,7 @@ final class AutoCastTransformerTest extends TestCase
             ],
         ], flow_context(config())->entryFactory());
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 [
                     'integer' => 1,
@@ -39,7 +42,7 @@ final class AutoCastTransformerTest extends TestCase
                     'nil' => null,
                 ],
             ],
-            $transformer->transform($rows, flow_context())->toArray()
+            $transformer->transform($rows, flow_context())->toArray(),
         );
     }
 }

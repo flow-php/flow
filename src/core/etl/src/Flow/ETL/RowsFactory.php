@@ -9,5 +9,5 @@ interface RowsFactory
     /**
      * @param array<array<mixed>> $data
      */
-    public function create(array $data) : Rows;
+    public function create(array $data): Rows;
 }

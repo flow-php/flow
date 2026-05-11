@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Copy;
 
-enum CopyFormat : string
+enum CopyFormat: string
 {
     case BINARY = 'binary';
     case CSV = 'csv';

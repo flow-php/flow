@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Cache\Implementation;
 
+use Flow\ETL\Cache;
 use Flow\ETL\Cache\CacheIndex;
-use Flow\ETL\{Cache, Row, Rows};
 use Flow\ETL\Exception\KeyNotInCacheException;
 use Flow\ETL\Hash\NativePHPHash;
-use Flow\Filesystem\{Filesystem, Path};
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Path;
 use Flow\Serializer\Serializer;
 
 final readonly class FilesystemCache implements Cache
@@ -23,17 +26,17 @@ final readonly class FilesystemCache implements Cache
         $this->cacheDir = $cacheDir ?? $this->filesystem->getSystemTmpDir();
     }
 
-    public function clear() : void
+    public function clear(): void
     {
         $this->filesystem->rm($this->cacheDir);
     }
 
-    public function delete(string $key) : void
+    public function delete(string $key): void
     {
         $this->filesystem->rm($this->cachePath($key));
     }
 
-    public function get(string $key) : Row|Rows|CacheIndex
+    public function get(string $key): Row|Rows|CacheIndex
     {
         $path = $this->cachePath($key);
 
@@ -49,20 +52,22 @@ final readonly class FilesystemCache implements Cache
         return $this->serializer->unserialize($serializedValue, [Row::class, Rows::class, CacheIndex::class]);
     }
 
-    public function has(string $key) : bool
+    public function has(string $key): bool
     {
         return $this->filesystem->status($this->cachePath($key)) !== null;
     }
 
-    public function set(string $key, CacheIndex|Rows|Row $value) : void
+    public function set(string $key, CacheIndex|Rows|Row $value): void
     {
         $cacheStream = $this->filesystem->writeTo($this->cachePath($key));
         $cacheStream->append($this->serializer->serialize($value));
         $cacheStream->close();
     }
 
-    private function cachePath(string $key) : Path
+    private function cachePath(string $key): Path
     {
-        return $this->cacheDir->suffix(implode('/', \str_split(\substr(NativePHPHash::xxh128($key), 0, 8), 2)) . '/' . $key . '.php.cache');
+        return $this->cacheDir->suffix(
+            implode('/', \str_split(\substr(NativePHPHash::xxh128($key), 0, 8), 2)) . '/' . $key . '.php.cache',
+        );
     }
 }

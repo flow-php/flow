@@ -25,7 +25,11 @@ final readonly class SheetRange
         }
 
         if ($endRow < $this->startRow) {
-            throw new InvalidArgumentException(\sprintf('End row "%d" must be greater or equal to start row "%d"', $endRow, $this->startRow));
+            throw new InvalidArgumentException(\sprintf(
+                'End row "%d" must be greater or equal to start row "%d"',
+                $endRow,
+                $this->startRow,
+            ));
         }
 
         if ($this->maxRows < 1) {
@@ -35,7 +39,7 @@ final readonly class SheetRange
         $this->endRow = min($endRow, $this->maxRows);
     }
 
-    public function nextRows(int $count) : self
+    public function nextRows(int $count): self
     {
         if ($count < 1) {
             throw new InvalidArgumentException(\sprintf('Count "%d" must be greater than 0', $count));
@@ -49,7 +53,7 @@ final readonly class SheetRange
         );
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return \sprintf(
             '%s!%s%d:%s%d',

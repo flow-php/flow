@@ -4,108 +4,115 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\DSL;
 
-use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
+use Flow\ETL\Attribute\DocumentationDSL;
+use Flow\ETL\Attribute\Module;
+use Flow\ETL\Attribute\Type as DSLType;
+use Flow\PostgreSql\Client;
 use Flow\PostgreSql\Client\Infrastructure\PgSql\PgCatalogProvider;
 use Flow\PostgreSql\Client\Types\ValueType;
-use Flow\PostgreSql\{Client, Parser};
+use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Parser\ColumnTypeParser;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Delete\DeleteBuilder;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
-use Flow\PostgreSql\QueryBuilder\Factory\{AlterFactory, CreateFactory, DropFactory};
+use Flow\PostgreSql\QueryBuilder\Factory\AlterFactory;
+use Flow\PostgreSql\QueryBuilder\Factory\CreateFactory;
+use Flow\PostgreSql\QueryBuilder\Factory\DropFactory;
 use Flow\PostgreSql\QueryBuilder\Insert\InsertBuilder;
-use Flow\PostgreSql\QueryBuilder\Schema\{ColumnDefinition, ColumnType, ReferentialAction};
-use Flow\PostgreSql\QueryBuilder\Schema\Constraint\{CheckConstraint, ForeignKeyConstraint, PrimaryKeyConstraint, UniqueConstraint};
-use Flow\PostgreSql\QueryBuilder\Schema\Function\{
-    CallBuilder,
-    CallFinalStep,
-    DoBuilder,
-    DoFinalStep,
-    FunctionArgument
-};
-use Flow\PostgreSql\QueryBuilder\Schema\Grant\{
-    GrantBuilder,
-    GrantOnStep,
-    GrantRoleBuilder,
-    GrantRoleToStep,
-    RevokeBuilder,
-    RevokeOnStep,
-    RevokeRoleBuilder,
-    RevokeRoleFromStep,
-    TablePrivilege
-};
-use Flow\PostgreSql\QueryBuilder\Schema\Index\{IndexColumn, IndexMethod};
-use Flow\PostgreSql\QueryBuilder\Schema\Index\Reindex\{ReindexBuilder, ReindexFinalStep};
-use Flow\PostgreSql\QueryBuilder\Schema\Ownership\{
-    DropOwnedBuilder,
-    DropOwnedFinalStep,
-    ReassignOwnedBuilder,
-    ReassignOwnedToStep
-};
-use Flow\PostgreSql\QueryBuilder\Schema\Session\{
-    ResetRoleBuilder,
-    ResetRoleFinalStep,
-    SetRoleBuilder,
-    SetRoleFinalStep
-};
-use Flow\PostgreSql\QueryBuilder\Schema\Truncate\{TruncateBuilder, TruncateFinalStep};
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnDefinition;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
+use Flow\PostgreSql\QueryBuilder\Schema\Constraint\CheckConstraint;
+use Flow\PostgreSql\QueryBuilder\Schema\Constraint\ForeignKeyConstraint;
+use Flow\PostgreSql\QueryBuilder\Schema\Constraint\PrimaryKeyConstraint;
+use Flow\PostgreSql\QueryBuilder\Schema\Constraint\UniqueConstraint;
+use Flow\PostgreSql\QueryBuilder\Schema\Function\CallBuilder;
+use Flow\PostgreSql\QueryBuilder\Schema\Function\CallFinalStep;
+use Flow\PostgreSql\QueryBuilder\Schema\Function\DoBuilder;
+use Flow\PostgreSql\QueryBuilder\Schema\Function\DoFinalStep;
+use Flow\PostgreSql\QueryBuilder\Schema\Function\FunctionArgument;
+use Flow\PostgreSql\QueryBuilder\Schema\Grant\GrantBuilder;
+use Flow\PostgreSql\QueryBuilder\Schema\Grant\GrantOnStep;
+use Flow\PostgreSql\QueryBuilder\Schema\Grant\GrantRoleBuilder;
+use Flow\PostgreSql\QueryBuilder\Schema\Grant\GrantRoleToStep;
+use Flow\PostgreSql\QueryBuilder\Schema\Grant\RevokeBuilder;
+use Flow\PostgreSql\QueryBuilder\Schema\Grant\RevokeOnStep;
+use Flow\PostgreSql\QueryBuilder\Schema\Grant\RevokeRoleBuilder;
+use Flow\PostgreSql\QueryBuilder\Schema\Grant\RevokeRoleFromStep;
+use Flow\PostgreSql\QueryBuilder\Schema\Grant\TablePrivilege;
+use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexColumn;
+use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexMethod;
+use Flow\PostgreSql\QueryBuilder\Schema\Index\Reindex\ReindexBuilder;
+use Flow\PostgreSql\QueryBuilder\Schema\Index\Reindex\ReindexFinalStep;
+use Flow\PostgreSql\QueryBuilder\Schema\Ownership\DropOwnedBuilder;
+use Flow\PostgreSql\QueryBuilder\Schema\Ownership\DropOwnedFinalStep;
+use Flow\PostgreSql\QueryBuilder\Schema\Ownership\ReassignOwnedBuilder;
+use Flow\PostgreSql\QueryBuilder\Schema\Ownership\ReassignOwnedToStep;
+use Flow\PostgreSql\QueryBuilder\Schema\ReferentialAction;
+use Flow\PostgreSql\QueryBuilder\Schema\Session\ResetRoleBuilder;
+use Flow\PostgreSql\QueryBuilder\Schema\Session\ResetRoleFinalStep;
+use Flow\PostgreSql\QueryBuilder\Schema\Session\SetRoleBuilder;
+use Flow\PostgreSql\QueryBuilder\Schema\Session\SetRoleFinalStep;
+use Flow\PostgreSql\QueryBuilder\Schema\Truncate\TruncateBuilder;
+use Flow\PostgreSql\QueryBuilder\Schema\Truncate\TruncateFinalStep;
 use Flow\PostgreSql\QueryBuilder\Schema\Type\TypeAttribute;
-use Flow\PostgreSql\QueryBuilder\Schema\View\RefreshMaterializedView\{RefreshMatViewOptionsStep, RefreshMaterializedViewBuilder};
+use Flow\PostgreSql\QueryBuilder\Schema\View\RefreshMaterializedView\RefreshMaterializedViewBuilder;
+use Flow\PostgreSql\QueryBuilder\Schema\View\RefreshMaterializedView\RefreshMatViewOptionsStep;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 use Flow\PostgreSql\QueryBuilder\Update\UpdateBuilder;
-use Flow\PostgreSql\QueryBuilder\Utility\{
-    AnalyzeBuilder,
-    AnalyzeFinalStep,
-    ClusterBuilder,
-    ClusterFinalStep,
-    CommentBuilder,
-    CommentFinalStep,
-    CommentTarget,
-    DiscardBuilder,
-    DiscardFinalStep,
-    DiscardType,
-    ExplainBuilder,
-    ExplainFinalStep,
-    LockBuilder,
-    LockFinalStep,
-    VacuumBuilder,
-    VacuumFinalStep
-};
-use Flow\PostgreSql\Schema\{
-    Column as SchemaColumn,
-    Domain as SchemaDomain,
-    Extension as SchemaExtension,
-    Func as SchemaFunction,
-    FunctionVolatility as SchemaFunctionVolatility,
-    IdentityGeneration,
-    Index as SchemaIndex,
-    IndexMethod as SchemaIndexMethod,
-    MaterializedView as SchemaMaterializedView,
-    PartitionStrategy,
-    Procedure as SchemaProcedure,
-    Schema as DatabaseSchema,
-    Sequence as SchemaSequence,
-    Table as SchemaTable,
-    Trigger as SchemaTrigger,
-    TriggerEvent,
-    TriggerTiming,
-    View as SchemaView
-};
-use Flow\PostgreSql\Schema\{Catalog, CatalogProvider, ChainCatalogProvider, ManualCatalogProvider};
-use Flow\PostgreSql\Schema\Constraint\{
-    CheckConstraint as SchemaCheckConstraint,
-    ExcludeConstraint as SchemaExcludeConstraint,
-    ForeignKey as SchemaForeignKey,
-    PrimaryKey as SchemaPrimaryKey,
-    UniqueConstraint as SchemaUniqueConstraint
-};
-use Flow\PostgreSql\Schema\Diff\{AstViewDependencyResolver, CatalogComparator, NoopViewDependencyResolver, RenameStrategy, ViewDependencyResolver};
-use Flow\PostgreSql\Schema\{ExecutionOrderStrategy,
-    ForeignKeyDependencyOrder,
-    MaterializedViewDependencyOrder,
-    NoExecutionOrder,
-    Schema,
-    ViewDependencyOrder};
+use Flow\PostgreSql\QueryBuilder\Utility\AnalyzeBuilder;
+use Flow\PostgreSql\QueryBuilder\Utility\AnalyzeFinalStep;
+use Flow\PostgreSql\QueryBuilder\Utility\ClusterBuilder;
+use Flow\PostgreSql\QueryBuilder\Utility\ClusterFinalStep;
+use Flow\PostgreSql\QueryBuilder\Utility\CommentBuilder;
+use Flow\PostgreSql\QueryBuilder\Utility\CommentFinalStep;
+use Flow\PostgreSql\QueryBuilder\Utility\CommentTarget;
+use Flow\PostgreSql\QueryBuilder\Utility\DiscardBuilder;
+use Flow\PostgreSql\QueryBuilder\Utility\DiscardFinalStep;
+use Flow\PostgreSql\QueryBuilder\Utility\DiscardType;
+use Flow\PostgreSql\QueryBuilder\Utility\ExplainBuilder;
+use Flow\PostgreSql\QueryBuilder\Utility\ExplainFinalStep;
+use Flow\PostgreSql\QueryBuilder\Utility\LockBuilder;
+use Flow\PostgreSql\QueryBuilder\Utility\LockFinalStep;
+use Flow\PostgreSql\QueryBuilder\Utility\VacuumBuilder;
+use Flow\PostgreSql\QueryBuilder\Utility\VacuumFinalStep;
+use Flow\PostgreSql\Schema\Catalog;
+use Flow\PostgreSql\Schema\CatalogProvider;
+use Flow\PostgreSql\Schema\ChainCatalogProvider;
+use Flow\PostgreSql\Schema\Column as SchemaColumn;
+use Flow\PostgreSql\Schema\Constraint\CheckConstraint as SchemaCheckConstraint;
+use Flow\PostgreSql\Schema\Constraint\ExcludeConstraint as SchemaExcludeConstraint;
+use Flow\PostgreSql\Schema\Constraint\ForeignKey as SchemaForeignKey;
+use Flow\PostgreSql\Schema\Constraint\PrimaryKey as SchemaPrimaryKey;
+use Flow\PostgreSql\Schema\Constraint\UniqueConstraint as SchemaUniqueConstraint;
+use Flow\PostgreSql\Schema\Diff\AstViewDependencyResolver;
+use Flow\PostgreSql\Schema\Diff\CatalogComparator;
+use Flow\PostgreSql\Schema\Diff\NoopViewDependencyResolver;
+use Flow\PostgreSql\Schema\Diff\RenameStrategy;
+use Flow\PostgreSql\Schema\Diff\ViewDependencyResolver;
+use Flow\PostgreSql\Schema\Domain as SchemaDomain;
+use Flow\PostgreSql\Schema\ExecutionOrderStrategy;
+use Flow\PostgreSql\Schema\Extension as SchemaExtension;
+use Flow\PostgreSql\Schema\ForeignKeyDependencyOrder;
+use Flow\PostgreSql\Schema\Func as SchemaFunction;
+use Flow\PostgreSql\Schema\FunctionVolatility as SchemaFunctionVolatility;
+use Flow\PostgreSql\Schema\IdentityGeneration;
+use Flow\PostgreSql\Schema\Index as SchemaIndex;
+use Flow\PostgreSql\Schema\IndexMethod as SchemaIndexMethod;
+use Flow\PostgreSql\Schema\ManualCatalogProvider;
+use Flow\PostgreSql\Schema\MaterializedView as SchemaMaterializedView;
+use Flow\PostgreSql\Schema\MaterializedViewDependencyOrder;
+use Flow\PostgreSql\Schema\NoExecutionOrder;
+use Flow\PostgreSql\Schema\PartitionStrategy;
+use Flow\PostgreSql\Schema\Procedure as SchemaProcedure;
+use Flow\PostgreSql\Schema\Schema as DatabaseSchema;
+use Flow\PostgreSql\Schema\Schema;
+use Flow\PostgreSql\Schema\Sequence as SchemaSequence;
+use Flow\PostgreSql\Schema\Table as SchemaTable;
+use Flow\PostgreSql\Schema\Trigger as SchemaTrigger;
+use Flow\PostgreSql\Schema\TriggerEvent;
+use Flow\PostgreSql\Schema\TriggerTiming;
+use Flow\PostgreSql\Schema\View as SchemaView;
+use Flow\PostgreSql\Schema\ViewDependencyOrder;
 
 /**
  * Create a column definition for CREATE TABLE.
@@ -114,7 +121,7 @@ use Flow\PostgreSql\Schema\{ExecutionOrderStrategy,
  * @param ColumnType $type Column data type
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column(string $name, ColumnType $type) : ColumnDefinition
+function column(string $name, ColumnType $type): ColumnDefinition
 {
     return ColumnDefinition::create($name, $type);
 }
@@ -123,7 +130,7 @@ function column(string $name, ColumnType $type) : ColumnDefinition
  * @param list<Schema> $schemas
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function catalog(array $schemas) : Catalog
+function catalog(array $schemas): Catalog
 {
     return new Catalog($schemas);
 }
@@ -134,7 +141,7 @@ function catalog(array $schemas) : Catalog
  * @param string ...$columns Columns that form the primary key
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function primary_key(string ...$columns) : PrimaryKeyConstraint
+function primary_key(string ...$columns): PrimaryKeyConstraint
 {
     return PrimaryKeyConstraint::create(...$columns);
 }
@@ -145,7 +152,7 @@ function primary_key(string ...$columns) : PrimaryKeyConstraint
  * @param string ...$columns Columns that must be unique together
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function unique_constraint(string ...$columns) : UniqueConstraint
+function unique_constraint(string ...$columns): UniqueConstraint
 {
     return UniqueConstraint::create(...$columns);
 }
@@ -158,7 +165,7 @@ function unique_constraint(string ...$columns) : UniqueConstraint
  * @param list<string> $referenceColumns Referenced columns (defaults to same as $columns if empty)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function foreign_key(array $columns, string $referenceTable, array $referenceColumns = []) : ForeignKeyConstraint
+function foreign_key(array $columns, string $referenceTable, array $referenceColumns = []): ForeignKeyConstraint
 {
     return ForeignKeyConstraint::create($columns, $referenceTable, $referenceColumns);
 }
@@ -167,7 +174,7 @@ function foreign_key(array $columns, string $referenceTable, array $referenceCol
  * Create a CHECK constraint.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function check_constraint(Condition $condition) : CheckConstraint
+function check_constraint(Condition $condition): CheckConstraint
 {
     return CheckConstraint::create($condition);
 }
@@ -198,7 +205,7 @@ function check_constraint(Condition $condition) : CheckConstraint
  * Example: create()->index('idx_email')->on('users')->columns('email')
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function create() : CreateFactory
+function create(): CreateFactory
 {
     return new CreateFactory();
 }
@@ -227,7 +234,7 @@ function create() : CreateFactory
  * Example: drop()->index('idx_email')->ifExists()
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function drop() : DropFactory
+function drop(): DropFactory
 {
     return new DropFactory();
 }
@@ -261,7 +268,7 @@ function drop() : DropFactory
  * Example: alter()->sequence('user_id_seq')->restart(1000)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function alter() : AlterFactory
+function alter(): AlterFactory
 {
     return new AlterFactory();
 }
@@ -272,7 +279,7 @@ function alter() : AlterFactory
  * @param string ...$tables Table names to truncate
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function truncate_table(string ...$tables) : TruncateFinalStep
+function truncate_table(string ...$tables): TruncateFinalStep
 {
     return TruncateBuilder::create(...$tables);
 }
@@ -290,7 +297,7 @@ function truncate_table(string ...$tables) : TruncateFinalStep
  * @param null|string $schema Schema name (optional, overrides parsed schema)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function refresh_materialized_view(string $name, ?string $schema = null) : RefreshMatViewOptionsStep
+function refresh_materialized_view(string $name, ?string $schema = null): RefreshMatViewOptionsStep
 {
     return RefreshMaterializedViewBuilder::create($name, $schema);
 }
@@ -299,7 +306,7 @@ function refresh_materialized_view(string $name, ?string $schema = null) : Refre
  * Get a CASCADE referential action.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function ref_action_cascade() : ReferentialAction
+function ref_action_cascade(): ReferentialAction
 {
     return ReferentialAction::CASCADE;
 }
@@ -308,7 +315,7 @@ function ref_action_cascade() : ReferentialAction
  * Get a RESTRICT referential action.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function ref_action_restrict() : ReferentialAction
+function ref_action_restrict(): ReferentialAction
 {
     return ReferentialAction::RESTRICT;
 }
@@ -317,7 +324,7 @@ function ref_action_restrict() : ReferentialAction
  * Get a SET NULL referential action.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function ref_action_set_null() : ReferentialAction
+function ref_action_set_null(): ReferentialAction
 {
     return ReferentialAction::SET_NULL;
 }
@@ -326,7 +333,7 @@ function ref_action_set_null() : ReferentialAction
  * Get a SET DEFAULT referential action.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function ref_action_set_default() : ReferentialAction
+function ref_action_set_default(): ReferentialAction
 {
     return ReferentialAction::SET_DEFAULT;
 }
@@ -335,7 +342,7 @@ function ref_action_set_default() : ReferentialAction
  * Get a NO ACTION referential action.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function ref_action_no_action() : ReferentialAction
+function ref_action_no_action(): ReferentialAction
 {
     return ReferentialAction::NO_ACTION;
 }
@@ -350,7 +357,7 @@ function ref_action_no_action() : ReferentialAction
  * @param string $name The index name (may include schema: schema.index)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function reindex_index(string $name) : ReindexFinalStep
+function reindex_index(string $name): ReindexFinalStep
 {
     return ReindexBuilder::index($name);
 }
@@ -365,7 +372,7 @@ function reindex_index(string $name) : ReindexFinalStep
  * @param string $name The table name (may include schema: schema.table)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function reindex_table(string $name) : ReindexFinalStep
+function reindex_table(string $name): ReindexFinalStep
 {
     return ReindexBuilder::table($name);
 }
@@ -380,7 +387,7 @@ function reindex_table(string $name) : ReindexFinalStep
  * @param string $name The schema name
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function reindex_schema(string $name) : ReindexFinalStep
+function reindex_schema(string $name): ReindexFinalStep
 {
     return ReindexBuilder::schema($name);
 }
@@ -395,7 +402,7 @@ function reindex_schema(string $name) : ReindexFinalStep
  * @param string $name The database name
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function reindex_database(string $name) : ReindexFinalStep
+function reindex_database(string $name): ReindexFinalStep
 {
     return ReindexBuilder::database($name);
 }
@@ -410,7 +417,7 @@ function reindex_database(string $name) : ReindexFinalStep
  * @param string $name The column name
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function index_col(string $name) : IndexColumn
+function index_col(string $name): IndexColumn
 {
     return IndexColumn::column($name);
 }
@@ -425,7 +432,7 @@ function index_col(string $name) : IndexColumn
  * @param Expression $expression The expression to index
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function index_expr(Expression $expression) : IndexColumn
+function index_expr(Expression $expression): IndexColumn
 {
     return IndexColumn::expression($expression);
 }
@@ -434,7 +441,7 @@ function index_expr(Expression $expression) : IndexColumn
  * Get the BTREE index method.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function index_method_btree() : IndexMethod
+function index_method_btree(): IndexMethod
 {
     return IndexMethod::BTREE;
 }
@@ -443,7 +450,7 @@ function index_method_btree() : IndexMethod
  * Get the HASH index method.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function index_method_hash() : IndexMethod
+function index_method_hash(): IndexMethod
 {
     return IndexMethod::HASH;
 }
@@ -452,7 +459,7 @@ function index_method_hash() : IndexMethod
  * Get the GIST index method.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function index_method_gist() : IndexMethod
+function index_method_gist(): IndexMethod
 {
     return IndexMethod::GIST;
 }
@@ -461,7 +468,7 @@ function index_method_gist() : IndexMethod
  * Get the SPGIST index method.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function index_method_spgist() : IndexMethod
+function index_method_spgist(): IndexMethod
 {
     return IndexMethod::SPGIST;
 }
@@ -470,7 +477,7 @@ function index_method_spgist() : IndexMethod
  * Get the GIN index method.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function index_method_gin() : IndexMethod
+function index_method_gin(): IndexMethod
 {
     return IndexMethod::GIN;
 }
@@ -479,7 +486,7 @@ function index_method_gin() : IndexMethod
  * Get the BRIN index method.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function index_method_brin() : IndexMethod
+function index_method_brin(): IndexMethod
 {
     return IndexMethod::BRIN;
 }
@@ -491,7 +498,7 @@ function index_method_brin() : IndexMethod
  * Produces: VACUUM users
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function vacuum() : VacuumFinalStep
+function vacuum(): VacuumFinalStep
 {
     return VacuumBuilder::create();
 }
@@ -503,7 +510,7 @@ function vacuum() : VacuumFinalStep
  * Produces: ANALYZE users
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function analyze() : AnalyzeFinalStep
+function analyze(): AnalyzeFinalStep
 {
     return AnalyzeBuilder::create();
 }
@@ -517,7 +524,7 @@ function analyze() : AnalyzeFinalStep
  * @param DeleteBuilder|InsertBuilder|SelectFinalStep|UpdateBuilder $query Query to explain
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function explain(SelectFinalStep|InsertBuilder|UpdateBuilder|DeleteBuilder $query) : ExplainFinalStep
+function explain(SelectFinalStep|InsertBuilder|UpdateBuilder|DeleteBuilder $query): ExplainFinalStep
 {
     return ExplainBuilder::create($query);
 }
@@ -529,7 +536,7 @@ function explain(SelectFinalStep|InsertBuilder|UpdateBuilder|DeleteBuilder $quer
  * Produces: LOCK TABLE users, orders IN ACCESS EXCLUSIVE MODE
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function lock_table(string ...$tables) : LockFinalStep
+function lock_table(string ...$tables): LockFinalStep
 {
     return LockBuilder::create(...$tables);
 }
@@ -544,7 +551,7 @@ function lock_table(string ...$tables) : LockFinalStep
  * @param string $name Target name (use 'table.column' for COLUMN targets)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function comment(CommentTarget $target, string $name) : CommentFinalStep
+function comment(CommentTarget $target, string $name): CommentFinalStep
 {
     return CommentBuilder::create($target, $name);
 }
@@ -556,7 +563,7 @@ function comment(CommentTarget $target, string $name) : CommentFinalStep
  * Produces: CLUSTER users USING idx_users_pkey
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function cluster() : ClusterFinalStep
+function cluster(): ClusterFinalStep
 {
     return ClusterBuilder::create();
 }
@@ -570,7 +577,7 @@ function cluster() : ClusterFinalStep
  * @param DiscardType $type Type of resources to discard (ALL, PLANS, SEQUENCES, TEMP)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function discard(DiscardType $type) : DiscardFinalStep
+function discard(DiscardType $type): DiscardFinalStep
 {
     return DiscardBuilder::create($type);
 }
@@ -589,7 +596,7 @@ function discard(DiscardType $type) : DiscardFinalStep
  * @return GrantOnStep Builder for grant options
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function grant(TablePrivilege|string ...$privileges) : GrantOnStep
+function grant(TablePrivilege|string ...$privileges): GrantOnStep
 {
     return GrantBuilder::create(...$privileges);
 }
@@ -608,7 +615,7 @@ function grant(TablePrivilege|string ...$privileges) : GrantOnStep
  * @return GrantRoleToStep Builder for grant role options
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function grant_role(string ...$roles) : GrantRoleToStep
+function grant_role(string ...$roles): GrantRoleToStep
 {
     return GrantRoleBuilder::create(...$roles);
 }
@@ -627,7 +634,7 @@ function grant_role(string ...$roles) : GrantRoleToStep
  * @return RevokeOnStep Builder for revoke options
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function revoke(TablePrivilege|string ...$privileges) : RevokeOnStep
+function revoke(TablePrivilege|string ...$privileges): RevokeOnStep
 {
     return RevokeBuilder::create(...$privileges);
 }
@@ -646,7 +653,7 @@ function revoke(TablePrivilege|string ...$privileges) : RevokeOnStep
  * @return RevokeRoleFromStep Builder for revoke role options
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function revoke_role(string ...$roles) : RevokeRoleFromStep
+function revoke_role(string ...$roles): RevokeRoleFromStep
 {
     return RevokeRoleBuilder::create(...$roles);
 }
@@ -662,7 +669,7 @@ function revoke_role(string ...$roles) : RevokeRoleFromStep
  * @return SetRoleFinalStep Builder for set role
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function set_role(string $role) : SetRoleFinalStep
+function set_role(string $role): SetRoleFinalStep
 {
     return SetRoleBuilder::create($role);
 }
@@ -676,7 +683,7 @@ function set_role(string $role) : SetRoleFinalStep
  * @return ResetRoleFinalStep Builder for reset role
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function reset_role() : ResetRoleFinalStep
+function reset_role(): ResetRoleFinalStep
 {
     return ResetRoleBuilder::create();
 }
@@ -692,7 +699,7 @@ function reset_role() : ResetRoleFinalStep
  * @return ReassignOwnedToStep Builder for reassign owned options
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function reassign_owned(string ...$roles) : ReassignOwnedToStep
+function reassign_owned(string ...$roles): ReassignOwnedToStep
 {
     return ReassignOwnedBuilder::create(...$roles);
 }
@@ -711,7 +718,7 @@ function reassign_owned(string ...$roles) : ReassignOwnedToStep
  * @return DropOwnedFinalStep Builder for drop owned options
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function drop_owned(string ...$roles) : DropOwnedFinalStep
+function drop_owned(string ...$roles): DropOwnedFinalStep
 {
     return DropOwnedBuilder::create(...$roles);
 }
@@ -729,7 +736,7 @@ function drop_owned(string ...$roles) : DropOwnedFinalStep
  * @return FunctionArgument Builder for function argument options
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function func_arg(ColumnType $type) : FunctionArgument
+function func_arg(ColumnType $type): FunctionArgument
 {
     return FunctionArgument::of($type);
 }
@@ -748,7 +755,7 @@ function func_arg(ColumnType $type) : FunctionArgument
  * @return CallFinalStep Builder for call statement options
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function call(string $procedure) : CallFinalStep
+function call(string $procedure): CallFinalStep
 {
     return CallBuilder::create($procedure);
 }
@@ -767,7 +774,7 @@ function call(string $procedure) : CallFinalStep
  * @return DoFinalStep Builder for DO statement options
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function do_block(string $code) : DoFinalStep
+function do_block(string $code): DoFinalStep
 {
     return DoBuilder::create($code);
 }
@@ -787,7 +794,7 @@ function do_block(string $code) : DoFinalStep
  * @return TypeAttribute Type attribute value object
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function type_attr(string $name, ColumnType $type) : TypeAttribute
+function type_attr(string $name, ColumnType $type): TypeAttribute
 {
     return TypeAttribute::of($name, $type);
 }
@@ -796,7 +803,7 @@ function type_attr(string $name, ColumnType $type) : TypeAttribute
  * Create an integer data type (PostgreSQL int4).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_integer() : ColumnType
+function column_type_integer(): ColumnType
 {
     return ColumnType::integer();
 }
@@ -805,7 +812,7 @@ function column_type_integer() : ColumnType
  * Create a smallint data type (PostgreSQL int2).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_smallint() : ColumnType
+function column_type_smallint(): ColumnType
 {
     return ColumnType::smallint();
 }
@@ -814,7 +821,7 @@ function column_type_smallint() : ColumnType
  * Create a bigint data type (PostgreSQL int8).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_bigint() : ColumnType
+function column_type_bigint(): ColumnType
 {
     return ColumnType::bigint();
 }
@@ -823,7 +830,7 @@ function column_type_bigint() : ColumnType
  * Create a boolean data type.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_boolean() : ColumnType
+function column_type_boolean(): ColumnType
 {
     return ColumnType::boolean();
 }
@@ -832,7 +839,7 @@ function column_type_boolean() : ColumnType
  * Create a text data type.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_text() : ColumnType
+function column_type_text(): ColumnType
 {
     return ColumnType::text();
 }
@@ -841,7 +848,7 @@ function column_type_text() : ColumnType
  * Create a varchar data type with length constraint.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_varchar(int $length) : ColumnType
+function column_type_varchar(int $length): ColumnType
 {
     return ColumnType::varchar($length);
 }
@@ -850,7 +857,7 @@ function column_type_varchar(int $length) : ColumnType
  * Create a char data type with length constraint.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_char(int $length) : ColumnType
+function column_type_char(int $length): ColumnType
 {
     return ColumnType::char($length);
 }
@@ -859,7 +866,7 @@ function column_type_char(int $length) : ColumnType
  * Create a numeric data type with optional precision and scale.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_numeric(?int $precision = null, ?int $scale = null) : ColumnType
+function column_type_numeric(?int $precision = null, ?int $scale = null): ColumnType
 {
     return ColumnType::numeric($precision, $scale);
 }
@@ -868,7 +875,7 @@ function column_type_numeric(?int $precision = null, ?int $scale = null) : Colum
  * Create a decimal data type with optional precision and scale.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_decimal(?int $precision = null, ?int $scale = null) : ColumnType
+function column_type_decimal(?int $precision = null, ?int $scale = null): ColumnType
 {
     return ColumnType::decimal($precision, $scale);
 }
@@ -877,7 +884,7 @@ function column_type_decimal(?int $precision = null, ?int $scale = null) : Colum
  * Create a real data type (PostgreSQL float4).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_real() : ColumnType
+function column_type_real(): ColumnType
 {
     return ColumnType::real();
 }
@@ -886,7 +893,7 @@ function column_type_real() : ColumnType
  * Create a double precision data type (PostgreSQL float8).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_double_precision() : ColumnType
+function column_type_double_precision(): ColumnType
 {
     return ColumnType::doublePrecision();
 }
@@ -895,7 +902,7 @@ function column_type_double_precision() : ColumnType
  * Create a date data type.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_date() : ColumnType
+function column_type_date(): ColumnType
 {
     return ColumnType::date();
 }
@@ -904,7 +911,7 @@ function column_type_date() : ColumnType
  * Create a time data type with optional precision.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_time(?int $precision = null) : ColumnType
+function column_type_time(?int $precision = null): ColumnType
 {
     return ColumnType::time($precision);
 }
@@ -913,7 +920,7 @@ function column_type_time(?int $precision = null) : ColumnType
  * Create a timestamp data type with optional precision.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_timestamp(?int $precision = null) : ColumnType
+function column_type_timestamp(?int $precision = null): ColumnType
 {
     return ColumnType::timestamp($precision);
 }
@@ -922,7 +929,7 @@ function column_type_timestamp(?int $precision = null) : ColumnType
  * Create a timestamp with time zone data type with optional precision.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_timestamptz(?int $precision = null) : ColumnType
+function column_type_timestamptz(?int $precision = null): ColumnType
 {
     return ColumnType::timestamptz($precision);
 }
@@ -931,7 +938,7 @@ function column_type_timestamptz(?int $precision = null) : ColumnType
  * Create an interval data type.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_interval() : ColumnType
+function column_type_interval(): ColumnType
 {
     return ColumnType::interval();
 }
@@ -940,7 +947,7 @@ function column_type_interval() : ColumnType
  * Create a UUID data type.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_uuid() : ColumnType
+function column_type_uuid(): ColumnType
 {
     return ColumnType::uuid();
 }
@@ -949,7 +956,7 @@ function column_type_uuid() : ColumnType
  * Create a JSON data type.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_json() : ColumnType
+function column_type_json(): ColumnType
 {
     return ColumnType::json();
 }
@@ -958,7 +965,7 @@ function column_type_json() : ColumnType
  * Create a JSONB data type.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_jsonb() : ColumnType
+function column_type_jsonb(): ColumnType
 {
     return ColumnType::jsonb();
 }
@@ -967,7 +974,7 @@ function column_type_jsonb() : ColumnType
  * Create a bytea data type.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_bytea() : ColumnType
+function column_type_bytea(): ColumnType
 {
     return ColumnType::bytea();
 }
@@ -976,7 +983,7 @@ function column_type_bytea() : ColumnType
  * Create an inet data type.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_inet() : ColumnType
+function column_type_inet(): ColumnType
 {
     return ColumnType::inet();
 }
@@ -985,7 +992,7 @@ function column_type_inet() : ColumnType
  * Create a cidr data type.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_cidr() : ColumnType
+function column_type_cidr(): ColumnType
 {
     return ColumnType::cidr();
 }
@@ -994,7 +1001,7 @@ function column_type_cidr() : ColumnType
  * Create a macaddr data type.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_macaddr() : ColumnType
+function column_type_macaddr(): ColumnType
 {
     return ColumnType::macaddr();
 }
@@ -1003,7 +1010,7 @@ function column_type_macaddr() : ColumnType
  * Create a serial data type.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_serial() : ColumnType
+function column_type_serial(): ColumnType
 {
     return ColumnType::serial();
 }
@@ -1012,7 +1019,7 @@ function column_type_serial() : ColumnType
  * Create a smallserial data type.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_smallserial() : ColumnType
+function column_type_smallserial(): ColumnType
 {
     return ColumnType::smallserial();
 }
@@ -1021,7 +1028,7 @@ function column_type_smallserial() : ColumnType
  * Create a bigserial data type.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_bigserial() : ColumnType
+function column_type_bigserial(): ColumnType
 {
     return ColumnType::bigserial();
 }
@@ -1030,7 +1037,7 @@ function column_type_bigserial() : ColumnType
  * Create an array data type from an element type.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_array(ColumnType $elementType) : ColumnType
+function column_type_array(ColumnType $elementType): ColumnType
 {
     return ColumnType::array($elementType);
 }
@@ -1042,7 +1049,7 @@ function column_type_array(ColumnType $elementType) : ColumnType
  * @param null|string $schema Optional schema name
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_custom(string $typeName, ?string $schema = null) : ColumnType
+function column_type_custom(string $typeName, ?string $schema = null): ColumnType
 {
     return ColumnType::custom($typeName, $schema);
 }
@@ -1055,7 +1062,7 @@ function column_type_custom(string $typeName, ?string $schema = null) : ColumnTy
  * @param string $typeName PostgreSQL type string (e.g., 'integer', 'character varying(255)', 'text[]')
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function column_type_from_string(string $typeName) : ColumnType
+function column_type_from_string(string $typeName): ColumnType
 {
     return (new ColumnTypeParser())->parse($typeName);
 }
@@ -1063,283 +1070,283 @@ function column_type_from_string(string $typeName) : ColumnType
 // ValueType DSL functions - Scalar types
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_text() : ValueType
+function value_type_text(): ValueType
 {
     return ValueType::TEXT;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_varchar() : ValueType
+function value_type_varchar(): ValueType
 {
     return ValueType::VARCHAR;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_char() : ValueType
+function value_type_char(): ValueType
 {
     return ValueType::CHAR;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_bpchar() : ValueType
+function value_type_bpchar(): ValueType
 {
     return ValueType::BPCHAR;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_int2() : ValueType
+function value_type_int2(): ValueType
 {
     return ValueType::INT2;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_smallint() : ValueType
+function value_type_smallint(): ValueType
 {
     return ValueType::INT2;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_int4() : ValueType
+function value_type_int4(): ValueType
 {
     return ValueType::INT4;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_integer() : ValueType
+function value_type_integer(): ValueType
 {
     return ValueType::INT4;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_int8() : ValueType
+function value_type_int8(): ValueType
 {
     return ValueType::INT8;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_bigint() : ValueType
+function value_type_bigint(): ValueType
 {
     return ValueType::INT8;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_float4() : ValueType
+function value_type_float4(): ValueType
 {
     return ValueType::FLOAT4;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_real() : ValueType
+function value_type_real(): ValueType
 {
     return ValueType::FLOAT4;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_float8() : ValueType
+function value_type_float8(): ValueType
 {
     return ValueType::FLOAT8;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_double() : ValueType
+function value_type_double(): ValueType
 {
     return ValueType::FLOAT8;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_numeric() : ValueType
+function value_type_numeric(): ValueType
 {
     return ValueType::NUMERIC;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_money() : ValueType
+function value_type_money(): ValueType
 {
     return ValueType::MONEY;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_bool() : ValueType
+function value_type_bool(): ValueType
 {
     return ValueType::BOOL;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_boolean() : ValueType
+function value_type_boolean(): ValueType
 {
     return ValueType::BOOL;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_bytea() : ValueType
+function value_type_bytea(): ValueType
 {
     return ValueType::BYTEA;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_bit() : ValueType
+function value_type_bit(): ValueType
 {
     return ValueType::BIT;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_varbit() : ValueType
+function value_type_varbit(): ValueType
 {
     return ValueType::VARBIT;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_date() : ValueType
+function value_type_date(): ValueType
 {
     return ValueType::DATE;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_time() : ValueType
+function value_type_time(): ValueType
 {
     return ValueType::TIME;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_timetz() : ValueType
+function value_type_timetz(): ValueType
 {
     return ValueType::TIMETZ;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_timestamp() : ValueType
+function value_type_timestamp(): ValueType
 {
     return ValueType::TIMESTAMP;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_timestamptz() : ValueType
+function value_type_timestamptz(): ValueType
 {
     return ValueType::TIMESTAMPTZ;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_interval() : ValueType
+function value_type_interval(): ValueType
 {
     return ValueType::INTERVAL;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_json() : ValueType
+function value_type_json(): ValueType
 {
     return ValueType::JSON;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_jsonb() : ValueType
+function value_type_jsonb(): ValueType
 {
     return ValueType::JSONB;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_uuid() : ValueType
+function value_type_uuid(): ValueType
 {
     return ValueType::UUID;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_inet() : ValueType
+function value_type_inet(): ValueType
 {
     return ValueType::INET;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_cidr() : ValueType
+function value_type_cidr(): ValueType
 {
     return ValueType::CIDR;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_macaddr() : ValueType
+function value_type_macaddr(): ValueType
 {
     return ValueType::MACADDR;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_macaddr8() : ValueType
+function value_type_macaddr8(): ValueType
 {
     return ValueType::MACADDR8;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_xml() : ValueType
+function value_type_xml(): ValueType
 {
     return ValueType::XML;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_oid() : ValueType
+function value_type_oid(): ValueType
 {
     return ValueType::OID;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_text_array() : ValueType
+function value_type_text_array(): ValueType
 {
     return ValueType::TEXT_ARRAY;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_varchar_array() : ValueType
+function value_type_varchar_array(): ValueType
 {
     return ValueType::VARCHAR_ARRAY;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_int2_array() : ValueType
+function value_type_int2_array(): ValueType
 {
     return ValueType::INT2_ARRAY;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_int4_array() : ValueType
+function value_type_int4_array(): ValueType
 {
     return ValueType::INT4_ARRAY;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_int8_array() : ValueType
+function value_type_int8_array(): ValueType
 {
     return ValueType::INT8_ARRAY;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_float4_array() : ValueType
+function value_type_float4_array(): ValueType
 {
     return ValueType::FLOAT4_ARRAY;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_float8_array() : ValueType
+function value_type_float8_array(): ValueType
 {
     return ValueType::FLOAT8_ARRAY;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_bool_array() : ValueType
+function value_type_bool_array(): ValueType
 {
     return ValueType::BOOL_ARRAY;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_uuid_array() : ValueType
+function value_type_uuid_array(): ValueType
 {
     return ValueType::UUID_ARRAY;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_json_array() : ValueType
+function value_type_json_array(): ValueType
 {
     return ValueType::JSON_ARRAY;
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function value_type_jsonb_array() : ValueType
+function value_type_jsonb_array(): ValueType
 {
     return ValueType::JSONB_ARRAY;
 }
@@ -1365,8 +1372,18 @@ function schema(
     array $procedures = [],
     array $domains = [],
     array $extensions = [],
-) : DatabaseSchema {
-    return new DatabaseSchema($name, $tables, $sequences, $views, $materializedViews, $functions, $procedures, $domains, $extensions);
+): DatabaseSchema {
+    return new DatabaseSchema(
+        $name,
+        $tables,
+        $sequences,
+        $views,
+        $materializedViews,
+        $functions,
+        $procedures,
+        $domains,
+        $extensions,
+    );
 }
 
 /**
@@ -1397,8 +1414,24 @@ function schema_table(
     array $partitionColumns = [],
     array $inherits = [],
     ?string $tablespace = null,
-) : SchemaTable {
-    return new SchemaTable($schema, $name, $columns, $primaryKey, $indexes, $foreignKeys, $uniqueConstraints, $checkConstraints, $excludeConstraints, $triggers, $unlogged, $partitionStrategy, $partitionColumns, $inherits, $tablespace);
+): SchemaTable {
+    return new SchemaTable(
+        $schema,
+        $name,
+        $columns,
+        $primaryKey,
+        $indexes,
+        $foreignKeys,
+        $uniqueConstraints,
+        $checkConstraints,
+        $excludeConstraints,
+        $triggers,
+        $unlogged,
+        $partitionStrategy,
+        $partitionColumns,
+        $inherits,
+        $tablespace,
+    );
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
@@ -1412,157 +1445,240 @@ function schema_column(
     bool $isGenerated = false,
     ?string $generationExpression = null,
     ?int $ordinalPosition = null,
-) : SchemaColumn {
-    return SchemaColumn::create($name, $type, $nullable, $default, $isIdentity, $identityGeneration, $isGenerated, $generationExpression, $ordinalPosition);
+): SchemaColumn {
+    return SchemaColumn::create(
+        $name,
+        $type,
+        $nullable,
+        $default,
+        $isIdentity,
+        $identityGeneration,
+        $isGenerated,
+        $generationExpression,
+        $ordinalPosition,
+    );
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_integer(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_integer(
+    string $name,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::integer(), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_smallint(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_smallint(
+    string $name,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::smallint(), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_bigint(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_bigint(
+    string $name,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::bigint(), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_serial(string $name) : SchemaColumn
+function schema_column_serial(string $name): SchemaColumn
 {
     return SchemaColumn::create($name, ColumnType::serial(), false);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_small_serial(string $name) : SchemaColumn
+function schema_column_small_serial(string $name): SchemaColumn
 {
     return SchemaColumn::create($name, ColumnType::smallserial(), false);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_big_serial(string $name) : SchemaColumn
+function schema_column_big_serial(string $name): SchemaColumn
 {
     return SchemaColumn::create($name, ColumnType::bigserial(), false);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_boolean(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_boolean(
+    string $name,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::boolean(), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_text(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_text(
+    string $name,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::text(), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_varchar(string $name, int $length, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_varchar(
+    string $name,
+    int $length,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::varchar($length), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_char(string $name, int $length, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_char(
+    string $name,
+    int $length,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::char($length), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_numeric(string $name, ?int $precision = null, ?int $scale = null, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_numeric(
+    string $name,
+    ?int $precision = null,
+    ?int $scale = null,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::numeric($precision, $scale), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_real(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_real(
+    string $name,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::real(), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_double_precision(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_double_precision(
+    string $name,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::doublePrecision(), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_date(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_date(
+    string $name,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::date(), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_time(string $name, ?int $precision = null, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_time(
+    string $name,
+    ?int $precision = null,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::time($precision), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_timestamp(string $name, ?int $precision = null, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_timestamp(
+    string $name,
+    ?int $precision = null,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::timestamp($precision), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_timestamp_tz(string $name, ?int $precision = null, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_timestamp_tz(
+    string $name,
+    ?int $precision = null,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::timestamptz($precision), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_interval(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_interval(
+    string $name,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::interval(), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_uuid(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_uuid(
+    string $name,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::uuid(), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_json(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_json(
+    string $name,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::json(), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_jsonb(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_jsonb(
+    string $name,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::jsonb(), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_bytea(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_bytea(
+    string $name,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::bytea(), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_inet(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_inet(
+    string $name,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::inet(), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_cidr(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_cidr(
+    string $name,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::cidr(), $nullable, $default);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_column_macaddr(string $name, bool $nullable = true, bool|float|int|string|Expression|null $default = null) : SchemaColumn
-{
+function schema_column_macaddr(
+    string $name,
+    bool $nullable = true,
+    bool|float|int|string|Expression|null $default = null,
+): SchemaColumn {
     return SchemaColumn::create($name, ColumnType::macaddr(), $nullable, $default);
 }
 
@@ -1570,7 +1686,7 @@ function schema_column_macaddr(string $name, bool $nullable = true, bool|float|i
  * @param non-empty-list<string> $columns
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_primary_key(array $columns, ?string $name = null) : SchemaPrimaryKey
+function schema_primary_key(array $columns, ?string $name = null): SchemaPrimaryKey
 {
     return new SchemaPrimaryKey($columns, $name);
 }
@@ -1590,27 +1706,37 @@ function schema_foreign_key(
     ReferentialAction $onDelete = ReferentialAction::NO_ACTION,
     bool $deferrable = false,
     bool $initiallyDeferred = false,
-) : SchemaForeignKey {
-    return new SchemaForeignKey($name, $columns, $referenceSchema, $referenceTable, $referenceColumns, $onUpdate, $onDelete, $deferrable, $initiallyDeferred);
+): SchemaForeignKey {
+    return new SchemaForeignKey(
+        $name,
+        $columns,
+        $referenceSchema,
+        $referenceTable,
+        $referenceColumns,
+        $onUpdate,
+        $onDelete,
+        $deferrable,
+        $initiallyDeferred,
+    );
 }
 
 /**
  * @param non-empty-list<string> $columns
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_unique(array $columns, ?string $name = null, bool $nullsNotDistinct = false) : SchemaUniqueConstraint
+function schema_unique(array $columns, ?string $name = null, bool $nullsNotDistinct = false): SchemaUniqueConstraint
 {
     return new SchemaUniqueConstraint($columns, $name, $nullsNotDistinct);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_check(string $expression, ?string $name = null, bool $noInherit = false) : SchemaCheckConstraint
+function schema_check(string $expression, ?string $name = null, bool $noInherit = false): SchemaCheckConstraint
 {
     return new SchemaCheckConstraint($expression, $name, $noInherit);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_exclude(string $definition, ?string $name = null) : SchemaExcludeConstraint
+function schema_exclude(string $definition, ?string $name = null): SchemaExcludeConstraint
 {
     return new SchemaExcludeConstraint($definition, $name);
 }
@@ -1626,7 +1752,7 @@ function schema_index(
     SchemaIndexMethod $method = SchemaIndexMethod::BTREE,
     bool $primary = false,
     ?string $predicate = null,
-) : SchemaIndex {
+): SchemaIndex {
     return new SchemaIndex($name, $columns, $unique, $method, $primary, $predicate);
 }
 
@@ -1642,12 +1768,23 @@ function schema_sequence(
     int|string $cacheValue = 1,
     ?string $ownedByTable = null,
     ?string $ownedByColumn = null,
-) : SchemaSequence {
-    return new SchemaSequence($name, $dataType, $startValue, $minValue, $maxValue, $incrementBy, $cycle, $cacheValue, $ownedByTable, $ownedByColumn);
+): SchemaSequence {
+    return new SchemaSequence(
+        $name,
+        $dataType,
+        $startValue,
+        $minValue,
+        $maxValue,
+        $incrementBy,
+        $cycle,
+        $cacheValue,
+        $ownedByTable,
+        $ownedByColumn,
+    );
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_view(string $name, string $definition, bool $isUpdatable = false) : SchemaView
+function schema_view(string $name, string $definition, bool $isUpdatable = false): SchemaView
 {
     return new SchemaView($name, $definition, $isUpdatable);
 }
@@ -1656,7 +1793,7 @@ function schema_view(string $name, string $definition, bool $isUpdatable = false
  * @param list<SchemaIndex> $indexes
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_materialized_view(string $name, string $definition, array $indexes = []) : SchemaMaterializedView
+function schema_materialized_view(string $name, string $definition, array $indexes = []): SchemaMaterializedView
 {
     return new SchemaMaterializedView($name, $definition, $indexes);
 }
@@ -1673,7 +1810,7 @@ function schema_function(
     ?string $definition = null,
     bool $isStrict = false,
     ?SchemaFunctionVolatility $volatility = null,
-) : SchemaFunction {
+): SchemaFunction {
     return new SchemaFunction($name, $returnType, $argumentTypes, $language, $definition, $isStrict, $volatility);
 }
 
@@ -1686,7 +1823,7 @@ function schema_procedure(
     array $argumentTypes = [],
     string $language = 'sql',
     ?string $definition = null,
-) : SchemaProcedure {
+): SchemaProcedure {
     return new SchemaProcedure($name, $argumentTypes, $language, $definition);
 }
 
@@ -1702,7 +1839,7 @@ function schema_trigger(
     string $functionName,
     bool $forEachRow = false,
     ?string $whenCondition = null,
-) : SchemaTrigger {
+): SchemaTrigger {
     return new SchemaTrigger($name, $tableName, $timing, $events, $functionName, $forEachRow, $whenCondition);
 }
 
@@ -1716,12 +1853,12 @@ function schema_domain(
     bool $nullable = true,
     bool|float|int|string|Expression|null $default = null,
     array $checkConstraints = [],
-) : SchemaDomain {
+): SchemaDomain {
     return SchemaDomain::create($name, $baseType, $nullable, $default, $checkConstraints);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function schema_extension(string $name, ?string $version = null) : SchemaExtension
+function schema_extension(string $name, ?string $version = null): SchemaExtension
 {
     return new SchemaExtension($name, $version);
 }
@@ -1731,19 +1868,22 @@ function schema_extension(string $name, ?string $version = null) : SchemaExtensi
  * @param list<string> $excludeTables
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function client_catalog_provider(Client\Client $client, ?array $schemaNames = null, array $excludeTables = []) : CatalogProvider
-{
+function client_catalog_provider(
+    Client\Client $client,
+    ?array $schemaNames = null,
+    array $excludeTables = [],
+): CatalogProvider {
     return new PgCatalogProvider($client, $schemaNames, $excludeTables);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function manual_catalog_provider(Catalog $catalog) : CatalogProvider
+function manual_catalog_provider(Catalog $catalog): CatalogProvider
 {
     return new ManualCatalogProvider($catalog);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function chain_catalog_provider(CatalogProvider ...$providers) : ChainCatalogProvider
+function chain_catalog_provider(CatalogProvider ...$providers): ChainCatalogProvider
 {
     return new ChainCatalogProvider(...$providers);
 }
@@ -1752,25 +1892,28 @@ function chain_catalog_provider(CatalogProvider ...$providers) : ChainCatalogPro
  * @param null|ExecutionOrderStrategy<\Flow\PostgreSql\Schema\Table> $tableOrderStrategy
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function catalog_comparator(?RenameStrategy $renameStrategy = null, ?ViewDependencyResolver $viewDependencyResolver = null, ?ExecutionOrderStrategy $tableOrderStrategy = null) : CatalogComparator
-{
+function catalog_comparator(
+    ?RenameStrategy $renameStrategy = null,
+    ?ViewDependencyResolver $viewDependencyResolver = null,
+    ?ExecutionOrderStrategy $tableOrderStrategy = null,
+): CatalogComparator {
     return CatalogComparator::create($renameStrategy, $viewDependencyResolver, $tableOrderStrategy);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function ast_view_dependency_resolver() : AstViewDependencyResolver
+function ast_view_dependency_resolver(): AstViewDependencyResolver
 {
     return new AstViewDependencyResolver(new Parser());
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function noop_view_dependency_resolver() : NoopViewDependencyResolver
+function noop_view_dependency_resolver(): NoopViewDependencyResolver
 {
     return new NoopViewDependencyResolver();
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function foreign_key_dependency_order() : ForeignKeyDependencyOrder
+function foreign_key_dependency_order(): ForeignKeyDependencyOrder
 {
     return new ForeignKeyDependencyOrder();
 }
@@ -1779,19 +1922,19 @@ function foreign_key_dependency_order() : ForeignKeyDependencyOrder
  * @return NoExecutionOrder<mixed>
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function no_execution_order() : NoExecutionOrder
+function no_execution_order(): NoExecutionOrder
 {
     return new NoExecutionOrder();
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function view_dependency_order() : ViewDependencyOrder
+function view_dependency_order(): ViewDependencyOrder
 {
     return new ViewDependencyOrder(new Parser());
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function materialized_view_dependency_order() : MaterializedViewDependencyOrder
+function materialized_view_dependency_order(): MaterializedViewDependencyOrder
 {
     return new MaterializedViewDependencyOrder(new Parser());
 }

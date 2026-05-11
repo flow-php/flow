@@ -4,31 +4,36 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Reader;
 
-use function Flow\ETL\Adapter\Parquet\empty_generator;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
-use Flow\Parquet\Data\{BitWidth, DeltaBinaryPackedDecoder, PlainValueUnpacker, RLEBitPackedHybrid};
+use Flow\Parquet\Data\BitWidth;
+use Flow\Parquet\Data\DeltaBinaryPackedDecoder;
+use Flow\Parquet\Data\PlainValueUnpacker;
+use Flow\Parquet\Data\RLEBitPackedHybrid;
 use Flow\Parquet\Dremel\ColumnData\ReadFlatColumnValues;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Page\Dictionary;
-use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, DictionaryPageHeader};
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, PhysicalType};
+use Flow\Parquet\ParquetFile\Page\Header\DataPageHeader;
+use Flow\Parquet\ParquetFile\Page\Header\DataPageHeaderV2;
+use Flow\Parquet\ParquetFile\Page\Header\DictionaryPageHeader;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+
+use function Flow\ETL\Adapter\Parquet\empty_generator;
 
 final readonly class ColumnDataDecoder
 {
     public function __construct(
         private ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
-    ) {
-    }
+    ) {}
 
     public function decodeData(
         string $buffer,
         FlatColumn $column,
         DataPageHeader $pageHeader,
         ?Dictionary $dictionary = null,
-    ) : ReadFlatColumnValues {
-
+    ): ReadFlatColumnValues {
         $reader = new BinaryBufferReader($buffer);
 
         $RLEBitPackedHybrid = new RLEBitPackedHybrid();
@@ -64,7 +69,7 @@ final readonly class ColumnDataDecoder
                 $column,
                 (new PlainValueUnpacker($reader, $this->byteOrder))->unpack($column, $nonEmptyValuesCount),
                 $repetitionLevels,
-                $definitionLevels
+                $definitionLevels,
             );
         }
 
@@ -91,21 +96,21 @@ final readonly class ColumnDataDecoder
             return new ReadFlatColumnValues($column, $valuesGenerator(), $repetitionLevels, $definitionLevels);
         }
 
-        if ($pageHeader->encoding() === Encodings::RLE_DICTIONARY || $pageHeader->encoding() === Encodings::PLAIN_DICTIONARY) {
+        if (
+            $pageHeader->encoding() === Encodings::RLE_DICTIONARY
+            || $pageHeader->encoding() === Encodings::PLAIN_DICTIONARY
+        ) {
             if ($nonEmptyValuesCount) {
                 $bitWidth = \ord($reader->readBytes(1));
 
                 /** @var array<int> $indices */
-                $indices = $this->readRLEBitPackedHybrid(
-                    $reader,
-                    $RLEBitPackedHybrid,
-                    $bitWidth,
-                    $nonEmptyValuesCount
-                );
+                $indices = $this->readRLEBitPackedHybrid($reader, $RLEBitPackedHybrid, $bitWidth, $nonEmptyValuesCount);
 
                 $valuesGenerator = static function () use ($indices, $dictionary) {
                     foreach ($indices as $index) {
-                        yield $dictionary && \array_key_exists($index, $dictionary->values) ? $dictionary->values[$index] : null;
+                        yield $dictionary && \array_key_exists($index, $dictionary->values)
+                            ? $dictionary->values[$index]
+                            : null;
                     }
                 };
 
@@ -113,7 +118,6 @@ final readonly class ColumnDataDecoder
             }
 
             return new ReadFlatColumnValues($column, empty_generator(), $repetitionLevels, $definitionLevels);
-
         }
 
         throw new RuntimeException('Encoding ' . $pageHeader->encoding()->name . ' not supported');
@@ -124,7 +128,7 @@ final readonly class ColumnDataDecoder
         FlatColumn $column,
         DataPageHeaderV2 $pageHeader,
         ?Dictionary $dictionary = null,
-    ) : ReadFlatColumnValues {
+    ): ReadFlatColumnValues {
         $reader = new BinaryBufferReader($buffer);
 
         $RLEBitPackedHybrid = new RLEBitPackedHybrid();
@@ -158,7 +162,7 @@ final readonly class ColumnDataDecoder
                 $column,
                 (new PlainValueUnpacker($reader, $this->byteOrder))->unpack($column, $nonEmptyValuesCount),
                 $repetitionLevels,
-                $definitionLevels
+                $definitionLevels,
             );
         }
 
@@ -185,17 +189,15 @@ final readonly class ColumnDataDecoder
             return new ReadFlatColumnValues($column, $valuesGenerator(), $repetitionLevels, $definitionLevels);
         }
 
-        if ($pageHeader->encoding() === Encodings::RLE_DICTIONARY || $pageHeader->encoding() === Encodings::PLAIN_DICTIONARY) {
+        if (
+            $pageHeader->encoding() === Encodings::RLE_DICTIONARY
+            || $pageHeader->encoding() === Encodings::PLAIN_DICTIONARY
+        ) {
             if (\count($definitionLevels)) {
                 $bitWidth = \ord($reader->readBytes(1));
 
                 /** @var array<int> $indices */
-                $indices = $this->readRLEBitPackedHybrid(
-                    $reader,
-                    $RLEBitPackedHybrid,
-                    $bitWidth,
-                    $nonEmptyValuesCount,
-                );
+                $indices = $this->readRLEBitPackedHybrid($reader, $RLEBitPackedHybrid, $bitWidth, $nonEmptyValuesCount);
 
                 $valuesGenerator = static function () use ($indices, $dictionary) {
                     foreach ($indices as $index) {
@@ -207,28 +209,25 @@ final readonly class ColumnDataDecoder
             }
 
             return new ReadFlatColumnValues($column, empty_generator(), $repetitionLevels, $definitionLevels);
-
         }
 
         throw new RuntimeException('Encoding ' . $pageHeader->encoding()->name . ' not supported');
     }
 
-    public function decodeDictionary(
-        string $buffer,
-        FlatColumn $column,
-        DictionaryPageHeader $pageHeader,
-    ) : Dictionary {
+    public function decodeDictionary(string $buffer, FlatColumn $column, DictionaryPageHeader $pageHeader): Dictionary
+    {
         $reader = new BinaryBufferReader($buffer);
 
-        return new Dictionary(
-            \iterator_to_array((new PlainValueUnpacker($reader, $this->byteOrder))->unpack($column, $pageHeader->valuesCount()))
-        );
+        return new Dictionary(\iterator_to_array((new PlainValueUnpacker($reader, $this->byteOrder))->unpack(
+            $column,
+            $pageHeader->valuesCount(),
+        )));
     }
 
     /**
      * @param array<int> $definitions
      */
-    private function countValues(array $definitions, FlatColumn $column) : int
+    private function countValues(array $definitions, FlatColumn $column): int
     {
         $maxDefinitionLevel = $column->maxDefinitionsLevel();
         $valuesCount = 0;
@@ -245,8 +244,12 @@ final readonly class ColumnDataDecoder
     /**
      * @return array<int>
      */
-    private function readRLEBitPackedHybrid(BinaryBufferReader $reader, RLEBitPackedHybrid $RLEBitPackedHybrid, int $bitWidth, int $expectedValuesCount) : array
-    {
+    private function readRLEBitPackedHybrid(
+        BinaryBufferReader $reader,
+        RLEBitPackedHybrid $RLEBitPackedHybrid,
+        int $bitWidth,
+        int $expectedValuesCount,
+    ): array {
         return $RLEBitPackedHybrid->decodeHybrid($reader, $bitWidth, $expectedValuesCount);
     }
 }

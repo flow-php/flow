@@ -22,13 +22,12 @@ final readonly class SpanStatus
     public function __construct(
         public SpanStatusCode $code,
         public ?string $description = null,
-    ) {
-    }
+    ) {}
 
     /**
      * Create an ERROR status with an optional description.
      */
-    public static function error(?string $description = null) : self
+    public static function error(?string $description = null): self
     {
         return new self(SpanStatusCode::ERROR, $description);
     }
@@ -38,18 +37,15 @@ final readonly class SpanStatus
      *
      * @param array{code: int, description: null|string} $data Normalized SpanStatus data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
-        return new self(
-            SpanStatusCode::from($data['code']),
-            $data['description'],
-        );
+        return new self(SpanStatusCode::from($data['code']), $data['description']);
     }
 
     /**
      * Create an OK status.
      */
-    public static function ok() : self
+    public static function ok(): self
     {
         return new self(SpanStatusCode::OK);
     }
@@ -57,7 +53,7 @@ final readonly class SpanStatus
     /**
      * Create an UNSET status (default).
      */
-    public static function unset() : self
+    public static function unset(): self
     {
         return new self(SpanStatusCode::UNSET);
     }
@@ -65,7 +61,7 @@ final readonly class SpanStatus
     /**
      * Check if the status is ERROR.
      */
-    public function isError() : bool
+    public function isError(): bool
     {
         return $this->code === SpanStatusCode::ERROR;
     }
@@ -73,7 +69,7 @@ final readonly class SpanStatus
     /**
      * Check if the status is OK.
      */
-    public function isOk() : bool
+    public function isOk(): bool
     {
         return $this->code === SpanStatusCode::OK;
     }
@@ -81,7 +77,7 @@ final readonly class SpanStatus
     /**
      * Check if the status is UNSET.
      */
-    public function isUnset() : bool
+    public function isUnset(): bool
     {
         return $this->code === SpanStatusCode::UNSET;
     }
@@ -91,7 +87,7 @@ final readonly class SpanStatus
      *
      * @return array{code: int, description: null|string}
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'code' => $this->code->value,

@@ -17,12 +17,12 @@ final class FuncCallCollector implements NodeVisitor
      */
     private array $funcCalls = [];
 
-    public static function nodeClasses() : array
+    public static function nodeClasses(): array
     {
         return [FuncCall::class];
     }
 
-    public function enter(object $node) : ?int
+    public function enter(object $node): ?int
     {
         /** @var FuncCall $node */
         $this->funcCalls[] = $node;
@@ -33,17 +33,17 @@ final class FuncCallCollector implements NodeVisitor
     /**
      * @return array<FuncCall>
      */
-    public function getFuncCalls() : array
+    public function getFuncCalls(): array
     {
         return $this->funcCalls;
     }
 
-    public function leave(object $node) : ?int
+    public function leave(object $node): ?int
     {
         return null;
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->funcCalls = [];
     }

@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 final class UuidArrayConverterTest extends TestCase
 {
-    public static function provide_non_array_values() : \Generator
+    public static function provide_non_array_values(): \Generator
     {
         yield 'string' => ['not an array', '{}'];
         yield 'integer' => [12345, '{}'];
@@ -22,20 +22,35 @@ final class UuidArrayConverterTest extends TestCase
         yield 'object' => [new \stdClass(), '{}'];
     }
 
-    public static function provide_valid_values() : \Generator
+    public static function provide_valid_values(): \Generator
     {
-        yield 'UUID array' => [['550e8400-e29b-41d4-a716-446655440000', '6ba7b810-9dad-11d1-80b4-00c04fd430c8'], '{550e8400-e29b-41d4-a716-446655440000,6ba7b810-9dad-11d1-80b4-00c04fd430c8}'];
+        yield 'UUID array' => [
+            ['550e8400-e29b-41d4-a716-446655440000', '6ba7b810-9dad-11d1-80b4-00c04fd430c8'],
+            '{550e8400-e29b-41d4-a716-446655440000,6ba7b810-9dad-11d1-80b4-00c04fd430c8}',
+        ];
         yield 'empty array' => [[], '{}'];
-        yield 'array with null' => [['550e8400-e29b-41d4-a716-446655440000', null, '6ba7b810-9dad-11d1-80b4-00c04fd430c8'], '{550e8400-e29b-41d4-a716-446655440000,NULL,6ba7b810-9dad-11d1-80b4-00c04fd430c8}'];
+        yield 'array with null' => [
+            ['550e8400-e29b-41d4-a716-446655440000', null, '6ba7b810-9dad-11d1-80b4-00c04fd430c8'],
+            '{550e8400-e29b-41d4-a716-446655440000,NULL,6ba7b810-9dad-11d1-80b4-00c04fd430c8}',
+        ];
         yield 'single UUID' => [['550e8400-e29b-41d4-a716-446655440000'], '{550e8400-e29b-41d4-a716-446655440000}'];
-        yield 'uppercase UUIDs' => [['550E8400-E29B-41D4-A716-446655440000', '6BA7B810-9DAD-11D1-80B4-00C04FD430C8'], '{550E8400-E29B-41D4-A716-446655440000,6BA7B810-9DAD-11D1-80B4-00C04FD430C8}'];
-        yield 'nil UUIDs' => [['00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'], '{00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000}'];
-        yield 'mixed case UUIDs' => [['550E8400-e29b-41D4-a716-446655440000'], '{550E8400-e29b-41D4-a716-446655440000}'];
+        yield 'uppercase UUIDs' => [
+            ['550E8400-E29B-41D4-A716-446655440000', '6BA7B810-9DAD-11D1-80B4-00C04FD430C8'],
+            '{550E8400-E29B-41D4-A716-446655440000,6BA7B810-9DAD-11D1-80B4-00C04FD430C8}',
+        ];
+        yield 'nil UUIDs' => [
+            ['00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000'],
+            '{00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000}',
+        ];
+        yield 'mixed case UUIDs' => [
+            ['550E8400-e29b-41D4-a716-446655440000'],
+            '{550E8400-e29b-41D4-a716-446655440000}',
+        ];
         yield 'all nulls' => [[null, null, null], '{NULL,NULL,NULL}'];
         yield 'max UUIDs' => [['ffffffff-ffff-ffff-ffff-ffffffffffff'], '{ffffffff-ffff-ffff-ffff-ffffffffffff}'];
     }
 
-    public function test_invalid_element_throws_exception() : void
+    public function test_invalid_element_throws_exception(): void
     {
         $converter = new UuidArrayConverter();
         $this->expectException(ValueConversionException::class);
@@ -43,31 +58,31 @@ final class UuidArrayConverterTest extends TestCase
     }
 
     #[DataProvider('provide_non_array_values')]
-    public function test_non_array_returns_empty_braces(mixed $input, string $expected) : void
+    public function test_non_array_returns_empty_braces(mixed $input, string $expected): void
     {
         $converter = new UuidArrayConverter();
-        self::assertSame($expected, $converter->toDatabase($input));
+        static::assertSame($expected, $converter->toDatabase($input));
     }
 
-    public function test_null_handling() : void
+    public function test_null_handling(): void
     {
         $converter = new UuidArrayConverter();
-        self::assertNull($converter->toDatabase(null));
+        static::assertNull($converter->toDatabase(null));
     }
 
-    public function test_supported_types() : void
+    public function test_supported_types(): void
     {
         $converter = new UuidArrayConverter();
         $types = $converter->supportedTypes();
 
-        self::assertContains(ValueType::UUID_ARRAY, $types);
-        self::assertCount(1, $types);
+        static::assertContains(ValueType::UUID_ARRAY, $types);
+        static::assertCount(1, $types);
     }
 
     #[DataProvider('provide_valid_values')]
-    public function test_to_database(array $input, string $expected) : void
+    public function test_to_database(array $input, string $expected): void
     {
         $converter = new UuidArrayConverter();
-        self::assertSame($expected, $converter->toDatabase($input));
+        static::assertSame($expected, $converter->toDatabase($input));
     }
 }

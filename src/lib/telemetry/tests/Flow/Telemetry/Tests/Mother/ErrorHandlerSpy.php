@@ -11,7 +11,7 @@ final class ErrorHandlerSpy implements ErrorHandler
     /** @var array<\Throwable> */
     private array $errors = [];
 
-    public function count() : int
+    public function count(): int
     {
         return \count($this->errors);
     }
@@ -19,17 +19,17 @@ final class ErrorHandlerSpy implements ErrorHandler
     /**
      * @return array<\Throwable>
      */
-    public function errors() : array
+    public function errors(): array
     {
         return $this->errors;
     }
 
-    public function handle(\Throwable $error) : void
+    public function handle(\Throwable $error): void
     {
         $this->errors[] = $error;
     }
 
-    public function last() : ?\Throwable
+    public function last(): ?\Throwable
     {
         if ($this->errors === []) {
             return null;

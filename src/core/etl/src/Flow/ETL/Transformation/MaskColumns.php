@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformation;
 
+use Flow\ETL\DataFrame;
+use Flow\ETL\Transformation;
+
 use function Flow\ETL\DSL\lit;
-use Flow\ETL\{DataFrame, Transformation};
 
 /**
  * Mask columns in DataFrame by replacing their values with a mask.
@@ -16,11 +18,12 @@ final readonly class MaskColumns implements Transformation
     /**
      * @param array<int, string> $columns
      */
-    public function __construct(private array $columns = [], private string $mask = '******')
-    {
-    }
+    public function __construct(
+        private array $columns = [],
+        private string $mask = '******',
+    ) {}
 
-    public function transform(DataFrame $dataFrame) : DataFrame
+    public function transform(DataFrame $dataFrame): DataFrame
     {
         foreach ($this->columns as $column) {
             $dataFrame->withEntry($column, lit($this->mask));

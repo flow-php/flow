@@ -19,39 +19,39 @@ interface SpanEvent
      *
      * @param array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount?: int} $data Normalized event data
      */
-    public static function fromArray(array $data) : self;
+    public static function fromArray(array $data): self;
 
     /**
      * Get the event attributes.
      *
      * @return array<string, array<bool|float|int|string>|bool|float|int|string>
      */
-    public function attributes() : array;
+    public function attributes(): array;
 
     /**
      * Get the event attributes as an Attributes object.
      */
-    public function attributesObject() : Attributes;
+    public function attributesObject(): Attributes;
 
     /**
      * Get the count of attributes that were dropped due to limits.
      */
-    public function droppedAttributeCount() : int;
+    public function droppedAttributeCount(): int;
 
     /**
      * Get the event name.
      */
-    public function name() : string;
+    public function name(): string;
 
     /**
      * Normalize the event to an array representation for serialization.
      *
      * @return array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount: int}
      */
-    public function normalize() : array;
+    public function normalize(): array;
 
     /**
      * Get the event timestamp.
      */
-    public function timestamp() : \DateTimeImmutable;
+    public function timestamp(): \DateTimeImmutable;
 }

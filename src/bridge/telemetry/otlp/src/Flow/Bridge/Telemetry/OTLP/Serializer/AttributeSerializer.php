@@ -21,7 +21,7 @@ final class AttributeSerializer
      *
      * @return array<array{key: string, value: array<string, mixed>}>
      */
-    public function serialize(Attributes $attributes) : array
+    public function serialize(Attributes $attributes): array
     {
         $result = [];
 
@@ -42,7 +42,7 @@ final class AttributeSerializer
      *
      * @return array<string, mixed>
      */
-    public function serializeValue(string|int|float|bool|array $value) : array
+    public function serializeValue(string|int|float|bool|array $value): array
     {
         if (\is_string($value)) {
             return ['stringValue' => $value];
@@ -70,7 +70,7 @@ final class AttributeSerializer
      *
      * @return array{arrayValue: array{values: array<array<string, mixed>>}}
      */
-    private function serializeArray(array $values) : array
+    private function serializeArray(array $values): array
     {
         $serialized = [];
 

@@ -17,6 +17,5 @@ final readonly class TypedValue
     public function __construct(
         public mixed $value,
         public ValueType $targetType,
-    ) {
-    }
+    ) {}
 }

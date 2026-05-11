@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema\Validator;
 
+use Flow\ETL\Schema;
+use Flow\ETL\SchemaValidator;
+
 use function Flow\Types\DSL\type_equals;
-use Flow\ETL\{Schema, SchemaValidator};
 
 /**
  * Rules of evolving schema matching:
@@ -22,7 +24,7 @@ final class EvolvingValidator implements SchemaValidator
      * @param Schema $expected
      * @param Schema $given
      */
-    public function isValid(Schema $expected, Schema $given) : bool
+    public function isValid(Schema $expected, Schema $given): bool
     {
         if ($given->count() < $expected->count()) {
             return false;

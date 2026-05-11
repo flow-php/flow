@@ -33,5 +33,5 @@ interface ResourceDetector
     /**
      * Detect resource attributes from the environment.
      */
-    public function detect() : Resource;
+    public function detect(): Resource;
 }

@@ -37,7 +37,7 @@ interface Carrier
      *
      * @return null|string The value, or null if not found
      */
-    public function get(string $key) : ?string;
+    public function get(string $key): ?string;
 
     /**
      * Set a value.
@@ -47,12 +47,12 @@ interface Carrier
      *
      * @return static For fluent chaining
      */
-    public function set(string $key, string $value) : static;
+    public function set(string $key, string $value): static;
 
     /**
      * Unwrap and return the underlying data structure.
      *
      * @return TWrapped The wrapped data structure
      */
-    public function unwrap() : mixed;
+    public function unwrap(): mixed;
 }

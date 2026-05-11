@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\CatalogProvider;
 
-use Flow\PostgreSql\Schema\{Catalog, CatalogProvider};
+use Flow\PostgreSql\Schema\Catalog;
+use Flow\PostgreSql\Schema\CatalogProvider;
 
 /**
  * @phpstan-import-type CatalogShape from Catalog
@@ -16,10 +17,9 @@ final readonly class ArrayCatalogProvider implements CatalogProvider
      */
     public function __construct(
         private array $data,
-    ) {
-    }
+    ) {}
 
-    public function get() : Catalog
+    public function get(): Catalog
     {
         return Catalog::fromArray($this->data);
     }

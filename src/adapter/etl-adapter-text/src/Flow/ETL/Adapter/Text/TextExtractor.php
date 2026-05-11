@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text;
 
-use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PathFiltering, Signal};
-use Flow\ETL\{Extractor, FlowContext};
+use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\FileExtractor;
+use Flow\ETL\Extractor\Limitable;
+use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\PathFiltering;
+use Flow\ETL\Extractor\Signal;
+use Flow\ETL\FlowContext;
 use Flow\Filesystem\Path;
+
+use function Flow\ETL\DSL\array_to_rows;
 
 final class TextExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -20,7 +26,7 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
         $this->resetLimit();
     }
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
@@ -49,7 +55,7 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
         }
     }
 
-    public function source() : Path
+    public function source(): Path
     {
         return $this->path;
     }

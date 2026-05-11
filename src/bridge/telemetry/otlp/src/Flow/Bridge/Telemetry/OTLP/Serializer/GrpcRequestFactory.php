@@ -24,19 +24,19 @@ interface GrpcRequestFactory
      *
      * @param array<LogEntry> $entries
      */
-    public function createLogsRequest(array $entries) : ExportLogsServiceRequest;
+    public function createLogsRequest(array $entries): ExportLogsServiceRequest;
 
     /**
      * Create an ExportMetricsServiceRequest for gRPC transport.
      *
      * @param array<Metric> $metrics
      */
-    public function createMetricsRequest(array $metrics) : ExportMetricsServiceRequest;
+    public function createMetricsRequest(array $metrics): ExportMetricsServiceRequest;
 
     /**
      * Create an ExportTraceServiceRequest for gRPC transport.
      *
      * @param array<Span> $spans
      */
-    public function createSpansRequest(array $spans) : ExportTraceServiceRequest;
+    public function createSpansRequest(array $spans): ExportTraceServiceRequest;
 }

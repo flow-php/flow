@@ -4,21 +4,33 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Config;
 
-use function Flow\Filesystem\DSL\{filesystem_telemetry_config, fstab};
 use Flow\Clock\SystemClock;
-use Flow\ETL\{Analyze, Cache, Config, NativePHPRandomValueGenerator, RandomValueGenerator};
+use Flow\ETL\Analyze;
+use Flow\ETL\Cache;
+use Flow\ETL\Config;
 use Flow\ETL\Config\Cache\CacheConfigBuilder;
 use Flow\ETL\Config\Sort\SortConfigBuilder;
-use Flow\ETL\Config\Telemetry\{TelemetryConfig, TelemetryOptions};
+use Flow\ETL\Config\Telemetry\TelemetryConfig;
+use Flow\ETL\Config\Telemetry\TelemetryOptions;
 use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Filesystem\FilesystemStreams;
+use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\Pipeline\Optimizer;
-use Flow\ETL\Pipeline\Optimizer\{BatchSizeOptimization, LimitOptimization};
+use Flow\ETL\Pipeline\Optimizer\BatchSizeOptimization;
+use Flow\ETL\Pipeline\Optimizer\LimitOptimization;
+use Flow\ETL\RandomValueGenerator;
 use Flow\ETL\Row\EntryFactory;
-use Flow\Filesystem\{Filesystem, FilesystemTable};
-use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
-use Flow\Telemetry\{PackageVersion, Telemetry};
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\FilesystemTable;
+use Flow\Serializer\Base64Serializer;
+use Flow\Serializer\NativePHPSerializer;
+use Flow\Serializer\Serializer;
+use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\Telemetry;
 use Psr\Clock\ClockInterface;
+
+use function Flow\Filesystem\DSL\filesystem_telemetry_config;
+use function Flow\Filesystem\DSL\fstab;
 
 final class ConfigBuilder
 {
@@ -62,24 +74,23 @@ final class ConfigBuilder
         $this->randomValueGenerator = new NativePHPRandomValueGenerator();
         $this->analyze = null;
         $this->telemetryConfig = null;
-        $this->version = PackageVersion::get('flow-php/etl') === 'unknown' ? PackageVersion::get('flow-php/flow') : PackageVersion::get('flow-php/etl');
+        $this->version = PackageVersion::get('flow-php/etl') === 'unknown'
+            ? PackageVersion::get('flow-php/flow')
+            : PackageVersion::get('flow-php/etl');
     }
 
-    public function analyze(Analyze $analyze) : self
+    public function analyze(Analyze $analyze): self
     {
         $this->analyze = $analyze;
 
         return $this;
     }
 
-    public function build(EntryFactory $entryFactory = new EntryFactory()) : Config
+    public function build(EntryFactory $entryFactory = new EntryFactory()): Config
     {
         $this->id ??= 'flow-php-' . $this->randomValueGenerator->string(32);
         $this->serializer ??= new Base64Serializer(new NativePHPSerializer());
-        $this->optimizer ??= new Optimizer(
-            new LimitOptimization(),
-            new BatchSizeOptimization(batchSize: 1000)
-        );
+        $this->optimizer ??= new Optimizer(new LimitOptimization(), new BatchSizeOptimization(batchSize: 1000));
 
         $dataframeName = $this->name ?? 'flow_dataframe';
 
@@ -101,28 +112,28 @@ final class ConfigBuilder
         );
     }
 
-    public function cache(Cache $cache) : self
+    public function cache(Cache $cache): self
     {
         $this->cache->cache($cache);
 
         return $this;
     }
 
-    public function cacheFilesystem(string $protocol) : self
+    public function cacheFilesystem(string $protocol): self
     {
         $this->cache->filesystemProtocol($protocol);
 
         return $this;
     }
 
-    public function clock(ClockInterface $clocks) : self
+    public function clock(ClockInterface $clocks): self
     {
         $this->clock = $clocks;
 
         return $this;
     }
 
-    public function dontPutInputIntoRows() : self
+    public function dontPutInputIntoRows(): self
     {
         $this->putInputIntoRows = false;
 
@@ -132,42 +143,42 @@ final class ConfigBuilder
     /**
      * @param int<1, max> $externalSortBucketsCount
      */
-    public function externalSortBucketsCount(int $externalSortBucketsCount) : self
+    public function externalSortBucketsCount(int $externalSortBucketsCount): self
     {
         $this->cache->externalSortBucketsCount($externalSortBucketsCount);
 
         return $this;
     }
 
-    public function externalSortFilesystem(string $protocol) : self
+    public function externalSortFilesystem(string $protocol): self
     {
         $this->sort->filesystemProtocol($protocol);
 
         return $this;
     }
 
-    public function id(string $id) : self
+    public function id(string $id): self
     {
         $this->id = $id;
 
         return $this;
     }
 
-    public function mount(Filesystem $filesystem) : self
+    public function mount(Filesystem $filesystem): self
     {
         $this->fstab()->mount($filesystem);
 
         return $this;
     }
 
-    public function name(string $name) : self
+    public function name(string $name): self
     {
         $this->name = $name;
 
         return $this;
     }
 
-    public function optimizer(Optimizer $optimizer) : self
+    public function optimizer(Optimizer $optimizer): self
     {
         $this->optimizer = $optimizer;
 
@@ -178,68 +189,69 @@ final class ConfigBuilder
      * When set, each extractor will try to put additional rows with input parameters, like for example uri to the source file from which
      * data is extracted.
      */
-    public function putInputIntoRows() : self
+    public function putInputIntoRows(): self
     {
         $this->putInputIntoRows = true;
 
         return $this;
     }
 
-    public function reset() : self
+    public function reset(): self
     {
         return new self();
     }
 
-    public function serializer(Serializer $serializer) : self
+    public function serializer(Serializer $serializer): self
     {
         $this->serializer = $serializer;
 
         return $this;
     }
 
-    public function sortMemoryLimit(Unit $unit) : self
+    public function sortMemoryLimit(Unit $unit): self
     {
         $this->sort->sortMemoryLimit($unit);
 
         return $this;
     }
 
-    public function unmount(Filesystem $filesystem) : self
+    public function unmount(Filesystem $filesystem): self
     {
         $this->fstab()->unmount($filesystem);
 
         return $this;
     }
 
-    public function withTelemetry(Telemetry $telemetry, TelemetryOptions $options = new TelemetryOptions()) : self
+    public function withTelemetry(Telemetry $telemetry, TelemetryOptions $options = new TelemetryOptions()): self
     {
         $this->telemetryConfig = new TelemetryConfig($telemetry, $options);
 
         if ($this->fstab !== null) {
-            $this->fstab->withTelemetry(
-                filesystem_telemetry_config(
-                    $telemetry,
-                    $this->getClock(),
-                    $options->filesystem
-                )
-            );
+            $this->fstab->withTelemetry(filesystem_telemetry_config(
+                $telemetry,
+                $this->getClock(),
+                $options->filesystem,
+            ));
         }
 
         return $this;
     }
 
-    private function fstab() : FilesystemTable
+    private function fstab(): FilesystemTable
     {
         if ($this->fstab === null) {
             $this->fstab = fstab();
 
             $filesystemOptions = $this->telemetryConfig?->options->filesystem;
 
-            if ($filesystemOptions !== null && ($filesystemOptions->traceStreams || $filesystemOptions->collectMetrics)) {
+            if (
+                $filesystemOptions !== null
+                && ($filesystemOptions->traceStreams || $filesystemOptions->collectMetrics)
+            ) {
                 $this->fstab->withTelemetry(filesystem_telemetry_config(
                     $this->telemetry()->telemetry,
                     $this->getClock(),
-                    $filesystemOptions
+                    $filesystemOptions,
                 ));
             }
         }
@@ -247,17 +259,16 @@ final class ConfigBuilder
         return $this->fstab;
     }
 
-    private function getClock() : ClockInterface
+    private function getClock(): ClockInterface
     {
         if ($this->clock === null) {
             $this->clock = SystemClock::utc();
         }
 
         return $this->clock;
-
     }
 
-    private function telemetry() : TelemetryConfig
+    private function telemetry(): TelemetryConfig
     {
         if ($this->telemetryConfig === null) {
             $this->telemetryConfig = TelemetryConfig::default($this->getClock());

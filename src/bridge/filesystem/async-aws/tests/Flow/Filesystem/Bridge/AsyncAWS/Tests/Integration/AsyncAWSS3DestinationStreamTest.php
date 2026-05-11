@@ -9,33 +9,36 @@ use function Flow\Filesystem\DSL\path;
 
 final class AsyncAWSS3DestinationStreamTest extends AsyncAWSS3TestCase
 {
-    public function test_closing_empty_stream() : void
+    public function test_closing_empty_stream(): void
     {
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
         $stream = $fs->writeTo(path('aws-s3://file.txt'));
-        self::assertTrue($stream->isOpen());
+        static::assertTrue($stream->isOpen());
         $stream->close();
-        self::assertFalse($stream->isOpen());
+        static::assertFalse($stream->isOpen());
     }
 
-    public function test_writing_content_from_resource() : void
+    public function test_writing_content_from_resource(): void
     {
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
         $stream = $fs->writeTo(path('aws-s3://orders.csv'));
         $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
-        self::assertNotFalse($resource);
+        static::assertNotFalse($resource);
         $stream->fromResource($resource);
         $stream->close();
 
-        self::assertTrue($fs->status(path('aws-s3://orders.csv'))?->isFile());
-        self::assertFalse($fs->status(path('aws-s3://orders.csv'))->isDirectory());
-        self::assertSame(\file_get_contents(__DIR__ . '/Fixtures/orders.csv'), $fs->readFrom(path('aws-s3://orders.csv'))->content());
+        static::assertTrue($fs->status(path('aws-s3://orders.csv'))?->isFile());
+        static::assertFalse($fs->status(path('aws-s3://orders.csv'))->isDirectory());
+        static::assertSame(
+            \file_get_contents(__DIR__ . '/Fixtures/orders.csv'),
+            $fs->readFrom(path('aws-s3://orders.csv'))->content(),
+        );
 
         $fs->rm(path('aws-s3://orders.csv'));
     }
 
-    public function test_writing_content_smaller_than_block_size_to_s3() : void
+    public function test_writing_content_smaller_than_block_size_to_s3(): void
     {
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
@@ -43,9 +46,9 @@ final class AsyncAWSS3DestinationStreamTest extends AsyncAWSS3TestCase
         $stream->append('Hello, World!');
         $stream->close();
 
-        self::assertTrue($fs->status(path('aws-s3://file.txt'))?->isFile());
-        self::assertFalse($fs->status(path('aws-s3://file.txt'))->isDirectory());
-        self::assertSame('Hello, World!', $fs->readFrom(path('aws-s3://file.txt'))->content());
+        static::assertTrue($fs->status(path('aws-s3://file.txt'))?->isFile());
+        static::assertFalse($fs->status(path('aws-s3://file.txt'))->isDirectory());
+        static::assertSame('Hello, World!', $fs->readFrom(path('aws-s3://file.txt'))->content());
 
         $fs->rm(path('aws-s3://file.txt'));
     }

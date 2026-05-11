@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\PHPUnit\Telemetry\Subscriber;
 
-use Flow\Bridge\PHPUnit\Telemetry\{Configuration, SpanStack, TestStatusRegistry};
-use Flow\Telemetry\{PackageVersion, Telemetry};
+use Flow\Bridge\PHPUnit\Telemetry\Configuration;
+use Flow\Bridge\PHPUnit\Telemetry\SpanStack;
+use Flow\Bridge\PHPUnit\Telemetry\TestStatusRegistry;
+use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanStatus;
-use PHPUnit\Event\Test\{Finished, FinishedSubscriber};
+use PHPUnit\Event\Test\Finished;
+use PHPUnit\Event\Test\FinishedSubscriber;
 
 final readonly class TestFinishedSubscriber implements FinishedSubscriber
 {
@@ -16,10 +20,9 @@ final readonly class TestFinishedSubscriber implements FinishedSubscriber
         private SpanStack $spanStack,
         private Configuration $config,
         private TestStatusRegistry $statusRegistry,
-    ) {
-    }
+    ) {}
 
-    public function notify(Finished $event) : void
+    public function notify(Finished $event): void
     {
         try {
             $testId = $event->test()->id();
@@ -29,8 +32,7 @@ final readonly class TestFinishedSubscriber implements FinishedSubscriber
                 if ($this->config->emitMetrics) {
                     $meter = $this->telemetry->meter('phpunit', PackageVersion::get('phpunit/phpunit'));
 
-                    $meter->createCounter('phpunit.test.count')
-                        ->add(1, ['test.status' => $status]);
+                    $meter->createCounter('phpunit.test.count')->add(1, ['test.status' => $status]);
                 }
 
                 $this->statusRegistry->clear($testId);
@@ -69,11 +71,9 @@ final readonly class TestFinishedSubscriber implements FinishedSubscriber
             if ($this->config->emitMetrics && $duration !== null) {
                 $meter = $this->telemetry->meter('phpunit', PackageVersion::get('phpunit/phpunit'));
 
-                $meter->createHistogram('phpunit.test.duration', 'ms')
-                    ->record($duration, ['test.status' => $status]);
+                $meter->createHistogram('phpunit.test.duration', 'ms')->record($duration, ['test.status' => $status]);
 
-                $meter->createCounter('phpunit.test.count')
-                    ->add(1, ['test.status' => $status]);
+                $meter->createCounter('phpunit.test.count')->add(1, ['test.status' => $status]);
             }
 
             $tracer->complete($span);

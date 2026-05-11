@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Explain\Plan;
 
-use Flow\PostgreSql\Explain\Plan\{Buffers, Cost, PlanNode, PlanNodeType, Timing};
+use Flow\PostgreSql\Explain\Plan\Buffers;
+use Flow\PostgreSql\Explain\Plan\Cost;
+use Flow\PostgreSql\Explain\Plan\PlanNode;
+use Flow\PostgreSql\Explain\Plan\PlanNodeType;
+use Flow\PostgreSql\Explain\Plan\Timing;
 use PHPUnit\Framework\TestCase;
 
 final class PlanNodeTest extends TestCase
 {
-    public function test_from_array_and_normalize_are_inverse() : void
+    public function test_from_array_and_normalize_are_inverse(): void
     {
         $original = new PlanNode(
             nodeType: PlanNodeType::SEQ_SCAN,
@@ -43,10 +47,10 @@ final class PlanNodeTest extends TestCase
         $normalized = $original->normalize();
         $restored = PlanNode::fromArray($normalized);
 
-        self::assertEquals($original, $restored);
+        static::assertEquals($original, $restored);
     }
 
-    public function test_from_array_and_normalize_with_nested_children() : void
+    public function test_from_array_and_normalize_with_nested_children(): void
     {
         $childNode = new PlanNode(
             nodeType: PlanNodeType::INDEX_SCAN,
@@ -67,12 +71,12 @@ final class PlanNodeTest extends TestCase
         $normalized = $original->normalize();
         $restored = PlanNode::fromArray($normalized);
 
-        self::assertEquals($original, $restored);
-        self::assertCount(1, $restored->children());
-        self::assertEquals(PlanNodeType::INDEX_SCAN, $restored->children()[0]->nodeType());
+        static::assertEquals($original, $restored);
+        static::assertCount(1, $restored->children());
+        static::assertEquals(PlanNodeType::INDEX_SCAN, $restored->children()[0]->nodeType());
     }
 
-    public function test_from_array_creates_instance_with_all_fields() : void
+    public function test_from_array_creates_instance_with_all_fields(): void
     {
         $data = [
             'node_type' => 'Seq Scan',
@@ -116,27 +120,27 @@ final class PlanNodeTest extends TestCase
 
         $node = PlanNode::fromArray($data);
 
-        self::assertEquals(PlanNodeType::SEQ_SCAN, $node->nodeType());
-        self::assertSame(0.0, $node->cost()->startupCost());
-        self::assertSame(100.0, $node->cost()->totalCost());
-        self::assertSame(1000, $node->estimatedRows());
-        self::assertSame(64, $node->rowWidth());
-        self::assertSame('users', $node->relationName());
-        self::assertSame('public', $node->schema());
-        self::assertSame('u', $node->alias());
-        self::assertSame('(active = true)', $node->filter());
-        self::assertSame(950, $node->actualRows());
-        self::assertSame(1, $node->actualLoops());
-        self::assertSame(50, $node->rowsRemovedByFilter());
-        self::assertSame('Forward', $node->scanDirection());
-        self::assertSame(['custom_field' => 'value'], $node->rawData());
-        self::assertNotNull($node->timing());
-        self::assertSame(0.1, $node->timing()->startupTime());
-        self::assertNotNull($node->buffers());
-        self::assertSame(50, $node->buffers()->sharedHit());
+        static::assertEquals(PlanNodeType::SEQ_SCAN, $node->nodeType());
+        static::assertSame(0.0, $node->cost()->startupCost());
+        static::assertSame(100.0, $node->cost()->totalCost());
+        static::assertSame(1000, $node->estimatedRows());
+        static::assertSame(64, $node->rowWidth());
+        static::assertSame('users', $node->relationName());
+        static::assertSame('public', $node->schema());
+        static::assertSame('u', $node->alias());
+        static::assertSame('(active = true)', $node->filter());
+        static::assertSame(950, $node->actualRows());
+        static::assertSame(1, $node->actualLoops());
+        static::assertSame(50, $node->rowsRemovedByFilter());
+        static::assertSame('Forward', $node->scanDirection());
+        static::assertSame(['custom_field' => 'value'], $node->rawData());
+        static::assertNotNull($node->timing());
+        static::assertSame(0.1, $node->timing()->startupTime());
+        static::assertNotNull($node->buffers());
+        static::assertSame(50, $node->buffers()->sharedHit());
     }
 
-    public function test_normalize_returns_expected_keys() : void
+    public function test_normalize_returns_expected_keys(): void
     {
         $node = new PlanNode(
             nodeType: PlanNodeType::SEQ_SCAN,
@@ -176,10 +180,10 @@ final class PlanNodeTest extends TestCase
             'raw_data',
         ];
 
-        self::assertSame($expectedKeys, \array_keys($normalized));
+        static::assertSame($expectedKeys, \array_keys($normalized));
     }
 
-    public function test_normalize_with_null_optional_fields() : void
+    public function test_normalize_with_null_optional_fields(): void
     {
         $node = new PlanNode(
             nodeType: PlanNodeType::SEQ_SCAN,
@@ -190,14 +194,14 @@ final class PlanNodeTest extends TestCase
 
         $normalized = $node->normalize();
 
-        self::assertSame('Seq Scan', $normalized['node_type']);
-        self::assertNull($normalized['relation_name']);
-        self::assertNull($normalized['schema']);
-        self::assertNull($normalized['alias']);
-        self::assertNull($normalized['timing']);
-        self::assertNull($normalized['buffers']);
-        self::assertNull($normalized['actual_rows']);
-        self::assertSame([], $normalized['children']);
-        self::assertSame([], $normalized['raw_data']);
+        static::assertSame('Seq Scan', $normalized['node_type']);
+        static::assertNull($normalized['relation_name']);
+        static::assertNull($normalized['schema']);
+        static::assertNull($normalized['alias']);
+        static::assertNull($normalized['timing']);
+        static::assertNull($normalized['buffers']);
+        static::assertNull($normalized['actual_rows']);
+        static::assertSame([], $normalized['children']);
+        static::assertSame([], $normalized['raw_data']);
     }
 }

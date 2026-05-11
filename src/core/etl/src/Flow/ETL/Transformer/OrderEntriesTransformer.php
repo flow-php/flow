@@ -4,26 +4,30 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
-use function Flow\ETL\DSL\row;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\{FlowContext, Row, Rows, Transformer};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
+use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\OrderEntries\Comparator;
+
+use function Flow\ETL\DSL\row;
 
 final readonly class OrderEntriesTransformer implements Transformer
 {
-    public function __construct(private Comparator $comparator)
-    {
-    }
+    public function __construct(
+        private Comparator $comparator,
+    ) {}
 
-    public function transform(Rows $rows, FlowContext $context) : Rows
+    public function transform(Rows $rows, FlowContext $context): Rows
     {
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $result = $rows->map(function (Row $row) : Row {
+            $result = $rows->map(function (Row $row): Row {
                 $entries = $row->entries()->all();
 
-                usort($entries, fn ($left, $right) => $this->comparator->compare($left, $right));
+                usort($entries, fn($left, $right) => $this->comparator->compare($left, $right));
 
                 return row(...$entries);
             });

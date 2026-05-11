@@ -16,5 +16,5 @@ interface UpdateWhereStep extends UpdateReturningStep
      *
      * @param Condition $condition The condition to apply
      */
-    public function where(Condition $condition) : UpdateReturningStep;
+    public function where(Condition $condition): UpdateReturningStep;
 }

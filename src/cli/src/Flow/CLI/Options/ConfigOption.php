@@ -4,21 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Options;
 
-use function Flow\CLI\option_string_nullable;
-use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\Config;
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputInterface;
 
+use function Flow\CLI\option_string_nullable;
+use function Flow\Filesystem\DSL\path_real;
+
 final readonly class ConfigOption
 {
-    public function __construct(private string $optionName)
-    {
-    }
+    public function __construct(
+        private string $optionName,
+    ) {}
 
-    public function get(InputInterface $input) : Config
+    public function get(InputInterface $input): Config
     {
         $configPath = option_string_nullable($this->optionName, $input);
 
@@ -41,7 +42,13 @@ final readonly class ConfigOption
         }
 
         if (!$config instanceof Config) {
-            throw new InvalidArgumentException('File "{$path->path()}" does not return instance of "' . Config::class . '" or "' . ConfigBuilder::class . '".');
+            throw new InvalidArgumentException(
+                'File "{$path->path()}" does not return instance of "'
+                . Config::class
+                . '" or "'
+                . ConfigBuilder::class
+                . '".',
+            );
         }
 
         return $config;

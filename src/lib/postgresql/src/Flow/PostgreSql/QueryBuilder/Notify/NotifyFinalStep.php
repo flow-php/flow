@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface NotifyFinalStep extends Sql
 {
-    public function toAst() : NotifyStmt;
+    public function toAst(): NotifyStmt;
 
-    public function withPayload(string $payload) : self;
+    public function withPayload(string $payload): self;
 }

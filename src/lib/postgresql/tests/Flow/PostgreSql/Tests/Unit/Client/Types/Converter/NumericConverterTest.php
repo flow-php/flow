@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 final class NumericConverterTest extends TestCase
 {
-    public static function provide_invalid_values() : \Generator
+    public static function provide_invalid_values(): \Generator
     {
         yield 'array' => [['array']];
         yield 'boolean true' => [true];
@@ -20,7 +20,7 @@ final class NumericConverterTest extends TestCase
         yield 'object' => [new \stdClass()];
     }
 
-    public static function provide_valid_values() : \Generator
+    public static function provide_valid_values(): \Generator
     {
         yield 'integer' => [42, '42'];
         yield 'negative integer' => [-42, '-42'];
@@ -30,36 +30,39 @@ final class NumericConverterTest extends TestCase
         yield 'zero float' => [0.0, '0'];
         yield 'string numeric' => ['999.99', '999.99'];
         yield 'string negative' => ['-999.99', '-999.99'];
-        yield 'large precision string' => ['12345678901234567890.12345678901234567890', '12345678901234567890.12345678901234567890'];
+        yield 'large precision string' => [
+            '12345678901234567890.12345678901234567890',
+            '12345678901234567890.12345678901234567890',
+        ];
         yield 'scientific notation string' => ['1.23e10', '1.23e10'];
         yield 'very high precision' => ['0.123456789012345678901234567890', '0.123456789012345678901234567890'];
         yield 'integer as string' => ['42', '42'];
     }
 
     #[DataProvider('provide_invalid_values')]
-    public function test_invalid_value_throws_exception(mixed $value) : void
+    public function test_invalid_value_throws_exception(mixed $value): void
     {
         $converter = new NumericConverter();
         $this->expectException(ValueConversionException::class);
         $converter->toDatabase($value);
     }
 
-    public function test_null_handling() : void
+    public function test_null_handling(): void
     {
         $converter = new NumericConverter();
-        self::assertNull($converter->toDatabase(null));
+        static::assertNull($converter->toDatabase(null));
     }
 
-    public function test_supported_types() : void
+    public function test_supported_types(): void
     {
         $converter = new NumericConverter();
-        self::assertContains(ValueType::NUMERIC, $converter->supportedTypes());
+        static::assertContains(ValueType::NUMERIC, $converter->supportedTypes());
     }
 
     #[DataProvider('provide_valid_values')]
-    public function test_to_database(mixed $input, string $expected) : void
+    public function test_to_database(mixed $input, string $expected): void
     {
         $converter = new NumericConverter();
-        self::assertSame($expected, $converter->toDatabase($input));
+        static::assertSame($expected, $converter->toDatabase($input));
     }
 }

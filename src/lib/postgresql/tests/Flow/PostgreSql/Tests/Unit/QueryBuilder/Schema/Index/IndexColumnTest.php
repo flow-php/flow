@@ -4,92 +4,91 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\Index;
 
-use function Flow\PostgreSql\DSL\{col, func};
-use Flow\PostgreSql\Protobuf\AST\{IndexElem, SortByDir, SortByNulls};
+use Flow\PostgreSql\Protobuf\AST\IndexElem;
+use Flow\PostgreSql\Protobuf\AST\SortByDir;
+use Flow\PostgreSql\Protobuf\AST\SortByNulls;
 use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexColumn;
-
 use PHPUnit\Framework\TestCase;
+
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\func;
 
 final class IndexColumnTest extends TestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }
 
-    public function test_asc_sets_ordering() : void
+    public function test_asc_sets_ordering(): void
     {
         $column = IndexColumn::column('name')->asc();
 
         $ast = $column->toAst();
 
-        self::assertInstanceOf(IndexElem::class, $ast);
-        self::assertSame(SortByDir::SORTBY_ASC, $ast->getOrdering());
+        static::assertInstanceOf(IndexElem::class, $ast);
+        static::assertSame(SortByDir::SORTBY_ASC, $ast->getOrdering());
     }
 
-    public function test_collation() : void
+    public function test_collation(): void
     {
         $column = IndexColumn::column('name')->collate('en_US');
 
         $ast = $column->toAst();
 
-        self::assertInstanceOf(IndexElem::class, $ast);
-        self::assertCount(1, $ast->getCollation());
-        self::assertSame('en_US', $ast->getCollation()[0]->getString()->getSval());
+        static::assertInstanceOf(IndexElem::class, $ast);
+        static::assertCount(1, $ast->getCollation());
+        static::assertSame('en_US', $ast->getCollation()[0]->getString()->getSval());
     }
 
-    public function test_column_creates_index_elem() : void
+    public function test_column_creates_index_elem(): void
     {
         $column = IndexColumn::column('name');
 
         $ast = $column->toAst();
 
-        self::assertInstanceOf(IndexElem::class, $ast);
-        self::assertSame('name', $ast->getName());
+        static::assertInstanceOf(IndexElem::class, $ast);
+        static::assertSame('name', $ast->getName());
     }
 
-    public function test_combined_options() : void
+    public function test_combined_options(): void
     {
-        $column = IndexColumn::column('name')
-            ->desc()
-            ->nullsFirst()
-            ->opclass('text_pattern_ops')
-            ->collate('en_US');
+        $column = IndexColumn::column('name')->desc()->nullsFirst()->opclass('text_pattern_ops')->collate('en_US');
 
         $ast = $column->toAst();
 
-        self::assertInstanceOf(IndexElem::class, $ast);
-        self::assertSame('name', $ast->getName());
-        self::assertSame(SortByDir::SORTBY_DESC, $ast->getOrdering());
-        self::assertSame(SortByNulls::SORTBY_NULLS_FIRST, $ast->getNullsOrdering());
-        self::assertCount(1, $ast->getOpclass());
-        self::assertCount(1, $ast->getCollation());
+        static::assertInstanceOf(IndexElem::class, $ast);
+        static::assertSame('name', $ast->getName());
+        static::assertSame(SortByDir::SORTBY_DESC, $ast->getOrdering());
+        static::assertSame(SortByNulls::SORTBY_NULLS_FIRST, $ast->getNullsOrdering());
+        static::assertCount(1, $ast->getOpclass());
+        static::assertCount(1, $ast->getCollation());
     }
 
-    public function test_desc_sets_ordering() : void
+    public function test_desc_sets_ordering(): void
     {
         $column = IndexColumn::column('name')->desc();
 
         $ast = $column->toAst();
 
-        self::assertInstanceOf(IndexElem::class, $ast);
-        self::assertSame(SortByDir::SORTBY_DESC, $ast->getOrdering());
+        static::assertInstanceOf(IndexElem::class, $ast);
+        static::assertSame(SortByDir::SORTBY_DESC, $ast->getOrdering());
     }
 
-    public function test_expression_creates_index_elem() : void
+    public function test_expression_creates_index_elem(): void
     {
         $column = IndexColumn::expression(func('lower', [col('name')]));
 
         $ast = $column->toAst();
 
-        self::assertInstanceOf(IndexElem::class, $ast);
-        self::assertEmpty($ast->getName());
-        self::assertNotNull($ast->getExpr());
+        static::assertInstanceOf(IndexElem::class, $ast);
+        static::assertEmpty($ast->getName());
+        static::assertNotNull($ast->getExpr());
     }
 
-    public function test_immutability() : void
+    public function test_immutability(): void
     {
         $original = IndexColumn::column('name');
         $modified = $original->desc();
@@ -97,38 +96,38 @@ final class IndexColumnTest extends TestCase
         $originalAst = $original->toAst();
         $modifiedAst = $modified->toAst();
 
-        self::assertSame(SortByDir::SORT_BY_DIR_UNDEFINED, $originalAst->getOrdering());
-        self::assertSame(SortByDir::SORTBY_DESC, $modifiedAst->getOrdering());
+        static::assertSame(SortByDir::SORT_BY_DIR_UNDEFINED, $originalAst->getOrdering());
+        static::assertSame(SortByDir::SORTBY_DESC, $modifiedAst->getOrdering());
     }
 
-    public function test_nulls_first_sets_nulls_ordering() : void
+    public function test_nulls_first_sets_nulls_ordering(): void
     {
         $column = IndexColumn::column('name')->nullsFirst();
 
         $ast = $column->toAst();
 
-        self::assertInstanceOf(IndexElem::class, $ast);
-        self::assertSame(SortByNulls::SORTBY_NULLS_FIRST, $ast->getNullsOrdering());
+        static::assertInstanceOf(IndexElem::class, $ast);
+        static::assertSame(SortByNulls::SORTBY_NULLS_FIRST, $ast->getNullsOrdering());
     }
 
-    public function test_nulls_last_sets_nulls_ordering() : void
+    public function test_nulls_last_sets_nulls_ordering(): void
     {
         $column = IndexColumn::column('name')->nullsLast();
 
         $ast = $column->toAst();
 
-        self::assertInstanceOf(IndexElem::class, $ast);
-        self::assertSame(SortByNulls::SORTBY_NULLS_LAST, $ast->getNullsOrdering());
+        static::assertInstanceOf(IndexElem::class, $ast);
+        static::assertSame(SortByNulls::SORTBY_NULLS_LAST, $ast->getNullsOrdering());
     }
 
-    public function test_opclass() : void
+    public function test_opclass(): void
     {
         $column = IndexColumn::column('name')->opclass('text_pattern_ops');
 
         $ast = $column->toAst();
 
-        self::assertInstanceOf(IndexElem::class, $ast);
-        self::assertCount(1, $ast->getOpclass());
-        self::assertSame('text_pattern_ops', $ast->getOpclass()[0]->getString()->getSval());
+        static::assertInstanceOf(IndexElem::class, $ast);
+        static::assertCount(1, $ast->getOpclass());
+        static::assertSame('text_pattern_ops', $ast->getOpclass()[0]->getString()->getSval());
     }
 }

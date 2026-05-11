@@ -4,38 +4,42 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration\Dialects;
 
-use function Flow\ETL\Adapter\Doctrine\{to_dbal_table_delete, to_dbal_table_insert, to_dbal_transaction};
-use function Flow\ETL\DSL\{config, flow_context, integer_entry, row, rows, string_entry};
-use Doctrine\DBAL\Schema\{Column, Table};
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\TransactionIsolationLevel;
-use Doctrine\DBAL\Types\{Type, Types};
+use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
+
+use function Flow\ETL\Adapter\Doctrine\to_dbal_table_delete;
+use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
+use function Flow\ETL\Adapter\Doctrine\to_dbal_transaction;
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\integer_entry;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\string_entry;
 
 final class PostgreSQLTransactionalDbalLoaderTest extends IntegrationTestCase
 {
-    public function test_multiple_batches_in_separate_transactions() : void
+    public function test_multiple_batches_in_separate_transactions(): void
     {
         if (!\getenv('PGSQL_DATABASE_URL')) {
-            self::markTestSkipped('PostgreSQL database is not available');
+            static::markTestSkipped('PostgreSQL database is not available');
         }
 
-        $table = new Table(
-            'test_table',
-            [
-                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-                new Column('value', Type::getType(Types::INTEGER), ['notnull' => true]),
-            ],
-        );
+        $table = new Table('test_table', [
+            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+            new Column('value', Type::getType(Types::INTEGER), ['notnull' => true]),
+        ]);
         $table->setPrimaryKey(['id']);
 
         $this->pgsqlDatabaseContext->createTable($table);
 
         $connection = $this->pgsqlDatabaseContext->connection();
 
-        $loader = to_dbal_transaction(
-            $connection,
-            to_dbal_table_insert($connection, 'test_table')
-        );
+        $loader = to_dbal_transaction($connection, to_dbal_table_insert($connection, 'test_table'));
 
         $batch1 = rows(row(integer_entry('id', 1), integer_entry('value', 100)));
         $batch2 = rows(row(integer_entry('id', 2), integer_entry('value', 200)));
@@ -47,26 +51,23 @@ final class PostgreSQLTransactionalDbalLoaderTest extends IntegrationTestCase
 
         $result = $this->pgsqlDatabaseContext->selectAll('test_table');
 
-        self::assertCount(2, $result);
-        self::assertEquals(1, $result[0]['id']);
-        self::assertEquals(100, $result[0]['value']);
-        self::assertEquals(2, $result[1]['id']);
-        self::assertEquals(200, $result[1]['value']);
+        static::assertCount(2, $result);
+        static::assertEquals(1, $result[0]['id']);
+        static::assertEquals(100, $result[0]['value']);
+        static::assertEquals(2, $result[1]['id']);
+        static::assertEquals(200, $result[1]['value']);
     }
 
-    public function test_rollback_on_failure() : void
+    public function test_rollback_on_failure(): void
     {
         if (!\getenv('PGSQL_DATABASE_URL')) {
-            self::markTestSkipped('PostgreSQL database is not available');
+            static::markTestSkipped('PostgreSQL database is not available');
         }
 
-        $table = new Table(
-            'test_table',
-            [
-                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            ],
-        );
+        $table = new Table('test_table', [
+            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+        ]);
         $table->setPrimaryKey(['id']);
 
         $this->pgsqlDatabaseContext->createTable($table);
@@ -80,7 +81,7 @@ final class PostgreSQLTransactionalDbalLoaderTest extends IntegrationTestCase
         $loader = to_dbal_transaction(
             $connection,
             to_dbal_table_delete($connection, 'test_table'),
-            to_dbal_table_insert($connection, 'test_table')
+            to_dbal_table_insert($connection, 'test_table'),
         );
 
         try {
@@ -90,64 +91,61 @@ final class PostgreSQLTransactionalDbalLoaderTest extends IntegrationTestCase
 
         $result = $this->pgsqlDatabaseContext->selectAll('test_table');
 
-        self::assertCount(2, $result);
-        self::assertEquals(1, $result[0]['id']);
-        self::assertEquals('Initial', $result[0]['name']);
-        self::assertEquals(2, $result[1]['id']);
-        self::assertEquals('Initial', $result[1]['name']);
+        static::assertCount(2, $result);
+        static::assertEquals(1, $result[0]['id']);
+        static::assertEquals('Initial', $result[0]['name']);
+        static::assertEquals(2, $result[1]['id']);
+        static::assertEquals('Initial', $result[1]['name']);
     }
 
-    public function test_transactional_delete_and_insert() : void
+    public function test_transactional_delete_and_insert(): void
     {
         if (!\getenv('PGSQL_DATABASE_URL')) {
-            self::markTestSkipped('PostgreSQL database is not available');
+            static::markTestSkipped('PostgreSQL database is not available');
         }
 
-        $table = new Table(
-            'test_table',
-            [
-                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            ],
-        );
+        $table = new Table('test_table', [
+            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+        ]);
         $table->setPrimaryKey(['id']);
 
         $this->pgsqlDatabaseContext->createTable($table);
 
         $connection = $this->pgsqlDatabaseContext->connection();
 
-        $rows = rows(row(integer_entry('id', 1), string_entry('name', 'Updated')), row(integer_entry('id', 2), string_entry('name', 'Updated')));
+        $rows = rows(
+            row(integer_entry('id', 1), string_entry('name', 'Updated')),
+            row(integer_entry('id', 2), string_entry('name', 'Updated')),
+        );
 
         $loader = to_dbal_transaction(
             $connection,
             to_dbal_table_delete($connection, 'test_table'),
-            to_dbal_table_insert($connection, 'test_table')
+            to_dbal_table_insert($connection, 'test_table'),
         );
 
         $loader->load($rows, flow_context(config()));
 
         $result = $this->pgsqlDatabaseContext->selectAll('test_table');
 
-        self::assertCount(2, $result);
-        self::assertEquals(1, $result[0]['id']);
-        self::assertEquals('Updated', $result[0]['name']);
-        self::assertEquals(2, $result[1]['id']);
-        self::assertEquals('Updated', $result[1]['name']);
+        static::assertCount(2, $result);
+        static::assertEquals(1, $result[0]['id']);
+        static::assertEquals('Updated', $result[0]['name']);
+        static::assertEquals(2, $result[1]['id']);
+        static::assertEquals('Updated', $result[1]['name']);
     }
 
-    public function test_with_isolation_level() : void
+    public function test_with_isolation_level(): void
     {
         if (!\getenv('PGSQL_DATABASE_URL')) {
-            self::markTestSkipped('PostgreSQL database is not available');
+            static::markTestSkipped('PostgreSQL database is not available');
         }
 
-        $table = new Table(
-            'test_table',
-            [
-                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            ],
-        );
+        $table = new Table('test_table', [
+            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+        ]);
         $table->setPrimaryKey(['id']);
 
         $this->pgsqlDatabaseContext->createTable($table);
@@ -156,17 +154,17 @@ final class PostgreSQLTransactionalDbalLoaderTest extends IntegrationTestCase
 
         $rows = rows(row(integer_entry('id', 1), string_entry('name', 'Test')));
 
-        $loader = to_dbal_transaction(
+        $loader = to_dbal_transaction($connection, to_dbal_table_insert(
             $connection,
-            to_dbal_table_insert($connection, 'test_table')
-        )->withIsolationLevel(TransactionIsolationLevel::SERIALIZABLE);
+            'test_table',
+        ))->withIsolationLevel(TransactionIsolationLevel::SERIALIZABLE);
 
         $loader->load($rows, flow_context(config()));
 
         $result = $this->pgsqlDatabaseContext->selectAll('test_table');
 
-        self::assertCount(1, $result);
-        self::assertEquals(1, $result[0]['id']);
-        self::assertEquals('Test', $result[0]['name']);
+        static::assertCount(1, $result);
+        static::assertEquals(1, $result[0]['id']);
+        static::assertEquals('Test', $result[0]['name']);
     }
 }

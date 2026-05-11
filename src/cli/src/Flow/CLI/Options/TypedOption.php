@@ -9,16 +9,16 @@ use Symfony\Component\Console\Input\InputInterface;
 
 final readonly class TypedOption
 {
-    public function __construct(private string $name)
-    {
-    }
+    public function __construct(
+        private string $name,
+    ) {}
 
-    public function asBool(InputInterface $input) : bool
+    public function asBool(InputInterface $input): bool
     {
         return $input->getOption($this->name) !== false;
     }
 
-    public function asBoolNullable(InputInterface $input) : ?bool
+    public function asBoolNullable(InputInterface $input): ?bool
     {
         $option = $input->getOption($this->name);
 
@@ -43,7 +43,7 @@ final readonly class TypedOption
         return $option;
     }
 
-    public function asInt(InputInterface $input, ?int $default = null) : int
+    public function asInt(InputInterface $input, ?int $default = null): int
     {
         $option = $this->asIntNullable($input);
 
@@ -54,7 +54,7 @@ final readonly class TypedOption
         return $option ?? $default;
     }
 
-    public function asIntNullable(InputInterface $input) : ?int
+    public function asIntNullable(InputInterface $input): ?int
     {
         $option = $input->getOption($this->name);
 
@@ -72,7 +72,7 @@ final readonly class TypedOption
     /**
      * @return array<array-key, string>
      */
-    public function asListOfStrings(InputInterface $input) : array
+    public function asListOfStrings(InputInterface $input): array
     {
         $option = $this->asListOfStringsNullable($input);
 
@@ -82,7 +82,7 @@ final readonly class TypedOption
     /**
      * @return null|array<array-key, string>
      */
-    public function asListOfStringsNullable(InputInterface $input) : ?array
+    public function asListOfStringsNullable(InputInterface $input): ?array
     {
         $option = $input->getOption($this->name);
 
@@ -110,7 +110,7 @@ final readonly class TypedOption
         return $options;
     }
 
-    public function asString(InputInterface $input, ?string $default = null) : string
+    public function asString(InputInterface $input, ?string $default = null): string
     {
         $option = $this->asStringNullable($input);
 
@@ -121,7 +121,7 @@ final readonly class TypedOption
         return $option ?? $default;
     }
 
-    public function asStringNullable(InputInterface $input) : ?string
+    public function asStringNullable(InputInterface $input): ?string
     {
         $option = $input->getOption($this->name);
 

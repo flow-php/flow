@@ -6,5 +6,5 @@ namespace Flow\ETL\Retry;
 
 interface RetryStrategy
 {
-    public function shouldRetry(\Throwable $exception, int $attemptNumber) : bool;
+    public function shouldRetry(\Throwable $exception, int $attemptNumber): bool;
 }

@@ -12,7 +12,7 @@ namespace Flow\Telemetry\Resource\Attribute;
  *
  * @see https://opentelemetry.io/docs/specs/semconv/resource/process/
  */
-enum ProcessAttribute : string
+enum ProcessAttribute: string
 {
     /**
      * The command used to launch the process.

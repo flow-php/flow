@@ -4,20 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
-use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\{Extractor, FlowContext};
+use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
 use Flow\Filesystem\Path;
+
+use function Flow\ETL\DSL\array_to_rows;
 
 final class FilesExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
     use Limitable;
     use PathFiltering;
 
-    public function __construct(private readonly Path $path)
-    {
-    }
+    public function __construct(
+        private readonly Path $path,
+    ) {}
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         foreach ($context->filesystem($this->path)->list($this->path, $this->filter()) as $fileStatus) {
             $signal = yield array_to_rows([
@@ -38,7 +40,7 @@ final class FilesExtractor implements Extractor, FileExtractor, LimitableExtract
         }
     }
 
-    public function source() : Path
+    public function source(): Path
     {
         return $this->path;
     }

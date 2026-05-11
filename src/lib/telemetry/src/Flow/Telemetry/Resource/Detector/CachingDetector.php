@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Resource\Detector;
 
-use Flow\Telemetry\{Attributes, Resource};
+use Flow\Telemetry\Attributes;
+use Flow\Telemetry\Resource;
 use Flow\Telemetry\Resource\ResourceDetector;
 
 /**
@@ -46,7 +47,7 @@ final readonly class CachingDetector implements ResourceDetector
         $this->cachePath = $cachePath ?? \sys_get_temp_dir() . '/flow_telemetry_resource.cache';
     }
 
-    public function detect() : Resource
+    public function detect(): Resource
     {
         if (\is_file($this->cachePath) && \is_readable($this->cachePath)) {
             $cached = $this->loadFromCache();
@@ -62,7 +63,7 @@ final readonly class CachingDetector implements ResourceDetector
         return $resource;
     }
 
-    private function loadFromCache() : ?Resource
+    private function loadFromCache(): ?Resource
     {
         $contents = @\file_get_contents($this->cachePath);
 
@@ -79,7 +80,7 @@ final readonly class CachingDetector implements ResourceDetector
         return $data;
     }
 
-    private function saveToCache(Resource $resource) : void
+    private function saveToCache(Resource $resource): void
     {
         $directory = \dirname($this->cachePath);
 

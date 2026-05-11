@@ -6,11 +6,16 @@ namespace Flow\Parquet\Dremel\Validator;
 
 use Flow\Parquet\Dremel\Validator;
 use Flow\Parquet\Exception\ValidationException;
-use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, LogicalType, NestedColumn, PhysicalType, Repetition};
+use Flow\Parquet\ParquetFile\Schema\Column;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Flow\Parquet\ParquetFile\Schema\Repetition;
 
 final class ColumnDataValidator implements Validator
 {
-    public function validate(Column $column, mixed $data) : void
+    public function validate(Column $column, mixed $data): void
     {
         $repetition = $column->repetition();
 
@@ -21,7 +26,11 @@ final class ColumnDataValidator implements Validator
         }
 
         if ($repetition === Repetition::REPEATED && !\is_array($data)) {
-            throw new ValidationException(\sprintf('Column "%s" is not array, got %s', $column->flatPath(), \gettype($data)));
+            throw new ValidationException(\sprintf(
+                'Column "%s" is not array, got %s',
+                $column->flatPath(),
+                \gettype($data),
+            ));
         }
 
         if ($repetition === Repetition::OPTIONAL) {
@@ -41,7 +50,11 @@ final class ColumnDataValidator implements Validator
          */
         if ($column->isList()) {
             if (!\is_array($data)) {
-                throw new ValidationException(\sprintf('Column "%s" is not array, got %s', $column->flatPath(), \gettype($data)));
+                throw new ValidationException(\sprintf(
+                    'Column "%s" is not array, got %s',
+                    $column->flatPath(),
+                    \gettype($data),
+                ));
             }
 
             foreach ($data as $value) {
@@ -53,7 +66,11 @@ final class ColumnDataValidator implements Validator
 
         if ($column->isMap()) {
             if (!\is_array($data)) {
-                throw new ValidationException(\sprintf('Column "%s" is not array, got %s', $column->flatPath(), \gettype($data)));
+                throw new ValidationException(\sprintf(
+                    'Column "%s" is not array, got %s',
+                    $column->flatPath(),
+                    \gettype($data),
+                ));
             }
 
             $valueColumn = $column->getMapValueColumn();
@@ -70,15 +87,19 @@ final class ColumnDataValidator implements Validator
         }
 
         if (!\is_array($data)) {
-            throw new ValidationException(\sprintf('Column "%s" is not array, got %s', $column->flatPath(), \gettype($data)));
+            throw new ValidationException(\sprintf(
+                'Column "%s" is not array, got %s',
+                $column->flatPath(),
+                \gettype($data),
+            ));
         }
 
-        foreach ($column->children() as $key => $child) {
+        foreach ($column->children() as $child) {
             $this->validate($child, $data[$child->name()] ?? null);
         }
     }
 
-    private function validateData(FlatColumn $column, mixed $data, ?Repetition $repetition) : void
+    private function validateData(FlatColumn $column, mixed $data, ?Repetition $repetition): void
     {
         if (\is_array($data)) {
             foreach ($data as $value) {
@@ -110,19 +131,29 @@ final class ColumnDataValidator implements Validator
                     case LogicalType::DATE:
                     case LogicalType::TIMESTAMP:
                         if (!$data instanceof \DateTimeInterface) {
-                            throw new ValidationException(\sprintf('Column "%s" require \DateTimeInterface as value', $column->flatPath()));
+                            throw new ValidationException(\sprintf(
+                                'Column "%s" require \DateTimeInterface as value',
+                                $column->flatPath(),
+                            ));
                         }
 
                         break;
                     case LogicalType::TIME:
                         if (!$data instanceof \DateInterval) {
-                            throw new ValidationException(\sprintf('Column "%s" require \DateInterval as value', $column->flatPath()));
+                            throw new ValidationException(\sprintf(
+                                'Column "%s" require \DateInterval as value',
+                                $column->flatPath(),
+                            ));
                         }
 
                         break;
                     case null:
                         if (!\is_int($data)) {
-                            throw new ValidationException(\sprintf('Column "%s" require integer as value, got: %s instead', $column->flatPath(), \gettype($data)));
+                            throw new ValidationException(\sprintf(
+                                'Column "%s" require integer as value, got: %s instead',
+                                $column->flatPath(),
+                                \gettype($data),
+                            ));
                         }
 
                         break;
@@ -142,7 +173,11 @@ final class ColumnDataValidator implements Validator
                     case LogicalType::JSON:
                     case LogicalType::UUID:
                         if (!\is_string($data)) {
-                            throw new ValidationException(\sprintf('Column "%s" is not string, got "%s" instead', $column->flatPath(), \gettype($data)));
+                            throw new ValidationException(\sprintf(
+                                'Column "%s" is not string, got "%s" instead',
+                                $column->flatPath(),
+                                \gettype($data),
+                            ));
                         }
 
                         break;

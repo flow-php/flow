@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Telemetry;
 
-use Flow\Filesystem\{Path, SourceStream};
+use Flow\Filesystem\Path;
+use Flow\Filesystem\SourceStream;
 use Flow\Telemetry\Meter\Instrument\Counter;
 use Flow\Telemetry\Meter\Meter;
 use Flow\Telemetry\PackageVersion;
-use Flow\Telemetry\Tracer\{Span, SpanKind, SpanStatus, Tracer};
+use Flow\Telemetry\Tracer\Span;
+use Flow\Telemetry\Tracer\SpanKind;
+use Flow\Telemetry\Tracer\SpanStatus;
+use Flow\Telemetry\Tracer\Tracer;
 
 final class TraceableSourceStream implements SourceStream
 {
@@ -34,15 +38,11 @@ final class TraceableSourceStream implements SourceStream
                 PackageVersion::get('flow-php/filesystem'),
             );
 
-            $this->span = $this->tracer->span(
-                'Read ' . $this->stream->path()->basename(),
-                SpanKind::INTERNAL,
-                [
-                    FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'source',
-                    FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),
-                    FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->stream->path()->protocol(),
-                ]
-            );
+            $this->span = $this->tracer->span('Read ' . $this->stream->path()->basename(), SpanKind::INTERNAL, [
+                FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'source',
+                FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),
+                FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->stream->path()->protocol(),
+            ]);
         }
 
         if ($this->telemetryConfig->options->collectMetrics) {
@@ -63,7 +63,7 @@ final class TraceableSourceStream implements SourceStream
         }
     }
 
-    public function close() : void
+    public function close(): void
     {
         try {
             $this->stream->close();
@@ -88,7 +88,7 @@ final class TraceableSourceStream implements SourceStream
         }
     }
 
-    public function content() : string
+    public function content(): string
     {
         $result = $this->stream->content();
         $bytesRead = \strlen($result);
@@ -99,7 +99,7 @@ final class TraceableSourceStream implements SourceStream
         return $result;
     }
 
-    public function isOpen() : bool
+    public function isOpen(): bool
     {
         return $this->stream->isOpen();
     }
@@ -109,7 +109,7 @@ final class TraceableSourceStream implements SourceStream
      *
      * @return \Generator<string>
      */
-    public function iterate(int $length = 1) : \Generator
+    public function iterate(int $length = 1): \Generator
     {
         $bytesReadInOperation = 0;
 
@@ -124,7 +124,7 @@ final class TraceableSourceStream implements SourceStream
         $this->recordMetrics($bytesReadInOperation);
     }
 
-    public function path() : Path
+    public function path(): Path
     {
         return $this->stream->path();
     }
@@ -132,7 +132,7 @@ final class TraceableSourceStream implements SourceStream
     /**
      * @param int<1, max> $length
      */
-    public function read(int $length, int $offset) : string
+    public function read(int $length, int $offset): string
     {
         $result = $this->stream->read($length, $offset);
         $bytesRead = \strlen($result);
@@ -148,7 +148,7 @@ final class TraceableSourceStream implements SourceStream
      *
      * @return \Generator<string>
      */
-    public function readLines(string $separator = "\n", ?int $length = null) : \Generator
+    public function readLines(string $separator = "\n", ?int $length = null): \Generator
     {
         $bytesReadInOperation = 0;
 
@@ -163,12 +163,12 @@ final class TraceableSourceStream implements SourceStream
         $this->recordMetrics($bytesReadInOperation);
     }
 
-    public function size() : ?int
+    public function size(): ?int
     {
         return $this->stream->size();
     }
 
-    private function recordMetrics(int $bytesRead) : void
+    private function recordMetrics(int $bytesRead): void
     {
         if (!$this->telemetryConfig->options->collectMetrics) {
             return;

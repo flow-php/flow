@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\PHPUnit\Telemetry\Subscriber;
 
-use Flow\Bridge\PHPUnit\Telemetry\{Configuration, SpanStack};
-use Flow\Telemetry\{PackageVersion, Telemetry};
-use PHPUnit\Event\TestSuite\{Started, StartedSubscriber};
+use Flow\Bridge\PHPUnit\Telemetry\Configuration;
+use Flow\Bridge\PHPUnit\Telemetry\SpanStack;
+use Flow\Telemetry\PackageVersion;
+use Flow\Telemetry\Telemetry;
+use PHPUnit\Event\TestSuite\Started;
+use PHPUnit\Event\TestSuite\StartedSubscriber;
 
 final readonly class TestSuiteStartedSubscriber implements StartedSubscriber
 {
@@ -14,16 +17,16 @@ final readonly class TestSuiteStartedSubscriber implements StartedSubscriber
         private Telemetry $telemetry,
         private SpanStack $spanStack,
         private Configuration $config,
-    ) {
-    }
+    ) {}
 
-    public function notify(Started $event) : void
+    public function notify(Started $event): void
     {
         try {
             $suite = $event->testSuite();
             $suiteName = $suite->name();
 
-            $isRoot = $suiteName === ''
+            $isRoot =
+                $suiteName === ''
                 || $suiteName === 'PHPUnit Test Suite'
                 || $suiteName === 'CLI Arguments'
                 || \str_ends_with((string) $suiteName, '.xml')
@@ -37,14 +40,11 @@ final readonly class TestSuiteStartedSubscriber implements StartedSubscriber
 
             $tracer = $this->telemetry->tracer('phpunit', PackageVersion::get('phpunit/phpunit'));
 
-            $span = $tracer->span(
-                $isRoot ? 'Test Suite Run' : $suite->name(),
-                attributes: [
-                    'test.suite' => $suite->name(),
-                    'test.suite.test_count' => $suite->count(),
-                    'test.suite.is_root' => $isRoot,
-                ],
-            );
+            $span = $tracer->span($isRoot ? 'Test Suite Run' : $suite->name(), attributes: [
+                'test.suite' => $suite->name(),
+                'test.suite.test_count' => $suite->count(),
+                'test.suite.is_root' => $isRoot,
+            ]);
 
             $this->spanStack->setSuiteSpan($suite->name(), $span);
             $this->spanStack->push($span);

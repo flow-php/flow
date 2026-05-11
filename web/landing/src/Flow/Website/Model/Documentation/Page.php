@@ -12,10 +12,9 @@ final readonly class Page
     public function __construct(
         public string $path,
         public string $content,
-    ) {
-    }
+    ) {}
 
-    public function description() : ?string
+    public function description(): ?string
     {
         $frontMatterParser = new FrontMatterParser(new SymfonyYamlFrontMatterParser());
         $result = $frontMatterParser->parse($this->content);
@@ -23,12 +22,12 @@ final readonly class Page
         return $result->getFrontMatter()['seo_description'] ?? 'Documentation';
     }
 
-    public function editOnGitHubUrl() : string
+    public function editOnGitHubUrl(): string
     {
         return 'https://github.com/flow-php/flow/edit/1.x/documentation/' . ltrim($this->path, '/');
     }
 
-    public function package() : ?string
+    public function package(): ?string
     {
         $frontMatterParser = new FrontMatterParser(new SymfonyYamlFrontMatterParser());
         $result = $frontMatterParser->parse($this->content);
@@ -37,7 +36,7 @@ final readonly class Page
         return is_string($package) ? $package : null;
     }
 
-    public function title() : ?string
+    public function title(): ?string
     {
         $frontMatterParser = new FrontMatterParser(new SymfonyYamlFrontMatterParser());
         $result = $frontMatterParser->parse($this->content);

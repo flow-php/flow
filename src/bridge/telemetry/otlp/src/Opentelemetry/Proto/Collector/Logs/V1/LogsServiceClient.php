@@ -1,4 +1,5 @@
 <?php
+
 // GENERATED CODE -- DO NOT EDIT!
 
 // Original file comments:
@@ -15,7 +16,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
+
 namespace Opentelemetry\Proto\Collector\Logs\V1;
 
 /**
@@ -23,14 +24,15 @@ namespace Opentelemetry\Proto\Collector\Logs\V1;
  * OpenTelemetry and an collector, or between an collector and a central collector (in this
  * case logs are sent/received to/from multiple Applications).
  */
-class LogsServiceClient extends \Grpc\BaseStub {
-
+class LogsServiceClient extends \Grpc\BaseStub
+{
     /**
      * @param string $hostname hostname
      * @param array $opts channel options
      * @param \Grpc\Channel $channel (optional) re-use channel object
      */
-    public function __construct($hostname, $opts, $channel = null) {
+    public function __construct($hostname, $opts, $channel = null)
+    {
         parent::__construct($hostname, $opts, $channel);
     }
 
@@ -40,12 +42,17 @@ class LogsServiceClient extends \Grpc\BaseStub {
      * @param array $options call options
      * @return \Grpc\UnaryCall<\Opentelemetry\Proto\Collector\Logs\V1\ExportLogsServiceResponse>
      */
-    public function Export(\Opentelemetry\Proto\Collector\Logs\V1\ExportLogsServiceRequest $argument,
-      $metadata = [], $options = []) {
-        return $this->_simpleRequest('/opentelemetry.proto.collector.logs.v1.LogsService/Export',
-        $argument,
-        ['\Opentelemetry\Proto\Collector\Logs\V1\ExportLogsServiceResponse', 'decode'],
-        $metadata, $options);
+    public function Export(
+        \Opentelemetry\Proto\Collector\Logs\V1\ExportLogsServiceRequest $argument,
+        $metadata = [],
+        $options = [],
+    ) {
+        return $this->_simpleRequest(
+            '/opentelemetry.proto.collector.logs.v1.LogsService/Export',
+            $argument,
+            ['\Opentelemetry\Proto\Collector\Logs\V1\ExportLogsServiceResponse', 'decode'],
+            $metadata,
+            $options,
+        );
     }
-
 }

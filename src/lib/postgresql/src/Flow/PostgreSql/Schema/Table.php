@@ -4,17 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema;
 
-use function Flow\PostgreSql\DSL\{column, create};
-
 use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
 use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
-use Flow\PostgreSql\QueryBuilder\Schema\Constraint\{CheckConstraint as CheckConstraintBuilder, ForeignKeyConstraint, PrimaryKeyConstraint, UniqueConstraint as UniqueConstraintBuilder};
+use Flow\PostgreSql\QueryBuilder\Schema\Constraint\CheckConstraint as CheckConstraintBuilder;
+use Flow\PostgreSql\QueryBuilder\Schema\Constraint\ForeignKeyConstraint;
+use Flow\PostgreSql\QueryBuilder\Schema\Constraint\PrimaryKeyConstraint;
+use Flow\PostgreSql\QueryBuilder\Schema\Constraint\UniqueConstraint as UniqueConstraintBuilder;
 use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexMethod as QbIndexMethod;
 use Flow\PostgreSql\QueryBuilder\Schema\Trigger\TriggerEvent as QbTriggerEvent;
 use Flow\PostgreSql\QueryBuilder\Sql;
-use Flow\PostgreSql\Schema\Constraint\{CheckConstraint, ExcludeConstraint, ForeignKey, PrimaryKey, UniqueConstraint};
+use Flow\PostgreSql\Schema\Constraint\CheckConstraint;
+use Flow\PostgreSql\Schema\Constraint\ExcludeConstraint;
+use Flow\PostgreSql\Schema\Constraint\ForeignKey;
+use Flow\PostgreSql\Schema\Constraint\PrimaryKey;
+use Flow\PostgreSql\Schema\Constraint\UniqueConstraint;
 use Flow\PostgreSql\Schema\Exception\ColumnNotFoundException;
+
+use function Flow\PostgreSql\DSL\column;
+use function Flow\PostgreSql\DSL\create;
 
 /**
  * @phpstan-import-type ColumnShape from Column
@@ -57,57 +65,45 @@ final readonly class Table
         public array $partitionColumns = [],
         public array $inherits = [],
         public ?string $tablespace = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @param TableShape $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             schema: $data['schema'] ?? 'public',
             name: $data['name'],
-            columns: \array_map(
-                static fn (array $col) : Column => Column::fromArray($col),
-                $data['columns'],
-            ),
+            columns: \array_map(static fn(array $col): Column => Column::fromArray($col), $data['columns']),
             primaryKey: array_key_exists('primary_key', $data) && $data['primary_key'] !== null
                 ? PrimaryKey::fromArray($data['primary_key'])
                 : null,
-            indexes: \array_map(
-                static fn (array $idx) : Index => Index::fromArray($idx),
-                $data['indexes'] ?? [],
-            ),
-            foreignKeys: \array_map(
-                static fn (array $fk) : ForeignKey => ForeignKey::fromArray($fk),
-                $data['foreign_keys'] ?? [],
-            ),
-            uniqueConstraints: \array_map(
-                static fn (array $uc) : UniqueConstraint => UniqueConstraint::fromArray($uc),
-                $data['unique_constraints'] ?? [],
-            ),
-            checkConstraints: \array_map(
-                static fn (array $cc) : CheckConstraint => CheckConstraint::fromArray($cc),
-                $data['check_constraints'] ?? [],
-            ),
-            excludeConstraints: \array_map(
-                static fn (array $ec) : ExcludeConstraint => ExcludeConstraint::fromArray($ec),
-                $data['exclude_constraints'] ?? [],
-            ),
-            triggers: \array_map(
-                static fn (array $t) : Trigger => Trigger::fromArray($t),
-                $data['triggers'] ?? [],
-            ),
+            indexes: \array_map(static fn(array $idx): Index => Index::fromArray($idx), $data['indexes'] ?? []),
+            foreignKeys: \array_map(static fn(array $fk): ForeignKey => ForeignKey::fromArray(
+                $fk,
+            ), $data['foreign_keys'] ?? []),
+            uniqueConstraints: \array_map(static fn(array $uc): UniqueConstraint => UniqueConstraint::fromArray(
+                $uc,
+            ), $data['unique_constraints'] ?? []),
+            checkConstraints: \array_map(static fn(array $cc): CheckConstraint => CheckConstraint::fromArray(
+                $cc,
+            ), $data['check_constraints'] ?? []),
+            excludeConstraints: \array_map(static fn(array $ec): ExcludeConstraint => ExcludeConstraint::fromArray(
+                $ec,
+            ), $data['exclude_constraints'] ?? []),
+            triggers: \array_map(static fn(array $t): Trigger => Trigger::fromArray($t), $data['triggers'] ?? []),
             unlogged: $data['unlogged'] ?? false,
-            partitionStrategy: array_key_exists('partition_strategy', $data) && $data['partition_strategy'] !== null ? PartitionStrategy::from($data['partition_strategy']) : null,
+            partitionStrategy: array_key_exists('partition_strategy', $data) && $data['partition_strategy'] !== null
+                ? PartitionStrategy::from($data['partition_strategy'])
+                : null,
             partitionColumns: $data['partition_columns'] ?? [],
             inherits: $data['inherits'] ?? [],
             tablespace: $data['tablespace'] ?? null,
         );
     }
 
-    public function column(string $name) : Column
+    public function column(string $name): Column
     {
         foreach ($this->columns as $column) {
             if ($column->name === $name) {
@@ -121,15 +117,12 @@ final readonly class Table
     /**
      * @return list<string>
      */
-    public function columnNames() : array
+    public function columnNames(): array
     {
-        return \array_map(
-            static fn (Column $c) : string => $c->name,
-            $this->columns,
-        );
+        return \array_map(static fn(Column $c): string => $c->name, $this->columns);
     }
 
-    public function hasColumn(string $name) : bool
+    public function hasColumn(string $name): bool
     {
         foreach ($this->columns as $column) {
             if ($column->name === $name) {
@@ -143,40 +136,28 @@ final readonly class Table
     /**
      * @return TableShape
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'schema' => $this->schema,
             'name' => $this->name,
-            'columns' => \array_map(
-                static fn (Column $col) : array => $col->normalize(),
-                $this->columns,
-            ),
+            'columns' => \array_map(static fn(Column $col): array => $col->normalize(), $this->columns),
             'primary_key' => $this->primaryKey?->normalize(),
-            'indexes' => \array_map(
-                static fn (Index $idx) : array => $idx->normalize(),
-                $this->indexes,
-            ),
-            'foreign_keys' => \array_map(
-                static fn (ForeignKey $fk) : array => $fk->normalize(),
-                $this->foreignKeys,
-            ),
+            'indexes' => \array_map(static fn(Index $idx): array => $idx->normalize(), $this->indexes),
+            'foreign_keys' => \array_map(static fn(ForeignKey $fk): array => $fk->normalize(), $this->foreignKeys),
             'unique_constraints' => \array_map(
-                static fn (UniqueConstraint $uc) : array => $uc->normalize(),
+                static fn(UniqueConstraint $uc): array => $uc->normalize(),
                 $this->uniqueConstraints,
             ),
             'check_constraints' => \array_map(
-                static fn (CheckConstraint $cc) : array => $cc->normalize(),
+                static fn(CheckConstraint $cc): array => $cc->normalize(),
                 $this->checkConstraints,
             ),
             'exclude_constraints' => \array_map(
-                static fn (ExcludeConstraint $ec) : array => $ec->normalize(),
+                static fn(ExcludeConstraint $ec): array => $ec->normalize(),
                 $this->excludeConstraints,
             ),
-            'triggers' => \array_map(
-                static fn (Trigger $t) : array => $t->normalize(),
-                $this->triggers,
-            ),
+            'triggers' => \array_map(static fn(Trigger $t): array => $t->normalize(), $this->triggers),
             'unlogged' => $this->unlogged,
             'partition_strategy' => $this->partitionStrategy?->value,
             'partition_columns' => $this->partitionColumns,
@@ -185,7 +166,7 @@ final readonly class Table
         ];
     }
 
-    public function qualifiedName() : string
+    public function qualifiedName(): string
     {
         return $this->schema . '.' . $this->name;
     }
@@ -193,7 +174,7 @@ final readonly class Table
     /**
      * @return list<Sql>
      */
-    public function toSql() : array
+    public function toSql(): array
     {
         $sqls = [];
 
@@ -312,7 +293,7 @@ final readonly class Table
 
         foreach ($this->triggers as $trigger) {
             $qbEvents = \array_map(
-                static fn (TriggerEvent $e) : QbTriggerEvent => QbTriggerEvent::{$e->name},
+                static fn(TriggerEvent $e): QbTriggerEvent => QbTriggerEvent::{$e->name},
                 $trigger->events,
             );
 

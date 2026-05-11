@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
-use Flow\PostgreSql\AST\Nodes\{Statement, StatementTrait};
+use Flow\PostgreSql\AST\Nodes\Statement;
+use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\FetchStmt;
 
 /**
@@ -16,10 +17,9 @@ final readonly class FetchStatement implements Statement
 
     public function __construct(
         private FetchStmt $stmt,
-    ) {
-    }
+    ) {}
 
-    public function raw() : FetchStmt
+    public function raw(): FetchStmt
     {
         return $this->stmt;
     }

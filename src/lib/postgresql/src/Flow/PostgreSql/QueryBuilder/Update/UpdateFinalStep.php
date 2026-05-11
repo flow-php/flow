@@ -15,10 +15,10 @@ interface UpdateFinalStep extends Sql
     /**
      * Convert this UPDATE query to protobuf AST.
      */
-    public function toAst() : UpdateStmt;
+    public function toAst(): UpdateStmt;
 
     /**
      * Convert this UPDATE query to SQL string.
      */
-    public function toSql() : string;
+    public function toSql(): string;
 }

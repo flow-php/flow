@@ -16,30 +16,25 @@ final class QueryException extends ClientException
         parent::__construct($message);
     }
 
-    public static function executionFailed(string $sql, PostgreSqlError $error) : self
+    public static function executionFailed(string $sql, PostgreSqlError $error): self
     {
         $sqlPreview = \strlen($sql) > self::SQL_PREVIEW_LENGTH
             ? \substr($sql, 0, self::SQL_PREVIEW_LENGTH) . '...'
             : $sql;
 
         return new self(
-            \sprintf(
-                'Query execution failed [%s]: %s. SQL: %s',
-                $error->sqlState,
-                $error->safeMessage(),
-                $sqlPreview
-            ),
+            \sprintf('Query execution failed [%s]: %s. SQL: %s', $error->sqlState, $error->safeMessage(), $sqlPreview),
             $sql,
-            $error
+            $error,
         );
     }
 
-    public function error() : PostgreSqlError
+    public function error(): PostgreSqlError
     {
         return $this->error;
     }
 
-    public function sql() : string
+    public function sql(): string
     {
         return $this->sql;
     }

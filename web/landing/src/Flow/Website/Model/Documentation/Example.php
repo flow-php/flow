@@ -10,6 +10,5 @@ final readonly class Example
         public string $topic,
         public string $name,
         public ?string $option = null,
-    ) {
-    }
+    ) {}
 }

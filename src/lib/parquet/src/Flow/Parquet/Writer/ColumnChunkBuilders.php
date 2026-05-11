@@ -6,8 +6,10 @@ namespace Flow\Parquet\Writer;
 
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\{Compressions, Schema};
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, NestedColumn};
+use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Writer\ColumnChunkBuilder\NestedColumnChunkBuilder;
 
 final class ColumnChunkBuilders
@@ -22,10 +24,9 @@ final class ColumnChunkBuilders
      */
     public function __construct(
         private readonly array $builders,
-    ) {
-    }
+    ) {}
 
-    public static function initialize(Schema $schema, Options $options, Compressions $compressions) : self
+    public static function initialize(Schema $schema, Options $options, Compressions $compressions): self
     {
         $builders = [];
         $flatBuilders = [];
@@ -55,7 +56,7 @@ final class ColumnChunkBuilders
         return $instance;
     }
 
-    public function addColumnByFlatPath(string $flatPath, WriteFlatColumnValues $columnValues) : void
+    public function addColumnByFlatPath(string $flatPath, WriteFlatColumnValues $columnValues): void
     {
         $this->flatBuilders[$flatPath]->addColumn($columnValues);
     }
@@ -63,7 +64,7 @@ final class ColumnChunkBuilders
     /**
      * @return array<ColumnChunkBuilder>
      */
-    public function builders() : array
+    public function builders(): array
     {
         return $this->builders;
     }
@@ -71,7 +72,7 @@ final class ColumnChunkBuilders
     /**
      * Close all pages in the column chunk builders.
      */
-    public function closePages() : void
+    public function closePages(): void
     {
         foreach ($this->builders as $builder) {
             $builder->closePage();
@@ -81,7 +82,7 @@ final class ColumnChunkBuilders
     /**
      * @return array<ColumnChunkContainer>
      */
-    public function flush(int $fileOffset) : array
+    public function flush(int $fileOffset): array
     {
         $offset = $fileOffset;
         $containers = [];
@@ -99,7 +100,7 @@ final class ColumnChunkBuilders
     /**
      * Check if any of the column chunk builders has reached the maximum page size.
      */
-    public function isAnyPageFull() : bool
+    public function isAnyPageFull(): bool
     {
         foreach ($this->builders as $builder) {
             if ($builder->isFull()) {
@@ -110,7 +111,7 @@ final class ColumnChunkBuilders
         return false;
     }
 
-    public function uncompressedSize() : int
+    public function uncompressedSize(): int
     {
         $size = 0;
 

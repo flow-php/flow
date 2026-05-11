@@ -8,7 +8,8 @@ use AsyncAws\S3\S3Client;
 use Flow\Filesystem\Bridge\AsyncAWS\BlockList;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Path;
-use Flow\Filesystem\Stream\{Block, BlockLifecycle};
+use Flow\Filesystem\Stream\Block;
+use Flow\Filesystem\Stream\BlockLifecycle;
 
 final readonly class AsyncAWSS3BlockLifecycle implements BlockLifecycle
 {
@@ -18,10 +19,9 @@ final readonly class AsyncAWSS3BlockLifecycle implements BlockLifecycle
         private string $bucket,
         private string $uploadId,
         private BlockList $blockList,
-    ) {
-    }
+    ) {}
 
-    public function filled(Block $block) : void
+    public function filled(Block $block): void
     {
         $handle = \fopen($block->path()->path(), 'rb');
 

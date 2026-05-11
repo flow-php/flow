@@ -4,25 +4,31 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\QueryBuilder;
 
-use function Flow\PostgreSql\DSL\{and_, col, delete, eq, param};
-use Flow\ETL\Adapter\PostgreSql\{EntryTypesMap, LoaderOptions\DeleteOptions};
+use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
 use Flow\ETL\Adapter\PostgreSql\Exception\RuntimeException;
-use Flow\ETL\{Row, Row\Entry};
+use Flow\ETL\Adapter\PostgreSql\LoaderOptions\DeleteOptions;
+use Flow\ETL\Row;
+use Flow\ETL\Row\Entry;
 use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\QueryBuilder\Sql;
+
+use function Flow\PostgreSql\DSL\and_;
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\delete;
+use function Flow\PostgreSql\DSL\eq;
+use function Flow\PostgreSql\DSL\param;
 
 final readonly class DeleteQueryBuilder
 {
     public function __construct(
         private string $table,
         private EntryTypesMap $typesMap,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array{Sql, list<null|TypedValue>}
      */
-    public function build(Row $row, DeleteOptions $options) : array
+    public function build(Row $row, DeleteOptions $options): array
     {
         $primaryKeys = $options->primaryKeys;
 
@@ -41,10 +47,7 @@ final readonly class DeleteQueryBuilder
 
             $entry = $row->get($key);
 
-            $conditions[] = eq(
-                col($key),
-                param($paramIndex++)
-            );
+            $conditions[] = eq(col($key), param($paramIndex++));
             $params[] = $this->mapEntryToParameter($entry);
         }
 
@@ -56,7 +59,7 @@ final readonly class DeleteQueryBuilder
     /**
      * @param Entry<mixed> $entry
      */
-    private function mapEntryToParameter(Entry $entry) : ?TypedValue
+    private function mapEntryToParameter(Entry $entry): ?TypedValue
     {
         return $this->typesMap->mapEntry($entry);
     }

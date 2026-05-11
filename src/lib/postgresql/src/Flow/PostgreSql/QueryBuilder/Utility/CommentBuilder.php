@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Utility;
 
-use Flow\PostgreSql\Protobuf\AST\{CommentStmt, Node, ObjectType, PBList, PBString};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\CommentStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\PBList;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class CommentBuilder implements CommentFinalStep
 {
@@ -15,25 +20,24 @@ final readonly class CommentBuilder implements CommentFinalStep
         private CommentTarget $target,
         private string $name,
         private ?string $comment = null,
-    ) {
-    }
+    ) {}
 
-    public static function create(CommentTarget $target, string $name) : CommentFinalStep
+    public static function create(CommentTarget $target, string $name): CommentFinalStep
     {
         return new self($target, $name);
     }
 
-    public function is(string $comment) : CommentFinalStep
+    public function is(string $comment): CommentFinalStep
     {
         return new self($this->target, $this->name, $comment);
     }
 
-    public function isNull() : CommentFinalStep
+    public function isNull(): CommentFinalStep
     {
         return new self($this->target, $this->name, null);
     }
 
-    public function toAst() : CommentStmt
+    public function toAst(): CommentStmt
     {
         $stmt = new CommentStmt();
         $stmt->setObjtype($this->target->value);
@@ -48,7 +52,7 @@ final readonly class CommentBuilder implements CommentFinalStep
         return $stmt;
     }
 
-    private function buildObjectNode() : Node
+    private function buildObjectNode(): Node
     {
         $node = new Node();
 
@@ -82,15 +86,19 @@ final readonly class CommentBuilder implements CommentFinalStep
 
             $list->setItems($items);
             $node->setList($list);
-        } elseif (\in_array($this->target->value, [
-            ObjectType::OBJECT_TABLE,
-            ObjectType::OBJECT_INDEX,
-            ObjectType::OBJECT_SEQUENCE,
-            ObjectType::OBJECT_VIEW,
-            ObjectType::OBJECT_MATVIEW,
-            ObjectType::OBJECT_TRIGGER,
-            ObjectType::OBJECT_TYPE,
-        ], true)) {
+        } elseif (\in_array(
+            $this->target->value,
+            [
+                ObjectType::OBJECT_TABLE,
+                ObjectType::OBJECT_INDEX,
+                ObjectType::OBJECT_SEQUENCE,
+                ObjectType::OBJECT_VIEW,
+                ObjectType::OBJECT_MATVIEW,
+                ObjectType::OBJECT_TRIGGER,
+                ObjectType::OBJECT_TYPE,
+            ],
+            true,
+        )) {
             $identifier = QualifiedIdentifier::parse($this->name);
             $list = new PBList();
             $items = [];

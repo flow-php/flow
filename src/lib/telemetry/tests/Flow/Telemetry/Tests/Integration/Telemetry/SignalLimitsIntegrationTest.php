@@ -4,14 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Integration\Telemetry;
 
-use Flow\Telemetry\Context\{MemoryContextStorage, SpanId, TraceId};
-use Flow\Telemetry\Logger\{LogRecordLimits, LoggerProvider};
-use Flow\Telemetry\Meter\{MeterProvider, MetricLimits};
-use Flow\Telemetry\Provider\Memory\{MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
+use Flow\Telemetry\Context\MemoryContextStorage;
+use Flow\Telemetry\Context\SpanId;
+use Flow\Telemetry\Context\TraceId;
+use Flow\Telemetry\Logger\LoggerProvider;
+use Flow\Telemetry\Logger\LogRecordLimits;
+use Flow\Telemetry\Meter\MeterProvider;
+use Flow\Telemetry\Meter\MetricLimits;
+use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
+use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
+use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
-use Flow\Telemetry\Tracer\{GenericEvent, SpanContext, SpanLimits, SpanLink, TracerProvider};
+use Flow\Telemetry\Tracer\GenericEvent;
+use Flow\Telemetry\Tracer\SpanContext;
+use Flow\Telemetry\Tracer\SpanLimits;
+use Flow\Telemetry\Tracer\SpanLink;
+use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
 
@@ -25,13 +35,13 @@ final class SignalLimitsIntegrationTest extends TestCase
 {
     private ClockInterface $clock;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         $this->clock = $this->createMock(ClockInterface::class);
         $this->clock->method('now')->willReturn(new \DateTimeImmutable('2024-01-01 12:00:00.123456'));
     }
 
-    public function test_logger_dropped_count_included_in_normalized_output() : void
+    public function test_logger_dropped_count_included_in_normalized_output(): void
     {
         $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
@@ -44,10 +54,10 @@ final class SignalLimitsIntegrationTest extends TestCase
 
         $normalized = $logProcessor->entries()[0]->normalize();
 
-        self::assertSame(2, $normalized['droppedAttributeCount']);
+        static::assertSame(2, $normalized['droppedAttributeCount']);
     }
 
-    public function test_logger_enforces_attribute_count_limit() : void
+    public function test_logger_enforces_attribute_count_limit(): void
     {
         $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
@@ -65,17 +75,17 @@ final class SignalLimitsIntegrationTest extends TestCase
         ]);
 
         $entries = $logProcessor->entries();
-        self::assertCount(1, $entries);
+        static::assertCount(1, $entries);
 
         $entry = $entries[0];
-        self::assertCount(3, $entry->record->attributes->normalize());
-        self::assertSame(2, $entry->droppedAttributeCount);
-        self::assertArrayHasKey('key1', $entry->record->attributes->normalize());
-        self::assertArrayHasKey('key2', $entry->record->attributes->normalize());
-        self::assertArrayHasKey('key3', $entry->record->attributes->normalize());
+        static::assertCount(3, $entry->record->attributes->normalize());
+        static::assertSame(2, $entry->droppedAttributeCount);
+        static::assertArrayHasKey('key1', $entry->record->attributes->normalize());
+        static::assertArrayHasKey('key2', $entry->record->attributes->normalize());
+        static::assertArrayHasKey('key3', $entry->record->attributes->normalize());
     }
 
-    public function test_logger_enforces_attribute_value_length_limit() : void
+    public function test_logger_enforces_attribute_value_length_limit(): void
     {
         $logProcessor = new MemoryLogProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
@@ -92,11 +102,11 @@ final class SignalLimitsIntegrationTest extends TestCase
         $entries = $logProcessor->entries();
         $attrs = $entries[0]->record->attributes->normalize();
 
-        self::assertSame('abc', $attrs['short']);
-        self::assertSame('this-is-a-', $attrs['long']);
+        static::assertSame('abc', $attrs['short']);
+        static::assertSame('this-is-a-', $attrs['long']);
     }
 
-    public function test_meter_counter_enforces_cardinality_limit() : void
+    public function test_meter_counter_enforces_cardinality_limit(): void
     {
         $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
         $limits = new MetricLimits(cardinalityLimit: 3);
@@ -113,16 +123,16 @@ final class SignalLimitsIntegrationTest extends TestCase
 
         $metrics = $counter->collect();
 
-        self::assertCount(4, $metrics);
+        static::assertCount(4, $metrics);
 
-        $overflowMetrics = \array_values(\array_filter($metrics, static fn ($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE)));
-        self::assertCount(1, $overflowMetrics);
+        $overflowMetrics = \array_values(\array_filter($metrics, static fn($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE)));
+        static::assertCount(1, $overflowMetrics);
 
-        self::assertTrue($overflowMetrics[0]->attributes->get(MetricLimits::OVERFLOW_ATTRIBUTE));
-        self::assertSame(9, $overflowMetrics[0]->value);
+        static::assertTrue($overflowMetrics[0]->attributes->get(MetricLimits::OVERFLOW_ATTRIBUTE));
+        static::assertSame(9, $overflowMetrics[0]->value);
     }
 
-    public function test_meter_histogram_enforces_cardinality_limit() : void
+    public function test_meter_histogram_enforces_cardinality_limit(): void
     {
         $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
         $limits = new MetricLimits(cardinalityLimit: 2);
@@ -138,13 +148,13 @@ final class SignalLimitsIntegrationTest extends TestCase
 
         $metrics = $histogram->collect();
 
-        self::assertCount(3, $metrics);
+        static::assertCount(3, $metrics);
 
-        $overflowMetrics = \array_values(\array_filter($metrics, static fn ($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE)));
-        self::assertCount(1, $overflowMetrics);
+        $overflowMetrics = \array_values(\array_filter($metrics, static fn($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE)));
+        static::assertCount(1, $overflowMetrics);
     }
 
-    public function test_meter_overflow_aggregates_excess_measurements() : void
+    public function test_meter_overflow_aggregates_excess_measurements(): void
     {
         $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
         $limits = new MetricLimits(cardinalityLimit: 2);
@@ -161,12 +171,12 @@ final class SignalLimitsIntegrationTest extends TestCase
 
         $metrics = $counter->collect();
 
-        $overflowMetrics = \array_values(\array_filter($metrics, static fn ($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE)));
+        $overflowMetrics = \array_values(\array_filter($metrics, static fn($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE)));
 
-        self::assertSame(12, $overflowMetrics[0]->value);
+        static::assertSame(12, $overflowMetrics[0]->value);
     }
 
-    public function test_meter_overflow_attribute_set_has_correct_attribute() : void
+    public function test_meter_overflow_attribute_set_has_correct_attribute(): void
     {
         $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
         $limits = new MetricLimits(cardinalityLimit: 1);
@@ -180,15 +190,15 @@ final class SignalLimitsIntegrationTest extends TestCase
 
         $metrics = $counter->collect();
 
-        self::assertCount(2, $metrics);
+        static::assertCount(2, $metrics);
 
-        $overflowMetrics = \array_values(\array_filter($metrics, static fn ($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE)));
+        $overflowMetrics = \array_values(\array_filter($metrics, static fn($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE)));
 
-        self::assertTrue($overflowMetrics[0]->attributes->get(MetricLimits::OVERFLOW_ATTRIBUTE));
-        self::assertCount(1, $overflowMetrics[0]->attributes->normalize());
+        static::assertTrue($overflowMetrics[0]->attributes->get(MetricLimits::OVERFLOW_ATTRIBUTE));
+        static::assertCount(1, $overflowMetrics[0]->attributes->normalize());
     }
 
-    public function test_meter_reuses_existing_aggregations_within_limit() : void
+    public function test_meter_reuses_existing_aggregations_within_limit(): void
     {
         $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
         $limits = new MetricLimits(cardinalityLimit: 2);
@@ -204,16 +214,16 @@ final class SignalLimitsIntegrationTest extends TestCase
 
         $metrics = $counter->collect();
 
-        self::assertCount(2, $metrics);
+        static::assertCount(2, $metrics);
 
-        $attrA = \array_values(\array_filter($metrics, static fn ($m) => $m->attributes->get('key') === 'a'));
-        $attrB = \array_values(\array_filter($metrics, static fn ($m) => $m->attributes->get('key') === 'b'));
+        $attrA = \array_values(\array_filter($metrics, static fn($m) => $m->attributes->get('key') === 'a'));
+        $attrB = \array_values(\array_filter($metrics, static fn($m) => $m->attributes->get('key') === 'b'));
 
-        self::assertSame(4, $attrA[0]->value);
-        self::assertSame(6, $attrB[0]->value);
+        static::assertSame(4, $attrA[0]->value);
+        static::assertSame(6, $attrB[0]->value);
     }
 
-    public function test_telemetry_facade_respects_limits() : void
+    public function test_telemetry_facade_respects_limits(): void
     {
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $metricProcessor = new MemoryMetricProcessor(new VoidExporter());
@@ -227,12 +237,7 @@ final class SignalLimitsIntegrationTest extends TestCase
         $meterProvider = new MeterProvider($metricProcessor, $this->clock);
         $loggerProvider = new LoggerProvider($logProcessor, $this->clock, $contextStorage, $logLimits);
 
-        $telemetry = new Telemetry(
-            ResourceMother::default(),
-            $tracerProvider,
-            $meterProvider,
-            $loggerProvider,
-        );
+        $telemetry = new Telemetry(ResourceMother::default(), $tracerProvider, $meterProvider, $loggerProvider);
 
         $tracer = $telemetry->tracer('test-service');
         $logger = $telemetry->logger('test-service');
@@ -243,19 +248,15 @@ final class SignalLimitsIntegrationTest extends TestCase
 
         $logger->info('message', ['x' => '1', 'y' => '2', 'z' => '3']);
 
-        self::assertSame(1, $spanProcessor->endedSpans()[0]->droppedAttributeCount());
-        self::assertSame(1, $logProcessor->entries()[0]->droppedAttributeCount);
+        static::assertSame(1, $spanProcessor->endedSpans()[0]->droppedAttributeCount());
+        static::assertSame(1, $logProcessor->entries()[0]->droppedAttributeCount);
     }
 
-    public function test_tracer_dropped_counts_included_in_normalized_output() : void
+    public function test_tracer_dropped_counts_included_in_normalized_output(): void
     {
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
-        $limits = new SpanLimits(
-            attributeCountLimit: 2,
-            eventCountLimit: 1,
-            linkCountLimit: 1,
-        );
+        $limits = new SpanLimits(attributeCountLimit: 2, eventCountLimit: 1, linkCountLimit: 1);
         $tracerProvider = new TracerProvider($spanProcessor, $this->clock, $contextStorage, limits: $limits);
 
         $tracer = $tracerProvider->tracer(ResourceMother::default(), 'test-service');
@@ -270,19 +271,16 @@ final class SignalLimitsIntegrationTest extends TestCase
 
         $normalized = $spanProcessor->endedSpans()[0]->normalize();
 
-        self::assertSame(1, $normalized['droppedAttributeCount']);
-        self::assertSame(1, $normalized['droppedEventsCount']);
-        self::assertSame(1, $normalized['droppedLinksCount']);
+        static::assertSame(1, $normalized['droppedAttributeCount']);
+        static::assertSame(1, $normalized['droppedEventsCount']);
+        static::assertSame(1, $normalized['droppedLinksCount']);
     }
 
-    public function test_tracer_enforces_event_attribute_limits() : void
+    public function test_tracer_enforces_event_attribute_limits(): void
     {
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
-        $limits = new SpanLimits(
-            attributePerEventCountLimit: 2,
-            attributeValueLengthLimit: 10,
-        );
+        $limits = new SpanLimits(attributePerEventCountLimit: 2, attributeValueLengthLimit: 10);
         $tracerProvider = new TracerProvider($spanProcessor, $this->clock, $contextStorage, limits: $limits);
 
         $tracer = $tracerProvider->tracer(ResourceMother::default(), 'test-service');
@@ -299,13 +297,13 @@ final class SignalLimitsIntegrationTest extends TestCase
         $endedSpans = $spanProcessor->endedSpans();
         $recordedEvent = $endedSpans[0]->events()[0];
 
-        self::assertCount(2, $recordedEvent->attributes());
-        self::assertSame('short', $recordedEvent->attributes()['key1']);
-        self::assertSame('this-is-a-', $recordedEvent->attributes()['key2']);
-        self::assertSame(1, $recordedEvent->droppedAttributeCount());
+        static::assertCount(2, $recordedEvent->attributes());
+        static::assertSame('short', $recordedEvent->attributes()['key1']);
+        static::assertSame('this-is-a-', $recordedEvent->attributes()['key2']);
+        static::assertSame(1, $recordedEvent->droppedAttributeCount());
     }
 
-    public function test_tracer_enforces_event_count_limit() : void
+    public function test_tracer_enforces_event_count_limit(): void
     {
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
@@ -324,46 +322,40 @@ final class SignalLimitsIntegrationTest extends TestCase
         $endedSpans = $spanProcessor->endedSpans();
         $recordedSpan = $endedSpans[0];
 
-        self::assertCount(2, $recordedSpan->events());
-        self::assertSame(2, $recordedSpan->droppedEventsCount());
-        self::assertSame('event1', $recordedSpan->events()[0]->name());
-        self::assertSame('event2', $recordedSpan->events()[1]->name());
+        static::assertCount(2, $recordedSpan->events());
+        static::assertSame(2, $recordedSpan->droppedEventsCount());
+        static::assertSame('event1', $recordedSpan->events()[0]->name());
+        static::assertSame('event2', $recordedSpan->events()[1]->name());
     }
 
-    public function test_tracer_enforces_link_attribute_limits() : void
+    public function test_tracer_enforces_link_attribute_limits(): void
     {
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
-        $limits = new SpanLimits(
-            attributePerLinkCountLimit: 2,
-            attributeValueLengthLimit: 10,
-        );
+        $limits = new SpanLimits(attributePerLinkCountLimit: 2, attributeValueLengthLimit: 10);
         $tracerProvider = new TracerProvider($spanProcessor, $this->clock, $contextStorage, limits: $limits);
 
         $tracer = $tracerProvider->tracer(ResourceMother::default(), 'test-service');
 
         $span = $tracer->span('test-operation');
-        $link = SpanLink::create(
-            SpanContext::create(TraceId::generate(), SpanId::generate()),
-            [
-                'key1' => 'short',
-                'key2' => 'this-is-a-very-long-value',
-                'key3' => 'dropped-attribute',
-            ],
-        );
+        $link = SpanLink::create(SpanContext::create(TraceId::generate(), SpanId::generate()), [
+            'key1' => 'short',
+            'key2' => 'this-is-a-very-long-value',
+            'key3' => 'dropped-attribute',
+        ]);
         $span->addLink($link);
         $tracer->complete($span);
 
         $endedSpans = $spanProcessor->endedSpans();
         $recordedLink = $endedSpans[0]->links()[0];
 
-        self::assertCount(2, $recordedLink->attributes->normalize());
-        self::assertSame('short', $recordedLink->attributes->normalize()['key1']);
-        self::assertSame('this-is-a-', $recordedLink->attributes->normalize()['key2']);
-        self::assertSame(1, $recordedLink->droppedAttributeCount);
+        static::assertCount(2, $recordedLink->attributes->normalize());
+        static::assertSame('short', $recordedLink->attributes->normalize()['key1']);
+        static::assertSame('this-is-a-', $recordedLink->attributes->normalize()['key2']);
+        static::assertSame(1, $recordedLink->droppedAttributeCount);
     }
 
-    public function test_tracer_enforces_link_count_limit() : void
+    public function test_tracer_enforces_link_count_limit(): void
     {
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
@@ -381,11 +373,11 @@ final class SignalLimitsIntegrationTest extends TestCase
         $endedSpans = $spanProcessor->endedSpans();
         $recordedSpan = $endedSpans[0];
 
-        self::assertCount(2, $recordedSpan->links());
-        self::assertSame(1, $recordedSpan->droppedLinksCount());
+        static::assertCount(2, $recordedSpan->links());
+        static::assertSame(1, $recordedSpan->droppedLinksCount());
     }
 
-    public function test_tracer_enforces_span_attribute_count_limit() : void
+    public function test_tracer_enforces_span_attribute_count_limit(): void
     {
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
@@ -405,17 +397,17 @@ final class SignalLimitsIntegrationTest extends TestCase
         $tracer->complete($span);
 
         $endedSpans = $spanProcessor->endedSpans();
-        self::assertCount(1, $endedSpans);
+        static::assertCount(1, $endedSpans);
 
         $recordedSpan = $endedSpans[0];
-        self::assertCount(3, $recordedSpan->attributes());
-        self::assertSame(2, $recordedSpan->droppedAttributeCount());
-        self::assertArrayHasKey('key1', $recordedSpan->attributes());
-        self::assertArrayHasKey('key2', $recordedSpan->attributes());
-        self::assertArrayHasKey('key3', $recordedSpan->attributes());
+        static::assertCount(3, $recordedSpan->attributes());
+        static::assertSame(2, $recordedSpan->droppedAttributeCount());
+        static::assertArrayHasKey('key1', $recordedSpan->attributes());
+        static::assertArrayHasKey('key2', $recordedSpan->attributes());
+        static::assertArrayHasKey('key3', $recordedSpan->attributes());
     }
 
-    public function test_tracer_enforces_span_attribute_value_length_limit() : void
+    public function test_tracer_enforces_span_attribute_value_length_limit(): void
     {
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $contextStorage = new MemoryContextStorage();
@@ -432,7 +424,7 @@ final class SignalLimitsIntegrationTest extends TestCase
         $endedSpans = $spanProcessor->endedSpans();
         $recordedSpan = $endedSpans[0];
 
-        self::assertSame('abc', $recordedSpan->attributes()['short']);
-        self::assertSame('this-is-a-', $recordedSpan->attributes()['long']);
+        static::assertSame('abc', $recordedSpan->attributes()['short']);
+        static::assertSame('this-is-a-', $recordedSpan->attributes()['long']);
     }
 }

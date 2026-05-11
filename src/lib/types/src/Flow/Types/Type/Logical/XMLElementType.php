@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use function Flow\Types\DSL\type_instance_of;
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+
+use function Flow\Types\DSL\type_instance_of;
 
 /**
  * @implements Type<\DOMElement>
  */
 final readonly class XMLElementType implements Type
 {
-    public function assert(mixed $value) : \DOMElement
+    public function assert(mixed $value): \DOMElement
     {
         if ($this->isValid($value)) {
             return $value;
@@ -22,7 +24,7 @@ final readonly class XMLElementType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
-    public function cast(mixed $value) : \DOMElement
+    public function cast(mixed $value): \DOMElement
     {
         if ($this->isValid($value)) {
             return $value;
@@ -38,19 +40,19 @@ final readonly class XMLElementType implements Type
         throw new CastingException($value, $this);
     }
 
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return $value instanceof \DOMElement;
     }
 
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'xml_element',
         ];
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return 'xml_element';
     }

@@ -4,25 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
-use function Flow\ETL\DSL\{df, from_data_frame, from_rows, row, rows, str_entry};
 use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_data_frame;
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\str_entry;
 
 final class DataFrameExtractorTest extends FlowTestCase
 {
-    public function test_extracting_from_another_data_frame() : void
+    public function test_extracting_from_another_data_frame(): void
     {
-        $extractor = from_data_frame(
-            df()->read(from_rows(
-                rows(
-                    row(str_entry('value', 'test')),
-                    row(str_entry('value', 'test')),
-                ),
-                rows(
-                    row(str_entry('value', 'test')),
-                    row(str_entry('value', 'test')),
-                )
-            ))
-        );
+        $extractor = from_data_frame(df()->read(from_rows(
+            rows(row(str_entry('value', 'test')), row(str_entry('value', 'test'))),
+            rows(row(str_entry('value', 'test')), row(str_entry('value', 'test'))),
+        )));
 
         self::assertExtractedRowsEquals(
             rows(
@@ -31,7 +29,7 @@ final class DataFrameExtractorTest extends FlowTestCase
                 row(str_entry('value', 'test')),
                 row(str_entry('value', 'test')),
             ),
-            $extractor
+            $extractor,
         );
     }
 }

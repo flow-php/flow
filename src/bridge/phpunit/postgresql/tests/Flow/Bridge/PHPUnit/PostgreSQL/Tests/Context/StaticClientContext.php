@@ -9,7 +9,7 @@ use Flow\PostgreSql\Client\Client;
 
 final class StaticClientContext
 {
-    public static function injectClient(string $key, Client $client) : void
+    public static function injectClient(string $key, Client $client): void
     {
         self::injectClients([$key => $client]);
     }
@@ -17,7 +17,7 @@ final class StaticClientContext
     /**
      * @param array<string, Client> $clients
      */
-    public static function injectClients(array $clients) : void
+    public static function injectClients(array $clients): void
     {
         $reflection = new \ReflectionClass(StaticClient::class);
         $property = $reflection->getProperty('clients');

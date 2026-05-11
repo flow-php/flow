@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
-use function Flow\ETL\DSL\xml_entry;
-use function Flow\Types\DSL\type_instance_of;
 use DOMDocument;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\XMLEntry;
@@ -13,9 +11,12 @@ use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\xml_entry;
+use function Flow\Types\DSL\type_instance_of;
+
 final class XMLEntryTest extends FlowTestCase
 {
-    public static function is_equal_data_provider() : \Generator
+    public static function is_equal_data_provider(): \Generator
     {
         $doc1 = new \DOMDocument();
         $doc1->loadXML('<root><foo>1</foo><bar>2</bar><baz>3</baz></root>');
@@ -86,25 +87,22 @@ final class XMLEntryTest extends FlowTestCase
      * it's designed to produce a canonical form of the XML document according to the Canonical XML standard,
      * which generally preserves whitespace within text nodes.
      */
-    public function test_canonicalization() : void
+    public function test_canonicalization(): void
     {
         $doc = new \DOMDocument();
         $doc->loadXML('<item item_attribute_01="1"><id id_attribute_01="1">1</id></item>');
 
         $doc2 = new \DOMDocument();
         $doc2->loadXML(<<<'XML'
-<item item_attribute_01="1">
-            <id id_attribute_01="1">1</id>
-        </item>
-XML);
+            <item item_attribute_01="1">
+                        <id id_attribute_01="1">1</id>
+                    </item>
+            XML);
 
-        self::assertNotEquals(
-            xml_entry('row', $doc),
-            xml_entry('row', $doc2),
-        );
+        static::assertNotEquals(xml_entry('row', $doc), xml_entry('row', $doc2));
     }
 
-    public function test_creating_entry_from_invalid_xml_string() : void
+    public function test_creating_entry_from_invalid_xml_string(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Given string "foo" is not valid XML');
@@ -112,84 +110,84 @@ XML);
         xml_entry('name', 'foo');
     }
 
-    public function test_creating_entry_from_valid_xml_string() : void
+    public function test_creating_entry_from_valid_xml_string(): void
     {
         $entry = xml_entry('name', '<root><foo>1</foo><bar>2</bar><baz>3</baz></root>');
 
-        self::assertSame('name', $entry->name());
-        self::assertSame('<root><foo>1</foo><bar>2</bar><baz>3</baz></root>', $entry->__toString());
+        static::assertSame('name', $entry->name());
+        static::assertSame('<root><foo>1</foo><bar>2</bar><baz>3</baz></root>', $entry->__toString());
     }
 
-    public function test_creating_xml_entry_with_empty_dom_document() : void
+    public function test_creating_xml_entry_with_empty_dom_document(): void
     {
         $doc = new \DOMDocument();
         $entry = xml_entry('name', $doc);
 
-        self::assertSame('name', $entry->name());
-        self::assertSame($doc, $entry->value());
-        self::assertSame("<?xml version=\"1.0\"?>\n", $entry->__toString());
+        static::assertSame('name', $entry->name());
+        static::assertSame($doc, $entry->value());
+        static::assertSame("<?xml version=\"1.0\"?>\n", $entry->__toString());
     }
 
-    public function test_duplicating_entry() : void
+    public function test_duplicating_entry(): void
     {
         $entry = xml_entry('xml', <<<'XML'
-<xml>
-    <root>
-        <item>
-            <id>1</id>
-            <name>Foo</name>
-        </item>
-        <item>
-            <id>2</id>
-            <name>Bar</name>
-        </item>
-    </root>
-</xml>
-XML);
+            <xml>
+                <root>
+                    <item>
+                        <id>1</id>
+                        <name>Foo</name>
+                    </item>
+                    <item>
+                        <id>2</id>
+                        <name>Bar</name>
+                    </item>
+                </root>
+            </xml>
+            XML);
         $duplicated = $entry->duplicate();
 
-        self::assertNotSame($entry, $duplicated);
-        self::assertEquals($entry, $duplicated);
+        static::assertNotSame($entry, $duplicated);
+        static::assertEquals($entry, $duplicated);
     }
 
     #[DataProvider('is_equal_data_provider')]
-    public function test_is_equal(bool $equals, XMLEntry $entry, XMLEntry $nextEntry) : void
+    public function test_is_equal(bool $equals, XMLEntry $entry, XMLEntry $nextEntry): void
     {
-        self::assertSame($equals, $entry->isEqual($nextEntry));
+        static::assertSame($equals, $entry->isEqual($nextEntry));
     }
 
-    public function test_rename_preserves_metadata() : void
+    public function test_rename_preserves_metadata(): void
     {
         $metadata = Metadata::fromArray(['description' => 'test metadata', 'priority' => 1]);
         $entry = xml_entry('old_name', '<root><item>test</item></root>', $metadata);
 
         $renamedEntry = $entry->rename('new_name');
 
-        self::assertSame('new_name', $renamedEntry->name());
-        self::assertEquals($entry->toString(), $renamedEntry->toString());
-        self::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
+        static::assertSame('new_name', $renamedEntry->name());
+        static::assertEquals($entry->toString(), $renamedEntry->toString());
+        static::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
 
-    public function test_serialization() : void
+    public function test_serialization(): void
     {
         $entry = xml_entry('xml', <<<'XML'
-<xml>
-    <root>
-        <item>
-            <id>1</id>
-            <name>Foo</name>
-        </item>
-        <item>
-            <id>2</id>
-            <name>Bar</name>
-        </item>
-    </root>
-</xml>
-XML);
+            <xml>
+                <root>
+                    <item>
+                        <id>1</id>
+                        <name>Foo</name>
+                    </item>
+                    <item>
+                        <id>2</id>
+                        <name>Bar</name>
+                    </item>
+                </root>
+            </xml>
+            XML);
 
         $serialized = \serialize($entry);
         $unserialized = type_instance_of(XMLEntry::class)->assert(\unserialize($serialized));
 
-        self::assertTrue($entry->isEqual($unserialized));
+        static::assertTrue($entry->isEqual($unserialized));
     }
 }

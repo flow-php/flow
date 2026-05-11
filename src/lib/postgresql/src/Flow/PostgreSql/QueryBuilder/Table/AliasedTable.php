@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Table;
 
-use Flow\PostgreSql\Protobuf\AST\{Alias, Node, PBString, RangeVar};
+use Flow\PostgreSql\Protobuf\AST\Alias;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 /**
@@ -19,10 +22,9 @@ final readonly class AliasedTable implements TableReference
         public TableReference $table,
         public string $alias,
         public ?array $columnAliases = null,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $rangeVar = $node->getRangeVar();
         $joinExpr = $node->getJoinExpr();
@@ -42,11 +44,7 @@ final readonly class AliasedTable implements TableReference
 
             $joinedTable = JoinedTable::fromAst($node);
 
-            return new self(
-                $joinedTable,
-                $joinAlias->getAliasname(),
-                self::extractColumnAliases($joinAlias)
-            );
+            return new self($joinedTable, $joinAlias->getAliasname(), self::extractColumnAliases($joinAlias));
         }
 
         if ($rangeSubselect !== null) {
@@ -68,11 +66,7 @@ final readonly class AliasedTable implements TableReference
                 $table = SubqueryReference::fromAst($nodeWithoutAlias);
             }
 
-            return new self(
-                $table,
-                $alias->getAliasname(),
-                self::extractColumnAliases($alias)
-            );
+            return new self($table, $alias->getAliasname(), self::extractColumnAliases($alias));
         }
 
         if ($rangeFunction !== null) {
@@ -94,22 +88,21 @@ final readonly class AliasedTable implements TableReference
                 $table = TableFunction::fromAst($nodeWithoutAlias);
             }
 
-            return new self(
-                $table,
-                $alias->getAliasname(),
-                self::extractColumnAliases($alias)
-            );
+            return new self($table, $alias->getAliasname(), self::extractColumnAliases($alias));
         }
 
-        throw InvalidAstException::unexpectedNodeType('RangeVar, JoinExpr, RangeSubselect, or RangeFunction', 'unknown');
+        throw InvalidAstException::unexpectedNodeType(
+            'RangeVar, JoinExpr, RangeSubselect, or RangeFunction',
+            'unknown',
+        );
     }
 
-    public function as(string $alias, ?array $columnAliases = null) : self
+    public function as(string $alias, ?array $columnAliases = null): self
     {
         return new self($this->table, $alias, $columnAliases);
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $tableNode = $this->table->toAst();
 
@@ -161,10 +154,13 @@ final readonly class AliasedTable implements TableReference
             return new Node(['range_function' => $rangeFunction]);
         }
 
-        throw InvalidAstException::unexpectedNodeType('RangeVar, JoinExpr, RangeSubselect, or RangeFunction', 'unknown');
+        throw InvalidAstException::unexpectedNodeType(
+            'RangeVar, JoinExpr, RangeSubselect, or RangeFunction',
+            'unknown',
+        );
     }
 
-    private function createAlias() : Alias
+    private function createAlias(): Alias
     {
         $alias = new Alias([
             'aliasname' => $this->alias,
@@ -186,7 +182,7 @@ final readonly class AliasedTable implements TableReference
     /**
      * @return null|array<string>
      */
-    private static function extractColumnAliases(Alias $alias) : ?array
+    private static function extractColumnAliases(Alias $alias): ?array
     {
         $colnames = $alias->getColnames();
 
@@ -209,7 +205,7 @@ final readonly class AliasedTable implements TableReference
         return \count($columnAliases) > 0 ? $columnAliases : null;
     }
 
-    private static function fromRangeVar(RangeVar $rangeVar) : self
+    private static function fromRangeVar(RangeVar $rangeVar): self
     {
         $alias = $rangeVar->getAlias();
 
@@ -226,16 +222,8 @@ final readonly class AliasedTable implements TableReference
         $schemaname = $rangeVar->getSchemaname();
         $inh = $rangeVar->getInh();
 
-        $table = new Table(
-            $relname,
-            $schemaname !== '' ? $schemaname : null,
-            $inh
-        );
+        $table = new Table($relname, $schemaname !== '' ? $schemaname : null, $inh);
 
-        return new self(
-            $table,
-            $alias->getAliasname(),
-            self::extractColumnAliases($alias)
-        );
+        return new self($table, $alias->getAliasname(), self::extractColumnAliases($alias));
     }
 }

@@ -18,12 +18,13 @@ final class SnappyDecompressor
     /**
      * @param array<int> $array
      */
-    public function __construct(private readonly array $array)
-    {
+    public function __construct(
+        private readonly array $array,
+    ) {
         $this->arrayLength = \count($this->array);
     }
 
-    public function readUncompressedLength() : int
+    public function readUncompressedLength(): int
     {
         $result = 0;
         $shift = 0;
@@ -33,7 +34,7 @@ final class SnappyDecompressor
             $this->pos++;
             $val = $c & 0x7F;
 
-            if (($val << $shift >> $shift) !== $val) {
+            if ((($val << $shift) >> $shift) !== $val) {
                 return -1;
             }
             $result |= $val << $shift;
@@ -50,7 +51,7 @@ final class SnappyDecompressor
     /**
      * @param array<int> $outBuffer
      */
-    public function uncompressToBuffer(array &$outBuffer) : bool
+    public function uncompressToBuffer(array &$outBuffer): bool
     {
         $outBuffer = \array_fill(0, $this->readUncompressedLength(), 0);
         $pos = $this->pos;
@@ -66,16 +67,20 @@ final class SnappyDecompressor
                 $len = ($c >> 2) + 1;
 
                 if ($len > 60) {
-                    if ($pos + 3 >= $this->arrayLength) {
+                    if (($pos + 3) >= $this->arrayLength) {
                         return false;
                     }
                     $smallLen = $len - 60;
-                    $len = $this->array[$pos] + ($this->array[$pos + 1] << 8) + ($this->array[$pos + 2] << 16) + ($this->array[$pos + 3] << 24);
+                    $len =
+                        $this->array[$pos]
+                        + ($this->array[$pos + 1] << 8)
+                        + ($this->array[$pos + 2] << 16)
+                        + ($this->array[$pos + 3] << 24);
                     $len = ($len & self::WORD_MASK[$smallLen]) + 1;
                     $pos += $smallLen;
                 }
 
-                if ($pos + $len > $this->arrayLength) {
+                if (($pos + $len) > $this->arrayLength) {
                     return false;
                 }
                 $this->copyBytes($this->array, $pos, $outBuffer, $outPos, (int) $len);
@@ -90,7 +95,7 @@ final class SnappyDecompressor
 
                         break;
                     case 2:
-                        if ($pos + 1 >= $this->arrayLength) {
+                        if (($pos + 1) >= $this->arrayLength) {
                             return false;
                         }
                         $len = ($c >> 2) + 1;
@@ -99,11 +104,15 @@ final class SnappyDecompressor
 
                         break;
                     case 3:
-                        if ($pos + 3 >= $this->arrayLength) {
+                        if (($pos + 3) >= $this->arrayLength) {
                             return false;
                         }
                         $len = ($c >> 2) + 1;
-                        $offset = $this->array[$pos] + ($this->array[$pos + 1] << 8) + ($this->array[$pos + 2] << 16) + ($this->array[$pos + 3] << 24);
+                        $offset =
+                            $this->array[$pos]
+                            + ($this->array[$pos + 1] << 8)
+                            + ($this->array[$pos + 2] << 16)
+                            + ($this->array[$pos + 3] << 24);
                         $pos += 4;
 
                         break;
@@ -124,7 +133,7 @@ final class SnappyDecompressor
      * @param array<int> $fromArray
      * @param array<int> $toArray
      */
-    private function copyBytes(array $fromArray, int $fromPos, array &$toArray, int $toPos, int $length) : void
+    private function copyBytes(array $fromArray, int $fromPos, array &$toArray, int $toPos, int $length): void
     {
         for ($i = 0; $i < $length; $i++) {
             $toArray[$toPos + $i] = $fromArray[$fromPos + $i];
@@ -134,7 +143,7 @@ final class SnappyDecompressor
     /**
      * @param array<int> $array
      */
-    private function selfCopyBytes(array &$array, int $pos, int $offset, int $length) : void
+    private function selfCopyBytes(array &$array, int $pos, int $offset, int $length): void
     {
         for ($i = 0; $i < $length; $i++) {
             $array[$pos + $i] = $array[$pos - $offset + $i];

@@ -8,5 +8,5 @@ use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 
 interface SelectHavingStep extends SelectWindowStep
 {
-    public function having(Condition $condition) : SelectWindowStep;
+    public function having(Condition $condition): SelectWindowStep;
 }

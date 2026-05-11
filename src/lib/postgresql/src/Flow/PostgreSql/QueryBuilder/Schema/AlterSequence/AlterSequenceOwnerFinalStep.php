@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface AlterSequenceOwnerFinalStep extends Sql
 {
-    public function toAst() : AlterTableStmt;
+    public function toAst(): AlterTableStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

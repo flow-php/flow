@@ -43,7 +43,7 @@ final class UdpSyslogHandler implements ErrorHandler
         }
     }
 
-    public function handle(\Throwable $error) : void
+    public function handle(\Throwable $error): void
     {
         try {
             $socket = $this->openSocket();
@@ -86,12 +86,7 @@ final class UdpSyslogHandler implements ErrorHandler
             return $this->socket;
         }
 
-        $handle = @\stream_socket_client(
-            \sprintf('udp://%s:%d', $this->host, $this->port),
-            $errno,
-            $errstr,
-            1.0,
-        );
+        $handle = @\stream_socket_client(\sprintf('udp://%s:%d', $this->host, $this->port), $_errno, $_errstr, 1.0);
 
         if (!\is_resource($handle)) {
             return null;

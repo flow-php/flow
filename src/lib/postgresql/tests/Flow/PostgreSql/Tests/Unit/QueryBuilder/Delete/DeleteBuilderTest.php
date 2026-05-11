@@ -4,26 +4,45 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Delete;
 
-use function Flow\PostgreSql\DSL\{any_, col, delete, eq, literal, param, select, table};
-use Flow\PostgreSql\{ParsedQuery, Parser};
-use Flow\PostgreSql\Protobuf\AST\{DeleteStmt, Node, RawStmt, SelectStmt};
-use Flow\PostgreSql\QueryBuilder\Clause\{CTE, WithClause};
-use Flow\PostgreSql\QueryBuilder\Condition\{Comparison, ComparisonOperator};
-use Flow\PostgreSql\QueryBuilder\Delete\{DeleteBuilder, DeleteFinalStep};
-use Flow\PostgreSql\QueryBuilder\Expression\{Column, FunctionCall, Literal};
+use Flow\PostgreSql\ParsedQuery;
+use Flow\PostgreSql\Parser;
+use Flow\PostgreSql\Protobuf\AST\DeleteStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RawStmt;
+use Flow\PostgreSql\Protobuf\AST\SelectStmt;
+use Flow\PostgreSql\QueryBuilder\Clause\CTE;
+use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
+use Flow\PostgreSql\QueryBuilder\Condition\Comparison;
+use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
+use Flow\PostgreSql\QueryBuilder\Delete\DeleteBuilder;
+use Flow\PostgreSql\QueryBuilder\Delete\DeleteFinalStep;
+use Flow\PostgreSql\QueryBuilder\Expression\Column;
+use Flow\PostgreSql\QueryBuilder\Expression\FunctionCall;
+use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\PostgreSql\DSL\any_;
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\delete;
+use function Flow\PostgreSql\DSL\eq;
+use function Flow\PostgreSql\DSL\literal;
+use function Flow\PostgreSql\DSL\param;
+use function Flow\PostgreSql\DSL\select;
+use function Flow\PostgreSql\DSL\table;
+
 final class DeleteBuilderTest extends TestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('pg_query')) {
-            self::markTestSkipped('pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.');
+            self::markTestSkipped(
+                'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
+            );
         }
     }
 
-    public function test_builder_steps_allow_fluent_interface() : void
+    public function test_builder_steps_allow_fluent_interface(): void
     {
         $query = DeleteBuilder::create()
             ->from('users', 'u')
@@ -31,24 +50,22 @@ final class DeleteBuilderTest extends TestCase
             ->returning(Column::name('id'));
 
         $ast = $query->toAst();
-        self::assertInstanceOf(DeleteStmt::class, $ast);
+        static::assertInstanceOf(DeleteStmt::class, $ast);
     }
 
-    public function test_delete_can_skip_optional_steps() : void
+    public function test_delete_can_skip_optional_steps(): void
     {
-        $queryWithoutWhere = DeleteBuilder::create()
-            ->from('temp_data')
-            ->returningAll();
+        $queryWithoutWhere = DeleteBuilder::create()->from('temp_data')->returningAll();
 
         $ast = $queryWithoutWhere->toAst();
-        self::assertInstanceOf(DeleteStmt::class, $ast);
-        self::assertFalse($ast->hasWhereClause());
+        static::assertInstanceOf(DeleteStmt::class, $ast);
+        static::assertFalse($ast->hasWhereClause());
 
         $returningList = $ast->getReturningList();
-        self::assertCount(1, $returningList);
+        static::assertCount(1, $returningList);
     }
 
-    public function test_delete_complex_query() : void
+    public function test_delete_complex_query(): void
     {
         $selectStmt = new SelectStmt();
         $selectNode = new Node();
@@ -64,130 +81,120 @@ final class DeleteBuilderTest extends TestCase
                 new Comparison(
                     Column::tableColumn('oi', 'order_id'),
                     ComparisonOperator::EQ,
-                    Column::tableColumn('co', 'id')
-                )
+                    Column::tableColumn('co', 'id'),
+                ),
             )
             ->returning(
                 Column::tableColumn('oi', 'id'),
                 Column::tableColumn('oi', 'product_id'),
-                Column::tableColumn('oi', 'quantity')
+                Column::tableColumn('oi', 'quantity'),
             );
 
         $ast = $query->toAst();
-        self::assertInstanceOf(DeleteStmt::class, $ast);
-        self::assertTrue($ast->hasWithClause());
+        static::assertInstanceOf(DeleteStmt::class, $ast);
+        static::assertTrue($ast->hasWithClause());
 
         $usingClause = $ast->getUsingClause();
-        self::assertNotNull($usingClause);
-        self::assertCount(1, $usingClause);
+        static::assertNotNull($usingClause);
+        static::assertCount(1, $usingClause);
 
-        self::assertTrue($ast->hasWhereClause());
+        static::assertTrue($ast->hasWhereClause());
 
         $returningList = $ast->getReturningList();
-        self::assertNotNull($returningList);
-        self::assertCount(3, $returningList);
+        static::assertNotNull($returningList);
+        static::assertCount(3, $returningList);
     }
 
-    public function test_delete_from_schema_qualified_table_reference() : void
+    public function test_delete_from_schema_qualified_table_reference(): void
     {
-        self::assertSame(
-            'DELETE FROM public.users',
-            delete()->from(table('users', 'public'))->toSql()
-        );
+        static::assertSame('DELETE FROM public.users', delete()->from(table('users', 'public'))->toSql());
     }
 
-    public function test_delete_from_table_reference() : void
+    public function test_delete_from_table_reference(): void
     {
-        self::assertSame(
-            'DELETE FROM users',
-            delete()->from(table('users'))->toSql()
-        );
+        static::assertSame('DELETE FROM users', delete()->from(table('users'))->toSql());
     }
 
-    public function test_delete_only_from_is_valid() : void
+    public function test_delete_only_from_is_valid(): void
     {
-        $query = DeleteBuilder::create()
-            ->from('all_data');
+        $query = DeleteBuilder::create()->from('all_data');
 
         $ast = $query->toAst();
-        self::assertInstanceOf(DeleteStmt::class, $ast);
+        static::assertInstanceOf(DeleteStmt::class, $ast);
 
         $relation = $ast->getRelation();
-        self::assertNotNull($relation);
-        self::assertSame('all_data', $relation->getRelname());
-        self::assertFalse($ast->hasWhereClause());
-        self::assertCount(0, $ast->getReturningList());
-        self::assertCount(0, $ast->getUsingClause());
+        static::assertNotNull($relation);
+        static::assertSame('all_data', $relation->getRelname());
+        static::assertFalse($ast->hasWhereClause());
+        static::assertCount(0, $ast->getReturningList());
+        static::assertCount(0, $ast->getUsingClause());
     }
 
-    public function test_delete_returning_all() : void
+    public function test_delete_returning_all(): void
     {
-        $query = DeleteBuilder::create()
-            ->from('temp_data')
-            ->returningAll();
+        $query = DeleteBuilder::create()->from('temp_data')->returningAll();
 
         $ast = $query->toAst();
-        self::assertInstanceOf(DeleteStmt::class, $ast);
+        static::assertInstanceOf(DeleteStmt::class, $ast);
 
         $returningList = $ast->getReturningList();
-        self::assertNotNull($returningList);
-        self::assertCount(1, $returningList);
+        static::assertNotNull($returningList);
+        static::assertCount(1, $returningList);
 
         $firstReturn = $returningList[0]->getResTarget();
-        self::assertNotNull($firstReturn);
+        static::assertNotNull($firstReturn);
 
         $val = $firstReturn->getVal();
-        self::assertNotNull($val);
+        static::assertNotNull($val);
 
-        self::assertTrue($val->hasColumnRef());
+        static::assertTrue($val->hasColumnRef());
         $columnRef = $val->getColumnRef();
-        self::assertNotNull($columnRef);
+        static::assertNotNull($columnRef);
         $fields = $columnRef->getFields();
-        self::assertNotNull($fields);
-        self::assertCount(1, $fields);
-        self::assertTrue($fields[0]->hasAStar());
+        static::assertNotNull($fields);
+        static::assertCount(1, $fields);
+        static::assertTrue($fields[0]->hasAStar());
     }
 
-    public function test_delete_with_alias() : void
+    public function test_delete_with_alias(): void
     {
-        $query = DeleteBuilder::create()
-            ->from('users', 'u');
+        $query = DeleteBuilder::create()->from('users', 'u');
 
         $ast = $query->toAst();
-        self::assertInstanceOf(DeleteStmt::class, $ast);
+        static::assertInstanceOf(DeleteStmt::class, $ast);
 
         $relation = $ast->getRelation();
-        self::assertNotNull($relation);
-        self::assertSame('users', $relation->getRelname());
+        static::assertNotNull($relation);
+        static::assertSame('users', $relation->getRelname());
 
         $alias = $relation->getAlias();
-        self::assertNotNull($alias);
-        self::assertSame('u', $alias->getAliasname());
+        static::assertNotNull($alias);
+        static::assertSame('u', $alias->getAliasname());
     }
 
-    public function test_delete_with_alias_and_where() : void
+    public function test_delete_with_alias_and_where(): void
     {
         $query = DeleteBuilder::create()
             ->from('users', 'u')
             ->where(new Comparison(Column::tableColumn('u', 'id'), ComparisonOperator::EQ, Literal::int(1)));
 
         $ast = $query->toAst();
-        self::assertInstanceOf(DeleteStmt::class, $ast);
+        static::assertInstanceOf(DeleteStmt::class, $ast);
 
         $relation = $ast->getRelation();
-        self::assertNotNull($relation);
-        self::assertSame('users', $relation->getRelname());
+        static::assertNotNull($relation);
+        static::assertSame('users', $relation->getRelname());
 
         $alias = $relation->getAlias();
-        self::assertNotNull($alias);
-        self::assertSame('u', $alias->getAliasname());
-        self::assertTrue($ast->hasWhereClause());
+        static::assertNotNull($alias);
+        static::assertSame('u', $alias->getAliasname());
+        static::assertTrue($ast->hasWhereClause());
     }
 
-    public function test_delete_with_alias_and_where_deparsed_output() : void
+    public function test_delete_with_alias_and_where_deparsed_output(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
         $delete = DeleteBuilder::create()
@@ -195,78 +202,88 @@ final class DeleteBuilderTest extends TestCase
             ->where(new Comparison(Column::tableColumn('u', 'active'), ComparisonOperator::EQ, Literal::bool(false)));
 
         $deparsed = $this->deparse($delete->toAst());
-        self::assertSame('DELETE FROM users u WHERE u.active = false', $deparsed);
+        static::assertSame('DELETE FROM users u WHERE u.active = false', $deparsed);
     }
 
-    public function test_delete_with_multiple_using_tables() : void
+    public function test_delete_with_multiple_using_tables(): void
     {
         $query = DeleteBuilder::create()
             ->from('order_items', 'oi')
-            ->using(
-                (new Table('orders'))->as('o'),
-                (new Table('customers'))->as('c')
-            )
-            ->where(
-                (new Comparison(Column::tableColumn('oi', 'order_id'), ComparisonOperator::EQ, Column::tableColumn('o', 'id')))
-                    ->and(new Comparison(Column::tableColumn('o', 'customer_id'), ComparisonOperator::EQ, Column::tableColumn('c', 'id')))
-                    ->and(new Comparison(Column::tableColumn('c', 'status'), ComparisonOperator::EQ, Literal::string('inactive')))
-            );
+            ->using((new Table('orders'))->as('o'), (new Table('customers'))->as('c'))
+            ->where((new Comparison(
+                Column::tableColumn('oi', 'order_id'),
+                ComparisonOperator::EQ,
+                Column::tableColumn('o', 'id'),
+            ))->and(
+                new Comparison(
+                    Column::tableColumn('o', 'customer_id'),
+                    ComparisonOperator::EQ,
+                    Column::tableColumn('c', 'id'),
+                ),
+            )->and(
+                new Comparison(Column::tableColumn('c', 'status'), ComparisonOperator::EQ, Literal::string('inactive')),
+            ));
 
         $ast = $query->toAst();
-        self::assertInstanceOf(DeleteStmt::class, $ast);
+        static::assertInstanceOf(DeleteStmt::class, $ast);
 
         $usingClause = $ast->getUsingClause();
-        self::assertNotNull($usingClause);
-        self::assertCount(2, $usingClause);
+        static::assertNotNull($usingClause);
+        static::assertCount(2, $usingClause);
 
         $firstTable = $usingClause[0]->getRangeVar();
-        self::assertNotNull($firstTable);
-        self::assertSame('orders', $firstTable->getRelname());
+        static::assertNotNull($firstTable);
+        static::assertSame('orders', $firstTable->getRelname());
 
         $firstAlias = $firstTable->getAlias();
-        self::assertNotNull($firstAlias);
-        self::assertSame('o', $firstAlias->getAliasname());
+        static::assertNotNull($firstAlias);
+        static::assertSame('o', $firstAlias->getAliasname());
 
         $secondTable = $usingClause[1]->getRangeVar();
-        self::assertNotNull($secondTable);
-        self::assertSame('customers', $secondTable->getRelname());
+        static::assertNotNull($secondTable);
+        static::assertSame('customers', $secondTable->getRelname());
 
         $secondAlias = $secondTable->getAlias();
-        self::assertNotNull($secondAlias);
-        self::assertSame('c', $secondAlias->getAliasname());
+        static::assertNotNull($secondAlias);
+        static::assertSame('c', $secondAlias->getAliasname());
     }
 
-    public function test_delete_with_multiple_using_tables_deparsed_output() : void
+    public function test_delete_with_multiple_using_tables_deparsed_output(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
         $delete = DeleteBuilder::create()
             ->from('order_items', 'oi')
-            ->using(
-                (new Table('orders'))->as('o'),
-                (new Table('customers'))->as('c')
-            )
-            ->where(
-                (new Comparison(Column::tableColumn('oi', 'order_id'), ComparisonOperator::EQ, Column::tableColumn('o', 'id')))
-                    ->and(new Comparison(Column::tableColumn('o', 'customer_id'), ComparisonOperator::EQ, Column::tableColumn('c', 'id')))
-            );
+            ->using((new Table('orders'))->as('o'), (new Table('customers'))->as('c'))
+            ->where((new Comparison(
+                Column::tableColumn('oi', 'order_id'),
+                ComparisonOperator::EQ,
+                Column::tableColumn('o', 'id'),
+            ))->and(
+                new Comparison(
+                    Column::tableColumn('o', 'customer_id'),
+                    ComparisonOperator::EQ,
+                    Column::tableColumn('c', 'id'),
+                ),
+            ));
 
         $deparsed = $this->deparse($delete->toAst());
-        self::assertSame('DELETE FROM order_items oi USING orders o, customers c WHERE oi.order_id = o.id AND o.customer_id = c.id', $deparsed);
+        static::assertSame(
+            'DELETE FROM order_items oi USING orders o, customers c WHERE oi.order_id = o.id AND o.customer_id = c.id',
+            $deparsed,
+        );
     }
 
-    public function test_delete_with_parameters() : void
+    public function test_delete_with_parameters(): void
     {
-        $query = delete()
-            ->from('users')
-            ->where(eq(col('id'), param(1)));
+        $query = delete()->from('users')->where(eq(col('id'), param(1)));
 
-        self::assertSame('DELETE FROM users WHERE id = $1', $query->toSql());
+        static::assertSame('DELETE FROM users WHERE id = $1', $query->toSql());
     }
 
-    public function test_delete_with_returning() : void
+    public function test_delete_with_returning(): void
     {
         $query = DeleteBuilder::create()
             ->from('sessions')
@@ -274,41 +291,41 @@ final class DeleteBuilderTest extends TestCase
             ->returning(Column::name('id'), Column::name('user_id'));
 
         $ast = $query->toAst();
-        self::assertInstanceOf(DeleteStmt::class, $ast);
+        static::assertInstanceOf(DeleteStmt::class, $ast);
 
         $returningList = $ast->getReturningList();
-        self::assertNotNull($returningList);
-        self::assertCount(2, $returningList);
+        static::assertNotNull($returningList);
+        static::assertCount(2, $returningList);
 
         $firstReturn = $returningList[0]->getResTarget();
-        self::assertNotNull($firstReturn);
+        static::assertNotNull($firstReturn);
 
         $firstVal = $firstReturn->getVal();
-        self::assertNotNull($firstVal);
-        self::assertTrue($firstVal->hasColumnRef());
+        static::assertNotNull($firstVal);
+        static::assertTrue($firstVal->hasColumnRef());
 
         $secondReturn = $returningList[1]->getResTarget();
-        self::assertNotNull($secondReturn);
+        static::assertNotNull($secondReturn);
 
         $secondVal = $secondReturn->getVal();
-        self::assertNotNull($secondVal);
-        self::assertTrue($secondVal->hasColumnRef());
+        static::assertNotNull($secondVal);
+        static::assertTrue($secondVal->hasColumnRef());
     }
 
-    public function test_delete_with_returning_all() : void
+    public function test_delete_with_returning_all(): void
     {
         $query = delete()
             ->from('users')
             ->where(eq(col('id'), literal(1)))
             ->returningAll();
 
-        self::assertSame('DELETE FROM users WHERE id = 1 RETURNING *', $query->toSql());
+        static::assertSame('DELETE FROM users WHERE id = 1 RETURNING *', $query->toSql());
     }
 
-    public function test_delete_with_returning_deparsed_output() : void
+    public function test_delete_with_returning_deparsed_output(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
         $delete = DeleteBuilder::create()
@@ -317,154 +334,168 @@ final class DeleteBuilderTest extends TestCase
             ->returning(Column::name('id'));
 
         $deparsed = $this->deparse($delete->toAst());
-        self::assertSame('DELETE FROM sessions WHERE expired = true RETURNING id', $deparsed);
+        static::assertSame('DELETE FROM sessions WHERE expired = true RETURNING id', $deparsed);
     }
 
-    public function test_delete_with_schema() : void
+    public function test_delete_with_schema(): void
     {
-        $query = DeleteBuilder::create()
-            ->from('myschema.users');
+        $query = DeleteBuilder::create()->from('myschema.users');
 
         $ast = $query->toAst();
 
         $relation = $ast->getRelation();
-        self::assertNotNull($relation);
-        self::assertSame('users', $relation->getRelname());
-        self::assertSame('myschema', $relation->getSchemaname());
+        static::assertNotNull($relation);
+        static::assertSame('users', $relation->getRelname());
+        static::assertSame('myschema', $relation->getSchemaname());
     }
 
-    public function test_delete_with_schema_deparsed_output() : void
+    public function test_delete_with_schema_deparsed_output(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available.');
+            static::markTestSkipped('pg_query_deparse function not available.');
         }
 
-        $query = DeleteBuilder::create()
-            ->from('public.users');
+        $query = DeleteBuilder::create()->from('public.users');
 
         $deparsed = $this->deparse($query->toAst());
-        self::assertSame('DELETE FROM public.users', $deparsed);
+        static::assertSame('DELETE FROM public.users', $deparsed);
     }
 
-    public function test_delete_with_schema_round_trip() : void
+    public function test_delete_with_schema_round_trip(): void
     {
-        $original = DeleteBuilder::create()
-            ->from('myschema.users');
+        $original = DeleteBuilder::create()->from('myschema.users');
 
         $ast = $original->toAst();
         $restored = DeleteBuilder::fromAst($ast);
         $restoredAst = $restored->toAst();
 
         $originalRelation = $ast->getRelation();
-        self::assertNotNull($originalRelation);
+        static::assertNotNull($originalRelation);
 
         $restoredRelation = $restoredAst->getRelation();
-        self::assertNotNull($restoredRelation);
+        static::assertNotNull($restoredRelation);
 
-        self::assertSame($originalRelation->getRelname(), $restoredRelation->getRelname());
-        self::assertSame($originalRelation->getSchemaname(), $restoredRelation->getSchemaname());
+        static::assertSame($originalRelation->getRelname(), $restoredRelation->getRelname());
+        static::assertSame($originalRelation->getSchemaname(), $restoredRelation->getSchemaname());
     }
 
-    public function test_delete_with_subquery_in_where() : void
+    public function test_delete_with_subquery_in_where(): void
     {
-        $subquery = select()
-            ->select(col('user_id'))
-            ->from(table('inactive_users'));
+        $subquery = select()->select(col('user_id'))->from(table('inactive_users'));
 
-        $query = delete()
-            ->from('users')
-            ->where(any_(col('id'), ComparisonOperator::EQ, $subquery));
+        $query = delete()->from('users')->where(any_(col('id'), ComparisonOperator::EQ, $subquery));
 
-        self::assertSame('DELETE FROM users WHERE id = ANY (SELECT user_id FROM inactive_users)', $query->toSql());
+        static::assertSame('DELETE FROM users WHERE id = ANY (SELECT user_id FROM inactive_users)', $query->toSql());
     }
 
-    public function test_delete_with_using() : void
+    public function test_delete_with_using(): void
     {
         $query = DeleteBuilder::create()
             ->from('order_items', 'oi')
             ->using(new Table('orders'))
             ->where(
-                (new Comparison(Column::tableColumn('oi', 'order_id'), ComparisonOperator::EQ, Column::tableColumn('orders', 'id')))
+                new Comparison(
+                    Column::tableColumn('oi', 'order_id'),
+                    ComparisonOperator::EQ,
+                    Column::tableColumn('orders', 'id'),
+                ),
             );
 
         $ast = $query->toAst();
-        self::assertInstanceOf(DeleteStmt::class, $ast);
+        static::assertInstanceOf(DeleteStmt::class, $ast);
 
         $relation = $ast->getRelation();
-        self::assertNotNull($relation);
-        self::assertSame('order_items', $relation->getRelname());
+        static::assertNotNull($relation);
+        static::assertSame('order_items', $relation->getRelname());
 
         $alias = $relation->getAlias();
-        self::assertNotNull($alias);
-        self::assertSame('oi', $alias->getAliasname());
+        static::assertNotNull($alias);
+        static::assertSame('oi', $alias->getAliasname());
 
         $usingClause = $ast->getUsingClause();
-        self::assertNotNull($usingClause);
-        self::assertCount(1, $usingClause);
+        static::assertNotNull($usingClause);
+        static::assertCount(1, $usingClause);
 
         $usingTable = $usingClause[0]->getRangeVar();
-        self::assertNotNull($usingTable);
-        self::assertSame('orders', $usingTable->getRelname());
+        static::assertNotNull($usingTable);
+        static::assertSame('orders', $usingTable->getRelname());
     }
 
-    public function test_delete_with_using_and_aliased_table() : void
+    public function test_delete_with_using_and_aliased_table(): void
     {
         $query = DeleteBuilder::create()
             ->from('order_items', 'oi')
             ->using((new Table('orders'))->as('o'))
-            ->where(
-                (new Comparison(Column::tableColumn('oi', 'order_id'), ComparisonOperator::EQ, Column::tableColumn('o', 'id')))
-                    ->and(new Comparison(Column::tableColumn('o', 'status'), ComparisonOperator::EQ, Literal::string('cancelled')))
-            );
+            ->where((new Comparison(
+                Column::tableColumn('oi', 'order_id'),
+                ComparisonOperator::EQ,
+                Column::tableColumn('o', 'id'),
+            ))->and(
+                new Comparison(
+                    Column::tableColumn('o', 'status'),
+                    ComparisonOperator::EQ,
+                    Literal::string('cancelled'),
+                ),
+            ));
 
         $ast = $query->toAst();
-        self::assertInstanceOf(DeleteStmt::class, $ast);
+        static::assertInstanceOf(DeleteStmt::class, $ast);
 
         $usingClause = $ast->getUsingClause();
-        self::assertNotNull($usingClause);
-        self::assertCount(1, $usingClause);
+        static::assertNotNull($usingClause);
+        static::assertCount(1, $usingClause);
 
         $usingTable = $usingClause[0]->getRangeVar();
-        self::assertNotNull($usingTable);
-        self::assertSame('orders', $usingTable->getRelname());
-        self::assertNotNull($usingTable->getAlias());
-        self::assertSame('o', $usingTable->getAlias()->getAliasname());
+        static::assertNotNull($usingTable);
+        static::assertSame('orders', $usingTable->getRelname());
+        static::assertNotNull($usingTable->getAlias());
+        static::assertSame('o', $usingTable->getAlias()->getAliasname());
     }
 
-    public function test_delete_with_using_deparsed_output() : void
+    public function test_delete_with_using_deparsed_output(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
         $delete = DeleteBuilder::create()
             ->from('order_items', 'oi')
             ->using((new Table('orders'))->as('o'))
-            ->where(
-                (new Comparison(Column::tableColumn('oi', 'order_id'), ComparisonOperator::EQ, Column::tableColumn('o', 'id')))
-                    ->and(new Comparison(Column::tableColumn('o', 'status'), ComparisonOperator::EQ, Literal::string('cancelled')))
-            );
+            ->where((new Comparison(
+                Column::tableColumn('oi', 'order_id'),
+                ComparisonOperator::EQ,
+                Column::tableColumn('o', 'id'),
+            ))->and(
+                new Comparison(
+                    Column::tableColumn('o', 'status'),
+                    ComparisonOperator::EQ,
+                    Literal::string('cancelled'),
+                ),
+            ));
 
         $deparsed = $this->deparse($delete->toAst());
-        self::assertSame("DELETE FROM order_items oi USING orders o WHERE oi.order_id = o.id AND o.status = 'cancelled'", $deparsed);
+        static::assertSame(
+            "DELETE FROM order_items oi USING orders o WHERE oi.order_id = o.id AND o.status = 'cancelled'",
+            $deparsed,
+        );
     }
 
-    public function test_delete_with_where() : void
+    public function test_delete_with_where(): void
     {
         $query = DeleteBuilder::create()
             ->from('users')
             ->where(new Comparison(Column::name('active'), ComparisonOperator::EQ, Literal::bool(false)));
 
         $ast = $query->toAst();
-        self::assertInstanceOf(DeleteStmt::class, $ast);
-        self::assertTrue($ast->hasWhereClause());
-        self::assertNotNull($ast->getWhereClause());
+        static::assertInstanceOf(DeleteStmt::class, $ast);
+        static::assertTrue($ast->hasWhereClause());
+        static::assertNotNull($ast->getWhereClause());
     }
 
-    public function test_delete_with_where_deparsed_output() : void
+    public function test_delete_with_where_deparsed_output(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
         $delete = DeleteBuilder::create()
@@ -472,10 +503,10 @@ final class DeleteBuilderTest extends TestCase
             ->where(new Comparison(Column::name('id'), ComparisonOperator::EQ, Literal::int(1)));
 
         $deparsed = $this->deparse($delete->toAst());
-        self::assertSame('DELETE FROM users WHERE id = 1', $deparsed);
+        static::assertSame('DELETE FROM users WHERE id = 1', $deparsed);
     }
 
-    public function test_delete_with_with_clause() : void
+    public function test_delete_with_with_clause(): void
     {
         $selectStmt = new SelectStmt();
         $selectNode = new Node();
@@ -490,46 +521,44 @@ final class DeleteBuilderTest extends TestCase
                 new Comparison(
                     Column::tableColumn('us', 'user_id'),
                     ComparisonOperator::EQ,
-                    Column::tableColumn('inactive_users', 'id')
-                )
+                    Column::tableColumn('inactive_users', 'id'),
+                ),
             );
 
         $ast = $query->toAst();
-        self::assertInstanceOf(DeleteStmt::class, $ast);
-        self::assertTrue($ast->hasWithClause());
+        static::assertInstanceOf(DeleteStmt::class, $ast);
+        static::assertTrue($ast->hasWithClause());
 
         $withClauseProto = $ast->getWithClause();
-        self::assertNotNull($withClauseProto);
+        static::assertNotNull($withClauseProto);
 
         $ctes = $withClauseProto->getCtes();
-        self::assertNotNull($ctes);
-        self::assertCount(1, $ctes);
+        static::assertNotNull($ctes);
+        static::assertCount(1, $ctes);
 
         $firstCte = $ctes[0]->getCommonTableExpr();
-        self::assertNotNull($firstCte);
-        self::assertSame('inactive_users', $firstCte->getCtename());
+        static::assertNotNull($firstCte);
+        static::assertSame('inactive_users', $firstCte->getCtename());
     }
 
-    public function test_delete_without_where_returning_all() : void
+    public function test_delete_without_where_returning_all(): void
     {
-        $query = DeleteBuilder::create()
-            ->from('temp_logs')
-            ->returningAll();
+        $query = DeleteBuilder::create()->from('temp_logs')->returningAll();
 
         $ast = $query->toAst();
-        self::assertInstanceOf(DeleteStmt::class, $ast);
+        static::assertInstanceOf(DeleteStmt::class, $ast);
 
         $relation = $ast->getRelation();
-        self::assertNotNull($relation);
-        self::assertSame('temp_logs', $relation->getRelname());
-        self::assertFalse($ast->hasWhereClause());
+        static::assertNotNull($relation);
+        static::assertSame('temp_logs', $relation->getRelname());
+        static::assertFalse($ast->hasWhereClause());
 
         $returningList = $ast->getReturningList();
-        self::assertNotNull($returningList);
-        self::assertCount(1, $returningList);
+        static::assertNotNull($returningList);
+        static::assertCount(1, $returningList);
     }
 
-    public function test_from_ast_empty_relname_throws_exception() : void
+    public function test_from_ast_empty_relname_throws_exception(): void
     {
         $this->expectException(\Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException::class);
         $this->expectExceptionMessage('Missing required field "relname" in RangeVar node');
@@ -542,7 +571,7 @@ final class DeleteBuilderTest extends TestCase
         DeleteBuilder::fromAst($deleteStmt);
     }
 
-    public function test_from_ast_missing_relation_throws_exception() : void
+    public function test_from_ast_missing_relation_throws_exception(): void
     {
         $this->expectException(\Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException::class);
         $this->expectExceptionMessage('Missing required field "relation" in DeleteStmt node');
@@ -551,47 +580,47 @@ final class DeleteBuilderTest extends TestCase
         DeleteBuilder::fromAst($deleteStmt);
     }
 
-    public function test_immutability_from() : void
+    public function test_immutability_from(): void
     {
         $original = DeleteBuilder::create();
         $modified = $original->from('users');
 
-        self::assertNotSame($original, $modified);
+        static::assertNotSame($original, $modified);
     }
 
-    public function test_immutability_returning() : void
+    public function test_immutability_returning(): void
     {
         $original = DeleteBuilder::create()->from('users');
         $modified = $original->returning(Column::name('id'));
 
-        self::assertNotSame($original, $modified);
+        static::assertNotSame($original, $modified);
     }
 
-    public function test_immutability_returning_all() : void
+    public function test_immutability_returning_all(): void
     {
         $original = DeleteBuilder::create()->from('users');
         $modified = $original->returningAll();
 
-        self::assertNotSame($original, $modified);
+        static::assertNotSame($original, $modified);
     }
 
-    public function test_immutability_using() : void
+    public function test_immutability_using(): void
     {
         $original = DeleteBuilder::create()->from('users');
         $modified = $original->using(new Table('orders'));
 
-        self::assertNotSame($original, $modified);
+        static::assertNotSame($original, $modified);
     }
 
-    public function test_immutability_where() : void
+    public function test_immutability_where(): void
     {
         $original = DeleteBuilder::create()->from('users');
         $modified = $original->where(new Comparison(Column::name('id'), ComparisonOperator::EQ, Literal::int(1)));
 
-        self::assertNotSame($original, $modified);
+        static::assertNotSame($original, $modified);
     }
 
-    public function test_round_trip_complex() : void
+    public function test_round_trip_complex(): void
     {
         $selectStmt = new SelectStmt();
         $selectNode = new Node();
@@ -607,8 +636,8 @@ final class DeleteBuilderTest extends TestCase
                 new Comparison(
                     Column::tableColumn('oi', 'order_id'),
                     ComparisonOperator::EQ,
-                    Column::tableColumn('co', 'id')
-                )
+                    Column::tableColumn('co', 'id'),
+                ),
             )
             ->returning(Column::name('id'), Column::name('product_id'));
 
@@ -617,26 +646,25 @@ final class DeleteBuilderTest extends TestCase
 
         $restoredAst = $restored->toAst();
 
-        self::assertTrue($restoredAst->hasWithClause());
+        static::assertTrue($restoredAst->hasWithClause());
 
         $withClauseProto = $restoredAst->getWithClause();
-        self::assertNotNull($withClauseProto);
+        static::assertNotNull($withClauseProto);
 
         $ctes = $withClauseProto->getCtes();
-        self::assertNotNull($ctes);
-        self::assertCount(1, $ctes);
+        static::assertNotNull($ctes);
+        static::assertCount(1, $ctes);
 
         $usingClause = $restoredAst->getUsingClause();
-        self::assertCount(1, $usingClause);
+        static::assertCount(1, $usingClause);
 
         $returningList = $restoredAst->getReturningList();
-        self::assertCount(2, $returningList);
+        static::assertCount(2, $returningList);
     }
 
-    public function test_round_trip_simple() : void
+    public function test_round_trip_simple(): void
     {
-        $original = DeleteBuilder::create()
-            ->from('users');
+        $original = DeleteBuilder::create()->from('users');
 
         $ast = $original->toAst();
         $restored = DeleteBuilder::fromAst($ast);
@@ -644,19 +672,18 @@ final class DeleteBuilderTest extends TestCase
         $restoredAst = $restored->toAst();
 
         $originalRelation = $ast->getRelation();
-        self::assertNotNull($originalRelation);
+        static::assertNotNull($originalRelation);
 
         $restoredRelation = $restoredAst->getRelation();
-        self::assertNotNull($restoredRelation);
+        static::assertNotNull($restoredRelation);
 
-        self::assertSame($originalRelation->getRelname(), $restoredRelation->getRelname());
-        self::assertSame($ast->hasWhereClause(), $restoredAst->hasWhereClause());
+        static::assertSame($originalRelation->getRelname(), $restoredRelation->getRelname());
+        static::assertSame($ast->hasWhereClause(), $restoredAst->hasWhereClause());
     }
 
-    public function test_round_trip_with_alias() : void
+    public function test_round_trip_with_alias(): void
     {
-        $original = DeleteBuilder::create()
-            ->from('users', 'u');
+        $original = DeleteBuilder::create()->from('users', 'u');
 
         $ast = $original->toAst();
         $restored = DeleteBuilder::fromAst($ast);
@@ -664,23 +691,23 @@ final class DeleteBuilderTest extends TestCase
         $restoredAst = $restored->toAst();
 
         $originalRelation = $ast->getRelation();
-        self::assertNotNull($originalRelation);
+        static::assertNotNull($originalRelation);
 
         $restoredRelation = $restoredAst->getRelation();
-        self::assertNotNull($restoredRelation);
+        static::assertNotNull($restoredRelation);
 
-        self::assertSame($originalRelation->getRelname(), $restoredRelation->getRelname());
+        static::assertSame($originalRelation->getRelname(), $restoredRelation->getRelname());
 
         $originalAlias = $originalRelation->getAlias();
-        self::assertNotNull($originalAlias);
+        static::assertNotNull($originalAlias);
 
         $restoredAlias = $restoredRelation->getAlias();
-        self::assertNotNull($restoredAlias);
+        static::assertNotNull($restoredAlias);
 
-        self::assertSame($originalAlias->getAliasname(), $restoredAlias->getAliasname());
+        static::assertSame($originalAlias->getAliasname(), $restoredAlias->getAliasname());
     }
 
-    public function test_round_trip_with_returning() : void
+    public function test_round_trip_with_returning(): void
     {
         $original = DeleteBuilder::create()
             ->from('users', 'u')
@@ -691,14 +718,14 @@ final class DeleteBuilderTest extends TestCase
         $restored = DeleteBuilder::fromAst($ast);
 
         $restoredAst = $restored->toAst();
-        self::assertTrue($restoredAst->hasWhereClause());
+        static::assertTrue($restoredAst->hasWhereClause());
 
         $returningList = $restoredAst->getReturningList();
-        self::assertNotNull($returningList);
-        self::assertCount(1, $returningList);
+        static::assertNotNull($returningList);
+        static::assertCount(1, $returningList);
     }
 
-    public function test_round_trip_with_using() : void
+    public function test_round_trip_with_using(): void
     {
         $original = DeleteBuilder::create()
             ->from('order_items', 'oi')
@@ -707,8 +734,8 @@ final class DeleteBuilderTest extends TestCase
                 new Comparison(
                     Column::tableColumn('oi', 'order_id'),
                     ComparisonOperator::EQ,
-                    Column::tableColumn('o', 'id')
-                )
+                    Column::tableColumn('o', 'id'),
+                ),
             );
 
         $ast = $original->toAst();
@@ -717,19 +744,19 @@ final class DeleteBuilderTest extends TestCase
         $restoredAst = $restored->toAst();
 
         $usingClause = $restoredAst->getUsingClause();
-        self::assertNotNull($usingClause);
-        self::assertCount(1, $usingClause);
+        static::assertNotNull($usingClause);
+        static::assertCount(1, $usingClause);
 
         $usingTable = $usingClause[0]->getRangeVar();
-        self::assertNotNull($usingTable);
-        self::assertSame('orders', $usingTable->getRelname());
+        static::assertNotNull($usingTable);
+        static::assertSame('orders', $usingTable->getRelname());
 
         $usingAlias = $usingTable->getAlias();
-        self::assertNotNull($usingAlias);
-        self::assertSame('o', $usingAlias->getAliasname());
+        static::assertNotNull($usingAlias);
+        static::assertSame('o', $usingAlias->getAliasname());
     }
 
-    public function test_round_trip_with_where() : void
+    public function test_round_trip_with_where(): void
     {
         $original = DeleteBuilder::create()
             ->from('users', 'u')
@@ -739,38 +766,36 @@ final class DeleteBuilderTest extends TestCase
         $restored = DeleteBuilder::fromAst($ast);
 
         $restoredAst = $restored->toAst();
-        self::assertTrue($restoredAst->hasWhereClause());
-        self::assertNotNull($restoredAst->getWhereClause());
+        static::assertTrue($restoredAst->hasWhereClause());
+        static::assertNotNull($restoredAst->getWhereClause());
     }
 
-    public function test_simple_delete() : void
+    public function test_simple_delete(): void
     {
-        $query = DeleteBuilder::create()
-            ->from('users');
+        $query = DeleteBuilder::create()->from('users');
 
         $ast = $query->toAst();
-        self::assertInstanceOf(DeleteStmt::class, $ast);
+        static::assertInstanceOf(DeleteStmt::class, $ast);
 
         $relation = $ast->getRelation();
-        self::assertNotNull($relation);
-        self::assertSame('users', $relation->getRelname());
-        self::assertNull($relation->getAlias());
+        static::assertNotNull($relation);
+        static::assertSame('users', $relation->getRelname());
+        static::assertNull($relation->getAlias());
     }
 
-    public function test_simple_delete_deparsed_output() : void
+    public function test_simple_delete_deparsed_output(): void
     {
         if (!\function_exists('pg_query_deparse')) {
-            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+            static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
-        $delete = DeleteBuilder::create()
-            ->from('users');
+        $delete = DeleteBuilder::create()->from('users');
 
         $deparsed = $this->deparse($delete->toAst());
-        self::assertSame('DELETE FROM users', $deparsed);
+        static::assertSame('DELETE FROM users', $deparsed);
     }
 
-    public function test_to_ast_without_table_throws_exception() : void
+    public function test_to_ast_without_table_throws_exception(): void
     {
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('Cannot create DeleteStmt without table name. Call from() first.');
@@ -780,7 +805,7 @@ final class DeleteBuilderTest extends TestCase
         $builder->toAst();
     }
 
-    private function deparse(DeleteStmt $deleteStmt) : string
+    private function deparse(DeleteStmt $deleteStmt): string
     {
         $parser = new Parser();
         $node = new Node(['delete_stmt' => $deleteStmt]);

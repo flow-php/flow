@@ -4,489 +4,334 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\Index;
 
-use function Flow\PostgreSql\DSL\{alter,
-    col,
-    create,
-    drop,
-    eq,
-    index_col,
-    index_method_btree,
-    index_method_gin,
-    index_method_hash,
-    literal,
-    reindex_database,
-    reindex_index,
-    reindex_schema,
-    reindex_table};
-
 use PHPUnit\Framework\TestCase;
+
+use function Flow\PostgreSql\DSL\alter;
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\create;
+use function Flow\PostgreSql\DSL\drop;
+use function Flow\PostgreSql\DSL\eq;
+use function Flow\PostgreSql\DSL\index_col;
+use function Flow\PostgreSql\DSL\index_method_btree;
+use function Flow\PostgreSql\DSL\index_method_gin;
+use function Flow\PostgreSql\DSL\index_method_hash;
+use function Flow\PostgreSql\DSL\literal;
+use function Flow\PostgreSql\DSL\reindex_database;
+use function Flow\PostgreSql\DSL\reindex_index;
+use function Flow\PostgreSql\DSL\reindex_schema;
+use function Flow\PostgreSql\DSL\reindex_table;
 
 final class IndexBuilderTest extends TestCase
 {
-    public function test_alter_index_rename() : void
+    public function test_alter_index_rename(): void
     {
-        $builder = alter()->index('idx_old')
-            ->renameTo('idx_new');
+        $builder = alter()->index('idx_old')->renameTo('idx_new');
 
-        self::assertSame(
-            'ALTER INDEX idx_old RENAME TO idx_new',
-            $builder->toSql()
-        );
+        static::assertSame('ALTER INDEX idx_old RENAME TO idx_new', $builder->toSql());
     }
 
-    public function test_alter_index_rename_if_exists() : void
+    public function test_alter_index_rename_if_exists(): void
     {
-        $builder = alter()->index('idx_old')
-            ->ifExists()
-            ->renameTo('idx_new');
+        $builder = alter()->index('idx_old')->ifExists()->renameTo('idx_new');
 
-        self::assertSame(
-            'ALTER INDEX IF EXISTS idx_old RENAME TO idx_new',
-            $builder->toSql()
-        );
+        static::assertSame('ALTER INDEX IF EXISTS idx_old RENAME TO idx_new', $builder->toSql());
     }
 
-    public function test_alter_index_rename_with_schema() : void
+    public function test_alter_index_rename_with_schema(): void
     {
-        $builder = alter()->index('idx_old', 'public')
-            ->renameTo('idx_new');
+        $builder = alter()->index('idx_old', 'public')->renameTo('idx_new');
 
-        self::assertSame(
-            'ALTER INDEX public.idx_old RENAME TO idx_new',
-            $builder->toSql()
-        );
+        static::assertSame('ALTER INDEX public.idx_old RENAME TO idx_new', $builder->toSql());
     }
 
-    public function test_alter_index_set_tablespace() : void
+    public function test_alter_index_set_tablespace(): void
     {
-        $builder = alter()->index('idx_users_email')
-            ->setTablespace('fast_storage');
+        $builder = alter()->index('idx_users_email')->setTablespace('fast_storage');
 
-        self::assertSame(
-            'ALTER INDEX idx_users_email SET TABLESPACE fast_storage',
-            $builder->toSql()
-        );
+        static::assertSame('ALTER INDEX idx_users_email SET TABLESPACE fast_storage', $builder->toSql());
     }
 
-    public function test_alter_index_set_tablespace_if_exists() : void
+    public function test_alter_index_set_tablespace_if_exists(): void
     {
-        $builder = alter()->index('idx_users_email')
-            ->ifExists()
-            ->setTablespace('fast_storage');
+        $builder = alter()->index('idx_users_email')->ifExists()->setTablespace('fast_storage');
 
-        self::assertSame(
-            'ALTER INDEX IF EXISTS idx_users_email SET TABLESPACE fast_storage',
-            $builder->toSql()
-        );
+        static::assertSame('ALTER INDEX IF EXISTS idx_users_email SET TABLESPACE fast_storage', $builder->toSql());
     }
 
-    public function test_create_index_concurrently() : void
+    public function test_create_index_concurrently(): void
     {
-        $builder = create()->index('idx_users_email')
-            ->concurrently()
-            ->on('users')
-            ->columns('email');
+        $builder = create()->index('idx_users_email')->concurrently()->on('users')->columns('email');
 
-        self::assertSame(
-            'CREATE INDEX CONCURRENTLY idx_users_email ON users (email)',
-            $builder->toSql()
-        );
+        static::assertSame('CREATE INDEX CONCURRENTLY idx_users_email ON users (email)', $builder->toSql());
     }
 
-    public function test_create_index_if_not_exists() : void
+    public function test_create_index_if_not_exists(): void
     {
-        $builder = create()->index('idx_users_email')
-            ->ifNotExists()
-            ->on('users')
-            ->columns('email');
+        $builder = create()->index('idx_users_email')->ifNotExists()->on('users')->columns('email');
 
-        self::assertSame(
-            'CREATE INDEX IF NOT EXISTS idx_users_email ON users (email)',
-            $builder->toSql()
-        );
+        static::assertSame('CREATE INDEX IF NOT EXISTS idx_users_email ON users (email)', $builder->toSql());
     }
 
-    public function test_create_index_simple() : void
+    public function test_create_index_simple(): void
     {
-        $builder = create()->index('idx_users_email')
-            ->on('users')
-            ->columns('email');
+        $builder = create()->index('idx_users_email')->on('users')->columns('email');
 
-        self::assertSame(
-            'CREATE INDEX idx_users_email ON users (email)',
-            $builder->toSql()
-        );
+        static::assertSame('CREATE INDEX idx_users_email ON users (email)', $builder->toSql());
     }
 
-    public function test_create_index_unique() : void
+    public function test_create_index_unique(): void
     {
-        $builder = create()->index('idx_users_email')
-            ->unique()
-            ->on('users')
-            ->columns('email');
+        $builder = create()->index('idx_users_email')->unique()->on('users')->columns('email');
 
-        self::assertSame(
-            'CREATE UNIQUE INDEX idx_users_email ON users (email)',
-            $builder->toSql()
-        );
+        static::assertSame('CREATE UNIQUE INDEX idx_users_email ON users (email)', $builder->toSql());
     }
 
-    public function test_create_index_unique_concurrently_if_not_exists() : void
+    public function test_create_index_unique_concurrently_if_not_exists(): void
     {
-        $builder = create()->index('idx_users_email')
+        $builder = create()
+            ->index('idx_users_email')
             ->unique()
             ->concurrently()
             ->ifNotExists()
             ->on('users')
             ->columns('email');
 
-        self::assertSame(
+        static::assertSame(
             'CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS idx_users_email ON users (email)',
-            $builder->toSql()
+            $builder->toSql(),
         );
     }
 
-    public function test_create_index_with_btree_method() : void
+    public function test_create_index_with_btree_method(): void
     {
-        $builder = create()->index('idx_users_email')
-            ->on('users')
-            ->using(index_method_btree())
-            ->columns('email');
+        $builder = create()->index('idx_users_email')->on('users')->using(index_method_btree())->columns('email');
 
-        self::assertSame(
-            'CREATE INDEX idx_users_email ON users USING btree (email)',
-            $builder->toSql()
-        );
+        static::assertSame('CREATE INDEX idx_users_email ON users USING btree (email)', $builder->toSql());
     }
 
-    public function test_create_index_with_desc_order() : void
+    public function test_create_index_with_desc_order(): void
     {
-        $builder = create()->index('idx_users_created_at')
-            ->on('users')
-            ->columns(index_col('created_at')->desc());
+        $builder = create()->index('idx_users_created_at')->on('users')->columns(index_col('created_at')->desc());
 
-        self::assertSame(
-            'CREATE INDEX idx_users_created_at ON users (created_at DESC)',
-            $builder->toSql()
-        );
+        static::assertSame('CREATE INDEX idx_users_created_at ON users (created_at DESC)', $builder->toSql());
     }
 
-    public function test_create_index_with_gin_method() : void
+    public function test_create_index_with_gin_method(): void
     {
-        $builder = create()->index('idx_documents_content')
+        $builder = create()
+            ->index('idx_documents_content')
             ->on('documents')
             ->using(index_method_gin())
             ->columns('content');
 
-        self::assertSame(
-            'CREATE INDEX idx_documents_content ON documents USING gin (content)',
-            $builder->toSql()
-        );
+        static::assertSame('CREATE INDEX idx_documents_content ON documents USING gin (content)', $builder->toSql());
     }
 
-    public function test_create_index_with_hash_method() : void
+    public function test_create_index_with_hash_method(): void
     {
-        $builder = create()->index('idx_users_email')
-            ->on('users')
-            ->using(index_method_hash())
-            ->columns('email');
+        $builder = create()->index('idx_users_email')->on('users')->using(index_method_hash())->columns('email');
 
-        self::assertSame(
-            'CREATE INDEX idx_users_email ON users USING hash (email)',
-            $builder->toSql()
-        );
+        static::assertSame('CREATE INDEX idx_users_email ON users USING hash (email)', $builder->toSql());
     }
 
-    public function test_create_index_with_include() : void
+    public function test_create_index_with_include(): void
     {
-        $builder = create()->index('idx_users_email')
-            ->on('users')
-            ->columns('email')
-            ->include('name', 'created_at');
+        $builder = create()->index('idx_users_email')->on('users')->columns('email')->include('name', 'created_at');
 
-        self::assertSame(
+        static::assertSame(
             'CREATE INDEX idx_users_email ON users (email) INCLUDE (name, created_at)',
-            $builder->toSql()
+            $builder->toSql(),
         );
     }
 
-    public function test_create_index_with_multiple_columns() : void
+    public function test_create_index_with_multiple_columns(): void
     {
-        $builder = create()->index('idx_users_name_email')
-            ->on('users')
-            ->columns('name', 'email');
+        $builder = create()->index('idx_users_name_email')->on('users')->columns('name', 'email');
 
-        self::assertSame(
-            'CREATE INDEX idx_users_name_email ON users (name, email)',
-            $builder->toSql()
-        );
+        static::assertSame('CREATE INDEX idx_users_name_email ON users (name, email)', $builder->toSql());
     }
 
-    public function test_create_index_with_nulls_first() : void
+    public function test_create_index_with_nulls_first(): void
     {
-        $builder = create()->index('idx_users_created_at')
+        $builder = create()
+            ->index('idx_users_created_at')
             ->on('users')
             ->columns(index_col('created_at')->desc()->nullsFirst());
 
-        self::assertSame(
+        static::assertSame(
             'CREATE INDEX idx_users_created_at ON users (created_at DESC NULLS FIRST)',
-            $builder->toSql()
+            $builder->toSql(),
         );
     }
 
-    public function test_create_index_with_nulls_last() : void
+    public function test_create_index_with_nulls_last(): void
     {
-        $builder = create()->index('idx_users_created_at')
-            ->on('users')
-            ->columns(index_col('created_at')->nullsLast());
+        $builder = create()->index('idx_users_created_at')->on('users')->columns(index_col('created_at')->nullsLast());
 
-        self::assertSame(
-            'CREATE INDEX idx_users_created_at ON users (created_at NULLS LAST)',
-            $builder->toSql()
-        );
+        static::assertSame('CREATE INDEX idx_users_created_at ON users (created_at NULLS LAST)', $builder->toSql());
     }
 
-    public function test_create_index_with_nulls_not_distinct() : void
+    public function test_create_index_with_nulls_not_distinct(): void
     {
-        $builder = create()->index('idx_users_email')
-            ->unique()
-            ->on('users')
-            ->columns('email')
-            ->nullsNotDistinct();
+        $builder = create()->index('idx_users_email')->unique()->on('users')->columns('email')->nullsNotDistinct();
 
-        self::assertSame(
+        static::assertSame(
             'CREATE UNIQUE INDEX idx_users_email ON users (email) NULLS NOT DISTINCT',
-            $builder->toSql()
+            $builder->toSql(),
         );
     }
 
-    public function test_create_index_with_on_only() : void
+    public function test_create_index_with_on_only(): void
     {
-        $builder = create()->index('idx_users_email')
-            ->onOnly('users')
-            ->columns('email');
+        $builder = create()->index('idx_users_email')->onOnly('users')->columns('email');
 
-        self::assertSame(
-            'CREATE INDEX idx_users_email ON ONLY users (email)',
-            $builder->toSql()
-        );
+        static::assertSame('CREATE INDEX idx_users_email ON ONLY users (email)', $builder->toSql());
     }
 
-    public function test_create_index_with_schema() : void
+    public function test_create_index_with_schema(): void
     {
-        $builder = create()->index('idx_users_email')
-            ->on('users', 'public')
-            ->columns('email');
+        $builder = create()->index('idx_users_email')->on('users', 'public')->columns('email');
 
-        self::assertSame(
-            'CREATE INDEX idx_users_email ON public.users (email)',
-            $builder->toSql()
-        );
+        static::assertSame('CREATE INDEX idx_users_email ON public.users (email)', $builder->toSql());
     }
 
-    public function test_create_index_with_tablespace() : void
+    public function test_create_index_with_tablespace(): void
     {
-        $builder = create()->index('idx_users_email')
-            ->on('users')
-            ->columns('email')
-            ->tablespace('fast_storage');
+        $builder = create()->index('idx_users_email')->on('users')->columns('email')->tablespace('fast_storage');
 
-        self::assertSame(
-            'CREATE INDEX idx_users_email ON users (email) TABLESPACE fast_storage',
-            $builder->toSql()
-        );
+        static::assertSame('CREATE INDEX idx_users_email ON users (email) TABLESPACE fast_storage', $builder->toSql());
     }
 
-    public function test_create_partial_index() : void
+    public function test_create_partial_index(): void
     {
-        $builder = create()->index('idx_users_active_email')
+        $builder = create()
+            ->index('idx_users_active_email')
             ->on('users')
             ->columns('email')
             ->where(eq(col('active'), literal(true)));
 
-        self::assertSame(
+        static::assertSame(
             'CREATE INDEX idx_users_active_email ON users (email) WHERE active = true',
-            $builder->toSql()
+            $builder->toSql(),
         );
     }
 
-    public function test_drop_index_cascade() : void
+    public function test_drop_index_cascade(): void
     {
-        $builder = drop()->index('idx_users_email')
-            ->cascade();
+        $builder = drop()->index('idx_users_email')->cascade();
 
-        self::assertSame(
-            'DROP INDEX idx_users_email CASCADE',
-            $builder->toSql()
-        );
+        static::assertSame('DROP INDEX idx_users_email CASCADE', $builder->toSql());
     }
 
-    public function test_drop_index_concurrently() : void
+    public function test_drop_index_concurrently(): void
     {
-        $builder = drop()->index('idx_users_email')
-            ->concurrently();
+        $builder = drop()->index('idx_users_email')->concurrently();
 
-        self::assertSame(
-            'DROP INDEX CONCURRENTLY idx_users_email',
-            $builder->toSql()
-        );
+        static::assertSame('DROP INDEX CONCURRENTLY idx_users_email', $builder->toSql());
     }
 
-    public function test_drop_index_if_exists() : void
+    public function test_drop_index_if_exists(): void
     {
-        $builder = drop()->index('idx_users_email')
-            ->ifExists();
+        $builder = drop()->index('idx_users_email')->ifExists();
 
-        self::assertSame(
-            'DROP INDEX IF EXISTS idx_users_email',
-            $builder->toSql()
-        );
+        static::assertSame('DROP INDEX IF EXISTS idx_users_email', $builder->toSql());
     }
 
-    public function test_drop_index_if_exists_cascade() : void
+    public function test_drop_index_if_exists_cascade(): void
     {
-        $builder = drop()->index('idx_users_email')
-            ->ifExists()
-            ->cascade();
+        $builder = drop()->index('idx_users_email')->ifExists()->cascade();
 
-        self::assertSame(
-            'DROP INDEX IF EXISTS idx_users_email CASCADE',
-            $builder->toSql()
-        );
+        static::assertSame('DROP INDEX IF EXISTS idx_users_email CASCADE', $builder->toSql());
     }
 
-    public function test_drop_index_multiple() : void
+    public function test_drop_index_multiple(): void
     {
         $builder = drop()->index('idx_users_email', 'idx_users_name', 'idx_orders_date');
 
-        self::assertSame(
-            'DROP INDEX idx_users_email, idx_users_name, idx_orders_date',
-            $builder->toSql()
-        );
+        static::assertSame('DROP INDEX idx_users_email, idx_users_name, idx_orders_date', $builder->toSql());
     }
 
-    public function test_drop_index_restrict() : void
+    public function test_drop_index_restrict(): void
     {
-        $builder = drop()->index('idx_users_email')
-            ->restrict();
+        $builder = drop()->index('idx_users_email')->restrict();
 
-        self::assertSame(
-            'DROP INDEX idx_users_email',
-            $builder->toSql()
-        );
+        static::assertSame('DROP INDEX idx_users_email', $builder->toSql());
     }
 
-    public function test_drop_index_simple() : void
+    public function test_drop_index_simple(): void
     {
         $builder = drop()->index('idx_users_email');
 
-        self::assertSame(
-            'DROP INDEX idx_users_email',
-            $builder->toSql()
-        );
+        static::assertSame('DROP INDEX idx_users_email', $builder->toSql());
     }
 
-    public function test_drop_index_with_schema() : void
+    public function test_drop_index_with_schema(): void
     {
         $builder = drop()->index('public.idx_users_email');
 
-        self::assertSame(
-            'DROP INDEX public.idx_users_email',
-            $builder->toSql()
-        );
+        static::assertSame('DROP INDEX public.idx_users_email', $builder->toSql());
     }
 
-    public function test_reindex_database() : void
+    public function test_reindex_database(): void
     {
         $builder = reindex_database('mydb');
 
-        self::assertSame(
-            'REINDEX DATABASE mydb',
-            $builder->toSql()
-        );
+        static::assertSame('REINDEX DATABASE mydb', $builder->toSql());
     }
 
-    public function test_reindex_index() : void
+    public function test_reindex_index(): void
     {
         $builder = reindex_index('idx_users_email');
 
-        self::assertSame(
-            'REINDEX INDEX idx_users_email',
-            $builder->toSql()
-        );
+        static::assertSame('REINDEX INDEX idx_users_email', $builder->toSql());
     }
 
-    public function test_reindex_index_concurrently() : void
+    public function test_reindex_index_concurrently(): void
     {
-        $builder = reindex_index('idx_users_email')
-            ->concurrently();
+        $builder = reindex_index('idx_users_email')->concurrently();
 
-        self::assertSame(
-            'REINDEX (CONCURRENTLY) INDEX idx_users_email',
-            $builder->toSql()
-        );
+        static::assertSame('REINDEX (CONCURRENTLY) INDEX idx_users_email', $builder->toSql());
     }
 
-    public function test_reindex_index_with_tablespace() : void
+    public function test_reindex_index_with_tablespace(): void
     {
-        $builder = reindex_index('idx_users_email')
-            ->tablespace('fast_storage');
+        $builder = reindex_index('idx_users_email')->tablespace('fast_storage');
 
-        self::assertSame(
-            'REINDEX (TABLESPACE fast_storage) INDEX idx_users_email',
-            $builder->toSql()
-        );
+        static::assertSame('REINDEX (TABLESPACE fast_storage) INDEX idx_users_email', $builder->toSql());
     }
 
-    public function test_reindex_schema() : void
+    public function test_reindex_schema(): void
     {
         $builder = reindex_schema('public');
 
-        self::assertSame(
-            'REINDEX SCHEMA public',
-            $builder->toSql()
-        );
+        static::assertSame('REINDEX SCHEMA public', $builder->toSql());
     }
 
-    public function test_reindex_table() : void
+    public function test_reindex_table(): void
     {
         $builder = reindex_table('users');
 
-        self::assertSame(
-            'REINDEX TABLE users',
-            $builder->toSql()
-        );
+        static::assertSame('REINDEX TABLE users', $builder->toSql());
     }
 
-    public function test_reindex_table_concurrently() : void
+    public function test_reindex_table_concurrently(): void
     {
-        $builder = reindex_table('users')
-            ->concurrently();
+        $builder = reindex_table('users')->concurrently();
 
-        self::assertSame(
-            'REINDEX (CONCURRENTLY) TABLE users',
-            $builder->toSql()
-        );
+        static::assertSame('REINDEX (CONCURRENTLY) TABLE users', $builder->toSql());
     }
 
-    public function test_reindex_table_verbose() : void
+    public function test_reindex_table_verbose(): void
     {
-        $builder = reindex_table('users')
-            ->verbose();
+        $builder = reindex_table('users')->verbose();
 
-        self::assertSame(
-            'REINDEX (VERBOSE) TABLE users',
-            $builder->toSql()
-        );
+        static::assertSame('REINDEX (VERBOSE) TABLE users', $builder->toSql());
     }
 
-    public function test_reindex_table_with_schema() : void
+    public function test_reindex_table_with_schema(): void
     {
         $builder = reindex_table('public.users');
 
-        self::assertSame(
-            'REINDEX TABLE public.users',
-            $builder->toSql()
-        );
+        static::assertSame('REINDEX TABLE public.users', $builder->toSql());
     }
 }

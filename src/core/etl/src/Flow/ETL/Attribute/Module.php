@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Attribute;
 
-enum Module : string
+enum Module: string
 {
     case AVRO = 'AVRO';
     case AZURE_FILESYSTEM = 'AZURE_FILESYSTEM';

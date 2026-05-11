@@ -12,7 +12,7 @@ final class FrameworkLoggerPass implements CompilerPassInterface
 {
     private const string SYMFONY_DEFAULT_LOGGER = 'Symfony\\Component\\HttpKernel\\Log\\Logger';
 
-    public function process(ContainerBuilder $container) : void
+    public function process(ContainerBuilder $container): void
     {
         $frameworkLogger = $container->hasParameter('flow.telemetry.framework_logger')
             ? $container->getParameter('flow.telemetry.framework_logger')
@@ -20,7 +20,9 @@ final class FrameworkLoggerPass implements CompilerPassInterface
 
         if ($frameworkLogger !== null) {
             if (!\is_string($frameworkLogger) || $frameworkLogger === '') {
-                throw new RuntimeException('flow_telemetry.framework_logger must be a non-empty string referencing a configured logger name.');
+                throw new RuntimeException(
+                    'flow_telemetry.framework_logger must be a non-empty string referencing a configured logger name.',
+                );
             }
 
             $targetId = 'flow.telemetry.' . $frameworkLogger . '.logger.psr3';

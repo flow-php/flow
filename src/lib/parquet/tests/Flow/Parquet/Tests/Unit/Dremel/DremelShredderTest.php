@@ -9,12 +9,16 @@ use Flow\Parquet\Dremel\Validator\DisabledValidator;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, MapKey, MapValue, NestedColumn};
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\ListElement;
+use Flow\Parquet\ParquetFile\Schema\MapKey;
+use Flow\Parquet\ParquetFile\Schema\MapValue;
+use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use PHPUnit\Framework\TestCase;
 
 final class DremelShredderTest extends TestCase
 {
-    public function test_complex_schema() : void
+    public function test_complex_schema(): void
     {
         $schema = Schema::with(
             FlatColumn::int32('id')->makeRequired(),
@@ -29,27 +33,53 @@ final class DremelShredderTest extends TestCase
         );
 
         $rows = [
-            ['id' => 1, 'name' => 'alice', 'score' => 9.5, 'address' => ['city' => 'NYC', 'zip' => '10001'], 'tags' => ['a', 'b'], 'metadata' => ['k1' => 1]],
+            [
+                'id' => 1,
+                'name' => 'alice',
+                'score' => 9.5,
+                'address' => ['city' => 'NYC', 'zip' => '10001'],
+                'tags' => ['a', 'b'],
+                'metadata' => ['k1' => 1],
+            ],
             ['id' => 2, 'name' => null, 'score' => null, 'address' => null, 'tags' => null, 'metadata' => null],
-            ['id' => 3, 'name' => 'charlie', 'score' => 7.0, 'address' => ['city' => 'LA', 'zip' => null], 'tags' => [], 'metadata' => []],
+            [
+                'id' => 3,
+                'name' => 'charlie',
+                'score' => 7.0,
+                'address' => ['city' => 'LA', 'zip' => null],
+                'tags' => [],
+                'metadata' => [],
+            ],
         ];
 
         $shredder = new DremelShredder(new DisabledValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
 
-        self::assertSame(['id', 'name', 'score', 'address.city', 'address.zip', 'tags.list.element', 'metadata.key_value.key', 'metadata.key_value.value'], \array_keys($result));
+        static::assertSame(
+            [
+                'id',
+                'name',
+                'score',
+                'address.city',
+                'address.zip',
+                'tags.list.element',
+                'metadata.key_value.key',
+                'metadata.key_value.value',
+            ],
+            \array_keys($result),
+        );
 
-        self::assertSame([1, 2, 3], $result['id']->values());
-        self::assertSame(['alice', 'charlie'], $result['name']->values());
-        self::assertSame([9.5, 7.0], $result['score']->values());
-        self::assertSame(['NYC', 'LA'], $result['address.city']->values());
-        self::assertSame(['10001'], $result['address.zip']->values());
-        self::assertSame(['a', 'b'], $result['tags.list.element']->values());
-        self::assertSame(['k1'], $result['metadata.key_value.key']->values());
-        self::assertSame([1], $result['metadata.key_value.value']->values());
+        static::assertSame([1, 2, 3], $result['id']->values());
+        static::assertSame(['alice', 'charlie'], $result['name']->values());
+        static::assertSame([9.5, 7.0], $result['score']->values());
+        static::assertSame(['NYC', 'LA'], $result['address.city']->values());
+        static::assertSame(['10001'], $result['address.zip']->values());
+        static::assertSame(['a', 'b'], $result['tags.list.element']->values());
+        static::assertSame(['k1'], $result['metadata.key_value.key']->values());
+        static::assertSame([1], $result['metadata.key_value.value']->values());
     }
 
-    public function test_flat_optional_column() : void
+    public function test_flat_optional_column(): void
     {
         $schema = Schema::with(FlatColumn::int32('id'));
         $rows = [['id' => 1], ['id' => null], ['id' => 3]];
@@ -57,13 +87,13 @@ final class DremelShredderTest extends TestCase
         $shredder = new DremelShredder(new DisabledValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
 
-        self::assertSame(['id'], \array_keys($result));
-        self::assertSame([1, 3], $result['id']->values());
-        self::assertSame([0, 0, 0], $result['id']->repetitionLevels());
-        self::assertSame([1, 0, 1], $result['id']->definitionLevels());
+        static::assertSame(['id'], \array_keys($result));
+        static::assertSame([1, 3], $result['id']->values());
+        static::assertSame([0, 0, 0], $result['id']->repetitionLevels());
+        static::assertSame([1, 0, 1], $result['id']->definitionLevels());
     }
 
-    public function test_flat_optional_column_all_nulls() : void
+    public function test_flat_optional_column_all_nulls(): void
     {
         $schema = Schema::with(FlatColumn::int32('id'));
         $rows = [['id' => null], ['id' => null], ['id' => null]];
@@ -71,13 +101,13 @@ final class DremelShredderTest extends TestCase
         $shredder = new DremelShredder(new DisabledValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
 
-        self::assertSame(['id'], \array_keys($result));
-        self::assertSame([], $result['id']->values());
-        self::assertSame([0, 0, 0], $result['id']->repetitionLevels());
-        self::assertSame([0, 0, 0], $result['id']->definitionLevels());
+        static::assertSame(['id'], \array_keys($result));
+        static::assertSame([], $result['id']->values());
+        static::assertSame([0, 0, 0], $result['id']->repetitionLevels());
+        static::assertSame([0, 0, 0], $result['id']->definitionLevels());
     }
 
-    public function test_flat_required_column() : void
+    public function test_flat_required_column(): void
     {
         $schema = Schema::with(FlatColumn::int32('id')->makeRequired());
         $rows = [['id' => 1], ['id' => 2], ['id' => 3]];
@@ -85,13 +115,13 @@ final class DremelShredderTest extends TestCase
         $shredder = new DremelShredder(new DisabledValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
 
-        self::assertSame(['id'], \array_keys($result));
-        self::assertSame([1, 2, 3], $result['id']->values());
-        self::assertSame([0, 0, 0], $result['id']->repetitionLevels());
-        self::assertSame([0, 0, 0], $result['id']->definitionLevels());
+        static::assertSame(['id'], \array_keys($result));
+        static::assertSame([1, 2, 3], $result['id']->values());
+        static::assertSame([0, 0, 0], $result['id']->repetitionLevels());
+        static::assertSame([0, 0, 0], $result['id']->definitionLevels());
     }
 
-    public function test_list_of_flat_values() : void
+    public function test_list_of_flat_values(): void
     {
         $schema = Schema::with(NestedColumn::list('tags', ListElement::string()));
         $rows = [
@@ -104,20 +134,18 @@ final class DremelShredderTest extends TestCase
         $shredder = new DremelShredder(new DisabledValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
 
-        self::assertSame(['tags.list.element'], \array_keys($result));
-        self::assertSame(['a', 'b', 'c', 'd'], $result['tags.list.element']->values());
-        self::assertSame([0, 0, 0, 1, 1, 0], $result['tags.list.element']->repetitionLevels());
-        self::assertSame([0, 1, 3, 3, 3, 3], $result['tags.list.element']->definitionLevels());
+        static::assertSame(['tags.list.element'], \array_keys($result));
+        static::assertSame(['a', 'b', 'c', 'd'], $result['tags.list.element']->values());
+        static::assertSame([0, 0, 0, 1, 1, 0], $result['tags.list.element']->repetitionLevels());
+        static::assertSame([0, 1, 3, 3, 3, 3], $result['tags.list.element']->definitionLevels());
     }
 
-    public function test_list_of_structs() : void
+    public function test_list_of_structs(): void
     {
-        $schema = Schema::with(
-            NestedColumn::list('items', ListElement::structure([
-                FlatColumn::int32('id'),
-                FlatColumn::string('name'),
-            ]))
-        );
+        $schema = Schema::with(NestedColumn::list('items', ListElement::structure([
+            FlatColumn::int32('id'),
+            FlatColumn::string('name'),
+        ])));
         $rows = [
             ['items' => null],
             ['items' => []],
@@ -128,12 +156,12 @@ final class DremelShredderTest extends TestCase
         $shredder = new DremelShredder(new DisabledValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
 
-        self::assertSame(['items.list.element.id', 'items.list.element.name'], \array_keys($result));
-        self::assertSame([1, 2, 3], $result['items.list.element.id']->values());
-        self::assertSame(['a', 'b', 'c'], $result['items.list.element.name']->values());
+        static::assertSame(['items.list.element.id', 'items.list.element.name'], \array_keys($result));
+        static::assertSame([1, 2, 3], $result['items.list.element.id']->values());
+        static::assertSame(['a', 'b', 'c'], $result['items.list.element.name']->values());
     }
 
-    public function test_map_of_flat_values() : void
+    public function test_map_of_flat_values(): void
     {
         $schema = Schema::with(NestedColumn::map('props', MapKey::string(), MapValue::int32()));
         $rows = [
@@ -146,19 +174,21 @@ final class DremelShredderTest extends TestCase
         $shredder = new DremelShredder(new DisabledValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
 
-        self::assertSame(['props.key_value.key', 'props.key_value.value'], \array_keys($result));
-        self::assertSame(['a', 'b', 'c'], $result['props.key_value.key']->values());
-        self::assertSame([1, 2, 3], $result['props.key_value.value']->values());
+        static::assertSame(['props.key_value.key', 'props.key_value.value'], \array_keys($result));
+        static::assertSame(['a', 'b', 'c'], $result['props.key_value.key']->values());
+        static::assertSame([1, 2, 3], $result['props.key_value.value']->values());
     }
 
-    public function test_map_with_struct_values() : void
+    public function test_map_with_struct_values(): void
     {
-        $schema = Schema::with(
-            NestedColumn::map('data', MapKey::string(), MapValue::structure([
+        $schema = Schema::with(NestedColumn::map(
+            'data',
+            MapKey::string(),
+            MapValue::structure([
                 FlatColumn::int32('x'),
                 FlatColumn::string('y'),
-            ]))
-        );
+            ]),
+        ));
         $rows = [
             ['data' => null],
             ['data' => ['k1' => ['x' => 1, 'y' => 'a']]],
@@ -168,19 +198,18 @@ final class DremelShredderTest extends TestCase
         $shredder = new DremelShredder(new DisabledValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
 
-        self::assertSame(['data.key_value.key', 'data.key_value.value.x', 'data.key_value.value.y'], \array_keys($result));
-        self::assertSame(['k1', 'k2', 'k3'], $result['data.key_value.key']->values());
-        self::assertSame([1, 2, 3], $result['data.key_value.value.x']->values());
-        self::assertSame(['a', 'b', 'c'], $result['data.key_value.value.y']->values());
+        static::assertSame(
+            ['data.key_value.key', 'data.key_value.value.x', 'data.key_value.value.y'],
+            \array_keys($result),
+        );
+        static::assertSame(['k1', 'k2', 'k3'], $result['data.key_value.key']->values());
+        static::assertSame([1, 2, 3], $result['data.key_value.value.x']->values());
+        static::assertSame(['a', 'b', 'c'], $result['data.key_value.value.y']->values());
     }
 
-    public function test_multiple_flat_columns() : void
+    public function test_multiple_flat_columns(): void
     {
-        $schema = Schema::with(
-            FlatColumn::int32('id'),
-            FlatColumn::string('name'),
-            FlatColumn::boolean('active'),
-        );
+        $schema = Schema::with(FlatColumn::int32('id'), FlatColumn::string('name'), FlatColumn::boolean('active'));
         $rows = [
             ['id' => 1, 'name' => 'alice', 'active' => true],
             ['id' => null, 'name' => null, 'active' => false],
@@ -190,17 +219,15 @@ final class DremelShredderTest extends TestCase
         $shredder = new DremelShredder(new DisabledValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
 
-        self::assertSame(['id', 'name', 'active'], \array_keys($result));
-        self::assertSame([1, 3], $result['id']->values());
-        self::assertSame(['alice', 'charlie'], $result['name']->values());
-        self::assertSame([true, false], $result['active']->values());
+        static::assertSame(['id', 'name', 'active'], \array_keys($result));
+        static::assertSame([1, 3], $result['id']->values());
+        static::assertSame(['alice', 'charlie'], $result['name']->values());
+        static::assertSame([true, false], $result['active']->values());
     }
 
-    public function test_nested_list_of_lists() : void
+    public function test_nested_list_of_lists(): void
     {
-        $schema = Schema::with(
-            NestedColumn::list('matrix', ListElement::list(ListElement::int32()))
-        );
+        $schema = Schema::with(NestedColumn::list('matrix', ListElement::list(ListElement::int32())));
         $rows = [
             ['matrix' => null],
             ['matrix' => []],
@@ -211,18 +238,16 @@ final class DremelShredderTest extends TestCase
         $shredder = new DremelShredder(new DisabledValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
 
-        self::assertSame(['matrix.list.element.list.element'], \array_keys($result));
-        self::assertSame([1, 2, 3, 4], $result['matrix.list.element.list.element']->values());
+        static::assertSame(['matrix.list.element.list.element'], \array_keys($result));
+        static::assertSame([1, 2, 3, 4], $result['matrix.list.element.list.element']->values());
     }
 
-    public function test_struct_with_flat_children() : void
+    public function test_struct_with_flat_children(): void
     {
-        $schema = Schema::with(
-            NestedColumn::structure('s', [
-                FlatColumn::int32('a'),
-                FlatColumn::string('b'),
-            ])
-        );
+        $schema = Schema::with(NestedColumn::structure('s', [
+            FlatColumn::int32('a'),
+            FlatColumn::string('b'),
+        ]));
         $rows = [
             ['s' => null],
             ['s' => ['a' => 1, 'b' => 'x']],
@@ -232,8 +257,8 @@ final class DremelShredderTest extends TestCase
         $shredder = new DremelShredder(new DisabledValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
 
-        self::assertSame(['s.a', 's.b'], \array_keys($result));
-        self::assertSame([1], $result['s.a']->values());
-        self::assertSame(['x', 'y'], $result['s.b']->values());
+        static::assertSame(['s.a', 's.b'], \array_keys($result));
+        static::assertSame([1], $result['s.a']->values());
+        static::assertSame(['x', 'y'], $result['s.b']->values());
     }
 }

@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Integration\Sql;
 
-use function Flow\Filesystem\DSL\native_local_filesystem;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Sql\SqlFileFinder;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Context\FilesystemContext;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\Filesystem\DSL\native_local_filesystem;
 
 final class SqlFileFinderTest extends TestCase
 {
@@ -15,40 +16,40 @@ final class SqlFileFinderTest extends TestCase
 
     private FilesystemContext $fs;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         $this->fs = new FilesystemContext('flow_sql_finder_');
         $this->finder = new SqlFileFinder(native_local_filesystem());
     }
 
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         $this->fs->cleanup();
     }
 
-    public function test_finds_single_sql_file_by_exact_path() : void
+    public function test_finds_single_sql_file_by_exact_path(): void
     {
         $file = $this->fs->writeFile('query.sql', 'SELECT 1');
 
         $found = $this->finder->find($file);
 
-        self::assertCount(1, $found);
-        self::assertSame($file->path(), $found[0]->path());
+        static::assertCount(1, $found);
+        static::assertSame($file->path(), $found[0]->path());
     }
 
-    public function test_finds_sql_files_recursively_in_directory() : void
+    public function test_finds_sql_files_recursively_in_directory(): void
     {
         $this->fs->writeFile('a.sql', 'SELECT 1');
         $this->fs->writeFile('nested/deep/b.sql', 'SELECT 2');
         $this->fs->writeFile('nested/c.sql', 'SELECT 3');
 
-        $paths = \array_map(static fn ($p) => \basename($p->path()), $this->finder->find($this->fs->path()));
+        $paths = \array_map(static fn($p) => \basename($p->path()), $this->finder->find($this->fs->path()));
 
         \sort($paths);
-        self::assertSame(['a.sql', 'b.sql', 'c.sql'], $paths);
+        static::assertSame(['a.sql', 'b.sql', 'c.sql'], $paths);
     }
 
-    public function test_finds_sql_files_via_glob_pattern() : void
+    public function test_finds_sql_files_via_glob_pattern(): void
     {
         $this->fs->writeFile('one.sql', 'SELECT 1');
         $this->fs->writeFile('two.sql', 'SELECT 2');
@@ -56,15 +57,15 @@ final class SqlFileFinderTest extends TestCase
 
         $found = $this->finder->find($this->fs->path('*.sql'));
 
-        self::assertCount(2, $found);
+        static::assertCount(2, $found);
     }
 
-    public function test_returns_empty_list_for_empty_directory() : void
+    public function test_returns_empty_list_for_empty_directory(): void
     {
-        self::assertSame([], $this->finder->find($this->fs->path()));
+        static::assertSame([], $this->finder->find($this->fs->path()));
     }
 
-    public function test_skips_non_sql_extensions_in_directory() : void
+    public function test_skips_non_sql_extensions_in_directory(): void
     {
         $this->fs->writeFile('keep.sql', 'SELECT 1');
         $this->fs->writeFile('skip.txt', 'nope');
@@ -72,18 +73,18 @@ final class SqlFileFinderTest extends TestCase
 
         $found = $this->finder->find($this->fs->path());
 
-        self::assertCount(1, $found);
-        self::assertSame('keep.sql', \basename($found[0]->path()));
+        static::assertCount(1, $found);
+        static::assertSame('keep.sql', \basename($found[0]->path()));
     }
 
-    public function test_skips_non_sql_files_matched_by_broad_glob() : void
+    public function test_skips_non_sql_files_matched_by_broad_glob(): void
     {
         $this->fs->writeFile('a.sql', 'SELECT 1');
         $this->fs->writeFile('b.txt', 'nope');
 
         $found = $this->finder->find($this->fs->path('*'));
 
-        self::assertCount(1, $found);
-        self::assertSame('a.sql', \basename($found[0]->path()));
+        static::assertCount(1, $found);
+        static::assertSame('a.sql', \basename($found[0]->path()));
     }
 }

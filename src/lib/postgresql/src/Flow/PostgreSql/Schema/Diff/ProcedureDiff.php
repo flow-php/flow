@@ -12,13 +12,12 @@ final readonly class ProcedureDiff implements Diff
     public function __construct(
         public Procedure $source,
         public Procedure $target,
-    ) {
-    }
+    ) {}
 
     /**
      * @return list<Sql>
      */
-    public function generate() : array
+    public function generate(): array
     {
         $sql = $this->target->toSql();
 

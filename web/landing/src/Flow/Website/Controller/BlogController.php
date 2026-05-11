@@ -12,7 +12,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class BlogController extends AbstractController
 {
     #[Route('/blog/{date}/{slug}', name: 'blog_post')]
-    public function post(string $date, string $slug) : Response
+    public function post(string $date, string $slug): Response
     {
         return $this->render('blog/posts/' . $date . '/' . $slug . '/post.html.twig', [
             'template_folder' => 'blog/posts/' . $date . '/' . $slug,
@@ -23,7 +23,7 @@ final class BlogController extends AbstractController
     }
 
     #[Route('/blog', name: 'blog', options: ['sitemap' => true])]
-    public function posts() : Response
+    public function posts(): Response
     {
         return $this->render('blog/posts.html.twig', [
             'posts' => (new Posts())->all(),

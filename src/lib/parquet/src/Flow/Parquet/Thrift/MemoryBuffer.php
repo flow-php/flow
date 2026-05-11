@@ -22,35 +22,32 @@ class MemoryBuffer implements Transport
      * Constructor. Optionally pass an initial value
      * for the buffer.
      */
-    public function __construct(protected string $data = '')
-    {
+    public function __construct(
+        protected string $data = '',
+    ) {
         $this->length = \strlen($this->data);
     }
 
-    public function available() : int
+    public function available(): int
     {
         return $this->length - $this->position;
     }
 
-    public function close() : void
-    {
-    }
+    public function close(): void {}
 
-    public function data() : string
+    public function data(): string
     {
         return $this->data;
     }
 
-    public function isOpen() : bool
+    public function isOpen(): bool
     {
         return true;
     }
 
-    public function open() : void
-    {
-    }
+    public function open(): void {}
 
-    public function read(int $len) : string
+    public function read(int $len): string
     {
         $availableBytes = $this->length - $this->position;
 
@@ -71,7 +68,7 @@ class MemoryBuffer implements Transport
         return $ret;
     }
 
-    public function write(string $buf) : void
+    public function write(string $buf): void
     {
         $this->data .= $buf;
         $this->length += \strlen($buf);

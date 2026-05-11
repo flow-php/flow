@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Serializer;
 
-use Flow\Telemetry\Tracer\{Span, SpanKind, SpanStatusCode};
-use Flow\Telemetry\Tracer\{SpanEvent, SpanLink};
+use Flow\Telemetry\Tracer\Span;
+use Flow\Telemetry\Tracer\SpanEvent;
+use Flow\Telemetry\Tracer\SpanKind;
+use Flow\Telemetry\Tracer\SpanLink;
+use Flow\Telemetry\Tracer\SpanStatusCode;
 
 /**
  * Serializes Span to OTLP JSON format.
@@ -19,15 +22,14 @@ final readonly class SpanSerializer
 {
     public function __construct(
         private AttributeSerializer $attributeSerializer = new AttributeSerializer(),
-    ) {
-    }
+    ) {}
 
     /**
      * Serialize a Span to OTLP format.
      *
      * @return array<string, mixed>
      */
-    public function serialize(Span $span) : array
+    public function serialize(Span $span): array
     {
         $context = $span->context();
 
@@ -67,7 +69,7 @@ final readonly class SpanSerializer
      *
      * @return array<array{name: string, timeUnixNano: string, attributes: array<array{key: string, value: array<string, mixed>}>}>
      */
-    private function serializeEvents(array $events) : array
+    private function serializeEvents(array $events): array
     {
         $result = [];
 
@@ -93,7 +95,7 @@ final readonly class SpanSerializer
      * 4 = SPAN_KIND_PRODUCER
      * 5 = SPAN_KIND_CONSUMER
      */
-    private function serializeKind(SpanKind $kind) : int
+    private function serializeKind(SpanKind $kind): int
     {
         return match ($kind) {
             SpanKind::INTERNAL => 1,
@@ -111,7 +113,7 @@ final readonly class SpanSerializer
      *
      * @return array<array{traceId: string, spanId: string, attributes: array<array{key: string, value: array<string, mixed>}>}>
      */
-    private function serializeLinks(array $links) : array
+    private function serializeLinks(array $links): array
     {
         $result = [];
 
@@ -136,7 +138,7 @@ final readonly class SpanSerializer
      *
      * @return array{code: int, message?: string}
      */
-    private function serializeStatus(Span $span) : array
+    private function serializeStatus(Span $span): array
     {
         $status = $span->status();
 
@@ -162,7 +164,7 @@ final readonly class SpanSerializer
     /**
      * Convert DateTimeImmutable to nanoseconds since Unix epoch as string.
      */
-    private function toNanoseconds(\DateTimeImmutable $dateTime) : string
+    private function toNanoseconds(\DateTimeImmutable $dateTime): string
     {
         $seconds = (int) $dateTime->format('U');
         $microseconds = (int) $dateTime->format('u');

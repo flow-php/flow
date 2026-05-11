@@ -16,13 +16,12 @@ final readonly class UniqueConstraint
         public array $columns,
         public ?string $name = null,
         public bool $nullsNotDistinct = false,
-    ) {
-    }
+    ) {}
 
     /**
      * @param UniqueConstraintShape $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             columns: $data['columns'],
@@ -31,12 +30,12 @@ final readonly class UniqueConstraint
         );
     }
 
-    public function isEqual(self $other) : bool
+    public function isEqual(self $other): bool
     {
         return $this->name === $other->name && $this->isEqualStructure($other);
     }
 
-    public function isEqualStructure(self $other) : bool
+    public function isEqualStructure(self $other): bool
     {
         $aCols = $this->columns;
         $bCols = $other->columns;
@@ -49,7 +48,7 @@ final readonly class UniqueConstraint
     /**
      * @return UniqueConstraintShape
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'columns' => $this->columns,

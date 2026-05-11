@@ -4,49 +4,51 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\PHPUnit\Telemetry\Tests\Unit;
 
-use Flow\Bridge\PHPUnit\Telemetry\{Configuration,
-    CurlTransportConfig,
-    ErrorLogHandlerConfig,
-    GrpcTransportConfig,
-    NullErrorHandlerConfig,
-    SerializerType,
-    StreamErrorHandlerConfig,
-    StreamTransportConfig,
-    SyslogErrorHandlerConfig,
-    TelemetryFactory,
-    UdpSyslogErrorHandlerConfig};
+use Flow\Bridge\PHPUnit\Telemetry\Configuration;
+use Flow\Bridge\PHPUnit\Telemetry\CurlTransportConfig;
+use Flow\Bridge\PHPUnit\Telemetry\ErrorLogHandlerConfig;
+use Flow\Bridge\PHPUnit\Telemetry\GrpcTransportConfig;
+use Flow\Bridge\PHPUnit\Telemetry\NullErrorHandlerConfig;
+use Flow\Bridge\PHPUnit\Telemetry\SerializerType;
+use Flow\Bridge\PHPUnit\Telemetry\StreamErrorHandlerConfig;
+use Flow\Bridge\PHPUnit\Telemetry\StreamTransportConfig;
+use Flow\Bridge\PHPUnit\Telemetry\SyslogErrorHandlerConfig;
+use Flow\Bridge\PHPUnit\Telemetry\TelemetryFactory;
 use Flow\Bridge\PHPUnit\Telemetry\Tests\Mother\ConfigurationMother;
-use Flow\Telemetry\ErrorHandler\{ErrorLogMessageType, SyslogFacility, SyslogSeverity};
+use Flow\Bridge\PHPUnit\Telemetry\UdpSyslogErrorHandlerConfig;
+use Flow\Telemetry\ErrorHandler\ErrorLogMessageType;
+use Flow\Telemetry\ErrorHandler\SyslogFacility;
+use Flow\Telemetry\ErrorHandler\SyslogSeverity;
 use Flow\Telemetry\Telemetry;
 use PHPUnit\Framework\TestCase;
 
 final class TelemetryFactoryTest extends TestCase
 {
-    public function test_create_returns_telemetry_with_default_curl_transport() : void
+    public function test_create_returns_telemetry_with_default_curl_transport(): void
     {
         $telemetry = TelemetryFactory::create(ConfigurationMother::default());
 
-        self::assertInstanceOf(Telemetry::class, $telemetry);
+        static::assertInstanceOf(Telemetry::class, $telemetry);
         $telemetry->shutdown();
     }
 
-    public function test_create_with_disabled_metrics_routes_metrics_to_void() : void
+    public function test_create_with_disabled_metrics_routes_metrics_to_void(): void
     {
         $telemetry = TelemetryFactory::create(ConfigurationMother::withDisabledMetrics());
 
-        self::assertInstanceOf(Telemetry::class, $telemetry);
+        static::assertInstanceOf(Telemetry::class, $telemetry);
         $telemetry->shutdown();
     }
 
-    public function test_create_with_disabled_traces_routes_spans_to_void() : void
+    public function test_create_with_disabled_traces_routes_spans_to_void(): void
     {
         $telemetry = TelemetryFactory::create(ConfigurationMother::withDisabledTraces());
 
-        self::assertInstanceOf(Telemetry::class, $telemetry);
+        static::assertInstanceOf(Telemetry::class, $telemetry);
         $telemetry->shutdown();
     }
 
-    public function test_create_with_error_log_handler() : void
+    public function test_create_with_error_log_handler(): void
     {
         $config = $this->configWithErrorHandler(new ErrorLogHandlerConfig(
             messageType: ErrorLogMessageType::Sapi,
@@ -56,11 +58,11 @@ final class TelemetryFactoryTest extends TestCase
 
         $telemetry = TelemetryFactory::create($config);
 
-        self::assertInstanceOf(Telemetry::class, $telemetry);
+        static::assertInstanceOf(Telemetry::class, $telemetry);
         $telemetry->shutdown();
     }
 
-    public function test_create_with_full_curl_options_covers_optional_branches() : void
+    public function test_create_with_full_curl_options_covers_optional_branches(): void
     {
         $config = new Configuration(
             serviceName: 'phpunit',
@@ -91,14 +93,14 @@ final class TelemetryFactoryTest extends TestCase
 
         $telemetry = TelemetryFactory::create($config);
 
-        self::assertInstanceOf(Telemetry::class, $telemetry);
+        static::assertInstanceOf(Telemetry::class, $telemetry);
         $telemetry->shutdown();
     }
 
-    public function test_create_with_grpc_transport() : void
+    public function test_create_with_grpc_transport(): void
     {
         if (!\extension_loaded('grpc')) {
-            self::markTestSkipped('grpc extension is required');
+            static::markTestSkipped('grpc extension is required');
         }
 
         $config = new Configuration(
@@ -120,21 +122,21 @@ final class TelemetryFactoryTest extends TestCase
 
         $telemetry = TelemetryFactory::create($config);
 
-        self::assertInstanceOf(Telemetry::class, $telemetry);
+        static::assertInstanceOf(Telemetry::class, $telemetry);
         $telemetry->shutdown();
     }
 
-    public function test_create_with_null_error_handler() : void
+    public function test_create_with_null_error_handler(): void
     {
         $config = $this->configWithErrorHandler(new NullErrorHandlerConfig());
 
         $telemetry = TelemetryFactory::create($config);
 
-        self::assertInstanceOf(Telemetry::class, $telemetry);
+        static::assertInstanceOf(Telemetry::class, $telemetry);
         $telemetry->shutdown();
     }
 
-    public function test_create_with_stream_error_handler() : void
+    public function test_create_with_stream_error_handler(): void
     {
         $config = $this->configWithErrorHandler(new StreamErrorHandlerConfig(
             destination: 'php://memory',
@@ -145,11 +147,11 @@ final class TelemetryFactoryTest extends TestCase
 
         $telemetry = TelemetryFactory::create($config);
 
-        self::assertInstanceOf(Telemetry::class, $telemetry);
+        static::assertInstanceOf(Telemetry::class, $telemetry);
         $telemetry->shutdown();
     }
 
-    public function test_create_with_stream_transport() : void
+    public function test_create_with_stream_transport(): void
     {
         $config = new Configuration(
             serviceName: 'phpunit',
@@ -168,11 +170,11 @@ final class TelemetryFactoryTest extends TestCase
 
         $telemetry = TelemetryFactory::create($config);
 
-        self::assertInstanceOf(Telemetry::class, $telemetry);
+        static::assertInstanceOf(Telemetry::class, $telemetry);
         $telemetry->shutdown();
     }
 
-    public function test_create_with_syslog_error_handler() : void
+    public function test_create_with_syslog_error_handler(): void
     {
         $config = $this->configWithErrorHandler(new SyslogErrorHandlerConfig(
             ident: 'flow-test',
@@ -183,11 +185,11 @@ final class TelemetryFactoryTest extends TestCase
 
         $telemetry = TelemetryFactory::create($config);
 
-        self::assertInstanceOf(Telemetry::class, $telemetry);
+        static::assertInstanceOf(Telemetry::class, $telemetry);
         $telemetry->shutdown();
     }
 
-    public function test_create_with_udp_syslog_error_handler() : void
+    public function test_create_with_udp_syslog_error_handler(): void
     {
         $config = $this->configWithErrorHandler(new UdpSyslogErrorHandlerConfig(
             host: '127.0.0.1',
@@ -199,13 +201,12 @@ final class TelemetryFactoryTest extends TestCase
 
         $telemetry = TelemetryFactory::create($config);
 
-        self::assertInstanceOf(Telemetry::class, $telemetry);
+        static::assertInstanceOf(Telemetry::class, $telemetry);
         $telemetry->shutdown();
     }
 
-    private function configWithErrorHandler(
-        ErrorLogHandlerConfig|NullErrorHandlerConfig|StreamErrorHandlerConfig|SyslogErrorHandlerConfig|UdpSyslogErrorHandlerConfig $errorHandler,
-    ) : Configuration {
+    private function configWithErrorHandler(ErrorLogHandlerConfig|NullErrorHandlerConfig|StreamErrorHandlerConfig|SyslogErrorHandlerConfig|UdpSyslogErrorHandlerConfig $errorHandler): Configuration
+    {
         return new Configuration(
             serviceName: 'phpunit',
             transport: ConfigurationMother::defaultTransport(),

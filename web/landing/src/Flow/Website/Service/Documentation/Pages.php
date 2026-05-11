@@ -4,26 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service\Documentation;
 
-use function Flow\Filesystem\DSL\{fstab, path};
 use Flow\Website\Model\Documentation\Page;
+
+use function Flow\Filesystem\DSL\fstab;
+use function Flow\Filesystem\DSL\path;
 
 final readonly class Pages
 {
     public function __construct(
         private string $basePath,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<Page>
      */
-    public function all() : array
+    public function all(): array
     {
-        $files = fstab()
-            ->for('file')
-            ->list(
-                path($this->basePath . '/**/*.md')
-            );
+        $files = fstab()->for('file')->list(path($this->basePath . '/**/*.md'));
 
         $pages = [];
 
@@ -42,7 +39,7 @@ final readonly class Pages
         return $pages;
     }
 
-    public function get(string $path) : Page
+    public function get(string $path): Page
     {
         $path = \rtrim($path, '/');
 

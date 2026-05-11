@@ -4,21 +4,29 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Command;
 
-use function Flow\CLI\{argument_string_nullable, option_bool, option_include_file, option_list_of_strings_nullable};
-use function Flow\ETL\Adapter\Doctrine\table_schema_to_flow_schema;
-use function Flow\ETL\DSL\schema_to_json;
-use Doctrine\DBAL\{Connection, DriverManager};
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
-use Flow\CLI\Command\Traits\{ConfigOptions, DBOptions};
+use Flow\CLI\Command\Traits\ConfigOptions;
+use Flow\CLI\Command\Traits\DBOptions;
 use Flow\CLI\Options\ConfigOption;
 use Flow\ETL\Config;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Schema\Formatter\PHPSchemaFormatter;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
+
+use function Flow\CLI\argument_string_nullable;
+use function Flow\CLI\option_bool;
+use function Flow\CLI\option_include_file;
+use function Flow\CLI\option_list_of_strings_nullable;
+use function Flow\ETL\Adapter\Doctrine\table_schema_to_flow_schema;
+use function Flow\ETL\DSL\schema_to_json;
 
 final class DatabaseTableSchemaCommand extends Command
 {
@@ -29,23 +37,32 @@ final class DatabaseTableSchemaCommand extends Command
 
     private ?Config $flowConfig = null;
 
-    public function configure() : void
+    public function configure(): void
     {
         $this
             ->setName('db:table:schema')
             ->setDescription('Read data schema from a database table.')
             ->setHelp(self::DB_CONNECTION_HELP)
-            ->addArgument('input-db-table', InputArgument::OPTIONAL, 'Table name for which we are going to generate schema.')
+            ->addArgument(
+                'input-db-table',
+                InputArgument::OPTIONAL,
+                'Table name for which we are going to generate schema.',
+            )
             ->addOption('output-php', null, InputOption::VALUE_NONE, 'Print schema as PHP code')
             ->addOption('output-table', null, InputOption::VALUE_NONE, 'Print schema as ascii table')
             ->addOption('output-ascii', null, InputOption::VALUE_NONE, 'Print schema as ascii list')
-            ->addOption('db-column', null, InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Filter schema by column name(s)');
+            ->addOption(
+                'db-column',
+                null,
+                InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
+                'Filter schema by column name(s)',
+            );
 
         $this->addConfigOptions($this);
         $this->addDbOptions($this);
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output) : int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $style = new SymfonyStyle($input, $output);
 
@@ -54,7 +71,7 @@ final class DatabaseTableSchemaCommand extends Command
         if (!$tableName) {
             $question = new ChoiceQuestion(
                 'Please select table name for which we are going to generate schema: ',
-                $this->connection->createSchemaManager()->listTableNames()
+                $this->connection->createSchemaManager()->listTableNames(),
             );
             $question->setErrorMessage('Invalid table: %s');
             $tableName = $style->askQuestion($question);
@@ -115,7 +132,7 @@ final class DatabaseTableSchemaCommand extends Command
         return Command::SUCCESS;
     }
 
-    protected function initialize(InputInterface $input, OutputInterface $output) : void
+    protected function initialize(InputInterface $input, OutputInterface $output): void
     {
         $this->flowConfig = (new ConfigOption('config'))->get($input);
 
@@ -123,12 +140,11 @@ final class DatabaseTableSchemaCommand extends Command
             $this->connection = option_include_file('db-connection-file', $input, Connection::class);
         } else {
             $style = new SymfonyStyle($input, $output);
-            $connectionString = $_ENV['FLOW_DB_CONNECTION_STRING']
-                ?? $style->ask(
-                    "FLOW_DB_CONNECTION_STRING env not found.\n Please provide database connection string, format:\n \"scheme://username:password@host:port/dbname?param1=value1&param2=value2&...\"",
-                    null,
-                    static fn ($value) => $value
-                );
+            $connectionString = $_ENV['FLOW_DB_CONNECTION_STRING'] ?? $style->ask(
+                "FLOW_DB_CONNECTION_STRING env not found.\n Please provide database connection string, format:\n \"scheme://username:password@host:port/dbname?param1=value1&param2=value2&...\"",
+                null,
+                static fn($value) => $value,
+            );
             $connectionParameters = (new DsnParser())->parse($connectionString);
             $this->connection = DriverManager::getConnection($connectionParameters);
         }

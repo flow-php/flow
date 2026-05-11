@@ -15,7 +15,7 @@ interface MergeFinalStep extends Sql
     /**
      * Convert this MERGE query to protobuf AST.
      */
-    public function toAst() : MergeStmt;
+    public function toAst(): MergeStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

@@ -9,13 +9,13 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface ReindexFinalStep extends Sql
 {
-    public function concurrently() : self;
+    public function concurrently(): self;
 
-    public function tablespace(string $tablespace) : self;
+    public function tablespace(string $tablespace): self;
 
-    public function toAst() : ReindexStmt;
+    public function toAst(): ReindexStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 
-    public function verbose() : self;
+    public function verbose(): self;
 }

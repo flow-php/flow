@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformation;
 
-use Flow\ETL\{DataFrame, Transformation};
+use Flow\ETL\DataFrame;
+use Flow\ETL\Transformation;
 use Flow\Filesystem\Exception\InvalidArgumentException;
 
 /**
@@ -20,14 +21,15 @@ final readonly class BatchSize implements Transformation
     /**
      * @param int<1, max> $size
      */
-    public function __construct(private int $size)
-    {
+    public function __construct(
+        private int $size,
+    ) {
         if ($size < 1) {
             throw new InvalidArgumentException('Batch size must be greater than 0');
         }
     }
 
-    public function transform(DataFrame $dataFrame) : DataFrame
+    public function transform(DataFrame $dataFrame): DataFrame
     {
         return $dataFrame->batchSize($this->size);
     }

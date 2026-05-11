@@ -9,9 +9,9 @@ use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
 interface InsertValuesStep extends InsertOnConflictStep
 {
-    public function defaultValues() : InsertOnConflictStep;
+    public function defaultValues(): InsertOnConflictStep;
 
-    public function select(SelectFinalStep $select) : InsertOnConflictStep;
+    public function select(SelectFinalStep $select): InsertOnConflictStep;
 
-    public function values(Expression ...$values) : self;
+    public function values(Expression ...$values): self;
 }

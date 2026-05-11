@@ -8,7 +8,7 @@ use Flow\PostgreSql\Schema\Catalog;
 
 final readonly class NoopViewDependencyResolver implements ViewDependencyResolver
 {
-    public function resolve(Catalog $catalog, array $modifiedTableQualifiedNames) : DependentViews
+    public function resolve(Catalog $catalog, array $modifiedTableQualifiedNames): DependentViews
     {
         return DependentViews::empty();
     }

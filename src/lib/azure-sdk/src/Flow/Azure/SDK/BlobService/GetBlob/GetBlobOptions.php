@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Azure\SDK\BlobService\GetBlob;
 
-use Flow\Azure\SDK\{BlobService, EndpointOptions, Endpoints\UserAgentHeader};
+use Flow\Azure\SDK\BlobService;
+use Flow\Azure\SDK\EndpointOptions;
+use Flow\Azure\SDK\Endpoints\UserAgentHeader;
 
 final class GetBlobOptions implements EndpointOptions
 {
@@ -39,7 +41,7 @@ final class GetBlobOptions implements EndpointOptions
     /**
      * @return array<string, string>
      */
-    public function toHeaders() : array
+    public function toHeaders(): array
     {
         $headers = [];
 
@@ -88,7 +90,7 @@ final class GetBlobOptions implements EndpointOptions
     /**
      * @return array<string, int|string>
      */
-    public function toURIParameters() : array
+    public function toURIParameters(): array
     {
         $uriParameters = [];
 
@@ -107,8 +109,11 @@ final class GetBlobOptions implements EndpointOptions
         return $uriParameters;
     }
 
-    public function withEncryption(string $encryptionKey, string $encryptionAlgorithm, ?string $encryptionKeySha256 = null) : self
-    {
+    public function withEncryption(
+        string $encryptionKey,
+        string $encryptionAlgorithm,
+        ?string $encryptionKeySha256 = null,
+    ): self {
         $this->encryptionKey = $encryptionKey;
         $this->encryptionKeySha256 = $encryptionKeySha256;
         $this->encryptionAlgorithm = $encryptionAlgorithm;
@@ -116,70 +121,70 @@ final class GetBlobOptions implements EndpointOptions
         return $this;
     }
 
-    public function withLeaseId(string $leaseId) : self
+    public function withLeaseId(string $leaseId): self
     {
         $this->leaseId = $leaseId;
 
         return $this;
     }
 
-    public function withOrigin(string $origin) : self
+    public function withOrigin(string $origin): self
     {
         $this->origin = $origin;
 
         return $this;
     }
 
-    public function withRange(Range $range) : self
+    public function withRange(Range $range): self
     {
         $this->range = $range;
 
         return $this;
     }
 
-    public function withRangeGetContentCrc64(bool $rangeGetContentCrc64) : self
+    public function withRangeGetContentCrc64(bool $rangeGetContentCrc64): self
     {
         $this->rangeGetContentCrc64 = $rangeGetContentCrc64;
 
         return $this;
     }
 
-    public function withRangeGetContentMd5(bool $rangeGetContentMd5) : self
+    public function withRangeGetContentMd5(bool $rangeGetContentMd5): self
     {
         $this->rangeGetContentMd5 = $rangeGetContentMd5;
 
         return $this;
     }
 
-    public function withRequestId(string $requestId) : self
+    public function withRequestId(string $requestId): self
     {
         $this->requestId = $requestId;
 
         return $this;
     }
 
-    public function withSnapshot(string $snapshot) : self
+    public function withSnapshot(string $snapshot): self
     {
         $this->snapshot = $snapshot;
 
         return $this;
     }
 
-    public function withTimeoutSeconds(int $timeoutSeconds) : self
+    public function withTimeoutSeconds(int $timeoutSeconds): self
     {
         $this->timeoutSeconds = $timeoutSeconds;
 
         return $this;
     }
 
-    public function withVersion(string $version) : self
+    public function withVersion(string $version): self
     {
         $this->version = $version;
 
         return $this;
     }
 
-    public function withVersionId(string $versionId) : self
+    public function withVersionId(string $versionId): self
     {
         $this->versionId = $versionId;
 

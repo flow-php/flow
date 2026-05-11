@@ -18,5 +18,5 @@ interface TableReference extends AstConvertible
      *
      * @param null|array<string> $columnAliases
      */
-    public function as(string $alias, ?array $columnAliases = null) : AliasedTable;
+    public function as(string $alias, ?array $columnAliases = null): AliasedTable;
 }

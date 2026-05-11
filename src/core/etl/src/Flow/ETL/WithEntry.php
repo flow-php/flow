@@ -8,7 +8,8 @@ use Flow\ETL\Function\ScalarFunction;
 
 final readonly class WithEntry
 {
-    public function __construct(public string $name, public ScalarFunction $function)
-    {
-    }
+    public function __construct(
+        public string $name,
+        public ScalarFunction $function,
+    ) {}
 }

@@ -4,8 +4,27 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Schema;
 
-use Flow\Parquet\ParquetFile\Schema\LogicalType\{Decimal, Time, Timestamp};
-use Flow\Parquet\ThriftModel\{BsonType, DateType, DecimalType, EnumType, Float16Type, IntType, JsonType, ListType, MapType, MicroSeconds, MilliSeconds, NanoSeconds, NullType, StringType, TimeType, TimeUnit, TimestampType, UUIDType};
+use Flow\Parquet\ParquetFile\Schema\LogicalType\Decimal;
+use Flow\Parquet\ParquetFile\Schema\LogicalType\Time;
+use Flow\Parquet\ParquetFile\Schema\LogicalType\Timestamp;
+use Flow\Parquet\ThriftModel\BsonType;
+use Flow\Parquet\ThriftModel\DateType;
+use Flow\Parquet\ThriftModel\DecimalType;
+use Flow\Parquet\ThriftModel\EnumType;
+use Flow\Parquet\ThriftModel\Float16Type;
+use Flow\Parquet\ThriftModel\IntType;
+use Flow\Parquet\ThriftModel\JsonType;
+use Flow\Parquet\ThriftModel\ListType;
+use Flow\Parquet\ThriftModel\MapType;
+use Flow\Parquet\ThriftModel\MicroSeconds;
+use Flow\Parquet\ThriftModel\MilliSeconds;
+use Flow\Parquet\ThriftModel\NanoSeconds;
+use Flow\Parquet\ThriftModel\NullType;
+use Flow\Parquet\ThriftModel\StringType;
+use Flow\Parquet\ThriftModel\TimestampType;
+use Flow\Parquet\ThriftModel\TimeType;
+use Flow\Parquet\ThriftModel\TimeUnit;
+use Flow\Parquet\ThriftModel\UUIDType;
 
 final readonly class LogicalType
 {
@@ -42,30 +61,29 @@ final readonly class LogicalType
         private ?Timestamp $timestamp = null,
         private ?Time $time = null,
         private ?Decimal $decimal = null,
-    ) {
-    }
+    ) {}
 
-    public static function bson() : self
+    public static function bson(): self
     {
         return new self(self::BSON);
     }
 
-    public static function date() : self
+    public static function date(): self
     {
         return new self(self::DATE);
     }
 
-    public static function decimal(int $scale, int $precision) : self
+    public static function decimal(int $scale, int $precision): self
     {
         return new self(self::DECIMAL, decimal: new Decimal($scale, $precision));
     }
 
-    public static function enum() : self
+    public static function enum(): self
     {
         return new self(self::ENUM);
     }
 
-    public static function fromThrift(\Flow\Parquet\ThriftModel\LogicalType $logicalType) : ?self
+    public static function fromThrift(\Flow\Parquet\ThriftModel\LogicalType $logicalType): ?self
     {
         $name = null;
 
@@ -133,111 +151,114 @@ final readonly class LogicalType
             $name,
             timestamp: $logicalType->TIMESTAMP !== null ? Timestamp::fromThrift($logicalType->TIMESTAMP) : null,
             time: $logicalType->TIME !== null ? Time::fromThrift($logicalType->TIME) : null,
-            decimal: $logicalType->DECIMAL !== null ? Decimal::fromThrift($logicalType->DECIMAL) : null
+            decimal: $logicalType->DECIMAL !== null ? Decimal::fromThrift($logicalType->DECIMAL) : null,
         );
     }
 
-    public static function integer() : self
+    public static function integer(): self
     {
         return new self(self::INTEGER);
     }
 
-    public static function json() : self
+    public static function json(): self
     {
         return new self(self::JSON);
     }
 
-    public static function list() : self
+    public static function list(): self
     {
         return new self(self::LIST);
     }
 
-    public static function map() : self
+    public static function map(): self
     {
         return new self(self::MAP);
     }
 
-    public static function string() : self
+    public static function string(): self
     {
         return new self(self::STRING);
     }
 
-    public static function time() : self
+    public static function time(): self
     {
         return new self(self::TIME, time: new Time(false, false, true, false));
     }
 
-    public static function timestamp() : self
+    public static function timestamp(): self
     {
         return new self(self::TIMESTAMP, timestamp: new Timestamp(false, false, true, false));
     }
 
-    public static function unknown() : self
+    public static function unknown(): self
     {
         return new self(self::UNKNOWN);
     }
 
-    public static function uuid() : self
+    public static function uuid(): self
     {
         return new self(self::UUID);
     }
 
-    public function decimalData() : ?Decimal
+    public function decimalData(): ?Decimal
     {
         return $this->decimal;
     }
 
-    public function is(string $logicalType) : bool
+    public function is(string $logicalType): bool
     {
         return $this->name() === $logicalType;
     }
 
-    public function name() : string
+    public function name(): string
     {
         return $this->name;
     }
 
-    public function timeData() : ?Time
+    public function timeData(): ?Time
     {
         return $this->time;
     }
 
-    public function timestampData() : ?Timestamp
+    public function timestampData(): ?Timestamp
     {
         return $this->timestamp;
     }
 
-    public function toThrift() : \Flow\Parquet\ThriftModel\LogicalType
+    public function toThrift(): \Flow\Parquet\ThriftModel\LogicalType
     {
         return new \Flow\Parquet\ThriftModel\LogicalType([
             self::BSON => $this->is(self::BSON) ? new BsonType() : null,
             self::DATE => $this->is(self::DATE) ? new DateType() : null,
-            self::DECIMAL => $this->is(self::DECIMAL) ? new DecimalType([
-                'scale' => $this->decimalData()?->scale(),
-                'precision' => $this->decimalData()?->precision(),
-            ]) : null,
+            self::DECIMAL => $this->is(self::DECIMAL)
+                ? new DecimalType([
+                    'scale' => $this->decimalData()?->scale(),
+                    'precision' => $this->decimalData()?->precision(),
+                ]) : null,
             self::ENUM => $this->is(self::ENUM) ? new EnumType() : null,
             self::INTEGER => $this->is(self::INTEGER) ? new IntType() : null,
             self::JSON => $this->is(self::JSON) ? new JsonType() : null,
             self::LIST => $this->is(self::LIST) ? new ListType() : null,
             self::MAP => $this->is(self::MAP) ? new MapType() : null,
             self::STRING => $this->is(self::STRING) ? new StringType() : null,
-            self::TIME => $this->is(self::TIME) ? new TimeType([
-                'isAdjustedToUTC' => $this->timeData()?->isAdjustedToUTC(),
-                'unit' => new TimeUnit([
-                    'MILLIS' => $this->timeData()?->millis() ? new MilliSeconds() : null,
-                    'MICROS' => $this->timeData()?->micros() ? new MicroSeconds() : null,
-                    'NANOS' => $this->timeData()?->nanos() ? new NanoSeconds() : null,
-                ]),
-            ]) : null,
-            self::TIMESTAMP => $this->is(self::TIMESTAMP) ? new TimestampType([
-                'isAdjustedToUTC' => $this->timestampData()?->isAdjustedToUTC(),
-                'unit' => new TimeUnit([
-                    'MILLIS' => $this->timestampData()?->millis() ? new MilliSeconds() : null,
-                    'MICROS' => $this->timestampData()?->micros() ? new MicroSeconds() : null,
-                    'NANOS' => $this->timestampData()?->nanos() ? new NanoSeconds() : null,
-                ]),
-            ]) : null,
+            self::TIME => $this->is(self::TIME)
+                ? new TimeType([
+                    'isAdjustedToUTC' => $this->timeData()?->isAdjustedToUTC(),
+                    'unit' => new TimeUnit([
+                        'MILLIS' => $this->timeData()?->millis() ? new MilliSeconds() : null,
+                        'MICROS' => $this->timeData()?->micros() ? new MicroSeconds() : null,
+                        'NANOS' => $this->timeData()?->nanos() ? new NanoSeconds() : null,
+                    ]),
+                ]) : null,
+            self::TIMESTAMP => $this->is(self::TIMESTAMP)
+                ? new TimestampType([
+                    'isAdjustedToUTC' => $this->timestampData()?->isAdjustedToUTC(),
+                    'unit' => new TimeUnit([
+                        'MILLIS' => $this->timestampData()?->millis() ? new MilliSeconds() : null,
+                        'MICROS' => $this->timestampData()?->micros() ? new MicroSeconds() : null,
+                        'NANOS' => $this->timestampData()?->nanos() ? new NanoSeconds() : null,
+                    ]),
+                ]) : null,
             self::UNKNOWN => $this->is(self::UNKNOWN) ? new NullType() : null,
             self::UUID => $this->is(self::UUID) ? new UUIDType() : null,
             self::FLOAT16 => $this->is(self::FLOAT16) ? new Float16Type() : null,

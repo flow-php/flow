@@ -6,7 +6,7 @@ declare(strict_types=1);
 use Composer\InstalledVersions;
 use Flow\ParquetViewer\Parquet;
 
-(static function () : void {
+(static function (): void {
     \error_reporting(E_ALL);
     \ini_set('display_errors', 'stderr');
     \ini_set('memory_limit', -1);
@@ -18,9 +18,12 @@ use Flow\ParquetViewer\Parquet;
     } else {
         \fwrite(
             STDERR,
-            'You must set up the project dependencies, run the following commands:' . PHP_EOL .
-            'curl -s http://getcomposer.org/installer | php' . PHP_EOL .
-            'php composer.phar install' . PHP_EOL
+            'You must set up the project dependencies, run the following commands:'
+            . PHP_EOL
+            . 'curl -s http://getcomposer.org/installer | php'
+            . PHP_EOL
+            . 'php composer.phar install'
+            . PHP_EOL,
         );
 
         exit(1);

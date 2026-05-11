@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Grant;
 
-use Flow\PostgreSql\Protobuf\AST\{DropBehavior, GrantRoleStmt, Node, RoleSpec, RoleSpecType};
+use Flow\PostgreSql\Protobuf\AST\DropBehavior;
+use Flow\PostgreSql\Protobuf\AST\GrantRoleStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RoleSpec;
+use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class RevokeRoleBuilder implements RevokeRoleFinalStep, RevokeRoleFromStep
@@ -19,42 +23,29 @@ final readonly class RevokeRoleBuilder implements RevokeRoleFinalStep, RevokeRol
         private array $revokedRoles,
         private array $fromRoles = [],
         private int $behavior = DropBehavior::DROP_RESTRICT,
-    ) {
-    }
+    ) {}
 
-    public static function create(string ...$roles) : RevokeRoleFromStep
+    public static function create(string ...$roles): RevokeRoleFromStep
     {
         return new self(\array_values($roles));
     }
 
-    public function cascade() : RevokeRoleFinalStep
+    public function cascade(): RevokeRoleFinalStep
     {
-        return new self(
-            $this->revokedRoles,
-            $this->fromRoles,
-            DropBehavior::DROP_CASCADE,
-        );
+        return new self($this->revokedRoles, $this->fromRoles, DropBehavior::DROP_CASCADE);
     }
 
-    public function from(string ...$roles) : RevokeRoleFinalStep
+    public function from(string ...$roles): RevokeRoleFinalStep
     {
-        return new self(
-            $this->revokedRoles,
-            \array_values($roles),
-            $this->behavior,
-        );
+        return new self($this->revokedRoles, \array_values($roles), $this->behavior);
     }
 
-    public function restrict() : RevokeRoleFinalStep
+    public function restrict(): RevokeRoleFinalStep
     {
-        return new self(
-            $this->revokedRoles,
-            $this->fromRoles,
-            DropBehavior::DROP_RESTRICT,
-        );
+        return new self($this->revokedRoles, $this->fromRoles, DropBehavior::DROP_RESTRICT);
     }
 
-    public function toAst() : GrantRoleStmt
+    public function toAst(): GrantRoleStmt
     {
         $stmt = new GrantRoleStmt();
         $stmt->setIsGrant(false);

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Table;
 
-use Flow\PostgreSql\Protobuf\AST\{Node, RangeVar};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 /**
@@ -16,10 +17,9 @@ final readonly class Table implements TableReference
         public string $name,
         public ?string $schema = null,
         public bool $inherits = true,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $rangeVar = $node->getRangeVar();
 
@@ -36,19 +36,15 @@ final readonly class Table implements TableReference
         $schemaname = $rangeVar->getSchemaname();
         $inh = $rangeVar->getInh();
 
-        return new self(
-            $relname,
-            $schemaname !== '' ? $schemaname : null,
-            $inh
-        );
+        return new self($relname, $schemaname !== '' ? $schemaname : null, $inh);
     }
 
-    public function as(string $alias, ?array $columnAliases = null) : AliasedTable
+    public function as(string $alias, ?array $columnAliases = null): AliasedTable
     {
         return new AliasedTable($this, $alias, $columnAliases);
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $rangeVar = new RangeVar([
             'relname' => $this->name,
@@ -62,12 +58,12 @@ final readonly class Table implements TableReference
         return new Node(['range_var' => $rangeVar]);
     }
 
-    public function withName(string $name) : self
+    public function withName(string $name): self
     {
         return new self($name, $this->schema, $this->inherits);
     }
 
-    public function withSchema(?string $schema) : self
+    public function withSchema(?string $schema): self
     {
         return new self($this->name, $schema, $this->inherits);
     }

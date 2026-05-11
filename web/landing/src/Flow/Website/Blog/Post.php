@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Website\Blog;
 
-use function Flow\Types\DSL\{type_string, type_structure};
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final readonly class Post
 {
@@ -13,10 +14,9 @@ final readonly class Post
         public string $description,
         public \DateTimeImmutable $date,
         public string $slug,
-    ) {
-    }
+    ) {}
 
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         type_structure([
             'title' => type_string(),
@@ -25,11 +25,6 @@ final readonly class Post
             'slug' => type_string(),
         ])->assert($data);
 
-        return new self(
-            $data['title'],
-            $data['description'],
-            new \DateTimeImmutable($data['date']),
-            $data['slug']
-        );
+        return new self($data['title'], $data['description'], new \DateTimeImmutable($data['date']), $data['slug']);
     }
 }

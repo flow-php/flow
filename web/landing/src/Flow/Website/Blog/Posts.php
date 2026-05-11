@@ -36,15 +36,12 @@ final class Posts
     /**
      * @return array<Post>
      */
-    public function all() : array
+    public function all(): array
     {
-        return \array_map(
-            static fn (array $data) : Post => Post::fromArray($data),
-            \array_reverse($this->posts)
-        );
+        return \array_map(static fn(array $data): Post => Post::fromArray($data), \array_reverse($this->posts));
     }
 
-    public function findByDateAndSlug(string $date, string $slug) : Post
+    public function findByDateAndSlug(string $date, string $slug): Post
     {
         foreach ($this->posts as $post) {
             if ($post['date'] === $date && $post['slug'] === $slug) {

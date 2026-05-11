@@ -8,11 +8,11 @@ use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
 interface CreateMatViewOptionsStep extends CreateMatViewFinalStep
 {
-    public function as(SelectFinalStep $query) : CreateMatViewDataStep;
+    public function as(SelectFinalStep $query): CreateMatViewDataStep;
 
-    public function columns(string ...$columns) : CreateMatViewAsStep;
+    public function columns(string ...$columns): CreateMatViewAsStep;
 
-    public function ifNotExists() : self;
+    public function ifNotExists(): self;
 
-    public function using(string $method) : self;
+    public function using(string $method): self;
 }

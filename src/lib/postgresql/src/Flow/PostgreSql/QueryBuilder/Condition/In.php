@@ -4,9 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Condition;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Expr, A_Expr_Kind, Node, PBList, PBString};
+use Flow\PostgreSql\Protobuf\AST\A_Expr;
+use Flow\PostgreSql\Protobuf\AST\A_Expr_Kind;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBList;
+use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
-use Flow\PostgreSql\QueryBuilder\Expression\{AliasedExpression, Expression, ExpressionFactory};
+use Flow\PostgreSql\QueryBuilder\Expression\AliasedExpression;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 
 final readonly class In implements Condition
 {
@@ -23,7 +29,7 @@ final readonly class In implements Condition
         }
     }
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $aExpr = $node->getAExpr();
 
@@ -65,33 +71,30 @@ final readonly class In implements Condition
             $values[] = ExpressionFactory::fromAst($item);
         }
 
-        return new self(
-            ExpressionFactory::fromAst($lexpr),
-            $values
-        );
+        return new self(ExpressionFactory::fromAst($lexpr), $values);
     }
 
-    public function and(Condition $other) : AndCondition
+    public function and(Condition $other): AndCondition
     {
         return new AndCondition($this, $other);
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return new AliasedExpression($this, $alias);
     }
 
-    public function not() : NotCondition
+    public function not(): NotCondition
     {
         return new NotCondition($this);
     }
 
-    public function or(Condition $other) : OrCondition
+    public function or(Condition $other): OrCondition
     {
         return new OrCondition($this, $other);
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $valueNodes = [];
 

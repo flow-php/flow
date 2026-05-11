@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use Flow\ETL\{Loader, Pipeline, Transformer};
+use Flow\ETL\Loader;
+use Flow\ETL\Pipeline;
 use Flow\ETL\Pipeline\Optimizer\Optimization;
+use Flow\ETL\Transformer;
 
 final readonly class Optimizer
 {
@@ -19,7 +21,7 @@ final readonly class Optimizer
         $this->optimizations = $optimizations;
     }
 
-    public function disabled() : self
+    public function disabled(): self
     {
         return new self();
     }
@@ -27,12 +29,12 @@ final readonly class Optimizer
     /**
      * @return array<Optimization>
      */
-    public function optimizations() : array
+    public function optimizations(): array
     {
         return $this->optimizations;
     }
 
-    public function optimize(Loader|Transformer $element, Pipeline $pipeline) : Pipeline
+    public function optimize(Loader|Transformer $element, Pipeline $pipeline): Pipeline
     {
         if (!\count($this->optimizations)) {
             return $pipeline->add($element);

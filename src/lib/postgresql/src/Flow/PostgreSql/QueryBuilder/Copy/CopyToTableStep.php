@@ -8,7 +8,7 @@ use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
 interface CopyToTableStep
 {
-    public function query(SelectFinalStep $query) : CopyToDestinationStep;
+    public function query(SelectFinalStep $query): CopyToDestinationStep;
 
-    public function table(string $table, string ...$columns) : CopyToDestinationStep;
+    public function table(string $table, string ...$columns): CopyToDestinationStep;
 }

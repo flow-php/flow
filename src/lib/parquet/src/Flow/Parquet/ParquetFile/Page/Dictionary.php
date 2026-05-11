@@ -9,7 +9,7 @@ final class Dictionary
     /**
      * @param array<array-key, mixed> $values
      */
-    public function __construct(public array $values)
-    {
-    }
+    public function __construct(
+        public array $values,
+    ) {}
 }

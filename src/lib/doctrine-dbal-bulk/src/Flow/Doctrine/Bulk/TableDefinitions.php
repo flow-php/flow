@@ -13,11 +13,9 @@ final class TableDefinitions
      */
     private array $tables = [];
 
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
-    public function get(string $name, Connection $connection) : TableDefinition
+    public function get(string $name, Connection $connection): TableDefinition
     {
         foreach ($this->tables as $table) {
             if ($table->name() === $name) {

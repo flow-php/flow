@@ -9,11 +9,13 @@ use Flow\Azure\SDK\URLFactory;
 
 final readonly class AzuriteURLFactory implements URLFactory
 {
-    public function __construct(private string $host = '127.0.0.1', private string $port = '10000', private bool $secure = false)
-    {
-    }
+    public function __construct(
+        private string $host = '127.0.0.1',
+        private string $port = '10000',
+        private bool $secure = false,
+    ) {}
 
-    public function create(Configuration $configuration, ?string $path = null, array $queryParameters = []) : string
+    public function create(Configuration $configuration, ?string $path = null, array $queryParameters = []): string
     {
         return \sprintf(
             '%s://%s:%s/%s/%s%s%s',
@@ -22,8 +24,8 @@ final readonly class AzuriteURLFactory implements URLFactory
             $this->port,
             $configuration->account,
             $configuration->container,
-            $path ? ('/' . \trim($path, '/')) : '',
-            $queryParameters ? ('?' . \http_build_query($queryParameters)) : ''
+            $path ? '/' . \trim($path, '/') : '',
+            $queryParameters ? '?' . \http_build_query($queryParameters) : '',
         );
     }
 }

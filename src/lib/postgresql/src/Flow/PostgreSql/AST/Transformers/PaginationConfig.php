@@ -12,6 +12,5 @@ final readonly class PaginationConfig
     public function __construct(
         public int $limit,
         public int $offset = 0,
-    ) {
-    }
+    ) {}
 }

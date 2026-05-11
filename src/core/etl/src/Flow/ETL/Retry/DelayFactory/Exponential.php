@@ -13,13 +13,12 @@ final readonly class Exponential implements DelayFactory
         private Duration $baseDuration,
         private int $multiplier = 2,
         private ?Duration $maxDelay = null,
-    ) {
-    }
+    ) {}
 
-    public function delay(int $attempt) : Duration
+    public function delay(int $attempt): Duration
     {
         $calculatedDelay = Duration::fromMicroseconds(
-            (int) ($this->baseDuration->microseconds() * ($this->multiplier ** ($attempt - 1)))
+            (int) ($this->baseDuration->microseconds() * ($this->multiplier ** ($attempt - 1))),
         );
 
         if ($this->maxDelay !== null && $calculatedDelay->microseconds() > $this->maxDelay->microseconds()) {

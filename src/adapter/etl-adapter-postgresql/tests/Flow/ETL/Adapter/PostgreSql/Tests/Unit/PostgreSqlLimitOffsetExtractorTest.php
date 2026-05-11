@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit;
 
-use function Flow\ETL\DSL\flow_context;
 use Flow\ETL\Adapter\PostgreSql\PostgreSqlLimitOffsetExtractor;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema;
@@ -12,16 +11,20 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\PostgreSql\Client\Client;
 use PHPUnit\Framework\MockObject\MockObject;
 
+use function Flow\ETL\DSL\flow_context;
+
 final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('pg_query')) {
-            self::markTestSkipped('pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.');
+            self::markTestSkipped(
+                'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
+            );
         }
     }
 
-    public function test_throws_exception_when_query_has_no_order_by() : void
+    public function test_throws_exception_when_query_has_no_order_by(): void
     {
         $client = $this->createClientMock();
         $extractor = new PostgreSqlLimitOffsetExtractor($client, 'SELECT * FROM users');
@@ -32,7 +35,7 @@ final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
         \iterator_to_array($extractor->extract(flow_context()));
     }
 
-    public function test_with_maximum_validates_positive_value() : void
+    public function test_with_maximum_validates_positive_value(): void
     {
         $client = $this->createClientMock();
         $extractor = new PostgreSqlLimitOffsetExtractor($client, 'SELECT * FROM users');
@@ -43,7 +46,7 @@ final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
         $extractor->withMaximum(0);
     }
 
-    public function test_with_maximum_validates_positive_value_negative() : void
+    public function test_with_maximum_validates_positive_value_negative(): void
     {
         $client = $this->createClientMock();
         $extractor = new PostgreSqlLimitOffsetExtractor($client, 'SELECT * FROM users');
@@ -54,7 +57,7 @@ final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
         $extractor->withMaximum(-5);
     }
 
-    public function test_with_page_size_validates_positive_value() : void
+    public function test_with_page_size_validates_positive_value(): void
     {
         $client = $this->createClientMock();
         $extractor = new PostgreSqlLimitOffsetExtractor($client, 'SELECT * FROM users');
@@ -65,7 +68,7 @@ final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
         $extractor->withPageSize(0);
     }
 
-    public function test_with_page_size_validates_positive_value_negative() : void
+    public function test_with_page_size_validates_positive_value_negative(): void
     {
         $client = $this->createClientMock();
         $extractor = new PostgreSqlLimitOffsetExtractor($client, 'SELECT * FROM users');
@@ -76,7 +79,7 @@ final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
         $extractor->withPageSize(-10);
     }
 
-    public function test_with_schema_returns_self() : void
+    public function test_with_schema_returns_self(): void
     {
         $client = $this->createClientMock();
         $extractor = new PostgreSqlLimitOffsetExtractor($client, 'SELECT * FROM users');
@@ -84,13 +87,13 @@ final class PostgreSqlLimitOffsetExtractorTest extends FlowTestCase
         $schema = new Schema();
         $result = $extractor->withSchema($schema);
 
-        self::assertSame($extractor, $result);
+        static::assertSame($extractor, $result);
     }
 
     /**
      * @return Client&MockObject
      */
-    private function createClientMock() : Client
+    private function createClientMock(): Client
     {
         return $this->createMock(Client::class);
     }

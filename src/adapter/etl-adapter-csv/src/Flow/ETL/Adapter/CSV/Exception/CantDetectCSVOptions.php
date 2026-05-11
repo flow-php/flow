@@ -6,6 +6,4 @@ namespace Flow\ETL\Adapter\CSV\Exception;
 
 use Flow\ETL\Exception\RuntimeException;
 
-final class CantDetectCSVOptions extends RuntimeException
-{
-}
+final class CantDetectCSVOptions extends RuntimeException {}

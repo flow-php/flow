@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\AsyncAWS\Tests\Double;
 
-use AsyncAws\S3\Result\{
-    CopyObjectOutput,
-    DeleteObjectOutput,
-    HeadObjectOutput,
-    ListObjectsV2Output,
-};
+use AsyncAws\S3\Result\CopyObjectOutput;
+use AsyncAws\S3\Result\DeleteObjectOutput;
+use AsyncAws\S3\Result\HeadObjectOutput;
+use AsyncAws\S3\Result\ListObjectsV2Output;
 use AsyncAws\S3\S3Client;
 
 final class RecordingS3Client extends S3Client
@@ -23,7 +21,7 @@ final class RecordingS3Client extends S3Client
     public int $listObjectsV2Count = 0;
 
     #[\Override]
-    public function copyObject($input) : CopyObjectOutput
+    public function copyObject($input): CopyObjectOutput
     {
         $this->copyObjectCount++;
 
@@ -31,7 +29,7 @@ final class RecordingS3Client extends S3Client
     }
 
     #[\Override]
-    public function deleteObject($input) : DeleteObjectOutput
+    public function deleteObject($input): DeleteObjectOutput
     {
         $this->deleteObjectCount++;
 
@@ -39,7 +37,7 @@ final class RecordingS3Client extends S3Client
     }
 
     #[\Override]
-    public function headObject($input) : HeadObjectOutput
+    public function headObject($input): HeadObjectOutput
     {
         $this->headObjectCount++;
 
@@ -47,14 +45,14 @@ final class RecordingS3Client extends S3Client
     }
 
     #[\Override]
-    public function listObjectsV2($input) : ListObjectsV2Output
+    public function listObjectsV2($input): ListObjectsV2Output
     {
         $this->listObjectsV2Count++;
 
         return parent::listObjectsV2($input);
     }
 
-    public function resetCounters() : void
+    public function resetCounters(): void
     {
         $this->copyObjectCount = 0;
         $this->deleteObjectCount = 0;

@@ -4,111 +4,104 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Expression;
 
-use Flow\PostgreSql\Protobuf\AST\{CaseExpr, CaseWhen, Node};
+use Flow\PostgreSql\Protobuf\AST\CaseExpr;
+use Flow\PostgreSql\Protobuf\AST\CaseWhen;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
-use Flow\PostgreSql\QueryBuilder\Expression\{BinaryExpression, CaseExpression, Column, Literal, WhenClause};
+use Flow\PostgreSql\QueryBuilder\Expression\BinaryExpression;
+use Flow\PostgreSql\QueryBuilder\Expression\CaseExpression;
+use Flow\PostgreSql\QueryBuilder\Expression\Column;
+use Flow\PostgreSql\QueryBuilder\Expression\Literal;
+use Flow\PostgreSql\QueryBuilder\Expression\WhenClause;
 use PHPUnit\Framework\TestCase;
 
 final class CaseExpressionTest extends TestCase
 {
-    public function test_converts_searched_case_to_ast() : void
+    public function test_converts_searched_case_to_ast(): void
     {
         $whenClause = new WhenClause(
             new BinaryExpression(Column::name('status'), '=', Literal::string('active')),
-            Literal::string('Active')
+            Literal::string('Active'),
         );
 
-        $caseExpr = new CaseExpression(
-            null,
-            [$whenClause],
-            Literal::string('Inactive')
-        );
+        $caseExpr = new CaseExpression(null, [$whenClause], Literal::string('Inactive'));
 
         $node = $caseExpr->toAst();
 
-        self::assertNotNull($node->getCaseExpr());
+        static::assertNotNull($node->getCaseExpr());
 
         $case = $node->getCaseExpr();
-        self::assertNull($case->getArg());
-        self::assertNotNull($case->getArgs());
-        self::assertCount(1, $case->getArgs());
-        self::assertNotNull($case->getDefresult());
+        static::assertNull($case->getArg());
+        static::assertNotNull($case->getArgs());
+        static::assertCount(1, $case->getArgs());
+        static::assertNotNull($case->getDefresult());
     }
 
-    public function test_converts_simple_case_to_ast() : void
+    public function test_converts_simple_case_to_ast(): void
     {
         $arg = Column::name('status');
-        $whenClause = new WhenClause(
-            Literal::int(1),
-            Literal::string('One')
-        );
+        $whenClause = new WhenClause(Literal::int(1), Literal::string('One'));
 
         $caseExpr = new CaseExpression($arg, [$whenClause]);
 
         $node = $caseExpr->toAst();
 
-        self::assertNotNull($node->getCaseExpr());
+        static::assertNotNull($node->getCaseExpr());
 
         $case = $node->getCaseExpr();
-        self::assertNotNull($case->getArg());
-        self::assertNotNull($case->getArgs());
-        self::assertCount(1, $case->getArgs());
-        self::assertNull($case->getDefresult());
+        static::assertNotNull($case->getArg());
+        static::assertNotNull($case->getArgs());
+        static::assertCount(1, $case->getArgs());
+        static::assertNull($case->getDefresult());
     }
 
-    public function test_creates_aliased_expression() : void
+    public function test_creates_aliased_expression(): void
     {
         $whenClause = new WhenClause(Literal::bool(true), Literal::int(1));
         $caseExpr = new CaseExpression(null, [$whenClause]);
 
         $aliased = $caseExpr->as('my_case');
 
-        self::assertSame('my_case', $aliased->getAlias());
-        self::assertSame($caseExpr, $aliased->getExpression());
+        static::assertSame('my_case', $aliased->getAlias());
+        static::assertSame($caseExpr, $aliased->getExpression());
     }
 
-    public function test_creates_searched_case_with_else() : void
+    public function test_creates_searched_case_with_else(): void
     {
-        $whenClause = new WhenClause(
-            Literal::bool(true),
-            Literal::string('yes')
-        );
+        $whenClause = new WhenClause(Literal::bool(true), Literal::string('yes'));
         $elseResult = Literal::string('no');
 
         $caseExpr = new CaseExpression(null, [$whenClause], $elseResult);
 
-        self::assertNull($caseExpr->getArg());
-        self::assertCount(1, $caseExpr->getWhenClauses());
-        self::assertSame($elseResult, $caseExpr->getElseResult());
+        static::assertNull($caseExpr->getArg());
+        static::assertCount(1, $caseExpr->getWhenClauses());
+        static::assertSame($elseResult, $caseExpr->getElseResult());
     }
 
-    public function test_creates_searched_case_without_else() : void
+    public function test_creates_searched_case_without_else(): void
     {
-        $whenClause = new WhenClause(
-            Literal::bool(true),
-            Literal::string('yes')
-        );
+        $whenClause = new WhenClause(Literal::bool(true), Literal::string('yes'));
 
         $caseExpr = new CaseExpression(null, [$whenClause]);
 
-        self::assertNull($caseExpr->getArg());
-        self::assertCount(1, $caseExpr->getWhenClauses());
-        self::assertNull($caseExpr->getElseResult());
+        static::assertNull($caseExpr->getArg());
+        static::assertCount(1, $caseExpr->getWhenClauses());
+        static::assertNull($caseExpr->getElseResult());
     }
 
-    public function test_creates_simple_case() : void
+    public function test_creates_simple_case(): void
     {
         $arg = Column::name('value');
         $whenClause = new WhenClause(Literal::int(1), Literal::string('one'));
 
         $caseExpr = new CaseExpression($arg, [$whenClause]);
 
-        self::assertSame($arg, $caseExpr->getArg());
-        self::assertCount(1, $caseExpr->getWhenClauses());
-        self::assertNull($caseExpr->getElseResult());
+        static::assertSame($arg, $caseExpr->getArg());
+        static::assertCount(1, $caseExpr->getWhenClauses());
+        static::assertNull($caseExpr->getElseResult());
     }
 
-    public function test_recreates_from_ast_with_multiple_when_clauses() : void
+    public function test_recreates_from_ast_with_multiple_when_clauses(): void
     {
         $caseWhen1 = new CaseWhen();
         $caseWhen1->setExpr(Literal::int(1)->toAst());
@@ -133,12 +126,12 @@ final class CaseExpressionTest extends TestCase
 
         $case = CaseExpression::fromAst($node);
 
-        self::assertNull($case->getArg());
-        self::assertCount(2, $case->getWhenClauses());
-        self::assertNotNull($case->getElseResult());
+        static::assertNull($case->getArg());
+        static::assertCount(2, $case->getWhenClauses());
+        static::assertNotNull($case->getElseResult());
     }
 
-    public function test_recreates_from_ast_with_simple_case() : void
+    public function test_recreates_from_ast_with_simple_case(): void
     {
         $arg = Column::name('status');
 
@@ -158,27 +151,24 @@ final class CaseExpressionTest extends TestCase
 
         $case = CaseExpression::fromAst($node);
 
-        self::assertNotNull($case->getArg());
-        self::assertCount(1, $case->getWhenClauses());
+        static::assertNotNull($case->getArg());
+        static::assertCount(1, $case->getWhenClauses());
     }
 
-    public function test_round_trip_conversion_with_searched_case() : void
+    public function test_round_trip_conversion_with_searched_case(): void
     {
-        $whenClause = new WhenClause(
-            Literal::bool(true),
-            Literal::int(1)
-        );
+        $whenClause = new WhenClause(Literal::bool(true), Literal::int(1));
 
         $caseExpr = new CaseExpression(null, [$whenClause], Literal::int(0));
         $node = $caseExpr->toAst();
         $restored = CaseExpression::fromAst($node);
 
-        self::assertNull($restored->getArg());
-        self::assertCount(1, $restored->getWhenClauses());
-        self::assertNotNull($restored->getElseResult());
+        static::assertNull($restored->getArg());
+        static::assertCount(1, $restored->getWhenClauses());
+        static::assertNotNull($restored->getElseResult());
     }
 
-    public function test_round_trip_conversion_with_simple_case() : void
+    public function test_round_trip_conversion_with_simple_case(): void
     {
         $arg = Column::name('value');
         $whenClause = new WhenClause(Literal::int(1), Literal::string('one'));
@@ -187,12 +177,12 @@ final class CaseExpressionTest extends TestCase
         $node = $caseExpr->toAst();
         $restored = CaseExpression::fromAst($node);
 
-        self::assertNotNull($restored->getArg());
-        self::assertCount(1, $restored->getWhenClauses());
-        self::assertNull($restored->getElseResult());
+        static::assertNotNull($restored->getArg());
+        static::assertCount(1, $restored->getWhenClauses());
+        static::assertNull($restored->getElseResult());
     }
 
-    public function test_throws_exception_for_empty_when_clauses() : void
+    public function test_throws_exception_for_empty_when_clauses(): void
     {
         $this->expectException(InvalidExpressionException::class);
 
@@ -200,7 +190,7 @@ final class CaseExpressionTest extends TestCase
         new CaseExpression(null, []);
     }
 
-    public function test_with_else_creates_new_instance() : void
+    public function test_with_else_creates_new_instance(): void
     {
         $whenClause = new WhenClause(Literal::bool(true), Literal::int(1));
         $caseExpr = new CaseExpression(null, [$whenClause]);
@@ -208,12 +198,12 @@ final class CaseExpressionTest extends TestCase
         $newElse = Literal::int(0);
         $newCase = $caseExpr->withElse($newElse);
 
-        self::assertNotSame($caseExpr, $newCase);
-        self::assertNull($caseExpr->getElseResult());
-        self::assertSame($newElse, $newCase->getElseResult());
+        static::assertNotSame($caseExpr, $newCase);
+        static::assertNull($caseExpr->getElseResult());
+        static::assertSame($newElse, $newCase->getElseResult());
     }
 
-    public function test_with_when_creates_new_instance() : void
+    public function test_with_when_creates_new_instance(): void
     {
         $whenClause1 = new WhenClause(Literal::bool(true), Literal::int(1));
         $caseExpr = new CaseExpression(null, [$whenClause1]);
@@ -221,8 +211,8 @@ final class CaseExpressionTest extends TestCase
         $whenClause2 = new WhenClause(Literal::bool(false), Literal::int(0));
         $newCase = $caseExpr->withWhen($whenClause2);
 
-        self::assertNotSame($caseExpr, $newCase);
-        self::assertCount(1, $caseExpr->getWhenClauses());
-        self::assertCount(1, $newCase->getWhenClauses());
+        static::assertNotSame($caseExpr, $newCase);
+        static::assertCount(1, $caseExpr->getWhenClauses());
+        static::assertCount(1, $newCase->getWhenClauses());
     }
 }

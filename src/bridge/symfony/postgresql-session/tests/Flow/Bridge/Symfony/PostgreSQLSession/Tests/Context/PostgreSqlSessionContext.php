@@ -19,7 +19,7 @@ final class PostgreSqlSessionContext
     /**
      * @param array{db_table?: string, db_schema?: string, db_id_col?: string, db_data_col?: string, db_lifetime_col?: string, db_time_col?: string, lock_mode?: int, ttl?: null|int} $options
      */
-    public function handler(array $options = []) : FlowPostgreSqlSessionHandler
+    public function handler(array $options = []): FlowPostgreSqlSessionHandler
     {
         $handler = new FlowPostgreSqlSessionHandler($this->client, $options);
         $handler->open('', 'test_session');
@@ -34,7 +34,7 @@ final class PostgreSqlSessionContext
      *
      * @return list<array{sql: string, parameters: array<int, mixed>}>
      */
-    public function onlyQueries(string $keyword, callable $action) : array
+    public function onlyQueries(string $keyword, callable $action): array
     {
         $before = \count($this->client->executedQueries);
         $action();

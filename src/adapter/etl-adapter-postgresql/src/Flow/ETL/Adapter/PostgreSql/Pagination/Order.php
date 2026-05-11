@@ -6,12 +6,12 @@ namespace Flow\ETL\Adapter\PostgreSql\Pagination;
 
 use Flow\PostgreSql\AST\Transformers\SortOrder;
 
-enum Order : string
+enum Order: string
 {
     case ASC = 'ASC';
     case DESC = 'DESC';
 
-    public function toSortOrder() : SortOrder
+    public function toSortOrder(): SortOrder
     {
         return match ($this) {
             self::ASC => SortOrder::ASC,

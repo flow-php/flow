@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace Flow\Doctrine\Bulk\Dialect;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Flow\Doctrine\Bulk\{BulkData, Columns, InsertOptions, TableDefinition, UpdateOptions};
+use Flow\Doctrine\Bulk\BulkData;
+use Flow\Doctrine\Bulk\Columns;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
+use Flow\Doctrine\Bulk\InsertOptions;
+use Flow\Doctrine\Bulk\TableDefinition;
+use Flow\Doctrine\Bulk\UpdateOptions;
 
 final readonly class MySQLDialect implements Dialect
 {
-    public function __construct(private AbstractPlatform $platform)
-    {
-    }
+    public function __construct(
+        private AbstractPlatform $platform,
+    ) {}
 
     /**
      * @param TableDefinition $table
@@ -20,15 +24,15 @@ final readonly class MySQLDialect implements Dialect
      *
      * @return string
      */
-    public function prepareDelete(TableDefinition $table, BulkData $bulkData) : string
+    public function prepareDelete(TableDefinition $table, BulkData $bulkData): string
     {
         $columns = $bulkData->columns()->all();
 
         return \sprintf(
             'DELETE FROM %s WHERE (%s) IN (%s)',
             $table->name(),
-            \implode(', ', \array_map(fn ($column) => $this->platform->quoteIdentifier($column), $columns)),
-            $bulkData->toSqlPlaceholders()
+            \implode(', ', \array_map(fn($column) => $this->platform->quoteIdentifier($column), $columns)),
+            $bulkData->toSqlPlaceholders(),
         );
     }
 
@@ -38,23 +42,26 @@ final readonly class MySQLDialect implements Dialect
      *
      * @return string
      */
-    public function prepareInsert(TableDefinition $table, BulkData $bulkData, ?InsertOptions $options = null) : string
+    public function prepareInsert(TableDefinition $table, BulkData $bulkData, ?InsertOptions $options = null): string
     {
         if ($options === null) {
             $options = new MySQLInsertOptions();
         }
 
         if (!$options instanceof MySQLInsertOptions) {
-            throw new RuntimeException('Invalid insert options provided, expected MySQLInsertOptions got: ' . $options::class);
+            throw new RuntimeException('Invalid insert options provided, expected MySQLInsertOptions got: '
+            . $options::class);
         }
 
         if ($options->skipConflicts === true) {
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON DUPLICATE KEY UPDATE %4$s=%4$s',
                 $table->name(),
-                \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
+                \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+                    $column,
+                ), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders(),
-                \current($bulkData->columns()->all())
+                \current($bulkData->columns()->all()),
             );
         }
 
@@ -64,19 +71,28 @@ final readonly class MySQLDialect implements Dialect
                 VALUES %s
                 ON DUPLICATE KEY UPDATE %s',
                 $table->name(),
-                \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
+                \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+                    $column,
+                ), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders(),
                 \count($options->updateColumns)
-                    ? $this->updateSelectedColumns($options->updateColumns, $bulkData->columns(), $table->name(), $options->preserveExistingValues)
-                    : $this->updateAllColumns($bulkData->columns())
+                    ? $this->updateSelectedColumns(
+                        $options->updateColumns,
+                        $bulkData->columns(),
+                        $table->name(),
+                        $options->preserveExistingValues,
+                    )
+                    : $this->updateAllColumns($bulkData->columns()),
             );
         }
 
         return \sprintf(
             'INSERT INTO %s (%s) VALUES %s',
             $table->name(),
-            \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
-            $bulkData->toSqlPlaceholders()
+            \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+                $column,
+            ), $bulkData->columns()->all())),
+            $bulkData->toSqlPlaceholders(),
         );
     }
 
@@ -87,13 +103,15 @@ final readonly class MySQLDialect implements Dialect
      *
      * @return string
      */
-    public function prepareUpdate(TableDefinition $table, BulkData $bulkData, ?UpdateOptions $options = null) : string
+    public function prepareUpdate(TableDefinition $table, BulkData $bulkData, ?UpdateOptions $options = null): string
     {
         return \sprintf(
             'REPLACE INTO %s (%s) VALUES %s',
             $table->name(),
-            \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
-            $bulkData->toSqlPlaceholders()
+            \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+                $column,
+            ), $bulkData->columns()->all())),
+            $bulkData->toSqlPlaceholders(),
         );
     }
 
@@ -102,13 +120,15 @@ final readonly class MySQLDialect implements Dialect
      *
      * @return string
      */
-    private function updateAllColumns(Columns $columns) : string
+    private function updateAllColumns(Columns $columns): string
     {
         return \implode(
             ',',
             $columns->map(
-                fn (string $column) : string => "{$this->platform->quoteIdentifier($column)} = VALUES({$this->platform->quoteIdentifier($column)})"
-            )
+                fn(string $column): string => "{$this->platform->quoteIdentifier(
+                    $column,
+                )} = VALUES({$this->platform->quoteIdentifier($column)})",
+            ),
         );
     }
 
@@ -118,18 +138,28 @@ final readonly class MySQLDialect implements Dialect
      *
      * @return string
      */
-    private function updateSelectedColumns(array $updateColumns, Columns $columns, string $tableName, ?bool $preserveExistingValues = null) : string
-    {
-        return \count($updateColumns)
-            ? \implode(',', \array_map(function (string $column) use ($tableName, $preserveExistingValues) : string {
+    private function updateSelectedColumns(
+        array $updateColumns,
+        Columns $columns,
+        string $tableName,
+        ?bool $preserveExistingValues = null,
+    ): string {
+        return \count($updateColumns) ? \implode(',', \array_map(function (string $column) use (
+                $tableName,
+                $preserveExistingValues,
+            ): string {
                 $clause = "{$this->platform->quoteIdentifier($column)} = ";
 
                 if (true === $preserveExistingValues) {
-                    return $clause . "COALESCE(VALUES({$this->platform->quoteIdentifier($column)}), {$tableName}.{$this->platform->quoteIdentifier($column)})";
+                    return (
+                        $clause
+                        . "COALESCE(VALUES({$this->platform->quoteIdentifier(
+                            $column,
+                        )}), {$tableName}.{$this->platform->quoteIdentifier($column)})"
+                    );
                 }
 
                 return $clause . "VALUES({$this->platform->quoteIdentifier($column)})";
-            }, $updateColumns))
-            : $this->updateAllColumns($columns);
+            }, $updateColumns)) : $this->updateAllColumns($columns);
     }
 }

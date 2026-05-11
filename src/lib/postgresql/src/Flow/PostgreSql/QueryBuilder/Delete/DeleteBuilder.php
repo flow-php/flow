@@ -4,13 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Delete;
 
-use Flow\PostgreSql\Protobuf\AST\{Alias, DeleteStmt, Node, RangeVar, ResTarget};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\Alias;
+use Flow\PostgreSql\Protobuf\AST\DeleteStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\Protobuf\AST\ResTarget;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
-use Flow\PostgreSql\QueryBuilder\Condition\{Condition, ConditionFactory};
+use Flow\PostgreSql\QueryBuilder\Condition\Condition;
+use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
-use Flow\PostgreSql\QueryBuilder\Expression\{Expression, ExpressionFactory, Star};
-use Flow\PostgreSql\QueryBuilder\Table\{AliasedTable, Table, TableReference};
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
+use Flow\PostgreSql\QueryBuilder\Expression\Star;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
+use Flow\PostgreSql\QueryBuilder\Table\AliasedTable;
+use Flow\PostgreSql\QueryBuilder\Table\Table;
+use Flow\PostgreSql\QueryBuilder\Table\TableReference;
 
 /**
  * Builder for DELETE statements using a fluent step-by-step API.
@@ -38,15 +48,14 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         private array $using = [],
         private ?Condition $where = null,
         private array $returning = [],
-    ) {
-    }
+    ) {}
 
-    public static function create() : DeleteFromStep
+    public static function create(): DeleteFromStep
     {
         return new self();
     }
 
-    public static function fromAst(DeleteStmt $deleteStmt) : static
+    public static function fromAst(DeleteStmt $deleteStmt): static
     {
         $relation = $deleteStmt->getRelation();
 
@@ -93,7 +102,11 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
                         $using[] = Table::fromAst($usingNode);
                     }
                 } else {
-                    throw InvalidAstException::invalidFieldValue('using_clause', 'DeleteStmt', 'Only RangeVar nodes are supported');
+                    throw InvalidAstException::invalidFieldValue(
+                        'using_clause',
+                        'DeleteStmt',
+                        'Only RangeVar nodes are supported',
+                    );
                 }
             }
         }
@@ -116,7 +129,11 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
                 $resTarget = $resTargetNode->getResTarget();
 
                 if ($resTarget === null) {
-                    throw InvalidAstException::invalidFieldValue('returning_list', 'DeleteStmt', 'Expected ResTarget node');
+                    throw InvalidAstException::invalidFieldValue(
+                        'returning_list',
+                        'DeleteStmt',
+                        'Expected ResTarget node',
+                    );
                 }
 
                 $val = $resTarget->getVal();
@@ -140,12 +157,12 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         );
     }
 
-    public static function with(WithClause $with) : DeleteFromStep
+    public static function with(WithClause $with): DeleteFromStep
     {
         return new self(with: $with);
     }
 
-    public function from(string|Table $table, ?string $alias = null) : DeleteUsingStep
+    public function from(string|Table $table, ?string $alias = null): DeleteUsingStep
     {
         if ($table instanceof Table) {
             $name = $table->name;
@@ -167,7 +184,7 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         );
     }
 
-    public function returning(Expression ...$expressions) : DeleteFinalStep
+    public function returning(Expression ...$expressions): DeleteFinalStep
     {
         return new self(
             with: $this->with,
@@ -180,7 +197,7 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         );
     }
 
-    public function returningAll() : DeleteFinalStep
+    public function returningAll(): DeleteFinalStep
     {
         return new self(
             with: $this->with,
@@ -193,7 +210,7 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         );
     }
 
-    public function toAst() : DeleteStmt
+    public function toAst(): DeleteStmt
     {
         if ($this->table === null) {
             throw new \LogicException('Cannot create DeleteStmt without table name. Call from() first.');
@@ -261,19 +278,16 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         return $deleteStmt;
     }
 
-    public function using(string|TableReference ...$tables) : DeleteWhereStep
+    public function using(string|TableReference ...$tables): DeleteWhereStep
     {
-        $tables = \array_map(
-            static function (string|TableReference $t) : TableReference {
-                if ($t instanceof TableReference) {
-                    return $t;
-                }
-                $id = QualifiedIdentifier::parse($t);
+        $tables = \array_map(static function (string|TableReference $t): TableReference {
+            if ($t instanceof TableReference) {
+                return $t;
+            }
+            $id = QualifiedIdentifier::parse($t);
 
-                return new Table($id->name(), $id->schema());
-            },
-            $tables,
-        );
+            return new Table($id->name(), $id->schema());
+        }, $tables);
 
         return new self(
             with: $this->with,
@@ -286,7 +300,7 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         );
     }
 
-    public function where(Condition $condition) : DeleteReturningStep
+    public function where(Condition $condition): DeleteReturningStep
     {
         return new self(
             with: $this->with,

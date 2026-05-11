@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Migrations\Tests\Integration;
 
-use Flow\PostgreSql\Migrations\{Configuration, Direction, Migrator, Version};
+use Flow\PostgreSql\Migrations\Configuration;
+use Flow\PostgreSql\Migrations\Direction;
 use Flow\PostgreSql\Migrations\Executor\DefaultMigrationExecutor;
+use Flow\PostgreSql\Migrations\Migrator;
 use Flow\PostgreSql\Migrations\Repository\AvailableMigration;
 use Flow\PostgreSql\Migrations\Store\PostgreSqlMigrationStore;
-use Flow\PostgreSql\Migrations\Tests\Double\{FailingMigration, FakeCatalogProvider, FakeMigrationRepository, SpyMigration};
+use Flow\PostgreSql\Migrations\Tests\Double\FailingMigration;
+use Flow\PostgreSql\Migrations\Tests\Double\FakeCatalogProvider;
+use Flow\PostgreSql\Migrations\Tests\Double\FakeMigrationRepository;
+use Flow\PostgreSql\Migrations\Tests\Double\SpyMigration;
+use Flow\PostgreSql\Migrations\Version;
 use Flow\PostgreSql\Schema\Catalog;
 use PHPUnit\Framework\TestCase;
 
@@ -20,7 +26,7 @@ final class MigratorTest extends TestCase
 
     protected PostgreSqlMigrationStore $store;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         $this->context = new PostgreSqlMigrationsContext();
         $this->configuration = new Configuration(
@@ -37,14 +43,14 @@ final class MigratorTest extends TestCase
         $this->context->dropTableIfExists('public.users');
     }
 
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         $this->context->dropTableIfExists('public.flow_migrations_test');
         $this->context->dropTableIfExists('public.users');
         $this->context->close();
     }
 
-    public function test_all_or_nothing_rolls_back_on_failure() : void
+    public function test_all_or_nothing_rolls_back_on_failure(): void
     {
         $repository = new FakeMigrationRepository(
             new AvailableMigration(Version::fromString('20260501120000'), 'good', new SpyMigration(), null),
@@ -64,10 +70,10 @@ final class MigratorTest extends TestCase
         } catch (\Throwable) {
         }
 
-        self::assertCount(0, $this->store->executedMigrations());
+        static::assertCount(0, $this->store->executedMigrations());
     }
 
-    public function test_dry_run_does_not_persist() : void
+    public function test_dry_run_does_not_persist(): void
     {
         $migrator = new Migrator(
             $this->fixtureRepository(),
@@ -77,17 +83,14 @@ final class MigratorTest extends TestCase
             $this->configuration,
         );
 
-        $results = $migrator->migrate(
-            Version::fromString('20260401120000'),
-            dryRun: true,
-        );
+        $results = $migrator->migrate(Version::fromString('20260401120000'), dryRun: true);
 
-        self::assertCount(1, $results);
-        self::assertTrue($results[0]->isSuccessful());
-        self::assertCount(0, $this->store->executedMigrations());
+        static::assertCount(1, $results);
+        static::assertTrue($results[0]->isSuccessful());
+        static::assertCount(0, $this->store->executedMigrations());
     }
 
-    public function test_execute_version_runs_single_migration() : void
+    public function test_execute_version_runs_single_migration(): void
     {
         $migrator = new Migrator(
             $this->fixtureRepository(),
@@ -99,11 +102,11 @@ final class MigratorTest extends TestCase
 
         $result = $migrator->executeVersion(Version::fromString('20260401120000'), Direction::UP);
 
-        self::assertTrue($result->isSuccessful());
-        self::assertCount(1, $this->store->executedMigrations());
+        static::assertTrue($result->isSuccessful());
+        static::assertCount(1, $this->store->executedMigrations());
     }
 
-    public function test_migrate_down_to_specific_version() : void
+    public function test_migrate_down_to_specific_version(): void
     {
         $migrator = new Migrator(
             $this->fixtureRepository(),
@@ -115,16 +118,16 @@ final class MigratorTest extends TestCase
 
         $migrator->migrate(Version::fromString('20260402100000'));
 
-        self::assertCount(2, $this->store->executedMigrations());
+        static::assertCount(2, $this->store->executedMigrations());
 
         $results = $migrator->migrate(Version::fromString('20260401120000'));
 
-        self::assertCount(1, $results);
-        self::assertSame(Direction::DOWN, $results[0]->direction);
-        self::assertCount(1, $this->store->executedMigrations());
+        static::assertCount(1, $results);
+        static::assertSame(Direction::DOWN, $results[0]->direction);
+        static::assertCount(1, $this->store->executedMigrations());
     }
 
-    public function test_migrate_up_from_empty_state() : void
+    public function test_migrate_up_from_empty_state(): void
     {
         $migrator = new Migrator(
             $this->fixtureRepository(),
@@ -136,17 +139,17 @@ final class MigratorTest extends TestCase
 
         $results = $migrator->migrate();
 
-        self::assertCount(3, $results);
+        static::assertCount(3, $results);
 
         foreach ($results as $result) {
-            self::assertTrue($result->isSuccessful());
-            self::assertSame(Direction::UP, $result->direction);
+            static::assertTrue($result->isSuccessful());
+            static::assertSame(Direction::UP, $result->direction);
         }
 
-        self::assertCount(3, $this->store->executedMigrations());
+        static::assertCount(3, $this->store->executedMigrations());
     }
 
-    public function test_migrate_up_to_specific_version() : void
+    public function test_migrate_up_to_specific_version(): void
     {
         $migrator = new Migrator(
             $this->fixtureRepository(),
@@ -158,11 +161,11 @@ final class MigratorTest extends TestCase
 
         $results = $migrator->migrate(Version::fromString('20260402100000'));
 
-        self::assertCount(2, $results);
-        self::assertCount(2, $this->store->executedMigrations());
+        static::assertCount(2, $results);
+        static::assertCount(2, $this->store->executedMigrations());
     }
 
-    public function test_status_returns_correct_states() : void
+    public function test_status_returns_correct_states(): void
     {
         $migrator = new Migrator(
             $this->fixtureRepository(),
@@ -176,12 +179,12 @@ final class MigratorTest extends TestCase
 
         $status = $migrator->status();
 
-        self::assertCount(3, $status);
-        self::assertCount(1, $status->executed());
-        self::assertCount(2, $status->pending());
+        static::assertCount(3, $status);
+        static::assertCount(1, $status->executed());
+        static::assertCount(2, $status->pending());
     }
 
-    private function fixtureRepository() : FakeMigrationRepository
+    private function fixtureRepository(): FakeMigrationRepository
     {
         $fixturesPath = __DIR__ . '/../Fixture/migrations';
 

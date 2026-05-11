@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Constraint;
 
-use Flow\PostgreSql\Protobuf\AST\{ConstrType, Constraint, Node, PBString, RangeVar};
+use Flow\PostgreSql\Protobuf\AST\Constraint;
+use Flow\PostgreSql\Protobuf\AST\ConstrType;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Schema\ReferentialAction;
 
@@ -24,21 +28,20 @@ final readonly class ForeignKeyConstraint implements TableConstraint
         private ?ReferentialAction $onDelete = null,
         private bool $deferrable = false,
         private bool $initiallyDeferred = false,
-    ) {
-    }
+    ) {}
 
     /**
      * @param list<string> $columns
      * @param list<string> $referenceColumns
      */
-    public static function create(array $columns, string $referenceTable, array $referenceColumns = []) : self
+    public static function create(array $columns, string $referenceTable, array $referenceColumns = []): self
     {
         $identifier = QualifiedIdentifier::parse($referenceTable);
 
         return new self($columns, $identifier->name(), $referenceColumns, $identifier->schema());
     }
 
-    public function deferrable(bool $initiallyDeferred = false) : self
+    public function deferrable(bool $initiallyDeferred = false): self
     {
         return new self(
             $this->columns,
@@ -53,7 +56,7 @@ final readonly class ForeignKeyConstraint implements TableConstraint
         );
     }
 
-    public function name(string $name) : self
+    public function name(string $name): self
     {
         return new self(
             $this->columns,
@@ -68,7 +71,7 @@ final readonly class ForeignKeyConstraint implements TableConstraint
         );
     }
 
-    public function onDelete(ReferentialAction $action) : self
+    public function onDelete(ReferentialAction $action): self
     {
         return new self(
             $this->columns,
@@ -83,7 +86,7 @@ final readonly class ForeignKeyConstraint implements TableConstraint
         );
     }
 
-    public function onUpdate(ReferentialAction $action) : self
+    public function onUpdate(ReferentialAction $action): self
     {
         return new self(
             $this->columns,
@@ -98,7 +101,7 @@ final readonly class ForeignKeyConstraint implements TableConstraint
         );
     }
 
-    public function schema(string $schema) : self
+    public function schema(string $schema): self
     {
         return new self(
             $this->columns,
@@ -113,7 +116,7 @@ final readonly class ForeignKeyConstraint implements TableConstraint
         );
     }
 
-    public function toAst() : Constraint
+    public function toAst(): Constraint
     {
         $constraint = new Constraint();
         $constraint->setContype(ConstrType::CONSTR_FOREIGN);
@@ -169,7 +172,7 @@ final readonly class ForeignKeyConstraint implements TableConstraint
         return $constraint;
     }
 
-    private function createStringNode(string $value) : Node
+    private function createStringNode(string $value): Node
     {
         $str = new PBString();
         $str->setSval($value);

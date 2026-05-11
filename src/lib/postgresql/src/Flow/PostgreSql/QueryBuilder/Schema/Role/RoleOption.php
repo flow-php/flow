@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Role;
 
-enum RoleOption : string
+enum RoleOption: string
 {
     case BYPASSRLS = 'bypassrls';
     case CREATEDB = 'createdb';

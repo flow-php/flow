@@ -4,10 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Dataset\Statistics;
 
-use function Flow\Types\DSL\type_instance_of;
-use Flow\ETL\Row\Entry\{BooleanEntry, DateEntry, DateTimeEntry, FloatEntry, IntegerEntry, ListEntry, MapEntry, StringEntry, StructureEntry, UuidEntry};
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Entry\BooleanEntry;
+use Flow\ETL\Row\Entry\DateEntry;
+use Flow\ETL\Row\Entry\DateTimeEntry;
+use Flow\ETL\Row\Entry\FloatEntry;
+use Flow\ETL\Row\Entry\IntegerEntry;
+use Flow\ETL\Row\Entry\ListEntry;
+use Flow\ETL\Row\Entry\MapEntry;
+use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Row\Entry\StructureEntry;
+use Flow\ETL\Row\Entry\UuidEntry;
+use Flow\ETL\Row\Reference;
 use Flow\Types\Value\Uuid;
+
+use function Flow\Types\DSL\type_instance_of;
 
 final class Column
 {
@@ -44,7 +55,7 @@ final class Column
     /**
      * @param Entry<mixed> $entry
      */
-    public function calculate(Entry $entry) : void
+    public function calculate(Entry $entry): void
     {
         if (!$this->reference->is($entry->ref())) {
             return;
@@ -108,52 +119,52 @@ final class Column
         }
     }
 
-    public function distinctCount() : int
+    public function distinctCount(): int
     {
         return $this->distinctCounter->count();
     }
 
-    public function max() : int|float|\DateTimeInterface|bool|null
+    public function max(): int|float|\DateTimeInterface|bool|null
     {
         return $this->max;
     }
 
-    public function maxElementsCount() : ?int
+    public function maxElementsCount(): ?int
     {
         return $this->maxElementsCount;
     }
 
-    public function maxLength() : ?int
+    public function maxLength(): ?int
     {
         return $this->maxLength;
     }
 
-    public function min() : int|float|\DateTimeInterface|bool|null
+    public function min(): int|float|\DateTimeInterface|bool|null
     {
         return $this->min;
     }
 
-    public function minElementsCount() : ?int
+    public function minElementsCount(): ?int
     {
         return $this->minElementsCount;
     }
 
-    public function minLength() : ?int
+    public function minLength(): ?int
     {
         return $this->minLength;
     }
 
-    public function name() : string
+    public function name(): string
     {
         return $this->reference->name();
     }
 
-    public function nullCount() : int
+    public function nullCount(): int
     {
         return $this->nullsCount;
     }
 
-    public function reference() : Reference
+    public function reference(): Reference
     {
         return $this->reference;
     }

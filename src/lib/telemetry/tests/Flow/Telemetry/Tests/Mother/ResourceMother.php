@@ -8,7 +8,7 @@ use Flow\Telemetry\Resource;
 
 final class ResourceMother
 {
-    public static function default() : Resource
+    public static function default(): Resource
     {
         return Resource::create([
             'service.name' => 'test-service',
@@ -16,7 +16,7 @@ final class ResourceMother
         ]);
     }
 
-    public static function full() : Resource
+    public static function full(): Resource
     {
         return Resource::create([
             'service.name' => 'test-service',
@@ -30,7 +30,7 @@ final class ResourceMother
     /**
      * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes
      */
-    public static function with(array $attributes) : Resource
+    public static function with(array $attributes): Resource
     {
         return Resource::create($attributes);
     }

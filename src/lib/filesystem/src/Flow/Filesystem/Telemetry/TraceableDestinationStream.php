@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Telemetry;
 
-use Flow\Filesystem\{DestinationStream, Path};
+use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\Path;
 use Flow\Telemetry\Meter\Instrument\Counter;
 use Flow\Telemetry\Meter\Meter;
 use Flow\Telemetry\PackageVersion;
-use Flow\Telemetry\Tracer\{Span, SpanKind, SpanStatus, Tracer};
+use Flow\Telemetry\Tracer\Span;
+use Flow\Telemetry\Tracer\SpanKind;
+use Flow\Telemetry\Tracer\SpanStatus;
+use Flow\Telemetry\Tracer\Tracer;
 
 final class TraceableDestinationStream implements DestinationStream
 {
@@ -34,15 +38,11 @@ final class TraceableDestinationStream implements DestinationStream
                 PackageVersion::get('flow-php/filesystem'),
             );
 
-            $this->span = $this->tracer->span(
-                'Write ' . $this->stream->path()->basename(),
-                SpanKind::INTERNAL,
-                [
-                    FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'destination',
-                    FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),
-                    FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->stream->path()->protocol(),
-                ]
-            );
+            $this->span = $this->tracer->span('Write ' . $this->stream->path()->basename(), SpanKind::INTERNAL, [
+                FilesystemTelemetryAttributes::ATTR_STREAM_TYPE => 'destination',
+                FilesystemTelemetryAttributes::ATTR_PATH_URI => $this->stream->path()->uri(),
+                FilesystemTelemetryAttributes::ATTR_FILESYSTEM_PROTOCOL => $this->stream->path()->protocol(),
+            ]);
         }
 
         if ($this->telemetryConfig->options->collectMetrics) {
@@ -63,7 +63,7 @@ final class TraceableDestinationStream implements DestinationStream
         }
     }
 
-    public function append(string $data) : DestinationStream
+    public function append(string $data): DestinationStream
     {
         $bytesWritten = \strlen($data);
 
@@ -75,18 +75,24 @@ final class TraceableDestinationStream implements DestinationStream
         return $this;
     }
 
-    public function close() : void
+    public function close(): void
     {
         try {
             $this->stream->close();
 
             if ($this->span !== null) {
-                $this->span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN, $this->totalBytesWritten);
+                $this->span->setAttribute(
+                    FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN,
+                    $this->totalBytesWritten,
+                );
                 $this->span->setStatus(SpanStatus::ok());
             }
         } catch (\Throwable $e) {
             if ($this->span !== null) {
-                $this->span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN, $this->totalBytesWritten);
+                $this->span->setAttribute(
+                    FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN,
+                    $this->totalBytesWritten,
+                );
                 $this->span->recordException($e, $this->telemetryConfig->clock->now());
                 $this->span->setStatus(SpanStatus::error($e->getMessage()));
             }
@@ -103,14 +109,14 @@ final class TraceableDestinationStream implements DestinationStream
     /**
      * @param resource $resource
      */
-    public function fromResource($resource) : DestinationStream
+    public function fromResource($resource): DestinationStream
     {
         $startPos = \ftell($resource);
 
         $this->stream->fromResource($resource);
 
         $endPos = \ftell($resource);
-        $bytesWritten = ($startPos !== false && $endPos !== false) ? ($endPos - $startPos) : 0;
+        $bytesWritten = $startPos !== false && $endPos !== false ? $endPos - $startPos : 0;
         $this->totalBytesWritten += $bytesWritten;
 
         $this->recordMetrics($bytesWritten);
@@ -118,17 +124,17 @@ final class TraceableDestinationStream implements DestinationStream
         return $this;
     }
 
-    public function isOpen() : bool
+    public function isOpen(): bool
     {
         return $this->stream->isOpen();
     }
 
-    public function path() : Path
+    public function path(): Path
     {
         return $this->stream->path();
     }
 
-    private function recordMetrics(int $bytesWritten) : void
+    private function recordMetrics(int $bytesWritten): void
     {
         if (!$this->telemetryConfig->options->collectMetrics) {
             return;

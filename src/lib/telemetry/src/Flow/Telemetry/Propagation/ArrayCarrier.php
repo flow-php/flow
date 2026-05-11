@@ -31,10 +31,9 @@ final class ArrayCarrier implements Carrier
      */
     public function __construct(
         private array $data = [],
-    ) {
-    }
+    ) {}
 
-    public function get(string $key) : ?string
+    public function get(string $key): ?string
     {
         $lowerKey = \strtolower($key);
 
@@ -47,7 +46,7 @@ final class ArrayCarrier implements Carrier
         return null;
     }
 
-    public function set(string $key, string $value) : static
+    public function set(string $key, string $value): static
     {
         $this->data[$key] = $value;
 
@@ -57,7 +56,7 @@ final class ArrayCarrier implements Carrier
     /**
      * @return array<string, string>
      */
-    public function unwrap() : array
+    public function unwrap(): array
     {
         return $this->data;
     }

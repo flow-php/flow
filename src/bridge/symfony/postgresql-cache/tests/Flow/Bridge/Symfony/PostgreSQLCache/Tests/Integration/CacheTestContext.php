@@ -4,10 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSQLCache\Tests\Integration;
 
-use function Flow\PostgreSql\DSL\{col, drop, is_null, param, pgsql_client, pgsql_connection_dsn, table, update};
-
 use Flow\Bridge\Symfony\PostgreSQLCache\CacheCatalogProvider;
-use Flow\PostgreSql\Client\{Client, ConnectionParameters};
+use Flow\PostgreSql\Client\Client;
+use Flow\PostgreSql\Client\ConnectionParameters;
+
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\drop;
+use function Flow\PostgreSql\DSL\is_null;
+use function Flow\PostgreSql\DSL\param;
+use function Flow\PostgreSql\DSL\pgsql_client;
+use function Flow\PostgreSql\DSL\pgsql_connection_dsn;
+use function Flow\PostgreSql\DSL\table;
+use function Flow\PostgreSql\DSL\update;
 
 final readonly class CacheTestContext
 {
@@ -27,12 +35,12 @@ final readonly class CacheTestContext
         $this->client = pgsql_client($this->connectionParameters);
     }
 
-    public function close() : void
+    public function close(): void
     {
         $this->client->close();
     }
 
-    public function createCacheTable(string $tableName = 'cache_items', string $schemaName = 'public') : void
+    public function createCacheTable(string $tableName = 'cache_items', string $schemaName = 'public'): void
     {
         $provider = new CacheCatalogProvider($tableName, $schemaName);
         $table = $provider->get()->get($schemaName)->tables[0];
@@ -42,7 +50,7 @@ final readonly class CacheTestContext
         }
     }
 
-    public function dropCacheTable(string $tableName = 'cache_items') : void
+    public function dropCacheTable(string $tableName = 'cache_items'): void
     {
         $this->client->execute(drop()->table($tableName)->ifExists()->cascade());
     }
@@ -52,7 +60,7 @@ final readonly class CacheTestContext
      * zeroing its time column. Rows with a null lifetime (i.e. saved without
      * an explicit TTL) are untouched and remain alive.
      */
-    public function expireAllExpirableCacheItems(string $tableName = 'cache_items', string $schemaName = 'public') : void
+    public function expireAllExpirableCacheItems(string $tableName = 'cache_items', string $schemaName = 'public'): void
     {
         $this->client->execute(
             update()

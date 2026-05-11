@@ -23,6 +23,5 @@ final readonly class MapPlan
         public FlatPlan|StructPlan|ListPlan|self|null $valuePlan,
         public array $optionalKey,
         public ?Column $valueColumn = null,
-    ) {
-    }
+    ) {}
 }

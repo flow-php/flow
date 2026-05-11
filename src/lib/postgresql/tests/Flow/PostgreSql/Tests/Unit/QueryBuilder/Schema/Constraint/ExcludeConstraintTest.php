@@ -4,43 +4,45 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\Constraint;
 
-use function Flow\PostgreSql\DSL\{col, eq, func, literal};
-use Flow\PostgreSql\Protobuf\AST\{ConstrType, Constraint, IndexElem, PBList, PBString};
+use Flow\PostgreSql\Protobuf\AST\Constraint;
+use Flow\PostgreSql\Protobuf\AST\ConstrType;
+use Flow\PostgreSql\Protobuf\AST\IndexElem;
+use Flow\PostgreSql\Protobuf\AST\PBList;
+use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\ExcludeConstraint;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\eq;
+use function Flow\PostgreSql\DSL\func;
+use function Flow\PostgreSql\DSL\literal;
+
 final class ExcludeConstraintTest extends TestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }
 
-    public function test_deferrable_initially_deferred_emits_flags_on_ast() : void
+    public function test_deferrable_initially_deferred_emits_flags_on_ast(): void
     {
-        $ast = ExcludeConstraint::create('btree')
-            ->element(col('room_id'), '=')
-            ->deferrable(true)
-            ->toAst();
+        $ast = ExcludeConstraint::create('btree')->element(col('room_id'), '=')->deferrable(true)->toAst();
 
-        self::assertTrue($ast->getDeferrable());
-        self::assertTrue($ast->getInitdeferred());
+        static::assertTrue($ast->getDeferrable());
+        static::assertTrue($ast->getInitdeferred());
     }
 
-    public function test_deferrable_initially_immediate_does_not_set_initdeferred() : void
+    public function test_deferrable_initially_immediate_does_not_set_initdeferred(): void
     {
-        $ast = ExcludeConstraint::create('btree')
-            ->element(col('room_id'), '=')
-            ->deferrable()
-            ->toAst();
+        $ast = ExcludeConstraint::create('btree')->element(col('room_id'), '=')->deferrable()->toAst();
 
-        self::assertTrue($ast->getDeferrable());
-        self::assertFalse($ast->getInitdeferred());
+        static::assertTrue($ast->getDeferrable());
+        static::assertFalse($ast->getInitdeferred());
     }
 
-    public function test_element_expression_uses_index_elem_expr_field() : void
+    public function test_element_expression_uses_index_elem_expr_field(): void
     {
         $ast = ExcludeConstraint::create('gist')
             ->element(func('tsrange', [col('start'), col('finish')]), '&&')
@@ -50,48 +52,43 @@ final class ExcludeConstraintTest extends TestCase
         $items = \iterator_to_array($exclusions[0]->getList()->getItems());
 
         $indexElem = $items[0]->getIndexElem();
-        self::assertSame('', $indexElem->getName());
-        self::assertNotNull($indexElem->getExpr());
+        static::assertSame('', $indexElem->getName());
+        static::assertNotNull($indexElem->getExpr());
     }
 
-    public function test_exclude_constraint_with_btree() : void
+    public function test_exclude_constraint_with_btree(): void
     {
-        $constraint = ExcludeConstraint::create('btree')
-            ->element(col('id'), '=');
+        $constraint = ExcludeConstraint::create('btree')->element(col('id'), '=');
 
         $ast = $constraint->toAst();
 
-        self::assertInstanceOf(Constraint::class, $ast);
-        self::assertSame(ConstrType::CONSTR_EXCLUSION, $ast->getContype());
-        self::assertSame('btree', $ast->getAccessMethod());
+        static::assertInstanceOf(Constraint::class, $ast);
+        static::assertSame(ConstrType::CONSTR_EXCLUSION, $ast->getContype());
+        static::assertSame('btree', $ast->getAccessMethod());
     }
 
-    public function test_exclude_constraint_with_multiple_elements() : void
+    public function test_exclude_constraint_with_multiple_elements(): void
     {
-        $constraint = ExcludeConstraint::create('gist')
-            ->element(col('room_id'), '=')
-            ->element(col('during'), '&&');
+        $constraint = ExcludeConstraint::create('gist')->element(col('room_id'), '=')->element(col('during'), '&&');
 
         $ast = $constraint->toAst();
 
-        self::assertInstanceOf(Constraint::class, $ast);
-        self::assertSame(ConstrType::CONSTR_EXCLUSION, $ast->getContype());
-        self::assertCount(2, $ast->getExclusions());
+        static::assertInstanceOf(Constraint::class, $ast);
+        static::assertSame(ConstrType::CONSTR_EXCLUSION, $ast->getContype());
+        static::assertCount(2, $ast->getExclusions());
     }
 
-    public function test_exclude_constraint_with_name() : void
+    public function test_exclude_constraint_with_name(): void
     {
-        $constraint = ExcludeConstraint::create()
-            ->element(col('room_id'), '=')
-            ->name('exc_room_booking');
+        $constraint = ExcludeConstraint::create()->element(col('room_id'), '=')->name('exc_room_booking');
 
         $ast = $constraint->toAst();
 
-        self::assertInstanceOf(Constraint::class, $ast);
-        self::assertSame('exc_room_booking', $ast->getConname());
+        static::assertInstanceOf(Constraint::class, $ast);
+        static::assertSame('exc_room_booking', $ast->getConname());
     }
 
-    public function test_exclude_constraint_with_where_clause() : void
+    public function test_exclude_constraint_with_where_clause(): void
     {
         $constraint = ExcludeConstraint::create()
             ->element(col('room_id'), '=')
@@ -99,11 +96,11 @@ final class ExcludeConstraintTest extends TestCase
 
         $ast = $constraint->toAst();
 
-        self::assertInstanceOf(Constraint::class, $ast);
-        self::assertTrue($ast->hasWhereClause());
+        static::assertInstanceOf(Constraint::class, $ast);
+        static::assertTrue($ast->hasWhereClause());
     }
 
-    public function test_exclude_with_all_options() : void
+    public function test_exclude_with_all_options(): void
     {
         $constraint = ExcludeConstraint::create('gist')
             ->name('exc_booking')
@@ -113,72 +110,67 @@ final class ExcludeConstraintTest extends TestCase
 
         $ast = $constraint->toAst();
 
-        self::assertInstanceOf(Constraint::class, $ast);
-        self::assertSame('exc_booking', $ast->getConname());
-        self::assertSame('gist', $ast->getAccessMethod());
-        self::assertCount(2, $ast->getExclusions());
-        self::assertTrue($ast->hasWhereClause());
+        static::assertInstanceOf(Constraint::class, $ast);
+        static::assertSame('exc_booking', $ast->getConname());
+        static::assertSame('gist', $ast->getAccessMethod());
+        static::assertCount(2, $ast->getExclusions());
+        static::assertTrue($ast->hasWhereClause());
     }
 
-    public function test_exclusions_are_list_of_pairs_of_index_elem_and_operator_list() : void
+    public function test_exclusions_are_list_of_pairs_of_index_elem_and_operator_list(): void
     {
-        $ast = ExcludeConstraint::create('btree')
-            ->element(col('room_id'), '=')
-            ->toAst();
+        $ast = ExcludeConstraint::create('btree')->element(col('room_id'), '=')->toAst();
 
         $exclusions = $ast->getExclusions();
 
-        self::assertCount(1, $exclusions);
+        static::assertCount(1, $exclusions);
 
         $pairList = $exclusions[0]->getList();
-        self::assertInstanceOf(PBList::class, $pairList);
+        static::assertInstanceOf(PBList::class, $pairList);
 
         $items = \iterator_to_array($pairList->getItems());
-        self::assertCount(2, $items);
+        static::assertCount(2, $items);
 
         $indexElem = $items[0]->getIndexElem();
-        self::assertInstanceOf(IndexElem::class, $indexElem);
-        self::assertSame('room_id', $indexElem->getName());
+        static::assertInstanceOf(IndexElem::class, $indexElem);
+        static::assertSame('room_id', $indexElem->getName());
 
         $operatorList = $items[1]->getList();
-        self::assertInstanceOf(PBList::class, $operatorList);
+        static::assertInstanceOf(PBList::class, $operatorList);
         $operatorItems = \iterator_to_array($operatorList->getItems());
-        self::assertCount(1, $operatorItems);
+        static::assertCount(1, $operatorItems);
         $operatorString = $operatorItems[0]->getString();
-        self::assertInstanceOf(PBString::class, $operatorString);
-        self::assertSame('=', $operatorString->getSval());
+        static::assertInstanceOf(PBString::class, $operatorString);
+        static::assertSame('=', $operatorString->getSval());
     }
 
-    public function test_immutability() : void
+    public function test_immutability(): void
     {
         $original = ExcludeConstraint::create();
         $withName = $original->name('exc_test');
 
-        self::assertNotSame($original, $withName);
-        self::assertSame('', $original->toAst()->getConname());
-        self::assertSame('exc_test', $withName->toAst()->getConname());
+        static::assertNotSame($original, $withName);
+        static::assertSame('', $original->toAst()->getConname());
+        static::assertSame('exc_test', $withName->toAst()->getConname());
     }
 
-    public function test_not_deferrable_by_default() : void
+    public function test_not_deferrable_by_default(): void
     {
-        $ast = ExcludeConstraint::create('btree')
-            ->element(col('room_id'), '=')
-            ->toAst();
+        $ast = ExcludeConstraint::create('btree')->element(col('room_id'), '=')->toAst();
 
-        self::assertFalse($ast->getDeferrable());
-        self::assertFalse($ast->getInitdeferred());
+        static::assertFalse($ast->getDeferrable());
+        static::assertFalse($ast->getInitdeferred());
     }
 
-    public function test_simple_exclude_constraint() : void
+    public function test_simple_exclude_constraint(): void
     {
-        $constraint = ExcludeConstraint::create()
-            ->element(col('room_id'), '=');
+        $constraint = ExcludeConstraint::create()->element(col('room_id'), '=');
 
         $ast = $constraint->toAst();
 
-        self::assertInstanceOf(Constraint::class, $ast);
-        self::assertSame(ConstrType::CONSTR_EXCLUSION, $ast->getContype());
-        self::assertSame('gist', $ast->getAccessMethod());
-        self::assertCount(1, $ast->getExclusions());
+        static::assertInstanceOf(Constraint::class, $ast);
+        static::assertSame(ConstrType::CONSTR_EXCLUSION, $ast->getContype());
+        static::assertSame('gist', $ast->getAccessMethod());
+        static::assertCount(1, $ast->getExclusions());
     }
 }

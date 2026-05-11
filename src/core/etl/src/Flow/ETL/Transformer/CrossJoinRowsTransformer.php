@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\{DataFrame, FlowContext, Rows, Transformer};
+use Flow\ETL\DataFrame;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
+use Flow\ETL\Transformer;
 
 final class CrossJoinRowsTransformer implements Transformer
 {
@@ -14,10 +17,9 @@ final class CrossJoinRowsTransformer implements Transformer
     public function __construct(
         private readonly DataFrame $dataFrame,
         private readonly string $prefix = '',
-    ) {
-    }
+    ) {}
 
-    public function transform(Rows $rows, FlowContext $context) : Rows
+    public function transform(Rows $rows, FlowContext $context): Rows
     {
         $context->telemetry()->transformationStarted($this);
 
@@ -37,7 +39,7 @@ final class CrossJoinRowsTransformer implements Transformer
         }
     }
 
-    private function rows() : Rows
+    private function rows(): Rows
     {
         if ($this->rows === null) {
             $this->rows = $this->dataFrame->fetch();

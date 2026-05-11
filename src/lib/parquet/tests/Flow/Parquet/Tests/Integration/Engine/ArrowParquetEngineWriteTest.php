@@ -4,18 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\Engine;
 
-use function Flow\ETL\DSL\generate_random_string;
 use Flow\Parquet\Engine\ArrowParquetEngine;
-use Flow\Parquet\{Options, Reader};
-use Flow\Parquet\ParquetFile\{Compressions, Schema};
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn, Repetition};
+use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\ListElement;
+use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\ParquetFile\Schema\Repetition;
+use Flow\Parquet\Reader;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\ETL\DSL\generate_random_string;
 
 #[Group('native-extension')]
 final class ArrowParquetEngineWriteTest extends TestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('arrow')) {
             self::markTestSkipped('Arrow extension is not loaded');
@@ -26,7 +32,7 @@ final class ArrowParquetEngineWriteTest extends TestCase
         }
     }
 
-    public function test_write_flat_columns_readable_by_php_engine() : void
+    public function test_write_flat_columns_readable_by_php_engine(): void
     {
         $path = __DIR__ . '/var/test-arrow-write-flat-' . generate_random_string() . '.parquet';
 
@@ -47,18 +53,22 @@ final class ArrowParquetEngineWriteTest extends TestCase
         $stream = \Flow\Filesystem\Stream\NativeLocalDestinationStream::openBlank(\Flow\Filesystem\DSL\path($path));
         $engine->writeRows($stream, $schema, Compressions::SNAPPY, new Options(), $inputData);
 
-        $result = \iterator_to_array((new Reader())->read($path)->values());
+        $result = \iterator_to_array(
+            (new Reader())
+                ->read($path)
+                ->values(),
+        );
 
-        self::assertCount(3, $result);
-        self::assertSame(1, $result[0]['id']);
-        self::assertSame('Alice', $result[0]['name']);
-        self::assertTrue($result[0]['active']);
-        self::assertEqualsWithDelta(99.5, $result[0]['score'], 0.001);
+        static::assertCount(3, $result);
+        static::assertSame(1, $result[0]['id']);
+        static::assertSame('Alice', $result[0]['name']);
+        static::assertTrue($result[0]['active']);
+        static::assertEqualsWithDelta(99.5, $result[0]['score'], 0.001);
 
         \unlink($path);
     }
 
-    public function test_write_nested_types() : void
+    public function test_write_nested_types(): void
     {
         $path = __DIR__ . '/var/test-arrow-write-nested-' . generate_random_string() . '.parquet';
 
@@ -79,50 +89,49 @@ final class ArrowParquetEngineWriteTest extends TestCase
         $stream = \Flow\Filesystem\Stream\NativeLocalDestinationStream::openBlank(\Flow\Filesystem\DSL\path($path));
         $engine->writeRows($stream, $schema, Compressions::SNAPPY, new Options(), $inputData);
 
-        $result = \iterator_to_array((new Reader())->read($path)->values());
+        $result = \iterator_to_array(
+            (new Reader())
+                ->read($path)
+                ->values(),
+        );
 
-        self::assertCount(2, $result);
-        self::assertSame(1, $result[0]['id']);
+        static::assertCount(2, $result);
+        static::assertSame(1, $result[0]['id']);
 
         \unlink($path);
     }
 
-    public function test_write_with_gzip_compression() : void
+    public function test_write_with_gzip_compression(): void
     {
         $path = __DIR__ . '/var/test-arrow-write-gzip-' . generate_random_string() . '.parquet';
 
-        $schema = Schema::with(
-            FlatColumn::int32('id', Repetition::REQUIRED),
-            FlatColumn::string('data'),
-        );
+        $schema = Schema::with(FlatColumn::int32('id', Repetition::REQUIRED), FlatColumn::string('data'));
 
-        $inputData = \array_map(
-            static fn (int $i) : array => ['id' => $i, 'data' => 'value_' . $i],
-            \range(1, 20),
-        );
+        $inputData = \array_map(static fn(int $i): array => ['id' => $i, 'data' => 'value_' . $i], \range(1, 20));
 
         $engine = new ArrowParquetEngine();
         $stream = \Flow\Filesystem\Stream\NativeLocalDestinationStream::openBlank(\Flow\Filesystem\DSL\path($path));
         $engine->writeRows($stream, $schema, Compressions::GZIP, new Options(), $inputData);
 
-        $result = \iterator_to_array((new Reader())->read($path)->values());
+        $result = \iterator_to_array(
+            (new Reader())
+                ->read($path)
+                ->values(),
+        );
 
-        self::assertCount(20, $result);
+        static::assertCount(20, $result);
 
         \unlink($path);
     }
 
-    public function test_write_with_snappy_compression() : void
+    public function test_write_with_snappy_compression(): void
     {
         $path = __DIR__ . '/var/test-arrow-write-snappy-' . generate_random_string() . '.parquet';
 
-        $schema = Schema::with(
-            FlatColumn::int32('id', Repetition::REQUIRED),
-            FlatColumn::string('data'),
-        );
+        $schema = Schema::with(FlatColumn::int32('id', Repetition::REQUIRED), FlatColumn::string('data'));
 
         $inputData = \array_map(
-            static fn (int $i) : array => ['id' => $i, 'data' => \str_repeat('a', 100)],
+            static fn(int $i): array => ['id' => $i, 'data' => \str_repeat('a', 100)],
             \range(1, 50),
         );
 
@@ -130,10 +139,14 @@ final class ArrowParquetEngineWriteTest extends TestCase
         $stream = \Flow\Filesystem\Stream\NativeLocalDestinationStream::openBlank(\Flow\Filesystem\DSL\path($path));
         $engine->writeRows($stream, $schema, Compressions::SNAPPY, new Options(), $inputData);
 
-        $result = \iterator_to_array((new Reader())->read($path)->values());
+        $result = \iterator_to_array(
+            (new Reader())
+                ->read($path)
+                ->values(),
+        );
 
-        self::assertCount(50, $result);
-        self::assertSame(1, $result[0]['id']);
+        static::assertCount(50, $result);
+        static::assertSame(1, $result[0]['id']);
 
         \unlink($path);
     }

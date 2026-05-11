@@ -20,6 +20,5 @@ final readonly class Configuration
         public string $rollbackFileName = 'rollback.php',
         public bool $allOrNothing = false,
         public bool $generateRollback = true,
-    ) {
-    }
+    ) {}
 }

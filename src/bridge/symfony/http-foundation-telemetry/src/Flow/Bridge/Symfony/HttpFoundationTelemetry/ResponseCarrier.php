@@ -35,22 +35,21 @@ final readonly class ResponseCarrier implements Carrier
 {
     public function __construct(
         private Response $response,
-    ) {
-    }
+    ) {}
 
-    public function get(string $key) : ?string
+    public function get(string $key): ?string
     {
         return $this->response->headers->get($key);
     }
 
-    public function set(string $key, string $value) : static
+    public function set(string $key, string $value): static
     {
         $this->response->headers->set($key, $value);
 
         return $this;
     }
 
-    public function unwrap() : Response
+    public function unwrap(): Response
     {
         return $this->response;
     }

@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Http\DynamicExtractor;
 
-use Psr\Http\Message\{RequestInterface, ResponseInterface};
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 interface NextRequestFactory
 {
-    public function create(?ResponseInterface $previousResponse = null) : ?RequestInterface;
+    public function create(?ResponseInterface $previousResponse = null): ?RequestInterface;
 }

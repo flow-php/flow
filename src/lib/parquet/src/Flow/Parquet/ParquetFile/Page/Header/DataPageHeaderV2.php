@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile\Page\Header;
 
 use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\{Encodings, Statistics};
+use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\RowGroup\StatisticsReader;
+use Flow\Parquet\ParquetFile\Statistics;
 
 final readonly class DataPageHeaderV2
 {
@@ -19,10 +20,9 @@ final readonly class DataPageHeaderV2
         private int $repetitionsByteLength,
         private ?bool $isCompressed,
         private ?Statistics $statistics,
-    ) {
-    }
+    ) {}
 
-    public static function fromThrift(\Flow\Parquet\ThriftModel\DataPageHeaderV2 $thrift, Options $options) : self
+    public static function fromThrift(\Flow\Parquet\ThriftModel\DataPageHeaderV2 $thrift, Options $options): self
     {
         return new self(
             (int) $thrift->num_values,
@@ -37,22 +37,22 @@ final readonly class DataPageHeaderV2
         );
     }
 
-    public function definitionsByteLength() : int
+    public function definitionsByteLength(): int
     {
         return $this->definitionsByteLength;
     }
 
-    public function encoding() : Encodings
+    public function encoding(): Encodings
     {
         return $this->encoding;
     }
 
-    public function repetitionsByteLength() : int
+    public function repetitionsByteLength(): int
     {
         return $this->repetitionsByteLength;
     }
 
-    public function statistics(Options $options) : ?StatisticsReader
+    public function statistics(Options $options): ?StatisticsReader
     {
         if ($this->statistics === null) {
             return null;
@@ -61,7 +61,7 @@ final readonly class DataPageHeaderV2
         return new StatisticsReader($this->statistics);
     }
 
-    public function toThrift() : \Flow\Parquet\ThriftModel\DataPageHeaderV2
+    public function toThrift(): \Flow\Parquet\ThriftModel\DataPageHeaderV2
     {
         return new \Flow\Parquet\ThriftModel\DataPageHeaderV2([
             'num_values' => $this->valuesCount,
@@ -75,7 +75,7 @@ final readonly class DataPageHeaderV2
         ]);
     }
 
-    public function valuesCount() : int
+    public function valuesCount(): int
     {
         return $this->valuesCount;
     }

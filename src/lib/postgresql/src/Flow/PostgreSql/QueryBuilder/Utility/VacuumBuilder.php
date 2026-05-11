@@ -4,8 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Utility;
 
-use Flow\PostgreSql\Protobuf\AST\{DefElem, Integer, Node, PBString, RangeVar, VacuumRelation as VacuumRelationAST, VacuumStmt};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\Protobuf\AST\VacuumRelation as VacuumRelationAST;
+use Flow\PostgreSql\Protobuf\AST\VacuumStmt;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 final readonly class VacuumBuilder implements VacuumFinalStep
 {
@@ -27,15 +34,14 @@ final readonly class VacuumBuilder implements VacuumFinalStep
         private ?bool $processToast = null,
         private ?bool $truncate = null,
         private ?int $parallel = null,
-    ) {
-    }
+    ) {}
 
-    public static function create() : VacuumFinalStep
+    public static function create(): VacuumFinalStep
     {
         return new self();
     }
 
-    public function analyze() : VacuumFinalStep
+    public function analyze(): VacuumFinalStep
     {
         return new self(
             $this->relations,
@@ -53,7 +59,7 @@ final readonly class VacuumBuilder implements VacuumFinalStep
         );
     }
 
-    public function disablePageSkipping() : VacuumFinalStep
+    public function disablePageSkipping(): VacuumFinalStep
     {
         return new self(
             $this->relations,
@@ -71,7 +77,7 @@ final readonly class VacuumBuilder implements VacuumFinalStep
         );
     }
 
-    public function freeze() : VacuumFinalStep
+    public function freeze(): VacuumFinalStep
     {
         return new self(
             $this->relations,
@@ -89,7 +95,7 @@ final readonly class VacuumBuilder implements VacuumFinalStep
         );
     }
 
-    public function full() : VacuumFinalStep
+    public function full(): VacuumFinalStep
     {
         return new self(
             $this->relations,
@@ -107,7 +113,7 @@ final readonly class VacuumBuilder implements VacuumFinalStep
         );
     }
 
-    public function indexCleanup(IndexCleanup $cleanup) : VacuumFinalStep
+    public function indexCleanup(IndexCleanup $cleanup): VacuumFinalStep
     {
         return new self(
             $this->relations,
@@ -125,7 +131,7 @@ final readonly class VacuumBuilder implements VacuumFinalStep
         );
     }
 
-    public function parallel(int $workers) : VacuumFinalStep
+    public function parallel(int $workers): VacuumFinalStep
     {
         return new self(
             $this->relations,
@@ -143,7 +149,7 @@ final readonly class VacuumBuilder implements VacuumFinalStep
         );
     }
 
-    public function processMain(bool $enabled) : VacuumFinalStep
+    public function processMain(bool $enabled): VacuumFinalStep
     {
         return new self(
             $this->relations,
@@ -161,7 +167,7 @@ final readonly class VacuumBuilder implements VacuumFinalStep
         );
     }
 
-    public function processToast(bool $enabled) : VacuumFinalStep
+    public function processToast(bool $enabled): VacuumFinalStep
     {
         return new self(
             $this->relations,
@@ -179,7 +185,7 @@ final readonly class VacuumBuilder implements VacuumFinalStep
         );
     }
 
-    public function skipLocked() : VacuumFinalStep
+    public function skipLocked(): VacuumFinalStep
     {
         return new self(
             $this->relations,
@@ -197,7 +203,7 @@ final readonly class VacuumBuilder implements VacuumFinalStep
         );
     }
 
-    public function table(string $table, string ...$columns) : VacuumFinalStep
+    public function table(string $table, string ...$columns): VacuumFinalStep
     {
         return new self(
             [...$this->relations, new VacuumRelation($table, $columns)],
@@ -215,7 +221,7 @@ final readonly class VacuumBuilder implements VacuumFinalStep
         );
     }
 
-    public function tables(string ...$tables) : VacuumFinalStep
+    public function tables(string ...$tables): VacuumFinalStep
     {
         $relations = $this->relations;
 
@@ -239,7 +245,7 @@ final readonly class VacuumBuilder implements VacuumFinalStep
         );
     }
 
-    public function toAst() : VacuumStmt
+    public function toAst(): VacuumStmt
     {
         $stmt = new VacuumStmt();
         $stmt->setIsVacuumcmd(true);
@@ -339,7 +345,7 @@ final readonly class VacuumBuilder implements VacuumFinalStep
         return $stmt;
     }
 
-    public function truncate(bool $enabled) : VacuumFinalStep
+    public function truncate(bool $enabled): VacuumFinalStep
     {
         return new self(
             $this->relations,
@@ -357,7 +363,7 @@ final readonly class VacuumBuilder implements VacuumFinalStep
         );
     }
 
-    public function verbose() : VacuumFinalStep
+    public function verbose(): VacuumFinalStep
     {
         return new self(
             $this->relations,
@@ -375,7 +381,7 @@ final readonly class VacuumBuilder implements VacuumFinalStep
         );
     }
 
-    private function createDefElemBool(string $name) : Node
+    private function createDefElemBool(string $name): Node
     {
         $defElem = new DefElem();
         $defElem->setDefname($name);
@@ -386,7 +392,7 @@ final readonly class VacuumBuilder implements VacuumFinalStep
         return $node;
     }
 
-    private function createDefElemInt(string $name, int $value) : Node
+    private function createDefElemInt(string $name, int $value): Node
     {
         $defElem = new DefElem();
         $defElem->setDefname($name);
@@ -405,7 +411,7 @@ final readonly class VacuumBuilder implements VacuumFinalStep
         return $node;
     }
 
-    private function createDefElemString(string $name, string $value) : Node
+    private function createDefElemString(string $name, string $value): Node
     {
         $defElem = new DefElem();
         $defElem->setDefname($name);

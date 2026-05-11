@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Parquet;
 
-use function Flow\Filesystem\DSL\path;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
-use Flow\Parquet\Engine\{AdaptiveParquetEngine, ArrowParquetEngine, PhpParquetEngine};
-use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\Parquet\ParquetFile\{Compressions, Schema};
+use Flow\Parquet\Engine\AdaptiveParquetEngine;
+use Flow\Parquet\Engine\ArrowParquetEngine;
+use Flow\Parquet\Engine\PhpParquetEngine;
+use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\Exception\RuntimeException;
+use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\ParquetFile\Schema;
+
+use function Flow\Filesystem\DSL\path;
 
 final class Writer
 {
@@ -35,12 +40,14 @@ final class Writer
         }
     }
 
-    public static function arrow(Compressions $compression = Compressions::SNAPPY, Options $options = new Options()) : self
-    {
+    public static function arrow(
+        Compressions $compression = Compressions::SNAPPY,
+        Options $options = new Options(),
+    ): self {
         return new self($compression, $options, new ArrowParquetEngine());
     }
 
-    public static function php(Compressions $compression = Compressions::SNAPPY, Options $options = new Options()) : self
+    public static function php(Compressions $compression = Compressions::SNAPPY, Options $options = new Options()): self
     {
         return new self($compression, $options, new PhpParquetEngine());
     }
@@ -52,7 +59,7 @@ final class Writer
         }
     }
 
-    public function close() : void
+    public function close(): void
     {
         if (!$this->isOpen()) {
             throw new RuntimeException('Writer is not open');
@@ -62,12 +69,12 @@ final class Writer
         $this->isOpen = false;
     }
 
-    public function isOpen() : bool
+    public function isOpen(): bool
     {
         return $this->isOpen;
     }
 
-    public function open(string $path, Schema $schema) : void
+    public function open(string $path, Schema $schema): void
     {
         if ($this->isOpen()) {
             throw new RuntimeException('Writer is already open');
@@ -86,7 +93,7 @@ final class Writer
         $this->isOpen = true;
     }
 
-    public function openForStream(DestinationStream $stream, Schema $schema) : void
+    public function openForStream(DestinationStream $stream, Schema $schema): void
     {
         $this->engine->openForWrite($stream, $schema, $this->compression, $this->options);
         $this->isOpen = true;
@@ -95,7 +102,7 @@ final class Writer
     /**
      * @param iterable<array<string, mixed>> $rows
      */
-    public function write(string $path, Schema $schema, iterable $rows) : void
+    public function write(string $path, Schema $schema, iterable $rows): void
     {
         if (\file_exists($path)) {
             throw new InvalidArgumentException("File {$path} already exists");
@@ -113,7 +120,7 @@ final class Writer
     /**
      * @param iterable<array<string, mixed>> $rows
      */
-    public function writeBatch(iterable $rows) : void
+    public function writeBatch(iterable $rows): void
     {
         $this->engine->writeBatch($rows);
     }
@@ -121,7 +128,7 @@ final class Writer
     /**
      * @param array<string, mixed> $row
      */
-    public function writeRow(array $row) : void
+    public function writeRow(array $row): void
     {
         $this->engine->writeRow($row);
     }
@@ -129,7 +136,7 @@ final class Writer
     /**
      * @param iterable<array<string, mixed>> $rows
      */
-    public function writeStream(DestinationStream $stream, Schema $schema, iterable $rows) : void
+    public function writeStream(DestinationStream $stream, Schema $schema, iterable $rows): void
     {
         $this->engine->writeRows($stream, $schema, $this->compression, $this->options, $rows);
     }

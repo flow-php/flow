@@ -43,7 +43,7 @@ final readonly class Column
         bool $isGenerated = false,
         ?string $generationExpression = null,
         ?int $ordinalPosition = null,
-    ) : self {
+    ): self {
         return new self(
             $name,
             $type,
@@ -60,7 +60,7 @@ final readonly class Column
     /**
      * @param ColumnShape $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             name: $data['name'],
@@ -68,33 +68,37 @@ final readonly class Column
             nullable: $data['nullable'],
             default: $data['default'] ?? null,
             isIdentity: $data['is_identity'] ?? false,
-            identityGeneration: array_key_exists('identity_generation', $data) && $data['identity_generation'] !== null ? IdentityGeneration::from($data['identity_generation']) : null,
+            identityGeneration: array_key_exists('identity_generation', $data) && $data['identity_generation'] !== null
+                ? IdentityGeneration::from($data['identity_generation'])
+                : null,
             isGenerated: $data['is_generated'] ?? false,
             generationExpression: $data['generation_expression'] ?? null,
             ordinalPosition: $data['ordinal_position'] ?? null,
         );
     }
 
-    public function isEqual(self $other) : bool
+    public function isEqual(self $other): bool
     {
         return $this->name === $other->name && $this->isEqualStructure($other);
     }
 
-    public function isEqualStructure(self $other) : bool
+    public function isEqualStructure(self $other): bool
     {
-        return $this->type->isEqual($other->type)
+        return (
+            $this->type->isEqual($other->type)
             && $this->nullable === $other->nullable
             && $this->default === $other->default
             && $this->isIdentity === $other->isIdentity
             && $this->identityGeneration === $other->identityGeneration
             && $this->isGenerated === $other->isGenerated
-            && $this->generationExpression === $other->generationExpression;
+            && $this->generationExpression === $other->generationExpression
+        );
     }
 
     /**
      * @return ColumnShape
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'name' => $this->name,

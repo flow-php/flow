@@ -5,21 +5,20 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\{FlowContext, Row, Rows, Transformer};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
+use Flow\ETL\Transformer;
 
 final readonly class HitsIntoRowsTransformer implements Transformer
 {
     public function __construct(
         private DocumentDataSource $source = DocumentDataSource::source,
-    ) {
-    }
+    ) {}
 
-    public function transform(Rows $rows, FlowContext $context) : Rows
+    public function transform(Rows $rows, FlowContext $context): Rows
     {
-        $context->telemetry()->transformationStarted(
-            $this,
-            []
-        );
+        $context->telemetry()->transformationStarted($this, []);
 
         try {
             $newRows = [];

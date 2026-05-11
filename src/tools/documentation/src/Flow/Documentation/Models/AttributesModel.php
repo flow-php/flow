@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
-use function Flow\Types\DSL\{type_array, type_list};
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_list;
 
 final readonly class AttributesModel
 {
@@ -13,36 +14,33 @@ final readonly class AttributesModel
      */
     public function __construct(
         public array $attributes,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<array<string, mixed>> $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         type_list(type_array())->assert($data);
 
-        return new self(
-            array_map(static fn (array $attribute) => AttributeModel::fromArray($attribute), $data),
-        );
+        return new self(array_map(static fn(array $attribute) => AttributeModel::fromArray($attribute), $data));
     }
 
-    public static function fromReflection(\ReflectionFunction|\ReflectionMethod $reflection) : self
+    public static function fromReflection(\ReflectionFunction|\ReflectionMethod $reflection): self
     {
-        return new self(
-            array_map(
-                static fn (\ReflectionAttribute $reflectionAttribute) : AttributeModel => AttributeModel::fromReflection($reflectionAttribute),
-                $reflection->getAttributes()
-            )
-        );
+        return new self(array_map(
+            static fn(\ReflectionAttribute $reflectionAttribute): AttributeModel => AttributeModel::fromReflection(
+                $reflectionAttribute,
+            ),
+            $reflection->getAttributes(),
+        ));
     }
 
-    public function findByName(string $name) : ?AttributeModel
+    public function findByName(string $name): ?AttributeModel
     {
         $attributes = array_filter(
             $this->attributes,
-            static fn (AttributeModel $attribute) => $attribute->name === $name
+            static fn(AttributeModel $attribute) => $attribute->name === $name,
         );
 
         if (\count($attributes)) {
@@ -55,8 +53,8 @@ final readonly class AttributesModel
     /**
      * @return array<array<string, mixed>>
      */
-    public function normalize() : array
+    public function normalize(): array
     {
-        return array_map(static fn (AttributeModel $attribute) => $attribute->normalize(), $this->attributes);
+        return array_map(static fn(AttributeModel $attribute) => $attribute->normalize(), $this->attributes);
     }
 }

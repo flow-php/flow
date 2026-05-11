@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Factory;
 
-use function Flow\CLI\{option_int_nullable, option_list_of_strings};
-use function Flow\ETL\Adapter\Parquet\from_parquet;
 use Flow\ETL\Adapter\Parquet\ParquetExtractor;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
+
+use function Flow\CLI\option_int_nullable;
+use function Flow\CLI\option_list_of_strings;
+use function Flow\ETL\Adapter\Parquet\from_parquet;
 
 final readonly class ParquetExtractorFactory
 {
@@ -16,10 +18,9 @@ final readonly class ParquetExtractorFactory
         private Path $path,
         private string $columns = 'input-parquet-columns',
         private string $offset = 'input-parquet-offset',
-    ) {
-    }
+    ) {}
 
-    public function get(InputInterface $input) : ParquetExtractor
+    public function get(InputInterface $input): ParquetExtractor
     {
         $extractor = from_parquet($this->path);
 

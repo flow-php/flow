@@ -6,5 +6,5 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Type;
 
 interface CreateCompositeTypeAttributesStep
 {
-    public function attributes(TypeAttribute ...$attributes) : CreateCompositeTypeFinalStep;
+    public function attributes(TypeAttribute ...$attributes): CreateCompositeTypeFinalStep;
 }

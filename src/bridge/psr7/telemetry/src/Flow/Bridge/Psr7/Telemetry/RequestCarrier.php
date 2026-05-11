@@ -32,20 +32,19 @@ final readonly class RequestCarrier implements Carrier
 {
     public function __construct(
         private ServerRequestInterface $request,
-    ) {
-    }
+    ) {}
 
-    public function get(string $key) : ?string
+    public function get(string $key): ?string
     {
         return $this->request->getHeader($key)[0] ?? null;
     }
 
-    public function set(string $key, string $value) : static
+    public function set(string $key, string $value): static
     {
         throw new RuntimeException('RequestCarrier is read-only');
     }
 
-    public function unwrap() : ServerRequestInterface
+    public function unwrap(): ServerRequestInterface
     {
         return $this->request;
     }

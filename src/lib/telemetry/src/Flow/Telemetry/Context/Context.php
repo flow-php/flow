@@ -27,8 +27,7 @@ final class Context
     public function __construct(
         public readonly TraceId $traceId,
         public readonly Baggage $baggage = new Baggage(),
-    ) {
-    }
+    ) {}
 
     /**
      * Create a new Context with an invalid TraceId (all zeros).
@@ -37,7 +36,7 @@ final class Context
      * Logs and spans emitted in this context will not have a trace ID until
      * a trace is explicitly started.
      */
-    public static function create() : self
+    public static function create(): self
     {
         return new self(TraceId::invalid());
     }
@@ -47,12 +46,9 @@ final class Context
      *
      * @param array{traceId: array{hex: string}, baggage: array{entries: array<string, string>}, activeSpanId: null|array{hex: string}} $data Normalized Context data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
-        $context = new self(
-            TraceId::fromArray($data['traceId']),
-            Baggage::fromArray($data['baggage']),
-        );
+        $context = new self(TraceId::fromArray($data['traceId']), Baggage::fromArray($data['baggage']));
 
         if ($data['activeSpanId'] !== null) {
             $context->activeSpanId = SpanId::fromArray($data['activeSpanId']);
@@ -66,7 +62,7 @@ final class Context
      *
      * @param TraceId $traceId The trace ID to use
      */
-    public static function withTraceId(TraceId $traceId) : self
+    public static function withTraceId(TraceId $traceId): self
     {
         return new self($traceId);
     }
@@ -76,7 +72,7 @@ final class Context
      *
      * @return null|SpanId The active span ID, or null if no span is active
      */
-    public function activeSpanId() : ?SpanId
+    public function activeSpanId(): ?SpanId
     {
         return $this->activeSpanId;
     }
@@ -87,7 +83,7 @@ final class Context
      * A root context has no active span, meaning any new span created
      * in this context would be a root span.
      */
-    public function isRootContext() : bool
+    public function isRootContext(): bool
     {
         return $this->activeSpanId === null;
     }
@@ -97,7 +93,7 @@ final class Context
      *
      * @return array{traceId: array{hex: string}, baggage: array{entries: array<string, string>}, activeSpanId: null|array{hex: string}}
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'traceId' => $this->traceId->normalize(),
@@ -113,7 +109,7 @@ final class Context
      *
      * @return self New Context instance with the active span set
      */
-    public function withActiveSpan(SpanId $spanId) : self
+    public function withActiveSpan(SpanId $spanId): self
     {
         $context = new self($this->traceId, $this->baggage);
         $context->activeSpanId = $spanId;
@@ -128,7 +124,7 @@ final class Context
      *
      * @return self New Context instance with the new baggage
      */
-    public function withBaggage(Baggage $baggage) : self
+    public function withBaggage(Baggage $baggage): self
     {
         $context = new self($this->traceId, $baggage);
         $context->activeSpanId = $this->activeSpanId;
@@ -141,7 +137,7 @@ final class Context
      *
      * @return self New Context instance with no active span
      */
-    public function withoutActiveSpan() : self
+    public function withoutActiveSpan(): self
     {
         return new self($this->traceId, $this->baggage);
     }

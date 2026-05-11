@@ -12,8 +12,10 @@ final readonly class Range
      * @param null|int $offset the starting byte position (nullable for reading from the end)
      * @param null|int $limit the number of bytes to read (nullable for reading until the end)
      */
-    public function __construct(private ?int $offset = null, private ?int $limit = null)
-    {
+    public function __construct(
+        private ?int $offset = null,
+        private ?int $limit = null,
+    ) {
         if ($offset !== null && $offset < 0) {
             throw new \InvalidArgumentException('Offset must be >= 0 if provided, $offset provided: ' . $offset);
         }
@@ -28,7 +30,7 @@ final readonly class Range
      *
      * @return string the formatted Range header
      */
-    public function toString() : string
+    public function toString(): string
     {
         if ($this->offset === null && $this->limit === null) {
             return '';

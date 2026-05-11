@@ -25,11 +25,12 @@ final class WriteFlatColumnValues
         $this->flatPath = $column->flatPath();
     }
 
-    public function add(FlatValue $cell) : void
+    public function add(FlatValue $cell): void
     {
         \assert(
             $cell->column->flatPath() === $this->flatPath,
-            'Cannot add data from different column, attempt to merge: ' . $this->flatPath . ' with ' . $cell->column->flatPath()
+            'Cannot add data from different column, attempt to merge: ' . $this->flatPath . ' with '
+                . $cell->column->flatPath(),
         );
 
         $this->repetitionLevels[] = $cell->repetitionLevel;
@@ -43,7 +44,7 @@ final class WriteFlatColumnValues
     /**
      * @param null|scalar $value
      */
-    public function addRaw(int $repetitionLevel, int $definitionLevel, bool|float|int|string|null $value) : void
+    public function addRaw(int $repetitionLevel, int $definitionLevel, bool|float|int|string|null $value): void
     {
         $this->repetitionLevels[] = $repetitionLevel;
         $this->definitionLevels[] = $definitionLevel;
@@ -56,22 +57,22 @@ final class WriteFlatColumnValues
     /**
      * @return array<int>
      */
-    public function definitionLevels() : array
+    public function definitionLevels(): array
     {
         return $this->definitionLevels;
     }
 
-    public function definitionLevelsCount() : int
+    public function definitionLevelsCount(): int
     {
         return \count($this->definitionLevels);
     }
 
-    public function flatPath() : string
+    public function flatPath(): string
     {
         return $this->flatPath;
     }
 
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return !\count($this->values) && !\count($this->repetitionLevels) && !\count($this->definitionLevels);
     }
@@ -79,7 +80,7 @@ final class WriteFlatColumnValues
     /**
      * @return \Generator<FlatValue>
      */
-    public function iterator() : \Generator
+    public function iterator(): \Generator
     {
         $maxDefinitionLevel = $this->column->repetitions()->maxDefinitionLevel();
 
@@ -90,7 +91,7 @@ final class WriteFlatColumnValues
                 $this->column,
                 $this->repetitionLevels[$index],
                 $definitionLevel,
-                $definitionLevel === $maxDefinitionLevel ? $this->values[$valueIndex] : null
+                $definitionLevel === $maxDefinitionLevel ? $this->values[$valueIndex] : null,
             );
 
             if ($definitionLevel === $maxDefinitionLevel) {
@@ -99,11 +100,11 @@ final class WriteFlatColumnValues
         }
     }
 
-    public function merge(self $flatData) : self
+    public function merge(self $flatData): self
     {
         \assert(
             $flatData->flatPath === $this->flatPath,
-            'Cannot merge different column, attempt to merge: ' . $this->flatPath . ' with ' . $flatData->flatPath
+            'Cannot merge different column, attempt to merge: ' . $this->flatPath . ' with ' . $flatData->flatPath,
         );
 
         array_push($this->repetitionLevels, ...$flatData->repetitionLevels);
@@ -113,7 +114,7 @@ final class WriteFlatColumnValues
         return $this;
     }
 
-    public function nullCount() : int
+    public function nullCount(): int
     {
         $maxDefinitionLevel = $this->column->repetitions()->maxDefinitionLevel();
 
@@ -131,12 +132,12 @@ final class WriteFlatColumnValues
     /**
      * @return array<int>
      */
-    public function repetitionLevels() : array
+    public function repetitionLevels(): array
     {
         return $this->repetitionLevels;
     }
 
-    public function rowsCount() : int
+    public function rowsCount(): int
     {
         $rowsCount = 0;
 
@@ -149,7 +150,7 @@ final class WriteFlatColumnValues
         return $rowsCount;
     }
 
-    public function skipRows(?int $skipRows) : self
+    public function skipRows(?int $skipRows): self
     {
         if ($skipRows === null || $skipRows <= 0) {
             return $this;
@@ -204,7 +205,7 @@ final class WriteFlatColumnValues
      *
      * @return array<WriteFlatColumnValues>
      */
-    public function splitByRows(int $rowsInChunk) : array
+    public function splitByRows(int $rowsInChunk): array
     {
         $chunks = [];
         $currentChunk = [
@@ -228,9 +229,18 @@ final class WriteFlatColumnValues
 
             $repetitionLevel = $this->repetitionLevels[$index];
 
-            if ($repetitionLevel === 0 && $rowsInCurrentChunk >= $rowsInChunk && \count($currentChunk['repetitions']) > 0) {
+            if (
+                $repetitionLevel === 0
+                && $rowsInCurrentChunk >= $rowsInChunk
+                && \count($currentChunk['repetitions']) > 0
+            ) {
                 $pageBreakIndexes[] = $index;
-                $chunks[] = new self($this->column, $currentChunk['repetitions'], $currentChunk['definitions'], $currentChunk['values']);
+                $chunks[] = new self(
+                    $this->column,
+                    $currentChunk['repetitions'],
+                    $currentChunk['definitions'],
+                    $currentChunk['values'],
+                );
                 $currentChunk = [
                     'repetitions' => [],
                     'definitions' => [],
@@ -252,7 +262,12 @@ final class WriteFlatColumnValues
         }
 
         if (\count($currentChunk['repetitions']) > 0) {
-            $chunks[] = new self($this->column, $currentChunk['repetitions'], $currentChunk['definitions'], $currentChunk['values']);
+            $chunks[] = new self(
+                $this->column,
+                $currentChunk['repetitions'],
+                $currentChunk['definitions'],
+                $currentChunk['values'],
+            );
         }
 
         return $chunks;
@@ -261,7 +276,7 @@ final class WriteFlatColumnValues
     /**
      * @return array<null|scalar>
      */
-    public function values() : array
+    public function values(): array
     {
         return $this->values;
     }

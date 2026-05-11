@@ -11,7 +11,7 @@ interface FilesystemFactory
     /**
      * @param array<string, mixed> $config
      */
-    public function create(string $protocol, array $config) : Filesystem;
+    public function create(string $protocol, array $config): Filesystem;
 
-    public function type() : string;
+    public function type(): string;
 }

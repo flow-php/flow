@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Index\AlterIndex;
 
-use Flow\PostgreSql\Protobuf\AST\{AlterTableCmd, AlterTableStmt, AlterTableType, Node, ObjectType, RangeVar};
+use Flow\PostgreSql\Protobuf\AST\AlterTableCmd;
+use Flow\PostgreSql\Protobuf\AST\AlterTableStmt;
+use Flow\PostgreSql\Protobuf\AST\AlterTableType;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ObjectType;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class AlterTablespaceIndexBuilder implements AlterTablespaceIndexFinalStep
@@ -16,15 +21,18 @@ final readonly class AlterTablespaceIndexBuilder implements AlterTablespaceIndex
         private ?string $schema,
         private string $tablespace,
         private bool $ifExists,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $index, ?string $schema, string $tablespace, bool $ifExists) : AlterTablespaceIndexFinalStep
-    {
+    public static function create(
+        string $index,
+        ?string $schema,
+        string $tablespace,
+        bool $ifExists,
+    ): AlterTablespaceIndexFinalStep {
         return new self($index, $schema, $tablespace, $ifExists);
     }
 
-    public function toAst() : AlterTableStmt
+    public function toAst(): AlterTableStmt
     {
         $stmt = new AlterTableStmt();
         $stmt->setObjtype(ObjectType::OBJECT_INDEX);

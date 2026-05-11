@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema\Formatter\Fixtures;
 
-enum StringEnum : string
+enum StringEnum: string
 {
     case A = 'a';
     case B = 'b';

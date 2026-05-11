@@ -14,25 +14,24 @@ final readonly class Parameter implements QueryParameter
         private string $queryParamName,
         private EntryReference $ref,
         private int|ArrayParameterType $type = ArrayParameterType::STRING,
-    ) {
-    }
+    ) {}
 
-    public static function asciis(string $queryParamName, EntryReference $ref) : self
+    public static function asciis(string $queryParamName, EntryReference $ref): self
     {
         return new self($queryParamName, $ref, ArrayParameterType::ASCII);
     }
 
-    public static function ints(string $queryParamName, EntryReference $ref) : self
+    public static function ints(string $queryParamName, EntryReference $ref): self
     {
         return new self($queryParamName, $ref, ArrayParameterType::INTEGER);
     }
 
-    public static function strings(string $queryParamName, EntryReference $ref) : self
+    public static function strings(string $queryParamName, EntryReference $ref): self
     {
         return new self($queryParamName, $ref, ArrayParameterType::STRING);
     }
 
-    public function queryParamName() : string
+    public function queryParamName(): string
     {
         return $this->queryParamName;
     }
@@ -40,14 +39,14 @@ final readonly class Parameter implements QueryParameter
     /**
      * @return array<array-key, null|bool|float|int|string>
      */
-    public function toQueryParam(Rows $rows) : array
+    public function toQueryParam(Rows $rows): array
     {
         $values = $rows->reduceToArray($this->ref);
 
-        return \array_filter($values, static fn ($value) => \is_scalar($value) || $value === null);
+        return \array_filter($values, static fn($value) => \is_scalar($value) || $value === null);
     }
 
-    public function type() : int|ArrayParameterType
+    public function type(): int|ArrayParameterType
     {
         return $this->type;
     }

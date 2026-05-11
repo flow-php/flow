@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Row};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
 
 final class RegexMatch extends ScalarFunctionChain
 {
@@ -20,10 +21,9 @@ final class RegexMatch extends ScalarFunctionChain
         private readonly ScalarFunction|string|array $subject,
         private readonly ScalarFunction|int $flags = 0,
         private readonly ScalarFunction|int $offset = 0,
-    ) {
-    }
+    ) {}
 
-    public function eval(Row $row, FlowContext $context) : ?bool
+    public function eval(Row $row, FlowContext $context): ?bool
     {
         $pattern = (new Parameter($this->pattern))->asString($row, $context);
         $subject = (new Parameter($this->subject))->asString($row, $context);
@@ -31,19 +31,27 @@ final class RegexMatch extends ScalarFunctionChain
         $offset = (new Parameter($this->offset))->asInt($row, $context);
 
         if ($pattern === null) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('RegexMatch requires non-null pattern'));
+            return $context
+                ->functions()
+                ->invalidResult(new InvalidArgumentException('RegexMatch requires non-null pattern'));
         }
 
         if ($subject === null) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('RegexMatch requires non-null subject'));
+            return $context
+                ->functions()
+                ->invalidResult(new InvalidArgumentException('RegexMatch requires non-null subject'));
         }
 
         if ($flags === null) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('RegexMatch requires non-null flags'));
+            return $context
+                ->functions()
+                ->invalidResult(new InvalidArgumentException('RegexMatch requires non-null flags'));
         }
 
         if ($offset === null) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('RegexMatch requires non-null offset'));
+            return $context
+                ->functions()
+                ->invalidResult(new InvalidArgumentException('RegexMatch requires non-null offset'));
         }
 
         /** @phpstan-ignore argument.type */

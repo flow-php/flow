@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\FilesystemCache;
 
 use Flow\Bridge\Symfony\FilesystemCache\Exception\FilesystemCacheException;
-use Flow\Filesystem\{Filesystem, Path};
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
-use Symfony\Component\Cache\Marshaller\{DefaultMarshaller, MarshallerInterface};
+use Symfony\Component\Cache\Marshaller\DefaultMarshaller;
+use Symfony\Component\Cache\Marshaller\MarshallerInterface;
 use Symfony\Component\Cache\PruneableInterface;
 
 final class FlowFilesystemCacheAdapter extends AbstractAdapter implements PruneableInterface
@@ -26,7 +28,10 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
         ?MarshallerInterface $marshaller = null,
     ) {
         if (isset($namespace[0]) && \preg_match('#[^-+.A-Za-z0-9]#', $namespace, $match)) {
-            throw new InvalidArgumentException(\sprintf('Namespace contains "%s" but only characters in [-+.A-Za-z0-9] are allowed.', $match[0]));
+            throw new InvalidArgumentException(\sprintf(
+                'Namespace contains "%s" but only characters in [-+.A-Za-z0-9] are allowed.',
+                $match[0],
+            ));
         }
         $this->marshaller = $marshaller ?? new DefaultMarshaller();
         $this->maxIdLength = self::MAX_KEY_LENGTH;
@@ -34,7 +39,7 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
         parent::__construct($namespace, $defaultLifetime);
     }
 
-    public function prune() : bool
+    public function prune(): bool
     {
         $now = \time();
 
@@ -49,7 +54,7 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
         return true;
     }
 
-    protected function doClear(string $namespace) : bool
+    protected function doClear(string $namespace): bool
     {
         foreach ($this->filesystem->list($this->listPattern(), new OnlyFiles()) as $status) {
             if ($namespace === '') {
@@ -69,7 +74,7 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
     /**
      * @param array<string> $ids
      */
-    protected function doDelete(array $ids) : bool
+    protected function doDelete(array $ids): bool
     {
         $ok = true;
 
@@ -91,7 +96,7 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
      *
      * @return iterable<string, mixed>
      */
-    protected function doFetch(array $ids) : iterable
+    protected function doFetch(array $ids): iterable
     {
         $now = \time();
         $expired = [];
@@ -134,7 +139,7 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
         }
     }
 
-    protected function doHave(string $id) : bool
+    protected function doHave(string $id): bool
     {
         $path = $this->fileFor($id);
 
@@ -152,7 +157,7 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
      *
      * @return array<int, string>
      */
-    protected function doSave(array $values, int $lifetime) : array
+    protected function doSave(array $values, int $lifetime): array
     {
         $failed = [];
         $marshalled = $this->marshaller->marshall($values, $failed);
@@ -186,19 +191,19 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
         return $failed ?? [];
     }
 
-    private function fileFor(string $id) : Path
+    private function fileFor(string $id): Path
     {
         $hash = \str_replace('/', '-', \base64_encode(\hash('xxh128', $id, true)));
 
         return Path::from(\rtrim($this->directory->uri(), '/') . '/' . \substr($hash, 0, 2) . '/' . \substr($hash, 2));
     }
 
-    private function listPattern() : Path
+    private function listPattern(): Path
     {
         return Path::from(\rtrim($this->directory->uri(), '/') . '/**/*');
     }
 
-    private function readExpiry(Path $path) : int
+    private function readExpiry(Path $path): int
     {
         $stream = $this->filesystem->readFrom($path);
 
@@ -213,7 +218,7 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
         return 0;
     }
 
-    private function readId(Path $path) : string
+    private function readId(Path $path): string
     {
         $stream = $this->filesystem->readFrom($path);
 

@@ -24,13 +24,12 @@ final readonly class LogRecordConverter
     public function __construct(
         private SeverityMapper $severityMapper = new SeverityMapper(),
         private ValueNormalizer $valueNormalizer = new ValueNormalizer(),
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<array-key, mixed> $context
      */
-    public function convert(string|\Stringable $level, string|\Stringable $message, array $context = []) : LogRecord
+    public function convert(string|\Stringable $level, string|\Stringable $message, array $context = []): LogRecord
     {
         $record = new LogRecord(
             severity: $this->severityMapper->map($level),
@@ -43,7 +42,7 @@ final readonly class LogRecordConverter
     /**
      * @param array<array-key, mixed> $context
      */
-    private function applyContext(LogRecord $record, array $context) : LogRecord
+    private function applyContext(LogRecord $record, array $context): LogRecord
     {
         foreach ($context as $key => $value) {
             $key = (string) $key;
@@ -63,7 +62,7 @@ final readonly class LogRecordConverter
     /**
      * @param array<array-key, mixed> $context
      */
-    private function interpolate(string $message, array $context) : string
+    private function interpolate(string $message, array $context): string
     {
         if ($message === '' || !str_contains($message, '{')) {
             return $message;
@@ -88,7 +87,7 @@ final readonly class LogRecordConverter
         return strtr($message, $replacements);
     }
 
-    private function renderForInterpolation(mixed $value) : ?string
+    private function renderForInterpolation(mixed $value): ?string
     {
         if ($value === null) {
             return '';

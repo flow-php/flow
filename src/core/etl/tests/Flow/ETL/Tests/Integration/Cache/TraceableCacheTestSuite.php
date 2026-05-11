@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Cache;
 
 use Flow\ETL\Cache;
-use Flow\ETL\Cache\Implementation\{InMemoryCache, TraceableCache};
+use Flow\ETL\Cache\Implementation\InMemoryCache;
+use Flow\ETL\Cache\Implementation\TraceableCache;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Provider\Memory\{MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
+use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
+use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
+use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Provider\Void\VoidExporter;
-use Flow\Telemetry\{Resource, Telemetry};
+use Flow\Telemetry\Resource;
+use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\TracerProvider;
 
 final class TraceableCacheTestSuite extends CacheBaseTestSuite
@@ -22,7 +26,7 @@ final class TraceableCacheTestSuite extends CacheBaseTestSuite
     private Telemetry $telemetry;
 
     #[\Override]
-    protected function setUp() : void
+    protected function setUp(): void
     {
         $clock = new SystemClock();
         $contextStorage = new MemoryContextStorage();
@@ -43,7 +47,7 @@ final class TraceableCacheTestSuite extends CacheBaseTestSuite
         parent::setUp();
     }
 
-    protected function cache() : Cache
+    protected function cache(): Cache
     {
         return new TraceableCache($this->innerCache, $this->telemetry);
     }

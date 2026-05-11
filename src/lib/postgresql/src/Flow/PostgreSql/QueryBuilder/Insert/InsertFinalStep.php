@@ -15,10 +15,10 @@ interface InsertFinalStep extends Sql
     /**
      * Convert this INSERT query to protobuf AST.
      */
-    public function toAst() : InsertStmt;
+    public function toAst(): InsertStmt;
 
     /**
      * Convert this INSERT query to SQL string.
      */
-    public function toSql() : string;
+    public function toSql(): string;
 }

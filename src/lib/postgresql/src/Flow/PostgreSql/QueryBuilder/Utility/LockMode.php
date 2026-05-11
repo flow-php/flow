@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Utility;
 
-enum LockMode : int
+enum LockMode: int
 {
     case ACCESS_EXCLUSIVE = 8;
     case ACCESS_SHARE = 1;

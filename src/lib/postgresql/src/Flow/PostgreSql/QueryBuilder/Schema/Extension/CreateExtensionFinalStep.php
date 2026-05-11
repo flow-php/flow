@@ -9,7 +9,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 
 interface CreateExtensionFinalStep extends Sql
 {
-    public function toAst() : CreateExtensionStmt;
+    public function toAst(): CreateExtensionStmt;
 
-    public function toSql() : string;
+    public function toSql(): string;
 }

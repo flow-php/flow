@@ -12,7 +12,7 @@ interface Serializer
     /**
      * @throw RuntimeException
      */
-    public function serialize(object $serializable) : string;
+    public function serialize(object $serializable): string;
 
     /**
      * @template T of object
@@ -23,5 +23,5 @@ interface Serializer
      *
      * @return T
      */
-    public function unserialize(string $serialized, array $classes) : object;
+    public function unserialize(string $serialized, array $classes): object;
 }

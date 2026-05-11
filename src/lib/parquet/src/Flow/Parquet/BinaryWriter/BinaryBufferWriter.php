@@ -4,33 +4,35 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\BinaryWriter;
 
-use Flow\Parquet\{BinaryWriter, DataSize};
+use Flow\Parquet\BinaryWriter;
+use Flow\Parquet\DataSize;
 
 final class BinaryBufferWriter implements BinaryWriter
 {
-    public function __construct(private string &$buffer)
-    {
+    public function __construct(
+        private string &$buffer,
+    ) {
         $this->buffer = '';
     }
 
-    public function append(string $buffer) : void
+    public function append(string $buffer): void
     {
         $this->buffer .= $buffer;
     }
 
-    public function length() : DataSize
+    public function length(): DataSize
     {
         return DataSize::fromBytes(\strlen($this->buffer));
     }
 
-    public function writeBits(array $bits) : void
+    public function writeBits(array $bits): void
     {
         $byte = 0;
         $bitIndex = 0;
 
         foreach ($bits as $bit) {
             if ($bit) {
-                $byte |= (1 << $bitIndex);
+                $byte |= 1 << $bitIndex;
             }
 
             $bitIndex++;
@@ -47,12 +49,12 @@ final class BinaryBufferWriter implements BinaryWriter
         }
     }
 
-    public function writeBytes(array $bytes) : void
+    public function writeBytes(array $bytes): void
     {
         $this->buffer .= \pack('C*', ...$bytes);
     }
 
-    public function writeVarInts(array $values) : void
+    public function writeVarInts(array $values): void
     {
         foreach ($values as $value) {
             $bytes = [];
@@ -62,7 +64,7 @@ final class BinaryBufferWriter implements BinaryWriter
 
                 while (\bccomp($unsigned, '127', 0) > 0) {
                     $remainder = \bcmod($unsigned, '128', 0);
-                    $bytes[] = ((int) $remainder) | 0x80;
+                    $bytes[] = (int) $remainder | 0x80;
                     $unsigned = \bcdiv($unsigned, '128', 0);
                 }
                 $bytes[] = (int) $unsigned;

@@ -6,11 +6,11 @@ namespace Flow\ETL\Adapter\Elasticsearch\Tests\Context;
 
 interface ElasticsearchContext
 {
-    public function clientConfig() : array;
+    public function clientConfig(): array;
 
-    public function createIndex(string $name) : void;
+    public function createIndex(string $name): void;
 
-    public function deleteIndex(string $name) : void;
+    public function deleteIndex(string $name): void;
 
-    public function version() : int;
+    public function version(): int;
 }

@@ -26,7 +26,7 @@ final readonly class SeverityMapper
     /**
      * @return array<string, Severity>
      */
-    public static function defaultMapping() : array
+    public static function defaultMapping(): array
     {
         return [
             LogLevel::DEBUG => Severity::DEBUG,
@@ -43,7 +43,7 @@ final readonly class SeverityMapper
     /**
      * @throws InvalidArgumentException When the level is not a known PSR-3 LogLevel string
      */
-    public function map(string|\Stringable $level) : Severity
+    public function map(string|\Stringable $level): Severity
     {
         $key = (string) $level;
 

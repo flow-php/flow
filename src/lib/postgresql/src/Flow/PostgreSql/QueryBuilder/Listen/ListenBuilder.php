@@ -13,15 +13,14 @@ final readonly class ListenBuilder implements ListenFinalStep
 
     private function __construct(
         private string $channel,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $channel) : ListenFinalStep
+    public static function create(string $channel): ListenFinalStep
     {
         return new self($channel);
     }
 
-    public function toAst() : ListenStmt
+    public function toAst(): ListenStmt
     {
         return (new ListenStmt())->setConditionname($this->channel);
     }

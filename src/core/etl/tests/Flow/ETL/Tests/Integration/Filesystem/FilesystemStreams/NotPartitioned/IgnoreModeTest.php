@@ -4,20 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\NotPartitioned;
 
-use function Flow\ETL\DSL\ignore;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
+
+use function Flow\ETL\DSL\ignore;
 
 final class IgnoreModeTest extends FilesystemStreamsTestCase
 {
     #[\Override]
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         parent::tearDown();
         $this->cleanFiles();
     }
 
-    public function test_open_stream_for_existing_file() : void
+    public function test_open_stream_for_existing_file(): void
     {
         $streams = $this->streams();
         $this->setupFiles([
@@ -31,11 +32,11 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
         $fileStream->append('different content');
         $streams->closeStreams($path);
 
-        self::assertFileExists($path->path());
-        self::assertSame('some content', \file_get_contents($path->path()));
+        static::assertFileExists($path->path());
+        static::assertSame('some content', \file_get_contents($path->path()));
     }
 
-    public function test_open_stream_for_non_existing_file() : void
+    public function test_open_stream_for_non_existing_file(): void
     {
         $streams = $this->streams();
         $this->setupFiles([
@@ -47,11 +48,11 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
         $fileStream->append('some content');
         $streams->closeStreams($path);
 
-        self::assertFileExists($path->path());
-        self::assertSame('some content', \file_get_contents($path->path()));
+        static::assertFileExists($path->path());
+        static::assertSame('some content', \file_get_contents($path->path()));
     }
 
-    protected function streams() : FilesystemStreams
+    protected function streams(): FilesystemStreams
     {
         $streams = new FilesystemStreams($this->fstab());
         $streams->setMode(ignore());

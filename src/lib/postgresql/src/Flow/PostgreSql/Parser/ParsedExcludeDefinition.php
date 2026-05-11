@@ -15,15 +15,16 @@ final readonly class ParsedExcludeDefinition
         public ?string $predicate,
         public bool $deferrable,
         public bool $initiallyDeferred,
-    ) {
-    }
+    ) {}
 
-    public function equals(self $other) : bool
+    public function equals(self $other): bool
     {
-        return $this->accessMethod === $other->accessMethod
+        return (
+            $this->accessMethod === $other->accessMethod
             && $this->elements === $other->elements
             && $this->predicate === $other->predicate
             && $this->deferrable === $other->deferrable
-            && $this->initiallyDeferred === $other->initiallyDeferred;
+            && $this->initiallyDeferred === $other->initiallyDeferred
+        );
     }
 }

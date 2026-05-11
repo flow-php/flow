@@ -4,23 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
-use function Flow\Types\DSL\type_string;
-use Flow\ETL\Row\Entry\{JsonEntry, UuidEntry, XMLEntry};
-use Flow\ETL\{Rows, Schema};
+use Flow\ETL\Row\Entry\JsonEntry;
+use Flow\ETL\Row\Entry\UuidEntry;
+use Flow\ETL\Row\Entry\XMLEntry;
+use Flow\ETL\Rows;
+use Flow\ETL\Schema;
 use Flow\Types\Value\Json;
+
+use function Flow\Types\DSL\type_string;
 
 final readonly class RowsNormalizer
 {
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     /**
      * @param Schema $schema
      *
      * @return array<mixed, array<string, mixed>>
      */
-    public function normalize(Rows $rows, Schema $schema) : array
+    public function normalize(Rows $rows, Schema $schema): array
     {
         $normalizedRows = [];
 

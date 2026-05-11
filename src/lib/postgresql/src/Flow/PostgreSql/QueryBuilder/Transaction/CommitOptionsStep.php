@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\QueryBuilder\Transaction;
 
 interface CommitOptionsStep extends CommitFinalStep
 {
-    public function andChain() : CommitFinalStep;
+    public function andChain(): CommitFinalStep;
 
-    public function andNoChain() : CommitFinalStep;
+    public function andNoChain(): CommitFinalStep;
 }

@@ -48,7 +48,7 @@ final class NestedColumn implements Column
     /**
      * @param array<Column> $columns
      */
-    public static function create(string $name, array $columns) : self
+    public static function create(string $name, array $columns): self
     {
         return new self($name, Repetition::OPTIONAL, $columns);
     }
@@ -56,58 +56,54 @@ final class NestedColumn implements Column
     /**
      * @param array<Column> $children
      */
-    public static function fromThrift(SchemaElement $schemaElement, array $children) : self
+    public static function fromThrift(SchemaElement $schemaElement, array $children): self
     {
         return new self(
             $schemaElement->name,
             $schemaElement->repetition_type !== null ? Repetition::from($schemaElement->repetition_type) : null,
             $children,
             $schemaElement->converted_type !== null ? ConvertedType::from($schemaElement->converted_type) : null,
-            $schemaElement->logicalType !== null ? LogicalType::fromThrift($schemaElement->logicalType) : null
+            $schemaElement->logicalType !== null ? LogicalType::fromThrift($schemaElement->logicalType) : null,
         );
     }
 
-    public static function list(string $name, ListElement $element, Repetition $repetition = Repetition::OPTIONAL) : self
+    public static function list(string $name, ListElement $element, Repetition $repetition = Repetition::OPTIONAL): self
     {
         return new self(
             $name,
             $repetition,
             [
-                new self(
-                    'list',
-                    Repetition::REPEATED,
-                    [$element->element]
-                ),
+                new self('list', Repetition::REPEATED, [$element->element]),
             ],
             ConvertedType::LIST,
-            new LogicalType(LogicalType::LIST)
+            new LogicalType(LogicalType::LIST),
         );
     }
 
-    public static function map(string $name, MapKey $key, MapValue $value, Repetition $repetition = Repetition::OPTIONAL) : self
-    {
+    public static function map(
+        string $name,
+        MapKey $key,
+        MapValue $value,
+        Repetition $repetition = Repetition::OPTIONAL,
+    ): self {
         return new self(
             $name,
             $repetition,
             [
-                new self(
-                    'key_value',
-                    Repetition::REPEATED,
-                    [
-                        $key->key,
-                        $value->value,
-                    ],
-                ),
+                new self('key_value', Repetition::REPEATED, [
+                    $key->key,
+                    $value->value,
+                ]),
             ],
             ConvertedType::MAP,
-            new LogicalType(LogicalType::MAP)
+            new LogicalType(LogicalType::MAP),
         );
     }
 
     /**
      * @param array<Column> $children
      */
-    public static function schemaRoot(string $name, array $children) : self
+    public static function schemaRoot(string $name, array $children): self
     {
         return new self($name, Repetition::REQUIRED, $children, null, null, true);
     }
@@ -115,7 +111,7 @@ final class NestedColumn implements Column
     /**
      * @param array<Column> $children
      */
-    public static function struct(string $name, array $children, Repetition $repetition = Repetition::OPTIONAL) : self
+    public static function struct(string $name, array $children, Repetition $repetition = Repetition::OPTIONAL): self
     {
         return new self($name, $repetition, $children);
     }
@@ -123,21 +119,22 @@ final class NestedColumn implements Column
     /**
      * @param array<Column> $children
      */
-    public static function structure(string $name, array $children, Repetition $repetition = Repetition::OPTIONAL) : self
+    public static function structure(string $name, array $children, Repetition $repetition = Repetition::OPTIONAL): self
     {
         return new self($name, $repetition, $children);
     }
 
-    public function __debugInfo() : array
+    public function __debugInfo(): array
     {
         return [
             'name' => $this->name,
             'type' => 'nested_column',
             'flat_path' => $this->flatPath(),
-            'parent' => $this->parent ? [
-                'name' => $this->parent->name(),
-                'flat_path' => $this->parent->flatPath(),
-            ] : null,
+            'parent' => $this->parent
+                ? [
+                    'name' => $this->parent->name(),
+                    'flat_path' => $this->parent->flatPath(),
+                ] : null,
             'physical_type' => $this->type()?->name,
             'logical_type' => $this->logicalType?->name(),
             'converted_type' => $this->convertedType?->name,
@@ -150,7 +147,7 @@ final class NestedColumn implements Column
     /**
      * @return array<Column>
      */
-    public function children() : array
+    public function children(): array
     {
         return $this->children;
     }
@@ -158,7 +155,7 @@ final class NestedColumn implements Column
     /**
      * @return array<string, FlatColumn>
      */
-    public function childrenFlat() : array
+    public function childrenFlat(): array
     {
         $flat = [];
 
@@ -174,12 +171,12 @@ final class NestedColumn implements Column
         return $flat;
     }
 
-    public function convertedType() : ?ConvertedType
+    public function convertedType(): ?ConvertedType
     {
         return $this->convertedType;
     }
 
-    public function ddl() : array
+    public function ddl(): array
     {
         $ddlArray = [
             'type' => 'group',
@@ -194,7 +191,7 @@ final class NestedColumn implements Column
         return $ddlArray;
     }
 
-    public function flatPath() : string
+    public function flatPath(): string
     {
         if ($this->flatPath !== null) {
             return $this->flatPath;
@@ -225,7 +222,7 @@ final class NestedColumn implements Column
         return $this->flatPath;
     }
 
-    public function getListElement() : Column
+    public function getListElement(): Column
     {
         if ($this->isList()) {
             /** @phpstan-ignore-next-line */
@@ -235,7 +232,7 @@ final class NestedColumn implements Column
         throw new InvalidArgumentException('Column ' . $this->flatPath() . ' is not a list');
     }
 
-    public function getMapKeyColumn() : FlatColumn
+    public function getMapKeyColumn(): FlatColumn
     {
         if ($this->isMap()) {
             /** @phpstan-ignore-next-line */
@@ -245,7 +242,7 @@ final class NestedColumn implements Column
         throw new InvalidArgumentException('Column ' . $this->flatPath() . ' is not a map');
     }
 
-    public function getMapValueColumn() : ?Column
+    public function getMapValueColumn(): ?Column
     {
         if ($this->isMap()) {
             /** @phpstan-ignore-next-line */
@@ -255,34 +252,42 @@ final class NestedColumn implements Column
         throw new InvalidArgumentException('Column ' . $this->flatPath() . ' is not a map');
     }
 
-    public function isList() : bool
+    public function isList(): bool
     {
-        return $this->cachedIsList ??= ($this->logicalType()?->name() === 'LIST' || $this->convertedType() === ConvertedType::LIST);
+        return $this->cachedIsList ??=
+            $this->logicalType()?->name() === 'LIST' || $this->convertedType() === ConvertedType::LIST;
     }
 
-    public function isMap() : bool
+    public function isMap(): bool
     {
-        return $this->cachedIsMap ??= ($this->logicalType()?->name() === 'MAP' || $this->convertedType() === ConvertedType::MAP);
+        return $this->cachedIsMap ??=
+            $this->logicalType()?->name() === 'MAP' || $this->convertedType() === ConvertedType::MAP;
     }
 
-    public function isMapElement() : bool
+    public function isMapElement(): bool
     {
         if ($this->parent === null) {
             return false;
         }
 
-        if ($this->parent()?->logicalType()?->name() === 'MAP' || $this->parent()?->convertedType() === ConvertedType::MAP) {
+        if (
+            $this->parent()?->logicalType()?->name() === 'MAP'
+            || $this->parent()?->convertedType() === ConvertedType::MAP
+        ) {
             return true;
         }
 
-        if ($this->parent()?->parent()?->logicalType()?->name() === 'MAP' || $this->parent()?->parent()?->convertedType() === ConvertedType::MAP) {
+        if (
+            $this->parent()?->parent()?->logicalType()?->name() === 'MAP'
+            || $this->parent()?->parent()?->convertedType() === ConvertedType::MAP
+        ) {
             return true;
         }
 
         return false;
     }
 
-    public function isStruct() : bool
+    public function isStruct(): bool
     {
         if ($this->isMap()) {
             return false;
@@ -295,19 +300,19 @@ final class NestedColumn implements Column
         return true;
     }
 
-    public function logicalType() : ?LogicalType
+    public function logicalType(): ?LogicalType
     {
         return $this->logicalType;
     }
 
-    public function makeRequired() : self
+    public function makeRequired(): self
     {
         $this->repetition = Repetition::REQUIRED;
 
         return $this;
     }
 
-    public function maxDefinitionsLevel() : int
+    public function maxDefinitionsLevel(): int
     {
         if ($this->maxDefinitionsLevel !== null) {
             return $this->maxDefinitionsLevel;
@@ -322,7 +327,7 @@ final class NestedColumn implements Column
         return $this->maxDefinitionsLevel = $this->parent ? $level + $this->parent->maxDefinitionsLevel() : $level;
     }
 
-    public function maxRepetitionsLevel() : int
+    public function maxRepetitionsLevel(): int
     {
         if ($this->maxRepetitionsLevel !== null) {
             return $this->maxRepetitionsLevel;
@@ -337,27 +342,27 @@ final class NestedColumn implements Column
         return $this->maxRepetitionsLevel = $this->parent ? $level + $this->parent->maxRepetitionsLevel() : $level;
     }
 
-    public function name() : string
+    public function name(): string
     {
         return $this->name;
     }
 
-    public function parent() : ?self
+    public function parent(): ?self
     {
         return $this->parent;
     }
 
-    public function path() : array
+    public function path(): array
     {
         return \explode('.', $this->flatPath());
     }
 
-    public function repetition() : ?Repetition
+    public function repetition(): ?Repetition
     {
         return $this->repetition;
     }
 
-    public function repetitions() : Repetitions
+    public function repetitions(): Repetitions
     {
         if ($this->repetitions !== null) {
             return $this->repetitions;
@@ -382,7 +387,7 @@ final class NestedColumn implements Column
         return $this->repetitions;
     }
 
-    public function setParent(self $parent) : void
+    public function setParent(self $parent): void
     {
         $this->flatPath = null;
         $this->maxDefinitionsLevel = null;
@@ -397,7 +402,7 @@ final class NestedColumn implements Column
     /**
      * @return array<SchemaElement>
      */
-    public function toThrift() : array
+    public function toThrift(): array
     {
         $elements = [
             new SchemaElement([
@@ -422,12 +427,12 @@ final class NestedColumn implements Column
         return $elements;
     }
 
-    public function type() : ?PhysicalType
+    public function type(): ?PhysicalType
     {
         return null;
     }
 
-    public function typeLength() : ?int
+    public function typeLength(): ?int
     {
         return null;
     }

@@ -8,7 +8,7 @@ use Flow\Parquet\ParquetFile\Data\Converter\TimeConverter;
 
 final class Comparator
 {
-    public function isGreaterThan(mixed $value, mixed $nextValue) : bool
+    public function isGreaterThan(mixed $value, mixed $nextValue): bool
     {
         if ($value === null) {
             return false;
@@ -30,7 +30,7 @@ final class Comparator
         return $value > $nextValue;
     }
 
-    public function isLessThan(mixed $value, mixed $nextValue) : bool
+    public function isLessThan(mixed $value, mixed $nextValue): bool
     {
         if ($value === null) {
             return false;

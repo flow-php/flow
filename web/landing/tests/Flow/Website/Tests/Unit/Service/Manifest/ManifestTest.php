@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class ManifestTest extends TestCase
 {
-    public function test_all_returns_packages_indexed_by_name() : void
+    public function test_all_returns_packages_indexed_by_name(): void
     {
         $manifest = new Manifest($this->writeManifest([
             ['name' => 'flow-php/etl', 'path' => 'src/core/etl', 'type' => 'core'],
@@ -18,21 +18,21 @@ final class ManifestTest extends TestCase
 
         $all = $manifest->all();
 
-        self::assertArrayHasKey('flow-php/etl', $all);
-        self::assertArrayHasKey('flow-php/etl-adapter-csv', $all);
-        self::assertSame('core', $all['flow-php/etl']['type']);
+        static::assertArrayHasKey('flow-php/etl', $all);
+        static::assertArrayHasKey('flow-php/etl-adapter-csv', $all);
+        static::assertSame('core', $all['flow-php/etl']['type']);
     }
 
-    public function test_by_name_returns_null_for_unknown_package() : void
+    public function test_by_name_returns_null_for_unknown_package(): void
     {
         $manifest = new Manifest($this->writeManifest([
             ['name' => 'flow-php/etl', 'path' => 'src/core/etl', 'type' => 'core'],
         ]));
 
-        self::assertNull($manifest->byName('flow-php/nonexistent'));
+        static::assertNull($manifest->byName('flow-php/nonexistent'));
     }
 
-    public function test_by_name_returns_package_entry() : void
+    public function test_by_name_returns_package_entry(): void
     {
         $manifest = new Manifest($this->writeManifest([
             ['name' => 'flow-php/parquet', 'path' => 'src/lib/parquet', 'type' => 'lib'],
@@ -40,12 +40,12 @@ final class ManifestTest extends TestCase
 
         $entry = $manifest->byName('flow-php/parquet');
 
-        self::assertNotNull($entry);
-        self::assertSame('flow-php/parquet', $entry['name']);
-        self::assertSame('lib', $entry['type']);
+        static::assertNotNull($entry);
+        static::assertSame('flow-php/parquet', $entry['name']);
+        static::assertSame('lib', $entry['type']);
     }
 
-    public function test_load_is_cached_between_calls() : void
+    public function test_load_is_cached_between_calls(): void
     {
         $path = $this->writeManifest([
             ['name' => 'flow-php/etl', 'path' => 'src/core/etl', 'type' => 'core'],
@@ -56,13 +56,13 @@ final class ManifestTest extends TestCase
         \unlink($path);
 
         // Second call must succeed from cache; would throw if it re-read from disk.
-        self::assertNotNull($manifest->byName('flow-php/etl'));
+        static::assertNotNull($manifest->byName('flow-php/etl'));
     }
 
-    public function test_skips_entries_with_non_string_name() : void
+    public function test_skips_entries_with_non_string_name(): void
     {
         $path = \tempnam(\sys_get_temp_dir(), 'flow-manifest-');
-        self::assertNotFalse($path);
+        static::assertNotFalse($path);
         \file_put_contents($path, \json_encode([
             'packages' => [
                 ['name' => 'flow-php/etl', 'type' => 'core'],
@@ -74,15 +74,15 @@ final class ManifestTest extends TestCase
         $manifest = new Manifest($path);
         $all = $manifest->all();
 
-        self::assertCount(1, $all);
-        self::assertArrayHasKey('flow-php/etl', $all);
+        static::assertCount(1, $all);
+        static::assertArrayHasKey('flow-php/etl', $all);
         \unlink($path);
     }
 
-    public function test_throws_on_invalid_json() : void
+    public function test_throws_on_invalid_json(): void
     {
         $path = \tempnam(\sys_get_temp_dir(), 'flow-manifest-');
-        self::assertNotFalse($path);
+        static::assertNotFalse($path);
         \file_put_contents($path, '{not json');
 
         $manifest = new Manifest($path);
@@ -95,7 +95,7 @@ final class ManifestTest extends TestCase
         }
     }
 
-    public function test_throws_when_file_missing() : void
+    public function test_throws_when_file_missing(): void
     {
         $manifest = new Manifest('/no/such/manifest.json');
 
@@ -108,7 +108,7 @@ final class ManifestTest extends TestCase
     /**
      * @param list<array<string, mixed>> $packages
      */
-    public function writeManifest(array $packages) : string
+    public function writeManifest(array $packages): string
     {
         $path = \tempnam(\sys_get_temp_dir(), 'flow-manifest-');
         self::assertNotFalse($path);

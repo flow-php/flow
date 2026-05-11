@@ -9,7 +9,7 @@ namespace Flow\Telemetry\Tracer;
  *
  * @see https://opentelemetry.io/docs/specs/otel/trace/api/#set-status
  */
-enum SpanStatusCode : int
+enum SpanStatusCode: int
 {
     /**
      * Operation failed with an error.

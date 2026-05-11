@@ -6,7 +6,8 @@ namespace Flow\Parquet\Writer\ColumnChunkBuilder;
 
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\ParquetFile\Schema\{Column, NestedColumn};
+use Flow\Parquet\ParquetFile\Schema\Column;
+use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Writer\ColumnChunkBuilder;
 
 final readonly class NestedColumnChunkBuilder implements ColumnChunkBuilder
@@ -15,28 +16,31 @@ final readonly class NestedColumnChunkBuilder implements ColumnChunkBuilder
      * @param NestedColumn $column
      * @param array<ColumnChunkBuilder> $childrenColumnChunkBuilders
      */
-    public function __construct(private NestedColumn $column, private array $childrenColumnChunkBuilders)
+    public function __construct(
+        private NestedColumn $column,
+        private array $childrenColumnChunkBuilders,
+    ) {}
+
+    public function addColumn(WriteFlatColumnValues $columnValues): void
     {
+        throw new RuntimeException(
+            'NestedColumnChunkBuilder does not support addColumn(). Use flat builders directly via addColumnByFlatPath().',
+        );
     }
 
-    public function addColumn(WriteFlatColumnValues $columnValues) : void
-    {
-        throw new RuntimeException('NestedColumnChunkBuilder does not support addColumn(). Use flat builders directly via addColumnByFlatPath().');
-    }
-
-    public function closePage() : void
+    public function closePage(): void
     {
         foreach ($this->childrenColumnChunkBuilders as $childBuilder) {
             $childBuilder->closePage();
         }
     }
 
-    public function column() : Column
+    public function column(): Column
     {
         return $this->column;
     }
 
-    public function flush(int $fileOffset) : array
+    public function flush(int $fileOffset): array
     {
         $offset = $fileOffset;
         $containers = [];
@@ -51,7 +55,7 @@ final readonly class NestedColumnChunkBuilder implements ColumnChunkBuilder
         return $containers;
     }
 
-    public function isFull() : bool
+    public function isFull(): bool
     {
         foreach ($this->childrenColumnChunkBuilders as $childBuilder) {
             if ($childBuilder->isFull()) {
@@ -62,7 +66,7 @@ final readonly class NestedColumnChunkBuilder implements ColumnChunkBuilder
         return false;
     }
 
-    public function uncompressedSize() : int
+    public function uncompressedSize(): int
     {
         $size = 0;
 

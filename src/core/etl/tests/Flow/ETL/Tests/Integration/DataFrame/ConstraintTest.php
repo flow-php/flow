@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\{constraint_sorted_by, constraint_unique, df, from_array, ref};
 use Flow\ETL\Exception\ConstraintViolationException;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\constraint_sorted_by;
+use function Flow\ETL\DSL\constraint_unique;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\ref;
+
 final class ConstraintTest extends FlowTestCase
 {
-    public function test_sorted_ascending_integers() : void
+    public function test_sorted_ascending_integers(): void
     {
         $result = df()
             ->read(from_array([
@@ -22,10 +27,10 @@ final class ConstraintTest extends FlowTestCase
             ->constrain(constraint_sorted_by(ref('id')))
             ->fetch();
 
-        self::assertCount(4, $result);
+        static::assertCount(4, $result);
     }
 
-    public function test_sorted_ascending_integers_violation() : void
+    public function test_sorted_ascending_integers_violation(): void
     {
         $this->expectException(ConstraintViolationException::class);
         $this->expectExceptionMessage('Constraint violation: Sorted constraint on [id ASC]');
@@ -41,7 +46,7 @@ final class ConstraintTest extends FlowTestCase
             ->run();
     }
 
-    public function test_sorted_default_order_is_ascending() : void
+    public function test_sorted_default_order_is_ascending(): void
     {
         $result = df()
             ->read(from_array([
@@ -52,10 +57,10 @@ final class ConstraintTest extends FlowTestCase
             ->constrain(constraint_sorted_by('id'))
             ->fetch();
 
-        self::assertCount(3, $result);
+        static::assertCount(3, $result);
     }
 
-    public function test_sorted_descending_floats() : void
+    public function test_sorted_descending_floats(): void
     {
         $result = df()
             ->read(from_array([
@@ -66,10 +71,10 @@ final class ConstraintTest extends FlowTestCase
             ->constrain(constraint_sorted_by(ref('price')->desc()))
             ->fetch();
 
-        self::assertCount(3, $result);
+        static::assertCount(3, $result);
     }
 
-    public function test_sorted_descending_violation() : void
+    public function test_sorted_descending_violation(): void
     {
         $this->expectException(ConstraintViolationException::class);
         $this->expectExceptionMessage('Constraint violation: Sorted constraint on [price DESC]');
@@ -84,7 +89,7 @@ final class ConstraintTest extends FlowTestCase
             ->run();
     }
 
-    public function test_sorted_multiple_columns() : void
+    public function test_sorted_multiple_columns(): void
     {
         $result = df()
             ->read(from_array([
@@ -96,10 +101,10 @@ final class ConstraintTest extends FlowTestCase
             ->constrain(constraint_sorted_by(ref('category'), ref('price')->desc()))
             ->fetch();
 
-        self::assertCount(4, $result);
+        static::assertCount(4, $result);
     }
 
-    public function test_sorted_multiple_columns_violation() : void
+    public function test_sorted_multiple_columns_violation(): void
     {
         $this->expectException(ConstraintViolationException::class);
         $this->expectExceptionMessage('Constraint violation: Sorted constraint on [category ASC, price DESC]');
@@ -115,7 +120,7 @@ final class ConstraintTest extends FlowTestCase
             ->run();
     }
 
-    public function test_sorted_strings_ascending() : void
+    public function test_sorted_strings_ascending(): void
     {
         $result = df()
             ->read(from_array([
@@ -127,10 +132,10 @@ final class ConstraintTest extends FlowTestCase
             ->constrain(constraint_sorted_by('name'))
             ->fetch();
 
-        self::assertCount(4, $result);
+        static::assertCount(4, $result);
     }
 
-    public function test_sorted_with_duplicate_values() : void
+    public function test_sorted_with_duplicate_values(): void
     {
         $result = df()
             ->read(from_array([
@@ -142,10 +147,10 @@ final class ConstraintTest extends FlowTestCase
             ->constrain(constraint_sorted_by(ref('id')))
             ->fetch();
 
-        self::assertCount(4, $result);
+        static::assertCount(4, $result);
     }
 
-    public function test_sorted_with_nulls_at_beginning_asc() : void
+    public function test_sorted_with_nulls_at_beginning_asc(): void
     {
         $result = df()
             ->read(from_array([
@@ -156,10 +161,10 @@ final class ConstraintTest extends FlowTestCase
             ->constrain(constraint_sorted_by(ref('id')))
             ->fetch();
 
-        self::assertCount(3, $result);
+        static::assertCount(3, $result);
     }
 
-    public function test_sorted_with_nulls_at_end_asc_violation() : void
+    public function test_sorted_with_nulls_at_end_asc_violation(): void
     {
         $this->expectException(ConstraintViolationException::class);
 
@@ -173,7 +178,7 @@ final class ConstraintTest extends FlowTestCase
             ->run();
     }
 
-    public function test_sorted_with_nulls_at_end_desc() : void
+    public function test_sorted_with_nulls_at_end_desc(): void
     {
         $result = df()
             ->read(from_array([
@@ -184,10 +189,10 @@ final class ConstraintTest extends FlowTestCase
             ->constrain(constraint_sorted_by(ref('id')->desc()))
             ->fetch();
 
-        self::assertCount(3, $result);
+        static::assertCount(3, $result);
     }
 
-    public function test_sorted_with_nulls_in_middle_violation() : void
+    public function test_sorted_with_nulls_in_middle_violation(): void
     {
         $this->expectException(ConstraintViolationException::class);
 
@@ -201,10 +206,12 @@ final class ConstraintTest extends FlowTestCase
             ->run();
     }
 
-    public function test_unique_on_multiple_fields() : void
+    public function test_unique_on_multiple_fields(): void
     {
         $this->expectException(ConstraintViolationException::class);
-        $this->expectExceptionMessage('Constraint violation: Unique constraint on [id, sub_id] - Values: [id<integer> = 4, sub_id<integer> = 4] in row: 5');
+        $this->expectExceptionMessage(
+            'Constraint violation: Unique constraint on [id, sub_id] - Values: [id<integer> = 4, sub_id<integer> = 4] in row: 5',
+        );
 
         df()
             ->read(from_array([

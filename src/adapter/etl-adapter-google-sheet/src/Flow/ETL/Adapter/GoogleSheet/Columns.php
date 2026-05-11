@@ -18,18 +18,24 @@ final readonly class Columns
         }
 
         if (!\preg_match('/^[A-Z]+$/', $startColumn)) {
-            throw new InvalidArgumentException(\sprintf('The column "%s" needs to contain only upper-case letters.', $startColumn));
+            throw new InvalidArgumentException(\sprintf(
+                'The column "%s" needs to contain only upper-case letters.',
+                $startColumn,
+            ));
         }
 
         if (!\preg_match('/^[A-Z]+$/', $endColumn)) {
-            throw new InvalidArgumentException(\sprintf('The column "%s" needs to contain only upper-case letters.', $endColumn));
+            throw new InvalidArgumentException(\sprintf(
+                'The column "%s" needs to contain only upper-case letters.',
+                $endColumn,
+            ));
         }
 
         if ($endColumn < $startColumn) {
             throw new InvalidArgumentException(\sprintf(
                 'The column that starts the range "%s" must not be after the end column "%s"',
                 $startColumn,
-                $endColumn
+                $endColumn,
             ));
         }
     }

@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Row};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
 use Flow\Types\Value\Json;
 
 final class JsonEncode extends ScalarFunctionChain
@@ -13,10 +14,9 @@ final class JsonEncode extends ScalarFunctionChain
     public function __construct(
         private readonly ScalarFunction $value,
         private readonly ScalarFunction|int $flags = JSON_THROW_ON_ERROR,
-    ) {
-    }
+    ) {}
 
-    public function eval(Row $row, FlowContext $context) : mixed
+    public function eval(Row $row, FlowContext $context): mixed
     {
         $value = (new Parameter($this->value))->eval($row, $context);
         $flags = (int) (new Parameter($this->flags))->asInt($row, $context);
@@ -29,7 +29,9 @@ final class JsonEncode extends ScalarFunctionChain
             $encoded = \json_encode($value, $flags);
 
             if ($encoded === false) {
-                return $context->functions()->invalidResult(new InvalidArgumentException('JsonEncode error: json_encode returned false'));
+                return $context
+                    ->functions()
+                    ->invalidResult(new InvalidArgumentException('JsonEncode error: json_encode returned false'));
             }
 
             if (\is_array($value) || \is_object($value)) {

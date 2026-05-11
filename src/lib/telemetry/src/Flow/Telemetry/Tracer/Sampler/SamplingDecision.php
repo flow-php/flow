@@ -17,7 +17,7 @@ namespace Flow\Telemetry\Tracer\Sampler;
  * RECORD_AND_SAMPLE: The span should be recorded and exported.
  *                    isRecording() returns true and SAMPLED flag is set.
  */
-enum SamplingDecision : string
+enum SamplingDecision: string
 {
     case DROP = 'drop';
 
@@ -28,7 +28,7 @@ enum SamplingDecision : string
     /**
      * Check if this decision indicates recording.
      */
-    public function isRecording() : bool
+    public function isRecording(): bool
     {
         return $this !== self::DROP;
     }
@@ -36,7 +36,7 @@ enum SamplingDecision : string
     /**
      * Check if this decision indicates sampling (export).
      */
-    public function isSampled() : bool
+    public function isSampled(): bool
     {
         return $this === self::RECORD_AND_SAMPLE;
     }

@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\EntryIdFactory;
 
-use function Flow\ETL\DSL\string_entry;
 use Flow\ETL\Adapter\Elasticsearch\IdFactory;
-use Flow\ETL\Hash\{Algorithm, NativePHPHash};
+use Flow\ETL\Hash\Algorithm;
+use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
+
+use function Flow\ETL\DSL\string_entry;
 
 final class HashIdFactory implements IdFactory
 {
@@ -25,21 +27,19 @@ final class HashIdFactory implements IdFactory
         $this->hashAlgorithm = new NativePHPHash();
     }
 
-    public function create(Row $row) : Entry
+    public function create(Row $row): Entry
     {
         return string_entry(
             'id',
-            $this->hashAlgorithm->hash(
-                \implode(':', \array_map(static function (string $name) use ($row) : string {
-                    $value = $row->valueOf($name);
+            $this->hashAlgorithm->hash(\implode(':', \array_map(static function (string $name) use ($row): string {
+                $value = $row->valueOf($name);
 
-                    return \is_scalar($value) || $value instanceof \Stringable ? (string) $value : '';
-                }, $this->entryNames))
-            )
+                return \is_scalar($value) || $value instanceof \Stringable ? (string) $value : '';
+            }, $this->entryNames))),
         );
     }
 
-    public function withAlgorithm(Algorithm $algorithm) : self
+    public function withAlgorithm(Algorithm $algorithm): self
     {
         $factory = new self(...$this->entryNames);
         $factory->hashAlgorithm = $algorithm;

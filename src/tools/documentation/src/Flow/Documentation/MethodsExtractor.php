@@ -15,13 +15,12 @@ final readonly class MethodsExtractor
         private string $repositoryRootPath,
         private string $className,
         private MethodCollector $methodCollector,
-    ) {
-    }
+    ) {}
 
     /**
      * @return \Generator<MethodModel>
      */
-    public function extract() : \Generator
+    public function extract(): \Generator
     {
         $this->methodCollector->collect($this->className);
 
@@ -29,12 +28,12 @@ final readonly class MethodsExtractor
 
         foreach ($this->methodCollector->methods as $methodName) {
             $reflectionMethod = $reflectionClass->getMethod($methodName);
-            $repositoryPath = \ltrim(\str_replace($this->repositoryRootPath, '', (string) $reflectionMethod->getFileName()), '/');
-
-            yield MethodModel::fromReflection(
-                $repositoryPath,
-                $reflectionMethod
+            $repositoryPath = \ltrim(
+                \str_replace($this->repositoryRootPath, '', (string) $reflectionMethod->getFileName()),
+                '/',
             );
+
+            yield MethodModel::fromReflection($repositoryPath, $reflectionMethod);
         }
     }
 }

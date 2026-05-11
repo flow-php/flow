@@ -4,19 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\Parquet;
 
-use Flow\Filesystem\{DestinationStream, SourceStream};
-use Flow\Parquet\ParquetFile\{Compressions, Schema};
+use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\SourceStream;
+use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\ParquetFile\Schema;
 
 interface ParquetEngine
 {
-    public function closeWrite() : void;
+    public function closeWrite(): void;
 
     public function openForWrite(
         DestinationStream $stream,
         Schema $schema,
         Compressions $compression,
         Options $options,
-    ) : void;
+    ): void;
 
     /**
      * @param array<string> $columns
@@ -29,17 +31,17 @@ interface ParquetEngine
         array $columns = [],
         ?int $limit = null,
         ?int $offset = null,
-    ) : \Generator;
+    ): \Generator;
 
     /**
      * @param iterable<array<string, mixed>> $rows
      */
-    public function writeBatch(iterable $rows) : void;
+    public function writeBatch(iterable $rows): void;
 
     /**
      * @param array<string, mixed> $row
      */
-    public function writeRow(array $row) : void;
+    public function writeRow(array $row): void;
 
     /**
      * @param iterable<array<string, mixed>> $rows
@@ -50,5 +52,5 @@ interface ParquetEngine
         Compressions $compression,
         Options $options,
         iterable $rows,
-    ) : void;
+    ): void;
 }

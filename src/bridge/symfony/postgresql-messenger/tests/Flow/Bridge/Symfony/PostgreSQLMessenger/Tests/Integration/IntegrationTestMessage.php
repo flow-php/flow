@@ -8,6 +8,5 @@ final readonly class IntegrationTestMessage
 {
     public function __construct(
         public string $payload,
-    ) {
-    }
+    ) {}
 }

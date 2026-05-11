@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Stream\Block;
 
+use Flow\Filesystem\Exception\InvalidArgumentException;
+use Flow\Filesystem\Stream\Block;
+use Flow\Filesystem\Stream\BlockFactory;
+
 use function Flow\ETL\DSL\generate_random_string;
 use function Flow\Filesystem\DSL\path;
-use Flow\Filesystem\Exception\InvalidArgumentException;
-use Flow\Filesystem\Stream\{Block, BlockFactory};
 
 final readonly class NativeLocalFileBlocksFactory implements BlockFactory
 {
@@ -23,7 +25,8 @@ final readonly class NativeLocalFileBlocksFactory implements BlockFactory
         if ($blockLocation) {
             if (!\file_exists($blockLocation) || !\is_dir($blockLocation)) {
                 if (!\mkdir($blockLocation, 0777, true) && !\is_dir($blockLocation)) {
-                    throw new InvalidArgumentException('Block location must be a valid directory, got: ' . $blockLocation);
+                    throw new InvalidArgumentException('Block location must be a valid directory, got: '
+                    . $blockLocation);
                 }
             }
         }
@@ -31,7 +34,7 @@ final readonly class NativeLocalFileBlocksFactory implements BlockFactory
         $this->blockLocation = $blockLocation ?: \sys_get_temp_dir();
     }
 
-    public function create(int $size) : Block
+    public function create(int $size): Block
     {
         $id = generate_random_string();
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Join;
 
-enum Join : string
+enum Join: string
 {
     case inner = 'inner';
     case left = 'left';

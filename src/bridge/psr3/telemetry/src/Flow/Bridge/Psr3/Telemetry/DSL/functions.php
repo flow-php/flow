@@ -4,10 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Psr3\Telemetry\DSL;
 
-use Flow\Bridge\Psr3\Telemetry\{LogRecordConverter, SeverityMapper, TelemetryLogger, ValueNormalizer};
-use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
-use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
-use Flow\Telemetry\Logger\{Logger, Severity};
+use Flow\Bridge\Psr3\Telemetry\LogRecordConverter;
+use Flow\Bridge\Psr3\Telemetry\SeverityMapper;
+use Flow\Bridge\Psr3\Telemetry\TelemetryLogger;
+use Flow\Bridge\Psr3\Telemetry\ValueNormalizer;
+use Flow\ETL\Attribute\DocumentationDSL;
+use Flow\ETL\Attribute\Module;
+use Flow\ETL\Attribute\Type as DSLType;
+use Flow\Telemetry\ErrorHandler\ErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
+use Flow\Telemetry\Logger\Logger;
+use Flow\Telemetry\Logger\Severity;
 
 /**
  * Create a TelemetryLogger that exposes a PSR-3 LoggerInterface backed by a Flow Telemetry Logger.
@@ -28,7 +35,7 @@ function psr3_telemetry_logger(
     Logger $logger,
     LogRecordConverter $converter = new LogRecordConverter(),
     ErrorHandler $errorHandler = new ErrorLogHandler(),
-) : TelemetryLogger {
+): TelemetryLogger {
     return new TelemetryLogger($logger, $converter, $errorHandler);
 }
 
@@ -55,7 +62,7 @@ function psr3_telemetry_logger(
  * ```
  */
 #[DocumentationDSL(module: Module::PSR3_TELEMETRY_BRIDGE, type: DSLType::HELPER)]
-function psr3_severity_mapper(?array $customMapping = null) : SeverityMapper
+function psr3_severity_mapper(?array $customMapping = null): SeverityMapper
 {
     return new SeverityMapper($customMapping);
 }
@@ -74,7 +81,7 @@ function psr3_severity_mapper(?array $customMapping = null) : SeverityMapper
 function psr3_log_record_converter(
     ?SeverityMapper $severityMapper = null,
     ?ValueNormalizer $valueNormalizer = null,
-) : LogRecordConverter {
+): LogRecordConverter {
     return new LogRecordConverter(
         $severityMapper ?? psr3_severity_mapper(),
         $valueNormalizer ?? psr3_value_normalizer(),
@@ -85,7 +92,7 @@ function psr3_log_record_converter(
  * Create a ValueNormalizer for converting arbitrary PHP values into Telemetry attribute types.
  */
 #[DocumentationDSL(module: Module::PSR3_TELEMETRY_BRIDGE, type: DSLType::HELPER)]
-function psr3_value_normalizer() : ValueNormalizer
+function psr3_value_normalizer(): ValueNormalizer
 {
     return new ValueNormalizer();
 }

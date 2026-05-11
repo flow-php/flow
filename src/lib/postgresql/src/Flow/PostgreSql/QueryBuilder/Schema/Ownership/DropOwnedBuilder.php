@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Ownership;
 
-use Flow\PostgreSql\Protobuf\AST\{DropBehavior, DropOwnedStmt, Node, RoleSpec, RoleSpecType};
+use Flow\PostgreSql\Protobuf\AST\DropBehavior;
+use Flow\PostgreSql\Protobuf\AST\DropOwnedStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RoleSpec;
+use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class DropOwnedBuilder implements DropOwnedFinalStep
@@ -17,31 +21,24 @@ final readonly class DropOwnedBuilder implements DropOwnedFinalStep
     private function __construct(
         private array $roles,
         private int $behavior = DropBehavior::DROP_RESTRICT,
-    ) {
-    }
+    ) {}
 
-    public static function create(string ...$roles) : DropOwnedFinalStep
+    public static function create(string ...$roles): DropOwnedFinalStep
     {
         return new self(\array_values($roles));
     }
 
-    public function cascade() : DropOwnedFinalStep
+    public function cascade(): DropOwnedFinalStep
     {
-        return new self(
-            $this->roles,
-            DropBehavior::DROP_CASCADE,
-        );
+        return new self($this->roles, DropBehavior::DROP_CASCADE);
     }
 
-    public function restrict() : DropOwnedFinalStep
+    public function restrict(): DropOwnedFinalStep
     {
-        return new self(
-            $this->roles,
-            DropBehavior::DROP_RESTRICT,
-        );
+        return new self($this->roles, DropBehavior::DROP_RESTRICT);
     }
 
-    public function toAst() : DropOwnedStmt
+    public function toAst(): DropOwnedStmt
     {
         $stmt = new DropOwnedStmt();
         $stmt->setBehavior($this->behavior);

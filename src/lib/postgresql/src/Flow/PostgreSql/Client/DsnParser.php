@@ -18,7 +18,7 @@ final readonly class DsnParser
      *
      * @throws DsnParserException If the DSN cannot be parsed
      */
-    public function parse(#[\SensitiveParameter] string $dsn) : ConnectionParameters
+    public function parse(#[\SensitiveParameter] string $dsn): ConnectionParameters
     {
         $params = $this->parseDsn($dsn);
 
@@ -35,7 +35,7 @@ final readonly class DsnParser
     /**
      * @param array<string, mixed> $parts
      */
-    private function parseDatabase(array $parts) : string
+    private function parseDatabase(array $parts): string
     {
         $path = \array_key_exists('path', $parts) && \is_string($parts['path']) ? $parts['path'] : '';
         $database = \ltrim($path, '/');
@@ -59,7 +59,7 @@ final readonly class DsnParser
      *     options: array<string, string>
      * }
      */
-    private function parseDsn(string $dsn) : array
+    private function parseDsn(string $dsn): array
     {
         $this->validateScheme($dsn);
 
@@ -84,7 +84,7 @@ final readonly class DsnParser
      *
      * @return array<string, string>
      */
-    private function parseOptions(array $parts) : array
+    private function parseOptions(array $parts): array
     {
         if (!\array_key_exists('query', $parts) || !\is_string($parts['query'])) {
             return [];
@@ -94,13 +94,37 @@ final readonly class DsnParser
         \parse_str($parts['query'], $parsed);
 
         $validOptions = [
-            'application_name', 'channel_binding', 'client_encoding', 'connect_timeout',
-            'fallback_application_name', 'gssencmode', 'gsslib', 'hostaddr',
-            'keepalives', 'keepalives_count', 'keepalives_idle', 'keepalives_interval',
-            'krbsrvname', 'options', 'passfile', 'replication', 'requirepeer', 'requiressl',
-            'service', 'ssl_max_protocol_version', 'ssl_min_protocol_version',
-            'sslcert', 'sslcompression', 'sslcrl', 'sslcrldir', 'sslkey', 'sslmode',
-            'sslrootcert', 'sslsni', 'target_session_attrs', 'tcp_user_timeout',
+            'application_name',
+            'channel_binding',
+            'client_encoding',
+            'connect_timeout',
+            'fallback_application_name',
+            'gssencmode',
+            'gsslib',
+            'hostaddr',
+            'keepalives',
+            'keepalives_count',
+            'keepalives_idle',
+            'keepalives_interval',
+            'krbsrvname',
+            'options',
+            'passfile',
+            'replication',
+            'requirepeer',
+            'requiressl',
+            'service',
+            'ssl_max_protocol_version',
+            'ssl_min_protocol_version',
+            'sslcert',
+            'sslcompression',
+            'sslcrl',
+            'sslcrldir',
+            'sslkey',
+            'sslmode',
+            'sslrootcert',
+            'sslsni',
+            'target_session_attrs',
+            'tcp_user_timeout',
         ];
 
         $options = [];
@@ -114,7 +138,7 @@ final readonly class DsnParser
         return $options;
     }
 
-    private function validateScheme(string $dsn) : void
+    private function validateScheme(string $dsn): void
     {
         $validSchemes = ['postgres://', 'postgresql://', 'pgsql://'];
 

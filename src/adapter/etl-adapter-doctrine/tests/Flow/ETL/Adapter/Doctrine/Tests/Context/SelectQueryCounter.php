@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Context;
 
-use Psr\Log\{AbstractLogger, LoggerAwareInterface, LoggerAwareTrait, NullLogger};
+use Psr\Log\AbstractLogger;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\NullLogger;
 
 final class SelectQueryCounter extends AbstractLogger implements LoggerAwareInterface
 {
@@ -22,7 +25,7 @@ final class SelectQueryCounter extends AbstractLogger implements LoggerAwareInte
         $this->logger = new NullLogger();
     }
 
-    public function log(mixed $level, string|\Stringable $message, array $context = []) : void
+    public function log(mixed $level, string|\Stringable $message, array $context = []): void
     {
         if (!isset($context['sql'])) {
             return;
@@ -40,7 +43,7 @@ final class SelectQueryCounter extends AbstractLogger implements LoggerAwareInte
         }
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->count = 0;
         $this->queries = [];

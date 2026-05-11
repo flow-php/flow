@@ -5,15 +5,22 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\FilesystemBundle;
 
 use Flow\Bridge\Symfony\FilesystemBundle\Attribute\AsFilesystemFactory;
-use Flow\Bridge\Symfony\FilesystemBundle\DependencyInjection\Compiler\{BuildFstabsPass, RegisterFilesystemFactoriesPass, RegisterFstabLocatorPass};
+use Flow\Bridge\Symfony\FilesystemBundle\DependencyInjection\Compiler\BuildFstabsPass;
+use Flow\Bridge\Symfony\FilesystemBundle\DependencyInjection\Compiler\RegisterFilesystemFactoriesPass;
+use Flow\Bridge\Symfony\FilesystemBundle\DependencyInjection\Compiler\RegisterFstabLocatorPass;
 use Flow\Bridge\Symfony\FilesystemCache\FlowFilesystemCacheAdapter;
-use Flow\Filesystem\{Filesystem, Path};
-use Symfony\Component\Config\Definition\Builder\{NodeDefinition, TreeBuilder};
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Path;
+use Symfony\Component\Config\Definition\Builder\NodeDefinition;
+use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
-use Symfony\Component\DependencyInjection\{ChildDefinition, ContainerBuilder, Definition, Reference};
+use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\Compiler\PassConfig;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
 final class FlowFilesystemBundle extends AbstractBundle
@@ -21,7 +28,7 @@ final class FlowFilesystemBundle extends AbstractBundle
     private const string MOUNT_REGEX = '/^[a-zA-Z][a-zA-Z0-9+.-]+$/';
 
     #[\Override]
-    public function build(ContainerBuilder $container) : void
+    public function build(ContainerBuilder $container): void
     {
         parent::build($container);
 
@@ -29,103 +36,114 @@ final class FlowFilesystemBundle extends AbstractBundle
         $container->addCompilerPass(new BuildFstabsPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, 0);
         $container->addCompilerPass(new RegisterFstabLocatorPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, -10);
 
-        $container->registerAttributeForAutoconfiguration(
-            AsFilesystemFactory::class,
-            static function (ChildDefinition $definition, AsFilesystemFactory $attribute, \Reflector $reflector) : void {
-                $definition->addTag(RegisterFilesystemFactoriesPass::TAG, ['type' => $attribute->type]);
-            },
-        );
+        $container->registerAttributeForAutoconfiguration(AsFilesystemFactory::class, static function (
+            ChildDefinition $definition,
+            AsFilesystemFactory $attribute,
+            \Reflector $reflector,
+        ): void {
+            $definition->addTag(RegisterFilesystemFactoriesPass::TAG, ['type' => $attribute->type]);
+        });
     }
 
     #[\Override]
-    public function configure(DefinitionConfigurator $definition) : void
+    public function configure(DefinitionConfigurator $definition): void
     {
-        $definition->rootNode()
+        $definition
+            ->rootNode()
             ->children()
-                ->scalarNode('default_fstab')->defaultNull()->end()
-                ->arrayNode('fstabs')
-                    ->isRequired()
-                    ->requiresAtLeastOneElement()
-                    ->useAttributeAsKey('name')
-                    ->validate()
-                        ->ifTrue(static function (array $fstabs) : bool {
-                            foreach (\array_keys($fstabs) as $name) {
-                                if (!\is_string($name) || $name === '') {
-                                    return true;
-                                }
-                            }
+            ->scalarNode('default_fstab')
+            ->defaultNull()
+            ->end()
+            ->arrayNode('fstabs')
+            ->isRequired()
+            ->requiresAtLeastOneElement()
+            ->useAttributeAsKey('name')
+            ->validate()
+            ->ifTrue(static function (array $fstabs): bool {
+                foreach (\array_keys($fstabs) as $name) {
+                    if (!\is_string($name) || $name === '') {
+                        return true;
+                    }
+                }
 
-                            return false;
-                        })
-                        ->thenInvalid('Fstab name must be a non-empty string.')
-                    ->end()
-                    ->arrayPrototype()
-                        ->children()
-                            ->arrayNode('filesystems')
-                                ->isRequired()
-                                ->requiresAtLeastOneElement()
-                                ->normalizeKeys(false)
-                                ->useAttributeAsKey('mount')
-                                ->validate()
-                                    ->ifTrue(static function (array $filesystems) : bool {
-                                        foreach (\array_keys($filesystems) as $mount) {
-                                            if (!\is_string($mount) || \preg_match(self::MOUNT_REGEX, $mount) !== 1) {
-                                                return true;
-                                            }
-                                        }
+                return false;
+            })
+            ->thenInvalid('Fstab name must be a non-empty string.')
+            ->end()
+            ->arrayPrototype()
+            ->children()
+            ->arrayNode('filesystems')
+            ->isRequired()
+            ->requiresAtLeastOneElement()
+            ->normalizeKeys(false)
+            ->useAttributeAsKey('mount')
+            ->validate()
+            ->ifTrue(static function (array $filesystems): bool {
+                foreach (\array_keys($filesystems) as $mount) {
+                    if (!\is_string($mount) || \preg_match(self::MOUNT_REGEX, $mount) !== 1) {
+                        return true;
+                    }
+                }
 
-                                        return false;
-                                    })
-                                    ->thenInvalid('Mount name must match ' . self::MOUNT_REGEX . '.')
-                                ->end()
-                                ->arrayPrototype()
-                                    ->ignoreExtraKeys(false)
-                                    ->children()
-                                        ->scalarNode('type')
-                                            ->isRequired()
-                                            ->cannotBeEmpty()
-                                        ->end()
-                                    ->end()
-                                ->end()
-                            ->end()
-                            ->append($this->telemetryNode())
-                        ->end()
-                    ->end()
-                ->end()
-                ->arrayNode('cache')
-                    ->info('Defines filesystem-backed Symfony Cache pools. Requires flow-php/symfony-filesystem-cache-bridge.')
-                    ->addDefaultsIfNotSet()
-                    ->children()
-                        ->arrayNode('pools')
-                            ->info('Named cache pools. Each becomes a service "flow.filesystem.cache.pool.<name>" usable as adapter: <id> in framework.cache.pools.')
-                            ->useAttributeAsKey('name')
-                            ->arrayPrototype()
-                                ->children()
-                                    ->scalarNode('fstab')
-                                        ->defaultNull()
-                                        ->info('Fstab name. Defaults to the bundle\'s resolved default fstab when null.')
-                                    ->end()
-                                    ->scalarNode('filesystem')
-                                        ->isRequired()
-                                        ->cannotBeEmpty()
-                                        ->info('Mount protocol of the filesystem within the chosen fstab (the YAML key under `filesystems:`).')
-                                    ->end()
-                                    ->scalarNode('path')
-                                        ->isRequired()
-                                        ->cannotBeEmpty()
-                                        ->info('Base directory inside the chosen filesystem where cache files are stored.')
-                                    ->end()
-                                    ->scalarNode('namespace')
-                                        ->defaultValue('')
-                                        ->info('Cache pool namespace. Allowed chars: -+.A-Za-z0-9')
-                                    ->end()
-                                    ->integerNode('default_lifetime')->defaultValue(0)->min(0)->end()
-                                    ->scalarNode('marshaller_service_id')->defaultNull()->end()
-                                ->end()
-                            ->end()
-                        ->end()
-                    ->end()
-                ->end()
+                return false;
+            })
+            ->thenInvalid('Mount name must match ' . self::MOUNT_REGEX . '.')
+            ->end()
+            ->arrayPrototype()
+            ->ignoreExtraKeys(false)
+            ->children()
+            ->scalarNode('type')
+            ->isRequired()
+            ->cannotBeEmpty()
+            ->end()
+            ->end()
+            ->end()
+            ->end()
+            ->append($this->telemetryNode())
+            ->end()
+            ->end()
+            ->end()
+            ->arrayNode('cache')
+            ->info('Defines filesystem-backed Symfony Cache pools. Requires flow-php/symfony-filesystem-cache-bridge.')
+            ->addDefaultsIfNotSet()
+            ->children()
+            ->arrayNode('pools')
+            ->info(
+                'Named cache pools. Each becomes a service "flow.filesystem.cache.pool.<name>" usable as adapter: <id> in framework.cache.pools.',
+            )
+            ->useAttributeAsKey('name')
+            ->arrayPrototype()
+            ->children()
+            ->scalarNode('fstab')
+            ->defaultNull()
+            ->info('Fstab name. Defaults to the bundle\'s resolved default fstab when null.')
+            ->end()
+            ->scalarNode('filesystem')
+            ->isRequired()
+            ->cannotBeEmpty()
+            ->info('Mount protocol of the filesystem within the chosen fstab (the YAML key under `filesystems:`).')
+            ->end()
+            ->scalarNode('path')
+            ->isRequired()
+            ->cannotBeEmpty()
+            ->info('Base directory inside the chosen filesystem where cache files are stored.')
+            ->end()
+            ->scalarNode('namespace')
+            ->defaultValue('')
+            ->info('Cache pool namespace. Allowed chars: -+.A-Za-z0-9')
+            ->end()
+            ->integerNode('default_lifetime')
+            ->defaultValue(0)
+            ->min(0)
+            ->end()
+            ->scalarNode('marshaller_service_id')
+            ->defaultNull()
+            ->end()
+            ->end()
+            ->end()
+            ->end()
+            ->end()
+            ->end()
             ->end();
     }
 
@@ -133,7 +151,7 @@ final class FlowFilesystemBundle extends AbstractBundle
      * @param array<string, mixed> $config
      */
     #[\Override]
-    public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder) : void
+    public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         /** @var array<string, array{filesystems: array<string, array<string, mixed>>}> $fstabs */
         $fstabs = $config['fstabs'] ?? [];
@@ -148,16 +166,16 @@ final class FlowFilesystemBundle extends AbstractBundle
             } elseif (\count($fstabs) === 1) {
                 $defaultFstab = (string) \array_key_first($fstabs);
             } else {
-                throw new InvalidConfigurationException(\sprintf(
-                    'flow_filesystem: no `default_fstab` was set and no fstab named "default" exists. Available fstabs: [%s].',
-                    \implode(', ', \array_keys($fstabs))
-                ));
+                throw new InvalidConfigurationException(\sprintf('flow_filesystem: no `default_fstab` was set and no fstab named "default" exists. Available fstabs: [%s].', \implode(
+                    ', ',
+                    \array_keys($fstabs),
+                )));
             }
         } elseif (!\array_key_exists($defaultFstab, $fstabs)) {
             throw new InvalidConfigurationException(\sprintf(
                 'flow_filesystem: `default_fstab` is set to "%s" but no such fstab exists. Available fstabs: [%s].',
                 $defaultFstab,
-                \implode(', ', \array_keys($fstabs))
+                \implode(', ', \array_keys($fstabs)),
             ));
         }
 
@@ -180,10 +198,16 @@ final class FlowFilesystemBundle extends AbstractBundle
      * @param array<string, array{fstab: ?string, filesystem: string, path: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string}> $pools
      * @param array<string, array{filesystems: array<string, array<string, mixed>>}> $fstabs
      */
-    private function registerCachePools(array $pools, array $fstabs, string $defaultFstab, ContainerBuilder $builder) : void
-    {
+    private function registerCachePools(
+        array $pools,
+        array $fstabs,
+        string $defaultFstab,
+        ContainerBuilder $builder,
+    ): void {
         if (!\class_exists(FlowFilesystemCacheAdapter::class)) {
-            throw new InvalidConfigurationException('flow_filesystem.cache.pools is configured but flow-php/symfony-filesystem-cache-bridge is not installed. Run composer require flow-php/symfony-filesystem-cache-bridge.');
+            throw new InvalidConfigurationException(
+                'flow_filesystem.cache.pools is configured but flow-php/symfony-filesystem-cache-bridge is not installed. Run composer require flow-php/symfony-filesystem-cache-bridge.',
+            );
         }
 
         foreach ($pools as $name => $poolConfig) {
@@ -234,31 +258,52 @@ final class FlowFilesystemBundle extends AbstractBundle
         }
     }
 
-    private function telemetryNode() : NodeDefinition
+    private function telemetryNode(): NodeDefinition
     {
         $builder = new TreeBuilder('telemetry');
 
-        $builder->getRootNode()
+        $builder
+            ->getRootNode()
             ->addDefaultsIfNotSet()
             ->children()
-                ->booleanNode('enabled')->defaultFalse()->end()
-                ->scalarNode('telemetry_service_id')->defaultNull()->end()
-                ->scalarNode('clock_service_id')->defaultNull()->end()
-                ->arrayNode('options')
-                    ->addDefaultsIfNotSet()
-                    ->children()
-                        ->booleanNode('trace_streams')->defaultTrue()->end()
-                        ->booleanNode('collect_metrics')->defaultTrue()->end()
-                    ->end()
-                ->end()
+            ->booleanNode('enabled')
+            ->defaultFalse()
+            ->end()
+            ->scalarNode('telemetry_service_id')
+            ->defaultNull()
+            ->end()
+            ->scalarNode('clock_service_id')
+            ->defaultNull()
+            ->end()
+            ->arrayNode('options')
+            ->addDefaultsIfNotSet()
+            ->children()
+            ->booleanNode('trace_streams')
+            ->defaultTrue()
+            ->end()
+            ->booleanNode('collect_metrics')
+            ->defaultTrue()
+            ->end()
+            ->end()
+            ->end()
             ->end()
             ->validate()
-                ->ifTrue(static fn (array $v) : bool => ($v['enabled'] ?? false) === true && (!\is_string($v['telemetry_service_id'] ?? null) || $v['telemetry_service_id'] === ''))
-                ->thenInvalid('telemetry.enabled=true requires a non-empty `telemetry_service_id`.')
+            ->ifTrue(
+                static fn(array $v): bool => (
+                    ($v['enabled'] ?? false) === true
+                    && (!\is_string($v['telemetry_service_id'] ?? null) || $v['telemetry_service_id'] === '')
+                ),
+            )
+            ->thenInvalid('telemetry.enabled=true requires a non-empty `telemetry_service_id`.')
             ->end()
             ->validate()
-                ->ifTrue(static fn (array $v) : bool => ($v['enabled'] ?? false) === true && (!\is_string($v['clock_service_id'] ?? null) || $v['clock_service_id'] === ''))
-                ->thenInvalid('telemetry.enabled=true requires a non-empty `clock_service_id`.')
+            ->ifTrue(
+                static fn(array $v): bool => (
+                    ($v['enabled'] ?? false) === true
+                    && (!\is_string($v['clock_service_id'] ?? null) || $v['clock_service_id'] === '')
+                ),
+            )
+            ->thenInvalid('telemetry.enabled=true requires a non-empty `clock_service_id`.')
             ->end();
 
         return $builder->getRootNode();

@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Tests\Integration;
 
-use Doctrine\DBAL\Schema\{Column, Table};
-use Doctrine\DBAL\Types\{Type, Types};
-use Flow\CLI\Command\{DatabaseTableListCommand};
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\Table;
+use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
+use Flow\CLI\Command\DatabaseTableListCommand;
 use Flow\CLI\Tests\Context\DatabaseContext;
 use Flow\ETL\Tests\FlowTestCase;
-use Symfony\Component\Console\Tester\CommandTester;
 use Flow\Filesystem\Tests\OperatingSystem;
+use Symfony\Component\Console\Tester\CommandTester;
 
 final class DatabaseTableListCommandTest extends FlowTestCase
 {
@@ -18,7 +20,7 @@ final class DatabaseTableListCommandTest extends FlowTestCase
 
     use OperatingSystem;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -30,29 +32,19 @@ final class DatabaseTableListCommandTest extends FlowTestCase
         $this->dbContext->dropAllTables();
     }
 
-    public function test_run_db_table_list() : void
+    public function test_run_db_table_list(): void
     {
-        $this->dbContext()->createTable(
-            (new Table(
-                'table_01',
-                [
-                    new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-                    new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-                    new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-                ],
-            ))->setPrimaryKey(['id'])
-        );
+        $this->dbContext()->createTable((new Table('table_01', [
+            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+        ]))->setPrimaryKey(['id']));
 
-        $this->dbContext()->createTable(
-            (new Table(
-                'table_02',
-                [
-                    new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-                    new Column('created_at', Type::getType(Types::DATETIME_IMMUTABLE), ['notnull' => true]),
-                    new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'platformOptions' => ['jsonb' => true]]),
-                ],
-            ))->setPrimaryKey(['id'])
-        );
+        $this->dbContext()->createTable((new Table('table_02', [
+            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+            new Column('created_at', Type::getType(Types::DATETIME_IMMUTABLE), ['notnull' => true]),
+            new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'platformOptions' => ['jsonb' => true]]),
+        ]))->setPrimaryKey(['id']));
 
         $tester = new CommandTester(new DatabaseTableListCommand('db:table:list'));
 
@@ -62,29 +54,26 @@ final class DatabaseTableListCommandTest extends FlowTestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame(
-            <<<'OUTPUT'
-┌──────────┬───────────┬─────────┐
-│ Name     │ Namespace │ Columns │
-├──────────┼───────────┼─────────┤
-│ table_01 │ public    │ 3       │
-│ table_02 │ public    │ 3       │
-└──────────┴───────────┴─────────┘
- ------------------ ----- 
-  Summary                 
- ------------------ ----- 
-  Total tables       2    
-  Total namespaces   1    
-  Total columns      6    
- ------------------ ----- 
+        static::assertSame(<<<'OUTPUT'
+            ┌──────────┬───────────┬─────────┐
+            │ Name     │ Namespace │ Columns │
+            ├──────────┼───────────┼─────────┤
+            │ table_01 │ public    │ 3       │
+            │ table_02 │ public    │ 3       │
+            └──────────┴───────────┴─────────┘
+             ------------------ ----- 
+              Summary                 
+             ------------------ ----- 
+              Total tables       2    
+              Total namespaces   1    
+              Total columns      6    
+             ------------------ ----- 
 
 
-OUTPUT,
-            $tester->getDisplay()
-        );
+            OUTPUT, $tester->getDisplay());
     }
 
-    protected function dbContext() : DatabaseContext
+    protected function dbContext(): DatabaseContext
     {
         if (null === $this->dbContext) {
             $this->dbContext = new DatabaseContext();

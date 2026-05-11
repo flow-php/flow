@@ -10,7 +10,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 final class FileRowsCountCommandTest extends TestCase
 {
-    public function test_count_rows_csv() : void
+    public function test_count_rows_csv(): void
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
@@ -18,10 +18,10 @@ final class FileRowsCountCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame('43', $tester->getDisplay());
+        static::assertSame('43', $tester->getDisplay());
     }
 
-    public function test_count_rows_excel() : void
+    public function test_count_rows_excel(): void
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
@@ -29,10 +29,10 @@ final class FileRowsCountCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame('43', $tester->getDisplay());
+        static::assertSame('43', $tester->getDisplay());
     }
 
-    public function test_count_rows_json() : void
+    public function test_count_rows_json(): void
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
@@ -40,10 +40,10 @@ final class FileRowsCountCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame('10000', $tester->getDisplay());
+        static::assertSame('10000', $tester->getDisplay());
     }
 
-    public function test_count_rows_parquet() : void
+    public function test_count_rows_parquet(): void
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
@@ -51,10 +51,10 @@ final class FileRowsCountCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame('1000', $tester->getDisplay());
+        static::assertSame('1000', $tester->getDisplay());
     }
 
-    public function test_count_rows_text() : void
+    public function test_count_rows_text(): void
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
@@ -62,10 +62,10 @@ final class FileRowsCountCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame('44', $tester->getDisplay());
+        static::assertSame('44', $tester->getDisplay());
     }
 
-    public function test_count_rows_with_large_offset() : void
+    public function test_count_rows_with_large_offset(): void
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
@@ -77,10 +77,10 @@ final class FileRowsCountCommandTest extends TestCase
         $tester->assertCommandIsSuccessful();
 
         // Offset larger than file should result in 0 rows
-        self::assertSame('0', $tester->getDisplay());
+        static::assertSame('0', $tester->getDisplay());
     }
 
-    public function test_count_rows_with_offset_and_limit() : void
+    public function test_count_rows_with_offset_and_limit(): void
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
@@ -93,10 +93,10 @@ final class FileRowsCountCommandTest extends TestCase
         $tester->assertCommandIsSuccessful();
 
         // CSV has 43 total rows, with offset 2 and limit 5 should count 3 rows (limit applies first, then offset)
-        self::assertSame('3', $tester->getDisplay());
+        static::assertSame('3', $tester->getDisplay());
     }
 
-    public function test_count_rows_with_offset_csv() : void
+    public function test_count_rows_with_offset_csv(): void
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
@@ -108,10 +108,10 @@ final class FileRowsCountCommandTest extends TestCase
         $tester->assertCommandIsSuccessful();
 
         // CSV has 43 total rows, with offset 5 should count 38 rows
-        self::assertSame('38', $tester->getDisplay());
+        static::assertSame('38', $tester->getDisplay());
     }
 
-    public function test_count_rows_with_zero_offset() : void
+    public function test_count_rows_with_zero_offset(): void
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
@@ -123,10 +123,10 @@ final class FileRowsCountCommandTest extends TestCase
         $tester->assertCommandIsSuccessful();
 
         // Zero offset should behave same as no offset
-        self::assertSame('43', $tester->getDisplay());
+        static::assertSame('43', $tester->getDisplay());
     }
 
-    public function test_count_rows_xml() : void
+    public function test_count_rows_xml(): void
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
@@ -134,6 +134,6 @@ final class FileRowsCountCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame('10000', $tester->getDisplay());
+        static::assertSame('10000', $tester->getDisplay());
     }
 }

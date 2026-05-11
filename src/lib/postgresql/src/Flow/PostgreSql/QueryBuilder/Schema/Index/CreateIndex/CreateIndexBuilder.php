@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Index\CreateIndex;
 
-use Flow\PostgreSql\Protobuf\AST\{IndexElem, IndexStmt, Node, RangeVar};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\IndexElem;
+use Flow\PostgreSql\Protobuf\AST\IndexStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
-use Flow\PostgreSql\QueryBuilder\Schema\Index\{IndexColumn, IndexMethod};
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
+use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexColumn;
+use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexMethod;
 
 final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, CreateIndexFinalStep, CreateIndexOnStep
 {
@@ -31,15 +36,14 @@ final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, Creat
         private ?Condition $whereCondition = null,
         private ?string $tablespace = null,
         private bool $nullsNotDistinct = false,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name) : CreateIndexOnStep
+    public static function create(string $name): CreateIndexOnStep
     {
         return new self($name);
     }
 
-    public function columns(IndexColumn|string ...$columns) : CreateIndexFinalStep
+    public function columns(IndexColumn|string ...$columns): CreateIndexFinalStep
     {
         $indexColumns = [];
 
@@ -68,7 +72,7 @@ final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, Creat
         );
     }
 
-    public function concurrently() : CreateIndexOnStep
+    public function concurrently(): CreateIndexOnStep
     {
         return new self(
             $this->name,
@@ -87,7 +91,7 @@ final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, Creat
         );
     }
 
-    public function ifNotExists() : CreateIndexOnStep
+    public function ifNotExists(): CreateIndexOnStep
     {
         return new self(
             $this->name,
@@ -106,7 +110,7 @@ final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, Creat
         );
     }
 
-    public function include(string ...$columns) : CreateIndexFinalStep
+    public function include(string ...$columns): CreateIndexFinalStep
     {
         return new self(
             $this->name,
@@ -125,7 +129,7 @@ final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, Creat
         );
     }
 
-    public function nullsDistinct() : CreateIndexFinalStep
+    public function nullsDistinct(): CreateIndexFinalStep
     {
         return new self(
             $this->name,
@@ -144,7 +148,7 @@ final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, Creat
         );
     }
 
-    public function nullsNotDistinct() : CreateIndexFinalStep
+    public function nullsNotDistinct(): CreateIndexFinalStep
     {
         return new self(
             $this->name,
@@ -163,7 +167,7 @@ final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, Creat
         );
     }
 
-    public function on(string $table, ?string $schema = null) : CreateIndexColumnsStep
+    public function on(string $table, ?string $schema = null): CreateIndexColumnsStep
     {
         if ($schema === null) {
             $identifier = QualifiedIdentifier::parse($table);
@@ -188,7 +192,7 @@ final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, Creat
         );
     }
 
-    public function onOnly(string $table, ?string $schema = null) : CreateIndexColumnsStep
+    public function onOnly(string $table, ?string $schema = null): CreateIndexColumnsStep
     {
         if ($schema === null) {
             $identifier = QualifiedIdentifier::parse($table);
@@ -213,7 +217,7 @@ final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, Creat
         );
     }
 
-    public function tablespace(string $tablespace) : CreateIndexFinalStep
+    public function tablespace(string $tablespace): CreateIndexFinalStep
     {
         return new self(
             $this->name,
@@ -232,7 +236,7 @@ final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, Creat
         );
     }
 
-    public function toAst() : IndexStmt
+    public function toAst(): IndexStmt
     {
         $stmt = new IndexStmt();
 
@@ -309,7 +313,7 @@ final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, Creat
         return $stmt;
     }
 
-    public function unique() : CreateIndexOnStep
+    public function unique(): CreateIndexOnStep
     {
         return new self(
             $this->name,
@@ -328,7 +332,7 @@ final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, Creat
         );
     }
 
-    public function using(IndexMethod $method) : CreateIndexColumnsStep
+    public function using(IndexMethod $method): CreateIndexColumnsStep
     {
         return new self(
             $this->name,
@@ -347,7 +351,7 @@ final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, Creat
         );
     }
 
-    public function where(Condition $predicate) : CreateIndexFinalStep
+    public function where(Condition $predicate): CreateIndexFinalStep
     {
         return new self(
             $this->name,

@@ -42,7 +42,7 @@ jobs:
       - name: "Mutation Tests"
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            composer test:mutation -- --git-diff-filter=AM --git-diff-base=origin/${{ github.base_ref }} --logger-github=false --log-verbosity=none
+            just test-mutation --git-diff-filter=AM --git-diff-base=origin/${{ github.base_ref }} --logger-github=false --log-verbosity=none
           else
-            composer test:mutation -- --logger-github=false --log-verbosity=none
+            just test-mutation --logger-github=false --log-verbosity=none
           fi

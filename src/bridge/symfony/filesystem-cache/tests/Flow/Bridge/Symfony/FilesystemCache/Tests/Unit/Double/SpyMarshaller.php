@@ -22,8 +22,7 @@ final class SpyMarshaller implements MarshallerInterface
      */
     public function __construct(
         private readonly array $failKeys = [],
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<string, mixed> $values
@@ -33,7 +32,7 @@ final class SpyMarshaller implements MarshallerInterface
      *
      * @return array<string, string>
      */
-    public function marshall(array $values, ?array &$failed) : array
+    public function marshall(array $values, ?array &$failed): array
     {
         $this->marshallCalls++;
         $failed = [];
@@ -54,7 +53,7 @@ final class SpyMarshaller implements MarshallerInterface
         return $out;
     }
 
-    public function unmarshall(string $value) : mixed
+    public function unmarshall(string $value): mixed
     {
         $this->unmarshallCalls++;
 

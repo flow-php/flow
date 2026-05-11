@@ -6,13 +6,25 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Unit\CatalogProvider;
 
 use Flow\Bridge\Symfony\PostgreSqlBundle\CatalogProvider\ArrayCatalogProvider;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
-use Flow\PostgreSql\Schema\{Catalog, Column, Extension, Func, FunctionVolatility, Index, MaterializedView, Procedure, Schema, Sequence, Table, View};
-use Flow\PostgreSql\Schema\Constraint\{PrimaryKey, UniqueConstraint};
+use Flow\PostgreSql\Schema\Catalog;
+use Flow\PostgreSql\Schema\Column;
+use Flow\PostgreSql\Schema\Constraint\PrimaryKey;
+use Flow\PostgreSql\Schema\Constraint\UniqueConstraint;
+use Flow\PostgreSql\Schema\Extension;
+use Flow\PostgreSql\Schema\Func;
+use Flow\PostgreSql\Schema\FunctionVolatility;
+use Flow\PostgreSql\Schema\Index;
+use Flow\PostgreSql\Schema\MaterializedView;
+use Flow\PostgreSql\Schema\Procedure;
+use Flow\PostgreSql\Schema\Schema;
+use Flow\PostgreSql\Schema\Sequence;
+use Flow\PostgreSql\Schema\Table;
+use Flow\PostgreSql\Schema\View;
 use PHPUnit\Framework\TestCase;
 
 final class ArrayCatalogProviderTest extends TestCase
 {
-    public function test_creates_catalog_from_array_data() : void
+    public function test_creates_catalog_from_array_data(): void
     {
         $catalog = new Catalog([
             new Schema('public', [
@@ -32,14 +44,14 @@ final class ArrayCatalogProviderTest extends TestCase
 
         $restored = $provider->get();
 
-        self::assertSame(['public'], $restored->names());
-        self::assertTrue($restored->get('public')->hasTable('users'));
-        self::assertNotNull($restored->get('public')->table('users')->primaryKey);
-        self::assertSame('users_pkey', $restored->get('public')->table('users')->primaryKey->name);
-        self::assertCount(2, $restored->get('public')->table('users')->columns);
+        static::assertSame(['public'], $restored->names());
+        static::assertTrue($restored->get('public')->hasTable('users'));
+        static::assertNotNull($restored->get('public')->table('users')->primaryKey);
+        static::assertSame('users_pkey', $restored->get('public')->table('users')->primaryKey->name);
+        static::assertCount(2, $restored->get('public')->table('users')->columns);
     }
 
-    public function test_creates_catalog_with_all_schema_objects() : void
+    public function test_creates_catalog_with_all_schema_objects(): void
     {
         $catalog = new Catalog([
             new Schema(
@@ -57,7 +69,14 @@ final class ArrayCatalogProviderTest extends TestCase
                 sequences: [new Sequence('users_id_seq')],
                 views: [new View('active_users', 'SELECT * FROM users')],
                 materializedViews: [new MaterializedView('user_stats', 'SELECT count(*) FROM users')],
-                functions: [new Func('get_user', 'text', ['integer'], 'sql', 'SELECT 1', volatility: FunctionVolatility::STABLE)],
+                functions: [new Func(
+                    'get_user',
+                    'text',
+                    ['integer'],
+                    'sql',
+                    'SELECT 1',
+                    volatility: FunctionVolatility::STABLE,
+                )],
                 procedures: [new Procedure('cleanup', [], 'sql', 'DELETE FROM logs')],
                 extensions: [new Extension('uuid-ossp', '1.1')],
             ),
@@ -68,19 +87,19 @@ final class ArrayCatalogProviderTest extends TestCase
         $restored = $provider->get();
 
         $schema = $restored->get('public');
-        self::assertCount(1, $schema->tables);
-        self::assertCount(1, $schema->sequences);
-        self::assertCount(1, $schema->views);
-        self::assertCount(1, $schema->materializedViews);
-        self::assertCount(1, $schema->functions);
-        self::assertCount(1, $schema->procedures);
-        self::assertCount(1, $schema->extensions);
+        static::assertCount(1, $schema->tables);
+        static::assertCount(1, $schema->sequences);
+        static::assertCount(1, $schema->views);
+        static::assertCount(1, $schema->materializedViews);
+        static::assertCount(1, $schema->functions);
+        static::assertCount(1, $schema->procedures);
+        static::assertCount(1, $schema->extensions);
     }
 
-    public function test_creates_empty_catalog() : void
+    public function test_creates_empty_catalog(): void
     {
         $provider = new ArrayCatalogProvider(['schemas' => []]);
 
-        self::assertSame([], $provider->get()->all());
+        static::assertSame([], $provider->get()->all());
     }
 }

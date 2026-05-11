@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Migrations\Tests\Integration;
 
-use function Flow\PostgreSql\DSL\{drop, pgsql_client, pgsql_connection_dsn};
-
 use Flow\PostgreSql\Client\Client;
+
+use function Flow\PostgreSql\DSL\drop;
+use function Flow\PostgreSql\DSL\pgsql_client;
+use function Flow\PostgreSql\DSL\pgsql_connection_dsn;
 
 final class PostgreSqlMigrationsContext
 {
@@ -23,12 +25,12 @@ final class PostgreSqlMigrationsContext
         $this->client = pgsql_client(pgsql_connection_dsn($dsn));
     }
 
-    public function close() : void
+    public function close(): void
     {
         $this->client->close();
     }
 
-    public function dropTableIfExists(string $table) : void
+    public function dropTableIfExists(string $table): void
     {
         $this->client->execute(drop()->table($table)->ifExists()->cascade()->toSql());
     }

@@ -12,13 +12,12 @@ final readonly class FuncDiff implements Diff
     public function __construct(
         public Func $source,
         public Func $target,
-    ) {
-    }
+    ) {}
 
     /**
      * @return list<Sql>
      */
-    public function generate() : array
+    public function generate(): array
     {
         $sql = $this->target->toSql();
 

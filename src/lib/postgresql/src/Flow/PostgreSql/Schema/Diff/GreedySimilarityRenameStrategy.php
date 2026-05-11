@@ -8,10 +8,9 @@ final readonly class GreedySimilarityRenameStrategy implements RenameStrategy
 {
     public function __construct(
         private SimilarityStrategy $similarity,
-    ) {
-    }
+    ) {}
 
-    public function resolve(array $candidates) : array
+    public function resolve(array $candidates): array
     {
         $candidatesByAdded = [];
 
@@ -42,7 +41,10 @@ final readonly class GreedySimilarityRenameStrategy implements RenameStrategy
         $pairs = [];
 
         foreach ($candidates as $candidate) {
-            if (array_key_exists($candidate->addedName, $matchedAdded) || array_key_exists($candidate->removedName, $matchedRemoved)) {
+            if (
+                array_key_exists($candidate->addedName, $matchedAdded)
+                || array_key_exists($candidate->removedName, $matchedRemoved)
+            ) {
                 continue;
             }
 
@@ -53,10 +55,12 @@ final readonly class GreedySimilarityRenameStrategy implements RenameStrategy
             }
         }
 
-        \usort($pairs, static fn (array $a, array $b) : int => $b['score'] <=> $a['score']);
+        \usort($pairs, static fn(array $a, array $b): int => $b['score'] <=> $a['score']);
 
         foreach ($pairs as $pair) {
-            if (array_key_exists($pair['added'], $matchedAdded) || array_key_exists($pair['removed'], $matchedRemoved)) {
+            if (
+                array_key_exists($pair['added'], $matchedAdded) || array_key_exists($pair['removed'], $matchedRemoved)
+            ) {
                 continue;
             }
 

@@ -11,190 +11,192 @@ use Flow\Parquet\Dremel\Validator\ColumnDataValidator;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn};
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\ListElement;
+use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use PHPUnit\Framework\TestCase;
 
 final class WriteFlatColumnValuesTest extends TestCase
 {
-    public function test_flat_column() : void
+    public function test_flat_column(): void
     {
-        $data = new WriteFlatColumnValues(FlatColumn::int32('int32'), repetitionLevels: [0, 0, 0], definitionLevels: [0, 1, 1], values: [2, 3]);
-
-        self::assertSame(1, $data->nullCount());
-        self::assertSame(3, $data->rowsCount());
-    }
-
-    public function test_list() : void
-    {
-        $schema = Schema::with(
-            NestedColumn::list('list', ListElement::int32())
+        $data = new WriteFlatColumnValues(
+            FlatColumn::int32('int32'),
+            repetitionLevels: [0, 0, 0],
+            definitionLevels: [0, 1, 1],
+            values: [2, 3],
         );
 
-        $data = new WriteFlatColumnValues($schema->columnsFlat()[0], repetitionLevels: [0, 1, 0], definitionLevels: [0, 3, 3], values: [2, 3]);
-
-        self::assertSame(1, $data->nullCount());
-        self::assertSame(2, $data->rowsCount());
+        static::assertSame(1, $data->nullCount());
+        static::assertSame(3, $data->rowsCount());
     }
 
-    public function test_skip_rows_bug_with_repeated_values_in_same_row() : void
+    public function test_list(): void
     {
-        $schema = Schema::with(
-            NestedColumn::list('list', ListElement::int32())
+        $schema = Schema::with(NestedColumn::list('list', ListElement::int32()));
+
+        $data = new WriteFlatColumnValues(
+            $schema->columnsFlat()[0],
+            repetitionLevels: [0, 1, 0],
+            definitionLevels: [0, 3, 3],
+            values: [2, 3],
         );
+
+        static::assertSame(1, $data->nullCount());
+        static::assertSame(2, $data->rowsCount());
+    }
+
+    public function test_skip_rows_bug_with_repeated_values_in_same_row(): void
+    {
+        $schema = Schema::with(NestedColumn::list('list', ListElement::int32()));
 
         $data = new WriteFlatColumnValues(
             $schema->columnsFlat()[0],
             repetitionLevels: [0, 1, 1, 0, 1],
             definitionLevels: [3, 3, 3, 3, 3],
-            values: [1, 2, 3, 4, 5]
+            values: [1, 2, 3, 4, 5],
         );
 
-        self::assertSame(2, $data->rowsCount());
+        static::assertSame(2, $data->rowsCount());
 
         $skipped = $data->skipRows(1);
 
-        self::assertSame(1, $skipped->rowsCount());
-        self::assertSame([4, 5], $skipped->values());
-        self::assertSame([3, 3], $skipped->definitionLevels());
-        self::assertSame([0, 1], $skipped->repetitionLevels());
+        static::assertSame(1, $skipped->rowsCount());
+        static::assertSame([4, 5], $skipped->values());
+        static::assertSame([3, 3], $skipped->definitionLevels());
+        static::assertSame([0, 1], $skipped->repetitionLevels());
     }
 
-    public function test_skip_rows_with_struct_containing_list_of_strings() : void
+    public function test_skip_rows_with_struct_containing_list_of_strings(): void
     {
         $schema = Schema::with(NestedColumn::struct('struct', [
             NestedColumn::list('list_of_string', ListElement::string()),
         ]));
 
         $faker = Factory::create();
-        $rows = \array_merge(...\array_map(static fn (int $i) : array => [
-            [
-                'struct' => [
-                    'list_of_string' => $i % 2 === 0
-                        ? \array_map(
-                            static fn ($i) => $faker->text(10),
-                            \range(1, 3)
-                        )
-                        : null,
+        $rows = \array_merge(...\array_map(
+            static fn(int $i): array => [
+                [
+                    'struct' => [
+                        'list_of_string' => ($i % 2) === 0
+                            ? \array_map(static fn($i) => $faker->text(10), \range(1, 3))
+                            : null,
+                    ],
                 ],
             ],
-        ], \range(1, 10)));
+            \range(1, 10),
+        ));
 
         $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
         $flatColumnValues = $result['struct.list_of_string.list.element'];
 
-        self::assertSame(10, $flatColumnValues->rowsCount());
+        static::assertSame(10, $flatColumnValues->rowsCount());
 
         $skippedResult = $flatColumnValues->skipRows(3);
 
-        self::assertSame(7, $skippedResult->rowsCount(), 'Should have 7 rows after skipping 3 rows');
+        static::assertSame(7, $skippedResult->rowsCount(), 'Should have 7 rows after skipping 3 rows');
     }
 
-    public function test_skipping_rows_in_flat_column() : void
+    public function test_skipping_rows_in_flat_column(): void
     {
         $data = new WriteFlatColumnValues(
             FlatColumn::int32('int32'),
             repetitionLevels: [0, 0, 0, 0, 0, 0, 0],
             definitionLevels: [1, 1, 1, 1, 1, 1, 1],
-            values: [1, 2, 3, 4, 5, 6, 7]
+            values: [1, 2, 3, 4, 5, 6, 7],
         );
 
         $skipped = $data->skipRows(2);
 
-        self::assertSame(5, $skipped->rowsCount());
-        self::assertSame([3, 4, 5, 6, 7], $skipped->values());
-        self::assertSame([1, 1, 1, 1, 1], $skipped->definitionLevels());
-        self::assertSame([0, 0, 0, 0, 0], $skipped->repetitionLevels());
+        static::assertSame(5, $skipped->rowsCount());
+        static::assertSame([3, 4, 5, 6, 7], $skipped->values());
+        static::assertSame([1, 1, 1, 1, 1], $skipped->definitionLevels());
+        static::assertSame([0, 0, 0, 0, 0], $skipped->repetitionLevels());
     }
 
-    public function test_skipping_rows_in_list() : void
+    public function test_skipping_rows_in_list(): void
     {
-        $schema = Schema::with(
-            NestedColumn::list('list', ListElement::int32())
-        );
+        $schema = Schema::with(NestedColumn::list('list', ListElement::int32()));
 
         $data = new WriteFlatColumnValues(
             $schema->columnsFlat()[0],
             repetitionLevels: [0, 1, 0, 0, 0, 1],
             definitionLevels: [3, 3, 3, 2, 3, 3],
-            values: [1, 2, 3, 4, 5]
+            values: [1, 2, 3, 4, 5],
         );
 
-        self::assertSame(4, $data->rowsCount());
+        static::assertSame(4, $data->rowsCount());
 
         $skipped = $data->skipRows(2);
 
-        self::assertSame(2, $skipped->rowsCount());
-        self::assertSame([4, 5], $skipped->values());
-        self::assertSame([2, 3, 3], $skipped->definitionLevels());
-        self::assertSame([0, 0, 1], $skipped->repetitionLevels());
+        static::assertSame(2, $skipped->rowsCount());
+        static::assertSame([4, 5], $skipped->values());
+        static::assertSame([2, 3, 3], $skipped->definitionLevels());
+        static::assertSame([0, 0, 1], $skipped->repetitionLevels());
     }
 
-    public function test_skipping_rows_in_list_with_multi_elements() : void
+    public function test_skipping_rows_in_list_with_multi_elements(): void
     {
-        $schema = Schema::with(
-            NestedColumn::list('list', ListElement::int32())
-        );
+        $schema = Schema::with(NestedColumn::list('list', ListElement::int32()));
 
         $data = new WriteFlatColumnValues(
             $schema->columnsFlat()[0],
             repetitionLevels: [0, 1, 0, 1, 0, 1],
             definitionLevels: [3, 3, 3, 2, 3, 3],
-            values: [1, 2, 3, 4, 5]
+            values: [1, 2, 3, 4, 5],
         );
 
-        self::assertSame(3, $data->rowsCount());
+        static::assertSame(3, $data->rowsCount());
 
         $skipped = $data->skipRows(2);
 
-        self::assertSame(1, $skipped->rowsCount());
-        self::assertSame([4, 5], $skipped->values());
-        self::assertSame([3, 3], $skipped->definitionLevels());
-        self::assertSame([0, 1], $skipped->repetitionLevels());
+        static::assertSame(1, $skipped->rowsCount());
+        static::assertSame([4, 5], $skipped->values());
+        static::assertSame([3, 3], $skipped->definitionLevels());
+        static::assertSame([0, 1], $skipped->repetitionLevels());
     }
 
-    public function test_split_by_rows_bug_with_repeated_values_in_same_row() : void
+    public function test_split_by_rows_bug_with_repeated_values_in_same_row(): void
     {
-        $schema = Schema::with(
-            NestedColumn::list('list', ListElement::int32())
-        );
+        $schema = Schema::with(NestedColumn::list('list', ListElement::int32()));
 
         $data = new WriteFlatColumnValues(
             $schema->columnsFlat()[0],
             repetitionLevels: [0, 1, 1, 0, 1, 0],
             definitionLevels: [3, 3, 3, 3, 3, 3],
-            values: [1, 2, 3, 4, 5, 6]
+            values: [1, 2, 3, 4, 5, 6],
         );
 
-        self::assertSame(3, $data->rowsCount());
+        static::assertSame(3, $data->rowsCount());
 
         $split = $data->splitByRows(1);
 
-        self::assertCount(3, $split);
-        self::assertSame([1, 2, 3], $split[0]->values());
-        self::assertSame([4, 5], $split[1]->values());
-        self::assertSame([6], $split[2]->values());
+        static::assertCount(3, $split);
+        static::assertSame([1, 2, 3], $split[0]->values());
+        static::assertSame([4, 5], $split[1]->values());
+        static::assertSame([6], $split[2]->values());
     }
 
-    public function test_split_by_rows_with_struct_containing_list_of_strings() : void
+    public function test_split_by_rows_with_struct_containing_list_of_strings(): void
     {
         $schema = Schema::with(NestedColumn::struct('struct', [
             NestedColumn::list('list_of_string', ListElement::string()),
         ]));
 
         $faker = Factory::create();
-        $rows = \array_merge(...\array_map(static fn (int $i) : array => [
-            [
-                'struct' => [
-                    'list_of_string' => $i % 2 === 0
-                        ? \array_map(
-                            static fn ($i) => $faker->text(10),
-                            \range(1, 5)
-                        )
-                        : null,
+        $rows = \array_merge(...\array_map(
+            static fn(int $i): array => [
+                [
+                    'struct' => [
+                        'list_of_string' => ($i % 2) === 0
+                            ? \array_map(static fn($i) => $faker->text(10), \range(1, 5))
+                            : null,
+                    ],
                 ],
             ],
-        ], \range(1, 100)));
+            \range(1, 100),
+        ));
 
         $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
@@ -202,24 +204,24 @@ final class WriteFlatColumnValuesTest extends TestCase
 
         $splitResult = $flatColumnValues->splitByRows(20);
 
-        self::assertCount(5, $splitResult, 'Should split into 5 chunks of 20 rows each');
+        static::assertCount(5, $splitResult, 'Should split into 5 chunks of 20 rows each');
     }
 
-    public function test_splitting_flat_columns_by_rows() : void
+    public function test_splitting_flat_columns_by_rows(): void
     {
         $data = new WriteFlatColumnValues(
             FlatColumn::int32('int32'),
             repetitionLevels: [0, 0, 0, 0, 0, 0, 0],
             definitionLevels: [1, 1, 1, 1, 1, 1, 1],
-            values: [1, 2, 3, 4, 5, 6, 7]
+            values: [1, 2, 3, 4, 5, 6, 7],
         );
 
         $split = $data->splitByRows(2);
 
-        self::assertCount(4, $split);
-        self::assertSame([1, 2], $split[0]->values());
-        self::assertSame([3, 4], $split[1]->values());
-        self::assertSame([5, 6], $split[2]->values());
-        self::assertSame([7], $split[3]->values());
+        static::assertCount(4, $split);
+        static::assertSame([1, 2], $split[0]->values());
+        static::assertSame([3, 4], $split[1]->values());
+        static::assertSame([5, 6], $split[2]->values());
+        static::assertSame([7], $split[3]->values());
     }
 }

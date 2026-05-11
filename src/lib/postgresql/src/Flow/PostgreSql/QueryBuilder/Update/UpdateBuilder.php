@@ -4,13 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Update;
 
-use Flow\PostgreSql\Protobuf\AST\{Alias, Node, RangeVar, ResTarget, UpdateStmt};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\Alias;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\Protobuf\AST\ResTarget;
+use Flow\PostgreSql\Protobuf\AST\UpdateStmt;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
-use Flow\PostgreSql\QueryBuilder\Condition\{Condition, ConditionFactory};
-use Flow\PostgreSql\QueryBuilder\Exception\{InvalidAstException, InvalidExpressionException};
-use Flow\PostgreSql\QueryBuilder\Expression\{Expression, ExpressionFactory, Star};
-use Flow\PostgreSql\QueryBuilder\Table\{JoinedTable, SubqueryReference, Table, TableFunction, TableReference};
+use Flow\PostgreSql\QueryBuilder\Condition\Condition;
+use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
+use Flow\PostgreSql\QueryBuilder\Expression\Star;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
+use Flow\PostgreSql\QueryBuilder\Table\JoinedTable;
+use Flow\PostgreSql\QueryBuilder\Table\SubqueryReference;
+use Flow\PostgreSql\QueryBuilder\Table\Table;
+use Flow\PostgreSql\QueryBuilder\Table\TableFunction;
+use Flow\PostgreSql\QueryBuilder\Table\TableReference;
 
 /**
  * Builder for UPDATE statements.
@@ -33,15 +46,14 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         private array $from = [],
         private ?Condition $where = null,
         private array $returning = [],
-    ) {
-    }
+    ) {}
 
-    public static function create() : UpdateTableStep
+    public static function create(): UpdateTableStep
     {
         return new self();
     }
 
-    public static function fromAst(UpdateStmt $updateStmt) : static
+    public static function fromAst(UpdateStmt $updateStmt): static
     {
         $with = null;
 
@@ -137,24 +149,21 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         return new self($with, $table, $schema, $alias, $assignments, $from, $where, $returning);
     }
 
-    public static function with(WithClause $with) : UpdateTableStep
+    public static function with(WithClause $with): UpdateTableStep
     {
         return new self(with: $with);
     }
 
-    public function from(string|TableReference ...$tables) : UpdateWhereStep
+    public function from(string|TableReference ...$tables): UpdateWhereStep
     {
-        $tables = \array_map(
-            static function (string|TableReference $t) : TableReference {
-                if ($t instanceof TableReference) {
-                    return $t;
-                }
-                $id = QualifiedIdentifier::parse($t);
+        $tables = \array_map(static function (string|TableReference $t): TableReference {
+            if ($t instanceof TableReference) {
+                return $t;
+            }
+            $id = QualifiedIdentifier::parse($t);
 
-                return new Table($id->name(), $id->schema());
-            },
-            $tables,
-        );
+            return new Table($id->name(), $id->schema());
+        }, $tables);
 
         return new self(
             with: $this->with,
@@ -168,7 +177,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         );
     }
 
-    public function returning(Expression ...$expressions) : UpdateFinalStep
+    public function returning(Expression ...$expressions): UpdateFinalStep
     {
         return new self(
             with: $this->with,
@@ -182,12 +191,12 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         );
     }
 
-    public function returningAll() : UpdateFinalStep
+    public function returningAll(): UpdateFinalStep
     {
         return $this->returning(Star::all());
     }
 
-    public function set(string $column, Expression $value) : UpdateSetStep
+    public function set(string $column, Expression $value): UpdateSetStep
     {
         return new self(
             with: $this->with,
@@ -201,7 +210,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         );
     }
 
-    public function setAll(array $assignments) : UpdateFromStep
+    public function setAll(array $assignments): UpdateFromStep
     {
         return new self(
             with: $this->with,
@@ -215,7 +224,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         );
     }
 
-    public function toAst() : UpdateStmt
+    public function toAst(): UpdateStmt
     {
         if ($this->table === null || $this->table === '') {
             throw InvalidExpressionException::invalidValue('table', 'null or empty');
@@ -296,7 +305,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         return $updateStmt;
     }
 
-    public function update(string|Table $table, ?string $alias = null) : UpdateSetStep
+    public function update(string|Table $table, ?string $alias = null): UpdateSetStep
     {
         if ($table instanceof Table) {
             $name = $table->name;
@@ -319,7 +328,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         );
     }
 
-    public function where(Condition $condition) : UpdateReturningStep
+    public function where(Condition $condition): UpdateReturningStep
     {
         return new self(
             with: $this->with,
@@ -333,7 +342,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         );
     }
 
-    private static function tableReferenceFromAst(Node $node) : TableReference
+    private static function tableReferenceFromAst(Node $node): TableReference
     {
         if ($node->getRangeVar() !== null) {
             return Table::fromAst($node);

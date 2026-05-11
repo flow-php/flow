@@ -4,42 +4,44 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\{average,
-    count,
-    datetime_entry,
-    datetime_schema,
-    df,
-    float_entry,
-    float_schema,
-    from_all,
-    from_array,
-    from_memory,
-    from_rows,
-    int_entry,
-    int_schema,
-    json_entry,
-    json_schema,
-    lit,
-    max,
-    null_entry,
-    rank,
-    ref,
-    row,
-    rows,
-    schema,
-    str_entry,
-    sum,
-    uuid_entry,
-    uuid_schema,
-    window};
-use Flow\ETL\{Loader, Rows};
+use Flow\ETL\Loader;
 use Flow\ETL\Memory\ArrayMemory;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Types\Value\Uuid;
 
+use function Flow\ETL\DSL\average;
+use function Flow\ETL\DSL\count;
+use function Flow\ETL\DSL\datetime_entry;
+use function Flow\ETL\DSL\datetime_schema;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\float_schema;
+use function Flow\ETL\DSL\from_all;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_memory;
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\json_entry;
+use function Flow\ETL\DSL\json_schema;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\max;
+use function Flow\ETL\DSL\null_entry;
+use function Flow\ETL\DSL\rank;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\sum;
+use function Flow\ETL\DSL\uuid_entry;
+use function Flow\ETL\DSL\uuid_schema;
+use function Flow\ETL\DSL\window;
+
 final class GroupByTest extends FlowIntegrationTestCase
 {
-    public function test_group_by_array() : void
+    public function test_group_by_array(): void
     {
         $rows = df()
             ->read(from_rows(rows(
@@ -56,22 +58,22 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->aggregate(sum('score'), average('score'))
             ->fetch();
 
-        self::assertEquals(
+        static::assertEquals(
             schema(json_schema('array'), int_schema('score_sum'), float_schema('score_avg')),
-            $rows->schema()
+            $rows->schema(),
         );
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['array' => ['a', 'b', 'c', 'd'], 'score_sum' => 40, 'score_avg' => 20.0],
                 ['array' => ['a', 'b', 'c'], 'score_sum' => 55, 'score_avg' => 27.5],
                 ['array' => ['a', 'b'], 'score_sum' => 125, 'score_avg' => 41.67],
                 ['array' => ['a'], 'score_sum' => 50, 'score_avg' => 50.0],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_group_by_date_time() : void
+    public function test_group_by_date_time(): void
     {
         $rows = df()
             ->read(from_rows(rows(
@@ -88,40 +90,52 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->aggregate(sum('score'), average('score'))
             ->fetch();
 
-        self::assertEquals(
+        static::assertEquals(
             schema(datetime_schema('date'), int_schema('score_sum'), float_schema('score_avg')),
-            $rows->schema()
+            $rows->schema(),
         );
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['date' => new \DateTimeImmutable('2024-01-01 10:00:00'), 'score_sum' => 40, 'score_avg' => 20.0],
                 ['date' => new \DateTimeImmutable('2024-01-02 10:00:00'), 'score_sum' => 55, 'score_avg' => 27.5],
                 ['date' => new \DateTimeImmutable('2024-01-03 10:00:00'), 'score_sum' => 125, 'score_avg' => 41.67],
                 ['date' => new \DateTimeImmutable('2024-01-04 10:00:00'), 'score_sum' => 50, 'score_avg' => 50.0],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_group_by_multiple_columns_and_batch_size() : void
+    public function test_group_by_multiple_columns_and_batch_size(): void
     {
         $loader = $this->createMock(Loader::class);
-        $loader->expects(self::exactly(4))
-            ->method('load');
+        $loader->expects(self::exactly(4))->method('load');
 
         $rows = df()
-            ->read(from_rows(
-                rows(
-                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                    row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                    row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
-                    row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30), str_entry('gender', 'female')),
-                    row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'female')),
-                    row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
-                    row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45), str_entry('gender', 'female')),
-                    row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
-                )
-            ))
+            ->read(from_rows(rows(
+                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
+                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
+                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
+                row(
+                    int_entry('id', 4),
+                    str_entry('country', 'PL'),
+                    int_entry('age', 30),
+                    str_entry('gender', 'female'),
+                ),
+                row(
+                    int_entry('id', 5),
+                    str_entry('country', 'US'),
+                    int_entry('age', 40),
+                    str_entry('gender', 'female'),
+                ),
+                row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
+                row(
+                    int_entry('id', 7),
+                    str_entry('country', 'US'),
+                    int_entry('age', 45),
+                    str_entry('gender', 'female'),
+                ),
+                row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
+            )))
             ->groupBy('country', 'gender')
             ->aggregate(average(ref('age')))
             ->withEntry('age_avg', ref('age_avg')->round(lit(2)))
@@ -129,67 +143,88 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->write($loader)
             ->fetch();
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['country' => 'PL', 'gender' => 'male', 'age_avg' => 21.67],
                 ['country' => 'PL', 'gender' => 'female', 'age_avg' => 30.0],
                 ['country' => 'US', 'gender' => 'female', 'age_avg' => 42.5],
                 ['country' => 'US', 'gender' => 'male', 'age_avg' => 45],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_group_by_multiples_columns_with_avg_aggregation() : void
+    public function test_group_by_multiples_columns_with_avg_aggregation(): void
     {
         $rows = df()
-            ->read(from_rows(
-                rows(
-                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                    row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                    row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
-                    row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30), str_entry('gender', 'female')),
-                    row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'female')),
-                    row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
-                    row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45), str_entry('gender', 'female')),
-                    row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
-                )
-            ))
+            ->read(from_rows(rows(
+                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
+                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
+                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
+                row(
+                    int_entry('id', 4),
+                    str_entry('country', 'PL'),
+                    int_entry('age', 30),
+                    str_entry('gender', 'female'),
+                ),
+                row(
+                    int_entry('id', 5),
+                    str_entry('country', 'US'),
+                    int_entry('age', 40),
+                    str_entry('gender', 'female'),
+                ),
+                row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
+                row(
+                    int_entry('id', 7),
+                    str_entry('country', 'US'),
+                    int_entry('age', 45),
+                    str_entry('gender', 'female'),
+                ),
+                row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
+            )))
             ->groupBy('country', 'gender')
             ->aggregate(average(ref('age')))
             ->fetch();
 
-        self::assertEquals(
+        static::assertEquals(
             rows(
                 row(str_entry('country', 'PL'), str_entry('gender', 'male'), float_entry('age_avg', 21.67)),
                 row(str_entry('country', 'PL'), str_entry('gender', 'female'), int_entry('age_avg', 30)),
                 row(str_entry('country', 'US'), str_entry('gender', 'female'), float_entry('age_avg', 42.5)),
                 row(str_entry('country', 'US'), str_entry('gender', 'male'), int_entry('age_avg', 45)),
             ),
-            $rows
+            $rows,
         );
     }
 
-    public function test_group_by_multiples_columns_with_avg_aggregation_with_null() : void
+    public function test_group_by_multiples_columns_with_avg_aggregation_with_null(): void
     {
         $rows = df()
-            ->read(from_rows(
-                rows(
-                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                    row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                    row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
-                    row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30), str_entry('gender', 'female')),
-                    row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'female')),
-                    row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
-                    row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45), str_entry('gender', null)),
-                    row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
-                )
-            ))
+            ->read(from_rows(rows(
+                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
+                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
+                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
+                row(
+                    int_entry('id', 4),
+                    str_entry('country', 'PL'),
+                    int_entry('age', 30),
+                    str_entry('gender', 'female'),
+                ),
+                row(
+                    int_entry('id', 5),
+                    str_entry('country', 'US'),
+                    int_entry('age', 40),
+                    str_entry('gender', 'female'),
+                ),
+                row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
+                row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45), str_entry('gender', null)),
+                row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
+            )))
             ->groupBy('country', 'gender')
             ->aggregate(average(ref('age')))
             ->fetch();
 
-        self::assertEquals(
+        static::assertEquals(
             rows(
                 row(str_entry('country', 'PL'), str_entry('gender', 'male'), float_entry('age_avg', 21.67)),
                 row(str_entry('country', 'PL'), str_entry('gender', 'female'), int_entry('age_avg', 30)),
@@ -197,95 +232,89 @@ final class GroupByTest extends FlowIntegrationTestCase
                 row(str_entry('country', 'US'), str_entry('gender', 'male'), int_entry('age_avg', 45)),
                 row(str_entry('country', 'US'), null_entry('gender'), int_entry('age_avg', 45)),
             ),
-            $rows
+            $rows,
         );
     }
 
-    public function test_group_by_single_column() : void
+    public function test_group_by_single_column(): void
     {
         $rows = df()
-            ->read(from_rows(
-                rows(
-                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                    row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                    row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                    row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                    row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                    row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                    row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                    row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
-                )
-            ))
+            ->read(from_rows(rows(
+                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
+                row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
+                row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
+                row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
+                row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+            )))
             ->groupBy('country')
             ->aggregate(sum(ref('age')))
             ->fetch();
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['country' => 'PL', 'age_sum' => 95],
                 ['country' => 'US', 'age_sum' => 175],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_group_by_single_column_with_an_alias() : void
+    public function test_group_by_single_column_with_an_alias(): void
     {
         $rows = df()
-            ->read(from_rows(
-                rows(
-                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                    row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                    row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                    row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                    row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                    row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                    row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                    row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
-                )
-            ))
+            ->read(from_rows(rows(
+                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
+                row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
+                row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
+                row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
+                row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+            )))
             ->groupBy('country')
             ->aggregate(sum(ref('age')->as('total_age')))
             ->fetch();
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['country' => 'PL', 'total_age' => 95],
                 ['country' => 'US', 'total_age' => 175],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_group_by_single_column_with_avg_aggregation() : void
+    public function test_group_by_single_column_with_avg_aggregation(): void
     {
         $rows = df()
-            ->read(from_rows(
-                rows(
-                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                    row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                    row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                    row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                    row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                    row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                    row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                    row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
-                )
-            ))
+            ->read(from_rows(rows(
+                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
+                row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
+                row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
+                row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
+                row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+            )))
             ->groupBy('country')
             ->aggregate(average(ref('age')))
             ->fetch();
 
-        self::assertEquals(
+        static::assertEquals(
             rows(
                 row(str_entry('country', 'PL'), float_entry('age_avg', 23.75)),
                 row(str_entry('country', 'US'), float_entry('age_avg', 43.75)),
             ),
-            $rows
+            $rows,
         );
     }
 
-    public function test_group_by_twice() : void
+    public function test_group_by_twice(): void
     {
         $dataset = [
             ['date' => '2023-01-01', 'user' => 'user_01'],
@@ -312,50 +341,98 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->aggregate(sum(ref('contributions')))
             ->fetch();
 
-        self::assertSame(
+        static::assertSame(
             [
                 ['user' => 'user_01', 'contributions_sum' => 4],
                 ['user' => 'user_02', 'contributions_sum' => 2],
                 ['user' => 'user_03', 'contributions_sum' => 3],
                 ['user' => 'user_04', 'contributions_sum' => 3],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_group_by_uuid() : void
+    public function test_group_by_uuid(): void
     {
         $rows = df()
             ->read(from_rows(rows(
-                row(int_entry('id', 1), int_entry('score', 20), uuid_entry('uuid', 'b97a23ab-ba84-4d8f-9d9a-abd32cc58110')),
-                row(int_entry('id', 2), int_entry('score', 20), uuid_entry('uuid', 'b97a23ab-ba84-4d8f-9d9a-abd32cc58110')),
-                row(int_entry('id', 3), int_entry('score', 25), uuid_entry('uuid', '28fc1a5f-25eb-40e2-88b8-7a0cdc5d18ae')),
-                row(int_entry('id', 4), int_entry('score', 30), uuid_entry('uuid', '28fc1a5f-25eb-40e2-88b8-7a0cdc5d18ae')),
-                row(int_entry('id', 5), int_entry('score', 40), uuid_entry('uuid', '5085fabf-15f7-4467-9076-61547afbbdc9')),
-                row(int_entry('id', 6), int_entry('score', 40), uuid_entry('uuid', '5085fabf-15f7-4467-9076-61547afbbdc9')),
-                row(int_entry('id', 7), int_entry('score', 45), uuid_entry('uuid', '5085fabf-15f7-4467-9076-61547afbbdc9')),
-                row(int_entry('id', 9), int_entry('score', 50), uuid_entry('uuid', 'c7c22b40-45ad-46d1-a47b-0d1dd389ae41')),
+                row(
+                    int_entry('id', 1),
+                    int_entry('score', 20),
+                    uuid_entry('uuid', 'b97a23ab-ba84-4d8f-9d9a-abd32cc58110'),
+                ),
+                row(
+                    int_entry('id', 2),
+                    int_entry('score', 20),
+                    uuid_entry('uuid', 'b97a23ab-ba84-4d8f-9d9a-abd32cc58110'),
+                ),
+                row(
+                    int_entry('id', 3),
+                    int_entry('score', 25),
+                    uuid_entry('uuid', '28fc1a5f-25eb-40e2-88b8-7a0cdc5d18ae'),
+                ),
+                row(
+                    int_entry('id', 4),
+                    int_entry('score', 30),
+                    uuid_entry('uuid', '28fc1a5f-25eb-40e2-88b8-7a0cdc5d18ae'),
+                ),
+                row(
+                    int_entry('id', 5),
+                    int_entry('score', 40),
+                    uuid_entry('uuid', '5085fabf-15f7-4467-9076-61547afbbdc9'),
+                ),
+                row(
+                    int_entry('id', 6),
+                    int_entry('score', 40),
+                    uuid_entry('uuid', '5085fabf-15f7-4467-9076-61547afbbdc9'),
+                ),
+                row(
+                    int_entry('id', 7),
+                    int_entry('score', 45),
+                    uuid_entry('uuid', '5085fabf-15f7-4467-9076-61547afbbdc9'),
+                ),
+                row(
+                    int_entry('id', 9),
+                    int_entry('score', 50),
+                    uuid_entry('uuid', 'c7c22b40-45ad-46d1-a47b-0d1dd389ae41'),
+                ),
             )))
             ->groupBy('uuid')
             ->aggregate(sum('score'), average('score'))
             ->fetch();
 
-        self::assertEquals(
+        static::assertEquals(
             schema(uuid_schema('uuid'), int_schema('score_sum'), float_schema('score_avg')),
-            $rows->schema()
+            $rows->schema(),
         );
-        self::assertEquals(
+        static::assertEquals(
             [
-                ['uuid' => Uuid::fromString('b97a23ab-ba84-4d8f-9d9a-abd32cc58110'), 'score_sum' => 40, 'score_avg' => 20.0],
-                ['uuid' => Uuid::fromString('28fc1a5f-25eb-40e2-88b8-7a0cdc5d18ae'), 'score_sum' => 55, 'score_avg' => 27.5],
-                ['uuid' => Uuid::fromString('5085fabf-15f7-4467-9076-61547afbbdc9'), 'score_sum' => 125, 'score_avg' => 41.67],
-                ['uuid' => Uuid::fromString('c7c22b40-45ad-46d1-a47b-0d1dd389ae41'), 'score_sum' => 50, 'score_avg' => 50.0],
+                [
+                    'uuid' => Uuid::fromString('b97a23ab-ba84-4d8f-9d9a-abd32cc58110'),
+                    'score_sum' => 40,
+                    'score_avg' => 20.0,
+                ],
+                [
+                    'uuid' => Uuid::fromString('28fc1a5f-25eb-40e2-88b8-7a0cdc5d18ae'),
+                    'score_sum' => 55,
+                    'score_avg' => 27.5,
+                ],
+                [
+                    'uuid' => Uuid::fromString('5085fabf-15f7-4467-9076-61547afbbdc9'),
+                    'score_sum' => 125,
+                    'score_avg' => 41.67,
+                ],
+                [
+                    'uuid' => Uuid::fromString('c7c22b40-45ad-46d1-a47b-0d1dd389ae41'),
+                    'score_sum' => 50,
+                    'score_avg' => 50.0,
+                ],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_pivot() : void
+    public function test_pivot(): void
     {
         $dataset1 = [
             ['date' => '2023-11-01', 'user' => 'norberttech', 'contributions' => 5],
@@ -380,7 +457,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->aggregate(sum(ref('contributions')))
             ->fetch();
 
-        self::assertSame(
+        static::assertSame(
             [
                 [
                     'date' => '2023-11-01',
@@ -408,11 +485,11 @@ final class GroupByTest extends FlowIntegrationTestCase
                     'stloyd' => 11,
                 ],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_pivot_with_multiple_group_by_column() : void
+    public function test_pivot_with_multiple_group_by_column(): void
     {
         $dataset1 = [
             ['date' => '2023-11-01', 'type' => 'admin', 'user' => 'norberttech', 'contributions' => 5],
@@ -437,7 +514,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->aggregate(sum(ref('contributions')))
             ->fetch();
 
-        self::assertSame(
+        static::assertSame(
             [
                 [
                     'date' => '2023-11-01',
@@ -500,67 +577,50 @@ final class GroupByTest extends FlowIntegrationTestCase
                     'norberttech' => null,
                 ],
             ],
-            $rows->toArray()
+            $rows->toArray(),
         );
     }
 
-    public function test_standalone_avg_aggregation() : void
+    public function test_standalone_avg_aggregation(): void
     {
         $rows = df()
-            ->read(from_rows(
-                rows(
-                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                    row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                    row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                    row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                    row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                    row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                    row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                    row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
-                )
-            ))
+            ->read(from_rows(rows(
+                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
+                row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
+                row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
+                row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
+                row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+            )))
             ->aggregate(average(ref('age')))
             ->rename('age_avg', 'average_age')
             ->fetch();
 
-        self::assertEquals(
-            rows(
-                row(float_entry('average_age', 33.75)),
-            ),
-            $rows
-        );
+        static::assertEquals(rows(row(float_entry('average_age', 33.75))), $rows);
     }
 
-    public function test_standalone_avg_and_max_aggregation() : void
+    public function test_standalone_avg_and_max_aggregation(): void
     {
         df()
-            ->read(from_rows(
-                rows(
-                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                    row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                    row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                    row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                    row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                    row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                    row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                    row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
-                )
-            ))
+            ->read(from_rows(rows(
+                row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
+                row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
+                row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
+                row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
+                row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+            )))
             ->aggregate(average(ref('age')), max(ref('age')))
-            ->run(function (Rows $rows) : void {
-                $this->assertEquals(
-                    rows(
-                        row(
-                            float_entry('age_avg', 33.75),
-                            int_entry('age_max', 50)
-                        )
-                    ),
-                    $rows
-                );
+            ->run(function (Rows $rows): void {
+                $this->assertEquals(rows(row(float_entry('age_avg', 33.75), int_entry('age_max', 50))), $rows);
             });
     }
 
-    public function test_window_avg_function() : void
+    public function test_window_avg_function(): void
     {
         $memoryPage1 = new ArrayMemory([
             ['employee_name' => 'James', 'department' => 'Sales', 'salary' => 3000],
@@ -580,7 +640,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             ['employee_name' => 'Charlotte', 'department' => 'Marketing', 'salary' => 3000],
         ]);
 
-        self::assertSame(
+        static::assertSame(
             [
                 ['department' => 'Sales', 'avg_salary' => 3917],
                 ['department' => 'Marketing', 'avg_salary' => 2940],
@@ -593,11 +653,11 @@ final class GroupByTest extends FlowIntegrationTestCase
                 ->dropDuplicates(ref('department'), ref('avg_salary'))
                 ->withEntry('avg_salary', ref('avg_salary')->round(lit(0)))
                 ->fetch()
-                ->toArray()
+                ->toArray(),
         );
     }
 
-    public function test_window_rank_function() : void
+    public function test_window_rank_function(): void
     {
         $memoryPage1 = new ArrayMemory([
             ['employee_name' => 'James', 'department' => 'Sales', 'salary' => 3000],
@@ -626,7 +686,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             ['employee_name' => 'Charlotte', 'department' => 'Marketing', 'salary' => 3000],
         ]);
 
-        self::assertSame(
+        static::assertSame(
             [
                 ['employee_name' => 'Emma', 'department' => 'Sales', 'salary' => 4800, 'rank' => 1],
                 ['employee_name' => 'Sophia', 'department' => 'Finance', 'salary' => 4200, 'rank' => 1],
@@ -635,10 +695,13 @@ final class GroupByTest extends FlowIntegrationTestCase
             df()
                 ->from(from_all(from_memory($memoryPage1), from_memory($memoryPage2)))
                 ->dropDuplicates(ref('employee_name'), ref('department'))
-                ->withEntry('rank', rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())))
+                ->withEntry(
+                    'rank',
+                    rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())),
+                )
                 ->filter(ref('rank')->equals(lit(1)))
                 ->fetch()
-                ->toArray()
+                ->toArray(),
         );
     }
 }

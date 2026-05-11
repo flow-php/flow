@@ -9,21 +9,21 @@ interface DeclareCursorOptionsStep extends DeclareCursorFinalStep
     /**
      * Make the cursor read binary data.
      */
-    public function binary() : self;
+    public function binary(): self;
 
     /**
      * Make the cursor non-scrollable (forward-only).
      * This is the default and recommended for ETL operations.
      */
-    public function noScroll() : self;
+    public function noScroll(): self;
 
     /**
      * Make the cursor scrollable (allows FETCH BACKWARD, FETCH ABSOLUTE, etc.).
      */
-    public function scroll() : self;
+    public function scroll(): self;
 
     /**
      * Allow the cursor to remain open after the transaction commits.
      */
-    public function withHold() : self;
+    public function withHold(): self;
 }

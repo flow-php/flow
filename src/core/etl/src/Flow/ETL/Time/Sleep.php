@@ -6,5 +6,5 @@ namespace Flow\ETL\Time;
 
 interface Sleep
 {
-    public function for(Duration $duration) : void;
+    public function for(Duration $duration): void;
 }

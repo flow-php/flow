@@ -4,18 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{flow_context, ref, str_entry};
-use function Flow\ETL\DSL\row;
 use Flow\ETL\String\StringStyles;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\str_entry;
 
 final class StringStyleTest extends FlowTestCase
 {
     /**
      * @return iterable<array-key, mixed>
      */
-    public static function provideStringStyles() : iterable
+    public static function provideStringStyles(): iterable
     {
         yield 'null' => [
             StringStyles::LOWER,
@@ -48,56 +51,32 @@ final class StringStyleTest extends FlowTestCase
         ];
     }
 
-    public function test_string_style_camel() : void
+    public function test_string_style_camel(): void
     {
-        self::assertSame(
-            'fooBarBaz',
-            ref('str')->stringStyle(ref('style'))->eval(
-                row(
-                    str_entry('str', 'Foo: Bar-baz.'),
-                    str_entry('style', 'camel')
-                ),
-                flow_context()
-            )
-        );
+        static::assertSame('fooBarBaz', ref('str')
+            ->stringStyle(ref('style'))
+            ->eval(row(str_entry('str', 'Foo: Bar-baz.'), str_entry('style', 'camel')), flow_context()));
     }
 
-    public function test_string_style_kebab() : void
+    public function test_string_style_kebab(): void
     {
-        self::assertSame(
-            'foo-bar-baz',
-            ref('str')->stringStyle('kebab')->eval(
-                row(str_entry('str', 'Foo: Bar-baz.')),
-                flow_context()
-            )
-        );
+        static::assertSame('foo-bar-baz', ref('str')
+            ->stringStyle('kebab')
+            ->eval(row(str_entry('str', 'Foo: Bar-baz.')), flow_context()));
     }
 
-    public function test_string_style_lower() : void
+    public function test_string_style_lower(): void
     {
-        self::assertSame(
-            'foo bar bri̇an',
-            ref('str')->stringStyle('lower')->eval(
-                row(str_entry('str', 'FOO Bar Brİan')),
-                flow_context()
-            )
-        );
+        static::assertSame('foo bar bri̇an', ref('str')
+            ->stringStyle('lower')
+            ->eval(row(str_entry('str', 'FOO Bar Brİan')), flow_context()));
     }
 
     #[DataProvider('provideStringStyles')]
-    public function test_string_styles(
-        StringStyles $style,
-        ?string $value,
-        ?string $expected,
-    ) : void {
-        self::assertSame(
-            $expected,
-            ref('str')->stringStyle($style)->eval(
-                row(
-                    str_entry('str', $value),
-                ),
-                flow_context()
-            )
-        );
+    public function test_string_styles(StringStyles $style, ?string $value, ?string $expected): void
+    {
+        static::assertSame($expected, ref('str')
+            ->stringStyle($style)
+            ->eval(row(str_entry('str', $value)), flow_context()));
     }
 }

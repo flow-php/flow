@@ -9,11 +9,11 @@ use Flow\ETL\Time\Duration;
 
 final readonly class Fixed implements DelayFactory
 {
-    public function __construct(private Duration $duration)
-    {
-    }
+    public function __construct(
+        private Duration $duration,
+    ) {}
 
-    public function delay(int $attempt) : Duration
+    public function delay(int $attempt): Duration
     {
         return $this->duration;
     }

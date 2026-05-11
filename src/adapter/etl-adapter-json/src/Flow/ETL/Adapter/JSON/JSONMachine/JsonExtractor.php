@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\JSONMachine;
 
-use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PathFiltering, Signal};
-use Flow\ETL\{Extractor, FlowContext};
+use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\FileExtractor;
+use Flow\ETL\Extractor\Limitable;
+use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\PathFiltering;
+use Flow\ETL\Extractor\Signal;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
 use JsonMachine\Items;
 use JsonMachine\JsonDecoder\ExtJsonDecoder;
+
+use function Flow\ETL\DSL\array_to_rows;
 
 final class JsonExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -29,7 +35,7 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
         $this->resetLimit();
     }
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
@@ -54,7 +60,12 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
                     continue;
                 }
 
-                $signal = yield array_to_rows([$row], $context->entryFactory(), $stream->path()->partitions(), $this->schema);
+                $signal = yield array_to_rows(
+                    [$row],
+                    $context->entryFactory(),
+                    $stream->path()->partitions(),
+                    $this->schema,
+                );
 
                 $this->incrementReturnedRows();
 
@@ -69,7 +80,7 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
         }
     }
 
-    public function source() : Path
+    public function source(): Path
     {
         return $this->path;
     }
@@ -78,7 +89,7 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
      * @param string $pointer
      * @param bool $pointerToEntryName - when true pointer will be used as entry name for extracted data
      */
-    public function withPointer(string $pointer, bool $pointerToEntryName = false) : self
+    public function withPointer(string $pointer, bool $pointerToEntryName = false): self
     {
         $this->pointer = $pointer;
         $this->pointerToEntryName = $pointerToEntryName;
@@ -86,7 +97,7 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
         return $this;
     }
 
-    public function withSchema(Schema $schema) : self
+    public function withSchema(Schema $schema): self
     {
         $this->schema = $schema;
 
@@ -96,7 +107,7 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
     /**
      * @return array{pointer?: string, decoder: ExtJsonDecoder}
      */
-    private function readerOptions() : array
+    private function readerOptions(): array
     {
         $options = [
             'decoder' => new ExtJsonDecoder(true),

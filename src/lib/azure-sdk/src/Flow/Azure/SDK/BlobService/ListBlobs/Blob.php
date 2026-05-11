@@ -9,11 +9,11 @@ final readonly class Blob
     /**
      * @param array<array-key, mixed> $data
      */
-    public function __construct(private array $data)
-    {
-    }
+    public function __construct(
+        private array $data,
+    ) {}
 
-    public function lastModifiedAt() : ?\DateTimeImmutable
+    public function lastModifiedAt(): ?\DateTimeImmutable
     {
         $properties = $this->data['Properties'] ?? null;
 
@@ -32,7 +32,7 @@ final readonly class Blob
         return $parsed === false ? null : $parsed;
     }
 
-    public function name() : string
+    public function name(): string
     {
         $name = $this->data['Name'] ?? null;
 
@@ -43,7 +43,7 @@ final readonly class Blob
         return $name;
     }
 
-    public function size() : int
+    public function size(): int
     {
         $properties = $this->data['Properties'] ?? null;
 

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Trigger;
 
-enum TriggerLevel : string
+enum TriggerLevel: string
 {
     case ROW = 'ROW';
     case STATEMENT = 'STATEMENT';
 
-    public function toBool() : bool
+    public function toBool(): bool
     {
         return $this === self::ROW;
     }

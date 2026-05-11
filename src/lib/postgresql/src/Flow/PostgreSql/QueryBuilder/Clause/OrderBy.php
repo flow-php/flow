@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Clause;
 
-use Flow\PostgreSql\Protobuf\AST\{Node, SortBy};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\SortBy;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
-use Flow\PostgreSql\QueryBuilder\Expression\{Column, Expression, ExpressionFactory};
+use Flow\PostgreSql\QueryBuilder\Expression\Column;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 
 /**
  * Represents an ORDER BY item.
@@ -17,10 +20,9 @@ final readonly class OrderBy
         private Expression $expression,
         private SortDirection $direction = SortDirection::ASC,
         private NullsPosition $nulls = NullsPosition::DEFAULT,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(SortBy $node) : self
+    public static function fromAst(SortBy $node): self
     {
         $nodeExpr = $node->getNode();
 
@@ -35,12 +37,12 @@ final readonly class OrderBy
         return new self($expression, $direction, $nulls);
     }
 
-    public function asc() : self
+    public function asc(): self
     {
         return new self($this->expression, SortDirection::ASC, $this->nulls);
     }
 
-    public function column() : ?string
+    public function column(): ?string
     {
         if ($this->expression instanceof Column) {
             return $this->expression->columnName();
@@ -49,37 +51,37 @@ final readonly class OrderBy
         return null;
     }
 
-    public function desc() : self
+    public function desc(): self
     {
         return new self($this->expression, SortDirection::DESC, $this->nulls);
     }
 
-    public function direction() : SortDirection
+    public function direction(): SortDirection
     {
         return $this->direction;
     }
 
-    public function expression() : Expression
+    public function expression(): Expression
     {
         return $this->expression;
     }
 
-    public function nulls() : NullsPosition
+    public function nulls(): NullsPosition
     {
         return $this->nulls;
     }
 
-    public function nullsFirst() : self
+    public function nullsFirst(): self
     {
         return new self($this->expression, $this->direction, NullsPosition::FIRST);
     }
 
-    public function nullsLast() : self
+    public function nullsLast(): self
     {
         return new self($this->expression, $this->direction, NullsPosition::LAST);
     }
 
-    public function toAst() : SortBy
+    public function toAst(): SortBy
     {
         return new SortBy([
             'node' => $this->expression->toAst(),
@@ -88,7 +90,7 @@ final readonly class OrderBy
         ]);
     }
 
-    public function toNode() : Node
+    public function toNode(): Node
     {
         return new Node(['sort_by' => $this->toAst()]);
     }

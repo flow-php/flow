@@ -13,7 +13,7 @@ final class ErrorLogHandlerTest extends TestCase
 
     private string $previousErrorLog = '';
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         $logFile = \tempnam(\sys_get_temp_dir(), 'flow-telemetry-error-log-');
 
@@ -26,7 +26,7 @@ final class ErrorLogHandlerTest extends TestCase
         \ini_set('error_log', $this->logFile);
     }
 
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         \ini_set('error_log', $this->previousErrorLog);
 
@@ -35,20 +35,20 @@ final class ErrorLogHandlerTest extends TestCase
         }
     }
 
-    public function test_collapses_newlines_when_expand_newlines_is_false() : void
+    public function test_collapses_newlines_when_expand_newlines_is_false(): void
     {
         $handler = new ErrorLogHandler();
 
         $handler->handle(new \RuntimeException("line1\nline2"));
 
         $contents = (string) \file_get_contents($this->logFile);
-        $lines = \array_values(\array_filter(\explode("\n", $contents), static fn (string $line) : bool => $line !== ''));
+        $lines = \array_values(\array_filter(\explode("\n", $contents), static fn(string $line): bool => $line !== ''));
 
-        self::assertCount(1, $lines);
-        self::assertStringContainsString('line1 line2', $lines[0]);
+        static::assertCount(1, $lines);
+        static::assertStringContainsString('line1 line2', $lines[0]);
     }
 
-    public function test_does_not_throw_when_invoked() : void
+    public function test_does_not_throw_when_invoked(): void
     {
         $this->expectNotToPerformAssertions();
 
@@ -57,7 +57,7 @@ final class ErrorLogHandlerTest extends TestCase
         $handler->handle(new \RuntimeException('boom'));
     }
 
-    public function test_emits_a_single_line_with_default_settings() : void
+    public function test_emits_a_single_line_with_default_settings(): void
     {
         $handler = new ErrorLogHandler();
 
@@ -65,24 +65,24 @@ final class ErrorLogHandlerTest extends TestCase
 
         $contents = (string) \file_get_contents($this->logFile);
 
-        self::assertStringContainsString('[flow-telemetry]', $contents);
-        self::assertStringContainsString('RuntimeException', $contents);
-        self::assertStringContainsString('boom', $contents);
+        static::assertStringContainsString('[flow-telemetry]', $contents);
+        static::assertStringContainsString('RuntimeException', $contents);
+        static::assertStringContainsString('boom', $contents);
     }
 
-    public function test_emits_separate_lines_when_expand_newlines_is_true() : void
+    public function test_emits_separate_lines_when_expand_newlines_is_true(): void
     {
         $handler = new ErrorLogHandler(expandNewlines: true);
 
         $handler->handle(new \RuntimeException("line1\nline2"));
 
         $contents = (string) \file_get_contents($this->logFile);
-        $lines = \array_values(\array_filter(\explode("\n", $contents), static fn (string $line) : bool => $line !== ''));
+        $lines = \array_values(\array_filter(\explode("\n", $contents), static fn(string $line): bool => $line !== ''));
 
-        self::assertGreaterThanOrEqual(2, \count($lines));
+        static::assertGreaterThanOrEqual(2, \count($lines));
     }
 
-    public function test_uses_a_custom_message_prefix() : void
+    public function test_uses_a_custom_message_prefix(): void
     {
         $handler = new ErrorLogHandler(messagePrefix: '[custom-prefix]');
 
@@ -90,7 +90,7 @@ final class ErrorLogHandlerTest extends TestCase
 
         $contents = (string) \file_get_contents($this->logFile);
 
-        self::assertStringContainsString('[custom-prefix]', $contents);
-        self::assertStringNotContainsString('[flow-telemetry]', $contents);
+        static::assertStringContainsString('[custom-prefix]', $contents);
+        static::assertStringNotContainsString('[flow-telemetry]', $contents);
     }
 }

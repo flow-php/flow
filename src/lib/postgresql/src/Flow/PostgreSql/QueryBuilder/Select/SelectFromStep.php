@@ -8,5 +8,5 @@ use Flow\PostgreSql\QueryBuilder\Table\TableReference;
 
 interface SelectFromStep extends SelectFinalStep
 {
-    public function from(string|TableReference ...$tables) : SelectJoinStep;
+    public function from(string|TableReference ...$tables): SelectJoinStep;
 }

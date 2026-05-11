@@ -38,16 +38,16 @@ jobs:
           cache-key-suffix: "-extensions"
 
       - name: "Test Brotli"
-        run: "composer test -- --group brotli-extension"
+        run: "just test --group brotli-extension"
 
       - name: "Test LZ4"
-        run: "composer test -- --group lz4-extension"
+        run: "just test --group lz4-extension"
 
       - name: "Test ZSTD"
-        run: "composer test -- --group zstd-extension"
+        run: "just test --group zstd-extension"
 
       - name: "Test Snappy"
-        run: "composer test -- --group snappy-extension"
+        run: "just test --group snappy-extension"
 
       - name: Upload to Codecov
         if: ${{ !cancelled() && matrix.php-version == '8.3' }}

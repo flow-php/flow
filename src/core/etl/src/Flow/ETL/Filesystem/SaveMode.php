@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Filesystem;
 
-enum SaveMode : string
+enum SaveMode: string
 {
     /**
      * If data sink already exists, data will be appended, this solution might cause data duplication

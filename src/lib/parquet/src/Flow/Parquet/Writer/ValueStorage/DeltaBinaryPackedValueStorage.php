@@ -6,7 +6,8 @@ namespace Flow\Parquet\Writer\ValueStorage;
 
 use Flow\Parquet\Data\DeltaBinaryPackedEncoder;
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, PhysicalType};
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 
 final class DeltaBinaryPackedValueStorage implements ValueStorage
 {
@@ -15,7 +16,7 @@ final class DeltaBinaryPackedValueStorage implements ValueStorage
      */
     private array $values = [];
 
-    public function addValues(FlatColumn $column, array $values) : void
+    public function addValues(FlatColumn $column, array $values): void
     {
         if (!in_array($column->type(), [PhysicalType::INT32, PhysicalType::INT64], true)) {
             throw new InvalidArgumentException('Delta encoding only supports INT32 and INT64 physical types');
@@ -24,7 +25,10 @@ final class DeltaBinaryPackedValueStorage implements ValueStorage
         foreach ($values as $value) {
             if ($value !== null) {
                 if (!is_int($value)) {
-                    throw new InvalidArgumentException(\sprintf('Delta encoding requires integer values, got %s', \gettype($value)));
+                    throw new InvalidArgumentException(\sprintf(
+                        'Delta encoding requires integer values, got %s',
+                        \gettype($value),
+                    ));
                 }
 
                 $this->values[] = $value;
@@ -32,7 +36,7 @@ final class DeltaBinaryPackedValueStorage implements ValueStorage
         }
     }
 
-    public function getBuffer() : string
+    public function getBuffer(): string
     {
         if (!\count($this->values)) {
             return '';
@@ -41,17 +45,17 @@ final class DeltaBinaryPackedValueStorage implements ValueStorage
         return (new DeltaBinaryPackedEncoder())->encode($this->values);
     }
 
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return empty($this->values);
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->values = [];
     }
 
-    public function size() : int
+    public function size(): int
     {
         return \count($this->values);
     }

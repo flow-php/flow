@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Instrumentation\Doctrine\DBAL\V3;
 
-use Doctrine\DBAL\Driver\{Connection as ConnectionInterface, Result, Statement as DriverStatement};
+use Doctrine\DBAL\Driver\Connection as ConnectionInterface;
+use Doctrine\DBAL\Driver\Result;
+use Doctrine\DBAL\Driver\Statement as DriverStatement;
 use Doctrine\DBAL\ParameterType;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V3\TracingConnection;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Provider\Memory\{MemoryExporter, MemorySpanProcessor};
-use Flow\Telemetry\Provider\Void\{VoidLogProcessor, VoidMetricProcessor};
-use Flow\Telemetry\{Resource, Telemetry};
+use Flow\Telemetry\Provider\Memory\MemoryExporter;
+use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
+use Flow\Telemetry\Provider\Void\VoidLogProcessor;
+use Flow\Telemetry\Provider\Void\VoidMetricProcessor;
+use Flow\Telemetry\Resource;
+use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -21,14 +26,14 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(TracingConnection::class)]
 final class TracingConnectionTest extends TestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\interface_exists('Doctrine\DBAL\VersionAwarePlatformDriver')) {
             self::markTestSkipped('Test requires Doctrine DBAL 3.x');
         }
     }
 
-    public function test_prepare_uses_truncation() : void
+    public function test_prepare_uses_truncation(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -40,11 +45,11 @@ final class TracingConnectionTest extends TestCase
         $tracing->prepare($sql);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame('INSERT INTO use...', $spans[0]->attributes()['db.query.text']);
+        static::assertCount(1, $spans);
+        static::assertSame('INSERT INTO use...', $spans[0]->attributes()['db.query.text']);
     }
 
-    public function test_query_uses_truncation() : void
+    public function test_query_uses_truncation(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -56,11 +61,11 @@ final class TracingConnectionTest extends TestCase
         $tracing->query($sql);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame('SELECT * F...', $spans[0]->attributes()['db.query.text']);
+        static::assertCount(1, $spans);
+        static::assertSame('SELECT * F...', $spans[0]->attributes()['db.query.text']);
     }
 
-    public function test_sql_not_logged_when_log_sql_disabled() : void
+    public function test_sql_not_logged_when_log_sql_disabled(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -72,11 +77,11 @@ final class TracingConnectionTest extends TestCase
         $tracing->exec($sql);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertArrayNotHasKey('db.query.text', $spans[0]->attributes());
+        static::assertCount(1, $spans);
+        static::assertArrayNotHasKey('db.query.text', $spans[0]->attributes());
     }
 
-    public function test_truncate_sql_exact_boundary_case() : void
+    public function test_truncate_sql_exact_boundary_case(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -88,11 +93,11 @@ final class TracingConnectionTest extends TestCase
         $tracing->exec($sql);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame($sql, $spans[0]->attributes()['db.query.text']);
+        static::assertCount(1, $spans);
+        static::assertSame($sql, $spans[0]->attributes()['db.query.text']);
     }
 
-    public function test_truncate_sql_handles_multibyte_characters() : void
+    public function test_truncate_sql_handles_multibyte_characters(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -104,14 +109,14 @@ final class TracingConnectionTest extends TestCase
         $tracing->exec($sql);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $truncated = $spans[0]->attributes()['db.query.text'];
-        self::assertSame('SELECT * FROM u...', $truncated);
-        self::assertSame(18, \mb_strlen($truncated));
+        static::assertSame('SELECT * FROM u...', $truncated);
+        static::assertSame(18, \mb_strlen($truncated));
     }
 
-    public function test_truncate_sql_returns_full_sql_when_max_length_negative() : void
+    public function test_truncate_sql_returns_full_sql_when_max_length_negative(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -123,11 +128,11 @@ final class TracingConnectionTest extends TestCase
         $tracing->exec($longSql);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame($longSql, $spans[0]->attributes()['db.query.text']);
+        static::assertCount(1, $spans);
+        static::assertSame($longSql, $spans[0]->attributes()['db.query.text']);
     }
 
-    public function test_truncate_sql_returns_full_sql_when_max_length_zero() : void
+    public function test_truncate_sql_returns_full_sql_when_max_length_zero(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -139,11 +144,11 @@ final class TracingConnectionTest extends TestCase
         $tracing->exec($longSql);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame($longSql, $spans[0]->attributes()['db.query.text']);
+        static::assertCount(1, $spans);
+        static::assertSame($longSql, $spans[0]->attributes()['db.query.text']);
     }
 
-    public function test_truncate_sql_returns_sql_when_shorter_than_limit() : void
+    public function test_truncate_sql_returns_sql_when_shorter_than_limit(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -155,11 +160,11 @@ final class TracingConnectionTest extends TestCase
         $tracing->exec($sql);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame($sql, $spans[0]->attributes()['db.query.text']);
+        static::assertCount(1, $spans);
+        static::assertSame($sql, $spans[0]->attributes()['db.query.text']);
     }
 
-    public function test_truncate_sql_truncates_and_appends_ellipsis() : void
+    public function test_truncate_sql_truncates_and_appends_ellipsis(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
@@ -171,114 +176,112 @@ final class TracingConnectionTest extends TestCase
         $tracing->exec($sql);
 
         $spans = $spanProcessor->endedSpans();
-        self::assertCount(1, $spans);
-        self::assertSame('SELECT * FROM users ...', $spans[0]->attributes()['db.query.text']);
+        static::assertCount(1, $spans);
+        static::assertSame('SELECT * FROM users ...', $spans[0]->attributes()['db.query.text']);
     }
 
-    private function createMockConnection() : ConnectionInterface
+    private function createMockConnection(): ConnectionInterface
     {
         return new class implements ConnectionInterface {
-            public function beginTransaction() : bool
+            public function beginTransaction(): bool
             {
                 return true;
             }
 
-            public function commit() : bool
+            public function commit(): bool
             {
                 return true;
             }
 
-            public function exec(string $sql) : int
+            public function exec(string $sql): int
             {
                 return 0;
             }
 
-            public function getNativeConnection() : object
+            public function getNativeConnection(): object
             {
                 return new \stdClass();
             }
 
-            public function getServerVersion() : string
+            public function getServerVersion(): string
             {
                 return '8.0.0';
             }
 
             /** @phpstan-ignore missingType.parameter */
-            public function lastInsertId($name = null) : string|int|false
+            public function lastInsertId($name = null): string|int|false
             {
                 return 0;
             }
 
-            public function prepare(string $sql) : DriverStatement
+            public function prepare(string $sql): DriverStatement
             {
                 return new class implements DriverStatement {
                     /** @phpstan-ignore missingType.parameter */
-                    public function bindValue($param, $value, $type = ParameterType::STRING) : bool
+                    public function bindValue($param, $value, $type = ParameterType::STRING): bool
                     {
                         return true;
                     }
 
                     /** @phpstan-ignore missingType.parameter */
-                    public function bindParam($param, &$variable, $type = ParameterType::STRING, $length = null) : bool
+                    public function bindParam($param, &$variable, $type = ParameterType::STRING, $length = null): bool
                     {
                         return true;
                     }
 
                     /** @phpstan-ignore missingType.parameter */
-                    public function execute($params = null) : Result
+                    public function execute($params = null): Result
                     {
                         return new class implements Result {
-                            public function columnCount() : int
+                            public function columnCount(): int
                             {
                                 return 0;
                             }
 
                             /** @return list<array<string, mixed>> */
-                            public function fetchAllAssociative() : array
+                            public function fetchAllAssociative(): array
                             {
                                 return [];
                             }
 
                             /** @return array<mixed, mixed> */
-                            public function fetchAllKeyValue() : array
+                            public function fetchAllKeyValue(): array
                             {
                                 return [];
                             }
 
                             /** @return list<list<mixed>> */
-                            public function fetchAllNumeric() : array
+                            public function fetchAllNumeric(): array
                             {
                                 return [];
                             }
 
                             /** @return array<string, mixed>|false */
-                            public function fetchAssociative() : array|false
+                            public function fetchAssociative(): array|false
                             {
                                 return false;
                             }
 
                             /** @return list<mixed> */
-                            public function fetchFirstColumn() : array
+                            public function fetchFirstColumn(): array
                             {
                                 return [];
                             }
 
                             /** @return false|list<mixed> */
-                            public function fetchNumeric() : array|false
+                            public function fetchNumeric(): array|false
                             {
                                 return false;
                             }
 
-                            public function fetchOne() : mixed
+                            public function fetchOne(): mixed
                             {
                                 return false;
                             }
 
-                            public function free() : void
-                            {
-                            }
+                            public function free(): void {}
 
-                            public function rowCount() : int
+                            public function rowCount(): int
                             {
                                 return 0;
                             }
@@ -287,60 +290,58 @@ final class TracingConnectionTest extends TestCase
                 };
             }
 
-            public function query(string $sql) : Result
+            public function query(string $sql): Result
             {
                 return new class implements Result {
-                    public function columnCount() : int
+                    public function columnCount(): int
                     {
                         return 0;
                     }
 
                     /** @return list<array<string, mixed>> */
-                    public function fetchAllAssociative() : array
+                    public function fetchAllAssociative(): array
                     {
                         return [];
                     }
 
                     /** @return array<mixed, mixed> */
-                    public function fetchAllKeyValue() : array
+                    public function fetchAllKeyValue(): array
                     {
                         return [];
                     }
 
                     /** @return list<list<mixed>> */
-                    public function fetchAllNumeric() : array
+                    public function fetchAllNumeric(): array
                     {
                         return [];
                     }
 
                     /** @return array<string, mixed>|false */
-                    public function fetchAssociative() : array|false
+                    public function fetchAssociative(): array|false
                     {
                         return false;
                     }
 
                     /** @return list<mixed> */
-                    public function fetchFirstColumn() : array
+                    public function fetchFirstColumn(): array
                     {
                         return [];
                     }
 
                     /** @return false|list<mixed> */
-                    public function fetchNumeric() : array|false
+                    public function fetchNumeric(): array|false
                     {
                         return false;
                     }
 
-                    public function fetchOne() : mixed
+                    public function fetchOne(): mixed
                     {
                         return false;
                     }
 
-                    public function free() : void
-                    {
-                    }
+                    public function free(): void {}
 
-                    public function rowCount() : int
+                    public function rowCount(): int
                     {
                         return 0;
                     }
@@ -348,19 +349,19 @@ final class TracingConnectionTest extends TestCase
             }
 
             /** @phpstan-ignore missingType.parameter, missingType.parameter */
-            public function quote($value, $type = ParameterType::STRING) : mixed
+            public function quote($value, $type = ParameterType::STRING): mixed
             {
                 return "'{$value}'";
             }
 
-            public function rollBack() : bool
+            public function rollBack(): bool
             {
                 return true;
             }
         };
     }
 
-    private function createTelemetry(MemorySpanProcessor $spanProcessor) : Telemetry
+    private function createTelemetry(MemorySpanProcessor $spanProcessor): Telemetry
     {
         $clock = new SystemClock();
         $contextStorage = new MemoryContextStorage();

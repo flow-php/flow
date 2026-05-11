@@ -13,27 +13,22 @@ final readonly class Timing
         private float $startupTime,
         private float $totalTime,
         private int $loops,
-    ) {
-    }
+    ) {}
 
     /**
      * @param TimingShape $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
-        return new self(
-            startupTime: $data['startup_time'],
-            totalTime: $data['total_time'],
-            loops: $data['loops'],
-        );
+        return new self(startupTime: $data['startup_time'], totalTime: $data['total_time'], loops: $data['loops']);
     }
 
-    public function averageTime() : float
+    public function averageTime(): float
     {
         return $this->loops > 0 ? $this->totalTime / $this->loops : 0.0;
     }
 
-    public function loops() : int
+    public function loops(): int
     {
         return $this->loops;
     }
@@ -41,7 +36,7 @@ final readonly class Timing
     /**
      * @return TimingShape
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'startup_time' => $this->startupTime,
@@ -50,17 +45,17 @@ final readonly class Timing
         ];
     }
 
-    public function startupTime() : float
+    public function startupTime(): float
     {
         return $this->startupTime;
     }
 
-    public function totalActualTime() : float
+    public function totalActualTime(): float
     {
         return $this->totalTime * $this->loops;
     }
 
-    public function totalTime() : float
+    public function totalTime(): float
     {
         return $this->totalTime;
     }

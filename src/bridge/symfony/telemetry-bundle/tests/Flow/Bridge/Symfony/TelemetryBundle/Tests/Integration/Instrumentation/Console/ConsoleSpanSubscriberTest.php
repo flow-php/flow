@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\Instrumentation\Console;
 
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Console\ConsoleSpanSubscriber;
-use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Command\{FailingCommand, TestCommand};
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Command\FailingCommand;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Command\TestCommand;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\KernelTestCase;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
@@ -20,16 +21,16 @@ use Symfony\Component\Console\Output\BufferedOutput;
 final class ConsoleSpanSubscriberTest extends KernelTestCase
 {
     #[\Override]
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         restore_exception_handler();
         parent::tearDown();
     }
 
-    public function test_does_not_trace_when_disabled() : void
+    public function test_does_not_trace_when_disabled(): void
     {
         $kernel = $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestBundle(FrameworkBundle::class);
                 $kernel->addTestExtensionConfig('framework', [
                     'router' => [
@@ -72,13 +73,13 @@ final class ConsoleSpanSubscriberTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        self::assertCount(0, $spans);
+        static::assertCount(0, $spans);
     }
 
-    public function test_excludes_command_with_exact_match() : void
+    public function test_excludes_command_with_exact_match(): void
     {
         $kernel = $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestBundle(FrameworkBundle::class);
                 $kernel->addTestExtensionConfig('framework', [
                     'router' => [
@@ -124,13 +125,13 @@ final class ConsoleSpanSubscriberTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        self::assertCount(0, $spans);
+        static::assertCount(0, $spans);
     }
 
-    public function test_excludes_command_with_regex_pattern() : void
+    public function test_excludes_command_with_regex_pattern(): void
     {
         $kernel = $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestBundle(FrameworkBundle::class);
                 $kernel->addTestExtensionConfig('framework', [
                     'router' => [
@@ -180,13 +181,13 @@ final class ConsoleSpanSubscriberTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        self::assertCount(0, $spans, 'Both test:command and test:failing should be excluded by regex');
+        static::assertCount(0, $spans, 'Both test:command and test:failing should be excluded by regex');
     }
 
-    public function test_traces_failing_console_command() : void
+    public function test_traces_failing_console_command(): void
     {
         $kernel = $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestBundle(FrameworkBundle::class);
                 $kernel->addTestExtensionConfig('framework', [
                     'router' => [
@@ -224,30 +225,30 @@ final class ConsoleSpanSubscriberTest extends KernelTestCase
 
         $exitCode = $application->run($input, $output);
 
-        self::assertSame(1, $exitCode);
+        static::assertSame(1, $exitCode);
 
         $container = $this->getContainer();
         /** @var MemorySpanProcessor $processor */
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('test:failing', $span->name());
+        static::assertSame('test:failing', $span->name());
 
         $attributes = $span->attributes();
-        self::assertSame(1, $attributes['process.exit_code']);
+        static::assertSame(1, $attributes['process.exit_code']);
 
         $status = $span->status();
-        self::assertNotNull($status);
-        self::assertSame('Exit code: 1', $status->description);
+        static::assertNotNull($status);
+        static::assertSame('Exit code: 1', $status->description);
     }
 
-    public function test_traces_successful_console_command() : void
+    public function test_traces_successful_console_command(): void
     {
         $kernel = $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestBundle(FrameworkBundle::class);
                 $kernel->addTestExtensionConfig('framework', [
                     'router' => [
@@ -285,26 +286,26 @@ final class ConsoleSpanSubscriberTest extends KernelTestCase
 
         $exitCode = $application->run($input, $output);
 
-        self::assertSame(0, $exitCode);
+        static::assertSame(0, $exitCode);
 
         $container = $this->getContainer();
         /** @var MemorySpanProcessor $processor */
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('test:command', $span->name());
-        self::assertSame(SpanKind::INTERNAL, $span->kind());
+        static::assertSame('test:command', $span->name());
+        static::assertSame(SpanKind::INTERNAL, $span->kind());
 
         $attributes = $span->attributes();
-        self::assertSame('test:command', $attributes['command.name']);
-        self::assertSame(TestCommand::class, $attributes['command.class']);
-        self::assertSame(0, $attributes['process.exit_code']);
+        static::assertSame('test:command', $attributes['command.name']);
+        static::assertSame(TestCommand::class, $attributes['command.class']);
+        static::assertSame(0, $attributes['process.exit_code']);
 
         $status = $span->status();
-        self::assertNotNull($status);
-        self::assertTrue($status->isOk());
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
     }
 }

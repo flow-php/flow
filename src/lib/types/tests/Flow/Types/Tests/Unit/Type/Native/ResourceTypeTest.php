@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
-use function Flow\Types\DSL\{type_from_array, type_resource};
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_from_array;
+use function Flow\Types\DSL\type_resource;
+
 final class ResourceTypeTest extends TestCase
 {
-    public static function assert_data_provider() : \Generator
+    public static function assert_data_provider(): \Generator
     {
         yield 'valid resource' => [
             'value' => \fopen('php://temp/max', 'r+b'),
@@ -64,7 +67,7 @@ final class ResourceTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider() : \Generator
+    public static function cast_data_provider(): \Generator
     {
         $resource = \fopen('php://temp/max', 'r+b');
 
@@ -87,7 +90,7 @@ final class ResourceTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider() : \Generator
+    public static function is_valid_data_provider(): \Generator
     {
         yield 'valid resource' => [
             'value' => \fopen('php://temp/max', 'r+b'),
@@ -111,32 +114,32 @@ final class ResourceTypeTest extends TestCase
     }
 
     #[DataProvider('assert_data_provider')]
-    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
+    public function test_assert(mixed $value, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_resource()->assert($value);
         } else {
-            self::assertIsResource(type_resource()->assert($value));
+            static::assertIsResource(type_resource()->assert($value));
         }
     }
 
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             type_resource()->cast($value);
         } else {
-            self::assertSame($expected, type_resource()->cast($value));
+            static::assertSame($expected, type_resource()->cast($value));
         }
     }
 
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(mixed $value, bool $expected) : void
+    public function test_is_valid(mixed $value, bool $expected): void
     {
         try {
-            self::assertSame($expected, type_resource()->isValid($value));
+            static::assertSame($expected, type_resource()->isValid($value));
         } finally {
             if (is_resource($value)) {
                 \fclose($value);
@@ -144,20 +147,17 @@ final class ResourceTypeTest extends TestCase
         }
     }
 
-    public function test_normalization() : void
+    public function test_normalization(): void
     {
         $type = type_resource();
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
-    public function test_to_string() : void
+    public function test_to_string(): void
     {
-        self::assertSame(
-            'resource',
-            type_resource()->toString()
-        );
+        static::assertSame('resource', type_resource()->toString());
     }
 }

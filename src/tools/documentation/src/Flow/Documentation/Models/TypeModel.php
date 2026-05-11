@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
-use function Flow\Types\DSL\{type_boolean, type_optional, type_string, type_structure};
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final readonly class TypeModel
 {
@@ -13,13 +16,12 @@ final readonly class TypeModel
         public ?string $namespace,
         public bool $isNullable,
         public bool $isVariadic,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<string, mixed> $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         $data = type_structure([
             'name' => type_string(),
@@ -28,15 +30,10 @@ final readonly class TypeModel
             'is_variadic' => type_boolean(),
         ])->assert($data);
 
-        return new self(
-            $data['name'],
-            $data['namespace'],
-            $data['is_nullable'],
-            $data['is_variadic'],
-        );
+        return new self($data['name'], $data['namespace'], $data['is_nullable'], $data['is_variadic']);
     }
 
-    public static function fromReflection(\ReflectionType $reflectionType) : self
+    public static function fromReflection(\ReflectionType $reflectionType): self
     {
         if (!$reflectionType instanceof \ReflectionNamedType) {
             throw new \InvalidArgumentException('ReflectionType must be instance of ReflectionNamedType');
@@ -54,7 +51,7 @@ final readonly class TypeModel
         );
     }
 
-    public function name() : string
+    public function name(): string
     {
         if (\class_exists($this->name)) {
             return (new \ReflectionClass($this->name))->getShortName();
@@ -63,7 +60,7 @@ final readonly class TypeModel
         return $this->name;
     }
 
-    public function namespace() : ?string
+    public function namespace(): ?string
     {
         if (\class_exists($this->name)) {
             return (new \ReflectionClass($this->name))->getNamespaceName();
@@ -75,7 +72,7 @@ final readonly class TypeModel
     /**
      * @return array<string, mixed>
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'name' => $this->name,

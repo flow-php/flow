@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Grant;
 
-use Flow\PostgreSql\Protobuf\AST\{Boolean, DefElem, GrantRoleStmt, Node, RoleSpec, RoleSpecType};
+use Flow\PostgreSql\Protobuf\AST\Boolean;
+use Flow\PostgreSql\Protobuf\AST\DefElem;
+use Flow\PostgreSql\Protobuf\AST\GrantRoleStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RoleSpec;
+use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
 final readonly class GrantRoleBuilder implements GrantRoleFinalStep, GrantRoleToStep
@@ -19,24 +24,19 @@ final readonly class GrantRoleBuilder implements GrantRoleFinalStep, GrantRoleTo
         private array $grantedRoles,
         private array $granteeRoles = [],
         private bool $adminOption = false,
-    ) {
-    }
+    ) {}
 
-    public static function create(string ...$roles) : GrantRoleToStep
+    public static function create(string ...$roles): GrantRoleToStep
     {
         return new self(\array_values($roles));
     }
 
-    public function to(string ...$roles) : GrantRoleFinalStep
+    public function to(string ...$roles): GrantRoleFinalStep
     {
-        return new self(
-            $this->grantedRoles,
-            \array_values($roles),
-            $this->adminOption,
-        );
+        return new self($this->grantedRoles, \array_values($roles), $this->adminOption);
     }
 
-    public function toAst() : GrantRoleStmt
+    public function toAst(): GrantRoleStmt
     {
         $stmt = new GrantRoleStmt();
         $stmt->setIsGrant(true);
@@ -89,12 +89,8 @@ final readonly class GrantRoleBuilder implements GrantRoleFinalStep, GrantRoleTo
         return $stmt;
     }
 
-    public function withAdminOption() : GrantRoleFinalStep
+    public function withAdminOption(): GrantRoleFinalStep
     {
-        return new self(
-            $this->grantedRoles,
-            $this->granteeRoles,
-            true,
-        );
+        return new self($this->grantedRoles, $this->granteeRoles, true);
     }
 }

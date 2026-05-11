@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Azure\SDK\BlobService\PutBlockBlobBlockList;
 
-use Flow\Azure\SDK\{BlobService, EndpointOptions, Endpoints\UserAgentHeader};
+use Flow\Azure\SDK\BlobService;
+use Flow\Azure\SDK\EndpointOptions;
+use Flow\Azure\SDK\Endpoints\UserAgentHeader;
 
 final class PutBlockBlobBlockListOptions implements EndpointOptions
 {
@@ -27,7 +29,7 @@ final class PutBlockBlobBlockListOptions implements EndpointOptions
     /**
      * @return array<string, int|string>
      */
-    public function toHeaders() : array
+    public function toHeaders(): array
     {
         $headers = [];
 
@@ -61,7 +63,7 @@ final class PutBlockBlobBlockListOptions implements EndpointOptions
     /**
      * @return array<string, int|string>
      */
-    public function toURIParameters() : array
+    public function toURIParameters(): array
     {
         $uriParameters = [];
 
@@ -72,15 +74,18 @@ final class PutBlockBlobBlockListOptions implements EndpointOptions
         return $uriParameters;
     }
 
-    public function withContentLength(int $contentLength) : self
+    public function withContentLength(int $contentLength): self
     {
         $this->contentLength = $contentLength;
 
         return $this;
     }
 
-    public function withEncryption(string $encryptionKey, string $encryptionAlgorithm, ?string $encryptionKeySha256 = null) : self
-    {
+    public function withEncryption(
+        string $encryptionKey,
+        string $encryptionAlgorithm,
+        ?string $encryptionKeySha256 = null,
+    ): self {
         $this->encryptionKey = $encryptionKey;
         $this->encryptionKeySha256 = $encryptionKeySha256;
         $this->encryptionAlgorithm = $encryptionAlgorithm;
@@ -88,21 +93,21 @@ final class PutBlockBlobBlockListOptions implements EndpointOptions
         return $this;
     }
 
-    public function withRequestId(string $requestId) : self
+    public function withRequestId(string $requestId): self
     {
         $this->requestId = $requestId;
 
         return $this;
     }
 
-    public function withTimeoutSeconds(int $timeoutSeconds) : self
+    public function withTimeoutSeconds(int $timeoutSeconds): self
     {
         $this->timeoutSeconds = $timeoutSeconds;
 
         return $this;
     }
 
-    public function withVersion(string $version) : self
+    public function withVersion(string $version): self
     {
         $this->version = $version;
 

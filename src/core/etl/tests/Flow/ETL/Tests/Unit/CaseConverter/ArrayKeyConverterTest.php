@@ -4,19 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\CaseConverter;
 
-use function Symfony\Component\String\u;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\StyleConverter\ArrayKeyConverter;
 
+use function Symfony\Component\String\u;
+
 final class ArrayKeyConverterTest extends FlowTestCase
 {
-    public function test_converts_all_keys_to_snake_case() : void
+    public function test_converts_all_keys_to_snake_case(): void
     {
-        $transformer = new ArrayKeyConverter(
-            static fn (string $key) : string => u($key)->snake()->toString()
-        );
+        $transformer = new ArrayKeyConverter(static fn(string $key): string => u($key)->snake()->toString());
 
-        self::assertEquals(
+        static::assertEquals(
             [
                 'item_id' => 1,
                 'item_status' => 'PENDING',

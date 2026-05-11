@@ -4,18 +4,29 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 
-use function Flow\ETL\Adapter\JSON\from_json;
-use function Flow\ETL\Adapter\Json\to_json;
-use function Flow\ETL\DSL\{average, df, from_array, from_rows, int_entry, json_entry, overwrite, ref, row};
-use function Flow\ETL\DSL\{config, flow_context, rows};
-use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\Adapter\JSON\from_json;
+use function Flow\ETL\Adapter\Json\to_json;
+use function Flow\ETL\DSL\average;
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\json_entry;
+use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\Filesystem\DSL\path;
+
 final class JsonTest extends FlowTestCase
 {
-    public function test_domdocument_json_file() : void
+    public function test_domdocument_json_file(): void
     {
         $domDocument = new \DOMDocument();
         $domDocument->loadXml('<b>red</b>');
@@ -31,18 +42,15 @@ final class JsonTest extends FlowTestCase
         $content = \file_get_contents($path);
 
         if ($content === false) {
-            self::fail('Failed to read file content');
+            static::fail('Failed to read file content');
         }
 
-        self::assertStringContainsString(
-            <<<'JSON'
-[{"id":1,"descriptionHtml":"<b>red<\/b>","size":"small"}]
-JSON,
-            $content
-        );
+        static::assertStringContainsString(<<<'JSON'
+            [{"id":1,"descriptionHtml":"<b>red<\/b>","size":"small"}]
+            JSON, $content);
     }
 
-    public function test_json_loader() : void
+    public function test_json_loader(): void
     {
         $path = __DIR__ . '/var/test_json_loader.json';
 
@@ -50,22 +58,16 @@ JSON,
             \unlink($path);
         }
 
-        df()
-            ->read(new FakeExtractor(100))
-            ->write(to_json($path))
-            ->run();
+        df()->read(new FakeExtractor(100))->write(to_json($path))->run();
 
-        self::assertEquals(
-            100,
-            df()->read(from_json($path))->count()
-        );
+        static::assertEquals(100, df()->read(from_json($path))->count());
 
         if (\file_exists($path)) {
             \unlink($path);
         }
     }
 
-    public function test_json_loader_loading_empty_string() : void
+    public function test_json_loader_loading_empty_string(): void
     {
         $loader = new JsonLoader(path($path = __DIR__ . '/var/test_json_loader_loading_empty_string.json'));
 
@@ -76,23 +78,20 @@ JSON,
         $content = \file_get_contents($path);
 
         if ($content === false) {
-            self::fail('Failed to read file content');
+            static::fail('Failed to read file content');
         }
 
-        self::assertJsonStringEqualsJsonString(
-            <<<'JSON'
-[
-]
-JSON,
-            $content
-        );
+        static::assertJsonStringEqualsJsonString(<<<'JSON'
+            [
+            ]
+            JSON, $content);
 
         if (\file_exists($path)) {
             \unlink($path);
         }
     }
 
-    public function test_json_loader_overwrite_mode() : void
+    public function test_json_loader_overwrite_mode(): void
     {
         $path = __DIR__ . '/var/test_json_loader.json';
 
@@ -100,45 +99,30 @@ JSON,
             \unlink($path);
         }
 
-        df()
-            ->read(new FakeExtractor(100))
-            ->write(to_json($path))
-            ->run();
+        df()->read(new FakeExtractor(100))->write(to_json($path))->run();
 
-        df()
-            ->read(new FakeExtractor(100))
-            ->mode(overwrite())
-            ->write(to_json($path))
-            ->run();
+        df()->read(new FakeExtractor(100))->mode(overwrite())->write(to_json($path))->run();
 
         $content = \file_get_contents($path);
 
         if ($content === false) {
-            self::fail('Failed to read file content');
+            static::fail('Failed to read file content');
         }
 
-        self::assertStringEndsWith(']', $content);
+        static::assertStringEndsWith(']', $content);
 
-        self::assertEquals(
-            100,
-            df()->read(from_json($path))->count()
-        );
+        static::assertEquals(100, df()->read(from_json($path))->count());
 
         if (\file_exists($path)) {
             \unlink($path);
         }
     }
 
-    public function test_jsonentry_json_file() : void
+    public function test_jsonentry_json_file(): void
     {
         $jsonObject = ['short' => 'short_description', 'long' => 'long_description'];
         df()
-            ->read(from_rows(rows(
-                row(
-                    int_entry('id', 1),
-                    json_entry('nested', $jsonObject),
-                )
-            )))
+            ->read(from_rows(rows(row(int_entry('id', 1), json_entry('nested', $jsonObject)))))
             ->saveMode(overwrite())
             ->write(to_json($path = __DIR__ . '/var/test_jsonentry.json'))
             ->run();
@@ -146,50 +130,49 @@ JSON,
         $content = \file_get_contents($path);
 
         if ($content === false) {
-            self::fail('Failed to read file content');
+            static::fail('Failed to read file content');
         }
 
-        self::assertStringContainsString(
-            <<<'JSON'
-[{"id":1,"nested":{"short":"short_description","long":"long_description"}}]
-JSON,
-            $content
-        );
+        static::assertStringContainsString(<<<'JSON'
+            [{"id":1,"nested":{"short":"short_description","long":"long_description"}}]
+            JSON, $content);
     }
 
-    public function test_partitioning_json_file() : void
+    public function test_partitioning_json_file(): void
     {
         df()
-            ->read(from_array($dataset = [
-                ['id' => 1, 'color' => 'red', 'size' => 'small'],
-                ['id' => 2, 'color' => 'blue', 'size' => 'medium'],
-                ['id' => 3, 'color' => 'green', 'size' => 'large'],
-                ['id' => 4, 'color' => 'yellow', 'size' => 'small'],
-                ['id' => 5, 'color' => 'black', 'size' => 'medium'],
-                ['id' => 6, 'color' => 'white', 'size' => 'large'],
-                ['id' => 7, 'color' => 'red', 'size' => 'small'],
-                ['id' => 8, 'color' => 'blue', 'size' => 'medium'],
-                ['id' => 9, 'color' => 'green', 'size' => 'large'],
-                ['id' => 10, 'color' => 'yellow', 'size' => 'small'],
-                ['id' => 11, 'color' => 'black', 'size' => 'medium'],
-                ['id' => 12, 'color' => 'white', 'size' => 'large'],
-            ]))
+            ->read(from_array(
+                $dataset = [
+                    ['id' => 1, 'color' => 'red', 'size' => 'small'],
+                    ['id' => 2, 'color' => 'blue', 'size' => 'medium'],
+                    ['id' => 3, 'color' => 'green', 'size' => 'large'],
+                    ['id' => 4, 'color' => 'yellow', 'size' => 'small'],
+                    ['id' => 5, 'color' => 'black', 'size' => 'medium'],
+                    ['id' => 6, 'color' => 'white', 'size' => 'large'],
+                    ['id' => 7, 'color' => 'red', 'size' => 'small'],
+                    ['id' => 8, 'color' => 'blue', 'size' => 'medium'],
+                    ['id' => 9, 'color' => 'green', 'size' => 'large'],
+                    ['id' => 10, 'color' => 'yellow', 'size' => 'small'],
+                    ['id' => 11, 'color' => 'black', 'size' => 'medium'],
+                    ['id' => 12, 'color' => 'white', 'size' => 'large'],
+                ],
+            ))
             ->saveMode(overwrite())
             ->partitionBy('size', 'color')
-            ->write(to_json($path = __DIR__ . '/var/test_partitioning_json_file/products.json'))
+            ->write(to_json(__DIR__ . '/var/test_partitioning_json_file/products.json'))
             ->run();
 
-        self::assertEquals(
+        static::assertEquals(
             $dataset,
             df()
                 ->read(from_json(__DIR__ . '/var/test_partitioning_json_file/**/*.json'))
                 ->sortBy(ref('id')->asc())
                 ->fetch()
-                ->toArray()
+                ->toArray(),
         );
     }
 
-    public function test_putting_each_row_in_a_new_line() : void
+    public function test_putting_each_row_in_a_new_line(): void
     {
         df()
             ->read(from_array([
@@ -199,29 +182,29 @@ JSON,
                 ['name' => 'Joe', 'age' => 30],
             ]))
             ->saveMode(overwrite())
-            ->write(to_json($path = __DIR__ . '/var/test_putting_each_row_in_a_new_line.json', put_rows_in_new_lines: true))
+            ->write(to_json(
+                $path = __DIR__ . '/var/test_putting_each_row_in_a_new_line.json',
+                put_rows_in_new_lines: true,
+            ))
             ->run();
 
         $content = \file_get_contents($path);
 
         if ($content === false) {
-            self::fail('Failed to read file content');
+            static::fail('Failed to read file content');
         }
 
-        self::assertStringContainsString(
-            <<<'JSON'
-[
-{"name":"John","age":30},
-{"name":"Jane","age":25},
-{"name":"Jake","age":30},
-{"name":"Joe","age":30}
-]
-JSON,
-            $content
-        );
+        static::assertStringContainsString(<<<'JSON'
+            [
+            {"name":"John","age":30},
+            {"name":"Jane","age":25},
+            {"name":"Jake","age":30},
+            {"name":"Joe","age":30}
+            ]
+            JSON, $content);
     }
 
-    public function test_putting_each_row_in_a_new_line_with_json_pretty_print_flag() : void
+    public function test_putting_each_row_in_a_new_line_with_json_pretty_print_flag(): void
     {
         df()
             ->read(from_array([
@@ -233,29 +216,30 @@ JSON,
             ->saveMode(overwrite())
             ->groupBy('age')
             ->aggregate(average(ref('pets')))
-            ->write(to_json($path = __DIR__ . '/var/test_putting_each_row_in_a_new_line.json', flags: JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT, put_rows_in_new_lines: true))
+            ->write(to_json(
+                $path = __DIR__ . '/var/test_putting_each_row_in_a_new_line.json',
+                flags: JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT,
+                put_rows_in_new_lines: true,
+            ))
             ->run();
 
         $content = \file_get_contents($path);
 
         if ($content === false) {
-            self::fail('Failed to read file content');
+            static::fail('Failed to read file content');
         }
 
-        self::assertStringContainsString(
-            <<<'JSON'
-[
-{
-    "age": 30,
-    "pets_avg": 0.67
-},
-{
-    "age": 25,
-    "pets_avg": 3
-}
-]
-JSON,
-            $content
-        );
+        static::assertStringContainsString(<<<'JSON'
+            [
+            {
+                "age": 30,
+                "pets_avg": 0.67
+            },
+            {
+                "age": 25,
+                "pets_avg": 3
+            }
+            ]
+            JSON, $content);
     }
 }

@@ -6,22 +6,22 @@ namespace Flow\Parquet;
 
 interface BinaryReader
 {
-    public function length() : DataSize;
+    public function length(): DataSize;
 
-    public function position() : DataSize;
+    public function position(): DataSize;
 
     /**
      * @return \Generator<int>
      */
-    public function readBits(int $total) : \Generator;
+    public function readBits(int $total): \Generator;
 
-    public function readBytes(int $total) : string;
+    public function readBytes(int $total): string;
 
-    public function readVarInt() : int;
+    public function readVarInt(): int;
 
-    public function remainingLength() : DataSize;
+    public function remainingLength(): DataSize;
 
-    public function seekBits(int $bits) : void;
+    public function seekBits(int $bits): void;
 
-    public function seekBytes(int $bytes) : void;
+    public function seekBytes(int $bytes): void;
 }

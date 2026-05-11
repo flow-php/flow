@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Flow\Bridge\Monolog\Telemetry\Tests\Integration;
 
 use Flow\Telemetry\Context\MemoryContextStorage;
-use Flow\Telemetry\Logger\{Logger, LoggerProvider};
+use Flow\Telemetry\Logger\Logger;
+use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
-use Flow\Telemetry\Provider\Void\{VoidExporter, VoidSpanProcessor};
+use Flow\Telemetry\Provider\Void\VoidExporter;
+use Flow\Telemetry\Provider\Void\VoidSpanProcessor;
 use Flow\Telemetry\Resource;
-use Flow\Telemetry\Tracer\{Tracer, TracerProvider};
+use Flow\Telemetry\Tracer\Tracer;
+use Flow\Telemetry\Tracer\TracerProvider;
 
 /**
  * Test context for Telemetry integration tests.
@@ -23,30 +26,21 @@ final readonly class TelemetryTestContext
         public MemoryLogProcessor $processor,
         public Logger $logger,
         public ?Tracer $tracer = null,
-    ) {
-    }
+    ) {}
 
     public static function create(
         ?Resource $resource = null,
         string $scope = 'test-app',
         string $version = 'unknown',
-    ) : self {
+    ): self {
         $contextStorage = new MemoryContextStorage();
         $clock = new SystemClock();
         $resource ??= Resource::create(['service.name' => 'test-service']);
         $processor = new MemoryLogProcessor(new VoidExporter());
 
-        $loggerProvider = new LoggerProvider(
-            $processor,
-            $clock,
-            $contextStorage,
-        );
+        $loggerProvider = new LoggerProvider($processor, $clock, $contextStorage);
 
-        $logger = $loggerProvider->logger(
-            $resource,
-            $scope,
-            $version,
-        );
+        $logger = $loggerProvider->logger($resource, $scope, $version);
 
         return new self($processor, $logger);
     }
@@ -61,35 +55,19 @@ final readonly class TelemetryTestContext
         ?Resource $resource = null,
         string $scope = 'test-app',
         string $version = 'unknown',
-    ) : self {
+    ): self {
         $contextStorage = new MemoryContextStorage();
         $clock = new SystemClock();
         $resource ??= Resource::create(['service.name' => 'test-service']);
         $processor = new MemoryLogProcessor(new VoidExporter());
 
-        $loggerProvider = new LoggerProvider(
-            $processor,
-            $clock,
-            $contextStorage,
-        );
+        $loggerProvider = new LoggerProvider($processor, $clock, $contextStorage);
 
-        $tracerProvider = new TracerProvider(
-            new VoidSpanProcessor(),
-            $clock,
-            $contextStorage,
-        );
+        $tracerProvider = new TracerProvider(new VoidSpanProcessor(), $clock, $contextStorage);
 
-        $logger = $loggerProvider->logger(
-            $resource,
-            $scope,
-            $version,
-        );
+        $logger = $loggerProvider->logger($resource, $scope, $version);
 
-        $tracer = $tracerProvider->tracer(
-            $resource,
-            $scope,
-            $version,
-        );
+        $tracer = $tracerProvider->tracer($resource, $scope, $version);
 
         return new self($processor, $logger, $tracer);
     }

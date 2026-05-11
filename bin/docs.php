@@ -3,14 +3,19 @@
 
 declare(strict_types=1);
 
-use Flow\Documentation\{FunctionCollector, FunctionsExtractor, MethodCollector, MethodsExtractor};
+use Flow\Documentation\FunctionCollector;
+use Flow\Documentation\FunctionsExtractor;
+use Flow\Documentation\MethodCollector;
+use Flow\Documentation\MethodsExtractor;
 use Flow\ETL\Attribute\Module;
+use Flow\ETL\DataFrame;
 use Flow\ETL\DataFrame\GroupedDataFrame;
-use Flow\ETL\{DataFrame, Flow};
+use Flow\ETL\Flow;
 use Flow\ETL\Function\ScalarFunctionChain;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\{InputArgument, InputInterface};
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -32,18 +37,23 @@ ini_set('memory_limit', -1);
 $application = new Application('Flow-PHP - Documentation');
 
 $application->add(new class extends Command {
-    public function configure() : void
+    public function configure(): void
     {
         $this
             ->setName('dsl:dump')
             ->setDescription('Dump DSL into json file.')
-            ->addOption('repository-root-path', null, InputArgument::OPTIONAL, 'Repository root path.', dirname(__DIR__) . '/')
+            ->addOption(
+                'repository-root-path',
+                null,
+                InputArgument::OPTIONAL,
+                'Repository root path.',
+                dirname(__DIR__) . '/',
+            )
             ->addArgument('output', InputArgument::REQUIRED, 'Where to dump dsl.');
     }
 
-    public function execute(InputInterface $input, OutputInterface $output) : int
+    public function execute(InputInterface $input, OutputInterface $output): int
     {
-
         $paths = [
             __DIR__ . '/../src/core/etl/src/Flow/ETL/DSL/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-avro/src/Flow/ETL/Adapter/Avro/functions.php',
@@ -71,23 +81,21 @@ $application->add(new class extends Command {
             __DIR__ . '/../src/bridge/filesystem/azure/src/Flow/Filesystem/Bridge/Azure/DSL/functions.php',
             __DIR__ . '/../src/bridge/filesystem/async-aws/src/Flow/Filesystem/Bridge/AsyncAWS/DSL/functions.php',
             __DIR__ . '/../src/bridge/monolog/telemetry/src/Flow/Bridge/Monolog/Telemetry/DSL/functions.php',
-            __DIR__ . '/../src/bridge/symfony/http-foundation-telemetry/src/Flow/Bridge/Symfony/HttpFoundationTelemetry/DSL/functions.php',
-            __DIR__ . '/../src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/DSL/functions.php',
+            __DIR__
+                . '/../src/bridge/symfony/http-foundation-telemetry/src/Flow/Bridge/Symfony/HttpFoundationTelemetry/DSL/functions.php',
+            __DIR__
+                . '/../src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/DSL/functions.php',
             __DIR__ . '/../src/bridge/psr7/telemetry/src/Flow/Bridge/Psr7/Telemetry/DSL/functions.php',
             __DIR__ . '/../src/bridge/psr18/telemetry/src/Flow/Bridge/Psr18/Telemetry/DSL/functions.php',
             __DIR__ . '/../src/bridge/telemetry/otlp/src/Flow/Bridge/Telemetry/OTLP/DSL/functions.php',
         ];
 
-        $extractor = new FunctionsExtractor(
-            $input->getOption('repository-root-path'),
-            new FunctionCollector()
-        );
+        $extractor = new FunctionsExtractor($input->getOption('repository-root-path'), new FunctionCollector());
 
         $normalizedFunctions = [];
 
         foreach ($extractor->extract($paths) as $function) {
             if (($attribute = $function->attributes->findByName('DocumentationDSL')) !== null) {
-
                 if ($attribute->arguments['module'] === Module::DEPRECATED) {
                     continue;
                 }
@@ -96,14 +104,17 @@ $application->add(new class extends Command {
             $normalizedFunctions[] = $function->normalize();
         }
 
-        \file_put_contents(__DIR__ . '/../' . \ltrim((string) $input->getArgument('output'), '/'), \json_encode($normalizedFunctions));
+        \file_put_contents(
+            __DIR__ . '/../' . \ltrim((string) $input->getArgument('output'), '/'),
+            \json_encode($normalizedFunctions),
+        );
 
         return Command::SUCCESS;
     }
 });
 
 $application->add(new class extends Command {
-    public function configure() : void
+    public function configure(): void
     {
         $this
             ->setName('api:dump')
@@ -111,7 +122,7 @@ $application->add(new class extends Command {
             ->addArgument('output', InputArgument::REQUIRED, 'Where to dump methods.');
     }
 
-    public function execute(InputInterface $input, OutputInterface $output) : int
+    public function execute(InputInterface $input, OutputInterface $output): int
     {
         $repositoryRootPath = dirname(__DIR__) . '/';
 
@@ -125,18 +136,17 @@ $application->add(new class extends Command {
         $normalizedMethods = [];
 
         foreach ($classes as $className) {
-            $extractor = new MethodsExtractor(
-                $repositoryRootPath,
-                $className,
-                new MethodCollector()
-            );
+            $extractor = new MethodsExtractor($repositoryRootPath, $className, new MethodCollector());
 
             foreach ($extractor->extract() as $method) {
                 $normalizedMethods[] = $method->normalize();
             }
         }
 
-        \file_put_contents(__DIR__ . '/../' . \ltrim((string) $input->getArgument('output'), '/'), \json_encode($normalizedMethods));
+        \file_put_contents(
+            __DIR__ . '/../' . \ltrim((string) $input->getArgument('output'), '/'),
+            \json_encode($normalizedMethods),
+        );
 
         return Command::SUCCESS;
     }

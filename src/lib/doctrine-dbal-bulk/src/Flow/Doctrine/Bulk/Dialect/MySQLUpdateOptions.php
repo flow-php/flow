@@ -8,12 +8,12 @@ use Flow\Doctrine\Bulk\UpdateOptions;
 
 final class MySQLUpdateOptions implements UpdateOptions
 {
-    public static function fromArray(array $options) : UpdateOptions
+    public static function fromArray(array $options): UpdateOptions
     {
         return new self();
     }
 
-    public static function new() : UpdateOptions
+    public static function new(): UpdateOptions
     {
         return new self();
     }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Azure\SDK\BlobService\ListBlobs;
 
-enum OptionInclude : string
+enum OptionInclude: string
 {
     case COPY = 'copy';
     case DELETED = 'deleted';

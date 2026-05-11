@@ -5,19 +5,28 @@ declare(strict_types=1);
 namespace Flow\Types\PHPStan;
 
 use Flow\Types\Type as FlowType;
-use Flow\Types\Type\Logical\{OptionalType, StructureType};
+use Flow\Types\Type\Logical\OptionalType;
+use Flow\Types\Type\Logical\StructureType;
 use PhpParser\Node\Expr\FuncCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\FunctionReflection;
-use PHPStan\Type\Constant\{ConstantArrayType, ConstantArrayTypeBuilder};
-use PHPStan\Type\{DynamicFunctionReturnTypeExtension, ErrorType, IntersectionType, Type, TypeCombinator};
+use PHPStan\Type\Constant\ConstantArrayType;
+use PHPStan\Type\Constant\ConstantArrayTypeBuilder;
+use PHPStan\Type\DynamicFunctionReturnTypeExtension;
+use PHPStan\Type\ErrorType;
 use PHPStan\Type\Generic\GenericObjectType;
+use PHPStan\Type\IntersectionType;
 use PHPStan\Type\ObjectType;
+use PHPStan\Type\Type;
+use PHPStan\Type\TypeCombinator;
 
 final class StructureTypeReturnTypeExtension implements DynamicFunctionReturnTypeExtension
 {
-    public function getTypeFromFunctionCall(FunctionReflection $functionReflection, FuncCall $functionCall, Scope $scope) : ?Type
-    {
+    public function getTypeFromFunctionCall(
+        FunctionReflection $functionReflection,
+        FuncCall $functionCall,
+        Scope $scope,
+    ): ?Type {
         $args = $functionCall->getArgs();
 
         if (!isset($args[0])) {
@@ -55,20 +64,19 @@ final class StructureTypeReturnTypeExtension implements DynamicFunctionReturnTyp
 
         return new IntersectionType([
             new ObjectType(StructureType::class),
-            new GenericObjectType(
-                FlowType::class,
-                [$arrayShapeType]
-            ),
+            new GenericObjectType(FlowType::class, [$arrayShapeType]),
         ]);
     }
 
-    public function isFunctionSupported(FunctionReflection $functionReflection) : bool
+    public function isFunctionSupported(FunctionReflection $functionReflection): bool
     {
         return $functionReflection->getName() === 'Flow\Types\DSL\type_structure';
     }
 
-    private function createResult(ConstantArrayType $requiredArrayType, ?ConstantArrayType $optionalArrayType = null) : Type
-    {
+    private function createResult(
+        ConstantArrayType $requiredArrayType,
+        ?ConstantArrayType $optionalArrayType = null,
+    ): Type {
         $builder = ConstantArrayTypeBuilder::createEmpty();
 
         // Process required elements
@@ -83,7 +91,7 @@ final class StructureTypeReturnTypeExtension implements DynamicFunctionReturnTyp
         if ($optionalArrayType !== null) {
             foreach ($optionalArrayType->getKeyTypes() as $key) {
                 $valueType = $optionalArrayType->getOffsetValueType($key);
-                [$type, $wasOptional] = $this->extractOptional($valueType->getTemplateType(FlowType::class, 'T'));
+                [$type, $_wasOptional] = $this->extractOptional($valueType->getTemplateType(FlowType::class, 'T'));
 
                 // Optional elements are always optional in the result structure
                 $builder->setOffsetValueType($key, $type, true);
@@ -96,7 +104,7 @@ final class StructureTypeReturnTypeExtension implements DynamicFunctionReturnTyp
     /**
      * @return array{Type, bool}
      */
-    private function extractOptional(Type $type) : array
+    private function extractOptional(Type $type): array
     {
         $optionalType = $type->getTemplateType(OptionalType::class, 'T');
 

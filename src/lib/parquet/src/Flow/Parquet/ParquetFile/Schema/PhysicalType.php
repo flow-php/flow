@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Schema;
 
-enum PhysicalType : int
+enum PhysicalType: int
 {
     case BOOLEAN = 0;
     case BYTE_ARRAY = 6;
@@ -13,5 +13,5 @@ enum PhysicalType : int
     case FLOAT = 4;
     case INT32 = 1;
     case INT64 = 2;
-    case INT96 = 3;  // deprecated, only used by legacy implementations.
+    case INT96 = 3; // deprecated, only used by legacy implementations.
 }

@@ -18,11 +18,8 @@ final class ValueFormatterTest extends FlowTestCase
     #[TestWith(['value' => ['a', 'b', 'c'], 'output' => '["a", "b", "c"]'])]
     #[TestWith(['value' => ['a' => 'b'], 'output' => '["a" => "b"]'])]
     #[TestWith(['value' => null, 'output' => 'null'])]
-    public function test_format_values(mixed $value, string $output) : void
+    public function test_format_values(mixed $value, string $output): void
     {
-        self::assertEquals(
-            $output,
-            (new ValueFormatter())->format($value)
-        );
+        static::assertEquals($output, (new ValueFormatter())->format($value));
     }
 }

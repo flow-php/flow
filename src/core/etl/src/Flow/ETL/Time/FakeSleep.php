@@ -13,19 +13,19 @@ final class FakeSleep implements Sleep
 
     private int $totalMicroseconds = 0;
 
-    public function for(Duration $duration) : void
+    public function for(Duration $duration): void
     {
         $this->sleepDurations[] = $duration;
         $this->totalMicroseconds += $duration->microseconds();
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->totalMicroseconds = 0;
         $this->sleepDurations = [];
     }
 
-    public function sleepCount() : int
+    public function sleepCount(): int
     {
         return \count($this->sleepDurations);
     }
@@ -33,22 +33,22 @@ final class FakeSleep implements Sleep
     /**
      * @return array<Duration>
      */
-    public function sleepDurations() : array
+    public function sleepDurations(): array
     {
         return $this->sleepDurations;
     }
 
-    public function totalMicroseconds() : int
+    public function totalMicroseconds(): int
     {
         return $this->totalMicroseconds;
     }
 
-    public function totalMilliseconds() : int
+    public function totalMilliseconds(): int
     {
         return (int) ($this->totalMicroseconds / 1000);
     }
 
-    public function totalSeconds() : int
+    public function totalSeconds(): int
     {
         return (int) ($this->totalMicroseconds / 1_000_000);
     }

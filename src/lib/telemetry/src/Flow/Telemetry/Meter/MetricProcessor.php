@@ -19,7 +19,7 @@ interface MetricProcessor
      *
      * @return bool True if all metrics were successfully exported
      */
-    public function flush() : bool;
+    public function flush(): bool;
 
     /**
      * Process a metric measurement.
@@ -28,7 +28,7 @@ interface MetricProcessor
      * may buffer the metric, export it immediately, or discard it based
      * on filtering rules.
      */
-    public function process(Metric $metric) : void;
+    public function process(Metric $metric): void;
 
     /**
      * Shutdown the processor.
@@ -36,5 +36,5 @@ interface MetricProcessor
      * Implementations SHOULD flush() pending data before delegating shutdown
      * to the underlying exporter. MUST be idempotent and MUST NOT throw.
      */
-    public function shutdown() : void;
+    public function shutdown(): void;
 }

@@ -9,7 +9,7 @@ interface InsertOptions
     /**
      * @param array<mixed> $options
      */
-    public static function fromArray(array $options) : self;
+    public static function fromArray(array $options): self;
 
-    public static function new() : self;
+    public static function new(): self;
 }

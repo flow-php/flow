@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\Migrations;
 
 interface Migration
 {
-    public function migrate(MigrationContext $context) : void;
+    public function migrate(MigrationContext $context): void;
 
-    public function transactional() : bool;
+    public function transactional(): bool;
 }

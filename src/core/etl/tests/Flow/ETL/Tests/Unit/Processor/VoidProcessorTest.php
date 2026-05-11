@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Processor;
 
-use function Flow\ETL\DSL\{flow_context, int_entry, row, rows};
 use Flow\ETL\Processor\VoidProcessor;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+
 final class VoidProcessorTest extends FlowTestCase
 {
-    public function test_discards_all_rows_and_yields_empty_batch() : void
+    public function test_discards_all_rows_and_yields_empty_batch(): void
     {
         $processor = new VoidProcessor();
 
@@ -21,11 +25,11 @@ final class VoidProcessorTest extends FlowTestCase
 
         $result = iterator_to_array($processor->process($generator, flow_context()));
 
-        self::assertCount(1, $result);
-        self::assertCount(0, $result[0]);
+        static::assertCount(1, $result);
+        static::assertCount(0, $result[0]);
     }
 
-    public function test_handles_empty_input() : void
+    public function test_handles_empty_input(): void
     {
         $processor = new VoidProcessor();
 
@@ -35,7 +39,7 @@ final class VoidProcessorTest extends FlowTestCase
 
         $result = iterator_to_array($processor->process($generator, flow_context()));
 
-        self::assertCount(1, $result);
-        self::assertCount(0, $result[0]);
+        static::assertCount(1, $result);
+        static::assertCount(0, $result[0]);
     }
 }

@@ -11,16 +11,13 @@ final readonly class RenameMapEntryStrategy implements RenameEntryStrategy
     /**
      * @param array<string, string> $renames Map of old_name => new_name
      */
-    public function __construct(private array $renames)
-    {
-    }
+    public function __construct(
+        private array $renames,
+    ) {}
 
-    public function rename(Row $row) : Row
+    public function rename(Row $row): Row
     {
-        $rowRenames = \array_intersect_key(
-            $this->renames,
-            \array_flip(\array_keys($row->entries()->toArray()))
-        );
+        $rowRenames = \array_intersect_key($this->renames, \array_flip(\array_keys($row->entries()->toArray())));
 
         return $rowRenames === [] ? $row : $row->renameMany($rowRenames);
     }

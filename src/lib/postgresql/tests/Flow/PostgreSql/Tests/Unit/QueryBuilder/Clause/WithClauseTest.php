@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Clause;
 
-use Flow\PostgreSql\Protobuf\AST\{Node, SelectStmt};
-use Flow\PostgreSql\QueryBuilder\Clause\{CTE, WithClause};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\SelectStmt;
+use Flow\PostgreSql\QueryBuilder\Clause\CTE;
+use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
 use PHPUnit\Framework\TestCase;
 
 final class WithClauseTest extends TestCase
 {
-    public function test_converts_multiple_ctes_to_ast() : void
+    public function test_converts_multiple_ctes_to_ast(): void
     {
         $query1 = $this->createMockSelectNode();
         $query2 = $this->createMockSelectNode();
@@ -23,22 +25,22 @@ final class WithClauseTest extends TestCase
         $node = $withClause->toAst();
 
         $protoWithClause = $node->getWithClause();
-        self::assertNotNull($protoWithClause);
+        static::assertNotNull($protoWithClause);
 
         $ctes = $protoWithClause->getCtes();
-        self::assertNotNull($ctes);
-        self::assertCount(2, $ctes);
+        static::assertNotNull($ctes);
+        static::assertCount(2, $ctes);
 
         $firstCte = $ctes[0]->getCommonTableExpr();
-        self::assertNotNull($firstCte);
-        self::assertSame('active', $firstCte->getCtename());
+        static::assertNotNull($firstCte);
+        static::assertSame('active', $firstCte->getCtename());
 
         $secondCte = $ctes[1]->getCommonTableExpr();
-        self::assertNotNull($secondCte);
-        self::assertSame('inactive', $secondCte->getCtename());
+        static::assertNotNull($secondCte);
+        static::assertSame('inactive', $secondCte->getCtename());
     }
 
-    public function test_converts_single_cte_to_ast() : void
+    public function test_converts_single_cte_to_ast(): void
     {
         $query = $this->createMockSelectNode();
         $cte = new CTE('users', $query);
@@ -47,29 +49,29 @@ final class WithClauseTest extends TestCase
         $node = $withClause->toAst();
 
         $protoWithClause = $node->getWithClause();
-        self::assertNotNull($protoWithClause);
+        static::assertNotNull($protoWithClause);
 
         $ctes = $protoWithClause->getCtes();
-        self::assertNotNull($ctes);
-        self::assertCount(1, $ctes);
+        static::assertNotNull($ctes);
+        static::assertCount(1, $ctes);
 
         $firstCte = $ctes[0]->getCommonTableExpr();
-        self::assertNotNull($firstCte);
-        self::assertSame('users', $firstCte->getCtename());
+        static::assertNotNull($firstCte);
+        static::assertSame('users', $firstCte->getCtename());
     }
 
-    public function test_getters() : void
+    public function test_getters(): void
     {
         $query = $this->createMockSelectNode();
         $cte = new CTE('test', $query);
         $withClause = new WithClause([$cte], true);
 
-        self::assertCount(1, $withClause->ctes());
-        self::assertSame($cte, $withClause->ctes()[0]);
-        self::assertTrue($withClause->recursive());
+        static::assertCount(1, $withClause->ctes());
+        static::assertSame($cte, $withClause->ctes()[0]);
+        static::assertTrue($withClause->recursive());
     }
 
-    public function test_immutable_add_method() : void
+    public function test_immutable_add_method(): void
     {
         $query1 = $this->createMockSelectNode();
         $query2 = $this->createMockSelectNode();
@@ -79,18 +81,18 @@ final class WithClauseTest extends TestCase
 
         $original = new WithClause([$cte1]);
 
-        self::assertCount(1, $original->ctes());
+        static::assertCount(1, $original->ctes());
 
         $modified = $original->add($cte2);
 
-        self::assertCount(1, $original->ctes());
-        self::assertCount(2, $modified->ctes());
-        self::assertNotSame($original, $modified);
-        self::assertSame($cte1, $modified->ctes()[0]);
-        self::assertSame($cte2, $modified->ctes()[1]);
+        static::assertCount(1, $original->ctes());
+        static::assertCount(2, $modified->ctes());
+        static::assertNotSame($original, $modified);
+        static::assertSame($cte1, $modified->ctes()[0]);
+        static::assertSame($cte2, $modified->ctes()[1]);
     }
 
-    public function test_recursive_with_clause_to_ast() : void
+    public function test_recursive_with_clause_to_ast(): void
     {
         $query = $this->createMockSelectNode();
         $cte = new CTE('hierarchy', $query, recursive: true);
@@ -99,11 +101,11 @@ final class WithClauseTest extends TestCase
         $node = $withClause->toAst();
 
         $protoWithClause = $node->getWithClause();
-        self::assertNotNull($protoWithClause);
-        self::assertTrue($protoWithClause->getRecursive());
+        static::assertNotNull($protoWithClause);
+        static::assertTrue($protoWithClause->getRecursive());
     }
 
-    public function test_roundtrip_conversion_multiple_ctes() : void
+    public function test_roundtrip_conversion_multiple_ctes(): void
     {
         $query1 = $this->createMockSelectNode();
         $query2 = $this->createMockSelectNode();
@@ -117,23 +119,23 @@ final class WithClauseTest extends TestCase
 
         $node = $original->toAst();
         $protoWithClause = $node->getWithClause();
-        self::assertNotNull($protoWithClause);
+        static::assertNotNull($protoWithClause);
         $reconstructed = WithClause::fromAst($protoWithClause);
 
-        self::assertCount(3, $reconstructed->ctes());
-        self::assertTrue($reconstructed->recursive());
+        static::assertCount(3, $reconstructed->ctes());
+        static::assertTrue($reconstructed->recursive());
 
-        self::assertSame('first', $reconstructed->ctes()[0]->name());
-        self::assertSame(['a', 'b'], $reconstructed->ctes()[0]->columnNames());
+        static::assertSame('first', $reconstructed->ctes()[0]->name());
+        static::assertSame(['a', 'b'], $reconstructed->ctes()[0]->columnNames());
 
-        self::assertSame('second', $reconstructed->ctes()[1]->name());
-        self::assertSame([], $reconstructed->ctes()[1]->columnNames());
+        static::assertSame('second', $reconstructed->ctes()[1]->name());
+        static::assertSame([], $reconstructed->ctes()[1]->columnNames());
 
-        self::assertSame('third', $reconstructed->ctes()[2]->name());
-        self::assertSame(['x'], $reconstructed->ctes()[2]->columnNames());
+        static::assertSame('third', $reconstructed->ctes()[2]->name());
+        static::assertSame(['x'], $reconstructed->ctes()[2]->columnNames());
     }
 
-    public function test_roundtrip_conversion_single_cte() : void
+    public function test_roundtrip_conversion_single_cte(): void
     {
         $query = $this->createMockSelectNode();
         $cte = new CTE('test', $query);
@@ -141,15 +143,15 @@ final class WithClauseTest extends TestCase
 
         $node = $original->toAst();
         $protoWithClause = $node->getWithClause();
-        self::assertNotNull($protoWithClause);
+        static::assertNotNull($protoWithClause);
         $reconstructed = WithClause::fromAst($protoWithClause);
 
-        self::assertCount(\count($original->ctes()), $reconstructed->ctes());
-        self::assertSame($original->recursive(), $reconstructed->recursive());
-        self::assertSame($original->ctes()[0]->name(), $reconstructed->ctes()[0]->name());
+        static::assertCount(\count($original->ctes()), $reconstructed->ctes());
+        static::assertSame($original->recursive(), $reconstructed->recursive());
+        static::assertSame($original->ctes()[0]->name(), $reconstructed->ctes()[0]->name());
     }
 
-    private function createMockSelectNode() : Node
+    private function createMockSelectNode(): Node
     {
         $selectStmt = new SelectStmt();
         $node = new Node();

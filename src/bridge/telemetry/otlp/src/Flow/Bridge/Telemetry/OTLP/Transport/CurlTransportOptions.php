@@ -56,22 +56,22 @@ final class CurlTransportOptions
 
     private int $timeoutMs = self::DEFAULT_TIMEOUT_MS;
 
-    public function caInfoPath() : ?string
+    public function caInfoPath(): ?string
     {
         return $this->caInfoPath;
     }
 
-    public function compression() : bool
+    public function compression(): bool
     {
         return $this->compression;
     }
 
-    public function connectTimeoutMs() : int
+    public function connectTimeoutMs(): int
     {
         return $this->connectTimeoutMs;
     }
 
-    public function followRedirects() : bool
+    public function followRedirects(): bool
     {
         return $this->followRedirects;
     }
@@ -79,47 +79,47 @@ final class CurlTransportOptions
     /**
      * @return array<string, string>
      */
-    public function headers() : array
+    public function headers(): array
     {
         return $this->headers;
     }
 
-    public function maxRedirects() : int
+    public function maxRedirects(): int
     {
         return $this->maxRedirects;
     }
 
-    public function proxy() : ?string
+    public function proxy(): ?string
     {
         return $this->proxy;
     }
 
-    public function shutdownTimeoutMs() : int
+    public function shutdownTimeoutMs(): int
     {
         return $this->shutdownTimeoutMs;
     }
 
-    public function sslCertPath() : ?string
+    public function sslCertPath(): ?string
     {
         return $this->sslCertPath;
     }
 
-    public function sslKeyPath() : ?string
+    public function sslKeyPath(): ?string
     {
         return $this->sslKeyPath;
     }
 
-    public function sslVerifyHost() : bool
+    public function sslVerifyHost(): bool
     {
         return $this->sslVerifyHost;
     }
 
-    public function sslVerifyPeer() : bool
+    public function sslVerifyPeer(): bool
     {
         return $this->sslVerifyPeer;
     }
 
-    public function timeoutMs() : int
+    public function timeoutMs(): int
     {
         return $this->timeoutMs;
     }
@@ -133,7 +133,7 @@ final class CurlTransportOptions
      *
      * @return array<int, mixed> Curl options array for curl_setopt_array()
      */
-    public function toCurlOptions(string $url, string $body, array $headers) : array
+    public function toCurlOptions(string $url, string $body, array $headers): array
     {
         $curlOptions = [
             \CURLOPT_URL => $url,
@@ -177,7 +177,7 @@ final class CurlTransportOptions
      *
      * @param string $caInfoPath Path to CA certificate bundle file
      */
-    public function withCaInfo(string $caInfoPath) : self
+    public function withCaInfo(string $caInfoPath): self
     {
         $this->caInfoPath = $caInfoPath;
 
@@ -192,7 +192,7 @@ final class CurlTransportOptions
      *
      * @param bool $enabled Whether to enable compression (default: true)
      */
-    public function withCompression(bool $enabled = true) : self
+    public function withCompression(bool $enabled = true): self
     {
         $this->compression = $enabled;
 
@@ -204,7 +204,7 @@ final class CurlTransportOptions
      *
      * @param int $milliseconds Maximum time in milliseconds to wait for the TCP/TLS connection
      */
-    public function withConnectTimeout(int $milliseconds) : self
+    public function withConnectTimeout(int $milliseconds): self
     {
         if ($milliseconds < 0) {
             throw new \InvalidArgumentException('Connect timeout must be non-negative');
@@ -221,7 +221,7 @@ final class CurlTransportOptions
      * @param bool $follow Whether to follow redirects
      * @param int $maxRedirects Maximum number of redirects to follow (default: 3)
      */
-    public function withFollowRedirects(bool $follow, int $maxRedirects = 3) : self
+    public function withFollowRedirects(bool $follow, int $maxRedirects = 3): self
     {
         if ($maxRedirects < 0) {
             throw new \InvalidArgumentException('Max redirects must be non-negative');
@@ -239,7 +239,7 @@ final class CurlTransportOptions
      * @param string $name Header name
      * @param string $value Header value
      */
-    public function withHeader(string $name, string $value) : self
+    public function withHeader(string $name, string $value): self
     {
         $this->headers[$name] = $value;
 
@@ -253,7 +253,7 @@ final class CurlTransportOptions
      *
      * @param array<string, string> $headers Headers as name => value pairs
      */
-    public function withHeaders(array $headers) : self
+    public function withHeaders(array $headers): self
     {
         $this->headers = $headers;
 
@@ -265,7 +265,7 @@ final class CurlTransportOptions
      *
      * @param string $proxy Proxy URL (e.g., 'http://proxy:8080', 'socks5://proxy:1080')
      */
-    public function withProxy(string $proxy) : self
+    public function withProxy(string $proxy): self
     {
         $this->proxy = $proxy;
 
@@ -281,7 +281,7 @@ final class CurlTransportOptions
      *
      * @param int $milliseconds Maximum drain wall-clock at shutdown
      */
-    public function withShutdownTimeout(int $milliseconds) : self
+    public function withShutdownTimeout(int $milliseconds): self
     {
         if ($milliseconds < 0) {
             throw new \InvalidArgumentException('Shutdown timeout must be non-negative');
@@ -298,7 +298,7 @@ final class CurlTransportOptions
      * @param string $certPath Path to client certificate file (PEM format)
      * @param null|string $keyPath Optional path to private key file (if not included in cert)
      */
-    public function withSslCertificate(string $certPath, ?string $keyPath = null) : self
+    public function withSslCertificate(string $certPath, ?string $keyPath = null): self
     {
         $this->sslCertPath = $certPath;
         $this->sslKeyPath = $keyPath;
@@ -312,7 +312,7 @@ final class CurlTransportOptions
      * @param bool $verifyPeer Whether to verify the peer's SSL certificate
      * @param bool $verifyHost Whether to verify the certificate's name against the host (default: true)
      */
-    public function withSslVerification(bool $verifyPeer, bool $verifyHost = true) : self
+    public function withSslVerification(bool $verifyPeer, bool $verifyHost = true): self
     {
         $this->sslVerifyPeer = $verifyPeer;
         $this->sslVerifyHost = $verifyHost;
@@ -325,7 +325,7 @@ final class CurlTransportOptions
      *
      * @param int $milliseconds Maximum time in milliseconds for the entire request (connect + send + receive)
      */
-    public function withTimeout(int $milliseconds) : self
+    public function withTimeout(int $milliseconds): self
     {
         if ($milliseconds < 0) {
             throw new \InvalidArgumentException('Timeout must be non-negative');

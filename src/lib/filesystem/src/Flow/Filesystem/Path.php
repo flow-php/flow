@@ -5,25 +5,24 @@ declare(strict_types=1);
 namespace Flow\Filesystem;
 
 use Flow\Filesystem\Exception\RuntimeException;
-use Flow\Filesystem\Path\{Option, Options, UnixPath, WindowsPath};
+use Flow\Filesystem\Path\Option;
+use Flow\Filesystem\Path\Options;
+use Flow\Filesystem\Path\UnixPath;
+use Flow\Filesystem\Path\WindowsPath;
 use Flow\Filesystem\Stream\ResourceContext;
 
 final readonly class Path
 {
-    public function __construct(private WindowsPath|UnixPath $implementation)
-    {
-    }
+    public function __construct(
+        private WindowsPath|UnixPath $implementation,
+    ) {}
 
     /**
      * @param array<array-key, null|bool|float|int|string|\UnitEnum>|Options $options
      */
-    public static function from(string $uri, array|Options $options = []) : self
+    public static function from(string $uri, array|Options $options = []): self
     {
-        return new self(
-            \PHP_OS_FAMILY === 'Windows'
-            ? new WindowsPath($uri, $options)
-            : new UnixPath($uri, $options)
-        );
+        return new self(\PHP_OS_FAMILY === 'Windows' ? new WindowsPath($uri, $options) : new UnixPath($uri, $options));
     }
 
     /**
@@ -33,76 +32,76 @@ final readonly class Path
      *
      * @throws RuntimeException
      */
-    public static function realpath(string $path, array|Options $options = []) : self
+    public static function realpath(string $path, array|Options $options = []): self
     {
         return new self(
-            \PHP_OS_FAMILY === 'Windows'
-                ? WindowsPath::realpath($path, $options)
-                : UnixPath::realpath($path, $options)
+            \PHP_OS_FAMILY === 'Windows' ? WindowsPath::realpath($path, $options) : UnixPath::realpath($path, $options),
         );
     }
 
-    public function addPartitions(Partition $partition, Partition ...$partitions) : self
+    public function addPartitions(Partition $partition, Partition ...$partitions): self
     {
         return new self($this->implementation->addPartitions($partition, ...$partitions));
     }
 
-    public function basename() : string
+    public function basename(): string
     {
         return $this->implementation->basename();
     }
 
-    public function basenamePrefix(string $prefix) : self
+    public function basenamePrefix(string $prefix): self
     {
         return new self($this->implementation->basenamePrefix($prefix));
     }
 
-    public function context() : ResourceContext
+    public function context(): ResourceContext
     {
         return ResourceContext::from($this);
     }
 
-    public function endsWith(string $string) : bool
+    public function endsWith(string $string): bool
     {
         return $this->implementation->endsWith($string);
     }
 
-    public function extension() : string|false
+    public function extension(): string|false
     {
         return $this->implementation->extension();
     }
 
-    public function filename() : string
+    public function filename(): string
     {
         return $this->implementation->filename();
     }
 
-    public function getOption(string|Option $option, string|int|bool|float|\UnitEnum|null $default = null) : string|int|bool|float|\UnitEnum|null
-    {
+    public function getOption(
+        string|Option $option,
+        string|int|bool|float|\UnitEnum|null $default = null,
+    ): string|int|bool|float|\UnitEnum|null {
         return $this->implementation->options()->get($option, $default);
     }
 
-    public function hasOption(string|Option $option) : bool
+    public function hasOption(string|Option $option): bool
     {
         return $this->implementation->options()->has($option);
     }
 
-    public function isEqual(self $path) : bool
+    public function isEqual(self $path): bool
     {
         return $this->implementation->isEqual($path->implementation);
     }
 
-    public function isLocal() : bool
+    public function isLocal(): bool
     {
         return $this->implementation->protocol() === 'file';
     }
 
-    public function isPattern() : bool
+    public function isPattern(): bool
     {
         return $this->implementation->isPattern();
     }
 
-    public function matches(self $path) : bool
+    public function matches(self $path): bool
     {
         return $this->implementation->matches($path->implementation);
     }
@@ -110,17 +109,17 @@ final readonly class Path
     /**
      * @return array<string, null|bool|float|int|string|\UnitEnum>
      */
-    public function options() : array
+    public function options(): array
     {
         return $this->implementation->options()->toArray();
     }
 
-    public function parentDirectory() : self
+    public function parentDirectory(): self
     {
         return new self($this->implementation->parentDirectory());
     }
 
-    public function partitions() : Partitions
+    public function partitions(): Partitions
     {
         return $this->implementation->partitions();
     }
@@ -128,79 +127,68 @@ final readonly class Path
     /**
      * @return array<Path>
      */
-    public function partitionsPaths() : array
+    public function partitionsPaths(): array
     {
-        return \array_map(
-            static fn ($implPath) => new self($implPath),
-            $this->implementation->partitionsPaths()
-        );
+        return \array_map(static fn($implPath) => new self($implPath), $this->implementation->partitionsPaths());
     }
 
     /**
      * Difference between Path::uri and Path::path is that Path::uri returns path with scheme and Path::path returns path without scheme.
      */
-    public function path() : string
+    public function path(): string
     {
         return $this->implementation->path();
     }
 
-    public function protocol() : string
+    public function protocol(): string
     {
         return $this->implementation->protocol();
     }
 
-    public function randomize() : self
+    public function randomize(): self
     {
         return new self($this->implementation->randomize());
     }
 
-    public function rootDirectoryName() : ?string
+    public function rootDirectoryName(): ?string
     {
         return $this->implementation->rootDirectoryName();
     }
 
-    public function setExtension(string $extension) : self
+    public function setExtension(string $extension): self
     {
         return new self($this->implementation->setExtension($extension));
     }
 
-    public function setOption(string|Option $option, string|int|bool|float|\UnitEnum|null $value) : self
+    public function setOption(string|Option $option, string|int|bool|float|\UnitEnum|null $value): self
     {
-        return new self(
-            $this->implementation->withOptions(
-                $this->implementation->options()->set(
-                    $option instanceof Option ? $option->value : $option,
-                    $value
-                )
-            )
-        );
+        return new self($this->implementation->withOptions($this->implementation->options()->set(
+            $option instanceof Option ? $option->value : $option,
+            $value,
+        )));
     }
 
-    public function setOptionWhenEmpty(string|Option $option, string|int|bool|float|\UnitEnum|null $value) : self
+    public function setOptionWhenEmpty(string|Option $option, string|int|bool|float|\UnitEnum|null $value): self
     {
-        return new self(
-            $this->implementation->withOptions(
-                $this->implementation->options()->setWhenEmpty(
-                    $option,
-                    $value
-                )
-            )
-        );
+        return new self($this->implementation->withOptions($this->implementation->options()->setWhenEmpty(
+            $option,
+            $value,
+        )));
     }
 
-    public function skipDirectories(int $count) : ?self
+    public function skipDirectories(int $count): ?self
     {
         return ($newImplementation = $this->implementation->skipDirectories($count)) === null
             ? null
             : new self($newImplementation);
     }
 
-    public function staticPart() : self
+    public function staticPart(): self
     {
         return new self($this->implementation->staticPart());
     }
 
-    public function suffix(string $string) : self
+    public function suffix(string $string): self
     {
         return new self($this->implementation->suffix($string));
     }
@@ -208,7 +196,7 @@ final readonly class Path
     /**
      * Difference between Path::uri and Path::path is that Path::uri returns path with scheme and Path::path returns path without scheme.
      */
-    public function uri() : string
+    public function uri(): string
     {
         return $this->implementation->uri();
     }

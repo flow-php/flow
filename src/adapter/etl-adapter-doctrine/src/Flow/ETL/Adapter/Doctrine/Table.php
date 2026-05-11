@@ -13,6 +13,5 @@ final readonly class Table
     public function __construct(
         public string $name,
         public ?array $columns = [],
-    ) {
-    }
+    ) {}
 }

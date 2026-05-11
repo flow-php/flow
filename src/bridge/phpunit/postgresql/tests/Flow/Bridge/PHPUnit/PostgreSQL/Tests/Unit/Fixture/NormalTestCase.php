@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 final class NormalTestCase extends TestCase
 {
-    public function test_something() : void
+    public function test_something(): void
     {
         $this->addToAssertionCount(1);
     }

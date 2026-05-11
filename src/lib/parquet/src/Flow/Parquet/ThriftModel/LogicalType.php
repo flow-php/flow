@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 namespace Flow\Parquet\ThriftModel;
 
 /**
@@ -10,8 +11,8 @@ namespace Flow\Parquet\ThriftModel;
  *
  *  @generated
  */
-use Thrift\Exception\{TProtocolException};
-use Thrift\Type\{TType};
+use Thrift\Exception\TProtocolException;
+use Thrift\Type\TType;
 
 /**
  * LogicalType annotations to replace ConvertedType.

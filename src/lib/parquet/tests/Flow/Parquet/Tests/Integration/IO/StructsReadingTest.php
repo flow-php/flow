@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use Flow\Parquet\{ParquetEngine, Reader};
+use Flow\Parquet\ParquetEngine;
+use Flow\Parquet\Reader;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class StructsReadingTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_deeply_nested_column(ParquetEngine $engine) : void
+    public function test_reading_struct_deeply_nested_column(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
@@ -28,10 +29,22 @@ class StructsReadingTest extends ParquetIntegrationTestCase
             static::assertArrayHasKey('struct_2', $row['struct_deeply_nested']['struct_0']['struct_1']);
             static::assertArrayHasKey('bool', $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']);
             static::assertArrayHasKey('struct_3', $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']);
-            static::assertArrayHasKey('float', $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3']);
-            static::assertArrayHasKey('struct_4', $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3']);
-            static::assertArrayHasKey('string', $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3']['struct_4']);
-            static::assertArrayHasKey('json', $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3']['struct_4']);
+            static::assertArrayHasKey(
+                'float',
+                $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3'],
+            );
+            static::assertArrayHasKey(
+                'struct_4',
+                $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3'],
+            );
+            static::assertArrayHasKey(
+                'string',
+                $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3']['struct_4'],
+            );
+            static::assertArrayHasKey(
+                'json',
+                $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3']['struct_4'],
+            );
             $count++;
         }
         static::assertSame(100, $count);
@@ -39,7 +52,7 @@ class StructsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_deeply_nested_column_with_limit(ParquetEngine $engine) : void
+    public function test_reading_struct_deeply_nested_column_with_limit(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
@@ -57,17 +70,29 @@ class StructsReadingTest extends ParquetIntegrationTestCase
             static::assertArrayHasKey('struct_2', $row['struct_deeply_nested']['struct_0']['struct_1']);
             static::assertArrayHasKey('bool', $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']);
             static::assertArrayHasKey('struct_3', $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']);
-            static::assertArrayHasKey('float', $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3']);
-            static::assertArrayHasKey('struct_4', $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3']);
-            static::assertArrayHasKey('string', $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3']['struct_4']);
-            static::assertArrayHasKey('json', $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3']['struct_4']);
+            static::assertArrayHasKey(
+                'float',
+                $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3'],
+            );
+            static::assertArrayHasKey(
+                'struct_4',
+                $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3'],
+            );
+            static::assertArrayHasKey(
+                'string',
+                $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3']['struct_4'],
+            );
+            static::assertArrayHasKey(
+                'json',
+                $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3']['struct_4'],
+            );
             $count++;
         }
         static::assertSame($limit, $count);
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_flat_column(ParquetEngine $engine) : void
+    public function test_reading_struct_flat_column(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
@@ -89,7 +114,7 @@ class StructsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_flat_nullable_column(ParquetEngine $engine) : void
+    public function test_reading_struct_flat_nullable_column(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
@@ -100,7 +125,7 @@ class StructsReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['struct_flat_nullable']) as $i => $row) {
-            if ($i % 2 === 0) {
+            if (($i % 2) === 0) {
                 static::assertArrayHasKey('string', $row['struct_flat_nullable']);
                 static::assertArrayHasKey('int', $row['struct_flat_nullable']);
                 static::assertArrayHasKey('list_of_ints', $row['struct_flat_nullable']);
@@ -115,7 +140,7 @@ class StructsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_nested_column(ParquetEngine $engine) : void
+    public function test_reading_struct_nested_column(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
@@ -138,7 +163,7 @@ class StructsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_nested_with_list_of_lists_column(ParquetEngine $engine) : void
+    public function test_reading_struct_nested_with_list_of_lists_column(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
@@ -160,7 +185,7 @@ class StructsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_nested_with_list_of_maps_column(ParquetEngine $engine) : void
+    public function test_reading_struct_nested_with_list_of_maps_column(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
@@ -182,7 +207,7 @@ class StructsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_nested_with_map_of_list_of_ints_column(ParquetEngine $engine) : void
+    public function test_reading_struct_nested_with_map_of_list_of_ints_column(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
@@ -196,8 +221,13 @@ class StructsReadingTest extends ParquetIntegrationTestCase
             static::assertArrayHasKey('string', $row['struct_nested_with_map_of_list_of_ints']);
             static::assertArrayHasKey('struct', $row['struct_nested_with_map_of_list_of_ints']);
             static::assertArrayHasKey('int', $row['struct_nested_with_map_of_list_of_ints']['struct']);
-            static::assertArrayHasKey('map_of_int_list_of_string', $row['struct_nested_with_map_of_list_of_ints']['struct']);
-            static::assertIsList($row['struct_nested_with_map_of_list_of_ints']['struct']['map_of_int_list_of_string'][0]);
+            static::assertArrayHasKey(
+                'map_of_int_list_of_string',
+                $row['struct_nested_with_map_of_list_of_ints']['struct'],
+            );
+            static::assertIsList(
+                $row['struct_nested_with_map_of_list_of_ints']['struct']['map_of_int_list_of_string'][0],
+            );
             $count++;
         }
         static::assertSame(100, $count);
@@ -205,13 +235,17 @@ class StructsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_nested_with_map_of_string_map_of_string_string_column(ParquetEngine $engine) : void
+    public function test_reading_struct_nested_with_map_of_string_map_of_string_string_column(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
 
-        static::assertNull($file->metadata()->schema()->get('struct_nested_with_map_of_string_map_of_string_string')->type());
-        static::assertNull($file->metadata()->schema()->get('struct_nested_with_map_of_string_map_of_string_string')->logicalType());
+        static::assertNull(
+            $file->metadata()->schema()->get('struct_nested_with_map_of_string_map_of_string_string')->type(),
+        );
+        static::assertNull(
+            $file->metadata()->schema()->get('struct_nested_with_map_of_string_map_of_string_string')->logicalType(),
+        );
 
         $count = 0;
 
@@ -219,9 +253,18 @@ class StructsReadingTest extends ParquetIntegrationTestCase
             static::assertArrayHasKey('string', $row['struct_nested_with_map_of_string_map_of_string_string']);
             static::assertArrayHasKey('struct', $row['struct_nested_with_map_of_string_map_of_string_string']);
             static::assertArrayHasKey('int', $row['struct_nested_with_map_of_string_map_of_string_string']['struct']);
-            static::assertArrayHasKey('map_of_string_map_of_string_string', $row['struct_nested_with_map_of_string_map_of_string_string']['struct']);
-            static::assertArrayHasKey('outer_key_0', $row['struct_nested_with_map_of_string_map_of_string_string']['struct']['map_of_string_map_of_string_string']);
-            static::assertArrayHasKey('inner_key_0', $row['struct_nested_with_map_of_string_map_of_string_string']['struct']['map_of_string_map_of_string_string']['outer_key_0']);
+            static::assertArrayHasKey(
+                'map_of_string_map_of_string_string',
+                $row['struct_nested_with_map_of_string_map_of_string_string']['struct'],
+            );
+            static::assertArrayHasKey(
+                'outer_key_0',
+                $row['struct_nested_with_map_of_string_map_of_string_string']['struct']['map_of_string_map_of_string_string'],
+            );
+            static::assertArrayHasKey(
+                'inner_key_0',
+                $row['struct_nested_with_map_of_string_map_of_string_string']['struct']['map_of_string_map_of_string_string']['outer_key_0'],
+            );
             $count++;
         }
         static::assertSame(100, $count);
@@ -229,13 +272,17 @@ class StructsReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_nested_with_map_of_string_map_of_string_string_column_with_limit(ParquetEngine $engine) : void
+    public function test_reading_struct_nested_with_map_of_string_map_of_string_string_column_with_limit(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
 
-        static::assertNull($file->metadata()->schema()->get('struct_nested_with_map_of_string_map_of_string_string')->type());
-        static::assertNull($file->metadata()->schema()->get('struct_nested_with_map_of_string_map_of_string_string')->logicalType());
+        static::assertNull(
+            $file->metadata()->schema()->get('struct_nested_with_map_of_string_map_of_string_string')->type(),
+        );
+        static::assertNull(
+            $file->metadata()->schema()->get('struct_nested_with_map_of_string_map_of_string_string')->logicalType(),
+        );
 
         $count = 0;
 
@@ -243,16 +290,25 @@ class StructsReadingTest extends ParquetIntegrationTestCase
             static::assertArrayHasKey('string', $row['struct_nested_with_map_of_string_map_of_string_string']);
             static::assertArrayHasKey('struct', $row['struct_nested_with_map_of_string_map_of_string_string']);
             static::assertArrayHasKey('int', $row['struct_nested_with_map_of_string_map_of_string_string']['struct']);
-            static::assertArrayHasKey('map_of_string_map_of_string_string', $row['struct_nested_with_map_of_string_map_of_string_string']['struct']);
-            static::assertArrayHasKey('outer_key_0', $row['struct_nested_with_map_of_string_map_of_string_string']['struct']['map_of_string_map_of_string_string']);
-            static::assertArrayHasKey('inner_key_0', $row['struct_nested_with_map_of_string_map_of_string_string']['struct']['map_of_string_map_of_string_string']['outer_key_0']);
+            static::assertArrayHasKey(
+                'map_of_string_map_of_string_string',
+                $row['struct_nested_with_map_of_string_map_of_string_string']['struct'],
+            );
+            static::assertArrayHasKey(
+                'outer_key_0',
+                $row['struct_nested_with_map_of_string_map_of_string_string']['struct']['map_of_string_map_of_string_string'],
+            );
+            static::assertArrayHasKey(
+                'inner_key_0',
+                $row['struct_nested_with_map_of_string_map_of_string_string']['struct']['map_of_string_map_of_string_string']['outer_key_0'],
+            );
             $count++;
         }
         static::assertSame($limit, $count);
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_struct_with_list_and_map_of_structs_column(ParquetEngine $engine) : void
+    public function test_reading_struct_with_list_and_map_of_structs_column(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
         $file = $reader->read(__DIR__ . '/Fixtures/structs.parquet');
@@ -268,10 +324,21 @@ class StructsReadingTest extends ParquetIntegrationTestCase
             static::assertArrayHasKey('int', $row['struct_with_list_and_map_of_structs']['struct']);
             static::assertArrayHasKey('list_of_structs', $row['struct_with_list_and_map_of_structs']['struct']);
             static::assertArrayHasKey('map_of_string_structs', $row['struct_with_list_and_map_of_structs']['struct']);
-            static::assertArrayHasKey('key_0', $row['struct_with_list_and_map_of_structs']['struct']['map_of_string_structs']);
-            static::assertArrayHasKey('int', $row['struct_with_list_and_map_of_structs']['struct']['map_of_string_structs']['key_0']);
-            static::assertArrayHasKey('list', $row['struct_with_list_and_map_of_structs']['struct']['map_of_string_structs']['key_0']);
-            static::assertIsList($row['struct_with_list_and_map_of_structs']['struct']['map_of_string_structs']['key_0']['list']);
+            static::assertArrayHasKey(
+                'key_0',
+                $row['struct_with_list_and_map_of_structs']['struct']['map_of_string_structs'],
+            );
+            static::assertArrayHasKey(
+                'int',
+                $row['struct_with_list_and_map_of_structs']['struct']['map_of_string_structs']['key_0'],
+            );
+            static::assertArrayHasKey(
+                'list',
+                $row['struct_with_list_and_map_of_structs']['struct']['map_of_string_structs']['key_0'],
+            );
+            static::assertIsList(
+                $row['struct_with_list_and_map_of_structs']['struct']['map_of_string_structs']['key_0']['list'],
+            );
             $count++;
         }
         static::assertSame(100, $count);

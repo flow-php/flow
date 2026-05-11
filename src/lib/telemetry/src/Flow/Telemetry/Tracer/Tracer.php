@@ -4,9 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer;
 
-use Flow\Telemetry\{Attributes, InstrumentationScope, Resource};
-use Flow\Telemetry\Context\{Context, ContextStorage, SpanId, TraceFlags, TraceId};
-use Flow\Telemetry\ErrorHandler\{ErrorHandler, ErrorLogHandler};
+use Flow\Telemetry\Attributes;
+use Flow\Telemetry\Context\Context;
+use Flow\Telemetry\Context\ContextStorage;
+use Flow\Telemetry\Context\SpanId;
+use Flow\Telemetry\Context\TraceFlags;
+use Flow\Telemetry\Context\TraceId;
+use Flow\Telemetry\ErrorHandler\ErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
+use Flow\Telemetry\InstrumentationScope;
+use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tracer\Sampler\Sampler;
 use Psr\Clock\ClockInterface;
 
@@ -64,7 +71,7 @@ final class Tracer
     /**
      * Get the currently active span context, or null if none.
      */
-    public function activeSpan() : ?SpanContext
+    public function activeSpan(): ?SpanContext
     {
         if ($this->spanStack->isEmpty()) {
             return null;
@@ -79,7 +86,7 @@ final class Tracer
      * This ends the span (if not already ended), removes it from the
      * active span stack, and notifies the processor.
      */
-    public function complete(Span $span) : void
+    public function complete(Span $span): void
     {
         if (!$span->isEnded()) {
             $span->end($this->clock->now());
@@ -107,7 +114,7 @@ final class Tracer
     /**
      * Get the tracer's context.
      */
-    public function context() : Context
+    public function context(): Context
     {
         return $this->contextStorage->current();
     }
@@ -115,7 +122,7 @@ final class Tracer
     /**
      * Flush all pending spans to the exporter.
      */
-    public function flush() : bool
+    public function flush(): bool
     {
         try {
             return $this->processor->flush();
@@ -129,7 +136,7 @@ final class Tracer
     /**
      * Get the instrumentation scope.
      */
-    public function instrumentationScope() : InstrumentationScope
+    public function instrumentationScope(): InstrumentationScope
     {
         return $this->scope;
     }
@@ -137,7 +144,7 @@ final class Tracer
     /**
      * Get the tracer name.
      */
-    public function name() : string
+    public function name(): string
     {
         return $this->scope->name;
     }
@@ -145,7 +152,7 @@ final class Tracer
     /**
      * Get the processor used by this tracer.
      */
-    public function processor() : SpanProcessor
+    public function processor(): SpanProcessor
     {
         return $this->processor;
     }
@@ -171,7 +178,7 @@ final class Tracer
         Attributes|array $attributes = [],
         array $links = [],
         SpanContext|false|null $parentContext = null,
-    ) : Span {
+    ): Span {
         $context = $this->contextStorage->current();
         $parentSpanId = null;
         $parentSpanContext = null;
@@ -210,7 +217,16 @@ final class Tracer
             : SpanContext::create($traceId, $spanId, $parentSpanId, $traceFlags, $traceState);
 
         $startTime = $this->clock->now();
-        $span = new Span($name, $spanContext, $kind, $startTime, $this->resource, $this->scope, $isRecording, $this->limits);
+        $span = new Span(
+            $name,
+            $spanContext,
+            $kind,
+            $startTime,
+            $this->resource,
+            $this->scope,
+            $isRecording,
+            $this->limits,
+        );
 
         $attributesToSet = $attributes instanceof Attributes ? $attributes : Attributes::create($attributes);
         $span->setAttributes($attributesToSet);
@@ -223,9 +239,7 @@ final class Tracer
             $samplingResult = $this->sampler->shouldSample($span);
 
             $isRecording = $samplingResult->decision->isRecording();
-            $traceFlags = $samplingResult->decision->isSampled()
-                ? TraceFlags::sampled()
-                : TraceFlags::default();
+            $traceFlags = $samplingResult->decision->isSampled() ? TraceFlags::sampled() : TraceFlags::default();
 
             if ($samplingResult->traceState !== null) {
                 $traceState = $samplingResult->traceState;
@@ -238,7 +252,16 @@ final class Tracer
                     ? SpanContext::createRemote($traceId, $spanId, $parentSpanId, $traceFlags, $traceState)
                     : SpanContext::create($traceId, $spanId, $parentSpanId, $traceFlags, $traceState);
 
-                $span = new Span($name, $spanContext, $kind, $startTime, $this->resource, $this->scope, $isRecording, $this->limits);
+                $span = new Span(
+                    $name,
+                    $spanContext,
+                    $kind,
+                    $startTime,
+                    $this->resource,
+                    $this->scope,
+                    $isRecording,
+                    $this->limits,
+                );
                 $span->setAttributes($attributesToSet);
 
                 foreach ($links as $link) {
@@ -279,8 +302,12 @@ final class Tracer
      *
      * @return T The callback result
      */
-    public function trace(string $name, callable $callback, SpanKind $kind = SpanKind::INTERNAL, SpanContext|false|null $parentContext = null) : mixed
-    {
+    public function trace(
+        string $name,
+        callable $callback,
+        SpanKind $kind = SpanKind::INTERNAL,
+        SpanContext|false|null $parentContext = null,
+    ): mixed {
         $span = $this->span($name, $kind, [], [], $parentContext);
 
         try {
@@ -301,7 +328,7 @@ final class Tracer
     /**
      * Get the tracer version.
      */
-    public function version() : string
+    public function version(): string
     {
         return $this->scope->version;
     }
@@ -311,7 +338,7 @@ final class Tracer
      *
      * This mutates the tracer instance and returns it for method chaining.
      */
-    public function withInstrumentationScope(InstrumentationScope $scope) : self
+    public function withInstrumentationScope(InstrumentationScope $scope): self
     {
         $this->scope = $scope;
 

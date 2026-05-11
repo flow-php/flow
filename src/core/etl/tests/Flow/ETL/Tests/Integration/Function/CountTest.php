@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\{count, df, from_array};
 use Flow\ETL\Tests\FlowTestCase;
+
+use function Flow\ETL\DSL\count;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_array;
 
 final class CountTest extends FlowTestCase
 {
-    public function test_count_aggregation() : void
+    public function test_count_aggregation(): void
     {
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['_count' => 3],
             ],
@@ -23,13 +26,13 @@ final class CountTest extends FlowTestCase
                 ]))
                 ->aggregate(count())
                 ->fetch()
-                ->toArray()
+                ->toArray(),
         );
     }
 
-    public function test_count_with_group_by() : void
+    public function test_count_with_group_by(): void
     {
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['group' => 'a', '_count' => 3],
                 ['group' => 'b', '_count' => 2],
@@ -45,13 +48,13 @@ final class CountTest extends FlowTestCase
                 ->groupBy('group')
                 ->aggregate(count())
                 ->fetch()
-                ->toArray()
+                ->toArray(),
         );
     }
 
-    public function test_count_with_group_by_on_multiple_columns() : void
+    public function test_count_with_group_by_on_multiple_columns(): void
     {
-        self::assertEquals(
+        static::assertEquals(
             [
                 ['group' => 'a', '_count' => 2, 'subgroup' => 'x'],
                 ['group' => 'a', '_count' => 1, 'subgroup' => 'y'],
@@ -69,7 +72,7 @@ final class CountTest extends FlowTestCase
                 ->groupBy('group', 'subgroup')
                 ->aggregate(count())
                 ->fetch()
-                ->toArray()
+                ->toArray(),
         );
     }
 }

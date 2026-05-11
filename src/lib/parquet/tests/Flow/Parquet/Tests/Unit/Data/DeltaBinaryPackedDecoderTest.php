@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Data;
 
-use Flow\Parquet\Data\{DeltaBinaryPackedDecoder, DeltaBinaryPackedEncoder};
-use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\Parquet\Data\DeltaBinaryPackedDecoder;
+use Flow\Parquet\Data\DeltaBinaryPackedEncoder;
+use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\Exception\RuntimeException;
 use PHPUnit\Framework\TestCase;
 
 final class DeltaBinaryPackedDecoderTest extends TestCase
 {
-    public function test_constructor_validates_block_miniblock_relationship() : void
+    public function test_constructor_validates_block_miniblock_relationship(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Block size must be a multiple of miniblock size');
@@ -18,7 +20,7 @@ final class DeltaBinaryPackedDecoderTest extends TestCase
         new DeltaBinaryPackedDecoder(128, 96);
     }
 
-    public function test_constructor_validates_block_size() : void
+    public function test_constructor_validates_block_size(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Block size must be a multiple of 128');
@@ -26,7 +28,7 @@ final class DeltaBinaryPackedDecoderTest extends TestCase
         new DeltaBinaryPackedDecoder(100);
     }
 
-    public function test_constructor_validates_miniblock_size() : void
+    public function test_constructor_validates_miniblock_size(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Miniblock size must be a multiple of 32');
@@ -34,7 +36,7 @@ final class DeltaBinaryPackedDecoderTest extends TestCase
         new DeltaBinaryPackedDecoder(128, 30);
     }
 
-    public function test_decode_different_patterns_produce_correct_output() : void
+    public function test_decode_different_patterns_produce_correct_output(): void
     {
         $encoder = new DeltaBinaryPackedEncoder();
         $decoder = new DeltaBinaryPackedDecoder();
@@ -48,12 +50,12 @@ final class DeltaBinaryPackedDecoderTest extends TestCase
         $decoded1 = $decoder->decode($encoded1, count($values1));
         $decoded2 = $decoder->decode($encoded2, count($values2));
 
-        self::assertSame($values1, $decoded1);
-        self::assertSame($values2, $decoded2);
-        self::assertNotSame($decoded1, $decoded2);
+        static::assertSame($values1, $decoded1);
+        static::assertSame($values2, $decoded2);
+        static::assertNotSame($decoded1, $decoded2);
     }
 
-    public function test_decode_empty_data_with_non_zero_count_throws_error() : void
+    public function test_decode_empty_data_with_non_zero_count_throws_error(): void
     {
         $decoder = new DeltaBinaryPackedDecoder();
 
@@ -63,15 +65,15 @@ final class DeltaBinaryPackedDecoderTest extends TestCase
         $decoder->decode('', 5);
     }
 
-    public function test_decode_empty_data_with_zero_count() : void
+    public function test_decode_empty_data_with_zero_count(): void
     {
         $decoder = new DeltaBinaryPackedDecoder();
         $result = $decoder->decode('', 0);
 
-        self::assertSame([], $result);
+        static::assertSame([], $result);
     }
 
-    public function test_decode_large_dataset() : void
+    public function test_decode_large_dataset(): void
     {
         $encoder = new DeltaBinaryPackedEncoder();
         $decoder = new DeltaBinaryPackedDecoder();
@@ -86,13 +88,13 @@ final class DeltaBinaryPackedDecoderTest extends TestCase
         $decoded = $decoder->decode($encoded, count($values));
 
         // For now, let's just test the first 128 values to ensure basic functionality works
-        self::assertSame(array_slice($values, 0, 128), array_slice($decoded, 0, 128));
+        static::assertSame(array_slice($values, 0, 128), array_slice($decoded, 0, 128));
 
         // TODO: Fix the issue with subsequent blocks
         // self::assertSame($values, $decoded);
     }
 
-    public function test_decode_large_values() : void
+    public function test_decode_large_values(): void
     {
         $encoder = new DeltaBinaryPackedEncoder();
         $decoder = new DeltaBinaryPackedDecoder();
@@ -101,10 +103,10 @@ final class DeltaBinaryPackedDecoderTest extends TestCase
         $encoded = $encoder->encode($values);
         $decoded = $decoder->decode($encoded, count($values));
 
-        self::assertSame($values, $decoded);
+        static::assertSame($values, $decoded);
     }
 
-    public function test_decode_negative_values() : void
+    public function test_decode_negative_values(): void
     {
         $encoder = new DeltaBinaryPackedEncoder();
         $decoder = new DeltaBinaryPackedDecoder();
@@ -113,10 +115,10 @@ final class DeltaBinaryPackedDecoderTest extends TestCase
         $encoded = $encoder->encode($values);
         $decoded = $decoder->decode($encoded, count($values));
 
-        self::assertSame($values, $decoded);
+        static::assertSame($values, $decoded);
     }
 
-    public function test_decode_produces_consistent_output() : void
+    public function test_decode_produces_consistent_output(): void
     {
         $encoder = new DeltaBinaryPackedEncoder();
         $decoder = new DeltaBinaryPackedDecoder();
@@ -127,11 +129,11 @@ final class DeltaBinaryPackedDecoderTest extends TestCase
         $decoded1 = $decoder->decode($encoded, count($values));
         $decoded2 = $decoder->decode($encoded, count($values));
 
-        self::assertSame($decoded1, $decoded2);
-        self::assertSame($values, $decoded1);
+        static::assertSame($decoded1, $decoded2);
+        static::assertSame($values, $decoded1);
     }
 
-    public function test_decode_random_pattern() : void
+    public function test_decode_random_pattern(): void
     {
         $encoder = new DeltaBinaryPackedEncoder();
         $decoder = new DeltaBinaryPackedDecoder();
@@ -140,10 +142,10 @@ final class DeltaBinaryPackedDecoderTest extends TestCase
         $encoded = $encoder->encode($values);
         $decoded = $decoder->decode($encoded, count($values));
 
-        self::assertSame($values, $decoded);
+        static::assertSame($values, $decoded);
     }
 
-    public function test_decode_sequential_values() : void
+    public function test_decode_sequential_values(): void
     {
         $encoder = new DeltaBinaryPackedEncoder();
         $decoder = new DeltaBinaryPackedDecoder();
@@ -152,10 +154,10 @@ final class DeltaBinaryPackedDecoderTest extends TestCase
         $encoded = $encoder->encode($values);
         $decoded = $decoder->decode($encoded, count($values));
 
-        self::assertSame($values, $decoded);
+        static::assertSame($values, $decoded);
     }
 
-    public function test_decode_single_value() : void
+    public function test_decode_single_value(): void
     {
         $encoder = new DeltaBinaryPackedEncoder();
         $decoder = new DeltaBinaryPackedDecoder();
@@ -164,10 +166,10 @@ final class DeltaBinaryPackedDecoderTest extends TestCase
         $encoded = $encoder->encode($values);
         $decoded = $decoder->decode($encoded, 1);
 
-        self::assertSame($values, $decoded);
+        static::assertSame($values, $decoded);
     }
 
-    public function test_decode_timestamp_like_sequence() : void
+    public function test_decode_timestamp_like_sequence(): void
     {
         $encoder = new DeltaBinaryPackedEncoder();
         $decoder = new DeltaBinaryPackedDecoder();
@@ -182,10 +184,10 @@ final class DeltaBinaryPackedDecoderTest extends TestCase
         $encoded = $encoder->encode($values);
         $decoded = $decoder->decode($encoded, count($values));
 
-        self::assertSame($values, $decoded);
+        static::assertSame($values, $decoded);
     }
 
-    public function test_decode_value_count_mismatch_throws_error() : void
+    public function test_decode_value_count_mismatch_throws_error(): void
     {
         $encoder = new DeltaBinaryPackedEncoder();
         $decoder = new DeltaBinaryPackedDecoder();
@@ -199,7 +201,7 @@ final class DeltaBinaryPackedDecoderTest extends TestCase
         $decoder->decode($encoded, 10);
     }
 
-    public function test_decode_values_with_negative_deltas() : void
+    public function test_decode_values_with_negative_deltas(): void
     {
         $encoder = new DeltaBinaryPackedEncoder();
         $decoder = new DeltaBinaryPackedDecoder();
@@ -208,10 +210,10 @@ final class DeltaBinaryPackedDecoderTest extends TestCase
         $encoded = $encoder->encode($values);
         $decoded = $decoder->decode($encoded, count($values));
 
-        self::assertSame($values, $decoded);
+        static::assertSame($values, $decoded);
     }
 
-    public function test_decode_values_with_varying_deltas() : void
+    public function test_decode_values_with_varying_deltas(): void
     {
         $encoder = new DeltaBinaryPackedEncoder();
         $decoder = new DeltaBinaryPackedDecoder();
@@ -220,10 +222,10 @@ final class DeltaBinaryPackedDecoderTest extends TestCase
         $encoded = $encoder->encode($values);
         $decoded = $decoder->decode($encoded, count($values));
 
-        self::assertSame($values, $decoded);
+        static::assertSame($values, $decoded);
     }
 
-    public function test_decode_values_with_zero_deltas() : void
+    public function test_decode_values_with_zero_deltas(): void
     {
         $encoder = new DeltaBinaryPackedEncoder();
         $decoder = new DeltaBinaryPackedDecoder();
@@ -232,10 +234,10 @@ final class DeltaBinaryPackedDecoderTest extends TestCase
         $encoded = $encoder->encode($values);
         $decoded = $decoder->decode($encoded, count($values));
 
-        self::assertSame($values, $decoded);
+        static::assertSame($values, $decoded);
     }
 
-    public function test_decode_with_custom_block_size() : void
+    public function test_decode_with_custom_block_size(): void
     {
         $encoder = new DeltaBinaryPackedEncoder(256, 64);
         $decoder = new DeltaBinaryPackedDecoder(256, 64);
@@ -244,6 +246,6 @@ final class DeltaBinaryPackedDecoderTest extends TestCase
         $encoded = $encoder->encode($values);
         $decoded = $decoder->decode($encoded, count($values));
 
-        self::assertSame($values, $decoded);
+        static::assertSame($values, $decoded);
     }
 }

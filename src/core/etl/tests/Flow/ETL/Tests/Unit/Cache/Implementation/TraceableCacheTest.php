@@ -4,21 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Cache\Implementation;
 
-use function Flow\ETL\DSL\{row, rows};
 use Flow\ETL\Cache;
 use Flow\ETL\Cache\CacheIndex;
-use Flow\ETL\Cache\Implementation\{InMemoryCache, TraceableCache};
+use Flow\ETL\Cache\Implementation\InMemoryCache;
+use Flow\ETL\Cache\Implementation\TraceableCache;
 use Flow\ETL\Exception\KeyNotInCacheException;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Provider\Memory\{MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
+use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
+use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
+use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Provider\Void\VoidExporter;
-use Flow\Telemetry\{Resource, Telemetry};
-use Flow\Telemetry\Tracer\{SpanKind, TracerProvider};
+use Flow\Telemetry\Resource;
+use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\Tracer\SpanKind;
+use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
+
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
 
 #[CoversClass(TraceableCache::class)]
 final class TraceableCacheTest extends FlowTestCase
@@ -29,7 +36,7 @@ final class TraceableCacheTest extends FlowTestCase
 
     private Telemetry $telemetry;
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         $clock = new SystemClock();
         $contextStorage = new MemoryContextStorage();
@@ -46,7 +53,7 @@ final class TraceableCacheTest extends FlowTestCase
         );
     }
 
-    public function test_clear_creates_span_with_correct_name_and_attributes() : void
+    public function test_clear_creates_span_with_correct_name_and_attributes(): void
     {
         $innerCache = new InMemoryCache();
         $cache = new TraceableCache($innerCache, $this->telemetry);
@@ -56,17 +63,17 @@ final class TraceableCacheTest extends FlowTestCase
         $this->telemetry->flush();
         $spans = $this->spanProcessor->endedSpans();
 
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('Cache Clear', $span->name());
-        self::assertSame(SpanKind::CLIENT, $span->kind());
+        static::assertSame('Cache Clear', $span->name());
+        static::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
-        self::assertSame('clear', $attributes['cache.operation']);
+        static::assertSame('clear', $attributes['cache.operation']);
     }
 
-    public function test_delete_creates_span_with_correct_name_and_attributes() : void
+    public function test_delete_creates_span_with_correct_name_and_attributes(): void
     {
         $innerCache = new InMemoryCache();
         $cache = new TraceableCache($innerCache, $this->telemetry);
@@ -76,18 +83,18 @@ final class TraceableCacheTest extends FlowTestCase
         $this->telemetry->flush();
         $spans = $this->spanProcessor->endedSpans();
 
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('Cache Delete test-key', $span->name());
-        self::assertSame(SpanKind::CLIENT, $span->kind());
+        static::assertSame('Cache Delete test-key', $span->name());
+        static::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
-        self::assertSame('delete', $attributes['cache.operation']);
-        self::assertSame('test-key', $attributes['cache.key']);
+        static::assertSame('delete', $attributes['cache.operation']);
+        static::assertSame('test-key', $attributes['cache.key']);
     }
 
-    public function test_get_increments_hit_counter_on_existing_key() : void
+    public function test_get_increments_hit_counter_on_existing_key(): void
     {
         $innerCache = new InMemoryCache();
         $cache = new TraceableCache($innerCache, $this->telemetry, 'test_dataframe');
@@ -99,13 +106,13 @@ final class TraceableCacheTest extends FlowTestCase
         $hitMetrics = $this->metricProcessor->metricsWithName('cache_hits');
         $missMetrics = $this->metricProcessor->metricsWithName('cache_misses');
 
-        self::assertCount(1, $hitMetrics);
-        self::assertCount(0, $missMetrics);
-        self::assertSame(1, $hitMetrics[0]->value);
-        self::assertSame('test_dataframe', $hitMetrics[0]->attributes->get('dataframe.name'));
+        static::assertCount(1, $hitMetrics);
+        static::assertCount(0, $missMetrics);
+        static::assertSame(1, $hitMetrics[0]->value);
+        static::assertSame('test_dataframe', $hitMetrics[0]->attributes->get('dataframe.name'));
     }
 
-    public function test_get_increments_miss_counter_and_throws_on_non_existing_key() : void
+    public function test_get_increments_miss_counter_and_throws_on_non_existing_key(): void
     {
         $innerCache = new InMemoryCache();
         $cache = new TraceableCache($innerCache, $this->telemetry, 'test_dataframe');
@@ -119,14 +126,14 @@ final class TraceableCacheTest extends FlowTestCase
             $hitMetrics = $this->metricProcessor->metricsWithName('cache_hits');
             $missMetrics = $this->metricProcessor->metricsWithName('cache_misses');
 
-            self::assertCount(0, $hitMetrics);
-            self::assertCount(1, $missMetrics);
-            self::assertSame(1, $missMetrics[0]->value);
-            self::assertSame('test_dataframe', $missMetrics[0]->attributes->get('dataframe.name'));
+            static::assertCount(0, $hitMetrics);
+            static::assertCount(1, $missMetrics);
+            static::assertSame(1, $missMetrics[0]->value);
+            static::assertSame('test_dataframe', $missMetrics[0]->attributes->get('dataframe.name'));
         }
     }
 
-    public function test_has_increments_hit_counter_when_key_exists() : void
+    public function test_has_increments_hit_counter_when_key_exists(): void
     {
         $innerCache = new InMemoryCache();
         $cache = new TraceableCache($innerCache, $this->telemetry, 'test_dataframe');
@@ -134,38 +141,38 @@ final class TraceableCacheTest extends FlowTestCase
         $innerCache->set('existing-key', row());
         $exists = $cache->has('existing-key');
 
-        self::assertTrue($exists);
+        static::assertTrue($exists);
 
         $this->telemetry->flush();
         $hitMetrics = $this->metricProcessor->metricsWithName('cache_hits');
         $missMetrics = $this->metricProcessor->metricsWithName('cache_misses');
 
-        self::assertCount(1, $hitMetrics);
-        self::assertCount(0, $missMetrics);
-        self::assertSame(1, $hitMetrics[0]->value);
-        self::assertSame('test_dataframe', $hitMetrics[0]->attributes->get('dataframe.name'));
+        static::assertCount(1, $hitMetrics);
+        static::assertCount(0, $missMetrics);
+        static::assertSame(1, $hitMetrics[0]->value);
+        static::assertSame('test_dataframe', $hitMetrics[0]->attributes->get('dataframe.name'));
     }
 
-    public function test_has_increments_miss_counter_when_key_does_not_exist() : void
+    public function test_has_increments_miss_counter_when_key_does_not_exist(): void
     {
         $innerCache = new InMemoryCache();
         $cache = new TraceableCache($innerCache, $this->telemetry, 'test_dataframe');
 
         $exists = $cache->has('non-existing-key');
 
-        self::assertFalse($exists);
+        static::assertFalse($exists);
 
         $this->telemetry->flush();
         $hitMetrics = $this->metricProcessor->metricsWithName('cache_hits');
         $missMetrics = $this->metricProcessor->metricsWithName('cache_misses');
 
-        self::assertCount(0, $hitMetrics);
-        self::assertCount(1, $missMetrics);
-        self::assertSame(1, $missMetrics[0]->value);
-        self::assertSame('test_dataframe', $missMetrics[0]->attributes->get('dataframe.name'));
+        static::assertCount(0, $hitMetrics);
+        static::assertCount(1, $missMetrics);
+        static::assertSame(1, $missMetrics[0]->value);
+        static::assertSame('test_dataframe', $missMetrics[0]->attributes->get('dataframe.name'));
     }
 
-    public function test_set_creates_span_with_cache_index_value_type() : void
+    public function test_set_creates_span_with_cache_index_value_type(): void
     {
         $innerCache = new InMemoryCache();
         $cache = new TraceableCache($innerCache, $this->telemetry);
@@ -175,19 +182,19 @@ final class TraceableCacheTest extends FlowTestCase
         $this->telemetry->flush();
         $spans = $this->spanProcessor->endedSpans();
 
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('Cache Set test-key', $span->name());
-        self::assertSame(SpanKind::CLIENT, $span->kind());
+        static::assertSame('Cache Set test-key', $span->name());
+        static::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
-        self::assertSame('set', $attributes['cache.operation']);
-        self::assertSame('test-key', $attributes['cache.key']);
-        self::assertSame('CacheIndex', $attributes['cache.value_type']);
+        static::assertSame('set', $attributes['cache.operation']);
+        static::assertSame('test-key', $attributes['cache.key']);
+        static::assertSame('CacheIndex', $attributes['cache.value_type']);
     }
 
-    public function test_set_creates_span_with_correct_name_and_attributes_for_row() : void
+    public function test_set_creates_span_with_correct_name_and_attributes_for_row(): void
     {
         $innerCache = new InMemoryCache();
         $cache = new TraceableCache($innerCache, $this->telemetry);
@@ -197,19 +204,19 @@ final class TraceableCacheTest extends FlowTestCase
         $this->telemetry->flush();
         $spans = $this->spanProcessor->endedSpans();
 
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('Cache Set test-key', $span->name());
-        self::assertSame(SpanKind::CLIENT, $span->kind());
+        static::assertSame('Cache Set test-key', $span->name());
+        static::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
-        self::assertSame('set', $attributes['cache.operation']);
-        self::assertSame('test-key', $attributes['cache.key']);
-        self::assertSame('Row', $attributes['cache.value_type']);
+        static::assertSame('set', $attributes['cache.operation']);
+        static::assertSame('test-key', $attributes['cache.key']);
+        static::assertSame('Row', $attributes['cache.value_type']);
     }
 
-    public function test_set_creates_span_with_rows_value_type() : void
+    public function test_set_creates_span_with_rows_value_type(): void
     {
         $innerCache = new InMemoryCache();
         $cache = new TraceableCache($innerCache, $this->telemetry);
@@ -219,19 +226,19 @@ final class TraceableCacheTest extends FlowTestCase
         $this->telemetry->flush();
         $spans = $this->spanProcessor->endedSpans();
 
-        self::assertCount(1, $spans);
+        static::assertCount(1, $spans);
 
         $span = $spans[0];
-        self::assertSame('Cache Set test-key', $span->name());
-        self::assertSame(SpanKind::CLIENT, $span->kind());
+        static::assertSame('Cache Set test-key', $span->name());
+        static::assertSame(SpanKind::CLIENT, $span->kind());
 
         $attributes = $span->attributes();
-        self::assertSame('set', $attributes['cache.operation']);
-        self::assertSame('test-key', $attributes['cache.key']);
-        self::assertSame('Rows', $attributes['cache.value_type']);
+        static::assertSame('set', $attributes['cache.operation']);
+        static::assertSame('test-key', $attributes['cache.key']);
+        static::assertSame('Rows', $attributes['cache.value_type']);
     }
 
-    public function test_set_records_exception_on_error() : void
+    public function test_set_records_exception_on_error(): void
     {
         $innerCache = $this->createMock(Cache::class);
         $innerCache->method('set')->willThrowException(new \RuntimeException('Test error'));
@@ -247,13 +254,13 @@ final class TraceableCacheTest extends FlowTestCase
             $this->telemetry->flush();
             $spans = $this->spanProcessor->endedSpans();
 
-            self::assertCount(1, $spans);
+            static::assertCount(1, $spans);
 
             $span = $spans[0];
-            self::assertNotNull($span->status());
-            self::assertTrue($span->status()->isError());
-            self::assertSame('Test error', $span->status()->description);
-            self::assertCount(1, $span->events());
+            static::assertNotNull($span->status());
+            static::assertTrue($span->status()->isError());
+            static::assertSame('Test error', $span->status()->description);
+            static::assertCount(1, $span->events());
         }
     }
 }

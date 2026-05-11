@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
-use Flow\PostgreSql\AST\Nodes\{Statement, StatementTrait};
+use Flow\PostgreSql\AST\Nodes\Statement;
+use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\VariableShowStmt;
 
 /**
@@ -18,10 +19,9 @@ final readonly class ShowStatement implements Statement
 
     public function __construct(
         private VariableShowStmt $stmt,
-    ) {
-    }
+    ) {}
 
-    public function raw() : VariableShowStmt
+    public function raw(): VariableShowStmt
     {
         return $this->stmt;
     }

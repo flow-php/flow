@@ -6,7 +6,7 @@ namespace Flow\Types\Tests\Unit\Type\Fixtures;
 
 final class StringableObject implements \Stringable
 {
-    public function __toString() : string
+    public function __toString(): string
     {
         return '';
     }

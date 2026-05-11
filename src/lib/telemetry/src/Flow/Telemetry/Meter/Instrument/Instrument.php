@@ -29,20 +29,20 @@ interface Instrument
      *
      * @return array<Metric> Aggregated metrics ready for export
      */
-    public function collect() : array;
+    public function collect(): array;
 
     /**
      * Get the instrument description.
      */
-    public function description() : ?string;
+    public function description(): ?string;
 
     /**
      * Get the instrument name.
      */
-    public function name() : string;
+    public function name(): string;
 
     /**
      * Get the unit of measurement.
      */
-    public function unit() : ?string;
+    public function unit(): ?string;
 }

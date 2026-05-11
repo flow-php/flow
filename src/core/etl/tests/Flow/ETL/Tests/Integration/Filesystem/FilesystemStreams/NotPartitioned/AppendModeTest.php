@@ -4,21 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\NotPartitioned;
 
-use function Flow\ETL\DSL\append;
-use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
+
+use function Flow\ETL\DSL\append;
+use function Flow\Filesystem\DSL\path;
 
 final class AppendModeTest extends FilesystemStreamsTestCase
 {
     #[\Override]
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         parent::tearDown();
         $this->cleanFiles();
     }
 
-    public function test_open_stream_for_existing_file() : void
+    public function test_open_stream_for_existing_file(): void
     {
         $streams = $this->streams();
         $this->setupFiles([
@@ -27,7 +28,7 @@ final class AppendModeTest extends FilesystemStreamsTestCase
             ],
         ]);
         $file = $this->getPath(__FUNCTION__ . '/existing-file.txt');
-        self::assertFileExists($file->path());
+        static::assertFileExists($file->path());
 
         $appendFileStream = $streams->writeTo($file);
         $appendFileStream->append('new content');
@@ -35,22 +36,22 @@ final class AppendModeTest extends FilesystemStreamsTestCase
 
         $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/*')));
 
-        self::assertCount(2, $files);
+        static::assertCount(2, $files);
 
         foreach ($files as $streamFile) {
-            self::assertStringStartsWith('existing-file', $streamFile->path->basename());
-            self::assertStringEndsWith('.txt', $streamFile->path->basename());
+            static::assertStringStartsWith('existing-file', $streamFile->path->basename());
+            static::assertStringEndsWith('.txt', $streamFile->path->basename());
         }
     }
 
-    public function test_open_stream_for_non_existing_file() : void
+    public function test_open_stream_for_non_existing_file(): void
     {
         $streams = $this->streams();
         $this->setupFiles([
             __FUNCTION__ => [],
         ]);
         $file = $this->getPath(__FUNCTION__ . '/non-existing-file.txt');
-        self::assertFileDoesNotExist($file->path());
+        static::assertFileDoesNotExist($file->path());
 
         $appendFileStream = $streams->writeTo($file);
         $appendFileStream->append('new content');
@@ -58,11 +59,11 @@ final class AppendModeTest extends FilesystemStreamsTestCase
 
         $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/*')));
 
-        self::assertCount(1, $files);
-        self::assertSame('non-existing-file.txt', $files[0]->path->basename());
+        static::assertCount(1, $files);
+        static::assertSame('non-existing-file.txt', $files[0]->path->basename());
     }
 
-    protected function streams() : FilesystemStreams
+    protected function streams(): FilesystemStreams
     {
         $streams = new FilesystemStreams($this->fstab());
         $streams->setMode(append());

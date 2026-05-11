@@ -6,5 +6,5 @@ namespace Flow\PostgreSql\QueryBuilder\Insert;
 
 interface InsertColumnsStep extends InsertValuesStep
 {
-    public function columns(string ...$columns) : InsertValuesStep;
+    public function columns(string ...$columns): InsertValuesStep;
 }

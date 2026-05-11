@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
-use function Flow\Filesystem\DSL\path_real;
-use Flow\ETL\Adapter\CSV\Detector\{Option, Options};
-use Flow\ETL\{Attribute\DocumentationDSL, Attribute\DocumentationExample, Attribute\Module, Attribute\Type as DSLType};
+use Flow\ETL\Adapter\CSV\Detector\Option;
+use Flow\ETL\Adapter\CSV\Detector\Options;
+use Flow\ETL\Attribute\DocumentationDSL;
+use Flow\ETL\Attribute\DocumentationExample;
+use Flow\ETL\Attribute\Module;
+use Flow\ETL\Attribute\Type as DSLType;
 use Flow\ETL\Schema;
-use Flow\Filesystem\{Path, SourceStream};
+use Flow\Filesystem\Path;
+use Flow\Filesystem\SourceStream;
+
+use function Flow\Filesystem\DSL\path_real;
 
 /**
  * @param Path|string $path
@@ -31,8 +37,7 @@ function from_csv(
     ?string $escape = null,
     int $characters_read_in_line = 1000,
     ?Schema $schema = null,
-) : CSVExtractor {
-
+): CSVExtractor {
     $loader = (new CSVExtractor(\is_string($path) ? path_real($path) : $path))
         ->withHeader($with_header)
         ->withEmptyToNull($empty_to_null)
@@ -75,7 +80,7 @@ function to_csv(
     string $escape = '\\',
     string $new_line_separator = PHP_EOL,
     string $datetime_format = \DateTimeInterface::ATOM,
-) : CSVLoader {
+): CSVLoader {
     return (new CSVLoader(\is_string($uri) ? path_real($uri) : $uri))
         ->withHeader($with_header)
         ->withSeparator($separator)
@@ -92,7 +97,11 @@ function to_csv(
  * @param null|Options $options - options to use for detection, default is Options::all()
  */
 #[DocumentationDSL(module: Module::CSV, type: DSLType::HELPER)]
-function csv_detect_separator(SourceStream $stream, int $lines = 5, ?Option $fallback = new Option(',', '"', '\\'), ?Options $options = null) : Option
-{
+function csv_detect_separator(
+    SourceStream $stream,
+    int $lines = 5,
+    ?Option $fallback = new Option(',', '"', '\\'),
+    ?Options $options = null,
+): Option {
     return (new CSVDetector($stream, $fallback, $options))->detect($lines);
 }

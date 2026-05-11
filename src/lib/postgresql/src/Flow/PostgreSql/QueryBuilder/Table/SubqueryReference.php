@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Table;
 
-use Flow\PostgreSql\Protobuf\AST\{Node, RangeSubselect};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RangeSubselect;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
 /**
@@ -18,10 +19,9 @@ final readonly class SubqueryReference implements TableReference
      */
     public function __construct(
         private Node $subquery,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $rangeSubselect = $node->getRangeSubselect();
 
@@ -38,17 +38,17 @@ final readonly class SubqueryReference implements TableReference
         return new self($subqueryNode);
     }
 
-    public function as(string $alias, ?array $columnAliases = null) : AliasedTable
+    public function as(string $alias, ?array $columnAliases = null): AliasedTable
     {
         return new AliasedTable($this, $alias, $columnAliases);
     }
 
-    public function getSubquery() : Node
+    public function getSubquery(): Node
     {
         return $this->subquery;
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $rangeSubselect = new RangeSubselect();
         $rangeSubselect->setSubquery($this->subquery);

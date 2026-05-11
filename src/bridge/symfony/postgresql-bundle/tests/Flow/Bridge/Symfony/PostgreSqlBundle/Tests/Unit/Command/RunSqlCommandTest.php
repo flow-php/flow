@@ -13,7 +13,7 @@ use Symfony\Component\DependencyInjection\Container;
 
 final class RunSqlCommandTest extends TestCase
 {
-    public function test_execute_non_select_query() : void
+    public function test_execute_non_select_query(): void
     {
         $client = new SpyClient();
 
@@ -23,12 +23,12 @@ final class RunSqlCommandTest extends TestCase
         $tester = new CommandTester(new RunSqlCommand($container, 'default'));
         $tester->execute(['sql' => 'DELETE FROM users WHERE id = 1']);
 
-        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('0 row(s) affected.', $tester->getDisplay());
-        self::assertSame('DELETE FROM users WHERE id = 1', $client->executedQueries[0]['sql']);
+        static::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        static::assertStringContainsString('0 row(s) affected.', $tester->getDisplay());
+        static::assertSame('DELETE FROM users WHERE id = 1', $client->executedQueries[0]['sql']);
     }
 
-    public function test_uses_connection_option() : void
+    public function test_uses_connection_option(): void
     {
         $client = new SpyClient();
 
@@ -38,7 +38,7 @@ final class RunSqlCommandTest extends TestCase
         $tester = new CommandTester(new RunSqlCommand($container, 'default'));
         $tester->execute(['sql' => 'UPDATE users SET active = true', '--connection' => 'other']);
 
-        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertSame('UPDATE users SET active = true', $client->executedQueries[0]['sql']);
+        static::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        static::assertSame('UPDATE users SET active = true', $client->executedQueries[0]['sql']);
     }
 }

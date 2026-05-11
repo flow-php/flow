@@ -24,15 +24,14 @@ final readonly class Signals
     private function __construct(
         public SignalType $type,
         private array $items,
-    ) {
-    }
+    ) {}
 
     /**
      * Construct a logs signal collection.
      *
      * @param array<LogEntry> $entries
      */
-    public static function logs(array $entries) : self
+    public static function logs(array $entries): self
     {
         return new self(SignalType::LOGS, $entries);
     }
@@ -42,7 +41,7 @@ final readonly class Signals
      *
      * @param array<Metric> $metrics
      */
-    public static function metrics(array $metrics) : self
+    public static function metrics(array $metrics): self
     {
         return new self(SignalType::METRICS, $metrics);
     }
@@ -52,7 +51,7 @@ final readonly class Signals
      *
      * @param array<Span> $spans
      */
-    public static function traces(array $spans) : self
+    public static function traces(array $spans): self
     {
         return new self(SignalType::TRACES, $spans);
     }
@@ -64,16 +63,17 @@ final readonly class Signals
      *
      * @return array<LogEntry>
      */
-    public function allLogs() : array
+    public function allLogs(): array
     {
         if ($this->type !== SignalType::LOGS) {
-            throw new RuntimeException(\sprintf('Signals collection of type %s does not carry log entries', $this->type->name));
+            throw new RuntimeException(\sprintf(
+                'Signals collection of type %s does not carry log entries',
+                $this->type->name,
+            ));
         }
 
-        /** @var array<LogEntry> $items */
-        $items = $this->items;
-
-        return $items;
+        /** @phpstan-ignore return.type */
+        return $this->items;
     }
 
     /**
@@ -83,16 +83,17 @@ final readonly class Signals
      *
      * @return array<Metric>
      */
-    public function allMetrics() : array
+    public function allMetrics(): array
     {
         if ($this->type !== SignalType::METRICS) {
-            throw new RuntimeException(\sprintf('Signals collection of type %s does not carry metrics', $this->type->name));
+            throw new RuntimeException(\sprintf(
+                'Signals collection of type %s does not carry metrics',
+                $this->type->name,
+            ));
         }
 
-        /** @var array<Metric> $items */
-        $items = $this->items;
-
-        return $items;
+        /** @phpstan-ignore return.type */
+        return $this->items;
     }
 
     /**
@@ -102,24 +103,25 @@ final readonly class Signals
      *
      * @return array<Span>
      */
-    public function allSpans() : array
+    public function allSpans(): array
     {
         if ($this->type !== SignalType::TRACES) {
-            throw new RuntimeException(\sprintf('Signals collection of type %s does not carry spans', $this->type->name));
+            throw new RuntimeException(\sprintf(
+                'Signals collection of type %s does not carry spans',
+                $this->type->name,
+            ));
         }
 
-        /** @var array<Span> $items */
-        $items = $this->items;
-
-        return $items;
+        /** @phpstan-ignore return.type */
+        return $this->items;
     }
 
-    public function count() : int
+    public function count(): int
     {
         return \count($this->items);
     }
 
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return \count($this->items) === 0;
     }

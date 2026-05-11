@@ -4,9 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Condition;
 
-use Flow\PostgreSql\Protobuf\AST\{A_Expr, A_Expr_Kind, Node, PBList, PBString};
+use Flow\PostgreSql\Protobuf\AST\A_Expr;
+use Flow\PostgreSql\Protobuf\AST\A_Expr_Kind;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBList;
+use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
-use Flow\PostgreSql\QueryBuilder\Expression\{AliasedExpression, Expression, ExpressionFactory};
+use Flow\PostgreSql\QueryBuilder\Expression\AliasedExpression;
+use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 
 final readonly class Between implements Condition
 {
@@ -16,10 +22,9 @@ final readonly class Between implements Condition
         public Expression $high,
         public bool $symmetric = false,
         public bool $negated = false,
-    ) {
-    }
+    ) {}
 
-    public static function fromAst(Node $node) : static
+    public static function fromAst(Node $node): static
     {
         $aExpr = $node->getAExpr();
 
@@ -35,7 +40,11 @@ final readonly class Between implements Condition
             && $kind !== A_Expr_Kind::AEXPR_BETWEEN_SYM
             && $kind !== A_Expr_Kind::AEXPR_NOT_BETWEEN_SYM
         ) {
-            throw InvalidAstException::invalidFieldValue('kind', 'A_Expr', 'Expected BETWEEN variant for Between condition');
+            throw InvalidAstException::invalidFieldValue(
+                'kind',
+                'A_Expr',
+                'Expected BETWEEN variant for Between condition',
+            );
         }
 
         $symmetric = $kind === A_Expr_Kind::AEXPR_BETWEEN_SYM || $kind === A_Expr_Kind::AEXPR_NOT_BETWEEN_SYM;
@@ -62,7 +71,11 @@ final readonly class Between implements Condition
         $items = $list->getItems();
 
         if ($items === null || $items->count() !== 2) {
-            throw InvalidAstException::invalidFieldValue('rexpr', 'A_Expr', 'Expected List with exactly 2 items for BETWEEN');
+            throw InvalidAstException::invalidFieldValue(
+                'rexpr',
+                'A_Expr',
+                'Expected List with exactly 2 items for BETWEEN',
+            );
         }
 
         return new self(
@@ -70,31 +83,31 @@ final readonly class Between implements Condition
             ExpressionFactory::fromAst($items->offsetGet(0)),
             ExpressionFactory::fromAst($items->offsetGet(1)),
             $symmetric,
-            $negated
+            $negated,
         );
     }
 
-    public function and(Condition $other) : AndCondition
+    public function and(Condition $other): AndCondition
     {
         return new AndCondition($this, $other);
     }
 
-    public function as(string $alias) : AliasedExpression
+    public function as(string $alias): AliasedExpression
     {
         return new AliasedExpression($this, $alias);
     }
 
-    public function not() : NotCondition
+    public function not(): NotCondition
     {
         return new NotCondition($this);
     }
 
-    public function or(Condition $other) : OrCondition
+    public function or(Condition $other): OrCondition
     {
         return new OrCondition($this, $other);
     }
 
-    public function toAst() : Node
+    public function toAst(): Node
     {
         $kind = match (true) {
             $this->symmetric && $this->negated => A_Expr_Kind::AEXPR_NOT_BETWEEN_SYM,

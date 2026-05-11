@@ -25,13 +25,12 @@ final readonly class ForeignKey
         public ReferentialAction $onDelete = ReferentialAction::NO_ACTION,
         public bool $deferrable = false,
         public bool $initiallyDeferred = false,
-    ) {
-    }
+    ) {}
 
     /**
      * @param ForeignKeyShape $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             name: $data['name'],
@@ -39,34 +38,40 @@ final readonly class ForeignKey
             referenceSchema: $data['reference_schema'],
             referenceTable: $data['reference_table'],
             referenceColumns: $data['reference_columns'],
-            onUpdate: array_key_exists('on_update', $data) ? ReferentialAction::from($data['on_update']) : ReferentialAction::NO_ACTION,
-            onDelete: array_key_exists('on_delete', $data) ? ReferentialAction::from($data['on_delete']) : ReferentialAction::NO_ACTION,
+            onUpdate: array_key_exists('on_update', $data)
+                ? ReferentialAction::from($data['on_update'])
+                : ReferentialAction::NO_ACTION,
+            onDelete: array_key_exists('on_delete', $data)
+                ? ReferentialAction::from($data['on_delete'])
+                : ReferentialAction::NO_ACTION,
             deferrable: $data['deferrable'] ?? false,
             initiallyDeferred: $data['initially_deferred'] ?? false,
         );
     }
 
-    public function isEqual(self $other) : bool
+    public function isEqual(self $other): bool
     {
         return $this->name === $other->name && $this->isEqualStructure($other);
     }
 
-    public function isEqualStructure(self $other) : bool
+    public function isEqualStructure(self $other): bool
     {
-        return $this->columns === $other->columns
+        return (
+            $this->columns === $other->columns
             && $this->referenceSchema === $other->referenceSchema
             && $this->referenceTable === $other->referenceTable
             && $this->referenceColumns === $other->referenceColumns
             && $this->onUpdate === $other->onUpdate
             && $this->onDelete === $other->onDelete
             && $this->deferrable === $other->deferrable
-            && $this->initiallyDeferred === $other->initiallyDeferred;
+            && $this->initiallyDeferred === $other->initiallyDeferred
+        );
     }
 
     /**
      * @return ForeignKeyShape
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'name' => $this->name,

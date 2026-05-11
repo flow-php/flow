@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests;
 
-use function Flow\ETL\DSL\{flow_context, rows};
-use Flow\ETL\{Extractor, FlowContext, Rows};
+use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\rows;
 
 /**
  * Base test case for testing FLow, designed mostly for unit tests.
@@ -19,14 +23,10 @@ abstract class FlowTestCase extends TestCase
         Extractor $extractor,
         ?FlowContext $flowContext = null,
         string $message = '',
-    ) : void {
+    ): void {
         $flowContext ??= flow_context();
 
-        static::assertCount(
-            $expectedCount,
-            \iterator_to_array($extractor->extract($flowContext)),
-            $message
-        );
+        static::assertCount($expectedCount, \iterator_to_array($extractor->extract($flowContext)), $message);
     }
 
     final public static function assertExtractedBatchesSize(
@@ -34,7 +34,7 @@ abstract class FlowTestCase extends TestCase
         Extractor $extractor,
         ?FlowContext $flowContext = null,
         string $message = '',
-    ) : void {
+    ): void {
         $flowContext ??= flow_context();
         $extractorContainsBatches = false;
 
@@ -56,7 +56,7 @@ abstract class FlowTestCase extends TestCase
         Extractor $extractor,
         ?FlowContext $flowContext = null,
         string $message = '',
-    ) : void {
+    ): void {
         $flowContext ??= flow_context();
         $extractedRows = rows();
 
@@ -72,7 +72,7 @@ abstract class FlowTestCase extends TestCase
         Extractor $extractor,
         ?FlowContext $flowContext = null,
         string $message = '',
-    ) : void {
+    ): void {
         $flowContext ??= flow_context();
         $totalRows = 0;
 
@@ -88,7 +88,7 @@ abstract class FlowTestCase extends TestCase
         Extractor $extractor,
         ?FlowContext $flowContext = null,
         string $message = '',
-    ) : void {
+    ): void {
         $flowContext ??= flow_context();
         $extractedRows = rows();
 
@@ -102,7 +102,7 @@ abstract class FlowTestCase extends TestCase
     /**
      * Root of the project monorepo.
      */
-    public function repositoryRoot() : string
+    public function repositoryRoot(): string
     {
         return \dirname(__DIR__, 7);
     }

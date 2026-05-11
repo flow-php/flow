@@ -11,10 +11,10 @@ use PHPUnit\Framework\TestCase;
 
 final class WriterTest extends TestCase
 {
-    public function test_arrow_factory_throws_when_extension_not_loaded() : void
+    public function test_arrow_factory_throws_when_extension_not_loaded(): void
     {
         if (\extension_loaded('arrow')) {
-            self::markTestSkipped('This test requires the arrow extension to NOT be loaded');
+            static::markTestSkipped('This test requires the arrow extension to NOT be loaded');
         }
 
         $this->expectException(RuntimeException::class);
@@ -22,13 +22,13 @@ final class WriterTest extends TestCase
         Writer::arrow();
     }
 
-    public function test_php_factory_creates_writer_with_php_engine() : void
+    public function test_php_factory_creates_writer_with_php_engine(): void
     {
         $writer = Writer::php();
 
         $reflection = new \ReflectionClass($writer);
         $engine = $reflection->getProperty('engine')->getValue($writer);
 
-        self::assertInstanceOf(PhpParquetEngine::class, $engine);
+        static::assertInstanceOf(PhpParquetEngine::class, $engine);
     }
 }

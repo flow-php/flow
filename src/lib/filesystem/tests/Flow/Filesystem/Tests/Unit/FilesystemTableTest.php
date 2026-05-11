@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Unit;
 
-use function Flow\Telemetry\DSL\{memory_span_processor, void_exporter};
 use Flow\Filesystem\Exception\InvalidArgumentException;
-use Flow\Filesystem\{Filesystem, FilesystemTable, Mount};
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\FilesystemTable;
+use Flow\Filesystem\Mount;
 use Flow\Filesystem\Telemetry\TraceableFilesystem;
 use Flow\Filesystem\Tests\Mother\FilesystemTelemetryConfigMother;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Telemetry\DSL\memory_span_processor;
+use function Flow\Telemetry\DSL\void_exporter;
+
 final class FilesystemTableTest extends TestCase
 {
-    public function test_duplicate_protocol_throws() : void
+    public function test_duplicate_protocol_throws(): void
     {
         $first = $this->filesystem('warehouse');
         $second = $this->filesystem('warehouse');
@@ -26,15 +30,15 @@ final class FilesystemTableTest extends TestCase
         $fstab->mount($second);
     }
 
-    public function test_for_resolves_by_protocol_string() : void
+    public function test_for_resolves_by_protocol_string(): void
     {
         $fs = $this->filesystem('warehouse');
         $fstab = new FilesystemTable($fs);
 
-        self::assertSame($fs, $fstab->for('warehouse'));
+        static::assertSame($fs, $fstab->for('warehouse'));
     }
 
-    public function test_for_throws_when_protocol_not_mounted() : void
+    public function test_for_throws_when_protocol_not_mounted(): void
     {
         $fstab = new FilesystemTable();
 
@@ -44,7 +48,7 @@ final class FilesystemTableTest extends TestCase
         $fstab->for('missing');
     }
 
-    public function test_mount_does_not_double_wrap_traceable_filesystem() : void
+    public function test_mount_does_not_double_wrap_traceable_filesystem(): void
     {
         $fstab = new FilesystemTable();
         $spanProcessor = memory_span_processor(void_exporter());
@@ -56,21 +60,21 @@ final class FilesystemTableTest extends TestCase
         $fstab->withTelemetry($config);
         $fstab->mount($traceableFs);
 
-        self::assertSame($traceableFs, $fstab->for('s3'));
+        static::assertSame($traceableFs, $fstab->for('s3'));
     }
 
-    public function test_mount_does_not_wrap_when_telemetry_not_configured() : void
+    public function test_mount_does_not_wrap_when_telemetry_not_configured(): void
     {
         $fstab = new FilesystemTable();
         $fs = $this->filesystem('azure');
 
         $fstab->mount($fs);
 
-        self::assertNotInstanceOf(TraceableFilesystem::class, $fstab->for('azure'));
-        self::assertSame($fs, $fstab->for('azure'));
+        static::assertNotInstanceOf(TraceableFilesystem::class, $fstab->for('azure'));
+        static::assertSame($fs, $fstab->for('azure'));
     }
 
-    public function test_mount_wraps_new_filesystem_when_telemetry_configured() : void
+    public function test_mount_wraps_new_filesystem_when_telemetry_configured(): void
     {
         $fstab = new FilesystemTable();
         $spanProcessor = memory_span_processor(void_exporter());
@@ -79,10 +83,10 @@ final class FilesystemTableTest extends TestCase
         $fstab->withTelemetry($config);
         $fstab->mount($this->filesystem('gcs'));
 
-        self::assertInstanceOf(TraceableFilesystem::class, $fstab->for('gcs'));
+        static::assertInstanceOf(TraceableFilesystem::class, $fstab->for('gcs'));
     }
 
-    public function test_unmount_removes_the_mount() : void
+    public function test_unmount_removes_the_mount(): void
     {
         $fs = $this->filesystem('warehouse');
         $fstab = new FilesystemTable($fs);
@@ -95,7 +99,7 @@ final class FilesystemTableTest extends TestCase
         $fstab->for('warehouse');
     }
 
-    public function test_unmount_throws_when_protocol_not_mounted() : void
+    public function test_unmount_throws_when_protocol_not_mounted(): void
     {
         $fstab = new FilesystemTable();
 
@@ -105,7 +109,7 @@ final class FilesystemTableTest extends TestCase
         $fstab->unmount($this->filesystem('missing'));
     }
 
-    public function test_with_telemetry_skips_already_traceable_filesystems() : void
+    public function test_with_telemetry_skips_already_traceable_filesystems(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
@@ -115,10 +119,10 @@ final class FilesystemTableTest extends TestCase
 
         $fstab->withTelemetry($config);
 
-        self::assertSame($traceableFs, $fstab->for('sftp'));
+        static::assertSame($traceableFs, $fstab->for('sftp'));
     }
 
-    public function test_with_telemetry_wraps_existing_filesystems_in_traceable() : void
+    public function test_with_telemetry_wraps_existing_filesystems_in_traceable(): void
     {
         $fstab = new FilesystemTable($this->filesystem('ftp'));
         $spanProcessor = memory_span_processor(void_exporter());
@@ -126,10 +130,10 @@ final class FilesystemTableTest extends TestCase
 
         $fstab->withTelemetry($config);
 
-        self::assertInstanceOf(TraceableFilesystem::class, $fstab->for('ftp'));
+        static::assertInstanceOf(TraceableFilesystem::class, $fstab->for('ftp'));
     }
 
-    private function filesystem(string $protocol) : Filesystem
+    private function filesystem(string $protocol): Filesystem
     {
         $mock = $this->createMock(Filesystem::class);
         $mock->method('mount')->willReturn(new Mount($protocol));

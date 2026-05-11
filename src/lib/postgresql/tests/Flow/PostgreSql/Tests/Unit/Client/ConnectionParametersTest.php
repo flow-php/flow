@@ -9,42 +9,36 @@ use PHPUnit\Framework\TestCase;
 
 final class ConnectionParametersTest extends TestCase
 {
-    public function test_debug_info_masks_password() : void
+    public function test_debug_info_masks_password(): void
     {
-        $params = ConnectionParameters::fromParams(
-            database: 'testdb',
-            user: 'admin',
-            password: 'supersecret',
-        );
+        $params = ConnectionParameters::fromParams(database: 'testdb', user: 'admin', password: 'supersecret');
 
         $debugInfo = $params->__debugInfo();
 
-        self::assertSame('***', $debugInfo['password']);
-        self::assertSame('admin', $debugInfo['user']);
-        self::assertSame('testdb', $debugInfo['database']);
+        static::assertSame('***', $debugInfo['password']);
+        static::assertSame('admin', $debugInfo['user']);
+        static::assertSame('testdb', $debugInfo['database']);
     }
 
-    public function test_debug_info_shows_null_for_no_password() : void
+    public function test_debug_info_shows_null_for_no_password(): void
     {
         $params = ConnectionParameters::fromParams(database: 'testdb');
 
         $debugInfo = $params->__debugInfo();
 
-        self::assertNull($debugInfo['password']);
+        static::assertNull($debugInfo['password']);
     }
 
-    public function test_from_params_basic() : void
+    public function test_from_params_basic(): void
     {
-        $params = ConnectionParameters::fromParams(
-            database: 'testdb',
-        );
+        $params = ConnectionParameters::fromParams(database: 'testdb');
 
-        self::assertStringContainsString('host=localhost', $params->toString());
-        self::assertStringContainsString('port=5432', $params->toString());
-        self::assertStringContainsString('dbname=testdb', $params->toString());
+        static::assertStringContainsString('host=localhost', $params->toString());
+        static::assertStringContainsString('port=5432', $params->toString());
+        static::assertStringContainsString('dbname=testdb', $params->toString());
     }
 
-    public function test_from_params_returns_correct_getters() : void
+    public function test_from_params_returns_correct_getters(): void
     {
         $params = ConnectionParameters::fromParams(
             database: 'testdb',
@@ -55,15 +49,15 @@ final class ConnectionParametersTest extends TestCase
             options: ['sslmode' => 'require'],
         );
 
-        self::assertSame('db.example.com', $params->host());
-        self::assertSame(5433, $params->port());
-        self::assertSame('testdb', $params->database());
-        self::assertSame('admin', $params->user());
-        self::assertSame('secret123', $params->password());
-        self::assertSame(['sslmode' => 'require'], $params->options());
+        static::assertSame('db.example.com', $params->host());
+        static::assertSame(5433, $params->port());
+        static::assertSame('testdb', $params->database());
+        static::assertSame('admin', $params->user());
+        static::assertSame('secret123', $params->password());
+        static::assertSame(['sslmode' => 'require'], $params->options());
     }
 
-    public function test_from_params_with_credentials() : void
+    public function test_from_params_with_credentials(): void
     {
         $params = ConnectionParameters::fromParams(
             database: 'testdb',
@@ -73,53 +67,48 @@ final class ConnectionParametersTest extends TestCase
             password: 'secret123',
         );
 
-        self::assertStringContainsString('host=db.example.com', $params->toString());
-        self::assertStringContainsString('port=5433', $params->toString());
-        self::assertStringContainsString('dbname=testdb', $params->toString());
-        self::assertStringContainsString('user=admin', $params->toString());
-        self::assertStringContainsString('password=secret123', $params->toString());
+        static::assertStringContainsString('host=db.example.com', $params->toString());
+        static::assertStringContainsString('port=5433', $params->toString());
+        static::assertStringContainsString('dbname=testdb', $params->toString());
+        static::assertStringContainsString('user=admin', $params->toString());
+        static::assertStringContainsString('password=secret123', $params->toString());
     }
 
-    public function test_from_params_with_options() : void
+    public function test_from_params_with_options(): void
     {
-        $params = ConnectionParameters::fromParams(
-            database: 'testdb',
-            options: [
-                'sslmode' => 'require',
-                'connect_timeout' => '10',
-            ],
-        );
+        $params = ConnectionParameters::fromParams(database: 'testdb', options: [
+            'sslmode' => 'require',
+            'connect_timeout' => '10',
+        ]);
 
-        self::assertStringContainsString('sslmode=require', $params->toString());
-        self::assertStringContainsString('connect_timeout=10', $params->toString());
+        static::assertStringContainsString('sslmode=require', $params->toString());
+        static::assertStringContainsString('connect_timeout=10', $params->toString());
     }
 
-    public function test_from_params_without_optional_credentials() : void
+    public function test_from_params_without_optional_credentials(): void
     {
-        $params = ConnectionParameters::fromParams(
-            database: 'testdb',
-        );
+        $params = ConnectionParameters::fromParams(database: 'testdb');
 
-        self::assertStringNotContainsString('user=', $params->toString());
-        self::assertStringNotContainsString('password=', $params->toString());
-        self::assertNull($params->user());
-        self::assertNull($params->password());
+        static::assertStringNotContainsString('user=', $params->toString());
+        static::assertStringNotContainsString('password=', $params->toString());
+        static::assertNull($params->user());
+        static::assertNull($params->password());
     }
 
-    public function test_from_string() : void
+    public function test_from_string(): void
     {
         $connectionString = 'host=localhost port=5432 dbname=test user=postgres password=secret';
 
         $params = ConnectionParameters::fromString($connectionString);
 
-        self::assertSame('localhost', $params->host());
-        self::assertSame(5432, $params->port());
-        self::assertSame('test', $params->database());
-        self::assertSame('postgres', $params->user());
-        self::assertSame('secret', $params->password());
+        static::assertSame('localhost', $params->host());
+        static::assertSame(5432, $params->port());
+        static::assertSame('test', $params->database());
+        static::assertSame('postgres', $params->user());
+        static::assertSame('secret', $params->password());
     }
 
-    public function test_from_string_throws_exception_when_dbname_missing() : void
+    public function test_from_string_throws_exception_when_dbname_missing(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Missing dbname in connection string');
@@ -127,36 +116,36 @@ final class ConnectionParametersTest extends TestCase
         ConnectionParameters::fromString('host=localhost port=5432');
     }
 
-    public function test_from_string_with_defaults() : void
+    public function test_from_string_with_defaults(): void
     {
         $params = ConnectionParameters::fromString('dbname=test');
 
-        self::assertSame('localhost', $params->host());
-        self::assertSame(5432, $params->port());
-        self::assertSame('test', $params->database());
-        self::assertNull($params->user());
-        self::assertNull($params->password());
+        static::assertSame('localhost', $params->host());
+        static::assertSame(5432, $params->port());
+        static::assertSame('test', $params->database());
+        static::assertNull($params->user());
+        static::assertNull($params->password());
     }
 
-    public function test_from_string_with_options() : void
+    public function test_from_string_with_options(): void
     {
         $connectionString = 'host=localhost port=5432 dbname=test sslmode=require connect_timeout=10';
 
         $params = ConnectionParameters::fromString($connectionString);
 
-        self::assertSame(['sslmode' => 'require', 'connect_timeout' => '10'], $params->options());
+        static::assertSame(['sslmode' => 'require', 'connect_timeout' => '10'], $params->options());
     }
 
-    public function test_from_string_with_quoted_password() : void
+    public function test_from_string_with_quoted_password(): void
     {
         $connectionString = "host=localhost dbname=test password='my secret pass'";
 
         $params = ConnectionParameters::fromString($connectionString);
 
-        self::assertSame('my secret pass', $params->password());
+        static::assertSame('my secret pass', $params->password());
     }
 
-    public function test_to_string_roundtrip() : void
+    public function test_to_string_roundtrip(): void
     {
         $original = ConnectionParameters::fromParams(
             database: 'testdb',
@@ -170,107 +159,104 @@ final class ConnectionParametersTest extends TestCase
         $connectionString = $original->toString();
         $parsed = ConnectionParameters::fromString($connectionString);
 
-        self::assertSame($original->host(), $parsed->host());
-        self::assertSame($original->port(), $parsed->port());
-        self::assertSame($original->database(), $parsed->database());
-        self::assertSame($original->user(), $parsed->user());
-        self::assertSame($original->password(), $parsed->password());
-        self::assertSame($original->options(), $parsed->options());
+        static::assertSame($original->host(), $parsed->host());
+        static::assertSame($original->port(), $parsed->port());
+        static::assertSame($original->database(), $parsed->database());
+        static::assertSame($original->user(), $parsed->user());
+        static::assertSame($original->password(), $parsed->password());
+        static::assertSame($original->options(), $parsed->options());
     }
 
-    public function test_with_database() : void
+    public function test_with_database(): void
     {
         $params = ConnectionParameters::fromParams(database: 'testdb');
 
         $modified = $params->withDatabase('testdb_test');
 
-        self::assertSame('testdb', $params->database());
-        self::assertSame('testdb_test', $modified->database());
-        self::assertNotSame($params, $modified);
+        static::assertSame('testdb', $params->database());
+        static::assertSame('testdb_test', $modified->database());
+        static::assertNotSame($params, $modified);
     }
 
-    public function test_with_database_allows_appending_suffix() : void
+    public function test_with_database_allows_appending_suffix(): void
     {
         $params = ConnectionParameters::fromParams(database: 'myapp');
 
         $testParams = $params->withDatabase($params->database() . '_test');
 
-        self::assertSame('myapp_test', $testParams->database());
+        static::assertSame('myapp_test', $testParams->database());
     }
 
-    public function test_with_host() : void
+    public function test_with_host(): void
     {
         $params = ConnectionParameters::fromParams(database: 'testdb', host: 'localhost');
 
         $modified = $params->withHost('db.production.com');
 
-        self::assertSame('localhost', $params->host());
-        self::assertSame('db.production.com', $modified->host());
+        static::assertSame('localhost', $params->host());
+        static::assertSame('db.production.com', $modified->host());
     }
 
-    public function test_with_option() : void
+    public function test_with_option(): void
     {
         $params = ConnectionParameters::fromParams(database: 'testdb');
 
         $modified = $params->withOption('sslmode', 'require');
 
-        self::assertSame([], $params->options());
-        self::assertSame(['sslmode' => 'require'], $modified->options());
+        static::assertSame([], $params->options());
+        static::assertSame(['sslmode' => 'require'], $modified->options());
     }
 
-    public function test_with_option_adds_to_existing() : void
+    public function test_with_option_adds_to_existing(): void
     {
-        $params = ConnectionParameters::fromParams(
-            database: 'testdb',
-            options: ['sslmode' => 'require'],
-        );
+        $params = ConnectionParameters::fromParams(database: 'testdb', options: ['sslmode' => 'require']);
 
         $modified = $params->withOption('connect_timeout', '10');
 
-        self::assertSame(['sslmode' => 'require'], $params->options());
-        self::assertSame(['sslmode' => 'require', 'connect_timeout' => '10'], $modified->options());
+        static::assertSame(['sslmode' => 'require'], $params->options());
+        static::assertSame(['sslmode' => 'require', 'connect_timeout' => '10'], $modified->options());
     }
 
-    public function test_with_options_replaces_all() : void
+    public function test_with_options_replaces_all(): void
     {
-        $params = ConnectionParameters::fromParams(
-            database: 'testdb',
-            options: ['sslmode' => 'require', 'connect_timeout' => '10'],
-        );
+        $params = ConnectionParameters::fromParams(database: 'testdb', options: [
+            'sslmode' => 'require',
+            'connect_timeout' => '10',
+        ]);
 
         $modified = $params->withOptions(['application_name' => 'myapp']);
 
-        self::assertSame(['sslmode' => 'require', 'connect_timeout' => '10'], $params->options());
-        self::assertSame(['application_name' => 'myapp'], $modified->options());
+        static::assertSame(['sslmode' => 'require', 'connect_timeout' => '10'], $params->options());
+        static::assertSame(['application_name' => 'myapp'], $modified->options());
     }
 
-    public function test_with_password() : void
+    public function test_with_password(): void
     {
         $params = ConnectionParameters::fromParams(database: 'testdb', password: 'secret');
 
         $modified = $params->withPassword('newsecret');
 
-        self::assertSame('secret', $params->password());
-        self::assertSame('newsecret', $modified->password());
+        static::assertSame('secret', $params->password());
+        static::assertSame('newsecret', $modified->password());
     }
 
-    public function test_with_port() : void
+    public function test_with_port(): void
     {
         $params = ConnectionParameters::fromParams(database: 'testdb', port: 5432);
 
         $modified = $params->withPort(5433);
 
-        self::assertSame(5432, $params->port());
-        self::assertSame(5433, $modified->port());
+        static::assertSame(5432, $params->port());
+        static::assertSame(5433, $modified->port());
     }
 
-    public function test_with_user() : void
+    public function test_with_user(): void
     {
         $params = ConnectionParameters::fromParams(database: 'testdb', user: 'admin');
 
         $modified = $params->withUser('readonly');
 
-        self::assertSame('admin', $params->user());
-        self::assertSame('readonly', $modified->user());
+        static::assertSame('admin', $params->user());
+        static::assertSame('readonly', $modified->user());
     }
 }

@@ -4,29 +4,31 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native\String;
 
-use function Flow\Types\DSL\{type_boolean,
-    type_date,
-    type_datetime,
-    type_float,
-    type_html,
-    type_integer,
-    type_json,
-    type_null,
-    type_string,
-    type_time_zone,
-    type_uuid,
-    type_xml};
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\TypeNarrower;
-use Flow\Types\Value\{Json, Uuid};
+use Flow\Types\Value\Json;
+use Flow\Types\Value\Uuid;
+
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_date;
+use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_html;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_json;
+use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_time_zone;
+use function Flow\Types\DSL\type_uuid;
+use function Flow\Types\DSL\type_xml;
 
 final class StringTypeNarrower implements TypeNarrower
 {
     /**
      * @return Type<mixed>
      */
-    public function narrow(mixed $value) : Type
+    public function narrow(mixed $value): Type
     {
         if (!\is_string($value)) {
             return type_string();
@@ -57,7 +59,7 @@ final class StringTypeNarrower implements TypeNarrower
     /**
      * @param non-empty-string $value
      */
-    private function isBoolean(string $value) : bool
+    private function isBoolean(string $value): bool
     {
         return \in_array(\strtolower($value), ['true', 'false'], true);
     }
@@ -65,7 +67,7 @@ final class StringTypeNarrower implements TypeNarrower
     /**
      * @param non-empty-string $value
      */
-    private function isDate(string $value) : bool
+    private function isDate(string $value): bool
     {
         $dateParts = \date_parse($value);
 
@@ -112,7 +114,7 @@ final class StringTypeNarrower implements TypeNarrower
     /**
      * @param non-empty-string $value
      */
-    private function isDateTime(string $value) : bool
+    private function isDateTime(string $value): bool
     {
         $dateParts = \date_parse($value);
 
@@ -137,7 +139,8 @@ final class StringTypeNarrower implements TypeNarrower
             return false;
         }
 
-        $hasDirectTime = ($dateParts['hour'] ?? false) !== false
+        $hasDirectTime =
+            ($dateParts['hour'] ?? false) !== false
             || ($dateParts['minute'] ?? false) !== false
             || ($dateParts['second'] ?? false) !== false
             || ($dateParts['fraction'] ?? false) !== false;
@@ -149,7 +152,11 @@ final class StringTypeNarrower implements TypeNarrower
         if (\is_array($dateParts['relative'] ?? false)) {
             $relative = $dateParts['relative'];
 
-            return ($relative['hour'] ?? 0) !== 0 || ($relative['minute'] ?? 0) !== 0 || ($relative['second'] ?? 0) !== 0;
+            return (
+                ($relative['hour'] ?? 0) !== 0
+                || ($relative['minute'] ?? 0) !== 0
+                || ($relative['second'] ?? 0) !== 0
+            );
         }
 
         return false;
@@ -158,7 +165,7 @@ final class StringTypeNarrower implements TypeNarrower
     /**
      * @param non-empty-string $value
      */
-    private function isFloat(string $value) : bool
+    private function isFloat(string $value): bool
     {
         if (!\is_numeric($value)) {
             return false;
@@ -175,7 +182,7 @@ final class StringTypeNarrower implements TypeNarrower
     /**
      * @param non-empty-string $value
      */
-    private function isHTML(string $value) : bool
+    private function isHTML(string $value): bool
     {
         if ('<' !== $value[0]) {
             return false;
@@ -187,10 +194,10 @@ final class StringTypeNarrower implements TypeNarrower
     /**
      * @param non-empty-string $value
      */
-    private function isInteger(string $value) : bool
+    private function isInteger(string $value): bool
     {
         if (\is_numeric($value)) {
-            return (string) ((int) $value) === $value;
+            return (string) (int) $value === $value;
         }
 
         return false;
@@ -199,7 +206,7 @@ final class StringTypeNarrower implements TypeNarrower
     /**
      * @param non-empty-string $value
      */
-    private function isJson(string $value) : bool
+    private function isJson(string $value): bool
     {
         return Json::isValid($value);
     }
@@ -207,7 +214,7 @@ final class StringTypeNarrower implements TypeNarrower
     /**
      * @param non-empty-string $value
      */
-    private function isNull(string $value) : bool
+    private function isNull(string $value): bool
     {
         return \in_array(\mb_strtolower($value), ['null', 'nil'], true);
     }
@@ -215,7 +222,7 @@ final class StringTypeNarrower implements TypeNarrower
     /**
      * @param non-empty-string $value
      */
-    private function isTimeZone(string $value) : bool
+    private function isTimeZone(string $value): bool
     {
         if (\in_array($value, \DateTimeZone::listIdentifiers(), true)) {
             return true;
@@ -237,7 +244,7 @@ final class StringTypeNarrower implements TypeNarrower
     /**
      * @param non-empty-string $value
      */
-    private function isUuid(string $value) : bool
+    private function isUuid(string $value): bool
     {
         return Uuid::isValid($value);
     }
@@ -245,7 +252,7 @@ final class StringTypeNarrower implements TypeNarrower
     /**
      * @param non-empty-string $value
      */
-    private function isXML(string $value) : bool
+    private function isXML(string $value): bool
     {
         if ('<' !== $value[0]) {
             return false;

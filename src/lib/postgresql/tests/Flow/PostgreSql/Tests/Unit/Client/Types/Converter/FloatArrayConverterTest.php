@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 final class FloatArrayConverterTest extends TestCase
 {
-    public static function provide_non_array_values() : \Generator
+    public static function provide_non_array_values(): \Generator
     {
         yield 'string' => ['not an array', '{}'];
         yield 'integer' => [12345, '{}'];
@@ -22,7 +22,7 @@ final class FloatArrayConverterTest extends TestCase
         yield 'object' => [new \stdClass(), '{}'];
     }
 
-    public static function provide_valid_values() : \Generator
+    public static function provide_valid_values(): \Generator
     {
         yield 'float array' => [[1.5, 2.7, 3.9], '{1.5,2.7,3.9}'];
         yield 'empty array' => [[], '{}'];
@@ -39,7 +39,7 @@ final class FloatArrayConverterTest extends TestCase
         yield 'mixed positive negative' => [[-1.5, 0.0, 1.5], '{-1.5,0,1.5}'];
     }
 
-    public function test_invalid_element_throws_exception() : void
+    public function test_invalid_element_throws_exception(): void
     {
         $converter = new FloatArrayConverter();
         $this->expectException(ValueConversionException::class);
@@ -47,32 +47,32 @@ final class FloatArrayConverterTest extends TestCase
     }
 
     #[DataProvider('provide_non_array_values')]
-    public function test_non_array_returns_empty_braces(mixed $input, string $expected) : void
+    public function test_non_array_returns_empty_braces(mixed $input, string $expected): void
     {
         $converter = new FloatArrayConverter();
-        self::assertSame($expected, $converter->toDatabase($input));
+        static::assertSame($expected, $converter->toDatabase($input));
     }
 
-    public function test_null_handling() : void
+    public function test_null_handling(): void
     {
         $converter = new FloatArrayConverter();
-        self::assertNull($converter->toDatabase(null));
+        static::assertNull($converter->toDatabase(null));
     }
 
-    public function test_supported_types() : void
+    public function test_supported_types(): void
     {
         $converter = new FloatArrayConverter();
         $types = $converter->supportedTypes();
 
-        self::assertContains(ValueType::FLOAT4_ARRAY, $types);
-        self::assertContains(ValueType::FLOAT8_ARRAY, $types);
-        self::assertCount(2, $types);
+        static::assertContains(ValueType::FLOAT4_ARRAY, $types);
+        static::assertContains(ValueType::FLOAT8_ARRAY, $types);
+        static::assertCount(2, $types);
     }
 
     #[DataProvider('provide_valid_values')]
-    public function test_to_database(array $input, string $expected) : void
+    public function test_to_database(array $input, string $expected): void
     {
         $converter = new FloatArrayConverter();
-        self::assertSame($expected, $converter->toDatabase($input));
+        static::assertSame($expected, $converter->toDatabase($input));
     }
 }

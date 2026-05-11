@@ -4,7 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Types;
 
-use Flow\PostgreSql\Client\Types\Converter\{BoolArrayConverter, BooleanConverter, ByteaConverter, CidrConverter, DateConverter, DateTimeConverter, FloatArrayConverter, FloatConverter, InetConverter, IntArrayConverter, IntegerConverter, IntervalConverter, JsonArrayConverter, JsonConverter, MoneyConverter, MultirangeConverter, NumericConverter, StringConverter, TextArrayConverter, TimeConverter, UuidArrayConverter, UuidConverter};
+use Flow\PostgreSql\Client\Types\Converter\BoolArrayConverter;
+use Flow\PostgreSql\Client\Types\Converter\BooleanConverter;
+use Flow\PostgreSql\Client\Types\Converter\ByteaConverter;
+use Flow\PostgreSql\Client\Types\Converter\CidrConverter;
+use Flow\PostgreSql\Client\Types\Converter\DateConverter;
+use Flow\PostgreSql\Client\Types\Converter\DateTimeConverter;
+use Flow\PostgreSql\Client\Types\Converter\FloatArrayConverter;
+use Flow\PostgreSql\Client\Types\Converter\FloatConverter;
+use Flow\PostgreSql\Client\Types\Converter\InetConverter;
+use Flow\PostgreSql\Client\Types\Converter\IntArrayConverter;
+use Flow\PostgreSql\Client\Types\Converter\IntegerConverter;
+use Flow\PostgreSql\Client\Types\Converter\IntervalConverter;
+use Flow\PostgreSql\Client\Types\Converter\JsonArrayConverter;
+use Flow\PostgreSql\Client\Types\Converter\JsonConverter;
+use Flow\PostgreSql\Client\Types\Converter\MoneyConverter;
+use Flow\PostgreSql\Client\Types\Converter\MultirangeConverter;
+use Flow\PostgreSql\Client\Types\Converter\NumericConverter;
+use Flow\PostgreSql\Client\Types\Converter\StringConverter;
+use Flow\PostgreSql\Client\Types\Converter\TextArrayConverter;
+use Flow\PostgreSql\Client\Types\Converter\TimeConverter;
+use Flow\PostgreSql\Client\Types\Converter\UuidArrayConverter;
+use Flow\PostgreSql\Client\Types\Converter\UuidConverter;
 
 final class ValueConverters
 {
@@ -26,20 +47,19 @@ final class ValueConverters
     /**
      * Create with default converters for a specific PostgreSQL version.
      */
-    public static function create(PostgreSqlVersion $version = PostgreSqlVersion::V17) : self
+    public static function create(PostgreSqlVersion $version = PostgreSqlVersion::V17): self
     {
         return new self(self::defaultConverters($version));
     }
 
-    public function forValueType(ValueType $type) : ValueConverter
+    public function forValueType(ValueType $type): ValueConverter
     {
         if (isset($this->pgTypeConverters[$type->value])) {
             return $this->pgTypeConverters[$type->value];
         }
 
         if ($this->isArrayType($type)) {
-            return $this->pgTypeConverters[ValueType::TEXT_ARRAY->value]
-                ?? $this->fallbackConverter;
+            return $this->pgTypeConverters[ValueType::TEXT_ARRAY->value] ?? $this->fallbackConverter;
         }
 
         return $this->fallbackConverter;
@@ -48,7 +68,7 @@ final class ValueConverters
     /**
      * Check if a converter exists for the given PostgreSQL type.
      */
-    public function has(ValueType $type) : bool
+    public function has(ValueType $type): bool
     {
         return isset($this->pgTypeConverters[$type->value]) || $this->isArrayType($type);
     }
@@ -56,7 +76,7 @@ final class ValueConverters
     /**
      * Register a value converter for its supported types.
      */
-    public function register(ValueConverter $converter) : void
+    public function register(ValueConverter $converter): void
     {
         foreach ($converter->supportedTypes() as $type) {
             $this->pgTypeConverters[$type->value] = $converter;
@@ -66,12 +86,12 @@ final class ValueConverters
     /**
      * Unregister a converter for the given PostgreSQL type.
      */
-    public function unregister(ValueType $type) : void
+    public function unregister(ValueType $type): void
     {
         unset($this->pgTypeConverters[$type->value]);
     }
 
-    private function isArrayType(ValueType $type) : bool
+    private function isArrayType(ValueType $type): bool
     {
         return match ($type) {
             ValueType::BOOL_ARRAY,
@@ -84,7 +104,8 @@ final class ValueConverters
             ValueType::VARCHAR_ARRAY,
             ValueType::UUID_ARRAY,
             ValueType::JSON_ARRAY,
-            ValueType::JSONB_ARRAY => true,
+            ValueType::JSONB_ARRAY,
+                => true,
             default => false,
         };
     }
@@ -92,7 +113,7 @@ final class ValueConverters
     /**
      * @return list<ValueConverter>
      */
-    private static function defaultConverters(PostgreSqlVersion $version) : array
+    private static function defaultConverters(PostgreSqlVersion $version): array
     {
         $converters = [
             new StringConverter(),

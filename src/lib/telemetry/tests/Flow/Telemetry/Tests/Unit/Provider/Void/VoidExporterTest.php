@@ -7,40 +7,44 @@ namespace Flow\Telemetry\Tests\Unit\Provider\Void;
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Logger\Severity;
-use Flow\Telemetry\Meter\{Metric, MetricType};
+use Flow\Telemetry\Meter\Metric;
+use Flow\Telemetry\Meter\MetricType;
 use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Signal\Signals;
-use Flow\Telemetry\Tests\Mother\{InstrumentationScopeMother, LogEntryMother, ResourceMother, SpanMother};
+use Flow\Telemetry\Tests\Mother\InstrumentationScopeMother;
+use Flow\Telemetry\Tests\Mother\LogEntryMother;
+use Flow\Telemetry\Tests\Mother\ResourceMother;
+use Flow\Telemetry\Tests\Mother\SpanMother;
 use PHPUnit\Framework\TestCase;
 
 final class VoidExporterTest extends TestCase
 {
-    public function test_export_empty_logs_returns_true() : void
+    public function test_export_empty_logs_returns_true(): void
     {
-        self::assertTrue((new VoidExporter())->export(Signals::logs([])));
+        static::assertTrue((new VoidExporter())->export(Signals::logs([])));
     }
 
-    public function test_export_empty_metrics_returns_true() : void
+    public function test_export_empty_metrics_returns_true(): void
     {
-        self::assertTrue((new VoidExporter())->export(Signals::metrics([])));
+        static::assertTrue((new VoidExporter())->export(Signals::metrics([])));
     }
 
-    public function test_export_empty_traces_returns_true() : void
+    public function test_export_empty_traces_returns_true(): void
     {
-        self::assertTrue((new VoidExporter())->export(Signals::traces([])));
+        static::assertTrue((new VoidExporter())->export(Signals::traces([])));
     }
 
-    public function test_export_logs_batch_returns_true() : void
+    public function test_export_logs_batch_returns_true(): void
     {
         $batch = Signals::logs([
             LogEntryMother::create('Log 1', Severity::INFO),
             LogEntryMother::create('Log 2', Severity::WARN),
         ]);
 
-        self::assertTrue((new VoidExporter())->export($batch));
+        static::assertTrue((new VoidExporter())->export($batch));
     }
 
-    public function test_export_metrics_batch_returns_true() : void
+    public function test_export_metrics_batch_returns_true(): void
     {
         $batch = Signals::metrics([
             new Metric(
@@ -54,25 +58,25 @@ final class VoidExporterTest extends TestCase
             ),
         ]);
 
-        self::assertTrue((new VoidExporter())->export($batch));
+        static::assertTrue((new VoidExporter())->export($batch));
     }
 
-    public function test_export_traces_batch_returns_true() : void
+    public function test_export_traces_batch_returns_true(): void
     {
         $batch = Signals::traces([
             SpanMother::withName('span-1'),
             SpanMother::withName('span-2'),
         ]);
 
-        self::assertTrue((new VoidExporter())->export($batch));
+        static::assertTrue((new VoidExporter())->export($batch));
     }
 
-    public function test_implements_exporter() : void
+    public function test_implements_exporter(): void
     {
-        self::assertInstanceOf(Exporter::class, new VoidExporter());
+        static::assertInstanceOf(Exporter::class, new VoidExporter());
     }
 
-    public function test_shutdown_is_noop() : void
+    public function test_shutdown_is_noop(): void
     {
         $exporter = new VoidExporter();
 

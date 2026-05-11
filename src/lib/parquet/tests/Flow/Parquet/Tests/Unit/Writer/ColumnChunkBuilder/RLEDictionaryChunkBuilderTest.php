@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\Writer\ColumnChunkBuilder;
 
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
-use Flow\Parquet\{Option, Options};
-use Flow\Parquet\ParquetFile\{Compressions, Encodings};
+use Flow\Parquet\Option;
+use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Data\Codec;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
+use Flow\Parquet\ParquetFile\Encodings;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Writer\ColumnChunkBuilder\RLEDictionaryChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkContainer;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -16,14 +20,14 @@ use PHPUnit\Framework\TestCase;
 
 final class RLEDictionaryChunkBuilderTest extends TestCase
 {
-    public static function compression_types_provider() : \Generator
+    public static function compression_types_provider(): \Generator
     {
         yield 'uncompressed' => [Compressions::UNCOMPRESSED];
         yield 'gzip' => [Compressions::GZIP];
         yield 'snappy' => [Compressions::SNAPPY];
     }
 
-    public static function dictionary_data_provider() : \Generator
+    public static function dictionary_data_provider(): \Generator
     {
         yield 'string repetition' => [
             ['apple', 'banana', 'apple', 'cherry', 'banana', 'apple'],
@@ -51,14 +55,14 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         ];
     }
 
-    public static function page_size_provider() : \Generator
+    public static function page_size_provider(): \Generator
     {
         yield 'small page' => [1024];
         yield 'medium page' => [8192];
         yield 'large page' => [65536];
     }
 
-    public static function physical_types_provider() : \Generator
+    public static function physical_types_provider(): \Generator
     {
         yield 'int32' => [PhysicalType::INT32, [10, 20, 10, 30, 20]];
         yield 'int64' => [PhysicalType::INT64, [1234567890123, 9876543210987, 1234567890123]];
@@ -68,13 +72,13 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         yield 'byte_array' => [PhysicalType::BYTE_ARRAY, ['hello', 'world', 'hello', 'test', 'world']];
     }
 
-    public static function writer_version_provider() : \Generator
+    public static function writer_version_provider(): \Generator
     {
         yield 'version 1' => [1];
         yield 'version 2' => [2];
     }
 
-    public function test_add_multiple_rows() : void
+    public function test_add_multiple_rows(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -85,15 +89,15 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
             $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ["value_{$i}"]));
         }
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
     /**
      * @param array<mixed> $values
      */
     #[DataProvider('dictionary_data_provider')]
-    public function test_add_row_with_dictionary_data(array $values, string $description) : void
+    public function test_add_row_with_dictionary_data(array $values, string $description): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -115,11 +119,11 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $builder->addColumn(new WriteFlatColumnValues($column, $repLevels, $defLevels, $nonNullValues));
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_add_row_with_empty_data() : void
+    public function test_add_row_with_empty_data(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -128,11 +132,11 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $builder->addColumn(new WriteFlatColumnValues($column, [], [], []));
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_add_row_with_null_values() : void
+    public function test_add_row_with_null_values(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -141,24 +145,31 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [0], []));
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_add_row_with_repeated_values() : void
+    public function test_add_row_with_repeated_values(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
         $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
 
-        $builder->addColumn(new WriteFlatColumnValues($column, [0, 0, 0, 0, 0], [1, 1, 1, 1, 1], ['apple', 'banana', 'apple', 'cherry', 'banana']));
+        $builder->addColumn(
+            new WriteFlatColumnValues(
+                $column,
+                [0, 0, 0, 0, 0],
+                [1, 1, 1, 1, 1],
+                ['apple', 'banana', 'apple', 'cherry', 'banana'],
+            ),
+        );
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_add_row_with_single_value() : void
+    public function test_add_row_with_single_value(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -167,11 +178,11 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ['hello']));
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_build_dictionary_page_without_dictionary_throws_exception() : void
+    public function test_build_dictionary_page_without_dictionary_throws_exception(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -190,7 +201,7 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $buildDictionaryPageMethod->invoke($builder, $codec, $compression);
     }
 
-    public function test_close_page_resets_internal_state() : void
+    public function test_close_page_resets_internal_state(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -203,26 +214,28 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $builder->closePage();
         $afterSize = $builder->uncompressedSize();
 
-        self::assertGreaterThan($beforeSize, $afterSize);
+        static::assertGreaterThan($beforeSize, $afterSize);
     }
 
-    public function test_close_page_with_data_builds_dictionary() : void
+    public function test_close_page_with_data_builds_dictionary(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
         $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
 
-        $builder->addColumn(new WriteFlatColumnValues($column, [0, 0, 0, 0], [1, 1, 1, 1], ['apple', 'banana', 'apple', 'cherry']));
+        $builder->addColumn(
+            new WriteFlatColumnValues($column, [0, 0, 0, 0], [1, 1, 1, 1], ['apple', 'banana', 'apple', 'cherry']),
+        );
 
         $builder->closePage();
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThan(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThan(0, $builder->uncompressedSize());
     }
 
     #[DataProvider('writer_version_provider')]
-    public function test_close_page_with_different_writer_versions(int $writerVersion) : void
+    public function test_close_page_with_different_writer_versions(int $writerVersion): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -234,10 +247,10 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $builder->closePage();
 
-        self::assertGreaterThan(0, $builder->uncompressedSize());
+        static::assertGreaterThan(0, $builder->uncompressedSize());
     }
 
-    public function test_close_page_with_empty_data() : void
+    public function test_close_page_with_empty_data(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -246,11 +259,11 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $builder->closePage();
 
-        self::assertFalse($builder->isFull());
-        self::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isFull());
+        static::assertGreaterThanOrEqual(0, $builder->uncompressedSize());
     }
 
-    public function test_close_page_with_unsupported_writer_version_throws_exception() : void
+    public function test_close_page_with_unsupported_writer_version_throws_exception(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -261,12 +274,14 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ['test']));
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Flow Parquet Writer does not support given version of Parquet format, supported versions are [1,2], given: 3');
+        $this->expectExceptionMessage(
+            'Flow Parquet Writer does not support given version of Parquet format, supported versions are [1,2], given: 3',
+        );
 
         $builder->closePage();
     }
 
-    public function test_column_returns_correct_column() : void
+    public function test_column_returns_correct_column(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -275,10 +290,10 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $result = $builder->column();
 
-        self::assertSame($column, $result);
+        static::assertSame($column, $result);
     }
 
-    public function test_constructor_initializes_correctly() : void
+    public function test_constructor_initializes_correctly(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -286,40 +301,42 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
 
-        self::assertInstanceOf(RLEDictionaryChunkBuilder::class, $builder);
-        self::assertSame($column, $builder->column());
-        self::assertFalse($builder->isFull());
-        self::assertSame(0, $builder->uncompressedSize());
+        static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $builder);
+        static::assertSame($column, $builder->column());
+        static::assertFalse($builder->isFull());
+        static::assertSame(0, $builder->uncompressedSize());
     }
 
     #[DataProvider('compression_types_provider')]
-    public function test_constructor_with_different_compressions(Compressions $compression) : void
+    public function test_constructor_with_different_compressions(Compressions $compression): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
 
         $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
 
-        self::assertInstanceOf(RLEDictionaryChunkBuilder::class, $builder);
+        static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $builder);
     }
 
     /**
      * @param array<mixed> $sampleValues
      */
     #[DataProvider('physical_types_provider')]
-    public function test_constructor_with_different_physical_types(PhysicalType $physicalType, array $sampleValues) : void
-    {
+    public function test_constructor_with_different_physical_types(
+        PhysicalType $physicalType,
+        array $sampleValues,
+    ): void {
         $column = new FlatColumn('test_col', $physicalType);
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
 
         $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
 
-        self::assertInstanceOf(RLEDictionaryChunkBuilder::class, $builder);
-        self::assertSame($column, $builder->column());
+        static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $builder);
+        static::assertSame($column, $builder->column());
     }
 
-    public function test_dictionary_compression_efficiency() : void
+    public function test_dictionary_compression_efficiency(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -341,16 +358,16 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertSame(100, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertSame(100, $containers[0]->columnChunk->valuesCount());
 
         $encodings = $containers[0]->columnChunk->encodings();
-        self::assertContains(Encodings::RLE_DICTIONARY, $encodings);
+        static::assertContains(Encodings::RLE_DICTIONARY, $encodings);
     }
 
     #[DataProvider('compression_types_provider')]
-    public function test_different_compressions_work_correctly(Compressions $compression) : void
+    public function test_different_compressions_work_correctly(Compressions $compression): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -360,12 +377,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertSame($compression, $containers[0]->columnChunk->codec());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertSame($compression, $containers[0]->columnChunk->codec());
     }
 
-    public function test_edge_case_boolean_false_value() : void
+    public function test_edge_case_boolean_false_value(): void
     {
         $column = new FlatColumn('bool_col', PhysicalType::BOOLEAN);
         $options = new Options();
@@ -376,12 +393,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertSame(1, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertSame(1, $containers[0]->columnChunk->valuesCount());
     }
 
-    public function test_edge_case_empty_string_value() : void
+    public function test_edge_case_empty_string_value(): void
     {
         $column = new FlatColumn('str_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -392,12 +409,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
     }
 
-    public function test_edge_case_large_string_value() : void
+    public function test_edge_case_large_string_value(): void
     {
         $column = new FlatColumn('str_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -409,12 +426,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertSame(1, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertSame(1, $containers[0]->columnChunk->valuesCount());
     }
 
-    public function test_edge_case_zero_values() : void
+    public function test_edge_case_zero_values(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $options = new Options();
@@ -425,12 +442,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertSame(1, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertSame(1, $containers[0]->columnChunk->valuesCount());
     }
 
-    public function test_flush_automatically_closes_page_when_data_exists() : void
+    public function test_flush_automatically_closes_page_when_data_exists(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -441,13 +458,13 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        self::assertGreaterThan(0, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertGreaterThan(0, $containers[0]->columnChunk->valuesCount());
     }
 
-    public function test_flush_cleans_up_builder_state() : void
+    public function test_flush_cleans_up_builder_state(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -456,22 +473,22 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0, 0], [1, 1], ['hello', 'world']));
 
-        self::assertFalse($builder->isEmpty());
-        self::assertGreaterThan(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isEmpty());
+        static::assertGreaterThan(0, $builder->uncompressedSize());
 
         $containers = $builder->flush(0);
-        self::assertCount(1, $containers);
+        static::assertCount(1, $containers);
 
-        self::assertTrue($builder->isEmpty());
-        self::assertEquals(0, $builder->uncompressedSize());
+        static::assertTrue($builder->isEmpty());
+        static::assertEquals(0, $builder->uncompressedSize());
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ['test']));
 
-        self::assertFalse($builder->isEmpty());
-        self::assertGreaterThan(0, $builder->uncompressedSize());
+        static::assertFalse($builder->isEmpty());
+        static::assertGreaterThan(0, $builder->uncompressedSize());
     }
 
-    public function test_flush_preserves_column_chunk_metadata() : void
+    public function test_flush_preserves_column_chunk_metadata(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -483,13 +500,13 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $containers = $builder->flush(0);
 
         $columnChunk = $containers[0]->columnChunk;
-        self::assertSame($column->type(), $columnChunk->type());
-        self::assertSame($compression, $columnChunk->codec());
-        self::assertSame($column->flatPath(), $columnChunk->flatPath());
-        self::assertNotNull($columnChunk->statistics());
+        static::assertSame($column->type(), $columnChunk->type());
+        static::assertSame($compression, $columnChunk->codec());
+        static::assertSame($column->flatPath(), $columnChunk->flatPath());
+        static::assertNotNull($columnChunk->statistics());
     }
 
-    public function test_flush_with_data() : void
+    public function test_flush_with_data(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -500,34 +517,36 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(100);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        self::assertSame(100, $containers[0]->columnChunk->fileOffset());
-        self::assertGreaterThan(0, strlen($containers[0]->binaryBuffer));
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertSame(100, $containers[0]->columnChunk->fileOffset());
+        static::assertGreaterThan(0, strlen($containers[0]->binaryBuffer));
     }
 
-    public function test_flush_with_dictionary_includes_dictionary_page() : void
+    public function test_flush_with_dictionary_includes_dictionary_page(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
         $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
 
-        $builder->addColumn(new WriteFlatColumnValues($column, [0, 0, 0, 0], [1, 1, 1, 1], ['apple', 'banana', 'apple', 'cherry']));
+        $builder->addColumn(
+            new WriteFlatColumnValues($column, [0, 0, 0, 0], [1, 1, 1, 1], ['apple', 'banana', 'apple', 'cherry']),
+        );
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
 
         $columnChunk = $containers[0]->columnChunk;
-        self::assertNotNull($columnChunk->dictionaryPageOffset());
-        self::assertNotNull($columnChunk->dataPageOffset());
-        self::assertGreaterThan($columnChunk->dictionaryPageOffset(), $columnChunk->dataPageOffset());
+        static::assertNotNull($columnChunk->dictionaryPageOffset());
+        static::assertNotNull($columnChunk->dataPageOffset());
+        static::assertGreaterThan($columnChunk->dictionaryPageOffset(), $columnChunk->dataPageOffset());
     }
 
-    public function test_flush_with_different_file_offsets() : void
+    public function test_flush_with_different_file_offsets(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -539,13 +558,13 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         foreach ($offsets as $offset) {
             $containers = $builder->flush($offset);
 
-            self::assertIsArray($containers);
-            self::assertCount(1, $containers);
-            self::assertSame($offset, $containers[0]->columnChunk->fileOffset());
+            static::assertIsArray($containers);
+            static::assertCount(1, $containers);
+            static::assertSame($offset, $containers[0]->columnChunk->fileOffset());
         }
     }
 
-    public function test_flush_with_empty_data() : void
+    public function test_flush_with_empty_data(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -554,24 +573,24 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        self::assertSame(0, $containers[0]->columnChunk->fileOffset());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertSame(0, $containers[0]->columnChunk->fileOffset());
     }
 
-    public function test_is_full_initially_false() : void
+    public function test_is_full_initially_false(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
         $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
 
-        self::assertFalse($builder->isFull());
+        static::assertFalse($builder->isFull());
     }
 
     #[DataProvider('page_size_provider')]
-    public function test_is_full_respects_page_size_option(int $pageSize) : void
+    public function test_is_full_respects_page_size_option(int $pageSize): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -579,7 +598,7 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $compression = Compressions::UNCOMPRESSED;
         $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
 
-        self::assertFalse($builder->isFull());
+        static::assertFalse($builder->isFull());
 
         for ($i = 0; $i < 10000; $i++) {
             $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ["value_{$i}"]));
@@ -589,10 +608,10 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
             }
         }
 
-        self::assertTrue(true);
+        static::assertTrue(true);
     }
 
-    public function test_is_full_uses_approximate_calculation() : void
+    public function test_is_full_uses_approximate_calculation(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -604,10 +623,10 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
             $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ["value_{$i}"]));
         }
 
-        self::assertTrue($builder->isFull());
+        static::assertTrue($builder->isFull());
     }
 
-    public function test_mixed_null_and_non_null_values() : void
+    public function test_mixed_null_and_non_null_values(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -618,12 +637,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertSame(3, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertSame(3, $containers[0]->columnChunk->valuesCount());
     }
 
-    public function test_multiple_close_page_calls() : void
+    public function test_multiple_close_page_calls(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -636,10 +655,10 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $builder->closePage();
         $builder->closePage();
 
-        self::assertGreaterThan(0, $builder->uncompressedSize());
+        static::assertGreaterThan(0, $builder->uncompressedSize());
     }
 
-    public function test_statistics_are_generated() : void
+    public function test_statistics_are_generated(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -651,10 +670,10 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         $containers = $builder->flush(0);
 
         $statistics = $containers[0]->columnChunk->statistics();
-        self::assertNotNull($statistics);
+        static::assertNotNull($statistics);
     }
 
-    public function test_uncompressed_size_accumulates_multiple_pages() : void
+    public function test_uncompressed_size_accumulates_multiple_pages(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -670,11 +689,11 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
             $sizes[] = $builder->uncompressedSize();
         }
 
-        self::assertGreaterThan($sizes[0], $sizes[1]);
-        self::assertGreaterThan($sizes[1], $sizes[2]);
+        static::assertGreaterThan($sizes[0], $sizes[1]);
+        static::assertGreaterThan($sizes[1], $sizes[2]);
     }
 
-    public function test_uncompressed_size_increases_with_pages() : void
+    public function test_uncompressed_size_increases_with_pages(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -688,20 +707,20 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $finalSize = $builder->uncompressedSize();
 
-        self::assertGreaterThan($initialSize, $finalSize);
+        static::assertGreaterThan($initialSize, $finalSize);
     }
 
-    public function test_uncompressed_size_initially_zero() : void
+    public function test_uncompressed_size_initially_zero(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
         $compression = Compressions::UNCOMPRESSED;
         $builder = new RLEDictionaryChunkBuilder($column, $options, $compression);
 
-        self::assertSame(0, $builder->uncompressedSize());
+        static::assertSame(0, $builder->uncompressedSize());
     }
 
-    public function test_workflow_add_close_flush() : void
+    public function test_workflow_add_close_flush(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -714,12 +733,12 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
     }
 
-    public function test_workflow_multiple_add_single_close_flush() : void
+    public function test_workflow_multiple_add_single_close_flush(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -734,13 +753,13 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        self::assertSame(5, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertSame(5, $containers[0]->columnChunk->valuesCount());
     }
 
-    public function test_workflow_multiple_cycles() : void
+    public function test_workflow_multiple_cycles(): void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = new Options();
@@ -754,9 +773,9 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $containers = $builder->flush(0);
 
-        self::assertIsArray($containers);
-        self::assertCount(1, $containers);
-        self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        self::assertSame(3, $containers[0]->columnChunk->valuesCount());
+        static::assertIsArray($containers);
+        static::assertCount(1, $containers);
+        static::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
+        static::assertSame(3, $containers[0]->columnChunk->valuesCount());
     }
 }

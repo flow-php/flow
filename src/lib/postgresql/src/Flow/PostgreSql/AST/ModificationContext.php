@@ -23,33 +23,32 @@ final readonly class ModificationContext
         private array $ancestors,
         private int $depth,
         private ParseResult $parseResult,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<object>
      */
-    public function ancestors() : array
+    public function ancestors(): array
     {
         return $this->ancestors;
     }
 
-    public function depth() : int
+    public function depth(): int
     {
         return $this->depth;
     }
 
-    public function isTopLevel() : bool
+    public function isTopLevel(): bool
     {
         return $this->depth === 1;
     }
 
-    public function parent() : ?object
+    public function parent(): ?object
     {
         return $this->ancestors[\count($this->ancestors) - 1] ?? null;
     }
 
-    public function parseResult() : ParseResult
+    public function parseResult(): ParseResult
     {
         return $this->parseResult;
     }

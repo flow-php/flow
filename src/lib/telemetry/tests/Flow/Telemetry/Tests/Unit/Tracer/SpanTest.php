@@ -4,15 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Tracer;
 
-use Flow\Telemetry\Context\{SpanId, TraceId};
+use Flow\Telemetry\Context\SpanId;
+use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
-use Flow\Telemetry\Tracer\{GenericEvent, Span, SpanContext, SpanKind, SpanLimits, SpanLink, SpanStatus};
+use Flow\Telemetry\Tracer\GenericEvent;
+use Flow\Telemetry\Tracer\Span;
+use Flow\Telemetry\Tracer\SpanContext;
+use Flow\Telemetry\Tracer\SpanKind;
+use Flow\Telemetry\Tracer\SpanLimits;
+use Flow\Telemetry\Tracer\SpanLink;
+use Flow\Telemetry\Tracer\SpanStatus;
 use PHPUnit\Framework\TestCase;
 
 final class SpanTest extends TestCase
 {
-    public function test_add_link_adds_link() : void
+    public function test_add_link_adds_link(): void
     {
         $span = $this->createSpan();
         $linkedContext = SpanContext::create(TraceId::generate(), SpanId::generate());
@@ -20,12 +27,12 @@ final class SpanTest extends TestCase
 
         $result = $span->addLink($link);
 
-        self::assertSame($span, $result);
-        self::assertCount(1, $span->links());
-        self::assertSame($link, $span->links()[0]);
+        static::assertSame($span, $result);
+        static::assertCount(1, $span->links());
+        static::assertSame($link, $span->links()[0]);
     }
 
-    public function test_add_multiple_links() : void
+    public function test_add_multiple_links(): void
     {
         $span = $this->createSpan();
         $link1 = SpanLink::create(SpanContext::create(TraceId::generate(), SpanId::generate()));
@@ -33,17 +40,17 @@ final class SpanTest extends TestCase
 
         $span->addLink($link1)->addLink($link2);
 
-        self::assertCount(2, $span->links());
+        static::assertCount(2, $span->links());
     }
 
-    public function test_attributes_returns_empty_array_initially() : void
+    public function test_attributes_returns_empty_array_initially(): void
     {
         $span = $this->createSpan();
 
-        self::assertSame([], $span->attributes());
+        static::assertSame([], $span->attributes());
     }
 
-    public function test_constructor_creates_span() : void
+    public function test_constructor_creates_span(): void
     {
         $context = SpanContext::create(TraceId::generate(), SpanId::generate());
         $startTime = new \DateTimeImmutable();
@@ -52,40 +59,47 @@ final class SpanTest extends TestCase
         $resource = ResourceMother::default();
         $span = new Span('test-span', $context, SpanKind::INTERNAL, $startTime, $resource, $scope);
 
-        self::assertSame('test-span', $span->name());
-        self::assertSame($context, $span->context());
-        self::assertSame(SpanKind::INTERNAL, $span->kind());
-        self::assertSame($startTime, $span->startTime());
-        self::assertSame($resource, $span->resource());
-        self::assertSame($scope, $span->scope());
-        self::assertNull($span->endTime());
-        self::assertNull($span->status());
-        self::assertSame([], $span->attributes());
-        self::assertSame([], $span->events());
-        self::assertSame([], $span->links());
-        self::assertFalse($span->isEnded());
+        static::assertSame('test-span', $span->name());
+        static::assertSame($context, $span->context());
+        static::assertSame(SpanKind::INTERNAL, $span->kind());
+        static::assertSame($startTime, $span->startTime());
+        static::assertSame($resource, $span->resource());
+        static::assertSame($scope, $span->scope());
+        static::assertNull($span->endTime());
+        static::assertNull($span->status());
+        static::assertSame([], $span->attributes());
+        static::assertSame([], $span->events());
+        static::assertSame([], $span->links());
+        static::assertFalse($span->isEnded());
     }
 
-    public function test_duration_returns_milliseconds() : void
+    public function test_duration_returns_milliseconds(): void
     {
         $startTime = new \DateTimeImmutable('2024-01-01 12:00:00.000000');
         $endTime = new \DateTimeImmutable('2024-01-01 12:00:00.500000');
         $context = SpanContext::create(TraceId::generate(), SpanId::generate());
-        $span = new Span('test-span', $context, SpanKind::INTERNAL, $startTime, ResourceMother::default(), new InstrumentationScope('test', '1.0.0'));
+        $span = new Span(
+            'test-span',
+            $context,
+            SpanKind::INTERNAL,
+            $startTime,
+            ResourceMother::default(),
+            new InstrumentationScope('test', '1.0.0'),
+        );
 
         $span->end($endTime);
 
-        self::assertEqualsWithDelta(500.0, $span->duration(), 0.001);
+        static::assertEqualsWithDelta(500.0, $span->duration(), 0.001);
     }
 
-    public function test_duration_returns_null_when_not_ended() : void
+    public function test_duration_returns_null_when_not_ended(): void
     {
         $span = $this->createSpan();
 
-        self::assertNull($span->duration());
+        static::assertNull($span->duration());
     }
 
-    public function test_end_only_sets_once() : void
+    public function test_end_only_sets_once(): void
     {
         $span = $this->createSpan();
         $firstEnd = new \DateTimeImmutable('2024-01-01 12:00:00');
@@ -94,22 +108,22 @@ final class SpanTest extends TestCase
         $span->end($firstEnd);
         $span->end($secondEnd);
 
-        self::assertSame($firstEnd, $span->endTime());
+        static::assertSame($firstEnd, $span->endTime());
     }
 
-    public function test_end_sets_end_time() : void
+    public function test_end_sets_end_time(): void
     {
         $span = $this->createSpan();
         $endTime = new \DateTimeImmutable();
 
         $result = $span->end($endTime);
 
-        self::assertSame($span, $result);
-        self::assertSame($endTime, $span->endTime());
-        self::assertTrue($span->isEnded());
+        static::assertSame($span, $result);
+        static::assertSame($endTime, $span->endTime());
+        static::assertTrue($span->isEnded());
     }
 
-    public function test_end_uses_current_time_when_not_provided() : void
+    public function test_end_uses_current_time_when_not_provided(): void
     {
         $span = $this->createSpan();
         $before = new \DateTimeImmutable();
@@ -117,19 +131,19 @@ final class SpanTest extends TestCase
         $span->end();
 
         $after = new \DateTimeImmutable();
-        self::assertNotNull($span->endTime());
-        self::assertGreaterThanOrEqual($before, $span->endTime());
-        self::assertLessThanOrEqual($after, $span->endTime());
+        static::assertNotNull($span->endTime());
+        static::assertGreaterThanOrEqual($before, $span->endTime());
+        static::assertLessThanOrEqual($after, $span->endTime());
     }
 
-    public function test_events_returns_empty_array_initially() : void
+    public function test_events_returns_empty_array_initially(): void
     {
         $span = $this->createSpan();
 
-        self::assertSame([], $span->events());
+        static::assertSame([], $span->events());
     }
 
-    public function test_fluent_interface_allows_chaining() : void
+    public function test_fluent_interface_allows_chaining(): void
     {
         $span = $this->createSpan();
         $linkedContext = SpanContext::create(TraceId::generate(), SpanId::generate());
@@ -143,16 +157,16 @@ final class SpanTest extends TestCase
             ->rename('new-name')
             ->end();
 
-        self::assertSame($span, $result);
-        self::assertSame('new-name', $span->name());
-        self::assertCount(2, $span->attributes());
-        self::assertCount(1, $span->events());
-        self::assertCount(1, $span->links());
-        self::assertNotNull($span->status());
-        self::assertTrue($span->isEnded());
+        static::assertSame($span, $result);
+        static::assertSame('new-name', $span->name());
+        static::assertCount(2, $span->attributes());
+        static::assertCount(1, $span->events());
+        static::assertCount(1, $span->links());
+        static::assertNotNull($span->status());
+        static::assertTrue($span->isEnded());
     }
 
-    public function test_from_array_with_minimal_data() : void
+    public function test_from_array_with_minimal_data(): void
     {
         $data = [
             'name' => 'minimal-span',
@@ -185,16 +199,16 @@ final class SpanTest extends TestCase
 
         $span = Span::fromArray($data);
 
-        self::assertSame('minimal-span', $span->name());
-        self::assertSame(SpanKind::INTERNAL, $span->kind());
-        self::assertNull($span->endTime());
-        self::assertNull($span->status());
-        self::assertEmpty($span->attributes());
-        self::assertEmpty($span->events());
-        self::assertEmpty($span->links());
+        static::assertSame('minimal-span', $span->name());
+        static::assertSame(SpanKind::INTERNAL, $span->kind());
+        static::assertNull($span->endTime());
+        static::assertNull($span->status());
+        static::assertEmpty($span->attributes());
+        static::assertEmpty($span->events());
+        static::assertEmpty($span->links());
     }
 
-    public function test_limits_attribute_count_allows_overwriting_existing() : void
+    public function test_limits_attribute_count_allows_overwriting_existing(): void
     {
         $limits = new SpanLimits(attributeCountLimit: 2);
         $span = $this->createSpanWithLimits($limits);
@@ -203,12 +217,12 @@ final class SpanTest extends TestCase
         $span->setAttribute('key2', 'value2');
         $span->setAttribute('key1', 'updated');
 
-        self::assertCount(2, $span->attributes());
-        self::assertSame(0, $span->droppedAttributeCount());
-        self::assertSame('updated', $span->attributes()['key1']);
+        static::assertCount(2, $span->attributes());
+        static::assertSame(0, $span->droppedAttributeCount());
+        static::assertSame('updated', $span->attributes()['key1']);
     }
 
-    public function test_limits_attribute_count_drops_excess_attributes() : void
+    public function test_limits_attribute_count_drops_excess_attributes(): void
     {
         $limits = new SpanLimits(attributeCountLimit: 3);
         $span = $this->createSpanWithLimits($limits);
@@ -221,15 +235,15 @@ final class SpanTest extends TestCase
             'key5' => 'value5',
         ]);
 
-        self::assertCount(3, $span->attributes());
-        self::assertSame(2, $span->droppedAttributeCount());
-        self::assertArrayHasKey('key1', $span->attributes());
-        self::assertArrayHasKey('key2', $span->attributes());
-        self::assertArrayHasKey('key3', $span->attributes());
-        self::assertArrayNotHasKey('key4', $span->attributes());
+        static::assertCount(3, $span->attributes());
+        static::assertSame(2, $span->droppedAttributeCount());
+        static::assertArrayHasKey('key1', $span->attributes());
+        static::assertArrayHasKey('key2', $span->attributes());
+        static::assertArrayHasKey('key3', $span->attributes());
+        static::assertArrayNotHasKey('key4', $span->attributes());
     }
 
-    public function test_limits_attribute_count_drops_single_attribute() : void
+    public function test_limits_attribute_count_drops_single_attribute(): void
     {
         $limits = new SpanLimits(attributeCountLimit: 2);
         $span = $this->createSpanWithLimits($limits);
@@ -238,21 +252,21 @@ final class SpanTest extends TestCase
         $span->setAttribute('key2', 'value2');
         $span->setAttribute('key3', 'value3');
 
-        self::assertCount(2, $span->attributes());
-        self::assertSame(1, $span->droppedAttributeCount());
+        static::assertCount(2, $span->attributes());
+        static::assertSame(1, $span->droppedAttributeCount());
     }
 
-    public function test_limits_attribute_value_length_truncates_array_strings() : void
+    public function test_limits_attribute_value_length_truncates_array_strings(): void
     {
         $limits = new SpanLimits(attributeValueLengthLimit: 5);
         $span = $this->createSpanWithLimits($limits);
 
         $span->setAttribute('tags', ['short', 'this-is-long']);
 
-        self::assertSame(['short', 'this-'], $span->attributes()['tags']);
+        static::assertSame(['short', 'this-'], $span->attributes()['tags']);
     }
 
-    public function test_limits_attribute_value_length_truncates_strings() : void
+    public function test_limits_attribute_value_length_truncates_strings(): void
     {
         $limits = new SpanLimits(attributeValueLengthLimit: 10);
         $span = $this->createSpanWithLimits($limits);
@@ -260,17 +274,13 @@ final class SpanTest extends TestCase
         $span->setAttribute('short', 'abc');
         $span->setAttribute('long', 'this-is-a-very-long-string');
 
-        self::assertSame('abc', $span->attributes()['short']);
-        self::assertSame('this-is-a-', $span->attributes()['long']);
+        static::assertSame('abc', $span->attributes()['short']);
+        static::assertSame('this-is-a-', $span->attributes()['long']);
     }
 
-    public function test_limits_dropped_counts_in_normalize() : void
+    public function test_limits_dropped_counts_in_normalize(): void
     {
-        $limits = new SpanLimits(
-            attributeCountLimit: 2,
-            eventCountLimit: 1,
-            linkCountLimit: 1,
-        );
+        $limits = new SpanLimits(attributeCountLimit: 2, eventCountLimit: 1, linkCountLimit: 1);
         $span = $this->createSpanWithLimits($limits);
 
         $span->setAttributes(['k1' => 'v1', 'k2' => 'v2', 'k3' => 'v3']);
@@ -281,12 +291,12 @@ final class SpanTest extends TestCase
 
         $normalized = $span->normalize();
 
-        self::assertSame(1, $normalized['droppedAttributeCount']);
-        self::assertSame(1, $normalized['droppedEventsCount']);
-        self::assertSame(1, $normalized['droppedLinksCount']);
+        static::assertSame(1, $normalized['droppedAttributeCount']);
+        static::assertSame(1, $normalized['droppedEventsCount']);
+        static::assertSame(1, $normalized['droppedLinksCount']);
     }
 
-    public function test_limits_event_attributes_are_enforced() : void
+    public function test_limits_event_attributes_are_enforced(): void
     {
         $limits = new SpanLimits(attributePerEventCountLimit: 2, attributeValueLengthLimit: 10);
         $span = $this->createSpanWithLimits($limits);
@@ -300,13 +310,13 @@ final class SpanTest extends TestCase
 
         $recordedEvent = $span->events()[0];
         $attrs = $recordedEvent->attributes();
-        self::assertCount(2, $attrs);
-        self::assertSame('short', $attrs['key1']);
-        self::assertSame('this-is-a-', $attrs['key2']);
-        self::assertSame(1, $recordedEvent->droppedAttributeCount());
+        static::assertCount(2, $attrs);
+        static::assertSame('short', $attrs['key1']);
+        static::assertSame('this-is-a-', $attrs['key2']);
+        static::assertSame(1, $recordedEvent->droppedAttributeCount());
     }
 
-    public function test_limits_event_count_drops_excess_events() : void
+    public function test_limits_event_count_drops_excess_events(): void
     {
         $limits = new SpanLimits(eventCountLimit: 2);
         $span = $this->createSpanWithLimits($limits);
@@ -315,36 +325,33 @@ final class SpanTest extends TestCase
         $span->recordEvent(GenericEvent::create('event2', new \DateTimeImmutable()));
         $span->recordEvent(GenericEvent::create('event3', new \DateTimeImmutable()));
 
-        self::assertCount(2, $span->events());
-        self::assertSame(1, $span->droppedEventsCount());
-        self::assertSame('event1', $span->events()[0]->name());
-        self::assertSame('event2', $span->events()[1]->name());
+        static::assertCount(2, $span->events());
+        static::assertSame(1, $span->droppedEventsCount());
+        static::assertSame('event1', $span->events()[0]->name());
+        static::assertSame('event2', $span->events()[1]->name());
     }
 
-    public function test_limits_link_attributes_are_enforced() : void
+    public function test_limits_link_attributes_are_enforced(): void
     {
         $limits = new SpanLimits(attributePerLinkCountLimit: 2, attributeValueLengthLimit: 10);
         $span = $this->createSpanWithLimits($limits);
 
-        $link = SpanLink::create(
-            SpanContext::create(TraceId::generate(), SpanId::generate()),
-            [
-                'key1' => 'short',
-                'key2' => 'this-is-a-very-long-value',
-                'key3' => 'dropped',
-            ],
-        );
+        $link = SpanLink::create(SpanContext::create(TraceId::generate(), SpanId::generate()), [
+            'key1' => 'short',
+            'key2' => 'this-is-a-very-long-value',
+            'key3' => 'dropped',
+        ]);
         $span->addLink($link);
 
         $recordedLink = $span->links()[0];
         $attrs = $recordedLink->attributes->normalize();
-        self::assertCount(2, $attrs);
-        self::assertSame('short', $attrs['key1']);
-        self::assertSame('this-is-a-', $attrs['key2']);
-        self::assertSame(1, $recordedLink->droppedAttributeCount);
+        static::assertCount(2, $attrs);
+        static::assertSame('short', $attrs['key1']);
+        static::assertSame('this-is-a-', $attrs['key2']);
+        static::assertSame(1, $recordedLink->droppedAttributeCount);
     }
 
-    public function test_limits_link_count_drops_excess_links() : void
+    public function test_limits_link_count_drops_excess_links(): void
     {
         $limits = new SpanLimits(linkCountLimit: 2);
         $span = $this->createSpanWithLimits($limits);
@@ -353,18 +360,18 @@ final class SpanTest extends TestCase
         $span->addLink(SpanLink::create(SpanContext::create(TraceId::generate(), SpanId::generate())));
         $span->addLink(SpanLink::create(SpanContext::create(TraceId::generate(), SpanId::generate())));
 
-        self::assertCount(2, $span->links());
-        self::assertSame(1, $span->droppedLinksCount());
+        static::assertCount(2, $span->links());
+        static::assertSame(1, $span->droppedLinksCount());
     }
 
-    public function test_links_returns_empty_array_initially() : void
+    public function test_links_returns_empty_array_initially(): void
     {
         $span = $this->createSpan();
 
-        self::assertSame([], $span->links());
+        static::assertSame([], $span->links());
     }
 
-    public function test_normalize_from_array_round_trip() : void
+    public function test_normalize_from_array_round_trip(): void
     {
         $traceId = TraceId::generate();
         $spanId = SpanId::generate();
@@ -377,29 +384,31 @@ final class SpanTest extends TestCase
         $original = new Span('test-span', $context, SpanKind::CLIENT, $startTime, ResourceMother::default(), $scope);
         $original->setAttribute('key', 'value');
         $original->recordEvent(GenericEvent::create('event', new \DateTimeImmutable('2024-01-01 12:00:00.500000')));
-        $original->addLink(SpanLink::create(SpanContext::create(TraceId::generate(), SpanId::generate()), ['link.attr' => 'test']));
+        $original->addLink(SpanLink::create(SpanContext::create(TraceId::generate(), SpanId::generate()), [
+            'link.attr' => 'test',
+        ]));
         $original->setStatus(SpanStatus::error('Something failed'));
         $original->end($endTime);
 
         $normalized = $original->normalize();
         $restored = Span::fromArray($normalized);
 
-        self::assertSame($original->name(), $restored->name());
-        self::assertSame($original->kind(), $restored->kind());
-        self::assertSame($original->context()->traceId->toHex(), $restored->context()->traceId->toHex());
-        self::assertSame($original->context()->spanId->toHex(), $restored->context()->spanId->toHex());
-        self::assertSame($original->context()->parentSpanId?->toHex(), $restored->context()->parentSpanId?->toHex());
-        self::assertEquals($original->startTime(), $restored->startTime());
-        self::assertEquals($original->endTime(), $restored->endTime());
-        self::assertSame($original->attributes(), $restored->attributes());
-        self::assertCount(\count($original->events()), $restored->events());
-        self::assertCount(\count($original->links()), $restored->links());
-        self::assertSame($original->status()?->code, $restored->status()?->code);
-        self::assertSame($original->status()?->description, $restored->status()?->description);
-        self::assertSame($original->scope()->name, $restored->scope()->name);
+        static::assertSame($original->name(), $restored->name());
+        static::assertSame($original->kind(), $restored->kind());
+        static::assertSame($original->context()->traceId->toHex(), $restored->context()->traceId->toHex());
+        static::assertSame($original->context()->spanId->toHex(), $restored->context()->spanId->toHex());
+        static::assertSame($original->context()->parentSpanId?->toHex(), $restored->context()->parentSpanId?->toHex());
+        static::assertEquals($original->startTime(), $restored->startTime());
+        static::assertEquals($original->endTime(), $restored->endTime());
+        static::assertSame($original->attributes(), $restored->attributes());
+        static::assertCount(\count($original->events()), $restored->events());
+        static::assertCount(\count($original->links()), $restored->links());
+        static::assertSame($original->status()?->code, $restored->status()?->code);
+        static::assertSame($original->status()?->description, $restored->status()?->description);
+        static::assertSame($original->scope()->name, $restored->scope()->name);
     }
 
-    public function test_normalize_returns_array_representation() : void
+    public function test_normalize_returns_array_representation(): void
     {
         $traceId = TraceId::generate();
         $spanId = SpanId::generate();
@@ -417,30 +426,30 @@ final class SpanTest extends TestCase
 
         $normalized = $span->normalize();
 
-        self::assertSame('test-span', $normalized['name']);
-        self::assertSame('server', $normalized['kind']);
-        self::assertSame('2024-01-01T12:00:00+00:00', $normalized['startTime']);
-        self::assertSame('2024-01-01T12:00:01+00:00', $normalized['endTime']);
-        self::assertSame(['http.method' => 'GET'], $normalized['attributes']);
-        self::assertCount(1, $normalized['events']);
-        self::assertCount(1, $normalized['links']);
-        self::assertNotNull($normalized['status']);
-        self::assertTrue($normalized['isRecording']);
+        static::assertSame('test-span', $normalized['name']);
+        static::assertSame('server', $normalized['kind']);
+        static::assertSame('2024-01-01T12:00:00+00:00', $normalized['startTime']);
+        static::assertSame('2024-01-01T12:00:01+00:00', $normalized['endTime']);
+        static::assertSame(['http.method' => 'GET'], $normalized['attributes']);
+        static::assertCount(1, $normalized['events']);
+        static::assertCount(1, $normalized['links']);
+        static::assertNotNull($normalized['status']);
+        static::assertTrue($normalized['isRecording']);
     }
 
-    public function test_record_event_adds_event() : void
+    public function test_record_event_adds_event(): void
     {
         $span = $this->createSpan();
         $event = GenericEvent::create('test.event', new \DateTimeImmutable(), ['key' => 'value']);
 
         $result = $span->recordEvent($event);
 
-        self::assertSame($span, $result);
-        self::assertCount(1, $span->events());
-        self::assertSame($event, $span->events()[0]);
+        static::assertSame($span, $result);
+        static::assertCount(1, $span->events());
+        static::assertSame($event, $span->events()[0]);
     }
 
-    public function test_record_exception_creates_exception_event() : void
+    public function test_record_exception_creates_exception_event(): void
     {
         $span = $this->createSpan();
         $exception = new \RuntimeException('Test exception message');
@@ -448,20 +457,20 @@ final class SpanTest extends TestCase
 
         $result = $span->recordException($exception, $timestamp);
 
-        self::assertSame($span, $result);
-        self::assertCount(1, $span->events());
+        static::assertSame($span, $result);
+        static::assertCount(1, $span->events());
 
         $event = $span->events()[0];
-        self::assertSame('exception', $event->name());
-        self::assertSame($timestamp, $event->timestamp());
+        static::assertSame('exception', $event->name());
+        static::assertSame($timestamp, $event->timestamp());
 
         $attributes = $event->attributes();
-        self::assertSame(\RuntimeException::class, $attributes['exception.type']);
-        self::assertSame('Test exception message', $attributes['exception.message']);
-        self::assertArrayHasKey('exception.stacktrace', $attributes);
+        static::assertSame(\RuntimeException::class, $attributes['exception.type']);
+        static::assertSame('Test exception message', $attributes['exception.message']);
+        static::assertArrayHasKey('exception.stacktrace', $attributes);
     }
 
-    public function test_record_exception_with_additional_attributes() : void
+    public function test_record_exception_with_additional_attributes(): void
     {
         $span = $this->createSpan();
         $exception = new \RuntimeException('Error');
@@ -471,11 +480,11 @@ final class SpanTest extends TestCase
 
         $event = $span->events()[0];
         $attributes = $event->attributes();
-        self::assertSame('custom.value', $attributes['custom.key']);
-        self::assertSame(\RuntimeException::class, $attributes['exception.type']);
+        static::assertSame('custom.value', $attributes['custom.key']);
+        static::assertSame(\RuntimeException::class, $attributes['exception.type']);
     }
 
-    public function test_record_multiple_events() : void
+    public function test_record_multiple_events(): void
     {
         $span = $this->createSpan();
         $event1 = GenericEvent::create('event1', new \DateTimeImmutable());
@@ -483,40 +492,40 @@ final class SpanTest extends TestCase
 
         $span->recordEvent($event1)->recordEvent($event2);
 
-        self::assertCount(2, $span->events());
+        static::assertCount(2, $span->events());
     }
 
-    public function test_rename_changes_name() : void
+    public function test_rename_changes_name(): void
     {
         $span = $this->createSpan('original-name');
 
         $result = $span->rename('new-name');
 
-        self::assertSame($span, $result);
-        self::assertSame('new-name', $span->name());
+        static::assertSame($span, $result);
+        static::assertSame('new-name', $span->name());
     }
 
-    public function test_set_attribute_adds_single_attribute() : void
+    public function test_set_attribute_adds_single_attribute(): void
     {
         $span = $this->createSpan();
 
         $result = $span->setAttribute('user.id', '12345');
 
-        self::assertSame($span, $result);
-        self::assertSame('12345', $span->attributes()['user.id']);
+        static::assertSame($span, $result);
+        static::assertSame('12345', $span->attributes()['user.id']);
     }
 
-    public function test_set_attribute_overwrites_existing() : void
+    public function test_set_attribute_overwrites_existing(): void
     {
         $span = $this->createSpan();
 
         $span->setAttribute('key', 'original');
         $span->setAttribute('key', 'overwritten');
 
-        self::assertSame('overwritten', $span->attributes()['key']);
+        static::assertSame('overwritten', $span->attributes()['key']);
     }
 
-    public function test_set_attribute_supports_various_types() : void
+    public function test_set_attribute_supports_various_types(): void
     {
         $span = $this->createSpan();
 
@@ -528,14 +537,14 @@ final class SpanTest extends TestCase
             ->setAttribute('array', ['a', 'b', 'c']);
 
         $attributes = $span->attributes();
-        self::assertSame('text', $attributes['string']);
-        self::assertSame(42, $attributes['int']);
-        self::assertSame(3.14, $attributes['float']);
-        self::assertTrue($attributes['bool']);
-        self::assertSame(['a', 'b', 'c'], $attributes['array']);
+        static::assertSame('text', $attributes['string']);
+        static::assertSame(42, $attributes['int']);
+        static::assertSame(3.14, $attributes['float']);
+        static::assertTrue($attributes['bool']);
+        static::assertSame(['a', 'b', 'c'], $attributes['array']);
     }
 
-    public function test_set_attributes_adds_multiple_attributes() : void
+    public function test_set_attributes_adds_multiple_attributes(): void
     {
         $span = $this->createSpan();
 
@@ -544,58 +553,65 @@ final class SpanTest extends TestCase
             'key2' => 'value2',
         ]);
 
-        self::assertSame($span, $result);
-        self::assertSame('value1', $span->attributes()['key1']);
-        self::assertSame('value2', $span->attributes()['key2']);
+        static::assertSame($span, $result);
+        static::assertSame('value1', $span->attributes()['key1']);
+        static::assertSame('value2', $span->attributes()['key2']);
     }
 
-    public function test_set_attributes_merges_with_existing() : void
+    public function test_set_attributes_merges_with_existing(): void
     {
         $span = $this->createSpan();
 
         $span->setAttribute('existing', 'value');
         $span->setAttributes(['new' => 'value']);
 
-        self::assertCount(2, $span->attributes());
-        self::assertSame('value', $span->attributes()['existing']);
-        self::assertSame('value', $span->attributes()['new']);
+        static::assertCount(2, $span->attributes());
+        static::assertSame('value', $span->attributes()['existing']);
+        static::assertSame('value', $span->attributes()['new']);
     }
 
-    public function test_set_status_can_be_overwritten() : void
+    public function test_set_status_can_be_overwritten(): void
     {
         $span = $this->createSpan();
 
         $span->setStatus(SpanStatus::unset());
         $span->setStatus(SpanStatus::error('Error occurred'));
 
-        self::assertNotNull($span->status());
-        self::assertTrue($span->status()->isError());
-        self::assertSame('Error occurred', $span->status()->description);
+        static::assertNotNull($span->status());
+        static::assertTrue($span->status()->isError());
+        static::assertSame('Error occurred', $span->status()->description);
     }
 
-    public function test_set_status_sets_status() : void
+    public function test_set_status_sets_status(): void
     {
         $span = $this->createSpan();
         $status = SpanStatus::ok();
 
         $result = $span->setStatus($status);
 
-        self::assertSame($span, $result);
-        self::assertSame($status, $span->status());
+        static::assertSame($span, $result);
+        static::assertSame($status, $span->status());
     }
 
-    public function test_span_with_all_span_kinds() : void
+    public function test_span_with_all_span_kinds(): void
     {
         $context = SpanContext::create(TraceId::generate(), SpanId::generate());
         $startTime = new \DateTimeImmutable();
 
         foreach (SpanKind::cases() as $kind) {
-            $span = new Span('test', $context, $kind, $startTime, ResourceMother::default(), new InstrumentationScope('test', '1.0.0'));
-            self::assertSame($kind, $span->kind());
+            $span = new Span(
+                'test',
+                $context,
+                $kind,
+                $startTime,
+                ResourceMother::default(),
+                new InstrumentationScope('test', '1.0.0'),
+            );
+            static::assertSame($kind, $span->kind());
         }
     }
 
-    private function createSpan(string $name = 'test-span') : Span
+    private function createSpan(string $name = 'test-span'): Span
     {
         return new Span(
             $name,
@@ -607,7 +623,7 @@ final class SpanTest extends TestCase
         );
     }
 
-    private function createSpanWithLimits(SpanLimits $limits, string $name = 'test-span') : Span
+    private function createSpanWithLimits(SpanLimits $limits, string $name = 'test-span'): Span
     {
         return new Span(
             $name,

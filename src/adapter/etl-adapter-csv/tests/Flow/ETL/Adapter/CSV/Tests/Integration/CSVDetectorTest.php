@@ -12,13 +12,13 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 final class CSVDetectorTest extends FlowTestCase
 {
-    public static function enclosure_provider() : \Generator
+    public static function enclosure_provider(): \Generator
     {
         yield ['enclosure' => '"'];
         yield ['enclosure' => "'"];
     }
 
-    public static function separator_provider() : \Generator
+    public static function separator_provider(): \Generator
     {
         yield ['separator' => ','];
         yield ['separator' => "\t"];
@@ -50,39 +50,39 @@ final class CSVDetectorTest extends FlowTestCase
     }
 
     #[DataProvider('enclosure_provider')]
-    public function test_detecting_enclosures(string $enclosure) : void
+    public function test_detecting_enclosures(string $enclosure): void
     {
         $detector = new CSVDetector($this->createResource(',', $enclosure));
 
-        self::assertSame($enclosure, $detector->detect()->enclosure);
+        static::assertSame($enclosure, $detector->detect()->enclosure);
     }
 
     #[DataProvider('separator_provider')]
-    public function test_detecting_separators(string $separator) : void
+    public function test_detecting_separators(string $separator): void
     {
         $detector = new CSVDetector($this->createResource($separator));
 
-        self::assertSame($separator, $detector->detect()->separator);
+        static::assertSame($separator, $detector->detect()->separator);
     }
 
     /**
      * @return SourceStream
      */
-    private function createResource(string $separator = ',', string $enclosure = '"') : SourceStream
+    private function createResource(string $separator = ',', string $enclosure = '"'): SourceStream
     {
         /** @var array<int, array<int, string>> $data */
         $data = [
-            ['id', 'name', 'email'],
-            ['1', 'John Doe', 'john@example.com'],
-            ['2', 'Jane Doe', 'jane@example.com'],
-            ['3', 'Mark', 'mark@example.com'],
-            ['4', 'Kate', 'kate@example.com'],
-            ['5', 'Peter', 'peter@example.com'],
-            ['6', 'Paul', 'paul@example.com'],
-            ['7', 'Mary', 'mary@example.com'],
-            ['8', 'Anna', 'anna@example.com'],
-            ['9', 'Robert', 'rober@example.com'],
-            ['10', 'Lucy', 'lucy@example.com'],
+            ['id', 'name',     'email'],
+            ['1',  'John Doe', 'john@example.com'],
+            ['2',  'Jane Doe', 'jane@example.com'],
+            ['3',  'Mark',     'mark@example.com'],
+            ['4',  'Kate',     'kate@example.com'],
+            ['5',  'Peter',    'peter@example.com'],
+            ['6',  'Paul',     'paul@example.com'],
+            ['7',  'Mary',     'mary@example.com'],
+            ['8',  'Anna',     'anna@example.com'],
+            ['9',  'Robert',   'rober@example.com'],
+            ['10', 'Lucy',     'lucy@example.com'],
             ['11', 'Ro\'bert', 'rob_ert@example.com'],
         ];
 

@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Flow\Website\StaticSourceProvider;
 
 use Flow\Website\Service\Examples;
-use NorbertTech\StaticContentGeneratorBundle\Content\{Source, SourceProvider};
+use NorbertTech\StaticContentGeneratorBundle\Content\Source;
+use NorbertTech\StaticContentGeneratorBundle\Content\SourceProvider;
 
 final readonly class ExamplesSourceProvider implements SourceProvider
 {
-    public function __construct(private Examples $examples)
-    {
+    public function __construct(
+        private Examples $examples,
+    ) {}
 
-    }
-
-    public function all() : array
+    public function all(): array
     {
         $sources = [];
 
@@ -26,8 +26,16 @@ final readonly class ExamplesSourceProvider implements SourceProvider
 
                 if (\count($options) > 0) {
                     foreach ($options as $option) {
-                        $sources[] = new Source('example_option', ['topic' => $topic, 'example' => $example, 'option' => $option]);
-                        $sources[] = new Source('example_option_playground', ['topic' => $topic, 'example' => $example, 'option' => $option]);
+                        $sources[] = new Source('example_option', [
+                            'topic' => $topic,
+                            'example' => $example,
+                            'option' => $option,
+                        ]);
+                        $sources[] = new Source('example_option_playground', [
+                            'topic' => $topic,
+                            'example' => $example,
+                            'option' => $option,
+                        ]);
                     }
                 } else {
                     $sources[] = new Source('example', ['topic' => $topic, 'example' => $example]);

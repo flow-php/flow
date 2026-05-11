@@ -4,25 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Transformers;
 
-use Flow\PostgreSql\AST\{ModificationContext, NodeModifier, Traverser};
+use Flow\PostgreSql\AST\ModificationContext;
+use Flow\PostgreSql\AST\NodeModifier;
+use Flow\PostgreSql\AST\Traverser;
 use Flow\PostgreSql\AST\Visitors\ParamRefCollector;
 use Flow\PostgreSql\Exception\PaginationException;
-use Flow\PostgreSql\Protobuf\AST\{
-    A_Const,
-    A_Expr,
-    A_Expr_Kind,
-    BoolExpr,
-    BoolExprType,
-    ColumnRef,
-    Integer,
-    LimitOption,
-    Node,
-    PBString,
-    ParamRef,
-    SelectStmt,
-    SortBy,
-    SortByDir
-};
+use Flow\PostgreSql\Protobuf\AST\A_Const;
+use Flow\PostgreSql\Protobuf\AST\A_Expr;
+use Flow\PostgreSql\Protobuf\AST\A_Expr_Kind;
+use Flow\PostgreSql\Protobuf\AST\BoolExpr;
+use Flow\PostgreSql\Protobuf\AST\BoolExprType;
+use Flow\PostgreSql\Protobuf\AST\ColumnRef;
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\LimitOption;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\ParamRef;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\SelectStmt;
+use Flow\PostgreSql\Protobuf\AST\SortBy;
+use Flow\PostgreSql\Protobuf\AST\SortByDir;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
 /**
@@ -43,16 +43,15 @@ final class KeysetPaginationModifier implements NodeModifier
 
     public function __construct(
         private readonly KeysetPaginationConfig $config,
-    ) {
-    }
+    ) {}
 
-    public static function nodeClasses() : array
+    public static function nodeClasses(): array
     {
         return [SelectStmt::class];
     }
 
     /** @phpstan-ignore return.unusedType (interface requires full signature) */
-    public function modify(object $node, ModificationContext $context) : int|object|null
+    public function modify(object $node, ModificationContext $context): int|object|null
     {
         /** @var SelectStmt $node */
         if (!$context->isTopLevel()) {
@@ -76,7 +75,7 @@ final class KeysetPaginationModifier implements NodeModifier
                 throw new PaginationException(\sprintf(
                     'Cursor values count (%d) must match columns count (%d)',
                     \count($this->config->cursor),
-                    \count($this->config->columns)
+                    \count($this->config->columns),
                 ));
             }
 
@@ -89,16 +88,14 @@ final class KeysetPaginationModifier implements NodeModifier
     /**
      * Adds ORDER BY clause to the statement based on keyset columns configuration.
      */
-    private function addOrderByFromKeyset(SelectStmt $stmt) : void
+    private function addOrderByFromKeyset(SelectStmt $stmt): void
     {
         $sortNodes = [];
 
         foreach ($this->config->columns as $column) {
             $sortBy = new SortBy();
             $sortBy->setNode($this->createColumnRef($column->column));
-            $sortBy->setSortbyDir(
-                $column->order === SortOrder::ASC ? SortByDir::SORTBY_ASC : SortByDir::SORTBY_DESC
-            );
+            $sortBy->setSortbyDir($column->order === SortOrder::ASC ? SortByDir::SORTBY_ASC : SortByDir::SORTBY_DESC);
 
             $sortByNode = new Node();
             $sortByNode->setSortBy($sortBy);
@@ -109,7 +106,7 @@ final class KeysetPaginationModifier implements NodeModifier
         $stmt->setSortClause($sortNodes);
     }
 
-    private function applyKeysetWhere(SelectStmt $stmt) : void
+    private function applyKeysetWhere(SelectStmt $stmt): void
     {
         $keysetCondition = $this->buildKeysetCondition();
 
@@ -129,13 +126,13 @@ final class KeysetPaginationModifier implements NodeModifier
         }
     }
 
-    private function applyLimit(SelectStmt $stmt) : void
+    private function applyLimit(SelectStmt $stmt): void
     {
         $stmt->setLimitOption(LimitOption::LIMIT_OPTION_COUNT);
         $stmt->setLimitCount($this->createIntegerNode($this->config->limit));
     }
 
-    private function buildComparisonExpr(Node $leftColumnRef, int $paramNumber, string $operator) : Node
+    private function buildComparisonExpr(Node $leftColumnRef, int $paramNumber, string $operator): Node
     {
         $paramRef = new ParamRef();
         $paramRef->setNumber($paramNumber + $this->parameterOffset);
@@ -160,7 +157,7 @@ final class KeysetPaginationModifier implements NodeModifier
         return $exprNode;
     }
 
-    private function buildKeysetCondition() : Node
+    private function buildKeysetCondition(): Node
     {
         $columns = $this->config->columns;
         $orConditions = [];
@@ -205,7 +202,7 @@ final class KeysetPaginationModifier implements NodeModifier
         return $orNode;
     }
 
-    private function createColumnRef(string $columnName) : Node
+    private function createColumnRef(string $columnName): Node
     {
         $fields = [];
 
@@ -226,7 +223,7 @@ final class KeysetPaginationModifier implements NodeModifier
         return $columnRefNode;
     }
 
-    private function createIntegerNode(int $value) : Node
+    private function createIntegerNode(int $value): Node
     {
         $integer = new Integer();
         $integer->setIval($value);
@@ -241,7 +238,7 @@ final class KeysetPaginationModifier implements NodeModifier
         return $node;
     }
 
-    private function detectMaxParamNumber(ModificationContext $context) : int
+    private function detectMaxParamNumber(ModificationContext $context): int
     {
         $collector = new ParamRefCollector();
         $traverser = new Traverser($collector);
@@ -250,7 +247,7 @@ final class KeysetPaginationModifier implements NodeModifier
         return $collector->getMaxParamNumber();
     }
 
-    private function hasOrderBy(SelectStmt $stmt) : bool
+    private function hasOrderBy(SelectStmt $stmt): bool
     {
         return \count($stmt->getSortClause() ?? []) > 0;
     }

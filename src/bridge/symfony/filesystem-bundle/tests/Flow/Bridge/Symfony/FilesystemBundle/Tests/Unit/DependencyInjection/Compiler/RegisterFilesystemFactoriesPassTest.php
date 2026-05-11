@@ -6,23 +6,26 @@ namespace Flow\Bridge\Symfony\FilesystemBundle\Tests\Unit\DependencyInjection\Co
 
 use Flow\Bridge\Symfony\FilesystemBundle\DependencyInjection\Compiler\RegisterFilesystemFactoriesPass;
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\LogicException;
-use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\Factory\{MemoryFilesystemFactory, NativeLocalFilesystemFactory};
+use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\Factory\MemoryFilesystemFactory;
+use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\Factory\NativeLocalFilesystemFactory;
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FilesystemFactoryRegistry;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition, Reference};
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Reference;
 
 final class RegisterFilesystemFactoriesPassTest extends TestCase
 {
-    public function test_does_nothing_when_registry_definition_absent() : void
+    public function test_does_nothing_when_registry_definition_absent(): void
     {
         $container = new ContainerBuilder();
 
         (new RegisterFilesystemFactoriesPass())->process($container);
 
-        self::assertFalse($container->hasDefinition('.flow.filesystem.factory_registry'));
+        static::assertFalse($container->hasDefinition('.flow.filesystem.factory_registry'));
     }
 
-    public function test_injects_tagged_factories_as_references() : void
+    public function test_injects_tagged_factories_as_references(): void
     {
         $container = new ContainerBuilder();
         $container->setDefinition('.flow.filesystem.factory_registry', (new Definition(FilesystemFactoryRegistry::class))->setArgument(0, []));
@@ -38,26 +41,26 @@ final class RegisterFilesystemFactoriesPassTest extends TestCase
         (new RegisterFilesystemFactoriesPass())->process($container);
 
         $argument = $container->getDefinition('.flow.filesystem.factory_registry')->getArgument(0);
-        self::assertIsArray($argument);
-        self::assertCount(2, $argument);
-        self::assertContainsOnlyInstancesOf(Reference::class, $argument);
+        static::assertIsArray($argument);
+        static::assertCount(2, $argument);
+        static::assertContainsOnlyInstancesOf(Reference::class, $argument);
 
-        $ids = \array_map(static fn (Reference $r) : string => (string) $r, $argument);
+        $ids = \array_map(static fn(Reference $r): string => (string) $r, $argument);
         \sort($ids);
-        self::assertSame(['.flow.filesystem.factory.file', '.flow.filesystem.factory.memory'], $ids);
+        static::assertSame(['.flow.filesystem.factory.file', '.flow.filesystem.factory.memory'], $ids);
     }
 
-    public function test_leaves_registry_empty_when_no_tagged_services() : void
+    public function test_leaves_registry_empty_when_no_tagged_services(): void
     {
         $container = new ContainerBuilder();
         $container->setDefinition('.flow.filesystem.factory_registry', (new Definition(FilesystemFactoryRegistry::class))->setArgument(0, []));
 
         (new RegisterFilesystemFactoriesPass())->process($container);
 
-        self::assertSame([], $container->getDefinition('.flow.filesystem.factory_registry')->getArgument(0));
+        static::assertSame([], $container->getDefinition('.flow.filesystem.factory_registry')->getArgument(0));
     }
 
-    public function test_throws_on_duplicate_type_across_services() : void
+    public function test_throws_on_duplicate_type_across_services(): void
     {
         $container = new ContainerBuilder();
         $container->setDefinition('.flow.filesystem.factory_registry', (new Definition(FilesystemFactoryRegistry::class))->setArgument(0, []));
@@ -76,7 +79,7 @@ final class RegisterFilesystemFactoriesPassTest extends TestCase
         (new RegisterFilesystemFactoriesPass())->process($container);
     }
 
-    public function test_throws_on_tag_without_type_attribute() : void
+    public function test_throws_on_tag_without_type_attribute(): void
     {
         $container = new ContainerBuilder();
         $container->setDefinition('.flow.filesystem.factory_registry', (new Definition(FilesystemFactoryRegistry::class))->setArgument(0, []));

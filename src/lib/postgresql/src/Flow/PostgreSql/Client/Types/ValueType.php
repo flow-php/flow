@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Types;
 
-enum ValueType : int
+enum ValueType: int
 {
     case BIT = 1560;
     case BOOL = 16;
 
     case BOOL_ARRAY = 1000;
-    case BPCHAR = 1042;  // blank-padded char
+    case BPCHAR = 1042; // blank-padded char
 
     case BYTEA = 17;
 
@@ -18,18 +18,18 @@ enum ValueType : int
     case CIDR = 650;
 
     case DATE = 1082;
-    case FLOAT4 = 700;   // real
+    case FLOAT4 = 700; // real
     case FLOAT4_ARRAY = 1021;
-    case FLOAT8 = 701;   // double precision
+    case FLOAT8 = 701; // double precision
     case FLOAT8_ARRAY = 1022;
 
     case INET = 869;
-    case INT2 = 21;      // smallint
+    case INT2 = 21; // smallint
     case INT2_ARRAY = 1005;
-    case INT4 = 23;      // integer
+    case INT4 = 23; // integer
     case INT4_ARRAY = 1007;
 
-    case INT8 = 20;      // bigint
+    case INT8 = 20; // bigint
     case INT8_ARRAY = 1016;
     case INTERVAL = 1186;
 

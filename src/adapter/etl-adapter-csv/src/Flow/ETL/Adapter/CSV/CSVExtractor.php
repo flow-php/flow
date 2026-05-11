@@ -4,11 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
-use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\{Exception\InvalidArgumentException, Extractor, FlowContext};
-use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PathFiltering, Signal};
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\FileExtractor;
+use Flow\ETL\Extractor\Limitable;
+use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\PathFiltering;
+use Flow\ETL\Extractor\Signal;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
+
+use function Flow\ETL\DSL\array_to_rows;
 
 final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -34,12 +41,13 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
 
     private bool $withHeader = true;
 
-    public function __construct(private readonly Path $path)
-    {
+    public function __construct(
+        private readonly Path $path,
+    ) {
         $this->resetLimit();
     }
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
@@ -99,12 +107,12 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         }
     }
 
-    public function source() : Path
+    public function source(): Path
     {
         return $this->path;
     }
 
-    public function withBOMRemoval(bool $removeBOM) : self
+    public function withBOMRemoval(bool $removeBOM): self
     {
         $this->removeBOM = $removeBOM;
 
@@ -114,7 +122,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
     /**
      * @param int<1, max> $charactersReadInLine
      */
-    public function withCharactersReadInLine(int $charactersReadInLine) : self
+    public function withCharactersReadInLine(int $charactersReadInLine): self
     {
         if ($charactersReadInLine < 1) {
             throw new InvalidArgumentException('Characters read in line must be greater than 0');
@@ -125,28 +133,28 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         return $this;
     }
 
-    public function withEmptyToNull(bool $emptyToNull) : self
+    public function withEmptyToNull(bool $emptyToNull): self
     {
         $this->emptyToNull = $emptyToNull;
 
         return $this;
     }
 
-    public function withEnclosure(string $enclosure) : self
+    public function withEnclosure(string $enclosure): self
     {
         $this->enclosure = $enclosure;
 
         return $this;
     }
 
-    public function withEscape(string $escape) : self
+    public function withEscape(string $escape): self
     {
         $this->escape = $escape;
 
         return $this;
     }
 
-    public function withHeader(bool $withHeader) : self
+    public function withHeader(bool $withHeader): self
     {
         $this->withHeader = $withHeader;
 
@@ -156,14 +164,14 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
     /**
      * @param Schema $schema
      */
-    public function withSchema(Schema $schema) : self
+    public function withSchema(Schema $schema): self
     {
         $this->schema = $schema;
 
         return $this;
     }
 
-    public function withSeparator(string $separator) : self
+    public function withSeparator(string $separator): self
     {
         $this->separator = $separator;
 
@@ -173,7 +181,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
     /**
      * @return array<int, string>
      */
-    private function generateAutoHeaders(int $count) : array
+    private function generateAutoHeaders(int $count): array
     {
         $headers = [];
 
@@ -189,29 +197,21 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
      *
      * @return array<int, string>
      */
-    private function mapHeaders(array $headers) : array
+    private function mapHeaders(array $headers): array
     {
-        $headers = \array_map(
-            static fn (mixed $header) : string => \trim(
-                match (true) {
-                    \is_string($header) => $header,
-                    \is_numeric($header) => (string) $header,
-                    $header === null => '',
-                    default => \is_scalar($header) ? (string) $header : '',
-                }
-            ),
-            $headers
-        );
+        $headers = \array_map(static fn(mixed $header): string => \trim(match (true) {
+            \is_string($header) => $header,
+            \is_numeric($header) => (string) $header,
+            $header === null => '',
+            default => \is_scalar($header) ? (string) $header : '',
+        }), $headers);
 
         return \array_map(
-            static fn (string $header, int $index) : string => $header !== '' ? $header : 'e' . \str_pad(
-                (string) $index,
-                2,
-                '0',
-                STR_PAD_LEFT
-            ),
+            static fn(string $header, int $index): string => $header !== ''
+                ? $header
+                : 'e' . \str_pad((string) $index, 2, '0', STR_PAD_LEFT),
             $headers,
-            \array_keys($headers)
+            \array_keys($headers),
         );
     }
 }

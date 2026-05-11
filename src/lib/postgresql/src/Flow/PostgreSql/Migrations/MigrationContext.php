@@ -10,6 +10,5 @@ final readonly class MigrationContext
 {
     public function __construct(
         public Client $client,
-    ) {
-    }
+    ) {}
 }

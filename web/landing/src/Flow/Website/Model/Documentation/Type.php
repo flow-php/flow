@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Model\Documentation;
 
-enum Type : string
+enum Type: string
 {
     case AGGREGATING_FUNCTION = 'Aggregating Functions';
     case COMPARISON = 'Comparisons';
@@ -19,14 +19,14 @@ enum Type : string
     case TYPE = 'Type';
     case WINDOW_FUNCTION = 'Window Functions';
 
-    public static function fromName(string $name) : self
+    public static function fromName(string $name): self
     {
         $name = \mb_strtoupper(\str_replace([' ', '-'], '_', $name));
 
         return constant("self::{$name}");
     }
 
-    public function priority() : int
+    public function priority(): int
     {
         return match ($this) {
             self::SCHEMA => 1,

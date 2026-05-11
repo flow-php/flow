@@ -4,17 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema\Definition;
 
-use function Flow\ETL\DSL\{enum_entry, enum_schema, int_entry, string_schema};
-use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\ETL\Schema\Definition\{BooleanDefinition, EnumDefinition};
-use Flow\ETL\Schema\{Definition, Metadata};
-use Flow\ETL\Tests\Fixtures\Enum\{BackedStringEnum, BasicEnum};
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\Definition\BooleanDefinition;
+use Flow\ETL\Schema\Definition\EnumDefinition;
+use Flow\ETL\Schema\Metadata;
+use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
+use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\enum_entry;
+use function Flow\ETL\DSL\enum_schema;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\string_schema;
+
 final class EnumDefinitionTest extends FlowTestCase
 {
-    public static function provideIsCompatibleCases() : \Generator
+    public static function provideIsCompatibleCases(): \Generator
     {
         yield 'same type and name' => [
             enum_schema('status', BackedStringEnum::class),
@@ -41,7 +49,7 @@ final class EnumDefinitionTest extends FlowTestCase
         ];
     }
 
-    public static function provideMergeCases() : \Generator
+    public static function provideMergeCases(): \Generator
     {
         yield 'same type and enum class' => [
             enum_schema('status', BackedStringEnum::class),
@@ -62,35 +70,35 @@ final class EnumDefinitionTest extends FlowTestCase
         ];
     }
 
-    public function test_add_metadata() : void
+    public function test_add_metadata(): void
     {
         $def = enum_schema('status', BackedStringEnum::class);
 
         $withMeta = $def->addMetadata('key', 'value');
 
-        self::assertTrue($withMeta->metadata()->has('key'));
-        self::assertSame('value', $withMeta->metadata()->get('key'));
+        static::assertTrue($withMeta->metadata()->has('key'));
+        static::assertSame('value', $withMeta->metadata()->get('key'));
     }
 
-    public function test_does_not_match_entry_with_different_name() : void
+    public function test_does_not_match_entry_with_different_name(): void
     {
         $def = enum_schema('status', BackedStringEnum::class);
 
-        self::assertFalse($def->matches(enum_entry('other', BackedStringEnum::one)));
+        static::assertFalse($def->matches(enum_entry('other', BackedStringEnum::one)));
     }
 
-    public function test_does_not_match_entry_with_different_type() : void
+    public function test_does_not_match_entry_with_different_type(): void
     {
         $def = enum_schema('col', BackedStringEnum::class);
 
-        self::assertFalse($def->matches(int_entry('col', 1)));
+        static::assertFalse($def->matches(int_entry('col', 1)));
     }
 
-    public function test_enum_class_accessor() : void
+    public function test_enum_class_accessor(): void
     {
         $def = enum_schema('status', BackedStringEnum::class);
 
-        self::assertSame(BackedStringEnum::class, $def->enumClass());
+        static::assertSame(BackedStringEnum::class, $def->enumClass());
     }
 
     /**
@@ -98,58 +106,58 @@ final class EnumDefinitionTest extends FlowTestCase
      * @param Definition<mixed> $other
      */
     #[DataProvider('provideIsCompatibleCases')]
-    public function test_is_compatible(Definition $definition, Definition $other, bool $expected) : void
+    public function test_is_compatible(Definition $definition, Definition $other, bool $expected): void
     {
-        self::assertSame($expected, $definition->isCompatible($other));
+        static::assertSame($expected, $definition->isCompatible($other));
     }
 
-    public function test_is_same_with_different_metadata() : void
+    public function test_is_same_with_different_metadata(): void
     {
         $def = enum_schema('status', BackedStringEnum::class, false, Metadata::with('key', 'value1'));
         $other = enum_schema('status', BackedStringEnum::class, false, Metadata::with('key', 'value2'));
 
-        self::assertFalse($def->isSame($other));
+        static::assertFalse($def->isSame($other));
     }
 
-    public function test_is_same_with_different_nullability() : void
+    public function test_is_same_with_different_nullability(): void
     {
         $def = enum_schema('status', BackedStringEnum::class, true);
         $other = enum_schema('status', BackedStringEnum::class, false);
 
-        self::assertFalse($def->isSame($other));
+        static::assertFalse($def->isSame($other));
     }
 
-    public function test_is_same_with_different_type() : void
+    public function test_is_same_with_different_type(): void
     {
         $def = enum_schema('status', BackedStringEnum::class);
         $other = string_schema('status');
 
-        self::assertFalse($def->isSame($other));
+        static::assertFalse($def->isSame($other));
     }
 
-    public function test_is_same_with_identical_definition() : void
+    public function test_is_same_with_identical_definition(): void
     {
         $def = enum_schema('status', BackedStringEnum::class, true, Metadata::with('key', 'value'));
         $other = enum_schema('status', BackedStringEnum::class, true, Metadata::with('key', 'value'));
 
-        self::assertTrue($def->isSame($other));
+        static::assertTrue($def->isSame($other));
     }
 
-    public function test_make_nullable() : void
+    public function test_make_nullable(): void
     {
         $def = enum_schema('status', BackedStringEnum::class, false);
 
         $nullable = $def->makeNullable();
 
-        self::assertTrue($nullable->isNullable());
-        self::assertFalse($def->isNullable());
+        static::assertTrue($nullable->isNullable());
+        static::assertFalse($def->isNullable());
     }
 
-    public function test_matches_entry_with_same_name_and_type() : void
+    public function test_matches_entry_with_same_name_and_type(): void
     {
         $def = enum_schema('status', BackedStringEnum::class);
 
-        self::assertTrue($def->matches(enum_entry('status', BackedStringEnum::one)));
+        static::assertTrue($def->matches(enum_entry('status', BackedStringEnum::one)));
     }
 
     /**
@@ -158,47 +166,49 @@ final class EnumDefinitionTest extends FlowTestCase
      * @param Definition<mixed> $expected
      */
     #[DataProvider('provideMergeCases')]
-    public function test_merge(Definition $definition, Definition $other, Definition $expected) : void
+    public function test_merge(Definition $definition, Definition $other, Definition $expected): void
     {
-        self::assertEquals($expected, $definition->merge($other));
+        static::assertEquals($expected, $definition->merge($other));
     }
 
-    public function test_merge_when_both_are_from_null() : void
+    public function test_merge_when_both_are_from_null(): void
     {
         $def1 = enum_schema('col', BackedStringEnum::class, true, Metadata::fromArray([Metadata::FROM_NULL => true]));
         $def2 = enum_schema('col', BackedStringEnum::class, true, Metadata::fromArray([Metadata::FROM_NULL => true]));
 
         $merged = $def1->merge($def2);
 
-        self::assertInstanceOf(EnumDefinition::class, $merged);
-        self::assertTrue($merged->isNullable());
-        self::assertTrue($merged->metadata()->has(Metadata::FROM_NULL));
+        static::assertInstanceOf(EnumDefinition::class, $merged);
+        static::assertTrue($merged->isNullable());
+        static::assertTrue($merged->metadata()->has(Metadata::FROM_NULL));
     }
 
-    public function test_merge_when_this_is_from_null() : void
+    public function test_merge_when_this_is_from_null(): void
     {
-        $nullDef = enum_schema('col', BackedStringEnum::class, true, Metadata::fromArray([Metadata::FROM_NULL => true]));
+        $nullDef = enum_schema('col', BackedStringEnum::class, true, Metadata::fromArray([
+            Metadata::FROM_NULL => true,
+        ]));
         $def = enum_schema('col', BackedStringEnum::class, false);
 
         $merged = $nullDef->merge($def);
 
-        self::assertInstanceOf(EnumDefinition::class, $merged);
-        self::assertTrue($merged->isNullable());
-        self::assertFalse($merged->metadata()->has(Metadata::FROM_NULL));
+        static::assertInstanceOf(EnumDefinition::class, $merged);
+        static::assertTrue($merged->isNullable());
+        static::assertFalse($merged->metadata()->has(Metadata::FROM_NULL));
     }
 
-    public function test_merge_with_assumed_null_keeps_original_type() : void
+    public function test_merge_with_assumed_null_keeps_original_type(): void
     {
         $def = enum_schema('col', BackedStringEnum::class, false);
         $nullDef = string_schema('col', true, Metadata::fromArray([Metadata::FROM_NULL => true]));
 
         $merged = $def->merge($nullDef);
 
-        self::assertInstanceOf(EnumDefinition::class, $merged);
-        self::assertTrue($merged->isNullable());
+        static::assertInstanceOf(EnumDefinition::class, $merged);
+        static::assertTrue($merged->isNullable());
     }
 
-    public function test_merge_with_different_entry_name_throws_exception() : void
+    public function test_merge_with_different_entry_name_throws_exception(): void
     {
         $def = enum_schema('status', BackedStringEnum::class);
 
@@ -208,7 +218,7 @@ final class EnumDefinitionTest extends FlowTestCase
         $def->merge(enum_schema('other', BackedStringEnum::class));
     }
 
-    public function test_merge_with_different_enum_class_throws_exception() : void
+    public function test_merge_with_different_enum_class_throws_exception(): void
     {
         $def = enum_schema('col', BackedStringEnum::class);
 
@@ -217,7 +227,7 @@ final class EnumDefinitionTest extends FlowTestCase
         $def->merge(enum_schema('col', BasicEnum::class));
     }
 
-    public function test_merge_with_incompatible_type_throws_exception() : void
+    public function test_merge_with_incompatible_type_throws_exception(): void
     {
         $def = enum_schema('col', BackedStringEnum::class);
 
@@ -226,46 +236,46 @@ final class EnumDefinitionTest extends FlowTestCase
         $def->merge(new BooleanDefinition('col'));
     }
 
-    public function test_normalize() : void
+    public function test_normalize(): void
     {
         $def = enum_schema('status', BackedStringEnum::class, true, Metadata::with('key', 'value'));
 
         $normalized = $def->normalize();
 
-        self::assertSame('status', $normalized['ref']);
-        self::assertTrue($normalized['nullable']);
-        self::assertArrayHasKey('type', $normalized);
-        self::assertArrayHasKey('metadata', $normalized);
+        static::assertSame('status', $normalized['ref']);
+        static::assertTrue($normalized['nullable']);
+        static::assertArrayHasKey('type', $normalized);
+        static::assertArrayHasKey('metadata', $normalized);
     }
 
-    public function test_nullable_matches_any_entry_with_same_name() : void
+    public function test_nullable_matches_any_entry_with_same_name(): void
     {
         $def = enum_schema('col', BackedStringEnum::class, true);
 
-        self::assertTrue($def->matches(enum_entry('col', null)));
+        static::assertTrue($def->matches(enum_entry('col', null)));
     }
 
-    public function test_rename() : void
+    public function test_rename(): void
     {
         $def = enum_schema('status', BackedStringEnum::class);
 
         $renamed = $def->rename('new_status');
 
-        self::assertSame('new_status', $renamed->entry()->name());
-        self::assertSame('status', $def->entry()->name());
+        static::assertSame('new_status', $renamed->entry()->name());
+        static::assertSame('status', $def->entry()->name());
     }
 
-    public function test_set_metadata() : void
+    public function test_set_metadata(): void
     {
         $def = enum_schema('status', BackedStringEnum::class);
         $metadata = Metadata::with('key', 'value');
 
         $withMeta = $def->setMetadata($metadata);
 
-        self::assertTrue($withMeta->metadata()->isEqual($metadata));
+        static::assertTrue($withMeta->metadata()->isEqual($metadata));
     }
 
-    public function test_throws_exception_for_non_existing_enum_class() : void
+    public function test_throws_exception_for_non_existing_enum_class(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
@@ -273,10 +283,10 @@ final class EnumDefinitionTest extends FlowTestCase
         enum_schema('status', 'NonExistingEnum');
     }
 
-    public function test_type_returns_enum_type() : void
+    public function test_type_returns_enum_type(): void
     {
         $def = enum_schema('status', BackedStringEnum::class);
 
-        self::assertStringContainsString('enum', $def->type()->toString());
+        static::assertStringContainsString('enum', $def->type()->toString());
     }
 }

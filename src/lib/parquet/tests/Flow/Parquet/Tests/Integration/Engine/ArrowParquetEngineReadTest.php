@@ -4,18 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\Engine;
 
-use function Flow\ETL\DSL\generate_random_string;
 use Flow\Parquet\Engine\ArrowParquetEngine;
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, MapKey, MapValue, NestedColumn, Repetition};
-use Flow\Parquet\{Reader, Writer};
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\ListElement;
+use Flow\Parquet\ParquetFile\Schema\MapKey;
+use Flow\Parquet\ParquetFile\Schema\MapValue;
+use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\ParquetFile\Schema\Repetition;
+use Flow\Parquet\Reader;
+use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\ETL\DSL\generate_random_string;
 
 #[Group('native-extension')]
 final class ArrowParquetEngineReadTest extends TestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\extension_loaded('arrow')) {
             self::markTestSkipped('Arrow extension is not loaded');
@@ -26,7 +33,7 @@ final class ArrowParquetEngineReadTest extends TestCase
         }
     }
 
-    public function test_read_flat_columns() : void
+    public function test_read_flat_columns(): void
     {
         $path = __DIR__ . '/var/test-arrow-read-flat-' . generate_random_string() . '.parquet';
 
@@ -52,16 +59,16 @@ final class ArrowParquetEngineReadTest extends TestCase
             $parquetFile->schema(),
         ));
 
-        self::assertCount(3, $result);
-        self::assertSame(1, $result[0]['id']);
-        self::assertSame('Alice', $result[0]['name']);
-        self::assertTrue($result[0]['active']);
-        self::assertEqualsWithDelta(99.5, $result[0]['score'], 0.001);
+        static::assertCount(3, $result);
+        static::assertSame(1, $result[0]['id']);
+        static::assertSame('Alice', $result[0]['name']);
+        static::assertTrue($result[0]['active']);
+        static::assertEqualsWithDelta(99.5, $result[0]['score'], 0.001);
 
         \unlink($path);
     }
 
-    public function test_read_nested_lists() : void
+    public function test_read_nested_lists(): void
     {
         $path = __DIR__ . '/var/test-arrow-read-lists-' . generate_random_string() . '.parquet';
 
@@ -84,14 +91,14 @@ final class ArrowParquetEngineReadTest extends TestCase
             $parquetFile->schema(),
         ));
 
-        self::assertCount(2, $result);
-        self::assertSame(['php', 'rust'], $result[0]['tags']);
-        self::assertSame(['python'], $result[1]['tags']);
+        static::assertCount(2, $result);
+        static::assertSame(['php', 'rust'], $result[0]['tags']);
+        static::assertSame(['python'], $result[1]['tags']);
 
         \unlink($path);
     }
 
-    public function test_read_nested_maps() : void
+    public function test_read_nested_maps(): void
     {
         $path = __DIR__ . '/var/test-arrow-read-maps-' . generate_random_string() . '.parquet';
 
@@ -114,14 +121,14 @@ final class ArrowParquetEngineReadTest extends TestCase
             $parquetFile->schema(),
         ));
 
-        self::assertCount(2, $result);
-        self::assertSame(100, $result[0]['metadata']['score']);
-        self::assertSame(5, $result[0]['metadata']['level']);
+        static::assertCount(2, $result);
+        static::assertSame(100, $result[0]['metadata']['score']);
+        static::assertSame(5, $result[0]['metadata']['level']);
 
         \unlink($path);
     }
 
-    public function test_read_nested_structs() : void
+    public function test_read_nested_structs(): void
     {
         $path = __DIR__ . '/var/test-arrow-read-structs-' . generate_random_string() . '.parquet';
 
@@ -147,14 +154,14 @@ final class ArrowParquetEngineReadTest extends TestCase
             $parquetFile->schema(),
         ));
 
-        self::assertCount(2, $result);
-        self::assertSame('Berlin', $result[0]['address']['city']);
-        self::assertSame(10115, $result[0]['address']['zip']);
+        static::assertCount(2, $result);
+        static::assertSame('Berlin', $result[0]['address']['city']);
+        static::assertSame(10115, $result[0]['address']['zip']);
 
         \unlink($path);
     }
 
-    public function test_read_with_column_projection() : void
+    public function test_read_with_column_projection(): void
     {
         $path = __DIR__ . '/var/test-arrow-read-proj-' . generate_random_string() . '.parquet';
 
@@ -179,24 +186,21 @@ final class ArrowParquetEngineReadTest extends TestCase
             ['id', 'name'],
         ));
 
-        self::assertCount(2, $result);
-        self::assertArrayHasKey('id', $result[0]);
-        self::assertArrayHasKey('name', $result[0]);
-        self::assertArrayNotHasKey('email', $result[0]);
+        static::assertCount(2, $result);
+        static::assertArrayHasKey('id', $result[0]);
+        static::assertArrayHasKey('name', $result[0]);
+        static::assertArrayNotHasKey('email', $result[0]);
 
         \unlink($path);
     }
 
-    public function test_read_with_limit() : void
+    public function test_read_with_limit(): void
     {
         $path = __DIR__ . '/var/test-arrow-read-limit-' . generate_random_string() . '.parquet';
 
         $schema = Schema::with(FlatColumn::int32('id', Repetition::REQUIRED));
 
-        $inputData = \array_map(
-            static fn (int $i) : array => ['id' => $i],
-            \range(1, 100),
-        );
+        $inputData = \array_map(static fn(int $i): array => ['id' => $i], \range(1, 100));
 
         (new Writer())->write($path, $schema, $inputData);
 
@@ -209,23 +213,20 @@ final class ArrowParquetEngineReadTest extends TestCase
             10,
         ));
 
-        self::assertCount(10, $result);
-        self::assertSame(1, $result[0]['id']);
-        self::assertSame(10, $result[9]['id']);
+        static::assertCount(10, $result);
+        static::assertSame(1, $result[0]['id']);
+        static::assertSame(10, $result[9]['id']);
 
         \unlink($path);
     }
 
-    public function test_read_with_limit_and_offset() : void
+    public function test_read_with_limit_and_offset(): void
     {
         $path = __DIR__ . '/var/test-arrow-read-limit-offset-' . generate_random_string() . '.parquet';
 
         $schema = Schema::with(FlatColumn::int32('id', Repetition::REQUIRED));
 
-        $inputData = \array_map(
-            static fn (int $i) : array => ['id' => $i],
-            \range(1, 100),
-        );
+        $inputData = \array_map(static fn(int $i): array => ['id' => $i], \range(1, 100));
 
         (new Writer())->write($path, $schema, $inputData);
 
@@ -239,23 +240,20 @@ final class ArrowParquetEngineReadTest extends TestCase
             10,
         ));
 
-        self::assertCount(5, $result);
-        self::assertSame(11, $result[0]['id']);
-        self::assertSame(15, $result[4]['id']);
+        static::assertCount(5, $result);
+        static::assertSame(11, $result[0]['id']);
+        static::assertSame(15, $result[4]['id']);
 
         \unlink($path);
     }
 
-    public function test_read_with_offset() : void
+    public function test_read_with_offset(): void
     {
         $path = __DIR__ . '/var/test-arrow-read-offset-' . generate_random_string() . '.parquet';
 
         $schema = Schema::with(FlatColumn::int32('id', Repetition::REQUIRED));
 
-        $inputData = \array_map(
-            static fn (int $i) : array => ['id' => $i],
-            \range(1, 100),
-        );
+        $inputData = \array_map(static fn(int $i): array => ['id' => $i], \range(1, 100));
 
         (new Writer())->write($path, $schema, $inputData);
 
@@ -269,8 +267,8 @@ final class ArrowParquetEngineReadTest extends TestCase
             50,
         ));
 
-        self::assertCount(50, $result);
-        self::assertSame(51, $result[0]['id']);
+        static::assertCount(50, $result);
+        static::assertSame(51, $result[0]['id']);
 
         \unlink($path);
     }

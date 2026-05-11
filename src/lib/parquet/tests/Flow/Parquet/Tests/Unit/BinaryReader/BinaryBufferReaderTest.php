@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class BinaryBufferReaderTest extends TestCase
 {
-    public function test_read_var_int() : void
+    public function test_read_var_int(): void
     {
         // Using examples:
         // 1 is encoded as 00000001
@@ -19,10 +19,10 @@ final class BinaryBufferReaderTest extends TestCase
 
         // First varint should be 1
         $result1 = $reader->readVarInt();
-        self::assertSame(1, $result1);
+        static::assertSame(1, $result1);
 
         // Second varint should be 300
         $result2 = $reader->readVarInt();
-        self::assertSame(300, $result2);
+        static::assertSame(300, $result2);
     }
 }

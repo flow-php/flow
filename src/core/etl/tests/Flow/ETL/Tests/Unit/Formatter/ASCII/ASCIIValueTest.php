@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Formatter\ASCII;
 
-use function Flow\ETL\DSL\datetime_entry;
 use Flow\ETL\Formatter\ASCII\ASCIIValue;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\ETL\DSL\datetime_entry;
+
 final class ASCIIValueTest extends FlowTestCase
 {
-    public static function values_with_truncating() : \Generator
+    public static function values_with_truncating(): \Generator
     {
         yield ['string', 'str'];
         yield [false, 'fal'];
@@ -21,7 +22,7 @@ final class ASCIIValueTest extends FlowTestCase
         yield [['a' => 1, 'b' => 2, 'c' => ['test']], '{"a'];
     }
 
-    public static function values_without_truncating() : \Generator
+    public static function values_without_truncating(): \Generator
     {
         yield ['string', 'string'];
         yield [1, '1'];
@@ -32,40 +33,25 @@ final class ASCIIValueTest extends FlowTestCase
     }
 
     #[DataProvider('values_without_truncating')]
-    public function test_converting_value_to_ascii_value(mixed $value, string $asciiValue) : void
+    public function test_converting_value_to_ascii_value(mixed $value, string $asciiValue): void
     {
         /** @var null|array<mixed>|bool|Entry<mixed>|float|int|string $value */
-        self::assertSame(
-            $asciiValue,
-            (new ASCIIValue($value))->print(false),
-        );
+        static::assertSame($asciiValue, (new ASCIIValue($value))->print(false));
     }
 
     #[DataProvider('values_with_truncating')]
-    public function test_converting_value_to_ascii_value_with_truncating(mixed $value, string $asciiValue) : void
+    public function test_converting_value_to_ascii_value_with_truncating(mixed $value, string $asciiValue): void
     {
         /** @var null|array<mixed>|bool|Entry<mixed>|float|int|string $value */
-        self::assertSame(
-            $asciiValue,
-            (new ASCIIValue($value))->print(3),
-        );
+        static::assertSame($asciiValue, (new ASCIIValue($value))->print(3));
     }
 
-    public function test_mb_str_pad() : void
+    public function test_mb_str_pad(): void
     {
-        self::assertSame(
-            '00ąćę',
-            ASCIIValue::mb_str_pad('ąćę', 5, '0', STR_PAD_LEFT)
-        );
+        static::assertSame('00ąćę', ASCIIValue::mb_str_pad('ąćę', 5, '0', STR_PAD_LEFT));
 
-        self::assertSame(
-            'ąćę00',
-            ASCIIValue::mb_str_pad('ąćę', 5, '0', STR_PAD_RIGHT)
-        );
+        static::assertSame('ąćę00', ASCIIValue::mb_str_pad('ąćę', 5, '0', STR_PAD_RIGHT));
 
-        self::assertSame(
-            '0ąćę0',
-            ASCIIValue::mb_str_pad('ąćę', 5, '0', STR_PAD_BOTH)
-        );
+        static::assertSame('0ąćę0', ASCIIValue::mb_str_pad('ąćę', 5, '0', STR_PAD_BOTH));
     }
 }

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Mother;
 
-use Flow\Telemetry\Context\{SpanId, TraceFlags, TraceId};
+use Flow\Telemetry\Context\SpanId;
+use Flow\Telemetry\Context\TraceFlags;
+use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\Tracer\SpanContext;
 
 final class SpanContextMother
@@ -13,7 +15,7 @@ final class SpanContextMother
         ?TraceId $traceId = null,
         ?SpanId $spanId = null,
         ?SpanId $parentSpanId = null,
-    ) : SpanContext {
+    ): SpanContext {
         return SpanContext::create(
             $traceId ?? TraceId::generate(),
             $spanId ?? SpanId::generate(),
@@ -22,7 +24,7 @@ final class SpanContextMother
         );
     }
 
-    public static function withFixedIds() : SpanContext
+    public static function withFixedIds(): SpanContext
     {
         return SpanContext::create(
             TraceId::fromHex('0102030405060708090a0b0c0d0e0f10'),

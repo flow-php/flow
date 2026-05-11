@@ -8,5 +8,5 @@ use Flow\ETL\Row;
 
 interface Comparator
 {
-    public function equals(Row $row, Row $nextRow) : bool;
+    public function equals(Row $row, Row $nextRow): bool;
 }

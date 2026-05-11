@@ -14,19 +14,19 @@ interface CreateTableTemporaryStep extends CreateTableFinalStep
     /**
      * Delete all rows in temporary table at the end of each transaction, but preserve the table structure.
      */
-    public function onCommitDeleteRows() : CreateTableFinalStep;
+    public function onCommitDeleteRows(): CreateTableFinalStep;
 
     /**
      * Drop temporary table at the end of each transaction.
      *
      * This is the default behavior when temporary() is called without specifying ON COMMIT.
      */
-    public function onCommitDrop() : CreateTableFinalStep;
+    public function onCommitDrop(): CreateTableFinalStep;
 
     /**
      * Preserve rows in temporary table at the end of each transaction.
      *
      * This is the most common behavior for temporary tables used across multiple transactions.
      */
-    public function onCommitPreserveRows() : CreateTableFinalStep;
+    public function onCommitPreserveRows(): CreateTableFinalStep;
 }

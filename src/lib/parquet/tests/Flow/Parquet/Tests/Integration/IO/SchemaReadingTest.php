@@ -4,48 +4,55 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use Flow\Parquet\{ParquetEngine, Reader};
+use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\RowGroup\StatisticsReader;
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, MapKey, MapValue, NestedColumn};
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\ListElement;
+use Flow\Parquet\ParquetFile\Schema\MapKey;
+use Flow\Parquet\ParquetFile\Schema\MapValue;
+use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\Reader;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class SchemaReadingTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
-    public function test_reading_lists_schema_ddl(ParquetEngine $engine) : void
+    public function test_reading_lists_schema_ddl(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
 
-        $schema = new Schema(
-            NestedColumn::create('schema', [
-                NestedColumn::list('list', ListElement::int32()),
-                NestedColumn::list('list_nullable', ListElement::int32()),
-                NestedColumn::list('list_mixed_types', ListElement::structure([
-                    FlatColumn::int32('int'),
-                    FlatColumn::string('string'),
-                    FlatColumn::boolean('bool'),
-                ])),
-                NestedColumn::list('list_nested', ListElement::list(ListElement::list(ListElement::int32()))),
-                NestedColumn::list('list_of_structs', ListElement::structure([
-                    FlatColumn::int32('id'),
-                    FlatColumn::string('name'),
-                ])),
-                NestedColumn::list('list_of_structs_nullable', ListElement::structure([
-                    FlatColumn::int32('id'),
-                    FlatColumn::string('name'),
-                ])),
-            ])
-        );
+        $schema = new Schema(NestedColumn::create('schema', [
+            NestedColumn::list('list', ListElement::int32()),
+            NestedColumn::list('list_nullable', ListElement::int32()),
+            NestedColumn::list('list_mixed_types', ListElement::structure([
+                FlatColumn::int32('int'),
+                FlatColumn::string('string'),
+                FlatColumn::boolean('bool'),
+            ])),
+            NestedColumn::list('list_nested', ListElement::list(ListElement::list(ListElement::int32()))),
+            NestedColumn::list('list_of_structs', ListElement::structure([
+                FlatColumn::int32('id'),
+                FlatColumn::string('name'),
+            ])),
+            NestedColumn::list('list_of_structs_nullable', ListElement::structure([
+                FlatColumn::int32('id'),
+                FlatColumn::string('name'),
+            ])),
+        ]));
 
         static::assertSame(
-            ($reader->read(__DIR__ . '/Fixtures/lists.parquet'))->metadata()->schema()->toDDL(),
+            $reader
+                ->read(__DIR__ . '/Fixtures/lists.parquet')
+                ->metadata()
+                ->schema()
+                ->toDDL(),
             $schema->toDDL(),
         );
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_maps_schema_ddl(ParquetEngine $engine) : void
+    public function test_reading_maps_schema_ddl(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
 
@@ -54,34 +61,54 @@ class SchemaReadingTest extends ParquetIntegrationTestCase
             NestedColumn::map('map_nullable', MapKey::string(), MapValue::int32()),
             NestedColumn::map('map_of_maps', MapKey::string(), MapValue::map(MapKey::string(), MapValue::int32())),
             NestedColumn::map('map_of_lists', MapKey::string(), MapValue::list(ListElement::int32())),
-            NestedColumn::map('map_of_complex_lists', MapKey::string(), MapValue::list(ListElement::structure([
-                FlatColumn::int32('int'),
-                FlatColumn::string('string'),
-                FlatColumn::boolean('bool'),
-            ]))),
-            NestedColumn::map('map_of_list_of_map_of_lists', MapKey::string(), MapValue::list(ListElement::map(MapKey::string(), MapValue::list(ListElement::int32())))),
-            NestedColumn::map('map_of_structs', MapKey::string(), MapValue::structure([
-                FlatColumn::int32('int_field'),
-                FlatColumn::string('string_field'),
-            ])),
-            NestedColumn::map('map_of_struct_of_structs', MapKey::string(), MapValue::structure([
-                NestedColumn::struct('struct', [
-                    NestedColumn::struct('nested_struct', [
-                        FlatColumn::int32('int'),
-                        FlatColumn::string('string'),
+            NestedColumn::map(
+                'map_of_complex_lists',
+                MapKey::string(),
+                MapValue::list(ListElement::structure([
+                    FlatColumn::int32('int'),
+                    FlatColumn::string('string'),
+                    FlatColumn::boolean('bool'),
+                ])),
+            ),
+            NestedColumn::map(
+                'map_of_list_of_map_of_lists',
+                MapKey::string(),
+                MapValue::list(ListElement::map(MapKey::string(), MapValue::list(ListElement::int32()))),
+            ),
+            NestedColumn::map(
+                'map_of_structs',
+                MapKey::string(),
+                MapValue::structure([
+                    FlatColumn::int32('int_field'),
+                    FlatColumn::string('string_field'),
+                ]),
+            ),
+            NestedColumn::map(
+                'map_of_struct_of_structs',
+                MapKey::string(),
+                MapValue::structure([
+                    NestedColumn::struct('struct', [
+                        NestedColumn::struct('nested_struct', [
+                            FlatColumn::int32('int'),
+                            FlatColumn::string('string'),
+                        ]),
                     ]),
                 ]),
-            ])),
+            ),
         );
 
         static::assertSame(
-            ($reader->read(__DIR__ . '/Fixtures/maps.parquet'))->metadata()->schema()->toDDL(),
+            $reader
+                ->read(__DIR__ . '/Fixtures/maps.parquet')
+                ->metadata()
+                ->schema()
+                ->toDDL(),
             $schema->toDDL(),
         );
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_primitives_schema_ddl(ParquetEngine $engine) : void
+    public function test_reading_primitives_schema_ddl(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
 
@@ -115,15 +142,21 @@ class SchemaReadingTest extends ParquetIntegrationTestCase
         );
 
         static::assertSame(
-            ($reader->read(__DIR__ . '/Fixtures/primitives.parquet'))->metadata()->schema()->toDDL(),
-            $schema->toDDL()
+            $reader
+                ->read(__DIR__ . '/Fixtures/primitives.parquet')
+                ->metadata()
+                ->schema()
+                ->toDDL(),
+            $schema->toDDL(),
         );
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_statistics(ParquetEngine $engine) : void
+    public function test_reading_statistics(ParquetEngine $engine): void
     {
-        $metadata = (new Reader(engine: $engine))->read(__DIR__ . '/Fixtures/primitives.parquet')->metadata();
+        $metadata = (new Reader(engine: $engine))
+            ->read(__DIR__ . '/Fixtures/primitives.parquet')
+            ->metadata();
 
         foreach ($metadata->columnChunks() as $chunk) {
             static::assertInstanceOf(StatisticsReader::class, $chunk->statistics());
@@ -131,7 +164,7 @@ class SchemaReadingTest extends ParquetIntegrationTestCase
     }
 
     #[DataProvider('engine_provider')]
-    public function test_reading_structs_schema_ddl(ParquetEngine $engine) : void
+    public function test_reading_structs_schema_ddl(ParquetEngine $engine): void
     {
         $reader = new Reader(engine: $engine);
 
@@ -179,21 +212,32 @@ class SchemaReadingTest extends ParquetIntegrationTestCase
                 FlatColumn::string('string'),
                 NestedColumn::struct('struct', [
                     FlatColumn::int32('int'),
-                    NestedColumn::list('list_of_map_of_string_int', ListElement::map(MapKey::string(), MapValue::int32())),
+                    NestedColumn::list('list_of_map_of_string_int', ListElement::map(
+                        MapKey::string(),
+                        MapValue::int32(),
+                    )),
                 ]),
             ]),
             NestedColumn::struct('struct_nested_with_map_of_list_of_ints', [
                 FlatColumn::string('string'),
                 NestedColumn::struct('struct', [
                     FlatColumn::int32('int'),
-                    NestedColumn::map('map_of_int_list_of_string', MapKey::int32(), MapValue::list(ListElement::string())),
+                    NestedColumn::map(
+                        'map_of_int_list_of_string',
+                        MapKey::int32(),
+                        MapValue::list(ListElement::string()),
+                    ),
                 ]),
             ]),
             NestedColumn::struct('struct_nested_with_map_of_string_map_of_string_string', [
                 FlatColumn::string('string'),
                 NestedColumn::struct('struct', [
                     FlatColumn::int32('int'),
-                    NestedColumn::map('map_of_string_map_of_string_string', MapKey::string(), MapValue::map(MapKey::string(), MapValue::string())),
+                    NestedColumn::map(
+                        'map_of_string_map_of_string_string',
+                        MapKey::string(),
+                        MapValue::map(MapKey::string(), MapValue::string()),
+                    ),
                 ]),
             ]),
             NestedColumn::struct('struct_with_list_and_map_of_structs', [
@@ -204,10 +248,14 @@ class SchemaReadingTest extends ParquetIntegrationTestCase
                         FlatColumn::int32('int'),
                         NestedColumn::list('list', ListElement::int32()),
                     ])),
-                    NestedColumn::map('map_of_string_structs', MapKey::string(), MapValue::structure([
-                        FlatColumn::int32('int'),
-                        NestedColumn::list('list', ListElement::int32()),
-                    ])),
+                    NestedColumn::map(
+                        'map_of_string_structs',
+                        MapKey::string(),
+                        MapValue::structure([
+                            FlatColumn::int32('int'),
+                            NestedColumn::list('list', ListElement::int32()),
+                        ]),
+                    ),
                 ]),
             ]),
             NestedColumn::struct('struct_deeply_nested', [
@@ -227,12 +275,16 @@ class SchemaReadingTest extends ParquetIntegrationTestCase
                         ]),
                     ]),
                 ]),
-            ])
+            ]),
         );
 
         static::assertSame(
-            ($reader->read(__DIR__ . '/Fixtures/structs.parquet'))->metadata()->schema()->toDDL(),
-            $schema->toDDL()
+            $reader
+                ->read(__DIR__ . '/Fixtures/structs.parquet')
+                ->metadata()
+                ->schema()
+                ->toDDL(),
+            $schema->toDDL(),
         );
     }
 }

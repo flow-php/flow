@@ -9,7 +9,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 final class CurrentCommandTest extends CommandTestCase
 {
-    public function test_shows_current_version_after_migration() : void
+    public function test_shows_current_version_after_migration(): void
     {
         $version = $this->context->generateDiffMigration();
         $this->context->runMigrate();
@@ -19,9 +19,9 @@ final class CurrentCommandTest extends CommandTestCase
         $tester = new CommandTester($command);
         $tester->execute([]);
 
-        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString($version, $tester->getDisplay());
-        self::assertTrue($this->context->tableExists('flow_migrations_test'));
-        self::assertTrue($this->context->tableExists('test_users'));
+        static::assertSame(Command::SUCCESS, $tester->getStatusCode());
+        static::assertStringContainsString($version, $tester->getDisplay());
+        static::assertTrue($this->context->tableExists('flow_migrations_test'));
+        static::assertTrue($this->context->tableExists('test_users'));
     }
 }

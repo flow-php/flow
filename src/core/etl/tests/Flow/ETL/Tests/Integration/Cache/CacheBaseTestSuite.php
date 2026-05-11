@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Cache;
 
-use function Flow\ETL\DSL\{row, rows, str_entry};
 use Flow\ETL\Cache;
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Exception\KeyNotInCacheException;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\str_entry;
+
 abstract class CacheBaseTestSuite extends FlowIntegrationTestCase
 {
     #[\Override]
-    protected function setUp() : void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -21,14 +24,14 @@ abstract class CacheBaseTestSuite extends FlowIntegrationTestCase
     }
 
     #[\Override]
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         parent::tearDown();
 
         $this->cache()->clear();
     }
 
-    public function test_caching_index() : void
+    public function test_caching_index(): void
     {
         $cache = $this->cache();
 
@@ -41,7 +44,7 @@ abstract class CacheBaseTestSuite extends FlowIntegrationTestCase
         static::assertEquals($index, $cache->get('index'));
     }
 
-    public function test_caching_row() : void
+    public function test_caching_row(): void
     {
         $cache = $this->cache();
 
@@ -54,7 +57,7 @@ abstract class CacheBaseTestSuite extends FlowIntegrationTestCase
         static::assertEquals($row, $cache->get('row'));
     }
 
-    public function test_caching_rows() : void
+    public function test_caching_rows(): void
     {
         $cache = $this->cache();
 
@@ -67,14 +70,14 @@ abstract class CacheBaseTestSuite extends FlowIntegrationTestCase
         static::assertEquals($rows, $cache->get('rows'));
     }
 
-    public function test_checking_on_non_existing_cache_key() : void
+    public function test_checking_on_non_existing_cache_key(): void
     {
         $cache = $this->cache();
 
         static::assertFalse($cache->has('non-existing'));
     }
 
-    public function test_clearing_cache() : void
+    public function test_clearing_cache(): void
     {
         $cache = $this->cache();
 
@@ -89,7 +92,7 @@ abstract class CacheBaseTestSuite extends FlowIntegrationTestCase
         static::assertFalse($cache->has('rows'));
     }
 
-    public function test_getting_non_existing_cache_key() : void
+    public function test_getting_non_existing_cache_key(): void
     {
         $cache = $this->cache();
 
@@ -98,7 +101,7 @@ abstract class CacheBaseTestSuite extends FlowIntegrationTestCase
         $cache->get('non-existing');
     }
 
-    public function test_removing_from_cache() : void
+    public function test_removing_from_cache(): void
     {
         $cache = $this->cache();
 
@@ -113,7 +116,7 @@ abstract class CacheBaseTestSuite extends FlowIntegrationTestCase
         static::assertTrue($cache->has('rows'));
     }
 
-    public function test_removing_non_existing_cache_key() : void
+    public function test_removing_non_existing_cache_key(): void
     {
         $cache = $this->cache();
 
@@ -122,5 +125,5 @@ abstract class CacheBaseTestSuite extends FlowIntegrationTestCase
         static::assertFalse($cache->has('non-existing'));
     }
 
-    abstract protected function cache() : Cache;
+    abstract protected function cache(): Cache;
 }

@@ -5,73 +5,122 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\Schema\Diff;
 
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
-use Flow\PostgreSql\Schema\{Column, IdentityGeneration};
+use Flow\PostgreSql\Schema\Column;
 use Flow\PostgreSql\Schema\Diff\ColumnDiff;
+use Flow\PostgreSql\Schema\IdentityGeneration;
 use PHPUnit\Framework\TestCase;
 
 final class ColumnDiffTest extends TestCase
 {
-    public function test_adds_generated_column() : void
+    public function test_adds_generated_column(): void
     {
         $diff = new ColumnDiff(
             'public.users',
             new Column('full_name', ColumnType::text(), true),
-            new Column('full_name', ColumnType::text(), true, isGenerated: true, generationExpression: 'first_name || last_name'),
+            new Column(
+                'full_name',
+                ColumnType::text(),
+                true,
+                isGenerated: true,
+                generationExpression: 'first_name || last_name',
+            ),
         );
 
         $sqls = $diff->generate();
 
-        self::assertCount(2, $sqls);
-        self::assertSame('ALTER TABLE public.users DROP full_name', $sqls[0]->toSql());
-        self::assertSame('ALTER TABLE public.users ADD COLUMN full_name pg_catalog.text GENERATED ALWAYS AS (first_name || last_name) STORED', $sqls[1]->toSql());
+        static::assertCount(2, $sqls);
+        static::assertSame('ALTER TABLE public.users DROP full_name', $sqls[0]->toSql());
+        static::assertSame(
+            'ALTER TABLE public.users ADD COLUMN full_name pg_catalog.text GENERATED ALWAYS AS (first_name || last_name) STORED',
+            $sqls[1]->toSql(),
+        );
     }
 
-    public function test_adds_identity_column() : void
+    public function test_adds_identity_column(): void
     {
         $diff = new ColumnDiff(
             'public.users',
             new Column('id', ColumnType::integer(), false),
-            new Column('id', ColumnType::integer(), false, isIdentity: true, identityGeneration: IdentityGeneration::ALWAYS),
+            new Column(
+                'id',
+                ColumnType::integer(),
+                false,
+                isIdentity: true,
+                identityGeneration: IdentityGeneration::ALWAYS,
+            ),
         );
 
         $sqls = $diff->generate();
 
-        self::assertCount(2, $sqls);
-        self::assertSame('ALTER TABLE public.users DROP id', $sqls[0]->toSql());
-        self::assertSame('ALTER TABLE public.users ADD COLUMN id int NOT NULL GENERATED ALWAYS AS IDENTITY', $sqls[1]->toSql());
+        static::assertCount(2, $sqls);
+        static::assertSame('ALTER TABLE public.users DROP id', $sqls[0]->toSql());
+        static::assertSame(
+            'ALTER TABLE public.users ADD COLUMN id int NOT NULL GENERATED ALWAYS AS IDENTITY',
+            $sqls[1]->toSql(),
+        );
     }
 
-    public function test_changes_generation_expression() : void
+    public function test_changes_generation_expression(): void
     {
         $diff = new ColumnDiff(
             'public.users',
-            new Column('full_name', ColumnType::text(), true, isGenerated: true, generationExpression: 'first_name || last_name'),
-            new Column('full_name', ColumnType::text(), true, isGenerated: true, generationExpression: 'upper(first_name || last_name)'),
+            new Column(
+                'full_name',
+                ColumnType::text(),
+                true,
+                isGenerated: true,
+                generationExpression: 'first_name || last_name',
+            ),
+            new Column(
+                'full_name',
+                ColumnType::text(),
+                true,
+                isGenerated: true,
+                generationExpression: 'upper(first_name || last_name)',
+            ),
         );
 
         $sqls = $diff->generate();
 
-        self::assertCount(2, $sqls);
-        self::assertSame('ALTER TABLE public.users DROP full_name', $sqls[0]->toSql());
-        self::assertSame('ALTER TABLE public.users ADD COLUMN full_name pg_catalog.text GENERATED ALWAYS AS (upper(first_name || last_name)) STORED', $sqls[1]->toSql());
+        static::assertCount(2, $sqls);
+        static::assertSame('ALTER TABLE public.users DROP full_name', $sqls[0]->toSql());
+        static::assertSame(
+            'ALTER TABLE public.users ADD COLUMN full_name pg_catalog.text GENERATED ALWAYS AS (upper(first_name || last_name)) STORED',
+            $sqls[1]->toSql(),
+        );
     }
 
-    public function test_changes_identity_generation_type() : void
+    public function test_changes_identity_generation_type(): void
     {
         $diff = new ColumnDiff(
             'public.users',
-            new Column('id', ColumnType::integer(), false, isIdentity: true, identityGeneration: IdentityGeneration::ALWAYS),
-            new Column('id', ColumnType::integer(), false, isIdentity: true, identityGeneration: IdentityGeneration::BY_DEFAULT),
+            new Column(
+                'id',
+                ColumnType::integer(),
+                false,
+                isIdentity: true,
+                identityGeneration: IdentityGeneration::ALWAYS,
+            ),
+            new Column(
+                'id',
+                ColumnType::integer(),
+                false,
+                isIdentity: true,
+                identityGeneration: IdentityGeneration::BY_DEFAULT,
+            ),
         );
 
         $sqls = $diff->generate();
 
-        self::assertCount(2, $sqls);
-        self::assertSame('ALTER TABLE public.users DROP id', $sqls[0]->toSql());
-        self::assertSame('ALTER TABLE public.users ADD COLUMN id int NOT NULL GENERATED BY DEFAULT AS IDENTITY', $sqls[1]->toSql());
+        static::assertCount(2, $sqls);
+        static::assertSame('ALTER TABLE public.users DROP id', $sqls[0]->toSql());
+        static::assertSame(
+            'ALTER TABLE public.users ADD COLUMN id int NOT NULL GENERATED BY DEFAULT AS IDENTITY',
+            $sqls[1]->toSql(),
+        );
     }
 
-    public function test_changes_type() : void
+    public function test_changes_type(): void
     {
         $diff = new ColumnDiff(
             'public.users',
@@ -81,11 +130,11 @@ final class ColumnDiffTest extends TestCase
 
         $sqls = $diff->generate();
 
-        self::assertCount(1, $sqls);
-        self::assertSame('ALTER TABLE public.users ALTER COLUMN col TYPE int', $sqls[0]->toSql());
+        static::assertCount(1, $sqls);
+        static::assertSame('ALTER TABLE public.users ALTER COLUMN col TYPE int', $sqls[0]->toSql());
     }
 
-    public function test_detects_default_change() : void
+    public function test_detects_default_change(): void
     {
         $diff = new ColumnDiff(
             'public.test_table',
@@ -93,13 +142,13 @@ final class ColumnDiffTest extends TestCase
             new Column('col', ColumnType::text(), true, 'new_default'),
         );
 
-        self::assertTrue($diff->hasDefaultChanged());
-        self::assertFalse($diff->hasTypeChanged());
-        self::assertFalse($diff->hasNullableChanged());
-        self::assertFalse($diff->hasNameChanged());
+        static::assertTrue($diff->hasDefaultChanged());
+        static::assertFalse($diff->hasTypeChanged());
+        static::assertFalse($diff->hasNullableChanged());
+        static::assertFalse($diff->hasNameChanged());
     }
 
-    public function test_detects_generation_change() : void
+    public function test_detects_generation_change(): void
     {
         $diff = new ColumnDiff(
             'public.test_table',
@@ -107,21 +156,27 @@ final class ColumnDiffTest extends TestCase
             new Column('col', ColumnType::text(), true, isGenerated: true, generationExpression: 'upper(name)'),
         );
 
-        self::assertTrue($diff->hasGenerationChanged());
+        static::assertTrue($diff->hasGenerationChanged());
     }
 
-    public function test_detects_identity_change() : void
+    public function test_detects_identity_change(): void
     {
         $diff = new ColumnDiff(
             'public.test_table',
             new Column('col', ColumnType::integer(), false, isIdentity: false),
-            new Column('col', ColumnType::integer(), false, isIdentity: true, identityGeneration: IdentityGeneration::ALWAYS),
+            new Column(
+                'col',
+                ColumnType::integer(),
+                false,
+                isIdentity: true,
+                identityGeneration: IdentityGeneration::ALWAYS,
+            ),
         );
 
-        self::assertTrue($diff->hasIdentityChanged());
+        static::assertTrue($diff->hasIdentityChanged());
     }
 
-    public function test_detects_name_change() : void
+    public function test_detects_name_change(): void
     {
         $diff = new ColumnDiff(
             'public.test_table',
@@ -129,13 +184,13 @@ final class ColumnDiffTest extends TestCase
             new Column('new_name', ColumnType::text(), true),
         );
 
-        self::assertTrue($diff->hasNameChanged());
-        self::assertFalse($diff->hasTypeChanged());
-        self::assertFalse($diff->hasNullableChanged());
-        self::assertFalse($diff->hasDefaultChanged());
+        static::assertTrue($diff->hasNameChanged());
+        static::assertFalse($diff->hasTypeChanged());
+        static::assertFalse($diff->hasNullableChanged());
+        static::assertFalse($diff->hasDefaultChanged());
     }
 
-    public function test_detects_nullable_change() : void
+    public function test_detects_nullable_change(): void
     {
         $diff = new ColumnDiff(
             'public.test_table',
@@ -143,11 +198,11 @@ final class ColumnDiffTest extends TestCase
             new Column('col', ColumnType::text(), false),
         );
 
-        self::assertTrue($diff->hasNullableChanged());
-        self::assertFalse($diff->hasTypeChanged());
+        static::assertTrue($diff->hasNullableChanged());
+        static::assertFalse($diff->hasTypeChanged());
     }
 
-    public function test_detects_type_change() : void
+    public function test_detects_type_change(): void
     {
         $diff = new ColumnDiff(
             'public.test_table',
@@ -155,11 +210,11 @@ final class ColumnDiffTest extends TestCase
             new Column('col', ColumnType::text(), true),
         );
 
-        self::assertTrue($diff->hasTypeChanged());
-        self::assertFalse($diff->hasNullableChanged());
+        static::assertTrue($diff->hasTypeChanged());
+        static::assertFalse($diff->hasNullableChanged());
     }
 
-    public function test_drops_default() : void
+    public function test_drops_default(): void
     {
         $diff = new ColumnDiff(
             'public.users',
@@ -169,11 +224,11 @@ final class ColumnDiffTest extends TestCase
 
         $sqls = $diff->generate();
 
-        self::assertCount(1, $sqls);
-        self::assertSame('ALTER TABLE public.users ALTER COLUMN col DROP DEFAULT', $sqls[0]->toSql());
+        static::assertCount(1, $sqls);
+        static::assertSame('ALTER TABLE public.users ALTER COLUMN col DROP DEFAULT', $sqls[0]->toSql());
     }
 
-    public function test_drops_not_null() : void
+    public function test_drops_not_null(): void
     {
         $diff = new ColumnDiff(
             'public.users',
@@ -183,11 +238,11 @@ final class ColumnDiffTest extends TestCase
 
         $sqls = $diff->generate();
 
-        self::assertCount(1, $sqls);
-        self::assertSame('ALTER TABLE public.users ALTER COLUMN col DROP NOT NULL', $sqls[0]->toSql());
+        static::assertCount(1, $sqls);
+        static::assertSame('ALTER TABLE public.users ALTER COLUMN col DROP NOT NULL', $sqls[0]->toSql());
     }
 
-    public function test_generated_column_with_not_null() : void
+    public function test_generated_column_with_not_null(): void
     {
         $diff = new ColumnDiff(
             'public.users',
@@ -197,12 +252,15 @@ final class ColumnDiffTest extends TestCase
 
         $sqls = $diff->generate();
 
-        self::assertCount(2, $sqls);
-        self::assertSame('ALTER TABLE public.users DROP computed', $sqls[0]->toSql());
-        self::assertSame('ALTER TABLE public.users ADD COLUMN computed pg_catalog.text NOT NULL GENERATED ALWAYS AS (upper(name)) STORED', $sqls[1]->toSql());
+        static::assertCount(2, $sqls);
+        static::assertSame('ALTER TABLE public.users DROP computed', $sqls[0]->toSql());
+        static::assertSame(
+            'ALTER TABLE public.users ADD COLUMN computed pg_catalog.text NOT NULL GENERATED ALWAYS AS (upper(name)) STORED',
+            $sqls[1]->toSql(),
+        );
     }
 
-    public function test_handles_multiple_changes_type_nullable_default() : void
+    public function test_handles_multiple_changes_type_nullable_default(): void
     {
         $diff = new ColumnDiff(
             'public.users',
@@ -212,13 +270,13 @@ final class ColumnDiffTest extends TestCase
 
         $sqls = $diff->generate();
 
-        self::assertCount(3, $sqls);
-        self::assertSame('ALTER TABLE public.users ALTER COLUMN col TYPE int', $sqls[0]->toSql());
-        self::assertSame('ALTER TABLE public.users ALTER COLUMN col SET NOT NULL', $sqls[1]->toSql());
-        self::assertSame('ALTER TABLE public.users ALTER COLUMN col SET DEFAULT 0', $sqls[2]->toSql());
+        static::assertCount(3, $sqls);
+        static::assertSame('ALTER TABLE public.users ALTER COLUMN col TYPE int', $sqls[0]->toSql());
+        static::assertSame('ALTER TABLE public.users ALTER COLUMN col SET NOT NULL', $sqls[1]->toSql());
+        static::assertSame('ALTER TABLE public.users ALTER COLUMN col SET DEFAULT 0', $sqls[2]->toSql());
     }
 
-    public function test_handles_rename_and_type_change() : void
+    public function test_handles_rename_and_type_change(): void
     {
         $diff = new ColumnDiff(
             'public.users',
@@ -228,12 +286,12 @@ final class ColumnDiffTest extends TestCase
 
         $sqls = $diff->generate();
 
-        self::assertCount(2, $sqls);
-        self::assertSame('ALTER TABLE public.users RENAME COLUMN old_name TO new_name', $sqls[0]->toSql());
-        self::assertSame('ALTER TABLE public.users ALTER COLUMN new_name TYPE int', $sqls[1]->toSql());
+        static::assertCount(2, $sqls);
+        static::assertSame('ALTER TABLE public.users RENAME COLUMN old_name TO new_name', $sqls[0]->toSql());
+        static::assertSame('ALTER TABLE public.users ALTER COLUMN new_name TYPE int', $sqls[1]->toSql());
     }
 
-    public function test_handles_rename_with_generation_change() : void
+    public function test_handles_rename_with_generation_change(): void
     {
         $diff = new ColumnDiff(
             'public.users',
@@ -243,28 +301,41 @@ final class ColumnDiffTest extends TestCase
 
         $sqls = $diff->generate();
 
-        self::assertCount(3, $sqls);
-        self::assertSame('ALTER TABLE public.users RENAME COLUMN old_name TO new_name', $sqls[0]->toSql());
-        self::assertSame('ALTER TABLE public.users DROP new_name', $sqls[1]->toSql());
-        self::assertSame('ALTER TABLE public.users ADD COLUMN new_name pg_catalog.text GENERATED ALWAYS AS (upper(name)) STORED', $sqls[2]->toSql());
+        static::assertCount(3, $sqls);
+        static::assertSame('ALTER TABLE public.users RENAME COLUMN old_name TO new_name', $sqls[0]->toSql());
+        static::assertSame('ALTER TABLE public.users DROP new_name', $sqls[1]->toSql());
+        static::assertSame(
+            'ALTER TABLE public.users ADD COLUMN new_name pg_catalog.text GENERATED ALWAYS AS (upper(name)) STORED',
+            $sqls[2]->toSql(),
+        );
     }
 
-    public function test_identity_with_default_and_not_null() : void
+    public function test_identity_with_default_and_not_null(): void
     {
         $diff = new ColumnDiff(
             'public.users',
             new Column('id', ColumnType::integer(), true),
-            new Column('id', ColumnType::integer(), false, default: '0', isIdentity: true, identityGeneration: IdentityGeneration::BY_DEFAULT),
+            new Column(
+                'id',
+                ColumnType::integer(),
+                false,
+                default: '0',
+                isIdentity: true,
+                identityGeneration: IdentityGeneration::BY_DEFAULT,
+            ),
         );
 
         $sqls = $diff->generate();
 
-        self::assertCount(2, $sqls);
-        self::assertSame('ALTER TABLE public.users DROP id', $sqls[0]->toSql());
-        self::assertSame('ALTER TABLE public.users ADD COLUMN id int NOT NULL DEFAULT 0 GENERATED BY DEFAULT AS IDENTITY', $sqls[1]->toSql());
+        static::assertCount(2, $sqls);
+        static::assertSame('ALTER TABLE public.users DROP id', $sqls[0]->toSql());
+        static::assertSame(
+            'ALTER TABLE public.users ADD COLUMN id int NOT NULL DEFAULT 0 GENERATED BY DEFAULT AS IDENTITY',
+            $sqls[1]->toSql(),
+        );
     }
 
-    public function test_no_changes_when_identical() : void
+    public function test_no_changes_when_identical(): void
     {
         $diff = new ColumnDiff(
             'public.test_table',
@@ -272,45 +343,57 @@ final class ColumnDiffTest extends TestCase
             new Column('col', ColumnType::text(), true, 'default_val'),
         );
 
-        self::assertFalse($diff->hasNameChanged());
-        self::assertFalse($diff->hasTypeChanged());
-        self::assertFalse($diff->hasNullableChanged());
-        self::assertFalse($diff->hasDefaultChanged());
-        self::assertFalse($diff->hasIdentityChanged());
-        self::assertFalse($diff->hasGenerationChanged());
+        static::assertFalse($diff->hasNameChanged());
+        static::assertFalse($diff->hasTypeChanged());
+        static::assertFalse($diff->hasNullableChanged());
+        static::assertFalse($diff->hasDefaultChanged());
+        static::assertFalse($diff->hasIdentityChanged());
+        static::assertFalse($diff->hasGenerationChanged());
     }
 
-    public function test_removes_generation_from_column() : void
+    public function test_removes_generation_from_column(): void
     {
         $diff = new ColumnDiff(
             'public.users',
-            new Column('full_name', ColumnType::text(), true, isGenerated: true, generationExpression: 'first_name || last_name'),
+            new Column(
+                'full_name',
+                ColumnType::text(),
+                true,
+                isGenerated: true,
+                generationExpression: 'first_name || last_name',
+            ),
             new Column('full_name', ColumnType::text(), true),
         );
 
         $sqls = $diff->generate();
 
-        self::assertCount(2, $sqls);
-        self::assertSame('ALTER TABLE public.users DROP full_name', $sqls[0]->toSql());
-        self::assertSame('ALTER TABLE public.users ADD COLUMN full_name pg_catalog.text', $sqls[1]->toSql());
+        static::assertCount(2, $sqls);
+        static::assertSame('ALTER TABLE public.users DROP full_name', $sqls[0]->toSql());
+        static::assertSame('ALTER TABLE public.users ADD COLUMN full_name pg_catalog.text', $sqls[1]->toSql());
     }
 
-    public function test_removes_identity_from_column() : void
+    public function test_removes_identity_from_column(): void
     {
         $diff = new ColumnDiff(
             'public.users',
-            new Column('id', ColumnType::integer(), false, isIdentity: true, identityGeneration: IdentityGeneration::ALWAYS),
+            new Column(
+                'id',
+                ColumnType::integer(),
+                false,
+                isIdentity: true,
+                identityGeneration: IdentityGeneration::ALWAYS,
+            ),
             new Column('id', ColumnType::integer(), false),
         );
 
         $sqls = $diff->generate();
 
-        self::assertCount(2, $sqls);
-        self::assertSame('ALTER TABLE public.users DROP id', $sqls[0]->toSql());
-        self::assertSame('ALTER TABLE public.users ADD COLUMN id int NOT NULL', $sqls[1]->toSql());
+        static::assertCount(2, $sqls);
+        static::assertSame('ALTER TABLE public.users DROP id', $sqls[0]->toSql());
+        static::assertSame('ALTER TABLE public.users ADD COLUMN id int NOT NULL', $sqls[1]->toSql());
     }
 
-    public function test_renames_column() : void
+    public function test_renames_column(): void
     {
         $diff = new ColumnDiff(
             'public.users',
@@ -320,11 +403,11 @@ final class ColumnDiffTest extends TestCase
 
         $sqls = $diff->generate();
 
-        self::assertCount(1, $sqls);
-        self::assertSame('ALTER TABLE public.users RENAME COLUMN old_name TO new_name', $sqls[0]->toSql());
+        static::assertCount(1, $sqls);
+        static::assertSame('ALTER TABLE public.users RENAME COLUMN old_name TO new_name', $sqls[0]->toSql());
     }
 
-    public function test_returns_empty_when_no_changes() : void
+    public function test_returns_empty_when_no_changes(): void
     {
         $diff = new ColumnDiff(
             'public.users',
@@ -332,10 +415,10 @@ final class ColumnDiffTest extends TestCase
             new Column('col', ColumnType::text(), true),
         );
 
-        self::assertSame([], $diff->generate());
+        static::assertSame([], $diff->generate());
     }
 
-    public function test_reversed_generation_change() : void
+    public function test_reversed_generation_change(): void
     {
         $diff = new ColumnDiff(
             'public.users',
@@ -345,27 +428,33 @@ final class ColumnDiffTest extends TestCase
 
         $sqls = $diff->generate();
 
-        self::assertCount(2, $sqls);
-        self::assertSame('ALTER TABLE public.users DROP full_name', $sqls[0]->toSql());
-        self::assertSame('ALTER TABLE public.users ADD COLUMN full_name pg_catalog.text', $sqls[1]->toSql());
+        static::assertCount(2, $sqls);
+        static::assertSame('ALTER TABLE public.users DROP full_name', $sqls[0]->toSql());
+        static::assertSame('ALTER TABLE public.users ADD COLUMN full_name pg_catalog.text', $sqls[1]->toSql());
     }
 
-    public function test_reversed_identity_change() : void
+    public function test_reversed_identity_change(): void
     {
         $diff = new ColumnDiff(
             'public.users',
-            new Column('id', ColumnType::integer(), false, isIdentity: true, identityGeneration: IdentityGeneration::ALWAYS),
+            new Column(
+                'id',
+                ColumnType::integer(),
+                false,
+                isIdentity: true,
+                identityGeneration: IdentityGeneration::ALWAYS,
+            ),
             new Column('id', ColumnType::integer(), false),
         );
 
         $sqls = $diff->generate();
 
-        self::assertCount(2, $sqls);
-        self::assertSame('ALTER TABLE public.users DROP id', $sqls[0]->toSql());
-        self::assertSame('ALTER TABLE public.users ADD COLUMN id int NOT NULL', $sqls[1]->toSql());
+        static::assertCount(2, $sqls);
+        static::assertSame('ALTER TABLE public.users DROP id', $sqls[0]->toSql());
+        static::assertSame('ALTER TABLE public.users ADD COLUMN id int NOT NULL', $sqls[1]->toSql());
     }
 
-    public function test_reversed_type_change() : void
+    public function test_reversed_type_change(): void
     {
         $diff = new ColumnDiff(
             'public.users',
@@ -375,11 +464,11 @@ final class ColumnDiffTest extends TestCase
 
         $sqls = $diff->generate();
 
-        self::assertCount(1, $sqls);
-        self::assertSame('ALTER TABLE public.users ALTER COLUMN col TYPE pg_catalog.text', $sqls[0]->toSql());
+        static::assertCount(1, $sqls);
+        static::assertSame('ALTER TABLE public.users ALTER COLUMN col TYPE pg_catalog.text', $sqls[0]->toSql());
     }
 
-    public function test_sets_default() : void
+    public function test_sets_default(): void
     {
         $diff = new ColumnDiff(
             'public.users',
@@ -389,11 +478,11 @@ final class ColumnDiffTest extends TestCase
 
         $sqls = $diff->generate();
 
-        self::assertCount(1, $sqls);
-        self::assertSame('ALTER TABLE public.users ALTER COLUMN col SET DEFAULT 42', $sqls[0]->toSql());
+        static::assertCount(1, $sqls);
+        static::assertSame('ALTER TABLE public.users ALTER COLUMN col SET DEFAULT 42', $sqls[0]->toSql());
     }
 
-    public function test_sets_not_null() : void
+    public function test_sets_not_null(): void
     {
         $diff = new ColumnDiff(
             'public.users',
@@ -403,7 +492,7 @@ final class ColumnDiffTest extends TestCase
 
         $sqls = $diff->generate();
 
-        self::assertCount(1, $sqls);
-        self::assertSame('ALTER TABLE public.users ALTER COLUMN col SET NOT NULL', $sqls[0]->toSql());
+        static::assertCount(1, $sqls);
+        static::assertSame('ALTER TABLE public.users ALTER COLUMN col SET NOT NULL', $sqls[0]->toSql());
     }
 }

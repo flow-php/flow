@@ -19,6 +19,5 @@ final readonly class PostgreSqlTelemetryConfig
         public Telemetry $telemetry,
         public ClockInterface $clock,
         public PostgreSqlTelemetryOptions $options = new PostgreSqlTelemetryOptions(),
-    ) {
-    }
+    ) {}
 }

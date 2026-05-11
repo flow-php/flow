@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\Azure;
 
-use Flow\Azure\SDK\BlobService\ListBlobs\{ListBlobOptions, OptionInclude, OptionShowOnly};
+use Flow\Azure\SDK\BlobService\ListBlobs\ListBlobOptions;
+use Flow\Azure\SDK\BlobService\ListBlobs\OptionInclude;
+use Flow\Azure\SDK\BlobService\ListBlobs\OptionShowOnly;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockFactory;
@@ -34,22 +36,22 @@ final class Options
         $this->tmpDir = \Flow\Filesystem\DSL\path('azure-blob://_$azure_flow_tmp$/');
     }
 
-    public function blockFactory() : BlockFactory
+    public function blockFactory(): BlockFactory
     {
         return $this->blockFactory;
     }
 
-    public function blockSize() : int
+    public function blockSize(): int
     {
         return $this->blockSize;
     }
 
-    public function fileFastPath() : bool
+    public function fileFastPath(): bool
     {
         return $this->fileFastPath;
     }
 
-    public function listBlobOptions() : ListBlobOptions
+    public function listBlobOptions(): ListBlobOptions
     {
         $listBlobOptions = new ListBlobOptions();
 
@@ -68,19 +70,19 @@ final class Options
         return $listBlobOptions;
     }
 
-    public function tmpDir() : Path
+    public function tmpDir(): Path
     {
         return $this->tmpDir;
     }
 
-    public function withBlockFactory(BlockFactory $blockFactory) : self
+    public function withBlockFactory(BlockFactory $blockFactory): self
     {
         $this->blockFactory = $blockFactory;
 
         return $this;
     }
 
-    public function withBlockSize(int $blockSize) : self
+    public function withBlockSize(int $blockSize): self
     {
         $this->blockSize = $blockSize;
 
@@ -93,35 +95,35 @@ final class Options
      * This avoids the container-list permission requirement and an extra round-trip when reading single files.
      * Disable if your workloads typically pass folder/prefix paths to list(), to skip the (failing) properties call.
      */
-    public function withFileFastPath(bool $enabled = true) : self
+    public function withFileFastPath(bool $enabled = true): self
     {
         $this->fileFastPath = $enabled;
 
         return $this;
     }
 
-    public function withListBlobInclude(OptionInclude ...$listBlobInclude) : self
+    public function withListBlobInclude(OptionInclude ...$listBlobInclude): self
     {
         $this->listBlobInclude = $listBlobInclude;
 
         return $this;
     }
 
-    public function withListBlobMaxResults(int $listBlobMaxResults) : self
+    public function withListBlobMaxResults(int $listBlobMaxResults): self
     {
         $this->listBlobMaxResults = $listBlobMaxResults;
 
         return $this;
     }
 
-    public function withListBlobShowOnly(OptionShowOnly $listBlobShowOnly) : self
+    public function withListBlobShowOnly(OptionShowOnly $listBlobShowOnly): self
     {
         $this->listBlobShowOnly = $listBlobShowOnly;
 
         return $this;
     }
 
-    public function withTmpDir(Path $tmpDir) : self
+    public function withTmpDir(Path $tmpDir): self
     {
         $this->tmpDir = $tmpDir;
 

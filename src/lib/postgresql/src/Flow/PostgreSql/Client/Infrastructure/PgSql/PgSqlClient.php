@@ -4,17 +4,43 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Infrastructure\PgSql;
 
-use function Flow\PostgreSql\DSL\{begin, commit, listen, release_savepoint, rollback, savepoint, unlisten};
-use Flow\PostgreSql\AST\Transformers\{ExplainConfig, ExplainModifier};
-use Flow\PostgreSql\Client\{Client, ConnectionParameters, Context as ClientContext, Cursor, Notification, Query, RowMapper, TransactionContext, TypedValue};
-use Flow\PostgreSql\Client\Exception\{ConnectionException, NoResultException, PostgreSqlError, QueryException, ResultException, TooManyRowsException, TransactionException, ValueConversionException};
+use Flow\PostgreSql\AST\Transformers\ExplainConfig;
+use Flow\PostgreSql\AST\Transformers\ExplainModifier;
+use Flow\PostgreSql\Client\Client;
+use Flow\PostgreSql\Client\ConnectionParameters;
+use Flow\PostgreSql\Client\Context as ClientContext;
+use Flow\PostgreSql\Client\Cursor;
+use Flow\PostgreSql\Client\Exception\ConnectionException;
+use Flow\PostgreSql\Client\Exception\NoResultException;
+use Flow\PostgreSql\Client\Exception\PostgreSqlError;
+use Flow\PostgreSql\Client\Exception\QueryException;
+use Flow\PostgreSql\Client\Exception\ResultException;
+use Flow\PostgreSql\Client\Exception\TooManyRowsException;
+use Flow\PostgreSql\Client\Exception\TransactionException;
+use Flow\PostgreSql\Client\Exception\ValueConversionException;
+use Flow\PostgreSql\Client\Notification;
+use Flow\PostgreSql\Client\Query;
+use Flow\PostgreSql\Client\RowMapper;
 use Flow\PostgreSql\Client\RowMapper\Context;
-use Flow\PostgreSql\Client\Types\{ResultCaster, ValueConverters, ValueType};
+use Flow\PostgreSql\Client\TransactionContext;
+use Flow\PostgreSql\Client\TypedValue;
+use Flow\PostgreSql\Client\Types\ResultCaster;
+use Flow\PostgreSql\Client\Types\ValueConverters;
+use Flow\PostgreSql\Client\Types\ValueType;
 use Flow\PostgreSql\Explain\ExplainParser;
 use Flow\PostgreSql\Explain\Plan\Plan;
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\QueryBuilder\Sql;
-use PgSql\{Connection, Result};
+use PgSql\Connection;
+use PgSql\Result;
+
+use function Flow\PostgreSql\DSL\begin;
+use function Flow\PostgreSql\DSL\commit;
+use function Flow\PostgreSql\DSL\listen;
+use function Flow\PostgreSql\DSL\release_savepoint;
+use function Flow\PostgreSql\DSL\rollback;
+use function Flow\PostgreSql\DSL\savepoint;
+use function Flow\PostgreSql\DSL\unlisten;
 
 final class PgSqlClient implements Client
 {
@@ -44,7 +70,7 @@ final class PgSqlClient implements Client
         ConnectionParameters $params,
         ?ValueConverters $valueConverters = null,
         ?ClientContext $context = null,
-    ) : self {
+    ): self {
         if (!\extension_loaded('pgsql')) {
             throw ConnectionException::extensionNotLoaded('pgsql');
         }
@@ -66,7 +92,7 @@ final class PgSqlClient implements Client
         );
     }
 
-    public function beginTransaction() : void
+    public function beginTransaction(): void
     {
         $this->assertConnected();
 
@@ -77,12 +103,12 @@ final class PgSqlClient implements Client
         } else {
             $this->executeTransactionCommand(
                 savepoint($savepointName),
-                static fn (string $error) => TransactionException::savepointFailed($savepointName, $error)
+                static fn(string $error) => TransactionException::savepointFailed($savepointName, $error),
             );
         }
     }
 
-    public function close() : void
+    public function close(): void
     {
         if ($this->connection !== null) {
             @\pg_close($this->connection);
@@ -90,7 +116,7 @@ final class PgSqlClient implements Client
         }
     }
 
-    public function commit() : void
+    public function commit(): void
     {
         $this->assertConnected();
 
@@ -101,24 +127,24 @@ final class PgSqlClient implements Client
         } else {
             $this->executeTransactionCommand(
                 release_savepoint($savepointName),
-                static fn (string $error) => TransactionException::releaseSavepointFailed($savepointName, $error)
+                static fn(string $error) => TransactionException::releaseSavepointFailed($savepointName, $error),
             );
         }
     }
 
-    public function converters() : ValueConverters
+    public function converters(): ValueConverters
     {
         return $this->valueConverters;
     }
 
-    public function cursor(Sql|string $sql, array $parameters = []) : Cursor
+    public function cursor(Sql|string $sql, array $parameters = []): Cursor
     {
         $result = $this->query($sql, $parameters);
 
         return new PgSqlCursor($result, $this->buildContext($sql, $parameters));
     }
 
-    public function execute(Sql|string $sql, array $parameters = []) : int
+    public function execute(Sql|string $sql, array $parameters = []): int
     {
         $result = $this->query($sql, $parameters);
         $affected = \pg_affected_rows($result);
@@ -127,7 +153,7 @@ final class PgSqlClient implements Client
         return $affected;
     }
 
-    public function explain(Sql|string $sql, array $parameters = [], ?ExplainConfig $config = null) : Plan
+    public function explain(Sql|string $sql, array $parameters = [], ?ExplainConfig $config = null): Plan
     {
         $config ??= ExplainConfig::forAnalysis();
         $query = $sql instanceof Sql ? $sql->toSql() : $sql;
@@ -141,7 +167,7 @@ final class PgSqlClient implements Client
         return (new ExplainParser())->parse($jsonOutput);
     }
 
-    public function fetch(Sql|string $sql, array $parameters = []) : ?array
+    public function fetch(Sql|string $sql, array $parameters = []): ?array
     {
         $result = $this->query($sql, $parameters);
         $row = \pg_fetch_assoc($result);
@@ -158,16 +184,13 @@ final class PgSqlClient implements Client
         return $converted;
     }
 
-    public function fetchAll(Sql|string $sql, array $parameters = []) : array
+    public function fetchAll(Sql|string $sql, array $parameters = []): array
     {
         $result = $this->query($sql, $parameters);
         $rows = \pg_fetch_all($result) ?: [];
 
         if ($rows !== []) {
-            $rows = \array_map(
-                fn (array $row) => $this->convertRow($result, $row),
-                $rows
-            );
+            $rows = \array_map(fn(array $row) => $this->convertRow($result, $row), $rows);
         }
 
         \pg_free_result($result);
@@ -175,24 +198,18 @@ final class PgSqlClient implements Client
         return $rows;
     }
 
-    public function fetchAllInto(
-        RowMapper $mapper,
-        Sql|string $sql,
-        array $parameters = [],
-    ) : array {
+    public function fetchAllInto(RowMapper $mapper, Sql|string $sql, array $parameters = []): array
+    {
         $context = $this->buildContext($sql, $parameters);
 
         return \array_values(\array_map(
-            static fn (array $row) => $mapper->map($row, $context),
+            static fn(array $row) => $mapper->map($row, $context),
             $this->fetchAll($sql, $parameters),
         ));
     }
 
-    public function fetchInto(
-        RowMapper $mapper,
-        Sql|string $sql,
-        array $parameters = [],
-    ) : mixed {
+    public function fetchInto(RowMapper $mapper, Sql|string $sql, array $parameters = []): mixed
+    {
         $row = $this->fetch($sql, $parameters);
 
         if ($row === null) {
@@ -202,7 +219,7 @@ final class PgSqlClient implements Client
         return $mapper->map($row, $this->buildContext($sql, $parameters));
     }
 
-    public function fetchOne(Sql|string $sql, array $parameters = []) : ?array
+    public function fetchOne(Sql|string $sql, array $parameters = []): ?array
     {
         $result = $this->query($sql, $parameters);
         $count = \pg_num_rows($result);
@@ -233,11 +250,8 @@ final class PgSqlClient implements Client
         return $converted;
     }
 
-    public function fetchOneInto(
-        RowMapper $mapper,
-        Sql|string $sql,
-        array $parameters = [],
-    ) : mixed {
+    public function fetchOneInto(RowMapper $mapper, Sql|string $sql, array $parameters = []): mixed
+    {
         $row = $this->fetchOne($sql, $parameters);
 
         if ($row === null) {
@@ -247,7 +261,7 @@ final class PgSqlClient implements Client
         return $mapper->map($row, $this->buildContext($sql, $parameters));
     }
 
-    public function fetchScalar(Sql|string $sql, array $parameters = []) : mixed
+    public function fetchScalar(Sql|string $sql, array $parameters = []): mixed
     {
         $result = $this->query($sql, $parameters);
 
@@ -274,7 +288,7 @@ final class PgSqlClient implements Client
         return $value;
     }
 
-    public function fetchScalarBool(Sql|string $sql, array $parameters = []) : bool
+    public function fetchScalarBool(Sql|string $sql, array $parameters = []): bool
     {
         $value = $this->fetchScalar($sql, $parameters);
 
@@ -285,7 +299,7 @@ final class PgSqlClient implements Client
         return $value;
     }
 
-    public function fetchScalarFloat(Sql|string $sql, array $parameters = []) : float
+    public function fetchScalarFloat(Sql|string $sql, array $parameters = []): float
     {
         $value = $this->fetchScalar($sql, $parameters);
 
@@ -296,7 +310,7 @@ final class PgSqlClient implements Client
         return $value;
     }
 
-    public function fetchScalarInt(Sql|string $sql, array $parameters = []) : int
+    public function fetchScalarInt(Sql|string $sql, array $parameters = []): int
     {
         $value = $this->fetchScalar($sql, $parameters);
 
@@ -307,7 +321,7 @@ final class PgSqlClient implements Client
         return $value;
     }
 
-    public function fetchScalarString(Sql|string $sql, array $parameters = []) : string
+    public function fetchScalarString(Sql|string $sql, array $parameters = []): string
     {
         $value = $this->fetchScalar($sql, $parameters);
 
@@ -318,7 +332,7 @@ final class PgSqlClient implements Client
         return $value;
     }
 
-    public function fetchSingle(Sql|string $sql, array $parameters = []) : array
+    public function fetchSingle(Sql|string $sql, array $parameters = []): array
     {
         $row = $this->fetchOne($sql, $parameters);
 
@@ -329,31 +343,27 @@ final class PgSqlClient implements Client
         return $row;
     }
 
-    public function fetchSingleInto(
-        RowMapper $mapper,
-        Sql|string $sql,
-        array $parameters = [],
-    ) : mixed {
+    public function fetchSingleInto(RowMapper $mapper, Sql|string $sql, array $parameters = []): mixed
+    {
         return $mapper->map($this->fetchSingle($sql, $parameters), $this->buildContext($sql, $parameters));
     }
 
-    public function getTransactionNestingLevel() : int
+    public function getTransactionNestingLevel(): int
     {
         return $this->transactionContext->getNestingLevel();
     }
 
-    public function isAutoCommit() : bool
+    public function isAutoCommit(): bool
     {
         return $this->autoCommit;
     }
 
-    public function isConnected() : bool
+    public function isConnected(): bool
     {
-        return $this->connection !== null
-            && \pg_connection_status($this->connection) === \PGSQL_CONNECTION_OK;
+        return $this->connection !== null && \pg_connection_status($this->connection) === \PGSQL_CONNECTION_OK;
     }
 
-    public function lastInsertId(string $sequenceName) : int|string
+    public function lastInsertId(string $sequenceName): int|string
     {
         try {
             $result = $this->fetchScalar('SELECT currval($1)', [$sequenceName]);
@@ -373,7 +383,7 @@ final class PgSqlClient implements Client
         return $result;
     }
 
-    public function listen(string $channel) : void
+    public function listen(string $channel): void
     {
         if (\array_key_exists($channel, $this->listeningChannels)) {
             return;
@@ -383,12 +393,12 @@ final class PgSqlClient implements Client
         $this->listeningChannels[$channel] = true;
     }
 
-    public function parameters() : ConnectionParameters
+    public function parameters(): ConnectionParameters
     {
         return $this->connectionParameters;
     }
 
-    public function rollBack() : void
+    public function rollBack(): void
     {
         $this->assertConnected();
 
@@ -399,12 +409,12 @@ final class PgSqlClient implements Client
         } else {
             $this->executeTransactionCommand(
                 rollback()->toSavepoint($savepointName),
-                static fn (string $error) => TransactionException::rollbackToSavepointFailed($savepointName, $error)
+                static fn(string $error) => TransactionException::rollbackToSavepointFailed($savepointName, $error),
             );
         }
     }
 
-    public function setAutoCommit(bool $autoCommit) : void
+    public function setAutoCommit(bool $autoCommit): void
     {
         if ($this->autoCommit === $autoCommit) {
             return;
@@ -421,7 +431,7 @@ final class PgSqlClient implements Client
         }
     }
 
-    public function transaction(callable $callback) : mixed
+    public function transaction(callable $callback): mixed
     {
         $this->beginTransaction();
 
@@ -437,7 +447,7 @@ final class PgSqlClient implements Client
         }
     }
 
-    public function unlisten(string $channel) : void
+    public function unlisten(string $channel): void
     {
         if (!\array_key_exists($channel, $this->listeningChannels)) {
             return;
@@ -447,12 +457,10 @@ final class PgSqlClient implements Client
         unset($this->listeningChannels[$channel]);
     }
 
-    public function wait(int $milliseconds) : ?Notification
+    public function wait(int $milliseconds): ?Notification
     {
         if ($milliseconds < 0) {
-            throw new \InvalidArgumentException(
-                \sprintf('Timeout must be non-negative, got %d', $milliseconds),
-            );
+            throw new \InvalidArgumentException(\sprintf('Timeout must be non-negative, got %d', $milliseconds));
         }
 
         $this->assertConnected();
@@ -476,7 +484,7 @@ final class PgSqlClient implements Client
             throw ConnectionException::notificationWaitFailed('pg_socket() failed to return connection socket');
         }
 
-        $deadlineNs = \hrtime(true) + $milliseconds * 1_000_000;
+        $deadlineNs = \hrtime(true) + ($milliseconds * 1_000_000);
 
         while (true) {
             $remainingNs = $deadlineNs - \hrtime(true);
@@ -522,7 +530,7 @@ final class PgSqlClient implements Client
         }
     }
 
-    private function assertConnected() : void
+    private function assertConnected(): void
     {
         if (!$this->isConnected()) {
             throw ConnectionException::notConnected();
@@ -532,13 +540,9 @@ final class PgSqlClient implements Client
     /**
      * @param list<mixed> $parameters
      */
-    private function buildContext(Sql|string $sql, array $parameters) : Context
+    private function buildContext(Sql|string $sql, array $parameters): Context
     {
-        return new Context(
-            query: new Query($sql, $parameters),
-            client: $this,
-            clientContext: $this->clientContext,
-        );
+        return new Context(query: new Query($sql, $parameters), client: $this, clientContext: $this->clientContext);
     }
 
     /**
@@ -546,7 +550,7 @@ final class PgSqlClient implements Client
      *
      * @return array<int, null|string>
      */
-    private function convertParameters(array $parameters) : array
+    private function convertParameters(array $parameters): array
     {
         $converted = [];
 
@@ -573,7 +577,7 @@ final class PgSqlClient implements Client
      *
      * @return array<string, mixed>
      */
-    private function convertRow(Result $result, array $row) : array
+    private function convertRow(Result $result, array $row): array
     {
         $converted = [];
         $i = 0;
@@ -593,7 +597,7 @@ final class PgSqlClient implements Client
         return $converted;
     }
 
-    private function executeTransactionCommand(Sql $query, callable $exceptionFactory) : void
+    private function executeTransactionCommand(Sql $query, callable $exceptionFactory): void
     {
         /** @var Connection $connection */
         $connection = $this->connection;
@@ -609,7 +613,7 @@ final class PgSqlClient implements Client
         \pg_free_result($result);
     }
 
-    private function extractError(Connection $connection, ?Result $result) : PostgreSqlError
+    private function extractError(Connection $connection, ?Result $result): PostgreSqlError
     {
         if ($result !== null) {
             $sqlState = \pg_result_error_field($result, \PGSQL_DIAG_SQLSTATE);
@@ -625,14 +629,14 @@ final class PgSqlClient implements Client
             if ($sqlState !== false && $sqlState !== null) {
                 return PostgreSqlError::fromDiagnostics(
                     $sqlState,
-                    ($message !== false && $message !== null) ? $message : (\pg_result_error($result) ?: 'Unknown error'),
-                    ($detail !== false && $detail !== null) ? $detail : null,
-                    ($hint !== false && $hint !== null) ? $hint : null,
-                    ($schema !== false && $schema !== null) ? $schema : null,
-                    ($table !== false && $table !== null) ? $table : null,
-                    ($column !== false && $column !== null) ? $column : null,
-                    ($constraint !== false && $constraint !== null) ? $constraint : null,
-                    ($position !== false && $position !== null) ? (int) $position : null,
+                    $message !== false && $message !== null ? $message : (\pg_result_error($result) ?: 'Unknown error'),
+                    $detail !== false && $detail !== null ? $detail : null,
+                    $hint !== false && $hint !== null ? $hint : null,
+                    $schema !== false && $schema !== null ? $schema : null,
+                    $table !== false && $table !== null ? $table : null,
+                    $column !== false && $column !== null ? $column : null,
+                    $constraint !== false && $constraint !== null ? $constraint : null,
+                    $position !== false && $position !== null ? (int) $position : null,
                 );
             }
         }
@@ -645,7 +649,7 @@ final class PgSqlClient implements Client
     /**
      * @param list<mixed> $parameters
      */
-    private function query(Sql|string $sql, array $parameters) : Result
+    private function query(Sql|string $sql, array $parameters): Result
     {
         $this->assertConnected();
 
@@ -658,19 +662,13 @@ final class PgSqlClient implements Client
         $success = @\pg_send_query_params($connection, $query, $convertedParams);
 
         if ($success === false) {
-            throw QueryException::executionFailed(
-                $query,
-                $this->extractError($connection, null)
-            );
+            throw QueryException::executionFailed($query, $this->extractError($connection, null));
         }
 
         $result = \pg_get_result($connection);
 
         if ($result === false) {
-            throw QueryException::executionFailed(
-                $query,
-                $this->extractError($connection, null)
-            );
+            throw QueryException::executionFailed($query, $this->extractError($connection, null));
         }
 
         while (\pg_get_result($connection) !== false) {
@@ -691,16 +689,14 @@ final class PgSqlClient implements Client
     /**
      * @param array<array-key, mixed> $raw
      */
-    private static function notificationFromRaw(array $raw) : Notification
+    private static function notificationFromRaw(array $raw): Notification
     {
         $channel = $raw['message'] ?? '';
         $payload = $raw['payload'] ?? '';
         $pid = $raw['pid'] ?? 0;
 
         if (!\is_string($channel) || !\is_string($payload) || !\is_int($pid)) {
-            throw ConnectionException::notificationWaitFailed(
-                'Malformed notification payload from pg_get_notify()',
-            );
+            throw ConnectionException::notificationWaitFailed('Malformed notification payload from pg_get_notify()');
         }
 
         return new Notification($channel, $payload, $pid);

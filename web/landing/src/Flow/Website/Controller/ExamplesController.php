@@ -6,18 +6,23 @@ namespace Flow\Website\Controller;
 
 use Flow\Website\Service\Examples;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\{BinaryFileResponse, Response};
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 final class ExamplesController extends AbstractController
 {
     public function __construct(
         private readonly Examples $examples,
-    ) {
-    }
+    ) {}
 
-    #[Route('/playground/{topic}/{example}/data/{path}', name: 'example_data', requirements: ['path' => '.+'], priority: 15)]
-    public function data(string $topic, string $example, string $path) : Response
+    #[Route(
+        '/playground/{topic}/{example}/data/{path}',
+        name: 'example_data',
+        requirements: ['path' => '.+'],
+        priority: 15,
+    )]
+    public function data(string $topic, string $example, string $path): Response
     {
         $filePath = $this->examples->dataFilePath($topic, $example, $path);
 
@@ -29,7 +34,7 @@ final class ExamplesController extends AbstractController
     }
 
     #[Route('/{topic}/{example}/', name: 'example', priority: -140)]
-    public function example(string $topic, string $example) : Response
+    public function example(string $topic, string $example): Response
     {
         $firstOption = $this->examples->firstOption($topic, $example);
 
@@ -48,7 +53,7 @@ final class ExamplesController extends AbstractController
     }
 
     #[Route('/playground/{topic}/{example}/{option}', name: 'example_option_playground', priority: 10)]
-    public function exampleOptionPlayground(string $topic, string $example, string $option) : Response
+    public function exampleOptionPlayground(string $topic, string $example, string $option): Response
     {
         return $this->render('example/playground.html.twig', [
             'topic' => $topic,
@@ -65,7 +70,7 @@ final class ExamplesController extends AbstractController
     }
 
     #[Route('/playground/{topic}/{example}', name: 'example_playground', priority: 5)]
-    public function examplePlayground(string $topic, string $example) : Response
+    public function examplePlayground(string $topic, string $example): Response
     {
         $firstOption = $this->examples->firstOption($topic, $example);
 
@@ -84,7 +89,7 @@ final class ExamplesController extends AbstractController
     }
 
     #[Route('/{topic}/{example}/{option}/', name: 'example_option', priority: -150)]
-    public function option(string $topic, string $example, string $option) : Response
+    public function option(string $topic, string $example, string $option): Response
     {
         return $this->render('example/index.html.twig', [
             'topicsNavigation' => $this->examples->topicsNavigation(),
@@ -100,8 +105,13 @@ final class ExamplesController extends AbstractController
         ]);
     }
 
-    #[Route('/playground/{topic}/{example}/{option}/data/{path}', name: 'example_option_data', requirements: ['path' => '.+'], priority: 20)]
-    public function optionData(string $topic, string $example, string $option, string $path) : Response
+    #[Route(
+        '/playground/{topic}/{example}/{option}/data/{path}',
+        name: 'example_option_data',
+        requirements: ['path' => '.+'],
+        priority: 20,
+    )]
+    public function optionData(string $topic, string $example, string $option, string $path): Response
     {
         $filePath = $this->examples->dataFilePath($topic, $example, $path, $option);
 
@@ -113,7 +123,7 @@ final class ExamplesController extends AbstractController
     }
 
     #[Route('/{topic}/', name: 'topic', priority: -120)]
-    public function topic(string $topic) : Response
+    public function topic(string $topic): Response
     {
         $firstExample = $this->examples->firstExample($topic);
         $firstOption = $this->examples->firstOption($topic, $firstExample);

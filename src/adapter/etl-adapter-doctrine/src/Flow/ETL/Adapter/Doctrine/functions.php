@@ -4,28 +4,27 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
-use Doctrine\DBAL\{ArrayParameterType as DbalArrayType,
-    Connection,
-    ParameterType as DbalParameterType
-};
+use Doctrine\DBAL\ArrayParameterType as DbalArrayType;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType as DbalParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Types\Type as DbalType;
-use Flow\Doctrine\Bulk\{Dialect\MySQLInsertOptions,
-    Dialect\PostgreSQLInsertOptions,
-    Dialect\PostgreSQLUpdateOptions,
-    Dialect\SqliteInsertOptions,
-    InsertOptions,
-    UpdateOptions};
-use Flow\ETL\{Adapter\Doctrine\Pagination\Key,
-    Adapter\Doctrine\Pagination\KeySet,
-    Adapter\Doctrine\Pagination\Order,
-    Attribute\DocumentationDSL,
-    Attribute\DocumentationExample,
-    Attribute\Module,
-    Attribute\Type as DSLType,
-    Loader,
-    Schema};
+use Flow\Doctrine\Bulk\Dialect\MySQLInsertOptions;
+use Flow\Doctrine\Bulk\Dialect\PostgreSQLInsertOptions;
+use Flow\Doctrine\Bulk\Dialect\PostgreSQLUpdateOptions;
+use Flow\Doctrine\Bulk\Dialect\SqliteInsertOptions;
+use Flow\Doctrine\Bulk\InsertOptions;
+use Flow\Doctrine\Bulk\UpdateOptions;
+use Flow\ETL\Adapter\Doctrine\Pagination\Key;
+use Flow\ETL\Adapter\Doctrine\Pagination\KeySet;
+use Flow\ETL\Adapter\Doctrine\Pagination\Order;
+use Flow\ETL\Attribute\DocumentationDSL;
+use Flow\ETL\Attribute\DocumentationExample;
+use Flow\ETL\Attribute\Module;
+use Flow\ETL\Attribute\Type as DSLType;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Loader;
+use Flow\ETL\Schema;
 
 /**
  * @param array<string, mixed>|Connection $connection
@@ -37,7 +36,7 @@ function dbal_dataframe_factory(
     array|Connection $connection,
     string $query,
     QueryParameter ...$parameters,
-) : DbalDataFrameFactory {
+): DbalDataFrameFactory {
     return \is_array($connection)
         ? new DbalDataFrameFactory($connection, $query, ...$parameters)
         : DbalDataFrameFactory::fromConnection($connection, $query, ...$parameters);
@@ -59,12 +58,12 @@ function from_dbal_limit_offset(
     array|OrderBy $order_by,
     int $page_size = 1000,
     ?int $maximum = null,
-) : DbalLimitOffsetExtractor {
-    $loader = (DbalLimitOffsetExtractor::table(
+): DbalLimitOffsetExtractor {
+    $loader = DbalLimitOffsetExtractor::table(
         $connection,
         \is_string($table) ? new Table($table) : $table,
         $order_by instanceof OrderBy ? [$order_by] : $order_by,
-    ))->withPageSize($page_size);
+    )->withPageSize($page_size);
 
     if ($maximum !== null) {
         $loader->withMaximum($maximum);
@@ -86,11 +85,9 @@ function from_dbal_limit_offset_qb(
     int $page_size = 1000,
     ?int $maximum = null,
     int $offset = 0,
-) : DbalLimitOffsetExtractor {
-    $loader = (new DbalLimitOffsetExtractor(
-        $connection,
-        $queryBuilder,
-    ))->withPageSize($page_size)
+): DbalLimitOffsetExtractor {
+    $loader = (new DbalLimitOffsetExtractor($connection, $queryBuilder))
+        ->withPageSize($page_size)
         ->withOffset($offset);
 
     if ($maximum !== null) {
@@ -101,11 +98,8 @@ function from_dbal_limit_offset_qb(
 }
 
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::EXTRACTOR)]
-function from_dbal_key_set_qb(
-    Connection $connection,
-    QueryBuilder $queryBuilder,
-    KeySet $key_set,
-) : DbalKeySetExtractor {
+function from_dbal_key_set_qb(Connection $connection, QueryBuilder $queryBuilder, KeySet $key_set): DbalKeySetExtractor
+{
     return new DbalKeySetExtractor($connection, $queryBuilder, $key_set);
 }
 
@@ -119,11 +113,8 @@ function from_dbal_queries(
     string $query,
     ?ParametersSet $parameters_set = null,
     array $types = [],
-) : DbalQueryExtractor {
-    $extractor = new DbalQueryExtractor(
-        $connection,
-        $query
-    );
+): DbalQueryExtractor {
+    $extractor = new DbalQueryExtractor($connection, $query);
 
     if ($parameters_set !== null) {
         $extractor->withParameters($parameters_set);
@@ -149,7 +140,7 @@ function dbal_from_queries(
     string $query,
     ?ParametersSet $parameters_set = null,
     array $types = [],
-) : DbalQueryExtractor {
+): DbalQueryExtractor {
     return from_dbal_queries($connection, $query, $parameters_set, $types);
 }
 
@@ -163,13 +154,8 @@ function from_dbal_query(
     string $query,
     array $parameters = [],
     array $types = [],
-) : DbalQueryExtractor {
-    return DbalQueryExtractor::single(
-        $connection,
-        $query,
-        $parameters,
-        $types,
-    );
+): DbalQueryExtractor {
+    return DbalQueryExtractor::single($connection, $query, $parameters, $types);
 }
 
 /**
@@ -184,7 +170,7 @@ function dbal_from_query(
     string $query,
     array $parameters = [],
     array $types = [],
-) : DbalQueryExtractor {
+): DbalQueryExtractor {
     return from_dbal_query($connection, $query, $parameters, $types);
 }
 
@@ -205,11 +191,8 @@ function dbal_from_query(
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::LOADER)]
 #[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'database_upsert')]
-function to_dbal_table_insert(
-    array|Connection $connection,
-    string $table,
-    ?InsertOptions $options = null,
-) : DbalLoader {
+function to_dbal_table_insert(array|Connection $connection, string $table, ?InsertOptions $options = null): DbalLoader
+{
     return \is_array($connection)
         ? (new DbalLoader($table, $connection))->withOperationOptions($options)
         : DbalLoader::fromConnection($connection, $table, $options);
@@ -225,13 +208,12 @@ function to_dbal_table_insert(
  * @throws InvalidArgumentException
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::LOADER)]
-function to_dbal_table_update(
-    array|Connection $connection,
-    string $table,
-    ?UpdateOptions $options = null,
-) : DbalLoader {
+function to_dbal_table_update(array|Connection $connection, string $table, ?UpdateOptions $options = null): DbalLoader
+{
     return \is_array($connection)
-        ? (new DbalLoader($table, $connection))->withOperation('update')->withOperationOptions($options)
+        ? (new DbalLoader($table, $connection))
+            ->withOperation('update')
+            ->withOperationOptions($options)
         : DbalLoader::fromConnection($connection, $table, $options, 'update');
 }
 
@@ -245,10 +227,8 @@ function to_dbal_table_update(
  * @throws InvalidArgumentException
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::LOADER)]
-function to_dbal_table_delete(
-    array|Connection $connection,
-    string $table,
-) : DbalLoader {
+function to_dbal_table_delete(array|Connection $connection, string $table): DbalLoader
+{
     return $connection instanceof Connection
         ? DbalLoader::fromConnection($connection, $table, null, 'delete')
         : (new DbalLoader($table, $connection))->withOperation('delete');
@@ -262,8 +242,12 @@ function to_dbal_table_delete(
  * @param array<class-string<\Flow\Types\Type<mixed>>, class-string<\Doctrine\DBAL\Types\Type>> $types_map
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
-function to_dbal_schema_table(Schema $schema, string $table_name, array $table_options = [], array $types_map = []) : \Doctrine\DBAL\Schema\Table
-{
+function to_dbal_schema_table(
+    Schema $schema,
+    string $table_name,
+    array $table_options = [],
+    array $types_map = [],
+): \Doctrine\DBAL\Schema\Table {
     return (new SchemaConverter($types_map))->toDbalTable($schema, $table_name, $table_options);
 }
 
@@ -275,7 +259,7 @@ function to_dbal_schema_table(Schema $schema, string $table_name, array $table_o
  * @return Schema
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
-function table_schema_to_flow_schema(\Doctrine\DBAL\Schema\Table $table, array $types_map = []) : Schema
+function table_schema_to_flow_schema(\Doctrine\DBAL\Schema\Table $table, array $types_map = []): Schema
 {
     return (new SchemaConverter($types_map))->toFlowSchema($table);
 }
@@ -286,8 +270,12 @@ function table_schema_to_flow_schema(\Doctrine\DBAL\Schema\Table $table, array $
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
 #[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'database_upsert')]
-function postgresql_insert_options(?bool $skip_conflicts = null, ?string $constraint = null, array $conflict_columns = [], array $update_columns = []) : PostgreSQLInsertOptions
-{
+function postgresql_insert_options(
+    ?bool $skip_conflicts = null,
+    ?string $constraint = null,
+    array $conflict_columns = [],
+    array $update_columns = [],
+): PostgreSQLInsertOptions {
     return new PostgreSQLInsertOptions($skip_conflicts, $constraint, $conflict_columns, $update_columns);
 }
 
@@ -295,8 +283,11 @@ function postgresql_insert_options(?bool $skip_conflicts = null, ?string $constr
  * @param array<string> $update_columns
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
-function mysql_insert_options(?bool $skip_conflicts = null, ?bool $upsert = null, array $update_columns = []) : MySQLInsertOptions
-{
+function mysql_insert_options(
+    ?bool $skip_conflicts = null,
+    ?bool $upsert = null,
+    array $update_columns = [],
+): MySQLInsertOptions {
     return new MySQLInsertOptions($skip_conflicts, $upsert, $update_columns);
 }
 
@@ -305,8 +296,11 @@ function mysql_insert_options(?bool $skip_conflicts = null, ?bool $upsert = null
  * @param array<string> $update_columns
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
-function sqlite_insert_options(?bool $skip_conflicts = null, array $conflict_columns = [], array $update_columns = []) : SqliteInsertOptions
-{
+function sqlite_insert_options(
+    ?bool $skip_conflicts = null,
+    array $conflict_columns = [],
+    array $update_columns = [],
+): SqliteInsertOptions {
     return new SqliteInsertOptions($skip_conflicts, $conflict_columns, $update_columns);
 }
 
@@ -315,14 +309,9 @@ function sqlite_insert_options(?bool $skip_conflicts = null, array $conflict_col
  * @param array<string> $update_columns
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
-function postgresql_update_options(
-    array $primary_key_columns = [],
-    array $update_columns = [],
-) : PostgreSQLUpdateOptions {
-    return new PostgreSQLUpdateOptions(
-        $primary_key_columns,
-        $update_columns,
-    );
+function postgresql_update_options(array $primary_key_columns = [], array $update_columns = []): PostgreSQLUpdateOptions
+{
+    return new PostgreSQLUpdateOptions($primary_key_columns, $update_columns);
 }
 
 /**
@@ -336,29 +325,31 @@ function postgresql_update_options(
  * @throws InvalidArgumentException
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::LOADER)]
-function to_dbal_transaction(
-    array|Connection $connection,
-    Loader ...$loaders,
-) : TransactionalDbalLoader {
+function to_dbal_transaction(array|Connection $connection, Loader ...$loaders): TransactionalDbalLoader
+{
     return \is_array($connection)
         ? new TransactionalDbalLoader($connection, ...$loaders)
         : TransactionalDbalLoader::fromConnection($connection, ...$loaders);
 }
 
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
-function pagination_key_asc(string $column, string|int|DbalParameterType|DbalType $type = DbalParameterType::STRING) : Key
-{
+function pagination_key_asc(
+    string $column,
+    string|int|DbalParameterType|DbalType $type = DbalParameterType::STRING,
+): Key {
     return new Key($column, Order::ASC, $type);
 }
 
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
-function pagination_key_desc(string $column, string|int|DbalParameterType|DbalType $type = DbalParameterType::STRING) : Key
-{
+function pagination_key_desc(
+    string $column,
+    string|int|DbalParameterType|DbalType $type = DbalParameterType::STRING,
+): Key {
     return new Key($column, Order::DESC, $type);
 }
 
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
-function pagination_key_set(Key ...$keys) : KeySet
+function pagination_key_set(Key ...$keys): KeySet
 {
     return new KeySet(...$keys);
 }

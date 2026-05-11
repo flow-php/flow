@@ -4,12 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\{float_entry, integer_entry};
-use Flow\Calculator\{Calculator, Rounding};
-use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\ETL\{FlowContext, Row, Rows, Window};
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\Calculator\Calculator;
+use Flow\Calculator\Rounding;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\Reference;
+use Flow\ETL\Rows;
+use Flow\ETL\Window;
+
+use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\integer_entry;
 
 final class Average implements AggregatingFunction, WindowFunction
 {
@@ -19,14 +27,17 @@ final class Average implements AggregatingFunction, WindowFunction
 
     private ?Window $window;
 
-    public function __construct(private readonly Reference $ref, private readonly int $scale = 2, private readonly Rounding $rounding = Rounding::HALF_UP)
-    {
+    public function __construct(
+        private readonly Reference $ref,
+        private readonly int $scale = 2,
+        private readonly Rounding $rounding = Rounding::HALF_UP,
+    ) {
         $this->window = null;
         $this->count = 0;
         $this->sum = 0;
     }
 
-    public function aggregate(Row $row, FlowContext $context) : void
+    public function aggregate(Row $row, FlowContext $context): void
     {
         try {
             /** @var mixed $value */
@@ -41,7 +52,7 @@ final class Average implements AggregatingFunction, WindowFunction
         }
     }
 
-    public function apply(Row $row, Rows $partition, FlowContext $context) : mixed
+    public function apply(Row $row, Rows $partition, FlowContext $context): mixed
     {
         $sum = 0;
         $count = 0;
@@ -56,21 +67,25 @@ final class Average implements AggregatingFunction, WindowFunction
                     $count++;
                 }
             } catch (InvalidArgumentException $e) {
-                $context->functions()->invalidResult(new InvalidArgumentException('Average window function error: ' . $e->getMessage(), 0, $e));
+                $context
+                    ->functions()
+                    ->invalidResult(
+                        new InvalidArgumentException('Average window function error: ' . $e->getMessage(), 0, $e),
+                    );
             }
         }
 
         return (new Calculator())->divide($sum, $count, $this->scale, $this->rounding);
     }
 
-    public function over(Window $window) : WindowFunction
+    public function over(Window $window): WindowFunction
     {
         $this->window = $window;
 
         return $this;
     }
 
-    public function result(EntryFactory $entryFactory) : Entry
+    public function result(EntryFactory $entryFactory): Entry
     {
         if (!$this->ref->hasAlias()) {
             $this->ref->as($this->ref->to() . '_avg');
@@ -78,7 +93,6 @@ final class Average implements AggregatingFunction, WindowFunction
 
         if (0 !== $this->count) {
             $result = (new Calculator())->divide($this->sum, $this->count, $this->scale, $this->rounding);
-            $resultInt = (int) $result;
         } else {
             $result = 0;
         }
@@ -90,12 +104,12 @@ final class Average implements AggregatingFunction, WindowFunction
         return float_entry($this->ref->name(), $result);
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return 'average()';
     }
 
-    public function window() : Window
+    public function window(): Window
     {
         if ($this->window === null) {
             throw new RuntimeException('Window function "' . $this->toString() . '" requires an OVER clause.');

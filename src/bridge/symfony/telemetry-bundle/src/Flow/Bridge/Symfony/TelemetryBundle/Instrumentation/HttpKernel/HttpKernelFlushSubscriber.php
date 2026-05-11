@@ -13,17 +13,16 @@ final readonly class HttpKernelFlushSubscriber implements EventSubscriberInterfa
 {
     public function __construct(
         private Telemetry $telemetry,
-    ) {
-    }
+    ) {}
 
-    public static function getSubscribedEvents() : array
+    public static function getSubscribedEvents(): array
     {
         return [
             KernelEvents::TERMINATE => ['onTerminate', -20000],
         ];
     }
 
-    public function onTerminate(TerminateEvent $event) : void
+    public function onTerminate(TerminateEvent $event): void
     {
         $this->telemetry->shutdown();
     }

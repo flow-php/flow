@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Page;
 
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 
 final readonly class ColumnData
 {
@@ -21,27 +23,31 @@ final readonly class ColumnData
         public array $repetitions,
         public array $definitions,
         public array $values,
-    ) {
-    }
+    ) {}
 
-    public static function initialize(FlatColumn $column) : self
+    public static function initialize(FlatColumn $column): self
     {
         return new self($column->type(), $column->logicalType(), [], [], []);
     }
 
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return \count($this->definitions) === 0 && \count($this->values) === 0;
     }
 
-    public function merge(self $columnData) : self
+    public function merge(self $columnData): self
     {
         if ($columnData->type !== $this->type) {
-            throw new \LogicException('Column data type mismatch, expected ' . $this->type->name . ', got ' . $columnData->type->name);
+            throw new \LogicException(
+                'Column data type mismatch, expected ' . $this->type->name . ', got ' . $columnData->type->name,
+            );
         }
 
         if ($this->logicalType?->name() !== $columnData->logicalType?->name()) {
-            throw new \LogicException('Column data logical type mismatch, expected ' . $this->logicalType?->name() . ', got ' . $columnData->logicalType?->name());
+            throw new \LogicException(
+                'Column data logical type mismatch, expected ' . $this->logicalType?->name() . ', got '
+                    . $columnData->logicalType?->name(),
+            );
         }
 
         return new self(
@@ -53,7 +59,7 @@ final readonly class ColumnData
         );
     }
 
-    public function size() : int
+    public function size(): int
     {
         if (!\count($this->definitions)) {
             return \count($this->values);
@@ -65,7 +71,7 @@ final readonly class ColumnData
     /**
      * @return array{0: self, 1: self}
      */
-    public function splitLastRow() : array
+    public function splitLastRow(): array
     {
         if (!\count($this->repetitions)) {
             return [$this, new self($this->type, $this->logicalType, [], [], [])];

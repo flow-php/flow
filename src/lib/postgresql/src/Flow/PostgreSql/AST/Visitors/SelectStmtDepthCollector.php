@@ -16,12 +16,12 @@ final class SelectStmtDepthCollector implements NodeVisitor
 
     private int $maxDepth = 0;
 
-    public static function nodeClasses() : array
+    public static function nodeClasses(): array
     {
         return [SelectStmt::class];
     }
 
-    public function enter(object $node) : ?int
+    public function enter(object $node): ?int
     {
         $this->currentDepth++;
 
@@ -32,19 +32,19 @@ final class SelectStmtDepthCollector implements NodeVisitor
         return null;
     }
 
-    public function getMaxDepth() : int
+    public function getMaxDepth(): int
     {
         return $this->maxDepth;
     }
 
-    public function leave(object $node) : ?int
+    public function leave(object $node): ?int
     {
         $this->currentDepth--;
 
         return null;
     }
 
-    public function reset() : void
+    public function reset(): void
     {
         $this->currentDepth = 0;
         $this->maxDepth = 0;

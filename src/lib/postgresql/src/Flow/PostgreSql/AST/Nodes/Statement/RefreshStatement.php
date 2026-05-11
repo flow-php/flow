@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Nodes\Statement;
 
-use Flow\PostgreSql\AST\Nodes\{Statement, StatementTrait};
+use Flow\PostgreSql\AST\Nodes\Statement;
+use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\RefreshMatViewStmt;
 
 /**
@@ -18,10 +19,9 @@ final readonly class RefreshStatement implements Statement
 
     public function __construct(
         private RefreshMatViewStmt $stmt,
-    ) {
-    }
+    ) {}
 
-    public function raw() : RefreshMatViewStmt
+    public function raw(): RefreshMatViewStmt
     {
         return $this->stmt;
     }

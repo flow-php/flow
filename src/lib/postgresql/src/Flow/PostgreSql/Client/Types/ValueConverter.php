@@ -14,12 +14,12 @@ interface ValueConverter
      *
      * @return array<ValueType>
      */
-    public function supportedTypes() : array;
+    public function supportedTypes(): array;
 
     /**
      * Convert a PHP value to PostgreSQL format for binding.
      *
      * @return null|string The value as a string for pg_query_params, or null for NULL values
      */
-    public function toDatabase(mixed $value) : ?string;
+    public function toDatabase(mixed $value): ?string;
 }

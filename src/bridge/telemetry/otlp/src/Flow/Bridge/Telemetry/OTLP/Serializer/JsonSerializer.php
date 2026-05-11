@@ -4,10 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Serializer;
 
-use Flow\Telemetry\{InstrumentationScope, Resource};
+use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Logger\LogEntry;
-use Flow\Telemetry\Meter\{Exemplar, Metric, MetricType};
-use Flow\Telemetry\Tracer\{Span, SpanEvent, SpanKind, SpanLink, SpanStatusCode};
+use Flow\Telemetry\Meter\Exemplar;
+use Flow\Telemetry\Meter\Metric;
+use Flow\Telemetry\Meter\MetricType;
+use Flow\Telemetry\Resource;
+use Flow\Telemetry\Tracer\Span;
+use Flow\Telemetry\Tracer\SpanEvent;
+use Flow\Telemetry\Tracer\SpanKind;
+use Flow\Telemetry\Tracer\SpanLink;
+use Flow\Telemetry\Tracer\SpanStatusCode;
 
 /**
  * JSON serializer for OTLP wire format.
@@ -21,7 +28,7 @@ final class JsonSerializer
     /**
      * @param array<LogEntry> $entries
      */
-    public function serializeLogs(array $entries) : string
+    public function serializeLogs(array $entries): string
     {
         $resourceLogs = [];
 
@@ -57,7 +64,7 @@ final class JsonSerializer
     /**
      * @param array<Metric> $metrics
      */
-    public function serializeMetrics(array $metrics) : string
+    public function serializeMetrics(array $metrics): string
     {
         $resourceMetrics = [];
 
@@ -93,7 +100,7 @@ final class JsonSerializer
     /**
      * @param array<Span> $spans
      */
-    public function serializeSpans(array $spans) : string
+    public function serializeSpans(array $spans): string
     {
         $resourceSpans = [];
 
@@ -131,7 +138,7 @@ final class JsonSerializer
      *
      * @return array<string, mixed>
      */
-    private function createHistogramDataPoint(Metric $metric) : array
+    private function createHistogramDataPoint(Metric $metric): array
     {
         $timestamp = $this->toNanoseconds($metric->timestamp);
 
@@ -157,7 +164,7 @@ final class JsonSerializer
 
         $userAttributes = \array_filter(
             $attributesArray,
-            static fn (string $key) : bool => !\str_starts_with($key, 'histogram.'),
+            static fn(string $key): bool => !\str_starts_with($key, 'histogram.'),
             \ARRAY_FILTER_USE_KEY,
         );
 
@@ -167,8 +174,8 @@ final class JsonSerializer
             'attributes' => $this->serializeAttributes($userAttributes),
             'count' => (string) $count,
             'sum' => \is_int($sum) ? (float) $sum : $sum,
-            'bucketCounts' => \array_map(static fn (int $c) : string => (string) $c, $bucketCounts),
-            'explicitBounds' => \array_map(static fn (int|float $b) : float => (float) $b, $explicitBounds),
+            'bucketCounts' => \array_map(static fn(int $c): string => (string) $c, $bucketCounts),
+            'explicitBounds' => \array_map(static fn(int|float $b): float => (float) $b, $explicitBounds),
         ];
 
         if ($min !== null) {
@@ -180,10 +187,9 @@ final class JsonSerializer
         }
 
         if (\count($metric->exemplars) > 0) {
-            $dataPoint['exemplars'] = \array_map(
-                fn (Exemplar $e) : array => $this->serializeExemplar($e),
-                $metric->exemplars
-            );
+            $dataPoint['exemplars'] = \array_map(fn(Exemplar $e): array => $this->serializeExemplar(
+                $e,
+            ), $metric->exemplars);
         }
 
         return $dataPoint;
@@ -194,12 +200,10 @@ final class JsonSerializer
      *
      * @return array<string, mixed>
      */
-    private function createMetricDataPoint(Metric $metric) : array
+    private function createMetricDataPoint(Metric $metric): array
     {
         $timestamp = $this->toNanoseconds($metric->timestamp);
-        $startTimestamp = $metric->startTimestamp !== null
-            ? $this->toNanoseconds($metric->startTimestamp)
-            : $timestamp;
+        $startTimestamp = $metric->startTimestamp !== null ? $this->toNanoseconds($metric->startTimestamp) : $timestamp;
 
         $dataPoint = [
             'startTimeUnixNano' => $startTimestamp,
@@ -214,10 +218,9 @@ final class JsonSerializer
         }
 
         if (\count($metric->exemplars) > 0) {
-            $dataPoint['exemplars'] = \array_map(
-                fn (Exemplar $e) : array => $this->serializeExemplar($e),
-                $metric->exemplars
-            );
+            $dataPoint['exemplars'] = \array_map(fn(Exemplar $e): array => $this->serializeExemplar(
+                $e,
+            ), $metric->exemplars);
         }
 
         return $dataPoint;
@@ -230,7 +233,7 @@ final class JsonSerializer
      *
      * @return array<string, array{resource: resource, entries: array<LogEntry>}>
      */
-    private function groupLogsByResource(array $entries) : array
+    private function groupLogsByResource(array $entries): array
     {
         $grouped = [];
 
@@ -257,7 +260,7 @@ final class JsonSerializer
      *
      * @return array<string, array{scope: InstrumentationScope, entries: array<LogEntry>}>
      */
-    private function groupLogsByScope(array $entries) : array
+    private function groupLogsByScope(array $entries): array
     {
         $grouped = [];
 
@@ -285,7 +288,7 @@ final class JsonSerializer
      *
      * @return array<string, array{resource: resource, metrics: array<Metric>}>
      */
-    private function groupMetricsByResource(array $metrics) : array
+    private function groupMetricsByResource(array $metrics): array
     {
         $grouped = [];
 
@@ -312,7 +315,7 @@ final class JsonSerializer
      *
      * @return array<string, array{scope: InstrumentationScope, metrics: array<Metric>}>
      */
-    private function groupMetricsByScope(array $metrics) : array
+    private function groupMetricsByScope(array $metrics): array
     {
         $grouped = [];
 
@@ -340,7 +343,7 @@ final class JsonSerializer
      *
      * @return array<string, array{resource: resource, spans: array<Span>}>
      */
-    private function groupSpansByResource(array $spans) : array
+    private function groupSpansByResource(array $spans): array
     {
         $grouped = [];
 
@@ -367,7 +370,7 @@ final class JsonSerializer
      *
      * @return array<string, array{scope: InstrumentationScope, spans: array<Span>}>
      */
-    private function groupSpansByScope(array $spans) : array
+    private function groupSpansByScope(array $spans): array
     {
         $grouped = [];
 
@@ -391,7 +394,7 @@ final class JsonSerializer
     /**
      * Generate a unique key for a Resource based on its attributes.
      */
-    private function resourceKey(Resource $resource) : string
+    private function resourceKey(Resource $resource): string
     {
         $attributes = $resource->all();
         \ksort($attributes);
@@ -406,7 +409,7 @@ final class JsonSerializer
      *
      * @return array<array{key: string, value: array<string, mixed>}>
      */
-    private function serializeAttributes(array $attributes) : array
+    private function serializeAttributes(array $attributes): array
     {
         $result = [];
 
@@ -427,7 +430,7 @@ final class JsonSerializer
      *
      * @return array<string, mixed>
      */
-    private function serializeAttributeValue(string|int|float|bool|array $value) : array
+    private function serializeAttributeValue(string|int|float|bool|array $value): array
     {
         if (\is_string($value)) {
             return ['stringValue' => $value];
@@ -465,7 +468,7 @@ final class JsonSerializer
      *
      * @return array<array{name: string, timeUnixNano: string, attributes: array<array{key: string, value: array<string, mixed>}>}>
      */
-    private function serializeEvents(array $events) : array
+    private function serializeEvents(array $events): array
     {
         $result = [];
 
@@ -485,7 +488,7 @@ final class JsonSerializer
      *
      * @return array<string, mixed>
      */
-    private function serializeExemplar(Exemplar $exemplar) : array
+    private function serializeExemplar(Exemplar $exemplar): array
     {
         $result = [
             'timeUnixNano' => $this->toNanoseconds($exemplar->timestamp),
@@ -516,7 +519,7 @@ final class JsonSerializer
      *
      * @return array<array{traceId: string, spanId: string, attributes: array<array{key: string, value: array<string, mixed>}>}>
      */
-    private function serializeLinks(array $links) : array
+    private function serializeLinks(array $links): array
     {
         $result = [];
 
@@ -540,7 +543,7 @@ final class JsonSerializer
      *
      * @return array<string, mixed>
      */
-    private function serializeLogRecord(LogEntry $entry) : array
+    private function serializeLogRecord(LogEntry $entry): array
     {
         $result = [
             'timeUnixNano' => $this->toNanoseconds($entry->timestamp),
@@ -568,7 +571,7 @@ final class JsonSerializer
      *
      * @return array<string, mixed>
      */
-    private function serializeMetric(Metric $metric) : array
+    private function serializeMetric(Metric $metric): array
     {
         $result = [
             'name' => $metric->name,
@@ -618,7 +621,7 @@ final class JsonSerializer
      *
      * @return array{attributes: array<array{key: string, value: array<string, mixed>}>}
      */
-    private function serializeResource(Resource $resource) : array
+    private function serializeResource(Resource $resource): array
     {
         return [
             'attributes' => $this->serializeAttributes($resource->all()),
@@ -630,7 +633,7 @@ final class JsonSerializer
      *
      * @return array{name: string, version?: string, attributes?: array<array{key: string, value: array<string, mixed>}>}
      */
-    private function serializeScope(InstrumentationScope $scope) : array
+    private function serializeScope(InstrumentationScope $scope): array
     {
         $result = [
             'name' => $scope->name,
@@ -652,7 +655,7 @@ final class JsonSerializer
      *
      * @return array<string, mixed>
      */
-    private function serializeSpan(Span $span) : array
+    private function serializeSpan(Span $span): array
     {
         $context = $span->context();
 
@@ -696,7 +699,7 @@ final class JsonSerializer
      * 4 = SPAN_KIND_PRODUCER
      * 5 = SPAN_KIND_CONSUMER
      */
-    private function serializeSpanKind(SpanKind $kind) : int
+    private function serializeSpanKind(SpanKind $kind): int
     {
         return match ($kind) {
             SpanKind::INTERNAL => 1,
@@ -712,7 +715,7 @@ final class JsonSerializer
      *
      * @return array{code: int, message?: string}
      */
-    private function serializeSpanStatus(Span $span) : array
+    private function serializeSpanStatus(Span $span): array
     {
         $status = $span->status();
 
@@ -738,7 +741,7 @@ final class JsonSerializer
     /**
      * Convert DateTimeImmutable to nanoseconds since Unix epoch as string.
      */
-    private function toNanoseconds(\DateTimeImmutable $dateTime) : string
+    private function toNanoseconds(\DateTimeImmutable $dateTime): string
     {
         $seconds = (int) $dateTime->format('U');
         $microseconds = (int) $dateTime->format('u');

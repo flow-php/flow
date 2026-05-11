@@ -4,12 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\View\CreateView;
 
-use Flow\PostgreSql\Protobuf\AST\{Node, PBString, RangeVar, ViewCheckOption, ViewStmt};
-use Flow\PostgreSql\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
+use Flow\PostgreSql\Protobuf\AST\ViewCheckOption;
+use Flow\PostgreSql\Protobuf\AST\ViewStmt;
+use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
-final readonly class CreateViewBuilder implements CreateViewAsStep, CreateViewCheckOptionStep, CreateViewFinalStep, CreateViewOptionsStep
+final readonly class CreateViewBuilder implements
+    CreateViewAsStep,
+    CreateViewCheckOptionStep,
+    CreateViewFinalStep,
+    CreateViewOptionsStep
 {
     use AstToSql;
 
@@ -25,10 +34,9 @@ final readonly class CreateViewBuilder implements CreateViewAsStep, CreateViewCh
         private bool $temporary = false,
         private bool $recursive = false,
         private ?int $checkOption = null,
-    ) {
-    }
+    ) {}
 
-    public static function create(string $name, ?string $schema = null) : CreateViewOptionsStep
+    public static function create(string $name, ?string $schema = null): CreateViewOptionsStep
     {
         if ($schema !== null) {
             return new self($name, $schema);
@@ -39,7 +47,7 @@ final readonly class CreateViewBuilder implements CreateViewAsStep, CreateViewCh
         return new self($identifier->name(), $identifier->schema());
     }
 
-    public function as(SelectFinalStep $query) : CreateViewCheckOptionStep
+    public function as(SelectFinalStep $query): CreateViewCheckOptionStep
     {
         return new self(
             $this->name,
@@ -53,7 +61,7 @@ final readonly class CreateViewBuilder implements CreateViewAsStep, CreateViewCh
         );
     }
 
-    public function columns(string ...$columns) : CreateViewAsStep
+    public function columns(string ...$columns): CreateViewAsStep
     {
         return new self(
             $this->name,
@@ -67,7 +75,7 @@ final readonly class CreateViewBuilder implements CreateViewAsStep, CreateViewCh
         );
     }
 
-    public function orReplace() : CreateViewOptionsStep
+    public function orReplace(): CreateViewOptionsStep
     {
         return new self(
             $this->name,
@@ -81,7 +89,7 @@ final readonly class CreateViewBuilder implements CreateViewAsStep, CreateViewCh
         );
     }
 
-    public function recursive() : CreateViewOptionsStep
+    public function recursive(): CreateViewOptionsStep
     {
         return new self(
             $this->name,
@@ -95,7 +103,7 @@ final readonly class CreateViewBuilder implements CreateViewAsStep, CreateViewCh
         );
     }
 
-    public function temporary() : CreateViewOptionsStep
+    public function temporary(): CreateViewOptionsStep
     {
         return new self(
             $this->name,
@@ -109,7 +117,7 @@ final readonly class CreateViewBuilder implements CreateViewAsStep, CreateViewCh
         );
     }
 
-    public function toAst() : ViewStmt
+    public function toAst(): ViewStmt
     {
         if ($this->name === null || $this->name === '') {
             throw InvalidExpressionException::invalidValue('view name', 'null or empty');
@@ -165,7 +173,7 @@ final readonly class CreateViewBuilder implements CreateViewAsStep, CreateViewCh
         return $stmt;
     }
 
-    public function withCascadedCheckOption() : CreateViewFinalStep
+    public function withCascadedCheckOption(): CreateViewFinalStep
     {
         return new self(
             $this->name,
@@ -179,7 +187,7 @@ final readonly class CreateViewBuilder implements CreateViewAsStep, CreateViewCh
         );
     }
 
-    public function withCheckOption() : CreateViewFinalStep
+    public function withCheckOption(): CreateViewFinalStep
     {
         return new self(
             $this->name,
@@ -193,7 +201,7 @@ final readonly class CreateViewBuilder implements CreateViewAsStep, CreateViewCh
         );
     }
 
-    public function withLocalCheckOption() : CreateViewFinalStep
+    public function withLocalCheckOption(): CreateViewFinalStep
     {
         return new self(
             $this->name,

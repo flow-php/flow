@@ -4,22 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Tests\Integration;
 
-use Flow\Documentation\{FunctionCollector, FunctionsExtractor};
+use Flow\Documentation\FunctionCollector;
+use Flow\Documentation\FunctionsExtractor;
 use PHPUnit\Framework\TestCase;
 
 final class FunctionsExtractorTest extends TestCase
 {
-    public function test_extract_functions_from_a_file() : void
+    public function test_extract_functions_from_a_file(): void
     {
-        $functionsExtractor = new FunctionsExtractor(
-            __DIR__,
-            new FunctionCollector()
-        );
+        $functionsExtractor = new FunctionsExtractor(__DIR__, new FunctionCollector());
 
         $functions = \iterator_to_array($functionsExtractor->extract([__DIR__ . '/functions.php']));
 
-        self::assertCount(1, $functions);
-        self::assertEquals(
+        static::assertCount(1, $functions);
+        static::assertEquals(
             [
                 'name' => 'doSomething',
                 'namespace' => 'Flow\Documentation\Tests\Integration',
@@ -86,8 +84,7 @@ final class FunctionsExtractorTest extends TestCase
                 'start_line_in_file' => 10,
                 'slug' => 'dosomething',
             ],
-            $functions[0]->normalize()
+            $functions[0]->normalize(),
         );
-
     }
 }

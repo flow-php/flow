@@ -4,11 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Diff;
 
-use function Flow\PostgreSql\DSL\{alter, drop};
-
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\QueryBuilder\Sql;
-use Flow\PostgreSql\Schema\{Domain, ExecutionOrderStrategy, Extension, ForeignKeyDependencyOrder, Func, MaterializedView, MaterializedViewDependencyOrder, Procedure, Schema, Sequence, Table, View, ViewDependencyOrder};
+use Flow\PostgreSql\Schema\Domain;
+use Flow\PostgreSql\Schema\ExecutionOrderStrategy;
+use Flow\PostgreSql\Schema\Extension;
+use Flow\PostgreSql\Schema\ForeignKeyDependencyOrder;
+use Flow\PostgreSql\Schema\Func;
+use Flow\PostgreSql\Schema\MaterializedView;
+use Flow\PostgreSql\Schema\MaterializedViewDependencyOrder;
+use Flow\PostgreSql\Schema\Procedure;
+use Flow\PostgreSql\Schema\Schema;
+use Flow\PostgreSql\Schema\Sequence;
+use Flow\PostgreSql\Schema\Table;
+use Flow\PostgreSql\Schema\View;
+use Flow\PostgreSql\Schema\ViewDependencyOrder;
+
+use function Flow\PostgreSql\DSL\alter;
+use function Flow\PostgreSql\DSL\drop;
 
 final readonly class SchemaDiff implements Diff
 {
@@ -72,26 +85,47 @@ final readonly class SchemaDiff implements Diff
         public array $modifiedExtensions = [],
         private ExecutionOrderStrategy $tableOrderStrategy = new ForeignKeyDependencyOrder(),
         private ExecutionOrderStrategy $viewOrderStrategy = new ViewDependencyOrder(new Parser()),
-        private ExecutionOrderStrategy $materializedViewOrderStrategy = new MaterializedViewDependencyOrder(new Parser()),
-    ) {
-    }
+        private ExecutionOrderStrategy $materializedViewOrderStrategy = new MaterializedViewDependencyOrder(
+            new Parser(),
+        ),
+    ) {}
 
     /**
      * @return list<Sql>
      */
-    public function generate() : array
+    public function generate(): array
     {
         return [
-            ...(new Schema($this->target->name, $this->addedTables, $this->addedSequences, $this->addedViews, $this->addedMaterializedViews, $this->addedFunctions, $this->addedProcedures, $this->addedDomains, $this->addedExtensions))->toSql($this->tableOrderStrategy, $this->viewOrderStrategy, $this->materializedViewOrderStrategy),
+            ...(new Schema(
+                $this->target->name,
+                $this->addedTables,
+                $this->addedSequences,
+                $this->addedViews,
+                $this->addedMaterializedViews,
+                $this->addedFunctions,
+                $this->addedProcedures,
+                $this->addedDomains,
+                $this->addedExtensions,
+            ))->toSql($this->tableOrderStrategy, $this->viewOrderStrategy, $this->materializedViewOrderStrategy),
             ...$this->modifiedSqls(),
             ...$this->renamedTableSqls(),
-            ...$this->dropObjectSqls($this->removedMaterializedViews, $this->removedViews, $this->removedTables, $this->removedProcedures, $this->removedFunctions, $this->removedSequences, $this->removedDomains, $this->removedExtensions),
+            ...$this->dropObjectSqls(
+                $this->removedMaterializedViews,
+                $this->removedViews,
+                $this->removedTables,
+                $this->removedProcedures,
+                $this->removedFunctions,
+                $this->removedSequences,
+                $this->removedDomains,
+                $this->removedExtensions,
+            ),
         ];
     }
 
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
-        return $this->addedTables === []
+        return (
+            $this->addedTables === []
             && $this->removedTables === []
             && $this->modifiedTables === []
             && $this->renamedTables === []
@@ -115,7 +149,8 @@ final readonly class SchemaDiff implements Diff
             && $this->modifiedDomains === []
             && $this->addedExtensions === []
             && $this->removedExtensions === []
-            && $this->modifiedExtensions === [];
+            && $this->modifiedExtensions === []
+        );
     }
 
     /**
@@ -130,8 +165,16 @@ final readonly class SchemaDiff implements Diff
      *
      * @return list<Sql>
      */
-    private function dropObjectSqls(array $materializedViews, array $views, array $tables, array $procedures, array $functions, array $sequences, array $domains, array $extensions) : array
-    {
+    private function dropObjectSqls(
+        array $materializedViews,
+        array $views,
+        array $tables,
+        array $procedures,
+        array $functions,
+        array $sequences,
+        array $domains,
+        array $extensions,
+    ): array {
         $sqls = [];
 
         foreach ($materializedViews as $mv) {
@@ -172,7 +215,7 @@ final readonly class SchemaDiff implements Diff
     /**
      * @return list<Sql>
      */
-    private function modifiedSqls() : array
+    private function modifiedSqls(): array
     {
         $sqls = [];
 
@@ -199,7 +242,7 @@ final readonly class SchemaDiff implements Diff
     /**
      * @return list<Sql>
      */
-    private function renamedTableSqls() : array
+    private function renamedTableSqls(): array
     {
         $sqls = [];
 

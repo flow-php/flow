@@ -4,24 +4,34 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\{config_builder, df, from_array, from_cache, telemetry_options};
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
-use Flow\ETL\{Extractor, FlowContext, Rows};
+use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Provider\Clock\SystemClock;
-use Flow\Telemetry\Provider\Memory\{MemoryLogProcessor, MemoryMetricProcessor, MemorySpanProcessor};
+use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
+use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
+use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Provider\Void\VoidExporter;
-use Flow\Telemetry\{Resource, Telemetry};
+use Flow\Telemetry\Resource;
+use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\TracerProvider;
+
+use function Flow\ETL\DSL\config_builder;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_cache;
+use function Flow\ETL\DSL\telemetry_options;
 
 final class CacheTest extends FlowIntegrationTestCase
 {
-    public function test_cache() : void
+    public function test_cache(): void
     {
         $spyExtractor = new class(20) implements Extractor {
             public int $extractions = 0;
@@ -33,7 +43,7 @@ final class CacheTest extends FlowIntegrationTestCase
                 $this->extractor = new FakeExtractor($rowsets);
             }
 
-            public function extract(FlowContext $context) : \Generator
+            public function extract(FlowContext $context): \Generator
             {
                 $this->extractions++;
 
@@ -44,39 +54,25 @@ final class CacheTest extends FlowIntegrationTestCase
         $cache = new InMemoryCache();
 
         df(config_builder()->cache($cache))
-            ->read(from_cache(
-                'test_etl_cache',
-                $spyExtractor,
-            ))
+            ->read(from_cache('test_etl_cache', $spyExtractor))
             ->cache('test_etl_cache')
             ->run();
 
-        self::assertEquals(1, $spyExtractor->extractions);
-        self::assertInstanceOf(CacheIndex::class, $cache->get('test_etl_cache'));
+        static::assertEquals(1, $spyExtractor->extractions);
+        static::assertInstanceOf(CacheIndex::class, $cache->get('test_etl_cache'));
 
-        df(config_builder()->cache($cache))
-            ->read(from_cache(
-                'test_etl_cache',
-                $spyExtractor,
-                clear: true
-            ))
-            ->run();
+        df(config_builder()->cache($cache))->read(from_cache('test_etl_cache', $spyExtractor, clear: true))->run();
 
-        self::assertEquals(1, $spyExtractor->extractions);
-        self::assertFalse($cache->has('test_etl_cache'));
+        static::assertEquals(1, $spyExtractor->extractions);
+        static::assertFalse($cache->has('test_etl_cache'));
     }
 
-    public function test_cache_with_previously_set_batch_size() : void
+    public function test_cache_with_previously_set_batch_size(): void
     {
         $cache = new InMemoryCache();
 
         df(config_builder()->cache($cache))
-            ->read(
-                from_array(\array_map(
-                    static fn (int $i) => ['id' => $i],
-                    \range(1, 100)
-                ))
-            )
+            ->read(from_array(\array_map(static fn(int $i) => ['id' => $i], \range(1, 100))))
             ->batchSize(20)
             ->cache('test')
             ->run();
@@ -84,16 +80,16 @@ final class CacheTest extends FlowIntegrationTestCase
         /** @var CacheIndex $cacheIndex */
         $cacheIndex = $cache->get('test');
 
-        self::assertCount(5, $cacheIndex->values());
+        static::assertCount(5, $cacheIndex->values());
 
-        foreach ($cacheIndex->values() as $index => $cacheRowsKey) {
+        foreach ($cacheIndex->values() as $cacheRowsKey) {
             $rows = $cache->get($cacheRowsKey);
-            self::assertInstanceOf(Rows::class, $rows);
-            self::assertCount(20, $rows);
+            static::assertInstanceOf(Rows::class, $rows);
+            static::assertCount(20, $rows);
         }
     }
 
-    public function test_cache_with_telemetry_collects_spans_and_metrics() : void
+    public function test_cache_with_telemetry_collects_spans_and_metrics(): void
     {
         $clock = new SystemClock();
         $contextStorage = new MemoryContextStorage();
@@ -110,51 +106,44 @@ final class CacheTest extends FlowIntegrationTestCase
         );
 
         df(config_builder()->withTelemetry($telemetry, telemetry_options(trace_cache: true)))
-            ->read(
-                from_array([
-                    ['id' => 1],
-                    ['id' => 2],
-                ])
-            )
+            ->read(from_array([
+                ['id' => 1],
+                ['id' => 2],
+            ]))
             ->cache('telemetry_test')
             ->run();
 
         $telemetry->flush();
 
         $spans = $spanProcessor->endedSpans();
-        $setSpans = \array_filter($spans, static fn ($span) => \str_starts_with((string) $span->name(), 'Cache Set '));
+        $setSpans = \array_filter($spans, static fn($span) => \str_starts_with((string) $span->name(), 'Cache Set '));
 
-        self::assertNotEmpty($setSpans, 'Expected Cache Set spans to be recorded');
+        static::assertNotEmpty($setSpans, 'Expected Cache Set spans to be recorded');
 
-        $hitMetrics = $metricProcessor->metricsWithName('cache_hits');
+        $metricProcessor->metricsWithName('cache_hits');
         $missMetrics = $metricProcessor->metricsWithName('cache_misses');
 
-        self::assertNotEmpty($missMetrics, 'Expected cache miss metrics to be recorded (from has() checks)');
+        static::assertNotEmpty($missMetrics, 'Expected cache miss metrics to be recorded (from has() checks)');
     }
 
-    public function test_cache_without_previously_set_batch_size() : void
+    public function test_cache_without_previously_set_batch_size(): void
     {
         $cache = new InMemoryCache();
 
         df(config_builder()->cache($cache))
-            ->read(
-                from_array(\array_map(
-                    static fn (int $i) => ['id' => $i],
-                    \range(1, 100)
-                ))
-            )
+            ->read(from_array(\array_map(static fn(int $i) => ['id' => $i], \range(1, 100))))
             ->cache('test')
             ->run();
 
         /** @var CacheIndex $cacheIndex */
         $cacheIndex = $cache->get('test');
 
-        self::assertCount(100, $cacheIndex->values());
+        static::assertCount(100, $cacheIndex->values());
 
-        foreach ($cacheIndex->values() as $index => $cacheRowsKey) {
+        foreach ($cacheIndex->values() as $cacheRowsKey) {
             $rows = $cache->get($cacheRowsKey);
-            self::assertInstanceOf(Rows::class, $rows);
-            self::assertCount(1, $rows);
+            static::assertInstanceOf(Rows::class, $rows);
+            static::assertCount(1, $rows);
         }
     }
 }

@@ -11,6 +11,5 @@ final readonly class DeltaHeader
         public int $miniblockCount,
         public int $totalValues,
         public int $firstValue,
-    ) {
-    }
+    ) {}
 }

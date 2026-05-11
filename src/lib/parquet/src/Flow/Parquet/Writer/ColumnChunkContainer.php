@@ -11,6 +11,5 @@ final readonly class ColumnChunkContainer
     public function __construct(
         public string $binaryBuffer,
         public ColumnChunk $columnChunk,
-    ) {
-    }
+    ) {}
 }

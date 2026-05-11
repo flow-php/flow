@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_equals, type_optional};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition\StringDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
+
+use function Flow\Types\DSL\type_equals;
+use function Flow\Types\DSL\type_optional;
 
 /**
  * @implements Entry<?string>
@@ -37,13 +40,11 @@ final class StringEntry implements Entry
         $this->definition = new StringDefinition(
             $this->name,
             $this->value === null,
-            $fromNull
-                ? $metadata->merge(Metadata::fromArray([Metadata::FROM_NULL => true]))
-                : $metadata
+            $fromNull ? $metadata->merge(Metadata::fromArray([Metadata::FROM_NULL => true])) : $metadata,
         );
     }
 
-    public static function fromNull(string $name, ?Metadata $metadata = null) : self
+    public static function fromNull(string $name, ?Metadata $metadata = null): self
     {
         return new self($name, null, $metadata, fromNull: true);
     }
@@ -51,7 +52,7 @@ final class StringEntry implements Entry
     /**
      * @throws InvalidArgumentException
      */
-    public static function lowercase(string $name, string $value) : self
+    public static function lowercase(string $name, string $value): self
     {
         return new self($name, \mb_strtolower($value));
     }
@@ -59,27 +60,27 @@ final class StringEntry implements Entry
     /**
      * @throws InvalidArgumentException
      */
-    public static function uppercase(string $name, string $value) : self
+    public static function uppercase(string $name, string $value): self
     {
         return new self($name, \mb_strtoupper($value));
     }
 
-    public function __toString() : string
+    public function __toString(): string
     {
         return $this->toString();
     }
 
-    public function definition() : StringDefinition
+    public function definition(): StringDefinition
     {
         return $this->definition;
     }
 
-    public function duplicate() : static
+    public function duplicate(): static
     {
         return new self($this->name, $this->value, $this->definition->metadata());
     }
 
-    public function is(string|Reference $name) : bool
+    public function is(string|Reference $name): bool
     {
         if ($name instanceof Reference) {
             return $this->name === $name->name();
@@ -88,17 +89,22 @@ final class StringEntry implements Entry
         return $this->name === $name;
     }
 
-    public function isEqual(Entry $entry) : bool
+    public function isEqual(Entry $entry): bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type(), $entry->type()) && $this->value() === $entry->value();
+        return (
+            $this->is($entry->name())
+            && $entry instanceof self
+            && type_equals($this->type(), $entry->type())
+            && $this->value() === $entry->value()
+        );
     }
 
-    public function map(callable $mapper) : static
+    public function map(callable $mapper): static
     {
         return new self($this->name, $mapper($this->value()));
     }
 
-    public function name() : string
+    public function name(): string
     {
         return $this->name;
     }
@@ -106,17 +112,17 @@ final class StringEntry implements Entry
     /**
      * @throws InvalidArgumentException
      */
-    public function rename(string $name) : static
+    public function rename(string $name): static
     {
         return new self($name, $this->value, $this->definition->metadata());
     }
 
-    public function toLowercase() : self
+    public function toLowercase(): self
     {
         return new self($this->name, $this->value ? \mb_strtolower($this->value) : null);
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         $value = $this->value();
 
@@ -127,17 +133,17 @@ final class StringEntry implements Entry
         return $value;
     }
 
-    public function type() : Type
+    public function type(): Type
     {
         return $this->definition->type();
     }
 
-    public function value() : ?string
+    public function value(): ?string
     {
         return $this->value;
     }
 
-    public function withValue(mixed $value) : static
+    public function withValue(mixed $value): static
     {
         return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }

@@ -6,7 +6,23 @@ namespace Flow\ETL\Adapter\PostgreSql;
 
 use Flow\ETL\Adapter\PostgreSql\Exception\TypeMappingException;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\{BooleanEntry, DateEntry, DateTimeEntry, EnumEntry, FloatEntry, HTMLElementEntry, HTMLEntry, IntegerEntry, JsonEntry, ListEntry, MapEntry, StringEntry, StructureEntry, TimeEntry, UuidEntry, XMLElementEntry, XMLEntry};
+use Flow\ETL\Row\Entry\BooleanEntry;
+use Flow\ETL\Row\Entry\DateEntry;
+use Flow\ETL\Row\Entry\DateTimeEntry;
+use Flow\ETL\Row\Entry\EnumEntry;
+use Flow\ETL\Row\Entry\FloatEntry;
+use Flow\ETL\Row\Entry\HTMLElementEntry;
+use Flow\ETL\Row\Entry\HTMLEntry;
+use Flow\ETL\Row\Entry\IntegerEntry;
+use Flow\ETL\Row\Entry\JsonEntry;
+use Flow\ETL\Row\Entry\ListEntry;
+use Flow\ETL\Row\Entry\MapEntry;
+use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Row\Entry\StructureEntry;
+use Flow\ETL\Row\Entry\TimeEntry;
+use Flow\ETL\Row\Entry\UuidEntry;
+use Flow\ETL\Row\Entry\XMLElementEntry;
+use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\Client\Types\ValueType;
 
@@ -75,7 +91,7 @@ final readonly class EntryTypesMap
      *
      * @throws TypeMappingException when entry type is not in the map
      */
-    public function mapEntry(Entry $entry) : ?TypedValue
+    public function mapEntry(Entry $entry): ?TypedValue
     {
         if ($entry->value() === null) {
             return null;

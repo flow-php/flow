@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Factory;
 
-use function Flow\CLI\{option_bool, option_string_nullable};
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
+
+use function Flow\CLI\option_bool;
+use function Flow\CLI\option_string_nullable;
 
 final readonly class JsonExtractorFactory
 {
@@ -15,10 +17,9 @@ final readonly class JsonExtractorFactory
         private Path $path,
         private string $pointerOption = 'input-json-pointer',
         private string $pointerAsEntryNameOption = 'input-json-pointer-entry-name',
-    ) {
-    }
+    ) {}
 
-    public function get(InputInterface $input) : JsonExtractor
+    public function get(InputInterface $input): JsonExtractor
     {
         $extractor = new JsonExtractor($this->path);
 

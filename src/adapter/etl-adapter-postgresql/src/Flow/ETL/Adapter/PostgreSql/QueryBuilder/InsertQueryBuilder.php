@@ -4,25 +4,29 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\QueryBuilder;
 
-use function Flow\PostgreSql\DSL\{bulk_insert, conflict_columns, conflict_constraint};
-use Flow\ETL\Adapter\PostgreSql\{EntryTypesMap, LoaderOptions\InsertOptions};
-use Flow\ETL\{Row\Entry, Rows};
+use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
+use Flow\ETL\Adapter\PostgreSql\LoaderOptions\InsertOptions;
+use Flow\ETL\Row\Entry;
+use Flow\ETL\Rows;
 use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\QueryBuilder\Insert\BulkInsert;
 use Flow\PostgreSql\QueryBuilder\Sql;
+
+use function Flow\PostgreSql\DSL\bulk_insert;
+use function Flow\PostgreSql\DSL\conflict_columns;
+use function Flow\PostgreSql\DSL\conflict_constraint;
 
 final readonly class InsertQueryBuilder
 {
     public function __construct(
         private string $table,
         private EntryTypesMap $typesMap,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array{Sql, list<null|TypedValue>}
      */
-    public function build(Rows $rows, ?InsertOptions $options = null) : array
+    public function build(Rows $rows, ?InsertOptions $options = null): array
     {
         $sortedRows = $rows->sortEntries();
         $firstRow = $sortedRows->first();
@@ -49,7 +53,7 @@ final readonly class InsertQueryBuilder
         return [$query, $params];
     }
 
-    private function applyConflictHandling(BulkInsert $query, InsertOptions $options) : BulkInsert
+    private function applyConflictHandling(BulkInsert $query, InsertOptions $options): BulkInsert
     {
         if ($options->skipConflicts) {
             return $query->onConflictDoNothing();
@@ -75,7 +79,7 @@ final readonly class InsertQueryBuilder
     /**
      * @param Entry<mixed> $entry
      */
-    private function mapEntryToParameter(Entry $entry) : ?TypedValue
+    private function mapEntryToParameter(Entry $entry): ?TypedValue
     {
         return $this->typesMap->mapEntry($entry);
     }

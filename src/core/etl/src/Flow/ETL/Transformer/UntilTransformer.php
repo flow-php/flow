@@ -6,18 +6,20 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\LimitReachedException;
-use Flow\ETL\{FlowContext, Rows, Transformer};
+use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction;
+use Flow\ETL\Rows;
+use Flow\ETL\Transformer;
 
 final class UntilTransformer implements Transformer
 {
     private bool $limitReached = false;
 
-    public function __construct(private readonly ScalarFunction $function)
-    {
-    }
+    public function __construct(
+        private readonly ScalarFunction $function,
+    ) {}
 
-    public function transform(Rows $rows, FlowContext $context) : Rows
+    public function transform(Rows $rows, FlowContext $context): Rows
     {
         $context->telemetry()->transformationStarted($this);
 

@@ -4,16 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Unit\Telemetry;
 
-use function Flow\Filesystem\DSL\{filesystem_telemetry_options, path};
-use function Flow\Telemetry\DSL\{memory_span_processor, void_exporter};
-use Flow\Filesystem\{DestinationStream, FileStatus, Filesystem, Mount, Path, SourceStream};
-use Flow\Filesystem\Telemetry\{TraceableDestinationStream, TraceableFilesystem, TraceableSourceStream};
+use Flow\Filesystem\DestinationStream;
+use Flow\Filesystem\FileStatus;
+use Flow\Filesystem\Filesystem;
+use Flow\Filesystem\Mount;
+use Flow\Filesystem\Path;
+use Flow\Filesystem\SourceStream;
+use Flow\Filesystem\Telemetry\TraceableDestinationStream;
+use Flow\Filesystem\Telemetry\TraceableFilesystem;
+use Flow\Filesystem\Telemetry\TraceableSourceStream;
 use Flow\Filesystem\Tests\Mother\FilesystemTelemetryConfigMother;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Filesystem\DSL\filesystem_telemetry_options;
+use function Flow\Filesystem\DSL\path;
+use function Flow\Telemetry\DSL\memory_span_processor;
+use function Flow\Telemetry\DSL\void_exporter;
+
 final class TraceableFilesystemTest extends TestCase
 {
-    public function test_all_telemetry_disabled_does_not_wrap_streams() : void
+    public function test_all_telemetry_disabled_does_not_wrap_streams(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor, filesystem_telemetry_options(
@@ -32,11 +42,11 @@ final class TraceableFilesystemTest extends TestCase
         $fs = new TraceableFilesystem($mockFilesystem, $config);
         $stream = $fs->readFrom($path);
 
-        self::assertSame($mockStream, $stream);
-        self::assertEmpty($spanProcessor->endedSpans());
+        static::assertSame($mockStream, $stream);
+        static::assertEmpty($spanProcessor->endedSpans());
     }
 
-    public function test_append_to_rethrows_exception() : void
+    public function test_append_to_rethrows_exception(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
@@ -55,7 +65,7 @@ final class TraceableFilesystemTest extends TestCase
         $fs->appendTo($path);
     }
 
-    public function test_append_to_returns_traceable_destination_stream() : void
+    public function test_append_to_returns_traceable_destination_stream(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
@@ -71,10 +81,10 @@ final class TraceableFilesystemTest extends TestCase
         $fs = new TraceableFilesystem($mockFilesystem, $config);
         $stream = $fs->appendTo($path);
 
-        self::assertInstanceOf(TraceableDestinationStream::class, $stream);
+        static::assertInstanceOf(TraceableDestinationStream::class, $stream);
     }
 
-    public function test_get_system_tmp_dir_delegates_to_underlying_filesystem() : void
+    public function test_get_system_tmp_dir_delegates_to_underlying_filesystem(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
@@ -85,11 +95,11 @@ final class TraceableFilesystemTest extends TestCase
 
         $fs = new TraceableFilesystem($mockFilesystem, $config);
 
-        self::assertSame($tmpPath, $fs->getSystemTmpDir());
-        self::assertEmpty($spanProcessor->endedSpans());
+        static::assertSame($tmpPath, $fs->getSystemTmpDir());
+        static::assertEmpty($spanProcessor->endedSpans());
     }
 
-    public function test_list_delegates_to_underlying_filesystem() : void
+    public function test_list_delegates_to_underlying_filesystem(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
@@ -97,17 +107,19 @@ final class TraceableFilesystemTest extends TestCase
 
         $mockFilesystem = $this->createMock(Filesystem::class);
         $mockFilesystem->method('mount')->willReturn(new Mount('file'));
-        $mockFilesystem->method('list')->willReturnCallback(static function () : \Generator {
-            yield from [];
-        });
+        $mockFilesystem
+            ->method('list')
+            ->willReturnCallback(static function (): \Generator {
+                yield from [];
+            });
 
         $fs = new TraceableFilesystem($mockFilesystem, $config);
         \iterator_to_array($fs->list($path));
 
-        self::assertEmpty($spanProcessor->endedSpans());
+        static::assertEmpty($spanProcessor->endedSpans());
     }
 
-    public function test_mount_delegates_to_underlying_filesystem() : void
+    public function test_mount_delegates_to_underlying_filesystem(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
@@ -118,11 +130,11 @@ final class TraceableFilesystemTest extends TestCase
 
         $fs = new TraceableFilesystem($mockFilesystem, $config);
 
-        self::assertSame($mount, $fs->mount());
-        self::assertEmpty($spanProcessor->endedSpans());
+        static::assertSame($mount, $fs->mount());
+        static::assertEmpty($spanProcessor->endedSpans());
     }
 
-    public function test_mv_delegates_to_underlying_filesystem() : void
+    public function test_mv_delegates_to_underlying_filesystem(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
@@ -136,11 +148,11 @@ final class TraceableFilesystemTest extends TestCase
         $fs = new TraceableFilesystem($mockFilesystem, $config);
         $result = $fs->mv($from, $to);
 
-        self::assertTrue($result);
-        self::assertEmpty($spanProcessor->endedSpans());
+        static::assertTrue($result);
+        static::assertEmpty($spanProcessor->endedSpans());
     }
 
-    public function test_read_from_rethrows_exception() : void
+    public function test_read_from_rethrows_exception(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
@@ -159,7 +171,7 @@ final class TraceableFilesystemTest extends TestCase
         $fs->readFrom($path);
     }
 
-    public function test_read_from_returns_traceable_source_stream() : void
+    public function test_read_from_returns_traceable_source_stream(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
@@ -175,10 +187,10 @@ final class TraceableFilesystemTest extends TestCase
         $fs = new TraceableFilesystem($mockFilesystem, $config);
         $stream = $fs->readFrom($path);
 
-        self::assertInstanceOf(TraceableSourceStream::class, $stream);
+        static::assertInstanceOf(TraceableSourceStream::class, $stream);
     }
 
-    public function test_rm_delegates_to_underlying_filesystem() : void
+    public function test_rm_delegates_to_underlying_filesystem(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
@@ -191,11 +203,11 @@ final class TraceableFilesystemTest extends TestCase
         $fs = new TraceableFilesystem($mockFilesystem, $config);
         $result = $fs->rm($path);
 
-        self::assertTrue($result);
-        self::assertEmpty($spanProcessor->endedSpans());
+        static::assertTrue($result);
+        static::assertEmpty($spanProcessor->endedSpans());
     }
 
-    public function test_status_delegates_to_underlying_filesystem() : void
+    public function test_status_delegates_to_underlying_filesystem(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
@@ -209,16 +221,17 @@ final class TraceableFilesystemTest extends TestCase
         $fs = new TraceableFilesystem($mockFilesystem, $config);
         $result = $fs->status($path);
 
-        self::assertSame($fileStatus, $result);
-        self::assertEmpty($spanProcessor->endedSpans());
+        static::assertSame($fileStatus, $result);
+        static::assertEmpty($spanProcessor->endedSpans());
     }
 
-    public function test_stream_tracing_enabled_wraps_streams() : void
+    public function test_stream_tracing_enabled_wraps_streams(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
-        $config = FilesystemTelemetryConfigMother::create($spanProcessor, filesystem_telemetry_options(
-            traceStreams: true,
-        ));
+        $config = FilesystemTelemetryConfigMother::create(
+            $spanProcessor,
+            filesystem_telemetry_options(traceStreams: true),
+        );
         $path = Path::realpath('/tmp/test.txt');
 
         $mockStream = $this->createMock(SourceStream::class);
@@ -231,10 +244,10 @@ final class TraceableFilesystemTest extends TestCase
         $fs = new TraceableFilesystem($mockFilesystem, $config);
         $stream = $fs->readFrom($path);
 
-        self::assertInstanceOf(TraceableSourceStream::class, $stream);
+        static::assertInstanceOf(TraceableSourceStream::class, $stream);
     }
 
-    public function test_write_to_rethrows_exception() : void
+    public function test_write_to_rethrows_exception(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
@@ -253,7 +266,7 @@ final class TraceableFilesystemTest extends TestCase
         $fs->writeTo($path);
     }
 
-    public function test_write_to_returns_traceable_destination_stream() : void
+    public function test_write_to_returns_traceable_destination_stream(): void
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
@@ -269,6 +282,6 @@ final class TraceableFilesystemTest extends TestCase
         $fs = new TraceableFilesystem($mockFilesystem, $config);
         $stream = $fs->writeTo($path);
 
-        self::assertInstanceOf(TraceableDestinationStream::class, $stream);
+        static::assertInstanceOf(TraceableDestinationStream::class, $stream);
     }
 }

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema;
 
-use function Flow\PostgreSql\DSL\create;
-
 use Flow\PostgreSql\QueryBuilder\Sql;
+
+use function Flow\PostgreSql\DSL\create;
 
 /**
  * @phpstan-type SequenceShape = array{name: string, data_type: string, start_value: int|string, min_value: int|string, max_value: null|int|string, increment_by: int|string, cycle: bool, cache_value: int|string, owned_by_table: ?string, owned_by_column: ?string}
@@ -24,13 +24,12 @@ final readonly class Sequence
         public int|string $cacheValue = 1,
         public ?string $ownedByTable = null,
         public ?string $ownedByColumn = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @param SequenceShape $data
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         return new self(
             name: $data['name'],
@@ -49,7 +48,7 @@ final readonly class Sequence
     /**
      * @return SequenceShape
      */
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'name' => $this->name,
@@ -65,9 +64,10 @@ final readonly class Sequence
         ];
     }
 
-    public function toSql() : Sql
+    public function toSql(): Sql
     {
-        $builder = create()->sequence($this->name)
+        $builder = create()
+            ->sequence($this->name)
             ->asType($this->dataType)
             ->startWith((int) $this->startValue)
             ->incrementBy((int) $this->incrementBy)

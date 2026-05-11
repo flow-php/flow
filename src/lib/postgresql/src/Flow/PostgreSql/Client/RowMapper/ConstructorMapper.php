@@ -33,8 +33,9 @@ final readonly class ConstructorMapper implements RowMapper
      *
      * @throws MappingException
      */
-    public function __construct(private string $class)
-    {
+    public function __construct(
+        private string $class,
+    ) {
         if (!\class_exists($this->class)) {
             throw MappingException::mappingFailed($this->class, 'Class does not exist');
         }
@@ -53,7 +54,7 @@ final readonly class ConstructorMapper implements RowMapper
     /**
      * @return T
      */
-    public function map(array $row, Context $context) : object
+    public function map(array $row, Context $context): object
     {
         $args = [];
 

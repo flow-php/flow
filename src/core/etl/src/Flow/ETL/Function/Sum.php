@@ -4,12 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\{float_entry, int_entry};
 use Flow\Calculator\Calculator;
-use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\ETL\{FlowContext, Row, Rows, Window};
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\Reference;
+use Flow\ETL\Rows;
+use Flow\ETL\Window;
+
+use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\int_entry;
 
 final class Sum implements AggregatingFunction, WindowFunction
 {
@@ -17,13 +24,14 @@ final class Sum implements AggregatingFunction, WindowFunction
 
     private ?Window $window;
 
-    public function __construct(private readonly Reference $ref)
-    {
+    public function __construct(
+        private readonly Reference $ref,
+    ) {
         $this->sum = 0;
         $this->window = null;
     }
 
-    public function aggregate(Row $row, FlowContext $context) : void
+    public function aggregate(Row $row, FlowContext $context): void
     {
         try {
             $entry = $row->get($this->ref);
@@ -32,13 +40,12 @@ final class Sum implements AggregatingFunction, WindowFunction
             if (\is_numeric($value)) {
                 $this->sum = (new Calculator())->add($this->sum, $value);
             }
-
         } catch (InvalidArgumentException $e) {
             $context->functions()->invalidResult(new InvalidArgumentException('Sum error: ' . $e->getMessage()));
         }
     }
 
-    public function apply(Row $row, Rows $partition, FlowContext $context) : mixed
+    public function apply(Row $row, Rows $partition, FlowContext $context): mixed
     {
         $sum = 0;
 
@@ -51,14 +58,18 @@ final class Sum implements AggregatingFunction, WindowFunction
                     $sum = (new Calculator())->add($sum, $value);
                 }
             } catch (InvalidArgumentException $e) {
-                $context->functions()->invalidResult(new InvalidArgumentException('Sum window function error: ' . $e->getMessage(), 0, $e));
+                $context
+                    ->functions()
+                    ->invalidResult(
+                        new InvalidArgumentException('Sum window function error: ' . $e->getMessage(), 0, $e),
+                    );
             }
         }
 
         return $sum;
     }
 
-    public function over(Window $window) : WindowFunction
+    public function over(Window $window): WindowFunction
     {
         $this->window = $window;
 
@@ -68,7 +79,7 @@ final class Sum implements AggregatingFunction, WindowFunction
     /**
      * @return Entry<?float>|Entry<?int>
      */
-    public function result(EntryFactory $entryFactory) : Entry
+    public function result(EntryFactory $entryFactory): Entry
     {
         if (!$this->ref->hasAlias()) {
             $this->ref->as($this->ref->to() . '_sum');
@@ -81,12 +92,12 @@ final class Sum implements AggregatingFunction, WindowFunction
         return float_entry($this->ref->name(), $this->sum);
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return 'sum()';
     }
 
-    public function window() : Window
+    public function window(): Window
     {
         if ($this->window === null) {
             throw new RuntimeException('Window function "' . $this->toString() . '" requires an OVER clause.');

@@ -4,24 +4,27 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
-use function Flow\Types\DSL\{
-    type_from_array,
-    type_instance_of,
-    type_integer,
-    type_intersection,
-    type_mixed,
-    type_positive_integer,
-    types};
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
-use Flow\Types\Tests\Unit\Type\Fixtures\Intersection\{Date, DateOrTime, Time};
+use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidTypeException;
+use Flow\Types\Tests\Unit\Type\Fixtures\Intersection\Date;
+use Flow\Types\Tests\Unit\Type\Fixtures\Intersection\DateOrTime;
+use Flow\Types\Tests\Unit\Type\Fixtures\Intersection\Time;
 use Flow\Types\Type\Native\IntersectionType;
 use Flow\Types\Type\Types;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_from_array;
+use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_intersection;
+use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_positive_integer;
+use function Flow\Types\DSL\types;
+
 final class IntersectionTypeTest extends TestCase
 {
-    public static function assert_data_provider() : \Generator
+    public static function assert_data_provider(): \Generator
     {
         yield 'valid integer for integer&positive_integer' => [
             'type' => type_intersection(type_integer(), type_positive_integer()),
@@ -78,7 +81,7 @@ final class IntersectionTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider() : \Generator
+    public static function cast_data_provider(): \Generator
     {
         yield 'string to integer for integer&positive_integer' => [
             'type' => type_intersection(type_integer(), type_positive_integer()),
@@ -123,7 +126,7 @@ final class IntersectionTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider() : \Generator
+    public static function is_valid_data_provider(): \Generator
     {
         yield 'valid positive integer for integer&positive_integer' => [
             'type' => type_intersection(type_integer(), type_positive_integer()),
@@ -174,7 +177,7 @@ final class IntersectionTypeTest extends TestCase
         ];
     }
 
-    public static function to_string_data_provider() : \Generator
+    public static function to_string_data_provider(): \Generator
     {
         yield 'integer and positive_integer' => [
             'type' => type_intersection(type_integer(), type_positive_integer()),
@@ -182,7 +185,12 @@ final class IntersectionTypeTest extends TestCase
         ];
 
         yield 'multiple integers and positive_integer' => [
-            'type' => type_intersection(type_integer(), type_integer(), type_integer(), type_intersection(type_integer(), type_positive_integer())),
+            'type' => type_intersection(
+                type_integer(),
+                type_integer(),
+                type_integer(),
+                type_intersection(type_integer(), type_positive_integer()),
+            ),
             'expected' => 'intersection<integer&positive_integer>',
         ];
 
@@ -192,7 +200,7 @@ final class IntersectionTypeTest extends TestCase
         ];
     }
 
-    public static function types_data_provider() : \Generator
+    public static function types_data_provider(): \Generator
     {
         yield 'integer and positive_integer' => [
             'expected' => types(type_integer(), type_positive_integer()),
@@ -211,28 +219,28 @@ final class IntersectionTypeTest extends TestCase
     }
 
     #[DataProvider('assert_data_provider')]
-    public function test_assert(IntersectionType $type, mixed $value, ?string $exceptionClass = null) : void
+    public function test_assert(IntersectionType $type, mixed $value, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             $type->assert($value);
         } else {
-            self::assertSame($value, $type->assert($value));
+            static::assertSame($value, $type->assert($value));
         }
     }
 
     #[DataProvider('cast_data_provider')]
-    public function test_cast(IntersectionType $type, mixed $value, mixed $expected, ?string $exceptionClass) : void
+    public function test_cast(IntersectionType $type, mixed $value, mixed $expected, ?string $exceptionClass): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
             $type->cast($value);
         } else {
-            self::assertEquals($expected, $type->cast($value));
+            static::assertEquals($expected, $type->cast($value));
         }
     }
 
-    public function test_intersection_with_mixed_type_as_left() : void
+    public function test_intersection_with_mixed_type_as_left(): void
     {
         $this->expectException(InvalidTypeException::class);
         $this->expectExceptionMessage('IntersectionType cannot be mixed with MixedType, mixed is a standalone type');
@@ -240,7 +248,7 @@ final class IntersectionTypeTest extends TestCase
         type_intersection(type_mixed(), type_integer());
     }
 
-    public function test_intersection_with_mixed_type_as_right() : void
+    public function test_intersection_with_mixed_type_as_right(): void
     {
         $this->expectException(InvalidTypeException::class);
         $this->expectExceptionMessage('IntersectionType cannot be mixed with MixedType, mixed is a standalone type');
@@ -249,29 +257,29 @@ final class IntersectionTypeTest extends TestCase
     }
 
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(IntersectionType $type, mixed $value, bool $expected) : void
+    public function test_is_valid(IntersectionType $type, mixed $value, bool $expected): void
     {
-        self::assertSame($expected, $type->isValid($value));
+        static::assertSame($expected, $type->isValid($value));
     }
 
-    public function test_normalization() : void
+    public function test_normalization(): void
     {
         $type = type_intersection(type_integer(), type_positive_integer());
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
-        self::assertEquals($type, $recreated);
+        static::assertEquals($type, $recreated);
     }
 
     #[DataProvider('to_string_data_provider')]
-    public function test_to_string(IntersectionType $type, string $expected) : void
+    public function test_to_string(IntersectionType $type, string $expected): void
     {
-        self::assertSame($expected, $type->toString());
+        static::assertSame($expected, $type->toString());
     }
 
     #[DataProvider('types_data_provider')]
-    public function test_types(Types $expected, IntersectionType $type) : void
+    public function test_types(Types $expected, IntersectionType $type): void
     {
-        self::assertEquals($expected, $type->types());
+        static::assertEquals($expected, $type->types());
     }
 }

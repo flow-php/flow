@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Dialect;
 
-use function Flow\Types\DSL\{type_boolean, type_list, type_optional, type_string, type_structure};
 use Flow\Doctrine\Bulk\InsertOptions;
+
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_structure;
 
 final readonly class SqliteInsertOptions implements InsertOptions
 {
@@ -18,23 +23,19 @@ final readonly class SqliteInsertOptions implements InsertOptions
         public array $conflictColumns = [],
         public array $updateColumns = [],
         public ?bool $preserveExistingValues = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<string, mixed> $options
      */
-    public static function fromArray(array $options) : InsertOptions
+    public static function fromArray(array $options): InsertOptions
     {
-        $options = type_structure(
-            [],
-            [
-                'skip_conflicts' => type_optional(type_boolean()),
-                'conflict_columns' => type_list(type_string()),
-                'update_columns' => type_list(type_string()),
-                'preserve_existing_values' => type_optional(type_boolean()),
-            ]
-        )->assert($options);
+        $options = type_structure([], [
+            'skip_conflicts' => type_optional(type_boolean()),
+            'conflict_columns' => type_list(type_string()),
+            'update_columns' => type_list(type_string()),
+            'preserve_existing_values' => type_optional(type_boolean()),
+        ])->assert($options);
 
         return new self(
             $options['skip_conflicts'] ?? null,
@@ -44,7 +45,7 @@ final readonly class SqliteInsertOptions implements InsertOptions
         );
     }
 
-    public static function new() : self
+    public static function new(): self
     {
         return new self();
     }
@@ -52,12 +53,12 @@ final readonly class SqliteInsertOptions implements InsertOptions
     /**
      * @param array<string> $conflictColumns
      */
-    public function conflictColumns(array $conflictColumns) : self
+    public function conflictColumns(array $conflictColumns): self
     {
         return new self($this->skipConflicts, $conflictColumns, $this->updateColumns);
     }
 
-    public function skipConflicts(bool $skip = true) : self
+    public function skipConflicts(bool $skip = true): self
     {
         return new self($skip, $this->conflictColumns, $this->updateColumns);
     }
@@ -65,7 +66,7 @@ final readonly class SqliteInsertOptions implements InsertOptions
     /**
      * @param array<string> $updateColumns
      */
-    public function updateColumns(array $updateColumns, ?bool $preserveExistingValues = null) : self
+    public function updateColumns(array $updateColumns, ?bool $preserveExistingValues = null): self
     {
         return new self($this->skipConflicts, $this->conflictColumns, $updateColumns, $preserveExistingValues);
     }

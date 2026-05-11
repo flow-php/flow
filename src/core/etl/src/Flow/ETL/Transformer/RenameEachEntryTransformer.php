@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
-use Flow\ETL\{Exception\InvalidArgumentException,
-    FlowContext,
-    Row,
-    Rows,
-    Transformer,
-    Transformer\Rename\RenameEntryStrategy};
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
+use Flow\ETL\Transformer;
+use Flow\ETL\Transformer\Rename\RenameEntryStrategy;
 
 final readonly class RenameEachEntryTransformer implements Transformer
 {
@@ -28,12 +28,12 @@ final readonly class RenameEachEntryTransformer implements Transformer
         $this->strategies = $strategies;
     }
 
-    public function transform(Rows $rows, FlowContext $context) : Rows
+    public function transform(Rows $rows, FlowContext $context): Rows
     {
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $result = $rows->map(function (Row $row) : Row {
+            $result = $rows->map(function (Row $row): Row {
                 foreach ($this->strategies as $strategy) {
                     $row = $strategy->rename($row);
                 }

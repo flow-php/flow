@@ -15,10 +15,9 @@ final readonly class RenameReplaceEntryStrategy implements RenameEntryStrategy
     public function __construct(
         private string|array $search,
         private string|array $replace,
-    ) {
-    }
+    ) {}
 
-    public function rename(Row $row) : Row
+    public function rename(Row $row): Row
     {
         $renames = [];
 

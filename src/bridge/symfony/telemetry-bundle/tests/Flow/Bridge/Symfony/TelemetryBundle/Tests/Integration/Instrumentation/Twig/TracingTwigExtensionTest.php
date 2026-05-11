@@ -16,7 +16,7 @@ use Twig\Loader\ArrayLoader;
 #[CoversClass(TracingTwigExtension::class)]
 final class TracingTwigExtensionTest extends KernelTestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         if (!\class_exists(AbstractExtension::class)) {
             self::markTestSkipped('twig/twig is not installed');
@@ -25,10 +25,10 @@ final class TracingTwigExtensionTest extends KernelTestCase
         parent::setUp();
     }
 
-    public function test_does_not_trace_blocks_when_disabled() : void
+    public function test_does_not_trace_blocks_when_disabled(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
                     'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
@@ -66,7 +66,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
 
         $result = $twig->render('child.html.twig');
 
-        self::assertSame('Child content', $result);
+        static::assertSame('Child content', $result);
 
         /** @var MemorySpanProcessor $processor */
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
@@ -74,14 +74,14 @@ final class TracingTwigExtensionTest extends KernelTestCase
 
         foreach ($spans as $span) {
             $attributes = $span->attributes();
-            self::assertNotSame('block', $attributes['twig.type'] ?? '', 'Block span should not be traced');
+            static::assertNotSame('block', $attributes['twig.type'] ?? '', 'Block span should not be traced');
         }
     }
 
-    public function test_does_not_trace_excluded_templates() : void
+    public function test_does_not_trace_excluded_templates(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
                     'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
@@ -134,14 +134,14 @@ final class TracingTwigExtensionTest extends KernelTestCase
             }
         }
 
-        self::assertContains('included.html.twig', $templateNames, 'Included template should be traced');
-        self::assertNotContains('excluded.html.twig', $templateNames, 'Excluded template should not be traced');
+        static::assertContains('included.html.twig', $templateNames, 'Included template should be traced');
+        static::assertNotContains('excluded.html.twig', $templateNames, 'Excluded template should not be traced');
     }
 
-    public function test_does_not_trace_excluded_templates_with_regex() : void
+    public function test_does_not_trace_excluded_templates_with_regex(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
                     'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
@@ -196,15 +196,19 @@ final class TracingTwigExtensionTest extends KernelTestCase
             }
         }
 
-        self::assertContains('included.html.twig', $templateNames, 'Included template should be traced');
-        self::assertNotContains('@Profiler/toolbar.html.twig', $templateNames, 'Profiler toolbar should not be traced');
-        self::assertNotContains('@Profiler/panel.html.twig', $templateNames, 'Profiler panel should not be traced');
+        static::assertContains('included.html.twig', $templateNames, 'Included template should be traced');
+        static::assertNotContains(
+            '@Profiler/toolbar.html.twig',
+            $templateNames,
+            'Profiler toolbar should not be traced',
+        );
+        static::assertNotContains('@Profiler/panel.html.twig', $templateNames, 'Profiler panel should not be traced');
     }
 
-    public function test_does_not_trace_templates_when_disabled() : void
+    public function test_does_not_trace_templates_when_disabled(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
                     'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
@@ -241,7 +245,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
 
         $result = $twig->render('test.html.twig', ['name' => 'World']);
 
-        self::assertSame('Hello World!', $result);
+        static::assertSame('Hello World!', $result);
 
         /** @var MemorySpanProcessor $processor */
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
@@ -249,14 +253,18 @@ final class TracingTwigExtensionTest extends KernelTestCase
 
         foreach ($spans as $span) {
             $attributes = $span->attributes();
-            self::assertNotSame('template', $attributes['twig.type'] ?? '', 'Template span should not be traced when trace_templates is false');
+            static::assertNotSame(
+                'template',
+                $attributes['twig.type'] ?? '',
+                'Template span should not be traced when trace_templates is false',
+            );
         }
     }
 
-    public function test_excluded_template_cascades_to_children() : void
+    public function test_excluded_template_cascades_to_children(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
                     'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
@@ -313,15 +321,19 @@ final class TracingTwigExtensionTest extends KernelTestCase
             }
         }
 
-        self::assertNotContains('excluded.html.twig', $templateNames, 'Excluded template should not be traced');
-        self::assertNotContains('child.html.twig', $templateNames, 'Child template should not be traced when parent is excluded');
-        self::assertNotContains('content', $blockNames, 'Block in excluded template should not be traced');
+        static::assertNotContains('excluded.html.twig', $templateNames, 'Excluded template should not be traced');
+        static::assertNotContains(
+            'child.html.twig',
+            $templateNames,
+            'Child template should not be traced when parent is excluded',
+        );
+        static::assertNotContains('content', $blockNames, 'Block in excluded template should not be traced');
     }
 
-    public function test_extension_not_registered_when_disabled() : void
+    public function test_extension_not_registered_when_disabled(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
                     'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
@@ -334,13 +346,13 @@ final class TracingTwigExtensionTest extends KernelTestCase
 
         $container = $this->getContainer();
 
-        self::assertFalse($container->has('flow.telemetry.twig.extension'));
+        static::assertFalse($container->has('flow.telemetry.twig.extension'));
     }
 
-    public function test_extension_service_is_registered() : void
+    public function test_extension_service_is_registered(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
                     'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
@@ -353,14 +365,14 @@ final class TracingTwigExtensionTest extends KernelTestCase
 
         $container = $this->getContainer();
 
-        self::assertTrue($container->has('flow.telemetry.twig.extension'));
-        self::assertInstanceOf(TracingTwigExtension::class, $container->get('flow.telemetry.twig.extension'));
+        static::assertTrue($container->has('flow.telemetry.twig.extension'));
+        static::assertInstanceOf(TracingTwigExtension::class, $container->get('flow.telemetry.twig.extension'));
     }
 
-    public function test_traces_blocks_in_templates() : void
+    public function test_traces_blocks_in_templates(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
                     'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
@@ -398,13 +410,13 @@ final class TracingTwigExtensionTest extends KernelTestCase
 
         $result = $twig->render('child.html.twig');
 
-        self::assertSame('Child content', $result);
+        static::assertSame('Child content', $result);
 
         /** @var MemorySpanProcessor $processor */
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        self::assertGreaterThanOrEqual(1, \count($spans));
+        static::assertGreaterThanOrEqual(1, \count($spans));
 
         $blockSpanFound = false;
 
@@ -413,17 +425,17 @@ final class TracingTwigExtensionTest extends KernelTestCase
 
             if (($attributes['twig.type'] ?? '') === 'block') {
                 $blockSpanFound = true;
-                self::assertSame('content', $attributes['twig.name']);
+                static::assertSame('content', $attributes['twig.name']);
             }
         }
 
-        self::assertTrue($blockSpanFound, 'Expected block span was not found');
+        static::assertTrue($blockSpanFound, 'Expected block span was not found');
     }
 
-    public function test_traces_macros_when_enabled() : void
+    public function test_traces_macros_when_enabled(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
                     'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
@@ -461,7 +473,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
 
         $result = $twig->render('test.html.twig');
 
-        self::assertSame('Hello World!', $result);
+        static::assertSame('Hello World!', $result);
 
         /** @var MemorySpanProcessor $processor */
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
@@ -474,17 +486,17 @@ final class TracingTwigExtensionTest extends KernelTestCase
 
             if (($attributes['twig.type'] ?? '') === 'macro') {
                 $macroSpanFound = true;
-                self::assertSame('greet', $attributes['twig.name']);
+                static::assertSame('greet', $attributes['twig.name']);
             }
         }
 
-        self::assertTrue($macroSpanFound, 'Expected macro span was not found');
+        static::assertTrue($macroSpanFound, 'Expected macro span was not found');
     }
 
-    public function test_traces_template_rendering() : void
+    public function test_traces_template_rendering(): void
     {
         $this->bootKernel([
-            'config' => static function (TestKernel $kernel) : void {
+            'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
                     'resource' => [],
                     'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
@@ -518,13 +530,13 @@ final class TracingTwigExtensionTest extends KernelTestCase
 
         $result = $twig->render('test.html.twig', ['name' => 'World']);
 
-        self::assertSame('Hello World!', $result);
+        static::assertSame('Hello World!', $result);
 
         /** @var MemorySpanProcessor $processor */
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        self::assertGreaterThanOrEqual(1, \count($spans));
+        static::assertGreaterThanOrEqual(1, \count($spans));
 
         $templateSpanFound = false;
 
@@ -532,11 +544,11 @@ final class TracingTwigExtensionTest extends KernelTestCase
             if ($span->name() === 'test.html.twig') {
                 $templateSpanFound = true;
                 $attributes = $span->attributes();
-                self::assertSame('template', $attributes['twig.type']);
-                self::assertSame('test.html.twig', $attributes['twig.template']);
+                static::assertSame('template', $attributes['twig.type']);
+                static::assertSame('test.html.twig', $attributes['twig.template']);
             }
         }
 
-        self::assertTrue($templateSpanFound, 'Expected template span was not found');
+        static::assertTrue($templateSpanFound, 'Expected template span was not found');
     }
 }

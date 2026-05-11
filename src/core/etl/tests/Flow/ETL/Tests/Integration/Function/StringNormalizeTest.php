@@ -4,36 +4,35 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\data_frame;
-use function Flow\ETL\DSL\{from_array, ref, to_memory};
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\to_memory;
+
 final class StringNormalizeTest extends FlowTestCase
 {
-    public function test_normalize_nfc() : void
+    public function test_normalize_nfc(): void
     {
-        (data_frame())
-            ->read(
-                from_array(
-                    [
-                        ['text' => 'hello'],
-                        ['text' => 'café'],
-                        ['text' => "e\u{0301}"],
-                        ['text' => 'Việt Nam'],
-                        ['text' => ''],
-                        ['text' => null],
-                        ['text' => 'مرحبا'],
-                        ['text' => 'καλημέρα'],
-                        ['text' => '👋🏻'],
-                    ]
-                )
-            )
+        data_frame()
+            ->read(from_array([
+                ['text' => 'hello'],
+                ['text' => 'café'],
+                ['text' => "e\u{0301}"],
+                ['text' => 'Việt Nam'],
+                ['text' => ''],
+                ['text' => null],
+                ['text' => 'مرحبا'],
+                ['text' => 'καλημέρα'],
+                ['text' => '👋🏻'],
+            ]))
             ->withEntry('normalized', ref('text')->stringNormalize())
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        self::assertSame(
+        static::assertSame(
             [
                 ['text' => 'hello', 'normalized' => 'hello'],
                 ['text' => 'café', 'normalized' => 'café'],
@@ -45,7 +44,7 @@ final class StringNormalizeTest extends FlowTestCase
                 ['text' => 'καλημέρα', 'normalized' => 'καλημέρα'],
                 ['text' => '👋🏻', 'normalized' => '👋🏻'],
             ],
-            $memory->dump()
+            $memory->dump(),
         );
     }
 }

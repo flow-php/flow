@@ -6,9 +6,9 @@ namespace Flow\Filesystem;
 
 interface Stream
 {
-    public function close() : void;
+    public function close(): void;
 
-    public function isOpen() : bool;
+    public function isOpen(): bool;
 
-    public function path() : Path;
+    public function path(): Path;
 }

@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Website\Command;
 
-use function Flow\ETL\Adapter\JSON\from_json;
-use function Flow\ETL\DSL\{collect, df, lit, ref};
-use function Flow\Filesystem\DSL\path;
 use Flow\Website\Service\FlowConfigFactory;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -15,9 +12,16 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Twig\Environment;
 
+use function Flow\ETL\Adapter\JSON\from_json;
+use function Flow\ETL\DSL\collect;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
+use function Flow\Filesystem\DSL\path;
+
 #[AsCommand(
     name: 'app:generate:data-frame-completer',
-    description: 'Generate CodeMirror completer for DataFrame methods'
+    description: 'Generate CodeMirror completer for DataFrame methods',
 )]
 final class GenerateDataFrameCompleterCommand extends Command
 {
@@ -29,7 +33,7 @@ final class GenerateDataFrameCompleterCommand extends Command
         parent::__construct();
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output) : int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 
@@ -56,10 +60,19 @@ final class GenerateDataFrameCompleterCommand extends Command
             ->read(from_json($dslJsonPath))
             ->collect()
             ->filter(ref('return_type')->isNotNull())
-            ->withEntry('has_flow_return', ref('return_type')->onEach(
-                ref('element')->arrayGet('name')->equals(lit('Flow'))
-                    ->and(ref('element')->arrayGet('namespace')->equals(lit('Flow\\ETL')))
-            )->arrayKeep(true)->size()->greaterThan(lit(0)))
+            ->withEntry(
+                'has_flow_return',
+                ref('return_type')
+                    ->onEach(
+                        ref('element')
+                            ->arrayGet('name')
+                            ->equals(lit('Flow'))
+                            ->and(ref('element')->arrayGet('namespace')->equals(lit('Flow\\ETL'))),
+                    )
+                    ->arrayKeep(true)
+                    ->size()
+                    ->greaterThan(lit(0)),
+            )
             ->filter(ref('has_flow_return')->equals(lit(true)))
             ->fetch()
             ->reduceToArray('name');
@@ -77,18 +90,19 @@ final class GenerateDataFrameCompleterCommand extends Command
                         ref('element')
                             ->arrayGet('name')
                             ->equals(lit('DataFrame'))
-                            ->and(ref('element')->arrayGet('namespace')->equals(lit('Flow\\ETL')))
-                    )->arrayKeep(true)
+                            ->and(ref('element')->arrayGet('namespace')->equals(lit('Flow\\ETL'))),
+                    )
+                    ->arrayKeep(true)
                     ->size()
                     ->greaterThan(lit(0))
                     ->or(
                         ref('return_type')
-                            ->onEach(
-                                ref('element')->arrayGet('name')->equals(lit('self'))
-                            )
-                            ->arrayKeep(true)->size()->greaterThan(lit(0))
-                            ->and(ref('class_slug')->equals(lit('dataframe')))
-                    )
+                            ->onEach(ref('element')->arrayGet('name')->equals(lit('self')))
+                            ->arrayKeep(true)
+                            ->size()
+                            ->greaterThan(lit(0))
+                            ->and(ref('class_slug')->equals(lit('dataframe'))),
+                    ),
             )
             ->filter(ref('returns_dataframe')->equals(lit(true)))
             ->select('class_slug', 'name')

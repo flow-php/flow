@@ -4,22 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\{datetime_entry, float_entry, int_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Row};
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
+use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\Reference;
+
+use function Flow\ETL\DSL\datetime_entry;
+use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\int_entry;
 
 final class Min implements AggregatingFunction
 {
     private float|\DateTimeInterface|null $min;
 
-    public function __construct(private readonly Reference $ref)
-    {
+    public function __construct(
+        private readonly Reference $ref,
+    ) {
         $this->min = null;
     }
 
-    public function aggregate(Row $row, FlowContext $context) : void
+    public function aggregate(Row $row, FlowContext $context): void
     {
         try {
             /** @var mixed $value */
@@ -46,7 +52,7 @@ final class Min implements AggregatingFunction
     /**
      * @return Entry<?\DateTimeInterface>|Entry<?float>|Entry<?int>
      */
-    public function result(EntryFactory $entryFactory) : Entry
+    public function result(EntryFactory $entryFactory): Entry
     {
         if (!$this->ref->hasAlias()) {
             $this->ref->as($this->ref->to() . '_min');
@@ -62,7 +68,7 @@ final class Min implements AggregatingFunction
 
         $resultInt = (int) $this->min;
 
-        if ($this->min - $resultInt === 0.0) {
+        if (($this->min - $resultInt) === 0.0) {
             return int_entry($this->ref->name(), (int) $this->min);
         }
 

@@ -5,16 +5,14 @@ declare(strict_types=1);
 namespace Flow\Website\StaticSourceProvider;
 
 use Flow\Website\Blog\Posts;
-use NorbertTech\StaticContentGeneratorBundle\Content\{Source, SourceProvider};
+use NorbertTech\StaticContentGeneratorBundle\Content\Source;
+use NorbertTech\StaticContentGeneratorBundle\Content\SourceProvider;
 
 final class BlogPostsProvider implements SourceProvider
 {
-    public function __construct()
-    {
+    public function __construct() {}
 
-    }
-
-    public function all() : array
+    public function all(): array
     {
         $sources = [];
 

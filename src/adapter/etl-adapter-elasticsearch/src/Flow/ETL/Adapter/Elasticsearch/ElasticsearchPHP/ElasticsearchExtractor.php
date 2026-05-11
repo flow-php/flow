@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
-use Elastic\Elasticsearch\Exception\{ClientResponseException, ServerResponseException};
-use Elasticsearch\{Client, ClientBuilder};
+use Elastic\Elasticsearch\Exception\ClientResponseException;
+use Elastic\Elasticsearch\Exception\ServerResponseException;
+use Elasticsearch\Client;
+use Elasticsearch\ClientBuilder;
+use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Extractor, FlowContext};
+use Flow\ETL\FlowContext;
 
 final class ElasticsearchExtractor implements Extractor
 {
@@ -42,7 +45,7 @@ final class ElasticsearchExtractor implements Extractor
         $this->client = null;
     }
 
-    public function extract(FlowContext $context) : \Generator
+    public function extract(FlowContext $context): \Generator
     {
         $pit = \is_array($this->pointInTimeParams)
             /**
@@ -51,8 +54,10 @@ final class ElasticsearchExtractor implements Extractor
             ? new PointInTime($this->client()->openPointInTime($this->pointInTimeParams))
             : null;
 
-        $params = ($pit)
-            ? (new SearchParams($this->parameters))->setBody('pit', ['id' => $pit->id()])->remove('index')
+        $params = $pit
+            ? (new SearchParams($this->parameters))
+                ->setBody('pit', ['id' => $pit->id()])
+                ->remove('index')
             : new SearchParams($this->parameters);
 
         /**
@@ -108,15 +113,13 @@ final class ElasticsearchExtractor implements Extractor
 
             // go with from/size pagination which is not recommended but will work for most of the small indexes.
             for ($page = 1; $page <= $results->pages(); $page++) {
-                $nextPageParams = $params
-                    ->set('from', $page * $results->size())
-                    ->set('size', $results->size());
+                $nextPageParams = $params->set('from', $page * $results->size())->set('size', $results->size());
 
                 if ($nextPageParams->asArray()['from'] >= $results->total()) {
                     break;
                 }
 
-                if ($nextPageParams->asArray()['from'] + $nextPageParams->asArray()['size'] > $results->total()) { // @phpstan-ignore binaryOp.invalid
+                if (($nextPageParams->asArray()['from'] + $nextPageParams->asArray()['size']) > $results->total()) { // @phpstan-ignore binaryOp.invalid
                     $nextPageParams = $nextPageParams->set('size', $results->total() - $fetched);
                 }
 
@@ -145,7 +148,7 @@ final class ElasticsearchExtractor implements Extractor
     /**
      * @param array<mixed> $pointInTimeParams - https://www.elastic.co/guide/en/elasticsearch/reference/master/point-in-time-api.html
      */
-    public function withPointInTime(array $pointInTimeParams) : self
+    public function withPointInTime(array $pointInTimeParams): self
     {
         $this->pointInTimeParams = $pointInTimeParams;
 
@@ -155,7 +158,7 @@ final class ElasticsearchExtractor implements Extractor
     /**
      * @phpstan-ignore-next-line
      */
-    private function client() : Client|\Elastic\Elasticsearch\Client
+    private function client(): Client|\Elastic\Elasticsearch\Client
     {
         if ($this->client === null) {
             if (\class_exists("Elasticsearch\ClientBuilder")) {
@@ -175,7 +178,7 @@ final class ElasticsearchExtractor implements Extractor
      * @throws ClientResponseException
      * @throws ServerResponseException
      */
-    private function closePointInTime(?PointInTime $pit) : void
+    private function closePointInTime(?PointInTime $pit): void
     {
         if ($pit) {
             /**

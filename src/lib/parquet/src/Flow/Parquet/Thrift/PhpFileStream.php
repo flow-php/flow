@@ -27,35 +27,35 @@ final class PhpFileStream implements Transport
         $this->stream = $resource;
     }
 
-    public function available() : int
+    public function available(): int
     {
         return 1;
     }
 
-    public function close() : void
+    public function close(): void
     {
         @\fclose($this->stream);
         $this->stream = null;
     }
 
-    public function flush() : void
+    public function flush(): void
     {
         @\fflush($this->stream);
     }
 
-    public function isOpen() : bool
+    public function isOpen(): bool
     {
         return \is_resource($this->stream);
     }
 
-    public function open() : void
+    public function open(): void
     {
         if (!\is_resource($this->stream)) {
             throw new TTransportException('TPhpStream: Could not open stream');
         }
     }
 
-    public function read(int $len) : string
+    public function read(int $len): string
     {
         $data = @\fread($this->stream, $len);
 
@@ -66,7 +66,7 @@ final class PhpFileStream implements Transport
         return $data;
     }
 
-    public function write(string $buf) : void
+    public function write(string $buf): void
     {
         while ($buf !== '') {
             $got = @\fwrite($this->stream, $buf);

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
+use Flow\Parquet\ParquetFile\Schema\Column;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\ThriftModel\SchemaElement;
 
 final class Schema
@@ -17,13 +19,12 @@ final class Schema
 
     public function __construct(
         private readonly NestedColumn $schemaRoot,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<SchemaElement> $schemaElements
      */
-    public static function fromThrift(array $schemaElements) : self
+    public static function fromThrift(array $schemaElements): self
     {
         if (!\count($schemaElements)) {
             throw new InvalidArgumentException('Schema must have at least one element');
@@ -42,20 +43,15 @@ final class Schema
         return new self($schema[0]);
     }
 
-    public static function with(Column ...$columns) : self
+    public static function with(Column ...$columns): self
     {
-        return new self(
-            NestedColumn::schemaRoot(
-                'schema',
-                $columns,
-            )
-        );
+        return new self(NestedColumn::schemaRoot('schema', $columns));
     }
 
     /**
      * @return array<Column>
      */
-    public function columns() : array
+    public function columns(): array
     {
         return $this->schemaRoot->children();
     }
@@ -63,7 +59,7 @@ final class Schema
     /**
      * @return array<FlatColumn>
      */
-    public function columnsFlat() : array
+    public function columnsFlat(): array
     {
         $columns = [];
 
@@ -74,7 +70,7 @@ final class Schema
         return $columns;
     }
 
-    public function get(string $name) : Column
+    public function get(string $name): Column
     {
         if (!\count($this->cache)) {
             foreach ($this->columns() as $column) {
@@ -89,7 +85,7 @@ final class Schema
         throw new InvalidArgumentException("Column \"{$name}\" does not exist");
     }
 
-    public function getFlat(string $flatPath) : FlatColumn
+    public function getFlat(string $flatPath): FlatColumn
     {
         if (!\count($this->cache)) {
             foreach ($this->columns() as $column) {
@@ -110,7 +106,7 @@ final class Schema
         throw new InvalidArgumentException("Column \"{$flatPath}\" does not exist");
     }
 
-    public function has(string $name) : bool
+    public function has(string $name): bool
     {
         try {
             $this->get($name);
@@ -124,23 +120,25 @@ final class Schema
     /**
      * @return array<string, mixed>
      */
-    public function toDDL() : array
+    public function toDDL(): array
     {
-        return [$this->schemaRoot->name() => [
-            'type' => 'message',
-            'children' => $this->generateDDL($this->schemaRoot->children()),
-        ]];
+        return [
+            $this->schemaRoot->name() => [
+                'type' => 'message',
+                'children' => $this->generateDDL($this->schemaRoot->children()),
+            ],
+        ];
     }
 
     /**
      * @return array<array-key, mixed>
      */
-    public function toThrift() : array
+    public function toThrift(): array
     {
         return $this->schemaRoot->toThrift();
     }
 
-    private function cache(Column $column) : void
+    private function cache(Column $column): void
     {
         $this->cache[$column->flatPath()] = $column;
 
@@ -154,7 +152,7 @@ final class Schema
     /**
      * @return array<FlatColumn>
      */
-    private function flattener(Column $column) : array
+    private function flattener(Column $column): array
     {
         if ($column instanceof FlatColumn) {
             return [$column];
@@ -175,7 +173,7 @@ final class Schema
      *
      * @return array<string, mixed>
      */
-    private function generateDDL(array $columns) : array
+    private function generateDDL(array $columns): array
     {
         $ddlArray = [];
 
@@ -191,7 +189,7 @@ final class Schema
      *
      * @return array<Column>
      */
-    private static function processSchema(array $schemaElements, int &$index = 0) : array
+    private static function processSchema(array $schemaElements, int &$index = 0): array
     {
         $element = $schemaElements[$index];
         $schemaRoot = $index === 0;
@@ -206,14 +204,8 @@ final class Schema
 
             return [
                 $schemaRoot
-                    ? NestedColumn::schemaRoot(
-                        $element->name,
-                        $children,
-                    )
-                    : NestedColumn::fromThrift(
-                        $element,
-                        $children,
-                    ),
+                    ? NestedColumn::schemaRoot($element->name, $children)
+                    : NestedColumn::fromThrift($element, $children),
             ];
         }
 
