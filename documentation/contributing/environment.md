@@ -59,8 +59,7 @@ If you want to first check what needs to be fixed, you can use:
 
 
 ```shell
-composer static:analyze:cs-fixer
-composer static:analyze:rector
+composer static:analyze:mago
 ```
 
 ## Test everything

@@ -28,16 +28,7 @@ jobs:
 
       - name: "Create cache directories"
         run: |
-          mkdir -p var/cs-fixer
           mkdir -p var/phpstan/cache
-
-      - name: "Cache cs-fixer results"
-        uses: "actions/cache@v5"
-        with:
-          path: "var/cs-fixer"
-          key: "php-${{ matrix.php-version }}-cache-cs-fixer-${{ github.run_id }}"
-          restore-keys: |
-            php-${{ matrix.php-version }}-cache-cs-fixer-
 
       - name: "Cache phpstan results"
         uses: "actions/cache@v5"
@@ -50,11 +41,8 @@ jobs:
       - name: "Monorepo Validate"
         run: "composer test:monorepo"
 
-      - name: "Static Analyze - CS Fixer"
-        run: "composer static:analyze:cs-fixer"
+      - name: "Static Analyze - Mago"
+        run: "composer static:analyze:mago"
 
       - name: "Static Analyze - PHPStan"
         run: "composer static:analyze:phpstan -- --error-format=github"
-
-      - name: "Static Analyze - Rector"
-        run: "composer static:analyze:rector"

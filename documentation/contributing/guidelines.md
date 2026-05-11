@@ -119,7 +119,7 @@ There are several tools used in this project to help with development, testing, 
 Most of them are available as Composer scripts, so you can run them using `composer <script-name>`.
 
 - `composer static:analyze` runs static analysis tools like PHPStan to check the code for errors and potential issues.
-- `composer cs:php:fix` runs the PHP CS Fixer and Rector to automatically fix coding standards issues in the code.
+- `composer cs:php:fix` runs Mago to automatically fix coding standards and lint issues in the code.
     - `composer test` runs all tests in the project, including unit tests, functional tests, and integration tests. It's
       a combination of all other test commands:
     - `composer test:core`
@@ -137,7 +137,7 @@ Most of them are available as Composer scripts, so you can run them using `compo
 # Coding Standards
 
 The whole project is developed as an object oriented code, with a focus on clean code principles.
-The coding standards are defined and automatically enforced by the PHP CS Fixer and Rector.
+The coding standards are defined and automatically enforced by Mago.
 
 Each package comes with a DSL (Domain Specific Language) that provides an easy, functional API.
 All functions defined in DSL (usually in `functions.php` files) are following the same codding standards as PHP code.

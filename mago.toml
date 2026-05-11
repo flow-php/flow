@@ -1,0 +1,71 @@
+php-version = "8.3"
+
+[source]
+paths = [
+    "bin",
+    "src",
+    "web/landing/bin",
+    "web/landing/src",
+    "web/landing/tests",
+]
+excludes = [
+    "**/vendor/**",
+    "**/var/**",
+    "**/extension/*/ext/build/**",
+    "**/extension/*/ext/run-tests.php",
+]
+
+[parser]
+enable-short-tags = false
+
+[linter]
+integrations = ["symfony", "phpunit"]
+
+[linter.rules]
+cyclomatic-complexity = { enabled = false }
+excessive-nesting = { enabled = false }
+excessive-parameter-list = { enabled = false }
+halstead = { enabled = false }
+kan-defect = { enabled = false }
+too-many-enum-cases = { enabled = false }
+too-many-methods = { enabled = false }
+too-many-properties = { enabled = false }
+class-name = { enabled = false }
+constant-name = { enabled = false }
+enum-name = { enabled = false }
+file-name = { enabled = false }
+function-name = { enabled = false }
+interface-name = { enabled = false }
+trait-name = { enabled = false }
+single-class-per-file = { enabled = false }
+no-boolean-flag-parameter = { enabled = false }
+literal-named-argument = { enabled = false }
+tagged-fixme = { enabled = false }
+tagged-todo = { enabled = false }
+prefer-static-closure = { enabled = false }
+prefer-arrow-function = { enabled = false }
+prefer-early-continue = { enabled = false }
+no-else-clause = { enabled = false }
+no-hash-comment = { enabled = false }
+no-empty-catch-clause = { enabled = false }
+no-isset = { enabled = false }
+no-nested-ternary = { enabled = false }
+no-assign-in-condition = { enabled = false }
+explicit-octal = { enabled = false }
+readable-literal = { enabled = false }
+no-redundant-final = { enabled = false }
+no-empty-loop = { enabled = false }
+no-empty = { enabled = false }
+loop-does-not-iterate = { enabled = false }
+no-debug-symbols = { enabled = false }
+no-multi-assignments = { enabled = false }
+identity-comparison = { enabled = false }
+strict-assertions = { enabled = false }
+assert-description = { enabled = false }
+use-specific-assertions = { enabled = false }
+prefer-first-class-callable = { enabled = false }
+final-controller = { enabled = false }
+prefer-interface = { enabled = false }
+no-redundant-else = { enabled = true, level = "warning" }
+no-redundant-variable = { enabled = true, level = "warning" }
+strict-types = { enabled = true, level = "error" }
