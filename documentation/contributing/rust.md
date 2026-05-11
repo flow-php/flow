@@ -64,8 +64,8 @@ nix-shell --arg with-arrow-ext false --arg with-rust true --run "cd src/extensio
 Run PHP-side parquet tests (uses the pre-built extension):
 
 ```bash
-nix-shell --run "composer test:lib:parquet"
-nix-shell --run "composer test:adapter:parquet"
+nix-shell --run "just test --testsuite=lib-parquet-integration"
+nix-shell --run "just test --testsuite=adapter-parquet-integration"
 ```
 
 Clean build artifacts:

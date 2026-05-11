@@ -142,7 +142,7 @@ See [Rust - Arrow Extension Development](/documentation/contributing/rust.md) fo
 
 ### Protobuf / gRPC Code Generation (protoc)
 
-Adds `protoc` and `grpc_php_plugin` to the shell. Required when regenerating OTLP protobuf and gRPC PHP classes via `composer build:telemetry:otlp:protobuf`.
+Adds `protoc` and `grpc_php_plugin` to the shell. Required when regenerating OTLP protobuf and gRPC PHP classes via `just gen-protobuf-otlp`.
 
 ```shell
 nix-shell --arg with-protoc true

@@ -38,11 +38,8 @@ jobs:
           restore-keys: |
             php-${{ matrix.php-version }}-cache-phpstan-
 
-      - name: "Monorepo Validate"
-        run: "composer test:monorepo"
+      - name: "Lint"
+        run: "just lint"
 
-      - name: "Static Analyze - Mago"
-        run: "composer static:analyze:mago"
-
-      - name: "Static Analyze - PHPStan"
-        run: "composer static:analyze:phpstan -- --error-format=github"
+      - name: "Static Analyze"
+        run: "just analyze --error-format=github"

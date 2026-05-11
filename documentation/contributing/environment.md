@@ -10,7 +10,7 @@ You can find detailed instructions how to use Nix in the [Nix Development Enviro
 
 ```shell
 cp compose.yml.dist compose.yml
-composer install 
+just install
 docker compose up -d
 ```
 
@@ -18,48 +18,51 @@ For the code coverage, please install [pcov](https://pecl.php.net/package/pcov).
 
 Pcov extension is not mandatory, and tests are going to pass without it; however, you won't be able to run mutation tests.
 
+Run `just --list` to see every available task.
+
 ## Run Test Suite
 
 ```shell
-composer test
+just test
 ```
 
 Above command will run all tests, including those that require custom extensions.
-In case you want to run tests only for a specific part of the project, you can use:
-
-
-```shell
-composer test:core
-composer test:lib:doctrine-dbal-bulk
-composer test:lib:parquet
-composer test:adapter:csv
-composer test:bridge:symfony-http-foundation
-```
-
-## Run Static Analyze
+To run a single test or a specific phpunit testsuite, forward arguments to `just test`:
 
 ```shell
-composer static:analyze
+just test --filter=my_test_method
+just test --testsuite=lib-parquet-unit
 ```
+
+`tools/phpunit/vendor/bin/phpunit --list-suites` shows every testsuite defined in `phpunit.xml.dist`.
+
+## Run Lint & Static Analyze
+
+```shell
+just lint
+just analyze
+```
+
+`just lint` runs Mago (format check + lint) and validates the monorepo configuration.
+`just analyze` runs PHPStan.
 
 **Important** static analyze **MUST** be executed at the lowest supported PHP version
 and with dependencies locked by `composer.lock`.
-Please make sure to use PHP 8.2 and that you used the `composer install` command first.
+Please make sure to use PHP 8.2 and that you used the `just install` command first.
 
 ## Fixing Coding Standards
 
 Before committing your code, please make sure that your code is following our coding standards.
 
 ```shell
-composer cs:php:fix
+just fix
 ```
 
 This command will automatically fix all coding standards issues in your code.
 If you want to first check what needs to be fixed, you can use:
 
-
 ```shell
-composer static:analyze:mago
+just lint-mago
 ```
 
 ## Test everything
@@ -68,7 +71,7 @@ This command will execute exactly the same tests as we run at GitHub Actions bef
 If it passes locally, you are good to open a pull request.
 
 ```shell
-composer build 
+just build
 ```
 
 ## Building Documentation
@@ -76,16 +79,16 @@ composer build
 Since documentation for DSL and our entire API is automatically generated, you can build it by running:
 
 ```shell
-composer build:docs
-composer build:docs:api
+just docs
+just docs-api
 ```
 
-`composer build:docs` must be executed after any adjustments to `functions.php` files (DSL).
+`just docs` must be executed after any adjustments to `functions.php` files (DSL).
 
 ## Building PHAR
 
 ```shell
-composer build:phar
+just phar
 ./build/flow.phar --version
 ```
 
@@ -94,7 +97,7 @@ composer build:phar
 In order to build docker image and load it to local registry please use:
 
 ```shell
-docker buildx build -t flow-php/flow:latest . --progress=plain --load
+just docker
 ```
 
 Usage:

@@ -32,7 +32,7 @@ jobs:
           pie-extensions: "flow-php/pg-query-ext:1.x-dev"
 
       - name: "Build PHAR file"
-        run: "composer build:phar"
+        run: "just phar"
 
       - name: "Validate Flow PHAR"
         run: |

@@ -79,6 +79,7 @@ pkgs.mkShell {
         pkgs.act
         pkgs.hyperfine
         pkgs.actionlint
+        pkgs.just
     ]
         ++ pkgs.lib.optional with-blackfire pkgs.blackfire
         ++ pkgs.lib.optionals with-wasm [
