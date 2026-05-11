@@ -4,6 +4,8 @@
 - [#2360](https://github.com/flow-php/flow/pull/2360) - **website light / dark / system theme** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2361](https://github.com/flow-php/flow/pull/2361) - **composer scripts are now moved to just** - [@norberttech](https://github.com/norberttech)
+- [#2361](https://github.com/flow-php/flow/pull/2361) - **php cs fixer and rector are now replaced by mago** - [@norberttech](https://github.com/norberttech)
 - [#2356](https://github.com/flow-php/flow/pull/2356) - **Symfony PostgreSql Bundle - bundle skeleton** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
