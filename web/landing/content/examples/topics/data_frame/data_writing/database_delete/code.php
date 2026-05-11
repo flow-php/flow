@@ -6,14 +6,18 @@ use function Flow\ETL\Adapter\Doctrine\{
     sqlite_insert_options,
     to_dbal_table_delete,
     to_dbal_table_insert};
-use function Flow\ETL\DSL\{data_frame, from_array};
+use function Flow\ETL\DSL\{data_frame, from_array, from_csv};
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\{Column, Table, UniqueConstraint};
 use Doctrine\DBAL\Types\{Type, Types};
 
 require __DIR__ . '/vendor/autoload.php';
 
-require __DIR__ . '/generate_static_orders.php';
+if (!\extension_loaded('pdo_sqlite')) {
+    print 'Example skipped. Requires PDO SQLite extension which is not available in this environment.' . PHP_EOL;
+
+    return;
+}
 
 $connection = DriverManager::getConnection([
     'path' => __DIR__ . '/output/orders.db',
@@ -42,21 +46,10 @@ if (!$schemaManager->tablesExist(['orders'])) {
     ));
 }
 
-$orderIds = [
-    'c0a43894-0102-4a4e-9fcd-393ef9e4f16a',
-    '83fd51a4-9bd1-4b40-8f6e-6a7cc940bb5a',
-    '7c65db1a-410f-4e91-8aeb-66fb3f1665f7',
-    '5af1d56c-a9f7-411e-8738-865942d6c40f',
-    '3a3ae1a9-debd-425a-8f9d-63c3315bc483',
-    '27d8ee4d-94cc-47fa-bc14-209a4ab2eb45',
-    'cc4fd722-1407-4781-9ad4-fa53966060af',
-    '718360e1-c4c9-40f4-84e2-6f7898788883',
-    'ea7c731c-ce3b-40bb-bbf8-79f1c717b6ca',
-    '17b0d6c5-dd8f-4d5a-ae06-1df15b67c82c',
-];
-
 data_frame()
-    ->read(from_array(generateStaticOrders($orderIds)))
+    ->read(from_csv(__DIR__ . '/data/orders.csv'))
+    ->select('order_id', 'created_at', 'updated_at', 'discount', 'email', 'customer', 'address', 'notes', 'items')
+    ->limit(10)
     ->write(
         to_dbal_table_insert(
             DriverManager::getConnection(['path' => __DIR__ . '/output/orders.db', 'driver' => 'pdo_sqlite']),
@@ -65,6 +58,11 @@ data_frame()
         )
     )
     ->run();
+
+$orderIds = \array_column(
+    $connection->fetchAllAssociative('SELECT order_id FROM orders'),
+    'order_id'
+);
 
 data_frame()
     ->read(from_array(\array_map(static fn (string $id) => ['order_id' => $id], $orderIds)))
@@ -76,6 +74,6 @@ data_frame()
     )
     ->run();
 
-$orders = $connection->fetchAllAssociative($connection->createQueryBuilder()->select('*')->from('orders')->orderBy('order_id')->getSQL());
+$orders = $connection->fetchAllAssociative('SELECT * FROM orders ORDER BY order_id');
 
 assert(\count($orders) === 0, 'There should be no orders left in the database after deletion.');

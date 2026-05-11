@@ -80,19 +80,19 @@ final class HTMLTypeTest extends TestCase
         ];
 
         yield 'valid HTML string' => [
-            'value' => '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
-            'expected' => null,
-            'exceptionClass' => CastingException::class,
+            'value' => $validHtml = '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
+            'expected' => $validHtml,
+            'exceptionClass' => null,
         ];
 
         yield 'valid HTML with spaces' => [
-            'value' => '<!DOCTYPE html><html>   <head><title></title></head>    <body><p>invalid</p>  </body>  </html>',
-            'expected' => null,
-            'exceptionClass' => CastingException::class,
+            'value' => $htmlWithSpaces = '<!DOCTYPE html><html>   <head><title></title></head>    <body><p>invalid</p>  </body>  </html>',
+            'expected' => $htmlWithSpaces,
+            'exceptionClass' => null,
         ];
 
         yield 'valid HTML with new lines' => [
-            'value' => <<<'HTML'
+            'value' => $htmlWithNewLines = <<<'HTML'
 <!DOCTYPE html>
 <html>
     <head><title></title></head>
@@ -101,8 +101,8 @@ final class HTMLTypeTest extends TestCase
     </body>
 </html>
 HTML,
-            'expected' => null,
-            'exceptionClass' => CastingException::class,
+            'expected' => $htmlWithNewLines,
+            'exceptionClass' => null,
         ];
 
         yield 'missing doctype' => [

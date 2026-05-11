@@ -9,7 +9,7 @@ use function Flow\ETL\DSL\{data_frame,
     to_output};
 use function Flow\Types\DSL\{type_integer, type_list};
 
-require __DIR__ . '/../../../../vendor/autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 (data_frame())
     ->read(

@@ -34,16 +34,15 @@ REGXP;
 
     public function cast(mixed $value) : HTMLDocument
     {
-        if (!$this->isValid($value)) {
-            throw new CastingException($value, $this);
+        if ($this->isValid($value)) {
+            return $value;
         }
 
-        /* @phpstan-ignore-next-line */
-        if (\is_string($value)) {
+        if (\is_string($value) && \class_exists('\Dom\HTMLDocument') && \preg_match(self::HTML_ALIKE_REGEX, $value) === 1) {
             return HTMLDocument::createFromString($value, \LIBXML_NOERROR);
         }
 
-        return $value;
+        throw new CastingException($value, $this);
     }
 
     public function isValid(mixed $value) : bool

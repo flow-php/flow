@@ -6,5 +6,5 @@ use function Flow\Types\DSL\type_time;
 
 require __DIR__ . '/vendor/autoload.php';
 
-echo 'From time string: ' . type_time()->assert('14:30:00')->format('H:i:s') . "\n";
-echo 'From short time: ' . type_time()->assert('09:15')->format('H:i:s') . "\n";
+echo 'From DateInterval: ' . type_time()->assert(new \DateInterval('PT14H30M0S'))->format('%H:%I:%S') . "\n";
+echo 'From short interval: ' . type_time()->assert(new \DateInterval('PT9H15M0S'))->format('%H:%I:%S') . "\n";

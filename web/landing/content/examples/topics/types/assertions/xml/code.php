@@ -6,6 +6,7 @@ use function Flow\Types\DSL\type_xml;
 
 require __DIR__ . '/vendor/autoload.php';
 
-$xml = '<?xml version="1.0"?><root><item>value</item></root>';
+$document = new \DOMDocument();
+$document->loadXML('<?xml version="1.0"?><root><item>value</item></root>');
 
-echo 'Assert XML: ' . type_xml()->assert($xml)->saveXML();
+echo 'Assert XML: ' . type_xml()->assert($document)->saveXML();

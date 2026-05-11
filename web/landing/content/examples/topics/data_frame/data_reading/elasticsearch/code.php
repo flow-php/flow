@@ -13,7 +13,7 @@ require __DIR__ . '/vendor/autoload.php';
 $fs = fstab()->for('file');
 
 if ($fs->status(path(__DIR__ . '/.env')) === null) {
-    print 'Example skipped. Please create .env file with Azure Storage Account credentials.' . PHP_EOL;
+    print 'Example skipped. Please create .env file with ELASTICSEARCH_URL.' . PHP_EOL;
 
     return;
 }

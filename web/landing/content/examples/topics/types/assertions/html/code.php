@@ -6,6 +6,6 @@ use function Flow\Types\DSL\type_html;
 
 require __DIR__ . '/vendor/autoload.php';
 
-$html = '<html><body><p>Hello World</p></body></html>';
+$document = \Dom\HTMLDocument::createFromString('<html><body><p>Hello World</p></body></html>', \LIBXML_NOERROR);
 
-echo 'Assert HTML: ' . type_html()->assert($html)->saveHTML();
+echo 'Assert HTML: ' . type_html()->assert($document)->saveHTML();

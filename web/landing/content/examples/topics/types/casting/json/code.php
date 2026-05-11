@@ -8,4 +8,4 @@ require __DIR__ . '/vendor/autoload.php';
 
 echo 'From array: ' . type_json()->cast(['id' => 1, 'name' => 'Alice'])->toString() . "\n";
 echo 'From string: ' . type_json()->cast('{"product":"Widget"}')->toString() . "\n";
-echo 'Access data: ' . type_json()->cast('{"price":29.99}')->data()['price'] . "\n";
+echo 'Access data: ' . type_json()->cast('{"price":29.99}')->toArray()['price'] . "\n";

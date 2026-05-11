@@ -3,14 +3,18 @@
 declare(strict_types=1);
 
 use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
-use function Flow\ETL\DSL\{data_frame, from_array, overwrite};
+use function Flow\ETL\DSL\{data_frame, from_csv, overwrite};
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};
 
 require __DIR__ . '/vendor/autoload.php';
 
-require __DIR__ . '/generate_orders.php';
+if (!\extension_loaded('pdo_sqlite')) {
+    print 'Example skipped. Requires PDO SQLite extension which is not available in this environment.' . PHP_EOL;
+
+    return;
+}
 
 $connection = DriverManager::getConnection([
     'path' => __DIR__ . '/output/orders.db',
@@ -39,7 +43,9 @@ $schemaManager->createTable(new Table(
 ));
 
 data_frame()
-    ->read(from_array(generateOrders(10)))
+    ->read(from_csv(__DIR__ . '/data/orders.csv'))
+    ->select('order_id', 'created_at', 'updated_at', 'discount', 'email', 'customer', 'address', 'notes', 'items')
+    ->limit(10)
     ->saveMode(overwrite())
     ->write(
         to_dbal_table_insert(

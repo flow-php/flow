@@ -6,5 +6,5 @@ use function Flow\Types\DSL\type_time_zone;
 
 require __DIR__ . '/vendor/autoload.php';
 
-echo 'From string: ' . type_time_zone()->assert('Europe/Warsaw')->getName() . "\n";
-echo 'From UTC: ' . type_time_zone()->assert('UTC')->getName() . "\n";
+echo 'From DateTimeZone: ' . type_time_zone()->assert(new \DateTimeZone('Europe/Warsaw'))->getName() . "\n";
+echo 'From UTC: ' . type_time_zone()->assert(new \DateTimeZone('UTC'))->getName() . "\n";

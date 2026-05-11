@@ -6,6 +6,6 @@ use function Flow\Types\DSL\type_html;
 
 require __DIR__ . '/vendor/autoload.php';
 
-$html = '<html><body><p>Hello World</p></body></html>';
+$html = '<!DOCTYPE html><html><head><title>Example</title></head><body><p>Hello World</p></body></html>';
 
 echo 'Cast HTML: ' . type_html()->cast($html)->saveHTML();

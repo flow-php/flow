@@ -13,5 +13,5 @@ enum Status: string
     case Completed = 'completed';
 }
 
-echo 'From string: ' . type_enum(Status::class)->assert('active')->name . "\n";
-echo 'From enum: ' . type_enum(Status::class)->assert(Status::Pending)->name . "\n";
+echo 'Active: ' . type_enum(Status::class)->assert(Status::Active)->name . "\n";
+echo 'Pending: ' . type_enum(Status::class)->assert(Status::Pending)->name . "\n";
