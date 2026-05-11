@@ -30,9 +30,9 @@
 
             {{ page.content|markdown_to_html }}
 
-            <p class="!mt-12 !mb-8 text-sm text-white/55" data-pagefind-ignore>
+            <p class="!mt-12 !mb-8 text-sm text-slate-500 dark:text-white/55" data-pagefind-ignore>
                 Found a typo or an outdated section?
-                <a class="inline-flex items-center gap-1 text-white/80 hover:text-white !no-underline"
+                <a class="inline-flex items-center gap-1 text-slate-700 hover:text-slate-900 !no-underline dark:text-white/80 dark:hover:text-white"
                    href="{{ page.editOnGitHubUrl }}" target="_blank" rel="noopener">
                     Edit this page on GitHub
                     <span aria-hidden="true">↗</span>
@@ -51,7 +51,7 @@
                     data-reactions-enabled="0"
                     data-emit-metadata="0"
                     data-input-position="bottom"
-                    data-theme="dark"
+                    data-theme="preferred_color_scheme"
                     data-lang="en"
                     crossorigin="anonymous"
                     async>

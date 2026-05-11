@@ -1,0 +1,73 @@
+{# Theme switch (System / Light / Dark).
+   variant = 'dropdown' (default) — icon button with popover, used in desktop header.
+   variant = 'inline'             — segmented control with all 3 options visible, used in mobile nav. #}
+{% set variant = variant|default('dropdown') %}
+{% set themeOptions = [
+    { value: 'light',  label: 'Light',  iconPath: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>' },
+    { value: 'dark',   label: 'Dark',   iconPath: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>' },
+    { value: 'system', label: 'System', iconPath: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>' },
+] %}
+
+{% if variant == 'inline' %}
+    <div {{ stimulus_controller('theme-switch') }}
+         role="radiogroup"
+         aria-label="Theme"
+         class="grid grid-cols-3 gap-1 rounded-lg border border-slate-200 bg-white p-1 dark:border-white/10 dark:bg-white/[0.04]">
+        {% for option in themeOptions %}
+            <button type="button"
+                    role="radio"
+                    aria-checked="false"
+                    data-theme-switch-target="option"
+                    data-theme-option="{{ option.value }}"
+                    data-action="click->theme-switch#select"
+                    class="group inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 data-[active=true]:bg-orange-100 data-[active=true]:text-white data-[active=true]:hover:bg-orange-200 dark:text-white/80 dark:hover:bg-white/[0.06] dark:hover:text-white dark:data-[active=true]:bg-orange-100 dark:data-[active=true]:text-white dark:data-[active=true]:hover:bg-orange-200 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    {{ option.iconPath|raw }}
+                </svg>
+                {{ option.label }}
+            </button>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="relative" {{ stimulus_controller('theme-switch') }}>
+        <button type="button"
+                aria-label="Theme"
+                aria-haspopup="menu"
+                data-action="click->theme-switch#toggle"
+                class="inline-flex h-9 w-9 items-center justify-center rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-white/75 dark:hover:text-white dark:hover:bg-white/[0.06] no-underline transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="hidden" data-theme-switch-target="currentIcon" data-theme-icon="light" aria-hidden="true">
+                <circle cx="12" cy="12" r="4"/>
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="hidden" data-theme-switch-target="currentIcon" data-theme-icon="dark" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="hidden" data-theme-switch-target="currentIcon" data-theme-icon="system" aria-hidden="true">
+                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                <path d="M8 21h8M12 17v4"/>
+            </svg>
+        </button>
+
+        <div data-theme-switch-target="menu"
+             role="menu"
+             class="hidden absolute right-0 top-full mt-2 z-50 min-w-[10rem] rounded-lg border border-slate-200 bg-white shadow-lg p-1 text-sm dark:border-white/10 dark:bg-[#1b1925] dark:shadow-2xl">
+            {% for option in themeOptions %}
+                <button type="button"
+                        role="menuitemradio"
+                        aria-checked="false"
+                        data-theme-switch-target="option"
+                        data-theme-option="{{ option.value }}"
+                        data-action="click->theme-switch#select"
+                        class="group flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-slate-700 hover:bg-slate-100 hover:text-slate-900 data-[active=true]:bg-slate-100 data-[active=true]:text-slate-900 dark:text-white/80 dark:hover:bg-white/[0.06] dark:hover:text-white dark:data-[active=true]:bg-white/[0.08] dark:data-[active=true]:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="text-slate-500 group-hover:text-slate-700 group-data-[active=true]:text-orange-200 dark:text-white/65 dark:group-hover:text-white dark:group-data-[active=true]:text-orange-100" aria-hidden="true">
+                        {{ option.iconPath|raw }}
+                    </svg>
+                    <span class="flex-1">{{ option.label }}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="hidden group-data-[active=true]:block text-orange-200 dark:text-orange-100" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                </button>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}

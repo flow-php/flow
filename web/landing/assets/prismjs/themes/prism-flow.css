@@ -1,14 +1,14 @@
 /**
- * okaidia theme for JavaScript, CSS and HTML
- * Loosely based on Monokai textmate theme by http://www.monokai.nl/
- * @author ocodia
+ * Flow PHP Prism theme.
+ *
+ * Light: based on stock prism.css (low-contrast pastel tokens on near-white).
+ * Dark: okaidia-inspired (loosely based on Monokai by http://www.monokai.nl/).
  */
 
 code[class*="language-"],
 pre[class*="language-"] {
-    color: #f8f8f2;
+    color: #1f2937;
     background: transparent;
-    text-shadow: 0 1px rgba(0, 0, 0, 0.3);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
     font-size: 16px;
     text-align: left;
@@ -26,6 +26,12 @@ pre[class*="language-"] {
     -moz-hyphens: none;
     -ms-hyphens: none;
     hyphens: none;
+}
+
+[data-theme="dark"] code[class*="language-"],
+[data-theme="dark"] pre[class*="language-"] {
+    color: #f8f8f2;
+    text-shadow: 0 1px rgba(0, 0, 0, 0.3);
 }
 
 /* Code blocks */
@@ -48,17 +54,18 @@ pre[class*="language-"] {
     white-space: normal;
 }
 
+/* ---------- Light tokens (stock prism palette) ---------- */
 .token.comment,
 .token.prolog,
 .token.doctype,
 .token.cdata {
-    color: #8292a2;
+    color: #708090;
 }
 
 .token.operator,
 .token.punctuation,
 .token.package {
-    color: #f8f8f2;
+    color: #9a6e3a;
 }
 
 .token.namespace {
@@ -70,12 +77,12 @@ pre[class*="language-"] {
 .token.constant,
 .token.symbol,
 .token.deleted {
-    color: #ff7b72;
+    color: #905;
 }
 
 .token.boolean,
 .token.number {
-    color: #79c0ff;
+    color: #905;
 }
 
 .token.selector,
@@ -84,7 +91,7 @@ pre[class*="language-"] {
 .token.char,
 .token.builtin,
 .token.inserted {
-    color: #79c0ff;
+    color: #690;
 }
 
 .token.entity,
@@ -92,23 +99,23 @@ pre[class*="language-"] {
 .language-css .token.string,
 .style .token.string,
 .token.variable {
-    color: #79c0ff;
+    color: #9a6e3a;
 }
 
 .token.atrule,
 .token.attr-value,
 .token.function,
 .token.class-name {
-    color: #d2a8ff;
+    color: #dd4a68;
 }
 
 .token.keyword {
-    color: #ff7b72;
+    color: #07a;
 }
 
 .token.regex,
 .token.important {
-    color: #79c0ff;
+    color: #e90;
 }
 
 .token.important,
@@ -121,4 +128,64 @@ pre[class*="language-"] {
 
 .token.entity {
     cursor: help;
+}
+
+/* ---------- Dark tokens (okaidia-inspired) ---------- */
+[data-theme="dark"] .token.comment,
+[data-theme="dark"] .token.prolog,
+[data-theme="dark"] .token.doctype,
+[data-theme="dark"] .token.cdata {
+    color: #8292a2;
+}
+
+[data-theme="dark"] .token.operator,
+[data-theme="dark"] .token.punctuation,
+[data-theme="dark"] .token.package {
+    color: #f8f8f2;
+}
+
+[data-theme="dark"] .token.property,
+[data-theme="dark"] .token.tag,
+[data-theme="dark"] .token.constant,
+[data-theme="dark"] .token.symbol,
+[data-theme="dark"] .token.deleted {
+    color: #ff7b72;
+}
+
+[data-theme="dark"] .token.boolean,
+[data-theme="dark"] .token.number {
+    color: #79c0ff;
+}
+
+[data-theme="dark"] .token.selector,
+[data-theme="dark"] .token.attr-name,
+[data-theme="dark"] .token.string,
+[data-theme="dark"] .token.char,
+[data-theme="dark"] .token.builtin,
+[data-theme="dark"] .token.inserted {
+    color: #79c0ff;
+}
+
+[data-theme="dark"] .token.entity,
+[data-theme="dark"] .token.url,
+[data-theme="dark"] .language-css .token.string,
+[data-theme="dark"] .style .token.string,
+[data-theme="dark"] .token.variable {
+    color: #79c0ff;
+}
+
+[data-theme="dark"] .token.atrule,
+[data-theme="dark"] .token.attr-value,
+[data-theme="dark"] .token.function,
+[data-theme="dark"] .token.class-name {
+    color: #d2a8ff;
+}
+
+[data-theme="dark"] .token.keyword {
+    color: #ff7b72;
+}
+
+[data-theme="dark"] .token.regex,
+[data-theme="dark"] .token.important {
+    color: #79c0ff;
 }

@@ -9,8 +9,12 @@ body {
     font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-image: radial-gradient(ellipse 80rem 40rem at 50% -20%, rgba(128, 109, 254, 0.18), transparent 60%);
+    background-image: radial-gradient(ellipse 80rem 40rem at 50% -20%, rgba(128, 109, 254, 0.08), transparent 60%);
     background-attachment: fixed;
+}
+
+[data-theme="dark"] body {
+    background-image: radial-gradient(ellipse 80rem 40rem at 50% -20%, rgba(128, 109, 254, 0.18), transparent 60%);
 }
 
 html {
@@ -28,8 +32,9 @@ html {
 /* Surfaces — a single source of truth for card backgrounds, replacing the
    repeated `rounded ... shadow-2xl shadow-gray border-gray border-2` pattern. */
 .card {
-    @apply relative rounded-xl border border-white/10 bg-white/[0.03] p-6
-           transition-colors duration-200;
+    @apply relative rounded-xl border border-slate-200 bg-white p-6
+           transition-colors duration-200
+           dark:border-white/10 dark:bg-white/[0.03];
 }
 
 .card > *:last-child {
@@ -37,22 +42,25 @@ html {
 }
 
 .card-hover {
-    @apply hover:border-white/20 hover:bg-white/[0.05];
+    @apply hover:border-slate-300 hover:bg-slate-50
+           dark:hover:border-white/20 dark:hover:bg-white/[0.05];
 }
 
 .card-accent {
-    @apply relative rounded-xl border border-blue-100/30 bg-blue-100/[0.06] p-6;
+    @apply relative rounded-xl border border-blue-300/30 bg-blue-300/[0.05] p-6
+           dark:border-blue-100/30 dark:bg-blue-100/[0.06];
 }
 
 .card-accent::before {
     content: "";
     @apply pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r
-           from-transparent via-blue-100/60 to-transparent;
+           from-transparent via-blue-300/50 to-transparent
+           dark:via-blue-100/60;
 }
 
 .eyebrow {
     @apply inline-flex items-center gap-2 text-xs font-semibold uppercase
-           tracking-[0.18em] text-blue-100;
+           tracking-[0.18em] text-blue-300 dark:text-blue-100;
 }
 
 .section-title {
@@ -60,7 +68,7 @@ html {
 }
 
 .muted {
-    @apply text-white/70;
+    @apply text-slate-600 dark:text-white/70;
 }
 
 .btn {
@@ -73,12 +81,13 @@ html {
 }
 
 .btn-secondary {
-    @apply border border-white/15 bg-white/[0.04] hover:border-white/25
-           hover:bg-white/[0.08];
+    @apply border border-slate-300 bg-white text-slate-900 hover:border-slate-400 hover:bg-slate-50
+           dark:border-white/15 dark:bg-white/[0.04] dark:text-white
+           dark:hover:border-white/25 dark:hover:bg-white/[0.08];
 }
 
 .btn-ghost {
-    @apply text-white/80 hover:text-white;
+    @apply text-slate-700 hover:text-slate-900 dark:text-white/80 dark:hover:text-white;
 }
 
 .btn img {
@@ -87,21 +96,21 @@ html {
 
 
 nav a {
-    @apply font-medium text-white dark:text-white hover:underline;
+    @apply font-medium text-slate-900 dark:text-white hover:underline;
 }
 
 footer a {
-    @apply font-medium text-white dark:text-white hover:underline;
+    @apply font-medium text-slate-900 dark:text-white hover:underline;
 }
 
 a {
     font-weight: normal;
-    @apply font-medium text-blue-600 dark:text-blue-500 hover:underline;
+    @apply font-medium text-blue-300 hover:underline dark:text-blue-100;
 }
 
 .link {
     font-weight: normal;
-    @apply font-medium text-blue-600 dark:text-blue-500 hover:underline;
+    @apply font-medium text-blue-300 hover:underline dark:text-blue-100;
 }
 
 code {
@@ -110,23 +119,24 @@ code {
 
 /* Blog post prose. Wraps full-width with comfortable reading measure. */
 #blog-post {
-    @apply pb-5 px-4 sm:px-6 lg:px-8 mx-auto max-w-3xl text-white/85;
+    @apply pb-5 px-4 sm:px-6 lg:px-8 mx-auto max-w-3xl text-slate-700 dark:text-white/85;
 }
 
 #blog-post a {
-    @apply text-blue-100 underline-offset-2 hover:text-orange-100 transition-colors;
+    @apply text-blue-300 underline-offset-2 hover:text-orange-300 transition-colors
+           dark:text-blue-100 dark:hover:text-orange-100;
 }
 
 #blog-post h1 {
-    @apply font-bold text-3xl sm:text-4xl tracking-tight text-white mt-2 mb-5;
+    @apply font-bold text-3xl sm:text-4xl tracking-tight text-slate-900 mt-2 mb-5 dark:text-white;
 }
 
 #blog-post h2 {
-    @apply font-bold text-2xl tracking-tight text-white mt-10 mb-3;
+    @apply font-bold text-2xl tracking-tight text-slate-900 mt-10 mb-3 dark:text-white;
 }
 
 #blog-post h3 {
-    @apply font-semibold text-xl text-white mt-7 mb-2;
+    @apply font-semibold text-xl text-slate-900 mt-7 mb-2 dark:text-white;
 }
 
 #blog-post p,
@@ -144,11 +154,12 @@ code {
 }
 
 #blog-post hr {
-    @apply my-8 border-0 h-px bg-white/10;
+    @apply my-8 border-0 h-px bg-slate-200 dark:bg-white/10;
 }
 
 #blog-post pre {
-    @apply rounded-xl my-6 p-4 overflow-auto border border-white/10 bg-white/[0.03];
+    @apply rounded-xl my-6 p-4 overflow-auto border border-slate-200 bg-white
+           dark:border-white/10 dark:bg-white/[0.03];
 }
 
 #blog-post pre code {
@@ -156,23 +167,27 @@ code {
 }
 
 #blog-post :not(pre) > code {
-    @apply font-mono text-[0.9em] px-1.5 py-0.5 rounded bg-white/[0.06] text-[#d2a8ff];
+    @apply font-mono text-[0.9em] px-1.5 py-0.5 rounded bg-violet-50 text-violet-700
+           dark:bg-white/[0.06] dark:text-[#d2a8ff];
 }
 
 #blog-post blockquote {
-    @apply border-l-2 border-blue-100 pl-4 py-1 my-5 text-white/75 italic;
+    @apply border-l-2 border-blue-300 pl-4 py-1 my-5 text-slate-600 italic
+           dark:border-blue-100 dark:text-white/75;
 }
 
 #blog-post table {
-    @apply w-full table-auto my-5 border-collapse rounded-lg overflow-hidden border border-white/10;
+    @apply w-full table-auto my-5 border-collapse rounded-lg overflow-hidden border border-slate-200
+           dark:border-white/10;
 }
 
 #blog-post table th {
-    @apply border-b border-white/10 bg-white/[0.04] px-3 py-2 text-left font-semibold text-white;
+    @apply border-b border-slate-200 bg-slate-50 px-3 py-2 text-left font-semibold text-slate-900
+           dark:border-white/10 dark:bg-white/[0.04] dark:text-white;
 }
 
 #blog-post table td {
-    @apply border-b border-white/10 px-3 py-2;
+    @apply border-b border-slate-200 px-3 py-2 dark:border-white/10;
 }
 
 
@@ -197,11 +212,11 @@ code {
 }
 
 #example-description hr {
-    @apply text-blue-100 my-4 border-t-2 rounded;
+    @apply text-blue-300 my-4 border-t-2 rounded dark:text-blue-100;
 }
 
 #example-description code {
-    @apply text-orange-100;
+    @apply text-orange-300 dark:text-orange-100;
 }
 
 
@@ -209,27 +224,28 @@ code {
    styles below replace the previous heavy borders/shadows with the lighter
    .card-style surface system. */
 #documentation-page {
-    @apply pb-8 text-white/85;
+    @apply pb-8 text-slate-700 dark:text-white/85;
 }
 
 #documentation-page a {
-    @apply inline text-blue-100 underline-offset-2 hover:text-orange-100 transition-colors;
+    @apply inline text-blue-300 underline-offset-2 hover:text-orange-300 transition-colors
+           dark:text-blue-100 dark:hover:text-orange-100;
 }
 
 #documentation-page h1 {
-    @apply font-bold text-3xl tracking-tight text-white mt-2 mb-5;
+    @apply font-bold text-3xl tracking-tight text-slate-900 mt-2 mb-5 dark:text-white;
 }
 
 #documentation-page h2 {
-    @apply font-bold text-2xl tracking-tight text-white mt-10 mb-3;
+    @apply font-bold text-2xl tracking-tight text-slate-900 mt-10 mb-3 dark:text-white;
 }
 
 #documentation-page h3 {
-    @apply font-semibold text-xl text-white mt-7 mb-2;
+    @apply font-semibold text-xl text-slate-900 mt-7 mb-2 dark:text-white;
 }
 
 #documentation-page h4 {
-    @apply font-semibold text-base text-white mt-5 mb-2;
+    @apply font-semibold text-base text-slate-900 mt-5 mb-2 dark:text-white;
 }
 
 #documentation-page p,
@@ -252,19 +268,21 @@ code {
 }
 
 #documentation-page hr {
-    @apply my-8 border-0 h-px bg-white/10;
+    @apply my-8 border-0 h-px bg-slate-200 dark:bg-white/10;
 }
 
 #documentation-page table {
-    @apply w-full table-auto my-5 border-collapse rounded-lg overflow-hidden border border-white/10;
+    @apply w-full table-auto my-5 border-collapse rounded-lg overflow-hidden border border-slate-200
+           dark:border-white/10;
 }
 
 #documentation-page th {
-    @apply border-b border-white/10 bg-white/[0.04] px-3 py-2 text-left font-semibold text-white;
+    @apply border-b border-slate-200 bg-slate-50 px-3 py-2 text-left font-semibold text-slate-900
+           dark:border-white/10 dark:bg-white/[0.04] dark:text-white;
 }
 
 #documentation-page td {
-    @apply border-b border-white/10 px-3 py-2;
+    @apply border-b border-slate-200 px-3 py-2 dark:border-white/10;
 }
 
 #documentation-page tr:last-child td {
@@ -272,7 +290,8 @@ code {
 }
 
 #documentation-page pre {
-    @apply rounded-xl my-6 p-4 overflow-auto border border-white/10 bg-white/[0.03];
+    @apply rounded-xl my-6 p-4 overflow-auto border border-slate-200 bg-white
+           dark:border-white/10 dark:bg-white/[0.03];
 }
 
 #documentation-page pre code {
@@ -281,11 +300,13 @@ code {
 
 /* Inline code only (not the <code> inside <pre>). */
 #documentation-page :not(pre) > code {
-    @apply font-mono text-[0.9em] px-1.5 py-0.5 rounded bg-white/[0.06] text-[#d2a8ff];
+    @apply font-mono text-[0.9em] px-1.5 py-0.5 rounded bg-violet-50 text-violet-700
+           dark:bg-white/[0.06] dark:text-[#d2a8ff];
 }
 
 #documentation-page blockquote {
-    @apply border-l-2 border-blue-100 pl-4 py-1 my-5 text-white/75 italic;
+    @apply border-l-2 border-blue-300 pl-4 py-1 my-5 text-slate-600 italic
+           dark:border-blue-100 dark:text-white/75;
 }
 
 /* Package nav rendered by [PACKAGE_NAV] marker. Inherits #documentation-page
@@ -295,14 +316,18 @@ code {
 }
 
 #documentation-page .package-nav a {
-    @apply inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04]
-           hover:border-white/20 hover:bg-white/[0.08] px-3 py-1.5 text-sm font-medium
-           text-white/85 hover:text-white !no-underline transition-colors;
+    @apply inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white
+           hover:border-slate-300 hover:bg-slate-50 px-3 py-1.5 text-sm font-medium
+           text-slate-700 hover:text-slate-900 !no-underline transition-colors
+           dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-white/20
+           dark:hover:bg-white/[0.08] dark:text-white/85 dark:hover:text-white;
 }
 
 /* Back link rendered by [BACK:/path] marker. */
 #documentation-page a.back-link {
-    @apply inline-flex items-center gap-1.5 mb-4 text-sm text-white/65 hover:text-white !no-underline transition-colors;
+    @apply inline-flex items-center gap-1.5 mb-4 text-sm text-slate-500 hover:text-slate-900
+           !no-underline transition-colors
+           dark:text-white/65 dark:hover:text-white;
 }
 
 /* Mobile docs popover lives inside #documentation-page so it inherits prose
@@ -367,7 +392,8 @@ code {
 
 /* Foldable Table of Contents */
 .toc-wrapper {
-    @apply rounded-xl mt-4 mb-6 border border-white/10 bg-white/[0.03] overflow-hidden;
+    @apply rounded-xl mt-4 mb-6 border border-slate-200 bg-white overflow-hidden
+           dark:border-white/10 dark:bg-white/[0.03];
 }
 
 .toc-header {
@@ -453,7 +479,9 @@ code {
         }
 
         .back-link {
-            @apply inline-flex items-center gap-2 ml-4 text-sm text-white/60 hover:text-white transition-colors no-underline;
+            @apply inline-flex items-center gap-2 ml-4 text-sm text-slate-500 hover:text-slate-900
+                transition-colors no-underline
+                dark:text-white/60 dark:hover:text-white;
 
             img {
                 @apply inline-block;
@@ -462,18 +490,21 @@ code {
     }
 
     #help-section {
-        @apply mb-6 rounded-xl p-5 border border-white/10 bg-white/[0.03];
+        @apply mb-6 rounded-xl p-5 border border-slate-200 bg-white
+            dark:border-white/10 dark:bg-white/[0.03];
 
         .help-header {
-            @apply flex justify-between items-center mb-4 pb-3 border-b border-white/10;
+            @apply flex justify-between items-center mb-4 pb-3 border-b border-slate-200
+                dark:border-white/10;
 
             h2 {
                 @apply text-2xl font-bold mb-0;
             }
 
             .help-close {
-                @apply w-8 h-8 rounded-full bg-transparent hover:bg-white/[0.10] text-white text-2xl
-                    flex items-center justify-center cursor-pointer border-0 transition-colors leading-none;
+                @apply w-8 h-8 rounded-full bg-transparent hover:bg-slate-100 text-slate-700 text-2xl
+                    flex items-center justify-center cursor-pointer border-0 transition-colors leading-none
+                    dark:hover:bg-white/[0.10] dark:text-white;
             }
         }
 
@@ -482,35 +513,37 @@ code {
                 @apply mb-6 last:mb-0;
 
                 h3 {
-                    @apply text-xl font-semibold mb-3 text-orange-100;
+                    @apply text-xl font-semibold mb-3 text-orange-300 dark:text-orange-100;
                 }
 
                 p {
-                    @apply mb-3 text-white/75 leading-relaxed;
+                    @apply mb-3 text-slate-700 leading-relaxed dark:text-white/75;
 
                     a {
-                        @apply text-blue-100 hover:text-orange-100 underline;
+                        @apply text-blue-300 hover:text-orange-300 underline
+                            dark:text-blue-100 dark:hover:text-orange-100;
                     }
                 }
 
                 ul {
-                    @apply list-disc pl-6 mb-3 text-white/75;
+                    @apply list-disc pl-6 mb-3 text-slate-700 dark:text-white/75;
 
                     li {
                         @apply mb-2;
 
                         strong {
-                            @apply text-white font-semibold;
+                            @apply text-slate-900 font-semibold dark:text-white;
                         }
 
                         em {
-                            @apply text-white/55 text-sm;
+                            @apply text-slate-500 text-sm dark:text-white/55;
                         }
                     }
                 }
 
                 code {
-                    @apply bg-white/[0.06] px-1.5 py-0.5 rounded text-[#d2a8ff] font-mono text-sm;
+                    @apply bg-violet-50 px-1.5 py-0.5 rounded text-violet-700 font-mono text-sm
+                        dark:bg-white/[0.06] dark:text-[#d2a8ff];
                 }
             }
         }
@@ -521,7 +554,7 @@ code {
         display: none;
 
         div.storage-indicator {
-            @apply col-start-1 col-span-12 lg:col-span-3 gap-2 text-xs text-white/55;
+            @apply col-start-1 col-span-12 lg:col-span-3 gap-2 text-xs text-slate-500 dark:text-white/55;
         }
 
         div.actions {
@@ -534,12 +567,15 @@ code {
             button,
             a {
                 @apply inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium
-                    text-white/85 hover:text-white border border-white/10 bg-white/[0.04]
-                    hover:border-white/20 hover:bg-white/[0.08] transition-colors no-underline;
+                    text-slate-700 hover:text-slate-900 border border-slate-300 bg-white
+                    hover:border-slate-400 hover:bg-slate-50 transition-colors no-underline
+                    dark:text-white/85 dark:hover:text-white dark:border-white/10 dark:bg-white/[0.04]
+                    dark:hover:border-white/20 dark:hover:bg-white/[0.08];
             }
 
             #action-run {
-                @apply bg-orange-100 hover:bg-orange-200 border-orange-100 hover:border-orange-200 text-white;
+                @apply bg-orange-100 hover:bg-orange-200 border-orange-100 hover:border-orange-200 text-white
+                    dark:bg-orange-100 dark:hover:bg-orange-200 dark:border-orange-100 dark:hover:border-orange-200 dark:text-white;
             }
 
             button:disabled,
@@ -570,7 +606,8 @@ code {
             }
 
             .file-browser-label {
-                @apply text-xs font-semibold uppercase tracking-[0.18em] text-white/55 whitespace-nowrap;
+                @apply text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 whitespace-nowrap
+                    dark:text-white/55;
 
                 .help-trigger-workspace {
                     @apply cursor-pointer border-0 bg-transparent p-0 ml-2 transition-opacity hover:opacity-70 inline-block align-middle;
@@ -578,17 +615,19 @@ code {
             }
 
             .file-select {
-                @apply bg-white/[0.06] text-white border border-white/10 rounded-md px-3 py-2 text-sm
-                    focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-transparent;
+                @apply bg-white text-slate-900 border border-slate-300 rounded-md px-3 py-2 text-sm
+                    focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-transparent
+                    dark:bg-white/[0.06] dark:text-white dark:border-white/10;
 
                 option {
-                    @apply text-base py-2 bg-black;
+                    @apply text-base py-2 bg-white dark:bg-black;
                 }
             }
         }
 
         div.file-browser {
-            @apply rounded-xl p-4 overflow-auto border border-white/10 bg-white/[0.03];
+            @apply rounded-xl p-4 overflow-auto border border-slate-200 bg-white
+                dark:border-white/10 dark:bg-white/[0.03];
             display: none;
 
             @screen lg {
@@ -596,7 +635,8 @@ code {
             }
 
             .file-browser-header {
-                @apply text-xs font-semibold mb-3 text-white/55 uppercase tracking-[0.18em];
+                @apply text-xs font-semibold mb-3 text-slate-500 uppercase tracking-[0.18em]
+                    dark:text-white/55;
 
                 .help-trigger-workspace {
                     @apply cursor-pointer border-0 bg-transparent p-0 ml-2 transition-opacity hover:opacity-70 inline-block align-middle;
@@ -608,28 +648,29 @@ code {
                     @apply list-none m-0 p-0;
 
                     .file-tree-item {
-                        @apply flex items-center gap-2 py-1 text-sm cursor-default text-white/80;
+                        @apply flex items-center gap-2 py-1 text-sm cursor-default text-slate-700 dark:text-white/80;
 
                         &.directory {
-                            @apply font-medium text-blue-100;
+                            @apply font-medium text-blue-300 dark:text-blue-100;
 
                             .icon {
-                                @apply text-blue-100;
+                                @apply text-blue-300 dark:text-blue-100;
                             }
                         }
 
                         &.file {
-                            @apply text-white/80;
+                            @apply text-slate-700 dark:text-white/80;
 
                             .icon {
-                                @apply text-white/45;
+                                @apply text-slate-400 dark:text-white/45;
                             }
 
                             &.clickable {
-                                @apply cursor-pointer hover:text-orange-100 transition-colors;
+                                @apply cursor-pointer hover:text-orange-300 transition-colors
+                                    dark:hover:text-orange-100;
 
                                 &:hover .icon {
-                                    @apply text-orange-100;
+                                    @apply text-orange-300 dark:text-orange-100;
                                 }
                             }
                         }
@@ -647,28 +688,33 @@ code {
         }
 
         div.code-container {
-            @apply rounded-xl overflow-hidden border border-white/10 bg-white/[0.03]
-                min-w-0 flex flex-col;
+            @apply rounded-xl overflow-hidden border border-slate-200 bg-white
+                min-w-0 flex flex-col
+                dark:border-white/10 dark:bg-white/[0.03];
 
             .tab-bar {
-                @apply flex items-center border-b border-white/10 bg-white/[0.04] px-2;
+                @apply flex items-center border-b border-slate-200 bg-slate-50 px-2
+                    dark:border-white/10 dark:bg-white/[0.04];
 
                 .tab {
-                    @apply flex items-center gap-2 px-4 py-2 text-sm text-white/60 border-b-2 border-transparent
-                        cursor-pointer hover:text-white transition-colors -mb-[2px];
+                    @apply flex items-center gap-2 px-4 py-2 text-sm text-slate-600 border-b-2 border-transparent
+                        cursor-pointer hover:text-slate-900 transition-colors -mb-[2px]
+                        dark:text-white/60 dark:hover:text-white;
 
                     &.active {
-                        @apply text-white border-orange-100;
+                        @apply text-slate-900 border-orange-200 dark:text-white dark:border-orange-100;
                     }
 
                     .tab-close {
-                        @apply ml-1 text-white/45 hover:text-white text-lg leading-none;
+                        @apply ml-1 text-slate-400 hover:text-slate-900 text-lg leading-none
+                            dark:text-white/45 dark:hover:text-white;
                     }
                 }
 
                 .tab-action {
-                    @apply ml-auto p-2 text-white/60 hover:text-white cursor-pointer
-                        transition-colors border-0 bg-transparent;
+                    @apply ml-auto p-2 text-slate-600 hover:text-slate-900 cursor-pointer
+                        transition-colors border-0 bg-transparent
+                        dark:text-white/60 dark:hover:text-white;
                 }
             }
 
@@ -691,10 +737,12 @@ code {
     }
 
     div.output-container {
-        @apply rounded-xl overflow-auto border border-white/10 bg-white/[0.03] min-h-[100px];
+        @apply rounded-xl overflow-auto border border-slate-200 bg-white min-h-[100px]
+            dark:border-white/10 dark:bg-white/[0.03];
 
         h2 {
-            @apply text-xs font-semibold uppercase tracking-[0.18em] text-white/55 px-4 pt-3;
+            @apply text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 px-4 pt-3
+                dark:text-white/55;
         }
 
         pre {
@@ -705,7 +753,7 @@ code {
             @apply py-1 font-mono text-sm;
 
             .output-timestamp {
-                @apply text-white/45 mr-2;
+                @apply text-slate-400 mr-2 dark:text-white/45;
             }
 
             .output-prefix {
@@ -718,39 +766,39 @@ code {
         }
 
         .output-info {
-            @apply text-cyan-400;
+            @apply text-cyan-700 dark:text-cyan-400;
 
             .output-prefix {
-                @apply text-cyan-500;
+                @apply text-cyan-700 dark:text-cyan-500;
             }
         }
 
         .output-success {
-            @apply text-white;
+            @apply text-slate-900 dark:text-white;
 
             .output-prefix {
-                @apply text-green-500;
+                @apply text-green-700 dark:text-green-500;
             }
         }
 
         .output-warning {
-            @apply text-yellow-400;
+            @apply text-amber-700 dark:text-yellow-400;
 
             .output-prefix {
-                @apply text-yellow-500;
+                @apply text-amber-700 dark:text-yellow-500;
             }
         }
 
         .output-error {
-            @apply text-red-400;
+            @apply text-red-700 dark:text-red-400;
 
             .output-prefix {
-                @apply text-red-500;
+                @apply text-red-700 dark:text-red-500;
             }
         }
 
         .output-default {
-            @apply text-white/80;
+            @apply text-slate-700 dark:text-white/80;
         }
     }
 
@@ -778,11 +826,11 @@ code {
 
 :root {
     --pagefind-ui-scale: 0.9;
-    --pagefind-ui-primary: #ff5547;
-    --pagefind-ui-text: rgba(255, 255, 255, 0.92);
+    --pagefind-ui-primary: #B33D32;
+    --pagefind-ui-text: #0f172a;
     --pagefind-ui-background: transparent;
-    --pagefind-ui-border: rgba(255, 255, 255, 0.10);
-    --pagefind-ui-tag: rgba(255, 255, 255, 0.06);
+    --pagefind-ui-border: #e2e8f0;
+    --pagefind-ui-tag: #f1f5f9;
     --pagefind-ui-border-width: 1px;
     --pagefind-ui-border-radius: 0.5rem;
     --pagefind-ui-image-border-radius: 0.5rem;
@@ -790,41 +838,48 @@ code {
     --pagefind-ui-font: 'Cabin Variable', system-ui, sans-serif;
 }
 
+[data-theme="dark"] {
+    --pagefind-ui-primary: #ff5547;
+    --pagefind-ui-text: rgba(255, 255, 255, 0.92);
+    --pagefind-ui-border: rgba(255, 255, 255, 0.10);
+    --pagefind-ui-tag: rgba(255, 255, 255, 0.06);
+}
+
 #site-search .pagefind-ui__search-input {
-    background: rgba(255, 255, 255, 0.04);
-    color: rgba(255, 255, 255, 0.92);
+    background: #fff;
+    color: #0f172a;
 }
 
 #site-search .pagefind-ui__search-input::placeholder {
-    color: rgba(255, 255, 255, 0.45);
+    color: #94a3b8;
 }
 
 #site-search .pagefind-ui__result {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid #e2e8f0;
 }
 
 #site-search .pagefind-ui__result-link {
-    color: #fff;
+    color: #0f172a;
 }
 
 #site-search .pagefind-ui__result-link:hover {
-    color: #ff5547;
+    color: #B33D32;
 }
 
 #site-search .pagefind-ui__result-excerpt {
-    color: rgba(255, 255, 255, 0.70);
+    color: #475569;
 }
 
 #site-search mark {
     background: transparent;
-    color: #ff5547;
+    color: #B33D32;
     font-weight: 600;
 }
 
 #site-search .pagefind-ui__filter-panel,
 #site-search .pagefind-ui__filter-name,
 #site-search .pagefind-ui__filter-value {
-    color: rgba(255, 255, 255, 0.85);
+    color: #334155;
 }
 
 #site-search .pagefind-ui__filter-name {
@@ -832,7 +887,7 @@ code {
     text-transform: uppercase;
     letter-spacing: 0.08em;
     font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.55);
+    color: #64748b;
 }
 
 #site-search .pagefind-ui__filter-value input[type="checkbox"] {
@@ -840,13 +895,13 @@ code {
 }
 
 #site-search .pagefind-ui__message {
-    color: rgba(255, 255, 255, 0.65);
+    color: #64748b;
 }
 
 #site-search .pagefind-ui__search-clear {
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    color: rgba(255, 255, 255, 0.70);
+    border: 1px solid #cbd5e1;
+    color: #475569;
     font-size: 0.75rem;
     padding: 0.35rem 0.6rem;
     border-radius: 0.375rem;
@@ -854,6 +909,60 @@ code {
 }
 
 #site-search .pagefind-ui__search-clear:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
+[data-theme="dark"] #site-search .pagefind-ui__search-input {
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.92);
+}
+
+[data-theme="dark"] #site-search .pagefind-ui__search-input::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+[data-theme="dark"] #site-search .pagefind-ui__result {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] #site-search .pagefind-ui__result-link {
+    color: #fff;
+}
+
+[data-theme="dark"] #site-search .pagefind-ui__result-link:hover {
+    color: #ff5547;
+}
+
+[data-theme="dark"] #site-search .pagefind-ui__result-excerpt {
+    color: rgba(255, 255, 255, 0.70);
+}
+
+[data-theme="dark"] #site-search mark {
+    color: #ff5547;
+}
+
+[data-theme="dark"] #site-search .pagefind-ui__filter-panel,
+[data-theme="dark"] #site-search .pagefind-ui__filter-name,
+[data-theme="dark"] #site-search .pagefind-ui__filter-value {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+[data-theme="dark"] #site-search .pagefind-ui__filter-name {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+[data-theme="dark"] #site-search .pagefind-ui__message {
+    color: rgba(255, 255, 255, 0.65);
+}
+
+[data-theme="dark"] #site-search .pagefind-ui__search-clear {
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    color: rgba(255, 255, 255, 0.70);
+}
+
+[data-theme="dark"] #site-search .pagefind-ui__search-clear:hover {
     background: rgba(255, 255, 255, 0.06);
     border-color: rgba(255, 255, 255, 0.20);
     color: #fff;
