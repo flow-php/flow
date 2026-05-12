@@ -87,11 +87,11 @@ final class TypeDetector
             }
 
             if ($detector->isStructure()) {
-                /** @var array<Type<mixed>> $elements */
                 $elements = [];
 
+                // @mago-ignore analysis:mixed-assignment
                 foreach ($value as $key => $item) {
-                    $elements[$key] = $this->detectType($item);
+                    $elements[type_string()->assert($key)] = $this->detectType($item);
                 }
 
                 return new StructureType($elements);

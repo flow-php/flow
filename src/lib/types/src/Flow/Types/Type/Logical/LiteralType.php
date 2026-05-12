@@ -90,27 +90,17 @@ final readonly class LiteralType implements Type
      */
     private static function createFromString(string $value): self
     {
-        if ($value === 'true') {
-            // @phpstan-ignore return.type
-            return new self(true);
-        }
+        return new self(self::parseScalar($value));
+    }
 
-        if ($value === 'false') {
-            // @phpstan-ignore return.type
-            return new self(false);
-        }
-
-        if (\is_numeric($value)) {
-            if (\str_contains($value, '.')) {
-                // @phpstan-ignore return.type
-                return new self((float) $value);
-            }
-
-            // @phpstan-ignore return.type
-            return new self((int) $value);
-        }
-
-        // @phpstan-ignore return.type
-        return new self($value);
+    private static function parseScalar(string $value): bool|float|int|string
+    {
+        return match (true) {
+            $value === 'true' => true,
+            $value === 'false' => false,
+            \is_numeric($value) && \str_contains($value, '.') => (float) $value,
+            \is_numeric($value) => (int) $value,
+            default => $value,
+        };
     }
 }

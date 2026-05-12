@@ -71,7 +71,7 @@ final class StringTypeNarrower implements TypeNarrower
     {
         $dateParts = \date_parse($value);
 
-        if ($dateParts['error_count'] > 0) {
+        if (type_integer()->assert($dateParts['error_count']) > 0) {
             return false;
         }
 
@@ -118,7 +118,7 @@ final class StringTypeNarrower implements TypeNarrower
     {
         $dateParts = \date_parse($value);
 
-        if ($dateParts['error_count'] > 0) {
+        if (type_integer()->assert($dateParts['error_count']) > 0) {
             return false;
         }
 
@@ -150,6 +150,7 @@ final class StringTypeNarrower implements TypeNarrower
         }
 
         if (\is_array($dateParts['relative'] ?? false)) {
+            // @mago-ignore analysis:mixed-assignment
             $relative = $dateParts['relative'];
 
             return (
@@ -263,9 +264,8 @@ final class StringTypeNarrower implements TypeNarrower
                 \libxml_use_internal_errors(true);
 
                 $doc = new \DOMDocument();
-                $result = @$doc->loadXML($value);
 
-                return (bool) $result;
+                return @$doc->loadXML($value);
             } catch (\Exception) {
                 return false;
             } finally {

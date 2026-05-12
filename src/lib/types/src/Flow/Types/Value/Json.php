@@ -6,6 +6,8 @@ namespace Flow\Types\Value;
 
 use Flow\Types\Exception\InvalidArgumentException;
 
+use function Flow\Types\DSL\type_array;
+
 final readonly class Json implements \JsonSerializable, \Stringable
 {
     private bool $isObject;
@@ -90,7 +92,7 @@ final readonly class Json implements \JsonSerializable, \Stringable
      */
     public function toArray(): array
     {
-        return (array) \json_decode($this->value, true, flags: \JSON_THROW_ON_ERROR);
+        return type_array()->assert(\json_decode($this->value, true, flags: \JSON_THROW_ON_ERROR));
     }
 
     public function toString(): string
@@ -105,6 +107,7 @@ final readonly class Json implements \JsonSerializable, \Stringable
      */
     private function sortRecursive(array $array): array
     {
+        // @mago-ignore analysis:mixed-assignment
         foreach ($array as $key => $value) {
             if (\is_array($value)) {
                 $array[$key] = $this->sortRecursive($value);

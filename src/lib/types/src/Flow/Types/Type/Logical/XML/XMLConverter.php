@@ -17,6 +17,10 @@ final class XMLConverter
 
         if ($document->hasChildNodes()) {
             foreach ($document->childNodes as $child) {
+                if (!$child instanceof \DOMElement) {
+                    continue;
+                }
+
                 $xmlArray[$child->nodeName] = $this->convertDOMElement($child);
             }
         }
@@ -32,22 +36,20 @@ final class XMLConverter
         $xmlArray = [];
 
         if ($element->hasAttributes()) {
-            /**
-             * @var \DOMAttr $attribute
-             */
+            // @mago-ignore analysis:possibly-null-iterator
             foreach ($element->attributes as $attribute) {
                 $xmlArray['@attributes'][$attribute->name] = $attribute->value;
             }
         }
 
         foreach ($element->childNodes as $childNode) {
-            if ($childNode->nodeType === XML_TEXT_NODE) {
+            if ($childNode instanceof \DOMText) {
                 if (\trim((string) $childNode->nodeValue)) {
                     $xmlArray['@value'] = $childNode->nodeValue;
                 }
             }
 
-            if ($childNode->nodeType === XML_ELEMENT_NODE) {
+            if ($childNode instanceof \DOMElement) {
                 if ($this->isElementCollection($element)) {
                     /** @phpstan-ignore-next-line */
                     $xmlArray[$childNode->nodeName][] = $this->convertDOMElement($childNode);
@@ -68,9 +70,8 @@ final class XMLConverter
 
         $nodeNames = [];
 
-        /** @var \DOMElement $childNode */
         foreach ($element->childNodes as $childNode) {
-            if ($childNode->nodeType === XML_ELEMENT_NODE) {
+            if ($childNode instanceof \DOMElement) {
                 $nodeNames[] = $childNode->nodeName;
             }
         }

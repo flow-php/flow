@@ -40,6 +40,7 @@ final readonly class AutoCaster
         $keyTypes = [];
         $valueTypes = [];
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($value as $key => $item) {
             $keyType = get_type($key);
             $valueType = get_type($item);
@@ -50,6 +51,7 @@ final readonly class AutoCaster
         if (isset($valueTypes['integer'], $valueTypes['float']) && \count($valueTypes) === 2) {
             $castedArray = [];
 
+            // @mago-ignore analysis:mixed-assignment
             foreach ($value as $key => $item) {
                 $castedArray[$key] = type_float()->cast($item);
             }

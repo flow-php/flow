@@ -480,6 +480,9 @@ final class TypeDetectorTest extends TestCase
         static::assertSame('html', $type->toString());
     }
 
+    /**
+     * @param class-string $class
+     */
     #[DataProvider('provide_logical_types_data')]
     public function test_logical_types(mixed $data, string $class, string $description): void
     {

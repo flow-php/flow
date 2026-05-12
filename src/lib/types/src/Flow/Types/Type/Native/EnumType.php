@@ -36,6 +36,8 @@ final readonly class EnumType implements Type
      * @param array<string, mixed> $data
      *
      * @return EnumType<\UnitEnum>
+     *
+     * @throws InvalidArgumentException
      */
     public static function fromArray(array $data): self
     {
@@ -44,7 +46,10 @@ final readonly class EnumType implements Type
             'class' => type_class_string(),
         ])->assert($data);
 
-        /** @phpstan-ignore-next-line */
+        if (!\is_subclass_of($data['class'], \UnitEnum::class)) {
+            throw new InvalidArgumentException(\sprintf('Class %s is not a UnitEnum', $data['class']));
+        }
+
         return new self($data['class']);
     }
 
@@ -71,6 +76,7 @@ final readonly class EnumType implements Type
                     throw new CastingException($value, $this);
                 }
 
+                // @mago-ignore analysis:possibly-static-access-on-interface
                 return $enumClass::from($value);
             }
 

@@ -43,6 +43,7 @@ final readonly class BooleanType implements Type
                 }
             }
 
+            // @mago-ignore analysis:mixed-operand
             return (bool) $value;
         } catch (\Throwable) {
             throw new CastingException($value, $this);

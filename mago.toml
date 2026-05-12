@@ -8,8 +8,12 @@ paths = [
     "web/landing/src",
     "web/landing/tests",
 ]
+includes = [
+    "vendor",
+    "tools/phpunit/vendor",
+]
 excludes = [
-    "**/vendor/**",
+    "src/**/vendor/**",
     "**/var/**",
     "**/extension/*/ext/build/**",
     "**/extension/*/ext/run-tests.php",
@@ -17,6 +21,13 @@ excludes = [
 
 [parser]
 enable-short-tags = false
+
+[analyzer]
+plugins = ["flow-php"]
+excludes = [
+    # PHPStan extensions depend on classes shipped only in the bundled phpstan.phar
+    "**/Flow/Types/PHPStan/**",
+]
 
 [linter]
 integrations = ["symfony", "phpunit"]

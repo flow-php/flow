@@ -20,7 +20,6 @@ use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_is_any;
 use function Flow\Types\DSL\type_is_nullable;
-use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_optional;
 
 /**
@@ -192,7 +191,7 @@ final class ListDefinition implements Definition
             ) {
                 return new self(
                     $this->ref,
-                    type_list(
+                    new ListType(
                         type_is_nullable($thisElementType) || type_is_nullable($definitionElementType)
                             ? type_optional(type_float())
                             : type_float(),

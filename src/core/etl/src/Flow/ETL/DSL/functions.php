@@ -781,45 +781,62 @@ function struct_entry(string $name, ?array $value, StructureType $type, ?Metadat
 }
 
 /**
- * @template T
- *
  * @param ?array<string, mixed> $value
- * @param StructureType<T> $type
+ * @param Type<mixed> $type
  *
- * @return Entry<?array<string, T>>
+ * @return Entry<?array<string, mixed>>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function structure_entry(string $name, ?array $value, StructureType $type, ?Metadata $metadata = null): Entry
+function structure_entry(string $name, ?array $value, Type $type, ?Metadata $metadata = null): Entry
 {
+    if (!$type instanceof StructureType) {
+        throw new InvalidArgumentException(\sprintf(
+            'Structure entry "%s" requires a StructureType, got %s',
+            $name,
+            $type::class,
+        ));
+    }
+
     return new StructureEntry($name, $value, $type, $metadata);
 }
 
 /**
- * @template T
- *
  * @param null|list<mixed> $value
- * @param ListType<T> $type
+ * @param Type<mixed> $type
  *
  * @return Entry<mixed>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function list_entry(string $name, ?array $value, ListType $type, ?Metadata $metadata = null): Entry
+function list_entry(string $name, ?array $value, Type $type, ?Metadata $metadata = null): Entry
 {
+    if (!$type instanceof ListType) {
+        throw new InvalidArgumentException(\sprintf(
+            'List entry "%s" requires a ListType, got %s',
+            $name,
+            $type::class,
+        ));
+    }
+
     return new ListEntry($name, $value, $type, $metadata);
 }
 
 /**
- * @template TKey of array-key
- * @template TValue
- *
  * @param ?array<array-key, mixed> $value
- * @param MapType<TKey, TValue> $mapType
+ * @param Type<mixed> $mapType
  *
- * @return Entry<?array<TKey, TValue>>
+ * @return Entry<?array<array-key, mixed>>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function map_entry(string $name, ?array $value, MapType $mapType, ?Metadata $metadata = null): Entry
+function map_entry(string $name, ?array $value, Type $mapType, ?Metadata $metadata = null): Entry
 {
+    if (!$mapType instanceof MapType) {
+        throw new InvalidArgumentException(\sprintf(
+            'Map entry "%s" requires a MapType, got %s',
+            $name,
+            $mapType::class,
+        ));
+    }
+
     return new MapEntry($name, $value, $mapType, $metadata);
 }
 

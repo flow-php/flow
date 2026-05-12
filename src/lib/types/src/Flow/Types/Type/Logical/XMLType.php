@@ -46,7 +46,7 @@ final readonly class XMLType implements Type
 
             $doc = new \DOMDocument();
 
-            if (!@$doc->loadXML((string) $stringValue)) {
+            if (!@$doc->loadXML($stringValue)) {
                 throw new CastingException($stringValue, $this);
             }
 

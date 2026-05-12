@@ -142,14 +142,12 @@ final class Comparator
     }
 
     /**
-     * @template T
-     *
-     * @param Type<T> $type
+     * @param Type<mixed> $type
      * @param class-string<Type<mixed>> $typeClass
      */
     public function is(Type $type, string $typeClass): bool
     {
-        if ($type instanceof $typeClass) {
+        if ($this->isInstanceOf($type, $typeClass)) {
             return true;
         }
 
@@ -159,7 +157,7 @@ final class Comparator
 
         if ($type instanceof UnionType) {
             foreach ($type->types()->all() as $nextType) {
-                if ($nextType instanceof $typeClass) {
+                if ($this->isInstanceOf($nextType, $typeClass)) {
                     return true;
                 }
             }
@@ -171,9 +169,16 @@ final class Comparator
     }
 
     /**
-     * @template T
-     *
-     * @param Type<T> $type
+     * @param Type<mixed> $type
+     * @param class-string<Type<mixed>> $typeClass
+     */
+    private function isInstanceOf(Type $type, string $typeClass): bool
+    {
+        return $type instanceof $typeClass;
+    }
+
+    /**
+     * @param Type<mixed> $type
      * @param class-string<Type<mixed>> $typeClass
      * @param class-string<Type<mixed>> ...$typeClasses
      */

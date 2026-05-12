@@ -22,6 +22,7 @@ final readonly class FloatType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    // @mago-ignore analysis:invalid-type-cast
     public function cast(mixed $value): float
     {
         if ($this->isValid($value)) {

@@ -13,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_html;
+use function Flow\Types\DSL\type_string;
 
 #[RequiresPhp('>= 8.4')]
 final class HTMLTypeTest extends TestCase
@@ -153,6 +154,9 @@ final class HTMLTypeTest extends TestCase
         ];
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('assert_data_provider')]
     public function test_assert(mixed $value, ?string $exceptionClass = null): void
     {
@@ -164,15 +168,22 @@ final class HTMLTypeTest extends TestCase
         }
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass = null): void
+    public function test_cast(mixed $value, string $expected, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
+            type_html()->cast($value);
+
+            return;
         }
 
-        $result = type_html()->cast($value);
-        self::assertHtmlEquals($expected, $result->saveHtml());
+        $result = type_html()->assert(type_html()->cast($value));
+        $html = type_string()->assert($result->saveHtml());
+        self::assertHtmlEquals($expected, $html);
     }
 
     #[DataProvider('is_valid_data_provider')]

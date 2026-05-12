@@ -122,6 +122,7 @@ final class EnumTypeTest extends TestCase
 
     /**
      * @param class-string<\UnitEnum> $class
+     * @param null|class-string<\Throwable> $exceptionClass
      */
     #[DataProvider('assert_data_provider')]
     public function test_assert(mixed $value, string $class, ?string $exceptionClass = null): void
@@ -136,6 +137,7 @@ final class EnumTypeTest extends TestCase
 
     /**
      * @param class-string<\UnitEnum> $class
+     * @param null|class-string<\Throwable> $exceptionClass
      */
     #[DataProvider('cast_data_provider')]
     public function test_cast(mixed $value, string $class, mixed $expected, ?string $exceptionClass): void

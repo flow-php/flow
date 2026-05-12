@@ -37,6 +37,7 @@ final readonly class ArrayType implements Type
 
         try {
             if (\is_string($value) && (\str_starts_with($value, '{') || \str_starts_with($value, '['))) {
+                // @mago-ignore analysis:mixed-assignment
                 $decoded = \json_decode($value, true, 512, \JSON_THROW_ON_ERROR);
 
                 return \is_array($decoded) ? $decoded : throw new CastingException($value, $this);
@@ -47,11 +48,13 @@ final readonly class ArrayType implements Type
             }
 
             if (\is_object($value)) {
+                // @mago-ignore analysis:mixed-assignment
                 $encoded = \json_decode(\json_encode($value, \JSON_THROW_ON_ERROR), true, 512, \JSON_THROW_ON_ERROR);
 
                 return \is_array($encoded) ? $encoded : throw new CastingException($value, $this);
             }
 
+            // @mago-ignore analysis:invalid-type-cast
             return (array) $value;
         } catch (\Throwable) {
             throw new CastingException($value, $this);

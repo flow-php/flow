@@ -75,6 +75,7 @@ final readonly class ListType implements Type
 
             $castedList = [];
 
+            // @mago-ignore analysis:mixed-assignment
             foreach ($value as $key => $item) {
                 $castedList[$key] = $this->element()->cast($item);
             }
@@ -103,6 +104,7 @@ final readonly class ListType implements Type
             return false;
         }
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($value as $item) {
             if (!$this->element->isValid($item)) {
                 return false;

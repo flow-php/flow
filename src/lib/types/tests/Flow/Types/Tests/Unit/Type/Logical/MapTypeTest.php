@@ -6,6 +6,7 @@ namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
+use Flow\Types\Type;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -137,8 +138,11 @@ final class MapTypeTest extends TestCase
         ];
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('assert_data_provider')]
-    public function test_assert(mixed $value, $mapType, ?string $exceptionClass = null): void
+    public function test_assert(mixed $value, Type $mapType, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
@@ -148,8 +152,11 @@ final class MapTypeTest extends TestCase
         }
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, $mapType, mixed $expected, ?string $exceptionClass): void
+    public function test_cast(mixed $value, Type $mapType, mixed $expected, ?string $exceptionClass): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
@@ -160,7 +167,7 @@ final class MapTypeTest extends TestCase
     }
 
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(mixed $value, $mapType, bool $expected): void
+    public function test_is_valid(mixed $value, Type $mapType, bool $expected): void
     {
         static::assertSame($expected, $mapType->isValid($value));
     }

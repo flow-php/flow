@@ -10,11 +10,11 @@ use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Value\Json;
 
-use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_literal;
 use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 
@@ -50,19 +50,6 @@ final readonly class StructureType implements Type
             throw new InvalidArgumentException('Structure must receive at least one element (required or optional).');
         }
 
-        foreach ($elements as $type) {
-            if (!$type instanceof Type) {
-                throw new InvalidArgumentException('Structure element type must be an instance of Type');
-            }
-        }
-
-        foreach ($optionalElements as $type) {
-            if (!$type instanceof Type) {
-                throw new InvalidArgumentException('Structure optional element type must be an instance of Type');
-            }
-        }
-
-        // Check for duplicate keys between required and optional elements
         $duplicateKeys = \array_intersect_key($elements, $optionalElements);
 
         if (!empty($duplicateKeys)) {
@@ -84,8 +71,8 @@ final readonly class StructureType implements Type
     {
         $data = type_structure([
             'type' => type_literal('structure'),
-            'elements' => type_map(type_string(), type_array()),
-            'optional_elements' => type_map(type_string(), type_array()),
+            'elements' => type_map(type_string(), type_map(type_string(), type_mixed())),
+            'optional_elements' => type_map(type_string(), type_map(type_string(), type_mixed())),
             'allow_extra' => type_boolean(),
         ])->assert($data);
 

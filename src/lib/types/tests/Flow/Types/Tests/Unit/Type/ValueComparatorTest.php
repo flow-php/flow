@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Types\Tests\Unit\Type;
 
 use Flow\Types\Exception\InvalidArgumentException;
+use Flow\Types\Type;
 use Flow\Types\Type\Comparison\Operator;
 use Flow\Types\Type\ValueComparator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -122,8 +123,8 @@ final class ValueComparatorTest extends TestCase
 
     #[DataProvider('comparable_types_data_provider')]
     public function test_assert_comparable_types_with_compatible_types(
-        mixed $left,
-        mixed $right,
+        Type $left,
+        Type $right,
         Operator $operator,
     ): void {
         $comparator = new ValueComparator();
@@ -134,8 +135,8 @@ final class ValueComparatorTest extends TestCase
 
     #[DataProvider('incomparable_types_data_provider')]
     public function test_assert_comparable_types_with_incompatible_types(
-        mixed $left,
-        mixed $right,
+        Type $left,
+        Type $right,
         Operator $operator,
     ): void {
         $comparator = new ValueComparator();

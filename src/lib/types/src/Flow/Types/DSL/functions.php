@@ -53,22 +53,18 @@ use Flow\Types\Value\Uuid;
 use UnitEnum;
 
 /**
- * @template T
+ * @param array<string, Type<mixed>> $elements
+ * @param array<string, Type<mixed>> $optional_elements
  *
- * @param array<string, Type<T>> $elements
- * @param array<string, Type<T>> $optional_elements
- *
- * @return StructureType<T>
+ * @return Type<array<string, mixed>>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_structure(array $elements = [], array $optional_elements = [], bool $allow_extra = false): StructureType
+function type_structure(array $elements = [], array $optional_elements = [], bool $allow_extra = false): Type
 {
     return new StructureType($elements, $optional_elements, $allow_extra);
 }
 
 /**
- * @template T
- * @template T
  * @template T
  *
  * @param Type<T> $first
@@ -194,10 +190,10 @@ function types(Type ...$types): Types
  *
  * @param Type<T> $element
  *
- * @return ListType<T>
+ * @return Type<list<T>>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_list(Type $element): ListType
+function type_list(Type $element): Type
 {
     return new ListType($element);
 }
@@ -209,10 +205,10 @@ function type_list(Type $element): ListType
  * @param Type<TKey> $key_type
  * @param Type<TValue> $value_type
  *
- * @return MapType<TKey, TValue>
+ * @return Type<array<TKey, TValue>>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_map(Type $key_type, Type $value_type): MapType
+function type_map(Type $key_type, Type $value_type): Type
 {
     return new MapType($key_type, $value_type);
 }
@@ -437,10 +433,10 @@ function type_enum(string $class): Type
  *
  * @param T $value
  *
- * @return LiteralType<T>
+ * @return Type<T>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_literal(bool|float|int|string $value): LiteralType
+function type_literal(bool|float|int|string $value): Type
 {
     return new LiteralType($value);
 }
@@ -521,6 +517,11 @@ function dom_element_to_string(
     $doc->preserveWhiteSpace = $preserver_white_space;
 
     $importedNode = $doc->importNode($element, true);
+
+    if ($importedNode === false) {
+        return false;
+    }
+
     $doc->appendChild($importedNode);
 
     return $doc->saveXML($doc->documentElement);

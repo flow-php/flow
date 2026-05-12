@@ -46,8 +46,7 @@ final readonly class DateTimeType implements Type
             }
 
             if (\is_bool($value)) {
-                /* @phpstan-ignore-next-line */
-                return new \DateTimeImmutable('@' . $value);
+                return new \DateTimeImmutable('@' . (int) $value);
             }
 
             if ($value instanceof \DateInterval) {

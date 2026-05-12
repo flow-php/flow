@@ -7,6 +7,7 @@ namespace Flow\Types\Tests\Unit\Type\Native;
 use Dom\HTMLDocument;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Tests\Unit\Type\Fixtures\StringableObject;
+use Flow\Types\Type\Native\StringType;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
@@ -197,6 +198,9 @@ final class StringTypeTest extends TestCase
         ];
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('assert_data_provider')]
     public function test_assert(mixed $value, ?string $exceptionClass = null): void
     {
@@ -208,6 +212,9 @@ final class StringTypeTest extends TestCase
         }
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('cast_data_provider')]
     public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass): void
     {
@@ -244,7 +251,7 @@ final class StringTypeTest extends TestCase
     #[DataProvider('is_stringable_data_provider')]
     public function test_is_stringable(mixed $value, bool $expected): void
     {
-        static::assertSame($expected, type_string()->isStringable($value));
+        static::assertSame($expected, (new StringType())->isStringable($value));
     }
 
     #[DataProvider('is_valid_data_provider')]

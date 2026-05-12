@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type;
 
+use Flow\Types\Type;
 use Flow\Types\Type\ArrayContentDetector;
 use Flow\Types\Type\Types;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -249,6 +250,10 @@ final class ArrayContentDetectorTest extends TestCase
         ];
     }
 
+    /**
+     * @param array<Type<mixed>> $keys
+     * @param array<Type<mixed>> $values
+     */
     #[DataProvider('provide_list_data')]
     public function test_list_data(array $keys, array $values, bool $isList, bool $expected): void
     {
@@ -258,6 +263,10 @@ final class ArrayContentDetectorTest extends TestCase
         );
     }
 
+    /**
+     * @param array<Type<mixed>> $keys
+     * @param array<Type<mixed>> $values
+     */
     #[DataProvider('provide_map_data')]
     public function test_map_data(array $keys, array $values, bool $isList, bool $expected): void
     {
@@ -267,6 +276,10 @@ final class ArrayContentDetectorTest extends TestCase
         );
     }
 
+    /**
+     * @param array<Type<mixed>> $keys
+     * @param array<Type<mixed>> $values
+     */
     #[DataProvider('provide_structure_data')]
     public function test_structure_data(array $keys, array $values, bool $isList, bool $expected): void
     {

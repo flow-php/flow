@@ -14,6 +14,7 @@ use PHPUnit\Framework\TestCase;
 
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_html_element;
+use function Flow\Types\DSL\type_string;
 
 #[RequiresPhp('>= 8.4')]
 final class HTMLElementTypeTest extends TestCase
@@ -154,6 +155,9 @@ final class HTMLElementTypeTest extends TestCase
         ];
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('assert_data_provider')]
     public function test_assert(mixed $value, ?string $exceptionClass = null): void
     {
@@ -165,15 +169,22 @@ final class HTMLElementTypeTest extends TestCase
         }
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass = null): void
+    public function test_cast(mixed $value, string $expected, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
+            type_html_element()->cast($value);
+
+            return;
         }
 
-        $result = type_html_element()->cast($value);
-        self::assertHtmlEquals($expected, $result?->C14N());
+        $result = type_html_element()->assert(type_html_element()->cast($value));
+        $canonical = type_string()->assert($result->C14N());
+        self::assertHtmlEquals($expected, $canonical);
     }
 
     #[DataProvider('is_valid_data_provider')]

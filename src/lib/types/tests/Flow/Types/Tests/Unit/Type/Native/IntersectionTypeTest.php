@@ -218,6 +218,9 @@ final class IntersectionTypeTest extends TestCase
         ];
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('assert_data_provider')]
     public function test_assert(IntersectionType $type, mixed $value, ?string $exceptionClass = null): void
     {
@@ -229,6 +232,9 @@ final class IntersectionTypeTest extends TestCase
         }
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('cast_data_provider')]
     public function test_cast(IntersectionType $type, mixed $value, mixed $expected, ?string $exceptionClass): void
     {

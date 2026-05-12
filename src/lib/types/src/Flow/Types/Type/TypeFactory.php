@@ -94,9 +94,7 @@ final class TypeFactory
             'numeric-string' => type_numeric_string(),
             'html' => type_html(),
             'html_element' => type_html_element(),
-            default => throw new InvalidArgumentException(
-                "Unknown type '" . (\is_string($data['type']) ? $data['type'] : \gettype($data['type'])) . "'",
-            ),
+            default => throw new InvalidArgumentException("Unknown type '" . $data['type'] . "'"),
         };
     }
 
