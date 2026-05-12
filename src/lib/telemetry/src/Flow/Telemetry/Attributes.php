@@ -110,7 +110,7 @@ final readonly class Attributes
         $parts = [];
 
         foreach ($this->values as $key => $value) {
-            if ($value === null || \is_array($value)) {
+            if (\is_array($value)) {
                 continue;
             }
 
@@ -167,10 +167,6 @@ final readonly class Attributes
         $result = [];
 
         foreach ($this->values as $key => $value) {
-            if ($value === null) {
-                continue;
-            }
-
             $result[$key] = $this->normalizeValue($value);
         }
 
@@ -211,8 +207,20 @@ final readonly class Attributes
         }
 
         if (\is_array($value)) {
-            /** @phpstan-ignore return.type */
-            return \array_map(fn($v) => $this->normalizeValue($v), $value);
+            return \array_map(fn($v) => $this->normalizeArrayElement($v), $value);
+        }
+
+        return $value;
+    }
+
+    private function normalizeArrayElement(bool|\DateTimeInterface|float|int|string|\Throwable $value): bool|float|int|string
+    {
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('c');
+        }
+
+        if ($value instanceof \Throwable) {
+            return $value->getMessage();
         }
 
         return $value;

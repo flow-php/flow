@@ -50,7 +50,7 @@ final class Throughput implements Instrument
 
     /**
      * @param string $name Instrument name
-     * @param resource $resource The resource context for this instrument
+     * @param \Flow\Telemetry\Resource $resource The resource context for this instrument
      * @param InstrumentationScope $scope Instrumentation scope that created this instrument
      * @param ClockInterface $clock Clock for timestamps
      * @param AggregationTemporality $temporality Aggregation temporality
@@ -105,7 +105,7 @@ final class Throughput implements Instrument
         if (!isset($this->aggregations[$key])) {
             $this->aggregations[$key] = [
                 'count' => 0,
-                'startTimeNs' => \hrtime(true),
+                'startTimeNs' => (int) \hrtime(true),
                 'startedAt' => $this->clock->now(),
                 'attributes' => $attrs,
                 'reservoir' => new SimpleFixedSizeExemplarReservoir(1),

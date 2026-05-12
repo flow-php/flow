@@ -11,22 +11,22 @@ use PHPUnit\Framework\TestCase;
 final class SuperglobalCarrierTest extends TestCase
 {
     /**
-     * @var array<string, mixed>
+     * @var array<array-key, mixed>
      */
     private array $originalCookie;
 
     /**
-     * @var array<string, mixed>
+     * @var array<array-key, mixed>
      */
     private array $originalGet;
 
     /**
-     * @var array<string, mixed>
+     * @var array<array-key, mixed>
      */
     private array $originalPost;
 
     /**
-     * @var array<string, mixed>
+     * @var array<array-key, mixed>
      */
     private array $originalServer;
 
@@ -42,7 +42,7 @@ final class SuperglobalCarrierTest extends TestCase
         $_COOKIE = [];
 
         foreach ($_SERVER as $key => $_) {
-            if (\is_string($key) && \str_starts_with($key, 'HTTP_')) {
+            if (\str_starts_with($key, 'HTTP_')) {
                 unset($_SERVER[$key]);
             }
         }

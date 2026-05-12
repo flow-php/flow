@@ -77,7 +77,7 @@ final class AlignedHistogramBucketExemplarReservoir implements ExemplarReservoir
 
     public function reset(): void
     {
-        $this->buckets = \array_fill(0, $this->bucketCount, null);
+        $this->buckets = \array_fill(0, \max(0, $this->bucketCount), null);
     }
 
     /**

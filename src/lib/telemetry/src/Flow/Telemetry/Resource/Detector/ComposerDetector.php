@@ -35,11 +35,7 @@ final readonly class ComposerDetector implements ResourceDetector
 
         $attributes = [];
 
-        $packageName = InstalledVersions::getRootPackage()['name'] ?? null;
-
-        if ($packageName === null) {
-            return Resource::empty();
-        }
+        $packageName = InstalledVersions::getRootPackage()['name'];
 
         $serviceName = $this->extractServiceName($packageName);
         $attributes[ServiceAttribute::NAME->value] = $serviceName;

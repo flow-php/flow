@@ -155,7 +155,6 @@ final class ThroughputTest extends TestCase
         foreach ($metrics as $metric) {
             $source = $metric->attributes->get('source');
             static::assertIsString($source);
-            /** @var string $source */
             $metricsBySource[$source] = $metric;
         }
 

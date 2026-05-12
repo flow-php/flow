@@ -183,8 +183,9 @@ final class LogRecordTest extends TestCase
 
         static::assertSame(\RuntimeException::class, $record->attributes->get('exception.type'));
         static::assertSame('Something went wrong', $record->attributes->get('exception.message'));
-        static::assertIsString($record->attributes->get('exception.stacktrace'));
-        static::assertStringContainsString('LogRecordTest', (string) $record->attributes->get('exception.stacktrace'));
+        $stacktrace = $record->attributes->get('exception.stacktrace');
+        static::assertIsString($stacktrace);
+        static::assertStringContainsString('LogRecordTest', $stacktrace);
     }
 
     public function test_set_observed_timestamp_returns_new_instance(): void

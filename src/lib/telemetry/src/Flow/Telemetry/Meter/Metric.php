@@ -34,7 +34,7 @@ final readonly class Metric
      * @param float|int $value Recorded value
      * @param Attributes $attributes Categorization attributes
      * @param \DateTimeImmutable $timestamp When the measurement was recorded (end of measurement period)
-     * @param resource $resource The resource context for this metric
+     * @param \Flow\Telemetry\Resource $resource The resource context for this metric
      * @param InstrumentationScope $scope The instrumentation scope that created this metric
      * @param null|string $unit Unit of measurement
      * @param null|string $description Human-readable description

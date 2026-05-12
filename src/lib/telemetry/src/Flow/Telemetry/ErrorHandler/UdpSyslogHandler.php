@@ -86,6 +86,8 @@ final class UdpSyslogHandler implements ErrorHandler
             return $this->socket;
         }
 
+        $_errno = null;
+        $_errstr = null;
         $handle = @\stream_socket_client(\sprintf('udp://%s:%d', $this->host, $this->port), $_errno, $_errstr, 1.0);
 
         if (!\is_resource($handle)) {

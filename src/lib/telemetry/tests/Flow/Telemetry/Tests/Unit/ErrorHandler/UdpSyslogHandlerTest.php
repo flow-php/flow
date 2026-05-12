@@ -16,10 +16,12 @@ final class UdpSyslogHandlerTest extends TestCase
 
     protected function setUp(): void
     {
+        $_errno = null;
+        $errstr = null;
         $socket = \stream_socket_server('udp://127.0.0.1:0', $_errno, $errstr, \STREAM_SERVER_BIND);
 
         if ($socket === false) {
-            self::markTestSkipped('Could not bind UDP socket: ' . $errstr);
+            self::markTestSkipped('Could not bind UDP socket: ' . ($errstr ?? 'unknown error'));
         }
 
         $this->receiver = $socket;
@@ -49,7 +51,7 @@ final class UdpSyslogHandlerTest extends TestCase
         $handler->handle(new \RuntimeException('udp boom'));
 
         \stream_set_timeout($this->receiver, 1);
-        $datagram = \stream_socket_recvfrom($this->receiver, 65535);
+        $datagram = \stream_socket_recvfrom($this->receiver, 65535, 0);
 
         static::assertIsString($datagram);
         static::assertStringContainsString('flow-test', $datagram);

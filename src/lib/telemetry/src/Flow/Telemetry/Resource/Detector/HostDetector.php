@@ -88,6 +88,8 @@ final readonly class HostDetector implements ResourceDetector
             return null;
         }
 
+        $matches = [];
+
         if (\preg_match('/"IOPlatformUUID"\s*=\s*"([^"]+)"/', $output, $matches)) {
             return $matches[1];
         }

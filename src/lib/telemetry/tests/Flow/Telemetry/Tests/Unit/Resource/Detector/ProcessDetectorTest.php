@@ -14,10 +14,6 @@ final class ProcessDetectorTest extends TestCase
     {
         global $argv;
 
-        if (!isset($argv) || !\is_array($argv) || \count($argv) === 0) {
-            static::markTestSkipped('No command line arguments available');
-        }
-
         $detector = new ProcessDetector();
         $resource = $detector->detect();
 

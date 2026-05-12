@@ -55,7 +55,7 @@ final readonly class TracerProvider
      * Note: Instance caching is handled by the Telemetry class.
      * This method always creates a new Tracer instance.
      *
-     * @param resource $resource The resource context for all spans from this tracer
+     * @param \Flow\Telemetry\Resource $resource The resource context for all spans from this tracer
      * @param string $name The name of the instrumentation scope (e.g., library name)
      * @param string $version The version of the instrumentation scope
      * @param null|string $schemaUrl Schema URL for semantic conventions

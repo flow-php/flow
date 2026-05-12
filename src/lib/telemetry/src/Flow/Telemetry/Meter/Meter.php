@@ -48,7 +48,7 @@ final class Meter
     private array $instruments = [];
 
     /**
-     * @param resource $resource The resource context for all metrics from this meter
+     * @param \Flow\Telemetry\Resource $resource The resource context for all metrics from this meter
      * @param InstrumentationScope $scope The instrumentation scope
      * @param MetricProcessor $processor The metric processor
      * @param ClockInterface $clock Clock for timestamps
@@ -181,7 +181,7 @@ final class Meter
      * @param string $name Metric name (e.g., 'http.request.duration', 'flow.batch.size')
      * @param null|string $unit Unit of measurement (e.g., 'ms', 'bytes', 'rows')
      * @param null|string $description Human-readable description
-     * @param null|array<float> $boundaries Explicit bucket boundaries (null uses default)
+     * @param null|list<float> $boundaries Explicit bucket boundaries (null uses default)
      */
     public function createHistogram(
         string $name,

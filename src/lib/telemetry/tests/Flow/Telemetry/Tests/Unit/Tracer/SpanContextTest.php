@@ -247,9 +247,11 @@ final class SpanContextTest extends TestCase
 
         static::assertTrue($original->traceId->equals($restored->traceId));
         static::assertTrue($original->spanId->equals($restored->spanId));
-        static::assertNotNull($original->parentSpanId);
-        static::assertNotNull($restored->parentSpanId);
-        static::assertTrue($original->parentSpanId->equals($restored->parentSpanId));
+        $originalParentSpanId = $original->parentSpanId;
+        $restoredParentSpanId = $restored->parentSpanId;
+        static::assertNotNull($originalParentSpanId);
+        static::assertNotNull($restoredParentSpanId);
+        static::assertTrue($originalParentSpanId->equals($restoredParentSpanId));
         static::assertSame($original->isRemote, $restored->isRemote);
     }
 

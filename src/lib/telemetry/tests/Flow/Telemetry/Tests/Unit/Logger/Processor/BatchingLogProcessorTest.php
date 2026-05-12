@@ -125,8 +125,10 @@ final class BatchingLogProcessorTest extends TestCase
         $exporter
             ->expects(self::once())
             ->method('export')
-            ->with(static::callback(static function (mixed $signal) use (&$capturedSignal) {
-                $capturedSignal = $signal;
+            ->with(static::callback(static function (mixed $signal) use (&$capturedSignal): bool {
+                if ($signal instanceof Signals) {
+                    $capturedSignal = $signal;
+                }
 
                 return $signal instanceof Signals && $signal->type === SignalType::LOGS;
             }))

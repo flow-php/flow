@@ -47,11 +47,7 @@ final readonly class ProcessDetector implements ResourceDetector
         $attributes[ProcessAttribute::RUNTIME_NAME->value] = 'PHP';
         $attributes[ProcessAttribute::RUNTIME_VERSION->value] = PHP_VERSION;
 
-        $command = $this->detectCommand();
-
-        if ($command !== null) {
-            $attributes[ProcessAttribute::COMMAND->value] = $command;
-        }
+        $attributes[ProcessAttribute::COMMAND->value] = $this->detectCommand();
 
         $commandArgs = $this->detectCommandArgs();
 
@@ -68,19 +64,22 @@ final readonly class ProcessDetector implements ResourceDetector
         return Resource::create($attributes);
     }
 
-    private function detectCommand(): ?string
+    private function detectCommand(): string
     {
-        if (isset($_SERVER['SCRIPT_FILENAME']) && \is_string($_SERVER['SCRIPT_FILENAME'])) {
-            return $_SERVER['SCRIPT_FILENAME'];
+        $scriptFilename = self::asString($_SERVER['SCRIPT_FILENAME']);
+
+        if ($scriptFilename !== null) {
+            return $scriptFilename;
         }
 
         global $argv;
 
-        if (isset($argv[0]) && \is_string($argv[0])) {
-            return $argv[0];
-        }
+        return $argv[0];
+    }
 
-        return null;
+    private static function asString(mixed $value): ?string
+    {
+        return \is_string($value) ? $value : null;
     }
 
     /**
@@ -90,11 +89,6 @@ final readonly class ProcessDetector implements ResourceDetector
     {
         global $argv;
 
-        if (!isset($argv) || !\is_array($argv) || \count($argv) === 0) {
-            return null;
-        }
-
-        /** @var array<string> $result */
         $result = \array_values(\array_filter($argv, 'is_string'));
 
         return \count($result) > 0 ? $result : null;

@@ -577,9 +577,10 @@ final class SpanTest extends TestCase
         $span->setStatus(SpanStatus::unset());
         $span->setStatus(SpanStatus::error('Error occurred'));
 
-        static::assertNotNull($span->status());
-        static::assertTrue($span->status()->isError());
-        static::assertSame('Error occurred', $span->status()->description);
+        $status = $span->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isError());
+        static::assertSame('Error occurred', $status->description);
     }
 
     public function test_set_status_sets_status(): void

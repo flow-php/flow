@@ -48,7 +48,7 @@ final class Gauge implements Instrument
 
     /**
      * @param string $name Instrument name
-     * @param resource $resource The resource context for this instrument
+     * @param \Flow\Telemetry\Resource $resource The resource context for this instrument
      * @param InstrumentationScope $scope Instrumentation scope that created this instrument
      * @param ClockInterface $clock Clock for timestamps
      * @param ExemplarFilter $exemplarFilter Filter for exemplar sampling

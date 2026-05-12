@@ -200,9 +200,11 @@ final class W3CBaggageTest extends TestCase
         $propagator->inject($original, $carrier);
         $restored = $propagator->extract(new ArrayCarrier($carrier->unwrap()));
 
-        static::assertNotNull($restored->baggage);
-        static::assertNotNull($original->baggage);
-        static::assertSame($original->baggage->get('user.id'), $restored->baggage->get('user.id'));
-        static::assertSame($original->baggage->get('session.id'), $restored->baggage->get('session.id'));
+        $restoredBaggage = $restored->baggage;
+        $originalBaggage = $original->baggage;
+        static::assertNotNull($restoredBaggage);
+        static::assertNotNull($originalBaggage);
+        static::assertSame($originalBaggage->get('user.id'), $restoredBaggage->get('user.id'));
+        static::assertSame($originalBaggage->get('session.id'), $restoredBaggage->get('session.id'));
     }
 }

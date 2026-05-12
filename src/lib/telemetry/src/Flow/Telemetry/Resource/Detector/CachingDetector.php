@@ -71,13 +71,12 @@ final readonly class CachingDetector implements ResourceDetector
             return null;
         }
 
-        $data = @\unserialize($contents, ['allowed_classes' => [Resource::class, Attributes::class]]);
+        return self::asResource(@\unserialize($contents, ['allowed_classes' => [Resource::class, Attributes::class]]));
+    }
 
-        if (!$data instanceof Resource) {
-            return null;
-        }
-
-        return $data;
+    private static function asResource(mixed $value): ?Resource
+    {
+        return $value instanceof Resource ? $value : null;
     }
 
     private function saveToCache(Resource $resource): void

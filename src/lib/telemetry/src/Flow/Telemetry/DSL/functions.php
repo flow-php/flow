@@ -437,7 +437,7 @@ function meter_provider(
  *
  * If providers are not specified, void providers (no-op) are used.
  *
- * @param resource $resource The resource describing the entity producing telemetry
+ * @param \Flow\Telemetry\Resource $resource The resource describing the entity producing telemetry
  * @param null|TracerProvider $tracerProvider The tracer provider (null for void/disabled)
  * @param null|MeterProvider $meterProvider The meter provider (null for void/disabled)
  * @param null|LoggerProvider $loggerProvider The logger provider (null for void/disabled)

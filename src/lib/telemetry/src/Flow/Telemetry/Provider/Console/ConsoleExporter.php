@@ -50,7 +50,6 @@ final readonly class ConsoleExporter implements Exporter
         private ConsoleMetricOptions $metricOptions = new ConsoleMetricOptions(),
         private ConsoleSpanOptions $spanOptions = new ConsoleSpanOptions(),
     ) {
-        /** @var null|resource $outputStream */
         $this->output = new ConsoleOutput($colors, $outputStream);
     }
 
@@ -217,7 +216,7 @@ final readonly class ConsoleExporter implements Exporter
 
                 foreach ($metric->attributes->normalize() as $key => $attrValue) {
                     $attrParts[] =
-                        $key . '=' . (\is_scalar($attrValue) ? (string) $attrValue : \json_encode($attrValue));
+                        $key . '=' . (\is_scalar($attrValue) ? (string) $attrValue : (\json_encode($attrValue) ?: ''));
                 }
                 $line .= '  ' . $this->output->dim('{' . \implode(', ', $attrParts) . '}');
             }

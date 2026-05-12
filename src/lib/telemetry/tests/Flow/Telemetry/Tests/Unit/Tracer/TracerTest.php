@@ -19,8 +19,9 @@ final class TracerTest extends TestCase
         $tracer = TracerMother::create();
         $span = $tracer->span('test-span');
 
-        static::assertNotNull($tracer->activeSpan());
-        static::assertTrue($tracer->activeSpan()->spanId->equals($span->context()->spanId));
+        $active = $tracer->activeSpan();
+        static::assertNotNull($active);
+        static::assertTrue($active->spanId->equals($span->context()->spanId));
     }
 
     public function test_active_span_returns_null_when_no_active_span(): void
@@ -81,8 +82,9 @@ final class TracerTest extends TestCase
         $parent = $tracer->span('parent');
         $child = $tracer->span('child');
 
-        static::assertNotNull($child->context()->parentSpanId);
-        static::assertTrue($child->context()->parentSpanId->equals($parent->context()->spanId));
+        $parentSpanId = $child->context()->parentSpanId;
+        static::assertNotNull($parentSpanId);
+        static::assertTrue($parentSpanId->equals($parent->context()->spanId));
     }
 
     public function test_nested_spans_share_trace_id(): void
@@ -124,8 +126,9 @@ final class TracerTest extends TestCase
 
         $span = TracerMother::withContext($context)->span('child');
 
-        static::assertNotNull($span->context()->parentSpanId);
-        static::assertTrue($span->context()->parentSpanId->equals($activeSpan));
+        $parentSpanId = $span->context()->parentSpanId;
+        static::assertNotNull($parentSpanId);
+        static::assertTrue($parentSpanId->equals($activeSpan));
     }
 
     public function test_span_is_root_when_no_parent(): void
@@ -194,8 +197,9 @@ final class TracerTest extends TestCase
         } catch (\RuntimeException) {
         }
 
-        static::assertNotNull($processor->endedSpans()[0]->status());
-        static::assertTrue($processor->endedSpans()[0]->status()->isError());
+        $status = $processor->endedSpans()[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isError());
     }
 
     public function test_trace_sets_ok_status_on_success(): void
@@ -205,8 +209,9 @@ final class TracerTest extends TestCase
 
         $tracer->trace('test-span', static fn() => 'ok');
 
-        static::assertNotNull($processor->endedSpans()[0]->status());
-        static::assertTrue($processor->endedSpans()[0]->status()->isOk());
+        $status = $processor->endedSpans()[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
     }
 
     public function test_version_returns_tracer_version(): void

@@ -409,7 +409,7 @@ final class HistogramTest extends TestCase
     }
 
     /**
-     * @param array<float> $boundaries
+     * @param list<float> $boundaries
      */
     #[DataProvider('bucketBoundaryTestCases')]
     public function test_values_are_placed_in_correct_buckets(

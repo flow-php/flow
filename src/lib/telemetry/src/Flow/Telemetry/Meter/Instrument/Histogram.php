@@ -39,7 +39,7 @@ final class Histogram implements Instrument
     /**
      * Default bucket boundaries (milliseconds, suitable for latency measurements).
      *
-     * @var array<float>
+     * @var list<float>
      */
     public const array DEFAULT_BOUNDARIES = [
         0.0,
@@ -73,7 +73,7 @@ final class Histogram implements Instrument
 
     /**
      * @param string $name Instrument name
-     * @param resource $resource The resource context for this instrument
+     * @param \Flow\Telemetry\Resource $resource The resource context for this instrument
      * @param InstrumentationScope $scope Instrumentation scope that created this instrument
      * @param ClockInterface $clock Clock for timestamps
      * @param AggregationTemporality $temporality Aggregation temporality
@@ -81,7 +81,7 @@ final class Histogram implements Instrument
      * @param MetricLimits $limits Cardinality limits for this instrument
      * @param null|string $unit Unit of measurement
      * @param null|string $description Human-readable description
-     * @param array<float> $boundaries Explicit bucket boundaries (strictly increasing)
+     * @param list<float> $boundaries Explicit bucket boundaries (strictly increasing)
      */
     public function __construct(
         private readonly string $name,

@@ -52,7 +52,8 @@ analyze *args:
 # Run Mago static analyzer, scoped to packages we've finished migrating (add package paths below).
 analyze-mago *args:
     tools/mago/vendor/bin/mago analyze {{args}} \
-        src/lib/types
+        src/lib/types \
+        src/lib/telemetry
 
 # Auto-fix code style with Mago (format + lint --fix).
 fix:

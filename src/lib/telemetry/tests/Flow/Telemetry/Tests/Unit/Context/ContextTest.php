@@ -38,8 +38,9 @@ final class ContextTest extends TestCase
         $spanId = SpanId::generate();
         $context = Context::create()->withActiveSpan($spanId);
 
-        static::assertNotNull($context->activeSpanId());
-        static::assertTrue($context->activeSpanId()->equals($spanId));
+        $activeSpanId = $context->activeSpanId();
+        static::assertNotNull($activeSpanId);
+        static::assertTrue($activeSpanId->equals($spanId));
     }
 
     /**
@@ -86,8 +87,9 @@ final class ContextTest extends TestCase
 
         static::assertSame('0af7651916cd43dd8448eb211c80319c', $context->traceId->toHex());
         static::assertSame('12345', $context->baggage->get('user.id'));
-        static::assertNotNull($context->activeSpanId());
-        static::assertSame('00f067aa0ba902b7', $context->activeSpanId()->toHex());
+        $activeSpanId = $context->activeSpanId();
+        static::assertNotNull($activeSpanId);
+        static::assertSame('00f067aa0ba902b7', $activeSpanId->toHex());
     }
 
     public function test_from_array_creates_context_without_active_span(): void
@@ -128,9 +130,11 @@ final class ContextTest extends TestCase
 
         static::assertTrue($original->traceId->equals($restored->traceId));
         static::assertSame($original->baggage->all(), $restored->baggage->all());
-        static::assertNotNull($original->activeSpanId());
-        static::assertNotNull($restored->activeSpanId());
-        static::assertTrue($original->activeSpanId()->equals($restored->activeSpanId()));
+        $originalActiveSpanId = $original->activeSpanId();
+        $restoredActiveSpanId = $restored->activeSpanId();
+        static::assertNotNull($originalActiveSpanId);
+        static::assertNotNull($restoredActiveSpanId);
+        static::assertTrue($originalActiveSpanId->equals($restoredActiveSpanId));
     }
 
     public function test_normalize_from_array_round_trip_without_active_span(): void
@@ -213,8 +217,9 @@ final class ContextTest extends TestCase
         $newContext = $context->withActiveSpan($spanId);
 
         static::assertNull($context->activeSpanId());
-        static::assertNotNull($newContext->activeSpanId());
-        static::assertTrue($newContext->activeSpanId()->equals($spanId));
+        $newActiveSpanId = $newContext->activeSpanId();
+        static::assertNotNull($newActiveSpanId);
+        static::assertTrue($newActiveSpanId->equals($spanId));
     }
 
     public function test_with_baggage_preserves_trace_id_and_active_span(): void
@@ -226,8 +231,9 @@ final class ContextTest extends TestCase
         $newContext = $context->withBaggage(new Baggage(['key' => 'value']));
 
         static::assertTrue($newContext->traceId->equals($traceId));
-        static::assertNotNull($newContext->activeSpanId());
-        static::assertTrue($newContext->activeSpanId()->equals($spanId));
+        $activeSpanId = $newContext->activeSpanId();
+        static::assertNotNull($activeSpanId);
+        static::assertTrue($activeSpanId->equals($spanId));
     }
 
     public function test_with_baggage_replaces_baggage(): void

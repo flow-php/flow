@@ -59,7 +59,7 @@ final readonly class SuperglobalCarrier implements Carrier
         }
 
         foreach ($_SERVER as $key => $value) {
-            if (\is_string($key) && \str_starts_with($key, 'HTTP_') && \is_string($value)) {
+            if (\str_starts_with($key, 'HTTP_') && \is_string($value)) {
                 $headerName = \strtolower(\str_replace('_', '-', \substr($key, 5)));
                 $data[$headerName] = $value;
             }
