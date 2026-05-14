@@ -582,6 +582,7 @@ final class CatalogTest extends TestCase
 
         $restoredTable = $restoredSchema->table('users');
         static::assertCount(3, $restoredTable->columns);
+        static::assertNotNull($restoredTable->primaryKey);
         static::assertSame('users_pkey', $restoredTable->primaryKey->name);
         static::assertCount(1, $restoredTable->indexes);
         static::assertCount(1, $restoredTable->uniqueConstraints);
@@ -655,6 +656,7 @@ final class CatalogTest extends TestCase
 
         $restoredTable = $restored->get('public')->table('orders');
 
+        static::assertNotNull($restoredTable->primaryKey);
         static::assertSame('orders_pkey', $restoredTable->primaryKey->name);
         static::assertSame(['id'], $restoredTable->primaryKey->columns);
 
@@ -716,13 +718,16 @@ final class CatalogTest extends TestCase
 
         static::assertArrayHasKey('schemas', $normalized);
         static::assertCount(1, $normalized['schemas']);
-        static::assertSame('public', $normalized['schemas'][0]['name']);
-        static::assertArrayHasKey('tables', $normalized['schemas'][0]);
-        static::assertSame('simple', $normalized['schemas'][0]['tables'][0]['name']);
-        static::assertSame('public', $normalized['schemas'][0]['tables'][0]['schema']);
-        static::assertArrayHasKey('columns', $normalized['schemas'][0]['tables'][0]);
-        static::assertSame('id', $normalized['schemas'][0]['tables'][0]['columns'][0]['name']);
-        static::assertSame('int4', $normalized['schemas'][0]['tables'][0]['columns'][0]['type']['name']);
+        $schema = $normalized['schemas'][0];
+        static::assertSame('public', $schema['name']);
+        static::assertArrayHasKey('tables', $schema);
+        $tables = $schema['tables'] ?? [];
+        $table = $tables[0];
+        static::assertSame('simple', $table['name']);
+        static::assertSame('public', $table['schema'] ?? null);
+        static::assertArrayHasKey('columns', $table);
+        static::assertSame('id', $table['columns'][0]['name']);
+        static::assertSame('int4', $table['columns'][0]['type']['name']);
     }
 
     public function test_round_trip_preserves_column_default_value(): void

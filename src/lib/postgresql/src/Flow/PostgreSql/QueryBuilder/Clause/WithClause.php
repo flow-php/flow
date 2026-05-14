@@ -25,7 +25,7 @@ final readonly class WithClause
     {
         $cteNodes = $withClause->getCtes();
 
-        if ($cteNodes === null || \count($cteNodes) === 0) {
+        if (\count($cteNodes) === 0) {
             throw InvalidAstException::missingRequiredField('ctes', 'WithClause');
         }
 

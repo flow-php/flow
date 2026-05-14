@@ -10,6 +10,6 @@ final class InvalidFromNodeException extends \RuntimeException
 {
     public static function invalidNode(Node $node): self
     {
-        return new self(\sprintf('Invalid FROM clause node type: %s', $node->getNode() ?? 'unknown'));
+        return new self(\sprintf('Invalid FROM clause node type: %s', $node->getNode()));
     }
 }

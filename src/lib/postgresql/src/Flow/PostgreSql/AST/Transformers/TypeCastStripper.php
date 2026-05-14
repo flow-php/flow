@@ -88,12 +88,12 @@ final readonly class TypeCastStripper implements NodeModifier
 
     private function stripAExpr(A_Expr $node): void
     {
-        if ($node->getLexpr() !== null) {
-            $node->setLexpr($this->unwrap($node->getLexpr()));
+        if (($lexpr = $node->getLexpr()) !== null) {
+            $node->setLexpr($this->unwrap($lexpr));
         }
 
-        if ($node->getRexpr() !== null) {
-            $node->setRexpr($this->unwrap($node->getRexpr()));
+        if (($rexpr = $node->getRexpr()) !== null) {
+            $node->setRexpr($this->unwrap($rexpr));
         }
     }
 
@@ -104,8 +104,8 @@ final readonly class TypeCastStripper implements NodeModifier
 
     private function stripBooleanTest(BooleanTest $node): void
     {
-        if ($node->getArg() !== null) {
-            $node->setArg($this->unwrap($node->getArg()));
+        if (($arg = $node->getArg()) !== null) {
+            $node->setArg($this->unwrap($arg));
         }
     }
 
@@ -116,23 +116,23 @@ final readonly class TypeCastStripper implements NodeModifier
 
     private function stripCaseExpr(CaseExpr $node): void
     {
-        if ($node->getArg() !== null) {
-            $node->setArg($this->unwrap($node->getArg()));
+        if (($arg = $node->getArg()) !== null) {
+            $node->setArg($this->unwrap($arg));
         }
 
-        if ($node->getDefresult() !== null) {
-            $node->setDefresult($this->unwrap($node->getDefresult()));
+        if (($defresult = $node->getDefresult()) !== null) {
+            $node->setDefresult($this->unwrap($defresult));
         }
     }
 
     private function stripCaseWhen(CaseWhen $node): void
     {
-        if ($node->getExpr() !== null) {
-            $node->setExpr($this->unwrap($node->getExpr()));
+        if (($expr = $node->getExpr()) !== null) {
+            $node->setExpr($this->unwrap($expr));
         }
 
-        if ($node->getResult() !== null) {
-            $node->setResult($this->unwrap($node->getResult()));
+        if (($result = $node->getResult()) !== null) {
+            $node->setResult($this->unwrap($result));
         }
     }
 
@@ -146,15 +146,15 @@ final readonly class TypeCastStripper implements NodeModifier
         $node->setArgs($this->unwrapAll($node->getArgs()));
         $node->setAggOrder($this->unwrapAll($node->getAggOrder()));
 
-        if ($node->getAggFilter() !== null) {
-            $node->setAggFilter($this->unwrap($node->getAggFilter()));
+        if (($aggFilter = $node->getAggFilter()) !== null) {
+            $node->setAggFilter($this->unwrap($aggFilter));
         }
     }
 
     private function stripIndirection(A_Indirection $node): void
     {
-        if ($node->getArg() !== null) {
-            $node->setArg($this->unwrap($node->getArg()));
+        if (($arg = $node->getArg()) !== null) {
+            $node->setArg($this->unwrap($arg));
         }
     }
 
@@ -165,22 +165,22 @@ final readonly class TypeCastStripper implements NodeModifier
 
     private function stripNamedArgExpr(NamedArgExpr $node): void
     {
-        if ($node->getArg() !== null) {
-            $node->setArg($this->unwrap($node->getArg()));
+        if (($arg = $node->getArg()) !== null) {
+            $node->setArg($this->unwrap($arg));
         }
     }
 
     private function stripNullTest(NullTest $node): void
     {
-        if ($node->getArg() !== null) {
-            $node->setArg($this->unwrap($node->getArg()));
+        if (($arg = $node->getArg()) !== null) {
+            $node->setArg($this->unwrap($arg));
         }
     }
 
     private function stripResTarget(ResTarget $node): void
     {
-        if ($node->getVal() !== null) {
-            $node->setVal($this->unwrap($node->getVal()));
+        if (($val = $node->getVal()) !== null) {
+            $node->setVal($this->unwrap($val));
         }
     }
 
@@ -191,8 +191,8 @@ final readonly class TypeCastStripper implements NodeModifier
 
     private function stripSubLink(SubLink $node): void
     {
-        if ($node->getTestexpr() !== null) {
-            $node->setTestexpr($this->unwrap($node->getTestexpr()));
+        if (($testexpr = $node->getTestexpr()) !== null) {
+            $node->setTestexpr($this->unwrap($testexpr));
         }
     }
 

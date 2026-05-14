@@ -261,9 +261,7 @@ final readonly class AlterSequenceBuilder implements AlterSequenceNameStep, Alte
         $boolean = new Boolean();
         $boolean->setBoolval($value);
 
-        $argNode = new Node();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says bool but actually expects Boolean) */
-        $argNode->setBoolean($boolean);
+        $argNode = new Node(['boolean' => $boolean]);
 
         return $this->withOption($name, $argNode);
     }
@@ -273,9 +271,7 @@ final readonly class AlterSequenceBuilder implements AlterSequenceNameStep, Alte
         $integer = new Integer();
         $integer->setIval($value);
 
-        $argNode = new Node();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $argNode->setInteger($integer);
+        $argNode = new Node(['integer' => $integer]);
 
         return $this->withOption($name, $argNode);
     }

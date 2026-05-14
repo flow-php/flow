@@ -53,6 +53,9 @@ final class PgSqlCursor implements Cursor
         return $this->iterate();
     }
 
+    /**
+     * @return \Generator<int, array<string, mixed>>
+     */
     public function iterate(): \Generator
     {
         while (($row = $this->next()) !== null) {
@@ -99,13 +102,14 @@ final class PgSqlCursor implements Cursor
             return [];
         }
 
+        $result = $this->result;
         $meta = [];
-        $count = \pg_num_fields($this->result);
+        $count = \pg_num_fields($result);
 
         for ($i = 0; $i < $count; $i++) {
             $meta[] = [
-                'name' => \pg_field_name($this->result, $i),
-                'type' => \pg_field_type($this->result, $i),
+                'name' => \pg_field_name($result, $i),
+                'type' => \pg_field_type($result, $i),
             ];
         }
 

@@ -400,9 +400,7 @@ final readonly class VacuumBuilder implements VacuumFinalStep
         $int = new Integer();
         $int->setIval($value);
 
-        $intNode = new Node();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $intNode->setInteger($int);
+        $intNode = new Node(['integer' => $int]);
         $defElem->setArg($intNode);
 
         $node = new Node();

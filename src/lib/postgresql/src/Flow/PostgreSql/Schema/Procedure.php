@@ -32,8 +32,8 @@ final readonly class Procedure
     {
         return new self(
             name: $data['name'],
-            argumentTypes: $data['argument_types'] ?? [],
-            language: $data['language'] ?? 'sql',
+            argumentTypes: $data['argument_types'],
+            language: $data['language'],
             definition: $data['definition'] ?? null,
         );
     }

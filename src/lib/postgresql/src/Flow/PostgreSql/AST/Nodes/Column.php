@@ -16,7 +16,7 @@ final readonly class Column
     {
         $fields = $this->columnRef->getFields();
 
-        if ($fields === null || \count($fields) === 0) {
+        if (\count($fields) === 0) {
             return null;
         }
 
@@ -47,7 +47,7 @@ final readonly class Column
     {
         $fields = $this->columnRef->getFields();
 
-        if ($fields === null || \count($fields) <= 1) {
+        if (\count($fields) <= 1) {
             return null;
         }
 

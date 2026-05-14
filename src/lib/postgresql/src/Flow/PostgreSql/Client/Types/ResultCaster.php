@@ -51,7 +51,7 @@ final readonly class ResultCaster
             'Infinity' => \INF,
             '-Infinity' => -\INF,
             'NaN' => \NAN,
-            default => (float) $value,
+            default => \floatval($value),
         };
     }
 }

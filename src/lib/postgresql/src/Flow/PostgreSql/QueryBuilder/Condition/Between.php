@@ -70,7 +70,7 @@ final readonly class Between implements Condition
 
         $items = $list->getItems();
 
-        if ($items === null || $items->count() !== 2) {
+        if ($items->count() !== 2) {
             throw InvalidAstException::invalidFieldValue(
                 'rexpr',
                 'A_Expr',

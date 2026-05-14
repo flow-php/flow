@@ -270,25 +270,23 @@ final class PgSqlClientTest extends PostgreSqlTestCase
 
     public function test_fetch_scalar_returns_null_when_no_rows(): void
     {
-        $value = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(literal(1))->where(is_true(literal(false))));
-
-        static::assertNull($value);
+        static::assertNull(
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalar(select(literal(1))->where(is_true(literal(false)))),
+        );
     }
 
     public function test_fetch_scalar_returns_single_value(): void
     {
-        $value = $this
+        static::assertSame(42, $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(
+            ->fetchScalarInt(
                 select(binary_expr(cast(param(1), column_type_integer()), '+', cast(param(2), column_type_integer()))),
                 ['10', '32'],
-            );
-
-        static::assertSame(42, $value);
+            ));
     }
 
     public function test_fetch_scalar_string_returns_string(): void

@@ -11,8 +11,11 @@ use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\TypeName;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
+use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_string;
+
 /**
- * @phpstan-type ColumnTypeShape = array{name: string, schema: ?string, precision: ?int, scale: ?int, is_array: bool}
+ * @phpstan-type ColumnTypeShape = array{name: string, schema?: ?string, precision?: ?int, scale?: ?int, is_array?: bool}
  */
 final readonly class ColumnType
 {
@@ -84,11 +87,15 @@ final readonly class ColumnType
      */
     public static function fromArray(array $data): self
     {
+        $schema = $data['schema'] ?? null;
+        $precision = $data['precision'] ?? null;
+        $scale = $data['scale'] ?? null;
+
         return new self(
-            name: $data['name'],
-            schema: $data['schema'] ?? null,
-            precision: $data['precision'] ?? null,
-            scale: $data['scale'] ?? null,
+            name: type_string()->assert($data['name']),
+            schema: \is_string($schema) ? $schema : null,
+            precision: \is_int($precision) ? $precision : null,
+            scale: \is_int($scale) ? $scale : null,
             isArray: $data['is_array'] ?? false,
         );
     }
@@ -97,7 +104,7 @@ final readonly class ColumnType
     {
         $namesNodes = $typeName->getNames();
 
-        if ($namesNodes === null || \count($namesNodes) === 0) {
+        if (\count($namesNodes) === 0) {
             throw InvalidAstException::missingRequiredField('names', 'TypeName');
         }
 
@@ -123,12 +130,8 @@ final readonly class ColumnType
             $aConst = $typmodNode->getAConst();
 
             if ($aConst !== null) {
-                $ival = $aConst->getIval();
-
-                if ($ival !== null) {
-                    /** @phpstan-ignore method.nonObject (protobuf PHPDoc says int but getIval() actually returns Integer object) */
-                    $typmods[] = $ival->getIval();
-                }
+                $ival = type_instance_of(Integer::class)->assert($aConst->getIval());
+                $typmods[] = $ival->getIval();
             }
         }
 
@@ -155,7 +158,7 @@ final readonly class ColumnType
             }
         }
 
-        return new self($name, $schema, $typmods[0] ?? null, $typmods[1] ?? null, $isArray);
+        return new self(type_string()->assert($name), $schema, $typmods[0] ?? null, $typmods[1] ?? null, $isArray);
     }
 
     public static function inet(): self
@@ -304,11 +307,10 @@ final readonly class ColumnType
 
     private function createIntegerConstNode(int $value): Node
     {
-        $aConst = new A_Const();
         $ival = new Integer();
         $ival->setIval($value);
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $aConst->setIval($ival);
+
+        $aConst = new A_Const(['ival' => $ival]);
 
         $node = new Node();
         $node->setAConst($aConst);

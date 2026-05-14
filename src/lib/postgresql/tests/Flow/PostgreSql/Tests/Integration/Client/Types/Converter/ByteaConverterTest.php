@@ -54,7 +54,7 @@ final class ByteaConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(literal('\\x00010203'), column_type_bytea())->as('val'))->toSql());
+            ->fetchScalarString(select(cast(literal('\\x00010203'), column_type_bytea())->as('val'))->toSql());
 
         static::assertSame("\x00\x01\x02\x03", $result);
     }
@@ -64,7 +64,9 @@ final class ByteaConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(literal('\\x7465737400646174610a'), column_type_bytea())->as('val'))->toSql());
+            ->fetchScalarString(
+                select(cast(literal('\\x7465737400646174610a'), column_type_bytea())->as('val'))->toSql(),
+            );
 
         static::assertSame("test\x00data\x0a", $result);
     }
@@ -75,7 +77,7 @@ final class ByteaConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(literal('\\x' . $hexInput), column_type_bytea())->as('val'))->toSql());
+            ->fetchScalarString(select(cast(literal('\\x' . $hexInput), column_type_bytea())->as('val'))->toSql());
 
         static::assertSame($expected, $result);
     }
@@ -86,7 +88,7 @@ final class ByteaConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_bytea())->as('val'))->toSql(), [$input]);
+            ->fetchScalarString(select(cast(param(1), column_type_bytea())->as('val'))->toSql(), [$input]);
 
         static::assertSame($expected, $result);
     }
@@ -98,19 +100,19 @@ final class ByteaConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_bytea())->as('val'))->toSql(), [$data]);
+            ->fetchScalarString(select(cast(param(1), column_type_bytea())->as('val'))->toSql(), [$data]);
 
         static::assertSame($data, $result);
     }
 
     public function test_null_bytea(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal(null), column_type_bytea())->as('val'))->toSql());
-
-        static::assertNull($result);
+        static::assertNull(
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalar(select(cast(literal(null), column_type_bytea())->as('val'))->toSql()),
+        );
     }
 
     #[DataProvider('provide_typed_bytea_binary_values')]
@@ -119,7 +121,7 @@ final class ByteaConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_bytea())->as('val'))->toSql(), [typed(
+            ->fetchScalarString(select(cast(param(1), column_type_bytea())->as('val'))->toSql(), [typed(
                 $input,
                 ValueType::BYTEA,
             )]);

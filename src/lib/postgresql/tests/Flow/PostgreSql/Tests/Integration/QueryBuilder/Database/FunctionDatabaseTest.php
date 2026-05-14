@@ -330,6 +330,6 @@ final class FunctionDatabaseTest extends PostgreSqlTestCase
                     ->toSql(),
             );
 
-        return $row['cnt'] > 0;
+        return (int) $row['cnt'] > 0;
     }
 }

@@ -25,18 +25,19 @@ final class BoolArrayConverter implements ValueConverter
             return '{}';
         }
 
-        $elements = [];
+        return '{' . \implode(',', \array_map(self::encodeElement(...), $value)) . '}';
+    }
 
-        foreach ($value as $v) {
-            if ($v === null) {
-                $elements[] = 'NULL';
-            } elseif (\is_bool($v)) {
-                $elements[] = $v ? 't' : 'f';
-            } else {
-                throw ValueConversionException::cannotConvert($v, 'boolean array element');
-            }
+    private static function encodeElement(mixed $element): string
+    {
+        if ($element === null) {
+            return 'NULL';
         }
 
-        return '{' . \implode(',', $elements) . '}';
+        if (\is_bool($element)) {
+            return $element ? 't' : 'f';
+        }
+
+        throw ValueConversionException::cannotConvert($element, 'boolean array element');
     }
 }

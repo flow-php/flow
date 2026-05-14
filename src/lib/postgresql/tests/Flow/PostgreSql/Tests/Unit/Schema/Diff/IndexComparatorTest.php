@@ -39,6 +39,7 @@ final class IndexComparatorTest extends TestCase
 
         static::assertCount(0, $result->added);
         static::assertCount(1, $result->removed);
+        static::assertNotNull($result->renamed);
         static::assertCount(1, $result->renamed);
     }
 
@@ -154,6 +155,7 @@ final class IndexComparatorTest extends TestCase
 
         static::assertSame([], $result->added);
         static::assertSame([], $result->removed);
+        static::assertNotNull($result->renamed);
         static::assertCount(1, $result->renamed);
         static::assertArrayHasKey('idx_old', $result->renamed);
         static::assertSame('idx_new', $result->renamed['idx_old']->name);

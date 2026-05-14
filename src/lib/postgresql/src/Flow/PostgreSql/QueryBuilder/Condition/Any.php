@@ -54,7 +54,7 @@ final readonly class Any implements Condition
 
             $operNames = $subLink->getOperName();
 
-            if ($operNames === null || $operNames->count() === 0) {
+            if ($operNames->count() === 0) {
                 throw InvalidAstException::missingRequiredField('oper_name', 'SubLink');
             }
 
@@ -113,7 +113,7 @@ final readonly class Any implements Condition
 
             $nameNodes = $aExpr->getName();
 
-            if ($nameNodes === null || $nameNodes->count() === 0) {
+            if ($nameNodes->count() === 0) {
                 throw InvalidAstException::missingRequiredField('name', 'A_Expr');
             }
 

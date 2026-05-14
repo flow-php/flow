@@ -527,7 +527,7 @@ final class InsertBuilderTest extends TestCase
 
         static::assertInstanceOf(InsertStmt::class, $ast);
         $cols = $ast->getCols();
-        static::assertTrue($cols === null || \count($cols) === 0);
+        static::assertTrue(\count($cols) === 0);
     }
 
     public function test_insert_without_explicit_columns(): void
@@ -540,7 +540,7 @@ final class InsertBuilderTest extends TestCase
 
         static::assertInstanceOf(InsertStmt::class, $ast);
         $cols = $ast->getCols();
-        static::assertTrue($cols === null || \count($cols) === 0);
+        static::assertTrue(\count($cols) === 0);
         static::assertNotNull($ast->getSelectStmt());
     }
 
@@ -634,8 +634,9 @@ final class InsertBuilderTest extends TestCase
 
         $restoredAst = $restored->toAst();
 
-        static::assertNotNull($restoredAst->getOnConflictClause());
-        static::assertNotNull($restoredAst->getOnConflictClause()->getTargetList());
+        $onConflict = $restoredAst->getOnConflictClause();
+        static::assertNotNull($onConflict);
+        static::assertNotNull($onConflict->getTargetList());
     }
 
     public function test_round_trip_with_returning(): void
@@ -691,8 +692,9 @@ final class InsertBuilderTest extends TestCase
 
         $restoredAst = $restored->toAst();
 
-        static::assertNotNull($restoredAst->getOnConflictClause());
-        static::assertNotNull($restoredAst->getOnConflictClause()->getWhereClause());
+        $onConflict = $restoredAst->getOnConflictClause();
+        static::assertNotNull($onConflict);
+        static::assertNotNull($onConflict->getWhereClause());
     }
 
     public function test_simple_insert(): void
@@ -705,8 +707,9 @@ final class InsertBuilderTest extends TestCase
         $ast = $query->toAst();
 
         static::assertInstanceOf(InsertStmt::class, $ast);
-        static::assertNotNull($ast->getRelation());
-        static::assertSame('users', $ast->getRelation()->getRelname());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertSame('users', $relation->getRelname());
         static::assertNotNull($ast->getCols());
         static::assertCount(2, $ast->getCols());
         static::assertNotNull($ast->getSelectStmt());

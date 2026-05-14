@@ -301,16 +301,23 @@ function constructor_mapper(string $class): ConstructorMapper
 
 /**
  * @template TType
- * @template TNext = TType
+ * @template TOut
  *
  * @param FlowType<TType> $type
- * @param null|RowMapper<TNext> $next
+ * @param null|RowMapper<TOut> $next
  *
- * @return TypeMapper<TType, TNext>
+ * @return ($next is null ? TypeMapper<TType, TType> : TypeMapper<TType, TOut>)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function type_mapper(FlowType $type, ?RowMapper $next = null): TypeMapper
 {
+    if ($next === null) {
+        // Mago 1.26+ already infers TypeMapper<TType, TType> from the conditional
+        // @return tag, but PHPStan needs this @var to bind the second template.
+        /** @var TypeMapper<TType, TType> */
+        return new TypeMapper($type);
+    }
+
     return new TypeMapper($type, $next);
 }
 

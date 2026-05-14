@@ -77,6 +77,8 @@ final class SessionBuilderTest extends TestCase
 
         $aConst = $args[0]->getAConst();
         static::assertNotNull($aConst);
-        static::assertSame('admin', $aConst->getSval()->getSval());
+        $sval = $aConst->getSval();
+        static::assertNotNull($sval);
+        static::assertSame('admin', $sval->getSval());
     }
 }

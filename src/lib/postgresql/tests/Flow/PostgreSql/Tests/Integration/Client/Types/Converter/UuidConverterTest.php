@@ -29,26 +29,23 @@ final class UuidConverterTest extends PostgreSqlTestCase
 
     public function test_gen_random_uuid(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(func('gen_random_uuid')->as('val'))->toSql());
-
-        static::assertIsString($result);
         static::assertMatchesRegularExpression(
             '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i',
-            $result,
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalarString(select(func('gen_random_uuid')->as('val'))->toSql()),
         );
     }
 
     public function test_null_uuid(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal(null), column_type_uuid())->as('val'))->toSql());
-
-        static::assertNull($result);
+        static::assertNull(
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalar(select(cast(literal(null), column_type_uuid())->as('val'))->toSql()),
+        );
     }
 
     #[DataProvider('provide_uuid_strings')]
@@ -57,9 +54,8 @@ final class UuidConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_uuid())->as('val'))->toSql(), [$input]);
+            ->fetchScalarString(select(cast(param(1), column_type_uuid())->as('val'))->toSql(), [$input]);
 
-        static::assertIsString($result);
         static::assertSame(\strtolower($input), $result);
     }
 }

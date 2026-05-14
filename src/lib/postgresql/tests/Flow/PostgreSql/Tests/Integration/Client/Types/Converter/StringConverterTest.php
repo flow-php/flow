@@ -57,19 +57,19 @@ final class StringConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_char(10))->as('val'))->toSql(), [$input]);
+            ->fetchScalarString(select(cast(param(1), column_type_char(10))->as('val'))->toSql(), [$input]);
 
         static::assertSame($expected, $result);
     }
 
     public function test_null_text(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal(null), column_type_text())->as('val'))->toSql());
-
-        static::assertNull($result);
+        static::assertNull(
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalar(select(cast(literal(null), column_type_text())->as('val'))->toSql()),
+        );
     }
 
     #[DataProvider('provide_text_values')]
@@ -78,7 +78,7 @@ final class StringConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_text())->as('val'))->toSql(), [$input]);
+            ->fetchScalarString(select(cast(param(1), column_type_text())->as('val'))->toSql(), [$input]);
 
         static::assertSame($expected, $result);
     }
@@ -89,7 +89,7 @@ final class StringConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_varchar(255))->as('val'))->toSql(), [$input]);
+            ->fetchScalarString(select(cast(param(1), column_type_varchar(255))->as('val'))->toSql(), [$input]);
 
         static::assertSame($expected, $result);
     }

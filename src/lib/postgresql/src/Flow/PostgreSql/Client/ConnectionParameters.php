@@ -54,6 +54,7 @@ final readonly class ConnectionParameters
     public static function fromString(#[\SensitiveParameter] string $connectionString): self
     {
         $parts = [];
+        $matches = [];
         $pattern = '/(\w+)=(?:\'([^\']*)\'|([^\s]*))/';
         \preg_match_all($pattern, $connectionString, $matches, \PREG_SET_ORDER);
 

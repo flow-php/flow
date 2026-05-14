@@ -254,7 +254,9 @@ final readonly class TableDiff implements Diff
         }
 
         foreach ($this->addedExcludeConstraints as $ec) {
-            if ($ec->name === null) {
+            $ecName = $ec->name;
+
+            if ($ecName === null) {
                 throw new \RuntimeException(\sprintf(
                     'Cannot add unnamed exclude constraint on table "%s". Constraint names are required for reversible migrations.',
                     $qualifiedName,
@@ -263,7 +265,7 @@ final readonly class TableDiff implements Diff
 
             $expressionParser = new ExpressionParser();
             $parsed = (new ExcludeDefinitionParser($expressionParser))->parse($ec->definition);
-            $constraint = ExcludeConstraintBuilder::create($parsed->accessMethod)->name($ec->name);
+            $constraint = ExcludeConstraintBuilder::create($parsed->accessMethod)->name($ecName);
 
             foreach ($parsed->elements as $element) {
                 $constraint = $constraint->element(

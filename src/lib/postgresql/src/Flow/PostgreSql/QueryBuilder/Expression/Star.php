@@ -40,7 +40,7 @@ final readonly class Star implements Expression
         if ($columnRef !== null) {
             $fields = $columnRef->getFields();
 
-            if ($fields === null || \count($fields) === 0) {
+            if (\count($fields) === 0) {
                 throw InvalidAstException::missingRequiredField('fields', 'ColumnRef');
             }
 

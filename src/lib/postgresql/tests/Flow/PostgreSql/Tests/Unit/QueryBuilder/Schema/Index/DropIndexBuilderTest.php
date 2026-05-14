@@ -6,9 +6,12 @@ namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\Index;
 
 use Flow\PostgreSql\Protobuf\AST\DropBehavior;
 use Flow\PostgreSql\Protobuf\AST\DropStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\QueryBuilder\Schema\Index\DropIndex\DropIndexBuilder;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\Types\DSL\type_instance_of;
 
 final class DropIndexBuilderTest extends TestCase
 {
@@ -100,8 +103,15 @@ final class DropIndexBuilderTest extends TestCase
 
         static::assertInstanceOf(DropStmt::class, $ast);
         static::assertCount(1, $ast->getObjects());
-        static::assertCount(2, $ast->getObjects()[0]->getList()->getItems());
-        static::assertSame('public', $ast->getObjects()[0]->getList()->getItems()[0]->getString()->getSval());
-        static::assertSame('idx_users_email', $ast->getObjects()[0]->getList()->getItems()[1]->getString()->getSval());
+        $list = $ast->getObjects()[0]->getList();
+        static::assertNotNull($list);
+        $items = $list->getItems();
+        static::assertCount(2, $items);
+        $schema = type_instance_of(Node::class)->assert($items[0])->getString();
+        static::assertNotNull($schema);
+        $index = type_instance_of(Node::class)->assert($items[1])->getString();
+        static::assertNotNull($index);
+        static::assertSame('public', $schema->getSval());
+        static::assertSame('idx_users_email', $index->getSval());
     }
 }

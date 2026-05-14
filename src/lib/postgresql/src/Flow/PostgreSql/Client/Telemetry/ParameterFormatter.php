@@ -58,9 +58,6 @@ final readonly class ParameterFormatter
 
     /**
      * Format a parameter value with optional length truncation.
-     *
-     * @param mixed $value The value to format
-     * @param null|int $maxLength Maximum length (null = unlimited)
      */
     public function format(mixed $value, ?int $maxLength = null): string
     {
@@ -71,5 +68,27 @@ final readonly class ParameterFormatter
         }
 
         return $result;
+    }
+
+    /**
+     * Format a positional parameter list as DB_QUERY_PARAMETER_* span attributes.
+     *
+     * @param list<mixed> $parameters
+     *
+     * @return array<string, string>
+     */
+    public function formatList(array $parameters, ?int $maxParameters, ?int $maxLength): array
+    {
+        $slice = $maxParameters === null ? $parameters : \array_slice($parameters, 0, $maxParameters);
+
+        return \array_combine(
+            \array_map(
+                static fn(int $index): string => (
+                    PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . ($index + 1)
+                ),
+                \array_keys($slice),
+            ),
+            \array_map(fn(mixed $value): string => $this->format($value, $maxLength), $slice),
+        );
     }
 }

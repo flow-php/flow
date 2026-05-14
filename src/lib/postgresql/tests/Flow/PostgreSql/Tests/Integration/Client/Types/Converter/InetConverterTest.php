@@ -35,7 +35,7 @@ final class InetConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_inet())->as('val'))->toSql(), [typed(
+            ->fetchScalarString(select(cast(param(1), column_type_inet())->as('val'))->toSql(), [typed(
                 $input,
                 ValueType::INET,
             )]);
@@ -45,11 +45,11 @@ final class InetConverterTest extends PostgreSqlTestCase
 
     public function test_null_inet(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal(null), column_type_inet())->as('val'))->toSql());
-
-        static::assertNull($result);
+        static::assertNull(
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalar(select(cast(literal(null), column_type_inet())->as('val'))->toSql()),
+        );
     }
 }

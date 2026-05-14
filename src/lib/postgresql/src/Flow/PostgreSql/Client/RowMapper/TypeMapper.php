@@ -16,15 +16,15 @@ use Flow\Types\Type;
  * return value becomes the mapper's output.
  *
  * @template TType
- * @template TNext = TType
+ * @template TOut
  *
- * @implements RowMapper<TNext>
+ * @implements RowMapper<TOut>
  */
 final readonly class TypeMapper implements RowMapper
 {
     /**
      * @param Type<TType> $type
-     * @param null|RowMapper<TNext> $next
+     * @param null|RowMapper<TOut> $next
      */
     public function __construct(
         private Type $type,
@@ -40,7 +40,7 @@ final readonly class TypeMapper implements RowMapper
         }
 
         if ($this->next === null) {
-            /** @var TNext $result */
+            /** @var TOut $result */
             return $result;
         }
 

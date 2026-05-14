@@ -11,6 +11,8 @@ use Flow\PostgreSql\Protobuf\AST\RawStmt;
 
 trait AstToSql
 {
+    abstract public function toAst(): object;
+
     public function toSql(): string
     {
         return self::deparseAst($this->toAst());

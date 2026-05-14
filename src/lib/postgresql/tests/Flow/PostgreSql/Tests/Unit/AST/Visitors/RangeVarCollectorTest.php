@@ -92,10 +92,12 @@ final class RangeVarCollectorTest extends TestCase
         $traverser = new Traverser($collector);
         $traverser->traverse($this->parseQuery('SELECT * FROM users AS u'));
 
-        static::assertCount(1, $collector->getRangeVars());
-        static::assertSame('users', $collector->getRangeVars()[0]->getRelname());
-        static::assertNotNull($collector->getRangeVars()[0]->getAlias());
-        static::assertSame('u', $collector->getRangeVars()[0]->getAlias()->getAliasname());
+        $rangeVars = $collector->getRangeVars();
+        static::assertCount(1, $rangeVars);
+        static::assertSame('users', $rangeVars[0]->getRelname());
+        $alias = $rangeVars[0]->getAlias();
+        static::assertNotNull($alias);
+        static::assertSame('u', $alias->getAliasname());
     }
 
     public function test_collects_table_with_schema(): void
@@ -165,7 +167,6 @@ final class RangeVarCollectorTest extends TestCase
 
     private function parseQuery(string $sql): ParseResult
     {
-        /** @var string $json */
         $json = \pg_query_parse($sql);
         $result = new ParseResult();
         $result->mergeFromJsonString($json);

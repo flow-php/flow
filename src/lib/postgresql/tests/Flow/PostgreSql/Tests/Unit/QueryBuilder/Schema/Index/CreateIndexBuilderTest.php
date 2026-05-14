@@ -108,7 +108,9 @@ final class CreateIndexBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(IndexStmt::class, $ast);
-        static::assertFalse($ast->getRelation()->getInh());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertFalse($relation->getInh());
     }
 
     public function test_on_sets_inh_to_true(): void
@@ -118,7 +120,9 @@ final class CreateIndexBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(IndexStmt::class, $ast);
-        static::assertTrue($ast->getRelation()->getInh());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertTrue($relation->getInh());
     }
 
     public function test_simple_create_index(): void
@@ -129,7 +133,9 @@ final class CreateIndexBuilderTest extends TestCase
 
         static::assertInstanceOf(IndexStmt::class, $ast);
         static::assertSame('idx_users_email', $ast->getIdxname());
-        static::assertSame('users', $ast->getRelation()->getRelname());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertSame('users', $relation->getRelname());
         static::assertCount(1, $ast->getIndexParams());
     }
 
@@ -176,7 +182,9 @@ final class CreateIndexBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(IndexStmt::class, $ast);
-        static::assertSame('public', $ast->getRelation()->getSchemaname());
-        static::assertSame('users', $ast->getRelation()->getRelname());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertSame('public', $relation->getSchemaname());
+        static::assertSame('users', $relation->getRelname());
     }
 }

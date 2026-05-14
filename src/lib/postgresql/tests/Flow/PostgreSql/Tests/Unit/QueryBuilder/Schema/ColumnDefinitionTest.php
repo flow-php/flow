@@ -48,7 +48,9 @@ final class ColumnDefinitionTest extends TestCase
 
         static::assertInstanceOf(ColumnDef::class, $ast);
         static::assertCount(1, $ast->getConstraints());
-        static::assertSame(ConstrType::CONSTR_CHECK, $ast->getConstraints()[0]->getConstraint()->getContype());
+        $constraint = $ast->getConstraints()[0]->getConstraint();
+        static::assertNotNull($constraint);
+        static::assertSame(ConstrType::CONSTR_CHECK, $constraint->getContype());
     }
 
     public function test_column_default_with_current_date(): void
@@ -59,7 +61,9 @@ final class ColumnDefinitionTest extends TestCase
 
         static::assertInstanceOf(ColumnDef::class, $ast);
         static::assertCount(1, $ast->getConstraints());
-        static::assertSame(ConstrType::CONSTR_DEFAULT, $ast->getConstraints()[0]->getConstraint()->getContype());
+        $constraint = $ast->getConstraints()[0]->getConstraint();
+        static::assertNotNull($constraint);
+        static::assertSame(ConstrType::CONSTR_DEFAULT, $constraint->getContype());
     }
 
     public function test_column_default_with_current_time(): void
@@ -70,7 +74,9 @@ final class ColumnDefinitionTest extends TestCase
 
         static::assertInstanceOf(ColumnDef::class, $ast);
         static::assertCount(1, $ast->getConstraints());
-        static::assertSame(ConstrType::CONSTR_DEFAULT, $ast->getConstraints()[0]->getConstraint()->getContype());
+        $constraint = $ast->getConstraints()[0]->getConstraint();
+        static::assertNotNull($constraint);
+        static::assertSame(ConstrType::CONSTR_DEFAULT, $constraint->getContype());
     }
 
     public function test_column_default_with_current_timestamp(): void
@@ -81,7 +87,9 @@ final class ColumnDefinitionTest extends TestCase
 
         static::assertInstanceOf(ColumnDef::class, $ast);
         static::assertCount(1, $ast->getConstraints());
-        static::assertSame(ConstrType::CONSTR_DEFAULT, $ast->getConstraints()[0]->getConstraint()->getContype());
+        $constraint = $ast->getConstraints()[0]->getConstraint();
+        static::assertNotNull($constraint);
+        static::assertSame(ConstrType::CONSTR_DEFAULT, $constraint->getContype());
     }
 
     public function test_column_default_with_expression(): void
@@ -94,7 +102,9 @@ final class ColumnDefinitionTest extends TestCase
 
         static::assertInstanceOf(ColumnDef::class, $ast);
         static::assertCount(1, $ast->getConstraints());
-        static::assertSame(ConstrType::CONSTR_DEFAULT, $ast->getConstraints()[0]->getConstraint()->getContype());
+        $constraint = $ast->getConstraints()[0]->getConstraint();
+        static::assertNotNull($constraint);
+        static::assertSame(ConstrType::CONSTR_DEFAULT, $constraint->getContype());
     }
 
     public function test_column_with_boolean_default_false(): void
@@ -105,7 +115,9 @@ final class ColumnDefinitionTest extends TestCase
 
         static::assertInstanceOf(ColumnDef::class, $ast);
         static::assertCount(1, $ast->getConstraints());
-        static::assertSame(ConstrType::CONSTR_DEFAULT, $ast->getConstraints()[0]->getConstraint()->getContype());
+        $constraint = $ast->getConstraints()[0]->getConstraint();
+        static::assertNotNull($constraint);
+        static::assertSame(ConstrType::CONSTR_DEFAULT, $constraint->getContype());
     }
 
     public function test_column_with_boolean_default_true(): void
@@ -116,7 +128,9 @@ final class ColumnDefinitionTest extends TestCase
 
         static::assertInstanceOf(ColumnDef::class, $ast);
         static::assertCount(1, $ast->getConstraints());
-        static::assertSame(ConstrType::CONSTR_DEFAULT, $ast->getConstraints()[0]->getConstraint()->getContype());
+        $constraint = $ast->getConstraints()[0]->getConstraint();
+        static::assertNotNull($constraint);
+        static::assertSame(ConstrType::CONSTR_DEFAULT, $constraint->getContype());
     }
 
     public function test_column_with_default_integer(): void
@@ -127,7 +141,9 @@ final class ColumnDefinitionTest extends TestCase
 
         static::assertInstanceOf(ColumnDef::class, $ast);
         static::assertCount(1, $ast->getConstraints());
-        static::assertSame(ConstrType::CONSTR_DEFAULT, $ast->getConstraints()[0]->getConstraint()->getContype());
+        $constraint = $ast->getConstraints()[0]->getConstraint();
+        static::assertNotNull($constraint);
+        static::assertSame(ConstrType::CONSTR_DEFAULT, $constraint->getContype());
     }
 
     public function test_column_with_default_null(): void
@@ -138,7 +154,9 @@ final class ColumnDefinitionTest extends TestCase
 
         static::assertInstanceOf(ColumnDef::class, $ast);
         static::assertCount(1, $ast->getConstraints());
-        static::assertSame(ConstrType::CONSTR_DEFAULT, $ast->getConstraints()[0]->getConstraint()->getContype());
+        $constraint = $ast->getConstraints()[0]->getConstraint();
+        static::assertNotNull($constraint);
+        static::assertSame(ConstrType::CONSTR_DEFAULT, $constraint->getContype());
     }
 
     public function test_column_with_default_raw_expression(): void
@@ -149,7 +167,9 @@ final class ColumnDefinitionTest extends TestCase
 
         static::assertInstanceOf(ColumnDef::class, $ast);
         static::assertCount(1, $ast->getConstraints());
-        static::assertSame(ConstrType::CONSTR_DEFAULT, $ast->getConstraints()[0]->getConstraint()->getContype());
+        $constraint = $ast->getConstraints()[0]->getConstraint();
+        static::assertNotNull($constraint);
+        static::assertSame(ConstrType::CONSTR_DEFAULT, $constraint->getContype());
     }
 
     public function test_column_with_default_string(): void
@@ -160,7 +180,9 @@ final class ColumnDefinitionTest extends TestCase
 
         static::assertInstanceOf(ColumnDef::class, $ast);
         static::assertCount(1, $ast->getConstraints());
-        static::assertSame(ConstrType::CONSTR_DEFAULT, $ast->getConstraints()[0]->getConstraint()->getContype());
+        $constraint = $ast->getConstraints()[0]->getConstraint();
+        static::assertNotNull($constraint);
+        static::assertSame(ConstrType::CONSTR_DEFAULT, $constraint->getContype());
     }
 
     public function test_generated_column(): void
@@ -176,7 +198,9 @@ final class ColumnDefinitionTest extends TestCase
         static::assertInstanceOf(ColumnDef::class, $ast);
         static::assertSame('s', $ast->getGenerated());
         static::assertCount(1, $ast->getConstraints());
-        static::assertSame(ConstrType::CONSTR_GENERATED, $ast->getConstraints()[0]->getConstraint()->getContype());
+        $constraint = $ast->getConstraints()[0]->getConstraint();
+        static::assertNotNull($constraint);
+        static::assertSame(ConstrType::CONSTR_GENERATED, $constraint->getContype());
     }
 
     public function test_identity_always(): void
@@ -189,8 +213,10 @@ final class ColumnDefinitionTest extends TestCase
 
         $constraints = $ast->getConstraints();
         static::assertCount(1, $constraints);
-        static::assertSame(ConstrType::CONSTR_IDENTITY, $constraints[0]->getConstraint()->getContype());
-        static::assertSame('a', $constraints[0]->getConstraint()->getGeneratedWhen());
+        $constraint = $constraints[0]->getConstraint();
+        static::assertNotNull($constraint);
+        static::assertSame(ConstrType::CONSTR_IDENTITY, $constraint->getContype());
+        static::assertSame('a', $constraint->getGeneratedWhen());
     }
 
     public function test_identity_by_default(): void
@@ -203,8 +229,10 @@ final class ColumnDefinitionTest extends TestCase
 
         $constraints = $ast->getConstraints();
         static::assertCount(1, $constraints);
-        static::assertSame(ConstrType::CONSTR_IDENTITY, $constraints[0]->getConstraint()->getContype());
-        static::assertSame('d', $constraints[0]->getConstraint()->getGeneratedWhen());
+        $constraint = $constraints[0]->getConstraint();
+        static::assertNotNull($constraint);
+        static::assertSame(ConstrType::CONSTR_IDENTITY, $constraint->getContype());
+        static::assertSame('d', $constraint->getGeneratedWhen());
     }
 
     public function test_immutability(): void
@@ -215,10 +243,9 @@ final class ColumnDefinitionTest extends TestCase
         static::assertNotSame($original, $modified);
         static::assertCount(0, $original->toAst()->getConstraints());
         static::assertCount(1, $modified->toAst()->getConstraints());
-        static::assertSame(
-            ConstrType::CONSTR_NOTNULL,
-            $modified->toAst()->getConstraints()[0]->getConstraint()->getContype(),
-        );
+        $constraint = $modified->toAst()->getConstraints()[0]->getConstraint();
+        static::assertNotNull($constraint);
+        static::assertSame(ConstrType::CONSTR_NOTNULL, $constraint->getContype());
     }
 
     public function test_multiple_constraints(): void
@@ -229,8 +256,12 @@ final class ColumnDefinitionTest extends TestCase
 
         static::assertInstanceOf(ColumnDef::class, $ast);
         static::assertCount(2, $ast->getConstraints());
-        static::assertSame(ConstrType::CONSTR_NOTNULL, $ast->getConstraints()[0]->getConstraint()->getContype());
-        static::assertSame(ConstrType::CONSTR_PRIMARY, $ast->getConstraints()[1]->getConstraint()->getContype());
+        $notNullConstraint = $ast->getConstraints()[0]->getConstraint();
+        static::assertNotNull($notNullConstraint);
+        static::assertSame(ConstrType::CONSTR_NOTNULL, $notNullConstraint->getContype());
+        $primaryConstraint = $ast->getConstraints()[1]->getConstraint();
+        static::assertNotNull($primaryConstraint);
+        static::assertSame(ConstrType::CONSTR_PRIMARY, $primaryConstraint->getContype());
     }
 
     public function test_not_null_column(): void
@@ -241,7 +272,9 @@ final class ColumnDefinitionTest extends TestCase
 
         static::assertInstanceOf(ColumnDef::class, $ast);
         static::assertCount(1, $ast->getConstraints());
-        static::assertSame(ConstrType::CONSTR_NOTNULL, $ast->getConstraints()[0]->getConstraint()->getContype());
+        $constraint = $ast->getConstraints()[0]->getConstraint();
+        static::assertNotNull($constraint);
+        static::assertSame(ConstrType::CONSTR_NOTNULL, $constraint->getContype());
     }
 
     public function test_nullable_column(): void
@@ -262,7 +295,9 @@ final class ColumnDefinitionTest extends TestCase
 
         static::assertInstanceOf(ColumnDef::class, $ast);
         static::assertCount(1, $ast->getConstraints());
-        static::assertSame(ConstrType::CONSTR_PRIMARY, $ast->getConstraints()[0]->getConstraint()->getContype());
+        $constraint = $ast->getConstraints()[0]->getConstraint();
+        static::assertNotNull($constraint);
+        static::assertSame(ConstrType::CONSTR_PRIMARY, $constraint->getContype());
     }
 
     public function test_references_constraint(): void
@@ -274,8 +309,11 @@ final class ColumnDefinitionTest extends TestCase
         static::assertInstanceOf(ColumnDef::class, $ast);
         static::assertCount(1, $ast->getConstraints());
         $constraint = $ast->getConstraints()[0]->getConstraint();
+        static::assertNotNull($constraint);
         static::assertSame(ConstrType::CONSTR_FOREIGN, $constraint->getContype());
-        static::assertSame('users', $constraint->getPktable()->getRelname());
+        $pktable = $constraint->getPktable();
+        static::assertNotNull($pktable);
+        static::assertSame('users', $pktable->getRelname());
     }
 
     public function test_references_with_schema(): void
@@ -286,8 +324,11 @@ final class ColumnDefinitionTest extends TestCase
 
         static::assertInstanceOf(ColumnDef::class, $ast);
         $constraint = $ast->getConstraints()[0]->getConstraint();
-        static::assertSame('public', $constraint->getPktable()->getSchemaname());
-        static::assertSame('users', $constraint->getPktable()->getRelname());
+        static::assertNotNull($constraint);
+        $pktable = $constraint->getPktable();
+        static::assertNotNull($pktable);
+        static::assertSame('public', $pktable->getSchemaname());
+        static::assertSame('users', $pktable->getRelname());
     }
 
     public function test_unique_constraint(): void
@@ -298,6 +339,8 @@ final class ColumnDefinitionTest extends TestCase
 
         static::assertInstanceOf(ColumnDef::class, $ast);
         static::assertCount(1, $ast->getConstraints());
-        static::assertSame(ConstrType::CONSTR_UNIQUE, $ast->getConstraints()[0]->getConstraint()->getContype());
+        $constraint = $ast->getConstraints()[0]->getConstraint();
+        static::assertNotNull($constraint);
+        static::assertSame(ConstrType::CONSTR_UNIQUE, $constraint->getContype());
     }
 }

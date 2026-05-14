@@ -25,11 +25,7 @@ final readonly class View
      */
     public static function fromArray(array $data): self
     {
-        return new self(
-            name: $data['name'],
-            definition: $data['definition'],
-            isUpdatable: $data['is_updatable'] ?? false,
-        );
+        return new self(name: $data['name'], definition: $data['definition'], isUpdatable: $data['is_updatable']);
     }
 
     /**

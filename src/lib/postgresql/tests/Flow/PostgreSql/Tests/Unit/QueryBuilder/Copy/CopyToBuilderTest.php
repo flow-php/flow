@@ -309,16 +309,24 @@ final class CopyToBuilderTest extends TestCase
 
     public function test_to_ast_without_destination_throws_exception(): void
     {
+        $builder = CopyToBuilder::create()->table('users');
+        static::assertInstanceOf(CopyToBuilder::class, $builder);
+
         $this->expectException(InvalidExpressionException::class);
 
-        CopyToBuilder::create()->table('users')->toAst();
+        $builder->toAst();
     }
 
     public function test_to_ast_without_table_or_query_throws_exception(): void
     {
+        $builder = CopyToBuilder::create();
+        static::assertInstanceOf(CopyToBuilder::class, $builder);
+        $withFile = $builder->file('/tmp/users.csv');
+        static::assertInstanceOf(CopyToBuilder::class, $withFile);
+
         $this->expectException(InvalidExpressionException::class);
 
-        CopyToBuilder::create()->file('/tmp/users.csv')->toAst();
+        $withFile->toAst();
     }
 
     private function deparse(CopyStmt $copyStmt): string

@@ -8,10 +8,15 @@ use Flow\PostgreSql\Protobuf\AST\AlterObjectSchemaStmt;
 use Flow\PostgreSql\Protobuf\AST\AlterSeqStmt;
 use Flow\PostgreSql\Protobuf\AST\AlterTableStmt;
 use Flow\PostgreSql\Protobuf\AST\AlterTableType;
+use Flow\PostgreSql\Protobuf\AST\Boolean;
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\RenameStmt;
 use Flow\PostgreSql\QueryBuilder\Schema\AlterSequence\AlterSequenceBuilder;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\Types\DSL\type_instance_of;
 
 final class AlterSequenceBuilderTest extends TestCase
 {
@@ -35,7 +40,7 @@ final class AlterSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'as') {
+            if ($defElem !== null && $defElem->getDefname() === 'as') {
                 $optionFound = true;
                 static::assertTrue($defElem->hasArg());
             }
@@ -56,10 +61,12 @@ final class AlterSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'cache') {
+            if ($defElem !== null && $defElem->getDefname() === 'cache') {
                 $optionFound = true;
-                /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns int instead of Integer class) */
-                static::assertSame(20, $defElem->getArg()?->getInteger()?->getIval());
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $integer = type_instance_of(Integer::class)->assert($arg->getInteger());
+                static::assertSame(20, $integer->getIval());
             }
         }
         static::assertTrue($optionFound);
@@ -78,10 +85,12 @@ final class AlterSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'cycle') {
+            if ($defElem !== null && $defElem->getDefname() === 'cycle') {
                 $optionFound = true;
-                /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns bool instead of Boolean class) */
-                static::assertTrue($defElem->getArg()?->getBoolean()?->getBoolval());
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $boolean = type_instance_of(Boolean::class)->assert($arg->getBoolean());
+                static::assertTrue($boolean->getBoolval());
             }
         }
         static::assertTrue($optionFound);
@@ -111,10 +120,12 @@ final class AlterSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'increment') {
+            if ($defElem !== null && $defElem->getDefname() === 'increment') {
                 $optionFound = true;
-                /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns int instead of Integer class) */
-                static::assertSame(10, $defElem->getArg()?->getInteger()?->getIval());
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $integer = type_instance_of(Integer::class)->assert($arg->getInteger());
+                static::assertSame(10, $integer->getIval());
             }
         }
         static::assertTrue($optionFound);
@@ -133,10 +144,12 @@ final class AlterSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'maxvalue') {
+            if ($defElem !== null && $defElem->getDefname() === 'maxvalue') {
                 $optionFound = true;
-                /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns int instead of Integer class) */
-                static::assertSame(9999999, $defElem->getArg()?->getInteger()?->getIval());
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $integer = type_instance_of(Integer::class)->assert($arg->getInteger());
+                static::assertSame(9999999, $integer->getIval());
             }
         }
         static::assertTrue($optionFound);
@@ -155,10 +168,12 @@ final class AlterSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'minvalue') {
+            if ($defElem !== null && $defElem->getDefname() === 'minvalue') {
                 $optionFound = true;
-                /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns int instead of Integer class) */
-                static::assertSame(1, $defElem->getArg()?->getInteger()?->getIval());
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $integer = type_instance_of(Integer::class)->assert($arg->getInteger());
+                static::assertSame(1, $integer->getIval());
             }
         }
         static::assertTrue($optionFound);
@@ -177,10 +192,12 @@ final class AlterSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'cycle') {
+            if ($defElem !== null && $defElem->getDefname() === 'cycle') {
                 $optionFound = true;
-                /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns bool instead of Boolean class) */
-                static::assertFalse($defElem->getArg()?->getBoolean()?->getBoolval());
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $boolean = type_instance_of(Boolean::class)->assert($arg->getBoolean());
+                static::assertFalse($boolean->getBoolval());
             }
         }
         static::assertTrue($optionFound);
@@ -199,7 +216,7 @@ final class AlterSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'maxvalue') {
+            if ($defElem !== null && $defElem->getDefname() === 'maxvalue') {
                 $optionFound = true;
                 static::assertFalse($defElem->hasArg());
             }
@@ -220,7 +237,7 @@ final class AlterSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'minvalue') {
+            if ($defElem !== null && $defElem->getDefname() === 'minvalue') {
                 $optionFound = true;
                 static::assertFalse($defElem->hasArg());
             }
@@ -241,13 +258,18 @@ final class AlterSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'owned_by') {
+            if ($defElem !== null && $defElem->getDefname() === 'owned_by') {
                 $optionFound = true;
-                $list = $defElem->getArg()?->getList();
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $list = $arg->getList();
                 static::assertNotNull($list);
-                static::assertCount(2, $list->getItems());
-                static::assertSame('users', $list->getItems()[0]->getString()?->getSval());
-                static::assertSame('id', $list->getItems()[1]->getString()?->getSval());
+                $items = $list->getItems();
+                static::assertCount(2, $items);
+                $first = type_instance_of(Node::class)->assert($items[0]);
+                static::assertSame('users', $first->getString()?->getSval());
+                $second = type_instance_of(Node::class)->assert($items[1]);
+                static::assertSame('id', $second->getString()?->getSval());
             }
         }
         static::assertTrue($optionFound);
@@ -266,12 +288,16 @@ final class AlterSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'owned_by') {
+            if ($defElem !== null && $defElem->getDefname() === 'owned_by') {
                 $optionFound = true;
-                $list = $defElem->getArg()?->getList();
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $list = $arg->getList();
                 static::assertNotNull($list);
-                static::assertCount(1, $list->getItems());
-                static::assertSame('none', $list->getItems()[0]->getString()?->getSval());
+                $items = $list->getItems();
+                static::assertCount(1, $items);
+                $first = type_instance_of(Node::class)->assert($items[0]);
+                static::assertSame('none', $first->getString()?->getSval());
             }
         }
         static::assertTrue($optionFound);
@@ -286,8 +312,10 @@ final class AlterSequenceBuilderTest extends TestCase
         static::assertInstanceOf(AlterTableStmt::class, $ast);
         static::assertSame(ObjectType::OBJECT_SEQUENCE, $ast->getObjtype());
         static::assertSame('user_id_seq', $ast->getRelation()?->getRelname());
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_ChangeOwner, $ast->getCmds()[0]->getAlterTableCmd()?->getSubtype());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $cmd = type_instance_of(Node::class)->assert($cmds[0]);
+        static::assertSame(AlterTableType::AT_ChangeOwner, $cmd->getAlterTableCmd()?->getSubtype());
     }
 
     public function test_alter_sequence_owner_to_if_exists(): void
@@ -329,8 +357,9 @@ final class AlterSequenceBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterSeqStmt::class, $ast);
-        /** @phpstan-ignore method.nonObject (protobuf returns nullable but we know it's set) */
-        static::assertSame('user_id_seq', $ast->getSequence()->getRelname());
+        $sequence = $ast->getSequence();
+        static::assertNotNull($sequence);
+        static::assertSame('user_id_seq', $sequence->getRelname());
         static::assertNotEmpty($ast->getOptions());
 
         $optionFound = false;
@@ -338,7 +367,7 @@ final class AlterSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'restart') {
+            if ($defElem !== null && $defElem->getDefname() === 'restart') {
                 $optionFound = true;
                 static::assertFalse($defElem->hasArg());
             }
@@ -359,10 +388,12 @@ final class AlterSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'restart') {
+            if ($defElem !== null && $defElem->getDefname() === 'restart') {
                 $optionFound = true;
-                /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns int instead of Integer class) */
-                static::assertSame(1000, $defElem->getArg()?->getInteger()?->getIval());
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $integer = type_instance_of(Integer::class)->assert($arg->getInteger());
+                static::assertSame(1000, $integer->getIval());
             }
         }
         static::assertTrue($optionFound);
@@ -376,8 +407,10 @@ final class AlterSequenceBuilderTest extends TestCase
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
         static::assertSame(ObjectType::OBJECT_SEQUENCE, $ast->getObjtype());
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_SetLogged, $ast->getCmds()[0]->getAlterTableCmd()?->getSubtype());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $cmd = type_instance_of(Node::class)->assert($cmds[0]);
+        static::assertSame(AlterTableType::AT_SetLogged, $cmd->getAlterTableCmd()?->getSubtype());
     }
 
     public function test_alter_sequence_set_logged_if_exists(): void
@@ -420,8 +453,10 @@ final class AlterSequenceBuilderTest extends TestCase
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
         static::assertSame(ObjectType::OBJECT_SEQUENCE, $ast->getObjtype());
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_SetUnLogged, $ast->getCmds()[0]->getAlterTableCmd()?->getSubtype());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $cmd = type_instance_of(Node::class)->assert($cmds[0]);
+        static::assertSame(AlterTableType::AT_SetUnLogged, $cmd->getAlterTableCmd()?->getSubtype());
     }
 
     public function test_alter_sequence_start_with(): void
@@ -437,10 +472,12 @@ final class AlterSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'start') {
+            if ($defElem !== null && $defElem->getDefname() === 'start') {
                 $optionFound = true;
-                /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns int instead of Integer class) */
-                static::assertSame(100, $defElem->getArg()?->getInteger()?->getIval());
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $integer = type_instance_of(Integer::class)->assert($arg->getInteger());
+                static::assertSame(100, $integer->getIval());
             }
         }
         static::assertTrue($optionFound);
@@ -468,10 +505,10 @@ final class AlterSequenceBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterSeqStmt::class, $ast);
-        /** @phpstan-ignore method.nonObject (protobuf returns nullable but we know it's set) */
-        static::assertSame('user_id_seq', $ast->getSequence()->getRelname());
-        /** @phpstan-ignore method.nonObject (protobuf returns nullable but we know it's set) */
-        static::assertSame('public', $ast->getSequence()->getSchemaname());
+        $sequence = $ast->getSequence();
+        static::assertNotNull($sequence);
+        static::assertSame('user_id_seq', $sequence->getRelname());
+        static::assertSame('public', $sequence->getSchemaname());
     }
 
     public function test_immutability(): void

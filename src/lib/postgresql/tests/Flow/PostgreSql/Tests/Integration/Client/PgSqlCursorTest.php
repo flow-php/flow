@@ -69,6 +69,9 @@ final class PgSqlCursorTest extends PostgreSqlTestCase
         }
 
         static::assertCount(3, $rows);
+        static::assertNotNull($rows[0]);
+        static::assertNotNull($rows[1]);
+        static::assertNotNull($rows[2]);
         static::assertSame(1, $rows[0]['num']);
         static::assertSame(2, $rows[1]['num']);
         static::assertSame(3, $rows[2]['num']);

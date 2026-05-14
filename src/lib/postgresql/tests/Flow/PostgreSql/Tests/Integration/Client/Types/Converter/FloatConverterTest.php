@@ -60,7 +60,7 @@ final class FloatConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_real())->as('val'))->toSql(), [typed(
+            ->fetchScalarFloat(select(cast(param(1), column_type_real())->as('val'))->toSql(), [typed(
                 $input,
                 ValueType::FLOAT4,
             )]);
@@ -74,7 +74,7 @@ final class FloatConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_double_precision())->as('val'))->toSql(), [typed(
+            ->fetchScalarFloat(select(cast(param(1), column_type_double_precision())->as('val'))->toSql(), [typed(
                 $input,
                 ValueType::FLOAT8,
             )]);
@@ -84,52 +84,56 @@ final class FloatConverterTest extends PostgreSqlTestCase
 
     public function test_null_float(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal(null), column_type_double_precision())->as('val'))->toSql());
-
-        static::assertNull($result);
+        static::assertNull(
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalar(select(cast(literal(null), column_type_double_precision())->as('val'))->toSql()),
+        );
     }
 
     #[DataProvider('provide_numeric_values')]
     public function test_numeric_round_trip(string $input, string $expected): void
     {
-        $result = $this
+        static::assertSame($expected, $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_numeric())->as('val'))->toSql(), [$input]);
-
-        static::assertSame($expected, $result);
+            ->fetchScalarString(select(cast(param(1), column_type_numeric())->as('val'))->toSql(), [$input]));
     }
 
     public function test_special_float_infinity(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal('Infinity'), column_type_double_precision())->as('val'))->toSql());
-
-        static::assertSame(INF, $result);
+        static::assertSame(
+            INF,
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalarFloat(
+                    select(cast(literal('Infinity'), column_type_double_precision())->as('val'))->toSql(),
+                ),
+        );
     }
 
     public function test_special_float_nan(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal('NaN'), column_type_double_precision())->as('val'))->toSql());
-
-        static::assertNan($result);
+        static::assertNan(
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalarFloat(select(cast(literal('NaN'), column_type_double_precision())->as('val'))->toSql()),
+        );
     }
 
     public function test_special_float_negative_infinity(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal('-Infinity'), column_type_double_precision())->as('val'))->toSql());
-
-        static::assertSame(-INF, $result);
+        static::assertSame(
+            -INF,
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalarFloat(
+                    select(cast(literal('-Infinity'), column_type_double_precision())->as('val'))->toSql(),
+                ),
+        );
     }
 }

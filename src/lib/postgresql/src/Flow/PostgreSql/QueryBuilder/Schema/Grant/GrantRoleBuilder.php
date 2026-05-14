@@ -73,9 +73,7 @@ final readonly class GrantRoleBuilder implements GrantRoleFinalStep, GrantRoleTo
             $boolean = new Boolean();
             $boolean->setBoolval(true);
 
-            $argNode = new Node();
-            /** @phpstan-ignore argument.type (protobuf PHPDoc says bool but actually expects Boolean) */
-            $argNode->setBoolean($boolean);
+            $argNode = new Node(['boolean' => $boolean]);
 
             $defElem = new DefElem();
             $defElem->setDefname('admin');

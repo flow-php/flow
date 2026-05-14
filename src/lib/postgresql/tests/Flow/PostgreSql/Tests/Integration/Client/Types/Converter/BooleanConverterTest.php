@@ -47,7 +47,7 @@ final class BooleanConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_boolean())->as('val'))->toSql(), [typed(
+            ->fetchScalarBool(select(cast(param(1), column_type_boolean())->as('val'))->toSql(), [typed(
                 $input,
                 ValueType::BOOL,
             )]);
@@ -61,18 +61,18 @@ final class BooleanConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_boolean())->as('val'))->toSql(), [$input]);
+            ->fetchScalarBool(select(cast(param(1), column_type_boolean())->as('val'))->toSql(), [$input]);
 
         static::assertSame($expected, $result);
     }
 
     public function test_null_boolean(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal(null), column_type_boolean())->as('val'))->toSql());
-
-        static::assertNull($result);
+        static::assertNull(
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalar(select(cast(literal(null), column_type_boolean())->as('val'))->toSql()),
+        );
     }
 }

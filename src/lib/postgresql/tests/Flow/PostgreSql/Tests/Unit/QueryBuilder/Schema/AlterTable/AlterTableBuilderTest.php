@@ -7,6 +7,7 @@ namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\AlterTable;
 use Flow\PostgreSql\Protobuf\AST\AlterTableStmt;
 use Flow\PostgreSql\Protobuf\AST\AlterTableType;
 use Flow\PostgreSql\Protobuf\AST\DropBehavior;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\QueryBuilder\Schema\AlterTable\AlterTableBuilder;
 use Flow\PostgreSql\QueryBuilder\Schema\AlterTable\RenameTableBuilder;
@@ -19,6 +20,7 @@ use Flow\PostgreSql\QueryBuilder\Sql;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\PostgreSql\DSL\literal;
+use function Flow\Types\DSL\type_instance_of;
 
 final class AlterTableBuilderTest extends TestCase
 {
@@ -38,9 +40,13 @@ final class AlterTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_AddColumn, $ast->getCmds()[0]->getAlterTableCmd()->getSubtype());
-        static::assertTrue($ast->getCmds()[0]->getAlterTableCmd()->hasDef());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $node = type_instance_of(Node::class)->assert($cmds[0]);
+        $cmd = $node->getAlterTableCmd();
+        static::assertNotNull($cmd);
+        static::assertSame(AlterTableType::AT_AddColumn, $cmd->getSubtype());
+        static::assertTrue($cmd->hasDef());
     }
 
     public function test_add_constraint(): void
@@ -50,8 +56,12 @@ final class AlterTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_AddConstraint, $ast->getCmds()[0]->getAlterTableCmd()->getSubtype());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $node = type_instance_of(Node::class)->assert($cmds[0]);
+        $cmd = $node->getAlterTableCmd();
+        static::assertNotNull($cmd);
+        static::assertSame(AlterTableType::AT_AddConstraint, $cmd->getSubtype());
     }
 
     public function test_add_foreign_key_constraint(): void
@@ -65,8 +75,12 @@ final class AlterTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_AddConstraint, $ast->getCmds()[0]->getAlterTableCmd()->getSubtype());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $node = type_instance_of(Node::class)->assert($cmds[0]);
+        $cmd = $node->getAlterTableCmd();
+        static::assertNotNull($cmd);
+        static::assertSame(AlterTableType::AT_AddConstraint, $cmd->getSubtype());
     }
 
     public function test_add_inherit(): void
@@ -76,10 +90,18 @@ final class AlterTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_AddInherit, $ast->getCmds()[0]->getAlterTableCmd()->getSubtype());
-        static::assertTrue($ast->getCmds()[0]->getAlterTableCmd()->hasDef());
-        static::assertSame('persons', $ast->getCmds()[0]->getAlterTableCmd()->getDef()->getRangeVar()->getRelname());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $node = type_instance_of(Node::class)->assert($cmds[0]);
+        $cmd = $node->getAlterTableCmd();
+        static::assertNotNull($cmd);
+        static::assertSame(AlterTableType::AT_AddInherit, $cmd->getSubtype());
+        static::assertTrue($cmd->hasDef());
+        $def = $cmd->getDef();
+        static::assertNotNull($def);
+        $rangeVar = $def->getRangeVar();
+        static::assertNotNull($rangeVar);
+        static::assertSame('persons', $rangeVar->getRelname());
     }
 
     public function test_add_inherit_to_sql(): void
@@ -97,8 +119,12 @@ final class AlterTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_AddConstraint, $ast->getCmds()[0]->getAlterTableCmd()->getSubtype());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $node = type_instance_of(Node::class)->assert($cmds[0]);
+        $cmd = $node->getAlterTableCmd();
+        static::assertNotNull($cmd);
+        static::assertSame(AlterTableType::AT_AddConstraint, $cmd->getSubtype());
     }
 
     public function test_alter_column_drop_default(): void
@@ -108,10 +134,14 @@ final class AlterTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_ColumnDefault, $ast->getCmds()[0]->getAlterTableCmd()->getSubtype());
-        static::assertSame('status', $ast->getCmds()[0]->getAlterTableCmd()->getName());
-        static::assertFalse($ast->getCmds()[0]->getAlterTableCmd()->hasDef());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $node = type_instance_of(Node::class)->assert($cmds[0]);
+        $cmd = $node->getAlterTableCmd();
+        static::assertNotNull($cmd);
+        static::assertSame(AlterTableType::AT_ColumnDefault, $cmd->getSubtype());
+        static::assertSame('status', $cmd->getName());
+        static::assertFalse($cmd->hasDef());
     }
 
     public function test_alter_column_drop_not_null(): void
@@ -121,9 +151,13 @@ final class AlterTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_DropNotNull, $ast->getCmds()[0]->getAlterTableCmd()->getSubtype());
-        static::assertSame('email', $ast->getCmds()[0]->getAlterTableCmd()->getName());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $node = type_instance_of(Node::class)->assert($cmds[0]);
+        $cmd = $node->getAlterTableCmd();
+        static::assertNotNull($cmd);
+        static::assertSame(AlterTableType::AT_DropNotNull, $cmd->getSubtype());
+        static::assertSame('email', $cmd->getName());
     }
 
     public function test_alter_column_set_default(): void
@@ -133,10 +167,14 @@ final class AlterTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_ColumnDefault, $ast->getCmds()[0]->getAlterTableCmd()->getSubtype());
-        static::assertSame('status', $ast->getCmds()[0]->getAlterTableCmd()->getName());
-        static::assertTrue($ast->getCmds()[0]->getAlterTableCmd()->hasDef());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $node = type_instance_of(Node::class)->assert($cmds[0]);
+        $cmd = $node->getAlterTableCmd();
+        static::assertNotNull($cmd);
+        static::assertSame(AlterTableType::AT_ColumnDefault, $cmd->getSubtype());
+        static::assertSame('status', $cmd->getName());
+        static::assertTrue($cmd->hasDef());
     }
 
     public function test_alter_column_set_not_null(): void
@@ -146,9 +184,13 @@ final class AlterTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_SetNotNull, $ast->getCmds()[0]->getAlterTableCmd()->getSubtype());
-        static::assertSame('email', $ast->getCmds()[0]->getAlterTableCmd()->getName());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $node = type_instance_of(Node::class)->assert($cmds[0]);
+        $cmd = $node->getAlterTableCmd();
+        static::assertNotNull($cmd);
+        static::assertSame(AlterTableType::AT_SetNotNull, $cmd->getSubtype());
+        static::assertSame('email', $cmd->getName());
     }
 
     public function test_alter_column_type(): void
@@ -158,9 +200,13 @@ final class AlterTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_AlterColumnType, $ast->getCmds()[0]->getAlterTableCmd()->getSubtype());
-        static::assertSame('name', $ast->getCmds()[0]->getAlterTableCmd()->getName());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $node = type_instance_of(Node::class)->assert($cmds[0]);
+        $cmd = $node->getAlterTableCmd();
+        static::assertNotNull($cmd);
+        static::assertSame(AlterTableType::AT_AlterColumnType, $cmd->getSubtype());
+        static::assertSame('name', $cmd->getName());
     }
 
     public function test_alter_table_if_exists(): void
@@ -185,8 +231,10 @@ final class AlterTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertSame('public', $ast->getRelation()->getSchemaname());
-        static::assertSame('users', $ast->getRelation()->getRelname());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertSame('public', $relation->getSchemaname());
+        static::assertSame('users', $relation->getRelname());
     }
 
     public function test_drop_column(): void
@@ -196,9 +244,13 @@ final class AlterTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_DropColumn, $ast->getCmds()[0]->getAlterTableCmd()->getSubtype());
-        static::assertSame('temp_column', $ast->getCmds()[0]->getAlterTableCmd()->getName());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $node = type_instance_of(Node::class)->assert($cmds[0]);
+        $cmd = $node->getAlterTableCmd();
+        static::assertNotNull($cmd);
+        static::assertSame(AlterTableType::AT_DropColumn, $cmd->getSubtype());
+        static::assertSame('temp_column', $cmd->getName());
     }
 
     public function test_drop_column_cascade(): void
@@ -208,7 +260,11 @@ final class AlterTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertSame(DropBehavior::DROP_CASCADE, $ast->getCmds()[0]->getAlterTableCmd()->getBehavior());
+        $cmds = $ast->getCmds();
+        $node = type_instance_of(Node::class)->assert($cmds[0]);
+        $cmd = $node->getAlterTableCmd();
+        static::assertNotNull($cmd);
+        static::assertSame(DropBehavior::DROP_CASCADE, $cmd->getBehavior());
     }
 
     public function test_drop_column_if_exists(): void
@@ -218,9 +274,13 @@ final class AlterTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_DropColumn, $ast->getCmds()[0]->getAlterTableCmd()->getSubtype());
-        static::assertTrue($ast->getCmds()[0]->getAlterTableCmd()->getMissingOk());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $node = type_instance_of(Node::class)->assert($cmds[0]);
+        $cmd = $node->getAlterTableCmd();
+        static::assertNotNull($cmd);
+        static::assertSame(AlterTableType::AT_DropColumn, $cmd->getSubtype());
+        static::assertTrue($cmd->getMissingOk());
     }
 
     public function test_drop_constraint(): void
@@ -230,9 +290,13 @@ final class AlterTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_DropConstraint, $ast->getCmds()[0]->getAlterTableCmd()->getSubtype());
-        static::assertSame('users_email_key', $ast->getCmds()[0]->getAlterTableCmd()->getName());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $node = type_instance_of(Node::class)->assert($cmds[0]);
+        $cmd = $node->getAlterTableCmd();
+        static::assertNotNull($cmd);
+        static::assertSame(AlterTableType::AT_DropConstraint, $cmd->getSubtype());
+        static::assertSame('users_email_key', $cmd->getName());
     }
 
     public function test_drop_constraint_cascade(): void
@@ -242,7 +306,11 @@ final class AlterTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertSame(DropBehavior::DROP_CASCADE, $ast->getCmds()[0]->getAlterTableCmd()->getBehavior());
+        $cmds = $ast->getCmds();
+        $node = type_instance_of(Node::class)->assert($cmds[0]);
+        $cmd = $node->getAlterTableCmd();
+        static::assertNotNull($cmd);
+        static::assertSame(DropBehavior::DROP_CASCADE, $cmd->getBehavior());
     }
 
     public function test_drop_constraint_if_exists(): void
@@ -252,7 +320,11 @@ final class AlterTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertTrue($ast->getCmds()[0]->getAlterTableCmd()->getMissingOk());
+        $cmds = $ast->getCmds();
+        $node = type_instance_of(Node::class)->assert($cmds[0]);
+        $cmd = $node->getAlterTableCmd();
+        static::assertNotNull($cmd);
+        static::assertTrue($cmd->getMissingOk());
     }
 
     public function test_drop_inherit(): void
@@ -262,10 +334,18 @@ final class AlterTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_DropInherit, $ast->getCmds()[0]->getAlterTableCmd()->getSubtype());
-        static::assertTrue($ast->getCmds()[0]->getAlterTableCmd()->hasDef());
-        static::assertSame('persons', $ast->getCmds()[0]->getAlterTableCmd()->getDef()->getRangeVar()->getRelname());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $node = type_instance_of(Node::class)->assert($cmds[0]);
+        $cmd = $node->getAlterTableCmd();
+        static::assertNotNull($cmd);
+        static::assertSame(AlterTableType::AT_DropInherit, $cmd->getSubtype());
+        static::assertTrue($cmd->hasDef());
+        $def = $cmd->getDef();
+        static::assertNotNull($def);
+        $rangeVar = $def->getRangeVar();
+        static::assertNotNull($rangeVar);
+        static::assertSame('persons', $rangeVar->getRelname());
     }
 
     public function test_drop_inherit_to_sql(): void
@@ -338,9 +418,15 @@ final class AlterTableBuilderTest extends TestCase
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
         static::assertSame(ObjectType::OBJECT_TABLE, $ast->getObjtype());
-        static::assertSame('users', $ast->getRelation()->getRelname());
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_SetLogged, $ast->getCmds()[0]->getAlterTableCmd()->getSubtype());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertSame('users', $relation->getRelname());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $node = type_instance_of(Node::class)->assert($cmds[0]);
+        $cmd = $node->getAlterTableCmd();
+        static::assertNotNull($cmd);
+        static::assertSame(AlterTableType::AT_SetLogged, $cmd->getSubtype());
     }
 
     public function test_set_logged_with_schema(): void
@@ -358,9 +444,13 @@ final class AlterTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_SetTableSpace, $ast->getCmds()[0]->getAlterTableCmd()->getSubtype());
-        static::assertSame('fast_storage', $ast->getCmds()[0]->getAlterTableCmd()->getName());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $node = type_instance_of(Node::class)->assert($cmds[0]);
+        $cmd = $node->getAlterTableCmd();
+        static::assertNotNull($cmd);
+        static::assertSame(AlterTableType::AT_SetTableSpace, $cmd->getSubtype());
+        static::assertSame('fast_storage', $cmd->getName());
     }
 
     public function test_set_tablespace_to_sql(): void
@@ -381,9 +471,15 @@ final class AlterTableBuilderTest extends TestCase
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
         static::assertSame(ObjectType::OBJECT_TABLE, $ast->getObjtype());
-        static::assertSame('users', $ast->getRelation()->getRelname());
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_SetUnLogged, $ast->getCmds()[0]->getAlterTableCmd()->getSubtype());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertSame('users', $relation->getRelname());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $node = type_instance_of(Node::class)->assert($cmds[0]);
+        $cmd = $node->getAlterTableCmd();
+        static::assertNotNull($cmd);
+        static::assertSame(AlterTableType::AT_SetUnLogged, $cmd->getSubtype());
     }
 
     public function test_set_unlogged_if_exists(): void
@@ -404,7 +500,9 @@ final class AlterTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertSame('users', $ast->getRelation()->getRelname());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertSame('users', $relation->getRelname());
         static::assertSame(ObjectType::OBJECT_TABLE, $ast->getObjtype());
         static::assertCount(1, $ast->getCmds());
     }

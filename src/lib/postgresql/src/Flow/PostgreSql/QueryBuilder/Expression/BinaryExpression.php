@@ -46,7 +46,7 @@ final readonly class BinaryExpression implements Expression
 
         $name = $aExpr->getName();
 
-        if ($name === null || \count($name) === 0) {
+        if (\count($name) === 0) {
             throw InvalidAstException::missingRequiredField('name', 'A_Expr');
         }
 

@@ -32,7 +32,7 @@ final class MoneyConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(literal(99.99), column_type_custom('money'))->as('val'))->toSql());
+            ->fetchScalarString(select(cast(literal(99.99), column_type_custom('money'))->as('val'))->toSql());
 
         static::assertSame('$99.99', $result);
     }
@@ -43,7 +43,7 @@ final class MoneyConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_custom('money'))->as('val'))->toSql(), [typed(
+            ->fetchScalarString(select(cast(param(1), column_type_custom('money'))->as('val'))->toSql(), [typed(
                 $input,
                 ValueType::MONEY,
             )]);
@@ -53,11 +53,11 @@ final class MoneyConverterTest extends PostgreSqlTestCase
 
     public function test_null_money(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal(null), column_type_custom('money'))->as('val'))->toSql());
-
-        static::assertNull($result);
+        static::assertNull(
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalar(select(cast(literal(null), column_type_custom('money'))->as('val'))->toSql()),
+        );
     }
 }

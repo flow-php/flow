@@ -35,7 +35,7 @@ final readonly class TableFunction implements TableReference
 
         $functions = $rangeFunction->getFunctions();
 
-        if ($functions === null || \count($functions) === 0) {
+        if (\count($functions) === 0) {
             throw InvalidAstException::missingRequiredField('functions', 'RangeFunction');
         }
 
@@ -48,7 +48,7 @@ final readonly class TableFunction implements TableReference
 
         $items = $list->getItems();
 
-        if ($items === null || \count($items) === 0) {
+        if (\count($items) === 0) {
             throw InvalidAstException::invalidFieldValue('functions', 'RangeFunction', 'List cannot be empty');
         }
 

@@ -10,6 +10,8 @@ use Flow\PostgreSql\QueryBuilder\Expression\AliasedExpression;
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_instance_of;
+
 final class LiteralTest extends TestCase
 {
     public function test_converts_bool_to_ast(): void
@@ -20,8 +22,7 @@ final class LiteralTest extends TestCase
         $aConst = $node->getAConst();
         static::assertNotNull($aConst);
 
-        $booleanObj = $aConst->getBoolval();
-        static::assertInstanceOf(Boolean::class, $booleanObj);
+        $booleanObj = type_instance_of(Boolean::class)->assert($aConst->getBoolval());
         static::assertTrue($booleanObj->getBoolval());
     }
 
@@ -47,8 +48,7 @@ final class LiteralTest extends TestCase
         static::assertNotNull($aConst);
         static::assertFalse($aConst->getIsnull());
 
-        $integerObj = $aConst->getIval();
-        static::assertInstanceOf(Integer::class, $integerObj);
+        $integerObj = type_instance_of(Integer::class)->assert($aConst->getIval());
         static::assertSame(123, $integerObj->getIval());
     }
 

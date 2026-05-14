@@ -7,6 +7,7 @@ namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\Constraint;
 use Flow\PostgreSql\Protobuf\AST\Constraint;
 use Flow\PostgreSql\Protobuf\AST\ConstrType;
 use Flow\PostgreSql\Protobuf\AST\IndexElem;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBList;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\ExcludeConstraint;
@@ -16,6 +17,7 @@ use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\eq;
 use function Flow\PostgreSql\DSL\func;
 use function Flow\PostgreSql\DSL\literal;
+use function Flow\Types\DSL\type_instance_of;
 
 final class ExcludeConstraintTest extends TestCase
 {
@@ -49,9 +51,12 @@ final class ExcludeConstraintTest extends TestCase
             ->toAst();
 
         $exclusions = $ast->getExclusions();
-        $items = \iterator_to_array($exclusions[0]->getList()->getItems());
+        $pairList = type_instance_of(Node::class)->assert($exclusions[0])->getList();
+        static::assertNotNull($pairList);
+        $items = \iterator_to_array($pairList->getItems());
 
-        $indexElem = $items[0]->getIndexElem();
+        $indexElem = type_instance_of(Node::class)->assert($items[0])->getIndexElem();
+        static::assertNotNull($indexElem);
         static::assertSame('', $indexElem->getName());
         static::assertNotNull($indexElem->getExpr());
     }

@@ -42,7 +42,7 @@ final readonly class Column implements Expression
 
         $fields = $columnRef->getFields();
 
-        if ($fields === null || \count($fields) === 0) {
+        if (\count($fields) === 0) {
             throw InvalidAstException::missingRequiredField('fields', 'ColumnRef');
         }
 

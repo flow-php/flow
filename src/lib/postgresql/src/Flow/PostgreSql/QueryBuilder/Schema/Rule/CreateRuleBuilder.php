@@ -230,7 +230,7 @@ final readonly class CreateRuleBuilder implements
 
         $stmts = $parsed->raw()->getStmts();
 
-        if ($stmts === null || \count($stmts) === 0) {
+        if (\count($stmts) === 0) {
             throw InvalidAstException::invalidFieldValue('stmts', 'ParseResult', 'expected at least one statement');
         }
 

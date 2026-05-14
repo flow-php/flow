@@ -22,6 +22,7 @@ final readonly class QueryAttributesExtractor
     public function extract(string $query): QueryAttributes
     {
         $operation = null;
+        $matches = [];
 
         if (\preg_match(
             '/^\s*(SELECT|INSERT|UPDATE|DELETE|MERGE|WITH|EXPLAIN|COPY|CREATE|ALTER|DROP|TRUNCATE|BEGIN|COMMIT|ROLLBACK)\b/i',

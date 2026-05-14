@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\QueryBuilder\Database;
 
+use Flow\PostgreSql\QueryBuilder\Select\SelectFromStep;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
 use function Flow\PostgreSql\DSL\agg_sum;
@@ -26,6 +27,7 @@ use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\star;
 use function Flow\PostgreSql\DSL\table;
 use function Flow\PostgreSql\DSL\with;
+use function Flow\Types\DSL\type_instance_of;
 
 final class SelectDatabaseTest extends PostgreSqlTestCase
 {
@@ -142,11 +144,10 @@ final class SelectDatabaseTest extends PostgreSqlTestCase
             ->from(table(self::TABLE_ORDERS))
             ->groupBy(col('user_id'));
 
-        /** @phpstan-ignore method.notFound (WithBuilder::select return type issue - same as existing SelectBuilderTest) */
-        $query = with(cte('order_totals', $cteQuery))
-            ->select(star())
-            ->from(table('order_totals'))
-            ->where(gt(col('total'), literal(200)));
+        $selectStep = type_instance_of(SelectFromStep::class)->assert(
+            with(cte('order_totals', $cteQuery))->select(star()),
+        );
+        $query = $selectStep->from(table('order_totals'))->where(gt(col('total'), literal(200)));
 
         $rows = $this->pgsqlContext()->client()->fetchAll($query->toSql());
 

@@ -16,6 +16,7 @@ use Flow\PostgreSql\QueryBuilder\Expression\Column;
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use Flow\PostgreSql\QueryBuilder\Expression\Star;
 use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
+use Flow\PostgreSql\QueryBuilder\Select\SelectFromStep;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
 use PHPUnit\Framework\TestCase;
 
@@ -76,6 +77,7 @@ use function Flow\PostgreSql\DSL\when;
 use function Flow\PostgreSql\DSL\window_def;
 use function Flow\PostgreSql\DSL\window_func;
 use function Flow\PostgreSql\DSL\with;
+use function Flow\Types\DSL\type_instance_of;
 
 final class SelectBuilderTest extends TestCase
 {
@@ -465,56 +467,59 @@ final class SelectBuilderTest extends TestCase
 
     public function test_select_with_cte_materialized_to_sql(): void
     {
+        $withSelect = with(cte(
+            'active_users',
+            select()
+                ->select(col('id'), col('name'))
+                ->from(table('users'))
+                ->where(eq(col('active'), literal(true))),
+            [],
+            CTEMaterialization::MATERIALIZED,
+        ))
+            ->select(star());
+        $fromStep = type_instance_of(SelectFromStep::class)->assert($withSelect);
+
         static::assertSame(
             'WITH active_users AS MATERIALIZED (SELECT id, name FROM users WHERE active = true) SELECT * FROM active_users',
-            with(cte(
-                'active_users',
-                select()
-                    ->select(col('id'), col('name'))
-                    ->from(table('users'))
-                    ->where(eq(col('active'), literal(true))),
-                [],
-                CTEMaterialization::MATERIALIZED,
-            ))
-                ->select(star())
-                ->from(table('active_users'))
-                ->toSql(),
+            $fromStep->from(table('active_users'))->toSql(),
         );
     }
 
     public function test_select_with_cte_not_materialized_to_sql(): void
     {
+        $withSelect = with(cte(
+            'active_users',
+            select()
+                ->select(col('id'), col('name'))
+                ->from(table('users'))
+                ->where(eq(col('active'), literal(true))),
+            [],
+            CTEMaterialization::NOT_MATERIALIZED,
+        ))
+            ->select(star());
+        $fromStep = type_instance_of(SelectFromStep::class)->assert($withSelect);
+
         static::assertSame(
             'WITH active_users AS NOT MATERIALIZED (SELECT id, name FROM users WHERE active = true) SELECT * FROM active_users',
-            with(cte(
-                'active_users',
-                select()
-                    ->select(col('id'), col('name'))
-                    ->from(table('users'))
-                    ->where(eq(col('active'), literal(true))),
-                [],
-                CTEMaterialization::NOT_MATERIALIZED,
-            ))
-                ->select(star())
-                ->from(table('active_users'))
-                ->toSql(),
+            $fromStep->from(table('active_users'))->toSql(),
         );
     }
 
     public function test_select_with_cte_to_sql(): void
     {
+        $withSelect = with(cte(
+            'active_users',
+            select()
+                ->select(col('id'), col('name'))
+                ->from(table('users'))
+                ->where(eq(col('active'), literal(true))),
+        ))
+            ->select(star());
+        $fromStep = type_instance_of(SelectFromStep::class)->assert($withSelect);
+
         static::assertSame(
             'WITH active_users AS (SELECT id, name FROM users WHERE active = true) SELECT * FROM active_users',
-            with(cte(
-                'active_users',
-                select()
-                    ->select(col('id'), col('name'))
-                    ->from(table('users'))
-                    ->where(eq(col('active'), literal(true))),
-            ))
-                ->select(star())
-                ->from(table('active_users'))
-                ->toSql(),
+            $fromStep->from(table('active_users'))->toSql(),
         );
     }
 
@@ -1134,7 +1139,7 @@ final class SelectBuilderTest extends TestCase
             ->from(table('employees')->as('e'))
             ->join(table('dept_stats')->as('ds'), eq(col('e.department_id'), col('ds.department_id')));
 
-        $query = with(cte('org_tree', $orgTreeQuery, [
+        $withSelect = with(cte('org_tree', $orgTreeQuery, [
             'id',
             'name',
             'manager_id',
@@ -1152,21 +1157,11 @@ final class SelectBuilderTest extends TestCase
             'salary',
             'salary_rank',
             'pct_of_max',
-        ]))
-            ->recursive()
-            ->select(
-                col('org_tree.name')->as('employee'),
-                col('org_tree.level'),
-                col('org_tree.path')->as('reporting_chain'),
-                col('d.name')->as('department'),
-                col('re.salary'),
-                col('re.salary_rank'),
-                col('re.pct_of_max'),
-                col('ds.avg_salary')->as('dept_avg'),
-                case_when([
-                    when(binary_expr(col('re.salary'), '>', col('ds.avg_salary')), literal('Above Average')),
-                ], literal('At/Below Average'))->as('salary_status'),
-            )
+        ]))->recursive()->select(col('org_tree.name')->as('employee'), col('org_tree.level'), col('org_tree.path')->as('reporting_chain'), col('d.name')->as('department'), col('re.salary'), col('re.salary_rank'), col('re.pct_of_max'), col('ds.avg_salary')->as('dept_avg'), case_when([
+            when(binary_expr(col('re.salary'), '>', col('ds.avg_salary')), literal('Above Average')),
+        ], literal('At/Below Average'))->as('salary_status'));
+        $fromStep = type_instance_of(SelectFromStep::class)->assert($withSelect);
+        $query = $fromStep
             ->from(table('org_tree'))
             ->join(table('ranked_employees')->as('re'), eq(col('org_tree.id'), col('re.id')))
             ->join(table('dept_stats')->as('ds'), eq(col('re.department_id'), col('ds.department_id')))

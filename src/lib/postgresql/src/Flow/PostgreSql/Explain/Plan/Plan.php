@@ -28,7 +28,6 @@ final readonly class Plan
      */
     public static function fromArray(array $data): self
     {
-        /** @var PlanNodeShape $rootNodeData */
         $rootNodeData = $data['root_node'];
 
         return new self(

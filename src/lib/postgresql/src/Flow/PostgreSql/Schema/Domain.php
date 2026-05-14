@@ -60,11 +60,11 @@ final readonly class Domain
         return new self(
             name: $data['name'],
             baseType: ColumnType::fromArray($data['base_type']),
-            nullable: $data['nullable'] ?? true,
+            nullable: $data['nullable'],
             default: $data['default'] ?? null,
             checkConstraints: \array_map(static fn(array $cc): CheckConstraint => CheckConstraint::fromArray(
                 $cc,
-            ), $data['check_constraints'] ?? []),
+            ), $data['check_constraints']),
         );
     }
 

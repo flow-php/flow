@@ -26,7 +26,7 @@ final readonly class UniqueConstraint
         return new self(
             columns: $data['columns'],
             name: $data['name'] ?? null,
-            nullsNotDistinct: $data['nulls_not_distinct'] ?? false,
+            nullsNotDistinct: $data['nulls_not_distinct'],
         );
     }
 

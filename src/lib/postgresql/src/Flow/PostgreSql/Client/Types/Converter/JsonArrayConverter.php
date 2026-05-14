@@ -29,21 +29,19 @@ final class JsonArrayConverter implements ValueConverter
             return '{}';
         }
 
-        $elements = [];
+        return '{' . \implode(',', \array_map(self::encodeElement(...), $value)) . '}';
+    }
 
-        foreach ($value as $v) {
-            if ($v === null) {
-                $elements[] = 'NULL';
-            } else {
-                try {
-                    $json = \json_encode($v, JSON_THROW_ON_ERROR);
-                    $elements[] = StringEscaper::escapeAlwaysQuoted($json);
-                } catch (\JsonException) {
-                    throw ValueConversionException::cannotConvert($v, 'JSON array element');
-                }
-            }
+    private static function encodeElement(mixed $element): string
+    {
+        if ($element === null) {
+            return 'NULL';
         }
 
-        return '{' . \implode(',', $elements) . '}';
+        try {
+            return StringEscaper::escapeAlwaysQuoted(\json_encode($element, JSON_THROW_ON_ERROR));
+        } catch (\JsonException) {
+            throw ValueConversionException::cannotConvert($element, 'JSON array element');
+        }
     }
 }

@@ -35,6 +35,7 @@ final class TableStructureComparatorTest extends TestCase
 
         static::assertCount(0, $result->added);
         static::assertCount(1, $result->removed);
+        static::assertNotNull($result->renamed);
         static::assertCount(1, $result->renamed);
     }
 
@@ -68,6 +69,7 @@ final class TableStructureComparatorTest extends TestCase
 
         static::assertCount(0, $result->added);
         static::assertCount(0, $result->removed);
+        static::assertNotNull($result->renamed);
         static::assertCount(1, $result->renamed);
         static::assertArrayHasKey('public.old_users', $result->renamed);
         static::assertSame('new_users', $result->renamed['public.old_users']->name);

@@ -212,8 +212,7 @@ function any_(string|Expression $left, ComparisonOperator $operator, Expression|
     $left = $left instanceof Expression ? $left : col($left);
 
     if ($arrayOrSubquery instanceof SelectFinalStep) {
-        $node = new Node();
-        $node->setSelectStmt($arrayOrSubquery->toAst());
+        $node = new Node(['select_stmt' => $arrayOrSubquery->toAst()]);
 
         return new Any($left, $operator, $node);
     }
@@ -233,8 +232,7 @@ function all_(string|Expression $left, ComparisonOperator $operator, Expression|
     $left = $left instanceof Expression ? $left : col($left);
 
     if ($arrayOrSubquery instanceof SelectFinalStep) {
-        $node = new Node();
-        $node->setSelectStmt($arrayOrSubquery->toAst());
+        $node = new Node(['select_stmt' => $arrayOrSubquery->toAst()]);
 
         return new All($left, $operator, $node);
     }

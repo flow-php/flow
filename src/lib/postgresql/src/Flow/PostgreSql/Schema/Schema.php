@@ -19,7 +19,7 @@ use Flow\PostgreSql\Schema\Exception\TableNotFoundException;
  * @phpstan-import-type DomainShape from Domain
  * @phpstan-import-type ExtensionShape from Extension
  *
- * @phpstan-type SchemaShape = array{name: string, tables: list<TableShape>, sequences: list<SequenceShape>, views: list<ViewShape>, materialized_views: list<MaterializedViewShape>, functions: list<FuncShape>, procedures: list<ProcedureShape>, domains: list<DomainShape>, extensions: list<ExtensionShape>}
+ * @phpstan-type SchemaShape = array{name: string, tables?: list<TableShape>, sequences?: list<SequenceShape>, views?: list<ViewShape>, materialized_views?: list<MaterializedViewShape>, functions?: list<FuncShape>, procedures?: list<ProcedureShape>, domains?: list<DomainShape>, extensions?: list<ExtensionShape>}
  */
 final readonly class Schema
 {
@@ -85,14 +85,30 @@ final readonly class Schema
     {
         return new self(
             name: $this->name,
-            tables: self::mergeByName($this->tables, $other->tables),
-            sequences: self::mergeByName($this->sequences, $other->sequences),
-            views: self::mergeByName($this->views, $other->views),
-            materializedViews: self::mergeByName($this->materializedViews, $other->materializedViews),
-            functions: self::mergeByName($this->functions, $other->functions),
-            procedures: self::mergeByName($this->procedures, $other->procedures),
-            domains: self::mergeByName($this->domains, $other->domains),
-            extensions: self::mergeByName($this->extensions, $other->extensions),
+            tables: self::mergeByName($this->tables, $other->tables, static fn(Table $t): string => $t->name),
+            sequences: self::mergeByName(
+                $this->sequences,
+                $other->sequences,
+                static fn(Sequence $s): string => $s->name,
+            ),
+            views: self::mergeByName($this->views, $other->views, static fn(View $v): string => $v->name),
+            materializedViews: self::mergeByName(
+                $this->materializedViews,
+                $other->materializedViews,
+                static fn(MaterializedView $mv): string => $mv->name,
+            ),
+            functions: self::mergeByName($this->functions, $other->functions, static fn(Func $f): string => $f->name),
+            procedures: self::mergeByName(
+                $this->procedures,
+                $other->procedures,
+                static fn(Procedure $p): string => $p->name,
+            ),
+            domains: self::mergeByName($this->domains, $other->domains, static fn(Domain $d): string => $d->name),
+            extensions: self::mergeByName(
+                $this->extensions,
+                $other->extensions,
+                static fn(Extension $e): string => $e->name,
+            ),
         );
     }
 
@@ -205,23 +221,24 @@ final readonly class Schema
     }
 
     /**
-     * @template T of object{name: string}
+     * @template T
      *
      * @param list<T> $base
      * @param list<T> $override
+     * @param callable(T): string $nameOf
      *
      * @return list<T>
      */
-    private static function mergeByName(array $base, array $override): array
+    private static function mergeByName(array $base, array $override, callable $nameOf): array
     {
         $indexed = [];
 
         foreach ($base as $item) {
-            $indexed[$item->name] = $item;
+            $indexed[$nameOf($item)] = $item;
         }
 
         foreach ($override as $item) {
-            $indexed[$item->name] = $item;
+            $indexed[$nameOf($item)] = $item;
         }
 
         return \array_values($indexed);

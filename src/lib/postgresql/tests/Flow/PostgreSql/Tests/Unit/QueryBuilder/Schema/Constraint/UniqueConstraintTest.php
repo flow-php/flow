@@ -6,8 +6,11 @@ namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\Constraint;
 
 use Flow\PostgreSql\Protobuf\AST\Constraint;
 use Flow\PostgreSql\Protobuf\AST\ConstrType;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\UniqueConstraint;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\Types\DSL\type_instance_of;
 
 final class UniqueConstraintTest extends TestCase
 {
@@ -26,9 +29,12 @@ final class UniqueConstraintTest extends TestCase
 
         static::assertInstanceOf(Constraint::class, $ast);
         static::assertSame(ConstrType::CONSTR_UNIQUE, $ast->getContype());
-        static::assertCount(2, $ast->getKeys());
-        static::assertSame('first_name', $ast->getKeys()[0]->getString()->getSval());
-        static::assertSame('last_name', $ast->getKeys()[1]->getString()->getSval());
+        $keys = $ast->getKeys();
+        static::assertCount(2, $keys);
+        $first = type_instance_of(Node::class)->assert($keys[0]);
+        static::assertSame('first_name', $first->getString()?->getSval());
+        $second = type_instance_of(Node::class)->assert($keys[1]);
+        static::assertSame('last_name', $second->getString()?->getSval());
     }
 
     public function test_immutability(): void
@@ -60,8 +66,10 @@ final class UniqueConstraintTest extends TestCase
 
         static::assertInstanceOf(Constraint::class, $ast);
         static::assertSame(ConstrType::CONSTR_UNIQUE, $ast->getContype());
-        static::assertCount(1, $ast->getKeys());
-        static::assertSame('email', $ast->getKeys()[0]->getString()->getSval());
+        $keys = $ast->getKeys();
+        static::assertCount(1, $keys);
+        $first = type_instance_of(Node::class)->assert($keys[0]);
+        static::assertSame('email', $first->getString()?->getSval());
     }
 
     public function test_unique_constraint_with_name(): void

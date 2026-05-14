@@ -11,19 +11,20 @@ use Flow\PostgreSql\Explain\Plan\Plan;
 use Flow\PostgreSql\Explain\Plan\PlanNode;
 use Flow\PostgreSql\Explain\Plan\PlanNodeType;
 use Flow\PostgreSql\Explain\Plan\Timing;
+use Flow\Types\Exception\InvalidTypeException;
+
+use function Flow\Types\DSL\type_array;
 
 final readonly class ExplainParser
 {
     public function parse(string $jsonOutput): Plan
     {
-        $data = \json_decode($jsonOutput, true);
-
-        if (\json_last_error() !== JSON_ERROR_NONE) {
-            throw ExplainParseException::invalidJson(\json_last_error_msg());
-        }
-
-        if (!\is_array($data)) {
-            throw ExplainParseException::unexpectedFormat('array', \gettype($data));
+        try {
+            $data = type_array()->assert(\json_decode($jsonOutput, true, 512, JSON_THROW_ON_ERROR));
+        } catch (\JsonException $e) {
+            throw ExplainParseException::invalidJson($e->getMessage());
+        } catch (InvalidTypeException $e) {
+            throw ExplainParseException::unexpectedFormat('array', 'non-array', $e);
         }
 
         if (!\array_key_exists(0, $data)) {
@@ -33,7 +34,7 @@ final readonly class ExplainParser
         /** @var array<string, mixed> $result */
         $result = $data[0];
 
-        if (!\is_array($result) || !\array_key_exists('Plan', $result) || !\is_array($result['Plan'])) {
+        if (!\array_key_exists('Plan', $result) || !\is_array($result['Plan'])) {
             throw ExplainParseException::missingField('Plan');
         }
 
@@ -59,7 +60,7 @@ final readonly class ExplainParser
     }
 
     /**
-     * @param array<string, mixed> $nodeData
+     * @param array<array-key, mixed> $nodeData
      */
     private function parseBuffers(array $nodeData): ?Buffers
     {
@@ -90,7 +91,7 @@ final readonly class ExplainParser
     }
 
     /**
-     * @param array<string, mixed> $nodeData
+     * @param array<array-key, mixed> $nodeData
      */
     private function parseCost(array $nodeData): Cost
     {
@@ -101,7 +102,7 @@ final readonly class ExplainParser
     }
 
     /**
-     * @param array<string, mixed> $nodeData
+     * @param array<array-key, mixed> $nodeData
      */
     private function parseNode(array $nodeData): PlanNode
     {
@@ -110,12 +111,7 @@ final readonly class ExplainParser
         $children = [];
 
         if (\array_key_exists('Plans', $nodeData) && \is_array($nodeData['Plans'])) {
-            foreach ($nodeData['Plans'] as $childData) {
-                if (\is_array($childData)) {
-                    /** @var array<string, mixed> $childData */
-                    $children[] = $this->parseNode($childData);
-                }
-            }
+            $children = $this->parseChildren($nodeData['Plans']);
         }
 
         $sortKey = null;
@@ -161,7 +157,7 @@ final readonly class ExplainParser
     }
 
     /**
-     * @param array<string, mixed> $nodeData
+     * @param array<array-key, mixed> $nodeData
      */
     private function parseTiming(array $nodeData): ?Timing
     {
@@ -181,6 +177,16 @@ final readonly class ExplainParser
     private function toFloat(mixed $value): float
     {
         return \is_numeric($value) ? (float) $value : 0.0;
+    }
+
+    /**
+     * @param array<array-key, mixed> $plans
+     *
+     * @return list<PlanNode>
+     */
+    private function parseChildren(array $plans): array
+    {
+        return \array_values(\array_map($this->parseNode(...), \array_filter($plans, \is_array(...))));
     }
 
     private function toInt(mixed $value): int

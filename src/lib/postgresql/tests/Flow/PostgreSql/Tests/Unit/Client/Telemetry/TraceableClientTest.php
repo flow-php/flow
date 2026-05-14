@@ -156,8 +156,9 @@ final class TraceableClientTest extends TestCase
         } finally {
             $spans = $spanProcessor->endedSpans();
             static::assertCount(1, $spans);
-            static::assertNotNull($spans[0]->status());
-            static::assertTrue($spans[0]->status()->isError());
+            $status = $spans[0]->status();
+            static::assertNotNull($status);
+            static::assertTrue($status->isError());
         }
     }
 
@@ -393,6 +394,7 @@ final class TraceableClientTest extends TestCase
         static::assertCount(1, $spans);
 
         $paramValue = $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1'];
+        static::assertIsString($paramValue);
         static::assertSame(103, \strlen($paramValue));
         static::assertStringEndsWith('...', $paramValue);
     }
@@ -417,6 +419,7 @@ final class TraceableClientTest extends TestCase
         static::assertCount(1, $spans);
 
         $paramValue = $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1'];
+        static::assertIsString($paramValue);
         static::assertSame(200, \strlen($paramValue));
         static::assertSame($longValue, $paramValue);
     }

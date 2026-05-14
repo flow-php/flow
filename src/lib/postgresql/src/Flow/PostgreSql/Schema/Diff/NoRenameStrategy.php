@@ -6,7 +6,7 @@ namespace Flow\PostgreSql\Schema\Diff;
 
 final readonly class NoRenameStrategy implements RenameStrategy
 {
-    public function resolve(array $structuralMatches): array
+    public function resolve(array $candidates): array
     {
         return [];
     }

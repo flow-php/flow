@@ -71,7 +71,7 @@ final readonly class ExpressionParser
 
         $stmts = $parsed->raw()->getStmts();
 
-        if ($stmts === null || \count($stmts) === 0) {
+        if (\count($stmts) === 0) {
             throw InvalidAstException::invalidFieldValue('stmts', 'ParseResult', 'expected at least one statement');
         }
 
@@ -83,7 +83,7 @@ final readonly class ExpressionParser
 
         $targetList = $selectStmt->getTargetList();
 
-        if ($targetList === null || \count($targetList) === 0) {
+        if (\count($targetList) === 0) {
             throw InvalidAstException::invalidFieldValue('targetList', 'SelectStmt', 'expected at least one target');
         }
 

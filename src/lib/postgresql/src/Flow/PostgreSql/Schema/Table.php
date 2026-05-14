@@ -34,7 +34,7 @@ use function Flow\PostgreSql\DSL\create;
  * @phpstan-import-type CheckConstraintShape from CheckConstraint
  * @phpstan-import-type ExcludeConstraintShape from ExcludeConstraint
  *
- * @phpstan-type TableShape = array{schema?: string, name: string, columns: non-empty-list<ColumnShape>, primary_key: ?PrimaryKeyShape, indexes: list<IndexShape>, foreign_keys: list<ForeignKeyShape>, unique_constraints: list<UniqueConstraintShape>, check_constraints: list<CheckConstraintShape>, exclude_constraints: list<ExcludeConstraintShape>, triggers: list<TriggerShape>, unlogged: bool, partition_strategy: ?string, partition_columns: list<string>, inherits: list<string>, tablespace: ?string}
+ * @phpstan-type TableShape = array{schema?: string, name: string, columns: non-empty-list<ColumnShape>, primary_key?: ?PrimaryKeyShape, indexes?: list<IndexShape>, foreign_keys?: list<ForeignKeyShape>, unique_constraints?: list<UniqueConstraintShape>, check_constraints?: list<CheckConstraintShape>, exclude_constraints?: list<ExcludeConstraintShape>, triggers?: list<TriggerShape>, unlogged?: bool, partition_strategy?: ?string, partition_columns?: list<string>, inherits?: list<string>, tablespace?: ?string}
  */
 final readonly class Table
 {

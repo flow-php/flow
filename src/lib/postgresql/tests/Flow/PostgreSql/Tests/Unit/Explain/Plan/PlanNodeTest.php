@@ -134,10 +134,12 @@ final class PlanNodeTest extends TestCase
         static::assertSame(50, $node->rowsRemovedByFilter());
         static::assertSame('Forward', $node->scanDirection());
         static::assertSame(['custom_field' => 'value'], $node->rawData());
-        static::assertNotNull($node->timing());
-        static::assertSame(0.1, $node->timing()->startupTime());
-        static::assertNotNull($node->buffers());
-        static::assertSame(50, $node->buffers()->sharedHit());
+        $timing = $node->timing();
+        static::assertNotNull($timing);
+        static::assertSame(0.1, $timing->startupTime());
+        $buffers = $node->buffers();
+        static::assertNotNull($buffers);
+        static::assertSame(50, $buffers->sharedHit());
     }
 
     public function test_normalize_returns_expected_keys(): void

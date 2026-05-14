@@ -6,9 +6,12 @@ namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\DropSequence;
 
 use Flow\PostgreSql\Protobuf\AST\DropBehavior;
 use Flow\PostgreSql\Protobuf\AST\DropStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\QueryBuilder\Schema\DropSequence\DropSequenceBuilder;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\Types\DSL\type_instance_of;
 
 final class DropSequenceBuilderTest extends TestCase
 {
@@ -77,13 +80,17 @@ final class DropSequenceBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(DropStmt::class, $ast);
-        static::assertCount(1, $ast->getObjects());
-        /** @phpstan-ignore method.nonObject (protobuf returns nullable but we know it's set) */
-        static::assertCount(2, $ast->getObjects()[0]->getList()->getItems() ?? []);
-        /** @phpstan-ignore method.nonObject (protobuf returns nullable but we know it's set) */
-        static::assertSame('public', $ast->getObjects()[0]->getList()->getItems()[0]->getString()?->getSval());
-        /** @phpstan-ignore method.nonObject (protobuf returns nullable but we know it's set) */
-        static::assertSame('user_id_seq', $ast->getObjects()[0]->getList()->getItems()[1]->getString()?->getSval());
+        $objects = $ast->getObjects();
+        static::assertCount(1, $objects);
+        $firstObject = type_instance_of(Node::class)->assert($objects[0]);
+        $list = $firstObject->getList();
+        static::assertNotNull($list);
+        $items = $list->getItems();
+        static::assertCount(2, $items);
+        $itemFirst = type_instance_of(Node::class)->assert($items[0]);
+        static::assertSame('public', $itemFirst->getString()?->getSval());
+        $itemSecond = type_instance_of(Node::class)->assert($items[1]);
+        static::assertSame('user_id_seq', $itemSecond->getString()?->getSval());
     }
 
     public function test_immutability(): void
@@ -103,7 +110,13 @@ final class DropSequenceBuilderTest extends TestCase
 
         static::assertInstanceOf(DropStmt::class, $ast);
         static::assertSame(ObjectType::OBJECT_SEQUENCE, $ast->getRemoveType());
-        static::assertCount(1, $ast->getObjects());
-        static::assertSame('user_id_seq', $ast->getObjects()[0]->getList()?->getItems()[0]->getString()?->getSval());
+        $objects = $ast->getObjects();
+        static::assertCount(1, $objects);
+        $firstObject = type_instance_of(Node::class)->assert($objects[0]);
+        $list = $firstObject->getList();
+        static::assertNotNull($list);
+        $items = $list->getItems();
+        $itemFirst = type_instance_of(Node::class)->assert($items[0]);
+        static::assertSame('user_id_seq', $itemFirst->getString()?->getSval());
     }
 }

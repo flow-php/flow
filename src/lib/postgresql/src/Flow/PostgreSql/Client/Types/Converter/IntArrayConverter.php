@@ -29,22 +29,27 @@ final class IntArrayConverter implements ValueConverter
             return '{}';
         }
 
-        $elements = [];
+        return '{' . \implode(',', \array_map(self::encodeElement(...), $value)) . '}';
+    }
 
-        foreach ($value as $v) {
-            if ($v === null) {
-                $elements[] = 'NULL';
-            } elseif (\is_int($v)) {
-                $elements[] = (string) $v;
-            } elseif (\is_string($v) && \is_numeric($v)) {
-                $elements[] = (string) (int) $v;
-            } elseif (\is_float($v)) {
-                $elements[] = (string) (int) $v;
-            } else {
-                throw ValueConversionException::cannotConvert($v, 'integer array element');
-            }
+    private static function encodeElement(mixed $element): string
+    {
+        if ($element === null) {
+            return 'NULL';
         }
 
-        return '{' . \implode(',', $elements) . '}';
+        if (\is_int($element)) {
+            return (string) $element;
+        }
+
+        if (\is_string($element) && \is_numeric($element)) {
+            return (string) (int) $element;
+        }
+
+        if (\is_float($element)) {
+            return (string) (int) $element;
+        }
+
+        throw ValueConversionException::cannotConvert($element, 'integer array element');
     }
 }

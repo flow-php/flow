@@ -39,7 +39,7 @@ final readonly class CaseExpression implements Expression
 
         $argsNodes = $caseExpr->getArgs();
 
-        if ($argsNodes === null || \count($argsNodes) === 0) {
+        if (\count($argsNodes) === 0) {
             throw InvalidAstException::missingRequiredField('args', 'CaseExpr');
         }
 

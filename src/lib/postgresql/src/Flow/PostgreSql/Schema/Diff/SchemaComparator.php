@@ -44,7 +44,6 @@ final readonly class SchemaComparator
         $materializedViews = $this->diffMaterializedViews($source->materializedViews, $target->materializedViews);
         $domains = $this->diffDomains($source->domains, $target->domains);
 
-        /** @var ChangeSet<Sequence, SequenceDiff> $sequences */
         $sequences = ChangeSet::fromNamedObjects(
             $source->sequences,
             $target->sequences,
@@ -62,7 +61,6 @@ final readonly class SchemaComparator
                     : new SequenceDiff($a, $b),
         );
 
-        /** @var ChangeSet<View, ViewDiff> $views */
         $views = ChangeSet::fromNamedObjects(
             $source->views,
             $target->views,
@@ -73,7 +71,6 @@ final readonly class SchemaComparator
                     : new ViewDiff($a, $b),
         );
 
-        /** @var ChangeSet<Func, FuncDiff> $functions */
         $functions = ChangeSet::fromNamedObjects(
             $source->functions,
             $target->functions,
@@ -88,7 +85,6 @@ final readonly class SchemaComparator
                     : new FuncDiff($a, $b),
         );
 
-        /** @var ChangeSet<Procedure, ProcedureDiff> $procedures */
         $procedures = ChangeSet::fromNamedObjects(
             $source->procedures,
             $target->procedures,
@@ -100,7 +96,6 @@ final readonly class SchemaComparator
                     : new ProcedureDiff($a, $b),
         );
 
-        /** @var ChangeSet<Extension, ExtensionDiff> $extensions */
         $extensions = ChangeSet::fromNamedObjects(
             $source->extensions,
             $target->extensions,
@@ -152,7 +147,6 @@ final readonly class SchemaComparator
      */
     private function diffDomains(array $sourceDomains, array $targetDomains): ChangeSet
     {
-        /** @var ChangeSet<Domain, DomainDiff> */
         return ChangeSet::fromNamedObjects(
             $sourceDomains,
             $targetDomains,
@@ -185,7 +179,6 @@ final readonly class SchemaComparator
      */
     private function diffMaterializedViews(array $sourceMViews, array $targetMViews): ChangeSet
     {
-        /** @var ChangeSet<MaterializedView, MaterializedViewDiff> */
         return ChangeSet::fromNamedObjects(
             $sourceMViews,
             $targetMViews,
@@ -215,7 +208,6 @@ final readonly class SchemaComparator
      */
     private function diffTables(array $sourceTables, array $targetTables): ChangeSet
     {
-        /** @var ChangeSet<Table, TableDiff> $initial */
         $initial = ChangeSet::fromNamedObjects(
             $sourceTables,
             $targetTables,

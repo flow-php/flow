@@ -14,6 +14,8 @@ use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
+use function Flow\Types\DSL\type_string;
+
 /**
  * Builder for COPY FROM statements (data import).
  */
@@ -377,7 +379,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         if ($this->isStdin) {
             $copyStmt->setFilename('');
         } else {
-            $copyStmt->setFilename($this->filename ?? '');
+            $copyStmt->setFilename(type_string()->assert($this->filename));
         }
 
         $rangeVar = new RangeVar([

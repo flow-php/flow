@@ -33,8 +33,9 @@ final class ClusterBuilderTest extends TestCase
 
         $ast = $builder->toAst();
 
-        static::assertNotNull($ast->getRelation());
-        static::assertSame('users', $ast->getRelation()->getRelname());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertSame('users', $relation->getRelname());
     }
 
     public function test_cluster_table_using_index(): void

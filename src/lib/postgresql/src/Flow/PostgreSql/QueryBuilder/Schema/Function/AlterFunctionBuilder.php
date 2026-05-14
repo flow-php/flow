@@ -233,9 +233,7 @@ final readonly class AlterFunctionBuilder implements AlterFunctionArgsStep, Alte
         $integer = new Integer();
         $integer->setIval($value);
 
-        $aConst = new A_Const();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $aConst->setIval($integer);
+        $aConst = new A_Const(['ival' => $integer]);
 
         $defElem = new DefElem();
         $defElem->setDefname($name);

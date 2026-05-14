@@ -87,7 +87,7 @@ final class StringCoercionTest extends TestCase
                 ->using(table('orders'))
                 ->where(eq(col('users.id'), col('orders.user_id')))
                 ->toSql(),
-            delete()->from('users')->using('orders')->where(eq('users.id', 'orders.user_id'))->toSql(),
+            delete()->from('users')->using(table('orders'))->where(eq('users.id', 'orders.user_id'))->toSql(),
         );
     }
 
@@ -245,7 +245,7 @@ final class StringCoercionTest extends TestCase
             update()
                 ->update('users')
                 ->set('name', literal('test'))
-                ->from('logs')
+                ->from(table('logs'))
                 ->where(eq('users.id', 'logs.user_id'))
                 ->toSql(),
         );

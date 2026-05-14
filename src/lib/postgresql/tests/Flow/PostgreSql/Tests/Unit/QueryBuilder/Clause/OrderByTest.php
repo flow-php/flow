@@ -240,7 +240,8 @@ final class OrderByTest extends TestCase
         static::assertInstanceOf(SortBy::class, $ast);
 
         $restored = OrderBy::fromAst($ast);
-        static::assertInstanceOf(Column::class, $restored->expression());
-        static::assertSame(['users', 'email'], $restored->expression()->parts());
+        $expression = $restored->expression();
+        static::assertInstanceOf(Column::class, $expression);
+        static::assertSame(['users', 'email'], $expression->parts());
     }
 }

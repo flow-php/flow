@@ -7,6 +7,8 @@ namespace Flow\PostgreSql\Client\RowMapper;
 use Flow\PostgreSql\Client\Exception\MappingException;
 use Flow\PostgreSql\Client\RowMapper;
 
+use function Flow\Types\DSL\type_instance_of;
+
 /**
  * Maps database rows directly to constructor parameters.
  *
@@ -25,7 +27,7 @@ final readonly class ConstructorMapper implements RowMapper
     /** @var list<\ReflectionParameter> */
     private array $parameters;
 
-    /** @var \ReflectionClass<T> */
+    /** @var \ReflectionClass<object> */
     private \ReflectionClass $reflection;
 
     /**
@@ -48,7 +50,7 @@ final readonly class ConstructorMapper implements RowMapper
             throw MappingException::mappingFailed($this->class, 'Class has no constructor');
         }
 
-        $this->parameters = $constructor->getParameters();
+        $this->parameters = \array_values($constructor->getParameters());
     }
 
     /**
@@ -73,7 +75,7 @@ final readonly class ConstructorMapper implements RowMapper
         }
 
         try {
-            return $this->reflection->newInstanceArgs($args);
+            return type_instance_of($this->class)->assert($this->reflection->newInstanceArgs($args));
         } catch (\Throwable $e) {
             throw MappingException::mappingFailed($this->class, $e->getMessage());
         }

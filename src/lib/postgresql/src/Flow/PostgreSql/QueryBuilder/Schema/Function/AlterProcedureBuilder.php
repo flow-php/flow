@@ -67,9 +67,7 @@ final readonly class AlterProcedureBuilder implements AlterProcedureArgsStep, Al
         $integer = new Integer();
         $integer->setIval(1);
 
-        $aConst = new A_Const();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $aConst->setIval($integer);
+        $aConst = new A_Const(['ival' => $integer]);
 
         $defElem = new DefElem();
         $defElem->setDefname('security_definer');
@@ -89,9 +87,7 @@ final readonly class AlterProcedureBuilder implements AlterProcedureArgsStep, Al
         $integer = new Integer();
         $integer->setIval(0);
 
-        $aConst = new A_Const();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $aConst->setIval($integer);
+        $aConst = new A_Const(['ival' => $integer]);
 
         $defElem = new DefElem();
         $defElem->setDefname('security_definer');

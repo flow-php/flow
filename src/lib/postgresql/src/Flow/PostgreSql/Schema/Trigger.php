@@ -33,7 +33,7 @@ final readonly class Trigger
             timing: TriggerTiming::from($data['timing']),
             events: \array_map(static fn(string $event): TriggerEvent => TriggerEvent::from($event), $data['events']),
             functionName: $data['function_name'],
-            forEachRow: $data['for_each_row'] ?? false,
+            forEachRow: $data['for_each_row'],
             whenCondition: $data['when_condition'] ?? null,
         );
     }

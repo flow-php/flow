@@ -34,7 +34,7 @@ final class CidrConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_cidr())->as('val'))->toSql(), [typed(
+            ->fetchScalarString(select(cast(param(1), column_type_cidr())->as('val'))->toSql(), [typed(
                 $input,
                 ValueType::CIDR,
             )]);
@@ -44,11 +44,11 @@ final class CidrConverterTest extends PostgreSqlTestCase
 
     public function test_null_cidr(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal(null), column_type_cidr())->as('val'))->toSql());
-
-        static::assertNull($result);
+        static::assertNull(
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalar(select(cast(literal(null), column_type_cidr())->as('val'))->toSql()),
+        );
     }
 }

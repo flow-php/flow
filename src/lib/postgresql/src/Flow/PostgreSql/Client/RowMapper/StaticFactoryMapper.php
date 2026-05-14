@@ -26,6 +26,11 @@ use Flow\PostgreSql\Client\RowMapper;
 final readonly class StaticFactoryMapper implements RowMapper
 {
     /**
+     * @var \Closure(array<string, mixed>): T
+     */
+    private \Closure $factory;
+
+    /**
      * @param class-string<T> $class
      * @param non-empty-string $method
      *
@@ -52,6 +57,10 @@ final readonly class StaticFactoryMapper implements RowMapper
         if (!$reflection->isPublic()) {
             throw MappingException::factoryMethodNotPublic($this->class, $this->method);
         }
+
+        /** @var \Closure(array<string, mixed>): T $factory */
+        $factory = $reflection->getClosure();
+        $this->factory = $factory;
     }
 
     /**
@@ -60,8 +69,7 @@ final readonly class StaticFactoryMapper implements RowMapper
     public function map(array $row, Context $context): object
     {
         try {
-            /** @var T */
-            return $this->class::{$this->method}($row);
+            return ($this->factory)($row);
         } catch (\Throwable $e) {
             throw MappingException::mappingFailed($this->class, $e->getMessage(), $e);
         }

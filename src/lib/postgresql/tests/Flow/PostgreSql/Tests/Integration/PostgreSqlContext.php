@@ -117,7 +117,7 @@ final class PostgreSqlContext
 
     public function dropTriggerIfExists(string $trigger, string $table): void
     {
-        $this->client->execute(drop()->trigger($trigger)->on($table)->ifExists()->cascade()->toSql());
+        $this->client->execute(drop()->trigger($trigger)->ifExists()->on($table)->cascade()->toSql());
     }
 
     public function dropTypeIfExists(string $type): void
@@ -153,7 +153,13 @@ final class PostgreSqlContext
      */
     public function spawnBackgroundNotifier(string $channel, string $payload, int $delayMs): void
     {
-        $autoload = \getcwd() . '/vendor/autoload.php';
+        $cwd = \getcwd();
+
+        if ($cwd === false) {
+            throw new \RuntimeException('Failed to determine current working directory');
+        }
+
+        $autoload = $cwd . '/vendor/autoload.php';
 
         if (!\is_file($autoload)) {
             throw new \RuntimeException(\sprintf('Project vendor/autoload.php not found at %s', $autoload));
@@ -175,10 +181,15 @@ final class PostgreSqlContext
             2 => ['file', $stderrLog, 'w'],
         ];
 
+        $pipes = [];
         $process = \proc_open(['php', '-r', $phpCode], $descriptors, $pipes);
 
         if (!\is_resource($process)) {
             throw new \RuntimeException('Failed to spawn background notifier process');
+        }
+
+        if (!\is_resource($pipes[0] ?? null)) {
+            throw new \RuntimeException('Failed to open stdin pipe to background notifier process');
         }
 
         \fclose($pipes[0]);

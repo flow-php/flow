@@ -91,7 +91,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
 
         $targetList = $updateStmt->getTargetList();
 
-        if ($targetList === null || \count($targetList) === 0) {
+        if (\count($targetList) === 0) {
             throw InvalidAstException::missingRequiredField('targetList', 'UpdateStmt');
         }
 
@@ -123,7 +123,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         $from = [];
         $fromClause = $updateStmt->getFromClause();
 
-        if ($fromClause !== null && \count($fromClause) > 0) {
+        if (\count($fromClause) > 0) {
             foreach ($fromClause as $fromNode) {
                 $from[] = self::tableReferenceFromAst($fromNode);
             }
@@ -140,7 +140,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         $returning = [];
         $returningList = $updateStmt->getReturningList();
 
-        if ($returningList !== null && \count($returningList) > 0) {
+        if (\count($returningList) > 0) {
             foreach ($returningList as $returningNode) {
                 $returning[] = ExpressionFactory::fromAst($returningNode);
             }

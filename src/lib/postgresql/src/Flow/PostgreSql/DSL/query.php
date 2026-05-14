@@ -95,6 +95,8 @@ use Flow\PostgreSql\QueryBuilder\Update\UpdateBuilder;
 use Flow\PostgreSql\QueryBuilder\Update\UpdateTableStep;
 use Flow\PostgreSql\QueryBuilder\With\WithBuilder;
 
+use function Flow\Types\DSL\type_string;
+
 /**
  * Create a new SELECT query builder.
  *
@@ -274,15 +276,11 @@ function col(string $column, ?string $table = null, ?string $schema = null): Col
             );
         }
 
-        if ($schema !== null && $table !== null) {
-            return Column::schemaTableColumn($schema, $table, $column);
+        if ($schema !== null) {
+            return Column::schemaTableColumn($schema, type_string()->assert($table), $column);
         }
 
-        if ($table === null) {
-            return Column::fromParts(QualifiedIdentifier::parse($column)->parts());
-        }
-
-        return Column::tableColumn($table, $column);
+        return Column::tableColumn(type_string()->assert($table), $column);
     }
 
     return Column::fromParts(QualifiedIdentifier::parse($column)->parts());
@@ -315,7 +313,7 @@ function literal(string|int|float|bool|null $value): Literal
         \is_string($value) => Literal::string($value),
         \is_int($value) => Literal::int($value),
         \is_float($value) => Literal::float($value),
-        \is_bool($value) => Literal::bool($value),
+        default => Literal::bool($value),
     };
 }
 
@@ -496,7 +494,7 @@ function least(string|Expression ...$expressions): Least
 /**
  * Create a type cast expression.
  *
- * @param Expression $expr Expression to cast
+ * @param Expression|string $expr Expression to cast
  * @param ColumnType $dataType Target data type (use column_type_* functions)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]

@@ -20,9 +20,8 @@ final class WhenClauseTest extends TestCase
         $whenClause = new WhenClause($condition, $result);
         $node = $whenClause->toAst();
 
-        static::assertNotNull($node->getCaseWhen());
-
         $caseWhen = $node->getCaseWhen();
+        static::assertNotNull($caseWhen);
         static::assertNotNull($caseWhen->getExpr());
         static::assertNotNull($caseWhen->getResult());
     }

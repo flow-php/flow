@@ -7,7 +7,7 @@ namespace Flow\PostgreSql\QueryBuilder\Select;
 use Flow\PostgreSql\Protobuf\AST\LimitOption;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ResTarget;
-use Flow\PostgreSql\Protobuf\AST\SelectStmt as ProtobufSelectStmt;
+use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Clause\LockingClause;
 use Flow\PostgreSql\QueryBuilder\Clause\OrderBy;
@@ -70,7 +70,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         return new self();
     }
 
-    public static function fromAst(ProtobufSelectStmt $selectStmt): static
+    public static function fromAst(SelectStmt $selectStmt): static
     {
         $with = null;
         $withClause = $selectStmt->getWithClause();
@@ -86,20 +86,17 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         }
 
         $selectList = [];
-        $targetList = $selectStmt->getTargetList();
 
-        if ($targetList !== null) {
-            foreach ($targetList as $targetNode) {
-                $resTarget = $targetNode->getResTarget();
+        foreach ($selectStmt->getTargetList() as $targetNode) {
+            $resTarget = $targetNode->getResTarget();
 
-                if ($resTarget !== null && $resTarget->getName() !== null && $resTarget->getName() !== '') {
-                    $selectList[] = AliasedExpression::fromAst($targetNode);
-                } else {
-                    $valNode = $resTarget?->getVal();
+            if ($resTarget !== null && $resTarget->getName() !== '') {
+                $selectList[] = AliasedExpression::fromAst($targetNode);
+            } else {
+                $valNode = $resTarget?->getVal();
 
-                    if ($valNode !== null) {
-                        $selectList[] = ExpressionFactory::fromAst($valNode);
-                    }
+                if ($valNode !== null) {
+                    $selectList[] = ExpressionFactory::fromAst($valNode);
                 }
             }
         }
@@ -108,7 +105,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         $distinctOn = [];
         $distinctClause = $selectStmt->getDistinctClause();
 
-        if ($distinctClause !== null && \count($distinctClause) > 0) {
+        if (\count($distinctClause) > 0) {
             $distinct = true;
 
             foreach ($distinctClause as $distinctNode) {
@@ -120,22 +117,19 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
 
         $from = [];
         $joins = [];
-        $fromClause = $selectStmt->getFromClause();
 
-        if ($fromClause !== null) {
-            foreach ($fromClause as $fromNode) {
-                if ($fromNode->hasJoinExpr()) {
-                    $flattenedJoins = self::flattenJoins($fromNode);
-                    $base = $flattenedJoins['base'];
+        foreach ($selectStmt->getFromClause() as $fromNode) {
+            if ($fromNode->hasJoinExpr()) {
+                $flattenedJoins = self::flattenJoins($fromNode);
+                $base = $flattenedJoins['base'];
 
-                    if ($base !== null) {
-                        $from[] = $base;
-                    }
-
-                    $joins = \array_merge($joins, $flattenedJoins['joins']);
-                } else {
-                    $from[] = self::tableReferenceFromNode($fromNode);
+                if ($base !== null) {
+                    $from[] = $base;
                 }
+
+                $joins = \array_merge($joins, $flattenedJoins['joins']);
+            } else {
+                $from[] = self::tableReferenceFromNode($fromNode);
             }
         }
 
@@ -147,12 +141,9 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         }
 
         $groupBy = [];
-        $groupClause = $selectStmt->getGroupClause();
 
-        if ($groupClause !== null) {
-            foreach ($groupClause as $groupNode) {
-                $groupBy[] = ExpressionFactory::fromAst($groupNode);
-            }
+        foreach ($selectStmt->getGroupClause() as $groupNode) {
+            $groupBy[] = ExpressionFactory::fromAst($groupNode);
         }
 
         $having = null;
@@ -163,24 +154,18 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         }
 
         $windows = [];
-        $windowClause = $selectStmt->getWindowClause();
 
-        if ($windowClause !== null) {
-            foreach ($windowClause as $windowNode) {
-                $windows[] = WindowDefinition::fromAst($windowNode);
-            }
+        foreach ($selectStmt->getWindowClause() as $windowNode) {
+            $windows[] = WindowDefinition::fromAst($windowNode);
         }
 
         $orderBy = [];
-        $sortClause = $selectStmt->getSortClause();
 
-        if ($sortClause !== null) {
-            foreach ($sortClause as $sortNode) {
-                $sortBy = $sortNode->getSortBy();
+        foreach ($selectStmt->getSortClause() as $sortNode) {
+            $sortBy = $sortNode->getSortBy();
 
-                if ($sortBy !== null) {
-                    $orderBy[] = OrderBy::fromAst($sortBy);
-                }
+            if ($sortBy !== null) {
+                $orderBy[] = OrderBy::fromAst($sortBy);
             }
         }
 
@@ -209,12 +194,9 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         }
 
         $locks = [];
-        $lockingClause = $selectStmt->getLockingClause();
 
-        if ($lockingClause !== null) {
-            foreach ($lockingClause as $lockNode) {
-                $locks[] = LockingClause::fromAst($lockNode);
-            }
+        foreach ($selectStmt->getLockingClause() as $lockNode) {
+            $locks[] = LockingClause::fromAst($lockNode);
         }
 
         return new self(
@@ -819,7 +801,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function toAst(): ProtobufSelectStmt
+    public function toAst(): SelectStmt
     {
         if ($this->setOp !== null && $this->setOpRhs !== null) {
             return $this->buildSetOperationAst();
@@ -918,9 +900,9 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    private function buildSetOperationAst(): ProtobufSelectStmt
+    private function buildSetOperationAst(): SelectStmt
     {
-        $selectStmt = new ProtobufSelectStmt();
+        $selectStmt = new SelectStmt();
 
         if ($this->with !== null) {
             $withNode = $this->with->toAst();
@@ -976,9 +958,9 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         return $selectStmt;
     }
 
-    private function buildSimpleSelectAst(): ProtobufSelectStmt
+    private function buildSimpleSelectAst(): SelectStmt
     {
-        $selectStmt = new ProtobufSelectStmt();
+        $selectStmt = new SelectStmt();
 
         if ($this->with !== null) {
             $withNode = $this->with->toAst();
@@ -1139,7 +1121,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         ];
     }
 
-    private static function fromSetOperation(ProtobufSelectStmt $selectStmt, ?WithClause $with): static
+    private static function fromSetOperation(SelectStmt $selectStmt, ?WithClause $with): static
     {
         $op = $selectStmt->getOp();
         $all = $selectStmt->getAll();
@@ -1162,15 +1144,12 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         $right = self::fromAst($rarg);
 
         $orderBy = [];
-        $sortClause = $selectStmt->getSortClause();
 
-        if ($sortClause !== null) {
-            foreach ($sortClause as $sortNode) {
-                $sortBy = $sortNode->getSortBy();
+        foreach ($selectStmt->getSortClause() as $sortNode) {
+            $sortBy = $sortNode->getSortBy();
 
-                if ($sortBy !== null) {
-                    $orderBy[] = OrderBy::fromAst($sortBy);
-                }
+            if ($sortBy !== null) {
+                $orderBy[] = OrderBy::fromAst($sortBy);
             }
         }
 
@@ -1199,12 +1178,9 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         }
 
         $locks = [];
-        $lockingClause = $selectStmt->getLockingClause();
 
-        if ($lockingClause !== null) {
-            foreach ($lockingClause as $lockNode) {
-                $locks[] = LockingClause::fromAst($lockNode);
-            }
+        foreach ($selectStmt->getLockingClause() as $lockNode) {
+            $locks[] = LockingClause::fromAst($lockNode);
         }
 
         return new self(
@@ -1254,7 +1230,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
                     $columnAliases = null;
                     $colnames = $alias->getColnames();
 
-                    if ($colnames !== null && \count($colnames) > 0) {
+                    if (\count($colnames) > 0) {
                         $columnAliases = [];
 
                         foreach ($colnames as $colNode) {

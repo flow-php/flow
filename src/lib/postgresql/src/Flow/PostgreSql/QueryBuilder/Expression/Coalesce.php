@@ -34,7 +34,7 @@ final readonly class Coalesce implements Expression
 
         $args = $coalesceExpr->getArgs();
 
-        if ($args === null || \count($args) < 2) {
+        if (\count($args) < 2) {
             throw InvalidAstException::invalidFieldValue('args', 'CoalesceExpr', 'must have at least 2 arguments');
         }
 

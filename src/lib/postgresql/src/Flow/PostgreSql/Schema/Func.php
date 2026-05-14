@@ -36,10 +36,10 @@ final readonly class Func
         return new self(
             name: $data['name'],
             returnType: $data['return_type'],
-            argumentTypes: $data['argument_types'] ?? [],
-            language: $data['language'] ?? 'sql',
+            argumentTypes: $data['argument_types'],
+            language: $data['language'],
             definition: $data['definition'] ?? null,
-            isStrict: $data['is_strict'] ?? false,
+            isStrict: $data['is_strict'],
             volatility: array_key_exists('volatility', $data) && $data['volatility'] !== null
                 ? FunctionVolatility::from($data['volatility'])
                 : null,

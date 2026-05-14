@@ -33,7 +33,7 @@ final readonly class MaterializedView
     {
         return new self(name: $data['name'], definition: $data['definition'], indexes: \array_map(
             static fn(array $index): Index => Index::fromArray($index),
-            $data['indexes'] ?? [],
+            $data['indexes'],
         ));
     }
 

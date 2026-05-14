@@ -39,7 +39,7 @@ final class RoleBuilderTest extends TestCase
 
     public function test_alter_role_ast_type(): void
     {
-        $builder = AlterRoleBuilder::create('admin')->superuser();
+        $builder = AlterRoleBuilder::create('admin')->set()->superuser();
 
         $ast = $builder->toAst();
 
@@ -76,12 +76,12 @@ final class RoleBuilderTest extends TestCase
 
     public function test_alter_role_set_options_to_sql(): void
     {
-        static::assertSame('ALTER ROLE admin WITH SUPERUSER', alter()->role('admin')->superuser()->toSql());
+        static::assertSame('ALTER ROLE admin WITH SUPERUSER', alter()->role('admin')->set()->superuser()->toSql());
     }
 
     public function test_alter_role_sets_role_spec(): void
     {
-        $builder = AlterRoleBuilder::create('admin')->noLogin();
+        $builder = AlterRoleBuilder::create('admin')->set()->noLogin();
 
         $ast = $builder->toAst();
         $roleSpec = $ast->getRole();
@@ -95,7 +95,7 @@ final class RoleBuilderTest extends TestCase
     {
         static::assertSame(
             'ALTER ROLE admin WITH NOSUPERUSER CREATEDB',
-            alter()->role('admin')->noSuperuser()->createDb()->toSql(),
+            alter()->role('admin')->set()->noSuperuser()->createDb()->toSql(),
         );
     }
 

@@ -37,7 +37,7 @@ final readonly class RowExpression implements Expression
 
         $args = $rowExpr->getArgs();
 
-        if ($args === null || \count($args) === 0) {
+        if (\count($args) === 0) {
             throw InvalidAstException::invalidFieldValue('args', 'RowExpr', 'must have at least 1 argument');
         }
 

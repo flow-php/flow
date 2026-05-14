@@ -35,12 +35,12 @@ final class NumericConverterTest extends PostgreSqlTestCase
 
     public function test_null_numeric(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal(null), column_type_numeric())->as('val'))->toSql());
-
-        static::assertNull($result);
+        static::assertNull(
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalar(select(cast(literal(null), column_type_numeric())->as('val'))->toSql()),
+        );
     }
 
     #[DataProvider('provide_numeric_values')]
@@ -49,7 +49,7 @@ final class NumericConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_numeric())->as('val'))->toSql(), [typed(
+            ->fetchScalarString(select(cast(param(1), column_type_numeric())->as('val'))->toSql(), [typed(
                 $input,
                 ValueType::NUMERIC,
             )]);
@@ -62,7 +62,7 @@ final class NumericConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_numeric(10, 2))->as('val'))->toSql(), [typed(
+            ->fetchScalarString(select(cast(param(1), column_type_numeric(10, 2))->as('val'))->toSql(), [typed(
                 '1234.5678',
                 ValueType::NUMERIC,
             )]);

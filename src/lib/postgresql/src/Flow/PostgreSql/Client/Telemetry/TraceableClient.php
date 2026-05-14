@@ -523,18 +523,11 @@ final class TraceableClient implements Client
         $attributes[PostgreSqlTelemetryAttributes::DB_QUERY_TEXT] = $queryText;
 
         if ($this->telemetryConfig->options->includeParameters && $parameters !== []) {
-            $maxParams = $this->telemetryConfig->options->maxParameters;
-            $maxParamLength = $this->telemetryConfig->options->maxParameterLength;
-            $count = 0;
-
-            foreach ($parameters as $index => $value) {
-                if ($maxParams !== null && $count >= $maxParams) {
-                    break;
-                }
-                $key = PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . ($index + 1);
-                $attributes[$key] = $this->parameterFormatter->format($value, $maxParamLength);
-                $count++;
-            }
+            $attributes = \array_merge($attributes, $this->parameterFormatter->formatList(
+                $parameters,
+                $this->telemetryConfig->options->maxParameters,
+                $this->telemetryConfig->options->maxParameterLength,
+            ));
         }
 
         return $attributes;
@@ -634,13 +627,19 @@ final class TraceableClient implements Client
     /**
      * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes
      */
-    private function recordDuration(int $startTime, array $attributes): void
+    private function recordDuration(int|float|false $startTime, array $attributes): void
     {
-        if ($this->operationDuration === null) {
+        if ($this->operationDuration === null || $startTime === false) {
             return;
         }
 
-        $duration = (\hrtime(true) - $startTime) / 1_000_000_000;
+        $now = \hrtime(true);
+
+        if ($now === false) {
+            return;
+        }
+
+        $duration = ($now - $startTime) / 1_000_000_000;
         $this->operationDuration->record($duration, $attributes);
     }
 

@@ -6,8 +6,11 @@ namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\Constraint;
 
 use Flow\PostgreSql\Protobuf\AST\Constraint;
 use Flow\PostgreSql\Protobuf\AST\ConstrType;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\PrimaryKeyConstraint;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\Types\DSL\type_instance_of;
 
 final class PrimaryKeyConstraintTest extends TestCase
 {
@@ -26,9 +29,14 @@ final class PrimaryKeyConstraintTest extends TestCase
 
         static::assertInstanceOf(Constraint::class, $ast);
         static::assertSame(ConstrType::CONSTR_PRIMARY, $ast->getContype());
-        static::assertCount(2, $ast->getKeys());
-        static::assertSame('user_id', $ast->getKeys()[0]->getString()->getSval());
-        static::assertSame('order_id', $ast->getKeys()[1]->getString()->getSval());
+        $keys = $ast->getKeys();
+        static::assertCount(2, $keys);
+        $firstKey = type_instance_of(Node::class)->assert($keys[0])->getString();
+        static::assertNotNull($firstKey);
+        $secondKey = type_instance_of(Node::class)->assert($keys[1])->getString();
+        static::assertNotNull($secondKey);
+        static::assertSame('user_id', $firstKey->getSval());
+        static::assertSame('order_id', $secondKey->getSval());
     }
 
     public function test_immutability(): void
@@ -50,8 +58,11 @@ final class PrimaryKeyConstraintTest extends TestCase
         static::assertInstanceOf(Constraint::class, $ast);
         static::assertSame(ConstrType::CONSTR_PRIMARY, $ast->getContype());
         static::assertSame('pk_users', $ast->getConname());
-        static::assertCount(1, $ast->getKeys());
-        static::assertSame('id', $ast->getKeys()[0]->getString()->getSval());
+        $keys = $ast->getKeys();
+        static::assertCount(1, $keys);
+        $key = type_instance_of(Node::class)->assert($keys[0])->getString();
+        static::assertNotNull($key);
+        static::assertSame('id', $key->getSval());
     }
 
     public function test_simple_primary_key(): void
@@ -62,7 +73,10 @@ final class PrimaryKeyConstraintTest extends TestCase
 
         static::assertInstanceOf(Constraint::class, $ast);
         static::assertSame(ConstrType::CONSTR_PRIMARY, $ast->getContype());
-        static::assertCount(1, $ast->getKeys());
-        static::assertSame('id', $ast->getKeys()[0]->getString()->getSval());
+        $keys = $ast->getKeys();
+        static::assertCount(1, $keys);
+        $key = type_instance_of(Node::class)->assert($keys[0])->getString();
+        static::assertNotNull($key);
+        static::assertSame('id', $key->getSval());
     }
 }

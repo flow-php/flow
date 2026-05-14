@@ -41,6 +41,12 @@ use function Flow\PostgreSql\DSL\release_savepoint;
 use function Flow\PostgreSql\DSL\rollback;
 use function Flow\PostgreSql\DSL\savepoint;
 use function Flow\PostgreSql\DSL\unlisten;
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
 
 final class PgSqlClient implements Client
 {
@@ -188,10 +194,13 @@ final class PgSqlClient implements Client
     {
         $result = $this->query($sql, $parameters);
         $rows = \pg_fetch_all($result) ?: [];
+        $converted = [];
 
-        if ($rows !== []) {
-            $rows = \array_map(fn(array $row) => $this->convertRow($result, $row), $rows);
+        foreach ($rows as $row) {
+            $converted[] = $this->convertRow($result, $row);
         }
+
+        $rows = $converted;
 
         \pg_free_result($result);
 
@@ -202,10 +211,13 @@ final class PgSqlClient implements Client
     {
         $context = $this->buildContext($sql, $parameters);
 
-        return \array_values(\array_map(
-            static fn(array $row) => $mapper->map($row, $context),
-            $this->fetchAll($sql, $parameters),
-        ));
+        $mapped = [];
+
+        foreach ($this->fetchAll($sql, $parameters) as $row) {
+            $mapped[] = $mapper->map($row, $context);
+        }
+
+        return $mapped;
     }
 
     public function fetchInto(RowMapper $mapper, Sql|string $sql, array $parameters = []): mixed
@@ -290,46 +302,22 @@ final class PgSqlClient implements Client
 
     public function fetchScalarBool(Sql|string $sql, array $parameters = []): bool
     {
-        $value = $this->fetchScalar($sql, $parameters);
-
-        if (!\is_bool($value)) {
-            throw ResultException::unexpectedScalarType('bool', \get_debug_type($value));
-        }
-
-        return $value;
+        return type_boolean()->assert($this->fetchScalar($sql, $parameters));
     }
 
     public function fetchScalarFloat(Sql|string $sql, array $parameters = []): float
     {
-        $value = $this->fetchScalar($sql, $parameters);
-
-        if (!\is_float($value)) {
-            throw ResultException::unexpectedScalarType('float', \get_debug_type($value));
-        }
-
-        return $value;
+        return type_float()->assert($this->fetchScalar($sql, $parameters));
     }
 
     public function fetchScalarInt(Sql|string $sql, array $parameters = []): int
     {
-        $value = $this->fetchScalar($sql, $parameters);
-
-        if (!\is_int($value)) {
-            throw ResultException::unexpectedScalarType('int', \get_debug_type($value));
-        }
-
-        return $value;
+        return type_integer()->assert($this->fetchScalar($sql, $parameters));
     }
 
     public function fetchScalarString(Sql|string $sql, array $parameters = []): string
     {
-        $value = $this->fetchScalar($sql, $parameters);
-
-        if (!\is_string($value)) {
-            throw ResultException::unexpectedScalarType('string', \get_debug_type($value));
-        }
-
-        return $value;
+        return type_string()->assert($this->fetchScalar($sql, $parameters));
     }
 
     public function fetchSingle(Sql|string $sql, array $parameters = []): array
@@ -366,7 +354,11 @@ final class PgSqlClient implements Client
     public function lastInsertId(string $sequenceName): int|string
     {
         try {
-            $result = $this->fetchScalar('SELECT currval($1)', [$sequenceName]);
+            return type_union(type_integer(), type_string())->assert(
+                $this->fetchScalar('SELECT currval($1)', [$sequenceName]) ?? throw ResultException::sequenceNotUsed(
+                    $sequenceName,
+                ),
+            );
         } catch (QueryException $e) {
             if (\str_contains($e->getMessage(), 'is not yet defined in this session')) {
                 throw ResultException::sequenceNotUsed($sequenceName);
@@ -374,13 +366,6 @@ final class PgSqlClient implements Client
 
             throw $e;
         }
-
-        if ($result === null) {
-            throw ResultException::sequenceNotUsed($sequenceName);
-        }
-
-        /** @var int|string $result */
-        return $result;
     }
 
     public function listen(string $channel): void
@@ -468,9 +453,9 @@ final class PgSqlClient implements Client
         /** @var Connection $connection */
         $connection = $this->connection;
 
-        $immediate = @\pg_get_notify($connection, \PGSQL_ASSOC);
+        $immediate = self::tryGetNotify($connection);
 
-        if (\is_array($immediate)) {
+        if ($immediate !== null) {
             return self::notificationFromRaw($immediate);
         }
 
@@ -500,8 +485,8 @@ final class PgSqlClient implements Client
                 $read,
                 $write,
                 $except,
-                (int) \intdiv($remainingNs, 1_000_000_000),
-                (int) \intdiv($remainingNs % 1_000_000_000, 1000),
+                (int) \intdiv((int) $remainingNs, 1_000_000_000),
+                (int) \intdiv((int) $remainingNs % 1_000_000_000, 1000),
             );
 
             if ($selected === false) {
@@ -522,9 +507,9 @@ final class PgSqlClient implements Client
                 );
             }
 
-            $raw = @\pg_get_notify($connection, \PGSQL_ASSOC);
+            $raw = self::tryGetNotify($connection);
 
-            if (\is_array($raw)) {
+            if ($raw !== null) {
                 return self::notificationFromRaw($raw);
             }
         }
@@ -552,51 +537,60 @@ final class PgSqlClient implements Client
      */
     private function convertParameters(array $parameters): array
     {
-        $converted = [];
+        return \array_values(\array_map($this->convertParameter(...), $parameters));
+    }
 
-        foreach ($parameters as $value) {
-            if ($value === null) {
-                $converted[] = null;
-            } elseif ($value instanceof TypedValue) {
-                $converter = $this->valueConverters->forValueType($value->targetType);
-                $converted[] = $converter->toDatabase($value->value);
-            } else {
-                if (\is_array($value)) {
-                    throw ValueConversionException::ambiguousArrayType();
-                }
-
-                $converted[] = $this->valueConverters->forValueType(ValueType::TEXT)->toDatabase($value);
-            }
+    private function convertParameter(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
         }
 
-        return $converted;
+        if ($value instanceof TypedValue) {
+            return $this->valueConverters->forValueType($value->targetType)->toDatabase($value->value);
+        }
+
+        if (\is_array($value)) {
+            throw ValueConversionException::ambiguousArrayType();
+        }
+
+        return $this->valueConverters->forValueType(ValueType::TEXT)->toDatabase($value);
     }
 
     /**
-     * @param array<int|string, null|string> $row
+     * @param array<array-key, mixed> $row
      *
      * @return array<string, mixed>
      */
     private function convertRow(Result $result, array $row): array
     {
-        $converted = [];
-        $i = 0;
+        $keys = \array_map(\strval(...), \array_keys($row));
+        $values = \array_values($row);
+        $converted = \array_map(
+            fn(int $i, mixed $value): mixed => $this->convertColumnValue($result, $i, $value),
+            \array_keys($values),
+            $values,
+        );
 
-        foreach ($row as $column => $value) {
-            $key = (string) $column;
-
-            if ($value === null) {
-                $converted[$key] = null;
-            } else {
-                $converted[$key] = $this->resultCaster->cast($value, \pg_field_type($result, $i));
-            }
-
-            $i++;
-        }
-
-        return $converted;
+        return \array_combine($keys, $converted);
     }
 
+    private function convertColumnValue(Result $result, int $columnIndex, mixed $value): mixed
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (\is_string($value)) {
+            return $this->resultCaster->cast($value, \pg_field_type($result, $columnIndex));
+        }
+
+        return $value;
+    }
+
+    /**
+     * @param callable(string): \Throwable $exceptionFactory
+     */
     private function executeTransactionCommand(Sql $query, callable $exceptionFactory): void
     {
         /** @var Connection $connection */
@@ -687,18 +681,28 @@ final class PgSqlClient implements Client
     }
 
     /**
+     * @return null|array<array-key, mixed>
+     */
+    private static function tryGetNotify(Connection $connection): ?array
+    {
+        $result = type_union(type_array(), type_boolean())->assert(@\pg_get_notify($connection, \PGSQL_ASSOC));
+
+        return \is_array($result) ? $result : null;
+    }
+
+    /**
      * @param array<array-key, mixed> $raw
      */
     private static function notificationFromRaw(array $raw): Notification
     {
-        $channel = $raw['message'] ?? '';
-        $payload = $raw['payload'] ?? '';
-        $pid = $raw['pid'] ?? 0;
-
-        if (!\is_string($channel) || !\is_string($payload) || !\is_int($pid)) {
+        if (
+            !\is_string($raw['message'] ?? null)
+            || !\is_string($raw['payload'] ?? null)
+            || !\is_int($raw['pid'] ?? null)
+        ) {
             throw ConnectionException::notificationWaitFailed('Malformed notification payload from pg_get_notify()');
         }
 
-        return new Notification($channel, $payload, $pid);
+        return new Notification($raw['message'], $raw['payload'], $raw['pid']);
     }
 }

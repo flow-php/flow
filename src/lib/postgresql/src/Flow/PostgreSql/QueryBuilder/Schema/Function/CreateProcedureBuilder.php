@@ -66,9 +66,7 @@ final readonly class CreateProcedureBuilder implements
         $integer = new Integer();
         $integer->setIval(1);
 
-        $argNode = new Node();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $argNode->setInteger($integer);
+        $argNode = new Node(['integer' => $integer]);
 
         return $this->withOption('security_definer', $argNode);
     }
@@ -78,9 +76,7 @@ final readonly class CreateProcedureBuilder implements
         $integer = new Integer();
         $integer->setIval(0);
 
-        $argNode = new Node();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $argNode->setInteger($integer);
+        $argNode = new Node(['integer' => $integer]);
 
         return $this->withOption('security_definer', $argNode);
     }

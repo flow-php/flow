@@ -28,9 +28,8 @@ final class CaseExpressionTest extends TestCase
 
         $node = $caseExpr->toAst();
 
-        static::assertNotNull($node->getCaseExpr());
-
         $case = $node->getCaseExpr();
+        static::assertNotNull($case);
         static::assertNull($case->getArg());
         static::assertNotNull($case->getArgs());
         static::assertCount(1, $case->getArgs());
@@ -46,9 +45,8 @@ final class CaseExpressionTest extends TestCase
 
         $node = $caseExpr->toAst();
 
-        static::assertNotNull($node->getCaseExpr());
-
         $case = $node->getCaseExpr();
+        static::assertNotNull($case);
         static::assertNotNull($case->getArg());
         static::assertNotNull($case->getArgs());
         static::assertCount(1, $case->getArgs());
@@ -186,8 +184,7 @@ final class CaseExpressionTest extends TestCase
     {
         $this->expectException(InvalidExpressionException::class);
 
-        /** @phpstan-ignore argument.type (intentionally testing exception) */
-        new CaseExpression(null, []);
+        (new \ReflectionClass(CaseExpression::class))->newInstance(null, []);
     }
 
     public function test_with_else_creates_new_instance(): void

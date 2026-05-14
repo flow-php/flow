@@ -103,7 +103,6 @@ final class TableTest extends TestCase
 
     private function parseQuery(string $sql): ParseResult
     {
-        /** @var string $json */
         $json = \pg_query_parse($sql);
         $result = new ParseResult();
         $result->mergeFromJsonString($json);

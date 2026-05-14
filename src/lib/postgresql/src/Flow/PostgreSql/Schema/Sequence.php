@@ -33,13 +33,13 @@ final readonly class Sequence
     {
         return new self(
             name: $data['name'],
-            dataType: $data['data_type'] ?? 'bigint',
-            startValue: $data['start_value'] ?? 1,
-            minValue: $data['min_value'] ?? 1,
+            dataType: $data['data_type'],
+            startValue: $data['start_value'],
+            minValue: $data['min_value'],
             maxValue: $data['max_value'] ?? null,
-            incrementBy: $data['increment_by'] ?? 1,
-            cycle: $data['cycle'] ?? false,
-            cacheValue: $data['cache_value'] ?? 1,
+            incrementBy: $data['increment_by'],
+            cycle: $data['cycle'],
+            cacheValue: $data['cache_value'],
             ownedByTable: $data['owned_by_table'] ?? null,
             ownedByColumn: $data['owned_by_column'] ?? null,
         );

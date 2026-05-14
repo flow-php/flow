@@ -34,14 +34,14 @@ namespace Flow\PostgreSql\Explain\Plan;
  *     sort_method: ?string,
  *     sort_space_used: ?int,
  *     sort_space_type: ?string,
- *     raw_data: array<string, mixed>
+ *     raw_data: array<array-key, mixed>
  * }
  */
 final readonly class PlanNode
 {
     /**
      * @param array<PlanNode> $children
-     * @param array<string, mixed> $rawData
+     * @param array<array-key, mixed> $rawData
      */
     public function __construct(
         private PlanNodeType $nodeType,
@@ -271,7 +271,7 @@ final readonly class PlanNode
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
     public function rawData(): array
     {

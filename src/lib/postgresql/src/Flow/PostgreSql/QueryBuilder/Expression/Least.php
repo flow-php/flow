@@ -39,7 +39,7 @@ final readonly class Least implements Expression
 
         $args = $minMaxExpr->getArgs();
 
-        if ($args === null || \count($args) < 2) {
+        if (\count($args) < 2) {
             throw InvalidAstException::invalidFieldValue('args', 'MinMaxExpr', 'must have at least 2 arguments');
         }
 

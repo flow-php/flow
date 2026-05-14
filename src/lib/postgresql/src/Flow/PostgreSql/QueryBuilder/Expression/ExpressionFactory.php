@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Expression;
 
 use Flow\PostgreSql\Protobuf\AST\A_Expr_Kind;
+use Flow\PostgreSql\Protobuf\AST\FuncCall;
 use Flow\PostgreSql\Protobuf\AST\MinMaxOp;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Exception\UnsupportedNodeException;
@@ -20,11 +21,12 @@ final class ExpressionFactory
             return Star::fromAst($node);
         }
 
-        if ($node->getColumnRef() !== null) {
-            $columnRef = $node->getColumnRef();
+        $columnRef = $node->getColumnRef();
+
+        if ($columnRef !== null) {
             $fields = $columnRef->getFields();
 
-            if ($fields !== null && \count($fields) > 0) {
+            if (\count($fields) > 0) {
                 $lastField = $fields[\count($fields) - 1];
 
                 if ($lastField->getAStar() !== null) {
@@ -39,19 +41,14 @@ final class ExpressionFactory
             return Literal::fromAst($node);
         }
 
-        if ($node->getFuncCall() !== null) {
-            $funcCall = $node->getFuncCall();
+        $funcCall = $node->getFuncCall();
 
+        if ($funcCall !== null) {
             if ($funcCall->getOver() !== null) {
                 return WindowFunction::fromAst($node);
             }
 
-            if (
-                $funcCall->getAggStar()
-                || $funcCall->getAggDistinct()
-                || $funcCall->getAggOrder() !== null
-                || $funcCall->getAggFilter() !== null
-            ) {
+            if (self::isAggregateCall($funcCall)) {
                 return AggregateCall::fromAst($node);
             }
 
@@ -62,11 +59,10 @@ final class ExpressionFactory
             return TypeCast::fromAst($node);
         }
 
-        if ($node->getAExpr() !== null) {
-            $aExpr = $node->getAExpr();
-            $kind = $aExpr->getKind();
+        $aExpr = $node->getAExpr();
 
-            if ($kind === A_Expr_Kind::AEXPR_NULLIF) {
+        if ($aExpr !== null) {
+            if ($aExpr->getKind() === A_Expr_Kind::AEXPR_NULLIF) {
                 return NullIf::fromAst($node);
             }
 
@@ -77,16 +73,15 @@ final class ExpressionFactory
             return Coalesce::fromAst($node);
         }
 
-        if ($node->getResTarget() !== null) {
-            $resTarget = $node->getResTarget();
+        $resTarget = $node->getResTarget();
+
+        if ($resTarget !== null) {
             $aliasName = $resTarget->getName();
 
-            // If there's an alias, return an AliasedExpression
-            if ($aliasName !== null && $aliasName !== '') {
+            if ($aliasName !== '') {
                 return AliasedExpression::fromAst($node);
             }
 
-            // Otherwise, unwrap and return the inner expression
             $valNode = $resTarget->getVal();
 
             if ($valNode !== null) {
@@ -106,9 +101,9 @@ final class ExpressionFactory
             return Subquery::fromAst($node);
         }
 
-        if ($node->getMinMaxExpr() !== null) {
-            $minMaxExpr = $node->getMinMaxExpr();
+        $minMaxExpr = $node->getMinMaxExpr();
 
+        if ($minMaxExpr !== null) {
             if ($minMaxExpr->getOp() === MinMaxOp::IS_GREATEST) {
                 return Greatest::fromAst($node);
             }
@@ -129,5 +124,15 @@ final class ExpressionFactory
         }
 
         throw UnsupportedNodeException::forNodeType('Unknown expression node type');
+    }
+
+    private static function isAggregateCall(FuncCall $funcCall): bool
+    {
+        return (
+            $funcCall->getAggStar()
+            || $funcCall->getAggDistinct()
+            || \count($funcCall->getAggOrder()) > 0
+            || $funcCall->getAggFilter() !== null
+        );
     }
 }

@@ -6,9 +6,12 @@ namespace Flow\PostgreSql\QueryBuilder\Utility;
 
 use Flow\PostgreSql\Protobuf\AST\DefElem;
 use Flow\PostgreSql\Protobuf\AST\ExplainStmt;
+use Flow\PostgreSql\Protobuf\AST\InsertStmt;
 use Flow\PostgreSql\Protobuf\AST\Integer;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\SelectStmt;
+use Flow\PostgreSql\Protobuf\AST\UpdateStmt;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Delete\DeleteFinalStep;
 use Flow\PostgreSql\QueryBuilder\Insert\InsertFinalStep;
@@ -178,16 +181,16 @@ final readonly class ExplainBuilder implements ExplainFinalStep
     {
         $stmt = new ExplainStmt();
 
-        $queryNode = new Node();
+        $ast = $this->query->toAst();
 
-        if ($this->query instanceof SelectFinalStep) {
-            $queryNode->setSelectStmt($this->query->toAst());
-        } elseif ($this->query instanceof InsertFinalStep) {
-            $queryNode->setInsertStmt($this->query->toAst());
-        } elseif ($this->query instanceof UpdateFinalStep) {
-            $queryNode->setUpdateStmt($this->query->toAst());
+        if ($ast instanceof SelectStmt) {
+            $queryNode = new Node(['select_stmt' => $ast]);
+        } elseif ($ast instanceof InsertStmt) {
+            $queryNode = new Node(['insert_stmt' => $ast]);
+        } elseif ($ast instanceof UpdateStmt) {
+            $queryNode = new Node(['update_stmt' => $ast]);
         } else {
-            $queryNode->setDeleteStmt($this->query->toAst());
+            $queryNode = new Node(['delete_stmt' => $ast]);
         }
 
         $stmt->setQuery($queryNode);
@@ -294,9 +297,7 @@ final readonly class ExplainBuilder implements ExplainFinalStep
         $int = new Integer();
         $int->setIval($value);
 
-        $intNode = new Node();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $intNode->setInteger($int);
+        $intNode = new Node(['integer' => $int]);
         $defElem->setArg($intNode);
 
         $node = new Node();

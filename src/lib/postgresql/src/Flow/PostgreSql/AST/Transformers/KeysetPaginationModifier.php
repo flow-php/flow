@@ -228,9 +228,7 @@ final class KeysetPaginationModifier implements NodeModifier
         $integer = new Integer();
         $integer->setIval($value);
 
-        $aConst = new A_Const();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $aConst->setIval($integer);
+        $aConst = new A_Const(['ival' => $integer]);
 
         $node = new Node();
         $node->setAConst($aConst);
@@ -249,6 +247,6 @@ final class KeysetPaginationModifier implements NodeModifier
 
     private function hasOrderBy(SelectStmt $stmt): bool
     {
-        return \count($stmt->getSortClause() ?? []) > 0;
+        return \count($stmt->getSortClause()) > 0;
     }
 }

@@ -97,6 +97,9 @@ final class TraceableCursor implements Cursor
         return $this->iterate();
     }
 
+    /**
+     * @return \Generator<int, array<string, mixed>>
+     */
     public function iterate(): \Generator
     {
         try {
@@ -114,6 +117,13 @@ final class TraceableCursor implements Cursor
         }
     }
 
+    /**
+     * @template T
+     *
+     * @param RowMapper<T> $mapper
+     *
+     * @return \Generator<int, T>
+     */
     public function map(RowMapper $mapper): \Generator
     {
         try {
@@ -175,18 +185,11 @@ final class TraceableCursor implements Cursor
         $attributes[PostgreSqlTelemetryAttributes::DB_QUERY_TEXT] = $queryText;
 
         if ($this->telemetryConfig->options->includeParameters && $this->parameters !== []) {
-            $maxParams = $this->telemetryConfig->options->maxParameters;
-            $maxParamLength = $this->telemetryConfig->options->maxParameterLength;
-            $count = 0;
-
-            foreach ($this->parameters as $index => $value) {
-                if ($maxParams !== null && $count >= $maxParams) {
-                    break;
-                }
-                $key = PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . ($index + 1);
-                $attributes[$key] = $this->parameterFormatter->format($value, $maxParamLength);
-                $count++;
-            }
+            $attributes = \array_merge($attributes, $this->parameterFormatter->formatList(
+                $this->parameters,
+                $this->telemetryConfig->options->maxParameters,
+                $this->telemetryConfig->options->maxParameterLength,
+            ));
         }
 
         return $attributes;
@@ -207,23 +210,27 @@ final class TraceableCursor implements Cursor
 
     private function completeSpan(SpanStatus $status, ?\Throwable $exception = null): void
     {
-        if ($this->span === null) {
+        $span = $this->span;
+
+        if ($span === null) {
             $this->recordMetrics();
 
             return;
         }
 
-        $this->span->setAttribute(PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS, $this->rowsIterated);
+        $span->setAttribute(PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS, $this->rowsIterated);
 
         if ($exception !== null) {
-            $this->span->recordException($exception, $this->telemetryConfig->clock->now());
-            $this->span->setAttribute(PostgreSqlTelemetryAttributes::ERROR_TYPE, $exception::class);
+            $span->recordException($exception, $this->telemetryConfig->clock->now());
+            $span->setAttribute(PostgreSqlTelemetryAttributes::ERROR_TYPE, $exception::class);
         }
 
-        $this->span->setStatus($status);
+        $span->setStatus($status);
 
-        if ($this->tracer !== null) {
-            $this->tracer->complete($this->span);
+        $tracer = $this->tracer;
+
+        if ($tracer !== null) {
+            $tracer->complete($span);
         }
 
         $this->recordMetrics();

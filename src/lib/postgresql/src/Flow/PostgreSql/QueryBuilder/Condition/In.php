@@ -61,10 +61,6 @@ final readonly class In implements Condition
 
         $items = $list->getItems();
 
-        if ($items === null) {
-            throw InvalidAstException::missingRequiredField('items', 'List');
-        }
-
         $values = [];
 
         foreach ($items as $item) {

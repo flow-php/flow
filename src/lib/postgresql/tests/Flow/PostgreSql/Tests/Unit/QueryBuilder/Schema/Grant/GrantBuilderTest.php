@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\Grant;
 
+use Flow\PostgreSql\Protobuf\AST\Boolean;
 use Flow\PostgreSql\Protobuf\AST\DropBehavior;
 use Flow\PostgreSql\Protobuf\AST\GrantRoleStmt;
 use Flow\PostgreSql\Protobuf\AST\GrantStmt;
@@ -16,6 +17,8 @@ use Flow\PostgreSql\QueryBuilder\Schema\Grant\RevokeBuilder;
 use Flow\PostgreSql\QueryBuilder\Schema\Grant\RevokeRoleBuilder;
 use Flow\PostgreSql\QueryBuilder\Schema\Grant\TablePrivilege;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\Types\DSL\type_instance_of;
 
 final class GrantBuilderTest extends TestCase
 {
@@ -110,7 +113,8 @@ final class GrantBuilderTest extends TestCase
 
         $arg = $defElem->getArg();
         static::assertNotNull($arg);
-        static::assertTrue($arg->getBoolean()->getBoolval());
+        $boolean = type_instance_of(Boolean::class)->assert($arg->getBoolean());
+        static::assertTrue($boolean->getBoolval());
     }
 
     public function test_grant_to_public(): void

@@ -7,6 +7,8 @@ namespace Flow\PostgreSql\Explain\Analyzer;
 use Flow\PostgreSql\Explain\Plan\Plan;
 use Flow\PostgreSql\Explain\Plan\PlanNode;
 
+use function Flow\Types\DSL\type_float;
+
 final readonly class PlanAnalyzer
 {
     public function __construct(
@@ -136,7 +138,11 @@ final readonly class PlanAnalyzer
 
         \usort(
             $insights,
-            static fn(Insight $a, Insight $b): int => $b->metrics['mismatch_ratio'] <=> $a->metrics['mismatch_ratio'],
+            static fn(Insight $a, Insight $b): int => (
+                type_float()->assert($b->metrics['mismatch_ratio']) <=> type_float()->assert(
+                    $a->metrics['mismatch_ratio'],
+                )
+            ),
         );
 
         return $insights;
@@ -236,7 +242,11 @@ final readonly class PlanAnalyzer
 
         \usort(
             $insights,
-            static fn(Insight $a, Insight $b): int => $b->metrics['removal_ratio'] <=> $a->metrics['removal_ratio'],
+            static fn(Insight $a, Insight $b): int => (
+                type_float()->assert($b->metrics['removal_ratio']) <=> type_float()->assert(
+                    $a->metrics['removal_ratio'],
+                )
+            ),
         );
 
         return $insights;
@@ -296,7 +306,9 @@ final readonly class PlanAnalyzer
 
         \usort(
             $insights,
-            static fn(Insight $a, Insight $b): int => $a->metrics['hit_ratio'] <=> $b->metrics['hit_ratio'],
+            static fn(Insight $a, Insight $b): int => (
+                type_float()->assert($a->metrics['hit_ratio']) <=> type_float()->assert($b->metrics['hit_ratio'])
+            ),
         );
 
         return $insights;
@@ -501,18 +513,23 @@ final readonly class PlanAnalyzer
 
     private function nodeIdentifier(PlanNode $node): string
     {
-        if ($node->relationName() !== null) {
-            $identifier = $node->relationName();
+        $relationName = $node->relationName();
 
-            if ($node->alias() !== null && $node->alias() !== $node->relationName()) {
-                $identifier .= ' (' . $node->alias() . ')';
+        if ($relationName !== null) {
+            $identifier = $relationName;
+            $alias = $node->alias();
+
+            if ($alias !== null && $alias !== $relationName) {
+                $identifier .= ' (' . $alias . ')';
             }
 
             return "'" . $identifier . "'";
         }
 
-        if ($node->indexName() !== null) {
-            return "'" . $node->indexName() . "'";
+        $indexName = $node->indexName();
+
+        if ($indexName !== null) {
+            return "'" . $indexName . "'";
         }
 
         return 'node';

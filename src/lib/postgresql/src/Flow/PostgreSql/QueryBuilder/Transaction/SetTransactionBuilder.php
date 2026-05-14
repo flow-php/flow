@@ -117,11 +117,10 @@ final readonly class SetTransactionBuilder implements SetTransactionOptionsStep
         $defElem = new DefElem();
         $defElem->setDefname($name);
 
-        $aConst = new A_Const();
         $ival = new Integer();
         $ival->setIval($value ? 1 : 0);
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $aConst->setIval($ival);
+
+        $aConst = new A_Const(['ival' => $ival]);
 
         $argNode = new Node();
         $argNode->setAConst($aConst);

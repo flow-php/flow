@@ -38,7 +38,7 @@ final readonly class FunctionCall implements Expression
 
         $funcNameNodes = $funcCall->getFuncname();
 
-        if ($funcNameNodes === null || \count($funcNameNodes) === 0) {
+        if (\count($funcNameNodes) === 0) {
             throw InvalidAstException::missingRequiredField('funcname', 'FuncCall');
         }
 
@@ -59,12 +59,9 @@ final readonly class FunctionCall implements Expression
         }
 
         $args = [];
-        $argsNodes = $funcCall->getArgs();
 
-        if ($argsNodes !== null) {
-            foreach ($argsNodes as $argNode) {
-                $args[] = ExpressionFactory::fromAst($argNode);
-            }
+        foreach ($funcCall->getArgs() as $argNode) {
+            $args[] = ExpressionFactory::fromAst($argNode);
         }
 
         return new self($funcName, $args);

@@ -59,7 +59,7 @@ final class IntegerConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_smallint())->as('val'))->toSql(), [typed(
+            ->fetchScalarInt(select(cast(param(1), column_type_smallint())->as('val'))->toSql(), [typed(
                 $input,
                 ValueType::INT2,
             )]);
@@ -73,7 +73,7 @@ final class IntegerConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_integer())->as('val'))->toSql(), [typed(
+            ->fetchScalarInt(select(cast(param(1), column_type_integer())->as('val'))->toSql(), [typed(
                 $input,
                 ValueType::INT4,
             )]);
@@ -87,7 +87,7 @@ final class IntegerConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_bigint())->as('val'))->toSql(), [typed(
+            ->fetchScalarInt(select(cast(param(1), column_type_bigint())->as('val'))->toSql(), [typed(
                 $input,
                 ValueType::INT8,
             )]);
@@ -97,11 +97,11 @@ final class IntegerConverterTest extends PostgreSqlTestCase
 
     public function test_null_integer(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal(null), column_type_integer())->as('val'))->toSql());
-
-        static::assertNull($result);
+        static::assertNull(
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalar(select(cast(literal(null), column_type_integer())->as('val'))->toSql()),
+        );
     }
 }

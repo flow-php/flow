@@ -88,12 +88,11 @@ final class JsonConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_json())->as('val'))->toSql(), [typed(
+            ->fetchScalarString(select(cast(param(1), column_type_json())->as('val'))->toSql(), [typed(
                 $input,
                 ValueType::JSON,
             )]);
 
-        static::assertIsString($result);
         static::assertSame($expected, $result);
     }
 
@@ -103,9 +102,8 @@ final class JsonConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_json())->as('val'))->toSql(), [$input]);
+            ->fetchScalarString(select(cast(param(1), column_type_json())->as('val'))->toSql(), [$input]);
 
-        static::assertIsString($result);
         static::assertSame($input, $result);
     }
 
@@ -115,9 +113,8 @@ final class JsonConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_jsonb())->as('val'))->toSql(), [$input]);
+            ->fetchScalarString(select(cast(param(1), column_type_jsonb())->as('val'))->toSql(), [$input]);
 
-        static::assertIsString($result);
         static::assertSame($expected, $result);
     }
 
@@ -130,32 +127,31 @@ final class JsonConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_json())->as('val'))->toSql(), [typed(
+            ->fetchScalarString(select(cast(param(1), column_type_json())->as('val'))->toSql(), [typed(
                 $input,
                 ValueType::JSON,
             )]);
 
-        static::assertIsString($result);
         static::assertSame($input, \json_decode($result, true, 512, \JSON_THROW_ON_ERROR));
     }
 
     public function test_null_json(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal(null), column_type_json())->as('val'))->toSql());
-
-        static::assertNull($result);
+        static::assertNull(
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalar(select(cast(literal(null), column_type_json())->as('val'))->toSql()),
+        );
     }
 
     public function test_null_jsonb(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal(null), column_type_jsonb())->as('val'))->toSql());
-
-        static::assertNull($result);
+        static::assertNull(
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalar(select(cast(literal(null), column_type_jsonb())->as('val'))->toSql()),
+        );
     }
 }

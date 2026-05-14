@@ -29,20 +29,23 @@ final class TextArrayConverter implements ValueConverter
             return '{}';
         }
 
-        $elements = [];
+        return '{' . \implode(',', \array_map(self::encodeElement(...), $value)) . '}';
+    }
 
-        foreach ($value as $v) {
-            if ($v === null) {
-                $elements[] = 'NULL';
-            } elseif (\is_string($v)) {
-                $elements[] = StringEscaper::escape($v);
-            } elseif (\is_scalar($v)) {
-                $elements[] = (string) $v;
-            } else {
-                throw ValueConversionException::cannotConvert($v, 'text array element');
-            }
+    private static function encodeElement(mixed $element): string
+    {
+        if ($element === null) {
+            return 'NULL';
         }
 
-        return '{' . \implode(',', $elements) . '}';
+        if (\is_string($element)) {
+            return StringEscaper::escape($element);
+        }
+
+        if (\is_scalar($element)) {
+            return (string) $element;
+        }
+
+        throw ValueConversionException::cannotConvert($element, 'text array element');
     }
 }

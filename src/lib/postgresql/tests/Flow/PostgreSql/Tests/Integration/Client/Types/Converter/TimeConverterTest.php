@@ -48,12 +48,12 @@ final class TimeConverterTest extends PostgreSqlTestCase
 
     public function test_null_time(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal(null), column_type_time())->as('val'))->toSql());
-
-        static::assertNull($result);
+        static::assertNull(
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalar(select(cast(literal(null), column_type_time())->as('val'))->toSql()),
+        );
     }
 
     #[DataProvider('provide_time_values')]
@@ -62,9 +62,8 @@ final class TimeConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_time())->as('val'))->toSql(), [$input]);
+            ->fetchScalarString(select(cast(param(1), column_type_time())->as('val'))->toSql(), [$input]);
 
-        static::assertIsString($result);
         static::assertSame($expected, $result);
     }
 
@@ -74,9 +73,8 @@ final class TimeConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_time())->as('val'))->toSql(), [$input]);
+            ->fetchScalarString(select(cast(param(1), column_type_time())->as('val'))->toSql(), [$input]);
 
-        static::assertIsString($result);
         static::assertSame($expected, $result);
     }
 
@@ -86,9 +84,12 @@ final class TimeConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_custom('timetz'))->as('val'))->toSql(), [$input]);
+            ->fetchScalarString(select(cast(param(1), column_type_custom('timetz'))->as('val'))->toSql(), [$input]);
 
-        static::assertIsString($result);
+        if ('' === $expectedTime) {
+            static::fail('expectedTime must be non-empty');
+        }
+
         static::assertStringStartsWith($expectedTime, $result);
     }
 }

@@ -150,11 +150,7 @@ final readonly class CreateDatabaseBuilder implements CreateDatabaseOptionsStep
         $integer = new Integer();
         $integer->setIval($value ? 1 : 0);
 
-        $node = new Node();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $node->setInteger($integer);
-
-        return $node;
+        return new Node(['integer' => $integer]);
     }
 
     private function integerNode(int $value): Node
@@ -162,11 +158,7 @@ final readonly class CreateDatabaseBuilder implements CreateDatabaseOptionsStep
         $integer = new Integer();
         $integer->setIval($value);
 
-        $node = new Node();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $node->setInteger($integer);
-
-        return $node;
+        return new Node(['integer' => $integer]);
     }
 
     private function stringNode(string $value): Node

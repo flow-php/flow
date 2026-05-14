@@ -51,9 +51,8 @@ final class DateConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_date())->as('val'))->toSql(), [$input]);
+            ->fetchScalarString(select(cast(param(1), column_type_date())->as('val'))->toSql(), [$input]);
 
-        static::assertIsString($result);
         static::assertSame($expected, $result);
     }
 
@@ -63,22 +62,21 @@ final class DateConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_date())->as('val'))->toSql(), [typed(
+            ->fetchScalarString(select(cast(param(1), column_type_date())->as('val'))->toSql(), [typed(
                 $input,
                 ValueType::DATE,
             )]);
 
-        static::assertIsString($result);
         static::assertSame($expected, $result);
     }
 
     public function test_null_date(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal(null), column_type_date())->as('val'))->toSql());
-
-        static::assertNull($result);
+        static::assertNull(
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalar(select(cast(literal(null), column_type_date())->as('val'))->toSql()),
+        );
     }
 }

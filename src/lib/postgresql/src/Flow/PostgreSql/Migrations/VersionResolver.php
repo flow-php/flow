@@ -17,13 +17,22 @@ final readonly class VersionResolver
 
     public function resolve(VersionAlias|string $alias): Version
     {
-        $versionAlias = $alias instanceof VersionAlias ? $alias : VersionAlias::tryFrom($alias);
+        if (!$alias instanceof VersionAlias) {
+            $tried = VersionAlias::tryFrom($alias);
 
-        if ($versionAlias === null) {
-            return Version::fromString($alias);
+            if ($tried === null) {
+                return Version::fromString($alias);
+            }
+
+            return $this->resolveAlias($tried);
         }
 
-        return match ($versionAlias) {
+        return $this->resolveAlias($alias);
+    }
+
+    private function resolveAlias(VersionAlias $alias): Version
+    {
+        return match ($alias) {
             VersionAlias::FIRST => $this->resolveFirst(),
             VersionAlias::LATEST => $this->resolveLatest(),
             VersionAlias::PREV => $this->resolvePrev(),

@@ -6,6 +6,8 @@ namespace Flow\PostgreSql\Tests\Integration\Client\Telemetry;
 
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryAttributes;
+use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryConfig;
+use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryOptions;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 use Flow\Telemetry\Logger\Severity;
 use Flow\Telemetry\Meter\MetricType;
@@ -119,8 +121,9 @@ final class TraceableClientTest extends PostgreSqlTestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertNotNull($spans[0]->status());
-        static::assertTrue($spans[0]->status()->isError());
+        $status = $spans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isError());
         static::assertArrayHasKey(PostgreSqlTelemetryAttributes::ERROR_TYPE, $spans[0]->attributes());
     }
 
@@ -275,7 +278,7 @@ final class TraceableClientTest extends PostgreSqlTestCase
         static::assertSame(1, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_TRANSACTION_NESTING_LEVEL]);
     }
 
-    private function collectMetrics($config): void
+    private function collectMetrics(PostgreSqlTelemetryConfig $config): void
     {
         $meter = $config->telemetry->meter('flow_php_postgresql');
 
@@ -288,8 +291,8 @@ final class TraceableClientTest extends PostgreSqlTestCase
         ?MemorySpanProcessor $spanProcessor = null,
         ?MemoryMetricProcessor $metricProcessor = null,
         ?MemoryLogProcessor $logProcessor = null,
-        $options = null,
-    ) {
+        ?PostgreSqlTelemetryOptions $options = null,
+    ): PostgreSqlTelemetryConfig {
         $clock = new SystemClock();
         $contextStorage = memory_context_storage();
 

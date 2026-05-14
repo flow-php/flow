@@ -16,6 +16,9 @@ use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
+use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_string;
+
 /**
  * Builder for COPY TO statements (data export).
  */
@@ -378,7 +381,7 @@ final readonly class CopyToBuilder implements CopyToDestinationStep, CopyToOptio
         if ($this->isStdout) {
             $copyStmt->setFilename('');
         } else {
-            $copyStmt->setFilename($this->filename ?? '');
+            $copyStmt->setFilename(type_string()->assert($this->filename));
         }
 
         if ($this->table !== null) {
@@ -407,8 +410,7 @@ final readonly class CopyToBuilder implements CopyToDestinationStep, CopyToOptio
                 $copyStmt->setAttlist($attlist);
             }
         } else {
-            /** @var SelectFinalStep $query */
-            $query = $this->query;
+            $query = type_instance_of(SelectFinalStep::class)->assert($this->query);
             $queryNode = new Node();
             $queryNode->setSelectStmt($query->toAst());
             $copyStmt->setQuery($queryNode);

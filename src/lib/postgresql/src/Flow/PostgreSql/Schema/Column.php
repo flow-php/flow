@@ -11,7 +11,7 @@ use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 /**
  * @phpstan-import-type ColumnTypeShape from ColumnType
  *
- * @phpstan-type ColumnShape = array{name: string, type: ColumnTypeShape, nullable: bool, default: ?string, is_identity: bool, identity_generation: ?string, is_generated: bool, generation_expression: ?string, ordinal_position: ?int}
+ * @phpstan-type ColumnShape = array{name: string, type: ColumnTypeShape, nullable: bool, default?: ?string, is_identity?: bool, identity_generation?: ?string, is_generated?: bool, generation_expression?: ?string, ordinal_position?: ?int}
  */
 final readonly class Column
 {

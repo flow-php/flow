@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\Index;
 
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ReindexObjectType;
 use Flow\PostgreSql\Protobuf\AST\ReindexStmt;
 use Flow\PostgreSql\QueryBuilder\Schema\Index\Reindex\ReindexBuilder;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\Types\DSL\type_instance_of;
 
 final class ReindexBuilderTest extends TestCase
 {
@@ -25,8 +28,11 @@ final class ReindexBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(ReindexStmt::class, $ast);
-        static::assertCount(1, $ast->getParams());
-        static::assertSame('concurrently', $ast->getParams()[0]->getDefElem()->getDefname());
+        $params = $ast->getParams();
+        static::assertCount(1, $params);
+        $defElem = type_instance_of(Node::class)->assert($params[0])->getDefElem();
+        static::assertNotNull($defElem);
+        static::assertSame('concurrently', $defElem->getDefname());
     }
 
     public function test_database_reindex(): void
@@ -60,7 +66,9 @@ final class ReindexBuilderTest extends TestCase
 
         static::assertInstanceOf(ReindexStmt::class, $ast);
         static::assertSame(ReindexObjectType::REINDEX_OBJECT_INDEX, $ast->getKind());
-        static::assertSame('idx_users_email', $ast->getRelation()->getRelname());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertSame('idx_users_email', $relation->getRelname());
     }
 
     public function test_index_with_schema(): void
@@ -70,8 +78,10 @@ final class ReindexBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(ReindexStmt::class, $ast);
-        static::assertSame('public', $ast->getRelation()->getSchemaname());
-        static::assertSame('idx_users_email', $ast->getRelation()->getRelname());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertSame('public', $relation->getSchemaname());
+        static::assertSame('idx_users_email', $relation->getRelname());
     }
 
     public function test_multiple_params(): void
@@ -114,7 +124,9 @@ final class ReindexBuilderTest extends TestCase
 
         static::assertInstanceOf(ReindexStmt::class, $ast);
         static::assertSame(ReindexObjectType::REINDEX_OBJECT_TABLE, $ast->getKind());
-        static::assertSame('users', $ast->getRelation()->getRelname());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertSame('users', $relation->getRelname());
     }
 
     public function test_tablespace_adds_param(): void
@@ -124,9 +136,16 @@ final class ReindexBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(ReindexStmt::class, $ast);
-        static::assertCount(1, $ast->getParams());
-        static::assertSame('tablespace', $ast->getParams()[0]->getDefElem()->getDefname());
-        static::assertSame('fast_storage', $ast->getParams()[0]->getDefElem()->getArg()->getString()->getSval());
+        $params = $ast->getParams();
+        static::assertCount(1, $params);
+        $defElem = type_instance_of(Node::class)->assert($params[0])->getDefElem();
+        static::assertNotNull($defElem);
+        static::assertSame('tablespace', $defElem->getDefname());
+        $arg = $defElem->getArg();
+        static::assertNotNull($arg);
+        $string = $arg->getString();
+        static::assertNotNull($string);
+        static::assertSame('fast_storage', $string->getSval());
     }
 
     public function test_verbose_adds_param(): void
@@ -136,7 +155,10 @@ final class ReindexBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(ReindexStmt::class, $ast);
-        static::assertCount(1, $ast->getParams());
-        static::assertSame('verbose', $ast->getParams()[0]->getDefElem()->getDefname());
+        $params = $ast->getParams();
+        static::assertCount(1, $params);
+        $defElem = type_instance_of(Node::class)->assert($params[0])->getDefElem();
+        static::assertNotNull($defElem);
+        static::assertSame('verbose', $defElem->getDefname());
     }
 }

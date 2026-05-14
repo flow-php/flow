@@ -44,8 +44,8 @@ final readonly class ForeignKey
             onDelete: array_key_exists('on_delete', $data)
                 ? ReferentialAction::from($data['on_delete'])
                 : ReferentialAction::NO_ACTION,
-            deferrable: $data['deferrable'] ?? false,
-            initiallyDeferred: $data['initially_deferred'] ?? false,
+            deferrable: $data['deferrable'],
+            initiallyDeferred: $data['initially_deferred'],
         );
     }
 

@@ -123,7 +123,9 @@ final readonly class CreateViewBuilder implements
             throw InvalidExpressionException::invalidValue('view name', 'null or empty');
         }
 
-        if ($this->query === null) {
+        $query = $this->query;
+
+        if ($query === null) {
             throw InvalidExpressionException::invalidValue('query', 'null');
         }
 
@@ -163,7 +165,7 @@ final readonly class CreateViewBuilder implements
         }
 
         $queryNode = new Node();
-        $queryNode->setSelectStmt($this->query->toAst());
+        $queryNode->setSelectStmt($query->toAst());
         $stmt->setQuery($queryNode);
 
         if ($this->checkOption !== null) {

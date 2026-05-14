@@ -25,18 +25,19 @@ final class UuidArrayConverter implements ValueConverter
             return '{}';
         }
 
-        $elements = [];
+        return '{' . \implode(',', \array_map(self::encodeElement(...), $value)) . '}';
+    }
 
-        foreach ($value as $v) {
-            if ($v === null) {
-                $elements[] = 'NULL';
-            } elseif (\is_string($v)) {
-                $elements[] = $v;
-            } else {
-                throw ValueConversionException::cannotConvert($v, 'UUID array element');
-            }
+    private static function encodeElement(mixed $element): string
+    {
+        if ($element === null) {
+            return 'NULL';
         }
 
-        return '{' . \implode(',', $elements) . '}';
+        if (\is_string($element)) {
+            return $element;
+        }
+
+        throw ValueConversionException::cannotConvert($element, 'UUID array element');
     }
 }

@@ -12,6 +12,8 @@ use Flow\PostgreSql\Protobuf\AST\PBFloat;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
+use function Flow\Types\DSL\type_instance_of;
+
 /**
  * Represents a literal value in SQL (string, int, float, bool, null).
  */
@@ -44,18 +46,13 @@ final readonly class Literal implements Expression
         }
 
         if ($aConst->hasIval()) {
-            $ival = $aConst->getIval();
-            \assert($ival instanceof Integer);
-
-            return new self($ival->getIval());
+            return new self(type_instance_of(Integer::class)->assert($aConst->getIval())->getIval());
         }
 
         if ($aConst->hasFval()) {
-            $fval = $aConst->getFval();
-            \assert($fval instanceof PBFloat);
-            $floatStr = $fval->getFval();
+            $fval = type_instance_of(PBFloat::class)->assert($aConst->getFval());
 
-            return new self((float) $floatStr);
+            return new self(\floatval($fval->getFval()));
         }
 
         if ($aConst->hasSval()) {
@@ -66,10 +63,7 @@ final readonly class Literal implements Expression
         }
 
         if ($aConst->hasBoolval()) {
-            $boolval = $aConst->getBoolval();
-            \assert($boolval instanceof Boolean);
-
-            return new self($boolval->getBoolval());
+            return new self(type_instance_of(Boolean::class)->assert($aConst->getBoolval())->getBoolval());
         }
 
         throw InvalidAstException::missingRequiredField('value', 'A_Const');
@@ -122,30 +116,27 @@ final readonly class Literal implements Expression
 
     public function toAst(): Node
     {
-        $aConst = new A_Const();
-
         if ($this->value === null) {
+            $aConst = new A_Const();
             $aConst->setIsnull(true);
         } elseif (\is_int($this->value)) {
             $integer = new Integer();
             $integer->setIval($this->value);
-
-            /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-            $aConst->setIval($integer);
+            $aConst = new A_Const(['ival' => $integer]);
         } elseif (\is_float($this->value)) {
+            $aConst = new A_Const();
             $float = new PBFloat();
             $float->setFval((string) $this->value);
             $aConst->setFval($float);
         } elseif (\is_string($this->value)) {
+            $aConst = new A_Const();
             $string = new PBString();
             $string->setSval($this->value);
             $aConst->setSval($string);
-        } elseif (\is_bool($this->value)) {
+        } else {
             $boolean = new Boolean();
             $boolean->setBoolval($this->value);
-
-            /** @phpstan-ignore argument.type (protobuf PHPDoc says bool but actually expects Boolean) */
-            $aConst->setBoolval($boolean);
+            $aConst = new A_Const(['boolval' => $boolean]);
         }
 
         $node = new Node();

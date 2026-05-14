@@ -158,6 +158,12 @@ final class ParameterFormatterTest extends TestCase
 
         static::assertSame(103, \strlen($result));
         static::assertStringEndsWith('...', $result);
-        static::assertStringStartsWith(\str_repeat('a', 100), $result);
+        $prefix = \str_repeat('a', 100);
+
+        if ('' === $prefix) {
+            static::fail('prefix must be non-empty');
+        }
+
+        static::assertStringStartsWith($prefix, $result);
     }
 }

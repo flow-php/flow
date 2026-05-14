@@ -86,8 +86,9 @@ final class AvailableMigrationsTest extends TestCase
             new AvailableMigration($v1, 'first', $this->stubMigration(), null),
         );
 
-        static::assertNotNull($migrations->first());
-        static::assertTrue($v1->equals($migrations->first()->version));
+        $first = $migrations->first();
+        static::assertNotNull($first);
+        static::assertTrue($v1->equals($first->version));
     }
 
     public function test_get_returns_migration_for_existing_version(): void
@@ -151,8 +152,9 @@ final class AvailableMigrationsTest extends TestCase
             new AvailableMigration($v2, 'second', $this->stubMigration(), null),
         );
 
-        static::assertNotNull($migrations->last());
-        static::assertTrue($v2->equals($migrations->last()->version));
+        $last = $migrations->last();
+        static::assertNotNull($last);
+        static::assertTrue($v2->equals($last->version));
     }
 
     public function test_non_empty_collection_is_not_empty(): void

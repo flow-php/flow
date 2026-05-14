@@ -84,8 +84,9 @@ final class ExecutedMigrationsTest extends TestCase
 
         $migrations = new ExecutedMigrations($middle, $latest, $earliest);
 
-        static::assertNotNull($migrations->latest());
-        static::assertTrue($latest->version->equals($migrations->latest()->version));
+        $latestMigration = $migrations->latest();
+        static::assertNotNull($latestMigration);
+        static::assertTrue($latest->version->equals($latestMigration->version));
     }
 
     public function test_non_empty_collection_is_not_empty(): void

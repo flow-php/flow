@@ -448,8 +448,9 @@ final class DeleteBuilderTest extends TestCase
         $usingTable = $usingClause[0]->getRangeVar();
         static::assertNotNull($usingTable);
         static::assertSame('orders', $usingTable->getRelname());
-        static::assertNotNull($usingTable->getAlias());
-        static::assertSame('o', $usingTable->getAlias()->getAliasname());
+        $alias = $usingTable->getAlias();
+        static::assertNotNull($alias);
+        static::assertSame('o', $alias->getAliasname());
     }
 
     public function test_delete_with_using_deparsed_output(): void

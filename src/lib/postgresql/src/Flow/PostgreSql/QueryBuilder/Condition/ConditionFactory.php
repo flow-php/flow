@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Condition;
 
+use Flow\PostgreSql\Protobuf\AST\A_Expr;
 use Flow\PostgreSql\Protobuf\AST\A_Expr_Kind;
+use Flow\PostgreSql\Protobuf\AST\BoolExpr;
 use Flow\PostgreSql\Protobuf\AST\BoolExprType;
 use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\SubLink;
 use Flow\PostgreSql\Protobuf\AST\SubLinkType;
 use Flow\PostgreSql\QueryBuilder\Exception\UnsupportedNodeException;
 
@@ -17,8 +20,9 @@ final class ConditionFactory
 {
     public static function fromAst(Node $node): Condition
     {
-        if ($node->getAExpr() !== null) {
-            $aExpr = $node->getAExpr();
+        $aExpr = $node->getAExpr();
+
+        if ($aExpr instanceof A_Expr) {
             $kind = $aExpr->getKind();
 
             return match ($kind) {
@@ -37,8 +41,9 @@ final class ConditionFactory
             };
         }
 
-        if ($node->getBoolExpr() !== null) {
-            $boolExpr = $node->getBoolExpr();
+        $boolExpr = $node->getBoolExpr();
+
+        if ($boolExpr instanceof BoolExpr) {
             $boolOp = $boolExpr->getBoolop();
 
             return match ($boolOp) {
@@ -53,8 +58,9 @@ final class ConditionFactory
             return IsNull::fromAst($node);
         }
 
-        if ($node->getSubLink() !== null) {
-            $subLink = $node->getSubLink();
+        $subLink = $node->getSubLink();
+
+        if ($subLink instanceof SubLink) {
             $subLinkType = $subLink->getSubLinkType();
 
             return match ($subLinkType) {
@@ -86,7 +92,7 @@ final class ConditionFactory
 
         $nameNodes = $aExpr->getName();
 
-        if ($nameNodes !== null && $nameNodes->count() > 0) {
+        if ($nameNodes->count() > 0) {
             $nameNode = $nameNodes->offsetGet(0);
             $stringNode = $nameNode->getString();
 

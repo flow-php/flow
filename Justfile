@@ -53,7 +53,8 @@ analyze *args:
 analyze-mago *args:
     tools/mago/vendor/bin/mago analyze {{args}} \
         src/lib/types \
-        src/lib/telemetry
+        src/lib/telemetry \
+        src/lib/postgresql
 
 # Auto-fix code style with Mago (format + lint --fix).
 fix:

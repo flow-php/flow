@@ -585,7 +585,7 @@ final class ParserTest extends TestCase
             static::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
         }
 
-        $summary = sql_summary('SELECT 1', PG_QUERY_PARSE_DEFAULT);
+        $summary = sql_summary('SELECT 1', 0);
 
         static::assertNotEmpty($summary);
     }

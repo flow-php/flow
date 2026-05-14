@@ -71,6 +71,7 @@ final readonly class AstViewDependencyResolver implements ViewDependencyResolver
      */
     private function computeDepths(array $affected, array $viewDependsOn, array $allViews): array
     {
+        /** @var array<string, int> $depths */
         $depths = [];
         $affectedSet = \array_flip($affected);
 

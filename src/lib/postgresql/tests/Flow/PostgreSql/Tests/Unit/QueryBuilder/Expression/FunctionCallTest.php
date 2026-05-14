@@ -125,8 +125,7 @@ final class FunctionCallTest extends TestCase
     {
         $this->expectException(InvalidExpressionException::class);
 
-        /** @phpstan-ignore argument.type (intentionally testing exception) */
-        new FunctionCall([], []);
+        (new \ReflectionClass(FunctionCall::class))->newInstance([], []);
     }
 
     public function test_with_args_creates_new_instance(): void

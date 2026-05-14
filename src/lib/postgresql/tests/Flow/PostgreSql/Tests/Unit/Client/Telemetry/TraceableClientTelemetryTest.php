@@ -154,8 +154,9 @@ final class TraceableClientTelemetryTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertNotNull($spans[0]->status());
-        static::assertFalse($spans[0]->status()->isError());
+        $status = $spans[0]->status();
+        static::assertNotNull($status);
+        static::assertFalse($status->isError());
     }
 
     public function test_duration_metric_is_recorded_when_metrics_enabled(): void

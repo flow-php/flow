@@ -128,16 +128,13 @@ final class TableDatabaseTest extends PostgreSqlTestCase
             );
         static::assertGreaterThanOrEqual(1, \count($constraints));
 
-        $hasAgeConstraint = false;
-
-        foreach ($constraints as $constraint) {
-            if ($constraint['def'] !== null && \str_contains($constraint['def'], 'age')) {
-                $hasAgeConstraint = true;
-
-                break;
-            }
-        }
-        static::assertTrue($hasAgeConstraint, 'Should have a CHECK constraint on age column');
+        $matchingConstraints = \array_filter(
+            $constraints,
+            static fn(array $constraint): bool => (
+                \is_string($constraint['def'] ?? null) && \str_contains($constraint['def'], 'age')
+            ),
+        );
+        static::assertNotEmpty($matchingConstraints, 'Should have a CHECK constraint on age column');
     }
 
     public function test_create_table_with_columns(): void

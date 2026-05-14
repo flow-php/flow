@@ -260,8 +260,7 @@ final class AggregateCallTest extends TestCase
     {
         $this->expectException(InvalidExpressionException::class);
 
-        /** @phpstan-ignore argument.type (intentionally testing exception) */
-        new AggregateCall([], []);
+        (new \ReflectionClass(AggregateCall::class))->newInstance([], []);
     }
 
     public function test_throws_exception_for_star_with_arguments(): void

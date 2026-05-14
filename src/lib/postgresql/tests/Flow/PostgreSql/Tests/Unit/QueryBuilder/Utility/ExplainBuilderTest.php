@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Utility;
 
 use Flow\PostgreSql\Protobuf\AST\ExplainStmt;
+use Flow\PostgreSql\Protobuf\AST\Integer;
 use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
 use Flow\PostgreSql\QueryBuilder\Utility\ExplainBuilder;
 use Flow\PostgreSql\QueryBuilder\Utility\ExplainFormat;
@@ -12,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 
 use function Flow\PostgreSql\DSL\star;
 use function Flow\PostgreSql\DSL\table;
+use function Flow\Types\DSL\type_instance_of;
 
 final class ExplainBuilderTest extends TestCase
 {
@@ -65,10 +67,12 @@ final class ExplainBuilderTest extends TestCase
         foreach ($options as $opt) {
             $defElem = $opt->getDefElem();
 
-            if ($defElem?->getDefname() === 'buffers') {
+            if ($defElem !== null && $defElem->getDefname() === 'buffers') {
                 $buffersFound = true;
-                /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns int instead of Integer class) */
-                static::assertSame(1, $defElem->getArg()?->getInteger()?->getIval());
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $integer = type_instance_of(Integer::class)->assert($arg->getInteger());
+                static::assertSame(1, $integer->getIval());
             }
         }
         static::assertTrue($buffersFound);
@@ -88,10 +92,12 @@ final class ExplainBuilderTest extends TestCase
         foreach ($options as $opt) {
             $defElem = $opt->getDefElem();
 
-            if ($defElem?->getDefname() === 'costs') {
+            if ($defElem !== null && $defElem->getDefname() === 'costs') {
                 $costsFound = true;
-                /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns int instead of Integer class) */
-                static::assertSame(1, $defElem->getArg()?->getInteger()?->getIval());
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $integer = type_instance_of(Integer::class)->assert($arg->getInteger());
+                static::assertSame(1, $integer->getIval());
             }
         }
         static::assertTrue($costsFound);
@@ -111,7 +117,7 @@ final class ExplainBuilderTest extends TestCase
         foreach ($options as $opt) {
             $defElem = $opt->getDefElem();
 
-            if ($defElem?->getDefname() === 'format') {
+            if ($defElem !== null && $defElem->getDefname() === 'format') {
                 $formatFound = true;
                 static::assertSame('json', $defElem->getArg()?->getString()?->getSval());
             }
@@ -133,7 +139,7 @@ final class ExplainBuilderTest extends TestCase
         foreach ($options as $opt) {
             $defElem = $opt->getDefElem();
 
-            if ($defElem?->getDefname() === 'format') {
+            if ($defElem !== null && $defElem->getDefname() === 'format') {
                 $formatFound = true;
                 static::assertSame('yaml', $defElem->getArg()?->getString()?->getSval());
             }
@@ -155,10 +161,12 @@ final class ExplainBuilderTest extends TestCase
         foreach ($options as $opt) {
             $defElem = $opt->getDefElem();
 
-            if ($defElem?->getDefname() === 'timing') {
+            if ($defElem !== null && $defElem->getDefname() === 'timing') {
                 $timingFound = true;
-                /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns int instead of Integer class) */
-                static::assertSame(1, $defElem->getArg()?->getInteger()?->getIval());
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $integer = type_instance_of(Integer::class)->assert($arg->getInteger());
+                static::assertSame(1, $integer->getIval());
             }
         }
         static::assertTrue($timingFound);

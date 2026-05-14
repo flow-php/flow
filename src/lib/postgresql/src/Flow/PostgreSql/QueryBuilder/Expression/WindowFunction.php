@@ -47,7 +47,7 @@ final readonly class WindowFunction implements Expression
 
         $funcNameNodes = $funcCall->getFuncname();
 
-        if ($funcNameNodes === null || \count($funcNameNodes) === 0) {
+        if (\count($funcNameNodes) === 0) {
             throw InvalidAstException::missingRequiredField('funcname', 'FuncCall');
         }
 
@@ -68,33 +68,24 @@ final readonly class WindowFunction implements Expression
         }
 
         $args = [];
-        $argsNodes = $funcCall->getArgs();
 
-        if ($argsNodes !== null) {
-            foreach ($argsNodes as $argNode) {
-                $args[] = ExpressionFactory::fromAst($argNode);
-            }
+        foreach ($funcCall->getArgs() as $argNode) {
+            $args[] = ExpressionFactory::fromAst($argNode);
         }
 
         $partitionBy = [];
-        $partitionNodes = $overNode->getPartitionClause();
 
-        if ($partitionNodes !== null) {
-            foreach ($partitionNodes as $partitionNode) {
-                $partitionBy[] = ExpressionFactory::fromAst($partitionNode);
-            }
+        foreach ($overNode->getPartitionClause() as $partitionNode) {
+            $partitionBy[] = ExpressionFactory::fromAst($partitionNode);
         }
 
         $orderBy = [];
-        $orderNodes = $overNode->getOrderClause();
 
-        if ($orderNodes !== null) {
-            foreach ($orderNodes as $orderNode) {
-                $sortBy = $orderNode->getSortBy();
+        foreach ($overNode->getOrderClause() as $orderNode) {
+            $sortBy = $orderNode->getSortBy();
 
-                if ($sortBy !== null) {
-                    $orderBy[] = OrderBy::fromAst($sortBy);
-                }
+            if ($sortBy !== null) {
+                $orderBy[] = OrderBy::fromAst($sortBy);
             }
         }
 

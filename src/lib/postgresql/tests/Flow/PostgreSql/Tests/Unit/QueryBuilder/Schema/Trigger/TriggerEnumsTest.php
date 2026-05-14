@@ -68,10 +68,10 @@ final class TriggerEnumsTest extends TestCase
         $combined = TriggerEvent::INSERT->value | TriggerEvent::UPDATE->value | TriggerEvent::DELETE->value;
 
         static::assertSame(28, $combined);
-        static::assertTrue(($combined & TriggerEvent::INSERT->value) !== 0);
-        static::assertTrue(($combined & TriggerEvent::UPDATE->value) !== 0);
-        static::assertTrue(($combined & TriggerEvent::DELETE->value) !== 0);
-        static::assertFalse(($combined & TriggerEvent::TRUNCATE->value) !== 0);
+        static::assertNotSame(0, $combined & TriggerEvent::INSERT->value);
+        static::assertNotSame(0, $combined & TriggerEvent::UPDATE->value);
+        static::assertNotSame(0, $combined & TriggerEvent::DELETE->value);
+        static::assertSame(0, $combined & TriggerEvent::TRUNCATE->value);
     }
 
     #[Test]

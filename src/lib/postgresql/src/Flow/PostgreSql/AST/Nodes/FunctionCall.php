@@ -16,7 +16,7 @@ final readonly class FunctionCall
     {
         $funcname = $this->funcCall->getFuncname();
 
-        if ($funcname === null || \count($funcname) === 0) {
+        if (\count($funcname) === 0) {
             return null;
         }
 
@@ -40,7 +40,7 @@ final readonly class FunctionCall
     {
         $funcname = $this->funcCall->getFuncname();
 
-        if ($funcname === null || \count($funcname) <= 1) {
+        if (\count($funcname) <= 1) {
             return null;
         }
 

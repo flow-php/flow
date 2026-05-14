@@ -45,7 +45,9 @@ final class CreateTableBuilderTest extends TestCase
 
         static::assertInstanceOf(CreateStmt::class, $ast);
         static::assertCount(1, $ast->getInhRelations());
-        static::assertSame('persons', $ast->getInhRelations()[0]->getRangeVar()->getRelname());
+        $rangeVar = $ast->getInhRelations()[0]->getRangeVar();
+        static::assertNotNull($rangeVar);
+        static::assertSame('persons', $rangeVar->getRelname());
     }
 
     public function test_create_table_inherits_multiple(): void
@@ -70,7 +72,9 @@ final class CreateTableBuilderTest extends TestCase
 
         static::assertInstanceOf(CreateStmt::class, $ast);
         static::assertTrue($ast->hasPartspec());
-        static::assertSame(PartitionStrategy::PARTITION_STRATEGY_HASH, $ast->getPartspec()->getStrategy());
+        $partspec = $ast->getPartspec();
+        static::assertNotNull($partspec);
+        static::assertSame(PartitionStrategy::PARTITION_STRATEGY_HASH, $partspec->getStrategy());
     }
 
     public function test_create_table_partition_by_list(): void
@@ -83,8 +87,10 @@ final class CreateTableBuilderTest extends TestCase
 
         static::assertInstanceOf(CreateStmt::class, $ast);
         static::assertTrue($ast->hasPartspec());
-        static::assertSame(PartitionStrategy::PARTITION_STRATEGY_LIST, $ast->getPartspec()->getStrategy());
-        static::assertCount(1, $ast->getPartspec()->getPartParams());
+        $partspec = $ast->getPartspec();
+        static::assertNotNull($partspec);
+        static::assertSame(PartitionStrategy::PARTITION_STRATEGY_LIST, $partspec->getStrategy());
+        static::assertCount(1, $partspec->getPartParams());
     }
 
     public function test_create_table_partition_by_range(): void
@@ -97,7 +103,9 @@ final class CreateTableBuilderTest extends TestCase
 
         static::assertInstanceOf(CreateStmt::class, $ast);
         static::assertTrue($ast->hasPartspec());
-        static::assertSame(PartitionStrategy::PARTITION_STRATEGY_RANGE, $ast->getPartspec()->getStrategy());
+        $partspec = $ast->getPartspec();
+        static::assertNotNull($partspec);
+        static::assertSame(PartitionStrategy::PARTITION_STRATEGY_RANGE, $partspec->getStrategy());
     }
 
     public function test_create_table_tablespace(): void
@@ -121,7 +129,9 @@ final class CreateTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(CreateStmt::class, $ast);
-        static::assertSame('t', $ast->getRelation()->getRelpersistence());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertSame('t', $relation->getRelpersistence());
         static::assertSame(0, $ast->getOncommit());
     }
 
@@ -134,7 +144,9 @@ final class CreateTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(CreateStmt::class, $ast);
-        static::assertSame('u', $ast->getRelation()->getRelpersistence());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertSame('u', $relation->getRelpersistence());
     }
 
     public function test_create_table_with_constraint(): void
@@ -190,8 +202,10 @@ final class CreateTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(CreateStmt::class, $ast);
-        static::assertSame('public', $ast->getRelation()->getSchemaname());
-        static::assertSame('users', $ast->getRelation()->getRelname());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertSame('public', $relation->getSchemaname());
+        static::assertSame('users', $relation->getRelname());
     }
 
     public function test_immutability(): void
@@ -210,8 +224,10 @@ final class CreateTableBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(CreateStmt::class, $ast);
-        static::assertSame('users', $ast->getRelation()->getRelname());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertSame('users', $relation->getRelname());
         static::assertCount(1, $ast->getTableElts());
-        static::assertSame('p', $ast->getRelation()->getRelpersistence());
+        static::assertSame('p', $relation->getRelpersistence());
     }
 }

@@ -358,9 +358,7 @@ final readonly class CreateFunctionBuilder implements
         $integer = new Integer();
         $integer->setIval($value ? 1 : 0);
 
-        $argNode = new Node();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $argNode->setInteger($integer);
+        $argNode = new Node(['integer' => $integer]);
 
         return $this->withOption($name, $argNode);
     }
@@ -370,9 +368,7 @@ final readonly class CreateFunctionBuilder implements
         $integer = new Integer();
         $integer->setIval($value);
 
-        $aConst = new A_Const();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $aConst->setIval($integer);
+        $aConst = new A_Const(['ival' => $integer]);
 
         $argNode = new Node();
         $argNode->setAConst($aConst);

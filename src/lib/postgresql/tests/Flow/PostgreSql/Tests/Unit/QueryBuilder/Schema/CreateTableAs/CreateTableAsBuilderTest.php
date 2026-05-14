@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\CreateTableAs;
 
 use Flow\PostgreSql\Protobuf\AST\CreateTableAsStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\QueryBuilder\Schema\CreateTableAs\CreateTableAsBuilder;
 use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
@@ -13,6 +14,7 @@ use PHPUnit\Framework\TestCase;
 
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\literal;
+use function Flow\Types\DSL\type_instance_of;
 
 final class CreateTableAsBuilderTest extends TestCase
 {
@@ -44,9 +46,14 @@ final class CreateTableAsBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(CreateTableAsStmt::class, $ast);
-        static::assertCount(2, $ast->getInto()->getColNames());
-        static::assertSame('user_id', $ast->getInto()->getColNames()[0]->getString()->getSval());
-        static::assertSame('user_name', $ast->getInto()->getColNames()[1]->getString()->getSval());
+        $into = $ast->getInto();
+        static::assertNotNull($into);
+        $colNames = $into->getColNames();
+        static::assertCount(2, $colNames);
+        $first = type_instance_of(Node::class)->assert($colNames[0]);
+        $second = type_instance_of(Node::class)->assert($colNames[1]);
+        static::assertSame('user_id', $first->getString()?->getSval());
+        static::assertSame('user_name', $second->getString()?->getSval());
     }
 
     public function test_create_table_as_with_no_data(): void
@@ -58,7 +65,9 @@ final class CreateTableAsBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(CreateTableAsStmt::class, $ast);
-        static::assertTrue($ast->getInto()->getSkipData());
+        $into = $ast->getInto();
+        static::assertNotNull($into);
+        static::assertTrue($into->getSkipData());
     }
 
     public function test_create_table_as_with_schema(): void
@@ -70,8 +79,12 @@ final class CreateTableAsBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(CreateTableAsStmt::class, $ast);
-        static::assertSame('archive', $ast->getInto()->getRel()->getSchemaname());
-        static::assertSame('new_table', $ast->getInto()->getRel()->getRelname());
+        $into = $ast->getInto();
+        static::assertNotNull($into);
+        $rel = $into->getRel();
+        static::assertNotNull($rel);
+        static::assertSame('archive', $rel->getSchemaname());
+        static::assertSame('new_table', $rel->getRelname());
     }
 
     public function test_immutability(): void
@@ -94,7 +107,11 @@ final class CreateTableAsBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(CreateTableAsStmt::class, $ast);
-        static::assertSame('users_copy', $ast->getInto()->getRel()->getRelname());
+        $into = $ast->getInto();
+        static::assertNotNull($into);
+        $rel = $into->getRel();
+        static::assertNotNull($rel);
+        static::assertSame('users_copy', $rel->getRelname());
         static::assertSame(ObjectType::OBJECT_TABLE, $ast->getObjtype());
         static::assertTrue($ast->hasQuery());
     }
@@ -111,10 +128,14 @@ final class CreateTableAsBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(CreateTableAsStmt::class, $ast);
-        static::assertSame('archive', $ast->getInto()->getRel()->getSchemaname());
-        static::assertSame('users_backup', $ast->getInto()->getRel()->getRelname());
-        static::assertCount(2, $ast->getInto()->getColNames());
+        $into = $ast->getInto();
+        static::assertNotNull($into);
+        $rel = $into->getRel();
+        static::assertNotNull($rel);
+        static::assertSame('archive', $rel->getSchemaname());
+        static::assertSame('users_backup', $rel->getRelname());
+        static::assertCount(2, $into->getColNames());
         static::assertTrue($ast->getIfNotExists());
-        static::assertTrue($ast->getInto()->getSkipData());
+        static::assertTrue($into->getSkipData());
     }
 }

@@ -262,11 +262,9 @@ final readonly class ColumnDefinition
         if ($value === null) {
             $aConst->setIsnull(true);
         } elseif (\is_bool($value)) {
-            /** @phpstan-ignore-next-line */
-            $aConst->setBoolval((new PBBoolean())->setBoolval($value));
+            $aConst = new A_Const(['boolval' => new PBBoolean(['boolval' => $value])]);
         } elseif (\is_int($value)) {
-            /** @phpstan-ignore-next-line */
-            $aConst->setIval((new PBInteger())->setIval($value));
+            $aConst = new A_Const(['ival' => new PBInteger(['ival' => $value])]);
         } elseif (\is_float($value)) {
             $aConst->setFval((new PBFloat())->setFval((string) $value));
         } else {

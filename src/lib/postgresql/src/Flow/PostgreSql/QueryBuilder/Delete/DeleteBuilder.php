@@ -91,11 +91,11 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         $using = [];
         $usingClause = $deleteStmt->getUsingClause();
 
-        if ($usingClause !== null && \count($usingClause) > 0) {
+        if (\count($usingClause) > 0) {
             foreach ($usingClause as $usingNode) {
-                if ($usingNode->getRangeVar() !== null) {
-                    $rangeVar = $usingNode->getRangeVar();
+                $rangeVar = $usingNode->getRangeVar();
 
+                if ($rangeVar !== null) {
                     if ($rangeVar->hasAlias()) {
                         $using[] = AliasedTable::fromAst($usingNode);
                     } else {
@@ -124,7 +124,7 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         $returningExpressions = [];
         $returningList = $deleteStmt->getReturningList();
 
-        if ($returningList !== null && \count($returningList) > 0) {
+        if (\count($returningList) > 0) {
             foreach ($returningList as $resTargetNode) {
                 $resTarget = $resTargetNode->getResTarget();
 

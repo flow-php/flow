@@ -6,10 +6,13 @@ namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\Index;
 
 use Flow\PostgreSql\Protobuf\AST\AlterTableStmt;
 use Flow\PostgreSql\Protobuf\AST\AlterTableType;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\RenameStmt;
 use Flow\PostgreSql\QueryBuilder\Schema\Index\AlterIndex\AlterIndexBuilder;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\Types\DSL\type_instance_of;
 
 final class AlterIndexBuilderTest extends TestCase
 {
@@ -60,7 +63,9 @@ final class AlterIndexBuilderTest extends TestCase
 
         static::assertInstanceOf(RenameStmt::class, $ast);
         static::assertSame(ObjectType::OBJECT_INDEX, $ast->getRenameType());
-        static::assertSame('idx_old', $ast->getRelation()->getRelname());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertSame('idx_old', $relation->getRelname());
         static::assertSame('idx_new', $ast->getNewname());
     }
 
@@ -71,8 +76,10 @@ final class AlterIndexBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(RenameStmt::class, $ast);
-        static::assertSame('public', $ast->getRelation()->getSchemaname());
-        static::assertSame('idx_old', $ast->getRelation()->getRelname());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertSame('public', $relation->getSchemaname());
+        static::assertSame('idx_old', $relation->getRelname());
     }
 
     public function test_set_tablespace_creates_alter_table_stmt(): void
@@ -83,10 +90,15 @@ final class AlterIndexBuilderTest extends TestCase
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
         static::assertSame(ObjectType::OBJECT_INDEX, $ast->getObjtype());
-        static::assertSame('idx_users_email', $ast->getRelation()->getRelname());
-        static::assertCount(1, $ast->getCmds());
-        static::assertSame(AlterTableType::AT_SetTableSpace, $ast->getCmds()[0]->getAlterTableCmd()->getSubtype());
-        static::assertSame('fast_storage', $ast->getCmds()[0]->getAlterTableCmd()->getName());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertSame('idx_users_email', $relation->getRelname());
+        $cmds = $ast->getCmds();
+        static::assertCount(1, $cmds);
+        $alterTableCmd = type_instance_of(Node::class)->assert($cmds[0])->getAlterTableCmd();
+        static::assertNotNull($alterTableCmd);
+        static::assertSame(AlterTableType::AT_SetTableSpace, $alterTableCmd->getSubtype());
+        static::assertSame('fast_storage', $alterTableCmd->getName());
     }
 
     public function test_set_tablespace_with_schema(): void
@@ -96,7 +108,9 @@ final class AlterIndexBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(AlterTableStmt::class, $ast);
-        static::assertSame('public', $ast->getRelation()->getSchemaname());
-        static::assertSame('idx_users_email', $ast->getRelation()->getRelname());
+        $relation = $ast->getRelation();
+        static::assertNotNull($relation);
+        static::assertSame('public', $relation->getSchemaname());
+        static::assertSame('idx_users_email', $relation->getRelname());
     }
 }

@@ -16,8 +16,8 @@ final class ExplainParseException extends \RuntimeException
         return new self("Missing required field in EXPLAIN output: {$field}");
     }
 
-    public static function unexpectedFormat(string $expected, string $actual): self
+    public static function unexpectedFormat(string $expected, string $actual, ?\Throwable $previous = null): self
     {
-        return new self("Unexpected EXPLAIN format: expected {$expected}, got {$actual}");
+        return new self("Unexpected EXPLAIN format: expected {$expected}, got {$actual}", 0, $previous);
     }
 }

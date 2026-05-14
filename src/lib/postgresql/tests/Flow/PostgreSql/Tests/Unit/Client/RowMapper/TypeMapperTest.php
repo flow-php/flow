@@ -16,6 +16,7 @@ use Symfony\Component\Uid\UuidV7;
 use function Flow\PostgreSql\DSL\type_mapper;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_optional;
@@ -203,13 +204,12 @@ final class TypeMapperTest extends TestCase
     {
         $spy = new SpyRowMapper();
 
-        $result = type_mapper(type_structure([
+        $result = type_instance_of(RecordedResult::class)->assert(type_mapper(type_structure([
             'metadata' => type_structure([
                 'theme' => type_string(),
             ]),
-        ]), $spy)->map(['metadata' => '{"theme":"dark"}'], MapperContextMother::any());
+        ]), $spy)->map(['metadata' => '{"theme":"dark"}'], MapperContextMother::any()));
 
-        static::assertInstanceOf(RecordedResult::class, $result);
         static::assertSame(['metadata' => ['theme' => 'dark']], $result->row);
     }
 
@@ -268,24 +268,24 @@ final class TypeMapperTest extends TestCase
 
     public function test_when_next_is_null_returns_cast_result_directly(): void
     {
-        $result = type_mapper(type_structure([
-            'id' => type_string(),
-            'name' => type_string(),
-        ]))->map(['id' => 'abc', 'name' => 'Alice'], MapperContextMother::any());
-
-        static::assertSame(['id' => 'abc', 'name' => 'Alice'], $result);
+        static::assertSame(
+            ['id' => 'abc', 'name' => 'Alice'],
+            type_mapper(type_structure([
+                'id' => type_string(),
+                'name' => type_string(),
+            ]))->map(['id' => 'abc', 'name' => 'Alice'], MapperContextMother::any()),
+        );
     }
 
     public function test_when_next_is_provided_cast_result_is_forwarded_to_next(): void
     {
         $spy = new SpyRowMapper();
 
-        $result = type_mapper(type_structure([
+        $result = type_instance_of(RecordedResult::class)->assert(type_mapper(type_structure([
             'id' => type_string(),
             'name' => type_string(),
-        ]), $spy)->map(['id' => 'abc', 'name' => 'Alice'], MapperContextMother::any());
+        ]), $spy)->map(['id' => 'abc', 'name' => 'Alice'], MapperContextMother::any()));
 
-        static::assertInstanceOf(RecordedResult::class, $result);
         static::assertSame(['id' => 'abc', 'name' => 'Alice'], $result->row);
         static::assertSame([['id' => 'abc', 'name' => 'Alice']], $spy->receivedRows);
     }

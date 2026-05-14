@@ -159,7 +159,7 @@ final class ChangeSetTest extends TestCase
         $result = ChangeSet::fromNamedObjects(
             [],
             [],
-            static fn(array $item): string => $item['name'],
+            static fn(array $item): string => (string) $item['name'],
             static fn(array $a, array $b): ?string => null,
         );
 
