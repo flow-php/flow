@@ -67,7 +67,7 @@ final class MemoryStream implements DestinationStream, SourceStream
 
     public function fromResource($resource): DestinationStream
     {
-        stream_copy_to_stream($resource, $this->handle);
+        stream_copy_to_stream($resource, $this->handle, null);
 
         return $this;
     }

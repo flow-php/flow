@@ -62,11 +62,11 @@ class Block
             );
         }
 
-        try {
-            $written = \fwrite($this->handle, $data);
-        } catch (\TypeError) {
+        if (!\is_resource($this->handle)) {
             throw new RuntimeException('Failed to write to block, stream resource is invalid');
         }
+
+        $written = \fwrite($this->handle, $data);
 
         if ($written === false || $written !== \strlen($data)) {
             throw new RuntimeException(

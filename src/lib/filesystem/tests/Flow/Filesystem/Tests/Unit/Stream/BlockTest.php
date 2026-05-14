@@ -9,6 +9,8 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Block;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_resource;
+
 final class BlockTest extends TestCase
 {
     public function test_append_throws_on_closed_handle(): void
@@ -21,7 +23,7 @@ final class BlockTest extends TestCase
 
         $reflection = new \ReflectionClass($block);
         $handleProperty = $reflection->getProperty('handle');
-        $handle = $handleProperty->getValue($block);
+        $handle = type_resource()->assert($handleProperty->getValue($block));
         \fclose($handle);
 
         $this->expectException(RuntimeException::class);

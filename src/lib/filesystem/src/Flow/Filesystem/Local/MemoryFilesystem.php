@@ -29,7 +29,9 @@ final readonly class MemoryFilesystem implements Filesystem
 
     public function appendTo(Path $path): DestinationStream
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         return $this->memory->for($path);
     }
@@ -41,7 +43,9 @@ final readonly class MemoryFilesystem implements Filesystem
 
     public function list(Path $path, Filter $pathFilter = new KeepAll()): \Generator
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if (!$path->isPattern()) {
             if ($this->memory->has($path) && $pathFilter->accept($status = $this->statFor($path))) {
@@ -74,7 +78,9 @@ final readonly class MemoryFilesystem implements Filesystem
 
     public function readFrom(Path $path): SourceStream
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if (!$this->memory->has($path)) {
             throw new RuntimeException('File not found in memory: ' . $path->uri());
@@ -85,7 +91,9 @@ final readonly class MemoryFilesystem implements Filesystem
 
     public function rm(Path $path): bool
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if (!$path->isPattern()) {
             if (!$this->memory->has($path)) {
@@ -111,7 +119,9 @@ final readonly class MemoryFilesystem implements Filesystem
 
     public function status(Path $path): ?FileStatus
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if (!$path->isPattern()) {
             if (!$this->memory->has($path)) {
@@ -132,7 +142,9 @@ final readonly class MemoryFilesystem implements Filesystem
 
     public function writeTo(Path $path): DestinationStream
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if ($this->status($path) !== null) {
             $this->memory->close($path);

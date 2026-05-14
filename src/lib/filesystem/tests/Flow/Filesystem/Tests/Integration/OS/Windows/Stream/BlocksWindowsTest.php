@@ -72,8 +72,12 @@ final class BlocksWindowsTest extends TestCase
 
     public function test_windows_large_file_streaming(): void
     {
-        // Create a temporary large file
         $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_blocks_test_');
+
+        if ($tempFile === false) {
+            static::markTestSkipped('Could not create temporary file');
+        }
+
         $largeContent = \str_repeat("Large file test content\r\n", 1000);
         \file_put_contents($tempFile, $largeContent);
 

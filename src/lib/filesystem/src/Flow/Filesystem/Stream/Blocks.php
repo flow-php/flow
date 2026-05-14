@@ -30,14 +30,21 @@ final class Blocks
     private int $size = 0;
 
     /**
-     * @param BlockFactory $blockFactory
-     * @param int $blockSize block size in bytes
+     * @param int<1, max> $blockSize block size in bytes
      */
     public function __construct(
         private readonly int $blockSize,
         private readonly BlockFactory $blockFactory = new NativeLocalFileBlocksFactory(),
         private readonly BlockLifecycle $blockLifecycle = new BlockVoidLifecycle(),
     ) {
+        /**
+         * @mago-ignore analysis:impossible-condition
+         * @mago-ignore analysis:redundant-comparison
+         */
+        if ($this->blockSize < 1) {
+            throw new InvalidArgumentException('Block size must be greater than 0');
+        }
+
         $this->currentBlock = $this->blockFactory->create($this->blockSize);
     }
 
@@ -51,9 +58,6 @@ final class Blocks
 
     public function append(string $data): void
     {
-        /**
-         * @phpstan-ignore-next-line
-         */
         foreach (\str_split($data, $this->blockSize) as $chunk) {
             if ($this->block()->spaceLeft() < \strlen($chunk)) {
                 // cut the chunk to fit into the block, store it in the block and move remaining part to next block

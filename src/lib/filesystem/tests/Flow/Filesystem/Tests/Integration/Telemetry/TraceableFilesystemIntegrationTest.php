@@ -53,8 +53,9 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         static::assertCount(2, $spans);
 
         foreach ($spans as $span) {
-            static::assertNotNull($span->status());
-            static::assertTrue($span->status()->isOk());
+            $status = $span->status();
+            static::assertNotNull($status);
+            static::assertTrue($status->isOk());
         }
 
         $destinationSpans = \array_values(\array_filter(
@@ -119,8 +120,9 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         ));
 
         static::assertCount(1, $destinationSpans);
-        static::assertNotNull($destinationSpans[0]->status());
-        static::assertTrue($destinationSpans[0]->status()->isOk());
+        $status = $destinationSpans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
         static::assertSame(
             'destination',
             $destinationSpans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE],
@@ -290,8 +292,9 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         ));
 
         static::assertCount(1, $sourceSpans);
-        static::assertNotNull($sourceSpans[0]->status());
-        static::assertTrue($sourceSpans[0]->status()->isOk());
+        $status = $sourceSpans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
     }
 
     public function test_rm_operation_does_not_create_span(): void

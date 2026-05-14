@@ -44,8 +44,9 @@ final class TraceableDestinationStreamTest extends TestCase
             \strlen($data),
             $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN],
         );
-        static::assertNotNull($spans[0]->status());
-        static::assertTrue($spans[0]->status()->isOk());
+        $status = $spans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
     }
 
     public function test_close_completes_lifecycle_span_with_final_attributes(): void
@@ -72,8 +73,9 @@ final class TraceableDestinationStreamTest extends TestCase
             \strlen($data),
             $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN],
         );
-        static::assertNotNull($spans[0]->status());
-        static::assertTrue($spans[0]->status()->isOk());
+        $status = $spans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
     }
 
     public function test_close_records_exception_and_rethrows(): void
@@ -99,8 +101,9 @@ final class TraceableDestinationStreamTest extends TestCase
         } finally {
             $spans = $spanProcessor->endedSpans();
             static::assertCount(1, $spans);
-            static::assertNotNull($spans[0]->status());
-            static::assertTrue($spans[0]->status()->isError());
+            $status = $spans[0]->status();
+            static::assertNotNull($status);
+            static::assertTrue($status->isError());
             static::assertNotEmpty($spans[0]->events());
         }
     }
@@ -147,8 +150,9 @@ final class TraceableDestinationStreamTest extends TestCase
         static::assertSame('Write test.txt', $spans[0]->name());
         static::assertSame('destination', $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE]);
         static::assertSame($path->uri(), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_PATH_URI]);
-        static::assertNotNull($spans[0]->status());
-        static::assertTrue($spans[0]->status()->isOk());
+        $status = $spans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
 
         \fclose($resource);
     }

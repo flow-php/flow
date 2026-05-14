@@ -11,6 +11,8 @@ use Flow\Filesystem\Path\UnixPath;
 use Flow\Filesystem\Path\WindowsPath;
 use Flow\Filesystem\Stream\ResourceContext;
 
+use function Flow\Types\DSL\type_instance_of;
+
 final readonly class Path
 {
     public function __construct(
@@ -88,7 +90,11 @@ final readonly class Path
 
     public function isEqual(self $path): bool
     {
-        return $this->implementation->isEqual($path->implementation);
+        if ($this->implementation instanceof UnixPath) {
+            return $this->implementation->isEqual(type_instance_of(UnixPath::class)->assert($path->implementation));
+        }
+
+        return $this->implementation->isEqual(type_instance_of(WindowsPath::class)->assert($path->implementation));
     }
 
     public function isLocal(): bool
@@ -103,7 +109,11 @@ final readonly class Path
 
     public function matches(self $path): bool
     {
-        return $this->implementation->matches($path->implementation);
+        if ($this->implementation instanceof UnixPath) {
+            return $this->implementation->matches(type_instance_of(UnixPath::class)->assert($path->implementation));
+        }
+
+        return $this->implementation->matches(type_instance_of(WindowsPath::class)->assert($path->implementation));
     }
 
     /**

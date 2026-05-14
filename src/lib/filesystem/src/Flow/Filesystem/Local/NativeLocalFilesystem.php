@@ -40,7 +40,9 @@ final readonly class NativeLocalFilesystem implements Filesystem
             throw new RuntimeException('Cannot write to system tmp directory');
         }
 
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if ($path->isPattern()) {
             throw new InvalidArgumentException("Pattern paths can't be written: " . $path->uri());
@@ -65,7 +67,9 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
     public function list(Path $path, Filter $pathFilter = new OnlyFiles()): \Generator
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if (!$path->isPattern()) {
             if ($pathFilter->accept($status = self::statFor($path, $path->path()))) {
@@ -92,8 +96,12 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
     public function mv(Path $from, Path $to): bool
     {
-        $this->mount->supports($from) || throw new InvalidSchemeException($from->protocol(), $this->mount->protocol);
-        $this->mount->supports($to) || throw new InvalidSchemeException($to->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($from)) {
+            throw new InvalidSchemeException($from->protocol(), $this->mount->protocol);
+        }
+        if (!$this->mount->supports($to)) {
+            throw new InvalidSchemeException($to->protocol(), $this->mount->protocol);
+        }
 
         if (\file_exists($to->path())) {
             $this->rm($to);
@@ -108,7 +116,9 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
     public function readFrom(Path $path): SourceStream
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if ($path->isPattern()) {
             throw new InvalidArgumentException("Pattern paths can't be open: " . $path->uri());
@@ -128,7 +138,9 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
     public function rm(Path $path): bool
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if (!$path->isPattern()) {
             if (!\file_exists($path->path())) {
@@ -163,7 +175,9 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
     public function status(Path $path): ?FileStatus
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if (!$path->isPattern()) {
             if (!\file_exists($path->path())) {
@@ -190,7 +204,9 @@ final readonly class NativeLocalFilesystem implements Filesystem
             throw new RuntimeException('Cannot write to system tmp directory');
         }
 
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if ($path->isPattern()) {
             throw new InvalidArgumentException("Pattern paths can't be written: " . $path->uri());
@@ -211,6 +227,9 @@ final readonly class NativeLocalFilesystem implements Filesystem
     /**
      * Lazy iterator over glob matches in CHILD_FIRST order so callers can safely delete each match
      * without confusing webmozart/glob's internal RecursiveIteratorIterator (which descends with SELF_FIRST).
+     */
+    /**
+     * @return \Iterator<int|string, string>
      */
     private function matchChildFirst(string $glob): \Iterator
     {

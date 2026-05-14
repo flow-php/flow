@@ -26,6 +26,8 @@ final readonly class WindowsPath
     {
         $this->options = \is_array($options) ? new Options($options) : $options;
 
+        $matches = [];
+
         if (\preg_match('/^([a-zA-Z0-9+-]+):\/\//', $uri, $matches)) {
             $this->protocol = $matches[1];
             $path = \str_replace($matches[1] . '://', '', $uri);
@@ -58,14 +60,19 @@ final readonly class WindowsPath
         $realPath = \str_replace('\\', '/', $path);
 
         if ($realPath !== '' && $realPath[0] === '~') {
-            if (
-                !($homeDir = \getenv('USERPROFILE')
-                ?: (\getenv('HOMEDRIVE') && \getenv('HOMEPATH') ? \getenv('HOMEDRIVE') . \getenv('HOMEPATH') : null))
-            ) {
+            $userProfile = \getenv('USERPROFILE');
+            $homeDrive = \getenv('HOMEDRIVE');
+            $homePath = \getenv('HOMEPATH');
+
+            if ($userProfile !== false && $userProfile !== '') {
+                $homeDir = $userProfile;
+            } elseif ($homeDrive !== false && $homeDrive !== '' && $homePath !== false && $homePath !== '') {
+                $homeDir = $homeDrive . $homePath;
+            } else {
                 throw new RuntimeException('Cannot resolve home directory on Windows');
             }
 
-            $realPath = \str_replace('\\', '/', type_string()->assert($homeDir)) . '/' . \substr($realPath, 1);
+            $realPath = \str_replace('\\', '/', $homeDir) . '/' . \substr($realPath, 1);
         }
 
         if (!self::isWindowsAbsolute($realPath)) {
@@ -73,6 +80,7 @@ final readonly class WindowsPath
         }
 
         $drive = '';
+        $matches = [];
 
         if (\preg_match('/^([a-zA-Z]):(.*)$/', $realPath, $matches)) {
             $drive = $matches[1] . ':';
@@ -108,7 +116,7 @@ final readonly class WindowsPath
 
         $pathInfo = \pathinfo($this->path);
         $dirname = $pathInfo['dirname'] ?? '';
-        $basename = $pathInfo['basename'] ?? '';
+        $basename = $pathInfo['basename'];
         $partitionsString = \implode('/', \array_map(
             static fn(Partition $p) => $p->name . '=' . $p->value,
             [$partition, ...$partitions],
@@ -141,7 +149,7 @@ final readonly class WindowsPath
     {
         $pathInfo = \pathinfo($this->path);
         $dirname = $pathInfo['dirname'] ?? '';
-        $basename = $pathInfo['basename'] ?? '';
+        $basename = $pathInfo['basename'];
 
         return new self(
             $this->protocol
@@ -220,6 +228,7 @@ final readonly class WindowsPath
         }
 
         $partitionsList = [];
+        $matches = [];
 
         foreach (\explode('/', $this->path) as $part) {
             if (\preg_match('/^([^=]+)=([^=]+)$/', $part, $matches)) {
@@ -250,20 +259,23 @@ final readonly class WindowsPath
                 $currentPartitionsList,
             ));
 
-            $paths[] = new self(
-                $this->protocol
-                . '://'
-                . (
-                    $dirname === '' || $dirname === '.'
-                        ? $partitionsString
-                        : \preg_replace(
-                            '#/' . \preg_quote($partitionsString, '#') . '/.*$#',
-                            '/' . $partitionsString,
-                            $dirname,
-                        )
-                ),
-                $this->options,
-            );
+            if ($dirname === '' || $dirname === '.') {
+                $pathPart = $partitionsString;
+            } else {
+                $replaced = \preg_replace(
+                    '#/' . \preg_quote($partitionsString, '#') . '/.*$#',
+                    '/' . $partitionsString,
+                    $dirname,
+                );
+
+                if ($replaced === null) {
+                    throw new RuntimeException('Failed to compute partitioned path');
+                }
+
+                $pathPart = $replaced;
+            }
+
+            $paths[] = new self($this->protocol . '://' . $pathPart, $this->options);
         }
 
         return $paths;
@@ -283,7 +295,7 @@ final readonly class WindowsPath
     {
         $pathInfo = \pathinfo($this->path);
         $dirname = $pathInfo['dirname'] ?? '';
-        $filename = $pathInfo['filename'] ?? '';
+        $filename = $pathInfo['filename'];
         $extension = $pathInfo['extension'] ?? '';
 
         $newFilename = $filename . '_' . \substr(\md5((string) \random_int(0, \PHP_INT_MAX)), 0, 10);
@@ -299,6 +311,8 @@ final readonly class WindowsPath
 
     public function rootDirectoryName(): ?string
     {
+        $matches = [];
+
         if (\preg_match('/^[a-zA-Z]:\/(.+)/', $this->path, $matches)) {
             return ($parts = \explode('/', $matches[1]))[0] !== '' ? $parts[0] : null;
         }
@@ -316,7 +330,7 @@ final readonly class WindowsPath
     {
         $pathInfo = \pathinfo($this->path);
         $dirname = $pathInfo['dirname'] ?? '';
-        $filename = $pathInfo['filename'] ?? '';
+        $filename = $pathInfo['filename'];
 
         return new self(
             $this->protocol
@@ -333,6 +347,8 @@ final readonly class WindowsPath
         if ($count < 0) {
             throw new \InvalidArgumentException('The number of folders to skip must be non-negative.');
         }
+
+        $matches = [];
 
         if (\preg_match('/^([a-zA-Z]:)\/(.*)$/', $this->path, $matches)) {
             if ($matches[2] === '') {
@@ -409,22 +425,11 @@ final readonly class WindowsPath
             }
         }
 
-        static $cmp = [];
-
-        if (isset($cmp["{$pattern}+{$flags}"])) {
-            return (bool) \preg_match($cmp["{$pattern}+{$flags}"], $filename);
-        }
-
         $rx = \preg_quote($pattern, null);
         $rx = \str_replace('\\*\\*', '(.*)?', $rx);
         $rx = \str_replace('\\*', '[^/]*', $rx);
         $rx = \strtr($rx, ['\\?' => '[^/]', '\\[' => '[', '\\]' => ']']);
         $rx = '{^' . $rx . '$}' . ($flags & 16 ? 'i' : '');
-
-        if (\count($cmp) >= 50) {
-            $cmp = [];
-        }
-        $cmp["{$pattern}+{$flags}"] = $rx;
 
         return (bool) \preg_match($rx, $filename);
     }
@@ -466,10 +471,15 @@ final readonly class WindowsPath
             return $path;
         }
 
-        if (
-            !($homeDir = \getenv('USERPROFILE')
-            ?: (\getenv('HOMEDRIVE') && \getenv('HOMEPATH') ? \getenv('HOMEDRIVE') . \getenv('HOMEPATH') : null))
-        ) {
+        $userProfile = \getenv('USERPROFILE');
+        $homeDrive = \getenv('HOMEDRIVE');
+        $homePath = \getenv('HOMEPATH');
+
+        if ($userProfile !== false && $userProfile !== '') {
+            $homeDir = $userProfile;
+        } elseif ($homeDrive !== false && $homeDrive !== '' && $homePath !== false && $homePath !== '') {
+            $homeDir = $homeDrive . $homePath;
+        } else {
             throw new RuntimeException('Cannot resolve home directory on Windows');
         }
 

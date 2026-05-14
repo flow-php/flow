@@ -26,12 +26,19 @@ final class AzureBlobDestinationStream implements DestinationStream
         private readonly BlockList $blockList,
     ) {}
 
+    /**
+     * @param int<1, max> $blockSize
+     */
     public static function openAppend(
         BlobServiceInterface $blobService,
         Path $path,
         BlockFactory $blockFactory = new NativeLocalFileBlocksFactory(),
         int $blockSize = 1024 * 1024 * 4,
     ): self {
+        if ($blockSize < 1) {
+            throw new InvalidArgumentException('Block size must be greater than 0');
+        }
+
         $blocks = new Blocks(
             $blockSize,
             $blockFactory,
@@ -49,12 +56,19 @@ final class AzureBlobDestinationStream implements DestinationStream
         return new self($blobService, $path, $blocks, $blockList);
     }
 
+    /**
+     * @param int<1, max> $blockSize
+     */
     public static function openBlank(
         BlobServiceInterface $blobService,
         Path $path,
         BlockFactory $blockFactory = new NativeLocalFileBlocksFactory(),
         int $blockSize = 1024 * 1024 * 4,
     ): self {
+        if ($blockSize < 1) {
+            throw new InvalidArgumentException('Block size must be greater than 0');
+        }
+
         return new self(
             $blobService,
             $path,

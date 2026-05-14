@@ -65,24 +65,26 @@ final class TraceableSourceStream implements SourceStream
 
     public function close(): void
     {
+        $span = $this->span;
+
         try {
             $this->stream->close();
 
-            if ($this->span !== null) {
-                $this->span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ, $this->totalBytesRead);
-                $this->span->setStatus(SpanStatus::ok());
+            if ($span !== null) {
+                $span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ, $this->totalBytesRead);
+                $span->setStatus(SpanStatus::ok());
             }
         } catch (\Throwable $e) {
-            if ($this->span !== null) {
-                $this->span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ, $this->totalBytesRead);
-                $this->span->recordException($e, $this->telemetryConfig->clock->now());
-                $this->span->setStatus(SpanStatus::error($e->getMessage()));
+            if ($span !== null) {
+                $span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ, $this->totalBytesRead);
+                $span->recordException($e, $this->telemetryConfig->clock->now());
+                $span->setStatus(SpanStatus::error($e->getMessage()));
             }
 
             throw $e;
         } finally {
-            if ($this->span !== null && $this->tracer !== null) {
-                $this->tracer->complete($this->span);
+            if ($span !== null && $this->tracer !== null) {
+                $this->tracer->complete($span);
                 $this->span = null;
             }
         }

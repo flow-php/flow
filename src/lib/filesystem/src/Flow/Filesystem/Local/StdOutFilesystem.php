@@ -31,7 +31,9 @@ final class StdOutFilesystem implements Filesystem
 
     public function appendTo(Path $path): DestinationStream
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         $target = $this->resolveTarget($path);
         $this->acquireTarget($target);
@@ -78,7 +80,9 @@ final class StdOutFilesystem implements Filesystem
 
     public function writeTo(Path $path): DestinationStream
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         $target = $this->resolveTarget($path);
         $this->acquireTarget($target);

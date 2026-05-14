@@ -37,7 +37,9 @@ final class FakeNativeLocalFilesystem implements Filesystem
             throw new RuntimeException('Cannot write to system tmp directory');
         }
 
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if ($path->isPattern()) {
             throw new InvalidArgumentException("Pattern paths can't be written: " . $path->uri());
@@ -62,7 +64,9 @@ final class FakeNativeLocalFilesystem implements Filesystem
 
     public function list(Path $path, Filter $pathFilter = new OnlyFiles()): \Generator
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if (!$path->isPattern()) {
             if ($pathFilter->accept($status = new FileStatus($path, \is_file($path->path())))) {
@@ -89,8 +93,12 @@ final class FakeNativeLocalFilesystem implements Filesystem
 
     public function mv(Path $from, Path $to): bool
     {
-        $this->mount->supports($from) || throw new InvalidSchemeException($from->protocol(), $this->mount->protocol);
-        $this->mount->supports($to) || throw new InvalidSchemeException($to->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($from)) {
+            throw new InvalidSchemeException($from->protocol(), $this->mount->protocol);
+        }
+        if (!$this->mount->supports($to)) {
+            throw new InvalidSchemeException($to->protocol(), $this->mount->protocol);
+        }
 
         if (\file_exists($to->path())) {
             $this->rm($to);
@@ -105,7 +113,9 @@ final class FakeNativeLocalFilesystem implements Filesystem
 
     public function readFrom(Path $path): SourceStream
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if ($path->isPattern()) {
             throw new InvalidArgumentException("Pattern paths can't be open: " . $path->uri());
@@ -125,7 +135,9 @@ final class FakeNativeLocalFilesystem implements Filesystem
 
     public function rm(Path $path): bool
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if (!$path->isPattern()) {
             if (!\file_exists($path->path())) {
@@ -160,7 +172,9 @@ final class FakeNativeLocalFilesystem implements Filesystem
 
     public function status(Path $path): ?FileStatus
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if (!$path->isPattern() && \file_exists($path->path())) {
             return new FileStatus($path, \is_file($path->path()));
@@ -183,7 +197,9 @@ final class FakeNativeLocalFilesystem implements Filesystem
             throw new RuntimeException('Cannot write to system tmp directory');
         }
 
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if ($path->isPattern()) {
             throw new InvalidArgumentException("Pattern paths can't be written: " . $path->uri());

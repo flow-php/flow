@@ -7,6 +7,7 @@ namespace Flow\Filesystem\Bridge\Azure;
 use Flow\Azure\SDK\BlobService\ListBlobs\ListBlobOptions;
 use Flow\Azure\SDK\BlobService\ListBlobs\OptionInclude;
 use Flow\Azure\SDK\BlobService\ListBlobs\OptionShowOnly;
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockFactory;
@@ -15,6 +16,7 @@ final class Options
 {
     private BlockFactory $blockFactory;
 
+    /** @var int<1, max> */
     private int $blockSize = 1024 * 1024 * 4;
 
     private bool $fileFastPath = true;
@@ -41,6 +43,9 @@ final class Options
         return $this->blockFactory;
     }
 
+    /**
+     * @return int<1, max>
+     */
     public function blockSize(): int
     {
         return $this->blockSize;
@@ -84,6 +89,10 @@ final class Options
 
     public function withBlockSize(int $blockSize): self
     {
+        if ($blockSize < 1) {
+            throw new InvalidArgumentException('Block size must be greater than 0');
+        }
+
         $this->blockSize = $blockSize;
 
         return $this;

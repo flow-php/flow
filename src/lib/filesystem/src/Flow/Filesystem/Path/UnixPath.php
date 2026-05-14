@@ -24,6 +24,8 @@ final readonly class UnixPath
     {
         $this->options = \is_array($options) ? new Options($options) : $options;
 
+        $matches = [];
+
         if (\preg_match('/^([a-zA-Z0-9+-]+):\/\//', $uri, $matches)) {
             $this->protocol = $matches[1];
             $path = \str_replace($matches[1] . '://', '', $uri);
@@ -76,7 +78,13 @@ final readonly class UnixPath
         }
 
         if (!self::isUnixAbsolute($realPath)) {
-            $realPath = \getcwd() . '/' . $realPath;
+            $cwd = \getcwd();
+
+            if ($cwd === false) {
+                throw new RuntimeException('Cannot resolve current working directory');
+            }
+
+            $realPath = $cwd . '/' . $realPath;
         }
 
         $absoluteParts = [];
@@ -108,7 +116,7 @@ final readonly class UnixPath
 
         $pathInfo = \pathinfo($this->path);
         $dirname = $pathInfo['dirname'] ?? '';
-        $basename = $pathInfo['basename'] ?? '';
+        $basename = $pathInfo['basename'];
         $partitionsString = \implode('/', \array_map(
             static fn(Partition $p) => $p->name . '=' . $p->value,
             [$partition, ...$partitions],
@@ -133,7 +141,7 @@ final readonly class UnixPath
     {
         $pathInfo = \pathinfo($this->path);
         $dirname = $pathInfo['dirname'] ?? '';
-        $basename = $pathInfo['basename'] ?? '';
+        $basename = $pathInfo['basename'];
 
         return new self(
             $this->protocol
@@ -207,6 +215,7 @@ final readonly class UnixPath
         }
 
         $partitionsList = [];
+        $matches = [];
 
         foreach (\explode('/', $this->path) as $part) {
             if (\preg_match('/^([^=]+)=([^=]+)$/', $part, $matches)) {
@@ -237,20 +246,23 @@ final readonly class UnixPath
                 $currentPartitionsList,
             ));
 
-            $paths[] = new self(
-                $this->protocol
-                . '://'
-                . (
-                    $dirname === '' || $dirname === '.'
-                        ? $partitionsString
-                        : \preg_replace(
-                            '#/' . \preg_quote($partitionsString, '#') . '/.*$#',
-                            '/' . $partitionsString,
-                            $dirname,
-                        )
-                ),
-                $this->options,
-            );
+            if ($dirname === '' || $dirname === '.') {
+                $pathPart = $partitionsString;
+            } else {
+                $replaced = \preg_replace(
+                    '#/' . \preg_quote($partitionsString, '#') . '/.*$#',
+                    '/' . $partitionsString,
+                    $dirname,
+                );
+
+                if ($replaced === null) {
+                    throw new RuntimeException('Failed to compute partitioned path');
+                }
+
+                $pathPart = $replaced;
+            }
+
+            $paths[] = new self($this->protocol . '://' . $pathPart, $this->options);
         }
 
         return $paths;
@@ -270,7 +282,7 @@ final readonly class UnixPath
     {
         $pathInfo = \pathinfo($this->path);
         $dirname = $pathInfo['dirname'] ?? '';
-        $filename = $pathInfo['filename'] ?? '';
+        $filename = $pathInfo['filename'];
         $extension = $pathInfo['extension'] ?? '';
 
         $newFilename = $filename . '_' . \substr(\md5((string) \random_int(0, \PHP_INT_MAX)), 0, 10);
@@ -295,7 +307,7 @@ final readonly class UnixPath
     {
         $pathInfo = \pathinfo($this->path);
         $dirname = $pathInfo['dirname'] ?? '';
-        $filename = $pathInfo['filename'] ?? '';
+        $filename = $pathInfo['filename'];
 
         return new self(
             $this->protocol
@@ -373,22 +385,11 @@ final readonly class UnixPath
             }
         }
 
-        static $cmp = [];
-
-        if (isset($cmp["{$pattern}+{$flags}"])) {
-            return (bool) \preg_match($cmp["{$pattern}+{$flags}"], $filename);
-        }
-
         $rx = \preg_quote($pattern, null);
         $rx = \str_replace('\\*\\*', '(.*)?', $rx);
         $rx = \str_replace('\\*', '[^/]*', $rx);
         $rx = \strtr($rx, ['\\?' => '[^/]', '\\[' => '[', '\\]' => ']']);
         $rx = '{^' . $rx . '$}' . ($flags & 16 ? 'i' : '');
-
-        if (\count($cmp) >= 50) {
-            $cmp = [];
-        }
-        $cmp["{$pattern}+{$flags}"] = $rx;
 
         return (bool) \preg_match($rx, $filename);
     }

@@ -66,8 +66,8 @@ final class Partition
     {
         $partitions = [];
 
-        foreach ($data as $partition => $value) {
-            $partitions[] = new self($partition, type_string()->cast($value));
+        foreach (array_keys($data) as $partition) {
+            $partitions[] = new self($partition, type_string()->cast($data[$partition]));
         }
 
         return $partitions;
@@ -78,6 +78,7 @@ final class Partition
         $regex = '/^([^\/\\\=:><|"?*]+)=([^\/\\\=:><|"?*]+)$/';
 
         $partitions = [];
+        $matches = [];
 
         foreach (\array_filter(\explode('/', $uri), static fn(string $s): bool => (bool) \strlen($s)) as $uriPart) {
             if (\preg_match($regex, $uriPart, $matches)) {

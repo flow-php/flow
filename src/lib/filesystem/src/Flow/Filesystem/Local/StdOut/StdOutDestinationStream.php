@@ -68,7 +68,7 @@ final class StdOutDestinationStream implements DestinationStream
     public function fromResource($resource): DestinationStream
     {
         if (\is_resource($this->handle)) {
-            stream_copy_to_stream($resource, $this->handle);
+            stream_copy_to_stream($resource, $this->handle, null);
         }
 
         return $this;

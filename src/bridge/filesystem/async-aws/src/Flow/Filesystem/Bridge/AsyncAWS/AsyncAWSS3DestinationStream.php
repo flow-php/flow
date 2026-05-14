@@ -31,6 +31,9 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
         $this->closed = false;
     }
 
+    /**
+     * @param int<1, max> $blockSize
+     */
     public static function openAppend(
         S3Client $s3Client,
         string $bucket,
@@ -38,6 +41,10 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
         BlockFactory $blockFactory = new NativeLocalFileBlocksFactory(),
         int $blockSize = 1024 * 1024 * 4,
     ): self {
+        if ($blockSize < 1) {
+            throw new InvalidArgumentException('Block size must be greater than 0');
+        }
+
         try {
             $objectHead = $s3Client->headObject([
                 'Bucket' => $bucket,
@@ -114,6 +121,9 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
         }
     }
 
+    /**
+     * @param int<1, max> $blockSize
+     */
     public static function openBlank(
         S3Client $s3Client,
         string $bucket,
@@ -121,6 +131,10 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
         BlockFactory $blockFactory = new NativeLocalFileBlocksFactory(),
         int $blockSize = 1024 * 1024 * 4,
     ): self {
+        if ($blockSize < 1) {
+            throw new InvalidArgumentException('Block size must be greater than 0');
+        }
+
         $response = $s3Client->createMultipartUpload(new CreateMultipartUploadRequest([
             'Bucket' => $bucket,
             'Key' => \ltrim($path->path(), '/'),

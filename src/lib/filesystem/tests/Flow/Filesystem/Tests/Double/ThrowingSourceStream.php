@@ -34,6 +34,8 @@ final class ThrowingSourceStream implements SourceStream
     public function iterate(int $length = 1): \Generator
     {
         throw new RuntimeException('Throwing source stream failed mid-iterate');
+
+        /** @mago-ignore analysis:unevaluated-code */
         yield;
     }
 
@@ -50,6 +52,8 @@ final class ThrowingSourceStream implements SourceStream
     public function readLines(string $separator = "\n", ?int $length = null): \Generator
     {
         throw new RuntimeException('Throwing source stream failed during readLines()');
+
+        /** @mago-ignore analysis:unevaluated-code */
         yield;
     }
 

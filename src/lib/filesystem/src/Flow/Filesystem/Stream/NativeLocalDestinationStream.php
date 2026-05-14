@@ -108,7 +108,7 @@ final class NativeLocalDestinationStream implements DestinationStream
             \rewind($resource);
         }
 
-        \stream_copy_to_stream($resource, $this->handle());
+        \stream_copy_to_stream($resource, $this->handle(), null);
 
         return $this;
     }

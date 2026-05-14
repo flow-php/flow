@@ -41,8 +41,9 @@ final class TraceableSourceStreamTest extends TestCase
             \strlen($content),
             $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ],
         );
-        static::assertNotNull($spans[0]->status());
-        static::assertTrue($spans[0]->status()->isOk());
+        $status = $spans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
     }
 
     public function test_close_records_exception_and_rethrows(): void
@@ -68,8 +69,9 @@ final class TraceableSourceStreamTest extends TestCase
         } finally {
             $spans = $spanProcessor->endedSpans();
             static::assertCount(1, $spans);
-            static::assertNotNull($spans[0]->status());
-            static::assertTrue($spans[0]->status()->isError());
+            $status = $spans[0]->status();
+            static::assertNotNull($status);
+            static::assertTrue($status->isError());
             static::assertNotEmpty($spans[0]->events());
         }
     }

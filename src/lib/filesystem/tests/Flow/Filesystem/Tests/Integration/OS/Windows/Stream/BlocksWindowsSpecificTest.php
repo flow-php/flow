@@ -91,8 +91,12 @@ final class BlocksWindowsSpecificTest extends TestCase
 
     public function test_windows_temp_file_streaming(): void
     {
-        // Create a temporary file in Windows temp directory
         $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_blocks_test_');
+
+        if ($tempFile === false) {
+            static::markTestSkipped('Could not create temporary file');
+        }
+
         $content = \str_repeat("Windows temp file content\r\n", 100);
         \file_put_contents($tempFile, $content);
 

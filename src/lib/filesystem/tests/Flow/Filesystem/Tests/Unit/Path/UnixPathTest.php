@@ -476,15 +476,17 @@ final class UnixPathTest extends PathTestCase
     }
 
     /**
-     * @param array<int, array{name: string, value: string}> $partitionData
+     * @param non-empty-array<int, array{name: string, value: string}> $partitionData
      */
     #[DataProvider('partitionProvider')]
     public function test_shared_partition_logic(string $input, array $partitionData, string $expected): void
     {
         $path = new UnixPath($input);
-        $partitions = array_map(static fn($p) => partition($p['name'], $p['value']), $partitionData);
+        $partitions = array_values(array_map(static fn($p) => partition($p['name'], $p['value']), $partitionData));
+        $first = array_shift($partitions);
+        static::assertNotNull($first);
 
-        $result = $path->addPartitions(...$partitions);
+        $result = $path->addPartitions($first, ...$partitions);
 
         static::assertEquals($expected, $result->path());
     }

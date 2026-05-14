@@ -72,6 +72,10 @@ final class RealpathTest extends TestCase
         static::assertIsString($currentDir);
         $cwd = \str_replace('\\', '/', $currentDir);
 
+        if ($cwd === '') {
+            static::fail('Current working directory is empty');
+        }
+
         $relativePath = path_real('./test_file.txt');
 
         static::assertStringStartsWith($cwd, $relativePath->path());

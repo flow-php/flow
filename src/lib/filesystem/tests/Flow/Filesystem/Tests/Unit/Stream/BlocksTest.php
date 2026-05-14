@@ -4,13 +4,34 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Unit\Stream;
 
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockLifecycle;
 use Flow\Filesystem\Stream\Blocks;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class BlocksTest extends TestCase
 {
+    /**
+     * @return \Generator<string, array{int}>
+     */
+    public static function nonPositiveBlockSizeProvider(): \Generator
+    {
+        yield 'zero' => [0];
+        yield 'negative' => [-1];
+    }
+
+    #[DataProvider('nonPositiveBlockSizeProvider')]
+    public function test_constructor_rejects_non_positive_block_size(int $blockSize): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Block size must be greater than 0');
+
+        /** @mago-ignore analysis:possibly-invalid-argument */
+        new Blocks($blockSize);
+    }
+
     public function test_writing_to_blocks(): void
     {
         $blockLifecycle = $this->createMock(BlockLifecycle::class);

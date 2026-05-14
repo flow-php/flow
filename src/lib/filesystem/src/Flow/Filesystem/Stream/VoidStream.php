@@ -38,10 +38,7 @@ final readonly class VoidStream implements DestinationStream, SourceStream
 
     public function iterate(int $length = 1): \Generator
     {
-        /** @phpstan-ignore-next-line */
-        foreach ([] as $char) {
-            yield $char;
-        }
+        yield from [];
     }
 
     public function path(): Path
@@ -56,10 +53,7 @@ final readonly class VoidStream implements DestinationStream, SourceStream
 
     public function readLines(string $separator = "\n", ?int $length = null): \Generator
     {
-        /** @phpstan-ignore-next-line */
-        foreach ([] as $char) {
-            yield $char;
-        }
+        yield from [];
     }
 
     public function size(): int
