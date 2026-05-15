@@ -17,7 +17,7 @@ final class SimpleXMLNormalizer implements Normalizer
     }
 
     /**
-     * @return array<array-key, mixed>
+     * @return array<string, mixed>
      */
     public function toArray(string $data): array
     {
@@ -25,22 +25,61 @@ final class SimpleXMLNormalizer implements Normalizer
     }
 
     /**
-     * @param array<array-key, mixed>|\SimpleXMLElement $xml
-     *
-     * @return array<array-key, mixed>
+     * @return array<string, mixed>
      */
-    private function normalize(\SimpleXMLElement|array $xml): array
+    private function normalize(\SimpleXMLElement $xml): array
     {
+        $children = $xml->children();
+
+        if ($children === null) {
+            return [];
+        }
+
+        /** @var array<string, list<\SimpleXMLElement>> $grouped */
+        $grouped = [];
+
+        foreach ($children as $name => $child) {
+            if ($child === null) {
+                continue;
+            }
+
+            $grouped[$name][] = $child;
+        }
+
         $normalized = [];
 
-        foreach ((array) $xml as $key => $value) {
-            $normalizedValue = $value instanceof \SimpleXMLElement || is_array($value)
-                ? $this->normalize($value)
-                : $value;
+        foreach ($grouped as $name => $group) {
+            if (count($group) === 1) {
+                $normalized[$name] = $this->valueOf($group[0]);
 
-            $normalized[$key] = \is_array($normalizedValue) && !\count($normalizedValue) ? null : $normalizedValue;
+                continue;
+            }
+
+            $values = [];
+
+            foreach ($group as $child) {
+                $values[] = $this->valueOf($child);
+            }
+
+            $normalized[$name] = $values;
         }
 
         return $normalized;
+    }
+
+    /**
+     * @return null|array<string, mixed>|string
+     */
+    private function valueOf(\SimpleXMLElement $element): array|string|null
+    {
+        if ($element->count() > 0) {
+            $value = $this->normalize($element);
+
+            return count($value) === 0 ? null : $value;
+        }
+
+        $text = (string) $element;
+
+        return $text === '' ? null : $text;
     }
 }

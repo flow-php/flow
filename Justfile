@@ -56,7 +56,8 @@ analyze-mago *args:
         src/lib/telemetry \
         src/lib/postgresql \
         src/lib/filesystem \
-        src/lib/array-dot
+        src/lib/array-dot \
+        src/lib/azure-sdk
 
 # Auto-fix code style with Mago (format + lint --fix).
 fix:

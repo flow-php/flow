@@ -15,48 +15,52 @@ final readonly class Blob
 
     public function lastModifiedAt(): ?\DateTimeImmutable
     {
-        $properties = $this->data['Properties'] ?? null;
-
-        if (!\is_array($properties)) {
+        if (!\array_key_exists('Properties', $this->data) || !\is_array($this->data['Properties'])) {
             return null;
         }
 
-        $raw = $properties['Last-Modified'] ?? null;
-
-        if (!\is_string($raw) || $raw === '') {
+        if (
+            !\array_key_exists('Last-Modified', $this->data['Properties'])
+            || !\is_string($this->data['Properties']['Last-Modified'])
+            || $this->data['Properties']['Last-Modified'] === ''
+        ) {
             return null;
         }
 
-        $parsed = \DateTimeImmutable::createFromFormat(\DateTimeImmutable::RFC7231, $raw);
+        $parsed = \DateTimeImmutable::createFromFormat(
+            \DateTimeImmutable::RFC7231,
+            $this->data['Properties']['Last-Modified'],
+        );
 
         return $parsed === false ? null : $parsed;
     }
 
     public function name(): string
     {
-        $name = $this->data['Name'] ?? null;
-
-        if (!\is_string($name)) {
+        if (!\array_key_exists('Name', $this->data) || !\is_string($this->data['Name'])) {
             throw new \InvalidArgumentException('Blob name must be a string');
         }
 
-        return $name;
+        return $this->data['Name'];
     }
 
     public function size(): int
     {
-        $properties = $this->data['Properties'] ?? null;
-
-        if (!\is_array($properties)) {
+        if (!\array_key_exists('Properties', $this->data) || !\is_array($this->data['Properties'])) {
             throw new \InvalidArgumentException('Blob properties must be an array');
         }
 
-        $contentLength = $properties['Content-Length'] ?? null;
-
-        if (!\is_string($contentLength) && !\is_int($contentLength)) {
+        if (!\array_key_exists('Content-Length', $this->data['Properties'])) {
             throw new \InvalidArgumentException('Content-Length must be a string or integer');
         }
 
-        return (int) $contentLength;
+        if (
+            !\is_string($this->data['Properties']['Content-Length'])
+            && !\is_int($this->data['Properties']['Content-Length'])
+        ) {
+            throw new \InvalidArgumentException('Content-Length must be a string or integer');
+        }
+
+        return (int) $this->data['Properties']['Content-Length'];
     }
 }

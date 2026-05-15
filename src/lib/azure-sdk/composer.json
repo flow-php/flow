@@ -15,6 +15,7 @@
     ],
     "require": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "flow-php/types": "self.version",
         "psr/log": "^2.0 || ^3.0",
         "psr/http-client": "^1.0",
         "php-http/discovery": "^1.0"
