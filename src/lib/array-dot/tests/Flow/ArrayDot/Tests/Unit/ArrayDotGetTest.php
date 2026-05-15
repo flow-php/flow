@@ -11,12 +11,11 @@ use PHPUnit\Framework\TestCase;
 
 use function Flow\ArrayDot\array_dot_exists;
 use function Flow\ArrayDot\array_dot_get;
-use function Flow\ArrayDot\array_dot_get_bool;
-use function Flow\ArrayDot\array_dot_get_datetime;
-use function Flow\ArrayDot\array_dot_get_enum;
-use function Flow\ArrayDot\array_dot_get_float;
-use function Flow\ArrayDot\array_dot_get_int;
-use function Flow\ArrayDot\array_dot_get_string;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
 
 final class ArrayDotGetTest extends TestCase
 {
@@ -429,61 +428,65 @@ final class ArrayDotGetTest extends TestCase
 
     public function test_array_dot_get_boolean(): void
     {
-        static::assertTrue(array_dot_get_bool(['active' => true], 'active'));
+        static::assertTrue(array_dot_get(['active' => true], 'active', type_boolean()));
 
-        static::assertFalse(array_dot_get_bool(['active' => false], 'active'));
+        static::assertFalse(array_dot_get(['active' => false], 'active', type_boolean()));
 
-        static::assertNull(array_dot_get_bool(['activate' => 'true'], '?active'));
+        static::assertNull(array_dot_get(['activate' => 'true'], '?active', type_boolean()));
     }
 
     public function test_array_dot_get_datetime(): void
     {
         static::assertEquals(
             new \DateTimeImmutable('2021-01-01 00:00:00'),
-            array_dot_get_datetime(['created_at' => '2021-01-01 00:00:00'], 'created_at'),
+            array_dot_get(['created_at' => '2021-01-01 00:00:00'], 'created_at', type_datetime()),
         );
 
-        static::assertNull(array_dot_get_datetime(['created_at' => '2021-01-01 00:00:00'], '?updated_at'));
+        static::assertNull(array_dot_get(['created_at' => '2021-01-01 00:00:00'], '?updated_at', type_datetime()));
     }
 
     public function test_array_dot_get_enum(): void
     {
-        static::assertSame(Numbers::ONE, array_dot_get_enum(['id' => 1], 'id', Numbers::class));
+        $intValue = array_dot_get(['id' => 1], 'id', type_integer());
+        static::assertSame(Numbers::ONE, $intValue === null ? null : Numbers::tryFrom($intValue));
 
-        static::assertSame(Letters::A, array_dot_get_enum(['id' => 'A'], 'id', Letters::class));
+        $stringValue = array_dot_get(['id' => 'A'], 'id', type_string());
+        static::assertSame(Letters::A, $stringValue === null ? null : Letters::tryFrom($stringValue));
 
-        static::assertSame(Numbers::ONE, array_dot_get_enum(['id' => '1'], 'id', Numbers::class));
+        $coercedValue = array_dot_get(['id' => '1'], 'id', type_integer());
+        static::assertSame(Numbers::ONE, $coercedValue === null ? null : Numbers::tryFrom($coercedValue));
 
-        static::assertNull(array_dot_get_enum(['identifier' => 1], '?id', Numbers::class));
+        $missingValue = array_dot_get(['identifier' => 1], '?id', type_integer());
+        static::assertNull($missingValue === null ? null : Numbers::tryFrom($missingValue));
     }
 
     public function test_array_dot_get_float(): void
     {
-        static::assertSame(1.0, array_dot_get_float(['id' => 1.0], 'id'));
+        static::assertSame(1.0, array_dot_get(['id' => 1.0], 'id', type_float()));
 
-        static::assertSame(10.0, array_dot_get_float(['id' => 10], 'id'));
+        static::assertSame(10.0, array_dot_get(['id' => 10], 'id', type_float()));
 
-        static::assertSame(1.0, array_dot_get_float(['id' => '1.0'], 'id'));
+        static::assertSame(1.0, array_dot_get(['id' => '1.0'], 'id', type_float()));
 
-        static::assertNull(array_dot_get_float(['identifier' => 1.0], '?id'));
+        static::assertNull(array_dot_get(['identifier' => 1.0], '?id', type_float()));
     }
 
     public function test_array_dot_get_int(): void
     {
-        static::assertSame(1, array_dot_get_int(['id' => 1], 'id'));
+        static::assertSame(1, array_dot_get(['id' => 1], 'id', type_integer()));
 
-        static::assertSame(1, array_dot_get_int(['id' => '01'], 'id'));
+        static::assertSame(1, array_dot_get(['id' => '01'], 'id', type_integer()));
 
-        static::assertNull(array_dot_get_int(['identifier' => 1], '?id'));
+        static::assertNull(array_dot_get(['identifier' => 1], '?id', type_integer()));
     }
 
     public function test_array_dot_get_string(): void
     {
-        static::assertSame('foo', array_dot_get_string(['name' => 'foo'], 'name'));
+        static::assertSame('foo', array_dot_get(['name' => 'foo'], 'name', type_string()));
 
-        static::assertSame('1', array_dot_get_string(['name' => 1], 'name'));
+        static::assertSame('1', array_dot_get(['name' => 1], 'name', type_string()));
 
-        static::assertNull(array_dot_get_string(['identifier' => 'foo'], '?name'));
+        static::assertNull(array_dot_get(['identifier' => 'foo'], '?name', type_string()));
     }
 
     public function test_escape_dot_path(): void
@@ -525,6 +528,30 @@ final class ArrayDotGetTest extends TestCase
             'id' => 1,
             'status' => 'NEW',
         ], '*.{id}');
+    }
+
+    public function test_get_traversing_past_scalar_leaf(): void
+    {
+        $this->expectException(InvalidPathException::class);
+        $this->expectExceptionMessage('Expected array under path, "user", but got: integer');
+
+        array_dot_get(['user' => 1], 'user.name');
+    }
+
+    public function test_get_traversing_past_scalar_leaf_with_nullsafe_next_step(): void
+    {
+        $this->expectException(InvalidPathException::class);
+        $this->expectExceptionMessage('Expected array under path, "user", but got: string');
+
+        array_dot_get(['user' => 'admin'], 'user.?role');
+    }
+
+    public function test_get_traversing_past_null_leaf(): void
+    {
+        $this->expectException(InvalidPathException::class);
+        $this->expectExceptionMessage('Expected array under path, "user", but got: NULL');
+
+        array_dot_get(['user' => null], 'user.name');
     }
 
     public function test_single_multi_key_get(): void

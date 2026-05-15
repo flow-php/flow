@@ -6,13 +6,19 @@ namespace Flow\ArrayDot;
 
 use Flow\ArrayDot\Exception\Exception;
 use Flow\ArrayDot\Exception\InvalidPathException;
+use Flow\Types\Type;
+
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
 
 /**
- * @param string $path
- *
  * @throws InvalidPathException
  *
- * @return array<string>
+ * @return non-empty-list<string>
  */
 function array_dot_steps(string $path): array
 {
@@ -25,6 +31,8 @@ function array_dot_steps(string $path): array
     }
 
     $path = \str_replace('\\.', '__ESCAPED_DOT__', $path);
+
+    $multiMatchPath = [];
 
     if (\preg_match('/(\.)({(.*?)})/', $path, $multiMatchPath)) {
         $path = \str_replace($multiMatchPath[2], '__MULTIMATCH_PATH__', $path);
@@ -49,35 +57,32 @@ function array_dot_steps(string $path): array
 
 /**
  * @param array<mixed> $array
- * @param string $path
- * @param mixed $value
  *
  * @throws InvalidPathException
  *
  * @return array<mixed>
  */
-function array_dot_set(array $array, string $path, $value): array
+function array_dot_set(array $array, string $path, mixed $value): array
 {
     $pathSteps = array_dot_steps($path);
+    $lastIndex = \count($pathSteps) - 1;
 
     $newArray = [];
     $currentElement = &$newArray;
 
     $takenSteps = [];
 
-    foreach ($pathSteps as $step) {
+    foreach ($pathSteps as $index => $step) {
         $takenSteps[] = $step;
 
         if ($step === '*') {
-            /**
-             * @var array<mixed> $nestedValues
-             */
-            $nestedValues = array_dot_get($array, \implode('.', $takenSteps));
+            $nestedValues = array_dot_get($array, \implode('.', $takenSteps), type_array()) ?? [];
             $stepsLeft = \array_slice($pathSteps, \count($takenSteps), \count($pathSteps));
 
-            /** @var mixed $nestedValue */
-            foreach ($nestedValues as $nestedKey => $nestedValue) {
-                $currentElement[$nestedKey] = array_dot_set((array) $nestedValue, \implode('.', $stepsLeft), $value);
+            $nestedArrays = \array_map(static fn(mixed $v): array => type_array()->cast($v), $nestedValues);
+
+            foreach ($nestedArrays as $nestedKey => $nestedArray) {
+                $currentElement[$nestedKey] = array_dot_set($nestedArray, \implode('.', $stepsLeft), $value);
             }
 
             return $newArray;
@@ -89,101 +94,98 @@ function array_dot_set(array $array, string $path, $value): array
             $takenSteps[] = $step;
         }
 
+        if ($index === $lastIndex) {
+            $currentElement[$step] = $value;
+
+            break;
+        }
+
         $currentElement[$step] = [];
 
         $currentElement = &$currentElement[$step];
     }
 
-    $currentElement = $value;
-
-    /** @var array<array-key, mixed> $newArray */
     return \array_merge($array, $newArray);
 }
 
 /**
+ * @deprecated Use {@see array_dot_get()} with `type_integer()` instead.
+ *
  * @param array<mixed> $array
+ *
+ * @throws InvalidPathException
  */
 function array_dot_get_int(array $array, string $path): ?int
 {
-    $result = array_dot_get($array, $path);
-
-    if ($result === null) {
-        return null;
-    }
-
-    return \is_numeric($result) ? (int) $result : 0;
+    return array_dot_get($array, $path, type_integer());
 }
 
 /**
+ * @deprecated Use {@see array_dot_get()} with `type_string()` instead.
+ *
  * @param array<mixed> $array
+ *
+ * @throws InvalidPathException
  */
 function array_dot_get_string(array $array, string $path): ?string
 {
-    $result = array_dot_get($array, $path);
-
-    if ($result === null) {
-        return null;
-    }
-
-    return \is_scalar($result) || $result instanceof \Stringable ? (string) $result : '';
+    return array_dot_get($array, $path, type_string());
 }
 
 /**
+ * @deprecated Use {@see array_dot_get()} with `type_boolean()` instead.
+ *
  * @param array<mixed> $array
+ *
+ * @throws InvalidPathException
  */
 function array_dot_get_bool(array $array, string $path): ?bool
 {
-    $result = array_dot_get($array, $path);
-
-    if ($result === null) {
-        return null;
-    }
-
-    return (bool) $result;
+    return array_dot_get($array, $path, type_boolean());
 }
 
 /**
+ * @deprecated Use {@see array_dot_get()} with `type_float()` instead.
+ *
  * @param array<mixed> $array
+ *
+ * @throws InvalidPathException
  */
 function array_dot_get_float(array $array, string $path): ?float
 {
-    $result = array_dot_get($array, $path);
-
-    if ($result === null) {
-        return null;
-    }
-
-    return \is_numeric($result) ? (float) $result : 0.0;
+    return array_dot_get($array, $path, type_float());
 }
 
 /**
+ * @deprecated Use {@see array_dot_get()} with `type_datetime()` instead.
+ *
  * @param array<mixed> $array
+ *
+ * @throws InvalidPathException
  */
 function array_dot_get_datetime(array $array, string $path): ?\DateTimeImmutable
 {
-    $result = array_dot_get($array, $path);
+    $value = array_dot_get($array, $path, type_datetime());
 
-    if ($result === null) {
+    if ($value === null) {
         return null;
     }
 
-    $dateTimeString = \is_scalar($result) || $result instanceof \Stringable ? (string) $result : '';
-
-    return new \DateTimeImmutable($dateTimeString);
+    return $value instanceof \DateTimeImmutable ? $value : \DateTimeImmutable::createFromInterface($value);
 }
 
 /**
- * @template T is \BackedEnum
+ * @deprecated Use {@see array_dot_get()} together with `BackedEnum::tryFrom()` instead.
  *
  * @param array<mixed> $array
- * @param string $path
- * @param class-string<T> $enumClass
+ * @param class-string<\BackedEnum> $enumClass
  *
- * @return null|\BackedEnum
+ * @throws Exception
+ * @throws InvalidPathException
  */
 function array_dot_get_enum(array $array, string $path, string $enumClass): ?\BackedEnum
 {
-    if (!\class_exists($enumClass)) {
+    if (!\enum_exists($enumClass)) {
         throw new Exception('Enum class does not exist');
     }
 
@@ -192,29 +194,47 @@ function array_dot_get_enum(array $array, string $path, string $enumClass): ?\Ba
     }
 
     $reflection = new \ReflectionEnum($enumClass);
+    $backingType = $reflection->getBackingType();
+    $backingTypeName = $backingType instanceof \ReflectionNamedType ? $backingType->getName() : '';
 
-    $result = match ((string) $reflection->getBackingType()) {
-        'int' => array_dot_get_int($array, $path),
-        'string' => array_dot_get_string($array, $path),
-        default => throw new Exception('Unsupported enum backing type: ' . $reflection->getBackingType()),
+    $result = match ($backingTypeName) {
+        'int' => array_dot_get($array, $path, type_integer()),
+        'string' => array_dot_get($array, $path, type_string()),
+        default => throw new Exception('Unsupported enum backing type: ' . $backingTypeName),
     };
 
     if ($result === null) {
         return null;
     }
 
-    return $enumClass::tryFrom($result);
+    foreach ($reflection->getCases() as $reflectionCase) {
+        if (!$reflectionCase instanceof \ReflectionEnumBackedCase) {
+            continue;
+        }
+
+        if ($reflectionCase->getBackingValue() === $result) {
+            $enumValue = $reflectionCase->getValue();
+
+            if ($enumValue instanceof \BackedEnum) {
+                return $enumValue;
+            }
+        }
+    }
+
+    return null;
 }
 
 /**
+ * @template T
+ *
  * @param array<mixed> $array
- * @param string $path
+ * @param Type<T>|null $type optional coercion target — when provided, the resolved leaf value is cast through {@see Type::cast()} (null is always preserved)
  *
  * @throws InvalidPathException
  *
- * @return mixed
+ * @return ($type is null ? mixed : T|null)
  */
-function array_dot_get(array $array, string $path): mixed
+function array_dot_get(array $array, string $path, ?Type $type = null): mixed
 {
     if ([] === $array) {
         if (\str_starts_with($path, '?')) {
@@ -224,17 +244,17 @@ function array_dot_get(array $array, string $path): mixed
         throw new InvalidPathException(\sprintf(
             'Path "%s" does not exists in array "%s".',
             $path,
-            \preg_replace('/\s+/', '', \trim(\var_export($array, true))),
+            \preg_replace('/\s+/', '', \trim(\var_export($array, true))) ?? '',
         ));
     }
 
     $pathSteps = array_dot_steps($path);
+    $lastIndex = \count($pathSteps) - 1;
 
     $arraySlice = $array;
-    /** @var array<string> $takenSteps */
     $takenSteps = [];
 
-    foreach ($pathSteps as $step) {
+    foreach ($pathSteps as $index => $step) {
         $takenSteps[] = $step;
 
         if (\in_array($step, ['*', '?*'], true)) {
@@ -244,18 +264,24 @@ function array_dot_get(array $array, string $path): mixed
                 return $arraySlice;
             }
 
-            $results = [];
-
-            foreach ($arraySlice as $value) {
-                if (!\is_array($value)) {
-                    $pathTaken = \implode('.', $takenSteps);
-                    $type = \gettype($value);
-
-                    throw new InvalidPathException("Expected array under path, \"{$pathTaken}\", but got: {$type}");
+            $sliceArray = type_array()->assert($arraySlice);
+            $pathTaken = \implode('.', $takenSteps);
+            $stepsLeftJoined = \implode('.', $stepsLeft);
+            $validatedArrays = \array_map(static function (mixed $v) use ($pathTaken): array {
+                if (!\is_array($v)) {
+                    throw new InvalidPathException(
+                        "Expected array under path, \"{$pathTaken}\", but got: " . \gettype($v),
+                    );
                 }
 
+                return $v;
+            }, $sliceArray);
+
+            $results = [];
+
+            foreach ($validatedArrays as $value) {
                 try {
-                    $results[] = array_dot_get($value, \implode('.', $stepsLeft));
+                    $results[] = array_dot_get($value, $stepsLeftJoined);
                 } catch (InvalidPathException $e) {
                     if ($step === '?*') {
                         continue;
@@ -269,15 +295,16 @@ function array_dot_get(array $array, string $path): mixed
         }
 
         // Multiselect
-        if (\preg_match('/^{(.*?)}$/', $step, $subSteps)) {
-            $subSteps = \explode(',', $subSteps[1]);
+        $subStepsMatch = [];
+
+        if (\preg_match('/^{(.*?)}$/', $step, $subStepsMatch)) {
+            $sliceArray = type_array()->assert($arraySlice);
+            $subSteps = \explode(',', $subStepsMatch[1]);
             $results = [];
 
             foreach ($subSteps as $subStep) {
-                $subSteps = array_dot_steps(\trim($subStep));
-
                 $results[\str_replace('.', '_', \str_replace('?', '', \trim($subStep)))] = array_dot_get(
-                    $arraySlice,
+                    $sliceArray,
                     \trim($subStep),
                 );
             }
@@ -312,29 +339,44 @@ function array_dot_get(array $array, string $path): mixed
             $takenSteps[] = $step;
         }
 
-        if (!\array_key_exists($step, $arraySlice)) {
+        $sliceArray = type_array()->assert($arraySlice);
+
+        if (!\array_key_exists($step, $sliceArray)) {
             if (!$nullSafe) {
                 throw new InvalidPathException(\sprintf(
                     'Path "%s" does not exists in array "%s".',
                     $path,
-                    \preg_replace('/\s+/', '', \trim(\var_export($array, true))),
+                    \preg_replace('/\s+/', '', \trim(\var_export($array, true))) ?? '',
                 ));
             }
 
             return null;
         }
 
-        /** @var array<mixed> $arraySlice */
-        $arraySlice = $arraySlice[$step];
+        if ($index === $lastIndex) {
+            return match (true) {
+                $type === null => $sliceArray[$step],
+                $sliceArray[$step] === null => null,
+                default => $type->cast($sliceArray[$step]),
+            };
+        }
+
+        if (!\is_array($sliceArray[$step])) {
+            throw new InvalidPathException(\sprintf(
+                'Expected array under path, "%s", but got: %s',
+                \implode('.', $takenSteps),
+                \gettype($sliceArray[$step]),
+            ));
+        }
+
+        $arraySlice = type_array()->assert($sliceArray[$step]);
     }
 
-    return $arraySlice;
+    return null;
 }
 
 /**
  * @param array<mixed> $array
- * @param string $path
- * @param string $newName
  *
  * @throws InvalidPathException
  *
@@ -346,7 +388,7 @@ function array_dot_rename(array $array, string $path, string $newName): array
         throw new InvalidPathException(\sprintf(
             'Path "%s" does not exists in array "%s".',
             $path,
-            \preg_replace('/\s+/', '', \trim(\var_export($array, true))),
+            \preg_replace('/\s+/', '', \trim(\var_export($array, true))) ?? '',
         ));
     }
 
@@ -361,20 +403,14 @@ function array_dot_rename(array $array, string $path, string $newName): array
         $takenSteps[] = $step;
 
         if ($step === '*') {
-            /**
-             * @var array<mixed> $nestedValues
-             */
-            $nestedValues = array_dot_get($array, \implode('.', $takenSteps));
+            $nestedValues = array_dot_get($array, \implode('.', $takenSteps), type_array()) ?? [];
             $stepsLeft = \array_slice($pathSteps, \count($takenSteps), \count($pathSteps));
             $stepsLeft[] = $lastStep;
 
-            /** @var mixed $nestedValue */
-            foreach ($nestedValues as $nestedKey => $nestedValue) {
-                $currentElement[$nestedKey] = array_dot_rename(
-                    (array) $nestedValue,
-                    \implode('.', $stepsLeft),
-                    $newName,
-                );
+            $nestedArrays = \array_map(static fn(mixed $v): array => type_array()->cast($v), $nestedValues);
+
+            foreach ($nestedArrays as $nestedKey => $nestedArray) {
+                $currentElement[$nestedKey] = array_dot_rename($nestedArray, \implode('.', $stepsLeft), $newName);
             }
 
             return $array;
@@ -390,7 +426,7 @@ function array_dot_rename(array $array, string $path, string $newName): array
             throw new Exception(\sprintf(
                 'Item for path "%s" is not an array in "%s".',
                 \implode('.', $takenSteps),
-                \preg_replace('/\s+/', '', \trim(\var_export($array, true))),
+                \preg_replace('/\s+/', '', \trim(\var_export($array, true))) ?? '',
             ));
         }
 
@@ -405,9 +441,6 @@ function array_dot_rename(array $array, string $path, string $newName): array
 
 /**
  * @param array<mixed> $array
- * @param string $path
- *
- * @return bool
  */
 function array_dot_exists(array $array, string $path): bool
 {
