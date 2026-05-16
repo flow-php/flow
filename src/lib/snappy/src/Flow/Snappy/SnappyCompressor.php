@@ -73,7 +73,7 @@ final class SnappyCompressor
         $hashFuncShift = 32 - $hashTableBits;
 
         if (!isset($this->globalHashTables[$hashTableBits])) {
-            $this->globalHashTables[$hashTableBits] = \array_fill(0, 1 << $hashTableBits, 0);
+            $this->globalHashTables[$hashTableBits] = \array_fill(0, \max(1, 1 << $hashTableBits), 0);
         }
 
         $hashTable = [];

@@ -53,7 +53,13 @@ final class SnappyDecompressor
      */
     public function uncompressToBuffer(array &$outBuffer): bool
     {
-        $outBuffer = \array_fill(0, $this->readUncompressedLength(), 0);
+        $uncompressedLength = $this->readUncompressedLength();
+
+        if ($uncompressedLength < 0) {
+            return false;
+        }
+
+        $outBuffer = \array_fill(0, $uncompressedLength, 0);
         $pos = $this->pos;
         $outPos = 0;
         $len = $offset = 0;
