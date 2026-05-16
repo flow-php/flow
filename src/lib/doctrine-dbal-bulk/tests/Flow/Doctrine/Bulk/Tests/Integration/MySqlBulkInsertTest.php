@@ -19,6 +19,7 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
 {
     public function test_inserts_multiple_rows_at_once(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('age', Type::getType(Types::INTEGER), ['notnull' => true]),
@@ -101,6 +102,7 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
 
     public function test_inserts_new_rows_and_skip_already_existed(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
@@ -142,6 +144,7 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
 
     public function test_inserts_new_rows_and_update_already_existed(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
@@ -183,6 +186,7 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
 
     public function test_inserts_new_rows_and_update_selected_columns_and_preserve_existing_values(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => false, 'length' => 255]),
@@ -224,6 +228,7 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
 
     public function test_inserts_new_rows_and_update_selected_columns_only_of_already_existed(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),

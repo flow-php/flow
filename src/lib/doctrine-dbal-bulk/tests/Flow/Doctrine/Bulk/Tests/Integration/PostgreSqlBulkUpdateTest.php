@@ -18,6 +18,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
 {
     public function test_update_multiple_rows_with_all_columns_and_multiple_primary_keys_at_once(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('account', Type::getType(Types::STRING), ['notnull' => true]),
@@ -116,6 +117,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
 
     public function test_update_multiple_rows_with_all_columns_at_once(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
@@ -175,6 +177,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
 
     public function test_update_multiple_rows_with_selected_columns_at_once(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
@@ -222,6 +225,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
 
     public function test_update_when_bulk_data_has_not_all_columns_from_primary_key_columns(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
@@ -258,6 +262,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
 
     public function test_update_with_custom_types_using_casted_placeholders_works_with_postgresql(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
@@ -312,6 +317,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
 
     public function test_update_with_empty_primary_key_columns(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),

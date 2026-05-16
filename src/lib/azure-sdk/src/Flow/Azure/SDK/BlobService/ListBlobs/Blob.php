@@ -28,8 +28,9 @@ final readonly class Blob
         }
 
         $parsed = \DateTimeImmutable::createFromFormat(
-            \DateTimeImmutable::RFC7231,
+            'D, d M Y H:i:s \G\M\T',
             $this->data['Properties']['Last-Modified'],
+            new \DateTimeZone('GMT'),
         );
 
         return $parsed === false ? null : $parsed;

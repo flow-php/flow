@@ -26,6 +26,9 @@ final class BulkDataTest extends TestCase
         yield 'positional parameters' => [SQLParametersStyle::POSITIONAL, '?'];
     }
 
+    /**
+     * @return \Generator<string, array{array<string, mixed>, string}>
+     */
     public static function provide_single_row_data(): \Generator
     {
         yield 'integer column' => [['id' => 42], 'INTEGER'];
@@ -409,6 +412,9 @@ final class BulkDataTest extends TestCase
         static::assertStringNotContainsString(':name_', $result);
     }
 
+    /**
+     * @param array<string, mixed> $rowData
+     */
     #[DataProvider('provide_single_row_data')]
     public function test_to_sql_casted_placeholders_with_single_column_data(
         array $rowData,

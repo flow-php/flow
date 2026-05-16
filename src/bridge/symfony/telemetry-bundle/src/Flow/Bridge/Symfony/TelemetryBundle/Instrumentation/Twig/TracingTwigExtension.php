@@ -82,7 +82,7 @@ final class TracingTwigExtension extends AbstractExtension
             return;
         }
 
-        if (!$this->activeSpans->contains($profile)) {
+        if (!isset($this->activeSpans[$profile])) {
             return;
         }
 
@@ -90,7 +90,7 @@ final class TracingTwigExtension extends AbstractExtension
         $spanData = $this->activeSpans[$profile];
         $spanData['tracer']->complete($spanData['span']);
 
-        $this->activeSpans->detach($profile);
+        unset($this->activeSpans[$profile]);
     }
 
     private function getSpanName(Profile $profile): string

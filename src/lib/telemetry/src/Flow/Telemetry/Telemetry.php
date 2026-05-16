@@ -169,15 +169,15 @@ final class Telemetry
         $processors = new \SplObjectStorage();
 
         foreach ($this->tracers as $tracer) {
-            $processors->attach($tracer->processor());
+            $processors[$tracer->processor()] = true;
         }
 
         foreach ($this->meters as $meter) {
-            $processors->attach($meter->processor());
+            $processors[$meter->processor()] = true;
         }
 
         foreach ($this->loggers as $logger) {
-            $processors->attach($logger->processor());
+            $processors[$logger->processor()] = true;
         }
 
         foreach ($processors as $processor) {

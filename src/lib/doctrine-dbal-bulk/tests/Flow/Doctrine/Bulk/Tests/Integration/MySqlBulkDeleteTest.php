@@ -16,6 +16,7 @@ final class MySqlBulkDeleteTest extends MysqlIntegrationTestCase
 {
     public function test_delete_nonexistent_rows(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
@@ -51,6 +52,7 @@ final class MySqlBulkDeleteTest extends MysqlIntegrationTestCase
 
     public function test_delete_rows_with_composite_key_condition(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('group', Type::getType(Types::STRING), ['notnull' => true, 'length' => 1]),
@@ -90,6 +92,7 @@ final class MySqlBulkDeleteTest extends MysqlIntegrationTestCase
 
     public function test_delete_rows_with_single_column_condition(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),

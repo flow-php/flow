@@ -57,7 +57,8 @@ analyze-mago *args:
         src/lib/postgresql \
         src/lib/filesystem \
         src/lib/array-dot \
-        src/lib/azure-sdk
+        src/lib/azure-sdk \
+        src/lib/doctrine-dbal-bulk
 
 # Auto-fix code style with Mago (format + lint --fix).
 fix:

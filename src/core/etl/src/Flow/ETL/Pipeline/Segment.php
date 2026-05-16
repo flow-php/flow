@@ -31,7 +31,7 @@ final readonly class Segment
 
     public function add(Transformer|Loader $step): void
     {
-        $this->steps->attach($step);
+        $this->steps->offsetSet($step);
     }
 
     public function contains(Transformer|Loader|Processor $step): bool
@@ -40,7 +40,7 @@ final readonly class Segment
             return $this->processor === $step;
         }
 
-        return $this->steps->contains($step);
+        return $this->steps->offsetExists($step);
     }
 
     /**
@@ -153,7 +153,7 @@ final readonly class Segment
         $segment = new self($processor);
 
         foreach ($this->steps as $step) {
-            $segment->steps->attach($step);
+            $segment->steps->offsetSet($step);
         }
 
         return $segment;

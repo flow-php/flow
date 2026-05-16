@@ -19,6 +19,7 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
 {
     public function test_inserts_multiple_rows_at_once(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('age', Type::getType(Types::INTEGER), ['notnull' => true]),
@@ -103,6 +104,7 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
 
     public function test_inserts_new_rows_and_skip_already_existed(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
@@ -144,6 +146,7 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
 
     public function test_inserts_new_rows_or_updates_already_existed_based_on_columns(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
@@ -184,6 +187,7 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
 
     public function test_inserts_new_rows_or_updates_already_existed_based_on_columns_with_update_only_specific_columns(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
@@ -222,6 +226,7 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
 
     public function test_inserts_new_rows_or_updates_already_existed_based_on_columns_with_update_only_specific_columns_and_preserve_existing_values(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => false, 'length' => 255]),
@@ -262,6 +267,7 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
 
     public function test_inserts_new_rows_or_updates_already_existed_based_on_primary_key(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),

@@ -31,6 +31,7 @@ final readonly class MySQLDialect implements Dialect
         return \sprintf(
             'DELETE FROM %s WHERE (%s) IN (%s)',
             $table->name(),
+            // @mago-expect analysis:deprecated-method
             \implode(', ', \array_map(fn($column) => $this->platform->quoteIdentifier($column), $columns)),
             $bulkData->toSqlPlaceholders(),
         );
@@ -57,6 +58,7 @@ final readonly class MySQLDialect implements Dialect
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON DUPLICATE KEY UPDATE %4$s=%4$s',
                 $table->name(),
+                // @mago-expect analysis:deprecated-method
                 \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
                     $column,
                 ), $bulkData->columns()->all())),
@@ -71,6 +73,7 @@ final readonly class MySQLDialect implements Dialect
                 VALUES %s
                 ON DUPLICATE KEY UPDATE %s',
                 $table->name(),
+                // @mago-expect analysis:deprecated-method
                 \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
                     $column,
                 ), $bulkData->columns()->all())),
@@ -89,6 +92,7 @@ final readonly class MySQLDialect implements Dialect
         return \sprintf(
             'INSERT INTO %s (%s) VALUES %s',
             $table->name(),
+            // @mago-expect analysis:deprecated-method
             \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
                 $column,
             ), $bulkData->columns()->all())),
@@ -108,6 +112,7 @@ final readonly class MySQLDialect implements Dialect
         return \sprintf(
             'REPLACE INTO %s (%s) VALUES %s',
             $table->name(),
+            // @mago-expect analysis:deprecated-method
             \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
                 $column,
             ), $bulkData->columns()->all())),
@@ -125,6 +130,8 @@ final readonly class MySQLDialect implements Dialect
         return \implode(
             ',',
             $columns->map(
+                // @mago-expect analysis:deprecated-method
+                // @mago-expect analysis:deprecated-method
                 fn(string $column): string => "{$this->platform->quoteIdentifier(
                     $column,
                 )} = VALUES({$this->platform->quoteIdentifier($column)})",
@@ -144,22 +151,30 @@ final readonly class MySQLDialect implements Dialect
         string $tableName,
         ?bool $preserveExistingValues = null,
     ): string {
-        return \count($updateColumns) ? \implode(',', \array_map(function (string $column) use (
-                $tableName,
-                $preserveExistingValues,
-            ): string {
-                $clause = "{$this->platform->quoteIdentifier($column)} = ";
+        return (
+            \count($updateColumns)
+                ? \implode(',', \array_map(
+                    function (string $column) use ($tableName, $preserveExistingValues): string {
+                        // @mago-expect analysis:deprecated-method
+                        $clause = "{$this->platform->quoteIdentifier($column)} = ";
 
-                if (true === $preserveExistingValues) {
-                    return (
-                        $clause
-                        . "COALESCE(VALUES({$this->platform->quoteIdentifier(
-                            $column,
-                        )}), {$tableName}.{$this->platform->quoteIdentifier($column)})"
-                    );
-                }
+                        if (true === $preserveExistingValues) {
+                            return (
+                                $clause
+                                // @mago-expect analysis:deprecated-method
+                                // @mago-expect analysis:deprecated-method
+                                . "COALESCE(VALUES({$this->platform->quoteIdentifier(
+                                    $column,
+                                )}), {$tableName}.{$this->platform->quoteIdentifier($column)})"
+                            );
+                        }
 
-                return $clause . "VALUES({$this->platform->quoteIdentifier($column)})";
-            }, $updateColumns)) : $this->updateAllColumns($columns);
+                        // @mago-expect analysis:deprecated-method
+                        return $clause . "VALUES({$this->platform->quoteIdentifier($column)})";
+                    },
+                    $updateColumns,
+                ))
+                : $this->updateAllColumns($columns)
+        );
     }
 }

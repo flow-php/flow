@@ -169,6 +169,7 @@ final class TableDefinitionsTest extends TestCase
         // Test that it can access database metadata
         $column = $tableDefinition->dbalColumn('id');
         static::assertInstanceOf(Column::class, $column);
+        // @mago-expect analysis:deprecated-method
         static::assertSame('id', $column->getName());
     }
 

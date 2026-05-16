@@ -809,6 +809,12 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
     public function test_two_separate_otlp_backends(): void
     {
+        if (!\extension_loaded('grpc')) {
+            static::markTestSkipped(
+                'grpc PHP extension is required to instantiate GrpcTransport during container compilation',
+            );
+        }
+
         $this->bootKernel([
             'config' => static function (TestKernel $kernel): void {
                 $kernel->addTestExtensionConfig('flow_telemetry', [
@@ -843,12 +849,10 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         static::assertInstanceOf(OTLPExporter::class, $container->get('flow.telemetry.exporter.otlp_traces'));
         static::assertInstanceOf(OTLPExporter::class, $container->get('flow.telemetry.exporter.otlp_metrics'));
 
-        if (\extension_loaded('grpc')) {
-            static::assertInstanceOf(
-                GrpcTransport::class,
-                $container->get('flow.telemetry.exporter.otlp_traces.transport'),
-            );
-        }
+        static::assertInstanceOf(
+            GrpcTransport::class,
+            $container->get('flow.telemetry.exporter.otlp_traces.transport'),
+        );
         static::assertInstanceOf(
             CurlTransport::class,
             $container->get('flow.telemetry.exporter.otlp_metrics.transport'),

@@ -260,11 +260,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
 
     private function freeParser(): void
     {
-        if ($this->parser !== null) {
-            xml_parser_free($this->parser);
-            $this->parser = null;
-        }
-
+        $this->parser = null;
         $this->namespaceStack = [];
         $this->currentPath = [];
     }

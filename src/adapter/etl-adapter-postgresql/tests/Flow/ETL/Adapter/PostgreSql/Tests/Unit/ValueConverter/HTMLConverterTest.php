@@ -27,7 +27,7 @@ final class HTMLConverterTest extends TestCase
 
         $converter = new HTMLConverter();
 
-        $doc = HTMLDocument::createFromString('<html><body><p>Hello</p></body></html>');
+        $doc = HTMLDocument::createFromString('<!DOCTYPE html><html><body><p>Hello</p></body></html>');
         $result = $converter->toDatabase($doc);
 
         static::assertIsString($result);
@@ -42,7 +42,7 @@ final class HTMLConverterTest extends TestCase
 
         $converter = new HTMLConverter();
 
-        $doc = HTMLDocument::createFromString('<html><body><p id="test">Hello</p></body></html>');
+        $doc = HTMLDocument::createFromString('<!DOCTYPE html><html><body><p id="test">Hello</p></body></html>');
         $element = $doc->getElementById('test');
 
         static::assertInstanceOf(HTMLElement::class, $element);

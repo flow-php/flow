@@ -16,6 +16,7 @@ final class SqliteBulkUpdateTest extends SqliteIntegrationTestCase
 {
     public function test_update_multiple_rows_with_all_columns_at_once(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),

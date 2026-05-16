@@ -27,16 +27,17 @@ final class TableDefinition
      */
     public function dbalColumn(string $columnName): Column
     {
-        $dbColumnNames = \array_filter(
+        $dbColumnNames = \array_values(\array_filter(
             $this->getColumns(),
+            // @mago-expect analysis:deprecated-method
             static fn(Column $dbColumn): bool => $dbColumn->getName() === $columnName,
-        );
+        ));
 
         if (\count($dbColumnNames) !== 1) {
             throw new RuntimeException("Column with name {$columnName}, not found in table: {$this->name}");
         }
 
-        return \current($dbColumnNames);
+        return $dbColumnNames[0];
     }
 
     /**
@@ -115,6 +116,7 @@ final class TableDefinition
             return $this->columns;
         }
 
+        // @mago-expect analysis:deprecated-method
         $this->columns = array_values($this->connection->createSchemaManager()->listTableColumns($this->name));
 
         return $this->columns;

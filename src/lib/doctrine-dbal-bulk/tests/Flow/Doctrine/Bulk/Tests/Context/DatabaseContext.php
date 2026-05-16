@@ -22,7 +22,9 @@ final readonly class DatabaseContext
     {
         $schemaManager = $this->connection->createSchemaManager();
 
+        // @mago-expect analysis:deprecated-method
         if ($schemaManager->tablesExist([$table->getName()])) {
+            // @mago-expect analysis:deprecated-method
             $schemaManager->dropTable($table->getName());
         }
 
@@ -31,15 +33,19 @@ final readonly class DatabaseContext
 
     public function dropAllTables(): void
     {
+        // @mago-expect analysis:deprecated-method
         foreach ($this->connection->createSchemaManager()->listTables() as $table) {
+            // @mago-expect analysis:deprecated-method
             if (\str_contains($table->getName(), 'innodb')) {
                 continue;
             }
 
+            // @mago-expect analysis:deprecated-method
             if (\str_contains($table->getName(), 'mysql')) {
                 continue;
             }
 
+            // @mago-expect analysis:deprecated-method
             $this->connection->createSchemaManager()->dropTable($table->getName());
         }
     }

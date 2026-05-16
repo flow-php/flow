@@ -31,6 +31,7 @@ final readonly class PostgreSQLDialect implements Dialect
         return \sprintf(
             'DELETE FROM %s WHERE (%s) IN (%s)',
             $table->name(),
+            // @mago-expect analysis:deprecated-method
             \implode(', ', \array_map(fn($column) => $this->platform->quoteIdentifier($column), $columns)),
             $bulkData->toSqlCastedPlaceholders($table),
         );
@@ -57,6 +58,7 @@ final readonly class PostgreSQLDialect implements Dialect
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT (%s) DO UPDATE SET %s',
                 $table->name(),
+                // @mago-expect analysis:deprecated-method
                 \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
                     $column,
                 ), $bulkData->columns()->all())),
@@ -77,6 +79,7 @@ final readonly class PostgreSQLDialect implements Dialect
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT ON CONSTRAINT %s DO UPDATE SET %s',
                 $table->name(),
+                // @mago-expect analysis:deprecated-method
                 \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
                     $column,
                 ), $bulkData->columns()->all())),
@@ -97,6 +100,7 @@ final readonly class PostgreSQLDialect implements Dialect
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT DO NOTHING',
                 $table->name(),
+                // @mago-expect analysis:deprecated-method
                 \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
                     $column,
                 ), $bulkData->columns()->all())),
@@ -107,6 +111,7 @@ final readonly class PostgreSQLDialect implements Dialect
         return \sprintf(
             'INSERT INTO %s (%s) VALUES %s',
             $table->name(),
+            // @mago-expect analysis:deprecated-method
             \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
                 $column,
             ), $bulkData->columns()->all())),
@@ -153,6 +158,7 @@ final readonly class PostgreSQLDialect implements Dialect
                 )
                 : $this->updateAllColumns($bulkData->columns()->without(...$options->primaryKeyColumns)),
             $bulkData->toSqlCastedPlaceholders($table),
+            // @mago-expect analysis:deprecated-method
             \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
                 $column,
             ), $bulkData->columns()->all())),
@@ -170,6 +176,8 @@ final readonly class PostgreSQLDialect implements Dialect
         return \implode(
             ',',
             $columns->map(
+                // @mago-expect analysis:deprecated-method
+                // @mago-expect analysis:deprecated-method
                 fn(string $column): string => "{$this->platform->quoteIdentifier(
                     $column,
                 )} = {$this->platform->quoteIdentifier('excluded.' . $column)}",
@@ -183,6 +191,8 @@ final readonly class PostgreSQLDialect implements Dialect
     private function updatedIndexColumns(array $updateColumns): string
     {
         return \implode(' AND ', \array_map(
+            // @mago-expect analysis:deprecated-method
+            // @mago-expect analysis:deprecated-method
             fn(string $column): string => "{$this->platform->quoteIdentifier('existing_table.'
             . $column)} = {$this->platform->quoteIdentifier('excluded.' . $column)}",
             $updateColumns,
@@ -203,21 +213,29 @@ final readonly class PostgreSQLDialect implements Dialect
          * The SET and WHERE clauses in ON CONFLICT DO UPDATE have access to the existing row using the
          * table's name (or an alias), and to rows proposed for insertion using the special EXCLUDED table.
          */
-        return \count($updateColumns) ? \implode(',', \array_map(function (string $column) use (
-                $tableName,
-                $preserveExistingValues,
-            ): string {
-                $clause = "{$this->platform->quoteIdentifier($column)} = ";
+        return (
+            \count($updateColumns)
+                ? \implode(',', \array_map(
+                    function (string $column) use ($tableName, $preserveExistingValues): string {
+                        // @mago-expect analysis:deprecated-method
+                        $clause = "{$this->platform->quoteIdentifier($column)} = ";
 
-                if (true === $preserveExistingValues) {
-                    return (
-                        $clause
-                        . "COALESCE({$this->platform->quoteIdentifier('excluded.'
-                        . $column)}, {$tableName}.{$this->platform->quoteIdentifier($column)})"
-                    );
-                }
+                        if (true === $preserveExistingValues) {
+                            return (
+                                $clause
+                                // @mago-expect analysis:deprecated-method
+                                // @mago-expect analysis:deprecated-method
+                                . "COALESCE({$this->platform->quoteIdentifier('excluded.'
+                                . $column)}, {$tableName}.{$this->platform->quoteIdentifier($column)})"
+                            );
+                        }
 
-                return $clause . "{$this->platform->quoteIdentifier('excluded.' . $column)}";
-            }, $updateColumns)) : $this->updateAllColumns($columns);
+                        // @mago-expect analysis:deprecated-method
+                        return $clause . "{$this->platform->quoteIdentifier('excluded.' . $column)}";
+                    },
+                    $updateColumns,
+                ))
+                : $this->updateAllColumns($columns)
+        );
     }
 }

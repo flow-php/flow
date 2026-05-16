@@ -22,7 +22,7 @@ use PHPUnit\Framework\TestCase;
 final class TableDefinitionTest extends TestCase
 {
     /**
-     * @return \Generator<string, array{array<string, mixed>, class-string<AbstractPlatform>}>
+     * @return \Generator<string, array{array{driver: 'sqlite3', memory: bool}, class-string<AbstractPlatform>}>
      */
     public static function provide_platform_types(): \Generator
     {
@@ -48,6 +48,8 @@ final class TableDefinitionTest extends TestCase
         $column1 = $tableDefinition->dbalColumn('id');
         $column2 = $tableDefinition->dbalColumn('id');
 
+        // @mago-expect analysis:deprecated-method
+        // @mago-expect analysis:deprecated-method
         static::assertSame($column1->getName(), $column2->getName());
         static::assertSame(
             Type::getTypeRegistry()->lookupName($column1->getType()),
@@ -93,6 +95,7 @@ final class TableDefinitionTest extends TestCase
 
         $nameColumn = $tableDefinition->dbalColumn('name');
 
+        // @mago-expect analysis:deprecated-method
         static::assertSame('name', $nameColumn->getName());
         static::assertSame(Types::STRING, Type::getTypeRegistry()->lookupName($nameColumn->getType()));
     }
@@ -105,6 +108,7 @@ final class TableDefinitionTest extends TestCase
         $column = $tableDefinition->dbalColumn('id');
 
         static::assertInstanceOf(Column::class, $column);
+        // @mago-expect analysis:deprecated-method
         static::assertSame('id', $column->getName());
     }
 
@@ -266,7 +270,7 @@ final class TableDefinitionTest extends TestCase
     }
 
     /**
-     * @param array<string, mixed> $connectionParams
+     * @param array{driver: 'sqlite3', memory: bool} $connectionParams
      * @param class-string<AbstractPlatform> $expectedPlatformClass
      */
     #[DataProvider('provide_platform_types')]
@@ -278,7 +282,6 @@ final class TableDefinitionTest extends TestCase
 
         $tableDefinition = new TableDefinition('test_table', $connection);
 
-        /** @var class-string<AbstractPlatform> $expectedPlatformClass */
         static::assertInstanceOf($expectedPlatformClass, $tableDefinition->platform());
     }
 

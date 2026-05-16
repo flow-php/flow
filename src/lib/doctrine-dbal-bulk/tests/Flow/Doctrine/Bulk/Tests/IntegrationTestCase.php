@@ -14,6 +14,9 @@ abstract class IntegrationTestCase extends TestCase
 
     protected readonly ProxyLogger $logger;
 
+    /**
+     * @param non-empty-string $name
+     */
     public function __construct(string $name)
     {
         $this->logger = new ProxyLogger();

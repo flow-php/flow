@@ -287,7 +287,6 @@ final class CurlTransport implements Transport
             $entry = $this->pending[$id] ?? null;
 
             \curl_multi_remove_handle($this->multiHandle, $ch);
-            \curl_close($ch);
             unset($this->pending[$id]);
 
             yield ['primaryError' => $primaryError, 'entry' => $entry];
@@ -301,7 +300,6 @@ final class CurlTransport implements Transport
     {
         foreach ($this->pending as $id => $entry) {
             \curl_multi_remove_handle($this->multiHandle, $entry['handle']);
-            \curl_close($entry['handle']);
             unset($this->pending[$id]);
 
             yield ['primaryError' => $this->buildShutdownTimeoutError(), 'entry' => $entry];

@@ -173,7 +173,7 @@ final class HTMLElementTypeTest extends TestCase
      * @param null|class-string<\Throwable> $exceptionClass
      */
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, string $expected, ?string $exceptionClass = null): void
+    public function test_cast(mixed $value, ?string $expected = null, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
@@ -181,6 +181,8 @@ final class HTMLElementTypeTest extends TestCase
 
             return;
         }
+
+        static::assertNotNull($expected);
 
         $result = type_html_element()->assert(type_html_element()->cast($value));
         $canonical = type_string()->assert($result->C14N());
