@@ -31,9 +31,10 @@ final readonly class DataPageHeaderV2
             Encodings::from($thrift->encoding),
             (int) $thrift->definition_levels_byte_length,
             (int) $thrift->repetition_levels_byte_length,
-            /** @phpstan-ignore-next-line */
-            $thrift->is_compressed ?? null,
-            $thrift->statistics ? Statistics::fromThrift($thrift->statistics) : null,
+            $thrift->is_compressed,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
+            $thrift->statistics !== null ? Statistics::fromThrift($thrift->statistics) : null,
         );
     }
 

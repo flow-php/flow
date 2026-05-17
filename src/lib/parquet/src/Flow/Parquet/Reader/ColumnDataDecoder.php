@@ -47,7 +47,7 @@ final readonly class ColumnDataDecoder
                 $pageHeader->valuesCount(),
             );
         } else {
-            $repetitionLevels = \array_fill(0, $pageHeader->valuesCount(), 0);
+            $repetitionLevels = \array_fill(0, max(0, $pageHeader->valuesCount()), 0);
         }
 
         if ($column->maxDefinitionsLevel()) {
@@ -59,7 +59,7 @@ final readonly class ColumnDataDecoder
                 $pageHeader->valuesCount(),
             );
         } else {
-            $definitionLevels = \array_fill(0, $pageHeader->valuesCount(), $column->maxDefinitionsLevel());
+            $definitionLevels = \array_fill(0, max(0, $pageHeader->valuesCount()), $column->maxDefinitionsLevel());
         }
 
         $nonEmptyValuesCount = $this->countValues($definitionLevels, $column);
@@ -103,7 +103,6 @@ final readonly class ColumnDataDecoder
             if ($nonEmptyValuesCount) {
                 $bitWidth = \ord($reader->readBytes(1));
 
-                /** @var array<int> $indices */
                 $indices = $this->readRLEBitPackedHybrid($reader, $RLEBitPackedHybrid, $bitWidth, $nonEmptyValuesCount);
 
                 $valuesGenerator = static function () use ($indices, $dictionary) {
@@ -141,7 +140,7 @@ final readonly class ColumnDataDecoder
                 $pageHeader->valuesCount(),
             );
         } else {
-            $repetitionLevels = \array_fill(0, $pageHeader->valuesCount(), 0);
+            $repetitionLevels = \array_fill(0, max(0, $pageHeader->valuesCount()), 0);
         }
 
         if ($column->maxDefinitionsLevel()) {
@@ -152,7 +151,7 @@ final readonly class ColumnDataDecoder
                 $pageHeader->valuesCount(),
             );
         } else {
-            $definitionLevels = \array_fill(0, $pageHeader->valuesCount(), $column->maxDefinitionsLevel());
+            $definitionLevels = \array_fill(0, max(0, $pageHeader->valuesCount()), $column->maxDefinitionsLevel());
         }
 
         $nonEmptyValuesCount = $this->countValues($definitionLevels, $column);
@@ -196,7 +195,6 @@ final readonly class ColumnDataDecoder
             if (\count($definitionLevels)) {
                 $bitWidth = \ord($reader->readBytes(1));
 
-                /** @var array<int> $indices */
                 $indices = $this->readRLEBitPackedHybrid($reader, $RLEBitPackedHybrid, $bitWidth, $nonEmptyValuesCount);
 
                 $valuesGenerator = static function () use ($indices, $dictionary) {

@@ -28,66 +28,74 @@ final readonly class StatisticsReader
 
     public function max(FlatColumn $column): mixed
     {
-        if ($this->statistics->max === null) {
+        $max = $this->statistics->max;
+
+        if ($max === null) {
             return null;
         }
 
         if (ColumnPrimitiveType::isString($column)) {
-            return $this->statistics->max;
+            return $max;
         }
 
-        return \iterator_to_array((new PlainValueUnpacker(
-            new BinaryBufferReader($this->statistics->max),
-            $this->byteOrder,
-        ))->unpack($column, 1))[0];
+        return \iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($max), $this->byteOrder))->unpack(
+            $column,
+            1,
+        ))[0];
     }
 
     public function maxValue(FlatColumn $column): mixed
     {
-        if ($this->statistics->maxValue === null) {
+        $maxValue = $this->statistics->maxValue;
+
+        if ($maxValue === null) {
             return null;
         }
 
         if (ColumnPrimitiveType::isString($column)) {
-            return $this->statistics->maxValue;
+            return $maxValue;
         }
 
-        return \iterator_to_array((new PlainValueUnpacker(
-            new BinaryBufferReader($this->statistics->maxValue),
-            $this->byteOrder,
-        ))->unpack($column, 1))[0];
+        return \iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($maxValue), $this->byteOrder))->unpack(
+            $column,
+            1,
+        ))[0];
     }
 
     public function min(FlatColumn $column): mixed
     {
-        if ($this->statistics->min === null) {
+        $min = $this->statistics->min;
+
+        if ($min === null) {
             return null;
         }
 
         if (ColumnPrimitiveType::isString($column)) {
-            return $this->statistics->min;
+            return $min;
         }
 
-        return \iterator_to_array((new PlainValueUnpacker(
-            new BinaryBufferReader($this->statistics->min),
-            $this->byteOrder,
-        ))->unpack($column, 1))[0];
+        return \iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($min), $this->byteOrder))->unpack(
+            $column,
+            1,
+        ))[0];
     }
 
     public function minValue(FlatColumn $column): mixed
     {
-        if ($this->statistics->minValue === null) {
+        $minValue = $this->statistics->minValue;
+
+        if ($minValue === null) {
             return null;
         }
 
         if (ColumnPrimitiveType::isString($column)) {
-            return $this->statistics->minValue;
+            return $minValue;
         }
 
-        return \iterator_to_array((new PlainValueUnpacker(
-            new BinaryBufferReader($this->statistics->minValue),
-            $this->byteOrder,
-        ))->unpack($column, 1))[0];
+        return \iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($minValue), $this->byteOrder))->unpack(
+            $column,
+            1,
+        ))[0];
     }
 
     public function nullCount(): ?int

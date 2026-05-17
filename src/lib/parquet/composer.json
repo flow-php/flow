@@ -17,6 +17,7 @@
         "composer-runtime-api": "^2.2",
         "flow-php/snappy": "self.version",
         "flow-php/filesystem": "self.version",
+        "flow-php/types": "self.version",
         "packaged/thrift": "^0.15.0",
         "symfony/polyfill-mbstring": "^1.33"
     },

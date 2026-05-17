@@ -23,8 +23,12 @@ final class ScalarDictionaryBuilder
 
             if (\is_float($value)) {
                 $key = \pack('E', $value);
-            } else {
+            } elseif (\is_int($value) || \is_string($value)) {
                 $key = $value;
+            } elseif (\is_bool($value)) {
+                $key = $value ? 1 : 0;
+            } else {
+                $key = \serialize($value);
             }
 
             if (!isset($valueToIndex[$key])) {

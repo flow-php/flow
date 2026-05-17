@@ -14,6 +14,6 @@ final class SnappyDecompressorTest extends TestCase
         $decompressor = new SnappyDecompressor([0xFF]);
         $outBuffer = [];
 
-        self::assertFalse($decompressor->uncompressToBuffer($outBuffer));
+        static::assertFalse($decompressor->uncompressToBuffer($outBuffer));
     }
 }

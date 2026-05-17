@@ -29,7 +29,6 @@ final readonly class PlainValuesPacker
      */
     public function packValues(FlatColumn $column, array $values): void
     {
-        /** @var array<mixed> $values */
         $values = \array_filter($values, static fn(mixed $value) => $value !== null);
 
         switch ($column->type()) {
@@ -72,23 +71,44 @@ final readonly class PlainValuesPacker
 
                 break;
             case PhysicalType::FIXED_LEN_BYTE_ARRAY:
-                match ($column->logicalType()?->name()) {
-                    LogicalType::UUID => $this->packUuids($values), // @phpstan-ignore argument.type
-                    LogicalType::DECIMAL => $this->packDecimals(
-                        $values, // @phpstan-ignore argument.type
-                        (int) $column->typeLength(),
-                        (int) $column->precision(),
-                        (int) $column->scale(),
-                    ),
-                    default => $this->packFixedLenByteArrays($values), // @phpstan-ignore argument.type
-                };
+                switch ($column->logicalType()?->name()) {
+                    case LogicalType::UUID:
+                        /** @var array<string> $values */
+                        $this->packUuids($values);
+
+                        break;
+                    case LogicalType::DECIMAL:
+                        /** @var array<float> $values */
+                        $this->packDecimals(
+                            $values,
+                            (int) $column->typeLength(),
+                            (int) $column->precision(),
+                            (int) $column->scale(),
+                        );
+
+                        break;
+                    default:
+                        /** @var array<string> $values */
+                        $this->packFixedLenByteArrays($values);
+
+                        break;
+                }
 
                 break;
             case PhysicalType::BYTE_ARRAY:
-                match ($column->logicalType()?->name()) {
-                    LogicalType::JSON, LogicalType::STRING => $this->packStrings($values), // @phpstan-ignore argument.type
-                    default => $this->packByteArrays($values), // @phpstan-ignore argument.type
-                };
+                switch ($column->logicalType()?->name()) {
+                    case LogicalType::JSON:
+                    case LogicalType::STRING:
+                        /** @var array<string> $values */
+                        $this->packStrings($values);
+
+                        break;
+                    default:
+                        /** @var array<string> $values */
+                        $this->packByteArrays($values);
+
+                        break;
+                }
 
                 break;
 

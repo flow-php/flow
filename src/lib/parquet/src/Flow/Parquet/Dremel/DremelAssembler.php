@@ -7,6 +7,7 @@ namespace Flow\Parquet\Dremel;
 use Flow\Parquet\Dremel\ColumnData\DefinitionConverter;
 use Flow\Parquet\Dremel\ColumnData\NullLevel;
 use Flow\Parquet\Dremel\ColumnData\Stack;
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -31,6 +32,7 @@ final readonly class DremelAssembler
         $depth = 0;
 
         if ($column instanceof FlatColumn) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($this->assemblyFlat($column, $flatData) as $value) {
                 yield $this->processRowNullLevels([$column->name() => $value]);
             }
@@ -42,6 +44,7 @@ final readonly class DremelAssembler
          * @var NestedColumn $column
          */
         if ($column->isList()) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($this->assemblyList($column, $flatData, $depth) as $value) {
                 yield $this->processRowNullLevels([$column->name() => $value]);
             }
@@ -50,6 +53,7 @@ final readonly class DremelAssembler
         }
 
         if ($column->isMap()) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($this->assemblyMap($column, $flatData, $depth) as $value) {
                 yield $this->processRowNullLevels([$column->name() => $value]);
             }
@@ -57,6 +61,7 @@ final readonly class DremelAssembler
             return;
         }
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($this->assemblyStructure($column, $flatData, $depth) as $value) {
             yield $this->processRowNullLevels([$column->name() => $value instanceof NullLevel ? null : $value]);
         }
@@ -77,6 +82,7 @@ final readonly class DremelAssembler
 
         foreach ($flatData->iterator($column) as $value) {
             if ($value->repetitionLevel === 0) {
+                // @mago-ignore analysis:mixed-assignment
                 foreach ($stack->dump() as $row) {
                     yield $row;
                 }
@@ -93,6 +99,7 @@ final readonly class DremelAssembler
             );
         }
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($stack->dump() as $row) {
             yield $row;
         }
@@ -108,6 +115,7 @@ final readonly class DremelAssembler
         $listElementColumn = $column->getListElement();
 
         if ($listElementColumn instanceof FlatColumn) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($this->assemblyFlat($listElementColumn, $flatData) as $row) {
                 yield $row;
             }
@@ -119,6 +127,7 @@ final readonly class DremelAssembler
          * @var NestedColumn $listElementColumn
          */
         if ($listElementColumn->isList()) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($this->assemblyList($listElementColumn, $flatData, $depth) as $row) {
                 yield $row;
             }
@@ -127,6 +136,7 @@ final readonly class DremelAssembler
         }
 
         if ($listElementColumn->isMap()) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($this->assemblyMap($listElementColumn, $flatData, $depth) as $row) {
                 yield $row;
             }
@@ -134,6 +144,7 @@ final readonly class DremelAssembler
             return;
         }
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($this->assemblyStructure($listElementColumn, $flatData, $depth, repeated: true) as $row) {
             yield $row;
         }
@@ -149,6 +160,7 @@ final readonly class DremelAssembler
         $mapValueColumn = $column->getMapValueColumn();
 
         if ($mapValueColumn === null) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($this->assemblyFlat($mapKeyColumn, $flatData) as $key) {
                 if ($key instanceof NullLevel) {
                     yield $key;
@@ -159,6 +171,7 @@ final readonly class DremelAssembler
                 if (\is_array($key)) {
                     $result = [];
 
+                    // @mago-ignore analysis:mixed-assignment
                     foreach ($key as $k) {
                         /** @var int|string $k */
                         $result[$k] = null;
@@ -186,7 +199,10 @@ final readonly class DremelAssembler
                     continue;
                 }
 
-                yield dremel_array_combine_recursive($iteration['key'], $iteration['value']);
+                yield dremel_array_combine_recursive(
+                    \Flow\Types\DSL\type_array()->assert($iteration['key']),
+                    \Flow\Types\DSL\type_array()->assert($iteration['value']),
+                );
             }
 
             return;
@@ -208,7 +224,10 @@ final readonly class DremelAssembler
                     continue;
                 }
 
-                yield dremel_array_combine_recursive($iteration['key'], $iteration['value']);
+                yield dremel_array_combine_recursive(
+                    \Flow\Types\DSL\type_array()->assert($iteration['key']),
+                    \Flow\Types\DSL\type_array()->assert($iteration['value']),
+                );
             }
 
             return;
@@ -227,7 +246,10 @@ final readonly class DremelAssembler
                     continue;
                 }
 
-                yield dremel_array_combine_recursive($iteration['key'], $iteration['value']);
+                yield dremel_array_combine_recursive(
+                    \Flow\Types\DSL\type_array()->assert($iteration['key']),
+                    \Flow\Types\DSL\type_array()->assert($iteration['value']),
+                );
             }
 
             return;
@@ -247,7 +269,10 @@ final readonly class DremelAssembler
                 continue;
             }
 
-            yield dremel_array_combine_recursive($iteration['key'], $iteration['value']);
+            yield dremel_array_combine_recursive(
+                \Flow\Types\DSL\type_array()->assert($iteration['key']),
+                \Flow\Types\DSL\type_array()->assert($iteration['value']),
+            );
         }
     }
 
@@ -292,6 +317,7 @@ final readonly class DremelAssembler
             foreach ($iterator as $iteration) {
                 $structure = [];
 
+                // @mago-ignore analysis:mixed-assignment
                 foreach ($iteration as $propertyName => $propertyValue) {
                     if ($propertyValue instanceof NullLevel && $propertyValue->level < $depth) {
                         yield new NullLevel($propertyValue->level);
@@ -311,11 +337,18 @@ final readonly class DremelAssembler
         foreach ($iterator as $iteration) {
             $structures = [];
 
+            // @mago-ignore analysis:mixed-assignment
             foreach ($iteration as $propertyName => $propertyValues) {
                 if ($propertyValues instanceof NullLevel && $propertyValues->level <= $depth) {
                     yield new NullLevel($propertyValues->level);
 
                     continue 2;
+                }
+
+                if (!\is_array($propertyValues)) {
+                    throw new InvalidArgumentException(
+                        'Expected property values to be an array, got ' . \gettype($propertyValues),
+                    );
                 }
 
                 array_iterate_at_level(
@@ -347,6 +380,7 @@ final readonly class DremelAssembler
      */
     private function processRowNullLevels(array $row): array
     {
+        // @mago-ignore analysis:mixed-assignment
         foreach ($row as &$value) {
             if (is_array($value)) {
                 $value = $this->processRowNullLevels($value);

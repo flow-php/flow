@@ -143,6 +143,8 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
     {
         $this->closePage();
 
+        $dictionaryPageContainer = $this->pages->dictionaryPageContainer();
+
         $containers = [new ColumnChunkContainer(
             $this->pages->buffer(),
             new ColumnChunk(
@@ -154,9 +156,9 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
                 encodings: $this->pages->encodings(),
                 totalCompressedSize: $this->pages->compressedSize(),
                 totalUncompressedSize: $this->pages->uncompressedSize(),
-                dictionaryPageOffset: $this->pages->dictionaryPageContainer() ? $fileOffset : null,
-                dataPageOffset: $this->pages->dictionaryPageContainer()
-                    ? $fileOffset + $this->pages->dictionaryPageContainer()->totalCompressedSize()
+                dictionaryPageOffset: $dictionaryPageContainer !== null ? $fileOffset : null,
+                dataPageOffset: $dictionaryPageContainer !== null
+                    ? $fileOffset + $dictionaryPageContainer->totalCompressedSize()
                     : $fileOffset,
                 indexPageOffset: null,
                 statistics: $this->chunkStatistics->toStatistics(),
@@ -187,7 +189,7 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
 
     public function isFull(): bool
     {
-        return $this->valueStorage->size() >= $this->options->get(Option::PAGE_SIZE_BYTES);
+        return $this->valueStorage->size() >= $this->options->getInt(Option::PAGE_SIZE_BYTES);
     }
 
     public function uncompressedSize(): int

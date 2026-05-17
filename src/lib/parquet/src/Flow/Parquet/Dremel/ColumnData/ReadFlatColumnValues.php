@@ -31,6 +31,8 @@ final readonly class ReadFlatColumnValues
 
         foreach ($this->definitionLevels as $definitionLevel) {
             if ($definitionLevel === $maxDefinitionLevel) {
+                // Iterator over decoded parquet column values (any scalar/object the converter accepts).
+                // @mago-ignore analysis:mixed-assignment
                 $value = $this->values->valid() ? $this->values->current() : null;
                 $this->values->next();
 

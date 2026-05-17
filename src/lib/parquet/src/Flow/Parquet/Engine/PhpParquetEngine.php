@@ -145,7 +145,7 @@ final class PhpParquetEngine implements ParquetEngine
 
         $totalRows = $metadata->rowsNumber();
 
-        if ($offset > $totalRows) {
+        if ($offset !== null && $offset > $totalRows) {
             return;
         }
 
@@ -189,8 +189,11 @@ final class PhpParquetEngine implements ParquetEngine
 
             $row = [];
 
+            // Row payload assembled from per-column generators; values are user data (mixed).
+            // @mago-ignore analysis:mixed-assignment
             foreach ($rowData as $columnData) {
-                if ($columnData !== null) {
+                if (\is_array($columnData)) {
+                    // @mago-ignore analysis:mixed-assignment
                     foreach ($columnData as $key => $value) {
                         $row[$key] = $value;
                     }
@@ -358,6 +361,7 @@ final class PhpParquetEngine implements ParquetEngine
 
                     $rowsSkipped = 0;
 
+                    // @mago-ignore analysis:mixed-assignment
                     foreach ($dremelAssembler->assemble($column, $columnData) as $row) {
                         if ($skipRows > 0 && $rowsSkipped < $skipRows) {
                             $rowsSkipped++;
@@ -402,6 +406,7 @@ final class PhpParquetEngine implements ParquetEngine
 
                 $rowsSkipped = 0;
 
+                // @mago-ignore analysis:mixed-assignment
                 foreach ($dremelAssembler->assemble($column, $columnData) as $row) {
                     if ($skipRows > 0 && $rowsSkipped < $skipRows) {
                         $rowsSkipped++;
@@ -427,14 +432,25 @@ final class PhpParquetEngine implements ParquetEngine
     {
         $fileTotalSize = $stream->size();
 
+        if ($fileTotalSize === null) {
+            throw new InvalidArgumentException('Cannot determine Parquet file size');
+        }
+
         if ($stream->read(4, $fileTotalSize - 4) !== ParquetFile::PARQUET_MAGIC_NUMBER) {
             throw new InvalidArgumentException('Given file is not valid Parquet file');
         }
 
-        /**
-         * @phpstan-ignore-next-line
-         */
-        $metadataLength = \unpack($this->byteOrder->value, $stream->read(4, $fileTotalSize - 8))[1];
+        $unpacked = \unpack($this->byteOrder->value, $stream->read(4, $fileTotalSize - 8));
+
+        if ($unpacked === false) {
+            throw new InvalidArgumentException('Failed to read Parquet metadata length');
+        }
+
+        $metadataLength = $unpacked[1];
+
+        if ($metadataLength <= 0) {
+            throw new InvalidArgumentException('Parquet metadata length must be positive, got ' . $metadataLength);
+        }
 
         $metadata = $stream->read($metadataLength, $fileTotalSize - ($metadataLength + 8));
 

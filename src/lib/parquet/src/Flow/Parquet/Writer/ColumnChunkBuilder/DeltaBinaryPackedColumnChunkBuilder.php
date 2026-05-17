@@ -190,7 +190,7 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
         return (
             (
                 $this->valueStorage->size() * ($this->column->type() === PhysicalType::INT32 ? 4 : 8)
-            ) >= $this->options->get(Option::PAGE_SIZE_BYTES)
+            ) >= $this->options->getInt(Option::PAGE_SIZE_BYTES)
         );
     }
 

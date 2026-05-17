@@ -137,8 +137,10 @@ final class PlainValueUnpackerTest extends TestCase
     {
         $byteOrder = ByteOrder::LITTLE_ENDIAN;
         $column = FlatColumn::decimal('test_column', 10, 2);
-        $buffer = encode_decimal($byteOrder, 123.45, $column->typeLength(), 10, 2);
-        $buffer .= encode_decimal($byteOrder, 678.90, $column->typeLength(), 10, 2);
+        $typeLength = $column->typeLength();
+        static::assertNotNull($typeLength);
+        $buffer = encode_decimal($byteOrder, 123.45, $typeLength, 10, 2);
+        $buffer .= encode_decimal($byteOrder, 678.90, $typeLength, 10, 2);
         $reader = new BinaryBufferReader($buffer);
 
         $unpacker = new PlainValueUnpacker($reader);
@@ -193,8 +195,8 @@ final class PlainValueUnpackerTest extends TestCase
 
     public function test_unpack_fixed_len_byte_array_with_uuid_logical_type(): void
     {
-        $uuid1 = \hex2bin('550e8400e29b41d4a716446655440000');
-        $uuid2 = \hex2bin('6ba7b8109dad11d180b400c04fd430c8');
+        $uuid1 = (string) \hex2bin('550e8400e29b41d4a716446655440000');
+        $uuid2 = (string) \hex2bin('6ba7b8109dad11d180b400c04fd430c8');
         $buffer = $uuid1 . $uuid2;
         $reader = new BinaryBufferReader($buffer);
         $column = FlatColumn::uuid('test_column');

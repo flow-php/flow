@@ -282,7 +282,9 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         for ($i = 0; $i < 50; $i++) {
             $intPart = $intMax > 0 ? \mt_rand(0, $intMax) : 0;
             $fracPart = $fracMax > 0 ? \mt_rand(0, $fracMax) : 0;
-            $value = $scale > 0 ? (float) \sprintf('%d.%0' . $fracDigits . 'd', $intPart, $fracPart) : (float) $intPart;
+            $value = $scale > 0
+                ? \floatval(\sprintf('%d.%0' . $fracDigits . 'd', $intPart, $fracPart))
+                : (float) $intPart;
             $inputData[] = ['decimal' => $value];
         }
 

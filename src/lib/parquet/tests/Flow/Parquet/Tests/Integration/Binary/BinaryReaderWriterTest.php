@@ -107,8 +107,15 @@ final class BinaryReaderWriterTest extends TestCase
         $buffer = '';
         $writer = new BinaryBufferWriter($buffer);
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($decimals as $decimal) {
-            $writer->append(encode_decimal($byteOrder, $decimal, $byteLength, $precision, $scale));
+            $writer->append(encode_decimal(
+                $byteOrder,
+                \Flow\Types\DSL\type_float()->assert($decimal),
+                $byteLength,
+                $precision,
+                $scale,
+            ));
         }
 
         $reader = new BinaryBufferReader($buffer);

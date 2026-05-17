@@ -20,12 +20,8 @@ final class ReadColumnDataTest extends TestCase
     {
         $schema = Schema::with(NestedColumn::map('m', MapKey::string(), MapValue::int32()));
 
-        /**
-         * @var FlatColumn $keyColumn
-         * @var FlatColumn $valueColumn
-         */
-        $keyColumn = $schema->get('m.key_value.key');
-        $valueColumn = $schema->get('m.key_value.value');
+        $keyColumn = \Flow\Types\DSL\type_instance_of(FlatColumn::class)->assert($schema->get('m.key_value.key'));
+        $valueColumn = \Flow\Types\DSL\type_instance_of(FlatColumn::class)->assert($schema->get('m.key_value.value'));
 
         $keyValuesGenerator = static function () {
             yield 'a';
@@ -84,15 +80,10 @@ final class ReadColumnDataTest extends TestCase
 
     public function test_iterating_over_map_column_data(): void
     {
-        /** @var NestedColumn $column */
         $schema = Schema::with(NestedColumn::map('m', MapKey::string(), MapValue::int32()));
 
-        /**
-         * @var FlatColumn $keyColumn
-         * @var FlatColumn $valueColumn
-         */
-        $keyColumn = $schema->get('m.key_value.key');
-        $valueColumn = $schema->get('m.key_value.value');
+        $keyColumn = \Flow\Types\DSL\type_instance_of(FlatColumn::class)->assert($schema->get('m.key_value.key'));
+        $valueColumn = \Flow\Types\DSL\type_instance_of(FlatColumn::class)->assert($schema->get('m.key_value.value'));
 
         $keyValuesGenerator = static function () {
             yield 'a';

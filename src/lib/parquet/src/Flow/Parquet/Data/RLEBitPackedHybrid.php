@@ -31,7 +31,7 @@ final class RLEBitPackedHybrid
         }
 
         if ($bitWidth === 0) {
-            $output = \array_merge($output, \array_fill(0, \min($numGroups * 8, $maxItems), 0));
+            $output = \array_merge($output, \array_fill(0, \max(0, \min($numGroups * 8, $maxItems)), 0));
 
             return;
         }
@@ -102,7 +102,6 @@ final class RLEBitPackedHybrid
      */
     public function decodeRLE(BinaryReader $reader, int $bitWidth, int $intVar, int $maxItems, array &$output): void
     {
-        $isLiteralRun = $intVar & 1;
         $runLength = $intVar >> 1;
 
         if ($runLength === 0) {
@@ -125,15 +124,8 @@ final class RLEBitPackedHybrid
             $value = 0;
         }
 
-        if ($isLiteralRun) {
-            for ($i = 0; $i < $count; $i++) {
-                /** @phpstan-ignore-next-line */
-                $output[] = \iterator_to_array($reader->readBits($bitWidth));
-            }
-        } else {
-            for ($i = 0; $i < $count; $i++) {
-                $output[] = $value;
-            }
+        for ($i = 0; $i < $count; $i++) {
+            $output[] = $value;
         }
     }
 
@@ -178,7 +170,7 @@ final class RLEBitPackedHybrid
         $byteCount = \count($bytes);
 
         if ($byteCount < $expectedBytesCount) {
-            \array_push($bytes, ...\array_fill(0, $expectedBytesCount - $byteCount, 0));
+            \array_push($bytes, ...\array_fill(0, \max(0, $expectedBytesCount - $byteCount), 0));
         }
 
         $writer->append($packed . \pack('C*', ...$bytes));

@@ -22,6 +22,7 @@ final class DeltaBinaryPackedValueStorage implements ValueStorage
             throw new InvalidArgumentException('Delta encoding only supports INT32 and INT64 physical types');
         }
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($values as $value) {
             if ($value !== null) {
                 if (!is_int($value)) {

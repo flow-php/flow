@@ -87,70 +87,106 @@ final readonly class LogicalType
     {
         $name = null;
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->STRING !== null) {
             $name = self::STRING;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->MAP !== null) {
             $name = self::MAP;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->LIST !== null) {
             $name = self::LIST;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->ENUM !== null) {
             $name = self::ENUM;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->DECIMAL !== null) {
             $name = self::DECIMAL;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->DATE !== null) {
             $name = self::DATE;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->TIME !== null) {
             $name = self::TIME;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->TIMESTAMP !== null) {
             $name = self::TIMESTAMP;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->INTEGER !== null) {
             $name = self::INTEGER;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->UNKNOWN !== null) {
             $name = self::UNKNOWN;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->JSON !== null) {
             $name = self::JSON;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->BSON !== null) {
             $name = self::BSON;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->UUID !== null) {
             $name = self::UUID;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->FLOAT16 !== null) {
             $name = self::FLOAT16;
         }
 
+        // @mago-ignore analysis:impossible-condition
+        // @mago-ignore analysis:redundant-comparison
         if (null === $name) {
             return null;
         }
 
         return new self(
             $name,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             timestamp: $logicalType->TIMESTAMP !== null ? Timestamp::fromThrift($logicalType->TIMESTAMP) : null,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             time: $logicalType->TIME !== null ? Time::fromThrift($logicalType->TIME) : null,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             decimal: $logicalType->DECIMAL !== null ? Decimal::fromThrift($logicalType->DECIMAL) : null,
         );
     }

@@ -14,7 +14,7 @@ final class WriteFlatColumnValues
      * @param FlatColumn $column
      * @param array<int> $repetitionLevels
      * @param array<int> $definitionLevels
-     * @param array<null|scalar> $values
+     * @param array<null|object|scalar> $values
      */
     public function __construct(
         public readonly FlatColumn $column,
@@ -87,12 +87,15 @@ final class WriteFlatColumnValues
         $valueIndex = 0;
 
         foreach ($this->definitionLevels as $index => $definitionLevel) {
-            yield new FlatValue(
-                $this->column,
-                $this->repetitionLevels[$index],
-                $definitionLevel,
-                $definitionLevel === $maxDefinitionLevel ? $this->values[$valueIndex] : null,
-            );
+            $rawValue = $definitionLevel === $maxDefinitionLevel ? $this->values[$valueIndex] : null;
+
+            if ($rawValue !== null && !\is_scalar($rawValue)) {
+                throw new \Flow\Parquet\Exception\InvalidArgumentException(
+                    'FlatValue iterator requires scalar values, got ' . \gettype($rawValue),
+                );
+            }
+
+            yield new FlatValue($this->column, $this->repetitionLevels[$index], $definitionLevel, $rawValue);
 
             if ($definitionLevel === $maxDefinitionLevel) {
                 $valueIndex++;
@@ -274,7 +277,7 @@ final class WriteFlatColumnValues
     }
 
     /**
-     * @return array<null|scalar>
+     * @return array<null|object|scalar>
      */
     public function values(): array
     {

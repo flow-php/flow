@@ -21,6 +21,7 @@ class ReaderTest extends ParquetIntegrationTestCase
         $rows = 0;
 
         foreach ($file->values() as $row) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($row as $column => $value) {
                 static::assertNotNull($value);
             }
@@ -35,7 +36,7 @@ class ReaderTest extends ParquetIntegrationTestCase
         static::assertSame(
             10_000,
             \array_sum(\array_map(
-                static fn(ColumnPageHeader $header) => $header->pageHeader->dataValuesCount(),
+                static fn(ColumnPageHeader $header) => $header->pageHeader->dataValuesCount() ?? 0,
                 $headers,
             )),
         );
@@ -52,6 +53,7 @@ class ReaderTest extends ParquetIntegrationTestCase
         $rows = 0;
 
         foreach ($file->values() as $row) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($row as $column => $value) {
                 static::assertNotNull($value, "Column {$column} is null");
             }

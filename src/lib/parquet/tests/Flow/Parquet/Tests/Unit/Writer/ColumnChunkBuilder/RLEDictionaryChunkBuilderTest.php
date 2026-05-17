@@ -106,13 +106,19 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $repLevels = [];
         $defLevels = [];
+        /** @var array<null|object|scalar> $nonNullValues */
         $nonNullValues = [];
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($values as $value) {
             $repLevels[] = 0;
             $defLevels[] = $value === null ? 0 : 1;
 
-            if ($value !== null) {
+            if ($value === null) {
+                continue;
+            }
+
+            if (\is_scalar($value) || \is_object($value)) {
                 $nonNullValues[] = $value;
             }
         }

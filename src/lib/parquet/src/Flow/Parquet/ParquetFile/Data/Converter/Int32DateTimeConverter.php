@@ -37,9 +37,10 @@ final class Int32DateTimeConverter implements Converter
 
     private function dateTimeToMicroseconds(\DateTimeInterface $dateTime): int
     {
-        $microseconds = \number_format((int) $dateTime->format('u') / 1000, 0, '', '') . '000';
+        $unixSeconds = (string) (int) $dateTime->format('U');
+        $microseconds = (string) (int) (\number_format((int) $dateTime->format('u') / 1000, 0, '', '') . '000');
 
-        return (int) \bcadd(\bcmul($dateTime->format('U'), '1000000'), $microseconds);
+        return (int) \bcadd(\bcmul($unixSeconds, '1000000'), $microseconds);
     }
 
     private function millisecondsToDateTimeImmutable(int $microseconds): \DateTimeImmutable

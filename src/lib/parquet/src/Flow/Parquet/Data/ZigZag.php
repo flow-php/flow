@@ -48,7 +48,7 @@ final readonly class ZigZag
      */
     private function logicalRightShift(int $value, int $bits): int
     {
-        if (PHP_INT_SIZE === 8 && $bits === 1) {
+        if ($bits === 1) {
             if ($value < 0) {
                 return (($value & 0x7FFFFFFFFFFFFFFF) >> 1) | 0x4000000000000000;
             }
@@ -62,7 +62,7 @@ final readonly class ZigZag
      */
     private function safeLeftShift(int $value, int $bits): int
     {
-        if (PHP_INT_SIZE === 8 && $bits === 1) {
+        if ($bits === 1) {
             if ($value > (PHP_INT_MAX >> 1)) {
                 $result = \bcmul((string) $value, '2', 0);
 

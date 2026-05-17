@@ -63,6 +63,7 @@ final class StatisticsCounter
         }
 
         if (\is_array($value)) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($value as $val) {
                 if ($this->comparator->isLessThan($val, $this->min)) {
                     $this->min = $val;
@@ -97,11 +98,11 @@ final class StatisticsCounter
                 continue;
             }
 
-            if ($this->min === null || $value < $this->min) {
+            if ($this->comparator->isLessThan($value, $this->min)) {
                 $this->min = $value;
             }
 
-            if ($this->max === null || $value > $this->max) {
+            if ($this->comparator->isGreaterThan($value, $this->max)) {
                 $this->max = $value;
             }
         }
@@ -170,7 +171,9 @@ final class StatisticsCounter
         $minBuffer = '';
         $maxBuffer = '';
 
+        // @mago-ignore analysis:mixed-assignment
         $min = $this->min();
+        // @mago-ignore analysis:mixed-assignment
         $max = $this->max();
 
         if ($min !== null) {

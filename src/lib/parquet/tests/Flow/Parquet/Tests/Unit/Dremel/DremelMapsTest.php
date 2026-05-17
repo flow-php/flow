@@ -134,9 +134,19 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $shredder->shred($schema, $rows);
+            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row), $rows);
+
+            $shredder->shred($schema, $narrowed);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row), $rows);
+
+            $result = $shredder->shred($schema, $narrowed);
 
             $normalized = [];
 
@@ -339,9 +349,19 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $shredder->shred($schema, $rows);
+            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row), $rows);
+
+            $shredder->shred($schema, $narrowed);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row), $rows);
+
+            $result = $shredder->shred($schema, $narrowed);
 
             $normalized = [];
 
@@ -597,9 +617,19 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $shredder->shred($schema, $rows);
+            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row), $rows);
+
+            $shredder->shred($schema, $narrowed);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row), $rows);
+
+            $result = $shredder->shred($schema, $narrowed);
 
             $normalized = [];
 
@@ -822,9 +852,19 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $shredder->shred($schema, $rows);
+            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row), $rows);
+
+            $shredder->shred($schema, $narrowed);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row), $rows);
+
+            $result = $shredder->shred($schema, $narrowed);
 
             $normalized = [];
 
@@ -935,9 +975,19 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $shredder->shred($schema, $rows);
+            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row), $rows);
+
+            $shredder->shred($schema, $narrowed);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row), $rows);
+
+            $result = $shredder->shred($schema, $narrowed);
 
             $normalized = [];
 
@@ -1028,9 +1078,19 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $shredder->shred($schema, $rows);
+            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row), $rows);
+
+            $shredder->shred($schema, $narrowed);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row), $rows);
+
+            $result = $shredder->shred($schema, $narrowed);
 
             $normalized = [];
 
@@ -1118,9 +1178,19 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $shredder->shred($schema, $rows);
+            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row), $rows);
+
+            $shredder->shred($schema, $narrowed);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row), $rows);
+
+            $result = $shredder->shred($schema, $narrowed);
 
             $normalized = [];
 
@@ -1213,9 +1283,19 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $shredder->shred($schema, $rows);
+            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row), $rows);
+
+            $shredder->shred($schema, $narrowed);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row), $rows);
+
+            $result = $shredder->shred($schema, $narrowed);
 
             $normalized = [];
 
@@ -1338,9 +1418,19 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $shredder->shred($schema, $rows);
+            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row), $rows);
+
+            $shredder->shred($schema, $narrowed);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row), $rows);
+
+            $result = $shredder->shred($schema, $narrowed);
 
             $normalized = [];
 
@@ -1485,9 +1575,19 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $shredder->shred($schema, $rows);
+            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row), $rows);
+
+            $shredder->shred($schema, $narrowed);
         } else {
-            $result = $shredder->shred($schema, $rows);
+            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row), $rows);
+
+            $result = $shredder->shred($schema, $narrowed);
 
             $normalized = [];
 

@@ -53,7 +53,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
     private StatisticsCounter $pageStatistics;
 
     /**
-     * @var array<null|bool|float|int|string>
+     * @var array<null|bool|float|int|object|string>
      */
     private array $pageValues = [];
 
@@ -156,6 +156,8 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
     {
         $this->closePage();
 
+        $dictionaryPageContainer = $this->pages->dictionaryPageContainer();
+
         $containers = [new ColumnChunkContainer(
             $this->pages->buffer(),
             new ColumnChunk(
@@ -167,9 +169,9 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
                 encodings: $this->pages->encodings(),
                 totalCompressedSize: $this->pages->compressedSize(),
                 totalUncompressedSize: $this->pages->uncompressedSize(),
-                dictionaryPageOffset: $this->pages->dictionaryPageContainer() ? $fileOffset : null,
-                dataPageOffset: $this->pages->dictionaryPageContainer()
-                    ? $fileOffset + $this->pages->dictionaryPageContainer()->totalCompressedSize()
+                dictionaryPageOffset: $dictionaryPageContainer !== null ? $fileOffset : null,
+                dataPageOffset: $dictionaryPageContainer !== null
+                    ? $fileOffset + $dictionaryPageContainer->totalCompressedSize()
                     : $fileOffset,
                 indexPageOffset: null,
                 statistics: $this->chunkStatistics->toStatistics(),
@@ -200,7 +202,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 
     public function isFull(): bool
     {
-        return (\count($this->pageValues) * 4) >= $this->options->get(Option::PAGE_SIZE_BYTES);
+        return (\count($this->pageValues) * 4) >= $this->options->getInt(Option::PAGE_SIZE_BYTES);
     }
 
     public function uncompressedSize(): int
@@ -315,16 +317,15 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 
     private function buildDictionaryPage(Codec $codec, Compressions $compression): PageContainer
     {
-        if (!$this->dictionary) {
+        $dictionary = $this->dictionary;
+
+        if ($dictionary === null) {
             throw new RuntimeException('Cannot build dictionary page without dictionary');
         }
 
         $pageBuffer = '';
         $pageWriter = new BinaryBufferWriter($pageBuffer);
-        (new PlainValuesPacker($pageWriter, $this->byteOrder))->packValues(
-            $this->column,
-            $this->dictionary->dictionary,
-        );
+        (new PlainValuesPacker($pageWriter, $this->byteOrder))->packValues($this->column, $dictionary->dictionary);
 
         $compressedBuffer = $codec->compress($pageBuffer, $compression);
 
@@ -334,7 +335,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
             \strlen($pageBuffer),
             dataPageHeader: null,
             dataPageHeaderV2: null,
-            dictionaryPageHeader: new DictionaryPageHeader(Encodings::PLAIN, \count($this->dictionary->dictionary)),
+            dictionaryPageHeader: new DictionaryPageHeader(Encodings::PLAIN, \count($dictionary->dictionary)),
         );
 
         return new PageContainer($compressedBuffer, $pageHeader);

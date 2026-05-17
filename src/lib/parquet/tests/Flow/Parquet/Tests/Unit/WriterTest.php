@@ -26,9 +26,11 @@ final class WriterTest extends TestCase
     {
         $writer = Writer::php();
 
-        $reflection = new \ReflectionClass($writer);
-        $engine = $reflection->getProperty('engine')->getValue($writer);
-
-        static::assertInstanceOf(PhpParquetEngine::class, $engine);
+        static::assertInstanceOf(
+            PhpParquetEngine::class,
+            (new \ReflectionClass($writer))
+                ->getProperty('engine')
+                ->getValue($writer),
+        );
     }
 }

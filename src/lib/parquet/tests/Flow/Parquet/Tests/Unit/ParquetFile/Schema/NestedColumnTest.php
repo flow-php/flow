@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\ParquetFile\Schema;
 
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
@@ -87,6 +88,59 @@ final class NestedColumnTest extends TestCase
             ],
             \array_keys($column->childrenFlat()),
         );
+    }
+
+    public function test_get_list_element_returns_inner_column(): void
+    {
+        $list = NestedColumn::list('list', ListElement::int32());
+
+        $element = $list->getListElement();
+
+        static::assertInstanceOf(FlatColumn::class, $element);
+        static::assertSame('element', $element->name());
+    }
+
+    public function test_get_list_element_throws_on_non_list(): void
+    {
+        $struct = NestedColumn::struct('struct', [FlatColumn::int32('int')]);
+
+        $this->expectException(InvalidArgumentException::class);
+        $struct->getListElement();
+    }
+
+    public function test_get_map_key_column_returns_key(): void
+    {
+        $map = NestedColumn::map('map', MapKey::string(), MapValue::int32());
+
+        $key = $map->getMapKeyColumn();
+
+        static::assertSame('key', $key->name());
+    }
+
+    public function test_get_map_key_column_throws_on_non_map(): void
+    {
+        $list = NestedColumn::list('list', ListElement::int32());
+
+        $this->expectException(InvalidArgumentException::class);
+        $list->getMapKeyColumn();
+    }
+
+    public function test_get_map_value_column_returns_value(): void
+    {
+        $map = NestedColumn::map('map', MapKey::string(), MapValue::int32());
+
+        $value = $map->getMapValueColumn();
+
+        static::assertNotNull($value);
+        static::assertSame('value', $value->name());
+    }
+
+    public function test_get_map_value_column_throws_on_non_map(): void
+    {
+        $struct = NestedColumn::struct('struct', [FlatColumn::int32('int')]);
+
+        $this->expectException(InvalidArgumentException::class);
+        $struct->getMapValueColumn();
     }
 
     public function test_is_map_on_a_map_column(): void

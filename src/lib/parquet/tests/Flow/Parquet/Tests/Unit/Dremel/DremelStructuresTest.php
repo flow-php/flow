@@ -124,9 +124,19 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $shredder->shred($schema, [$row]);
+            $narrowedRow = \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row);
+
+            $shredder->shred($schema, [$narrowedRow]);
         } else {
-            $shredResult = $shredder->shred($schema, [$row]);
+            $narrowedRow = \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row);
+
+            $shredResult = $shredder->shred($schema, [$narrowedRow]);
 
             $normalized = [];
 
@@ -254,9 +264,19 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $shredder->shred($schema, [$row]);
+            $narrowedRow = \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row);
+
+            $shredder->shred($schema, [$narrowedRow]);
         } else {
-            $shredResult = $shredder->shred($schema, [$row]);
+            $narrowedRow = \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row);
+
+            $shredResult = $shredder->shred($schema, [$narrowedRow]);
 
             $normalized = [];
 
@@ -413,9 +433,19 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $shredder->shred($schema, [$row]);
+            $narrowedRow = \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row);
+
+            $shredder->shred($schema, [$narrowedRow]);
         } else {
-            $shredResult = $shredder->shred($schema, [$row]);
+            $narrowedRow = \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row);
+
+            $shredResult = $shredder->shred($schema, [$narrowedRow]);
 
             $normalized = [];
 
@@ -556,9 +586,19 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $shredder->shred($schema, [$row]);
+            $narrowedRow = \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row);
+
+            $shredder->shred($schema, [$narrowedRow]);
         } else {
-            $shredResult = $shredder->shred($schema, [$row]);
+            $narrowedRow = \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row);
+
+            $shredResult = $shredder->shred($schema, [$narrowedRow]);
 
             $normalized = [];
 
@@ -684,9 +724,19 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $shredder->shred($schema, [$row]);
+            $narrowedRow = \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row);
+
+            $shredder->shred($schema, [$narrowedRow]);
         } else {
-            $shredResult = $shredder->shred($schema, [$row]);
+            $narrowedRow = \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row);
+
+            $shredResult = $shredder->shred($schema, [$narrowedRow]);
 
             $normalized = [];
 
@@ -788,9 +838,19 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $shredder->shred($schema, [$row]);
+            $narrowedRow = \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row);
+
+            $shredder->shred($schema, [$narrowedRow]);
         } else {
-            $shredResult = $shredder->shred($schema, [$row]);
+            $narrowedRow = \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row);
+
+            $shredResult = $shredder->shred($schema, [$narrowedRow]);
 
             $normalized = [];
 
@@ -907,9 +967,19 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $shredder->shred($schema, [$row]);
+            $narrowedRow = \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row);
+
+            $shredder->shred($schema, [$narrowedRow]);
         } else {
-            $shredResult = $shredder->shred($schema, [$row]);
+            $narrowedRow = \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row);
+
+            $shredResult = $shredder->shred($schema, [$narrowedRow]);
 
             $normalized = [];
 
@@ -1030,9 +1100,19 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $shredder->shred($schema, [$row]);
+            $narrowedRow = \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row);
+
+            $shredder->shred($schema, [$narrowedRow]);
         } else {
-            $shredResult = $shredder->shred($schema, [$row]);
+            $narrowedRow = \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row);
+
+            $shredResult = $shredder->shred($schema, [$narrowedRow]);
 
             $normalized = [];
 

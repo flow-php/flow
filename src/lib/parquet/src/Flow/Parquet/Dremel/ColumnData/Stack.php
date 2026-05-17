@@ -42,6 +42,7 @@ final class Stack
         }
 
         $valueNode = null;
+        // @mago-ignore analysis:mixed-assignment
         $lastStackNode = &$this->stack[\count($this->stack) - 1];
 
         for ($l = 1; $l < $level; $l++) {
@@ -56,6 +57,7 @@ final class Stack
                 if (!\count($value)) {
                     throw new InvalidArgumentException('Cannot access last element of empty array');
                 }
+                // @mago-ignore analysis:mixed-assignment
                 $valueNode = &$value[\count($value) - 1];
             } else {
                 if (!\is_array($valueNode)) {
@@ -68,6 +70,7 @@ final class Stack
                 if (!\count($valueNode)) {
                     throw new InvalidArgumentException('Cannot access last element of empty array');
                 }
+                // @mago-ignore analysis:mixed-assignment
                 $valueNode = &$valueNode[\count($valueNode) - 1];
             }
 
@@ -81,8 +84,10 @@ final class Stack
             if (!\count($lastStackNode)) {
                 throw new InvalidArgumentException('Cannot access last element of empty array');
             }
+            // @mago-ignore analysis:mixed-assignment
             $lastStackNode = &$lastStackNode[\count($lastStackNode) - 1];
         }
+        // @mago-ignore analysis:mixed-assignment
         $valueNode ??= $value;
 
         if (!\is_array($lastStackNode)) {

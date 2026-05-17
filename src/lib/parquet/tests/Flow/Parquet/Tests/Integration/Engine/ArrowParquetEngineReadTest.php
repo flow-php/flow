@@ -122,8 +122,9 @@ final class ArrowParquetEngineReadTest extends TestCase
         ));
 
         static::assertCount(2, $result);
-        static::assertSame(100, $result[0]['metadata']['score']);
-        static::assertSame(5, $result[0]['metadata']['level']);
+        $metadata = \Flow\Types\DSL\type_array()->assert($result[0]['metadata']);
+        static::assertSame(100, $metadata['score']);
+        static::assertSame(5, $metadata['level']);
 
         \unlink($path);
     }
@@ -155,8 +156,9 @@ final class ArrowParquetEngineReadTest extends TestCase
         ));
 
         static::assertCount(2, $result);
-        static::assertSame('Berlin', $result[0]['address']['city']);
-        static::assertSame(10115, $result[0]['address']['zip']);
+        $address = \Flow\Types\DSL\type_array()->assert($result[0]['address']);
+        static::assertSame('Berlin', $address['city']);
+        static::assertSame(10115, $address['zip']);
 
         \unlink($path);
     }

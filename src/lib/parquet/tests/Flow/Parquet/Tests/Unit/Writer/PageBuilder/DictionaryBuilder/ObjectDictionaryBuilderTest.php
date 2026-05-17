@@ -72,7 +72,6 @@ final class ObjectDictionaryBuilderTest extends TestCase
         $column = new FlatColumn('test_column', PhysicalType::INT64);
         $date1 = new \DateTimeImmutable('2023-01-01');
         $date2 = new \DateTimeImmutable('2023-01-02');
-        /** @phpstan-ignore-next-line */
         $data = new WriteFlatColumnValues($column, values: [$date1, $date2, $date1, $date2, $date1, $date2]);
 
         $result = $this->builder->build($data);
@@ -88,9 +87,7 @@ final class ObjectDictionaryBuilderTest extends TestCase
     {
         $column = new FlatColumn('test_column', PhysicalType::INT64);
         $interval1 = new \DateInterval('P1D');
-        $interval2 = new \DateInterval('P1D');
-        $interval2->invert = 1;
-        /** @phpstan-ignore-next-line */
+        $interval2 = (new \DateTimeImmutable('2023-01-02'))->diff(new \DateTimeImmutable('2023-01-01'));
         $data = new WriteFlatColumnValues($column, values: [$interval1, $interval2, $interval1]);
 
         $result = $this->builder->build($data);
@@ -108,7 +105,6 @@ final class ObjectDictionaryBuilderTest extends TestCase
         $interval1 = new \DateInterval('P1D');
         $interval2 = new \DateInterval('P1Y');
         $interval3 = new \DateInterval('PT1H');
-        /** @phpstan-ignore-next-line */
         $data = new WriteFlatColumnValues($column, values: [
             $interval1,
             $interval2,
@@ -132,7 +128,6 @@ final class ObjectDictionaryBuilderTest extends TestCase
         $column = new FlatColumn('test_column', PhysicalType::INT64);
         $interval1 = new \DateInterval('P1Y2M3DT4H5M6S');
         $interval2 = new \DateInterval('P10DT2H30M');
-        /** @phpstan-ignore-next-line */
         $data = new WriteFlatColumnValues($column, values: [$interval1, $interval2, $interval1]);
 
         $result = $this->builder->build($data);
@@ -150,7 +145,6 @@ final class ObjectDictionaryBuilderTest extends TestCase
         $date1 = new \DateTimeImmutable('2023-01-01');
         $date2 = new \DateTimeImmutable('01/01/2023');
         $date3 = new \DateTimeImmutable('January 1, 2023');
-        /** @phpstan-ignore-next-line */
         $data = new WriteFlatColumnValues($column, values: [$date1, $date2, $date3]);
 
         $result = $this->builder->build($data);
@@ -167,7 +161,6 @@ final class ObjectDictionaryBuilderTest extends TestCase
         $dateUTC = new \DateTimeImmutable('2023-01-01 12:00:00', new \DateTimeZone('UTC'));
         $dateNY = new \DateTimeImmutable('2023-01-01 12:00:00', new \DateTimeZone('America/New_York'));
         $dateTokyo = new \DateTimeImmutable('2023-01-01 12:00:00', new \DateTimeZone('Asia/Tokyo'));
-        /** @phpstan-ignore-next-line */
         $data = new WriteFlatColumnValues($column, values: [$dateUTC, $dateNY, $dateTokyo, $dateNY, $dateUTC]);
 
         $result = $this->builder->build($data);
@@ -185,7 +178,6 @@ final class ObjectDictionaryBuilderTest extends TestCase
         $column = new FlatColumn('test_column', PhysicalType::INT64);
         $date1 = new \DateTimeImmutable('2023-01-01 12:00:00.123456');
         $date2 = new \DateTimeImmutable('2023-01-01 12:00:00.654321');
-        /** @phpstan-ignore-next-line */
         $data = new WriteFlatColumnValues($column, values: [$date1, $date2, $date1]);
 
         $result = $this->builder->build($data);
@@ -206,7 +198,6 @@ final class ObjectDictionaryBuilderTest extends TestCase
     public function test_different_object_types(array $values, array $expectedDictionary, array $expectedIndices): void
     {
         $column = new FlatColumn('test_column', PhysicalType::INT64);
-        /** @phpstan-ignore-next-line */
         $data = new WriteFlatColumnValues($column, values: $values);
 
         $result = $this->builder->build($data);
@@ -226,7 +217,6 @@ final class ObjectDictionaryBuilderTest extends TestCase
         $date1 = new \DateTimeImmutable('2023-01-01');
         $date2 = new \DateTimeImmutable('2023-01-02');
         $date3 = new \DateTimeImmutable('2023-01-03');
-        /** @phpstan-ignore-next-line */
         $data = new WriteFlatColumnValues($column, values: [$date1, $date2, $date3, $date2, $date1, $date3]);
 
         $result = $this->builder->build($data);
@@ -256,7 +246,6 @@ final class ObjectDictionaryBuilderTest extends TestCase
         $column = new FlatColumn('test_column', PhysicalType::INT64);
         $dateTime = new \DateTimeImmutable('2023-01-01 12:00:00');
         $values = array_fill(0, 1000, $dateTime);
-        /** @phpstan-ignore-next-line */
         $data = new WriteFlatColumnValues($column, values: $values);
 
         $result = $this->builder->build($data);
@@ -275,7 +264,6 @@ final class ObjectDictionaryBuilderTest extends TestCase
         for ($i = 0; $i < 50; $i++) {
             $values[] = new \DateTimeImmutable(sprintf('2023-01-01 12:00:%02d', $i));
         }
-        /** @phpstan-ignore-next-line */
         $data = new WriteFlatColumnValues($column, values: $values);
 
         $result = $this->builder->build($data);
@@ -296,7 +284,6 @@ final class ObjectDictionaryBuilderTest extends TestCase
         $date2 = new \DateTimeImmutable('2023-01-02');
         $date3 = new \DateTimeImmutable('2023-01-08');
         $date4 = new \DateTimeImmutable('2023-01-01');
-        /** @phpstan-ignore-next-line */
         $data = new WriteFlatColumnValues($column, values: [$date1, $date2, $date3, $date4, $date2, $date1]);
 
         $result = $this->builder->build($data);
@@ -315,7 +302,6 @@ final class ObjectDictionaryBuilderTest extends TestCase
         $column = new FlatColumn('test_column', PhysicalType::INT64);
         $dateTime = new \DateTimeImmutable('2023-01-01 12:00:00');
         $interval = new \DateInterval('P1D');
-        /** @phpstan-ignore-next-line */
         $data = new WriteFlatColumnValues($column, values: [$dateTime, $interval, $dateTime, $interval]);
 
         $result = $this->builder->build($data);
@@ -333,7 +319,6 @@ final class ObjectDictionaryBuilderTest extends TestCase
         $date1 = new \DateTimeImmutable('2023-01-01');
         $date2 = new \DateTimeImmutable('2023-01-02');
         $date3 = new \DateTimeImmutable('2023-01-03');
-        /** @phpstan-ignore-next-line */
         $data = new WriteFlatColumnValues($column, values: [null, $date1, null, $date2, $date1, null, $date3, $date2]);
 
         $result = $this->builder->build($data);
@@ -352,7 +337,6 @@ final class ObjectDictionaryBuilderTest extends TestCase
         $date1 = new \DateTimeImmutable('2023-01-01');
         $date2 = new \DateTimeImmutable('2023-01-02');
         $date3 = new \DateTimeImmutable('2023-01-03');
-        /** @phpstan-ignore-next-line */
         $data = new WriteFlatColumnValues($column, values: [$date1, $date2, $date3]);
 
         $result = $this->builder->build($data);
@@ -370,7 +354,6 @@ final class ObjectDictionaryBuilderTest extends TestCase
         $column = new FlatColumn('test_column', PhysicalType::INT64);
         $dateTime1 = new \DateTimeImmutable('2023-01-01 12:00:00');
         $dateTime2 = new \DateTimeImmutable('2023-01-01 12:00:01');
-        /** @phpstan-ignore-next-line */
         $data = new WriteFlatColumnValues($column, values: [$dateTime1, $dateTime2]);
 
         $result = $this->builder->build($data);
@@ -387,7 +370,6 @@ final class ObjectDictionaryBuilderTest extends TestCase
         $column = new FlatColumn('test_column', PhysicalType::INT64);
         $dateTime1 = new \DateTimeImmutable('2023-01-01 12:00:00');
         $dateTime2 = new \DateTimeImmutable('2023-01-01 12:00:00');
-        /** @phpstan-ignore-next-line */
         $data = new WriteFlatColumnValues($column, values: [$dateTime1, $dateTime2]);
 
         $result = $this->builder->build($data);
@@ -403,7 +385,6 @@ final class ObjectDictionaryBuilderTest extends TestCase
     {
         $column = new FlatColumn('test_column', PhysicalType::INT64);
         $dateTime = new \DateTimeImmutable('2023-01-01 12:00:00');
-        /** @phpstan-ignore-next-line */
         $data = new WriteFlatColumnValues($column, values: [$dateTime]);
 
         $result = $this->builder->build($data);
@@ -418,7 +399,6 @@ final class ObjectDictionaryBuilderTest extends TestCase
     {
         $column = new FlatColumn('test_column', PhysicalType::INT64);
         $dateTime = new \DateTimeImmutable('2023-01-01 12:00:00');
-        /** @phpstan-ignore-next-line */
         $data = new WriteFlatColumnValues($column, values: [null, $dateTime, null, $dateTime, null]);
 
         $result = $this->builder->build($data);

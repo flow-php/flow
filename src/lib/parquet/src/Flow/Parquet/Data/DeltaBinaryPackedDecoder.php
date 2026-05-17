@@ -85,14 +85,19 @@ final readonly class DeltaBinaryPackedDecoder
             $miniblockIndex < $miniblockCount && $deltasRead < $blockDeltaCount;
             $miniblockIndex++
         ) {
-            $bitWidth = $bitWidths[$miniblockIndex];
+            $bitWidth = $bitWidths[$miniblockIndex] ?? null;
+
+            if ($bitWidth === null) {
+                throw new \Flow\Parquet\Exception\RuntimeException('Missing bit width for miniblock index '
+                . $miniblockIndex);
+            }
             $miniblockSize = $this->miniblockSize;
 
             $remainingDeltas = $blockDeltaCount - $deltasRead;
             $valuesToRead = min($miniblockSize, $remainingDeltas);
 
             if ($bitWidth === 0) {
-                $miniblockDeltas = array_fill(0, $valuesToRead, 0);
+                $miniblockDeltas = array_fill(0, max(0, $valuesToRead), 0);
             } else {
                 $packedSize = (int) ceil(($miniblockSize * $bitWidth) / 8);
                 $packedRaw = $reader->readBytes($packedSize);
@@ -101,15 +106,20 @@ final readonly class DeltaBinaryPackedDecoder
 
             $actualDeltas = array_map(
                 static function ($delta) use ($minDelta) {
+                    // PHP converts int overflow to float at runtime, so $result may be float even though both operands are int.
+                    // PHPStan models int arithmetic as never overflowing, which is why the is_float check below is suppressed.
                     $result = $delta + $minDelta;
 
                     // Handle float overflow precisely using BCMath
-                    // @phpstan-ignore-next-line function.impossibleType - PHP can convert int overflow to float
+                    // @mago-ignore analysis:impossible-condition
+                    // @phpstan-ignore-next-line
                     if (\is_float($result)) {
                         // Use BCMath for precise integer arithmetic
                         $preciseResult = \bcadd((string) $delta, (string) $minDelta, 0);
 
                         // Apply 2's complement wrapping for 64-bit integers
+                        // @mago-ignore analysis:redundant-condition
+                        // @mago-ignore analysis:redundant-comparison
                         if (PHP_INT_SIZE === 8) {
                             if (\bccomp($preciseResult, (string) PHP_INT_MAX, 0) > 0) {
                                 $preciseResult = \bcsub($preciseResult, '18446744073709551616', 0);

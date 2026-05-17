@@ -22,7 +22,11 @@ final readonly class Statistics
         return new self(
             $thrift->max,
             $thrift->min,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             $thrift->null_count !== null ? (int) $thrift->null_count : null,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             $thrift->distinct_count !== null ? (int) $thrift->distinct_count : null,
             $thrift->max_value,
             $thrift->min_value,

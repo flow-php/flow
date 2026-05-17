@@ -45,8 +45,10 @@ final readonly class ColumnData
 
         if ($this->logicalType?->name() !== $columnData->logicalType?->name()) {
             throw new \LogicException(
-                'Column data logical type mismatch, expected ' . $this->logicalType?->name() . ', got '
-                    . $columnData->logicalType?->name(),
+                'Column data logical type mismatch, expected '
+                . ($this->logicalType?->name() ?? 'null')
+                . ', got '
+                . ($columnData->logicalType?->name() ?? 'null'),
             );
         }
 
@@ -77,8 +79,11 @@ final readonly class ColumnData
             return [$this, new self($this->type, $this->logicalType, [], [], [])];
         }
 
+        /** @var array<int> $repetitions */
         $repetitions = [];
+        /** @var array<int> $definitions */
         $definitions = [];
+        /** @var array<mixed> $values */
         $values = [];
 
         $maxDefinition = $this->definitions ? \max($this->definitions) : 0;

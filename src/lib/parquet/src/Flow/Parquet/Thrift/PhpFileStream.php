@@ -9,7 +9,7 @@ use Thrift\Exception\TTransportException;
 final class PhpFileStream implements Transport
 {
     /**
-     * @var resource
+     * @var resource|null
      */
     private $stream;
 
@@ -34,13 +34,17 @@ final class PhpFileStream implements Transport
 
     public function close(): void
     {
-        @\fclose($this->stream);
-        $this->stream = null;
+        if ($this->stream !== null) {
+            @\fclose($this->stream);
+            $this->stream = null;
+        }
     }
 
     public function flush(): void
     {
-        @\fflush($this->stream);
+        if ($this->stream !== null) {
+            @\fflush($this->stream);
+        }
     }
 
     public function isOpen(): bool
@@ -57,6 +61,10 @@ final class PhpFileStream implements Transport
 
     public function read(int $len): string
     {
+        if ($this->stream === null) {
+            throw new TTransportException('PhpStream: Stream is closed');
+        }
+
         $data = @\fread($this->stream, $len);
 
         if ($data === false || $data === '') {
@@ -68,6 +76,10 @@ final class PhpFileStream implements Transport
 
     public function write(string $buf): void
     {
+        if ($this->stream === null) {
+            throw new TTransportException('PhpStream: Stream is closed');
+        }
+
         while ($buf !== '') {
             $got = @\fwrite($this->stream, $buf);
 

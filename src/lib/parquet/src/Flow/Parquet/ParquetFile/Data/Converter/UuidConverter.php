@@ -9,6 +9,7 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\Converter;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use function Flow\Types\DSL\type_string;
 
 final class UuidConverter implements Converter
 {
@@ -37,7 +38,7 @@ final class UuidConverter implements Converter
         }
 
         if (\is_object($data) && \method_exists($data, 'toString')) {
-            return $data->toString();
+            return type_string()->assert($data->toString());
         }
 
         if ($data instanceof \Stringable) {

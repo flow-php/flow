@@ -57,6 +57,7 @@ final class ColumnDataValidator implements Validator
                 ));
             }
 
+            // @mago-ignore analysis:mixed-assignment
             foreach ($data as $value) {
                 $this->validate($column->getListElement(), $value);
             }
@@ -75,6 +76,7 @@ final class ColumnDataValidator implements Validator
 
             $valueColumn = $column->getMapValueColumn();
 
+            // @mago-ignore analysis:mixed-assignment
             foreach ($data as $key => $value) {
                 $this->validate($column->getMapKeyColumn(), $key);
 
@@ -102,6 +104,7 @@ final class ColumnDataValidator implements Validator
     private function validateData(FlatColumn $column, mixed $data, ?Repetition $repetition): void
     {
         if (\is_array($data)) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($data as $value) {
                 $this->validateData($column, $value, $repetition);
             }

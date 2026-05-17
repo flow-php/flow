@@ -93,6 +93,11 @@ final class ArrowParquetEngine implements ParquetEngine
         $this->resetBatch();
     }
 
+    /**
+     * @param array<string> $columns
+     *
+     * @return \Generator<int, array<string, mixed>>
+     */
     public function readValues(
         SourceStream $stream,
         Schema $schema,

@@ -112,35 +112,6 @@ final class RLEBitPackedHybridTest extends TestCase
         static::assertEquals([2, 2], $result);
     }
 
-    public function test_decode_rl_e_with_is_literal_run_true(): void
-    {
-        $rleBitPackedHybrid = new RLEBitPackedHybrid();
-        $binaryReader = $this->getMockBuilder(BinaryReader::class)->disableOriginalConstructor()->getMock();
-
-        $bitWidth = 8;
-        $intVar = 3; // Odd intVar, so isLiteralRun will be true
-        $maxItems = 2;
-
-        $binaryReader
-            ->expects(self::exactly(1))
-            ->method('readBytes')
-            ->willReturn(\chr(0));
-
-        $binaryReader
-            ->expects(self::exactly(1))
-            ->method('readBits')
-            ->willReturnOnConsecutiveCalls(
-                (static function () {
-                    yield 1;
-                })(),
-            );
-
-        $result = [];
-        $rleBitPackedHybrid->decodeRLE($binaryReader, $bitWidth, $intVar, $maxItems, $result);
-
-        static::assertEquals([[1]], $result);
-    }
-
     public function test_decode_rl_e_with_run_length_zero(): void
     {
         $rleBitPackedHybrid = new RLEBitPackedHybrid();

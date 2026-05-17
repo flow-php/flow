@@ -79,7 +79,8 @@ final class RowGroup
 
     public function toThrift(): \Flow\Parquet\ThriftModel\RowGroup
     {
-        $fileOffset = \count($this->columnChunks) ? \current($this->columnChunks)->fileOffset() : 0;
+        $firstChunk = \current($this->columnChunks);
+        $fileOffset = $firstChunk !== false ? $firstChunk->fileOffset() : 0;
         $chunksUncompressedSize = \array_map(
             static fn(ColumnChunk $chunk) => $chunk->totalUncompressedSize(),
             $this->columnChunks,

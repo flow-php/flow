@@ -27,6 +27,14 @@ final class Comparator
             $nextValue = (new TimeConverter())->toParquetType($nextValue);
         }
 
+        if (!\is_scalar($value) || !\is_scalar($nextValue)) {
+            throw new \RuntimeException(\sprintf(
+                'Cannot compare non-scalar values: %s with %s',
+                \gettype($value),
+                \gettype($nextValue),
+            ));
+        }
+
         return $value > $nextValue;
     }
 
@@ -47,6 +55,14 @@ final class Comparator
         if ($value instanceof \DateInterval) {
             $value = (new TimeConverter())->toParquetType($value);
             $nextValue = (new TimeConverter())->toParquetType($nextValue);
+        }
+
+        if (!\is_scalar($value) || !\is_scalar($nextValue)) {
+            throw new \RuntimeException(\sprintf(
+                'Cannot compare non-scalar values: %s with %s',
+                \gettype($value),
+                \gettype($nextValue),
+            ));
         }
 
         return $value < $nextValue;

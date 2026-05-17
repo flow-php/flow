@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 
 abstract class ParquetIntegrationTestCase extends TestCase
 {
+    /**
+     * @return array<string, array{0: \Flow\Parquet\ParquetEngine}>
+     */
     public static function engine_provider(): array
     {
         $engines = ['php' => [new PhpParquetEngine()]];

@@ -37,6 +37,7 @@ final class RLEBitPackedTest extends TestCase
     #[DataProvider('values_provider')]
     public function test_packing_and_unpacking_with_length(array $values, int $length): void
     {
+        $values = \Flow\Types\DSL\type_list(\Flow\Types\DSL\type_integer())->assert($values);
         $byteOrder = ByteOrder::LITTLE_ENDIAN;
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
         $packer = new RLEBitPackedPacker($rleBitPackedHybrid, $byteOrder);

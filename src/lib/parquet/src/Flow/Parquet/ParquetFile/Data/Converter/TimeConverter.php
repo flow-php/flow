@@ -37,26 +37,11 @@ final class TimeConverter implements Converter
 
     private function toDateInterval(int $microseconds): \DateInterval
     {
-        $seconds = (int) \floor($microseconds / 1000000);
-        $remainingMicroseconds = $microseconds % 1000000;
 
-        $minutes = (int) \floor($seconds / 60);
-        $remainingSeconds = $seconds % 60;
+        $base = new \DateTimeImmutable('1970-01-01 00:00:00.000000', new \DateTimeZone('UTC'));
+        $target = $base->modify(\sprintf('+%d microseconds', $microseconds));
 
-        $hours = (int) \floor($minutes / 60);
-        $remainingMinutes = $minutes % 60;
-
-        $remainingHours = $hours % 24;
-
-        $intervalSpec = \sprintf('PT%dH%dM%dS', $remainingHours, $remainingMinutes, $remainingSeconds);
-
-        $interval = new \DateInterval($intervalSpec);
-        $interval->y = 0;
-        $interval->m = 0;
-        $interval->d = 0;
-        $interval->f = $remainingMicroseconds / 1000000;
-
-        return $interval;
+        return $base->diff($target);
     }
 
     private function toInt(\DateInterval $interval): int

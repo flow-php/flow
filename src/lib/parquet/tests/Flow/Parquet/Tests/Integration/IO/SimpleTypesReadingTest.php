@@ -9,6 +9,8 @@ use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Reader;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\Types\DSL\type_array;
+
 class SimpleTypesReadingTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
@@ -20,9 +22,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         static::assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('bool')->type());
         static::assertNull($file->metadata()->schema()->get('bool')->logicalType());
 
-        $results = \array_merge_recursive(...\iterator_to_array($file->values(['bool'])))['bool'];
+        $results = type_array()->assert(\array_merge_recursive(...\iterator_to_array($file->values(['bool'])))['bool']);
         static::assertCount(100, $results);
-        static::assertContainsOnly('bool', $results);
+        static::assertContainsOnlyBool($results);
         static::assertSame($file->metadata()->rowsNumber(), \count($results));
     }
 
@@ -35,9 +37,11 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         static::assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('bool')->type());
         static::assertNull($file->metadata()->schema()->get('bool')->logicalType());
 
-        $results = \array_merge_recursive(...\iterator_to_array($file->values(['bool'], limit: 50)))['bool'];
+        $results = type_array()->assert(
+            \array_merge_recursive(...\iterator_to_array($file->values(['bool'], limit: 50)))['bool'],
+        );
         static::assertCount(50, $results);
-        static::assertContainsOnly('bool', $results);
+        static::assertContainsOnlyBool($results);
     }
 
     #[DataProvider('engine_provider')]
@@ -49,7 +53,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         static::assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('bool_nullable')->type());
         static::assertNull($file->metadata()->schema()->get('bool_nullable')->logicalType());
 
-        $results = \array_merge_recursive(...\iterator_to_array($file->values(['bool_nullable'])))['bool_nullable'];
+        $results = type_array()->assert(
+            \array_merge_recursive(...\iterator_to_array($file->values(['bool_nullable'])))['bool_nullable'],
+        );
         static::assertCount(100, $results);
         static::assertSame($file->metadata()->rowsNumber(), \count($results));
         static::assertCount(50, \array_filter($results, static fn($value) => $value === null));
@@ -65,10 +71,12 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         static::assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('bool_nullable')->type());
         static::assertNull($file->metadata()->schema()->get('bool_nullable')->logicalType());
 
-        $results = \array_merge_recursive(...\iterator_to_array($file->values(
-            ['bool_nullable'],
-            $limit = 50,
-        )))['bool_nullable'];
+        $results = type_array()->assert(
+            \array_merge_recursive(...\iterator_to_array($file->values(
+                ['bool_nullable'],
+                $limit = 50,
+            )))['bool_nullable'],
+        );
         static::assertCount($limit, $results);
         static::assertCount($limit / 2, \array_filter($results, static fn($value) => $value === null));
         static::assertCount($limit / 2, \array_filter($results, static fn($value) => $value !== null));
@@ -81,7 +89,7 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         static::assertEquals(PhysicalType::INT32, $file->metadata()->schema()->get('date')->type());
-        static::assertEquals('DATE', $file->metadata()->schema()->get('date')->logicalType()->name());
+        static::assertEquals('DATE', $file->metadata()->schema()->get('date')->logicalType()?->name());
 
         $count = 0;
 
@@ -100,7 +108,7 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         static::assertEquals(PhysicalType::INT32, $file->metadata()->schema()->get('date_nullable')->type());
-        static::assertEquals('DATE', $file->metadata()->schema()->get('date_nullable')->logicalType()->name());
+        static::assertEquals('DATE', $file->metadata()->schema()->get('date_nullable')->logicalType()?->name());
 
         $count = 0;
 
@@ -196,9 +204,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         static::assertCount(1000, $floatValues);
 
         // Verify data types
-        static::assertContainsOnly('int', $int32Values);
-        static::assertContainsOnly('int', $int64Values);
-        static::assertContainsOnly('float', $floatValues);
+        static::assertContainsOnlyInt($int32Values);
+        static::assertContainsOnlyInt($int64Values);
+        static::assertContainsOnlyFloat($floatValues);
 
         // Verify some sample values are reasonable
         static::assertGreaterThan(0, count(array_filter($int32Values, static fn($v) => $v !== 0)));
@@ -253,7 +261,7 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         static::assertEquals(PhysicalType::BYTE_ARRAY, $file->metadata()->schema()->get('enum')->type());
-        static::assertEquals('STRING', $file->metadata()->schema()->get('enum')->logicalType()->name());
+        static::assertEquals('STRING', $file->metadata()->schema()->get('enum')->logicalType()?->name());
 
         $count = 0;
 
@@ -397,7 +405,7 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         static::assertEquals(PhysicalType::BYTE_ARRAY, $file->metadata()->schema()->get('json')->type());
-        static::assertEquals('STRING', $file->metadata()->schema()->get('json')->logicalType()->name());
+        static::assertEquals('STRING', $file->metadata()->schema()->get('json')->logicalType()?->name());
 
         $count = 0;
 
@@ -416,7 +424,7 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         static::assertEquals(PhysicalType::BYTE_ARRAY, $file->metadata()->schema()->get('json_nullable')->type());
-        static::assertEquals('STRING', $file->metadata()->schema()->get('json_nullable')->logicalType()->name());
+        static::assertEquals('STRING', $file->metadata()->schema()->get('json_nullable')->logicalType()?->name());
 
         $count = 0;
 
@@ -439,7 +447,7 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         static::assertEquals(PhysicalType::BYTE_ARRAY, $file->metadata()->schema()->get('string')->type());
-        static::assertEquals('STRING', $file->metadata()->schema()->get('string')->logicalType()->name());
+        static::assertEquals('STRING', $file->metadata()->schema()->get('string')->logicalType()?->name());
 
         $count = 0;
 
@@ -458,7 +466,7 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         static::assertEquals(PhysicalType::BYTE_ARRAY, $file->metadata()->schema()->get('string_nullable')->type());
-        static::assertEquals('STRING', $file->metadata()->schema()->get('string_nullable')->logicalType()->name());
+        static::assertEquals('STRING', $file->metadata()->schema()->get('string_nullable')->logicalType()?->name());
 
         $count = 0;
 
@@ -481,7 +489,7 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         static::assertEquals(PhysicalType::INT64, $file->metadata()->schema()->get('time')->type());
-        static::assertEquals('TIME', $file->metadata()->schema()->get('time')->logicalType()->name());
+        static::assertEquals('TIME', $file->metadata()->schema()->get('time')->logicalType()?->name());
 
         $count = 0;
 
@@ -500,7 +508,7 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         static::assertEquals(PhysicalType::INT64, $file->metadata()->schema()->get('time_nullable')->type());
-        static::assertEquals('TIME', $file->metadata()->schema()->get('time_nullable')->logicalType()->name());
+        static::assertEquals('TIME', $file->metadata()->schema()->get('time_nullable')->logicalType()?->name());
 
         $count = 0;
 
@@ -523,7 +531,7 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         static::assertEquals(PhysicalType::INT64, $file->metadata()->schema()->get('timestamp')->type());
-        static::assertEquals('TIMESTAMP', $file->metadata()->schema()->get('timestamp')->logicalType()->name());
+        static::assertEquals('TIMESTAMP', $file->metadata()->schema()->get('timestamp')->logicalType()?->name());
 
         $count = 0;
 
@@ -544,7 +552,7 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         static::assertEquals(PhysicalType::INT64, $file->metadata()->schema()->get('timestamp_nullable')->type());
         static::assertEquals(
             'TIMESTAMP',
-            $file->metadata()->schema()->get('timestamp_nullable')->logicalType()->name(),
+            $file->metadata()->schema()->get('timestamp_nullable')->logicalType()?->name(),
         );
 
         $count = 0;
@@ -568,7 +576,7 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         static::assertEquals(PhysicalType::BYTE_ARRAY, $file->metadata()->schema()->get('uuid')->type());
-        static::assertEquals('STRING', $file->metadata()->schema()->get('uuid')->logicalType()->name());
+        static::assertEquals('STRING', $file->metadata()->schema()->get('uuid')->logicalType()?->name());
 
         $count = 0;
 
@@ -587,7 +595,7 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         static::assertEquals(PhysicalType::BYTE_ARRAY, $file->metadata()->schema()->get('uuid_nullable')->type());
-        static::assertEquals('STRING', $file->metadata()->schema()->get('uuid_nullable')->logicalType()->name());
+        static::assertEquals('STRING', $file->metadata()->schema()->get('uuid_nullable')->logicalType()?->name());
 
         $count = 0;
 

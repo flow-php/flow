@@ -41,15 +41,6 @@ final readonly class DeltaBinaryPackedEncoder
             return '';
         }
 
-        foreach ($values as $index => $value) {
-            if (!is_int($value)) {
-                throw new InvalidArgumentException(
-                    'Delta encoding requires integer values, got ' . gettype($value) . " at index {$index}: "
-                        . var_export($value, true),
-                );
-            }
-        }
-
         $buffer = '';
         $writer = new BinaryBufferWriter($buffer);
 
@@ -113,7 +104,7 @@ final readonly class DeltaBinaryPackedEncoder
     private function packMiniblockSafe(array $values, int $bitWidth, BinaryBufferWriter $writer): string
     {
         $expectedByteCount = (int) ceil(($this->miniblockSize * $bitWidth) / 8);
-        $bytes = array_fill(0, $expectedByteCount, 0);
+        $bytes = array_fill(0, max(0, $expectedByteCount), 0);
 
         $globalBitOffset = 0;
 
@@ -221,7 +212,7 @@ final readonly class DeltaBinaryPackedEncoder
      */
     private function writeHeader(BinaryBufferWriter $writer, array $values): void
     {
-        $miniblockCount = $this->blockSize / $this->miniblockSize;
+        $miniblockCount = (int) ($this->blockSize / $this->miniblockSize);
 
         $this->writeULEB128($writer, $this->blockSize);
         $this->writeULEB128($writer, $miniblockCount);

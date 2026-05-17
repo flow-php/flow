@@ -45,6 +45,8 @@ final class FlatColumn implements Column
 
     public static function dateTime(string $name, Repetition $repetition = Repetition::OPTIONAL): self
     {
+        // @mago-ignore analysis:impossible-condition
+        // @mago-ignore analysis:redundant-comparison
         if (PHP_INT_MAX !== Consts::PHP_INT64_MAX) {
             throw new InvalidArgumentException(
                 'PHP_INT_MAX must be equal to ' . Consts::PHP_INT64_MAX . ' to support 64-bit timestamps.',
@@ -121,11 +123,23 @@ final class FlatColumn implements Column
         return new self(
             $thrift->name,
             PhysicalType::from($thrift->type),
+            // @mago-ignore analysis:redundant-comparison
+            // @mago-ignore analysis:impossible-condition
             $thrift->converted_type === null ? null : ConvertedType::from($thrift->converted_type),
+            // @mago-ignore analysis:redundant-comparison
+            // @mago-ignore analysis:impossible-condition
             $thrift->logicalType === null ? null : LogicalType::fromThrift($thrift->logicalType),
+            // @mago-ignore analysis:redundant-comparison
+            // @mago-ignore analysis:impossible-condition
             $thrift->repetition_type === null ? null : Repetition::from($thrift->repetition_type),
+            // @mago-ignore analysis:redundant-comparison
+            // @mago-ignore analysis:redundant-condition
             $thrift->precision !== null ? (int) $thrift->precision : null,
+            // @mago-ignore analysis:redundant-comparison
+            // @mago-ignore analysis:redundant-condition
             $thrift->scale !== null ? (int) $thrift->scale : null,
+            // @mago-ignore analysis:redundant-comparison
+            // @mago-ignore analysis:redundant-condition
             $thrift->type_length !== null ? (int) $thrift->type_length : null,
         );
     }
@@ -137,6 +151,8 @@ final class FlatColumn implements Column
 
     public static function int64(string $name, Repetition $repetition = Repetition::OPTIONAL): self
     {
+        // @mago-ignore analysis:impossible-condition
+        // @mago-ignore analysis:redundant-comparison
         if (PHP_INT_MAX !== Consts::PHP_INT64_MAX) {
             throw new InvalidArgumentException(
                 'PHP_INT_MAX must be equal to ' . Consts::PHP_INT64_MAX . ' to support 64-bit timestamps.',
@@ -158,6 +174,8 @@ final class FlatColumn implements Column
 
     public static function time(string $name, Repetition $repetition = Repetition::OPTIONAL): self
     {
+        // @mago-ignore analysis:impossible-condition
+        // @mago-ignore analysis:redundant-comparison
         if (PHP_INT_MAX !== Consts::PHP_INT64_MAX) {
             throw new InvalidArgumentException(
                 'PHP_INT_MAX must be equal to ' . Consts::PHP_INT64_MAX . ' to support 64-bit timestamps.',
@@ -212,10 +230,10 @@ final class FlatColumn implements Column
      */
     public function ddl(): array
     {
+        $logicalType = $this->logicalType();
+
         return [
-            'type' =>
-                $this->type()->name
-                    . ($this->logicalType()?->name() !== null ? ' (' . $this->logicalType()->name() . ')' : ''),
+            'type' => $this->type()->name . ($logicalType !== null ? ' (' . $logicalType->name() . ')' : ''),
             'optional' => $this->repetition()?->value === Repetition::OPTIONAL->value,
         ];
     }

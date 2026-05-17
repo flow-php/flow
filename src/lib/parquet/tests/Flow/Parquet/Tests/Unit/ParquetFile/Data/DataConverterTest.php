@@ -21,11 +21,8 @@ final class DataConverterTest extends TestCase
         $dataConverter = new DataConverter([$mockConverter], $options);
         $column = new FlatColumn('test', PhysicalType::INT32);
 
-        $result1 = $dataConverter->fromParquetType($column, 'data1');
-        $result2 = $dataConverter->toParquetType($column, 'data2');
-
-        static::assertSame('converted_data', $result1);
-        static::assertSame('converted_data', $result2);
+        static::assertSame('converted_data', $dataConverter->fromParquetType($column, 'data1'));
+        static::assertSame('converted_data', $dataConverter->toParquetType($column, 'data2'));
         static::assertSame(1, $mockConverter->isForCallCount); // Only called once for caching
         static::assertSame(1, $mockConverter->fromParquetTypeCallCount);
         static::assertSame(1, $mockConverter->toParquetTypeCallCount);
@@ -38,14 +35,11 @@ final class DataConverterTest extends TestCase
         $dataConverter = new DataConverter([$complexDataConverter], $options);
         $column = new FlatColumn('test', PhysicalType::INT32);
 
-        $arrayData = ['key' => 'value'];
-        $result1 = $dataConverter->fromParquetType($column, $arrayData);
-        static::assertSame('complex_from_parquet', $result1);
+        static::assertSame('complex_from_parquet', $dataConverter->fromParquetType($column, ['key' => 'value']));
 
         $objectData = new \stdClass();
         $objectData->property = 'value';
-        $result2 = $dataConverter->toParquetType($column, $objectData);
-        static::assertSame('complex_to_parquet', $result2);
+        static::assertSame('complex_to_parquet', $dataConverter->toParquetType($column, $objectData));
     }
 
     public function test_constructor_with_empty_converters_array(): void
@@ -54,9 +48,7 @@ final class DataConverterTest extends TestCase
         $dataConverter = new DataConverter([], $options);
         $column = new FlatColumn('test', PhysicalType::INT32);
 
-        $result = $dataConverter->fromParquetType($column, 'data');
-
-        static::assertSame('data', $result);
+        static::assertSame('data', $dataConverter->fromParquetType($column, 'data'));
     }
 
     public function test_from_parquet_type_caches_converter_result(): void
@@ -66,11 +58,8 @@ final class DataConverterTest extends TestCase
         $dataConverter = new DataConverter([$mockConverter], $options);
         $column = new FlatColumn('test', PhysicalType::INT32);
 
-        $result1 = $dataConverter->fromParquetType($column, 'data1');
-        $result2 = $dataConverter->fromParquetType($column, 'data2');
-
-        static::assertSame('converted_data', $result1);
-        static::assertSame('converted_data', $result2);
+        static::assertSame('converted_data', $dataConverter->fromParquetType($column, 'data1'));
+        static::assertSame('converted_data', $dataConverter->fromParquetType($column, 'data2'));
         static::assertSame(1, $mockConverter->isForCallCount);
         static::assertSame(2, $mockConverter->fromParquetTypeCallCount);
     }
@@ -82,11 +71,8 @@ final class DataConverterTest extends TestCase
         $dataConverter = new DataConverter([$nonMatchingConverter], $options);
         $column = new FlatColumn('test', PhysicalType::INT32);
 
-        $result1 = $dataConverter->fromParquetType($column, 'data1');
-        $result2 = $dataConverter->fromParquetType($column, 'data2');
-
-        static::assertSame('data1', $result1);
-        static::assertSame('data2', $result2);
+        static::assertSame('data1', $dataConverter->fromParquetType($column, 'data1'));
+        static::assertSame('data2', $dataConverter->fromParquetType($column, 'data2'));
         static::assertSame(1, $nonMatchingConverter->isForCallCount);
         static::assertSame(0, $nonMatchingConverter->fromParquetTypeCallCount);
     }
@@ -102,8 +88,9 @@ final class DataConverterTest extends TestCase
             $dataConverter->fromParquetType($column, 'data');
             static::fail('Expected DataConversionException to be thrown');
         } catch (DataConversionException $e) {
-            static::assertInstanceOf(\RuntimeException::class, $e->getPrevious());
-            static::assertSame('Test exception from converter', $e->getPrevious()->getMessage());
+            $previous = $e->getPrevious();
+            static::assertInstanceOf(\RuntimeException::class, $previous);
+            static::assertSame('Test exception from converter', $previous->getMessage());
         }
     }
 
@@ -113,9 +100,7 @@ final class DataConverterTest extends TestCase
         $dataConverter = new DataConverter([], $options);
         $column = new FlatColumn('test', PhysicalType::INT32);
 
-        $result = $dataConverter->fromParquetType($column, null);
-
-        static::assertNull($result);
+        static::assertNull($dataConverter->fromParquetType($column, null));
     }
 
     public function test_from_parquet_type_returns_original_data_when_no_converter_matches(): void
@@ -123,11 +108,8 @@ final class DataConverterTest extends TestCase
         $options = Options::default();
         $dataConverter = new DataConverter([], $options);
         $column = new FlatColumn('test', PhysicalType::INT32);
-        $data = 'test_data';
 
-        $result = $dataConverter->fromParquetType($column, $data);
-
-        static::assertSame($data, $result);
+        static::assertSame('test_data', $dataConverter->fromParquetType($column, 'test_data'));
     }
 
     public function test_from_parquet_type_uses_first_matching_converter(): void
@@ -138,9 +120,7 @@ final class DataConverterTest extends TestCase
         $dataConverter = new DataConverter([$firstConverter, $secondConverter], $options);
         $column = new FlatColumn('test', PhysicalType::INT32);
 
-        $result = $dataConverter->fromParquetType($column, 'data');
-
-        static::assertSame('first_converter_result', $result);
+        static::assertSame('first_converter_result', $dataConverter->fromParquetType($column, 'data'));
         static::assertSame(1, $firstConverter->isForCallCount);
         static::assertSame(1, $firstConverter->fromParquetTypeCallCount);
         static::assertSame(0, $secondConverter->isForCallCount);
@@ -153,11 +133,8 @@ final class DataConverterTest extends TestCase
         $mockConverter = new MockConverter(true, 'converted_from_parquet');
         $dataConverter = new DataConverter([$mockConverter], $options);
         $column = new FlatColumn('test', PhysicalType::INT32);
-        $data = 'original_data';
 
-        $result = $dataConverter->fromParquetType($column, $data);
-
-        static::assertSame('converted_from_parquet', $result);
+        static::assertSame('converted_from_parquet', $dataConverter->fromParquetType($column, 'original_data'));
     }
 
     public function test_from_parquet_type_with_different_column_paths_uses_separate_cache_entries(): void
@@ -169,11 +146,8 @@ final class DataConverterTest extends TestCase
         $column1 = new FlatColumn('column1', PhysicalType::INT32);
         $column2 = new FlatColumn('column2', PhysicalType::INT64);
 
-        $result1 = $dataConverter->fromParquetType($column1, 'data');
-        $result2 = $dataConverter->fromParquetType($column2, 'data');
-
-        static::assertSame('converter_result', $result1);
-        static::assertSame('data', $result2); // No converter matches column2
+        static::assertSame('converter_result', $dataConverter->fromParquetType($column1, 'data'));
+        static::assertSame('data', $dataConverter->fromParquetType($column2, 'data')); // No converter matches column2
         static::assertSame(2, $selectiveConverter->isForCallCount); // Called for both columns
         static::assertSame(1, $selectiveConverter->fromParquetTypeCallCount); // Only called for column1
     }
@@ -187,9 +161,7 @@ final class DataConverterTest extends TestCase
         $dataConverter = new DataConverter([$converter1, $converter2, $converter3], $options);
         $column = new FlatColumn('test', PhysicalType::INT32);
 
-        $result = $dataConverter->fromParquetType($column, 'original_data');
-
-        static::assertSame('original_data', $result);
+        static::assertSame('original_data', $dataConverter->fromParquetType($column, 'original_data'));
         static::assertSame(1, $converter1->isForCallCount);
         static::assertSame(1, $converter2->isForCallCount);
         static::assertSame(1, $converter3->isForCallCount);
@@ -206,9 +178,7 @@ final class DataConverterTest extends TestCase
 
         $column = new FlatColumn('nested.path.column', PhysicalType::INT32);
 
-        $result = $dataConverter->fromParquetType($column, 'data');
-
-        static::assertSame('converted_result', $result);
+        static::assertSame('converted_result', $dataConverter->fromParquetType($column, 'data'));
     }
 
     public function test_from_parquet_type_wraps_converter_exceptions(): void
@@ -252,11 +222,8 @@ final class DataConverterTest extends TestCase
         $dataConverter = new DataConverter([$mockConverter], $options);
         $column = new FlatColumn('test', PhysicalType::INT32);
 
-        $result1 = $dataConverter->toParquetType($column, 'data1');
-        $result2 = $dataConverter->toParquetType($column, 'data2');
-
-        static::assertSame('converted_data', $result1);
-        static::assertSame('converted_data', $result2);
+        static::assertSame('converted_data', $dataConverter->toParquetType($column, 'data1'));
+        static::assertSame('converted_data', $dataConverter->toParquetType($column, 'data2'));
         static::assertSame(1, $mockConverter->isForCallCount);
         static::assertSame(2, $mockConverter->toParquetTypeCallCount);
     }
@@ -268,11 +235,8 @@ final class DataConverterTest extends TestCase
         $dataConverter = new DataConverter([$nonMatchingConverter], $options);
         $column = new FlatColumn('test', PhysicalType::INT32);
 
-        $result1 = $dataConverter->toParquetType($column, 'data1');
-        $result2 = $dataConverter->toParquetType($column, 'data2');
-
-        static::assertSame('data1', $result1);
-        static::assertSame('data2', $result2);
+        static::assertSame('data1', $dataConverter->toParquetType($column, 'data1'));
+        static::assertSame('data2', $dataConverter->toParquetType($column, 'data2'));
         static::assertSame(1, $nonMatchingConverter->isForCallCount);
         static::assertSame(0, $nonMatchingConverter->toParquetTypeCallCount);
     }
@@ -296,9 +260,7 @@ final class DataConverterTest extends TestCase
         $dataConverter = new DataConverter([], $options);
         $column = new FlatColumn('test', PhysicalType::INT32);
 
-        $result = $dataConverter->toParquetType($column, null);
-
-        static::assertNull($result);
+        static::assertNull($dataConverter->toParquetType($column, null));
     }
 
     public function test_to_parquet_type_returns_original_data_when_no_converter_matches(): void
@@ -306,11 +268,8 @@ final class DataConverterTest extends TestCase
         $options = Options::default();
         $dataConverter = new DataConverter([], $options);
         $column = new FlatColumn('test', PhysicalType::INT32);
-        $data = 'test_data';
 
-        $result = $dataConverter->toParquetType($column, $data);
-
-        static::assertSame($data, $result);
+        static::assertSame('test_data', $dataConverter->toParquetType($column, 'test_data'));
     }
 
     public function test_to_parquet_type_uses_first_matching_converter(): void
@@ -321,9 +280,7 @@ final class DataConverterTest extends TestCase
         $dataConverter = new DataConverter([$firstConverter, $secondConverter], $options);
         $column = new FlatColumn('test', PhysicalType::INT32);
 
-        $result = $dataConverter->toParquetType($column, 'data');
-
-        static::assertSame('first_converter_result', $result);
+        static::assertSame('first_converter_result', $dataConverter->toParquetType($column, 'data'));
         static::assertSame(1, $firstConverter->isForCallCount);
         static::assertSame(1, $firstConverter->toParquetTypeCallCount);
         static::assertSame(0, $secondConverter->isForCallCount);
@@ -336,11 +293,8 @@ final class DataConverterTest extends TestCase
         $mockConverter = new MockConverter(true, 'converted_to_parquet');
         $dataConverter = new DataConverter([$mockConverter], $options);
         $column = new FlatColumn('test', PhysicalType::INT32);
-        $data = 'original_data';
 
-        $result = $dataConverter->toParquetType($column, $data);
-
-        static::assertSame('converted_to_parquet', $result);
+        static::assertSame('converted_to_parquet', $dataConverter->toParquetType($column, 'original_data'));
     }
 
     public function test_to_parquet_type_with_different_column_paths_uses_separate_cache_entries(): void
@@ -352,11 +306,8 @@ final class DataConverterTest extends TestCase
         $column1 = new FlatColumn('column1', PhysicalType::INT32);
         $column2 = new FlatColumn('column2', PhysicalType::INT64);
 
-        $result1 = $dataConverter->toParquetType($column1, 'data');
-        $result2 = $dataConverter->toParquetType($column2, 'data');
-
-        static::assertSame('converter_result', $result1);
-        static::assertSame('data', $result2); // No converter matches column2
+        static::assertSame('converter_result', $dataConverter->toParquetType($column1, 'data'));
+        static::assertSame('data', $dataConverter->toParquetType($column2, 'data')); // No converter matches column2
         static::assertSame(2, $selectiveConverter->isForCallCount); // Called for both columns
         static::assertSame(1, $selectiveConverter->toParquetTypeCallCount); // Only called for column1
     }
@@ -369,9 +320,7 @@ final class DataConverterTest extends TestCase
 
         $column = new FlatColumn('nested.path.column', PhysicalType::INT32);
 
-        $result = $dataConverter->toParquetType($column, 'data');
-
-        static::assertSame('converted_result', $result);
+        static::assertSame('converted_result', $dataConverter->toParquetType($column, 'data'));
     }
 }
 

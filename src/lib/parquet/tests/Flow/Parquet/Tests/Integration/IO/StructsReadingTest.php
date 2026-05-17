@@ -8,6 +8,8 @@ use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\Reader;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function Flow\Types\DSL\type_array;
+
 class StructsReadingTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
@@ -22,29 +24,23 @@ class StructsReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['struct_deeply_nested']) as $row) {
-            static::assertArrayHasKey('struct_0', $row['struct_deeply_nested']);
-            static::assertArrayHasKey('int', $row['struct_deeply_nested']['struct_0']);
-            static::assertArrayHasKey('struct_1', $row['struct_deeply_nested']['struct_0']);
-            static::assertArrayHasKey('string', $row['struct_deeply_nested']['struct_0']['struct_1']);
-            static::assertArrayHasKey('struct_2', $row['struct_deeply_nested']['struct_0']['struct_1']);
-            static::assertArrayHasKey('bool', $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']);
-            static::assertArrayHasKey('struct_3', $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']);
-            static::assertArrayHasKey(
-                'float',
-                $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3'],
-            );
-            static::assertArrayHasKey(
-                'struct_4',
-                $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3'],
-            );
-            static::assertArrayHasKey(
-                'string',
-                $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3']['struct_4'],
-            );
-            static::assertArrayHasKey(
-                'json',
-                $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3']['struct_4'],
-            );
+            $deep = type_array()->assert($row['struct_deeply_nested']);
+            static::assertArrayHasKey('struct_0', $deep);
+            $s0 = type_array()->assert($deep['struct_0']);
+            static::assertArrayHasKey('int', $s0);
+            static::assertArrayHasKey('struct_1', $s0);
+            $s1 = type_array()->assert($s0['struct_1']);
+            static::assertArrayHasKey('string', $s1);
+            static::assertArrayHasKey('struct_2', $s1);
+            $s2 = type_array()->assert($s1['struct_2']);
+            static::assertArrayHasKey('bool', $s2);
+            static::assertArrayHasKey('struct_3', $s2);
+            $s3 = type_array()->assert($s2['struct_3']);
+            static::assertArrayHasKey('float', $s3);
+            static::assertArrayHasKey('struct_4', $s3);
+            $s4 = type_array()->assert($s3['struct_4']);
+            static::assertArrayHasKey('string', $s4);
+            static::assertArrayHasKey('json', $s4);
             $count++;
         }
         static::assertSame(100, $count);
@@ -63,29 +59,23 @@ class StructsReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['struct_deeply_nested'], $limit = 50) as $row) {
-            static::assertArrayHasKey('struct_0', $row['struct_deeply_nested']);
-            static::assertArrayHasKey('int', $row['struct_deeply_nested']['struct_0']);
-            static::assertArrayHasKey('struct_1', $row['struct_deeply_nested']['struct_0']);
-            static::assertArrayHasKey('string', $row['struct_deeply_nested']['struct_0']['struct_1']);
-            static::assertArrayHasKey('struct_2', $row['struct_deeply_nested']['struct_0']['struct_1']);
-            static::assertArrayHasKey('bool', $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']);
-            static::assertArrayHasKey('struct_3', $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']);
-            static::assertArrayHasKey(
-                'float',
-                $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3'],
-            );
-            static::assertArrayHasKey(
-                'struct_4',
-                $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3'],
-            );
-            static::assertArrayHasKey(
-                'string',
-                $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3']['struct_4'],
-            );
-            static::assertArrayHasKey(
-                'json',
-                $row['struct_deeply_nested']['struct_0']['struct_1']['struct_2']['struct_3']['struct_4'],
-            );
+            $deep = type_array()->assert($row['struct_deeply_nested']);
+            static::assertArrayHasKey('struct_0', $deep);
+            $s0 = type_array()->assert($deep['struct_0']);
+            static::assertArrayHasKey('int', $s0);
+            static::assertArrayHasKey('struct_1', $s0);
+            $s1 = type_array()->assert($s0['struct_1']);
+            static::assertArrayHasKey('string', $s1);
+            static::assertArrayHasKey('struct_2', $s1);
+            $s2 = type_array()->assert($s1['struct_2']);
+            static::assertArrayHasKey('bool', $s2);
+            static::assertArrayHasKey('struct_3', $s2);
+            $s3 = type_array()->assert($s2['struct_3']);
+            static::assertArrayHasKey('float', $s3);
+            static::assertArrayHasKey('struct_4', $s3);
+            $s4 = type_array()->assert($s3['struct_4']);
+            static::assertArrayHasKey('string', $s4);
+            static::assertArrayHasKey('json', $s4);
             $count++;
         }
         static::assertSame($limit, $count);
@@ -103,10 +93,11 @@ class StructsReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['struct_flat']) as $row) {
-            static::assertArrayHasKey('string', $row['struct_flat']);
-            static::assertArrayHasKey('int', $row['struct_flat']);
-            static::assertArrayHasKey('list_of_ints', $row['struct_flat']);
-            static::assertArrayHasKey('map_of_string_int', $row['struct_flat']);
+            $flat = type_array()->assert($row['struct_flat']);
+            static::assertArrayHasKey('string', $flat);
+            static::assertArrayHasKey('int', $flat);
+            static::assertArrayHasKey('list_of_ints', $flat);
+            static::assertArrayHasKey('map_of_string_int', $flat);
             $count++;
         }
         static::assertSame(100, $count);
@@ -126,10 +117,11 @@ class StructsReadingTest extends ParquetIntegrationTestCase
 
         foreach ($file->values(['struct_flat_nullable']) as $i => $row) {
             if (($i % 2) === 0) {
-                static::assertArrayHasKey('string', $row['struct_flat_nullable']);
-                static::assertArrayHasKey('int', $row['struct_flat_nullable']);
-                static::assertArrayHasKey('list_of_ints', $row['struct_flat_nullable']);
-                static::assertArrayHasKey('map_of_string_int', $row['struct_flat_nullable']);
+                $flat = type_array()->assert($row['struct_flat_nullable']);
+                static::assertArrayHasKey('string', $flat);
+                static::assertArrayHasKey('int', $flat);
+                static::assertArrayHasKey('list_of_ints', $flat);
+                static::assertArrayHasKey('map_of_string_int', $flat);
             } else {
                 static::assertNull($row['struct_flat_nullable']);
             }
@@ -151,11 +143,13 @@ class StructsReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['struct_nested']) as $row) {
-            static::assertArrayHasKey('string', $row['struct_nested']);
-            static::assertArrayHasKey('struct_flat', $row['struct_nested']);
-            static::assertArrayHasKey('int', $row['struct_nested']['struct_flat']);
-            static::assertArrayHasKey('list_of_ints', $row['struct_nested']['struct_flat']);
-            static::assertArrayHasKey('map_of_string_int', $row['struct_nested']['struct_flat']);
+            $nested = type_array()->assert($row['struct_nested']);
+            static::assertArrayHasKey('string', $nested);
+            static::assertArrayHasKey('struct_flat', $nested);
+            $flat = type_array()->assert($nested['struct_flat']);
+            static::assertArrayHasKey('int', $flat);
+            static::assertArrayHasKey('list_of_ints', $flat);
+            static::assertArrayHasKey('map_of_string_int', $flat);
             $count++;
         }
         static::assertSame(100, $count);
@@ -174,10 +168,12 @@ class StructsReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['struct_nested_with_list_of_lists']) as $row) {
-            static::assertArrayHasKey('string', $row['struct_nested_with_list_of_lists']);
-            static::assertArrayHasKey('struct', $row['struct_nested_with_list_of_lists']);
-            static::assertArrayHasKey('int', $row['struct_nested_with_list_of_lists']['struct']);
-            static::assertArrayHasKey('list_of_list_of_ints', $row['struct_nested_with_list_of_lists']['struct']);
+            $outer = type_array()->assert($row['struct_nested_with_list_of_lists']);
+            static::assertArrayHasKey('string', $outer);
+            static::assertArrayHasKey('struct', $outer);
+            $struct = type_array()->assert($outer['struct']);
+            static::assertArrayHasKey('int', $struct);
+            static::assertArrayHasKey('list_of_list_of_ints', $struct);
             $count++;
         }
         static::assertSame(100, $count);
@@ -196,10 +192,12 @@ class StructsReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['struct_nested_with_list_of_maps']) as $row) {
-            static::assertArrayHasKey('string', $row['struct_nested_with_list_of_maps']);
-            static::assertArrayHasKey('struct', $row['struct_nested_with_list_of_maps']);
-            static::assertArrayHasKey('int', $row['struct_nested_with_list_of_maps']['struct']);
-            static::assertArrayHasKey('list_of_map_of_string_int', $row['struct_nested_with_list_of_maps']['struct']);
+            $outer = type_array()->assert($row['struct_nested_with_list_of_maps']);
+            static::assertArrayHasKey('string', $outer);
+            static::assertArrayHasKey('struct', $outer);
+            $struct = type_array()->assert($outer['struct']);
+            static::assertArrayHasKey('int', $struct);
+            static::assertArrayHasKey('list_of_map_of_string_int', $struct);
             $count++;
         }
         static::assertSame(100, $count);
@@ -218,16 +216,14 @@ class StructsReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['struct_nested_with_map_of_list_of_ints']) as $row) {
-            static::assertArrayHasKey('string', $row['struct_nested_with_map_of_list_of_ints']);
-            static::assertArrayHasKey('struct', $row['struct_nested_with_map_of_list_of_ints']);
-            static::assertArrayHasKey('int', $row['struct_nested_with_map_of_list_of_ints']['struct']);
-            static::assertArrayHasKey(
-                'map_of_int_list_of_string',
-                $row['struct_nested_with_map_of_list_of_ints']['struct'],
-            );
-            static::assertIsList(
-                $row['struct_nested_with_map_of_list_of_ints']['struct']['map_of_int_list_of_string'][0],
-            );
+            $outer = type_array()->assert($row['struct_nested_with_map_of_list_of_ints']);
+            static::assertArrayHasKey('string', $outer);
+            static::assertArrayHasKey('struct', $outer);
+            $struct = type_array()->assert($outer['struct']);
+            static::assertArrayHasKey('int', $struct);
+            static::assertArrayHasKey('map_of_int_list_of_string', $struct);
+            $mapList = type_array()->assert($struct['map_of_int_list_of_string']);
+            static::assertIsList($mapList[0]);
             $count++;
         }
         static::assertSame(100, $count);
@@ -250,21 +246,16 @@ class StructsReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['struct_nested_with_map_of_string_map_of_string_string']) as $row) {
-            static::assertArrayHasKey('string', $row['struct_nested_with_map_of_string_map_of_string_string']);
-            static::assertArrayHasKey('struct', $row['struct_nested_with_map_of_string_map_of_string_string']);
-            static::assertArrayHasKey('int', $row['struct_nested_with_map_of_string_map_of_string_string']['struct']);
-            static::assertArrayHasKey(
-                'map_of_string_map_of_string_string',
-                $row['struct_nested_with_map_of_string_map_of_string_string']['struct'],
-            );
-            static::assertArrayHasKey(
-                'outer_key_0',
-                $row['struct_nested_with_map_of_string_map_of_string_string']['struct']['map_of_string_map_of_string_string'],
-            );
-            static::assertArrayHasKey(
-                'inner_key_0',
-                $row['struct_nested_with_map_of_string_map_of_string_string']['struct']['map_of_string_map_of_string_string']['outer_key_0'],
-            );
+            $outer = type_array()->assert($row['struct_nested_with_map_of_string_map_of_string_string']);
+            static::assertArrayHasKey('string', $outer);
+            static::assertArrayHasKey('struct', $outer);
+            $struct = type_array()->assert($outer['struct']);
+            static::assertArrayHasKey('int', $struct);
+            static::assertArrayHasKey('map_of_string_map_of_string_string', $struct);
+            $outerMap = type_array()->assert($struct['map_of_string_map_of_string_string']);
+            static::assertArrayHasKey('outer_key_0', $outerMap);
+            $innerMap = type_array()->assert($outerMap['outer_key_0']);
+            static::assertArrayHasKey('inner_key_0', $innerMap);
             $count++;
         }
         static::assertSame(100, $count);
@@ -287,21 +278,16 @@ class StructsReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['struct_nested_with_map_of_string_map_of_string_string'], $limit = 50) as $row) {
-            static::assertArrayHasKey('string', $row['struct_nested_with_map_of_string_map_of_string_string']);
-            static::assertArrayHasKey('struct', $row['struct_nested_with_map_of_string_map_of_string_string']);
-            static::assertArrayHasKey('int', $row['struct_nested_with_map_of_string_map_of_string_string']['struct']);
-            static::assertArrayHasKey(
-                'map_of_string_map_of_string_string',
-                $row['struct_nested_with_map_of_string_map_of_string_string']['struct'],
-            );
-            static::assertArrayHasKey(
-                'outer_key_0',
-                $row['struct_nested_with_map_of_string_map_of_string_string']['struct']['map_of_string_map_of_string_string'],
-            );
-            static::assertArrayHasKey(
-                'inner_key_0',
-                $row['struct_nested_with_map_of_string_map_of_string_string']['struct']['map_of_string_map_of_string_string']['outer_key_0'],
-            );
+            $outer = type_array()->assert($row['struct_nested_with_map_of_string_map_of_string_string']);
+            static::assertArrayHasKey('string', $outer);
+            static::assertArrayHasKey('struct', $outer);
+            $struct = type_array()->assert($outer['struct']);
+            static::assertArrayHasKey('int', $struct);
+            static::assertArrayHasKey('map_of_string_map_of_string_string', $struct);
+            $outerMap = type_array()->assert($struct['map_of_string_map_of_string_string']);
+            static::assertArrayHasKey('outer_key_0', $outerMap);
+            $innerMap = type_array()->assert($outerMap['outer_key_0']);
+            static::assertArrayHasKey('inner_key_0', $innerMap);
             $count++;
         }
         static::assertSame($limit, $count);
@@ -319,26 +305,19 @@ class StructsReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['struct_with_list_and_map_of_structs']) as $row) {
-            static::assertArrayHasKey('string', $row['struct_with_list_and_map_of_structs']);
-            static::assertArrayHasKey('struct', $row['struct_with_list_and_map_of_structs']);
-            static::assertArrayHasKey('int', $row['struct_with_list_and_map_of_structs']['struct']);
-            static::assertArrayHasKey('list_of_structs', $row['struct_with_list_and_map_of_structs']['struct']);
-            static::assertArrayHasKey('map_of_string_structs', $row['struct_with_list_and_map_of_structs']['struct']);
-            static::assertArrayHasKey(
-                'key_0',
-                $row['struct_with_list_and_map_of_structs']['struct']['map_of_string_structs'],
-            );
-            static::assertArrayHasKey(
-                'int',
-                $row['struct_with_list_and_map_of_structs']['struct']['map_of_string_structs']['key_0'],
-            );
-            static::assertArrayHasKey(
-                'list',
-                $row['struct_with_list_and_map_of_structs']['struct']['map_of_string_structs']['key_0'],
-            );
-            static::assertIsList(
-                $row['struct_with_list_and_map_of_structs']['struct']['map_of_string_structs']['key_0']['list'],
-            );
+            $outer = type_array()->assert($row['struct_with_list_and_map_of_structs']);
+            static::assertArrayHasKey('string', $outer);
+            static::assertArrayHasKey('struct', $outer);
+            $struct = type_array()->assert($outer['struct']);
+            static::assertArrayHasKey('int', $struct);
+            static::assertArrayHasKey('list_of_structs', $struct);
+            static::assertArrayHasKey('map_of_string_structs', $struct);
+            $map = type_array()->assert($struct['map_of_string_structs']);
+            static::assertArrayHasKey('key_0', $map);
+            $entry = type_array()->assert($map['key_0']);
+            static::assertArrayHasKey('int', $entry);
+            static::assertArrayHasKey('list', $entry);
+            static::assertIsList($entry['list']);
             $count++;
         }
         static::assertSame(100, $count);

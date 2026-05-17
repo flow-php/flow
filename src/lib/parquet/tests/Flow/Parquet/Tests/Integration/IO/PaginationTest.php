@@ -134,7 +134,7 @@ class PaginationTest extends ParquetIntegrationTestCase
         );
     }
 
-    private function generateDataset(string $path): void
+    private function _generateDataset(string $path): void
     {
         $writer = new Writer(options: Options::default()->set(Option::ROW_GROUP_SIZE_BYTES, 1024)->set(
             Option::ROW_GROUP_SIZE_CHECK_INTERVAL,

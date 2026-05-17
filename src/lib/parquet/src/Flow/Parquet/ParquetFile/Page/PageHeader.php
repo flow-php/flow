@@ -28,10 +28,16 @@ final readonly class PageHeader
             Type::from($thrift->type),
             (int) $thrift->compressed_page_size,
             (int) $thrift->uncompressed_page_size,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             $thrift->data_page_header !== null ? DataPageHeader::fromThrift($thrift->data_page_header) : null,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             $thrift->data_page_header_v2 !== null
                 ? DataPageHeaderV2::fromThrift($thrift->data_page_header_v2, $options)
                 : null,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             $thrift->dictionary_page_header !== null
                 ? DictionaryPageHeader::fromThrift($thrift->dictionary_page_header)
                 : null,
@@ -82,17 +88,20 @@ final readonly class PageHeader
 
     public function encoding(): Encodings
     {
-        if ($this->dictionaryPageHeader) {
+        if ($this->dictionaryPageHeader !== null) {
             return $this->dictionaryPageHeader->encoding();
         }
 
-        if ($this->dataPageHeaderV2) {
+        if ($this->dataPageHeaderV2 !== null) {
             return $this->dataPageHeaderV2->encoding();
         }
 
-        /**
-         * @phpstan-ignore-next-line
-         */
+        if ($this->dataPageHeader === null) {
+            throw new \Flow\Parquet\Exception\RuntimeException(
+                'PageHeader has no encoding: missing all page sub-headers',
+            );
+        }
+
         return $this->dataPageHeader->encoding();
     }
 

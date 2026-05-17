@@ -31,13 +31,24 @@ final class SchemaTest extends TestCase
         );
         $assembler = new DremelAssembler($converter);
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($rows as $row) {
-            $shredResult = $shredder->shred($schema, [$row]);
+            $narrowedRow = \Flow\Types\DSL\type_map(
+                \Flow\Types\DSL\type_string(),
+                \Flow\Types\DSL\type_mixed(),
+            )->assert($row);
+            $shredResult = $shredder->shred($schema, [$narrowedRow]);
 
             foreach ($schema->columns() as $column) {
                 $readFlatValues = [];
 
-                $flatChildren = $column instanceof FlatColumn ? [$column] : $column->childrenFlat();
+                if ($column instanceof FlatColumn) {
+                    $flatChildren = [$column];
+                } elseif ($column instanceof NestedColumn) {
+                    $flatChildren = $column->childrenFlat();
+                } else {
+                    static::fail('Unknown column type: ' . $column::class);
+                }
 
                 foreach ($flatChildren as $flatChild) {
                     $fp = $flatChild->flatPath();
@@ -54,10 +65,9 @@ final class SchemaTest extends TestCase
                 }
 
                 $readData = new ReadColumnData($column, $readFlatValues);
-                static::assertEquals(
-                    $row[$column->name()],
-                    \iterator_to_array($assembler->assemble($column, $readData))[0][$column->name()],
-                );
+                $assembled = \iterator_to_array($assembler->assemble($column, $readData));
+                $firstAssembled = \Flow\Types\DSL\type_array()->assert($assembled[0]);
+                static::assertEquals($narrowedRow[$column->name()], $firstAssembled[$column->name()]);
             }
         }
     }

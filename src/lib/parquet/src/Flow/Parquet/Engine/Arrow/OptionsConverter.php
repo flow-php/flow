@@ -42,6 +42,8 @@ final class OptionsConverter
         if ($columnsCompressions !== null) {
             $mapped = [];
 
+            // Options::getArray returns array<mixed>; each entry is narrowed via instanceof.
+            // @mago-ignore analysis:mixed-assignment
             foreach ($columnsCompressions as $path => $compression) {
                 if ($compression instanceof Compressions) {
                     $mapped[$path] = $compression->name;
@@ -58,6 +60,7 @@ final class OptionsConverter
         if ($columnsEncodings !== null) {
             $mapped = [];
 
+            // @mago-ignore analysis:mixed-assignment
             foreach ($columnsEncodings as $path => $encoding) {
                 if ($encoding instanceof Encodings) {
                     $mapped[$path] = $encoding->name;

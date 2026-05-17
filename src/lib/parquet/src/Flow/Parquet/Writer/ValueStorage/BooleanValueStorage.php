@@ -14,15 +14,13 @@ final class BooleanValueStorage implements ValueStorage
      */
     private array $values = [];
 
-    /**
-     * @param array<bool> $values
-     */
     public function addValues(FlatColumn $column, array $values): void
     {
-        $nonNullValues = \array_filter($values, static fn(?bool $value) => $value !== null);
-
-        foreach ($nonNullValues as $value) {
-            $this->values[] = $value;
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($values as $value) {
+            if (\is_bool($value)) {
+                $this->values[] = $value;
+            }
         }
     }
 

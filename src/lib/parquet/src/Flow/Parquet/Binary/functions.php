@@ -340,5 +340,5 @@ function decode_decimal(ByteOrder $order, string $bytes, int $precision, int $sc
         ));
     }
 
-    return (float) \bcdiv((string) $intValue, \bcpow('10', (string) $scale), $scale);
+    return (float) \bcdiv((string) $intValue, \bcpow('10', (string) $scale), \max(0, $scale));
 }

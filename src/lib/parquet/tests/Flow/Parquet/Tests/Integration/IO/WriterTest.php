@@ -177,6 +177,7 @@ class WriterTest extends ParquetIntegrationTestCase
             ->metadata()
             ->columnChunks()[0]->statistics();
 
+        static::assertNotNull($statistics);
         static::assertSame(1, $statistics->min($column));
         static::assertSame(100, $statistics->max($column));
         static::assertSame(1, $statistics->minValue($column));
@@ -216,9 +217,9 @@ class WriterTest extends ParquetIntegrationTestCase
             $chunks[$chunk->flatPath()] = $chunk;
         }
 
-        static::assertSame(3, $chunks['all_null']->statistics()->nullCount());
-        static::assertSame(0, $chunks['all_string']->statistics()->nullCount());
-        static::assertSame(1, $chunks['mixed']->statistics()->nullCount());
+        static::assertSame(3, $chunks['all_null']->statistics()?->nullCount());
+        static::assertSame(0, $chunks['all_string']->statistics()?->nullCount());
+        static::assertSame(1, $chunks['mixed']->statistics()?->nullCount());
 
         \unlink($path);
     }
@@ -237,7 +238,10 @@ class WriterTest extends ParquetIntegrationTestCase
         foreach ((new Reader(options: $options, engine: new \Flow\Parquet\Engine\PhpParquetEngine()))
             ->read($path)
             ->pageHeaders() as $pageHeader) {
-            $statistics = $pageHeader->pageHeader->dataPageHeaderV2()->statistics($options);
+            $dataPageHeaderV2 = $pageHeader->pageHeader->dataPageHeaderV2();
+            static::assertNotNull($dataPageHeaderV2);
+            $statistics = $dataPageHeaderV2->statistics($options);
+            static::assertNotNull($statistics);
 
             static::assertSame(1, $statistics->min($column));
             static::assertSame(100, $statistics->max($column));
@@ -361,27 +365,30 @@ class WriterTest extends ParquetIntegrationTestCase
             ],
         ]);
 
-        $max = (new Reader(engine: $engine))
+        static::assertNull((new Reader(engine: $engine))
             ->read($path)
             ->metadata()
-            ->columnChunks()[0]->statistics()->max($column);
-        $min = (new Reader(engine: $engine))
+            ->columnChunks()[0]->statistics()?->max($column));
+        static::assertNull((new Reader(engine: $engine))
             ->read($path)
             ->metadata()
-            ->columnChunks()[0]->statistics()->min($column);
-        $maxValue = (new Reader(engine: $engine))
-            ->read($path)
-            ->metadata()
-            ->columnChunks()[0]->statistics()->max($column);
-        $minValue = (new Reader(engine: $engine))
-            ->read($path)
-            ->metadata()
-            ->columnChunks()[0]->statistics()->min($column);
-
-        static::assertNull($max);
-        static::assertNull($min);
-        static::assertNull($maxValue);
-        static::assertNull($minValue);
+            ->columnChunks()[0]->statistics()?->min($column));
+        static::assertNull(
+            (new Reader(engine: $engine))
+                ->read($path)
+                ->metadata()
+                ->columnChunks()[0]
+                ->statistics()
+                ?->maxValue($column),
+        );
+        static::assertNull(
+            (new Reader(engine: $engine))
+                ->read($path)
+                ->metadata()
+                ->columnChunks()[0]
+                ->statistics()
+                ?->minValue($column),
+        );
 
         static::assertFileExists($path);
         \unlink($path);
@@ -577,6 +584,9 @@ class WriterTest extends ParquetIntegrationTestCase
         \unlink($path);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function createRow(): array
     {
         $faker = Factory::create();

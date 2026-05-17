@@ -26,20 +26,24 @@ final class ReaderTest extends TestCase
 
         $reader = Reader::arrow();
 
-        $reflection = new \ReflectionClass($reader);
-        $engine = $reflection->getProperty('engine')->getValue($reader);
-
-        static::assertInstanceOf(ArrowParquetEngine::class, $engine);
+        static::assertInstanceOf(
+            ArrowParquetEngine::class,
+            (new \ReflectionClass($reader))
+                ->getProperty('engine')
+                ->getValue($reader),
+        );
     }
 
     public function test_php_factory_creates_reader_with_php_engine(): void
     {
         $reader = Reader::php();
 
-        $reflection = new \ReflectionClass($reader);
-        $engine = $reflection->getProperty('engine')->getValue($reader);
-
-        static::assertInstanceOf(PhpParquetEngine::class, $engine);
+        static::assertInstanceOf(
+            PhpParquetEngine::class,
+            (new \ReflectionClass($reader))
+                ->getProperty('engine')
+                ->getValue($reader),
+        );
     }
 
     public function test_read_returns_parquet_file(): void

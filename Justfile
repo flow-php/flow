@@ -59,7 +59,8 @@ analyze-mago *args:
         src/lib/array-dot \
         src/lib/azure-sdk \
         src/lib/doctrine-dbal-bulk \
-        src/lib/snappy
+        src/lib/snappy \
+        src/lib/parquet
 
 # Auto-fix code style with Mago (format + lint --fix).
 fix:

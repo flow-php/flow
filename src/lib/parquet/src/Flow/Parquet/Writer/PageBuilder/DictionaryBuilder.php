@@ -46,7 +46,9 @@ final class DictionaryBuilder
                     LogicalType::TIMESTAMP,
                         => (new ObjectDictionaryBuilder())->build($data),
                     default => throw new \RuntimeException(
-                        'Building dictionary for "' . $column->logicalType()?->name() . '" is not supported',
+                        'Building dictionary for "'
+                        . ($column->logicalType()?->name() ?? 'null')
+                        . '" is not supported',
                     ),
                 };
 

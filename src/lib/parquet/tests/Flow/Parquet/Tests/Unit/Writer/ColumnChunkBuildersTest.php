@@ -240,7 +240,7 @@ final class ColumnChunkBuildersTest extends TestCase
         // Extract builders through reflection
         $reflection = new \ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
-        $buildersArray = $buildersProperty->getValue($builders);
+        $buildersArray = \Flow\Types\DSL\type_array()->assert($buildersProperty->getValue($builders));
 
         // Verify custom encodings
         static::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $buildersArray['user_id']);
@@ -266,7 +266,7 @@ final class ColumnChunkBuildersTest extends TestCase
         // Extract the builder through reflection to verify PLAIN is used instead of DELTA
         $reflection = new \ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
-        $buildersArray = $buildersProperty->getValue($builders);
+        $buildersArray = \Flow\Types\DSL\type_array()->assert($buildersProperty->getValue($builders));
 
         static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['user_id']);
     }
@@ -290,7 +290,7 @@ final class ColumnChunkBuildersTest extends TestCase
         // Extract builders through reflection
         $reflection = new \ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
-        $buildersArray = $buildersProperty->getValue($builders);
+        $buildersArray = \Flow\Types\DSL\type_array()->assert($buildersProperty->getValue($builders));
 
         static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['col1']);
         static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $buildersArray['col2']);
@@ -314,7 +314,7 @@ final class ColumnChunkBuildersTest extends TestCase
         // Extract the builder through reflection to verify the correct type
         $reflection = new \ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
-        $buildersArray = $buildersProperty->getValue($builders);
+        $buildersArray = \Flow\Types\DSL\type_array()->assert($buildersProperty->getValue($builders));
 
         static::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $buildersArray['user_id']);
     }
@@ -337,13 +337,13 @@ final class ColumnChunkBuildersTest extends TestCase
         // Extract the nested builder through reflection
         $reflection = new \ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
-        $buildersArray = $buildersProperty->getValue($builders);
+        $buildersArray = \Flow\Types\DSL\type_array()->assert($buildersProperty->getValue($builders));
 
         // Get the nested column builder
-        $nestedBuilder = $buildersArray['user'];
+        $nestedBuilder = \Flow\Types\DSL\type_object()->assert($buildersArray['user']);
         $nestedReflection = new \ReflectionClass($nestedBuilder);
         $childBuildersProperty = $nestedReflection->getProperty('childrenColumnChunkBuilders');
-        $childBuilders = $childBuildersProperty->getValue($nestedBuilder);
+        $childBuilders = \Flow\Types\DSL\type_array()->assert($childBuildersProperty->getValue($nestedBuilder));
 
         // Get the child builders as values array since they're keyed by flat path
         $childBuilderValues = array_values($childBuilders);
@@ -369,7 +369,7 @@ final class ColumnChunkBuildersTest extends TestCase
         // Extract the builder through reflection to verify the correct type
         $reflection = new \ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
-        $buildersArray = $buildersProperty->getValue($builders);
+        $buildersArray = \Flow\Types\DSL\type_array()->assert($buildersProperty->getValue($builders));
 
         static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['description']);
     }
@@ -389,7 +389,7 @@ final class ColumnChunkBuildersTest extends TestCase
         // Extract the builder through reflection to verify the correct type
         $reflection = new \ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
-        $buildersArray = $buildersProperty->getValue($builders);
+        $buildersArray = \Flow\Types\DSL\type_array()->assert($buildersProperty->getValue($builders));
 
         static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $buildersArray['status']);
     }
@@ -492,7 +492,7 @@ final class ColumnChunkBuildersTest extends TestCase
         // Extract the builder through reflection to verify default behavior
         $reflection = new \ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
-        $buildersArray = $buildersProperty->getValue($builders);
+        $buildersArray = \Flow\Types\DSL\type_array()->assert($buildersProperty->getValue($builders));
 
         // Should use default PLAIN encoding since no custom encoding specified
         static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['user_id']);

@@ -73,8 +73,7 @@ final class FloatDictionaryBuilderTest extends TestCase
         static::assertSame(1.0, $result->dictionary[0]);
         static::assertSame(\INF, $result->dictionary[1]);
         static::assertSame(-\INF, $result->dictionary[2]);
-        /** @phpstan-ignore-next-line */
-        static::assertTrue(\is_nan($result->dictionary[3]));
+        static::assertTrue(\is_nan(\Flow\Types\DSL\type_float()->assert($result->dictionary[3])));
     }
 
     public function test_alternating_float_pattern(): void
@@ -339,8 +338,7 @@ final class FloatDictionaryBuilderTest extends TestCase
         static::assertCount(3, $result->dictionary);
         static::assertSame([0, 1, 2, 1, 0], $result->indices);
         static::assertSame(1.0, $result->dictionary[0]);
-        /** @phpstan-ignore-next-line */
-        static::assertTrue(\is_nan($result->dictionary[1]));
+        static::assertTrue(\is_nan(\Flow\Types\DSL\type_float()->assert($result->dictionary[1])));
         static::assertSame(2.0, $result->dictionary[2]);
     }
 

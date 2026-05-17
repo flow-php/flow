@@ -51,12 +51,20 @@ final readonly class ColumnChunk
             \array_map(static fn($encoding) => Encodings::from($encoding), $thrift->meta_data->encodings),
             (int) $thrift->meta_data->total_compressed_size,
             (int) $thrift->meta_data->total_uncompressed_size,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             $thrift->meta_data->dictionary_page_offset !== null
                 ? (int) $thrift->meta_data->dictionary_page_offset
                 : null,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             $thrift->meta_data->data_page_offset !== null ? (int) $thrift->meta_data->data_page_offset : null,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             $thrift->meta_data->index_page_offset !== null ? (int) $thrift->meta_data->index_page_offset : null,
-            $thrift->meta_data->statistics ? Statistics::fromThrift($thrift->meta_data->statistics) : null,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
+            $thrift->meta_data->statistics !== null ? Statistics::fromThrift($thrift->meta_data->statistics) : null,
         );
     }
 
@@ -95,14 +103,20 @@ final readonly class ColumnChunk
 
     public function pageOffset(): int
     {
-        return \min(
-            // @phpstan-ignore-next-line
-            \array_filter([
+        $offsets = \array_filter(
+            [
                 $this->dictionaryPageOffset,
                 $this->dataPageOffset,
                 $this->indexPageOffset,
-            ]),
+            ],
+            static fn(?int $offset): bool => $offset !== null,
         );
+
+        if ($offsets === []) {
+            throw new \Flow\Parquet\Exception\RuntimeException('ColumnChunk has no page offsets');
+        }
+
+        return \min($offsets);
     }
 
     public function statistics(): ?StatisticsReader

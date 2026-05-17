@@ -17,15 +17,13 @@ final readonly class Codec
 
     public function compress(string $data, Compressions $compression): string
     {
-        /**
-         * @var false|string $result
-         */
         $result = match ($compression) {
             Compressions::UNCOMPRESSED => $data,
             Compressions::SNAPPY => \snappy_compress($data),
             Compressions::BROTLI => \brotli_compress($data, $this->options->getInt(Option::BROTLI_COMPRESSION_LEVEL)),
             Compressions::GZIP => \gzencode($data, $this->options->getInt(Option::GZIP_COMPRESSION_LEVEL)),
             Compressions::LZ4 => \lz4_compress($data, $this->options->getInt(Option::LZ4_COMPRESSION_LEVEL)),
+            // @mago-ignore analysis:redundant-cast
             Compressions::LZ4_RAW => \substr(
                 (string) \lz4_compress($data, $this->options->getInt(Option::LZ4_COMPRESSION_LEVEL)),
                 4,
@@ -43,7 +41,6 @@ final readonly class Codec
 
     public function decompress(string $data, Compressions $compression, ?int $uncompressedSize = null): string
     {
-        /** @var false|string $result */
         $result = match ($compression) {
             Compressions::UNCOMPRESSED => $data,
             Compressions::SNAPPY => \snappy_uncompress($data),

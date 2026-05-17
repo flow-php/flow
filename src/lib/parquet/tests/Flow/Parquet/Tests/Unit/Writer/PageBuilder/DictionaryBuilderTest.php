@@ -135,7 +135,6 @@ final class DictionaryBuilderTest extends TestCase
         $date4 = new \DateTimeImmutable('2023-01-04');
 
         $column = new FlatColumn('test_column', $physicalType, logicalType: $logicalType);
-        /** @phpstan-ignore-next-line */
         $data = new WriteFlatColumnValues($column, values: [
             $date1,
             $date2,
@@ -232,8 +231,7 @@ final class DictionaryBuilderTest extends TestCase
         static::assertSame(1.0, $result->dictionary[0]);
         static::assertSame(\INF, $result->dictionary[1]);
         static::assertSame(-\INF, $result->dictionary[2]);
-        /** @phpstan-ignore-next-line */
-        static::assertTrue(\is_nan($result->dictionary[3]));
+        static::assertTrue(\is_nan(\Flow\Types\DSL\type_float()->assert($result->dictionary[3])));
     }
 
     #[DataProvider('int64_int32_physical_types_provider')]

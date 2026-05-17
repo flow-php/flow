@@ -32,8 +32,13 @@ final readonly class ColumnChunkReader
             throw new RuntimeException('Cannot open temporary stream');
         }
 
-        /** @phpstan-ignore-next-line */
-        \fwrite($pageStream, $stream->read($columnChunk->totalCompressedSize(), $columnChunk->pageOffset()));
+        $compressedSize = $columnChunk->totalCompressedSize();
+
+        if ($compressedSize <= 0) {
+            throw new RuntimeException('Cannot read column chunk with non-positive compressed size');
+        }
+
+        \fwrite($pageStream, $stream->read($compressedSize, $columnChunk->pageOffset()));
         \rewind($pageStream);
 
         $header = $this->readHeader($pageStream);
@@ -102,14 +107,11 @@ final readonly class ColumnChunkReader
             $thriftHeader = new \Flow\Parquet\ThriftModel\PageHeader();
             @$thriftHeader->read(new CompactProtocol(new PhpFileStream($stream)));
 
-            if ($thriftHeader->type === null) {
-                return null;
-            }
-
             return PageHeader::fromThrift($thriftHeader, $this->options);
         } catch (\Throwable) {
-            /** @phpstan-ignore-next-line */
-            \fseek($stream, $currentOffset);
+            if ($currentOffset !== false) {
+                \fseek($stream, $currentOffset);
+            }
 
             return null;
         }

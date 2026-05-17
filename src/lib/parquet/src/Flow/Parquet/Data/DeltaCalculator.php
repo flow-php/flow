@@ -8,19 +8,17 @@ final readonly class DeltaCalculator
 {
     public function calculateDelta(int $previous, int $current): int
     {
-        // Check if simple subtraction would overflow to float
         $result = $current - $previous;
 
-        /**
-         * PHP will convert int overflow to float.
-         *
-         * @phpstan-ignore-next-line function.impossibleType
-         */
+        // @mago-ignore analysis:impossible-condition
+        // @phpstan-ignore-next-line
         if (\is_float($result)) {
             // Use BCMath for precise calculation without overflow
             $deltaString = \bcsub((string) $current, (string) $previous, 0);
 
             // For 64-bit systems, implement proper 2's complement wrapping
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             if (PHP_INT_SIZE === 8) {
                 // If delta is out of range, wrap it using 2^64
                 while (\bccomp($deltaString, (string) PHP_INT_MAX, 0) > 0) {
@@ -66,19 +64,17 @@ final readonly class DeltaCalculator
 
     public function calculateRelativeDelta(int $delta, int $minDelta): int
     {
-        // Check if simple subtraction would overflow to float
         $result = $delta - $minDelta;
 
-        /**
-         * PHP will convert int overflow to float.
-         *
-         * @phpstan-ignore-next-line function.impossibleType
-         */
+        // @mago-ignore analysis:impossible-condition
+        // @phpstan-ignore-next-line
         if (\is_float($result)) {
             // Use BCMath for precise calculation without overflow
             $deltaString = \bcsub((string) $delta, (string) $minDelta, 0);
 
             // For 64-bit systems, implement proper 2's complement wrapping
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             if (PHP_INT_SIZE === 8) {
                 // If delta is out of range, wrap it using 2^64
                 while (\bccomp($deltaString, (string) PHP_INT_MAX, 0) > 0) {
@@ -116,14 +112,17 @@ final readonly class DeltaCalculator
         $currentValue = $firstValue;
 
         foreach ($deltas as $delta) {
-            // Check if simple addition would overflow to float
+            // PHP converts int overflow to float at runtime, so $result may be float even though both operands are int.
             $result = $currentValue + $delta;
 
+            // @mago-ignore analysis:impossible-condition
             if (\is_float($result)) {
                 // Use BCMath for precise calculation without overflow
                 $nextValueString = \bcadd((string) $currentValue, (string) $delta, 0);
 
                 // For 64-bit systems, implement proper 2's complement wrapping
+                // @mago-ignore analysis:redundant-condition
+                // @mago-ignore analysis:redundant-comparison
                 if (PHP_INT_SIZE === 8) {
                     // If result is out of range, wrap it using 2^64
                     while (\bccomp($nextValueString, (string) PHP_INT_MAX, 0) > 0) {

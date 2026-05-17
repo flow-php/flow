@@ -43,14 +43,25 @@ final class ParquetFile
 
         $fileTotalSize = $this->stream->size();
 
+        if ($fileTotalSize === null) {
+            throw new InvalidArgumentException('Cannot determine Parquet file size');
+        }
+
         if ($this->stream->read(4, $fileTotalSize - 4) !== self::PARQUET_MAGIC_NUMBER) {
             throw new InvalidArgumentException('Given file is not valid Parquet file');
         }
 
-        /**
-         * @phpstan-ignore-next-line
-         */
-        $metadataLength = \unpack($this->byteOrder->value, $this->stream->read(4, $fileTotalSize - 8))[1];
+        $unpacked = \unpack($this->byteOrder->value, $this->stream->read(4, $fileTotalSize - 8));
+
+        if ($unpacked === false) {
+            throw new InvalidArgumentException('Failed to read Parquet metadata length');
+        }
+
+        $metadataLength = $unpacked[1];
+
+        if ($metadataLength <= 0) {
+            throw new InvalidArgumentException('Parquet metadata length must be positive, got ' . $metadataLength);
+        }
 
         $metadata = $this->stream->read($metadataLength, $fileTotalSize - ($metadataLength + 8));
 
@@ -90,7 +101,7 @@ final class ParquetFile
             throw new InvalidArgumentException('Limit must be greater than 0');
         }
 
-        if ($limit !== null && $offset < 0) {
+        if ($limit !== null && $offset !== null && $offset < 0) {
             throw new InvalidArgumentException('Offset must be greater than or equal to 0');
         }
 

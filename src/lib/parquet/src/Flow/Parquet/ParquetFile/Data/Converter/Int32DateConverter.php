@@ -55,12 +55,12 @@ final class Int32DateConverter implements Converter
 
     private function numberOfDaysToDateTime(int $data): \DateTimeImmutable
     {
-        $interval = new \DateInterval('P' . \abs($data) . 'D');
+        $epoch = new \DateTimeImmutable('1970-01-01 00:00:00 UTC');
 
-        if ($data < 0) {
-            $interval->invert = 1;
+        if ($data >= 0) {
+            return $epoch->add(new \DateInterval('P' . $data . 'D'));
         }
 
-        return (new \DateTimeImmutable('1970-01-01 00:00:00 UTC'))->add($interval);
+        return $epoch->sub(new \DateInterval('P' . \abs($data) . 'D'));
     }
 }
