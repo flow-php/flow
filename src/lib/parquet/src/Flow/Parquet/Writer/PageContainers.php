@@ -8,6 +8,9 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Page\Header\Type;
 
+use function array_map;
+use function array_unique;
+
 final class PageContainers
 {
     /**
@@ -114,9 +117,9 @@ final class PageContainers
             }
         }
 
-        $encodings = \array_unique($encodings);
+        $encodings = array_unique($encodings);
 
-        return \array_map(static fn(int $encoding) => Encodings::from($encoding), $encodings);
+        return array_map(static fn(int $encoding) => Encodings::from($encoding), $encodings);
     }
 
     public function uncompressedSize(): int

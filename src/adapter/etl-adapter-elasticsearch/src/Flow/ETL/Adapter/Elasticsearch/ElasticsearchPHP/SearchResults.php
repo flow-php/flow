@@ -9,6 +9,13 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Rows;
 
+use function array_key_exists;
+use function array_keys;
+use function ceil;
+use function count;
+use function end;
+use function is_array;
+
 final readonly class SearchResults
 {
     /**
@@ -21,7 +28,7 @@ final readonly class SearchResults
      */
     public function __construct(array|Elasticsearch $results)
     {
-        $this->results = \is_array($results) ? $results : $results->asArray();
+        $this->results = is_array($results) ? $results : $results->asArray();
     }
 
     public function lastHitSort(): ?array
@@ -32,9 +39,9 @@ final readonly class SearchResults
 
         $hits = $this->results['hits']['hits'];
 
-        $lastHit = \end($hits);
+        $lastHit = end($hits);
 
-        return \array_key_exists('sort', $lastHit) ? $lastHit['sort'] : null;
+        return array_key_exists('sort', $lastHit) ? $lastHit['sort'] : null;
     }
 
     public function pages(): int
@@ -43,12 +50,12 @@ final readonly class SearchResults
             return 0;
         }
 
-        return (int) \ceil($this->total() / $this->size());
+        return (int) ceil($this->total() / $this->size());
     }
 
     public function size(): int
     {
-        return \count($this->results['hits']['hits']);
+        return count($this->results['hits']['hits']);
     }
 
     public function toRows(EntryFactory $entryFactory): Rows
@@ -56,7 +63,7 @@ final readonly class SearchResults
         /** @var array<Row\Entry> $entries */
         $entries = [];
 
-        foreach (\array_keys($this->results) as $key) {
+        foreach (array_keys($this->results) as $key) {
             $entries[$key] = $entryFactory->create($key, $this->results[$key]);
         }
 

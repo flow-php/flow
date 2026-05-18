@@ -22,12 +22,17 @@ use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\TracerProvider;
+use Generator;
 
+use function array_filter;
+use function array_map;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_cache;
 use function Flow\ETL\DSL\telemetry_options;
+use function range;
+use function str_starts_with;
 
 final class CacheTest extends FlowIntegrationTestCase
 {
@@ -43,7 +48,7 @@ final class CacheTest extends FlowIntegrationTestCase
                 $this->extractor = new FakeExtractor($rowsets);
             }
 
-            public function extract(FlowContext $context): \Generator
+            public function extract(FlowContext $context): Generator
             {
                 $this->extractions++;
 
@@ -72,7 +77,7 @@ final class CacheTest extends FlowIntegrationTestCase
         $cache = new InMemoryCache();
 
         df(config_builder()->cache($cache))
-            ->read(from_array(\array_map(static fn(int $i) => ['id' => $i], \range(1, 100))))
+            ->read(from_array(array_map(static fn(int $i) => ['id' => $i], range(1, 100))))
             ->batchSize(20)
             ->cache('test')
             ->run();
@@ -116,7 +121,7 @@ final class CacheTest extends FlowIntegrationTestCase
         $telemetry->flush();
 
         $spans = $spanProcessor->endedSpans();
-        $setSpans = \array_filter($spans, static fn($span) => \str_starts_with((string) $span->name(), 'Cache Set '));
+        $setSpans = array_filter($spans, static fn($span) => str_starts_with((string) $span->name(), 'Cache Set '));
 
         static::assertNotEmpty($setSpans, 'Expected Cache Set spans to be recorded');
 
@@ -131,7 +136,7 @@ final class CacheTest extends FlowIntegrationTestCase
         $cache = new InMemoryCache();
 
         df(config_builder()->cache($cache))
-            ->read(from_array(\array_map(static fn(int $i) => ['id' => $i], \range(1, 100))))
+            ->read(from_array(array_map(static fn(int $i) => ['id' => $i], range(1, 100))))
             ->cache('test')
             ->run();
 

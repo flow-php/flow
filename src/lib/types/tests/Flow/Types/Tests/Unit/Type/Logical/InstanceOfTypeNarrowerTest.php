@@ -7,6 +7,7 @@ namespace Flow\Types\Tests\Unit\Type\Logical;
 use Flow\Types\Type\Logical\InstanceOfTypeNarrower;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid as RamseyUuid;
+use stdClass;
 use Symfony\Component\Uid\Uuid as SymfonyUuid;
 
 use function Flow\Types\DSL\get_type;
@@ -55,7 +56,7 @@ final class InstanceOfTypeNarrowerTest extends TestCase
 
     public function test_narrow_with_unknown_object_returns_detected_type(): void
     {
-        $object = new \stdClass();
+        $object = new stdClass();
         $narrower = new InstanceOfTypeNarrower();
 
         static::assertEquals(get_type($object), $narrower->narrow($object));

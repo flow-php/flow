@@ -10,6 +10,8 @@ use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
+use function count;
+
 /**
  * Represents an aliased table reference: table AS alias or table AS alias (col1, col2).
  */
@@ -186,7 +188,7 @@ final readonly class AliasedTable implements TableReference
     {
         $colnames = $alias->getColnames();
 
-        if (\count($colnames) === 0) {
+        if (count($colnames) === 0) {
             return null;
         }
 
@@ -202,7 +204,7 @@ final readonly class AliasedTable implements TableReference
             $columnAliases[] = $string->getSval();
         }
 
-        return \count($columnAliases) > 0 ? $columnAliases : null;
+        return count($columnAliases) > 0 ? $columnAliases : null;
     }
 
     private static function fromRangeVar(RangeVar $rangeVar): self

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use DateInterval;
+use DatePeriod;
+use DateTimeImmutable;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\date_entry;
@@ -20,23 +23,23 @@ final class SequenceExtractorTest extends FlowTestCase
     {
         $extractor = from_sequence_date_period(
             'day',
-            new \DateTimeImmutable('2023-01-01'),
-            new \DateInterval('P1D'),
-            new \DateTimeImmutable('2023-01-11'),
-            \DatePeriod::EXCLUDE_START_DATE,
+            new DateTimeImmutable('2023-01-01'),
+            new DateInterval('P1D'),
+            new DateTimeImmutable('2023-01-11'),
+            DatePeriod::EXCLUDE_START_DATE,
         );
 
         self::assertExtractedRowsEquals(
             rows(
-                row(date_entry('day', new \DateTimeImmutable('2023-01-02'))),
-                row(date_entry('day', new \DateTimeImmutable('2023-01-03'))),
-                row(date_entry('day', new \DateTimeImmutable('2023-01-04'))),
-                row(date_entry('day', new \DateTimeImmutable('2023-01-05'))),
-                row(date_entry('day', new \DateTimeImmutable('2023-01-06'))),
-                row(date_entry('day', new \DateTimeImmutable('2023-01-07'))),
-                row(date_entry('day', new \DateTimeImmutable('2023-01-08'))),
-                row(date_entry('day', new \DateTimeImmutable('2023-01-09'))),
-                row(date_entry('day', new \DateTimeImmutable('2023-01-10'))),
+                row(date_entry('day', new DateTimeImmutable('2023-01-02'))),
+                row(date_entry('day', new DateTimeImmutable('2023-01-03'))),
+                row(date_entry('day', new DateTimeImmutable('2023-01-04'))),
+                row(date_entry('day', new DateTimeImmutable('2023-01-05'))),
+                row(date_entry('day', new DateTimeImmutable('2023-01-06'))),
+                row(date_entry('day', new DateTimeImmutable('2023-01-07'))),
+                row(date_entry('day', new DateTimeImmutable('2023-01-08'))),
+                row(date_entry('day', new DateTimeImmutable('2023-01-09'))),
+                row(date_entry('day', new DateTimeImmutable('2023-01-10'))),
             ),
             $extractor,
         );
@@ -46,24 +49,24 @@ final class SequenceExtractorTest extends FlowTestCase
     {
         $extractor = from_sequence_date_period_recurrences(
             'day',
-            new \DateTimeImmutable('2023-01-01'),
-            new \DateInterval('P1D'),
+            new DateTimeImmutable('2023-01-01'),
+            new DateInterval('P1D'),
             10,
-            \DatePeriod::EXCLUDE_START_DATE,
+            DatePeriod::EXCLUDE_START_DATE,
         );
 
         self::assertExtractedRowsEquals(
             rows(
-                row(date_entry('day', new \DateTimeImmutable('2023-01-02'))),
-                row(date_entry('day', new \DateTimeImmutable('2023-01-03'))),
-                row(date_entry('day', new \DateTimeImmutable('2023-01-04'))),
-                row(date_entry('day', new \DateTimeImmutable('2023-01-05'))),
-                row(date_entry('day', new \DateTimeImmutable('2023-01-06'))),
-                row(date_entry('day', new \DateTimeImmutable('2023-01-07'))),
-                row(date_entry('day', new \DateTimeImmutable('2023-01-08'))),
-                row(date_entry('day', new \DateTimeImmutable('2023-01-09'))),
-                row(date_entry('day', new \DateTimeImmutable('2023-01-10'))),
-                row(date_entry('day', new \DateTimeImmutable('2023-01-11'))),
+                row(date_entry('day', new DateTimeImmutable('2023-01-02'))),
+                row(date_entry('day', new DateTimeImmutable('2023-01-03'))),
+                row(date_entry('day', new DateTimeImmutable('2023-01-04'))),
+                row(date_entry('day', new DateTimeImmutable('2023-01-05'))),
+                row(date_entry('day', new DateTimeImmutable('2023-01-06'))),
+                row(date_entry('day', new DateTimeImmutable('2023-01-07'))),
+                row(date_entry('day', new DateTimeImmutable('2023-01-08'))),
+                row(date_entry('day', new DateTimeImmutable('2023-01-09'))),
+                row(date_entry('day', new DateTimeImmutable('2023-01-10'))),
+                row(date_entry('day', new DateTimeImmutable('2023-01-11'))),
             ),
             $extractor,
         );

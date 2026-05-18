@@ -17,6 +17,7 @@ use Flow\ETL\Window;
 
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\int_entry;
+use function is_numeric;
 
 final class Sum implements AggregatingFunction, WindowFunction
 {
@@ -37,7 +38,7 @@ final class Sum implements AggregatingFunction, WindowFunction
             $entry = $row->get($this->ref);
             $value = $entry->value();
 
-            if (\is_numeric($value)) {
+            if (is_numeric($value)) {
                 $this->sum = (new Calculator())->add($this->sum, $value);
             }
         } catch (InvalidArgumentException $e) {
@@ -54,7 +55,7 @@ final class Sum implements AggregatingFunction, WindowFunction
                 $entry = $partitionRow->get($this->ref);
                 $value = $entry->value();
 
-                if (\is_numeric($value)) {
+                if (is_numeric($value)) {
                     $sum = (new Calculator())->add($sum, $value);
                 }
             } catch (InvalidArgumentException $e) {

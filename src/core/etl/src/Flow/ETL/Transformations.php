@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use function array_values;
+
 /**
  * Collection of transformations.
  * Transformations are applied in the order they are passed to the constructor.
@@ -17,7 +19,7 @@ final readonly class Transformations implements Transformation
 
     public function __construct(Transformation ...$transformations)
     {
-        $this->transformations = \array_values($transformations);
+        $this->transformations = array_values($transformations);
     }
 
     public function transform(DataFrame $dataFrame): DataFrame

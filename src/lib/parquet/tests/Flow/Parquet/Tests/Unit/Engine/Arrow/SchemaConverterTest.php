@@ -14,6 +14,8 @@ use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_array;
+
 final class SchemaConverterTest extends TestCase
 {
     public function test_boolean_column_to_extension(): void
@@ -140,9 +142,9 @@ final class SchemaConverterTest extends TestCase
 
         static::assertSame('tags', $result[0]['name']);
         static::assertSame('LIST', $result[0]['type']);
-        $children = \Flow\Types\DSL\type_array()->assert($result[0]['children']);
+        $children = type_array()->assert($result[0]['children']);
         static::assertCount(1, $children);
-        $firstChild = \Flow\Types\DSL\type_array()->assert($children[0]);
+        $firstChild = type_array()->assert($children[0]);
         static::assertSame('STRING', $firstChild['type']);
     }
 
@@ -153,10 +155,10 @@ final class SchemaConverterTest extends TestCase
 
         static::assertSame('attributes', $result[0]['name']);
         static::assertSame('MAP', $result[0]['type']);
-        $children = \Flow\Types\DSL\type_array()->assert($result[0]['children']);
+        $children = type_array()->assert($result[0]['children']);
         static::assertCount(2, $children);
-        $firstChild = \Flow\Types\DSL\type_array()->assert($children[0]);
-        $secondChild = \Flow\Types\DSL\type_array()->assert($children[1]);
+        $firstChild = type_array()->assert($children[0]);
+        $secondChild = type_array()->assert($children[1]);
         static::assertSame('STRING', $firstChild['type']);
         static::assertSame('INT32', $secondChild['type']);
     }
@@ -195,10 +197,10 @@ final class SchemaConverterTest extends TestCase
 
         static::assertSame('address', $result[0]['name']);
         static::assertSame('STRUCT', $result[0]['type']);
-        $children = \Flow\Types\DSL\type_array()->assert($result[0]['children']);
+        $children = type_array()->assert($result[0]['children']);
         static::assertCount(2, $children);
-        $firstChild = \Flow\Types\DSL\type_array()->assert($children[0]);
-        $secondChild = \Flow\Types\DSL\type_array()->assert($children[1]);
+        $firstChild = type_array()->assert($children[0]);
+        $secondChild = type_array()->assert($children[1]);
         static::assertSame('street', $firstChild['name']);
         static::assertSame('STRING', $firstChild['type']);
         static::assertSame('city', $secondChild['name']);

@@ -12,6 +12,7 @@ use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\FlowContext;
 use Flow\Filesystem\Path;
+use Generator;
 
 final class AvroExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -26,7 +27,7 @@ final class AvroExtractor implements Extractor, FileExtractor, LimitableExtracto
         );
     }
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         yield;
     }

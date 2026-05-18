@@ -17,8 +17,14 @@ use Flow\Parquet\ParquetFile\Schema\ListElement;
 use Flow\Parquet\ParquetFile\Schema\MapKey;
 use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Generator;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_string;
+use function iterator_to_array;
 
 final class DremelMapsTest extends TestCase
 {
@@ -134,17 +140,11 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row), $rows);
+            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
             $shredder->shred($schema, $narrowed);
         } else {
-            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row), $rows);
+            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
             $result = $shredder->shred($schema, $narrowed);
 
@@ -165,7 +165,7 @@ final class DremelMapsTest extends TestCase
             foreach ($result as $columnValues) {
                 $readFlatValues[] = new ReadFlatColumnValues(
                     $columnValues->column,
-                    (static function (array $values): \Generator {
+                    (static function (array $values): Generator {
                         yield from $values;
                     })($columnValues->values()),
                     $columnValues->repetitionLevels(),
@@ -175,7 +175,7 @@ final class DremelMapsTest extends TestCase
 
             static::assertEquals(
                 $rows,
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('m'),
                     new ReadColumnData($schema->get('m'), $readFlatValues),
                 )),
@@ -349,17 +349,11 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row), $rows);
+            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
             $shredder->shred($schema, $narrowed);
         } else {
-            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row), $rows);
+            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
             $result = $shredder->shred($schema, $narrowed);
 
@@ -380,7 +374,7 @@ final class DremelMapsTest extends TestCase
             foreach ($result as $columnValues) {
                 $readFlatValues[] = new ReadFlatColumnValues(
                     $columnValues->column,
-                    (static function (array $values): \Generator {
+                    (static function (array $values): Generator {
                         yield from $values;
                     })($columnValues->values()),
                     $columnValues->repetitionLevels(),
@@ -390,7 +384,7 @@ final class DremelMapsTest extends TestCase
 
             static::assertEquals(
                 $rows,
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('m'),
                     new ReadColumnData($schema->get('m'), $readFlatValues),
                 )),
@@ -617,17 +611,11 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row), $rows);
+            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
             $shredder->shred($schema, $narrowed);
         } else {
-            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row), $rows);
+            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
             $result = $shredder->shred($schema, $narrowed);
 
@@ -648,7 +636,7 @@ final class DremelMapsTest extends TestCase
             foreach ($result as $columnValues) {
                 $readFlatValues[] = new ReadFlatColumnValues(
                     $columnValues->column,
-                    (static function (array $values): \Generator {
+                    (static function (array $values): Generator {
                         yield from $values;
                     })($columnValues->values()),
                     $columnValues->repetitionLevels(),
@@ -658,7 +646,7 @@ final class DremelMapsTest extends TestCase
 
             static::assertEquals(
                 $rows,
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('m'),
                     new ReadColumnData($schema->get('m'), $readFlatValues),
                 )),
@@ -852,17 +840,11 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row), $rows);
+            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
             $shredder->shred($schema, $narrowed);
         } else {
-            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row), $rows);
+            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
             $result = $shredder->shred($schema, $narrowed);
 
@@ -883,7 +865,7 @@ final class DremelMapsTest extends TestCase
             foreach ($result as $columnValues) {
                 $readFlatValues[] = new ReadFlatColumnValues(
                     $columnValues->column,
-                    (static function (array $values): \Generator {
+                    (static function (array $values): Generator {
                         yield from $values;
                     })($columnValues->values()),
                     $columnValues->repetitionLevels(),
@@ -893,7 +875,7 @@ final class DremelMapsTest extends TestCase
 
             static::assertEquals(
                 $rows,
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('m'),
                     new ReadColumnData($schema->get('m'), $readFlatValues),
                 )),
@@ -975,17 +957,11 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row), $rows);
+            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
             $shredder->shred($schema, $narrowed);
         } else {
-            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row), $rows);
+            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
             $result = $shredder->shred($schema, $narrowed);
 
@@ -1006,7 +982,7 @@ final class DremelMapsTest extends TestCase
             foreach ($result as $columnValues) {
                 $readFlatValues[] = new ReadFlatColumnValues(
                     $columnValues->column,
-                    (static function (array $values): \Generator {
+                    (static function (array $values): Generator {
                         yield from $values;
                     })($columnValues->values()),
                     $columnValues->repetitionLevels(),
@@ -1016,7 +992,7 @@ final class DremelMapsTest extends TestCase
 
             static::assertEquals(
                 $rows,
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('m'),
                     new ReadColumnData($schema->get('m'), $readFlatValues),
                 )),
@@ -1078,17 +1054,11 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row), $rows);
+            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
             $shredder->shred($schema, $narrowed);
         } else {
-            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row), $rows);
+            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
             $result = $shredder->shred($schema, $narrowed);
 
@@ -1109,7 +1079,7 @@ final class DremelMapsTest extends TestCase
             foreach ($result as $columnValues) {
                 $readFlatValues[] = new ReadFlatColumnValues(
                     $columnValues->column,
-                    (static function (array $values): \Generator {
+                    (static function (array $values): Generator {
                         yield from $values;
                     })($columnValues->values()),
                     $columnValues->repetitionLevels(),
@@ -1119,7 +1089,7 @@ final class DremelMapsTest extends TestCase
 
             static::assertEquals(
                 $rows,
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('m'),
                     new ReadColumnData($schema->get('m'), $readFlatValues),
                 )),
@@ -1178,17 +1148,11 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row), $rows);
+            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
             $shredder->shred($schema, $narrowed);
         } else {
-            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row), $rows);
+            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
             $result = $shredder->shred($schema, $narrowed);
 
@@ -1209,7 +1173,7 @@ final class DremelMapsTest extends TestCase
             foreach ($result as $columnValues) {
                 $readFlatValues[] = new ReadFlatColumnValues(
                     $columnValues->column,
-                    (static function (array $values): \Generator {
+                    (static function (array $values): Generator {
                         yield from $values;
                     })($columnValues->values()),
                     $columnValues->repetitionLevels(),
@@ -1219,7 +1183,7 @@ final class DremelMapsTest extends TestCase
 
             static::assertEquals(
                 $rows,
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('m'),
                     new ReadColumnData($schema->get('m'), $readFlatValues),
                 )),
@@ -1283,17 +1247,11 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row), $rows);
+            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
             $shredder->shred($schema, $narrowed);
         } else {
-            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row), $rows);
+            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
             $result = $shredder->shred($schema, $narrowed);
 
@@ -1314,7 +1272,7 @@ final class DremelMapsTest extends TestCase
             foreach ($result as $columnValues) {
                 $readFlatValues[] = new ReadFlatColumnValues(
                     $columnValues->column,
-                    (static function (array $values): \Generator {
+                    (static function (array $values): Generator {
                         yield from $values;
                     })($columnValues->values()),
                     $columnValues->repetitionLevels(),
@@ -1324,7 +1282,7 @@ final class DremelMapsTest extends TestCase
 
             static::assertEquals(
                 $rows,
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('m'),
                     new ReadColumnData($schema->get('m'), $readFlatValues),
                 )),
@@ -1418,17 +1376,11 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row), $rows);
+            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
             $shredder->shred($schema, $narrowed);
         } else {
-            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row), $rows);
+            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
             $result = $shredder->shred($schema, $narrowed);
 
@@ -1449,7 +1401,7 @@ final class DremelMapsTest extends TestCase
             foreach ($result as $columnValues) {
                 $readFlatValues[] = new ReadFlatColumnValues(
                     $columnValues->column,
-                    (static function (array $values): \Generator {
+                    (static function (array $values): Generator {
                         yield from $values;
                     })($columnValues->values()),
                     $columnValues->repetitionLevels(),
@@ -1459,7 +1411,7 @@ final class DremelMapsTest extends TestCase
 
             static::assertEquals(
                 $rows,
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('m'),
                     new ReadColumnData($schema->get('m'), $readFlatValues),
                 )),
@@ -1575,17 +1527,11 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row), $rows);
+            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
             $shredder->shred($schema, $narrowed);
         } else {
-            $narrowed = array_map(static fn($row) => \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row), $rows);
+            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
             $result = $shredder->shred($schema, $narrowed);
 
@@ -1606,7 +1552,7 @@ final class DremelMapsTest extends TestCase
             foreach ($result as $columnValues) {
                 $readFlatValues[] = new ReadFlatColumnValues(
                     $columnValues->column,
-                    (static function (array $values): \Generator {
+                    (static function (array $values): Generator {
                         yield from $values;
                     })($columnValues->values()),
                     $columnValues->repetitionLevels(),
@@ -1616,7 +1562,7 @@ final class DremelMapsTest extends TestCase
 
             static::assertEquals(
                 $rows,
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('m'),
                     new ReadColumnData($schema->get('m'), $readFlatValues),
                 )),

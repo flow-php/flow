@@ -20,6 +20,11 @@ use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_string;
+use function iterator_to_array;
+
 final class DremelStructuresTest extends TestCase
 {
     #[TestWith([
@@ -124,17 +129,11 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowedRow = \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row);
+            $narrowedRow = type_map(type_string(), type_mixed())->assert($row);
 
             $shredder->shred($schema, [$narrowedRow]);
         } else {
-            $narrowedRow = \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row);
+            $narrowedRow = type_map(type_string(), type_mixed())->assert($row);
 
             $shredResult = $shredder->shred($schema, [$narrowedRow]);
 
@@ -170,7 +169,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('s'),
                     new ReadColumnData($schema->get('s'), $readFlatValues),
                 )),
@@ -264,17 +263,11 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowedRow = \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row);
+            $narrowedRow = type_map(type_string(), type_mixed())->assert($row);
 
             $shredder->shred($schema, [$narrowedRow]);
         } else {
-            $narrowedRow = \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row);
+            $narrowedRow = type_map(type_string(), type_mixed())->assert($row);
 
             $shredResult = $shredder->shred($schema, [$narrowedRow]);
 
@@ -310,7 +303,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('s'),
                     new ReadColumnData($schema->get('s'), $readFlatValues),
                 )),
@@ -433,17 +426,11 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowedRow = \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row);
+            $narrowedRow = type_map(type_string(), type_mixed())->assert($row);
 
             $shredder->shred($schema, [$narrowedRow]);
         } else {
-            $narrowedRow = \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row);
+            $narrowedRow = type_map(type_string(), type_mixed())->assert($row);
 
             $shredResult = $shredder->shred($schema, [$narrowedRow]);
 
@@ -479,7 +466,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('s'),
                     new ReadColumnData($schema->get('s'), $readFlatValues),
                 )),
@@ -586,17 +573,11 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowedRow = \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row);
+            $narrowedRow = type_map(type_string(), type_mixed())->assert($row);
 
             $shredder->shred($schema, [$narrowedRow]);
         } else {
-            $narrowedRow = \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row);
+            $narrowedRow = type_map(type_string(), type_mixed())->assert($row);
 
             $shredResult = $shredder->shred($schema, [$narrowedRow]);
 
@@ -632,7 +613,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('s'),
                     new ReadColumnData($schema->get('s'), $readFlatValues),
                 )),
@@ -724,17 +705,11 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowedRow = \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row);
+            $narrowedRow = type_map(type_string(), type_mixed())->assert($row);
 
             $shredder->shred($schema, [$narrowedRow]);
         } else {
-            $narrowedRow = \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row);
+            $narrowedRow = type_map(type_string(), type_mixed())->assert($row);
 
             $shredResult = $shredder->shred($schema, [$narrowedRow]);
 
@@ -770,7 +745,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('s'),
                     new ReadColumnData($schema->get('s'), $readFlatValues),
                 )),
@@ -838,17 +813,11 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowedRow = \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row);
+            $narrowedRow = type_map(type_string(), type_mixed())->assert($row);
 
             $shredder->shred($schema, [$narrowedRow]);
         } else {
-            $narrowedRow = \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row);
+            $narrowedRow = type_map(type_string(), type_mixed())->assert($row);
 
             $shredResult = $shredder->shred($schema, [$narrowedRow]);
 
@@ -884,7 +853,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('s'),
                     new ReadColumnData($schema->get('s'), $readFlatValues),
                 )),
@@ -967,17 +936,11 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowedRow = \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row);
+            $narrowedRow = type_map(type_string(), type_mixed())->assert($row);
 
             $shredder->shred($schema, [$narrowedRow]);
         } else {
-            $narrowedRow = \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row);
+            $narrowedRow = type_map(type_string(), type_mixed())->assert($row);
 
             $shredResult = $shredder->shred($schema, [$narrowedRow]);
 
@@ -1013,7 +976,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('s'),
                     new ReadColumnData($schema->get('s'), $readFlatValues),
                 )),
@@ -1100,17 +1063,11 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowedRow = \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row);
+            $narrowedRow = type_map(type_string(), type_mixed())->assert($row);
 
             $shredder->shred($schema, [$narrowedRow]);
         } else {
-            $narrowedRow = \Flow\Types\DSL\type_map(
-                \Flow\Types\DSL\type_string(),
-                \Flow\Types\DSL\type_mixed(),
-            )->assert($row);
+            $narrowedRow = type_map(type_string(), type_mixed())->assert($row);
 
             $shredResult = $shredder->shred($schema, [$narrowedRow]);
 
@@ -1146,7 +1103,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('s'),
                     new ReadColumnData($schema->get('s'), $readFlatValues),
                 )),

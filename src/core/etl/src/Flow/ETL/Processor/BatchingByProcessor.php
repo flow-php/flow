@@ -10,6 +10,9 @@ use Flow\ETL\Processor;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
+use Generator;
+
+use function count;
 
 /**
  * Groups rows into batches by column value.
@@ -35,7 +38,7 @@ final readonly class BatchingByProcessor implements Processor
         }
     }
 
-    public function process(\Generator $rows, FlowContext $context): \Generator
+    public function process(Generator $rows, FlowContext $context): Generator
     {
         /** @var array<Row> $buffer */
         $buffer = [];
@@ -53,7 +56,7 @@ final readonly class BatchingByProcessor implements Processor
                 }
 
                 if ($value !== $currentValue) {
-                    if ($this->minSize === null || \count($buffer) >= $this->minSize) {
+                    if ($this->minSize === null || count($buffer) >= $this->minSize) {
                         if ($buffer !== []) {
                             yield new Rows(...$buffer);
                             $buffer = [];

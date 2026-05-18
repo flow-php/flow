@@ -11,6 +11,7 @@ use Flow\Filesystem\Tests\Double\RejectingFilter;
 
 use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function iterator_to_array;
 
 final class AsyncAWSS3FilesystemFileFastPathTest extends AsyncAWSS3TestCase
 {
@@ -23,7 +24,7 @@ final class AsyncAWSS3FilesystemFileFastPathTest extends AsyncAWSS3TestCase
 
         $client->resetCounters();
 
-        $statuses = \iterator_to_array($fs->list(path('aws-s3://var/orders/orders.csv')));
+        $statuses = iterator_to_array($fs->list(path('aws-s3://var/orders/orders.csv')));
 
         static::assertCount(1, $statuses);
         static::assertSame(0, $client->headObjectCount, 'HEAD must not be issued when fast path is disabled');
@@ -39,7 +40,7 @@ final class AsyncAWSS3FilesystemFileFastPathTest extends AsyncAWSS3TestCase
 
         $client->resetCounters();
 
-        $statuses = \iterator_to_array($fs->list(path('aws-s3://var/orders/orders.csv'), new RejectingFilter()));
+        $statuses = iterator_to_array($fs->list(path('aws-s3://var/orders/orders.csv'), new RejectingFilter()));
 
         static::assertCount(0, $statuses);
         static::assertSame(1, $client->headObjectCount);
@@ -56,7 +57,7 @@ final class AsyncAWSS3FilesystemFileFastPathTest extends AsyncAWSS3TestCase
 
         $client->resetCounters();
 
-        $statuses = \iterator_to_array($fs->list(path('aws-s3://var/orders/')));
+        $statuses = iterator_to_array($fs->list(path('aws-s3://var/orders/')));
 
         static::assertCount(2, $statuses);
         static::assertSame(0, $client->headObjectCount, 'HEAD must be skipped for paths ending with /');
@@ -70,7 +71,7 @@ final class AsyncAWSS3FilesystemFileFastPathTest extends AsyncAWSS3TestCase
 
         $client->resetCounters();
 
-        $statuses = \iterator_to_array($fs->list(path('aws-s3://var/missing/file.csv')));
+        $statuses = iterator_to_array($fs->list(path('aws-s3://var/missing/file.csv')));
 
         static::assertCount(0, $statuses);
         static::assertSame(1, $client->headObjectCount, 'HEAD is attempted on non-pattern, non-folder path');
@@ -87,7 +88,7 @@ final class AsyncAWSS3FilesystemFileFastPathTest extends AsyncAWSS3TestCase
 
         $client->resetCounters();
 
-        $statuses = \iterator_to_array($fs->list(path('aws-s3://var/orders/*.csv')));
+        $statuses = iterator_to_array($fs->list(path('aws-s3://var/orders/*.csv')));
 
         static::assertCount(2, $statuses);
         static::assertSame(0, $client->headObjectCount, 'HEAD must not be issued for pattern paths');
@@ -103,7 +104,7 @@ final class AsyncAWSS3FilesystemFileFastPathTest extends AsyncAWSS3TestCase
 
         $client->resetCounters();
 
-        \iterator_to_array($fs->list(path('aws-s3:///')));
+        iterator_to_array($fs->list(path('aws-s3:///')));
 
         static::assertSame(0, $client->headObjectCount);
         static::assertSame(1, $client->listObjectsV2Count);
@@ -119,7 +120,7 @@ final class AsyncAWSS3FilesystemFileFastPathTest extends AsyncAWSS3TestCase
 
         $client->resetCounters();
 
-        $statuses = \iterator_to_array($fs->list(path('aws-s3://var/orders/file.txt')));
+        $statuses = iterator_to_array($fs->list(path('aws-s3://var/orders/file.txt')));
 
         static::assertCount(1, $statuses);
         static::assertSame('aws-s3://var/orders/file.txt', $statuses[0]->path->uri());
@@ -136,7 +137,7 @@ final class AsyncAWSS3FilesystemFileFastPathTest extends AsyncAWSS3TestCase
 
         $client->resetCounters();
 
-        $statuses = \iterator_to_array($fs->list(path('aws-s3://var/orders/orders.csv'), new OnlyFiles()));
+        $statuses = iterator_to_array($fs->list(path('aws-s3://var/orders/orders.csv'), new OnlyFiles()));
 
         static::assertCount(1, $statuses);
         static::assertSame('aws-s3://var/orders/orders.csv', $statuses[0]->path->uri());

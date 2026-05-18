@@ -8,15 +8,17 @@ use Flow\PostgreSql\AST\Transformers\KeysetPaginationConfig;
 use Flow\PostgreSql\AST\Transformers\KeysetPaginationModifier;
 use Flow\PostgreSql\AST\Transformers\SortOrder;
 use Flow\PostgreSql\Exception\PaginationException;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
 use function Flow\PostgreSql\DSL\sql_keyset_column;
 use function Flow\PostgreSql\DSL\sql_parse;
 
 final class KeysetPaginationModifierTest extends TestCase
 {
-    public static function keysetPaginationProvider(): \Generator
+    public static function keysetPaginationProvider(): Generator
     {
         yield 'first page single column asc - no cursor' => [
             'SELECT * FROM users ORDER BY id',
@@ -164,7 +166,7 @@ final class KeysetPaginationModifierTest extends TestCase
 
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped(
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );

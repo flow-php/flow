@@ -8,11 +8,17 @@ use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+use Throwable;
 
+use function class_exists;
 use function Flow\Types\DSL\type_class_string;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_literal;
 use function Flow\Types\DSL\type_structure;
+use function interface_exists;
+use function is_a;
+use function is_object;
+use function is_string;
 
 /**
  * @template T of object
@@ -27,7 +33,7 @@ final readonly class InstanceOfType implements Type
     public function __construct(
         public string $class,
     ) {
-        if (!\class_exists($class) && !\interface_exists($class)) {
+        if (!class_exists($class) && !interface_exists($class)) {
             throw new InvalidArgumentException("Class {$class} not found");
         }
     }
@@ -58,7 +64,7 @@ final readonly class InstanceOfType implements Type
 
     public function cast(mixed $value): object
     {
-        if (\is_object($value) && \is_a($value, $this->class, true)) {
+        if (is_object($value) && is_a($value, $this->class, true)) {
             return $value;
         }
 
@@ -70,14 +76,14 @@ final readonly class InstanceOfType implements Type
             }
 
             return $object;
-        } catch (\Throwable) {
+        } catch (Throwable) {
             throw new CastingException($value, $this);
         }
     }
 
     public function isValid(mixed $value): bool
     {
-        return (\is_object($value) || \is_string($value)) && \is_a($value, $this->class, true);
+        return (is_object($value) || is_string($value)) && is_a($value, $this->class, true);
     }
 
     public function normalize(): array

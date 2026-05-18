@@ -8,7 +8,22 @@ use Flow\Bridge\Symfony\FilesystemCache\FlowFilesystemCacheAdapter;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RuntimeException;
+use SplFileInfo;
 use Symfony\Component\Cache\Marshaller\MarshallerInterface;
+
+use function bin2hex;
+use function count;
+use function file_get_contents;
+use function file_put_contents;
+use function Flow\Filesystem\DSL\path;
+use function is_dir;
+use function random_bytes;
+use function sort;
+use function sprintf;
+use function sys_get_temp_dir;
 
 final class FilesystemCacheContext
 {
@@ -21,8 +36,8 @@ final class FilesystemCacheContext
     public function __construct()
     {
         $this->filesystem = new NativeLocalFilesystem();
-        $this->directoryPath = \sys_get_temp_dir() . '/flow-fs-cache-' . \bin2hex(\random_bytes(8));
-        $this->directory = \Flow\Filesystem\DSL\path($this->directoryPath);
+        $this->directoryPath = sys_get_temp_dir() . '/flow-fs-cache-' . bin2hex(random_bytes(8));
+        $this->directory = path($this->directoryPath);
     }
 
     public function adapter(
@@ -42,8 +57,8 @@ final class FilesystemCacheContext
 
     public function cleanup(): void
     {
-        if (\is_dir($this->directoryPath)) {
-            $this->filesystem->rm(\Flow\Filesystem\DSL\path($this->directoryPath));
+        if (is_dir($this->directoryPath)) {
+            $this->filesystem->rm(path($this->directoryPath));
         }
     }
 
@@ -54,8 +69,8 @@ final class FilesystemCacheContext
     {
         $path = $this->singleFilePath();
 
-        if (\file_put_contents($path, $body) === false) {
-            throw new \RuntimeException("Failed to write {$path}");
+        if (file_put_contents($path, $body) === false) {
+            throw new RuntimeException("Failed to write {$path}");
         }
 
         return $path;
@@ -66,32 +81,32 @@ final class FilesystemCacheContext
      */
     public function listFiles(): array
     {
-        if (!\is_dir($this->directoryPath)) {
+        if (!is_dir($this->directoryPath)) {
             return [];
         }
 
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($this->directoryPath, \RecursiveDirectoryIterator::SKIP_DOTS),
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($this->directoryPath, RecursiveDirectoryIterator::SKIP_DOTS),
         );
         $files = [];
 
         foreach ($iterator as $entry) {
-            if ($entry instanceof \SplFileInfo && $entry->isFile()) {
+            if ($entry instanceof SplFileInfo && $entry->isFile()) {
                 $files[] = $entry->getPathname();
             }
         }
 
-        \sort($files);
+        sort($files);
 
         return $files;
     }
 
     public function readFile(string $path): string
     {
-        $content = \file_get_contents($path);
+        $content = file_get_contents($path);
 
         if ($content === false) {
-            throw new \RuntimeException("Failed to read {$path}");
+            throw new RuntimeException("Failed to read {$path}");
         }
 
         return $content;
@@ -106,11 +121,11 @@ final class FilesystemCacheContext
     {
         $files = $this->listFiles();
 
-        if (\count($files) !== 1) {
-            throw new \RuntimeException(\sprintf(
+        if (count($files) !== 1) {
+            throw new RuntimeException(sprintf(
                 'Expected exactly 1 file under %s, found %d.',
                 $this->directoryPath,
-                \count($files),
+                count($files),
             ));
         }
 

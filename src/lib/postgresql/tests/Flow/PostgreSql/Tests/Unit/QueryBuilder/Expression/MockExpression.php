@@ -9,6 +9,7 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Expression\AliasedExpression;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use RuntimeException;
 
 /**
  * Mock expression for testing - represents a simple string literal.
@@ -24,13 +25,13 @@ final readonly class MockExpression implements Expression
         $aConst = $node->getAConst();
 
         if ($aConst === null) {
-            throw new \RuntimeException('Expected A_Const node');
+            throw new RuntimeException('Expected A_Const node');
         }
 
         $sval = $aConst->getSval();
 
         if ($sval === null) {
-            throw new \RuntimeException('Expected sval in A_Const');
+            throw new RuntimeException('Expected sval in A_Const');
         }
 
         return new self($sval->getSval());

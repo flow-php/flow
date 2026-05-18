@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration\Dialects;
 
+use DateTimeImmutable;
 use Flow\Clock\FakeClock;
 use Flow\ETL\Adapter\Doctrine\DbalMetadata;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
@@ -104,7 +105,7 @@ final class PostgreSQLKeySetExtractorTest extends IntegrationTestCase
         ));
 
         $clock = new FakeClock();
-        $clock->set(new \DateTimeImmutable('2025-01-01 00:00:00 UTC'));
+        $clock->set(new DateTimeImmutable('2025-01-01 00:00:00 UTC'));
 
         for ($i = 1; $i <= 25; $i++) {
             $clock->modify('+1 hour');

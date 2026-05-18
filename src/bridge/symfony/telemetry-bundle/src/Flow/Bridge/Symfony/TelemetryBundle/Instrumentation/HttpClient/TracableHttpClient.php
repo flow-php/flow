@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpClient;
 
+use DateTimeImmutable;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
@@ -11,6 +12,9 @@ use Flow\Telemetry\Tracer\SpanStatus;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 use Symfony\Contracts\HttpClient\ResponseStreamInterface;
+use Throwable;
+
+use function parse_url;
 
 final readonly class TracableHttpClient implements HttpClientInterface
 {
@@ -25,7 +29,7 @@ final readonly class TracableHttpClient implements HttpClientInterface
      */
     public function request(string $method, string $url, array $options = []): ResponseInterface
     {
-        $parsedUrl = \parse_url($url);
+        $parsedUrl = parse_url($url);
         $scheme = $parsedUrl['scheme'] ?? 'http';
         $host = $parsedUrl['host'] ?? 'unknown';
         $port = $parsedUrl['port'] ?? null;
@@ -59,8 +63,8 @@ final readonly class TracableHttpClient implements HttpClientInterface
             }
 
             return $response;
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;

@@ -8,6 +8,10 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function array_map;
+use function in_array;
+use function sprintf;
+
 final class Sprintf extends ScalarFunctionChain
 {
     /**
@@ -29,11 +33,11 @@ final class Sprintf extends ScalarFunctionChain
         /**
          * @var array<null|float|int|string> $values
          */
-        $values = \array_map(static fn(ScalarFunction|float|int|string|null $value): mixed => (new Parameter(
+        $values = array_map(static fn(ScalarFunction|float|int|string|null $value): mixed => (new Parameter(
             $value,
         ))->eval($row, $context), $this->values);
 
-        if ($format === null || \in_array(null, $values, true)) {
+        if ($format === null || in_array(null, $values, true)) {
             return $context
                 ->functions()
                 ->invalidResult(new InvalidArgumentException('Sprintf requires non-null format and values'));
@@ -42,6 +46,6 @@ final class Sprintf extends ScalarFunctionChain
         /** @var array<float|int|string> $nonNullValues */
         $nonNullValues = $values;
 
-        return \sprintf($format, ...$nonNullValues);
+        return sprintf($format, ...$nonNullValues);
     }
 }

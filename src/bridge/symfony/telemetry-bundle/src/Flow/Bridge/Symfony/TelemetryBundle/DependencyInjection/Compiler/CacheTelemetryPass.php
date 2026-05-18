@@ -13,6 +13,9 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 
+use function is_a;
+use function preg_match;
+
 final class CacheTelemetryPass implements CompilerPassInterface
 {
     public function process(ContainerBuilder $container): void
@@ -52,7 +55,7 @@ final class CacheTelemetryPass implements CompilerPassInterface
             $decoratorId = $serviceId . '.flow_telemetry';
             $decoratedId = $decoratorId . '.inner';
 
-            $isTagAware = \is_a($serviceClass, TagAwareAdapterInterface::class, true);
+            $isTagAware = is_a($serviceClass, TagAwareAdapterInterface::class, true);
 
             $adapterClass = $isTagAware ? TagAwareTraceableCacheAdapter::class : TraceableCacheAdapter::class;
 
@@ -82,7 +85,7 @@ final class CacheTelemetryPass implements CompilerPassInterface
 
     private function matchesPattern(string $serviceId, string $pattern): bool
     {
-        $result = @\preg_match($pattern, $serviceId);
+        $result = @preg_match($pattern, $serviceId);
 
         if ($result !== false) {
             return (bool) $result;

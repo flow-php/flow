@@ -17,6 +17,9 @@ use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 
+use function array_merge;
+use function array_values;
+
 final readonly class CreateFunctionBuilder implements
     CreateFunctionArgsStep,
     CreateFunctionFinalStep,
@@ -54,7 +57,7 @@ final readonly class CreateFunctionBuilder implements
             $this->name,
             $this->schema,
             $this->replace,
-            \array_values($args),
+            array_values($args),
             $this->returnType,
             $this->setof,
             $this->tableColumns,
@@ -305,7 +308,7 @@ final readonly class CreateFunctionBuilder implements
                 $currentParams[] = $existingParam;
             }
 
-            $stmt->setParameters(\array_merge($currentParams, $parameterNodes));
+            $stmt->setParameters(array_merge($currentParams, $parameterNodes));
         }
 
         $optionNodes = [];

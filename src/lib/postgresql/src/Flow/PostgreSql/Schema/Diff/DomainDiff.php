@@ -10,9 +10,11 @@ use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Constraint\CheckConstraint;
 use Flow\PostgreSql\Schema\Domain;
+use RuntimeException;
 
 use function Flow\PostgreSql\DSL\alter;
 use function Flow\PostgreSql\DSL\drop;
+use function sprintf;
 
 final readonly class DomainDiff implements Diff
 {
@@ -54,7 +56,7 @@ final readonly class DomainDiff implements Diff
 
         foreach ($this->removedCheckConstraints as $cc) {
             if ($cc->name === null) {
-                throw new \RuntimeException(\sprintf(
+                throw new RuntimeException(sprintf(
                     'Cannot drop unnamed check constraint on domain "%s". Constraint names are required for reversible migrations.',
                     $this->target->name,
                 ));
@@ -65,7 +67,7 @@ final readonly class DomainDiff implements Diff
 
         foreach ($this->addedCheckConstraints as $cc) {
             if ($cc->name === null) {
-                throw new \RuntimeException(\sprintf(
+                throw new RuntimeException(sprintf(
                     'Cannot add unnamed check constraint on domain "%s". Constraint names are required for reversible migrations.',
                     $this->target->name,
                 ));

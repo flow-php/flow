@@ -6,13 +6,15 @@ namespace Flow\Filesystem;
 
 use Flow\Filesystem\Exception\InvalidArgumentException;
 
+use function preg_match;
+
 final readonly class Mount
 {
     public string $protocol;
 
     public function __construct(string $protocol)
     {
-        if (!\preg_match('/^[a-zA-Z][a-zA-Z0-9+.-]+$/', $protocol)) {
+        if (!preg_match('/^[a-zA-Z][a-zA-Z0-9+.-]+$/', $protocol)) {
             throw new InvalidArgumentException(
                 "Invalid mount protocol: '{$protocol}'. Only alphanumeric characters, dots, hyphens and plus signs are allowed.",
             );

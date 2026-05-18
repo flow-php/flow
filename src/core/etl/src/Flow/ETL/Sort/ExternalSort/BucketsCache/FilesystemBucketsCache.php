@@ -13,6 +13,7 @@ use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use Flow\Serializer\NativePHPSerializer;
 use Flow\Serializer\Serializer;
+use Generator;
 
 final readonly class FilesystemBucketsCache implements BucketsCache
 {
@@ -39,7 +40,7 @@ final readonly class FilesystemBucketsCache implements BucketsCache
     /**
      * @return \Generator<Row>
      */
-    public function get(string $bucketId): \Generator
+    public function get(string $bucketId): Generator
     {
         $path = $this->keyPath($bucketId);
 

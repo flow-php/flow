@@ -11,6 +11,8 @@ use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
+use function array_values;
+
 final readonly class DropSchemaBuilder implements DropSchemaFinalStep
 {
     use AstToSql;
@@ -26,7 +28,7 @@ final readonly class DropSchemaBuilder implements DropSchemaFinalStep
 
     public static function create(string ...$names): DropSchemaFinalStep
     {
-        return new self(\array_values($names));
+        return new self(array_values($names));
     }
 
     public function cascade(): DropSchemaFinalStep

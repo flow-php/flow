@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use DateTimeImmutable;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config;
@@ -53,7 +54,7 @@ final class MaxTest extends FlowTestCase
         $aggregator->aggregate(row(datetime_entry('datetime', '2021-01-04 00:00:00')), flow_context());
 
         static::assertEquals(
-            new \DateTimeImmutable('2021-01-04 00:00:00'),
+            new DateTimeImmutable('2021-01-04 00:00:00'),
             $aggregator->result(flow_context(config())->entryFactory())->value(),
         );
     }

@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Parser;
 
+use function ltrim;
+use function stripos;
+use function substr;
+
 final readonly class CheckDefinitionParser
 {
     public function __construct(
@@ -17,9 +21,9 @@ final readonly class CheckDefinitionParser
 
     private function stripWrapper(string $definition): string
     {
-        $trimmed = \ltrim($definition);
+        $trimmed = ltrim($definition);
 
-        if (\stripos($trimmed, 'CHECK (') !== 0) {
+        if (stripos($trimmed, 'CHECK (') !== 0) {
             return $definition;
         }
 
@@ -27,6 +31,6 @@ final readonly class CheckDefinitionParser
             return $definition;
         }
 
-        return \substr($trimmed, 7, -1);
+        return substr($trimmed, 7, -1);
     }
 }

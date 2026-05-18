@@ -4,26 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\Clock;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use Psr\Clock\ClockInterface;
 
 final readonly class SystemClock implements ClockInterface
 {
     public function __construct(
-        private \DateTimeZone $timezone,
+        private DateTimeZone $timezone,
     ) {}
 
     public static function system(): self
     {
-        return new self(new \DateTimeZone(date_default_timezone_get()));
+        return new self(new DateTimeZone(date_default_timezone_get()));
     }
 
     public static function utc(): self
     {
-        return new self(new \DateTimeZone('UTC'));
+        return new self(new DateTimeZone('UTC'));
     }
 
-    public function now(): \DateTimeImmutable
+    public function now(): DateTimeImmutable
     {
-        return new \DateTimeImmutable('now', $this->timezone);
+        return new DateTimeImmutable('now', $this->timezone);
     }
 }

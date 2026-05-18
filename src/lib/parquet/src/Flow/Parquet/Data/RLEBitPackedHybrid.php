@@ -7,6 +7,17 @@ namespace Flow\Parquet\Data;
 use Flow\Parquet\BinaryReader;
 use Flow\Parquet\BinaryWriter;
 
+use function array_fill;
+use function array_merge;
+use function array_push;
+use function chr;
+use function count;
+use function max;
+use function min;
+use function ord;
+use function pack;
+use function strlen;
+
 final class RLEBitPackedHybrid
 {
     public function __construct() {}
@@ -31,7 +42,7 @@ final class RLEBitPackedHybrid
         }
 
         if ($bitWidth === 0) {
-            $output = \array_merge($output, \array_fill(0, \max(0, \min($numGroups * 8, $maxItems)), 0));
+            $output = array_merge($output, array_fill(0, max(0, min($numGroups * 8, $maxItems)), 0));
 
             return;
         }
@@ -40,8 +51,8 @@ final class RLEBitPackedHybrid
         $totalByteCount = (int) (($bitWidth * $count) / 8);
 
         $remainingByteCount = $reader->remainingLength()->bytes();
-        $readRaw = $reader->readBytes(\min($remainingByteCount, $totalByteCount));
-        $actualByteCount = \strlen($readRaw);
+        $readRaw = $reader->readBytes(min($remainingByteCount, $totalByteCount));
+        $actualByteCount = strlen($readRaw);
 
         if ($actualByteCount === 0) {
             return;
@@ -49,7 +60,7 @@ final class RLEBitPackedHybrid
 
         $bitMask = (1 << $bitWidth) - 1;
         $byteIndex = 0;
-        $currentByte = \ord($readRaw[0]);
+        $currentByte = ord($readRaw[0]);
         $totalBits = $actualByteCount * 8;
         $bitsLeftInByte = 8;
         $bitsReadFromByte = 0;
@@ -69,7 +80,7 @@ final class RLEBitPackedHybrid
                 $output[] = $decodedValue;
             } elseif (($byteIndex + 1) < $actualByteCount) {
                 $byteIndex++;
-                $currentByte |= \ord($readRaw[$byteIndex]) << $bitsLeftInByte;
+                $currentByte |= ord($readRaw[$byteIndex]) << $bitsLeftInByte;
                 $bitsLeftInByte += 8;
             }
         }
@@ -83,14 +94,14 @@ final class RLEBitPackedHybrid
         /** @var array<int> $output */
         $output = [];
 
-        while (\count($output) < $maxItems) {
+        while (count($output) < $maxItems) {
             $varInt = $reader->readVarInt();
             $isRle = ($varInt & 1) === 0;
 
             if ($isRle) {
-                $this->decodeRLE($reader, $bitWidth, $varInt, $maxItems - \count($output), $output);
+                $this->decodeRLE($reader, $bitWidth, $varInt, $maxItems - count($output), $output);
             } else {
-                $this->decodeBitPacked($reader, $bitWidth, $varInt, $maxItems - \count($output), $output);
+                $this->decodeBitPacked($reader, $bitWidth, $varInt, $maxItems - count($output), $output);
             }
         }
 
@@ -110,7 +121,7 @@ final class RLEBitPackedHybrid
             return;
         }
 
-        $count = \min($runLength, $maxItems);
+        $count = min($runLength, $maxItems);
         $width = (int) (($bitWidth + 7) / 8);
 
         if ($width > 0) {
@@ -118,7 +129,7 @@ final class RLEBitPackedHybrid
             $value = 0;
 
             for ($i = 0; $i < $width; $i++) {
-                $value |= \ord($raw[$i]) << ($i * 8);
+                $value |= ord($raw[$i]) << ($i * 8);
             }
         } else {
             $value = 0;
@@ -134,17 +145,17 @@ final class RLEBitPackedHybrid
      */
     public function encodeBitPacked(BinaryWriter $writer, int $bitWidth, array $values): void
     {
-        $count = \count($values);
+        $count = count($values);
         $numGroups = ($count + 7) >> 3;
         $varInt = ($numGroups << 1) | 1;
 
         $packed = '';
 
         while ($varInt >= 0x80) {
-            $packed .= \chr(($varInt & 0x7F) | 0x80);
+            $packed .= chr(($varInt & 0x7F) | 0x80);
             $varInt >>= 7;
         }
-        $packed .= \chr($varInt & 0x7F);
+        $packed .= chr($varInt & 0x7F);
 
         $buffer = 0;
         $bitsInBuffer = 0;
@@ -167,13 +178,13 @@ final class RLEBitPackedHybrid
         }
 
         $expectedBytesCount = (int) (($numGroups * 8 * $bitWidth) / 8);
-        $byteCount = \count($bytes);
+        $byteCount = count($bytes);
 
         if ($byteCount < $expectedBytesCount) {
-            \array_push($bytes, ...\array_fill(0, \max(0, $expectedBytesCount - $byteCount), 0));
+            array_push($bytes, ...array_fill(0, max(0, $expectedBytesCount - $byteCount), 0));
         }
 
-        $writer->append($packed . \pack('C*', ...$bytes));
+        $writer->append($packed . pack('C*', ...$bytes));
     }
 
     /**
@@ -195,13 +206,13 @@ final class RLEBitPackedHybrid
             }
 
             // we always bit-pack a multiple of 8 values at a time, so we only store the number of "values / 8"
-            if (\count($bitPackedBuffer) > 0 && \count($bitPackedBuffer) < 8) {
+            if (count($bitPackedBuffer) > 0 && count($bitPackedBuffer) < 8) {
                 $bitPackedBuffer[] = $value;
 
                 continue;
             }
 
-            if (\count($bitPackedBuffer) && (\count($bitPackedBuffer) % 8) === 0) {
+            if (count($bitPackedBuffer) && (count($bitPackedBuffer) % 8) === 0) {
                 $this->encodeBitPacked($writer, $bitWidth, $bitPackedBuffer);
                 $bitPackedBuffer = [];
             }
@@ -209,8 +220,8 @@ final class RLEBitPackedHybrid
             if ($previousValue === $value) {
                 $rleBuffer[] = $value;
             } else {
-                if (\count($rleBuffer) >= 8) {
-                    if (\count($bitPackedBuffer)) {
+                if (count($rleBuffer) >= 8) {
+                    if (count($bitPackedBuffer)) {
                         $this->encodeBitPacked($writer, $bitWidth, $bitPackedBuffer);
                         $bitPackedBuffer = [];
                     }
@@ -219,7 +230,7 @@ final class RLEBitPackedHybrid
                     $rleBuffer = [];
                 }
 
-                \array_push($bitPackedBuffer, ...$rleBuffer);
+                array_push($bitPackedBuffer, ...$rleBuffer);
                 $bitPackedBuffer[] = $value;
                 $rleBuffer = [];
             }
@@ -227,20 +238,20 @@ final class RLEBitPackedHybrid
             $previousValue = $value;
         }
 
-        if (\count($rleBuffer) > 8) {
+        if (count($rleBuffer) > 8) {
             $this->encodeRLE($writer, $bitWidth, $rleBuffer);
             $rleBuffer = [];
         }
 
-        if (\count($bitPackedBuffer)) {
-            if (\count($rleBuffer)) {
-                \array_push($bitPackedBuffer, ...$rleBuffer);
+        if (count($bitPackedBuffer)) {
+            if (count($rleBuffer)) {
+                array_push($bitPackedBuffer, ...$rleBuffer);
             }
 
             $this->encodeBitPacked($writer, $bitWidth, $bitPackedBuffer);
         }
 
-        if (\count($rleBuffer)) {
+        if (count($rleBuffer)) {
             $bitPackedBuffer = $rleBuffer;
             $this->encodeBitPacked($writer, $bitWidth, $bitPackedBuffer);
         }
@@ -251,7 +262,7 @@ final class RLEBitPackedHybrid
      */
     public function encodeRLE(BinaryWriter $writer, int $bitWidth, array $values): void
     {
-        $repeatCount = \count($values);
+        $repeatCount = count($values);
         $intVar = $repeatCount << 1;
 
         $value = $values[0];
@@ -259,15 +270,15 @@ final class RLEBitPackedHybrid
         $packed = '';
 
         while ($intVar >= 0x80) {
-            $packed .= \chr(($intVar & 0x7F) | 0x80);
+            $packed .= chr(($intVar & 0x7F) | 0x80);
             $intVar >>= 7;
         }
-        $packed .= \chr($intVar & 0x7F);
+        $packed .= chr($intVar & 0x7F);
 
         $width = (int) (($bitWidth + 7) / 8);
 
         for ($i = 0; $i < $width; $i++) {
-            $packed .= \chr(($value >> ($i * 8)) & 0xFF);
+            $packed .= chr(($value >> ($i * 8)) & 0xFF);
         }
 
         $writer->append($packed);

@@ -11,6 +11,8 @@ use Flow\PostgreSql\Protobuf\AST\RoleSpec;
 use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
+use function array_values;
+
 final readonly class RevokeRoleBuilder implements RevokeRoleFinalStep, RevokeRoleFromStep
 {
     use AstToSql;
@@ -27,7 +29,7 @@ final readonly class RevokeRoleBuilder implements RevokeRoleFinalStep, RevokeRol
 
     public static function create(string ...$roles): RevokeRoleFromStep
     {
-        return new self(\array_values($roles));
+        return new self(array_values($roles));
     }
 
     public function cascade(): RevokeRoleFinalStep
@@ -37,7 +39,7 @@ final readonly class RevokeRoleBuilder implements RevokeRoleFinalStep, RevokeRol
 
     public function from(string ...$roles): RevokeRoleFinalStep
     {
-        return new self($this->revokedRoles, \array_values($roles), $this->behavior);
+        return new self($this->revokedRoles, array_values($roles), $this->behavior);
     }
 
     public function restrict(): RevokeRoleFinalStep

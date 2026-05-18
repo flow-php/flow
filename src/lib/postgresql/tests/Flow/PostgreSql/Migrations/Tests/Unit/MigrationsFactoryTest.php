@@ -19,6 +19,8 @@ use Flow\PostgreSql\Migrations\VersionResolver;
 use Flow\PostgreSql\Schema\Catalog;
 use PHPUnit\Framework\TestCase;
 
+use function sys_get_temp_dir;
+
 final class MigrationsFactoryTest extends TestCase
 {
     public function test_create_diff_generator(): void
@@ -27,7 +29,7 @@ final class MigrationsFactoryTest extends TestCase
             new Configuration(
                 new SpyClient(),
                 new FakeCatalogProvider(new Catalog([])),
-                \sys_get_temp_dir() . '/flow_migrations_test',
+                sys_get_temp_dir() . '/flow_migrations_test',
                 'App\\Migrations',
             ),
             new FakeMigrationRepository(),
@@ -45,7 +47,7 @@ final class MigrationsFactoryTest extends TestCase
             new Configuration(
                 new SpyClient(),
                 new FakeCatalogProvider(new Catalog([])),
-                \sys_get_temp_dir() . '/flow_migrations_test',
+                sys_get_temp_dir() . '/flow_migrations_test',
                 'App\\Migrations',
             ),
             new FakeMigrationRepository(),
@@ -60,7 +62,7 @@ final class MigrationsFactoryTest extends TestCase
             new Configuration(
                 new SpyClient(),
                 new FakeCatalogProvider(new Catalog([])),
-                \sys_get_temp_dir() . '/flow_migrations_test',
+                sys_get_temp_dir() . '/flow_migrations_test',
                 'App\\Migrations',
             ),
             new FakeMigrationRepository(),
@@ -75,7 +77,7 @@ final class MigrationsFactoryTest extends TestCase
             new Configuration(
                 new SpyClient(),
                 new FakeCatalogProvider(new Catalog([])),
-                \sys_get_temp_dir() . '/flow_migrations_test',
+                sys_get_temp_dir() . '/flow_migrations_test',
                 'App\\Migrations',
             ),
             new FakeMigrationRepository(),
@@ -90,7 +92,7 @@ final class MigrationsFactoryTest extends TestCase
             new Configuration(
                 new SpyClient(),
                 new FakeCatalogProvider(new Catalog([])),
-                \sys_get_temp_dir() . '/flow_migrations_test',
+                sys_get_temp_dir() . '/flow_migrations_test',
                 'App\\Migrations',
             ),
             new FakeMigrationRepository(),

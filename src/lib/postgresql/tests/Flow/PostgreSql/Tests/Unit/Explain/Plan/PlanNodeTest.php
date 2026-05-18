@@ -11,6 +11,8 @@ use Flow\PostgreSql\Explain\Plan\PlanNodeType;
 use Flow\PostgreSql\Explain\Plan\Timing;
 use PHPUnit\Framework\TestCase;
 
+use function array_keys;
+
 final class PlanNodeTest extends TestCase
 {
     public function test_from_array_and_normalize_are_inverse(): void
@@ -182,7 +184,7 @@ final class PlanNodeTest extends TestCase
             'raw_data',
         ];
 
-        static::assertSame($expectedKeys, \array_keys($normalized));
+        static::assertSame($expectedKeys, array_keys($normalized));
     }
 
     public function test_normalize_with_null_optional_fields(): void

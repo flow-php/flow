@@ -6,6 +6,7 @@ namespace Flow\Filesystem;
 
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
+use Generator;
 
 interface Filesystem
 {
@@ -16,7 +17,7 @@ interface Filesystem
     /**
      * @return \Generator<FileStatus>
      */
-    public function list(Path $path, Filter $pathFilter = new KeepAll()): \Generator;
+    public function list(Path $path, Filter $pathFilter = new KeepAll()): Generator;
 
     public function mount(): Mount;
 

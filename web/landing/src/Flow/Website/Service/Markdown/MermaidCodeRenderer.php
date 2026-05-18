@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service\Markdown;
 
+use InvalidArgumentException;
 use League\CommonMark\Extension\CommonMark\Node\Block\FencedCode;
 use League\CommonMark\Node\Node;
 use League\CommonMark\Renderer\ChildNodeRendererInterface;
@@ -20,7 +21,7 @@ final readonly class MermaidCodeRenderer implements NodeRendererInterface
     public function render(Node $node, ChildNodeRendererInterface $childRenderer)
     {
         if (!$node instanceof FencedCode) {
-            throw new \InvalidArgumentException('Incompatible node type: ' . $node::class);
+            throw new InvalidArgumentException('Incompatible node type: ' . $node::class);
         }
 
         $info = $node->getInfo();

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\AsyncAWS;
 
+use function count;
+
 final class BlockList
 {
     /**
@@ -13,14 +15,14 @@ final class BlockList
 
     public function add(string $blockETag): self
     {
-        $this->blocks[\count($this->blocks) + 1] = $blockETag;
+        $this->blocks[count($this->blocks) + 1] = $blockETag;
 
         return $this;
     }
 
     public function count(): int
     {
-        return \count($this->blocks);
+        return count($this->blocks);
     }
 
     /**

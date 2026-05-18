@@ -10,6 +10,10 @@ use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\Type;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
+use function array_filter;
+use function array_values;
+use function count;
+
 final class TableDefinition
 {
     /**
@@ -27,13 +31,13 @@ final class TableDefinition
      */
     public function dbalColumn(string $columnName): Column
     {
-        $dbColumnNames = \array_values(\array_filter(
+        $dbColumnNames = array_values(array_filter(
             $this->getColumns(),
             // @mago-expect analysis:deprecated-method
             static fn(Column $dbColumn): bool => $dbColumn->getName() === $columnName,
         ));
 
-        if (\count($dbColumnNames) !== 1) {
+        if (count($dbColumnNames) !== 1) {
             throw new RuntimeException("Column with name {$columnName}, not found in table: {$this->name}");
         }
 

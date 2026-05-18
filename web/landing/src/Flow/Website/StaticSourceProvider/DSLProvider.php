@@ -7,6 +7,7 @@ namespace Flow\Website\StaticSourceProvider;
 use Flow\Website\Service\Documentation\DSLDefinitions;
 use NorbertTech\StaticContentGeneratorBundle\Content\Source;
 use NorbertTech\StaticContentGeneratorBundle\Content\SourceProvider;
+use RuntimeException;
 
 final readonly class DSLProvider implements SourceProvider
 {
@@ -24,7 +25,7 @@ final readonly class DSLProvider implements SourceProvider
 
         foreach ($this->dslDefinitions->all() as $definition) {
             if ($definition->module() === null) {
-                throw new \RuntimeException(
+                throw new RuntimeException(
                     'Module is required for DSL definition, non given for: ' . $definition->path(),
                 );
             }

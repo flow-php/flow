@@ -10,6 +10,9 @@ use Flow\ETL\Function\Parameter;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Flow\ETL\WithEntry;
+use Throwable;
+
+use function Flow\ETL\DSL\rows;
 
 final readonly class DuplicateRowTransformer implements Transformer
 {
@@ -36,13 +39,13 @@ final readonly class DuplicateRowTransformer implements Transformer
         $context->telemetry()->transformationStarted($this);
 
         try {
-            $duplicatedRows = \Flow\ETL\DSL\rows();
+            $duplicatedRows = rows();
 
             foreach ($rows->all() as $row) {
                 $condition = (new Parameter($this->condition))->asBoolean($row, $context);
 
                 if ($condition) {
-                    $duplicatedRow = \Flow\ETL\DSL\rows($row->duplicate());
+                    $duplicatedRow = rows($row->duplicate());
 
                     foreach ($this->entries as $entry) {
                         $duplicatedRow = (new ScalarFunctionTransformer($entry->name, $entry->function))->transform(
@@ -65,7 +68,7 @@ final readonly class DuplicateRowTransformer implements Transformer
             ]);
 
             return $rows;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->transformationFailed($this, $e);
 
             throw $e;

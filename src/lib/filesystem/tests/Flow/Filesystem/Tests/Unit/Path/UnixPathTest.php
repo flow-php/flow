@@ -8,13 +8,14 @@ use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Path\Options;
 use Flow\Filesystem\Path\UnixPath;
 use Flow\Filesystem\Tests\Unit\PathTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\Filesystem\DSL\partition;
 
 final class UnixPathTest extends PathTestCase
 {
-    public static function partitionProvider(): \Generator
+    public static function partitionProvider(): Generator
     {
         yield 'single partition' => [
             '/file.txt',
@@ -38,7 +39,7 @@ final class UnixPathTest extends PathTestCase
         ];
     }
 
-    public static function pathProvider(): \Generator
+    public static function pathProvider(): Generator
     {
         yield 'file scheme' => ['file://path/to/file.txt', '/path/to/file.txt', 'file'];
         yield 'custom scheme' => ['flow-file://path/to/file.txt', '/path/to/file.txt', 'flow-file'];
@@ -46,7 +47,7 @@ final class UnixPathTest extends PathTestCase
         yield 'relative path' => ['path/to/file.txt', '/path/to/file.txt', 'file'];
     }
 
-    public static function patternProvider(): \Generator
+    public static function patternProvider(): Generator
     {
         yield 'exact match' => ['/file.csv', '/file.csv', true];
         yield 'wildcard match' => ['/nested/folder/*/file.csv', '/nested/folder/any/file.csv', true];

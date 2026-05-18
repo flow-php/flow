@@ -7,6 +7,8 @@ namespace Flow\Parquet\Writer\PageBuilder\DictionaryBuilder;
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\Writer\PageBuilder\Dictionary;
 
+use function pack;
+
 final class FloatDictionaryBuilder
 {
     public function build(WriteFlatColumnValues $data): Dictionary
@@ -21,7 +23,7 @@ final class FloatDictionaryBuilder
                 continue;
             }
 
-            $hash = \pack('E', $value);
+            $hash = pack('E', $value);
 
             if (!isset($valueToIndex[$hash])) {
                 $dictionary[] = $value;

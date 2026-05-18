@@ -33,11 +33,13 @@ use Flow\PostgreSql\Schema\TriggerTiming;
 use Flow\PostgreSql\Schema\View;
 use PHPUnit\Framework\TestCase;
 
+use function count;
 use function Flow\PostgreSql\DSL\schema;
 use function Flow\PostgreSql\DSL\schema_column_integer;
 use function Flow\PostgreSql\DSL\schema_column_text;
 use function Flow\PostgreSql\DSL\schema_column_varchar;
 use function Flow\PostgreSql\DSL\schema_table;
+use function sprintf;
 
 final class CatalogTest extends TestCase
 {
@@ -321,7 +323,7 @@ final class CatalogTest extends TestCase
         foreach ($columns as $i => $originalColumn) {
             static::assertTrue(
                 $originalColumn->type->isEqual($restoredTable->columns[$i]->type),
-                \sprintf('Column type mismatch for %s', $originalColumn->name),
+                sprintf('Column type mismatch for %s', $originalColumn->name),
             );
         }
     }
@@ -470,7 +472,7 @@ final class CatalogTest extends TestCase
             static::assertSame($volatility, $restoredFunctions[$i]->volatility);
         }
 
-        static::assertNull($restoredFunctions[\count(FunctionVolatility::cases())]->volatility);
+        static::assertNull($restoredFunctions[count(FunctionVolatility::cases())]->volatility);
     }
 
     public function test_normalize_and_from_array_with_partition_strategies(): void

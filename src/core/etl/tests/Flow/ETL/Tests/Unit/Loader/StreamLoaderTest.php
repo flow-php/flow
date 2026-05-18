@@ -20,6 +20,9 @@ use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\to_output;
 use function Flow\ETL\DSL\to_stream;
+use function ob_end_clean;
+use function ob_get_contents;
+use function ob_start;
 
 final class StreamLoaderTest extends FlowTestCase
 {
@@ -29,7 +32,7 @@ final class StreamLoaderTest extends FlowTestCase
     {
         $loader = to_output(false, Output::column_count);
 
-        \ob_start();
+        ob_start();
 
         $loader->load(
             rows(
@@ -39,8 +42,8 @@ final class StreamLoaderTest extends FlowTestCase
             ),
             flow_context(config()),
         );
-        $output = \ob_get_contents() ?: '';
-        \ob_end_clean();
+        $output = ob_get_contents() ?: '';
+        ob_end_clean();
 
         self::assertCommandOutputIdentical(<<<'ASCII'
             Columns: 2
@@ -69,7 +72,7 @@ final class StreamLoaderTest extends FlowTestCase
     {
         $loader = new StreamLoader('php://output', Mode::WRITE, 0);
 
-        \ob_start();
+        ob_start();
 
         $loader->load(
             rows(
@@ -79,8 +82,8 @@ final class StreamLoaderTest extends FlowTestCase
             )->partitionBy(ref('group'))[0],
             flow_context(config()),
         );
-        $output = \ob_get_contents() ?: '';
-        \ob_end_clean();
+        $output = ob_get_contents() ?: '';
+        ob_end_clean();
 
         self::assertCommandOutputContains(<<<'TABLE'
             +----+------+-------+
@@ -100,7 +103,7 @@ final class StreamLoaderTest extends FlowTestCase
     {
         $loader = to_output(false, Output::rows_and_schema);
 
-        \ob_start();
+        ob_start();
 
         $loader->load(
             rows(
@@ -110,8 +113,8 @@ final class StreamLoaderTest extends FlowTestCase
             ),
             flow_context(config()),
         );
-        $output = \ob_get_contents() ?: '';
-        \ob_end_clean();
+        $output = ob_get_contents() ?: '';
+        ob_end_clean();
 
         self::assertCommandOutputIdentical(<<<'ASCII'
             +----+------+
@@ -134,7 +137,7 @@ final class StreamLoaderTest extends FlowTestCase
     {
         $loader = new StreamLoader('php://output', Mode::WRITE, 0);
 
-        \ob_start();
+        ob_start();
 
         $loader->load(
             rows(
@@ -144,8 +147,8 @@ final class StreamLoaderTest extends FlowTestCase
             ),
             flow_context(config()),
         );
-        $output = \ob_get_contents() ?: '';
-        \ob_end_clean();
+        $output = ob_get_contents() ?: '';
+        ob_end_clean();
 
         self::assertCommandOutputContains(<<<'TABLE'
             +----+------+
@@ -163,7 +166,7 @@ final class StreamLoaderTest extends FlowTestCase
     {
         $loader = new StreamLoader('php://output', Mode::WRITE, 0, Output::schema);
 
-        \ob_start();
+        ob_start();
 
         $loader->load(
             rows(
@@ -173,8 +176,8 @@ final class StreamLoaderTest extends FlowTestCase
             ),
             flow_context(config()),
         );
-        $output = \ob_get_contents() ?: '';
-        \ob_end_clean();
+        $output = ob_get_contents() ?: '';
+        ob_end_clean();
 
         self::assertCommandOutputIdentical(<<<'ASCII'
             schema
@@ -188,7 +191,7 @@ final class StreamLoaderTest extends FlowTestCase
     {
         $loader = to_output(false, Output::rows_and_column_count);
 
-        \ob_start();
+        ob_start();
 
         $loader->load(
             rows(
@@ -198,8 +201,8 @@ final class StreamLoaderTest extends FlowTestCase
             ),
             flow_context(config()),
         );
-        $output = \ob_get_contents() ?: '';
-        \ob_end_clean();
+        $output = ob_get_contents() ?: '';
+        ob_end_clean();
 
         self::assertCommandOutputIdentical(<<<'ASCII'
             Rows: 3, Columns: 2
@@ -211,7 +214,7 @@ final class StreamLoaderTest extends FlowTestCase
     {
         $loader = to_output(false, Output::rows_count);
 
-        \ob_start();
+        ob_start();
 
         $loader->load(
             rows(
@@ -221,8 +224,8 @@ final class StreamLoaderTest extends FlowTestCase
             ),
             flow_context(config()),
         );
-        $output = \ob_get_contents() ?: '';
-        \ob_end_clean();
+        $output = ob_get_contents() ?: '';
+        ob_end_clean();
 
         self::assertCommandOutputIdentical(<<<'ASCII'
             Rows: 3

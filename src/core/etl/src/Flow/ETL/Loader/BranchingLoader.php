@@ -11,6 +11,7 @@ use Flow\ETL\Loader;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
+use Throwable;
 
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
@@ -45,7 +46,7 @@ final class BranchingLoader implements Closure, Loader, OverridingLoader
             $this->loader->load($rows, $context);
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 
             throw $e;

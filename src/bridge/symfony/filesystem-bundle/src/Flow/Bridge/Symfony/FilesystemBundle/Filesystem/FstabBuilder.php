@@ -9,6 +9,8 @@ use Flow\Bridge\Symfony\FilesystemBundle\Exception\LogicException;
 use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Telemetry\FilesystemTelemetryConfig;
 
+use function sprintf;
+
 final class FstabBuilder
 {
     /**
@@ -36,7 +38,7 @@ final class FstabBuilder
                 $filesystem = $factory->create($protocol, $options);
             } catch (InvalidArgumentException|\Flow\ETL\Exception\InvalidArgumentException $e) {
                 throw new LogicException(
-                    \sprintf('Fstab "%s" mount "%s": %s', $fstabName, $protocol, $e->getMessage()),
+                    sprintf('Fstab "%s" mount "%s": %s', $fstabName, $protocol, $e->getMessage()),
                     0,
                     $e,
                 );

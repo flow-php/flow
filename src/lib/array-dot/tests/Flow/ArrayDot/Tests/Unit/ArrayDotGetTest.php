@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ArrayDot\Tests\Unit;
 
+use DateTimeImmutable;
 use Flow\ArrayDot\Exception\InvalidPathException;
 use Flow\ArrayDot\Tests\Unit\Fixtures\Letters;
 use Flow\ArrayDot\Tests\Unit\Fixtures\Numbers;
@@ -438,7 +439,7 @@ final class ArrayDotGetTest extends TestCase
     public function test_array_dot_get_datetime(): void
     {
         static::assertEquals(
-            new \DateTimeImmutable('2021-01-01 00:00:00'),
+            new DateTimeImmutable('2021-01-01 00:00:00'),
             array_dot_get(['created_at' => '2021-01-01 00:00:00'], 'created_at', type_datetime()),
         );
 

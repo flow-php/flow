@@ -8,6 +8,8 @@ use Flow\Bridge\Symfony\PostgreSQLMessenger\MessengerCatalogProvider;
 use Flow\PostgreSql\Schema\IdentityGeneration;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
+
 final class MessengerCatalogProviderTest extends TestCase
 {
     public function test_body_headers_queue_name_not_nullable(): void
@@ -59,7 +61,7 @@ final class MessengerCatalogProviderTest extends TestCase
     public function test_index_names_use_custom_table_name_prefix(): void
     {
         $provider = new MessengerCatalogProvider('my_queue');
-        $indexNames = \array_map(static fn($i) => $i->name, $provider->get()->get('public')->tables[0]->indexes);
+        $indexNames = array_map(static fn($i) => $i->name, $provider->get()->get('public')->tables[0]->indexes);
 
         static::assertContains('idx_my_queue_queue_name', $indexNames);
         static::assertContains('idx_my_queue_available_at', $indexNames);
@@ -117,7 +119,7 @@ final class MessengerCatalogProviderTest extends TestCase
         $indexes = $provider->get()->get('public')->tables[0]->indexes;
 
         static::assertCount(3, $indexes);
-        $indexColumns = \array_map(static fn($i) => $i->columns, $indexes);
+        $indexColumns = array_map(static fn($i) => $i->columns, $indexes);
         static::assertContains(['queue_name'], $indexColumns);
         static::assertContains(['available_at'], $indexColumns);
         static::assertContains(['delivered_at'], $indexColumns);

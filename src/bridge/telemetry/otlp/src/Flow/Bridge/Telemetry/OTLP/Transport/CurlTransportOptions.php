@@ -4,6 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Transport;
 
+use InvalidArgumentException;
+
+use const CURLOPT_CAINFO;
+use const CURLOPT_CONNECTTIMEOUT_MS;
+use const CURLOPT_ENCODING;
+use const CURLOPT_FOLLOWLOCATION;
+use const CURLOPT_HTTPHEADER;
+use const CURLOPT_MAXREDIRS;
+use const CURLOPT_POST;
+use const CURLOPT_POSTFIELDS;
+use const CURLOPT_PROXY;
+use const CURLOPT_RETURNTRANSFER;
+use const CURLOPT_SSL_VERIFYHOST;
+use const CURLOPT_SSL_VERIFYPEER;
+use const CURLOPT_SSLCERT;
+use const CURLOPT_SSLKEY;
+use const CURLOPT_TIMEOUT_MS;
+use const CURLOPT_URL;
+
 /**
  * Configuration options for CurlTransport.
  *
@@ -136,37 +155,37 @@ final class CurlTransportOptions
     public function toCurlOptions(string $url, string $body, array $headers): array
     {
         $curlOptions = [
-            \CURLOPT_URL => $url,
-            \CURLOPT_POST => true,
-            \CURLOPT_POSTFIELDS => $body,
-            \CURLOPT_RETURNTRANSFER => true,
-            \CURLOPT_TIMEOUT_MS => $this->timeoutMs,
-            \CURLOPT_CONNECTTIMEOUT_MS => $this->connectTimeoutMs,
-            \CURLOPT_HTTPHEADER => $headers,
-            \CURLOPT_FOLLOWLOCATION => $this->followRedirects,
-            \CURLOPT_MAXREDIRS => $this->maxRedirects,
-            \CURLOPT_SSL_VERIFYPEER => $this->sslVerifyPeer,
-            \CURLOPT_SSL_VERIFYHOST => $this->sslVerifyHost ? 2 : 0,
+            CURLOPT_URL => $url,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $body,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT_MS => $this->timeoutMs,
+            CURLOPT_CONNECTTIMEOUT_MS => $this->connectTimeoutMs,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_FOLLOWLOCATION => $this->followRedirects,
+            CURLOPT_MAXREDIRS => $this->maxRedirects,
+            CURLOPT_SSL_VERIFYPEER => $this->sslVerifyPeer,
+            CURLOPT_SSL_VERIFYHOST => $this->sslVerifyHost ? 2 : 0,
         ];
 
         if ($this->sslCertPath !== null) {
-            $curlOptions[\CURLOPT_SSLCERT] = $this->sslCertPath;
+            $curlOptions[CURLOPT_SSLCERT] = $this->sslCertPath;
         }
 
         if ($this->sslKeyPath !== null) {
-            $curlOptions[\CURLOPT_SSLKEY] = $this->sslKeyPath;
+            $curlOptions[CURLOPT_SSLKEY] = $this->sslKeyPath;
         }
 
         if ($this->caInfoPath !== null) {
-            $curlOptions[\CURLOPT_CAINFO] = $this->caInfoPath;
+            $curlOptions[CURLOPT_CAINFO] = $this->caInfoPath;
         }
 
         if ($this->proxy !== null) {
-            $curlOptions[\CURLOPT_PROXY] = $this->proxy;
+            $curlOptions[CURLOPT_PROXY] = $this->proxy;
         }
 
         if ($this->compression) {
-            $curlOptions[\CURLOPT_ENCODING] = '';
+            $curlOptions[CURLOPT_ENCODING] = '';
         }
 
         return $curlOptions;
@@ -207,7 +226,7 @@ final class CurlTransportOptions
     public function withConnectTimeout(int $milliseconds): self
     {
         if ($milliseconds < 0) {
-            throw new \InvalidArgumentException('Connect timeout must be non-negative');
+            throw new InvalidArgumentException('Connect timeout must be non-negative');
         }
 
         $this->connectTimeoutMs = $milliseconds;
@@ -224,7 +243,7 @@ final class CurlTransportOptions
     public function withFollowRedirects(bool $follow, int $maxRedirects = 3): self
     {
         if ($maxRedirects < 0) {
-            throw new \InvalidArgumentException('Max redirects must be non-negative');
+            throw new InvalidArgumentException('Max redirects must be non-negative');
         }
 
         $this->followRedirects = $follow;
@@ -284,7 +303,7 @@ final class CurlTransportOptions
     public function withShutdownTimeout(int $milliseconds): self
     {
         if ($milliseconds < 0) {
-            throw new \InvalidArgumentException('Shutdown timeout must be non-negative');
+            throw new InvalidArgumentException('Shutdown timeout must be non-negative');
         }
 
         $this->shutdownTimeoutMs = $milliseconds;
@@ -328,7 +347,7 @@ final class CurlTransportOptions
     public function withTimeout(int $milliseconds): self
     {
         if ($milliseconds < 0) {
-            throw new \InvalidArgumentException('Timeout must be non-negative');
+            throw new InvalidArgumentException('Timeout must be non-negative');
         }
 
         $this->timeoutMs = $milliseconds;

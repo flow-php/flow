@@ -15,6 +15,8 @@ use Flow\PostgreSql\QueryBuilder\Expression\AliasedExpression;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 
+use function count;
+
 final readonly class NotCondition implements Condition
 {
     public function __construct(
@@ -42,11 +44,11 @@ final readonly class NotCondition implements Condition
 
         $args = $boolExpr->getArgs();
 
-        if (\count($args) !== 1) {
+        if (count($args) !== 1) {
             throw InvalidAstException::invalidFieldValue(
                 'args',
                 'BoolExpr',
-                'NOT_EXPR must have exactly one argument, got ' . \count($args),
+                'NOT_EXPR must have exactly one argument, got ' . count($args),
             );
         }
 

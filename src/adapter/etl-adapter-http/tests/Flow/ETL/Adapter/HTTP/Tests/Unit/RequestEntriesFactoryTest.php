@@ -8,19 +8,23 @@ use Flow\ETL\Adapter\Http\RequestEntriesFactory;
 use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Psr\Http\Message\RequestInterface;
+use RuntimeException;
+
+use function json_encode;
 
 final class RequestEntriesFactoryTest extends FlowTestCase
 {
-    public static function requests(): \Generator
+    public static function requests(): Generator
     {
         $messageFactory = new Psr17Factory();
-        $jsonContent = \json_encode(['status' => 'success']);
+        $jsonContent = json_encode(['status' => 'success']);
 
         if ($jsonContent === false) {
-            throw new \RuntimeException('Failed to encode JSON');
+            throw new RuntimeException('Failed to encode JSON');
         }
 
         $request = $messageFactory

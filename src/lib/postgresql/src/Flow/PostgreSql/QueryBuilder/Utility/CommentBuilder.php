@@ -12,6 +12,8 @@ use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
+use function in_array;
+
 final readonly class CommentBuilder implements CommentFinalStep
 {
     use AstToSql;
@@ -71,7 +73,7 @@ final readonly class CommentBuilder implements CommentFinalStep
 
             $list->setItems($items);
             $node->setList($list);
-        } elseif (\in_array($this->target, [CommentTarget::FUNCTION, CommentTarget::PROCEDURE], true)) {
+        } elseif (in_array($this->target, [CommentTarget::FUNCTION, CommentTarget::PROCEDURE], true)) {
             $identifier = QualifiedIdentifier::parse($this->name);
             $list = new PBList();
             $items = [];
@@ -86,7 +88,7 @@ final readonly class CommentBuilder implements CommentFinalStep
 
             $list->setItems($items);
             $node->setList($list);
-        } elseif (\in_array(
+        } elseif (in_array(
             $this->target->value,
             [
                 ObjectType::OBJECT_TABLE,

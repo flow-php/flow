@@ -12,11 +12,13 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Throwable;
 
 use function Flow\Filesystem\DSL\file_move;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
+use function sprintf;
 
 #[AsCommand(
     name: 'flow:filesystem:mv',
@@ -60,9 +62,9 @@ final class MvCommand extends Command
 
             try {
                 $sourceFs = $table->for($source);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 throw new InvalidArgumentException(
-                    \sprintf('in fstab "%s": source: %s', $activeFstab, $e->getMessage()),
+                    sprintf('in fstab "%s": source: %s', $activeFstab, $e->getMessage()),
                     0,
                     $e,
                 );
@@ -70,9 +72,9 @@ final class MvCommand extends Command
 
             try {
                 $table->for($dest);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 throw new InvalidArgumentException(
-                    \sprintf('in fstab "%s": destination: %s', $activeFstab, $e->getMessage()),
+                    sprintf('in fstab "%s": destination: %s', $activeFstab, $e->getMessage()),
                     0,
                     $e,
                 );
@@ -81,21 +83,21 @@ final class MvCommand extends Command
             $sourceStatus = $sourceFs->status($source);
 
             if ($sourceStatus === null) {
-                throw new InvalidArgumentException(\sprintf('Source not found: %s', $source->uri()));
+                throw new InvalidArgumentException(sprintf('Source not found: %s', $source->uri()));
             }
 
             if ($sourceStatus->isDirectory()) {
-                throw new InvalidArgumentException(\sprintf('Refusing to move directory: %s', $source->uri()));
+                throw new InvalidArgumentException(sprintf('Refusing to move directory: %s', $source->uri()));
             }
 
             file_move($table)->execute($source, $dest);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $io->getErrorStyle()->error($e->getMessage());
 
             return Command::FAILURE;
         }
 
-        $io->success(\sprintf('Moved %s → %s', $source->uri(), $dest->uri()));
+        $io->success(sprintf('Moved %s → %s', $source->uri(), $dest->uri()));
 
         return Command::SUCCESS;
     }

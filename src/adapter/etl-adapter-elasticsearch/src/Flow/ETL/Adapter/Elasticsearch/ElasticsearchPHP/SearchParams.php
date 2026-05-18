@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
+use function array_key_exists;
+use function array_merge;
+
 final readonly class SearchParams
 {
     /**
@@ -23,20 +26,20 @@ final readonly class SearchParams
 
     public function hasSort(): bool
     {
-        if (\array_key_exists('body', $this->params)) {
-            if (\array_key_exists('sort', $this->params['body'])) {
+        if (array_key_exists('body', $this->params)) {
+            if (array_key_exists('sort', $this->params['body'])) {
                 return true;
             }
         }
 
-        return \array_key_exists('sort', $this->params);
+        return array_key_exists('sort', $this->params);
     }
 
     public function remove(string $key): self
     {
         $params = $this->params;
 
-        if (\array_key_exists($key, $params)) {
+        if (array_key_exists($key, $params)) {
             unset($params[$key]);
         }
 
@@ -45,11 +48,11 @@ final readonly class SearchParams
 
     public function set(string $key, mixed $value): self
     {
-        return new self(\array_merge($this->params, [$key => $value]));
+        return new self(array_merge($this->params, [$key => $value]));
     }
 
     public function setBody(string $key, mixed $value): self
     {
-        return $this->set('body', \array_merge($this->params['body'], [$key => $value]));
+        return $this->set('body', array_merge($this->params['body'], [$key => $value]));
     }
 }

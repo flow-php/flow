@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit;
 
+use DateTimeImmutable;
 use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\PostgreSql\Client\TypedValue;
@@ -54,7 +55,7 @@ final class EntryTypesMapTest extends TestCase
     public function test_maps_datetime_entry_to_timestamptz_type(): void
     {
         $map = new EntryTypesMap();
-        $date = new \DateTimeImmutable('2024-01-15 10:30:00');
+        $date = new DateTimeImmutable('2024-01-15 10:30:00');
         $result = $map->mapEntry(datetime_entry('created_at', $date));
 
         static::assertInstanceOf(TypedValue::class, $result);

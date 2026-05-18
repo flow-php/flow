@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Unit\RowsNormalizer\EntryNormalizer;
 
+use DateTimeImmutable;
 use Flow\ETL\Adapter\XML\Abstraction\XMLAttribute;
 use Flow\ETL\Adapter\XML\Abstraction\XMLNode;
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Json;
+use stdClass;
 
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
@@ -56,7 +58,7 @@ final class PHPValueNormalizerTest extends FlowTestCase
 
         static::assertEquals(
             XMLNode::flatNode('array', '2024-08-22T02:00:00.000000+00:00'),
-            $normalizer->normalize('array', type_datetime(), new \DateTimeImmutable('2024-08-22 02:00:00 UTC')),
+            $normalizer->normalize('array', type_datetime(), new DateTimeImmutable('2024-08-22 02:00:00 UTC')),
         );
     }
 
@@ -98,7 +100,7 @@ final class PHPValueNormalizerTest extends FlowTestCase
 
         static::assertEquals(
             XMLNode::flatNode('object', '{"a":"1","b":22}'),
-            $normalizer->normalize('object', type_instance_of(\stdClass::class), (object) ['a' => '1', 'b' => 22]),
+            $normalizer->normalize('object', type_instance_of(stdClass::class), (object) ['a' => '1', 'b' => 22]),
         );
     }
 

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel;
 
+use function preg_match;
+use function strtoupper;
+
 final readonly class PathExclusionRule
 {
     public function __construct(
@@ -21,11 +24,11 @@ final readonly class PathExclusionRule
 
     public function matches(string $path, string $method): bool
     {
-        if ($this->method !== null && \strtoupper($this->method) !== \strtoupper($method)) {
+        if ($this->method !== null && strtoupper($this->method) !== strtoupper($method)) {
             return false;
         }
 
-        $result = @\preg_match($this->path, $path);
+        $result = @preg_match($this->path, $path);
 
         if ($result !== false) {
             return (bool) $result;

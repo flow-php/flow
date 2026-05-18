@@ -6,6 +6,7 @@ namespace Flow\CLI\Arguments;
 
 use Flow\ETL\Config;
 use Flow\Filesystem\Path;
+use InvalidArgumentException;
 use Symfony\Component\Console\Input\InputInterface;
 
 use function Flow\CLI\argument_string;
@@ -27,7 +28,7 @@ final readonly class FilePathArgument
         $path = path_real(argument_string($this->path, $input));
 
         if ($config->fstab()->for($path)->status($path) === null) {
-            throw new \InvalidArgumentException("File '{$path->path()}' does not exist.");
+            throw new InvalidArgumentException("File '{$path->path()}' does not exist.");
         }
 
         return $path;
@@ -38,7 +39,7 @@ final readonly class FilePathArgument
         $path = path_real(argument_string($this->path, $input));
 
         if ($config->fstab()->for($path)->status($path) !== null) {
-            throw new \InvalidArgumentException("File '{$path->path()}' already exist.");
+            throw new InvalidArgumentException("File '{$path->path()}' already exist.");
         }
 
         return $path;

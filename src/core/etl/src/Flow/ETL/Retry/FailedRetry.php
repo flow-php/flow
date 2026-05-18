@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Retry;
 
+use DateTimeImmutable;
 use Psr\Clock\ClockInterface;
+use Throwable;
 
 final readonly class FailedRetry
 {
     private function __construct(
-        public \DateTimeImmutable $timestamp,
-        public \Throwable $exception,
+        public DateTimeImmutable $timestamp,
+        public Throwable $exception,
         public int $attemptNumber,
     ) {}
 
-    public static function create(ClockInterface $clock, \Throwable $exception, int $attemptNumber): self
+    public static function create(ClockInterface $clock, Throwable $exception, int $attemptNumber): self
     {
         return new self($clock->now(), $exception, $attemptNumber);
     }

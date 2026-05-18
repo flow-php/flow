@@ -18,6 +18,10 @@ use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\Schema\IdentityGeneration;
 
+use function is_bool;
+use function is_float;
+use function is_int;
+
 final readonly class ColumnDefinition
 {
     /**
@@ -261,11 +265,11 @@ final readonly class ColumnDefinition
 
         if ($value === null) {
             $aConst->setIsnull(true);
-        } elseif (\is_bool($value)) {
+        } elseif (is_bool($value)) {
             $aConst = new A_Const(['boolval' => new PBBoolean(['boolval' => $value])]);
-        } elseif (\is_int($value)) {
+        } elseif (is_int($value)) {
             $aConst = new A_Const(['ival' => new PBInteger(['ival' => $value])]);
-        } elseif (\is_float($value)) {
+        } elseif (is_float($value)) {
             $aConst->setFval((new PBFloat())->setFval((string) $value));
         } else {
             $aConst->setSval((new PBString())->setSval($value));

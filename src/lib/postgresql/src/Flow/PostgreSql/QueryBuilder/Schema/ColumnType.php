@@ -11,8 +11,11 @@ use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\TypeName;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
+use function count;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
+use function is_int;
+use function is_string;
 
 /**
  * @phpstan-type ColumnTypeShape = array{name: string, schema?: ?string, precision?: ?int, scale?: ?int, is_array?: bool}
@@ -93,9 +96,9 @@ final readonly class ColumnType
 
         return new self(
             name: type_string()->assert($data['name']),
-            schema: \is_string($schema) ? $schema : null,
-            precision: \is_int($precision) ? $precision : null,
-            scale: \is_int($scale) ? $scale : null,
+            schema: is_string($schema) ? $schema : null,
+            precision: is_int($precision) ? $precision : null,
+            scale: is_int($scale) ? $scale : null,
             isArray: $data['is_array'] ?? false,
         );
     }
@@ -104,7 +107,7 @@ final readonly class ColumnType
     {
         $namesNodes = $typeName->getNames();
 
-        if (\count($namesNodes) === 0) {
+        if (count($namesNodes) === 0) {
             throw InvalidAstException::missingRequiredField('names', 'TypeName');
         }
 
@@ -120,8 +123,8 @@ final readonly class ColumnType
             $names[] = $stringNode->getSval();
         }
 
-        $schema = \count($names) > 1 ? $names[0] : null;
-        $name = $names[\count($names) - 1];
+        $schema = count($names) > 1 ? $names[0] : null;
+        $name = $names[count($names) - 1];
 
         $typmods = [];
         $typmodsNodes = $typeName->getTypmods();

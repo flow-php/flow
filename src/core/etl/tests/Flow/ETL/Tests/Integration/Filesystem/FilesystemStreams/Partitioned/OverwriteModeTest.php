@@ -9,13 +9,16 @@ use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTes
 use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Tests\Double\FakeNativeLocalFilesystem;
+use Override;
 
+use function file_get_contents;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\Filesystem\DSL\path;
+use function iterator_to_array;
 
 final class OverwriteModeTest extends FilesystemStreamsTestCase
 {
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         parent::tearDown();
@@ -39,12 +42,12 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
         $fileStream->append('new content');
         $streams->closeStreams($file);
 
-        $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/**/*.txt')));
+        $files = iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/**/*.txt')));
 
         static::assertCount(1, $files);
 
         static::assertStringStartsWith('file.txt', $files[0]->path->basename());
-        static::assertSame('new content', \file_get_contents($files[0]->path->path()));
+        static::assertSame('new content', file_get_contents($files[0]->path->path()));
     }
 
     public function test_open_stream_for_existing_partition_without_existing_file(): void
@@ -62,12 +65,12 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
         $fileStream->append('new content');
         $streams->closeStreams($file);
 
-        $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/**/*.txt')));
+        $files = iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/**/*.txt')));
 
         static::assertCount(1, $files);
 
         static::assertSame('file.txt', $files[0]->path->basename());
-        static::assertSame('new content', \file_get_contents($files[0]->path->path()));
+        static::assertSame('new content', file_get_contents($files[0]->path->path()));
     }
 
     public function test_open_stream_for_non_existing_partition(): void
@@ -82,12 +85,12 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
         $appendedFile = $streams->writeTo($file, partitions: [new Partition('partition', 'value')]);
         $appendedFile->append('new content');
         $streams->closeStreams($file);
-        $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/partition=value/*')));
+        $files = iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/partition=value/*')));
 
         static::assertCount(1, $files);
 
         static::assertSame('file.txt', $files[0]->path->basename());
-        static::assertSame('new content', \file_get_contents($files[0]->path->path()));
+        static::assertSame('new content', file_get_contents($files[0]->path->path()));
     }
 
     public function test_open_stream_for_non_existing_partition_with_custom_schema(): void
@@ -107,12 +110,12 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
         $appendedFile->append('new content');
 
         $streams->closeStreams($file);
-        $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/partition=value/*')));
+        $files = iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/partition=value/*')));
 
         static::assertCount(1, $files);
 
         static::assertSame('file.txt', $files[0]->path->basename());
-        static::assertSame('new content', \file_get_contents($files[0]->path->path()));
+        static::assertSame('new content', file_get_contents($files[0]->path->path()));
     }
 
     protected function streams(): FilesystemStreams

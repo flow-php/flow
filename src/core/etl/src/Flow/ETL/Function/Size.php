@@ -7,6 +7,9 @@ namespace Flow\ETL\Function;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function count;
+use function is_countable;
+use function is_string;
 use function Symfony\Component\String\s;
 
 final class Size extends ScalarFunctionChain
@@ -19,12 +22,12 @@ final class Size extends ScalarFunctionChain
     {
         $value = (new Parameter($this->value))->eval($row, $context);
 
-        if (\is_string($value)) {
+        if (is_string($value)) {
             return s($value)->length();
         }
 
-        if (\is_countable($value)) {
-            return \count($value);
+        if (is_countable($value)) {
+            return count($value);
         }
 
         return null;

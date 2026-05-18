@@ -4,21 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use Dom\HTMLDocument;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_html;
 use function Flow\Types\DSL\type_string;
+use function preg_replace;
 
 #[RequiresPhp('>= 8.4')]
 final class HTMLTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'valid HTMLDocument' => [
             'value' => HTMLDocument::createFromString('<!DOCTYPE html><html><head></head><body></body></html>'),
@@ -51,17 +56,17 @@ final class HTMLTypeTest extends TestCase
         ];
 
         yield 'invalid object' => [
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid DateTimeZone' => [
-            'value' => new \DateTimeZone('UTC'),
+            'value' => new DateTimeZone('UTC'),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid DateTimeImmutable' => [
-            'value' => new \DateTimeImmutable(),
+            'value' => new DateTimeImmutable(),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
@@ -71,12 +76,12 @@ final class HTMLTypeTest extends TestCase
         ];
 
         yield 'random object' => [
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'exceptionClass' => InvalidTypeException::class,
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
         yield 'valid HTMLDocument' => [
             'value' => HTMLDocument::createFromString(
@@ -128,13 +133,13 @@ final class HTMLTypeTest extends TestCase
         ];
 
         yield 'random object' => [
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'expected' => null,
             'exceptionClass' => CastingException::class,
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'valid HTMLDocument' => [
             'value' => HTMLDocument::createFromString(
@@ -209,6 +214,6 @@ final class HTMLTypeTest extends TestCase
 
     private function assertHtmlEquals(string $expected, string $html): void
     {
-        self::assertEquals(\preg_replace('/\s*/', '', $expected), \preg_replace('/\s*/', '', $html));
+        self::assertEquals(preg_replace('/\s*/', '', $expected), preg_replace('/\s*/', '', $html));
     }
 }

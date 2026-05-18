@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Arrow;
 
-if (\extension_loaded('arrow')) {
+use function extension_loaded;
+
+if (extension_loaded('arrow')) {
     return;
 }
 

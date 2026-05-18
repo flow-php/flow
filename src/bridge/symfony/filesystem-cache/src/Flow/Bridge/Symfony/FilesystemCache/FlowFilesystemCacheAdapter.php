@@ -14,6 +14,18 @@ use Symfony\Component\Cache\Marshaller\DefaultMarshaller;
 use Symfony\Component\Cache\Marshaller\MarshallerInterface;
 use Symfony\Component\Cache\PruneableInterface;
 
+use function base64_encode;
+use function count;
+use function explode;
+use function hash;
+use function preg_match;
+use function rtrim;
+use function sprintf;
+use function str_replace;
+use function str_starts_with;
+use function substr;
+use function time;
+
 final class FlowFilesystemCacheAdapter extends AbstractAdapter implements PruneableInterface
 {
     private const int MAX_KEY_LENGTH = 255;
@@ -27,8 +39,8 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
         int $defaultLifetime = 0,
         ?MarshallerInterface $marshaller = null,
     ) {
-        if (isset($namespace[0]) && \preg_match('#[^-+.A-Za-z0-9]#', $namespace, $match)) {
-            throw new InvalidArgumentException(\sprintf(
+        if (isset($namespace[0]) && preg_match('#[^-+.A-Za-z0-9]#', $namespace, $match)) {
+            throw new InvalidArgumentException(sprintf(
                 'Namespace contains "%s" but only characters in [-+.A-Za-z0-9] are allowed.',
                 $match[0],
             ));
@@ -41,7 +53,7 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
 
     public function prune(): bool
     {
-        $now = \time();
+        $now = time();
 
         foreach ($this->filesystem->list($this->listPattern(), new OnlyFiles()) as $status) {
             $expiry = $this->readExpiry($status->path);
@@ -63,7 +75,7 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
                 continue;
             }
 
-            if (\str_starts_with($this->readId($status->path), $namespace)) {
+            if (str_starts_with($this->readId($status->path), $namespace)) {
                 $this->filesystem->rm($status->path);
             }
         }
@@ -98,7 +110,7 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
      */
     protected function doFetch(array $ids): iterable
     {
-        $now = \time();
+        $now = time();
         $expired = [];
 
         foreach ($ids as $id) {
@@ -116,9 +128,9 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
                 $stream->close();
             }
 
-            $parts = \explode("\n", $content, 3);
+            $parts = explode("\n", $content, 3);
 
-            if (\count($parts) < 3) {
+            if (count($parts) < 3) {
                 throw FilesystemCacheException::corruptedCacheFile($path->path());
             }
 
@@ -149,7 +161,7 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
 
         $expiry = $this->readExpiry($path);
 
-        return $expiry === 0 || $expiry > \time();
+        return $expiry === 0 || $expiry > time();
     }
 
     /**
@@ -166,12 +178,12 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
             return $failed ?? [];
         }
 
-        $expiry = $lifetime > 0 ? \time() + $lifetime : 0;
+        $expiry = $lifetime > 0 ? time() + $lifetime : 0;
 
         foreach ($marshalled as $id => $value) {
             $path = $this->fileFor((string) $id);
             $tmp = $path->randomize();
-            $content = \sprintf('%010d', $expiry) . "\n" . (string) $id . "\n" . $value;
+            $content = sprintf('%010d', $expiry) . "\n" . (string) $id . "\n" . $value;
 
             $stream = $this->filesystem->writeTo($tmp);
 
@@ -193,14 +205,14 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
 
     private function fileFor(string $id): Path
     {
-        $hash = \str_replace('/', '-', \base64_encode(\hash('xxh128', $id, true)));
+        $hash = str_replace('/', '-', base64_encode(hash('xxh128', $id, true)));
 
-        return Path::from(\rtrim($this->directory->uri(), '/') . '/' . \substr($hash, 0, 2) . '/' . \substr($hash, 2));
+        return Path::from(rtrim($this->directory->uri(), '/') . '/' . substr($hash, 0, 2) . '/' . substr($hash, 2));
     }
 
     private function listPattern(): Path
     {
-        return Path::from(\rtrim($this->directory->uri(), '/') . '/**/*');
+        return Path::from(rtrim($this->directory->uri(), '/') . '/**/*');
     }
 
     private function readExpiry(Path $path): int

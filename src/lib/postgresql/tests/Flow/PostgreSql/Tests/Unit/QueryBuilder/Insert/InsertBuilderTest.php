@@ -18,6 +18,7 @@ use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use Flow\PostgreSql\QueryBuilder\Insert\InsertBuilder;
 use PHPUnit\Framework\TestCase;
 
+use function count;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\conflict_columns;
 use function Flow\PostgreSql\DSL\insert;
@@ -26,6 +27,7 @@ use function Flow\PostgreSql\DSL\param;
 use function Flow\PostgreSql\DSL\parameters;
 use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\table;
+use function function_exists;
 
 final class InsertBuilderTest extends TestCase
 {
@@ -132,7 +134,7 @@ final class InsertBuilderTest extends TestCase
 
     public function test_insert_multiple_rows_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -320,7 +322,7 @@ final class InsertBuilderTest extends TestCase
 
     public function test_insert_with_function_values_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -348,7 +350,7 @@ final class InsertBuilderTest extends TestCase
 
     public function test_insert_with_on_conflict_do_nothing_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -380,7 +382,7 @@ final class InsertBuilderTest extends TestCase
 
     public function test_insert_with_on_conflict_do_update_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -465,7 +467,7 @@ final class InsertBuilderTest extends TestCase
 
     public function test_insert_with_returning_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -501,7 +503,7 @@ final class InsertBuilderTest extends TestCase
 
     public function test_insert_with_schema_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -527,7 +529,7 @@ final class InsertBuilderTest extends TestCase
 
         static::assertInstanceOf(InsertStmt::class, $ast);
         $cols = $ast->getCols();
-        static::assertTrue(\count($cols) === 0);
+        static::assertTrue(count($cols) === 0);
     }
 
     public function test_insert_without_explicit_columns(): void
@@ -540,7 +542,7 @@ final class InsertBuilderTest extends TestCase
 
         static::assertInstanceOf(InsertStmt::class, $ast);
         $cols = $ast->getCols();
-        static::assertTrue(\count($cols) === 0);
+        static::assertTrue(count($cols) === 0);
         static::assertNotNull($ast->getSelectStmt());
     }
 
@@ -717,7 +719,7 @@ final class InsertBuilderTest extends TestCase
 
     public function test_simple_insert_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 

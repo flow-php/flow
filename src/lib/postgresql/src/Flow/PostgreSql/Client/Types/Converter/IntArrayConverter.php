@@ -8,6 +8,14 @@ use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\ValueConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
 
+use function array_map;
+use function implode;
+use function is_array;
+use function is_float;
+use function is_int;
+use function is_numeric;
+use function is_string;
+
 final class IntArrayConverter implements ValueConverter
 {
     public function supportedTypes(): array
@@ -25,11 +33,11 @@ final class IntArrayConverter implements ValueConverter
             return null;
         }
 
-        if (!\is_array($value)) {
+        if (!is_array($value)) {
             return '{}';
         }
 
-        return '{' . \implode(',', \array_map(self::encodeElement(...), $value)) . '}';
+        return '{' . implode(',', array_map(self::encodeElement(...), $value)) . '}';
     }
 
     private static function encodeElement(mixed $element): string
@@ -38,15 +46,15 @@ final class IntArrayConverter implements ValueConverter
             return 'NULL';
         }
 
-        if (\is_int($element)) {
+        if (is_int($element)) {
             return (string) $element;
         }
 
-        if (\is_string($element) && \is_numeric($element)) {
+        if (is_string($element) && is_numeric($element)) {
             return (string) (int) $element;
         }
 
-        if (\is_float($element)) {
+        if (is_float($element)) {
             return (string) (int) $element;
         }
 

@@ -9,6 +9,7 @@ use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
+use function array_map;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\bool_schema;
@@ -27,6 +28,7 @@ use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_entry;
+use function range;
 
 final class SchemaTest extends FlowIntegrationTestCase
 {
@@ -87,13 +89,13 @@ final class SchemaTest extends FlowIntegrationTestCase
     public function test_getting_schema(): void
     {
         $rows = array_to_rows(
-            \array_map(
+            array_map(
                 static fn($i) => [
                     'id' => $i,
                     'name' => 'name_' . $i,
                     'active' => ($i % 2) === 0,
                 ],
-                \range(1, 100),
+                range(1, 100),
             ),
             flow_context(config())->entryFactory(),
         );
@@ -107,14 +109,14 @@ final class SchemaTest extends FlowIntegrationTestCase
     public function test_getting_schema_from_limited_rows(): void
     {
         $rows = array_to_rows(
-            \array_map(
+            array_map(
                 static fn($i) => [
                     'id' => $i,
                     'name' => 'name_' . $i,
                     'active' => ($i % 2) === 0,
                     'union' => $i > 50 ? 'string' : 1,
                 ],
-                \range(1, 100),
+                range(1, 100),
             ),
             flow_context(config())->entryFactory(),
         );

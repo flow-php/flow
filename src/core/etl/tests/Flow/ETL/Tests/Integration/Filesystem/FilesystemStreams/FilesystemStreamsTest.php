@@ -7,12 +7,15 @@ namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path\Filter\KeepAll;
+use Override;
 
+use function file_get_contents;
 use function Flow\Filesystem\DSL\path;
+use function iterator_to_array;
 
 final class FilesystemStreamsTest extends FilesystemStreamsTestCase
 {
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         parent::tearDown();
@@ -53,7 +56,7 @@ final class FilesystemStreamsTest extends FilesystemStreamsTestCase
         $streams = $this->streams();
         static::assertEquals(
             'file content',
-            \file_get_contents(
+            file_get_contents(
                 $streams
                     ->read($this->getPath(__FUNCTION__ . '/file.txt'))
                     ->path()
@@ -75,7 +78,7 @@ final class FilesystemStreamsTest extends FilesystemStreamsTestCase
         $streams = $this->streams();
         static::assertEquals(
             'file content',
-            \file_get_contents(
+            file_get_contents(
                 $streams
                     ->read($this->getPath(__FUNCTION__ . '/file.txt'), [new Partition('partition', 'a')])
                     ->path()
@@ -133,7 +136,7 @@ final class FilesystemStreamsTest extends FilesystemStreamsTestCase
         $streams = $this->streams();
         static::assertCount(
             4,
-            \iterator_to_array($streams->list($this->getPath(__FUNCTION__ . '/**/*.txt'), new KeepAll())),
+            iterator_to_array($streams->list($this->getPath(__FUNCTION__ . '/**/*.txt'), new KeepAll())),
         );
     }
 

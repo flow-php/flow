@@ -10,7 +10,12 @@ use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
+use UnitEnum;
 
+use function array_is_list;
+use function array_keys;
+use function array_map;
+use function array_values;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;
@@ -31,6 +36,14 @@ use function Flow\Types\DSL\type_uuid;
 use function Flow\Types\DSL\type_xml;
 use function Flow\Types\DSL\type_xml_element;
 use function Flow\Types\DSL\types;
+use function gettype;
+use function is_a;
+use function is_array;
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_object;
+use function is_string;
 
 final class TypeDetector
 {
@@ -51,31 +64,31 @@ final class TypeDetector
             return type_uuid();
         }
 
-        if (\is_string($value)) {
+        if (is_string($value)) {
             return type_string();
         }
 
-        if (\is_int($value)) {
+        if (is_int($value)) {
             return type_integer();
         }
 
-        if (\is_bool($value)) {
+        if (is_bool($value)) {
             return type_boolean();
         }
 
-        if (\is_float($value)) {
+        if (is_float($value)) {
             return type_float();
         }
 
-        if (\is_array($value)) {
+        if (is_array($value)) {
             if ([] === $value) {
                 return type_array();
             }
 
             $detector = new ArrayContentDetector(
-                types(...\array_map($this->detectType(...), \array_keys($value)))->deduplicate(),
-                types(...\array_map($this->detectType(...), \array_values($value)))->deduplicate(),
-                \array_is_list($value),
+                types(...array_map($this->detectType(...), array_keys($value)))->deduplicate(),
+                types(...array_map($this->detectType(...), array_values($value)))->deduplicate(),
+                array_is_list($value),
             );
 
             if ($detector->isList()) {
@@ -100,13 +113,13 @@ final class TypeDetector
             return type_array();
         }
 
-        if ($value instanceof \UnitEnum) {
+        if ($value instanceof UnitEnum) {
             return type_enum($value::class);
         }
 
-        if (\is_object($value)) {
+        if (is_object($value)) {
             foreach (['Ramsey\Uuid\UuidInterface', 'Symfony\Component\Uid\Uuid'] as $uuidClass) {
-                if (\is_a($value, $uuidClass, true)) {
+                if (is_a($value, $uuidClass, true)) {
                     return type_uuid();
                 }
             }
@@ -150,6 +163,6 @@ final class TypeDetector
             return type_instance_of($value::class);
         }
 
-        throw new InvalidArgumentException('Unsupported type given: ' . \gettype($value));
+        throw new InvalidArgumentException('Unsupported type given: ' . gettype($value));
     }
 }

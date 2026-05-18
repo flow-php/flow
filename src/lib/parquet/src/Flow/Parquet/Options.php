@@ -7,6 +7,12 @@ namespace Flow\Parquet;
 use Flow\Filesystem\SizeUnits;
 use Flow\Parquet\Exception\InvalidArgumentException;
 
+use function gettype;
+use function is_array;
+use function is_bool;
+use function is_int;
+use function is_string;
+
 final class Options
 {
     /**
@@ -64,19 +70,19 @@ final class Options
             return null;
         }
 
-        if (\is_array($value)) {
+        if (is_array($value)) {
             return $value;
         }
 
-        throw new InvalidArgumentException("Option {$option->name} is not an array, but: " . \gettype($value));
+        throw new InvalidArgumentException("Option {$option->name} is not an array, but: " . gettype($value));
     }
 
     public function getBool(Option $option): bool
     {
         $value = $this->options[$option->name];
 
-        if (!\is_bool($value)) {
-            throw new InvalidArgumentException("Option {$option->name} is not a boolean, but: " . \gettype($value));
+        if (!is_bool($value)) {
+            throw new InvalidArgumentException("Option {$option->name} is not a boolean, but: " . gettype($value));
         }
 
         return $value;
@@ -86,8 +92,8 @@ final class Options
     {
         $value = $this->options[$option->name];
 
-        if (!\is_int($value)) {
-            throw new InvalidArgumentException("Option {$option->name} is not an integer, but: " . \gettype($value));
+        if (!is_int($value)) {
+            throw new InvalidArgumentException("Option {$option->name} is not an integer, but: " . gettype($value));
         }
 
         return $value;
@@ -97,8 +103,8 @@ final class Options
     {
         $value = $this->options[$option->name];
 
-        if (!\is_string($value)) {
-            throw new InvalidArgumentException("Option {$option->name} is not a string, but: " . \gettype($value));
+        if (!is_string($value)) {
+            throw new InvalidArgumentException("Option {$option->name} is not a string, but: " . gettype($value));
         }
 
         return $value;

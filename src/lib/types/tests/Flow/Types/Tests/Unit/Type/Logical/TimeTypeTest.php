@@ -4,19 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
+use DateInterval;
+use DateTimeImmutable;
+use DateTimeZone;
 use Flow\Types\Exception\InvalidTypeException;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_time;
 
 final class TimeTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'valid DateInterval' => [
-            'value' => new \DateInterval('PT10S'),
+            'value' => new DateInterval('PT10S'),
             'exceptionClass' => null,
         ];
 
@@ -46,52 +51,52 @@ final class TimeTypeTest extends TestCase
         ];
 
         yield 'invalid object' => [
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid DateTimeZone' => [
-            'value' => new \DateTimeZone('UTC'),
+            'value' => new DateTimeZone('UTC'),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid DateTimeImmutable' => [
-            'value' => new \DateTimeImmutable(),
+            'value' => new DateTimeImmutable(),
             'exceptionClass' => InvalidTypeException::class,
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
         yield 'string to time' => [
             'value' => 'PT1S',
-            'expected' => new \DateInterval('PT1S'),
+            'expected' => new DateInterval('PT1S'),
             'exceptionClass' => null,
         ];
 
         yield 'datetime to time' => [
-            'value' => new \DateTimeImmutable('2021-01-01 00:00:01'),
-            'expected' => new \DateInterval('PT1S'),
+            'value' => new DateTimeImmutable('2021-01-01 00:00:01'),
+            'expected' => new DateInterval('PT1S'),
             'exceptionClass' => null,
         ];
 
         yield 'date to time' => [
-            'value' => new \DateTimeImmutable('2021-01-01'),
-            'expected' => new \DateInterval('PT0S'),
+            'value' => new DateTimeImmutable('2021-01-01'),
+            'expected' => new DateInterval('PT0S'),
             'exceptionClass' => null,
         ];
 
         yield 'time stays as is' => [
-            'value' => new \DateInterval('PT10S'),
-            'expected' => new \DateInterval('PT10S'),
+            'value' => new DateInterval('PT10S'),
+            'expected' => new DateInterval('PT10S'),
             'exceptionClass' => null,
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'valid DateInterval' => [
-            'value' => new \DateInterval('PT10S'),
+            'value' => new DateInterval('PT10S'),
             'expected' => true,
         ];
 
@@ -116,7 +121,7 @@ final class TimeTypeTest extends TestCase
             $this->expectException($exceptionClass);
             type_time()->assert($value);
         } else {
-            static::assertInstanceOf(\DateInterval::class, type_time()->assert($value));
+            static::assertInstanceOf(DateInterval::class, type_time()->assert($value));
         }
     }
 

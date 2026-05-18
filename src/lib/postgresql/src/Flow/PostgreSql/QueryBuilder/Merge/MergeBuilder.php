@@ -159,7 +159,7 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
             $sourceNode->setRangeSubselect($rangeSubselect);
         } else {
             $sourceRangeVar = new RangeVar([
-                'relname' => $this->sourceTable ?? '',
+                'relname' => $this->sourceTable,
                 'inh' => true,
             ]);
 

@@ -7,8 +7,14 @@ namespace Flow\Types\Value;
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Exception\RuntimeException;
 use Ramsey\Uuid\UuidInterface;
+use Stringable;
 
-final readonly class Uuid implements \Stringable
+use function class_exists;
+use function is_string;
+use function preg_match;
+use function strlen;
+
+final readonly class Uuid implements Stringable
 {
     /**
      * This regexp is a port of the Uuid library,
@@ -23,11 +29,11 @@ final readonly class Uuid implements \Stringable
      */
     public function __construct(string|UuidInterface|\Symfony\Component\Uid\Uuid $value)
     {
-        if (\is_string($value)) {
+        if (is_string($value)) {
             try {
-                if (\class_exists(\Ramsey\Uuid\Uuid::class)) {
+                if (class_exists(\Ramsey\Uuid\Uuid::class)) {
                     $this->value = (string) \Ramsey\Uuid\Uuid::fromString($value);
-                } elseif (\class_exists(\Symfony\Component\Uid\Uuid::class)) {
+                } elseif (class_exists(\Symfony\Component\Uid\Uuid::class)) {
                     $this->value = \Symfony\Component\Uid\Uuid::fromString($value)->toRfc4122();
                 } elseif (self::isValid($value)) {
                     $this->value = $value;
@@ -53,11 +59,11 @@ final readonly class Uuid implements \Stringable
 
     public static function isValid(string $value): bool
     {
-        if (\strlen($value) !== 36) {
+        if (strlen($value) !== 36) {
             return false;
         }
 
-        return 1 === \preg_match(self::UUID_REGEXP, $value);
+        return 1 === preg_match(self::UUID_REGEXP, $value);
     }
 
     public function __toString(): string

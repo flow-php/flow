@@ -12,9 +12,15 @@ use Flow\Filesystem\Tests\Double\FailingRmFilesystem;
 use Flow\Filesystem\Tests\Double\ThrowingSourceFilesystem;
 use PHPUnit\Framework\TestCase;
 
+use function bin2hex;
+use function file_get_contents;
+use function file_put_contents;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function random_bytes;
+use function sys_get_temp_dir;
+use function unlink;
 
 final class MoveTest extends TestCase
 {
@@ -69,28 +75,28 @@ final class MoveTest extends TestCase
         $srcStream->append('move-payload');
         $srcStream->close();
 
-        $destPath = \sys_get_temp_dir() . '/flow_move_test_' . \bin2hex(\random_bytes(4));
+        $destPath = sys_get_temp_dir() . '/flow_move_test_' . bin2hex(random_bytes(4));
         $dest = path('file://' . $destPath);
 
         static::assertTrue((new Move($fstab))->execute($src, $dest));
 
         static::assertNull($fstab->for($src)->status($src));
-        static::assertSame('move-payload', \file_get_contents($destPath));
-        @\unlink($destPath);
+        static::assertSame('move-payload', file_get_contents($destPath));
+        @unlink($destPath);
     }
 
     public function test_same_mount_move_delegates_to_filesystem_mv(): void
     {
         $fstab = new FilesystemTable(native_local_filesystem());
 
-        $tmp = \sys_get_temp_dir() . '/flow_move_local_' . \bin2hex(\random_bytes(4));
-        \file_put_contents($tmp, 'local-bytes');
+        $tmp = sys_get_temp_dir() . '/flow_move_local_' . bin2hex(random_bytes(4));
+        file_put_contents($tmp, 'local-bytes');
         $destPath = $tmp . '.moved';
 
         static::assertTrue((new Move($fstab))->execute(path('file://' . $tmp), path('file://' . $destPath)));
 
         static::assertFileDoesNotExist($tmp);
-        static::assertSame('local-bytes', \file_get_contents($destPath));
-        @\unlink($destPath);
+        static::assertSame('local-bytes', file_get_contents($destPath));
+        @unlink($destPath);
     }
 }

@@ -16,6 +16,7 @@ use Flow\ETL\Processor\HashJoin\HashTable;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Rows;
+use Generator;
 
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\row;
@@ -35,7 +36,7 @@ final readonly class HashJoinProcessor implements Processor
         private Join $join,
     ) {}
 
-    public function process(\Generator $rows, FlowContext $context): \Generator
+    public function process(Generator $rows, FlowContext $context): Generator
     {
         $leftReferences = refs(...$this->expression->left());
         $rightReferences = refs(...$this->expression->right());

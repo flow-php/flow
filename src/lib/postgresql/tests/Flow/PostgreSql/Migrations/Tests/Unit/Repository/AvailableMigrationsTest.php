@@ -12,6 +12,8 @@ use Flow\PostgreSql\Migrations\Repository\AvailableMigrations;
 use Flow\PostgreSql\Migrations\Version;
 use PHPUnit\Framework\TestCase;
 
+use function iterator_to_array;
+
 final class AvailableMigrationsTest extends TestCase
 {
     public function stubMigration(): Migration
@@ -135,7 +137,7 @@ final class AvailableMigrationsTest extends TestCase
             new AvailableMigration($v2, 'second', $this->stubMigration(), null),
         );
 
-        $items = \iterator_to_array($migrations);
+        $items = iterator_to_array($migrations);
 
         static::assertTrue($v1->equals($items[0]->version));
         static::assertTrue($v2->equals($items[1]->version));

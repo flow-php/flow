@@ -6,6 +6,7 @@ namespace Flow\Types\Tests\Unit\Type\Native;
 
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -14,7 +15,7 @@ use function Flow\Types\DSL\type_from_array;
 
 final class CallableTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'valid callable function name' => [
             'value' => 'printf',
@@ -47,7 +48,7 @@ final class CallableTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
         yield 'callable function name' => [
             'value' => 'printf',
@@ -74,7 +75,7 @@ final class CallableTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'valid callable function name' => [
             'value' => 'printf',

@@ -12,10 +12,12 @@ use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
+use Exception;
 use Flow\Doctrine\Bulk\BulkData;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use Flow\Doctrine\Bulk\SQLParametersStyle;
 use Flow\Doctrine\Bulk\TableDefinition;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -24,7 +26,7 @@ final class TableDefinitionTest extends TestCase
     /**
      * @return \Generator<string, array{array{driver: 'sqlite3', memory: bool}, class-string<AbstractPlatform>}>
      */
-    public static function provide_platform_types(): \Generator
+    public static function provide_platform_types(): Generator
     {
         yield 'sqlite' => [['driver' => 'sqlite3', 'memory' => true], SQLitePlatform::class];
     }
@@ -32,7 +34,7 @@ final class TableDefinitionTest extends TestCase
     /**
      * @return \Generator<string, array{string}>
      */
-    public static function provide_table_names(): \Generator
+    public static function provide_table_names(): Generator
     {
         yield 'simple name' => ['users'];
         yield 'with underscore' => ['user_profiles'];
@@ -63,7 +65,7 @@ final class TableDefinitionTest extends TestCase
 
         $tableDefinition = new TableDefinition('non_existent_table', $connection);
 
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
 
         $tableDefinition->dbalColumn('any_column');
     }

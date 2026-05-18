@@ -17,6 +17,7 @@ use Flow\ETL\Retry\RetryStrategy\AnyThrowable;
 use Flow\ETL\Rows;
 use Flow\ETL\Time\Sleep;
 use Flow\ETL\Time\SystemSleep;
+use Throwable;
 
 final readonly class RetryLoader implements Loader
 {
@@ -46,7 +47,7 @@ final readonly class RetryLoader implements Loader
                     ]);
 
                     return;
-                } catch (\Throwable $exception) {
+                } catch (Throwable $exception) {
                     $retriesRecord->add(FailedRetry::create($context->config->clock(), $exception, $attemptNumber));
 
                     if (!$this->retryStrategy->shouldRetry($exception, $attemptNumber)) {
@@ -56,7 +57,7 @@ final readonly class RetryLoader implements Loader
                     $this->sleep->for($this->delayFactory->delay($attemptNumber));
                 }
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 
             throw $e;

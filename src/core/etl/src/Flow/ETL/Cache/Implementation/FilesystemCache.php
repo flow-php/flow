@@ -14,6 +14,9 @@ use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use Flow\Serializer\Serializer;
 
+use function str_split;
+use function substr;
+
 final readonly class FilesystemCache implements Cache
 {
     private Path $cacheDir;
@@ -67,7 +70,7 @@ final readonly class FilesystemCache implements Cache
     private function cachePath(string $key): Path
     {
         return $this->cacheDir->suffix(
-            implode('/', \str_split(\substr(NativePHPHash::xxh128($key), 0, 8), 2)) . '/' . $key . '.php.cache',
+            implode('/', str_split(substr(NativePHPHash::xxh128($key), 0, 8), 2)) . '/' . $key . '.php.cache',
         );
     }
 }

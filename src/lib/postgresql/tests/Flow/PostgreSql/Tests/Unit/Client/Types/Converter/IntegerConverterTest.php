@@ -7,21 +7,23 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\Converter\IntegerConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 final class IntegerConverterTest extends TestCase
 {
-    public static function provide_invalid_values(): \Generator
+    public static function provide_invalid_values(): Generator
     {
         yield 'boolean true' => [true];
         yield 'boolean false' => [false];
         yield 'float' => [3.7];
         yield 'array' => [['array']];
-        yield 'object' => [new \stdClass()];
+        yield 'object' => [new stdClass()];
     }
 
-    public static function provide_valid_values(): \Generator
+    public static function provide_valid_values(): Generator
     {
         yield 'positive integer' => [42, '42'];
         yield 'negative integer' => [-123, '-123'];

@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSQLMessenger;
 
+use DateInterval;
+use DateTimeImmutable;
 use Flow\Bridge\Symfony\PostgreSQLMessenger\Exception\TransportException;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\Types\ValueType;
 use Flow\PostgreSql\QueryBuilder\Clause\SortDirection;
 
+use function array_values;
 use function Flow\PostgreSql\DSL\and_;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\count_all;
@@ -25,6 +28,13 @@ use function Flow\PostgreSql\DSL\star;
 use function Flow\PostgreSql\DSL\table;
 use function Flow\PostgreSql\DSL\typed;
 use function Flow\PostgreSql\DSL\update;
+use function get_debug_type;
+use function is_int;
+use function is_string;
+use function json_encode;
+use function sprintf;
+
+use const JSON_THROW_ON_ERROR;
 
 final readonly class Connection
 {
@@ -71,7 +81,7 @@ final readonly class Connection
             $query = $query->limit($limit);
         }
 
-        return \array_values($this->client->fetchAll($query, [$this->queueName]));
+        return array_values($this->client->fetchAll($query, [$this->queueName]));
     }
 
     /**
@@ -80,8 +90,8 @@ final readonly class Connection
     public function get(): ?array
     {
         return $this->client->transaction(function (Client $client): ?array {
-            $now = new \DateTimeImmutable('now');
-            $redeliverCutoff = $now->sub(new \DateInterval('PT' . $this->redeliverTimeout . 'S'));
+            $now = new DateTimeImmutable('now');
+            $redeliverCutoff = $now->sub(new DateInterval('PT' . $this->redeliverTimeout . 'S'));
 
             $row = $client->fetch(
                 select(star())
@@ -107,8 +117,8 @@ final readonly class Connection
 
             $rowId = $row['id'];
 
-            if (!\is_int($rowId) && !\is_string($rowId)) {
-                throw TransportException::unexpectedRowShape('id', \get_debug_type($rowId));
+            if (!is_int($rowId) && !is_string($rowId)) {
+                throw TransportException::unexpectedRowShape('id', get_debug_type($rowId));
             }
 
             $client->execute(
@@ -128,7 +138,7 @@ final readonly class Connection
 
     public function getMessageCount(): int
     {
-        $now = new \DateTimeImmutable('now');
+        $now = new DateTimeImmutable('now');
 
         return $this->client->fetchScalarInt(
             select(count_all())
@@ -148,7 +158,7 @@ final readonly class Connection
     public function keepalive(string $id, ?int $seconds = null): void
     {
         if ($seconds !== null && $this->redeliverTimeout < $seconds) {
-            throw new TransportException(\sprintf(
+            throw new TransportException(sprintf(
                 'Flow PostgreSQL Messenger redeliver_timeout (%ds) cannot be smaller than the keepalive interval (%ds).',
                 $this->redeliverTimeout,
                 $seconds,
@@ -161,7 +171,7 @@ final readonly class Connection
                 ->set('delivered_at', param(1))
                 ->where(eq(col('id'), param(2))),
             [
-                typed(new \DateTimeImmutable('now'), ValueType::TIMESTAMPTZ),
+                typed(new DateTimeImmutable('now'), ValueType::TIMESTAMPTZ),
                 (int) $id,
             ],
         );
@@ -177,8 +187,8 @@ final readonly class Connection
      */
     public function send(string $body, array $headers, int $delay = 0): string
     {
-        $now = new \DateTimeImmutable('now');
-        $availableAt = $delay > 0 ? $now->modify(\sprintf('%+d seconds', (int) ($delay / 1000))) : $now;
+        $now = new DateTimeImmutable('now');
+        $availableAt = $delay > 0 ? $now->modify(sprintf('%+d seconds', (int) ($delay / 1000))) : $now;
 
         $row = $this->client->fetchSingle(
             insert()
@@ -188,7 +198,7 @@ final readonly class Connection
                 ->returning(col('id')),
             [
                 $body,
-                \json_encode($headers, \JSON_THROW_ON_ERROR),
+                json_encode($headers, JSON_THROW_ON_ERROR),
                 $this->queueName,
                 typed($now, ValueType::TIMESTAMPTZ),
                 typed($availableAt, ValueType::TIMESTAMPTZ),
@@ -197,8 +207,8 @@ final readonly class Connection
 
         $rowId = $row['id'];
 
-        if (!\is_int($rowId) && !\is_string($rowId)) {
-            throw TransportException::unexpectedRowShape('id', \get_debug_type($rowId));
+        if (!is_int($rowId) && !is_string($rowId)) {
+            throw TransportException::unexpectedRowShape('id', get_debug_type($rowId));
         }
 
         return (string) $rowId;

@@ -7,6 +7,7 @@ namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Update;
 use Flow\PostgreSql\ParsedQuery;
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\RawStmt;
 use Flow\PostgreSql\Protobuf\AST\UpdateStmt;
 use Flow\PostgreSql\QueryBuilder\Clause\CTE;
@@ -24,6 +25,8 @@ use Flow\PostgreSql\QueryBuilder\Table\Table;
 use Flow\PostgreSql\QueryBuilder\Update\UpdateBuilder;
 use PHPUnit\Framework\TestCase;
 
+use function count;
+use function extension_loaded;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\eq;
 use function Flow\PostgreSql\DSL\literal;
@@ -32,12 +35,13 @@ use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\sub_select;
 use function Flow\PostgreSql\DSL\table;
 use function Flow\PostgreSql\DSL\update;
+use function function_exists;
 
 final class UpdateBuilderTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped(
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );
@@ -84,7 +88,7 @@ final class UpdateBuilderTest extends TestCase
         $this->expectException(InvalidAstException::class);
 
         $updateStmt = new UpdateStmt();
-        $rangeVar = new \Flow\PostgreSql\Protobuf\AST\RangeVar(['relname' => 'users']);
+        $rangeVar = new RangeVar(['relname' => 'users']);
         $updateStmt->setRelation($rangeVar);
 
         UpdateBuilder::fromAst($updateStmt);
@@ -197,7 +201,7 @@ final class UpdateBuilderTest extends TestCase
 
         $originalTargetList = $ast->getTargetList();
         $restoredTargetList = $restoredAst->getTargetList();
-        static::assertCount(\count($originalTargetList), $restoredTargetList);
+        static::assertCount(count($originalTargetList), $restoredTargetList);
     }
 
     public function test_round_trip_with_from(): void
@@ -282,7 +286,7 @@ final class UpdateBuilderTest extends TestCase
 
     public function test_simple_update_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -354,7 +358,7 @@ final class UpdateBuilderTest extends TestCase
 
     public function test_update_multiple_columns_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -420,7 +424,7 @@ final class UpdateBuilderTest extends TestCase
 
     public function test_update_with_binary_expression_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -491,7 +495,7 @@ final class UpdateBuilderTest extends TestCase
 
     public function test_update_with_from_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -615,7 +619,7 @@ final class UpdateBuilderTest extends TestCase
 
     public function test_update_with_returning_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -644,7 +648,7 @@ final class UpdateBuilderTest extends TestCase
 
     public function test_update_with_schema_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available.');
         }
 
@@ -737,7 +741,7 @@ final class UpdateBuilderTest extends TestCase
 
     public function test_update_with_where_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 

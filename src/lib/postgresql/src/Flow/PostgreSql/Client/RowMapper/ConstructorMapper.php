@@ -6,7 +6,12 @@ namespace Flow\PostgreSql\Client\RowMapper;
 
 use Flow\PostgreSql\Client\Exception\MappingException;
 use Flow\PostgreSql\Client\RowMapper;
+use ReflectionClass;
+use Throwable;
 
+use function array_key_exists;
+use function array_values;
+use function class_exists;
 use function Flow\Types\DSL\type_instance_of;
 
 /**
@@ -28,7 +33,7 @@ final readonly class ConstructorMapper implements RowMapper
     private array $parameters;
 
     /** @var \ReflectionClass<object> */
-    private \ReflectionClass $reflection;
+    private ReflectionClass $reflection;
 
     /**
      * @param class-string<T> $class
@@ -38,11 +43,11 @@ final readonly class ConstructorMapper implements RowMapper
     public function __construct(
         private string $class,
     ) {
-        if (!\class_exists($this->class)) {
+        if (!class_exists($this->class)) {
             throw MappingException::mappingFailed($this->class, 'Class does not exist');
         }
 
-        $this->reflection = new \ReflectionClass($this->class);
+        $this->reflection = new ReflectionClass($this->class);
 
         $constructor = $this->reflection->getConstructor();
 
@@ -50,7 +55,7 @@ final readonly class ConstructorMapper implements RowMapper
             throw MappingException::mappingFailed($this->class, 'Class has no constructor');
         }
 
-        $this->parameters = \array_values($constructor->getParameters());
+        $this->parameters = array_values($constructor->getParameters());
     }
 
     /**
@@ -63,7 +68,7 @@ final readonly class ConstructorMapper implements RowMapper
         foreach ($this->parameters as $param) {
             $paramName = $param->getName();
 
-            if (\array_key_exists($paramName, $row)) {
+            if (array_key_exists($paramName, $row)) {
                 $args[$paramName] = $row[$paramName];
             } elseif ($param->isDefaultValueAvailable()) {
                 continue;
@@ -76,7 +81,7 @@ final readonly class ConstructorMapper implements RowMapper
 
         try {
             return type_instance_of($this->class)->assert($this->reflection->newInstanceArgs($args));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             throw MappingException::mappingFailed($this->class, $e->getMessage());
         }
     }

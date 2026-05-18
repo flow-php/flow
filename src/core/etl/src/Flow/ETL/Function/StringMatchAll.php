@@ -7,6 +7,11 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Throwable;
+
+use function preg_match_all;
+
+use const PREG_SET_ORDER;
 
 final class StringMatchAll extends ScalarFunctionChain
 {
@@ -40,12 +45,12 @@ final class StringMatchAll extends ScalarFunctionChain
         try {
             $matches = [];
 
-            if (\preg_match_all($pattern, $haystack, $matches, \PREG_SET_ORDER) !== false) {
+            if (preg_match_all($pattern, $haystack, $matches, PREG_SET_ORDER) !== false) {
                 return $matches;
             }
 
             return [];
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context
                 ->functions()
                 ->invalidResult(new InvalidArgumentException('StringMatchAll error: ' . $e->getMessage()));

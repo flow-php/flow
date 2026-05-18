@@ -8,6 +8,8 @@ use Flow\PostgreSql\Exception\ParserException;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ParseResult;
 
+use function array_pop;
+
 /**
  * AST Traverser for PostgreSQL parse trees.
  *
@@ -289,7 +291,7 @@ final class Traverser
             $this->ancestorStack[] = $node;
             $this->currentDepth++;
             $this->traverseNodeChildren($node);
-            \array_pop($this->ancestorStack);
+            array_pop($this->ancestorStack);
             $this->currentDepth--;
         }
 

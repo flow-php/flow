@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Provider\Console;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Provider\Console\ConsoleOutput;
 use PHPUnit\Framework\TestCase;
+
+use function fclose;
+use function fopen;
+use function rewind;
+use function stream_get_contents;
 
 final class ConsoleOutputTest extends TestCase
 {
@@ -65,7 +71,7 @@ final class ConsoleOutputTest extends TestCase
     public function test_format_timestamp(): void
     {
         $output = new ConsoleOutput();
-        $dt = new \DateTimeImmutable('2024-01-15 10:30:45.123456');
+        $dt = new DateTimeImmutable('2024-01-15 10:30:45.123456');
 
         $result = $output->formatTimestamp($dt);
 
@@ -155,14 +161,14 @@ final class ConsoleOutputTest extends TestCase
 
     public function test_write_to_stream(): void
     {
-        $stream = \fopen('php://memory', 'rwb');
+        $stream = fopen('php://memory', 'rwb');
         static::assertIsResource($stream);
         $output = new ConsoleOutput(colors: false, stream: $stream);
 
         $output->write('test');
 
-        \rewind($stream);
-        static::assertSame("test\n", \stream_get_contents($stream));
-        \fclose($stream);
+        rewind($stream);
+        static::assertSame("test\n", stream_get_contents($stream));
+        fclose($stream);
     }
 }

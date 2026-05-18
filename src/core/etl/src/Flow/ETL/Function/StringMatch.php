@@ -7,7 +7,9 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Throwable;
 
+use function count;
 use function Symfony\Component\String\s;
 
 final class StringMatch extends ScalarFunctionChain
@@ -41,8 +43,8 @@ final class StringMatch extends ScalarFunctionChain
             /** @var array<int|string, string> $result */
             $result = s($haystack)->match($pattern);
 
-            return \count($result) > 0 ? $result : null;
-        } catch (\Throwable $e) {
+            return count($result) > 0 ? $result : null;
+        } catch (Throwable $e) {
             $context
                 ->functions()
                 ->invalidResult(new InvalidArgumentException('StringMatch error: ' . $e->getMessage()));

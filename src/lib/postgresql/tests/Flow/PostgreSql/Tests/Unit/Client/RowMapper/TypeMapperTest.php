@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Client\RowMapper;
 
+use DateTimeImmutable;
 use Flow\PostgreSql\Client\Exception\MappingException;
 use Flow\PostgreSql\Tests\Mother\MapperContextMother;
 use Flow\PostgreSql\Tests\Unit\Client\RowMapper\Fake\RecordedResult;
 use Flow\PostgreSql\Tests\Unit\Client\RowMapper\Fake\SpyRowMapper;
 use Flow\Types\Type;
+use Flow\Types\Value\Uuid;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Uid\UuidV7;
@@ -26,7 +29,7 @@ use function Flow\Types\DSL\type_uuid;
 
 final class TypeMapperTest extends TestCase
 {
-    public static function provide_invalid_mappings(): \Generator
+    public static function provide_invalid_mappings(): Generator
     {
         yield 'map scalars' => [
             ['id' => UuidV7::generate(), 'name' => 'Alice', 'last_name' => null],
@@ -67,7 +70,7 @@ final class TypeMapperTest extends TestCase
         ];
     }
 
-    public static function provide_valid_mappings(): \Generator
+    public static function provide_valid_mappings(): Generator
     {
         yield 'map scalars' => [
             ['id' => '019d92a8-54e1-70a9-bc8f-85ef98592dd4', 'name' => 'Alice', 'last_name' => null],
@@ -93,7 +96,7 @@ final class TypeMapperTest extends TestCase
                 'last_name' => type_optional(type_string()),
             ]),
             [
-                'id' => new \Flow\Types\Value\Uuid('019d9293-793d-7036-918a-f19abffd545c'),
+                'id' => new Uuid('019d9293-793d-7036-918a-f19abffd545c'),
                 'name' => 'Alice',
                 'last_name' => null,
             ],
@@ -175,9 +178,9 @@ final class TypeMapperTest extends TestCase
                 'age' => type_integer(),
             ]),
             [
-                'id' => new \Flow\Types\Value\Uuid('019d9293-793d-7036-918a-f19abffd545c'),
+                'id' => new Uuid('019d9293-793d-7036-918a-f19abffd545c'),
                 'name' => 'Alice',
-                'created_at' => new \DateTimeImmutable('2024-03-15 14:30:00'),
+                'created_at' => new DateTimeImmutable('2024-03-15 14:30:00'),
                 'metadata' => ['theme' => 'dark', 'notifications' => true],
                 'age' => 42,
             ],

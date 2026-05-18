@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Exception;
 
+use function strlen;
+use function substr;
+
 enum PostgreSqlErrorCategory: string
 {
     case CARDINALITY_VIOLATION = '21';
@@ -53,11 +56,11 @@ enum PostgreSqlErrorCategory: string
 
     public static function fromSqlState(string $sqlState): self
     {
-        if (\strlen($sqlState) < 2) {
+        if (strlen($sqlState) < 2) {
             return self::UNKNOWN;
         }
 
-        $class = \substr($sqlState, 0, 2);
+        $class = substr($sqlState, 0, 2);
 
         return self::tryFrom($class) ?? self::UNKNOWN;
     }

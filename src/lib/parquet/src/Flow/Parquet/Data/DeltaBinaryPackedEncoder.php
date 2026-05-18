@@ -7,6 +7,8 @@ namespace Flow\Parquet\Data;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\Exception\InvalidArgumentException;
 
+use function count;
+
 final readonly class DeltaBinaryPackedEncoder
 {
     private const int DEFAULT_BLOCK_SIZE = 128;
@@ -37,7 +39,7 @@ final readonly class DeltaBinaryPackedEncoder
      */
     public function encode(array $values): string
     {
-        if (!\count($values)) {
+        if (!count($values)) {
             return '';
         }
 
@@ -139,7 +141,7 @@ final readonly class DeltaBinaryPackedEncoder
     {
         $padded = $miniblockDeltas;
 
-        while (\count($padded) < $this->miniblockSize) {
+        while (count($padded) < $this->miniblockSize) {
             $padded[] = 0;
         }
 
@@ -151,7 +153,7 @@ final readonly class DeltaBinaryPackedEncoder
      */
     private function writeBlock(BinaryBufferWriter $writer, array $blockDeltas): void
     {
-        if (!\count($blockDeltas)) {
+        if (!count($blockDeltas)) {
             return;
         }
 

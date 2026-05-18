@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Explain\Plan;
 
+use function array_map;
+
 /**
  * @phpstan-import-type TimingShape from Timing
  * @phpstan-import-type BuffersShape from Buffers
@@ -240,7 +242,7 @@ final readonly class PlanNode
             'cost' => $this->cost->normalize(),
             'estimated_rows' => $this->estimatedRows,
             'row_width' => $this->rowWidth,
-            'children' => \array_map(static fn(self $child): array => $child->normalize(), $this->children),
+            'children' => array_map(static fn(self $child): array => $child->normalize(), $this->children),
             'relation_name' => $this->relationName,
             'schema' => $this->schema,
             'alias' => $this->alias,

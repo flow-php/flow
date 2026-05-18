@@ -8,6 +8,9 @@ use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\ValueConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
 
+use function bin2hex;
+use function is_string;
+
 final class ByteaConverter implements ValueConverter
 {
     public function supportedTypes(): array
@@ -21,8 +24,8 @@ final class ByteaConverter implements ValueConverter
             return null;
         }
 
-        if (\is_string($value)) {
-            return '\x' . \bin2hex($value);
+        if (is_string($value)) {
+            return '\x' . bin2hex($value);
         }
 
         throw ValueConversionException::cannotConvert($value, 'bytea');

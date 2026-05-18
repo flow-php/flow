@@ -11,6 +11,8 @@ use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use stdClass;
 
 final class DataConverterTest extends TestCase
 {
@@ -37,7 +39,7 @@ final class DataConverterTest extends TestCase
 
         static::assertSame('complex_from_parquet', $dataConverter->fromParquetType($column, ['key' => 'value']));
 
-        $objectData = new \stdClass();
+        $objectData = new stdClass();
         $objectData->property = 'value';
         static::assertSame('complex_to_parquet', $dataConverter->toParquetType($column, $objectData));
     }
@@ -89,7 +91,7 @@ final class DataConverterTest extends TestCase
             static::fail('Expected DataConversionException to be thrown');
         } catch (DataConversionException $e) {
             $previous = $e->getPrevious();
-            static::assertInstanceOf(\RuntimeException::class, $previous);
+            static::assertInstanceOf(RuntimeException::class, $previous);
             static::assertSame('Test exception from converter', $previous->getMessage());
         }
     }
@@ -248,7 +250,7 @@ final class DataConverterTest extends TestCase
         $dataConverter = new DataConverter([$throwingConverter], $options);
         $column = new FlatColumn('test_column', PhysicalType::INT32);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Test exception from converter');
 
         $dataConverter->toParquetType($column, 'data');
@@ -428,7 +430,7 @@ final class ThrowingMockConverter implements Converter
 {
     public function fromParquetType(mixed $data): mixed
     {
-        throw new \RuntimeException('Test exception from converter');
+        throw new RuntimeException('Test exception from converter');
     }
 
     public function isFor(FlatColumn $column, Options $options): bool
@@ -438,6 +440,6 @@ final class ThrowingMockConverter implements Converter
 
     public function toParquetType(mixed $data): mixed
     {
-        throw new \RuntimeException('Test exception from converter');
+        throw new RuntimeException('Test exception from converter');
     }
 }

@@ -4,8 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter\Exemplar;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Meter\Exemplar;
 use Flow\Telemetry\Tracer\SpanContext;
+use InvalidArgumentException;
+
+use function array_values;
+use function count;
+use function is_array;
+use function random_int;
 
 /**
  * Fixed-size reservoir using Algorithm R for uniform sampling.
@@ -33,13 +40,13 @@ final class SimpleFixedSizeExemplarReservoir implements ExemplarReservoir
         private readonly int $size = 1,
     ) {
         if ($size < 1) {
-            throw new \InvalidArgumentException('Reservoir size must be at least 1');
+            throw new InvalidArgumentException('Reservoir size must be at least 1');
         }
     }
 
     public function collect(bool $reset = true): array
     {
-        $result = \array_values($this->exemplars);
+        $result = array_values($this->exemplars);
 
         if ($reset) {
             $this->reset();
@@ -52,7 +59,7 @@ final class SimpleFixedSizeExemplarReservoir implements ExemplarReservoir
         int|float $value,
         array $attributes,
         SpanContext $context,
-        \DateTimeImmutable $timestamp,
+        DateTimeImmutable $timestamp,
         int $bucketIndex = 0,
     ): void {
         $this->count++;
@@ -60,7 +67,7 @@ final class SimpleFixedSizeExemplarReservoir implements ExemplarReservoir
         $filteredAttributes = $this->filterAttributes($attributes);
         $exemplar = new Exemplar($value, $timestamp, $context->traceId, $context->spanId, $filteredAttributes);
 
-        if (\count($this->exemplars) < $this->size) {
+        if (count($this->exemplars) < $this->size) {
             $this->exemplars[] = $exemplar;
 
             return;
@@ -72,7 +79,7 @@ final class SimpleFixedSizeExemplarReservoir implements ExemplarReservoir
             return;
         }
 
-        $replaceIndex = \random_int(0, $this->count - 1);
+        $replaceIndex = random_int(0, $this->count - 1);
 
         if ($replaceIndex < $this->size) {
             $this->exemplars[$replaceIndex] = $exemplar;
@@ -97,7 +104,7 @@ final class SimpleFixedSizeExemplarReservoir implements ExemplarReservoir
         $filtered = [];
 
         foreach ($attributes as $key => $value) {
-            if (!\is_array($value)) {
+            if (!is_array($value)) {
                 $filtered[$key] = $value;
             }
         }

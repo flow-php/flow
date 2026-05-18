@@ -14,6 +14,15 @@ use Flow\PostgreSql\Protobuf\AST\PBFloat;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
+use function array_filter;
+use function array_map;
+use function array_merge;
+use function array_values;
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_string;
+
 final readonly class CallBuilder implements CallFinalStep
 {
     use AstToSql;
@@ -56,22 +65,22 @@ final readonly class CallBuilder implements CallFinalStep
 
     public function with(mixed ...$args): CallFinalStep
     {
-        $argNodes = \array_values(\array_filter(
-            \array_map($this->createArgumentNode(...), $args),
+        $argNodes = array_values(array_filter(
+            array_map($this->createArgumentNode(...), $args),
             static fn(?Node $node): bool => $node !== null,
         ));
 
-        return new self($this->procedure, \array_values(\array_merge($this->arguments, $argNodes)));
+        return new self($this->procedure, array_values(array_merge($this->arguments, $argNodes)));
     }
 
     private function createArgumentNode(mixed $arg): ?Node
     {
         return match (true) {
             $arg instanceof Node => $arg,
-            \is_int($arg) => $this->createIntegerNode($arg),
-            \is_string($arg) => $this->createStringNode($arg),
-            \is_bool($arg) => $this->createBoolNode($arg),
-            \is_float($arg) => $this->createFloatNode($arg),
+            is_int($arg) => $this->createIntegerNode($arg),
+            is_string($arg) => $this->createStringNode($arg),
+            is_bool($arg) => $this->createBoolNode($arg),
+            is_float($arg) => $this->createFloatNode($arg),
             $arg === null => $this->createNullNode(),
             default => null,
         };

@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\HttpFoundation\Output;
 
+use DateTimeInterface;
 use Flow\Bridge\Symfony\HttpFoundation\Output;
 use Flow\ETL\Loader;
 use Flow\Filesystem\Path;
+use RuntimeException;
 
 use function Flow\ETL\Adapter\CSV\to_csv;
 
 if (!function_exists('Flow\ETL\Adapter\CSV\to_csv')) {
-    throw new \RuntimeException(
+    throw new RuntimeException(
         'Flow\ETL\Adapter\CSV\to_csv function is not available. Make sure that composer require flow-php/etl-adapter-csv dependency is present in your composer.json.',
     );
 }
@@ -24,7 +26,7 @@ final readonly class CSVOutput implements Output
         private string $enclosure = '"',
         private string $escape = '\\',
         private string $newLineSeparator = PHP_EOL,
-        private string $datetimeFormat = \DateTimeInterface::ATOM,
+        private string $datetimeFormat = DateTimeInterface::ATOM,
     ) {}
 
     public function loader(Path $path): Loader

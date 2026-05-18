@@ -8,6 +8,8 @@ use Flow\Bridge\Symfony\PostgreSQLCache\Tests\Context\PostgreSqlCacheContext;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
 
+use function iterator_to_array;
+
 final class FlowPostgreSqlCacheAdapterTest extends TestCase
 {
     private PostgreSqlCacheContext $context;
@@ -80,7 +82,7 @@ final class FlowPostgreSqlCacheAdapterTest extends TestCase
         ];
         $adapter = $this->context->adapter(marshaller: $this->context->spyMarshaller());
 
-        \iterator_to_array($adapter->getItems(['fresh', 'stale']));
+        iterator_to_array($adapter->getItems(['fresh', 'stale']));
 
         static::assertCount(2, $this->context->client->executedQueries);
         static::assertStringStartsWith(
@@ -99,7 +101,7 @@ final class FlowPostgreSqlCacheAdapterTest extends TestCase
         $marshaller = $this->context->spyMarshaller();
         $adapter = $this->context->adapter(marshaller: $marshaller);
 
-        $items = \iterator_to_array($adapter->getItems(['a', 'b']));
+        $items = iterator_to_array($adapter->getItems(['a', 'b']));
 
         static::assertSame('hello', $items['a']->get());
         static::assertSame(42, $items['b']->get());
@@ -117,7 +119,7 @@ final class FlowPostgreSqlCacheAdapterTest extends TestCase
     {
         $adapter = $this->context->adapter();
 
-        static::assertSame([], \iterator_to_array($adapter->getItems([])));
+        static::assertSame([], iterator_to_array($adapter->getItems([])));
         static::assertSame([], $this->context->client->executedQueries);
     }
 

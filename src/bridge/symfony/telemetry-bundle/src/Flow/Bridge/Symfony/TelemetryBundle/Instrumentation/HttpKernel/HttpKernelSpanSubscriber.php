@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel;
 
+use Closure;
+use DateTimeImmutable;
 use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\ContextStorage;
 use Flow\Telemetry\PackageVersion;
@@ -22,6 +24,12 @@ use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\Event\TerminateEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
+
+use function array_map;
+use function count;
+use function is_array;
+use function is_object;
+use function is_string;
 
 final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterface
 {
@@ -42,7 +50,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         private Propagator $propagator,
         private bool $extractContext = true,
     ) {
-        $this->excludePathRules = \array_map(
+        $this->excludePathRules = array_map(
             static fn(array $config): PathExclusionRule => PathExclusionRule::fromConfig($config),
             $excludePaths,
         );
@@ -70,7 +78,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
         $route = $request->attributes->get('_route');
 
-        if (\is_string($route)) {
+        if (is_string($route)) {
             $span->setAttribute('http.route', $route);
         }
 
@@ -91,7 +99,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
             return;
         }
 
-        $span->recordException($event->getThrowable(), new \DateTimeImmutable());
+        $span->recordException($event->getThrowable(), new DateTimeImmutable());
     }
 
     public function onRequest(RequestEvent $event): void
@@ -165,7 +173,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         $headers = [];
 
         foreach ($request->headers->all() as $key => $values) {
-            if (\is_array($values) && \count($values) > 0 && \is_string($values[0])) {
+            if (is_array($values) && count($values) > 0 && is_string($values[0])) {
                 $headers[$key] = $values[0];
             }
         }
@@ -190,26 +198,24 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
      */
     private function resolveControllerName(callable|object|array $controller): ?string
     {
-        if (\is_array($controller) && \count($controller) === 2) {
+        if (is_array($controller) && count($controller) === 2) {
             $firstElement = $controller[0];
             $secondElement = $controller[1];
-            $class = \is_object($firstElement)
-                ? $firstElement::class
-                : (\is_string($firstElement) ? $firstElement : '');
-            $method = \is_string($secondElement) ? $secondElement : '';
+            $class = is_object($firstElement) ? $firstElement::class : (is_string($firstElement) ? $firstElement : '');
+            $method = is_string($secondElement) ? $secondElement : '';
 
             return "{$class}::{$method}";
         }
 
-        if (\is_object($controller)) {
-            if ($controller instanceof \Closure) {
+        if (is_object($controller)) {
+            if ($controller instanceof Closure) {
                 return 'Closure';
             }
 
             return $controller::class . '::__invoke';
         }
 
-        if (\is_string($controller)) {
+        if (is_string($controller)) {
             return $controller;
         }
 

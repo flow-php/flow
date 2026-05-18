@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use DateTimeImmutable;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Loader;
@@ -143,19 +144,19 @@ final class JoinTest extends FlowIntegrationTestCase
 
         $rows = df()
             ->from(from_rows(rows(
-                row(int_entry('id', 1), datetime_entry('date', new \DateTimeImmutable('2024-01-01 00:00:00'))),
-                row(int_entry('id', 2), datetime_entry('date', new \DateTimeImmutable('2024-01-01 00:00:00'))),
-                row(int_entry('id', 3), datetime_entry('date', new \DateTimeImmutable('2024-01-02 00:00:00'))),
-                row(int_entry('id', 4), datetime_entry('date', new \DateTimeImmutable('2024-01-03 00:00:00'))),
-                row(int_entry('id', 5), datetime_entry('date', new \DateTimeImmutable('2024-01-04 00:00:00'))),
-                row(int_entry('id', 6), datetime_entry('date', new \DateTimeImmutable('2024-01-04 00:00:00'))),
-                row(int_entry('id', 7), datetime_entry('date', new \DateTimeImmutable('2024-01-05 00:00:00'))),
-                row(int_entry('id', 9), datetime_entry('date', new \DateTimeImmutable('2024-01-05 00:00:00'))),
+                row(int_entry('id', 1), datetime_entry('date', new DateTimeImmutable('2024-01-01 00:00:00'))),
+                row(int_entry('id', 2), datetime_entry('date', new DateTimeImmutable('2024-01-01 00:00:00'))),
+                row(int_entry('id', 3), datetime_entry('date', new DateTimeImmutable('2024-01-02 00:00:00'))),
+                row(int_entry('id', 4), datetime_entry('date', new DateTimeImmutable('2024-01-03 00:00:00'))),
+                row(int_entry('id', 5), datetime_entry('date', new DateTimeImmutable('2024-01-04 00:00:00'))),
+                row(int_entry('id', 6), datetime_entry('date', new DateTimeImmutable('2024-01-04 00:00:00'))),
+                row(int_entry('id', 7), datetime_entry('date', new DateTimeImmutable('2024-01-05 00:00:00'))),
+                row(int_entry('id', 9), datetime_entry('date', new DateTimeImmutable('2024-01-05 00:00:00'))),
             )))
             ->join(
                 data_frame()->process(rows(
-                    row(datetime_entry('date', new \DateTimeImmutable('2024-01-01 00:00:00')), int_entry('events', 1)),
-                    row(datetime_entry('date', new \DateTimeImmutable('2024-01-05 00:00:00')), int_entry('events', 5)),
+                    row(datetime_entry('date', new DateTimeImmutable('2024-01-01 00:00:00')), int_entry('events', 1)),
+                    row(datetime_entry('date', new DateTimeImmutable('2024-01-05 00:00:00')), int_entry('events', 5)),
                 )),
                 Expression::on(['date' => 'date'], 'joined_'),
                 Join::left,
@@ -168,50 +169,50 @@ final class JoinTest extends FlowIntegrationTestCase
             [
                 [
                     'id' => 1,
-                    'date' => new \DateTimeImmutable('2024-01-01 00:00:00'),
-                    'joined_date' => new \DateTimeImmutable('2024-01-01 00:00:00'),
+                    'date' => new DateTimeImmutable('2024-01-01 00:00:00'),
+                    'joined_date' => new DateTimeImmutable('2024-01-01 00:00:00'),
                     'joined_events' => 1,
                 ],
                 [
                     'id' => 2,
-                    'date' => new \DateTimeImmutable('2024-01-01 00:00:00'),
-                    'joined_date' => new \DateTimeImmutable('2024-01-01 00:00:00'),
+                    'date' => new DateTimeImmutable('2024-01-01 00:00:00'),
+                    'joined_date' => new DateTimeImmutable('2024-01-01 00:00:00'),
                     'joined_events' => 1,
                 ],
                 [
                     'id' => 3,
-                    'date' => new \DateTimeImmutable('2024-01-02 00:00:00'),
+                    'date' => new DateTimeImmutable('2024-01-02 00:00:00'),
                     'joined_date' => null,
                     'joined_events' => null,
                 ],
                 [
                     'id' => 4,
-                    'date' => new \DateTimeImmutable('2024-01-03 00:00:00'),
+                    'date' => new DateTimeImmutable('2024-01-03 00:00:00'),
                     'joined_date' => null,
                     'joined_events' => null,
                 ],
                 [
                     'id' => 5,
-                    'date' => new \DateTimeImmutable('2024-01-04 00:00:00'),
+                    'date' => new DateTimeImmutable('2024-01-04 00:00:00'),
                     'joined_date' => null,
                     'joined_events' => null,
                 ],
                 [
                     'id' => 6,
-                    'date' => new \DateTimeImmutable('2024-01-04 00:00:00'),
+                    'date' => new DateTimeImmutable('2024-01-04 00:00:00'),
                     'joined_date' => null,
                     'joined_events' => null,
                 ],
                 [
                     'id' => 7,
-                    'date' => new \DateTimeImmutable('2024-01-05 00:00:00'),
-                    'joined_date' => new \DateTimeImmutable('2024-01-05 00:00:00'),
+                    'date' => new DateTimeImmutable('2024-01-05 00:00:00'),
+                    'joined_date' => new DateTimeImmutable('2024-01-05 00:00:00'),
                     'joined_events' => 5,
                 ],
                 [
                     'id' => 9,
-                    'date' => new \DateTimeImmutable('2024-01-05 00:00:00'),
-                    'joined_date' => new \DateTimeImmutable('2024-01-05 00:00:00'),
+                    'date' => new DateTimeImmutable('2024-01-05 00:00:00'),
+                    'joined_date' => new DateTimeImmutable('2024-01-05 00:00:00'),
                     'joined_events' => 5,
                 ],
             ],

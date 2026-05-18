@@ -7,6 +7,14 @@ namespace Flow\Parquet\BinaryWriter;
 use Flow\Parquet\BinaryWriter;
 use Flow\Parquet\DataSize;
 
+use function bcadd;
+use function bccomp;
+use function bcdiv;
+use function bcmod;
+use function chr;
+use function pack;
+use function strlen;
+
 final class BinaryBufferWriter implements BinaryWriter
 {
     public function __construct(
@@ -22,7 +30,7 @@ final class BinaryBufferWriter implements BinaryWriter
 
     public function length(): DataSize
     {
-        return DataSize::fromBytes(\strlen($this->buffer));
+        return DataSize::fromBytes(strlen($this->buffer));
     }
 
     public function writeBits(array $bits): void
@@ -38,20 +46,20 @@ final class BinaryBufferWriter implements BinaryWriter
             $bitIndex++;
 
             if ($bitIndex === 8) {
-                $this->buffer .= \chr($byte);
+                $this->buffer .= chr($byte);
                 $byte = 0;
                 $bitIndex = 0;
             }
         }
 
         if ($bitIndex > 0) {
-            $this->buffer .= \chr($byte);
+            $this->buffer .= chr($byte);
         }
     }
 
     public function writeBytes(array $bytes): void
     {
-        $this->buffer .= \pack('C*', ...$bytes);
+        $this->buffer .= pack('C*', ...$bytes);
     }
 
     public function writeVarInts(array $values): void
@@ -60,12 +68,12 @@ final class BinaryBufferWriter implements BinaryWriter
             $bytes = [];
 
             if ($value < 0) {
-                $unsigned = \bcadd((string) $value, '18446744073709551616', 0);
+                $unsigned = bcadd((string) $value, '18446744073709551616', 0);
 
-                while (\bccomp($unsigned, '127', 0) > 0) {
-                    $remainder = \bcmod($unsigned, '128', 0);
+                while (bccomp($unsigned, '127', 0) > 0) {
+                    $remainder = bcmod($unsigned, '128', 0);
                     $bytes[] = (int) $remainder | 0x80;
-                    $unsigned = \bcdiv($unsigned, '128', 0);
+                    $unsigned = bcdiv($unsigned, '128', 0);
                 }
                 $bytes[] = (int) $unsigned;
             } else {

@@ -10,6 +10,8 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 
+use function sprintf;
+
 final class ConfigurationTest extends TestCase
 {
     public function test_clock_service_id_can_be_configured(): void
@@ -460,7 +462,7 @@ final class ConfigurationTest extends TestCase
     public function test_stream_transport_rejects_http_specific_options(string $key, mixed $value): void
     {
         $this->expectException(InvalidConfigurationException::class);
-        $this->expectExceptionMessage(\sprintf(
+        $this->expectExceptionMessage(sprintf(
             'The "%s" parameter is not supported when transport.type is "stream".',
             $key,
         ));

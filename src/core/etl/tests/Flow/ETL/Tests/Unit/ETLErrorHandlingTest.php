@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use DateTimeImmutable;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
@@ -11,12 +12,16 @@ use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer;
+use Generator;
+use RuntimeException;
 
+use function array_merge;
 use function Flow\ETL\DSL\boolean_entry;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\ignore_error_handler;
 use function Flow\ETL\DSL\integer_entry;
 use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\skip_rows_handler;
 use function Flow\ETL\DSL\string_entry;
 use function Flow\ETL\DSL\throw_error_handler;
@@ -31,19 +36,19 @@ final class ETLErrorHandlingTest extends FlowTestCase
              *
              * @return \Generator<int, Rows, mixed, void>
              */
-            public function extract(FlowContext $context): \Generator
+            public function extract(FlowContext $context): Generator
             {
-                yield \Flow\ETL\DSL\rows(row(
+                yield rows(row(
                     integer_entry('id', 101),
                     boolean_entry('deleted', false),
-                    new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
+                    new DateTimeEntry('expiration-date', new DateTimeImmutable('2020-08-24')),
                     string_entry('phase', null),
                 ));
 
-                yield \Flow\ETL\DSL\rows(row(
+                yield rows(row(
                     integer_entry('id', 102),
                     boolean_entry('deleted', true),
-                    new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-25')),
+                    new DateTimeEntry('expiration-date', new DateTimeImmutable('2020-08-25')),
                     string_entry('phase', null),
                 ));
             }
@@ -52,7 +57,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
         $brokenTransformer = new class implements Transformer {
             public function transform(Rows $rows, FlowContext $context): Rows
             {
-                throw new \RuntimeException('Transformer Exception');
+                throw new RuntimeException('Transformer Exception');
             }
         };
 
@@ -62,11 +67,11 @@ final class ETLErrorHandlingTest extends FlowTestCase
 
             public function load(Rows $rows, FlowContext $context): void
             {
-                $this->result = \array_merge($this->result, $rows->toArray());
+                $this->result = array_merge($this->result, $rows->toArray());
             }
         };
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Transformer Exception');
 
         data_frame()
@@ -85,19 +90,19 @@ final class ETLErrorHandlingTest extends FlowTestCase
              *
              * @return \Generator<int, Rows, mixed, void>
              */
-            public function extract(FlowContext $context): \Generator
+            public function extract(FlowContext $context): Generator
             {
-                yield \Flow\ETL\DSL\rows(row(
+                yield rows(row(
                     integer_entry('id', 101),
                     boolean_entry('deleted', false),
-                    new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
+                    new DateTimeEntry('expiration-date', new DateTimeImmutable('2020-08-24')),
                     string_entry('phase', null),
                 ));
 
-                yield \Flow\ETL\DSL\rows(row(
+                yield rows(row(
                     integer_entry('id', 102),
                     boolean_entry('deleted', true),
-                    new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-25')),
+                    new DateTimeEntry('expiration-date', new DateTimeImmutable('2020-08-25')),
                     string_entry('phase', null),
                 ));
             }
@@ -106,7 +111,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
         $brokenTransformer = new class implements Transformer {
             public function transform(Rows $rows, FlowContext $context): Rows
             {
-                throw new \RuntimeException('Transformer Exception');
+                throw new RuntimeException('Transformer Exception');
             }
         };
 
@@ -116,7 +121,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
 
             public function load(Rows $rows, FlowContext $context): void
             {
-                $this->result = \array_merge($this->result, $rows->toArray());
+                $this->result = array_merge($this->result, $rows->toArray());
             }
         };
 
@@ -132,13 +137,13 @@ final class ETLErrorHandlingTest extends FlowTestCase
                 [
                     'id' => 101,
                     'deleted' => false,
-                    'expiration-date' => new \DateTimeImmutable('2020-08-24'),
+                    'expiration-date' => new DateTimeImmutable('2020-08-24'),
                     'phase' => null,
                 ],
                 [
                     'id' => 102,
                     'deleted' => true,
-                    'expiration-date' => new \DateTimeImmutable('2020-08-25'),
+                    'expiration-date' => new DateTimeImmutable('2020-08-25'),
                     'phase' => null,
                 ],
             ],
@@ -154,19 +159,19 @@ final class ETLErrorHandlingTest extends FlowTestCase
              *
              * @return \Generator<int, Rows, mixed, void>
              */
-            public function extract(FlowContext $context): \Generator
+            public function extract(FlowContext $context): Generator
             {
-                yield \Flow\ETL\DSL\rows(row(
+                yield rows(row(
                     integer_entry('id', 101),
                     boolean_entry('deleted', false),
-                    new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
+                    new DateTimeEntry('expiration-date', new DateTimeImmutable('2020-08-24')),
                     string_entry('phase', null),
                 ));
 
-                yield \Flow\ETL\DSL\rows(row(
+                yield rows(row(
                     integer_entry('id', 102),
                     boolean_entry('deleted', true),
-                    new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-25')),
+                    new DateTimeEntry('expiration-date', new DateTimeImmutable('2020-08-25')),
                     string_entry('phase', null),
                 ));
             }
@@ -176,7 +181,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
             public function transform(Rows $rows, FlowContext $context): Rows
             {
                 if ($rows->first()->valueOf('id') === 101) {
-                    throw new \RuntimeException('Transformer Exception');
+                    throw new RuntimeException('Transformer Exception');
                 }
 
                 return $rows;
@@ -189,7 +194,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
 
             public function load(Rows $rows, FlowContext $context): void
             {
-                $this->result = \array_merge($this->result, $rows->toArray());
+                $this->result = array_merge($this->result, $rows->toArray());
             }
         };
 
@@ -200,7 +205,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
                 [
                     'id' => 102,
                     'deleted' => true,
-                    'expiration-date' => new \DateTimeImmutable('2020-08-25'),
+                    'expiration-date' => new DateTimeImmutable('2020-08-25'),
                     'phase' => null,
                 ],
             ],

@@ -9,6 +9,18 @@ use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\SourceStream;
+use Generator;
+
+use function fclose;
+use function feof;
+use function fgets;
+use function fread;
+use function fseek;
+use function fstat;
+use function fwrite;
+use function is_resource;
+use function stream_get_contents;
+use function strlen;
 
 final class MemoryStream implements DestinationStream, SourceStream
 {
@@ -19,26 +31,26 @@ final class MemoryStream implements DestinationStream, SourceStream
         private $handle,
         private readonly Path $path,
     ) {
-        if (!\is_resource($this->handle)) {
+        if (!is_resource($this->handle)) {
             throw new InvalidArgumentException('Invalid memory stream handle');
         }
     }
 
     public function __destruct()
     {
-        if (\is_resource($this->handle)) {
-            \fclose($this->handle);
+        if (is_resource($this->handle)) {
+            fclose($this->handle);
         }
     }
 
     public function append(string $data): DestinationStream
     {
-        $written = \fwrite($this->handle, $data);
+        $written = fwrite($this->handle, $data);
 
-        if ($written === false || $written !== \strlen($data)) {
+        if ($written === false || $written !== strlen($data)) {
             throw new RuntimeException(
                 'Failed to write all bytes to stream, expected '
-                . \strlen($data)
+                . strlen($data)
                 . ' bytes, written: '
                 . ($written === false ? '0' : $written),
             );
@@ -54,9 +66,9 @@ final class MemoryStream implements DestinationStream, SourceStream
 
     public function content(): string
     {
-        \fseek($this->handle, 0);
+        fseek($this->handle, 0);
 
-        $content = \stream_get_contents($this->handle);
+        $content = stream_get_contents($this->handle);
 
         if ($content === false) {
             throw new InvalidArgumentException('Failed to read memory stream content');
@@ -77,12 +89,12 @@ final class MemoryStream implements DestinationStream, SourceStream
         return true;
     }
 
-    public function iterate(int $length = 1): \Generator
+    public function iterate(int $length = 1): Generator
     {
-        \fseek($this->handle, 0);
+        fseek($this->handle, 0);
 
-        while (!\feof($this->handle)) {
-            yield (string) \fread($this->handle, $length);
+        while (!feof($this->handle)) {
+            yield (string) fread($this->handle, $length);
         }
     }
 
@@ -93,23 +105,23 @@ final class MemoryStream implements DestinationStream, SourceStream
 
     public function read(int $length, int $offset): string
     {
-        \fseek($this->handle, $offset);
+        fseek($this->handle, $offset);
 
-        return (string) \fread($this->handle, $length);
+        return (string) fread($this->handle, $length);
     }
 
-    public function readLines(string $separator = "\n", ?int $length = null): \Generator
+    public function readLines(string $separator = "\n", ?int $length = null): Generator
     {
-        \fseek($this->handle, 0);
+        fseek($this->handle, 0);
 
-        while (!\feof($this->handle)) {
-            yield (string) \fgets($this->handle, $length);
+        while (!feof($this->handle)) {
+            yield (string) fgets($this->handle, $length);
         }
     }
 
     public function size(): ?int
     {
-        $stat = \fstat($this->handle);
+        $stat = fstat($this->handle);
 
         return $stat['size'] ?? null;
     }

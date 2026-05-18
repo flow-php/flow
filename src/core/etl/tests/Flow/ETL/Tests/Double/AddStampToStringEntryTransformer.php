@@ -11,6 +11,7 @@ use Flow\ETL\Transformer;
 
 use function Flow\ETL\DSL\string_entry;
 use function Flow\Types\DSL\type_string;
+use function sprintf;
 
 final readonly class AddStampToStringEntryTransformer implements Transformer
 {
@@ -29,7 +30,7 @@ final readonly class AddStampToStringEntryTransformer implements Transformer
     {
         return $rows->map(fn(Row $row): Row => $row->set(string_entry(
             $this->entryName,
-            \sprintf(
+            sprintf(
                 '%s%s%s',
                 type_string()->assert($row->get($this->entryName)->value()),
                 $this->divider,

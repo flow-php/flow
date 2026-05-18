@@ -8,6 +8,10 @@ use Flow\PostgreSql\AST\Nodes\Table;
 use Flow\PostgreSql\AST\Visitors\RangeVarCollector;
 use Flow\PostgreSql\ParsedQuery;
 
+use function array_filter;
+use function array_map;
+use function array_values;
+
 final readonly class Tables
 {
     public function __construct(
@@ -22,8 +26,8 @@ final readonly class Tables
         $collector = new RangeVarCollector();
         $this->query->traverse($collector);
 
-        return \array_values(\array_filter(
-            \array_map(static fn($ref) => new Table($ref), $collector->getRangeVars()),
+        return array_values(array_filter(
+            array_map(static fn($ref) => new Table($ref), $collector->getRangeVars()),
             static fn($table) => $table->name() !== '',
         ));
     }

@@ -4,10 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Nodes;
 
+use ArrayIterator;
+use Countable;
+use IteratorAggregate;
+use Traversable;
+
+use function count;
+
 /**
  * @implements \IteratorAggregate<int, Statement<mixed>>
  */
-final readonly class Statements implements \Countable, \IteratorAggregate
+final readonly class Statements implements Countable, IteratorAggregate
 {
     /**
      * @param array<int, Statement<mixed>> $statements
@@ -26,7 +33,7 @@ final readonly class Statements implements \Countable, \IteratorAggregate
 
     public function count(): int
     {
-        return \count($this->statements);
+        return count($this->statements);
     }
 
     /**
@@ -48,9 +55,9 @@ final readonly class Statements implements \Countable, \IteratorAggregate
     /**
      * @return \Traversable<int, Statement<mixed>>
      */
-    public function getIterator(): \Traversable
+    public function getIterator(): Traversable
     {
-        return new \ArrayIterator($this->statements);
+        return new ArrayIterator($this->statements);
     }
 
     /**
@@ -59,7 +66,7 @@ final readonly class Statements implements \Countable, \IteratorAggregate
      */
     public function isEmpty(): bool
     {
-        return \count($this->statements) === 0;
+        return count($this->statements) === 0;
     }
 
     /**
@@ -68,7 +75,7 @@ final readonly class Statements implements \Countable, \IteratorAggregate
      */
     public function isSingle(): bool
     {
-        return \count($this->statements) === 1;
+        return count($this->statements) === 1;
     }
 
     /**
@@ -76,10 +83,10 @@ final readonly class Statements implements \Countable, \IteratorAggregate
      */
     public function last(): ?Statement
     {
-        if (\count($this->statements) === 0) {
+        if (count($this->statements) === 0) {
             return null;
         }
 
-        return $this->statements[\count($this->statements) - 1];
+        return $this->statements[count($this->statements) - 1];
     }
 }

@@ -12,7 +12,13 @@ use Flow\PostgreSql\Protobuf\AST\PBFloat;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
+use function assert;
+use function floatval;
 use function Flow\Types\DSL\type_instance_of;
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_string;
 
 /**
  * Represents a literal value in SQL (string, int, float, bool, null).
@@ -52,12 +58,12 @@ final readonly class Literal implements Expression
         if ($aConst->hasFval()) {
             $fval = type_instance_of(PBFloat::class)->assert($aConst->getFval());
 
-            return new self(\floatval($fval->getFval()));
+            return new self(floatval($fval->getFval()));
         }
 
         if ($aConst->hasSval()) {
             $sval = $aConst->getSval();
-            \assert($sval instanceof PBString);
+            assert($sval instanceof PBString);
 
             return new self($sval->getSval());
         }
@@ -91,17 +97,17 @@ final readonly class Literal implements Expression
 
     public function isBool(): bool
     {
-        return \is_bool($this->value);
+        return is_bool($this->value);
     }
 
     public function isFloat(): bool
     {
-        return \is_float($this->value);
+        return is_float($this->value);
     }
 
     public function isInt(): bool
     {
-        return \is_int($this->value);
+        return is_int($this->value);
     }
 
     public function isNull(): bool
@@ -111,7 +117,7 @@ final readonly class Literal implements Expression
 
     public function isString(): bool
     {
-        return \is_string($this->value);
+        return is_string($this->value);
     }
 
     public function toAst(): Node
@@ -119,16 +125,16 @@ final readonly class Literal implements Expression
         if ($this->value === null) {
             $aConst = new A_Const();
             $aConst->setIsnull(true);
-        } elseif (\is_int($this->value)) {
+        } elseif (is_int($this->value)) {
             $integer = new Integer();
             $integer->setIval($this->value);
             $aConst = new A_Const(['ival' => $integer]);
-        } elseif (\is_float($this->value)) {
+        } elseif (is_float($this->value)) {
             $aConst = new A_Const();
             $float = new PBFloat();
             $float->setFval((string) $this->value);
             $aConst->setFval($float);
-        } elseif (\is_string($this->value)) {
+        } elseif (is_string($this->value)) {
             $aConst = new A_Const();
             $string = new PBString();
             $string->setSval($this->value);

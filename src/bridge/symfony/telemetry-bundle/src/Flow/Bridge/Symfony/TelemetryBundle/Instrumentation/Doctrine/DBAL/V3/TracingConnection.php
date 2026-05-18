@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V3;
 
+use DateTimeImmutable;
 use Doctrine\DBAL\Driver\Connection as ConnectionInterface;
 use Doctrine\DBAL\Driver\Middleware\AbstractConnectionMiddleware;
 use Doctrine\DBAL\Driver\Result;
@@ -12,6 +13,11 @@ use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
+use Override;
+use Throwable;
+
+use function mb_strlen;
+use function mb_substr;
 
 final class TracingConnection extends AbstractConnectionMiddleware
 {
@@ -24,7 +30,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
         parent::__construct($connection);
     }
 
-    #[\Override]
+    #[Override]
     public function beginTransaction(): bool
     {
         $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
@@ -37,8 +43,8 @@ final class TracingConnection extends AbstractConnectionMiddleware
             $span->setStatus(SpanStatus::ok());
 
             return $result;
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -47,7 +53,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
         }
     }
 
-    #[\Override]
+    #[Override]
     public function commit(): bool
     {
         $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
@@ -60,8 +66,8 @@ final class TracingConnection extends AbstractConnectionMiddleware
             $span->setStatus(SpanStatus::ok());
 
             return $result;
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -70,7 +76,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
         }
     }
 
-    #[\Override]
+    #[Override]
     public function exec(string $sql): int
     {
         $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
@@ -89,8 +95,8 @@ final class TracingConnection extends AbstractConnectionMiddleware
             $span->setStatus(SpanStatus::ok());
 
             return $result;
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -99,7 +105,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
         }
     }
 
-    #[\Override]
+    #[Override]
     public function prepare(string $sql): DriverStatement
     {
         $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
@@ -118,8 +124,8 @@ final class TracingConnection extends AbstractConnectionMiddleware
             $span->setStatus(SpanStatus::ok());
 
             return new TracingStatement($statement, $this->telemetry);
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -128,7 +134,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
         }
     }
 
-    #[\Override]
+    #[Override]
     public function query(string $sql): Result
     {
         $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
@@ -147,8 +153,8 @@ final class TracingConnection extends AbstractConnectionMiddleware
             $span->setStatus(SpanStatus::ok());
 
             return $result;
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -157,7 +163,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
         }
     }
 
-    #[\Override]
+    #[Override]
     public function rollBack(): bool
     {
         $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
@@ -170,8 +176,8 @@ final class TracingConnection extends AbstractConnectionMiddleware
             $span->setStatus(SpanStatus::ok());
 
             return $result;
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -186,10 +192,10 @@ final class TracingConnection extends AbstractConnectionMiddleware
             return $sql;
         }
 
-        if (\mb_strlen($sql) <= $this->maxSqlLength) {
+        if (mb_strlen($sql) <= $this->maxSqlLength) {
             return $sql;
         }
 
-        return \mb_substr($sql, 0, $this->maxSqlLength) . '...';
+        return mb_substr($sql, 0, $this->maxSqlLength) . '...';
     }
 }

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\ErrorHandler;
 
+use Throwable;
+
 /**
  * Discards every Throwable.
  */
 final readonly class NullErrorHandler implements ErrorHandler
 {
-    public function handle(\Throwable $error): void {}
+    public function handle(Throwable $error): void {}
 }

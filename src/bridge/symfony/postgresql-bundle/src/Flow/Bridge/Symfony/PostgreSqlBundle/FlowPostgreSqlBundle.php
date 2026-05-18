@@ -39,6 +39,9 @@ use Flow\PostgreSql\Migrations\Store\MigrationStore;
 use Flow\PostgreSql\Migrations\VersionGenerator\TimestampVersionGenerator;
 use Flow\PostgreSql\Migrations\VersionResolver;
 use Flow\Telemetry\Provider\Clock\SystemClock;
+use LogicException;
+use Override;
+use Reflector;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
 use Symfony\Component\DependencyInjection\ChildDefinition;
@@ -51,13 +54,19 @@ use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
+use function array_key_exists;
+use function array_keys;
+use function class_exists;
 use function Flow\Types\DSL\type_string;
+use function implode;
+use function in_array;
+use function sprintf;
 
 final class FlowPostgreSqlBundle extends AbstractBundle
 {
     protected string $extensionAlias = 'flow_postgresql';
 
-    #[\Override]
+    #[Override]
     public function build(ContainerBuilder $container): void
     {
         parent::build($container);
@@ -68,13 +77,13 @@ final class FlowPostgreSqlBundle extends AbstractBundle
         $container->registerAttributeForAutoconfiguration(AsCatalogProvider::class, static function (
             ChildDefinition $definition,
             AsCatalogProvider $attribute,
-            \Reflector $reflector,
+            Reflector $reflector,
         ): void {
             $definition->addTag('flow.postgresql.catalog_provider');
         });
     }
 
-    #[\Override]
+    #[Override]
     public function configure(DefinitionConfigurator $definition): void
     {
         $definition
@@ -340,11 +349,11 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     /**
      * @param array{connections: array<string, array{dsn: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>} $config
      */
-    #[\Override]
+    #[Override]
     public function loadExtension(array $config, ContainerConfigurator $configurator, ContainerBuilder $container): void
     {
         $isFirst = true;
-        $connectionNames = \array_keys($config['connections']);
+        $connectionNames = array_keys($config['connections']);
 
         foreach ($config['connections'] as $name => $connectionConfig) {
             $this->registerConnection($name, $connectionConfig, $container, $isFirst);
@@ -384,7 +393,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
      */
     private function registerCache(array $cacheConfig, array $connectionNames, ContainerBuilder $container): void
     {
-        if (!\class_exists(FlowPostgreSqlCacheAdapter::class)) {
+        if (!class_exists(FlowPostgreSqlCacheAdapter::class)) {
             return;
         }
 
@@ -411,12 +420,12 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     ): void {
         $connectionName = $poolConfig['connection'] ?? $connectionNames[0];
 
-        if (!\in_array($connectionName, $connectionNames, true)) {
-            throw new \LogicException(\sprintf(
+        if (!in_array($connectionName, $connectionNames, true)) {
+            throw new LogicException(sprintf(
                 'Cache pool "%s" references unknown connection "%s". Declared connections: %s',
                 $name,
                 $connectionName,
-                \implode(', ', $connectionNames),
+                implode(', ', $connectionNames),
             ));
         }
 
@@ -461,12 +470,12 @@ final class FlowPostgreSqlBundle extends AbstractBundle
         $configProviderServiceIds = [];
 
         foreach ($catalogProviders as $i => $providerConfig) {
-            if (\array_key_exists('catalog', $providerConfig) && $providerConfig['catalog'] !== null) {
+            if (array_key_exists('catalog', $providerConfig) && $providerConfig['catalog'] !== null) {
                 $providerDef = new Definition(ArrayCatalogProvider::class, [$providerConfig['catalog']]);
                 $providerDef->addTag('flow.postgresql.catalog_provider');
                 $container->setDefinition("flow.postgresql.catalog_provider.{$i}", $providerDef);
             } elseif (
-                \array_key_exists('catalog_provider_id', $providerConfig)
+                array_key_exists('catalog_provider_id', $providerConfig)
                 && $providerConfig['catalog_provider_id'] !== null
             ) {
                 $configProviderServiceIds[] = type_string()->assert($providerConfig['catalog_provider_id']);
@@ -499,7 +508,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
 
         $clientArguments = [new Reference("flow.postgresql.{$name}.connection_parameters")];
 
-        if (\array_key_exists('context', $connectionConfig) && $connectionConfig['context'] !== []) {
+        if (array_key_exists('context', $connectionConfig) && $connectionConfig['context'] !== []) {
             $contextDef = new Definition(Context::class, [
                 null,
                 $connectionConfig['context'],
@@ -520,7 +529,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             $this->registerStaticConnection($name, $container);
         }
 
-        if (\array_key_exists('telemetry', $connectionConfig)) {
+        if (array_key_exists('telemetry', $connectionConfig)) {
             $this->registerTelemetry($name, $connectionConfig['telemetry'], $container);
         }
 
@@ -539,7 +548,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
         array $connectionNames,
         ContainerBuilder $container,
     ): void {
-        if (!\class_exists(FlowPostgreSqlTransportFactory::class)) {
+        if (!class_exists(FlowPostgreSqlTransportFactory::class)) {
             return;
         }
 
@@ -684,7 +693,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
      */
     private function registerSession(array $sessionConfig, array $connectionNames, ContainerBuilder $container): void
     {
-        if (!\class_exists(FlowPostgreSqlSessionHandler::class)) {
+        if (!class_exists(FlowPostgreSqlSessionHandler::class)) {
             return;
         }
 
@@ -694,11 +703,11 @@ final class FlowPostgreSqlBundle extends AbstractBundle
 
         $connectionName = $sessionConfig['connection'] ?? $connectionNames[0];
 
-        if (!\in_array($connectionName, $connectionNames, true)) {
-            throw new \LogicException(\sprintf(
+        if (!in_array($connectionName, $connectionNames, true)) {
+            throw new LogicException(sprintf(
                 'Session references unknown connection "%s". Declared connections: %s',
                 $connectionName,
-                \implode(', ', $connectionNames),
+                implode(', ', $connectionNames),
             ));
         }
 
@@ -755,8 +764,8 @@ final class FlowPostgreSqlBundle extends AbstractBundle
 
     private function registerStaticConnection(string $name, ContainerBuilder $container): void
     {
-        if (!\class_exists(StaticClient::class)) {
-            throw new \LogicException(\sprintf(
+        if (!class_exists(StaticClient::class)) {
+            throw new LogicException(sprintf(
                 'Connection "%s" has test_transaction_rollback set to true, but flow-php/phpunit-postgresql-bridge is not installed. Run "composer require --dev flow-php/phpunit-postgresql-bridge".',
                 $name,
             ));

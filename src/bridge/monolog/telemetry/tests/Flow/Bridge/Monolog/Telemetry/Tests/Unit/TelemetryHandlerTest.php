@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Telemetry\Tests\Unit;
 
+use DateTimeImmutable;
 use Flow\Bridge\Monolog\Telemetry\LogRecordConverter;
 use Flow\Bridge\Monolog\Telemetry\SeverityMapper;
 use Flow\Bridge\Monolog\Telemetry\TelemetryHandler;
@@ -14,11 +15,14 @@ use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
 use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Resource;
+use Generator;
 use Monolog\Level;
 use Monolog\Logger as MonologLogger;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use stdClass;
 
 #[CoversClass(TelemetryHandler::class)]
 final class TelemetryHandlerTest extends TestCase
@@ -30,7 +34,7 @@ final class TelemetryHandlerTest extends TestCase
     /**
      * @return \Generator<string, array{Level, Severity}>
      */
-    public static function levelToSeverityProvider(): \Generator
+    public static function levelToSeverityProvider(): Generator
     {
         yield 'debug' => [Level::Debug, Severity::DEBUG];
         yield 'info' => [Level::Info, Severity::INFO];
@@ -126,7 +130,7 @@ final class TelemetryHandlerTest extends TestCase
 
     public function test_handler_handles_exception_in_context(): void
     {
-        $exception = new \RuntimeException('Something went wrong');
+        $exception = new RuntimeException('Something went wrong');
 
         $this->monolog->error('Error occurred', [
             'exception' => $exception,
@@ -134,7 +138,7 @@ final class TelemetryHandlerTest extends TestCase
 
         $entries = $this->processor->entries();
         static::assertCount(1, $entries);
-        static::assertSame(\RuntimeException::class, $entries[0]->record->attributes->get('exception.type'));
+        static::assertSame(RuntimeException::class, $entries[0]->record->attributes->get('exception.type'));
         static::assertSame('Something went wrong', $entries[0]->record->attributes->get('exception.message'));
         static::assertNotNull($entries[0]->record->attributes->get('exception.stacktrace'));
     }
@@ -189,7 +193,7 @@ final class TelemetryHandlerTest extends TestCase
 
     public function test_handler_normalizes_datetime_values(): void
     {
-        $datetime = new \DateTimeImmutable('2024-01-15 10:30:00');
+        $datetime = new DateTimeImmutable('2024-01-15 10:30:00');
 
         $this->monolog->info('Test', [
             'timestamp' => $datetime,
@@ -231,7 +235,7 @@ final class TelemetryHandlerTest extends TestCase
 
     public function test_handler_normalizes_objects_without_to_string_to_class_name(): void
     {
-        $object = new \stdClass();
+        $object = new stdClass();
 
         $this->monolog->info('Test', [
             'object' => $object,

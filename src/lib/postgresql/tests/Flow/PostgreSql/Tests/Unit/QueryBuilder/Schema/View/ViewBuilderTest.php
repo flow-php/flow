@@ -22,6 +22,7 @@ use Flow\PostgreSql\QueryBuilder\Schema\View\RefreshMaterializedView\RefreshMate
 use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
 use function Flow\PostgreSql\DSL\alter;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\create;
@@ -37,7 +38,7 @@ final class ViewBuilderTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }

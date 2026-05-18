@@ -7,16 +7,18 @@ namespace Flow\Bridge\Psr3\Telemetry\Tests\Unit;
 use Flow\Bridge\Psr3\Telemetry\Exception\InvalidArgumentException;
 use Flow\Bridge\Psr3\Telemetry\SeverityMapper;
 use Flow\Telemetry\Logger\Severity;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LogLevel;
+use Stringable;
 
 final class SeverityMapperTest extends TestCase
 {
     /**
      * @return \Generator<string, array{string, Severity}>
      */
-    public static function default_mapping_provider(): \Generator
+    public static function default_mapping_provider(): Generator
     {
         yield 'debug' => [LogLevel::DEBUG, Severity::DEBUG];
         yield 'info' => [LogLevel::INFO, Severity::INFO];
@@ -31,7 +33,7 @@ final class SeverityMapperTest extends TestCase
     public function test_accepts_stringable_level(): void
     {
         $mapper = new SeverityMapper();
-        $level = new class implements \Stringable {
+        $level = new class implements Stringable {
             public function __toString(): string
             {
                 return LogLevel::WARNING;

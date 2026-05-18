@@ -26,6 +26,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function count;
 use function Flow\CLI\option_bool;
 use function Flow\CLI\option_int;
 use function Flow\CLI\option_int_nullable;
@@ -152,7 +153,7 @@ final class FileReadCommand extends Command
 
         $outputColumns = option_list_of_strings('output-columns', $input);
 
-        if (\count($outputColumns)) {
+        if (count($outputColumns)) {
             $df->select(...$outputColumns);
         }
 

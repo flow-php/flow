@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Types\ValueType;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\PostgreSql\DSL\cast;
@@ -14,13 +15,15 @@ use function Flow\PostgreSql\DSL\literal;
 use function Flow\PostgreSql\DSL\param;
 use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\typed;
+use function serialize;
+use function str_repeat;
 
 final class ByteaConverterTest extends PostgreSqlTestCase
 {
     /**
      * @return \Generator<string, array{string, string}>
      */
-    public static function provide_bytea_values(): \Generator
+    public static function provide_bytea_values(): Generator
     {
         yield 'simple string' => ['hello world', 'hello world'];
         yield 'empty string' => ['', ''];
@@ -31,7 +34,7 @@ final class ByteaConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{string, string}>
      */
-    public static function provide_hex_bytea_values(): \Generator
+    public static function provide_hex_bytea_values(): Generator
     {
         yield 'simple hex' => ['48454c4c4f', 'HELLO'];
         yield 'empty hex' => ['', ''];
@@ -41,12 +44,12 @@ final class ByteaConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{string}>
      */
-    public static function provide_typed_bytea_binary_values(): \Generator
+    public static function provide_typed_bytea_binary_values(): Generator
     {
         yield 'leading null bytes' => ["\x00\x00\x00\x02\x11\x06value1"];
         yield 'embedded null bytes' => ["hello\x00world"];
         yield 'high bytes' => ["\x01\x02\x03\xff\xfe"];
-        yield 'serialize output' => [\serialize(['greeting' => 'world', 'count' => 7])];
+        yield 'serialize output' => [serialize(['greeting' => 'world', 'count' => 7])];
     }
 
     public function test_binary_data_via_hex_literal(): void
@@ -95,7 +98,7 @@ final class ByteaConverterTest extends PostgreSqlTestCase
 
     public function test_large_bytea_data(): void
     {
-        $data = \str_repeat('abcdefghijklmnopqrstuvwxyz0123456789', 100);
+        $data = str_repeat('abcdefghijklmnopqrstuvwxyz0123456789', 100);
 
         $result = $this
             ->pgsqlContext()

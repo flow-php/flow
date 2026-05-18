@@ -7,13 +7,16 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\integer_entry;
+use function serialize;
+use function unserialize;
 
 final class IntegerEntryTest extends FlowTestCase
 {
-    public static function is_equal_data_provider(): \Generator
+    public static function is_equal_data_provider(): Generator
     {
         yield 'equal names and values' => [true, integer_entry('name', 1), integer_entry('name', 1)];
         yield 'different names and values' => [false, integer_entry('name', 1), integer_entry('different_name', 1)];
@@ -84,9 +87,9 @@ final class IntegerEntryTest extends FlowTestCase
     {
         $string = integer_entry('name', 1);
 
-        $serialized = \serialize($string);
+        $serialized = serialize($string);
         /** @var IntegerEntry $unserialized */
-        $unserialized = \unserialize($serialized);
+        $unserialized = unserialize($serialized);
 
         static::assertTrue($string->isEqual($unserialized));
     }

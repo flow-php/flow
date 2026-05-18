@@ -11,6 +11,7 @@ use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
+use Throwable;
 
 final readonly class ScalarFunctionFilterTransformer implements Transformer
 {
@@ -39,7 +40,7 @@ final readonly class ScalarFunctionFilterTransformer implements Transformer
             ]);
 
             return $result;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->transformationFailed($this, $e);
 
             throw $e;

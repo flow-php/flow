@@ -32,13 +32,17 @@ use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use stdClass;
+
+use function interface_exists;
 
 #[CoversClass(TracingDriver::class)]
 final class TracingDriverTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (\interface_exists('Doctrine\DBAL\VersionAwarePlatformDriver')) {
+        if (interface_exists('Doctrine\DBAL\VersionAwarePlatformDriver')) {
             self::markTestSkipped('Test requires Doctrine DBAL 4.x');
         }
     }
@@ -251,7 +255,7 @@ final class TracingDriverTest extends TestCase
 
                     public function getNativeConnection(): object
                     {
-                        return new \stdClass();
+                        return new stdClass();
                     }
 
                     public function getServerVersion(): string
@@ -266,12 +270,12 @@ final class TracingDriverTest extends TestCase
 
                     public function prepare(string $sql): Statement
                     {
-                        throw new \RuntimeException('Not implemented');
+                        throw new RuntimeException('Not implemented');
                     }
 
                     public function query(string $sql): Result
                     {
-                        throw new \RuntimeException('Not implemented');
+                        throw new RuntimeException('Not implemented');
                     }
 
                     public function quote(string $value): string
@@ -290,7 +294,7 @@ final class TracingDriverTest extends TestCase
 
             public function getExceptionConverter(): ExceptionConverter
             {
-                throw new \RuntimeException('Not implemented');
+                throw new RuntimeException('Not implemented');
             }
         };
     }

@@ -15,9 +15,12 @@ use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
 use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Resource;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LogLevel;
+use RuntimeException;
+use Stringable;
 
 final class TelemetryLoggerTest extends TestCase
 {
@@ -28,7 +31,7 @@ final class TelemetryLoggerTest extends TestCase
     /**
      * @return \Generator<string, array{string, Severity}>
      */
-    public static function level_to_severity_provider(): \Generator
+    public static function level_to_severity_provider(): Generator
     {
         yield 'debug' => [LogLevel::DEBUG, Severity::DEBUG];
         yield 'info' => [LogLevel::INFO, Severity::INFO];
@@ -114,12 +117,12 @@ final class TelemetryLoggerTest extends TestCase
 
     public function test_exception_in_context_routes_to_set_exception(): void
     {
-        $exception = new \RuntimeException('boom');
+        $exception = new RuntimeException('boom');
 
         $this->psrLogger->error('failure', ['exception' => $exception]);
 
         $entry = $this->processor->entries()[0];
-        static::assertSame(\RuntimeException::class, $entry->record->attributes->get('exception.type'));
+        static::assertSame(RuntimeException::class, $entry->record->attributes->get('exception.type'));
         static::assertSame('boom', $entry->record->attributes->get('exception.message'));
         static::assertNotNull($entry->record->attributes->get('exception.stacktrace'));
         static::assertFalse($entry->record->attributes->has('exception'));
@@ -188,7 +191,7 @@ final class TelemetryLoggerTest extends TestCase
 
     public function test_stringable_message_is_supported(): void
     {
-        $message = new class implements \Stringable {
+        $message = new class implements Stringable {
             public function __toString(): string
             {
                 return 'rendered';

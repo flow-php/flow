@@ -18,6 +18,8 @@ use Flow\ETL\Window;
 
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\integer_entry;
+use function is_int;
+use function is_numeric;
 
 final class Average implements AggregatingFunction, WindowFunction
 {
@@ -43,7 +45,7 @@ final class Average implements AggregatingFunction, WindowFunction
             /** @var mixed $value */
             $value = $row->valueOf($this->ref);
 
-            if (\is_numeric($value)) {
+            if (is_numeric($value)) {
                 $this->sum = (new Calculator())->add($this->sum, $value);
                 $this->count++;
             }
@@ -62,7 +64,7 @@ final class Average implements AggregatingFunction, WindowFunction
                 /** @var mixed $value */
                 $value = $partitionRow->valueOf($this->ref);
 
-                if (\is_numeric($value)) {
+                if (is_numeric($value)) {
                     $sum = (new Calculator())->add($sum, $value);
                     $count++;
                 }
@@ -97,7 +99,7 @@ final class Average implements AggregatingFunction, WindowFunction
             $result = 0;
         }
 
-        if (\is_int($result)) {
+        if (is_int($result)) {
             return integer_entry($this->ref->name(), $result);
         }
 

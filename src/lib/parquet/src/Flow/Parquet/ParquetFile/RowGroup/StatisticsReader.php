@@ -11,6 +11,8 @@ use Flow\Parquet\ParquetFile\Schema\ColumnPrimitiveType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Statistics;
 
+use function iterator_to_array;
+
 final readonly class StatisticsReader
 {
     private ByteOrder $byteOrder;
@@ -38,7 +40,7 @@ final readonly class StatisticsReader
             return $max;
         }
 
-        return \iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($max), $this->byteOrder))->unpack(
+        return iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($max), $this->byteOrder))->unpack(
             $column,
             1,
         ))[0];
@@ -56,7 +58,7 @@ final readonly class StatisticsReader
             return $maxValue;
         }
 
-        return \iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($maxValue), $this->byteOrder))->unpack(
+        return iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($maxValue), $this->byteOrder))->unpack(
             $column,
             1,
         ))[0];
@@ -74,7 +76,7 @@ final readonly class StatisticsReader
             return $min;
         }
 
-        return \iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($min), $this->byteOrder))->unpack(
+        return iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($min), $this->byteOrder))->unpack(
             $column,
             1,
         ))[0];
@@ -92,7 +94,7 @@ final readonly class StatisticsReader
             return $minValue;
         }
 
-        return \iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($minValue), $this->byteOrder))->unpack(
+        return iterator_to_array((new PlainValueUnpacker(new BinaryBufferReader($minValue), $this->byteOrder))->unpack(
             $column,
             1,
         ))[0];

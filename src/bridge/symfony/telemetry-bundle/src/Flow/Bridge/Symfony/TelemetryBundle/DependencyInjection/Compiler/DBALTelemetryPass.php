@@ -13,6 +13,11 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 
+use function array_keys;
+use function count;
+use function interface_exists;
+use function preg_match;
+
 final class DBALTelemetryPass implements CompilerPassInterface
 {
     private const string VERSION_AWARE_PLATFORM_DRIVER = 'Doctrine\\DBAL\\VersionAwarePlatformDriver';
@@ -73,12 +78,12 @@ final class DBALTelemetryPass implements CompilerPassInterface
             /** @var array<string, string> $connections */
             $connections = $container->getParameter('doctrine.connections');
 
-            foreach (\array_keys($connections) as $name) {
+            foreach (array_keys($connections) as $name) {
                 $connectionNames[] = $name;
             }
         }
 
-        if (\count($connectionNames) === 0 && $container->hasDefinition('doctrine.dbal.default_connection')) {
+        if (count($connectionNames) === 0 && $container->hasDefinition('doctrine.dbal.default_connection')) {
             $connectionNames[] = 'default';
         }
 
@@ -101,7 +106,7 @@ final class DBALTelemetryPass implements CompilerPassInterface
 
     private function matchesPattern(string $connectionName, string $pattern): bool
     {
-        $result = @\preg_match($pattern, $connectionName);
+        $result = @preg_match($pattern, $connectionName);
 
         if ($result !== false) {
             return (bool) $result;
@@ -115,7 +120,7 @@ final class DBALTelemetryPass implements CompilerPassInterface
      */
     private function resolveDriverClass(): string
     {
-        if (\interface_exists(self::VERSION_AWARE_PLATFORM_DRIVER)) {
+        if (interface_exists(self::VERSION_AWARE_PLATFORM_DRIVER)) {
             return V3TracingDriver::class;
         }
 

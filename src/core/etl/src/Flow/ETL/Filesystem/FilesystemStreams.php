@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Filesystem;
 
+use ArrayIterator;
+use Countable;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\FilesystemTable;
@@ -12,11 +14,22 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\SourceStream;
 use Flow\Filesystem\Stream\VoidStream;
+use Generator;
+use IteratorAggregate;
+use Traversable;
+
+use function array_key_exists;
+use function array_merge;
+use function array_values;
+use function count;
+use function Flow\Filesystem\DSL\path;
+use function str_contains;
+use function str_replace;
 
 /**
  * @implements \IteratorAggregate<array-key, DestinationStream>
  */
-final class FilesystemStreams implements \Countable, \IteratorAggregate
+final class FilesystemStreams implements Countable, IteratorAggregate
 {
     public const string FLOW_TMP_FILE_PREFIX = '._flow_php_tmp.';
 
@@ -46,16 +59,16 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
 
                     if ($this->saveMode === SaveMode::Overwrite) {
                         if ($fileStream->path()->partitions()->count()) {
-                            $filename = \str_replace(self::FLOW_TMP_FILE_PREFIX, '', $fileStream->path()->filename());
+                            $filename = str_replace(self::FLOW_TMP_FILE_PREFIX, '', $fileStream->path()->filename());
 
-                            $partitionFilesPattern = \Flow\Filesystem\DSL\path(
+                            $partitionFilesPattern = path(
                                 $fileStream->path()->parentDirectory()->uri() . '/' . $filename . '*.'
                                     . $fileStream->path()->extension(),
                                 $fileStream->path()->options(),
                             );
 
                             foreach ($fs->list($partitionFilesPattern) as $partitionFile) {
-                                if (\str_contains($partitionFile->path->path(), self::FLOW_TMP_FILE_PREFIX)) {
+                                if (str_contains($partitionFile->path->path(), self::FLOW_TMP_FILE_PREFIX)) {
                                     continue;
                                 }
 
@@ -63,8 +76,8 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
                             }
                         }
 
-                        $fs->mv($fileStream->path(), \Flow\Filesystem\DSL\path(
-                            \str_replace(self::FLOW_TMP_FILE_PREFIX, '', $fileStream->path()->uri()),
+                        $fs->mv($fileStream->path(), path(
+                            str_replace(self::FLOW_TMP_FILE_PREFIX, '', $fileStream->path()->uri()),
                             $fileStream->path()->options(),
                         ));
                     }
@@ -79,7 +92,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
 
     public function count(): int
     {
-        return \count($this->writingStreams);
+        return count($this->writingStreams);
     }
 
     /**
@@ -87,7 +100,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
      */
     public function exists(Path $path, array $partitions = []): bool
     {
-        $destination = \count($partitions) ? $path->addPartitions(...$partitions) : $path;
+        $destination = count($partitions) ? $path->addPartitions(...$partitions) : $path;
 
         return $this->fstab->for($path)->status($destination) !== null;
     }
@@ -95,9 +108,9 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
     /**
      * @return \Traversable<string, DestinationStream>
      */
-    public function getIterator(): \Traversable
+    public function getIterator(): Traversable
     {
-        return new \ArrayIterator(\array_merge(...\array_values($this->writingStreams)));
+        return new ArrayIterator(array_merge(...array_values($this->writingStreams)));
     }
 
     /**
@@ -105,19 +118,19 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
      */
     public function isOpen(Path $path, array $partitions = []): bool
     {
-        if (!\array_key_exists($path->uri(), $this->writingStreams)) {
+        if (!array_key_exists($path->uri(), $this->writingStreams)) {
             return false;
         }
 
-        $destination = \count($partitions) ? $path->addPartitions(...$partitions) : $path;
+        $destination = count($partitions) ? $path->addPartitions(...$partitions) : $path;
 
-        return \array_key_exists($destination->uri(), $this->writingStreams[$path->uri()]);
+        return array_key_exists($destination->uri(), $this->writingStreams[$path->uri()]);
     }
 
     /**
      * @return \Generator<SourceStream>
      */
-    public function list(Path $path, Filter $pathFilter): \Generator
+    public function list(Path $path, Filter $pathFilter): Generator
     {
         $fs = $this->fstab->for($path);
 
@@ -129,11 +142,11 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
     /**
      * @return \Generator<DestinationStream>
      */
-    public function listOpenStreams(Path $path): \Generator
+    public function listOpenStreams(Path $path): Generator
     {
         $uri = $path->uri();
 
-        if (!\array_key_exists($uri, $this->writingStreams)) {
+        if (!array_key_exists($uri, $this->writingStreams)) {
             return;
         }
 
@@ -153,7 +166,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
             throw new RuntimeException("Path can't be pattern, given: " . $path->uri());
         }
 
-        $destination = \count($partitions) ? $path->addPartitions(...$partitions) : $path;
+        $destination = count($partitions) ? $path->addPartitions(...$partitions) : $path;
 
         return $this->fstab->for($path)->readFrom($destination);
     }
@@ -164,7 +177,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
      */
     public function rm(Path $path, array $partitions = []): void
     {
-        $destination = \count($partitions) ? $path->addPartitions(...$partitions) : $path;
+        $destination = count($partitions) ? $path->addPartitions(...$partitions) : $path;
 
         $fs = $this->fstab->for($path);
 
@@ -195,15 +208,15 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
 
         $pathUri = $path->uri();
 
-        if (!\array_key_exists($pathUri, $this->writingStreams)) {
+        if (!array_key_exists($pathUri, $this->writingStreams)) {
             $this->writingStreams[$pathUri] = [];
         }
 
-        $destination = \count($partitions) ? $path->addPartitions(...$partitions) : $path;
+        $destination = count($partitions) ? $path->addPartitions(...$partitions) : $path;
 
         $destinationPathUri = $destination->uri();
 
-        if (!\array_key_exists($destinationPathUri, $this->writingStreams[$pathUri])) {
+        if (!array_key_exists($destinationPathUri, $this->writingStreams[$pathUri])) {
             $fs = $this->fstab->for($path);
 
             $outputPath = $destination;

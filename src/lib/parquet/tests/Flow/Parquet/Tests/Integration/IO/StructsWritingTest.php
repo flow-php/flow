@@ -15,15 +15,21 @@ use Flow\Parquet\Reader;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function array_map;
+use function array_merge;
+use function file_exists;
 use function Flow\ETL\DSL\generate_random_int;
 use function Flow\ETL\DSL\generate_random_string;
+use function iterator_to_array;
+use function mkdir;
+use function range;
 
 class StructsWritingTest extends ParquetIntegrationTestCase
 {
     protected function setUp(): void
     {
-        if (!\file_exists(__DIR__ . '/var')) {
-            \mkdir(__DIR__ . '/var');
+        if (!file_exists(__DIR__ . '/var')) {
+            mkdir(__DIR__ . '/var');
         }
     }
 
@@ -43,7 +49,7 @@ class StructsWritingTest extends ParquetIntegrationTestCase
         ]));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'struct' => ($i % 2) === 0
@@ -52,26 +58,26 @@ class StructsWritingTest extends ParquetIntegrationTestCase
                             'boolean' => $faker->boolean,
                             'string' => $faker->text(150),
                             'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            'list_of_int' => \array_map(
+                            'list_of_int' => array_map(
                                 static fn($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                                \range(1, generate_random_int(2, 10)),
+                                range(1, generate_random_int(2, 10)),
                             ),
-                            'list_of_string' => \array_map(
+                            'list_of_string' => array_map(
                                 static fn($i) => $faker->text(10),
-                                \range(1, generate_random_int(2, 10)),
+                                range(1, generate_random_int(2, 10)),
                             ),
                         ]
                         : null,
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
@@ -95,7 +101,7 @@ class StructsWritingTest extends ParquetIntegrationTestCase
         ]));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'struct' => [
@@ -103,25 +109,25 @@ class StructsWritingTest extends ParquetIntegrationTestCase
                         'boolean' => $faker->boolean,
                         'string' => $faker->text(150),
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                        'list_of_int' => \array_map(
+                        'list_of_int' => array_map(
                             static fn($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         ),
-                        'list_of_string' => \array_map(
+                        'list_of_string' => array_map(
                             static fn($i) => $faker->text(10),
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         ),
                     ],
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
@@ -145,7 +151,7 @@ class StructsWritingTest extends ParquetIntegrationTestCase
         ]));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'struct' => [
@@ -154,25 +160,25 @@ class StructsWritingTest extends ParquetIntegrationTestCase
                         'string' => ($i % 10) === 0 ? $faker->text(150) : null,
                         'int32' => ($i % 4) === 0 ? $faker->numberBetween(0, Consts::PHP_INT32_MAX) : null,
                         'list_of_int' => ($i % 2) === 0
-                            ? \array_map(
+                            ? array_map(
                                 static fn($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                                \range(1, generate_random_int(2, 10)),
+                                range(1, generate_random_int(2, 10)),
                             )
                             : null,
                         'list_of_string' => ($i % 2) === 0
-                            ? \array_map(static fn($i) => $faker->text(10), \range(1, generate_random_int(2, 10)))
+                            ? array_map(static fn($i) => $faker->text(10), range(1, generate_random_int(2, 10)))
                             : null,
                     ],
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),

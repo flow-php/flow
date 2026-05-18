@@ -8,6 +8,7 @@ use Flow\Filesystem\Bridge\AsyncAWS\ContentTypeDetector;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
 use Flow\Filesystem\Path\Options;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -15,7 +16,7 @@ use function Flow\Filesystem\DSL\path;
 
 final class ContentTypeDetectorTest extends TestCase
 {
-    public static function provide_content_type_enum_values(): \Generator
+    public static function provide_content_type_enum_values(): Generator
     {
         yield 'CSV enum' => [ContentType::CSV, 'text/csv'];
         yield 'JSON enum' => [ContentType::JSON, 'application/json'];
@@ -29,7 +30,7 @@ final class ContentTypeDetectorTest extends TestCase
         yield 'BINARY enum' => [ContentType::BINARY, 'application/octet-stream'];
     }
 
-    public static function provide_file_extensions(): \Generator
+    public static function provide_file_extensions(): Generator
     {
         yield 'csv extension' => ['file.csv', 'text/csv'];
         yield 'json extension' => ['file.json', 'application/json'];
@@ -44,7 +45,7 @@ final class ContentTypeDetectorTest extends TestCase
         yield 'no extension' => ['file', 'application/octet-stream'];
     }
 
-    public static function provide_string_content_types(): \Generator
+    public static function provide_string_content_types(): Generator
     {
         yield 'custom text/html' => ['text/html', 'text/html'];
         yield 'custom application/pdf' => ['application/pdf', 'application/pdf'];

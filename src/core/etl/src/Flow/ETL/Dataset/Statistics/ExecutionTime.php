@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Dataset\Statistics;
 
+use DateInterval;
+use DateTimeImmutable;
 use Flow\ETL\Exception\InvalidArgumentException;
 
 final readonly class ExecutionTime
 {
     public function __construct(
-        public \DateTimeImmutable $startedAt,
-        public \DateTimeImmutable $finishedAt,
+        public DateTimeImmutable $startedAt,
+        public DateTimeImmutable $finishedAt,
         public HighResolutionTime $highResolutionTime,
     ) {
         if ($startedAt > $finishedAt) {
@@ -18,7 +20,7 @@ final readonly class ExecutionTime
         }
     }
 
-    public function duration(): \DateInterval
+    public function duration(): DateInterval
     {
         return $this->startedAt->diff($this->finishedAt);
     }

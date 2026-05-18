@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function iterator_to_array;
 
 final class AsyncAWSS3FilesystemTest extends TestCase
 {
@@ -27,7 +28,7 @@ final class AsyncAWSS3FilesystemTest extends TestCase
     {
         $this->expectException(InvalidSchemeException::class);
 
-        \iterator_to_array(aws_s3_filesystem('bucket', $this->createMock(S3Client::class))->list(path(
+        iterator_to_array(aws_s3_filesystem('bucket', $this->createMock(S3Client::class))->list(path(
             'file:///var/foo.txt',
         )));
     }

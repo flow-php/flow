@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type;
 
+use DateTimeZone;
 use Flow\Types\Type\AutoCaster;
 use PHPUnit\Framework\TestCase;
 
@@ -21,16 +22,16 @@ final class AutoCasterTest extends TestCase
 
     public function test_auto_casting_timezone_offset_to_timezone(): void
     {
-        static::assertEquals(new \DateTimeZone('+05:30'), (new AutoCaster())->cast('+05:30'));
+        static::assertEquals(new DateTimeZone('+05:30'), (new AutoCaster())->cast('+05:30'));
     }
 
     public function test_auto_casting_timezone_string_america_to_timezone(): void
     {
-        static::assertEquals(new \DateTimeZone('America/New_York'), (new AutoCaster())->cast('America/New_York'));
+        static::assertEquals(new DateTimeZone('America/New_York'), (new AutoCaster())->cast('America/New_York'));
     }
 
     public function test_auto_casting_timezone_string_to_timezone(): void
     {
-        static::assertEquals(new \DateTimeZone('UTC'), (new AutoCaster())->cast('UTC'));
+        static::assertEquals(new DateTimeZone('UTC'), (new AutoCaster())->cast('UTC'));
     }
 }

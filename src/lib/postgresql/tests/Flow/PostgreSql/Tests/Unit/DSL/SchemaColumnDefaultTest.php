@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Tests\Unit\DSL;
 
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
 use function Flow\PostgreSql\DSL\column_type_varchar;
 use function Flow\PostgreSql\DSL\func;
 use function Flow\PostgreSql\DSL\literal;
@@ -18,6 +19,7 @@ use function Flow\PostgreSql\DSL\schema_column_timestamp_tz;
 use function Flow\PostgreSql\DSL\schema_column_uuid;
 use function Flow\PostgreSql\DSL\schema_column_varchar;
 use function Flow\PostgreSql\DSL\schema_table;
+use function implode;
 
 final class SchemaColumnDefaultTest extends TestCase
 {
@@ -103,7 +105,7 @@ final class SchemaColumnDefaultTest extends TestCase
         ]);
 
         $statements = $table->toSql();
-        $sql = \implode("\n", \array_map(static fn($stmt) => $stmt->toSql(), $statements));
+        $sql = implode("\n", array_map(static fn($stmt) => $stmt->toSql(), $statements));
 
         static::assertStringContainsString("DEFAULT 'active'", $sql);
         static::assertStringContainsString('DEFAULT now()', $sql);

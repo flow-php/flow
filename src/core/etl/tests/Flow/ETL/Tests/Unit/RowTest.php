@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use DateTimeImmutable;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\bool_entry;
@@ -40,10 +42,11 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function number_format;
 
 final class RowTest extends FlowTestCase
 {
-    public static function is_equal_data_provider(): \Generator
+    public static function is_equal_data_provider(): Generator
     {
         yield 'equal simple same integer entries' => [
             true,
@@ -85,9 +88,9 @@ final class RowTest extends FlowTestCase
     {
         $row = row(
             int_entry('id', generate_random_int(100, 100000)),
-            float_entry('price', \number_format(generate_random_int(100, 100000) / 100, 2, '.', '')),
+            float_entry('price', number_format(generate_random_int(100, 100000) / 100, 2, '.', '')),
             bool_entry('deleted', false),
-            datetime_entry('created-at', new \DateTimeImmutable('now')),
+            datetime_entry('created-at', new DateTimeImmutable('now')),
             str_entry('phase', null),
             json_entry('array', [
                 ['id' => 1, 'status' => 'NEW'],
@@ -247,7 +250,7 @@ final class RowTest extends FlowTestCase
         $row = row(
             integer_entry('id', 1234),
             boolean_entry('deleted', false),
-            new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
+            new DateTimeEntry('created-at', $createdAt = new DateTimeImmutable('2020-07-13 15:00')),
             string_entry('phase', null),
             structure_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure([
                 'item-id' => type_integer(),

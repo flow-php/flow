@@ -6,6 +6,9 @@ namespace Flow\Filesystem\Stream;
 
 use Flow\Filesystem\Path;
 
+use function count;
+use function stream_context_create;
+
 final readonly class ResourceContext
 {
     /**
@@ -26,6 +29,6 @@ final readonly class ResourceContext
      */
     public function resource()
     {
-        return \count($this->options) ? \stream_context_create([$this->scheme => $this->options]) : null;
+        return count($this->options) ? stream_context_create([$this->scheme => $this->options]) : null;
     }
 }

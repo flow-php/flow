@@ -14,6 +14,8 @@ use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
 use PHPUnit\Framework\TestCase;
 
+use function array_keys;
+
 final class NestedColumnTest extends TestCase
 {
     public function test_column_is_list(): void
@@ -86,7 +88,7 @@ final class NestedColumnTest extends TestCase
                 'struct_nested.struct_flat.map_of_string_int.key_value.key',
                 'struct_nested.struct_flat.map_of_string_int.key_value.value',
             ],
-            \array_keys($column->childrenFlat()),
+            array_keys($column->childrenFlat()),
         );
     }
 

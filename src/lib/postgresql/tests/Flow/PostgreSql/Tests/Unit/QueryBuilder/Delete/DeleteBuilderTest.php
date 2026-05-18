@@ -8,6 +8,7 @@ use Flow\PostgreSql\ParsedQuery;
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Protobuf\AST\DeleteStmt;
 use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\RawStmt;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 use Flow\PostgreSql\QueryBuilder\Clause\CTE;
@@ -16,12 +17,16 @@ use Flow\PostgreSql\QueryBuilder\Condition\Comparison;
 use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
 use Flow\PostgreSql\QueryBuilder\Delete\DeleteBuilder;
 use Flow\PostgreSql\QueryBuilder\Delete\DeleteFinalStep;
+use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Expression\Column;
 use Flow\PostgreSql\QueryBuilder\Expression\FunctionCall;
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
+use LogicException;
 use PHPUnit\Framework\TestCase;
 
+use function assert;
+use function extension_loaded;
 use function Flow\PostgreSql\DSL\any_;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\delete;
@@ -30,12 +35,13 @@ use function Flow\PostgreSql\DSL\literal;
 use function Flow\PostgreSql\DSL\param;
 use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\table;
+use function function_exists;
 
 final class DeleteBuilderTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped(
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );
@@ -193,7 +199,7 @@ final class DeleteBuilderTest extends TestCase
 
     public function test_delete_with_alias_and_where_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -250,7 +256,7 @@ final class DeleteBuilderTest extends TestCase
 
     public function test_delete_with_multiple_using_tables_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -324,7 +330,7 @@ final class DeleteBuilderTest extends TestCase
 
     public function test_delete_with_returning_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -351,7 +357,7 @@ final class DeleteBuilderTest extends TestCase
 
     public function test_delete_with_schema_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available.');
         }
 
@@ -455,7 +461,7 @@ final class DeleteBuilderTest extends TestCase
 
     public function test_delete_with_using_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -495,7 +501,7 @@ final class DeleteBuilderTest extends TestCase
 
     public function test_delete_with_where_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -561,11 +567,11 @@ final class DeleteBuilderTest extends TestCase
 
     public function test_from_ast_empty_relname_throws_exception(): void
     {
-        $this->expectException(\Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException::class);
+        $this->expectException(InvalidAstException::class);
         $this->expectExceptionMessage('Missing required field "relname" in RangeVar node');
 
         $deleteStmt = new DeleteStmt();
-        $deleteStmt->setRelation(new \Flow\PostgreSql\Protobuf\AST\RangeVar([
+        $deleteStmt->setRelation(new RangeVar([
             'relname' => '',
         ]));
 
@@ -574,7 +580,7 @@ final class DeleteBuilderTest extends TestCase
 
     public function test_from_ast_missing_relation_throws_exception(): void
     {
-        $this->expectException(\Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException::class);
+        $this->expectException(InvalidAstException::class);
         $this->expectExceptionMessage('Missing required field "relation" in DeleteStmt node');
 
         $deleteStmt = new DeleteStmt();
@@ -786,7 +792,7 @@ final class DeleteBuilderTest extends TestCase
 
     public function test_simple_delete_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -798,11 +804,11 @@ final class DeleteBuilderTest extends TestCase
 
     public function test_to_ast_without_table_throws_exception(): void
     {
-        $this->expectException(\LogicException::class);
+        $this->expectException(LogicException::class);
         $this->expectExceptionMessage('Cannot create DeleteStmt without table name. Call from() first.');
 
         $builder = DeleteBuilder::create();
-        \assert($builder instanceof DeleteFinalStep);
+        assert($builder instanceof DeleteFinalStep);
         $builder->toAst();
     }
 

@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Context;
 
+use Countable;
+
+use function array_key_exists;
+use function array_merge;
+use function count;
+
 /**
  * Key-value store for data propagation across process boundaries.
  *
@@ -19,7 +25,7 @@ namespace Flow\Telemetry\Context;
  * echo $baggage->get('user.id'); // "12345"
  * ```
  */
-final readonly class Baggage implements \Countable
+final readonly class Baggage implements Countable
 {
     /**
      * @param array<string, string> $entries
@@ -53,7 +59,7 @@ final readonly class Baggage implements \Countable
      */
     public function count(): int
     {
-        return \count($this->entries);
+        return count($this->entries);
     }
 
     /**
@@ -75,7 +81,7 @@ final readonly class Baggage implements \Countable
      */
     public function has(string $key): bool
     {
-        return \array_key_exists($key, $this->entries);
+        return array_key_exists($key, $this->entries);
     }
 
     /**
@@ -83,7 +89,7 @@ final readonly class Baggage implements \Countable
      */
     public function isEmpty(): bool
     {
-        return \count($this->entries) === 0;
+        return count($this->entries) === 0;
     }
 
     /**
@@ -108,7 +114,7 @@ final readonly class Baggage implements \Countable
      */
     public function with(string $key, string $value): self
     {
-        return new self(\array_merge($this->entries, [$key => $value]));
+        return new self(array_merge($this->entries, [$key => $value]));
     }
 
     /**

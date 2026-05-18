@@ -8,6 +8,7 @@ use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Rows;
+use Throwable;
 
 final class CallbackLoader implements Loader
 {
@@ -31,7 +32,7 @@ final class CallbackLoader implements Loader
             ($this->callback)($rows, $context);
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 
             throw $e;

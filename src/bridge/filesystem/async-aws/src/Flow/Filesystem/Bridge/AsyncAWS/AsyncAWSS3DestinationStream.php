@@ -16,6 +16,15 @@ use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockFactory;
 use Flow\Filesystem\Stream\Blocks;
 
+use function fclose;
+use function fopen;
+use function gettype;
+use function is_resource;
+use function ltrim;
+use function rewind;
+use function str_replace;
+use function stream_get_meta_data;
+
 final class AsyncAWSS3DestinationStream implements DestinationStream
 {
     private bool $closed;
@@ -48,7 +57,7 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
         try {
             $objectHead = $s3Client->headObject([
                 'Bucket' => $bucket,
-                'Key' => \ltrim($path->path(), '/'),
+                'Key' => ltrim($path->path(), '/'),
             ]);
             $objectHead->resolve();
 
@@ -56,7 +65,7 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
 
             $response = $s3Client->createMultipartUpload(new CreateMultipartUploadRequest([
                 'Bucket' => $bucket,
-                'Key' => \ltrim($appendPath->path(), '/'),
+                'Key' => ltrim($appendPath->path(), '/'),
                 'ContentType' => (new ContentTypeDetector())->from($path),
             ]));
 
@@ -137,7 +146,7 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
 
         $response = $s3Client->createMultipartUpload(new CreateMultipartUploadRequest([
             'Bucket' => $bucket,
-            'Key' => \ltrim($path->path(), '/'),
+            'Key' => ltrim($path->path(), '/'),
             'ContentType' => (new ContentTypeDetector())->from($path),
         ]));
 
@@ -168,7 +177,7 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
     public function close(): void
     {
         if ($this->blocks->size() === 0) {
-            $handle = \fopen($this->blocks->block()->path()->path(), 'rb');
+            $handle = fopen($this->blocks->block()->path()->path(), 'rb');
 
             if ($handle === false) {
                 throw new InvalidArgumentException('Cannot open file: ' . $this->blocks->block()->path()->path());
@@ -182,7 +191,7 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
                 'Body' => $handle,
             ]);
 
-            \fclose($handle);
+            fclose($handle);
 
             $this->s3Client->completeMultipartUpload([
                 'Bucket' => $this->bucket,
@@ -198,12 +207,12 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
             if ($this->path->endsWith('_flow_php_append_')) {
                 $this->s3Client->deleteObject([
                     'Bucket' => $this->bucket,
-                    'Key' => ltrim(\str_replace('_flow_php_append_', '', $this->path->path()), '/'),
+                    'Key' => ltrim(str_replace('_flow_php_append_', '', $this->path->path()), '/'),
                 ]);
 
                 $this->s3Client->copyObject([
                     'Bucket' => $this->bucket,
-                    'Key' => ltrim(\str_replace('_flow_php_append_', '', $this->path->path()), '/'),
+                    'Key' => ltrim(str_replace('_flow_php_append_', '', $this->path->path()), '/'),
                     'CopySource' => $this->bucket . '/' . $this->path->path(),
                 ]);
 
@@ -232,12 +241,12 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
         if ($this->path->endsWith('_flow_php_append_')) {
             $this->s3Client->deleteObject([
                 'Bucket' => $this->bucket,
-                'Key' => ltrim(\str_replace('/_flow_php_append_', '', $this->path->path()), '/'),
+                'Key' => ltrim(str_replace('/_flow_php_append_', '', $this->path->path()), '/'),
             ]);
 
             $this->s3Client->copyObject([
                 'Bucket' => $this->bucket,
-                'Key' => ltrim(\str_replace('/_flow_php_append_', '', $this->path->path()), '/'),
+                'Key' => ltrim(str_replace('/_flow_php_append_', '', $this->path->path()), '/'),
                 'CopySource' => $this->bucket . '/' . ltrim($this->path->path(), '/'),
             ]);
 
@@ -252,16 +261,16 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
 
     public function fromResource($resource): DestinationStream
     {
-        if (!\is_resource($resource)) {
+        if (!is_resource($resource)) {
             throw new InvalidArgumentException(
-                'DestinationStream::fromResource expects resource type, given: ' . \gettype($resource),
+                'DestinationStream::fromResource expects resource type, given: ' . gettype($resource),
             );
         }
 
-        $meta = \stream_get_meta_data($resource);
+        $meta = stream_get_meta_data($resource);
 
         if ($meta['seekable']) {
-            \rewind($resource);
+            rewind($resource);
         }
 
         $this->blocks->fromResource($resource);

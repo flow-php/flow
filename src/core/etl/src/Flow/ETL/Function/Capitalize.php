@@ -8,6 +8,13 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function function_exists;
+use function is_scalar;
+use function mb_convert_case;
+use function ucwords;
+
+use const MB_CASE_TITLE;
+
 final class Capitalize extends ScalarFunctionChain
 {
     public function __construct(
@@ -24,10 +31,10 @@ final class Capitalize extends ScalarFunctionChain
                 ->invalidResult(new InvalidArgumentException('Capitalize function requires non-null value'));
         }
 
-        if (\function_exists('mb_convert_case')) {
-            return \mb_convert_case(\is_scalar($string) ? (string) $string : '', \MB_CASE_TITLE);
+        if (function_exists('mb_convert_case')) {
+            return mb_convert_case(is_scalar($string) ? (string) $string : '', MB_CASE_TITLE);
         }
 
-        return \ucwords(\is_scalar($string) ? (string) $string : '');
+        return ucwords(is_scalar($string) ? (string) $string : '');
     }
 }

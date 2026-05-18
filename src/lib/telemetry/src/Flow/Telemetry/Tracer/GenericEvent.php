@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Attributes;
 
 /**
@@ -24,7 +25,7 @@ final readonly class GenericEvent implements SpanEvent
 {
     public function __construct(
         private string $name,
-        private \DateTimeImmutable $timestamp,
+        private DateTimeImmutable $timestamp,
         private Attributes $attributesObject = new Attributes(),
         private int $droppedAttributeCount = 0,
     ) {}
@@ -39,7 +40,7 @@ final readonly class GenericEvent implements SpanEvent
      */
     public static function create(
         string $name,
-        \DateTimeImmutable $timestamp,
+        DateTimeImmutable $timestamp,
         Attributes|array $attributes = [],
         int $droppedAttributeCount = 0,
     ): self {
@@ -60,7 +61,7 @@ final readonly class GenericEvent implements SpanEvent
     {
         return new self(
             $data['name'],
-            new \DateTimeImmutable($data['timestamp']),
+            new DateTimeImmutable($data['timestamp']),
             Attributes::fromArray($data['attributes']),
             $data['droppedAttributeCount'] ?? 0,
         );
@@ -104,7 +105,7 @@ final readonly class GenericEvent implements SpanEvent
         ];
     }
 
-    public function timestamp(): \DateTimeImmutable
+    public function timestamp(): DateTimeImmutable
     {
         return $this->timestamp;
     }

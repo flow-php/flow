@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel\Tests\Integration;
 
+use DateInterval;
+use DateTimeImmutable;
 use Flow\ETL\Adapter\Excel\CellStyler;
 use Flow\ETL\Adapter\Excel\ExcelWriter;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -139,9 +141,9 @@ final class ExcelLoaderTest extends FlowTestCase
     public function test_round_trip_with_custom_date_formats(): void
     {
         $outputPath = __DIR__ . '/var/output_custom_formats.xlsx';
-        $date = new \DateTimeImmutable('2024-06-15');
-        $datetime = new \DateTimeImmutable('2024-06-15 14:30:45');
-        $time = new \DateInterval('PT14H30M45S');
+        $date = new DateTimeImmutable('2024-06-15');
+        $datetime = new DateTimeImmutable('2024-06-15 14:30:45');
+        $time = new DateInterval('PT14H30M45S');
 
         df()
             ->read(from_rows(rows(row(
@@ -192,8 +194,8 @@ final class ExcelLoaderTest extends FlowTestCase
     public function test_round_trip_with_datetime_xlsx(): void
     {
         $outputPath = __DIR__ . '/var/output_datetime.xlsx';
-        $date = new \DateTimeImmutable('2024-06-15');
-        $datetime = new \DateTimeImmutable('2024-06-15 14:30:00');
+        $date = new DateTimeImmutable('2024-06-15');
+        $datetime = new DateTimeImmutable('2024-06-15 14:30:00');
 
         df()
             ->read(from_rows(rows(row(date_entry('date_val', $date), datetime_entry('datetime_val', $datetime)))))

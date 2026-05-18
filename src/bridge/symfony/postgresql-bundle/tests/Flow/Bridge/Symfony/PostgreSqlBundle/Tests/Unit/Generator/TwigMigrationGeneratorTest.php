@@ -17,11 +17,14 @@ use PHPUnit\Framework\TestCase;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
+use function dirname;
+use function file_get_contents;
+
 final class TwigMigrationGeneratorTest extends TestCase
 {
     public function templatesPath(): string
     {
-        return \dirname(__DIR__, 8) . '/src/Flow/Bridge/Symfony/PostgreSqlBundle/Resources/templates';
+        return dirname(__DIR__, 8) . '/src/Flow/Bridge/Symfony/PostgreSqlBundle/Resources/templates';
     }
 
     public function test_generate_data_migration_creates_files(): void
@@ -47,11 +50,11 @@ final class TwigMigrationGeneratorTest extends TestCase
             static::assertFileExists($tmpDir->path . '/20260401120000_test_migration/rollback.php');
             static::assertStringContainsString(
                 'App\\Migrations',
-                (string) \file_get_contents($tmpDir->path . '/20260401120000_test_migration/migration.php'),
+                (string) file_get_contents($tmpDir->path . '/20260401120000_test_migration/migration.php'),
             );
             static::assertStringContainsString(
                 'App\\Migrations',
-                (string) \file_get_contents($tmpDir->path . '/20260401120000_test_migration/rollback.php'),
+                (string) file_get_contents($tmpDir->path . '/20260401120000_test_migration/rollback.php'),
             );
         } finally {
             $tmpDir->cleanUp();
@@ -107,10 +110,10 @@ final class TwigMigrationGeneratorTest extends TestCase
             static::assertFileExists($tmpDir->path . '/20260401120000_add_table/migration.php');
             static::assertFileExists($tmpDir->path . '/20260401120000_add_table/rollback.php');
 
-            $migrationContent = (string) \file_get_contents($tmpDir->path . '/20260401120000_add_table/migration.php');
+            $migrationContent = (string) file_get_contents($tmpDir->path . '/20260401120000_add_table/migration.php');
             static::assertStringContainsString('CREATE TABLE test (id INT)', $migrationContent);
 
-            $rollbackContent = (string) \file_get_contents($tmpDir->path . '/20260401120000_add_table/rollback.php');
+            $rollbackContent = (string) file_get_contents($tmpDir->path . '/20260401120000_add_table/rollback.php');
             static::assertStringContainsString('DROP TABLE test', $rollbackContent);
         } finally {
             $tmpDir->cleanUp();

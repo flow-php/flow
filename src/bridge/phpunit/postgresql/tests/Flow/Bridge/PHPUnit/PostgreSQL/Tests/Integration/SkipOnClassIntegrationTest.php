@@ -8,19 +8,21 @@ use Flow\Bridge\PHPUnit\PostgreSQL\SkipTransactionRollback;
 use Flow\PostgreSql\Client\Client;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
 use function Flow\Bridge\PHPUnit\PostgreSQL\DSL\static_pgsql_client;
 use function Flow\PostgreSql\DSL\pgsql_connection_dsn;
+use function getenv;
 
 #[SkipTransactionRollback]
 final class SkipOnClassIntegrationTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pgsql')) {
+        if (!extension_loaded('pgsql')) {
             self::markTestSkipped('ext-pgsql is not available');
         }
 
-        $dsn = \getenv('PGSQL_DATABASE_URL');
+        $dsn = getenv('PGSQL_DATABASE_URL');
 
         if (!$dsn) {
             self::markTestSkipped('PGSQL_DATABASE_URL environment variable is not set');
@@ -52,6 +54,6 @@ final class SkipOnClassIntegrationTest extends TestCase
 
     protected function client(): Client
     {
-        return static_pgsql_client(pgsql_connection_dsn((string) \getenv('PGSQL_DATABASE_URL')));
+        return static_pgsql_client(pgsql_connection_dsn((string) getenv('PGSQL_DATABASE_URL')));
     }
 }

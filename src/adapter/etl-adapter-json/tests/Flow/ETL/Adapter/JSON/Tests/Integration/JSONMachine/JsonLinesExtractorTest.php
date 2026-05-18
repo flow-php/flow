@@ -10,13 +10,17 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function array_keys;
 use function Flow\ETL\Adapter\JSON\from_json_lines;
+use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\schema_to_ascii;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
+use function is_array;
+use function iterator_to_array;
 
 final class JsonLinesExtractorTest extends FlowTestCase
 {
@@ -36,7 +40,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
                     'capital',
                     '_input_file_uri',
                 ],
-                \array_keys($row->toArray()),
+                array_keys($row->toArray()),
             );
         }
 
@@ -59,7 +63,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
                     'country_code',
                     'capital',
                 ],
-                \is_array($value) ? \array_keys($value) : [],
+                is_array($value) ? array_keys($value) : [],
             );
         }
 
@@ -84,7 +88,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
                     'country_code',
                     'capital',
                 ],
-                \array_keys($row->toArray()),
+                array_keys($row->toArray()),
             );
         }
 
@@ -108,7 +112,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
         $total = 0;
 
         /** @var Rows $rows */
-        foreach ($extractor->extract(flow_context(\Flow\ETL\DSL\config())) as $rows) {
+        foreach ($extractor->extract(flow_context(config())) as $rows) {
             $rows->each(function (Row $row): void {
                 $this->assertSame(
                     [
@@ -118,7 +122,7 @@ final class JsonLinesExtractorTest extends FlowTestCase
                         'country_code',
                         'capital',
                     ],
-                    \array_keys($row->toArray()),
+                    array_keys($row->toArray()),
                 );
             });
             $total += $rows->count();
@@ -132,14 +136,14 @@ final class JsonLinesExtractorTest extends FlowTestCase
         $extractor = from_json_lines(path(__DIR__ . '/../../Fixtures/timezones.jsonl'));
         $extractor->changeLimit(2);
 
-        static::assertCount(2, \iterator_to_array($extractor->extract(flow_context(\Flow\ETL\DSL\config()))));
+        static::assertCount(2, iterator_to_array($extractor->extract(flow_context(config()))));
     }
 
     public function test_signal_stop(): void
     {
         $extractor = from_json_lines(path(__DIR__ . '/../../Fixtures/timezones.jsonl'));
 
-        $generator = $extractor->extract(flow_context(\Flow\ETL\DSL\config()));
+        $generator = $extractor->extract(flow_context(config()));
 
         static::assertTrue($generator->valid());
         $generator->next();

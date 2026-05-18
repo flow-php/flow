@@ -17,6 +17,7 @@ use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\delete;
 use function Flow\PostgreSql\DSL\eq;
 use function Flow\PostgreSql\DSL\param;
+use function sprintf;
 
 final readonly class DeleteQueryBuilder
 {
@@ -42,7 +43,7 @@ final readonly class DeleteQueryBuilder
 
         foreach ($primaryKeys as $key) {
             if (!$row->has($key)) {
-                throw new RuntimeException(\sprintf('Primary key "%s" not found in row', $key));
+                throw new RuntimeException(sprintf('Primary key "%s" not found in row', $key));
             }
 
             $entry = $row->get($key);

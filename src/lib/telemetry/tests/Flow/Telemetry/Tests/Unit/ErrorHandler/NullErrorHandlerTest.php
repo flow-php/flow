@@ -6,6 +6,7 @@ namespace Flow\Telemetry\Tests\Unit\ErrorHandler;
 
 use Flow\Telemetry\ErrorHandler\NullErrorHandler;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class NullErrorHandlerTest extends TestCase
 {
@@ -15,6 +16,6 @@ final class NullErrorHandlerTest extends TestCase
 
         $handler = new NullErrorHandler();
 
-        $handler->handle(new \RuntimeException('boom'));
+        $handler->handle(new RuntimeException('boom'));
     }
 }

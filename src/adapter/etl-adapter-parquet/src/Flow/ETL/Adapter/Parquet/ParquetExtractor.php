@@ -18,6 +18,7 @@ use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile;
 use Flow\Parquet\Reader;
+use Generator;
 
 use function Flow\ETL\DSL\array_to_row;
 use function Flow\ETL\DSL\rows;
@@ -51,7 +52,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
         $this->options = Options::default();
     }
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
@@ -142,7 +143,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     /**
      * @return \Generator<int, array{file: ParquetFile, stream: SourceStream}>
      */
-    private function readers(FlowContext $context): \Generator
+    private function readers(FlowContext $context): Generator
     {
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
             yield [

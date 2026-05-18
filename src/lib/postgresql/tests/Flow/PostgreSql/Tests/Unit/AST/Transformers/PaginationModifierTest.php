@@ -7,14 +7,16 @@ namespace Flow\PostgreSql\Tests\Unit\AST\Transformers;
 use Flow\PostgreSql\AST\Transformers\PaginationConfig;
 use Flow\PostgreSql\AST\Transformers\PaginationModifier;
 use Flow\PostgreSql\Exception\PaginationException;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
 use function Flow\PostgreSql\DSL\sql_parse;
 
 final class PaginationModifierTest extends TestCase
 {
-    public static function paginationProvider(): \Generator
+    public static function paginationProvider(): Generator
     {
         yield 'simple select with order by - limit only' => [
             'SELECT * FROM users ORDER BY id',
@@ -181,7 +183,7 @@ final class PaginationModifierTest extends TestCase
 
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped(
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );

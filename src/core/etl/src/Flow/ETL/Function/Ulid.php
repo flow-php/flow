@@ -9,7 +9,9 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
-if (!\class_exists(\Symfony\Component\Uid\Ulid::class)) {
+use function class_exists;
+
+if (!class_exists(\Symfony\Component\Uid\Ulid::class)) {
     throw new RuntimeException(
         "\Symfony\Component\Uid\Ulid class not found, please add 'symfony/uid' as a dependency to the project first.",
     );

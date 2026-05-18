@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
+use DateTimeImmutable;
 use Faker\Factory;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
+use Generator;
 
+use function array_map;
+use function count;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\float_schema;
@@ -23,6 +27,8 @@ use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function random_int;
+use function range;
 
 final readonly class FakeRandomOrdersExtractor implements Extractor
 {
@@ -59,7 +65,7 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
         );
     }
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         foreach ($this->rawData() as $row) {
             yield array_to_rows($row, $context->entryFactory(), schema: self::schema());
@@ -69,7 +75,7 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
     /**
      * @return \Generator<array<string, mixed>>
      */
-    public function rawData(): \Generator
+    public function rawData(): Generator
     {
         $faker = Factory::create();
 
@@ -90,26 +96,26 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
         ];
 
         for ($i = 0; $i < $this->count; $i++) {
-            $createdAt = \DateTimeImmutable::createFromMutable($faker->dateTimeThisYear);
-            $cancelledAt = \random_int(1, 10) === 1
+            $createdAt = DateTimeImmutable::createFromMutable($faker->dateTimeThisYear);
+            $cancelledAt = random_int(1, 10) === 1
                 ? $createdAt->modify('+' . $faker->numberBetween(1, 5) . ' hours')
                 : null;
 
             if ($cancelledAt) {
                 $updatedAt = $cancelledAt;
             } else {
-                $updatedAt = \random_int(1, 3) === 1
+                $updatedAt = random_int(1, 3) === 1
                     ? $createdAt->modify('+' . $faker->numberBetween(1, 3) . ' days')
                     : null;
             }
 
             $signal = yield [
                 'order_id' => $faker->uuid,
-                'seller_id' => $sellers[\random_int(0, \count($sellers) - 1)],
+                'seller_id' => $sellers[random_int(0, count($sellers) - 1)],
                 'created_at' => $createdAt,
                 'updated_at' => $updatedAt,
                 'cancelled_at' => $cancelledAt,
-                'discount' => \random_int(0, 1) === 1 ? $faker->randomFloat(2, 0, 50) : null,
+                'discount' => random_int(0, 1) === 1 ? $faker->randomFloat(2, 0, 50) : null,
                 'email' => $faker->email,
                 'customer' => $faker->firstName . ' ' . $faker->lastName,
                 'address' => [
@@ -118,14 +124,14 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
                     'zip' => $faker->postcode,
                     'country' => $faker->country,
                 ],
-                'notes' => \array_map(static fn($i) => $faker->sentence, \range(1, $faker->numberBetween(1, 5))),
-                'items' => \array_map(
+                'notes' => array_map(static fn($i) => $faker->sentence, range(1, $faker->numberBetween(1, 5))),
+                'items' => array_map(
                     static fn(int $index) => [
                         'sku' => $skus[$skuIndex = $faker->numberBetween(1, 4)]['sku'],
                         'quantity' => $faker->numberBetween(1, 10),
                         'price' => $skus[$skuIndex]['price'],
                     ],
-                    \range(1, $faker->numberBetween(1, 4)),
+                    range(1, $faker->numberBetween(1, 4)),
                 ),
             ];
 

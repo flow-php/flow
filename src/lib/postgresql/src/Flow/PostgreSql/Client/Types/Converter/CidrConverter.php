@@ -8,6 +8,8 @@ use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\ValueConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
 
+use function is_string;
+
 final class CidrConverter implements ValueConverter
 {
     public function supportedTypes(): array
@@ -21,7 +23,7 @@ final class CidrConverter implements ValueConverter
             return null;
         }
 
-        if (\is_string($value)) {
+        if (is_string($value)) {
             return $value;
         }
 

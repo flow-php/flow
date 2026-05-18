@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\FilesystemCache\Tests\Unit\Double;
 
 use Psr\Log\AbstractLogger;
+use Stringable;
 
 final class SpyLogger extends AbstractLogger
 {
@@ -16,7 +17,7 @@ final class SpyLogger extends AbstractLogger
     /**
      * @param array<array-key, mixed> $context
      */
-    public function log($level, \Stringable|string $message, array $context = []): void
+    public function log($level, Stringable|string $message, array $context = []): void
     {
         $this->records[] = [
             'level' => $level,

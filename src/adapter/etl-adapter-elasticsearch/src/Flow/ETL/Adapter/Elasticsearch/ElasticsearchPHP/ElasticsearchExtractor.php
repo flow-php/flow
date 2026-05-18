@@ -11,6 +11,10 @@ use Elasticsearch\ClientBuilder;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Generator;
+
+use function class_exists;
+use function is_array;
 
 final class ElasticsearchExtractor implements Extractor
 {
@@ -45,9 +49,9 @@ final class ElasticsearchExtractor implements Extractor
         $this->client = null;
     }
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
-        $pit = \is_array($this->pointInTimeParams)
+        $pit = is_array($this->pointInTimeParams)
             /**
              * @phpstan-ignore-next-line
              */
@@ -161,7 +165,7 @@ final class ElasticsearchExtractor implements Extractor
     private function client(): Client|\Elastic\Elasticsearch\Client
     {
         if ($this->client === null) {
-            if (\class_exists("Elasticsearch\ClientBuilder")) {
+            if (class_exists("Elasticsearch\ClientBuilder")) {
                 $this->client = ClientBuilder::fromConfig($this->config);
             } else {
                 $this->client = \Elastic\Elasticsearch\ClientBuilder::fromConfig($this->config);

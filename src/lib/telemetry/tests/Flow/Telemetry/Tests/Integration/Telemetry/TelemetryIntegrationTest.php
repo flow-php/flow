@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Integration\Telemetry;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
@@ -18,6 +19,8 @@ use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
 
+use function array_filter;
+
 final class TelemetryIntegrationTest extends TestCase
 {
     private ClockInterface $clock;
@@ -25,7 +28,7 @@ final class TelemetryIntegrationTest extends TestCase
     protected function setUp(): void
     {
         $this->clock = $this->createMock(ClockInterface::class);
-        $this->clock->method('now')->willReturn(new \DateTimeImmutable('2024-01-01 12:00:00.123456'));
+        $this->clock->method('now')->willReturn(new DateTimeImmutable('2024-01-01 12:00:00.123456'));
     }
 
     public function test_context_flows_through_all_signals(): void
@@ -150,8 +153,8 @@ final class TelemetryIntegrationTest extends TestCase
         static::assertCount(3, $logProcessor->entries());
         static::assertCount(3, $metricProcessor->metrics());
 
-        $counterMetrics = \array_filter($metricProcessor->metrics(), static fn($m) => $m->type === MetricType::COUNTER);
-        $histogramMetrics = \array_filter(
+        $counterMetrics = array_filter($metricProcessor->metrics(), static fn($m) => $m->type === MetricType::COUNTER);
+        $histogramMetrics = array_filter(
             $metricProcessor->metrics(),
             static fn($m) => $m->type === MetricType::HISTOGRAM,
         );

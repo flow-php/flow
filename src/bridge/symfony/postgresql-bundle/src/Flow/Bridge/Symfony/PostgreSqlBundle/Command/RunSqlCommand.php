@@ -13,8 +13,18 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function array_keys;
+use function array_map;
+use function count;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
+use function implode;
+use function sprintf;
+use function str_repeat;
+use function str_starts_with;
+use function strtoupper;
+use function strval;
+use function trim;
 
 #[AsCommand(name: 'flow:sql:run', description: 'Execute SQL directly on the database')]
 final class RunSqlCommand extends Command
@@ -43,7 +53,7 @@ final class RunSqlCommand extends Command
         ));
         $sql = type_string()->assert($input->getArgument('sql'));
 
-        if (\str_starts_with(\strtoupper(\trim($sql)), 'SELECT')) {
+        if (str_starts_with(strtoupper(trim($sql)), 'SELECT')) {
             $rows = $client->fetchAll($sql);
 
             if (empty($rows)) {
@@ -52,23 +62,23 @@ final class RunSqlCommand extends Command
                 return Command::SUCCESS;
             }
 
-            $headers = \array_keys($rows[0]);
-            $output->writeln(\implode("\t", $headers));
-            $output->writeln(\str_repeat('-', 80));
+            $headers = array_keys($rows[0]);
+            $output->writeln(implode("\t", $headers));
+            $output->writeln(str_repeat('-', 80));
 
             foreach ($rows as $row) {
                 /** @var array<string, null|scalar> $row */
-                $output->writeln(\implode("\t", \array_map(static fn($v) => $v === null ? 'NULL' : \strval($v), $row)));
+                $output->writeln(implode("\t", array_map(static fn($v) => $v === null ? 'NULL' : strval($v), $row)));
             }
 
             $output->writeln('');
-            $output->writeln(\sprintf('<info>%d row(s) returned.</info>', \count($rows)));
+            $output->writeln(sprintf('<info>%d row(s) returned.</info>', count($rows)));
 
             return Command::SUCCESS;
         }
 
         $affected = $client->execute($sql);
-        $output->writeln(\sprintf('<info>%d row(s) affected.</info>', $affected));
+        $output->writeln(sprintf('<info>%d row(s) affected.</info>', $affected));
 
         return Command::SUCCESS;
     }

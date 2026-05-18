@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Dremel\Statistics;
 
+use DateInterval;
 use Flow\Parquet\ParquetFile\Data\Converter\TimeConverter;
+use RuntimeException;
+
+use function gettype;
+use function is_scalar;
+use function sprintf;
 
 final class Comparator
 {
@@ -18,20 +24,20 @@ final class Comparator
             return true;
         }
 
-        if (\gettype($value) !== \gettype($nextValue)) {
-            throw new \RuntimeException(\sprintf('Cannot compare %s with %s', \gettype($value), \gettype($nextValue)));
+        if (gettype($value) !== gettype($nextValue)) {
+            throw new RuntimeException(sprintf('Cannot compare %s with %s', gettype($value), gettype($nextValue)));
         }
 
-        if ($value instanceof \DateInterval) {
+        if ($value instanceof DateInterval) {
             $value = (new TimeConverter())->toParquetType($value);
             $nextValue = (new TimeConverter())->toParquetType($nextValue);
         }
 
-        if (!\is_scalar($value) || !\is_scalar($nextValue)) {
-            throw new \RuntimeException(\sprintf(
+        if (!is_scalar($value) || !is_scalar($nextValue)) {
+            throw new RuntimeException(sprintf(
                 'Cannot compare non-scalar values: %s with %s',
-                \gettype($value),
-                \gettype($nextValue),
+                gettype($value),
+                gettype($nextValue),
             ));
         }
 
@@ -48,20 +54,20 @@ final class Comparator
             return true;
         }
 
-        if (\gettype($value) !== \gettype($nextValue)) {
-            throw new \RuntimeException(\sprintf('Cannot compare %s with %s', \gettype($value), \gettype($nextValue)));
+        if (gettype($value) !== gettype($nextValue)) {
+            throw new RuntimeException(sprintf('Cannot compare %s with %s', gettype($value), gettype($nextValue)));
         }
 
-        if ($value instanceof \DateInterval) {
+        if ($value instanceof DateInterval) {
             $value = (new TimeConverter())->toParquetType($value);
             $nextValue = (new TimeConverter())->toParquetType($nextValue);
         }
 
-        if (!\is_scalar($value) || !\is_scalar($nextValue)) {
-            throw new \RuntimeException(\sprintf(
+        if (!is_scalar($value) || !is_scalar($nextValue)) {
+            throw new RuntimeException(sprintf(
                 'Cannot compare non-scalar values: %s with %s',
-                \gettype($value),
-                \gettype($nextValue),
+                gettype($value),
+                gettype($nextValue),
             ));
         }
 

@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem;
 
+use DateTimeImmutable;
+
 final readonly class FileStatus
 {
     public function __construct(
         public Path $path,
         private bool $isFile,
         public ?int $size = null,
-        public ?\DateTimeImmutable $lastModifiedAt = null,
+        public ?DateTimeImmutable $lastModifiedAt = null,
     ) {}
 
     public function isDirectory(): bool

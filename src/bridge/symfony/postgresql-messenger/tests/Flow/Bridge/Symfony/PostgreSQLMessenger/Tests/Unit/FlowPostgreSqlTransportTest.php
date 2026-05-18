@@ -9,6 +9,7 @@ use Flow\Bridge\Symfony\PostgreSQLMessenger\FlowPostgreSqlTransport;
 use Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit\Double\FakeSerializer;
 use Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit\Double\SpyClient;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
 use Symfony\Component\Messenger\Transport\Receiver\KeepaliveReceiverInterface;
@@ -16,6 +17,8 @@ use Symfony\Component\Messenger\Transport\Receiver\ListableReceiverInterface;
 use Symfony\Component\Messenger\Transport\Receiver\MessageCountAwareInterface;
 use Symfony\Component\Messenger\Transport\SetupableTransportInterface;
 use Symfony\Component\Messenger\Transport\TransportInterface;
+
+use function iterator_to_array;
 
 final class FlowPostgreSqlTransportTest extends TestCase
 {
@@ -37,14 +40,14 @@ final class FlowPostgreSqlTransportTest extends TestCase
         $client->fetchAllReturn = [['id' => 1, 'body' => 'a', 'headers' => '{}']];
         $transport = new FlowPostgreSqlTransport(new Connection($client), new FakeSerializer());
 
-        $envelopes = \iterator_to_array($transport->all(), false);
+        $envelopes = iterator_to_array($transport->all(), false);
 
         static::assertCount(1, $envelopes);
     }
 
     public function test_does_not_implement_setupable_transport_interface(): void
     {
-        static::assertFalse((new \ReflectionClass(FlowPostgreSqlTransport::class))->implementsInterface(SetupableTransportInterface::class));
+        static::assertFalse((new ReflectionClass(FlowPostgreSqlTransport::class))->implementsInterface(SetupableTransportInterface::class));
     }
 
     public function test_find_delegates_to_receiver(): void
@@ -62,7 +65,7 @@ final class FlowPostgreSqlTransportTest extends TestCase
         $client->fetchReturn = ['id' => 1, 'body' => 'a', 'headers' => '{}'];
         $transport = new FlowPostgreSqlTransport(new Connection($client), new FakeSerializer());
 
-        static::assertCount(1, \iterator_to_array($transport->get(), false));
+        static::assertCount(1, iterator_to_array($transport->get(), false));
     }
 
     public function test_get_message_count_delegates_to_receiver(): void
@@ -76,7 +79,7 @@ final class FlowPostgreSqlTransportTest extends TestCase
 
     public function test_implements_expected_interfaces(): void
     {
-        $reflection = new \ReflectionClass(FlowPostgreSqlTransport::class);
+        $reflection = new ReflectionClass(FlowPostgreSqlTransport::class);
 
         static::assertTrue($reflection->implementsInterface(TransportInterface::class));
         static::assertTrue($reflection->implementsInterface(ListableReceiverInterface::class));

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
+use function is_iterable;
+
 /**
  * @source https://stackoverflow.com/a/15973172
  */
@@ -19,7 +21,7 @@ final class CartesianProduct
         $result = [[]];
 
         foreach ($input as $key => $values) {
-            if (!\is_iterable($values)) {
+            if (!is_iterable($values)) {
                 continue;
             }
 

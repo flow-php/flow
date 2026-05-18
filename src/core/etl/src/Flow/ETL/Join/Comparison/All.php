@@ -8,6 +8,9 @@ use Flow\ETL\Join\Comparison;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 
+use function array_merge;
+use function array_unique;
+
 final readonly class All implements Comparison
 {
     /**
@@ -17,7 +20,7 @@ final readonly class All implements Comparison
 
     public function __construct(Comparison $comparison, Comparison ...$comparisons)
     {
-        $this->comparisons = \array_merge([$comparison], $comparisons);
+        $this->comparisons = array_merge([$comparison], $comparisons);
     }
 
     public function compare(Row $left, Row $right): bool
@@ -42,7 +45,7 @@ final readonly class All implements Comparison
             $entries[] = $comparison->left();
         }
 
-        return \array_unique(\array_merge(...$entries));
+        return array_unique(array_merge(...$entries));
     }
 
     /**
@@ -56,6 +59,6 @@ final readonly class All implements Comparison
             $entries[] = $comparison->right();
         }
 
-        return \array_unique(\array_merge(...$entries));
+        return array_unique(array_merge(...$entries));
     }
 }

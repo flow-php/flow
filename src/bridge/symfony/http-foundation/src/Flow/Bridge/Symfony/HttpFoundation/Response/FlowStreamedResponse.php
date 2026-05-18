@@ -13,8 +13,10 @@ use Flow\ETL\Transformation;
 use Flow\ETL\Transformations;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+use function bin2hex;
 use function Flow\ETL\DSL\df;
 use function Flow\Filesystem\DSL\path;
+use function random_bytes;
 
 class FlowStreamedResponse extends StreamedResponse
 {
@@ -44,7 +46,7 @@ class FlowStreamedResponse extends StreamedResponse
 
     private function stream(): void
     {
-        $stdoutPath = path($this->filesystem . '://' . \bin2hex(\random_bytes(16)) . '.stdout', ['stream' => 'output']);
+        $stdoutPath = path($this->filesystem . '://' . bin2hex(random_bytes(16)) . '.stdout', ['stream' => 'output']);
 
         $report = df($this->config)
             ->read($this->extractor)

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Dom\HTMLDocument;
+use DOMDocument;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ExecutionMode;
 use PHPUnit\Framework\Attributes\RequiresPhp;
@@ -15,12 +16,15 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 
+use const LIBXML_HTML_NOIMPLIED;
+use const LIBXML_NOERROR;
+
 final class DOMElementParentTest extends TestCase
 {
     #[RequiresPhp('>= 8.4')]
     public function test_html_fails_when_parent_not_available_in_strict_mode(): void
     {
-        $element = HTMLDocument::createFromString('<span>bar</span>', \LIBXML_HTML_NOIMPLIED | \LIBXML_NOERROR);
+        $element = HTMLDocument::createFromString('<span>bar</span>', LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
 
         $context = flow_context(config());
         $context->functions()->setMode(ExecutionMode::STRICT);
@@ -38,7 +42,7 @@ final class DOMElementParentTest extends TestCase
     {
         $element = HTMLDocument::createFromString(
             '<div><span>foo</span><p>bar</p></div>',
-            \LIBXML_HTML_NOIMPLIED | \LIBXML_NOERROR,
+            LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR,
         );
 
         static::assertEquals(
@@ -55,7 +59,7 @@ final class DOMElementParentTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function test_html_getting_parent_element_when_not_available(): void
     {
-        $element = HTMLDocument::createFromString('<span>bar</span>', \LIBXML_HTML_NOIMPLIED | \LIBXML_NOERROR);
+        $element = HTMLDocument::createFromString('<span>bar</span>', LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
 
         static::assertNull(
             ref('value')
@@ -69,7 +73,7 @@ final class DOMElementParentTest extends TestCase
 
     public function test_xml_fails_when_parent_not_available_in_strict_mode(): void
     {
-        $xml = new \DOMDocument();
+        $xml = new DOMDocument();
         $xml->loadXML('<root>foobar</root>');
 
         $context = flow_context(config());
@@ -85,7 +89,7 @@ final class DOMElementParentTest extends TestCase
 
     public function test_xml_getting_parent_element(): void
     {
-        $xml = new \DOMDocument();
+        $xml = new DOMDocument();
         $xml->loadXML('<root><foo>foo</foo><bar>bar</bar></root>');
 
         static::assertEquals(
@@ -102,7 +106,7 @@ final class DOMElementParentTest extends TestCase
 
     public function test_xml_getting_parent_element_when_not_available(): void
     {
-        $xml = new \DOMDocument();
+        $xml = new DOMDocument();
         $xml->loadXML('<root>foobar</root>');
 
         static::assertEquals($xml, ref('value')
@@ -115,7 +119,7 @@ final class DOMElementParentTest extends TestCase
 
     public function test_xml_getting_parent_element_when_passing_document(): void
     {
-        $xml = new \DOMDocument();
+        $xml = new DOMDocument();
         $xml->loadXML('<root>foobar</root>');
 
         static::assertEquals($xml, ref('value')

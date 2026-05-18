@@ -7,7 +7,13 @@ namespace Flow\Bridge\Symfony\PostgreSQLSession\Tests\Unit;
 use Flow\Bridge\Symfony\PostgreSQLSession\Exception\SessionException;
 use Flow\Bridge\Symfony\PostgreSQLSession\FlowPostgreSqlSessionHandler;
 use Flow\Bridge\Symfony\PostgreSQLSession\Tests\Context\PostgreSqlSessionContext;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+
+use function count;
+use function time;
+
+use const PHP_INT_MAX;
 
 final class FlowPostgreSqlSessionHandlerTest extends TestCase
 {
@@ -56,7 +62,7 @@ final class FlowPostgreSqlSessionHandlerTest extends TestCase
 
     public function test_constructor_rejects_invalid_lock_mode(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid lock_mode "99"');
 
         $this->context->handler(['lock_mode' => 99]);
@@ -65,7 +71,7 @@ final class FlowPostgreSqlSessionHandlerTest extends TestCase
     public function test_destroy_commits_open_transaction_and_releases_lock(): void
     {
         $handler = $this->context->handler(['lock_mode' => FlowPostgreSqlSessionHandler::LOCK_TRANSACTIONAL]);
-        $this->context->client->fetchReturn = ['sess_data' => 'payload', 'sess_lifetime' => \PHP_INT_MAX];
+        $this->context->client->fetchReturn = ['sess_data' => 'payload', 'sess_lifetime' => PHP_INT_MAX];
 
         $handler->read('sid-9');
         $handler->destroy('sid-9');
@@ -124,7 +130,7 @@ final class FlowPostgreSqlSessionHandlerTest extends TestCase
 
         $handler->read('sid-5');
 
-        static::assertGreaterThanOrEqual(2, \count($this->context->client->executedQueries));
+        static::assertGreaterThanOrEqual(2, count($this->context->client->executedQueries));
         static::assertStringContainsString('pg_advisory_lock', $this->context->client->executedQueries[0]['sql']);
         static::assertStringContainsString('SELECT', $this->context->client->executedQueries[1]['sql']);
         static::assertStringContainsString('sess_data', $this->context->client->executedQueries[1]['sql']);
@@ -143,7 +149,7 @@ final class FlowPostgreSqlSessionHandlerTest extends TestCase
 
     public function test_read_returns_empty_string_when_session_expired(): void
     {
-        $this->context->client->fetchReturn = ['sess_data' => 'payload', 'sess_lifetime' => \time() - 100];
+        $this->context->client->fetchReturn = ['sess_data' => 'payload', 'sess_lifetime' => time() - 100];
         $handler = $this->context->handler(['lock_mode' => FlowPostgreSqlSessionHandler::LOCK_NONE]);
 
         static::assertSame('', $handler->read('sid-2'));
@@ -159,7 +165,7 @@ final class FlowPostgreSqlSessionHandlerTest extends TestCase
 
     public function test_read_returns_session_data_when_alive(): void
     {
-        $this->context->client->fetchReturn = ['sess_data' => 'payload', 'sess_lifetime' => \time() + 3600];
+        $this->context->client->fetchReturn = ['sess_data' => 'payload', 'sess_lifetime' => time() + 3600];
         $handler = $this->context->handler(['lock_mode' => FlowPostgreSqlSessionHandler::LOCK_NONE]);
 
         static::assertSame('payload', $handler->read('sid-4'));
@@ -167,7 +173,7 @@ final class FlowPostgreSqlSessionHandlerTest extends TestCase
 
     public function test_read_throws_when_data_is_not_string(): void
     {
-        $this->context->client->fetchReturn = ['sess_data' => 123, 'sess_lifetime' => \time() + 3600];
+        $this->context->client->fetchReturn = ['sess_data' => 123, 'sess_lifetime' => time() + 3600];
         $handler = $this->context->handler(['lock_mode' => FlowPostgreSqlSessionHandler::LOCK_NONE]);
 
         $this->expectException(SessionException::class);

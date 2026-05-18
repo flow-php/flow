@@ -7,6 +7,9 @@ namespace Flow\CLI\Arguments;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputInterface;
 
+use function is_int;
+use function is_string;
+
 final readonly class TypedArgument
 {
     public function __construct(
@@ -32,7 +35,7 @@ final readonly class TypedArgument
             return null;
         }
 
-        if (!\is_int($option)) {
+        if (!is_int($option)) {
             throw new InvalidArgumentException("Argument '{$this->name}' must be an integer.");
         }
 
@@ -58,7 +61,7 @@ final readonly class TypedArgument
             return null;
         }
 
-        if (!\is_string($option)) {
+        if (!is_string($option)) {
             throw new InvalidArgumentException("Argument '{$this->name}' must be a string.");
         }
 

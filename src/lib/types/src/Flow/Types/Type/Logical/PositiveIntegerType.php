@@ -4,9 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
+use DateInterval;
+use DateTimeImmutable;
+use DOMElement;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+use Throwable;
+
+use function is_bool;
+use function is_int;
+use function is_numeric;
 
 /**
  * @implements Type<int<0, max>>
@@ -29,38 +37,38 @@ final readonly class PositiveIntegerType implements Type
         }
 
         try {
-            if ($value instanceof \DOMElement) {
+            if ($value instanceof DOMElement) {
                 return $this->assert((int) $value->nodeValue);
             }
 
-            if ($value instanceof \DateTimeImmutable) {
+            if ($value instanceof DateTimeImmutable) {
                 return $this->assert((int) $value->format('Uu'));
             }
 
-            if ($value instanceof \DateInterval) {
-                $reference = new \DateTimeImmutable();
+            if ($value instanceof DateInterval) {
+                $reference = new DateTimeImmutable();
                 $endTime = $reference->add($value);
 
                 return $this->assert((int) $endTime->format('Uu') - (int) $reference->format('Uu'));
             }
 
-            if (\is_numeric($value)) {
+            if (is_numeric($value)) {
                 return $this->assert((int) $value);
             }
 
-            if (\is_bool($value)) {
+            if (is_bool($value)) {
                 return $this->assert($value ? 1 : 0);
             }
 
             throw new CastingException($value, $this);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             throw new CastingException($value, $this);
         }
     }
 
     public function isValid(mixed $value): bool
     {
-        return \is_int($value) && $value > 0;
+        return is_int($value) && $value > 0;
     }
 
     public function normalize(): array

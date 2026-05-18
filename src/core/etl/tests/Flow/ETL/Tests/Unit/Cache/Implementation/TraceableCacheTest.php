@@ -23,6 +23,7 @@ use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
+use RuntimeException;
 
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -241,11 +242,11 @@ final class TraceableCacheTest extends FlowTestCase
     public function test_set_records_exception_on_error(): void
     {
         $innerCache = $this->createMock(Cache::class);
-        $innerCache->method('set')->willThrowException(new \RuntimeException('Test error'));
+        $innerCache->method('set')->willThrowException(new RuntimeException('Test error'));
 
         $cache = new TraceableCache($innerCache, $this->telemetry);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Test error');
 
         try {

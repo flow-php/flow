@@ -18,6 +18,12 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema;
+use Generator;
+
+use function array_column;
+use function array_keys;
+use function count;
+use function extension_loaded;
 
 final class ArrowParquetEngine implements ParquetEngine
 {
@@ -38,7 +44,7 @@ final class ArrowParquetEngine implements ParquetEngine
     public function __construct(
         private readonly Options $options = new Options(),
     ) {
-        if (!\extension_loaded('arrow')) {
+        if (!extension_loaded('arrow')) {
             throw new RuntimeException('The arrow extension is required for ArrowParquetEngine. '
             . 'Install it from flow-php/arrow-ext.');
         }
@@ -88,7 +94,7 @@ final class ArrowParquetEngine implements ParquetEngine
         $this->arrowWriter = new Writer($adapter, $extensionSchema, $compressionStr, $extensionOptions);
 
         /** @var array<string> $colNames */
-        $colNames = \array_column($extensionSchema, 'name');
+        $colNames = array_column($extensionSchema, 'name');
         $this->colNames = $colNames;
         $this->resetBatch();
     }
@@ -104,7 +110,7 @@ final class ArrowParquetEngine implements ParquetEngine
         array $columns = [],
         ?int $limit = null,
         ?int $offset = null,
-    ): \Generator {
+    ): Generator {
         $adapter = new SourceStreamAdapter($stream);
         $extensionOptions = OptionsConverter::toExtension($this->options);
         $reader = new Reader($adapter, $extensionOptions);
@@ -114,13 +120,13 @@ final class ArrowParquetEngine implements ParquetEngine
             $yielded = 0;
 
             while (null !== ($batch = $reader->readRowGroup($columns ?: null))) {
-                $colNames = \array_keys($batch);
+                $colNames = array_keys($batch);
 
                 if ($colNames === []) {
                     continue;
                 }
 
-                $rowCount = \count($batch[$colNames[0]]);
+                $rowCount = count($batch[$colNames[0]]);
 
                 for ($i = 0; $i < $rowCount; $i++) {
                     if ($offset !== null && $skipped < $offset) {

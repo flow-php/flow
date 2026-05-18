@@ -9,6 +9,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\Rows;
+use Throwable;
 
 final readonly class MemoryLoader implements Loader
 {
@@ -24,7 +25,7 @@ final readonly class MemoryLoader implements Loader
             $this->memory->save($rows->toArray());
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 
             throw $e;

@@ -35,8 +35,21 @@ use Flow\Parquet\Thrift\MemoryBuffer;
 use Flow\Parquet\Thrift\PhpFileStream;
 use Flow\Parquet\ThriftModel\FileMetaData;
 use Flow\Parquet\Writer\RowGroupBuilder;
+use Generator;
+use MultipleIterator;
 
+use function array_map;
+use function array_push;
+use function count;
+use function fclose;
 use function Flow\Types\DSL\type_integer;
+use function fopen;
+use function is_array;
+use function iterator_to_array;
+use function pack;
+use function stream_get_contents;
+use function strlen;
+use function unpack;
 
 final class PhpParquetEngine implements ParquetEngine
 {
@@ -63,12 +76,12 @@ final class PhpParquetEngine implements ParquetEngine
             $rowGroupContainer = $this->activeRowGroupBuilder()->flush($this->fileOffset);
             $this->activeStream()->append($rowGroupContainer->binaryBuffer);
             $this->activeMetadata()->rowGroups()->add($rowGroupContainer->rowGroup);
-            $this->fileOffset += \strlen($rowGroupContainer->binaryBuffer);
+            $this->fileOffset += strlen($rowGroupContainer->binaryBuffer);
         }
 
         $this->rowGroupBuilder = null;
 
-        $metadataHandle = \fopen('php://temp/maxmemory:' . (5 * 1024 * 1024), 'rb+');
+        $metadataHandle = fopen('php://temp/maxmemory:' . (5 * 1024 * 1024), 'rb+');
 
         if ($metadataHandle === false) {
             throw new RuntimeException('Cannot open temporary stream');
@@ -78,16 +91,16 @@ final class PhpParquetEngine implements ParquetEngine
             ->activeMetadata()
             ->toThrift()
             ->write(new CompactProtocol(new PhpFileStream($metadataHandle)));
-        $metadataBytes = \stream_get_contents($metadataHandle, offset: 0);
+        $metadataBytes = stream_get_contents($metadataHandle, offset: 0);
 
         if ($metadataBytes === false) {
             throw new RuntimeException('Cannot read metadata from temporary stream');
         }
 
         $this->activeStream()->append($metadataBytes);
-        \fclose($metadataHandle);
+        fclose($metadataHandle);
 
-        $this->activeStream()->append(\pack('l', \strlen($metadataBytes)));
+        $this->activeStream()->append(pack('l', strlen($metadataBytes)));
         $this->activeStream()->append(ParquetFile::PARQUET_MAGIC_NUMBER);
 
         $this->activeStream()->close();
@@ -105,7 +118,7 @@ final class PhpParquetEngine implements ParquetEngine
     ): void {
         $this->writeStream = $stream;
         $this->activeStream()->append(ParquetFile::PARQUET_MAGIC_NUMBER);
-        $this->fileOffset = \strlen(ParquetFile::PARQUET_MAGIC_NUMBER);
+        $this->fileOffset = strlen(ParquetFile::PARQUET_MAGIC_NUMBER);
 
         $this->metadata = new Metadata(
             $schema,
@@ -132,15 +145,15 @@ final class PhpParquetEngine implements ParquetEngine
         array $columns = [],
         ?int $limit = null,
         ?int $offset = null,
-    ): \Generator {
+    ): Generator {
         $dataConverter = DataConverter::initialize($this->options);
         $dremelAssembler = new DremelAssembler($dataConverter);
         $chunkReader = new ColumnChunkReader(new PageReader($this->byteOrder, $this->options), $this->options);
 
         $metadata = $this->readMetadata($stream);
 
-        if (!\count($columns)) {
-            $columns = \array_map(static fn(Column $c) => $c->name(), $schema->columns());
+        if (!count($columns)) {
+            $columns = array_map(static fn(Column $c) => $c->name(), $schema->columns());
         }
 
         $totalRows = $metadata->rowsNumber();
@@ -163,7 +176,7 @@ final class PhpParquetEngine implements ParquetEngine
             return;
         }
 
-        $multipleIterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
+        $multipleIterator = new MultipleIterator(MultipleIterator::MIT_KEYS_ASSOC);
 
         foreach ($columns as $columnName) {
             $multipleIterator->attachIterator(
@@ -192,7 +205,7 @@ final class PhpParquetEngine implements ParquetEngine
             // Row payload assembled from per-column generators; values are user data (mixed).
             // @mago-ignore analysis:mixed-assignment
             foreach ($rowData as $columnData) {
-                if (\is_array($columnData)) {
+                if (is_array($columnData)) {
                     // @mago-ignore analysis:mixed-assignment
                     foreach ($columnData as $key => $value) {
                         $row[$key] = $value;
@@ -207,7 +220,7 @@ final class PhpParquetEngine implements ParquetEngine
 
     public function writeBatch(iterable $rows): void
     {
-        if (\is_array($rows)) {
+        if (is_array($rows)) {
             $this->activeRowGroupBuilder()->addRows($rows);
 
             return;
@@ -230,7 +243,7 @@ final class PhpParquetEngine implements ParquetEngine
             $rowGroupContainer = $this->activeRowGroupBuilder()->flush($this->fileOffset);
             $this->activeStream()->append($rowGroupContainer->binaryBuffer);
             $this->activeMetadata()->rowGroups()->add($rowGroupContainer->rowGroup);
-            $this->fileOffset += \strlen($rowGroupContainer->binaryBuffer);
+            $this->fileOffset += strlen($rowGroupContainer->binaryBuffer);
         }
     }
 
@@ -242,7 +255,7 @@ final class PhpParquetEngine implements ParquetEngine
         iterable $rows,
     ): void {
         $stream->append(ParquetFile::PARQUET_MAGIC_NUMBER);
-        $fileOffset = \strlen(ParquetFile::PARQUET_MAGIC_NUMBER);
+        $fileOffset = strlen(ParquetFile::PARQUET_MAGIC_NUMBER);
 
         $metadata = new Metadata(
             $schema,
@@ -270,7 +283,7 @@ final class PhpParquetEngine implements ParquetEngine
                 $rowGroupContainer = $rowGroupBuilder->flush($fileOffset);
                 $stream->append($rowGroupContainer->binaryBuffer);
                 $metadata->rowGroups()->add($rowGroupContainer->rowGroup);
-                $fileOffset += \strlen($rowGroupContainer->binaryBuffer);
+                $fileOffset += strlen($rowGroupContainer->binaryBuffer);
             }
         }
 
@@ -280,23 +293,23 @@ final class PhpParquetEngine implements ParquetEngine
             $metadata->rowGroups()->add($rowGroupContainer->rowGroup);
         }
 
-        $metadataHandle = \fopen('php://temp/maxmemory:' . (5 * 1024 * 1024), 'rb+');
+        $metadataHandle = fopen('php://temp/maxmemory:' . (5 * 1024 * 1024), 'rb+');
 
         if ($metadataHandle === false) {
             throw new RuntimeException('Cannot open temporary stream');
         }
 
         $metadata->toThrift()->write(new CompactProtocol(new PhpFileStream($metadataHandle)));
-        $metadataBytes = \stream_get_contents($metadataHandle, offset: 0);
+        $metadataBytes = stream_get_contents($metadataHandle, offset: 0);
 
         if ($metadataBytes === false) {
             throw new RuntimeException('Cannot read metadata from temporary stream');
         }
 
         $stream->append($metadataBytes);
-        \fclose($metadataHandle);
+        fclose($metadataHandle);
 
-        $stream->append(\pack('l', \strlen($metadataBytes)));
+        $stream->append(pack('l', strlen($metadataBytes)));
         $stream->append(ParquetFile::PARQUET_MAGIC_NUMBER);
 
         $stream->close();
@@ -337,7 +350,7 @@ final class PhpParquetEngine implements ParquetEngine
         DremelAssembler $dremelAssembler,
         ?int $limit,
         ?int $offset,
-    ): \Generator {
+    ): Generator {
         $yieldedRows = 0;
         $rowGroupOffset = 0;
 
@@ -380,14 +393,14 @@ final class PhpParquetEngine implements ParquetEngine
                 $mergedFlatData = [];
 
                 foreach ($column->childrenFlat() as $child) {
-                    $pages = \iterator_to_array($chunkReader->read($rowGroup->getColumnChunk($child), $child, $stream));
+                    $pages = iterator_to_array($chunkReader->read($rowGroup->getColumnChunk($child), $child, $stream));
 
                     $allRepetitionLevels = [];
                     $allDefinitionLevels = [];
 
                     foreach ($pages as $page) {
-                        \array_push($allRepetitionLevels, ...$page->repetitionLevels());
-                        \array_push($allDefinitionLevels, ...$page->definitionLevels());
+                        array_push($allRepetitionLevels, ...$page->repetitionLevels());
+                        array_push($allDefinitionLevels, ...$page->definitionLevels());
                     }
 
                     $mergedFlatData[] = new ReadFlatColumnValues(
@@ -440,7 +453,7 @@ final class PhpParquetEngine implements ParquetEngine
             throw new InvalidArgumentException('Given file is not valid Parquet file');
         }
 
-        $unpacked = \unpack($this->byteOrder->value, $stream->read(4, $fileTotalSize - 8));
+        $unpacked = unpack($this->byteOrder->value, $stream->read(4, $fileTotalSize - 8));
 
         if ($unpacked === false) {
             throw new InvalidArgumentException('Failed to read Parquet metadata length');

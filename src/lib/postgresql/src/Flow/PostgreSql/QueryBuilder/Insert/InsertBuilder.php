@@ -24,6 +24,9 @@ use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
 
+use function array_values;
+use function count;
+
 final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateStep, InsertIntoStep
 {
     use AstToSql;
@@ -110,7 +113,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             if ($selectStmt !== null) {
                 $valuesListsNodes = $selectStmt->getValuesLists();
 
-                if (\count($valuesListsNodes) > 0) {
+                if (count($valuesListsNodes) > 0) {
                     foreach ($valuesListsNodes as $listNode) {
                         $list = $listNode->getList();
 
@@ -128,7 +131,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
                 } else {
                     $targetList = $selectStmt->getTargetList();
 
-                    if (\count($targetList) === 0) {
+                    if (count($targetList) === 0) {
                         $defaultValues = true;
                     } else {
                         $selectQuery = new readonly class($selectStmt) implements SelectFinalStep {
@@ -227,7 +230,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             $this->table,
             $this->schema,
             $this->alias,
-            \array_values([...$columns]),
+            array_values([...$columns]),
             $this->valuesList,
             $this->selectQuery,
             $this->defaultValues,
@@ -331,7 +334,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             $this->selectQuery,
             $this->defaultValues,
             $this->onConflict,
-            \array_values([...$expressions]),
+            array_values([...$expressions]),
             false,
         );
     }
@@ -493,7 +496,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             $this->schema,
             $this->alias,
             $this->columns,
-            [...$this->valuesList, \array_values([...$values])],
+            [...$this->valuesList, array_values([...$values])],
             $this->selectQuery,
             $this->defaultValues,
             $this->onConflict,

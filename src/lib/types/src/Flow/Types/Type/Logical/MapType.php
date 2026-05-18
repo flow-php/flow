@@ -11,13 +11,22 @@ use Flow\Types\Type;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
 use Flow\Types\Value\Json;
+use Throwable;
 
+use function array_key_exists;
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_literal;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function is_array;
+use function is_string;
+use function json_decode;
+use function sprintf;
+use function str_starts_with;
+
+use const JSON_THROW_ON_ERROR;
 
 /**
  * @template TKey of array-key
@@ -54,7 +63,7 @@ final readonly class MapType implements Type
         $keyType = type_from_array($data['key']);
 
         if (!$keyType instanceof IntegerType && !$keyType instanceof StringType) {
-            throw new InvalidArgumentException(\sprintf(
+            throw new InvalidArgumentException(sprintf(
                 'Map key type must be IntegerType or StringType, got %s',
                 $keyType::class,
             ));
@@ -79,11 +88,11 @@ final readonly class MapType implements Type
                 $value = $value->toArray();
             }
 
-            if (\is_string($value) && (\str_starts_with($value, '{') || \str_starts_with($value, '['))) {
-                return $this->assert(\json_decode($value, true, 512, \JSON_THROW_ON_ERROR));
+            if (is_string($value) && (str_starts_with($value, '{') || str_starts_with($value, '['))) {
+                return $this->assert(json_decode($value, true, 512, JSON_THROW_ON_ERROR));
             }
 
-            if (!\is_array($value)) {
+            if (!is_array($value)) {
                 throw new CastingException($value, $this);
             }
 
@@ -93,7 +102,7 @@ final readonly class MapType implements Type
             foreach ($value as $key => $item) {
                 $castedKey = $this->key->cast($key);
 
-                if (\array_key_exists($castedKey, $castedMap)) {
+                if (array_key_exists($castedKey, $castedMap)) {
                     throw new CastingException($value, $this);
                 }
 
@@ -101,14 +110,14 @@ final readonly class MapType implements Type
             }
 
             return $this->assert($castedMap);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             throw new CastingException($value, $this, $e);
         }
     }
 
     public function isValid(mixed $value): bool
     {
-        if (!\is_array($value)) {
+        if (!is_array($value)) {
             return false;
         }
 

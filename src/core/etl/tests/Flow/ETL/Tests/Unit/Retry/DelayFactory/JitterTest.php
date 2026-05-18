@@ -12,6 +12,8 @@ use function Flow\ETL\DSL\delay_fixed;
 use function Flow\ETL\DSL\delay_jitter;
 use function Flow\ETL\DSL\duration_microseconds;
 use function Flow\ETL\DSL\duration_seconds;
+use function max;
+use function min;
 
 final class JitterTest extends TestCase
 {
@@ -44,8 +46,8 @@ final class JitterTest extends TestCase
         $minExpected = 500_000;
         $maxExpected = 1_500_000;
 
-        $minActual = \min($delays);
-        $maxActual = \max($delays);
+        $minActual = min($delays);
+        $maxActual = max($delays);
 
         static::assertNotSame($minActual, $maxActual, 'Jitter should create variation in delays');
 
@@ -65,8 +67,8 @@ final class JitterTest extends TestCase
             $delays[] = $jitterFactory->delay(1)->microseconds();
         }
 
-        $minDelay = \min($delays);
-        $maxDelay = \max($delays);
+        $minDelay = min($delays);
+        $maxDelay = max($delays);
 
         static::assertGreaterThanOrEqual(0, $minDelay);
         static::assertLessThanOrEqual(20_000_000, $maxDelay);

@@ -4,50 +4,59 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
+use ArrayIterator;
+use DateTime;
+use DateTimeImmutable;
+use DateTimeInterface;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
+use function class_exists;
 use function Flow\Types\DSL\type_class_string;
 use function Flow\Types\DSL\type_from_array;
+use function interface_exists;
+use function is_a;
 
 final class ClassStringTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'valid DateTimeImmutable class string for DateTimeInterface class' => [
-            'value' => \DateTimeImmutable::class,
-            'class' => \DateTimeInterface::class,
+            'value' => DateTimeImmutable::class,
+            'class' => DateTimeInterface::class,
             'exceptionClass' => null,
         ];
 
         yield 'valid DateTimeImmutable class string for DateTimeImmutable class' => [
-            'value' => \DateTimeImmutable::class,
-            'class' => \DateTimeImmutable::class,
+            'value' => DateTimeImmutable::class,
+            'class' => DateTimeImmutable::class,
             'exceptionClass' => null,
         ];
 
         yield 'valid DateTime class string for DateTimeInterface class' => [
-            'value' => \DateTime::class,
-            'class' => \DateTimeInterface::class,
+            'value' => DateTime::class,
+            'class' => DateTimeInterface::class,
             'exceptionClass' => null,
         ];
 
         yield 'valid stdClass class string for stdClass class' => [
-            'value' => \stdClass::class,
-            'class' => \stdClass::class,
+            'value' => stdClass::class,
+            'class' => stdClass::class,
             'exceptionClass' => null,
         ];
 
         yield 'valid DateTimeImmutable class string for no class constraint' => [
-            'value' => \DateTimeImmutable::class,
+            'value' => DateTimeImmutable::class,
             'class' => null,
             'exceptionClass' => null,
         ];
 
         yield 'valid stdClass class string for no class constraint' => [
-            'value' => \stdClass::class,
+            'value' => stdClass::class,
             'class' => null,
             'exceptionClass' => null,
         ];
@@ -60,181 +69,181 @@ final class ClassStringTypeTest extends TestCase
 
         yield 'invalid non-class string' => [
             'value' => 'not-a-class',
-            'class' => \DateTimeImmutable::class,
+            'class' => DateTimeImmutable::class,
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid DateTime class string for DateTimeImmutable class' => [
-            'value' => \DateTime::class,
-            'class' => \DateTimeImmutable::class,
+            'value' => DateTime::class,
+            'class' => DateTimeImmutable::class,
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid stdClass class string for DateTimeImmutable class' => [
-            'value' => \stdClass::class,
-            'class' => \DateTimeImmutable::class,
+            'value' => stdClass::class,
+            'class' => DateTimeImmutable::class,
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid integer' => [
             'value' => 123,
-            'class' => \DateTimeImmutable::class,
+            'class' => DateTimeImmutable::class,
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid boolean' => [
             'value' => false,
-            'class' => \DateTimeImmutable::class,
+            'class' => DateTimeImmutable::class,
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid float' => [
             'value' => 124.25,
-            'class' => \DateTimeImmutable::class,
+            'class' => DateTimeImmutable::class,
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid array' => [
             'value' => [1, 2],
-            'class' => \DateTimeImmutable::class,
+            'class' => DateTimeImmutable::class,
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid object' => [
-            'value' => new \stdClass(),
-            'class' => \DateTimeImmutable::class,
+            'value' => new stdClass(),
+            'class' => DateTimeImmutable::class,
             'exceptionClass' => InvalidTypeException::class,
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
         yield 'valid stdClass class string' => [
-            'value' => \stdClass::class,
-            'class' => \stdClass::class,
-            'expected' => \stdClass::class,
+            'value' => stdClass::class,
+            'class' => stdClass::class,
+            'expected' => stdClass::class,
             'exceptionClass' => null,
         ];
 
         yield 'valid DateTimeImmutable class string for DateTimeInterface' => [
-            'value' => \DateTimeImmutable::class,
-            'class' => \DateTimeInterface::class,
-            'expected' => \DateTimeImmutable::class,
+            'value' => DateTimeImmutable::class,
+            'class' => DateTimeInterface::class,
+            'expected' => DateTimeImmutable::class,
             'exceptionClass' => null,
         ];
 
         yield 'cast DateTimeImmutable object to class string' => [
-            'value' => new \DateTimeImmutable(),
-            'class' => \DateTimeInterface::class,
-            'expected' => \DateTimeImmutable::class,
+            'value' => new DateTimeImmutable(),
+            'class' => DateTimeInterface::class,
+            'expected' => DateTimeImmutable::class,
             'exceptionClass' => null,
         ];
 
         yield 'cast DateTime object to class string' => [
-            'value' => new \DateTime(),
-            'class' => \DateTimeInterface::class,
-            'expected' => \DateTime::class,
+            'value' => new DateTime(),
+            'class' => DateTimeInterface::class,
+            'expected' => DateTime::class,
             'exceptionClass' => null,
         ];
 
         yield 'cast stdClass object to class string' => [
-            'value' => new \stdClass(),
-            'class' => \stdClass::class,
-            'expected' => \stdClass::class,
+            'value' => new stdClass(),
+            'class' => stdClass::class,
+            'expected' => stdClass::class,
             'exceptionClass' => null,
         ];
 
         yield 'cast DateTimeImmutable object to class string for no class constraint' => [
-            'value' => new \DateTimeImmutable(),
+            'value' => new DateTimeImmutable(),
             'class' => null,
-            'expected' => \DateTimeImmutable::class,
+            'expected' => DateTimeImmutable::class,
             'exceptionClass' => null,
         ];
 
         yield 'cast stdClass object to class string for no class constraint' => [
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'class' => null,
-            'expected' => \stdClass::class,
+            'expected' => stdClass::class,
             'exceptionClass' => null,
         ];
 
         yield 'valid class string for no class constraint' => [
-            'value' => \ArrayIterator::class,
+            'value' => ArrayIterator::class,
             'class' => null,
-            'expected' => \ArrayIterator::class,
+            'expected' => ArrayIterator::class,
             'exceptionClass' => null,
         ];
 
         yield 'invalid non-class string' => [
             'value' => 'not-a-class',
-            'class' => \stdClass::class,
+            'class' => stdClass::class,
             'expected' => null,
             'exceptionClass' => CastingException::class,
         ];
 
         yield 'invalid incompatible class string' => [
-            'value' => \stdClass::class,
-            'class' => \DateTimeInterface::class,
+            'value' => stdClass::class,
+            'class' => DateTimeInterface::class,
             'expected' => null,
             'exceptionClass' => CastingException::class,
         ];
 
         yield 'invalid incompatible object' => [
-            'value' => new \stdClass(),
-            'class' => \DateTimeInterface::class,
+            'value' => new stdClass(),
+            'class' => DateTimeInterface::class,
             'expected' => null,
             'exceptionClass' => CastingException::class,
         ];
 
         yield 'invalid integer' => [
             'value' => 123,
-            'class' => \stdClass::class,
+            'class' => stdClass::class,
             'expected' => null,
             'exceptionClass' => CastingException::class,
         ];
 
         yield 'invalid array' => [
             'value' => [1, 2],
-            'class' => \stdClass::class,
+            'class' => stdClass::class,
             'expected' => null,
             'exceptionClass' => CastingException::class,
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'valid stdClass class string for stdClass class' => [
-            'value' => \stdClass::class,
-            'class' => \stdClass::class,
+            'value' => stdClass::class,
+            'class' => stdClass::class,
             'expected' => true,
         ];
 
         yield 'valid DateTimeImmutable class string for DateTimeInterface class' => [
-            'value' => \DateTimeImmutable::class,
-            'class' => \DateTimeInterface::class,
+            'value' => DateTimeImmutable::class,
+            'class' => DateTimeInterface::class,
             'expected' => true,
         ];
 
         yield 'valid DateTime class string for DateTimeInterface class' => [
-            'value' => \DateTime::class,
-            'class' => \DateTimeInterface::class,
+            'value' => DateTime::class,
+            'class' => DateTimeInterface::class,
             'expected' => true,
         ];
 
         yield 'valid DateTimeImmutable class string for no class constraint' => [
-            'value' => \DateTimeImmutable::class,
+            'value' => DateTimeImmutable::class,
             'class' => null,
             'expected' => true,
         ];
 
         yield 'valid stdClass class string for no class constraint' => [
-            'value' => \stdClass::class,
+            'value' => stdClass::class,
             'class' => null,
             'expected' => true,
         ];
 
         yield 'valid ArrayIterator class string for no class constraint' => [
-            'value' => \ArrayIterator::class,
+            'value' => ArrayIterator::class,
             'class' => null,
             'expected' => true,
         ];
@@ -247,55 +256,55 @@ final class ClassStringTypeTest extends TestCase
 
         yield 'invalid non-class string' => [
             'value' => 'not-a-class',
-            'class' => \stdClass::class,
+            'class' => stdClass::class,
             'expected' => false,
         ];
 
         yield 'invalid DateTime class string for DateTimeImmutable class' => [
-            'value' => \DateTime::class,
-            'class' => \DateTimeImmutable::class,
+            'value' => DateTime::class,
+            'class' => DateTimeImmutable::class,
             'expected' => false,
         ];
 
         yield 'invalid stdClass class string for DateTimeImmutable class' => [
-            'value' => \stdClass::class,
-            'class' => \DateTimeImmutable::class,
+            'value' => stdClass::class,
+            'class' => DateTimeImmutable::class,
             'expected' => false,
         ];
 
         yield 'invalid null' => [
             'value' => null,
-            'class' => \stdClass::class,
+            'class' => stdClass::class,
             'expected' => false,
         ];
 
         yield 'invalid integer' => [
             'value' => 123,
-            'class' => \stdClass::class,
+            'class' => stdClass::class,
             'expected' => false,
         ];
 
         yield 'invalid boolean' => [
             'value' => false,
-            'class' => \stdClass::class,
+            'class' => stdClass::class,
             'expected' => false,
         ];
 
         yield 'invalid float' => [
             'value' => 124.25,
-            'class' => \stdClass::class,
+            'class' => stdClass::class,
             'expected' => false,
         ];
 
         yield 'invalid array' => [
             'value' => [1, 2],
-            'class' => \stdClass::class,
+            'class' => stdClass::class,
             'expected' => false,
         ];
 
         yield 'invalid object' => [
-            'value' => new \stdClass(),
-            'class' => \stdClass::class,
+            'value' => new stdClass(),
+            'class' => stdClass::class,
             'expected' => false,
         ];
     }
@@ -313,10 +322,10 @@ final class ClassStringTypeTest extends TestCase
         } else {
             $result = type_class_string($class)->assert($value);
             static::assertIsString($result);
-            static::assertTrue(\class_exists($result) || \interface_exists($result));
+            static::assertTrue(class_exists($result) || interface_exists($result));
 
             if ($class !== null) {
-                static::assertTrue(\is_a($result, $class, true));
+                static::assertTrue(is_a($result, $class, true));
             }
         }
     }
@@ -335,10 +344,10 @@ final class ClassStringTypeTest extends TestCase
             $result = type_class_string($class)->cast($value);
             static::assertSame($expected, $result);
             static::assertIsString($result);
-            static::assertTrue(\class_exists($result) || \interface_exists($result));
+            static::assertTrue(class_exists($result) || interface_exists($result));
 
             if ($class !== null) {
-                static::assertTrue(\is_a($result, $class, true));
+                static::assertTrue(is_a($result, $class, true));
             }
         }
     }
@@ -354,7 +363,7 @@ final class ClassStringTypeTest extends TestCase
 
     public function test_normalization(): void
     {
-        $type = type_class_string(\DateTimeImmutable::class);
+        $type = type_class_string(DateTimeImmutable::class);
         $normalized = $type->normalize();
         $recreated = type_from_array($normalized);
 
@@ -372,9 +381,9 @@ final class ClassStringTypeTest extends TestCase
 
     public function test_to_string(): void
     {
-        static::assertSame('class-string<DateTimeImmutable>', type_class_string(\DateTimeImmutable::class)->toString());
+        static::assertSame('class-string<DateTimeImmutable>', type_class_string(DateTimeImmutable::class)->toString());
 
-        static::assertSame('class-string<DateTimeInterface>', type_class_string(\DateTimeInterface::class)->toString());
+        static::assertSame('class-string<DateTimeInterface>', type_class_string(DateTimeInterface::class)->toString());
 
         static::assertSame('class-string', type_class_string()->toString());
     }

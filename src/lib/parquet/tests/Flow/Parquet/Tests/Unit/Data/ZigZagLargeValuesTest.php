@@ -7,6 +7,8 @@ namespace Flow\Parquet\Tests\Unit\Data;
 use Flow\Parquet\Data\ZigZag;
 use PHPUnit\Framework\TestCase;
 
+use function array_merge;
+
 final class ZigZagLargeValuesTest extends TestCase
 {
     public function test_zigzag_large_positive_values(): void
@@ -26,7 +28,7 @@ final class ZigZagLargeValuesTest extends TestCase
             PHP_INT_MAX - 100,
         ];
 
-        foreach (\array_merge($failingValues, $problematicValues) as $value) {
+        foreach (array_merge($failingValues, $problematicValues) as $value) {
             $encoded = $zigzag->encode($value);
             $decoded = $zigzag->decode($encoded);
             static::assertSame($value, $decoded, "ZigZag should roundtrip correctly for value: {$value}");

@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder;
 
+use function count;
+use function str_contains;
+use function str_ends_with;
+use function str_starts_with;
+use function strlen;
+use function substr;
+
 /**
  * Parses and represents qualified SQL identifiers like schema.table or table.column.
  *
@@ -55,7 +62,7 @@ final readonly class QualifiedIdentifier
      */
     public function column(): string
     {
-        return $this->parts[\count($this->parts) - 1];
+        return $this->parts[count($this->parts) - 1];
     }
 
     /**
@@ -63,7 +70,7 @@ final readonly class QualifiedIdentifier
      */
     public function count(): int
     {
-        return \count($this->parts);
+        return count($this->parts);
     }
 
     /**
@@ -73,7 +80,7 @@ final readonly class QualifiedIdentifier
      */
     public function hasSchema(): bool
     {
-        return \count($this->parts) >= 2;
+        return count($this->parts) >= 2;
     }
 
     /**
@@ -81,7 +88,7 @@ final readonly class QualifiedIdentifier
      */
     public function name(): string
     {
-        return $this->parts[\count($this->parts) - 1];
+        return $this->parts[count($this->parts) - 1];
     }
 
     /**
@@ -100,7 +107,7 @@ final readonly class QualifiedIdentifier
      */
     public function schema(): ?string
     {
-        if (\count($this->parts) < 2) {
+        if (count($this->parts) < 2) {
             return null;
         }
 
@@ -114,11 +121,11 @@ final readonly class QualifiedIdentifier
      */
     public function table(): ?string
     {
-        if (\count($this->parts) === 3) {
+        if (count($this->parts) === 3) {
             return $this->parts[1];
         }
 
-        if (\count($this->parts) === 2) {
+        if (count($this->parts) === 2) {
             return $this->parts[0];
         }
 
@@ -132,10 +139,10 @@ final readonly class QualifiedIdentifier
      */
     private static function splitRespectingQuotes(string $identifier): array
     {
-        if (\str_starts_with($identifier, '"') && \str_ends_with($identifier, '"')) {
-            $inner = \substr($identifier, 1, -1);
+        if (str_starts_with($identifier, '"') && str_ends_with($identifier, '"')) {
+            $inner = substr($identifier, 1, -1);
 
-            if (\str_contains($inner, '"')) {
+            if (str_contains($inner, '"')) {
             } else {
                 return [$inner];
             }
@@ -144,7 +151,7 @@ final readonly class QualifiedIdentifier
         $parts = [];
         $current = '';
         $inQuotes = false;
-        $length = \strlen($identifier);
+        $length = strlen($identifier);
 
         for ($i = 0; $i < $length; $i++) {
             $char = $identifier[$i];

@@ -12,6 +12,8 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Partition;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function array_keys;
+use function array_map;
 use function Flow\ETL\Adapter\Excel\DSL\from_excel;
 use function Flow\ETL\Adapter\Excel\DSL\is_valid_excel_sheet_name;
 use function Flow\ETL\DSL\config;
@@ -78,7 +80,7 @@ final class ExcelExtractorTest extends FlowTestCase
         static::assertCount(5, $rows);
 
         foreach ($rows as $row) {
-            static::assertSame(['id', 'name', 'email'], \array_keys($row));
+            static::assertSame(['id', 'name', 'email'], array_keys($row));
             static::assertCount(3, $row);
         }
     }
@@ -94,7 +96,7 @@ final class ExcelExtractorTest extends FlowTestCase
         static::assertCount(7, $rows);
 
         foreach ($rows as $row) {
-            static::assertSame(['id', 'name', 'email'], \array_keys($row));
+            static::assertSame(['id', 'name', 'email'], array_keys($row));
             static::assertCount(3, $row);
         }
     }
@@ -111,7 +113,7 @@ final class ExcelExtractorTest extends FlowTestCase
         static::assertCount(7, $rows);
 
         foreach ($rows as $row) {
-            static::assertSame(['e00', 'e01', 'e02'], \array_keys($row));
+            static::assertSame(['e00', 'e01', 'e02'], array_keys($row));
             static::assertCount(3, $row);
         }
     }
@@ -124,7 +126,7 @@ final class ExcelExtractorTest extends FlowTestCase
         static::assertCount(5, $rows);
 
         foreach ($rows as $row) {
-            static::assertSame(['id', 'name', 'email'], \array_keys($row));
+            static::assertSame(['id', 'name', 'email'], array_keys($row));
             static::assertCount(3, $row);
         }
     }
@@ -146,7 +148,7 @@ final class ExcelExtractorTest extends FlowTestCase
         static::assertCount(11, $rows);
 
         foreach ($rows as $row) {
-            static::assertSame(['e00', 'e01', 'e02'], \array_keys($row));
+            static::assertSame(['e00', 'e01', 'e02'], array_keys($row));
             static::assertCount(3, $row);
         }
     }
@@ -159,7 +161,7 @@ final class ExcelExtractorTest extends FlowTestCase
         static::assertCount(5, $rows);
 
         foreach ($rows as $row) {
-            static::assertSame(['id', 'name', 'email'], \array_keys($row));
+            static::assertSame(['id', 'name', 'email'], array_keys($row));
             static::assertCount(3, $row);
         }
     }
@@ -191,7 +193,7 @@ final class ExcelExtractorTest extends FlowTestCase
             ->toArray();
 
         static::assertCount(10, $rows);
-        static::assertSame(['id', 'name', 'email'], \array_keys($rows[0]));
+        static::assertSame(['id', 'name', 'email'], array_keys($rows[0]));
     }
 
     public function test_extract_with_explicit_xlsx_reader(): void
@@ -202,7 +204,7 @@ final class ExcelExtractorTest extends FlowTestCase
             ->toArray();
 
         static::assertCount(10, $rows);
-        static::assertSame(['id', 'name', 'email'], \array_keys($rows[0]));
+        static::assertSame(['id', 'name', 'email'], array_keys($rows[0]));
     }
 
     public function test_extract_with_unknown_file(): void
@@ -253,7 +255,7 @@ final class ExcelExtractorTest extends FlowTestCase
         df()->read(from_excel(__DIR__ . '/../Fixtures/partitioned/group=*/*.xlsx'))->run(function (Rows $rows): void {
             $this->assertSame(
                 ['group'],
-                \array_map(static fn(Partition $p) => $p->name, $rows->partitions()->toArray()),
+                array_map(static fn(Partition $p) => $p->name, $rows->partitions()->toArray()),
             );
         });
     }

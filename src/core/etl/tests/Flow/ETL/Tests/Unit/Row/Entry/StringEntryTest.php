@@ -7,14 +7,17 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\string_entry;
 use function Flow\Types\DSL\type_instance_of;
+use function serialize;
+use function unserialize;
 
 final class StringEntryTest extends FlowTestCase
 {
-    public static function is_equal_data_provider(): \Generator
+    public static function is_equal_data_provider(): Generator
     {
         yield 'equal names and values' => [true, string_entry('name', 'value'), string_entry('name', 'value')];
         yield 'different names and values' => [
@@ -111,8 +114,8 @@ final class StringEntryTest extends FlowTestCase
 
             TXT);
 
-        $serialized = \serialize($string);
-        $unserialized = type_instance_of(StringEntry::class)->assert(\unserialize($serialized));
+        $serialized = serialize($string);
+        $unserialized = type_instance_of(StringEntry::class)->assert(unserialize($serialized));
 
         static::assertTrue($string->isEqual($unserialized));
     }

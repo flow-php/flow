@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema;
 
+use function array_values;
+
 final readonly class ChainCatalogProvider implements CatalogProvider
 {
     /**
@@ -13,7 +15,7 @@ final readonly class ChainCatalogProvider implements CatalogProvider
 
     public function __construct(CatalogProvider ...$providers)
     {
-        $this->providers = \array_values($providers);
+        $this->providers = array_values($providers);
     }
 
     public function get(): Catalog

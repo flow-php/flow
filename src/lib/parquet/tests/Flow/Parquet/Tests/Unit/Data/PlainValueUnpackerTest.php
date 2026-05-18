@@ -12,18 +12,22 @@ use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use PHPUnit\Framework\TestCase;
 
+use function chr;
 use function Flow\Parquet\Binary\encode_decimal;
 use function Flow\Parquet\Binary\encode_f32;
 use function Flow\Parquet\Binary\encode_f64;
 use function Flow\Parquet\Binary\encode_i32;
 use function Flow\Parquet\Binary\encode_i64;
 use function Flow\Parquet\Binary\encode_u32;
+use function hex2bin;
+use function str_repeat;
+use function strlen;
 
 final class PlainValueUnpackerTest extends TestCase
 {
     public function test_unpack_boolean(): void
     {
-        $buffer = \chr(0b00000010);
+        $buffer = chr(0b00000010);
         $reader = new BinaryBufferReader($buffer);
         $column = FlatColumn::boolean('test_column');
 
@@ -38,9 +42,9 @@ final class PlainValueUnpackerTest extends TestCase
         $string1 = 'abc';
         $string2 = 'def';
         $buffer =
-            encode_u32($byteOrder, [\strlen($string1)])
+            encode_u32($byteOrder, [strlen($string1)])
             . $string1
-            . encode_u32($byteOrder, [\strlen($string2)])
+            . encode_u32($byteOrder, [strlen($string2)])
             . $string2;
         $reader = new BinaryBufferReader($buffer);
         $column = new FlatColumn('test_column', PhysicalType::BYTE_ARRAY);
@@ -61,9 +65,9 @@ final class PlainValueUnpackerTest extends TestCase
         $string1 = 'string1';
         $string2 = 'string2';
         $buffer =
-            encode_u32($byteOrder, [\strlen($string1)])
+            encode_u32($byteOrder, [strlen($string1)])
             . $string1
-            . encode_u32($byteOrder, [\strlen($string2)])
+            . encode_u32($byteOrder, [strlen($string2)])
             . $string2;
         $reader = new BinaryBufferReader($buffer);
         $column = new FlatColumn('test_column', PhysicalType::BYTE_ARRAY);
@@ -78,8 +82,7 @@ final class PlainValueUnpackerTest extends TestCase
         $byteOrder = ByteOrder::LITTLE_ENDIAN;
         $json1 = '{"key": "value"}';
         $json2 = '{"foo": "bar"}';
-        $buffer =
-            encode_u32($byteOrder, [\strlen($json1)]) . $json1 . encode_u32($byteOrder, [\strlen($json2)]) . $json2;
+        $buffer = encode_u32($byteOrder, [strlen($json1)]) . $json1 . encode_u32($byteOrder, [strlen($json2)]) . $json2;
         $reader = new BinaryBufferReader($buffer);
         $column = FlatColumn::json('test_column');
 
@@ -94,9 +97,9 @@ final class PlainValueUnpackerTest extends TestCase
         $string1 = 'hello';
         $string2 = 'world';
         $buffer =
-            encode_u32($byteOrder, [\strlen($string1)])
+            encode_u32($byteOrder, [strlen($string1)])
             . $string1
-            . encode_u32($byteOrder, [\strlen($string2)])
+            . encode_u32($byteOrder, [strlen($string2)])
             . $string2;
         $reader = new BinaryBufferReader($buffer);
         $column = FlatColumn::string('test_column');
@@ -111,8 +114,7 @@ final class PlainValueUnpackerTest extends TestCase
         $byteOrder = ByteOrder::LITTLE_ENDIAN;
         $uuid1 = 'uuid1';
         $uuid2 = 'uuid2';
-        $buffer =
-            encode_u32($byteOrder, [\strlen($uuid1)]) . $uuid1 . encode_u32($byteOrder, [\strlen($uuid2)]) . $uuid2;
+        $buffer = encode_u32($byteOrder, [strlen($uuid1)]) . $uuid1 . encode_u32($byteOrder, [strlen($uuid2)]) . $uuid2;
         $reader = new BinaryBufferReader($buffer);
         $column = new FlatColumn('test_column', PhysicalType::BYTE_ARRAY, null, LogicalType::uuid());
 
@@ -150,8 +152,8 @@ final class PlainValueUnpackerTest extends TestCase
 
     public function test_unpack_fixed_len_byte_array_with_null_logical_type_returns_raw_string(): void
     {
-        $data1 = \str_repeat('A', 16);
-        $data2 = \str_repeat('B', 16);
+        $data1 = str_repeat('A', 16);
+        $data2 = str_repeat('B', 16);
         $buffer = $data1 . $data2;
         $reader = new BinaryBufferReader($buffer);
         $column = new FlatColumn('test_column', PhysicalType::FIXED_LEN_BYTE_ARRAY, null, null, null, null, null, 16);
@@ -168,8 +170,8 @@ final class PlainValueUnpackerTest extends TestCase
 
     public function test_unpack_fixed_len_byte_array_with_unsupported_logical_type_returns_raw_string(): void
     {
-        $data1 = \str_repeat('X', 16);
-        $data2 = \str_repeat('Y', 16);
+        $data1 = str_repeat('X', 16);
+        $data2 = str_repeat('Y', 16);
         $buffer = $data1 . $data2;
         $reader = new BinaryBufferReader($buffer);
         $column = new FlatColumn(
@@ -195,8 +197,8 @@ final class PlainValueUnpackerTest extends TestCase
 
     public function test_unpack_fixed_len_byte_array_with_uuid_logical_type(): void
     {
-        $uuid1 = (string) \hex2bin('550e8400e29b41d4a716446655440000');
-        $uuid2 = (string) \hex2bin('6ba7b8109dad11d180b400c04fd430c8');
+        $uuid1 = (string) hex2bin('550e8400e29b41d4a716446655440000');
+        $uuid2 = (string) hex2bin('6ba7b8109dad11d180b400c04fd430c8');
         $buffer = $uuid1 . $uuid2;
         $reader = new BinaryBufferReader($buffer);
         $column = FlatColumn::uuid('test_column');

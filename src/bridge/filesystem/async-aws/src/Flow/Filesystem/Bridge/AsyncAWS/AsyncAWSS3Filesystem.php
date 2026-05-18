@@ -17,6 +17,12 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\SourceStream;
+use Generator;
+
+use function Flow\Filesystem\DSL\path;
+use function ltrim;
+use function str_ends_with;
+use function trim;
 
 final readonly class AsyncAWSS3Filesystem implements Filesystem
 {
@@ -53,7 +59,7 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
         return $this->options->tmpDir();
     }
 
-    public function list(Path $path, Filter $pathFilter = new KeepAll()): \Generator
+    public function list(Path $path, Filter $pathFilter = new KeepAll()): Generator
     {
         $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
 
@@ -61,12 +67,12 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
             !$path->isPattern()
             && $this->options->fileFastPath()
             && $path->extension() !== false
-            && !\str_ends_with($path->path(), DIRECTORY_SEPARATOR)
+            && !str_ends_with($path->path(), DIRECTORY_SEPARATOR)
         ) {
             try {
                 $headObject = $this->s3Client->headObject([
                     'Bucket' => $this->bucket,
-                    'Key' => \ltrim($path->path(), DIRECTORY_SEPARATOR),
+                    'Key' => ltrim($path->path(), DIRECTORY_SEPARATOR),
                 ]);
                 $headObject->resolve();
 
@@ -88,9 +94,9 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
         }
 
         if ($path->isPattern()) {
-            $prefix = \ltrim($path->staticPart()->path(), DIRECTORY_SEPARATOR);
+            $prefix = ltrim($path->staticPart()->path(), DIRECTORY_SEPARATOR);
         } else {
-            $prefix = \ltrim($path->path(), DIRECTORY_SEPARATOR);
+            $prefix = ltrim($path->path(), DIRECTORY_SEPARATOR);
         }
 
         $continuationToken = null;
@@ -103,9 +109,9 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
             ]);
 
             foreach ($result->getContents() as $object) {
-                $objectPath = \Flow\Filesystem\DSL\path(
+                $objectPath = path(
                     $path->protocol() . '://' . DIRECTORY_SEPARATOR
-                        . \ltrim((string) $object->getKey(), DIRECTORY_SEPARATOR),
+                        . ltrim((string) $object->getKey(), DIRECTORY_SEPARATOR),
                     $path->options(),
                 );
                 $objectFileStatus = new FileStatus(
@@ -194,10 +200,7 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
              * entire path, like for example aws-s3://nested/folder we need to first add / at the end, to accidentally
              * not delete files that would also match the prefix, like: aws-s3://nested/folder_but_file.txt.
              */
-            $folderPath = \Flow\Filesystem\DSL\path(
-                \trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR,
-                $path->options(),
-            );
+            $folderPath = path(trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $path->options());
 
             $deletedCount = 0;
 
@@ -247,10 +250,7 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
                  * entire path, like for example aws-s3://nested/folder we need to first add / at the end, to accidentally
                  * not match files that would also match the prefix, like: aws-s3://nested/folder_but_file.txt.
                  */
-                $folderPath = \Flow\Filesystem\DSL\path(
-                    trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR,
-                    $path->options(),
-                );
+                $folderPath = path(trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $path->options());
 
                 foreach ($this->list($folderPath) as $fileStatus) {
                     return new FileStatus($folderPath, false);

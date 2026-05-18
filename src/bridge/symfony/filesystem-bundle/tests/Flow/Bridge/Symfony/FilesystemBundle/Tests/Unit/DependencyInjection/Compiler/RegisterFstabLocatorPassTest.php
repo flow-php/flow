@@ -11,6 +11,8 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 
+use function array_keys;
+
 final class RegisterFstabLocatorPassTest extends TestCase
 {
     public function test_default_fstab_parameter_is_empty_string_when_null(): void
@@ -69,7 +71,7 @@ final class RegisterFstabLocatorPassTest extends TestCase
 
         /** @var array<string, Reference> $refs */
         $refs = $definition->getArgument(0);
-        static::assertSame(['default', 'secondary'], \array_keys($refs));
+        static::assertSame(['default', 'secondary'], array_keys($refs));
         static::assertSame('.flow.filesystem.fstab.default', (string) $refs['default']);
         static::assertSame('.flow.filesystem.fstab.secondary', (string) $refs['secondary']);
     }

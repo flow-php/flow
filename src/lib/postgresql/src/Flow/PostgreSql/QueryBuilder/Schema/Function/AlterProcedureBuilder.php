@@ -16,6 +16,8 @@ use Flow\PostgreSql\Protobuf\AST\RenameStmt;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidBuilderStateException;
 
+use function array_values;
+
 final readonly class AlterProcedureBuilder implements AlterProcedureArgsStep, AlterProcedureFinalStep
 {
     use AstToSql;
@@ -38,7 +40,7 @@ final readonly class AlterProcedureBuilder implements AlterProcedureArgsStep, Al
 
     public function arguments(FunctionArgument ...$args): AlterProcedureFinalStep
     {
-        return new self($this->name, \array_values($args), $this->actions, $this->renameTo);
+        return new self($this->name, array_values($args), $this->actions, $this->renameTo);
     }
 
     public function renameTo(string $newName): AlterProcedureFinalStep

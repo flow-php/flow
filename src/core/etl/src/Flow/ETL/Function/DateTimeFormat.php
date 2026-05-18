@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use DateTimeInterface;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -11,13 +12,13 @@ use Flow\ETL\Row;
 final class DateTimeFormat extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction|\DateTimeInterface $dateTime,
+        private readonly ScalarFunction|DateTimeInterface $dateTime,
         private readonly ScalarFunction|string $format,
     ) {}
 
     public function eval(Row $row, FlowContext $context): mixed
     {
-        $value = (new Parameter($this->dateTime))->asInstanceOf($row, $context, \DateTimeInterface::class);
+        $value = (new Parameter($this->dateTime))->asInstanceOf($row, $context, DateTimeInterface::class);
         $format = (new Parameter($this->format))->asString($row, $context);
 
         if ($value === null || $format === null) {

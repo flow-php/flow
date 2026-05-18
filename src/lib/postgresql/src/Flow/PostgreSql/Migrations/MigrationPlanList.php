@@ -4,10 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Migrations;
 
+use ArrayIterator;
+use Countable;
+use IteratorAggregate;
+
+use function array_values;
+use function count;
+
 /**
  * @implements \IteratorAggregate<int, MigrationPlan>
  */
-final readonly class MigrationPlanList implements \Countable, \IteratorAggregate
+final readonly class MigrationPlanList implements Countable, IteratorAggregate
 {
     /**
      * @var list<MigrationPlan>
@@ -16,20 +23,20 @@ final readonly class MigrationPlanList implements \Countable, \IteratorAggregate
 
     public function __construct(MigrationPlan ...$plans)
     {
-        $this->plans = \array_values($plans);
+        $this->plans = array_values($plans);
     }
 
     public function count(): int
     {
-        return \count($this->plans);
+        return count($this->plans);
     }
 
     /**
      * @return \ArrayIterator<int, MigrationPlan>
      */
-    public function getIterator(): \ArrayIterator
+    public function getIterator(): ArrayIterator
     {
-        return new \ArrayIterator($this->plans);
+        return new ArrayIterator($this->plans);
     }
 
     public function isEmpty(): bool

@@ -4,9 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service;
 
+use FilesystemIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RuntimeException;
 use Symfony\Component\Yaml\Yaml;
 
+use function array_diff;
+use function array_keys;
+use function array_values;
+use function asort;
+use function count;
+use function current;
+use function file_exists;
+use function file_get_contents;
 use function Flow\Types\DSL\type_string;
+use function is_dir;
+use function is_file;
+use function realpath;
+use function reset;
+use function scandir;
+use function sprintf;
+use function str_replace;
 
 final readonly class Examples
 {
@@ -17,37 +36,37 @@ final readonly class Examples
     public function code(string $topic, string $example, ?string $option = null): string
     {
         if ($option !== null) {
-            $path = \sprintf('%s/topics/%s/%s/%s/code.php', \realpath($this->examplesPath), $topic, $example, $option);
+            $path = sprintf('%s/topics/%s/%s/%s/code.php', realpath($this->examplesPath), $topic, $example, $option);
         } elseif ($this->hasOptions($topic, $example)) {
             $options = $this->options($topic, $example);
 
-            if (0 === \count($options)) {
-                throw new \RuntimeException(\sprintf(
+            if (0 === count($options)) {
+                throw new RuntimeException(sprintf(
                     'Example "%s" in topic "%s" has no valid options.',
                     $example,
                     $topic,
                 ));
             }
-            $firstOption = \current($options);
-            $path = \sprintf(
+            $firstOption = current($options);
+            $path = sprintf(
                 '%s/topics/%s/%s/%s/code.php',
-                \realpath($this->examplesPath),
+                realpath($this->examplesPath),
                 $topic,
                 $example,
                 $firstOption,
             );
         } else {
-            $path = \sprintf('%s/topics/%s/%s/code.php', \realpath($this->examplesPath), $topic, $example);
+            $path = sprintf('%s/topics/%s/%s/code.php', realpath($this->examplesPath), $topic, $example);
         }
 
-        if (false === \file_exists($path)) {
-            throw new \RuntimeException(\sprintf(
+        if (false === file_exists($path)) {
+            throw new RuntimeException(sprintf(
                 'Code example doesn\'t exists, it should be located in path: "%s".',
                 $path,
             ));
         }
 
-        return \file_get_contents($path);
+        return file_get_contents($path);
     }
 
     /**
@@ -58,7 +77,7 @@ final readonly class Examples
         $basePath = $this->examplePath($topic, $example, $option);
         $filePath = $basePath . '/' . $relativePath;
 
-        if (!\file_exists($filePath) || !\is_file($filePath)) {
+        if (!file_exists($filePath) || !is_file($filePath)) {
             return null;
         }
 
@@ -75,19 +94,19 @@ final readonly class Examples
         $basePath = $this->examplePath($topic, $example, $option);
         $inputDir = $basePath . '/input';
 
-        if (!\is_dir($inputDir)) {
+        if (!is_dir($inputDir)) {
             return [];
         }
 
         $files = [];
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($inputDir, \FilesystemIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::LEAVES_ONLY,
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($inputDir, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::LEAVES_ONLY,
         );
 
         foreach ($iterator as $file) {
             if ($file->isFile()) {
-                $virtualPath = \str_replace($basePath . '/', '', $file->getPathname());
+                $virtualPath = str_replace($basePath . '/', '', $file->getPathname());
                 $files[$virtualPath] = $virtualPath;
             }
         }
@@ -99,33 +118,28 @@ final readonly class Examples
     {
         // For 2-level examples (no options), return directly without merge logic
         if (!$this->hasOptions($topic, $example)) {
-            $path = \sprintf('%s/topics/%s/%s/description.md', \realpath($this->examplesPath), $topic, $example);
+            $path = sprintf('%s/topics/%s/%s/description.md', realpath($this->examplesPath), $topic, $example);
 
-            return \file_exists($path) ? \file_get_contents($path) : null;
+            return file_exists($path) ? file_get_contents($path) : null;
         }
 
         // For 3-level examples, check for example-level description
-        $exampleLevelPath = \sprintf(
-            '%s/topics/%s/%s/description.md',
-            \realpath($this->examplesPath),
-            $topic,
-            $example,
-        );
-        $exampleDescription = \file_exists($exampleLevelPath) ? \file_get_contents($exampleLevelPath) : null;
+        $exampleLevelPath = sprintf('%s/topics/%s/%s/description.md', realpath($this->examplesPath), $topic, $example);
+        $exampleDescription = file_exists($exampleLevelPath) ? file_get_contents($exampleLevelPath) : null;
 
         // Get option-level description
         if (null === $option) {
             $option = $this->firstOption($topic, $example);
         }
 
-        $optionPath = \sprintf(
+        $optionPath = sprintf(
             '%s/topics/%s/%s/%s/description.md',
-            \realpath($this->examplesPath),
+            realpath($this->examplesPath),
             $topic,
             $example,
             $option,
         );
-        $optionDescription = \file_exists($optionPath) ? \file_get_contents($optionPath) : null;
+        $optionDescription = file_exists($optionPath) ? file_get_contents($optionPath) : null;
 
         // Merge descriptions with horizontal rule separator
         if (null !== $exampleDescription && null !== $optionDescription) {
@@ -138,9 +152,9 @@ final readonly class Examples
     public function documentation(string $topic, string $example, ?string $option = null): ?string
     {
         if ($option !== null) {
-            $path = \sprintf(
+            $path = sprintf(
                 '%s/topics/%s/%s/%s/documentation.md',
-                \realpath($this->examplesPath),
+                realpath($this->examplesPath),
                 $topic,
                 $example,
                 $option,
@@ -148,26 +162,26 @@ final readonly class Examples
         } elseif ($this->hasOptions($topic, $example)) {
             $options = $this->options($topic, $example);
 
-            if (0 === \count($options)) {
+            if (0 === count($options)) {
                 return null;
             }
-            $firstOption = \current($options);
-            $path = \sprintf(
+            $firstOption = current($options);
+            $path = sprintf(
                 '%s/topics/%s/%s/%s/documentation.md',
-                \realpath($this->examplesPath),
+                realpath($this->examplesPath),
                 $topic,
                 $example,
                 $firstOption,
             );
         } else {
-            $path = \sprintf('%s/topics/%s/%s/documentation.md', \realpath($this->examplesPath), $topic, $example);
+            $path = sprintf('%s/topics/%s/%s/documentation.md', realpath($this->examplesPath), $topic, $example);
         }
 
-        if (false === \file_exists($path)) {
+        if (false === file_exists($path)) {
             return null;
         }
 
-        return \file_get_contents($path);
+        return file_get_contents($path);
     }
 
     /**
@@ -175,20 +189,20 @@ final readonly class Examples
      */
     public function examples(string $topic): array
     {
-        $path = \sprintf('%s/topics/%s', \realpath($this->examplesPath), $topic);
+        $path = sprintf('%s/topics/%s', realpath($this->examplesPath), $topic);
 
-        if (false === \file_exists($path)) {
-            throw new \RuntimeException(\sprintf(
+        if (false === file_exists($path)) {
+            throw new RuntimeException(sprintf(
                 'Topic "%s" doesn\'t exists, it should be located in path: "%s".',
                 $topic,
                 $path,
             ));
         }
 
-        $examples = \array_values(\array_diff(\scandir($path), ['..', '.', '.gitignore', '_meta.yaml']));
+        $examples = array_values(array_diff(scandir($path), ['..', '.', '.gitignore', '_meta.yaml']));
 
-        if (0 === \count($examples)) {
-            throw new \RuntimeException(\sprintf(
+        if (0 === count($examples)) {
+            throw new RuntimeException(sprintf(
                 'Topic "%s" doesn\'t have any example, there should be at least one example in path "%s".',
                 $topic,
                 $path,
@@ -198,21 +212,21 @@ final readonly class Examples
         $priorities = [];
 
         foreach ($examples as $example) {
-            $meta = $this->readMeta(\sprintf('%s/topics/%s/%s', \realpath($this->examplesPath), $topic, $example));
+            $meta = $this->readMeta(sprintf('%s/topics/%s/%s', realpath($this->examplesPath), $topic, $example));
             $priorities[$example] = $meta['priority'];
         }
 
-        \asort($priorities);
+        asort($priorities);
 
-        foreach (\array_keys($priorities) as $example) {
-            $meta = $this->readMeta(\sprintf('%s/topics/%s/%s', \realpath($this->examplesPath), $topic, $example));
+        foreach (array_keys($priorities) as $example) {
+            $meta = $this->readMeta(sprintf('%s/topics/%s/%s', realpath($this->examplesPath), $topic, $example));
 
             if ($meta['hidden']) {
                 unset($priorities[$example]);
             }
         }
 
-        return \array_keys($priorities);
+        return array_keys($priorities);
     }
 
     /**
@@ -232,8 +246,8 @@ final readonly class Examples
             foreach ($examples as $nextExample) {
                 $options = $this->options($nextTopic, $nextExample);
 
-                if (\count($options) > 0) {
-                    $firstOption = type_string()->assert(\reset($options));
+                if (count($options) > 0) {
+                    $firstOption = type_string()->assert(reset($options));
                     $navigation[$nextExample] = [
                         'name' => 'example_option',
                         'arguments' => ['topic' => $nextTopic, 'example' => $nextExample, 'option' => $firstOption],
@@ -254,14 +268,14 @@ final readonly class Examples
     {
         $examples = $this->examples($topic);
 
-        return type_string()->assert(\reset($examples));
+        return type_string()->assert(reset($examples));
     }
 
     public function firstOption(string $topic, string $example): ?string
     {
         $options = $this->options($topic, $example);
 
-        return \count($options) > 0 ? type_string()->assert(\reset($options)) : null;
+        return count($options) > 0 ? type_string()->assert(reset($options)) : null;
     }
 
     /**
@@ -272,10 +286,10 @@ final readonly class Examples
      */
     public function options(string $topic, string $example): array
     {
-        $path = \sprintf('%s/topics/%s/%s', \realpath($this->examplesPath), $topic, $example);
+        $path = sprintf('%s/topics/%s/%s', realpath($this->examplesPath), $topic, $example);
 
-        if (false === \file_exists($path)) {
-            throw new \RuntimeException(\sprintf(
+        if (false === file_exists($path)) {
+            throw new RuntimeException(sprintf(
                 'Example "%s" in topic "%s" doesn\'t exist, it should be located in path: "%s".',
                 $example,
                 $topic,
@@ -283,43 +297,43 @@ final readonly class Examples
             ));
         }
 
-        if (\file_exists(\sprintf('%s/code.php', $path))) {
+        if (file_exists(sprintf('%s/code.php', $path))) {
             return [];
         }
 
-        $items = \array_values(\array_diff(\scandir($path), ['..', '.', '.gitignore', '_meta.yaml']));
+        $items = array_values(array_diff(scandir($path), ['..', '.', '.gitignore', '_meta.yaml']));
         $options = [];
 
         foreach ($items as $item) {
-            $itemPath = \sprintf('%s/%s', $path, $item);
+            $itemPath = sprintf('%s/%s', $path, $item);
 
-            if (\is_dir($itemPath) && \file_exists(\sprintf('%s/code.php', $itemPath))) {
+            if (is_dir($itemPath) && file_exists(sprintf('%s/code.php', $itemPath))) {
                 $options[] = $item;
             }
         }
 
-        if (0 === \count($options)) {
+        if (0 === count($options)) {
             return [];
         }
 
         $priorities = [];
 
         foreach ($options as $option) {
-            $meta = $this->readMeta(\sprintf('%s/%s', $path, $option));
+            $meta = $this->readMeta(sprintf('%s/%s', $path, $option));
             $priorities[$option] = $meta['priority'];
         }
 
-        \asort($priorities);
+        asort($priorities);
 
-        foreach (\array_keys($priorities) as $option) {
-            $meta = $this->readMeta(\sprintf('%s/%s', $path, $option));
+        foreach (array_keys($priorities) as $option) {
+            $meta = $this->readMeta(sprintf('%s/%s', $path, $option));
 
             if ($meta['hidden']) {
                 unset($priorities[$option]);
             }
         }
 
-        return \array_keys($priorities);
+        return array_keys($priorities);
     }
 
     /**
@@ -385,19 +399,19 @@ final readonly class Examples
      */
     public function topics(): array
     {
-        $path = \sprintf('%s/topics', \realpath($this->examplesPath));
+        $path = sprintf('%s/topics', realpath($this->examplesPath));
 
-        if (false === \file_exists($path)) {
-            throw new \RuntimeException(\sprintf(
+        if (false === file_exists($path)) {
+            throw new RuntimeException(sprintf(
                 'Topics root directory doesn\'t exists, it should be located in path: "%s".',
                 $path,
             ));
         }
 
-        $topics = \array_values(\array_diff(\scandir($path), ['..', '.']));
+        $topics = array_values(array_diff(scandir($path), ['..', '.']));
 
-        if (0 === \count($topics)) {
-            throw new \RuntimeException(\sprintf(
+        if (0 === count($topics)) {
+            throw new RuntimeException(sprintf(
                 'Topics root directory doesn\'t have any topic, there should be at least one topic in path "%s".',
                 $path,
             ));
@@ -406,21 +420,21 @@ final readonly class Examples
         $priorities = [];
 
         foreach ($topics as $topic) {
-            $meta = $this->readMeta(\sprintf('%s/topics/%s', \realpath($this->examplesPath), $topic));
+            $meta = $this->readMeta(sprintf('%s/topics/%s', realpath($this->examplesPath), $topic));
             $priorities[$topic] = $meta['priority'];
         }
 
-        \asort($priorities);
+        asort($priorities);
 
-        foreach (\array_keys($priorities) as $topic) {
-            $meta = $this->readMeta(\sprintf('%s/topics/%s', \realpath($this->examplesPath), $topic));
+        foreach (array_keys($priorities) as $topic) {
+            $meta = $this->readMeta(sprintf('%s/topics/%s', realpath($this->examplesPath), $topic));
 
             if ($meta['hidden']) {
                 unset($priorities[$topic]);
             }
         }
 
-        return \array_keys($priorities);
+        return array_keys($priorities);
     }
 
     /**
@@ -432,12 +446,12 @@ final readonly class Examples
 
         foreach ($this->topics() as $topic) {
             $examples = $this->examples($topic);
-            $firstExample = type_string()->assert(\reset($examples));
+            $firstExample = type_string()->assert(reset($examples));
 
             $options = $this->options($topic, $firstExample);
 
-            if (\count($options) > 0) {
-                $firstOption = type_string()->assert(\reset($options));
+            if (count($options) > 0) {
+                $firstOption = type_string()->assert(reset($options));
                 $navigation[$topic] = [
                     'name' => 'example_option',
                     'arguments' => ['topic' => $topic, 'example' => $firstExample, 'option' => $firstOption],
@@ -456,51 +470,51 @@ final readonly class Examples
     private function examplePath(string $topic, string $example, ?string $option = null): string
     {
         if ($option !== null) {
-            return \sprintf('%s/topics/%s/%s/%s', \realpath($this->examplesPath), $topic, $example, $option);
+            return sprintf('%s/topics/%s/%s/%s', realpath($this->examplesPath), $topic, $example, $option);
         }
 
         if ($this->hasOptions($topic, $example)) {
             $options = $this->options($topic, $example);
 
-            if (0 === \count($options)) {
-                throw new \RuntimeException(\sprintf(
+            if (0 === count($options)) {
+                throw new RuntimeException(sprintf(
                     'Example "%s" in topic "%s" has no valid options.',
                     $example,
                     $topic,
                 ));
             }
 
-            $firstOption = \current($options);
+            $firstOption = current($options);
 
-            return \sprintf('%s/topics/%s/%s/%s', \realpath($this->examplesPath), $topic, $example, $firstOption);
+            return sprintf('%s/topics/%s/%s/%s', realpath($this->examplesPath), $topic, $example, $firstOption);
         }
 
-        return \sprintf('%s/topics/%s/%s', \realpath($this->examplesPath), $topic, $example);
+        return sprintf('%s/topics/%s/%s', realpath($this->examplesPath), $topic, $example);
     }
 
     private function hasOptions(string $topic, string $example): bool
     {
-        $path = \sprintf('%s/topics/%s/%s', \realpath($this->examplesPath), $topic, $example);
+        $path = sprintf('%s/topics/%s/%s', realpath($this->examplesPath), $topic, $example);
 
-        if (\file_exists(\sprintf('%s/code.php', $path))) {
+        if (file_exists(sprintf('%s/code.php', $path))) {
             return false;
         }
 
-        if (!\file_exists($path)) {
+        if (!file_exists($path)) {
             return false;
         }
 
-        $items = \scandir($path);
+        $items = scandir($path);
 
-        if (\count($items)) {
+        if (count($items)) {
             foreach ($items as $item) {
                 if ($item === '.' || $item === '..') {
                     continue;
                 }
 
-                $itemPath = \sprintf('%s/%s', $path, $item);
+                $itemPath = sprintf('%s/%s', $path, $item);
 
-                if (\is_dir($itemPath) && \file_exists(\sprintf('%s/code.php', $itemPath))) {
+                if (is_dir($itemPath) && file_exists(sprintf('%s/code.php', $itemPath))) {
                     return true;
                 }
             }
@@ -518,11 +532,11 @@ final readonly class Examples
     {
         $metaPath = $path . '/_meta.yaml';
 
-        if (!\file_exists($metaPath)) {
+        if (!file_exists($metaPath)) {
             return ['priority' => 99, 'hidden' => false];
         }
 
-        $content = \file_get_contents($metaPath);
+        $content = file_get_contents($metaPath);
         $meta = Yaml::parse($content);
 
         return [

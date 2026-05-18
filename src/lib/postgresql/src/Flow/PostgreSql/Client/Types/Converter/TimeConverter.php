@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Types\Converter;
 
+use DateInterval;
+use DateTimeInterface;
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\ValueConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
+
+use function is_string;
+use function sprintf;
 
 final class TimeConverter implements ValueConverter
 {
@@ -24,15 +29,15 @@ final class TimeConverter implements ValueConverter
             return null;
         }
 
-        if ($value instanceof \DateTimeInterface) {
+        if ($value instanceof DateTimeInterface) {
             return $value->format('H:i:s.u');
         }
 
-        if ($value instanceof \DateInterval) {
-            return \sprintf('%02d:%02d:%02d', $value->h, $value->i, $value->s);
+        if ($value instanceof DateInterval) {
+            return sprintf('%02d:%02d:%02d', $value->h, $value->i, $value->s);
         }
 
-        if (\is_string($value)) {
+        if (is_string($value)) {
             return $value;
         }
 

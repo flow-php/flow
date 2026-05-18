@@ -12,6 +12,8 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockFactory;
 
+use function Flow\Filesystem\DSL\path;
+
 final class Options
 {
     private BlockFactory $blockFactory;
@@ -35,7 +37,7 @@ final class Options
     public function __construct()
     {
         $this->blockFactory = new NativeLocalFileBlocksFactory();
-        $this->tmpDir = \Flow\Filesystem\DSL\path('azure-blob://_$azure_flow_tmp$/');
+        $this->tmpDir = path('azure-blob://_$azure_flow_tmp$/');
     }
 
     public function blockFactory(): BlockFactory

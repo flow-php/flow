@@ -15,6 +15,8 @@ use Flow\Parquet\ParquetFile\Page\Header\Type;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
+use function fread;
+
 final readonly class PageReader
 {
     public function __construct(
@@ -111,7 +113,7 @@ final readonly class PageReader
             return '';
         }
 
-        $bytes = \fread($stream, $length);
+        $bytes = fread($stream, $length);
 
         if ($bytes === false) {
             throw new RuntimeException("Failed to read {$length} bytes from page stream");

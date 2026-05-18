@@ -19,6 +19,7 @@ use Flow\PostgreSql\Migrations\Tests\Double\SpyMigration;
 use Flow\PostgreSql\Migrations\Version;
 use Flow\PostgreSql\Schema\Catalog;
 use PHPUnit\Framework\TestCase;
+use Throwable;
 
 use function Flow\Types\DSL\type_instance_of;
 
@@ -71,7 +72,7 @@ final class MigratorTest extends TestCase
 
         try {
             $migrator->migrate(allOrNothing: true);
-        } catch (\Throwable) {
+        } catch (Throwable) {
         }
 
         static::assertCount(0, $this->store->executedMigrations());

@@ -9,6 +9,10 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Function\Trim\Type;
 use Flow\ETL\Row;
 
+use function ltrim;
+use function rtrim;
+use function trim;
+
 final class Trim extends ScalarFunctionChain
 {
     public function __construct(
@@ -36,9 +40,9 @@ final class Trim extends ScalarFunctionChain
         }
 
         return match ($type) {
-            Type::LEFT => \ltrim($value, $characters),
-            Type::RIGHT => \rtrim($value, $characters),
-            Type::BOTH => \trim($value, $characters),
+            Type::LEFT => ltrim($value, $characters),
+            Type::RIGHT => rtrim($value, $characters),
+            Type::BOTH => trim($value, $characters),
         };
     }
 }

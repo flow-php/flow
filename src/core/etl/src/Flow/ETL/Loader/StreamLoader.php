@@ -16,8 +16,11 @@ use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema\SchemaFormatter;
 use Flow\Filesystem\Stream\Mode;
+use Throwable;
 
+use function fclose;
 use function fopen;
+use function fwrite;
 
 final class StreamLoader implements Closure, Loader
 {
@@ -83,7 +86,7 @@ final class StreamLoader implements Closure, Loader
         try {
             $stream = $this->getStream();
 
-            \fwrite($stream, match ($this->output) {
+            fwrite($stream, match ($this->output) {
                 Output::rows_count => 'Rows: ' . $rows->count() . "\n",
                 Output::column_count => 'Columns: ' . $rows->schema()->count() . "\n",
                 Output::rows_and_column_count => 'Rows: '
@@ -106,7 +109,7 @@ final class StreamLoader implements Closure, Loader
             };
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 
             throw $e;
@@ -116,7 +119,7 @@ final class StreamLoader implements Closure, Loader
     private function closeStream(): void
     {
         if ($this->stream !== null) {
-            \fclose($this->stream);
+            fclose($this->stream);
             $this->stream = null;
         }
     }
@@ -132,8 +135,8 @@ final class StreamLoader implements Closure, Loader
 
         try {
             /** @phpstan-ignore-next-line */
-            $this->stream = @\fopen($this->url, $this->mode->value);
-        } catch (\Throwable $e) {
+            $this->stream = @fopen($this->url, $this->mode->value);
+        } catch (Throwable $e) {
             throw new RuntimeException(
                 "Can't open stream for url: {$this->url} in mode: {$this->mode->value}. Reason: " . $e->getMessage(),
                 (int) $e->getCode(),

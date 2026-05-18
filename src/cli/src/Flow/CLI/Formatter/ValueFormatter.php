@@ -4,19 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Formatter;
 
+use DateTimeInterface;
+
+use function is_bool;
+use function is_int;
+use function is_numeric;
+use function number_format;
+
 final readonly class ValueFormatter
 {
     public function __construct(
         private string $nullValue = '-',
     ) {}
 
-    public function format(string|float|int|bool|\DateTimeInterface|null $value): string
+    public function format(string|float|int|bool|DateTimeInterface|null $value): string
     {
-        if ($value instanceof \DateTimeInterface) {
-            return $value->format(\DateTimeInterface::ATOM);
+        if ($value instanceof DateTimeInterface) {
+            return $value->format(DateTimeInterface::ATOM);
         }
 
-        if (\is_bool($value)) {
+        if (is_bool($value)) {
             return $value ? 'true' : 'false';
         }
 
@@ -24,12 +31,12 @@ final readonly class ValueFormatter
             return $this->nullValue;
         }
 
-        if (\is_numeric($value)) {
-            if (\is_int($value)) {
-                return \number_format($value, 0);
+        if (is_numeric($value)) {
+            if (is_int($value)) {
+                return number_format($value, 0);
             }
 
-            return \number_format((float) $value, 2);
+            return number_format((float) $value, 2);
         }
 
         return (string) $value;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
+use DateTimeImmutable;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -21,8 +22,8 @@ final class ModifyDateTimeTest extends FlowTestCase
     {
         $rows = data_frame()
             ->read(from_array([
-                ['id' => 1, 'created_at' => new \DateTimeImmutable('2025-01-01')],
-                ['id' => 2, 'created_at' => new \DateTimeImmutable('2025-02-01')],
+                ['id' => 1, 'created_at' => new DateTimeImmutable('2025-01-01')],
+                ['id' => 2, 'created_at' => new DateTimeImmutable('2025-02-01')],
             ]))
             ->withEntry('expiration_at', ref('created_at')->modifyDateTime('last day of this month'))
             ->fetch()
@@ -32,13 +33,13 @@ final class ModifyDateTimeTest extends FlowTestCase
             [
                 [
                     'id' => 1,
-                    'created_at' => new \DateTimeImmutable('2025-01-01'),
-                    'expiration_at' => new \DateTimeImmutable('2025-01-31'),
+                    'created_at' => new DateTimeImmutable('2025-01-01'),
+                    'expiration_at' => new DateTimeImmutable('2025-01-31'),
                 ],
                 [
                     'id' => 2,
-                    'created_at' => new \DateTimeImmutable('2025-02-01'),
-                    'expiration_at' => new \DateTimeImmutable('2025-02-28'),
+                    'created_at' => new DateTimeImmutable('2025-02-01'),
+                    'expiration_at' => new DateTimeImmutable('2025-02-28'),
                 ],
             ],
             $rows,

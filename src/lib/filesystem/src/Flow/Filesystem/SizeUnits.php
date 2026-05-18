@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem;
 
+use function number_format;
+
 final class SizeUnits
 {
     public const int GiB_SIZE = 1073741824;
@@ -44,7 +46,7 @@ final class SizeUnits
         }
 
         if ($bytes < self::KiB_SIZE) {
-            return \number_format($bytes, 0, $decimalSeparator, $thousandsSeparator) . ' B';
+            return number_format($bytes, 0, $decimalSeparator, $thousandsSeparator) . ' B';
         }
 
         $units = ['KiB', 'MiB', 'GiB', 'TiB', 'PiB'];
@@ -60,7 +62,7 @@ final class SizeUnits
             }
         }
 
-        return \number_format($value, $decimals, $decimalSeparator, $thousandsSeparator) . ' ' . $unit;
+        return number_format($value, $decimals, $decimalSeparator, $thousandsSeparator) . ' ' . $unit;
     }
 
     /**

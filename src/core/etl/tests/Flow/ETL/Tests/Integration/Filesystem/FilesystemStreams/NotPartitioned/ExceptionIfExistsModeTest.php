@@ -6,12 +6,14 @@ namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\NotPartitioned
 
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
+use Override;
 
+use function file_get_contents;
 use function Flow\ETL\DSL\exception_if_exists;
 
 final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
 {
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         parent::tearDown();
@@ -49,7 +51,7 @@ final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
         $streams->closeStreams($file);
 
         static::assertFileExists($file->path());
-        static::assertSame('some content', \file_get_contents($file->path()));
+        static::assertSame('some content', file_get_contents($file->path()));
     }
 
     protected function streams(): FilesystemStreams

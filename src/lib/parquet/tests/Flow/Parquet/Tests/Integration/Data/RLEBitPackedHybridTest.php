@@ -10,7 +10,10 @@ use Flow\Parquet\Data\BitWidth;
 use Flow\Parquet\Data\RLEBitPackedHybrid;
 use PHPUnit\Framework\TestCase;
 
+use function array_fill;
+use function count;
 use function Flow\ETL\DSL\generate_random_int;
+use function json_encode;
 
 final class RLEBitPackedHybridTest extends TestCase
 {
@@ -26,7 +29,7 @@ final class RLEBitPackedHybridTest extends TestCase
         static::assertSame($values, (new RLEBitPackedHybrid())->decodeHybrid(
             new BinaryBufferReader($buffer),
             BitWidth::fromArray($values),
-            \count($values),
+            count($values),
         ));
     }
 
@@ -42,7 +45,7 @@ final class RLEBitPackedHybridTest extends TestCase
         static::assertSame($values, (new RLEBitPackedHybrid())->decodeHybrid(
             new BinaryBufferReader($buffer),
             BitWidth::fromArray($values),
-            \count($values),
+            count($values),
         ));
     }
 
@@ -59,7 +62,7 @@ final class RLEBitPackedHybridTest extends TestCase
         static::assertSame($values, (new RLEBitPackedHybrid())->decodeHybrid(
             new BinaryBufferReader($buffer),
             BitWidth::fromArray($values),
-            \count($values),
+            count($values),
         ));
     }
 
@@ -77,7 +80,7 @@ final class RLEBitPackedHybridTest extends TestCase
         static::assertSame($values, (new RLEBitPackedHybrid())->decodeHybrid(
             new BinaryBufferReader($buffer),
             BitWidth::fromArray($values),
-            \count($values),
+            count($values),
         ));
     }
 
@@ -145,7 +148,7 @@ final class RLEBitPackedHybridTest extends TestCase
         static::assertSame($values, (new RLEBitPackedHybrid())->decodeHybrid(
             new BinaryBufferReader($buffer),
             BitWidth::fromArray($values),
-            \count($values),
+            count($values),
         ));
     }
 
@@ -163,7 +166,7 @@ final class RLEBitPackedHybridTest extends TestCase
         static::assertSame($values, (new RLEBitPackedHybrid())->decodeHybrid(
             new BinaryBufferReader($buffer),
             BitWidth::fromArray($values),
-            \count($values),
+            count($values),
         ));
     }
 
@@ -180,7 +183,7 @@ final class RLEBitPackedHybridTest extends TestCase
         static::assertSame($values, (new RLEBitPackedHybrid())->decodeHybrid(
             new BinaryBufferReader($buffer),
             BitWidth::fromArray($values),
-            \count($values),
+            count($values),
         ));
     }
 
@@ -198,7 +201,7 @@ final class RLEBitPackedHybridTest extends TestCase
         static::assertSame($values, (new RLEBitPackedHybrid())->decodeHybrid(
             new BinaryBufferReader($buffer),
             BitWidth::fromArray($values),
-            \count($values),
+            count($values),
         ));
     }
 
@@ -291,7 +294,7 @@ final class RLEBitPackedHybridTest extends TestCase
         static::assertSame($values, (new RLEBitPackedHybrid())->decodeHybrid(
             new BinaryBufferReader($buffer),
             BitWidth::fromArray($values),
-            \count($values),
+            count($values),
         ));
     }
 
@@ -389,7 +392,7 @@ final class RLEBitPackedHybridTest extends TestCase
         static::assertSame($values, (new RLEBitPackedHybrid())->decodeHybrid(
             new BinaryBufferReader($buffer),
             BitWidth::fromArray($values),
-            \count($values),
+            count($values),
         ));
     }
 
@@ -405,13 +408,13 @@ final class RLEBitPackedHybridTest extends TestCase
         static::assertSame($values, (new RLEBitPackedHybrid())->decodeHybrid(
             new BinaryBufferReader($buffer),
             BitWidth::fromArray($values),
-            \count($values),
+            count($values),
         ));
     }
 
     public function test_plain_long_rle(): void
     {
-        $values = \array_fill(0, 100, 1);
+        $values = array_fill(0, 100, 1);
 
         $buffer = '';
         (new RLEBitPackedHybrid())->encodeHybrid(
@@ -423,7 +426,7 @@ final class RLEBitPackedHybridTest extends TestCase
         static::assertSame($values, (new RLEBitPackedHybrid())->decodeHybrid(
             new BinaryBufferReader($buffer),
             BitWidth::fromArray($values),
-            \count($values),
+            count($values),
         ));
     }
 
@@ -441,7 +444,7 @@ final class RLEBitPackedHybridTest extends TestCase
         static::assertSame($values, (new RLEBitPackedHybrid())->decodeHybrid(
             new BinaryBufferReader($buffer),
             BitWidth::fromArray($values),
-            \count($values),
+            count($values),
         ));
     }
 
@@ -467,10 +470,10 @@ final class RLEBitPackedHybridTest extends TestCase
                 (new RLEBitPackedHybrid())->decodeHybrid(
                     new BinaryBufferReader($buffer),
                     BitWidth::fromArray($values),
-                    \count($values),
+                    count($values),
                 ),
                 'Failed to encode and decode RLEBitPackedHybrid: Iteration: ' . $iteration . ', values: '
-                    . \json_encode($values, JSON_THROW_ON_ERROR),
+                    . json_encode($values, JSON_THROW_ON_ERROR),
             );
         }
     }

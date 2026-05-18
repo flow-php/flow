@@ -5,9 +5,19 @@ declare(strict_types=1);
 namespace Flow\Documentation;
 
 use Flow\Documentation\Models\FunctionModel;
+use Generator;
 use PhpParser\NodeTraverser;
 use PhpParser\ParserFactory;
 use PhpParser\PhpVersion;
+use ReflectionFunction;
+use RuntimeException;
+
+use function file_exists;
+use function in_array;
+use function ltrim;
+use function realpath;
+use function sprintf;
+use function str_replace;
 
 final readonly class FunctionsExtractor
 {
@@ -21,20 +31,20 @@ final readonly class FunctionsExtractor
      *
      * @return \Generator<FunctionModel>
      */
-    public function extract(array $paths): \Generator
+    public function extract(array $paths): Generator
     {
         $parser = (new ParserFactory())->createForVersion(PhpVersion::fromComponents(8, 2));
 
         $includedFiles = get_included_files();
 
         foreach ($paths as $path) {
-            if (false === \file_exists($path)) {
-                throw new \RuntimeException(\sprintf('Path "%s" doesn\'t exists.', $path));
+            if (false === file_exists($path)) {
+                throw new RuntimeException(sprintf('Path "%s" doesn\'t exists.', $path));
             }
 
-            $realpath = \realpath($path);
+            $realpath = realpath($path);
 
-            if (!\in_array($realpath, $includedFiles, true)) {
+            if (!in_array($realpath, $includedFiles, true)) {
                 require_once $realpath;
             }
 
@@ -50,9 +60,9 @@ final readonly class FunctionsExtractor
         }
 
         foreach ($this->functionCollector->functions as $functionName) {
-            $reflectionFunction = new \ReflectionFunction($functionName);
-            $repositoryPath = \ltrim(
-                \str_replace($this->repositoryRootPath, '', (string) $reflectionFunction->getFileName()),
+            $reflectionFunction = new ReflectionFunction($functionName);
+            $repositoryPath = ltrim(
+                str_replace($this->repositoryRootPath, '', (string) $reflectionFunction->getFileName()),
                 '/',
             );
 

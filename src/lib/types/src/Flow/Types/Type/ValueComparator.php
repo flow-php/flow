@@ -8,6 +8,9 @@ use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type;
 use Flow\Types\Type\Comparison\Operator;
 
+use function is_string;
+use function sprintf;
+
 final readonly class ValueComparator
 {
     public function __construct(
@@ -19,13 +22,13 @@ final readonly class ValueComparator
      */
     public function assertAllTypesComparable(array $types, Operator|string $operator): void
     {
-        $operator = \is_string($operator) ? Operator::from($operator) : $operator;
+        $operator = is_string($operator) ? Operator::from($operator) : $operator;
 
         if (count($types) > 1) {
             foreach ($types as $nextType) {
                 foreach ($types as $baseType) {
                     if (!$this->comparator->comparable($baseType, $nextType)) {
-                        throw new InvalidArgumentException(\sprintf(
+                        throw new InvalidArgumentException(sprintf(
                             "Can't compare '(%s %s %s)' due to data type mismatch.",
                             $baseType->toString(),
                             $operator->value,
@@ -43,10 +46,10 @@ final readonly class ValueComparator
      */
     public function assertComparableTypes(Type $left, Type $right, Operator|string $operator): void
     {
-        $operator = \is_string($operator) ? Operator::from($operator) : $operator;
+        $operator = is_string($operator) ? Operator::from($operator) : $operator;
 
         if (!$this->comparator->comparable($left, $right)) {
-            throw new InvalidArgumentException(\sprintf(
+            throw new InvalidArgumentException(sprintf(
                 "Can't compare '(%s %s %s)' due to data type mismatch.",
                 $left->toString(),
                 $operator->value,

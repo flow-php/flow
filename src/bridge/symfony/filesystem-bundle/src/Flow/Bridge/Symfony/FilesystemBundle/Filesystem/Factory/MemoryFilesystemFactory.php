@@ -8,17 +8,20 @@ use Flow\Bridge\Symfony\FilesystemBundle\Exception\InvalidArgumentException;
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FilesystemFactory;
 use Flow\Filesystem\Filesystem;
 
+use function array_keys;
 use function Flow\Filesystem\DSL\memory_filesystem;
+use function implode;
+use function sprintf;
 
 final class MemoryFilesystemFactory implements FilesystemFactory
 {
     public function create(string $protocol, array $config): Filesystem
     {
         if ($config !== []) {
-            throw new InvalidArgumentException(\sprintf(
+            throw new InvalidArgumentException(sprintf(
                 'Filesystem factory for type "%s" does not accept any options. Unknown keys: [%s].',
                 $this->type(),
-                \implode(', ', \array_keys($config)),
+                implode(', ', array_keys($config)),
             ));
         }
 

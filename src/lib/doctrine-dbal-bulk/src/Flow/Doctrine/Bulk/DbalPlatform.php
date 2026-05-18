@@ -15,6 +15,9 @@ use Flow\Doctrine\Bulk\Dialect\PostgreSQLDialect;
 use Flow\Doctrine\Bulk\Dialect\SqliteDialect;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
+use function in_array;
+use function sprintf;
+
 /**
  * @infection-ignore-all
  */
@@ -38,7 +41,7 @@ final readonly class DbalPlatform
             return new SqliteDialect($this->platform);
         }
 
-        throw new RuntimeException(\sprintf('Database platform "%s" is not yet supported', $this->platform::class));
+        throw new RuntimeException(sprintf('Database platform "%s" is not yet supported', $this->platform::class));
     }
 
     private function isMariaDB(): bool
@@ -58,7 +61,7 @@ final readonly class DbalPlatform
 
     private function isSqlite(): bool
     {
-        return \in_array(
+        return in_array(
             $this->platform::class,
             ['Doctrine\DBAL\Platforms\SqlitePlatform', SQLitePlatform::class],
             true,

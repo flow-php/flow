@@ -10,6 +10,7 @@ use Flow\Website\Factory\Github\ContributorsRequestFactory;
 use Http\Client\Curl\Client;
 use Http\Discovery\Psr17Factory;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
+use Throwable;
 
 use function Flow\ETL\Adapter\Http\from_dynamic_http_requests;
 use function Flow\ETL\DSL\df;
@@ -64,7 +65,7 @@ final readonly class Github
                 ->run();
 
             return $memory->dump();
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return [];
         }
     }

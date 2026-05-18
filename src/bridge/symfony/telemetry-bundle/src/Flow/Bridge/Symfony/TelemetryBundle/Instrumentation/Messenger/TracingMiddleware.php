@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\ContextStorage;
 use Flow\Telemetry\PackageVersion;
@@ -19,6 +20,10 @@ use Symfony\Component\Messenger\Middleware\StackInterface;
 use Symfony\Component\Messenger\Stamp\BusNameStamp;
 use Symfony\Component\Messenger\Stamp\ReceivedStamp;
 use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
+use Throwable;
+
+use function end;
+use function explode;
 
 final readonly class TracingMiddleware implements MiddlewareInterface
 {
@@ -79,8 +84,8 @@ final readonly class TracingMiddleware implements MiddlewareInterface
             $span->setStatus(SpanStatus::ok());
 
             return $result;
-        } catch (\Throwable $e) {
-            $span->recordException($e, new \DateTimeImmutable());
+        } catch (Throwable $e) {
+            $span->recordException($e, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($e->getMessage()));
 
             throw $e;
@@ -118,9 +123,9 @@ final readonly class TracingMiddleware implements MiddlewareInterface
 
     private function getShortClassName(string $className): string
     {
-        $parts = \explode('\\', $className);
+        $parts = explode('\\', $className);
 
-        return \end($parts);
+        return end($parts);
     }
 
     private function injectContext(Envelope $envelope): Envelope

@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
+use ReflectionIntersectionType;
+use ReflectionNamedType;
+use ReflectionType;
+use ReflectionUnionType;
+
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_list;
+use function implode;
 
 final readonly class TypesModel
 {
@@ -26,15 +32,14 @@ final readonly class TypesModel
         return new self(array_map(static fn(array $type) => TypeModel::fromArray($type), $data));
     }
 
-    public static function fromReflection(\ReflectionType $reflectionType): self
+    public static function fromReflection(ReflectionType $reflectionType): self
     {
         $types = match ($reflectionType::class) {
-            \ReflectionIntersectionType::class => array_map(
-                static fn(\ReflectionType $type) => TypeModel::fromReflection($type),
-                $reflectionType->getTypes(),
-            ),
-            \ReflectionNamedType::class => [TypeModel::fromReflection($reflectionType)],
-            \ReflectionUnionType::class => array_map(static fn(\ReflectionType $type) => TypeModel::fromReflection(
+            ReflectionIntersectionType::class => array_map(static fn(ReflectionType $type) => TypeModel::fromReflection(
+                $type,
+            ), $reflectionType->getTypes()),
+            ReflectionNamedType::class => [TypeModel::fromReflection($reflectionType)],
+            ReflectionUnionType::class => array_map(static fn(ReflectionType $type) => TypeModel::fromReflection(
                 $type,
             ), $reflectionType->getTypes()),
             default => [],
@@ -59,6 +64,6 @@ final readonly class TypesModel
             $normalizedNames[] = $type->name();
         }
 
-        return \implode('|', $normalizedNames);
+        return implode('|', $normalizedNames);
     }
 }

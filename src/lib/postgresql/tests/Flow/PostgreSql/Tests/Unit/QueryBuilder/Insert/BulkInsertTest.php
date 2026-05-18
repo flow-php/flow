@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Insert;
 
 use Flow\PostgreSql\QueryBuilder\Clause\ConflictTarget;
 use Flow\PostgreSql\QueryBuilder\Insert\BulkInsert;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 final class BulkInsertTest extends TestCase
@@ -164,7 +165,7 @@ final class BulkInsertTest extends TestCase
 
     public function test_throws_exception_for_empty_columns(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('At least one column is required');
 
         BulkInsert::into('users', [], 1);
@@ -172,7 +173,7 @@ final class BulkInsertTest extends TestCase
 
     public function test_throws_exception_for_negative_rows(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Row count must be at least 1');
 
         BulkInsert::into('users', ['name'], -1);
@@ -180,7 +181,7 @@ final class BulkInsertTest extends TestCase
 
     public function test_throws_exception_for_zero_rows(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Row count must be at least 1');
 
         BulkInsert::into('users', ['name'], 0);

@@ -16,6 +16,7 @@ use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
+use function array_values;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
 
@@ -59,7 +60,7 @@ final readonly class CopyToBuilder implements CopyToDestinationStep, CopyToOptio
         return new self(
             $this->table,
             $this->schema,
-            \array_values($columns),
+            array_values($columns),
             $this->query,
             $this->filename,
             $this->isProgram,
@@ -180,7 +181,7 @@ final readonly class CopyToBuilder implements CopyToDestinationStep, CopyToOptio
             $this->header,
             $this->quote,
             $this->escape,
-            \array_values($columns),
+            array_values($columns),
             false,
             $this->encoding,
         );
@@ -347,7 +348,7 @@ final readonly class CopyToBuilder implements CopyToDestinationStep, CopyToOptio
         return new self(
             $identifier->name(),
             $identifier->schema(),
-            \array_values($columns),
+            array_values($columns),
             null,
             $this->filename,
             $this->isProgram,

@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Types\ValueType;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\PostgreSql\DSL\cast;
@@ -20,7 +21,7 @@ final class InetConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{string, string}>
      */
-    public static function provide_inet_values(): \Generator
+    public static function provide_inet_values(): Generator
     {
         yield 'ipv4' => ['192.168.1.1', '192.168.1.1'];
         yield 'ipv4 with cidr' => ['192.168.1.1/24', '192.168.1.1/24'];

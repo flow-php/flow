@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\Engine;
 
+use Flow\Filesystem\Stream\NativeLocalDestinationStream;
 use Flow\Parquet\Engine\ArrowParquetEngine;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
@@ -16,19 +17,28 @@ use Flow\Parquet\Reader;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
+use function extension_loaded;
+use function file_exists;
 use function Flow\ETL\DSL\generate_random_string;
+use function Flow\Filesystem\DSL\path;
+use function iterator_to_array;
+use function mkdir;
+use function range;
+use function str_repeat;
+use function unlink;
 
 #[Group('native-extension')]
 final class ArrowParquetEngineWriteTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('arrow')) {
+        if (!extension_loaded('arrow')) {
             self::markTestSkipped('Arrow extension is not loaded');
         }
 
-        if (!\file_exists(__DIR__ . '/var')) {
-            \mkdir(__DIR__ . '/var');
+        if (!file_exists(__DIR__ . '/var')) {
+            mkdir(__DIR__ . '/var');
         }
     }
 
@@ -50,10 +60,10 @@ final class ArrowParquetEngineWriteTest extends TestCase
         ];
 
         $engine = new ArrowParquetEngine();
-        $stream = \Flow\Filesystem\Stream\NativeLocalDestinationStream::openBlank(\Flow\Filesystem\DSL\path($path));
+        $stream = NativeLocalDestinationStream::openBlank(path($path));
         $engine->writeRows($stream, $schema, Compressions::SNAPPY, new Options(), $inputData);
 
-        $result = \iterator_to_array(
+        $result = iterator_to_array(
             (new Reader())
                 ->read($path)
                 ->values(),
@@ -65,7 +75,7 @@ final class ArrowParquetEngineWriteTest extends TestCase
         static::assertTrue($result[0]['active']);
         static::assertEqualsWithDelta(99.5, $result[0]['score'], 0.001);
 
-        \unlink($path);
+        unlink($path);
     }
 
     public function test_write_nested_types(): void
@@ -86,10 +96,10 @@ final class ArrowParquetEngineWriteTest extends TestCase
         ];
 
         $engine = new ArrowParquetEngine();
-        $stream = \Flow\Filesystem\Stream\NativeLocalDestinationStream::openBlank(\Flow\Filesystem\DSL\path($path));
+        $stream = NativeLocalDestinationStream::openBlank(path($path));
         $engine->writeRows($stream, $schema, Compressions::SNAPPY, new Options(), $inputData);
 
-        $result = \iterator_to_array(
+        $result = iterator_to_array(
             (new Reader())
                 ->read($path)
                 ->values(),
@@ -98,7 +108,7 @@ final class ArrowParquetEngineWriteTest extends TestCase
         static::assertCount(2, $result);
         static::assertSame(1, $result[0]['id']);
 
-        \unlink($path);
+        unlink($path);
     }
 
     public function test_write_with_gzip_compression(): void
@@ -107,13 +117,13 @@ final class ArrowParquetEngineWriteTest extends TestCase
 
         $schema = Schema::with(FlatColumn::int32('id', Repetition::REQUIRED), FlatColumn::string('data'));
 
-        $inputData = \array_map(static fn(int $i): array => ['id' => $i, 'data' => 'value_' . $i], \range(1, 20));
+        $inputData = array_map(static fn(int $i): array => ['id' => $i, 'data' => 'value_' . $i], range(1, 20));
 
         $engine = new ArrowParquetEngine();
-        $stream = \Flow\Filesystem\Stream\NativeLocalDestinationStream::openBlank(\Flow\Filesystem\DSL\path($path));
+        $stream = NativeLocalDestinationStream::openBlank(path($path));
         $engine->writeRows($stream, $schema, Compressions::GZIP, new Options(), $inputData);
 
-        $result = \iterator_to_array(
+        $result = iterator_to_array(
             (new Reader())
                 ->read($path)
                 ->values(),
@@ -121,7 +131,7 @@ final class ArrowParquetEngineWriteTest extends TestCase
 
         static::assertCount(20, $result);
 
-        \unlink($path);
+        unlink($path);
     }
 
     public function test_write_with_snappy_compression(): void
@@ -130,16 +140,13 @@ final class ArrowParquetEngineWriteTest extends TestCase
 
         $schema = Schema::with(FlatColumn::int32('id', Repetition::REQUIRED), FlatColumn::string('data'));
 
-        $inputData = \array_map(
-            static fn(int $i): array => ['id' => $i, 'data' => \str_repeat('a', 100)],
-            \range(1, 50),
-        );
+        $inputData = array_map(static fn(int $i): array => ['id' => $i, 'data' => str_repeat('a', 100)], range(1, 50));
 
         $engine = new ArrowParquetEngine();
-        $stream = \Flow\Filesystem\Stream\NativeLocalDestinationStream::openBlank(\Flow\Filesystem\DSL\path($path));
+        $stream = NativeLocalDestinationStream::openBlank(path($path));
         $engine->writeRows($stream, $schema, Compressions::SNAPPY, new Options(), $inputData);
 
-        $result = \iterator_to_array(
+        $result = iterator_to_array(
             (new Reader())
                 ->read($path)
                 ->values(),
@@ -148,6 +155,6 @@ final class ArrowParquetEngineWriteTest extends TestCase
         static::assertCount(50, $result);
         static::assertSame(1, $result[0]['id']);
 
-        \unlink($path);
+        unlink($path);
     }
 }

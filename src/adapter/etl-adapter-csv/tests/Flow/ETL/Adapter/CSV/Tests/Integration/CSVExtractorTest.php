@@ -10,13 +10,18 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Tests\OperatingSystem;
+use RuntimeException;
 
+use function array_keys;
+use function array_map;
 use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\schema_to_ascii;
 use function Flow\Filesystem\DSL\path_real;
+use function iterator_to_array;
 
 final class CSVExtractorTest extends FlowTestCase
 {
@@ -38,9 +43,9 @@ final class CSVExtractorTest extends FlowTestCase
                     ],
                 ],
             ],
-            \array_map(
+            array_map(
                 static fn(Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+                iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
             ),
         );
     }
@@ -61,9 +66,9 @@ final class CSVExtractorTest extends FlowTestCase
                     ],
                 ],
             ],
-            \array_map(
+            array_map(
                 static fn(Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+                iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
             ),
         );
     }
@@ -85,9 +90,9 @@ final class CSVExtractorTest extends FlowTestCase
                     ],
                 ],
             ],
-            \array_map(
+            array_map(
                 static fn(Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+                iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
             ),
         );
     }
@@ -109,9 +114,9 @@ final class CSVExtractorTest extends FlowTestCase
                     ],
                 ],
             ],
-            \array_map(
+            array_map(
                 static fn(Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+                iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
             ),
         );
     }
@@ -133,9 +138,9 @@ final class CSVExtractorTest extends FlowTestCase
                     ],
                 ],
             ],
-            \array_map(
+            array_map(
                 static fn(Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+                iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
             ),
         );
     }
@@ -166,9 +171,9 @@ final class CSVExtractorTest extends FlowTestCase
                     ],
                 ],
             ],
-            \array_map(
+            array_map(
                 static fn(Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+                iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
             ),
         );
     }
@@ -194,9 +199,9 @@ final class CSVExtractorTest extends FlowTestCase
                     ],
                 ],
             ],
-            \array_map(
+            array_map(
                 static fn(Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(flow_context(\Flow\ETL\DSL\config()))),
+                iterator_to_array($extractor->extract(flow_context(config()))),
             ),
         );
     }
@@ -214,9 +219,9 @@ final class CSVExtractorTest extends FlowTestCase
                     ['e00' => '1', 'name' => 'Norbert', 'active' => null],
                 ],
             ],
-            \array_map(
+            array_map(
                 static fn(Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(flow_context(\Flow\ETL\DSL\config()))),
+                iterator_to_array($extractor->extract(flow_context(config()))),
             ),
         );
     }
@@ -241,7 +246,7 @@ final class CSVExtractorTest extends FlowTestCase
                     'Value',
                     'Industry_code_ANZSIC06',
                 ],
-                \array_keys($row->toArray()),
+                array_keys($row->toArray()),
             );
         }
 
@@ -270,7 +275,7 @@ final class CSVExtractorTest extends FlowTestCase
                     'Value',
                     'Industry_code_ANZSIC06',
                 ],
-                \array_keys($row->toArray()),
+                array_keys($row->toArray()),
             );
         }
 
@@ -303,11 +308,11 @@ final class CSVExtractorTest extends FlowTestCase
         $total = 0;
 
         /** @var Rows $rows */
-        foreach ($extractor->extract(flow_context(\Flow\ETL\DSL\config())) as $rows) {
+        foreach ($extractor->extract(flow_context(config())) as $rows) {
             $rows->each(function (Row $row): void {
                 $this->assertSame(
                     ['e00', 'e01', 'e02', 'e03', 'e04', 'e05', 'e06', 'e07', 'e08', 'e09'],
-                    \array_keys($row->toArray()),
+                    array_keys($row->toArray()),
                 );
             });
             $total += $rows->count();
@@ -330,9 +335,9 @@ final class CSVExtractorTest extends FlowTestCase
         $total = 0;
 
         /** @var Rows $rows */
-        foreach ($extractor->extract(flow_context(\Flow\ETL\DSL\config())) as $rows) {
+        foreach ($extractor->extract(flow_context(config())) as $rows) {
             $rows->each(function (Row $row): void {
-                $this->assertSame(['id', 'name'], \array_keys($row->toArray()));
+                $this->assertSame(['id', 'name'], array_keys($row->toArray()));
             });
             $total += $rows->count();
         }
@@ -347,9 +352,9 @@ final class CSVExtractorTest extends FlowTestCase
         $total = 0;
 
         /** @var Rows $rows */
-        foreach ($extractor->extract(flow_context(\Flow\ETL\DSL\config())) as $rows) {
+        foreach ($extractor->extract(flow_context(config())) as $rows) {
             $rows->each(function (Row $row): void {
-                $this->assertSame(['id', 'name', 'active'], \array_keys($row->toArray()));
+                $this->assertSame(['id', 'name', 'active'], array_keys($row->toArray()));
             });
             $total += $rows->count();
         }
@@ -411,7 +416,7 @@ final class CSVExtractorTest extends FlowTestCase
         $extractor = from_csv(path_real(__DIR__ . '/../Fixtures/orders_flow.csv'));
         $extractor->changeLimit(2);
 
-        static::assertCount(2, \iterator_to_array($extractor->extract(flow_context(\Flow\ETL\DSL\config()))));
+        static::assertCount(2, iterator_to_array($extractor->extract(flow_context(config()))));
     }
 
     public function test_loading_data_from_all_partitions(): void
@@ -440,7 +445,7 @@ final class CSVExtractorTest extends FlowTestCase
     {
         $extractor = from_csv(path_real(__DIR__ . '/../Fixtures/orders_flow.csv'));
 
-        $generator = $extractor->extract(flow_context(\Flow\ETL\DSL\config()));
+        $generator = $extractor->extract(flow_context(config()));
 
         static::assertTrue($generator->valid());
         $generator->next();
@@ -470,9 +475,9 @@ final class CSVExtractorTest extends FlowTestCase
                     ],
                 ],
             ],
-            \array_map(
+            array_map(
                 static fn(Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+                iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
             ),
         );
     }
@@ -482,7 +487,7 @@ final class CSVExtractorTest extends FlowTestCase
         $handle = fopen($path, 'rb');
 
         if ($handle === false) {
-            throw new \RuntimeException('Failed to open file: ' . $path);
+            throw new RuntimeException('Failed to open file: ' . $path);
         }
 
         $bomLength = strlen($BOM);

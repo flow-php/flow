@@ -11,8 +11,10 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Flow\Serializer\Exception\SerializationException;
+use Throwable;
 
 use function Flow\ETL\DSL\ref;
+use function is_string;
 
 final readonly class UnserializeTransformer implements Transformer
 {
@@ -41,7 +43,7 @@ final readonly class UnserializeTransformer implements Transformer
 
                 $serialized = $row->valueOf($source->name());
 
-                if (!\is_string($serialized)) {
+                if (!is_string($serialized)) {
                     return $row;
                 }
 
@@ -65,7 +67,7 @@ final readonly class UnserializeTransformer implements Transformer
             ]);
 
             return $result;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->transformationFailed($this, $e);
 
             throw $e;

@@ -9,6 +9,8 @@ use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 
+use function is_numeric;
+
 final class DatabaseContext
 {
     /**
@@ -108,6 +110,6 @@ final class DatabaseContext
             $this->connection->createQueryBuilder()->select('COUNT(*)')->from($tableName)->getSQL(),
         );
 
-        return \is_numeric($result) ? (int) $result : 0;
+        return is_numeric($result) ? (int) $result : 0;
     }
 }

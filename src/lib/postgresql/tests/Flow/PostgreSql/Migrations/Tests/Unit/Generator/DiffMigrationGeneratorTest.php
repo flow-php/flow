@@ -17,6 +17,8 @@ use Flow\PostgreSql\Schema\Schema;
 use Flow\PostgreSql\Schema\Table;
 use PHPUnit\Framework\TestCase;
 
+use function implode;
+
 final class DiffMigrationGeneratorTest extends TestCase
 {
     public function test_does_not_generate_rollback_when_disabled(): void
@@ -99,7 +101,7 @@ final class DiffMigrationGeneratorTest extends TestCase
 
         $diffGenerator->generate('initial_schema', fromEmptySchema: true);
 
-        $upSqlJoined = \implode(' ', $spy->lastUpSql ?? []);
+        $upSqlJoined = implode(' ', $spy->lastUpSql ?? []);
         static::assertStringContainsString('new_table', $upSqlJoined);
         static::assertStringContainsString('existing_table', $upSqlJoined);
     }
@@ -128,8 +130,8 @@ final class DiffMigrationGeneratorTest extends TestCase
 
         $diffGenerator->generate('create_users');
 
-        $upSqlJoined = \implode(' ', $spy->lastUpSql ?? []);
-        $downSqlJoined = \implode(' ', $spy->lastDownSql ?? []);
+        $upSqlJoined = implode(' ', $spy->lastUpSql ?? []);
+        $downSqlJoined = implode(' ', $spy->lastDownSql ?? []);
         static::assertStringContainsString('CREATE', $upSqlJoined);
         static::assertStringContainsString('users', $upSqlJoined);
         static::assertStringContainsString('DROP', $downSqlJoined);

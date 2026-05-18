@@ -10,6 +10,9 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 use Flow\PostgreSql\QueryBuilder\Sql;
+use InvalidArgumentException;
+
+use function count;
 
 final class DeclareCursorBuilder implements DeclareCursorOptionsStep
 {
@@ -37,15 +40,15 @@ final class DeclareCursorBuilder implements DeclareCursorOptionsStep
         $parsed = $parser->parse($sql);
         $rawStmts = $parsed->raw()->getStmts();
 
-        if (\count($rawStmts) === 0) {
-            throw new \InvalidArgumentException('Query cannot be empty');
+        if (count($rawStmts) === 0) {
+            throw new InvalidArgumentException('Query cannot be empty');
         }
 
         $firstStmt = $rawStmts[0];
         $stmtNode = $firstStmt->getStmt();
 
         if ($stmtNode === null) {
-            throw new \InvalidArgumentException('Invalid query: no statement found');
+            throw new InvalidArgumentException('Invalid query: no statement found');
         }
 
         return new self($cursorName, $stmtNode);

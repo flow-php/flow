@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Exception;
 
 use Flow\PostgreSql\Client\Exception\MappingException;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class MappingExceptionTest extends TestCase
 {
@@ -19,7 +20,7 @@ final class MappingExceptionTest extends TestCase
 
     public function test_mapping_failed_preserves_previous_throwable(): void
     {
-        $previous = new \RuntimeException('root cause');
+        $previous = new RuntimeException('root cause');
 
         $exception = MappingException::mappingFailed('App\\UserDto', 'invalid shape', $previous);
 

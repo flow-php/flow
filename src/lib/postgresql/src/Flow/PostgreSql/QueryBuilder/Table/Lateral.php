@@ -9,6 +9,8 @@ use Flow\PostgreSql\Protobuf\AST\RangeSubselect;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidTableException;
 
+use function get_debug_type;
+
 /**
  * Represents a LATERAL subquery or function reference.
  * LATERAL allows a subquery or function to reference columns from preceding tables.
@@ -90,7 +92,7 @@ final readonly class Lateral implements TableReference
 
         throw InvalidTableException::invalidType(
             'SubqueryReference or TableFunction',
-            \get_debug_type($this->reference),
+            get_debug_type($this->reference),
         );
     }
 }

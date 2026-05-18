@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Meter;
 
+use DateTimeImmutable;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Meter\Instrument\Counter;
 use Flow\Telemetry\Meter\Instrument\Gauge;
@@ -16,12 +17,17 @@ use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
 use Flow\Telemetry\Provider\Void\VoidMetricProcessor;
 use Flow\Telemetry\Tests\Mother\ClockMother;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
+use Generator;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function array_filter;
+use function array_values;
+
 final class MeterTest extends TestCase
 {
-    public static function gaugeValueProvider(): \Generator
+    public static function gaugeValueProvider(): Generator
     {
         yield 'zero' => [0];
         yield 'positive' => [100];
@@ -29,7 +35,7 @@ final class MeterTest extends TestCase
         yield 'float' => [3.14159];
     }
 
-    public static function histogramValueProvider(): \Generator
+    public static function histogramValueProvider(): Generator
     {
         yield 'zero' => [0];
         yield 'small' => [0.001];
@@ -37,14 +43,14 @@ final class MeterTest extends TestCase
         yield 'large' => [10000.5];
     }
 
-    public static function negativeAmountProvider(): \Generator
+    public static function negativeAmountProvider(): Generator
     {
         yield 'negative integer' => [-1];
         yield 'negative float' => [-0.5];
         yield 'large negative' => [-1000];
     }
 
-    public static function upDownCounterValueProvider(): \Generator
+    public static function upDownCounterValueProvider(): Generator
     {
         yield 'positive' => [10];
         yield 'negative' => [-10];
@@ -53,7 +59,7 @@ final class MeterTest extends TestCase
         yield 'negative float' => [-5.5];
     }
 
-    public static function validCounterAmountProvider(): \Generator
+    public static function validCounterAmountProvider(): Generator
     {
         yield 'zero' => [0];
         yield 'positive integer' => [42];
@@ -99,13 +105,13 @@ final class MeterTest extends TestCase
         $processedMetrics = $processor->metrics();
         static::assertCount(2, $processedMetrics);
 
-        $getMetrics = \array_filter($processedMetrics, static fn($m) => $m->attributes->get('method') === 'GET');
-        $postMetrics = \array_filter($processedMetrics, static fn($m) => $m->attributes->get('method') === 'POST');
+        $getMetrics = array_filter($processedMetrics, static fn($m) => $m->attributes->get('method') === 'GET');
+        $postMetrics = array_filter($processedMetrics, static fn($m) => $m->attributes->get('method') === 'POST');
 
         static::assertCount(1, $getMetrics);
         static::assertCount(1, $postMetrics);
-        static::assertSame(10, \array_values($getMetrics)[0]->value);
-        static::assertSame(5, \array_values($postMetrics)[0]->value);
+        static::assertSame(10, array_values($getMetrics)[0]->value);
+        static::assertSame(5, array_values($postMetrics)[0]->value);
     }
 
     public function test_complete_removes_instrument_from_cache(): void
@@ -176,7 +182,7 @@ final class MeterTest extends TestCase
 
     public function test_counter_aggregates_values_and_produces_metric_on_collect(): void
     {
-        $timestamp = new \DateTimeImmutable('2024-01-15 10:30:00');
+        $timestamp = new DateTimeImmutable('2024-01-15 10:30:00');
         $meter = new Meter(
             ResourceMother::default(),
             new InstrumentationScope('test-meter', '1.0.0'),
@@ -213,7 +219,7 @@ final class MeterTest extends TestCase
         );
         $counter = $meter->createCounter('counter');
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Counter amount must be >= 0');
 
         $counter->add($amount);
@@ -236,13 +242,13 @@ final class MeterTest extends TestCase
         $metrics = $meter->collect();
         static::assertCount(2, $metrics);
 
-        $getMetrics = \array_filter($metrics, static fn($m) => $m->attributes->get('method') === 'GET');
-        $postMetrics = \array_filter($metrics, static fn($m) => $m->attributes->get('method') === 'POST');
+        $getMetrics = array_filter($metrics, static fn($m) => $m->attributes->get('method') === 'GET');
+        $postMetrics = array_filter($metrics, static fn($m) => $m->attributes->get('method') === 'POST');
 
         static::assertCount(1, $getMetrics);
         static::assertCount(1, $postMetrics);
-        static::assertSame(13, \array_values($getMetrics)[0]->value);
-        static::assertSame(5, \array_values($postMetrics)[0]->value);
+        static::assertSame(13, array_values($getMetrics)[0]->value);
+        static::assertSame(5, array_values($postMetrics)[0]->value);
     }
 
     public function test_create_counter_returns_same_instance_for_same_name(): void
@@ -279,7 +285,7 @@ final class MeterTest extends TestCase
 
     public function test_gauge_keeps_last_value_on_collect(): void
     {
-        $timestamp = new \DateTimeImmutable('2024-01-15 10:30:00');
+        $timestamp = new DateTimeImmutable('2024-01-15 10:30:00');
         $meter = new Meter(
             ResourceMother::default(),
             new InstrumentationScope('test-meter', '1.0.0'),
@@ -322,7 +328,7 @@ final class MeterTest extends TestCase
 
     public function test_histogram_tracks_distribution_statistics(): void
     {
-        $timestamp = new \DateTimeImmutable('2024-01-15 10:30:00');
+        $timestamp = new DateTimeImmutable('2024-01-15 10:30:00');
         $meter = new Meter(
             ResourceMother::default(),
             new InstrumentationScope('test-meter', '1.0.0'),
@@ -399,7 +405,7 @@ final class MeterTest extends TestCase
 
     public function test_up_down_counter_aggregates_values(): void
     {
-        $timestamp = new \DateTimeImmutable('2024-01-15 10:30:00');
+        $timestamp = new DateTimeImmutable('2024-01-15 10:30:00');
         $meter = new Meter(
             ResourceMother::default(),
             new InstrumentationScope('test-meter', '1.0.0'),

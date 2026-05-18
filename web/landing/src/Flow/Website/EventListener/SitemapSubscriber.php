@@ -13,6 +13,8 @@ use Presta\SitemapBundle\Sitemap\Url\UrlConcrete;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
+use function mb_strtolower;
+
 final readonly class SitemapSubscriber implements EventSubscriberInterface
 {
     public function __construct(
@@ -64,7 +66,7 @@ final readonly class SitemapSubscriber implements EventSubscriberInterface
                 new UrlConcrete(
                     $event->getUrlGenerator()->generate(
                         'documentation_dsl',
-                        ['module' => \mb_strtolower($module->name)],
+                        ['module' => mb_strtolower($module->name)],
                         UrlGeneratorInterface::ABSOLUTE_URL,
                     ),
                     changefreq: 'weekly',
@@ -77,7 +79,7 @@ final readonly class SitemapSubscriber implements EventSubscriberInterface
                     new UrlConcrete(
                         $event->getUrlGenerator()->generate(
                             'documentation_dsl_function',
-                            ['module' => \mb_strtolower($module->name), 'function' => $definition->slug()],
+                            ['module' => mb_strtolower($module->name), 'function' => $definition->slug()],
                             UrlGeneratorInterface::ABSOLUTE_URL,
                         ),
                         changefreq: 'weekly',

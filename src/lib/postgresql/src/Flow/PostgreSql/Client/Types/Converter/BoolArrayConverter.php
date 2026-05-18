@@ -8,6 +8,11 @@ use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\ValueConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
 
+use function array_map;
+use function implode;
+use function is_array;
+use function is_bool;
+
 final class BoolArrayConverter implements ValueConverter
 {
     public function supportedTypes(): array
@@ -21,11 +26,11 @@ final class BoolArrayConverter implements ValueConverter
             return null;
         }
 
-        if (!\is_array($value)) {
+        if (!is_array($value)) {
             return '{}';
         }
 
-        return '{' . \implode(',', \array_map(self::encodeElement(...), $value)) . '}';
+        return '{' . implode(',', array_map(self::encodeElement(...), $value)) . '}';
     }
 
     private static function encodeElement(mixed $element): string
@@ -34,7 +39,7 @@ final class BoolArrayConverter implements ValueConverter
             return 'NULL';
         }
 
-        if (\is_bool($element)) {
+        if (is_bool($element)) {
             return $element ? 't' : 'f';
         }
 

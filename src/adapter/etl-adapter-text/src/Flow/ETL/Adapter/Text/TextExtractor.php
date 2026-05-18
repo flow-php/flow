@@ -12,8 +12,10 @@ use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\Filesystem\Path;
+use Generator;
 
 use function Flow\ETL\DSL\array_to_rows;
+use function rtrim;
 
 final class TextExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -26,7 +28,7 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
         $this->resetLimit();
     }
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
@@ -35,9 +37,9 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
 
             foreach ($stream->readLines() as $rowData) {
                 if ($shouldPutInputIntoRows) {
-                    $row = [['text' => \rtrim($rowData), '_input_file_uri' => $uri]];
+                    $row = [['text' => rtrim($rowData), '_input_file_uri' => $uri]];
                 } else {
-                    $row = [['text' => \rtrim($rowData)]];
+                    $row = [['text' => rtrim($rowData)]];
                 }
 
                 $signal = yield array_to_rows($row, $context->entryFactory(), $stream->path()->partitions());

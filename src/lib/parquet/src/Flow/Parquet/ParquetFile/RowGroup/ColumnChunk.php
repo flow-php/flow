@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroup;
 
+use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\ParquetFile\Statistics;
 use Flow\Parquet\ThriftModel\ColumnMetaData;
+
+use function array_filter;
+use function array_map;
+use function implode;
+use function min;
 
 final readonly class ColumnChunk
 {
@@ -48,7 +54,7 @@ final readonly class ColumnChunk
             (int) $thrift->meta_data->num_values,
             (int) $thrift->file_offset,
             $thrift->meta_data->path_in_schema,
-            \array_map(static fn($encoding) => Encodings::from($encoding), $thrift->meta_data->encodings),
+            array_map(static fn($encoding) => Encodings::from($encoding), $thrift->meta_data->encodings),
             (int) $thrift->meta_data->total_compressed_size,
             (int) $thrift->meta_data->total_uncompressed_size,
             // @mago-ignore analysis:redundant-condition
@@ -98,12 +104,12 @@ final readonly class ColumnChunk
 
     public function flatPath(): string
     {
-        return \implode('.', $this->path);
+        return implode('.', $this->path);
     }
 
     public function pageOffset(): int
     {
-        $offsets = \array_filter(
+        $offsets = array_filter(
             [
                 $this->dictionaryPageOffset,
                 $this->dataPageOffset,
@@ -113,10 +119,10 @@ final readonly class ColumnChunk
         );
 
         if ($offsets === []) {
-            throw new \Flow\Parquet\Exception\RuntimeException('ColumnChunk has no page offsets');
+            throw new RuntimeException('ColumnChunk has no page offsets');
         }
 
-        return \min($offsets);
+        return min($offsets);
     }
 
     public function statistics(): ?StatisticsReader
@@ -144,7 +150,7 @@ final readonly class ColumnChunk
             'file_offset' => $this->fileOffset,
             'meta_data' => new ColumnMetaData([
                 'type' => $this->type->value,
-                'encodings' => \array_map(static fn(Encodings $encoding) => $encoding->value, $this->encodings),
+                'encodings' => array_map(static fn(Encodings $encoding) => $encoding->value, $this->encodings),
                 'path_in_schema' => $this->path,
                 'codec' => $this->codec->value,
                 'num_values' => $this->valuesCount,

@@ -11,6 +11,8 @@ use Flow\PostgreSql\Protobuf\AST\TruncateStmt;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
+use function array_values;
+
 final readonly class TruncateBuilder implements TruncateFinalStep
 {
     use AstToSql;
@@ -26,7 +28,7 @@ final readonly class TruncateBuilder implements TruncateFinalStep
 
     public static function create(string ...$tables): TruncateFinalStep
     {
-        return new self(\array_values($tables));
+        return new self(array_values($tables));
     }
 
     public function cascade(): TruncateFinalStep

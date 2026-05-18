@@ -11,6 +11,8 @@ use Flow\Bridge\Symfony\FilesystemBundle\DependencyInjection\Compiler\RegisterFs
 use Flow\Bridge\Symfony\FilesystemCache\FlowFilesystemCacheAdapter;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
+use Override;
+use Reflector;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
@@ -23,11 +25,21 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
+use function array_key_exists;
+use function array_key_first;
+use function array_keys;
+use function class_exists;
+use function count;
+use function implode;
+use function is_string;
+use function preg_match;
+use function sprintf;
+
 final class FlowFilesystemBundle extends AbstractBundle
 {
     private const string MOUNT_REGEX = '/^[a-zA-Z][a-zA-Z0-9+.-]+$/';
 
-    #[\Override]
+    #[Override]
     public function build(ContainerBuilder $container): void
     {
         parent::build($container);
@@ -39,13 +51,13 @@ final class FlowFilesystemBundle extends AbstractBundle
         $container->registerAttributeForAutoconfiguration(AsFilesystemFactory::class, static function (
             ChildDefinition $definition,
             AsFilesystemFactory $attribute,
-            \Reflector $reflector,
+            Reflector $reflector,
         ): void {
             $definition->addTag(RegisterFilesystemFactoriesPass::TAG, ['type' => $attribute->type]);
         });
     }
 
-    #[\Override]
+    #[Override]
     public function configure(DefinitionConfigurator $definition): void
     {
         $definition
@@ -60,8 +72,8 @@ final class FlowFilesystemBundle extends AbstractBundle
             ->useAttributeAsKey('name')
             ->validate()
             ->ifTrue(static function (array $fstabs): bool {
-                foreach (\array_keys($fstabs) as $name) {
-                    if (!\is_string($name) || $name === '') {
+                foreach (array_keys($fstabs) as $name) {
+                    if (!is_string($name) || $name === '') {
                         return true;
                     }
                 }
@@ -79,8 +91,8 @@ final class FlowFilesystemBundle extends AbstractBundle
             ->useAttributeAsKey('mount')
             ->validate()
             ->ifTrue(static function (array $filesystems): bool {
-                foreach (\array_keys($filesystems) as $mount) {
-                    if (!\is_string($mount) || \preg_match(self::MOUNT_REGEX, $mount) !== 1) {
+                foreach (array_keys($filesystems) as $mount) {
+                    if (!is_string($mount) || preg_match(self::MOUNT_REGEX, $mount) !== 1) {
                         return true;
                     }
                 }
@@ -150,7 +162,7 @@ final class FlowFilesystemBundle extends AbstractBundle
     /**
      * @param array<string, mixed> $config
      */
-    #[\Override]
+    #[Override]
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         /** @var array<string, array{filesystems: array<string, array<string, mixed>>}> $fstabs */
@@ -161,21 +173,21 @@ final class FlowFilesystemBundle extends AbstractBundle
         $config['fstabs'] = $fstabs;
 
         if ($defaultFstab === null) {
-            if (\array_key_exists('default', $fstabs)) {
+            if (array_key_exists('default', $fstabs)) {
                 $defaultFstab = 'default';
-            } elseif (\count($fstabs) === 1) {
-                $defaultFstab = (string) \array_key_first($fstabs);
+            } elseif (count($fstabs) === 1) {
+                $defaultFstab = (string) array_key_first($fstabs);
             } else {
-                throw new InvalidConfigurationException(\sprintf('flow_filesystem: no `default_fstab` was set and no fstab named "default" exists. Available fstabs: [%s].', \implode(
+                throw new InvalidConfigurationException(sprintf('flow_filesystem: no `default_fstab` was set and no fstab named "default" exists. Available fstabs: [%s].', implode(
                     ', ',
-                    \array_keys($fstabs),
+                    array_keys($fstabs),
                 )));
             }
-        } elseif (!\array_key_exists($defaultFstab, $fstabs)) {
-            throw new InvalidConfigurationException(\sprintf(
+        } elseif (!array_key_exists($defaultFstab, $fstabs)) {
+            throw new InvalidConfigurationException(sprintf(
                 'flow_filesystem: `default_fstab` is set to "%s" but no such fstab exists. Available fstabs: [%s].',
                 $defaultFstab,
-                \implode(', ', \array_keys($fstabs)),
+                implode(', ', array_keys($fstabs)),
             ));
         }
 
@@ -204,7 +216,7 @@ final class FlowFilesystemBundle extends AbstractBundle
         string $defaultFstab,
         ContainerBuilder $builder,
     ): void {
-        if (!\class_exists(FlowFilesystemCacheAdapter::class)) {
+        if (!class_exists(FlowFilesystemCacheAdapter::class)) {
             throw new InvalidConfigurationException(
                 'flow_filesystem.cache.pools is configured but flow-php/symfony-filesystem-cache-bridge is not installed. Run composer require flow-php/symfony-filesystem-cache-bridge.',
             );
@@ -213,24 +225,24 @@ final class FlowFilesystemBundle extends AbstractBundle
         foreach ($pools as $name => $poolConfig) {
             $fstabName = $poolConfig['fstab'] ?? $defaultFstab;
 
-            if (!\array_key_exists($fstabName, $fstabs)) {
-                throw new InvalidConfigurationException(\sprintf(
+            if (!array_key_exists($fstabName, $fstabs)) {
+                throw new InvalidConfigurationException(sprintf(
                     'flow_filesystem.cache.pools.%s: fstab "%s" is not declared. Available fstabs: [%s].',
                     $name,
                     $fstabName,
-                    \implode(', ', \array_keys($fstabs)),
+                    implode(', ', array_keys($fstabs)),
                 ));
             }
 
             $mounts = $fstabs[$fstabName]['filesystems'];
 
-            if (!\array_key_exists($poolConfig['filesystem'], $mounts)) {
-                throw new InvalidConfigurationException(\sprintf(
+            if (!array_key_exists($poolConfig['filesystem'], $mounts)) {
+                throw new InvalidConfigurationException(sprintf(
                     'flow_filesystem.cache.pools.%s: filesystem "%s" is not mounted in fstab "%s". Available mounts: [%s].',
                     $name,
                     $poolConfig['filesystem'],
                     $fstabName,
-                    \implode(', ', \array_keys($mounts)),
+                    implode(', ', array_keys($mounts)),
                 ));
             }
 
@@ -291,7 +303,7 @@ final class FlowFilesystemBundle extends AbstractBundle
             ->ifTrue(
                 static fn(array $v): bool => (
                     ($v['enabled'] ?? false) === true
-                    && (!\is_string($v['telemetry_service_id'] ?? null) || $v['telemetry_service_id'] === '')
+                    && (!is_string($v['telemetry_service_id'] ?? null) || $v['telemetry_service_id'] === '')
                 ),
             )
             ->thenInvalid('telemetry.enabled=true requires a non-empty `telemetry_service_id`.')
@@ -300,7 +312,7 @@ final class FlowFilesystemBundle extends AbstractBundle
             ->ifTrue(
                 static fn(array $v): bool => (
                     ($v['enabled'] ?? false) === true
-                    && (!\is_string($v['clock_service_id'] ?? null) || $v['clock_service_id'] === '')
+                    && (!is_string($v['clock_service_id'] ?? null) || $v['clock_service_id'] === '')
                 ),
             )
             ->thenInvalid('telemetry.enabled=true requires a non-empty `clock_service_id`.')

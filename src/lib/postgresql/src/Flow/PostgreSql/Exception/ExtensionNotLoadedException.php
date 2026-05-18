@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Exception;
 
-final class ExtensionNotLoadedException extends \RuntimeException
+use RuntimeException;
+
+final class ExtensionNotLoadedException extends RuntimeException
 {
     public function __construct()
     {

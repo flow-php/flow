@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
+use DateTimeZone;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type\Logical\ListType;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_float;
@@ -19,7 +22,7 @@ use function Flow\Types\DSL\type_string;
 
 final class ListTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'valid list of strings' => [
             'value' => ['a', 'b'],
@@ -70,19 +73,19 @@ final class ListTypeTest extends TestCase
         ];
 
         yield 'invalid object' => [
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'listType' => type_list(type_integer()),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid DateTimeZone' => [
-            'value' => new \DateTimeZone('UTC'),
+            'value' => new DateTimeZone('UTC'),
             'listType' => type_list(type_integer()),
             'exceptionClass' => InvalidTypeException::class,
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
         yield 'list of ints to list of floats' => [
             'value' => [1, 2, 3],
@@ -99,7 +102,7 @@ final class ListTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'valid list of booleans' => [
             'value' => [true, false],

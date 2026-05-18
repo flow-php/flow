@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
+use DateTimeImmutable;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
@@ -16,6 +17,7 @@ use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
+use function implode;
 
 final class MapEntryTest extends FlowTestCase
 {
@@ -40,7 +42,7 @@ final class MapEntryTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected map<integer, datetime> got different types: array<mixed>');
 
-        map_entry('map', ['string', new \DateTimeImmutable()], type_map(type_integer(), type_datetime()));
+        map_entry('map', ['string', new DateTimeImmutable()], type_map(type_integer(), type_datetime()));
     }
 
     public function test_creating_float_map_from_wrong_value_types(): void
@@ -119,7 +121,7 @@ final class MapEntryTest extends FlowTestCase
                 'strings',
                 ['one', 'two', 'three'],
                 type_map(type_integer(), type_string()),
-            )->map(static fn(array $value): array => [\implode(', ', $value)]),
+            )->map(static fn(array $value): array => [implode(', ', $value)]),
         );
     }
 

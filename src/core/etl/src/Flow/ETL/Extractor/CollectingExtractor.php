@@ -7,6 +7,7 @@ namespace Flow\ETL\Extractor;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Generator;
 
 final readonly class CollectingExtractor implements Extractor, OverridingExtractor
 {
@@ -14,7 +15,7 @@ final readonly class CollectingExtractor implements Extractor, OverridingExtract
         private Extractor $extractor,
     ) {}
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         $collectedRows = new Rows();
 

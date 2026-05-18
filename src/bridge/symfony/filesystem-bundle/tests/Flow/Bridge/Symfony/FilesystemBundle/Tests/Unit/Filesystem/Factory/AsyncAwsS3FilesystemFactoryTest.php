@@ -10,6 +10,7 @@ use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\Factory\AsyncAwsS3Filesystem
 use Flow\Filesystem\Bridge\AsyncAWS\AsyncAWSS3Filesystem;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use stdClass;
 use Symfony\Component\HttpClient\HttpClient;
 
 final class AsyncAwsS3FilesystemFactoryTest extends TestCase
@@ -138,7 +139,7 @@ final class AsyncAwsS3FilesystemFactoryTest extends TestCase
 
         (new AsyncAwsS3FilesystemFactory())->create('aws-s3', [
             'bucket' => 'b',
-            'client' => new \stdClass(),
+            'client' => new stdClass(),
         ]);
     }
 
@@ -151,7 +152,7 @@ final class AsyncAwsS3FilesystemFactoryTest extends TestCase
             'bucket' => 'b',
             'client' => [
                 'region' => 'us-east-1',
-                'http_client' => new \stdClass(),
+                'http_client' => new stdClass(),
             ],
         ]);
     }
@@ -165,7 +166,7 @@ final class AsyncAwsS3FilesystemFactoryTest extends TestCase
             'bucket' => 'b',
             'client' => [
                 'region' => 'us-east-1',
-                'logger' => new \stdClass(),
+                'logger' => new stdClass(),
             ],
         ]);
     }

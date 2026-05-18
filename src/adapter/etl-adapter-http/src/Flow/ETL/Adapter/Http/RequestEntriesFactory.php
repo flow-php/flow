@@ -10,7 +10,11 @@ use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\JsonEntry;
 use Psr\Http\Message\RequestInterface;
 
+use function class_exists;
 use function Flow\ETL\DSL\string_entry;
+use function is_array;
+use function json_decode;
+use function str_contains;
 
 final class RequestEntriesFactory
 {
@@ -28,13 +32,13 @@ final class RequestEntriesFactory
 
         if ($request->hasHeader('Content-Type')) {
             foreach ($request->getHeader('Content-Type') as $header) {
-                if (\str_contains($header, 'application/json')) {
+                if (str_contains($header, 'application/json')) {
                     $requestType = 'json';
                 }
             }
         } else {
             foreach ($request->getHeader('Accept') as $header) {
-                if (\str_contains($header, 'application/json')) {
+                if (str_contains($header, 'application/json')) {
                     $requestType = 'json';
                 }
             }
@@ -57,10 +61,10 @@ final class RequestEntriesFactory
             if (!empty($requestBodyContent)) {
                 switch ($requestType) {
                     case 'json':
-                        if (\class_exists(JsonEntry::class)) {
-                            $decodedJson = \json_decode($requestBodyContent, true, 512, JSON_THROW_ON_ERROR);
+                        if (class_exists(JsonEntry::class)) {
+                            $decodedJson = json_decode($requestBodyContent, true, 512, JSON_THROW_ON_ERROR);
 
-                            if (!\is_array($decodedJson)) {
+                            if (!is_array($decodedJson)) {
                                 throw new InvalidArgumentException(
                                     'Invalid JSON request body, expected array or object',
                                 );

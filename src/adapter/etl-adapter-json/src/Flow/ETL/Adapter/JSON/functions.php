@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON;
 
+use DateTimeInterface;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonLinesExtractor;
 use Flow\ETL\Attribute\DocumentationDSL;
@@ -14,6 +15,7 @@ use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
 
 use function Flow\Filesystem\DSL\path_real;
+use function is_string;
 
 /**
  * @param Path|string $path - string is internally turned into stream
@@ -24,7 +26,7 @@ use function Flow\Filesystem\DSL\path_real;
 #[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'json')]
 function from_json(string|Path $path, ?string $pointer = null, ?Schema $schema = null): JsonExtractor
 {
-    $loader = new JsonExtractor(\is_string($path) ? path_real($path) : $path);
+    $loader = new JsonExtractor(is_string($path) ? path_real($path) : $path);
 
     if ($pointer !== null) {
         $loader->withPointer($pointer);
@@ -46,7 +48,7 @@ function from_json(string|Path $path, ?string $pointer = null, ?Schema $schema =
 #[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'jsonl')]
 function from_json_lines(string|Path $path): JsonLinesExtractor
 {
-    return new JsonLinesExtractor(\is_string($path) ? path_real($path) : $path);
+    return new JsonLinesExtractor(is_string($path) ? path_real($path) : $path);
 }
 
 /**
@@ -61,10 +63,10 @@ function from_json_lines(string|Path $path): JsonLinesExtractor
 function to_json(
     string|Path $path,
     int $flags = JSON_THROW_ON_ERROR,
-    string $date_time_format = \DateTimeInterface::ATOM,
+    string $date_time_format = DateTimeInterface::ATOM,
     bool $put_rows_in_new_lines = false,
 ): JsonLoader {
-    return (new JsonLoader(\is_string($path) ? path_real($path) : $path))
+    return (new JsonLoader(is_string($path) ? path_real($path) : $path))
         ->withFlags($flags)
         ->withDateTimeFormat($date_time_format)
         ->withRowsInNewLines($put_rows_in_new_lines);
@@ -80,5 +82,5 @@ function to_json(
 #[DocumentationDSL(module: Module::JSON, type: Type::LOADER)]
 function to_json_lines(string|Path $path): JsonLinesLoader
 {
-    return new JsonLinesLoader(\is_string($path) ? path_real($path) : $path);
+    return new JsonLinesLoader(is_string($path) ? path_real($path) : $path);
 }

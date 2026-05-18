@@ -41,6 +41,7 @@ use function Flow\PostgreSql\DSL\schema_view;
 use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\star;
 use function Flow\PostgreSql\DSL\table;
+use function ksort;
 
 final class CatalogComparatorTest extends TestCase
 {
@@ -440,7 +441,7 @@ final class CatalogComparatorTest extends TestCase
             $renames[$col->source->name] = $col->target->name;
         }
 
-        \ksort($renames);
+        ksort($renames);
         static::assertSame(
             [
                 'net_commission_cents' => 'net_commission',
@@ -517,7 +518,7 @@ final class CatalogComparatorTest extends TestCase
             $renames[$col->source->name] = $col->target->name;
         }
 
-        \ksort($renames);
+        ksort($renames);
         static::assertSame(
             [
                 'amount_cents' => 'amount',

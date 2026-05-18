@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Countable;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
@@ -13,10 +14,18 @@ use Flow\ETL\Row\References;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
 
+use function array_key_exists;
+use function array_map;
+use function array_merge;
+use function array_values;
+use function count;
 use function Flow\ETL\DSL\definition_from_array;
 use function Flow\ETL\DSL\schema;
+use function implode;
+use function is_array;
+use function sprintf;
 
-final class Schema implements \Countable
+final class Schema implements Countable
 {
     /**
      * @var array<string, Definition<mixed>>
@@ -39,7 +48,7 @@ final class Schema implements \Countable
         $schema = [];
 
         foreach ($definitions as $definition) {
-            if (!\is_array($definition)) {
+            if (!is_array($definition)) {
                 throw new InvalidArgumentException('Schema definition must be an array');
             }
 
@@ -106,7 +115,7 @@ final class Schema implements \Countable
      */
     public function add(Definition ...$definitions): self
     {
-        $this->setDefinitions(...\array_merge(\array_values($this->definitions), $definitions));
+        $this->setDefinitions(...array_merge(array_values($this->definitions), $definitions));
 
         return $this;
     }
@@ -129,7 +138,7 @@ final class Schema implements \Countable
 
     public function count(): int
     {
-        return \count($this->definitions);
+        return count($this->definitions);
     }
 
     /**
@@ -146,14 +155,14 @@ final class Schema implements \Countable
     public function findDefinition(string|Reference $ref): ?Definition
     {
         if ($ref instanceof Reference) {
-            if (!\array_key_exists($ref->name(), $this->definitions)) {
+            if (!array_key_exists($ref->name(), $this->definitions)) {
                 return null;
             }
 
             return $this->definitions[$ref->name()];
         }
 
-        if (!\array_key_exists($ref, $this->definitions)) {
+        if (!array_key_exists($ref, $this->definitions)) {
             return null;
         }
 
@@ -192,12 +201,12 @@ final class Schema implements \Countable
 
     public function isSame(self $schema): bool
     {
-        if (\count($this->definitions) !== \count($schema->definitions)) {
+        if (count($this->definitions) !== count($schema->definitions)) {
             return false;
         }
 
         foreach ($this->definitions as $entry => $definition) {
-            if (!\array_key_exists($entry, $schema->definitions)) {
+            if (!array_key_exists($entry, $schema->definitions)) {
                 return false;
             }
 
@@ -272,7 +281,7 @@ final class Schema implements \Countable
         $newDefinitions = $this->definitions;
 
         foreach ($schema->definitions as $entry => $definition) {
-            if (!\array_key_exists($definition->entry()->name(), $newDefinitions)) {
+            if (!array_key_exists($definition->entry()->name(), $newDefinitions)) {
                 $newDefinitions[$entry] = $definition->makeNullable();
             } else {
                 $newDefinitions[$entry] = $newDefinitions[$entry]->merge($definition);
@@ -280,12 +289,12 @@ final class Schema implements \Countable
         }
 
         foreach ($newDefinitions as $entry => $definition) {
-            if (!\array_key_exists($definition->entry()->name(), $schema->definitions)) {
+            if (!array_key_exists($definition->entry()->name(), $schema->definitions)) {
                 $newDefinitions[$entry] = $definition->makeNullable();
             }
         }
 
-        $this->setDefinitions(...\array_values($newDefinitions));
+        $this->setDefinitions(...array_values($newDefinitions));
 
         return $this;
     }
@@ -414,17 +423,17 @@ final class Schema implements \Countable
         $duplicatedDefinitions = [];
 
         foreach ($definitions as $definition) {
-            if (\array_key_exists($definition->entry()->name(), $uniqueDefinitions)) {
+            if (array_key_exists($definition->entry()->name(), $uniqueDefinitions)) {
                 $duplicatedDefinitions[] = $definition->entry()->name();
             }
             $uniqueDefinitions[$definition->entry()->name()] = $definition;
         }
 
-        if (\count($uniqueDefinitions) !== \count($definitions)) {
-            throw new SchemaDefinitionNotUniqueException(\sprintf(
+        if (count($uniqueDefinitions) !== count($definitions)) {
+            throw new SchemaDefinitionNotUniqueException(sprintf(
                 'Entry definitions must be unique, duplicated entries: [%s], all: [%s]',
-                \implode(', ', $duplicatedDefinitions),
-                \implode(', ', \array_map(static fn(Definition $d) => $d->entry()->name(), $definitions)),
+                implode(', ', $duplicatedDefinitions),
+                implode(', ', array_map(static fn(Definition $d) => $d->entry()->name(), $definitions)),
             ));
         }
 

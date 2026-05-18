@@ -10,6 +10,7 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\execution_context;
 use function Flow\ETL\DSL\from_array;
+use function iterator_to_array;
 
 final class ArrayExtractorTest extends FlowTestCase
 {
@@ -20,7 +21,7 @@ final class ArrayExtractorTest extends FlowTestCase
             ['id' => 2, 'name' => 'Michal'],
         ]);
 
-        $rows = \iterator_to_array($extractor->extract(execution_context(config_builder()->build())));
+        $rows = iterator_to_array($extractor->extract(execution_context(config_builder()->build())));
 
         static::assertCount(2, $rows);
         static::assertSame(['id' => 1, 'name' => 'Norbert'], $rows[0]->first()->toArray());
@@ -36,7 +37,7 @@ final class ArrayExtractorTest extends FlowTestCase
 
         $extractor = from_array($generator());
 
-        $rows = \iterator_to_array($extractor->extract(execution_context(config())));
+        $rows = iterator_to_array($extractor->extract(execution_context(config())));
 
         static::assertCount(2, $rows);
         static::assertSame(['id' => 1, 'name' => 'Norbert'], $rows[0]->first()->toArray());

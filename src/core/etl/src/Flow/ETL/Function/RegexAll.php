@@ -8,6 +8,8 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function preg_match_all;
+
 final class RegexAll extends ScalarFunctionChain
 {
     /**
@@ -58,7 +60,7 @@ final class RegexAll extends ScalarFunctionChain
         }
 
         // Returns the number of full pattern matches (which might be zero), or false on failure.
-        if (\preg_match_all($pattern, $subject, $matches, $flags, $offset) !== false) {
+        if (preg_match_all($pattern, $subject, $matches, $flags, $offset) !== false) {
             if ($matches === [[]]) {
                 return null;
             }

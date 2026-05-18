@@ -11,6 +11,9 @@ use Flow\PostgreSql\AST\NodeVisitor;
 use Flow\PostgreSql\AST\Traverser;
 use Flow\PostgreSql\Protobuf\AST\ParseResult;
 
+use function pg_query_deparse;
+use function pg_query_deparse_opts;
+
 final readonly class ParsedQuery
 {
     public function __construct(
@@ -28,10 +31,10 @@ final readonly class ParsedQuery
     public function deparse(?DeparseOptions $options = null): string
     {
         if ($options === null) {
-            return \pg_query_deparse($this->parseResult->serializeToString());
+            return pg_query_deparse($this->parseResult->serializeToString());
         }
 
-        return \pg_query_deparse_opts(
+        return pg_query_deparse_opts(
             $this->parseResult->serializeToString(),
             $options->hasPrettyPrint(),
             $options->getIndentSize(),

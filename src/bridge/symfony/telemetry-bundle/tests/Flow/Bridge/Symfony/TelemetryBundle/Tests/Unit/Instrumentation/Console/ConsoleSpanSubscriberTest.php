@@ -19,6 +19,7 @@ use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Event\ConsoleCommandEvent;
 use Symfony\Component\Console\Event\ConsoleErrorEvent;
@@ -127,7 +128,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
         $subscriber = new ConsoleSpanSubscriber($telemetry, excludeCommands: ['cache:clear']);
 
         $command = new Command('cache:clear');
-        $exception = new \RuntimeException('Error');
+        $exception = new RuntimeException('Error');
         $commandEvent = new ConsoleCommandEvent($command, new ArrayInput([]), new NullOutput());
         $errorEvent = new ConsoleErrorEvent(new ArrayInput([]), new NullOutput(), $exception, $command);
 
@@ -145,7 +146,7 @@ final class ConsoleSpanSubscriberTest extends TestCase
         $subscriber = new ConsoleSpanSubscriber($telemetry);
 
         $command = new Command('app:failing');
-        $exception = new \RuntimeException('Something went wrong');
+        $exception = new RuntimeException('Something went wrong');
         $commandEvent = new ConsoleCommandEvent($command, new ArrayInput([]), new NullOutput());
         $errorEvent = new ConsoleErrorEvent(new ArrayInput([]), new NullOutput(), $exception, $command);
         $terminateEvent = new ConsoleTerminateEvent($command, new ArrayInput([]), new NullOutput(), 1);

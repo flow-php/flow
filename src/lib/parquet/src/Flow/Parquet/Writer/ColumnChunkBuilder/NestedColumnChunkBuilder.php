@@ -10,6 +10,8 @@ use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Writer\ColumnChunkBuilder;
 
+use function strlen;
+
 final readonly class NestedColumnChunkBuilder implements ColumnChunkBuilder
 {
     /**
@@ -48,7 +50,7 @@ final readonly class NestedColumnChunkBuilder implements ColumnChunkBuilder
         foreach ($this->childrenColumnChunkBuilders as $childBuilder) {
             foreach ($childBuilder->flush($offset) as $container) {
                 $containers[] = $container;
-                $offset += \strlen($container->binaryBuffer);
+                $offset += strlen($container->binaryBuffer);
             }
         }
 

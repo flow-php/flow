@@ -9,6 +9,9 @@ use Flow\PostgreSql\Schema\Catalog;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 
+use function array_key_exists;
+use function array_replace;
+
 final readonly class Context
 {
     /**
@@ -44,7 +47,7 @@ final readonly class Context
      */
     public function get(string $key, Type $type): mixed
     {
-        if (!\array_key_exists($key, $this->data)) {
+        if (!array_key_exists($key, $this->data)) {
             throw ContextException::keyNotFound($key);
         }
 
@@ -53,12 +56,12 @@ final readonly class Context
 
     public function has(string $key): bool
     {
-        return \array_key_exists($key, $this->data);
+        return array_key_exists($key, $this->data);
     }
 
     public function merge(self $other): self
     {
-        return new self(catalog: $other->catalog ?? $this->catalog, data: \array_replace($this->data, $other->data));
+        return new self(catalog: $other->catalog ?? $this->catalog, data: array_replace($this->data, $other->data));
     }
 
     public function with(string $key, mixed $value): self

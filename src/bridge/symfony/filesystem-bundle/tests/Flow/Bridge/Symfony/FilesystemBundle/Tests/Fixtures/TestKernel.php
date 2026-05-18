@@ -5,11 +5,18 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\FilesystemBundle\Tests\Fixtures;
 
 use Flow\Bridge\Symfony\FilesystemBundle\FlowFilesystemBundle;
+use Override;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\Kernel;
+
+use function array_merge;
+use function bin2hex;
+use function random_bytes;
+use function str_starts_with;
+use function sys_get_temp_dir;
 
 final class TestKernel extends Kernel
 {
@@ -29,7 +36,7 @@ final class TestKernel extends Kernel
 
     public function __construct(string $environment = 'test', bool $debug = true)
     {
-        $this->testId = \bin2hex(\random_bytes(8));
+        $this->testId = bin2hex(random_bytes(8));
 
         parent::__construct($environment, $debug);
     }
@@ -60,26 +67,24 @@ final class TestKernel extends Kernel
      */
     public function addTestExtensionConfig(string $extension, array $config): void
     {
-        $this->testExtensionConfigs[$extension] = \array_merge($this->testExtensionConfigs[$extension] ?? [], $config);
+        $this->testExtensionConfigs[$extension] = array_merge($this->testExtensionConfigs[$extension] ?? [], $config);
     }
 
-    #[\Override]
+    #[Override]
     public function getCacheDir(): string
     {
         return (
-            \sys_get_temp_dir() . '/flow_filesystem_bundle_test/' . $this->environment . '/' . $this->testId . '/cache'
+            sys_get_temp_dir() . '/flow_filesystem_bundle_test/' . $this->environment . '/' . $this->testId . '/cache'
         );
     }
 
-    #[\Override]
+    #[Override]
     public function getLogDir(): string
     {
-        return (
-            \sys_get_temp_dir() . '/flow_filesystem_bundle_test/' . $this->environment . '/' . $this->testId . '/log'
-        );
+        return sys_get_temp_dir() . '/flow_filesystem_bundle_test/' . $this->environment . '/' . $this->testId . '/log';
     }
 
-    #[\Override]
+    #[Override]
     public function getProjectDir(): string
     {
         return __DIR__ . '/..';
@@ -121,16 +126,16 @@ final class TestKernel extends Kernel
             public function process(ContainerBuilder $container): void
             {
                 foreach ($container->getDefinitions() as $id => $definition) {
-                    if (\str_starts_with($id, 'flow.filesystem') || \str_starts_with($id, 'test.')) {
+                    if (str_starts_with($id, 'flow.filesystem') || str_starts_with($id, 'test.')) {
                         $definition->setPublic(true);
                     }
                 }
 
                 foreach ($container->getAliases() as $id => $alias) {
                     if (
-                        \str_starts_with($id, 'Flow\\Filesystem\\')
-                        || \str_starts_with($id, 'Flow\\Bridge\\Symfony\\FilesystemBundle\\')
-                        || \str_starts_with($id, 'flow.filesystem')
+                        str_starts_with($id, 'Flow\\Filesystem\\')
+                        || str_starts_with($id, 'Flow\\Bridge\\Symfony\\FilesystemBundle\\')
+                        || str_starts_with($id, 'flow.filesystem')
                     ) {
                         $alias->setPublic(true);
                     }

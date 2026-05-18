@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use DateTimeImmutable;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\DuplicateRowTransformer;
 use Flow\ETL\WithEntry;
@@ -60,30 +61,30 @@ final class DuplicateRowTransformerTest extends FlowTestCase
                     'id' => 1,
                     'status' => 'active',
                     'amount' => 100,
-                    'date_created' => new \DateTimeImmutable('2025-01-01'),
+                    'date_created' => new DateTimeImmutable('2025-01-01'),
                     'date_deactivated' => null,
                 ],
                 [
                     'id' => 2,
                     'status' => 'inactive',
                     'amount' => 100,
-                    'date_created' => new \DateTimeImmutable('2025-01-01'),
-                    'date_deactivated' => new \DateTimeImmutable('2025-01-03'),
+                    'date_created' => new DateTimeImmutable('2025-01-01'),
+                    'date_deactivated' => new DateTimeImmutable('2025-01-03'),
                 ],
                 [
                     'id' => 3,
                     'status' => 'active',
                     'amount' => 100,
-                    'date_created' => new \DateTimeImmutable('2025-01-01'),
+                    'date_created' => new DateTimeImmutable('2025-01-01'),
                     'date_deactivated' => null,
                 ],
                 [
                     'id' => 2,
                     'status' => 'inactive',
                     'amount' => -100,
-                    'date_created' => new \DateTimeImmutable('2025-01-01'),
-                    'date_deactivated' => new \DateTimeImmutable('2025-01-03'),
-                    'date_updated' => new \DateTimeImmutable('2025-01-03'),
+                    'date_created' => new DateTimeImmutable('2025-01-01'),
+                    'date_deactivated' => new DateTimeImmutable('2025-01-03'),
+                    'date_updated' => new DateTimeImmutable('2025-01-03'),
                 ],
             ],
             $transformedRows->toArray(),

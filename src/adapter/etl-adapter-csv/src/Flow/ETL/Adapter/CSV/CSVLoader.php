@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
+use DateTimeInterface;
 use Flow\ETL\Adapter\CSV\RowsNormalizer\EntryNormalizer;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\RuntimeException;
@@ -18,10 +19,15 @@ use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
+use Throwable;
+
+use function fclose;
+use function fputcsv;
+use function stream_get_contents;
 
 final class CSVLoader implements Closure, FileLoader, Loader
 {
-    private string $dateTimeFormat = \DateTimeInterface::ATOM;
+    private string $dateTimeFormat = DateTimeInterface::ATOM;
 
     private string $enclosure = '"';
 
@@ -75,7 +81,7 @@ final class CSVLoader implements Closure, FileLoader, Loader
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 
             throw $e;
@@ -155,7 +161,7 @@ final class CSVLoader implements Closure, FileLoader, Loader
             throw new RuntimeException('Failed to open temporary stream for CSV row');
         }
 
-        \fputcsv(
+        fputcsv(
             stream: $tmpHandle,
             fields: $row,
             separator: $this->separator,
@@ -163,8 +169,8 @@ final class CSVLoader implements Closure, FileLoader, Loader
             escape: $this->escape,
             eol: $this->newLineSeparator,
         );
-        $csvRowData = \stream_get_contents($tmpHandle, offset: 0);
-        \fclose($tmpHandle);
+        $csvRowData = stream_get_contents($tmpHandle, offset: 0);
+        fclose($tmpHandle);
 
         if ($csvRowData === false) {
             throw new RuntimeException('Failed to read temporary stream for CSV row');

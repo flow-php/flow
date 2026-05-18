@@ -14,6 +14,8 @@ use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
+use function array_values;
+
 final readonly class CreateTriggerBuilder implements
     CreateTriggerFinalStep,
     CreateTriggerOnStep,
@@ -59,7 +61,7 @@ final readonly class CreateTriggerBuilder implements
             $this->replace,
             $this->constraint,
             TriggerTiming::AFTER,
-            \array_values($events),
+            array_values($events),
             [],
             $this->table,
             $this->schema,
@@ -82,7 +84,7 @@ final readonly class CreateTriggerBuilder implements
             $this->constraint,
             TriggerTiming::AFTER,
             [TriggerEvent::UPDATE],
-            \array_values($columns),
+            array_values($columns),
             $this->table,
             $this->schema,
             $this->fromTable,
@@ -103,7 +105,7 @@ final readonly class CreateTriggerBuilder implements
             $this->replace,
             $this->constraint,
             TriggerTiming::BEFORE,
-            \array_values($events),
+            array_values($events),
             [],
             $this->table,
             $this->schema,
@@ -126,7 +128,7 @@ final readonly class CreateTriggerBuilder implements
             $this->constraint,
             TriggerTiming::BEFORE,
             [TriggerEvent::UPDATE],
-            \array_values($columns),
+            array_values($columns),
             $this->table,
             $this->schema,
             $this->fromTable,
@@ -202,7 +204,7 @@ final readonly class CreateTriggerBuilder implements
             $this->level,
             $this->when,
             $functionName,
-            \array_values($args),
+            array_values($args),
         );
     }
 
@@ -323,7 +325,7 @@ final readonly class CreateTriggerBuilder implements
             $this->replace,
             $this->constraint,
             TriggerTiming::INSTEAD_OF,
-            \array_values($events),
+            array_values($events),
             [],
             $this->table,
             $this->schema,

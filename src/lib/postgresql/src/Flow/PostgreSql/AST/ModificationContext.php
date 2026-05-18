@@ -6,6 +6,8 @@ namespace Flow\PostgreSql\AST;
 
 use Flow\PostgreSql\Protobuf\AST\ParseResult;
 
+use function count;
+
 /**
  * Provides context information during AST modification.
  *
@@ -45,7 +47,7 @@ final readonly class ModificationContext
 
     public function parent(): ?object
     {
-        return $this->ancestors[\count($this->ancestors) - 1] ?? null;
+        return $this->ancestors[count($this->ancestors) - 1] ?? null;
     }
 
     public function parseResult(): ParseResult

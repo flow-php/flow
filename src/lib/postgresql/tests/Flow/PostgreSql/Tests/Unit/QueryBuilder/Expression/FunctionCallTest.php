@@ -11,6 +11,7 @@ use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PostgreSql\QueryBuilder\Expression\FunctionCall;
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
 final class FunctionCallTest extends TestCase
 {
@@ -125,7 +126,7 @@ final class FunctionCallTest extends TestCase
     {
         $this->expectException(InvalidExpressionException::class);
 
-        (new \ReflectionClass(FunctionCall::class))->newInstance([], []);
+        (new ReflectionClass(FunctionCall::class))->newInstance([], []);
     }
 
     public function test_with_args_creates_new_instance(): void

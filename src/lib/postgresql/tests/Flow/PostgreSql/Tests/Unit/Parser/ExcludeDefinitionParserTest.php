@@ -7,6 +7,9 @@ namespace Flow\PostgreSql\Tests\Unit\Parser;
 use Flow\PostgreSql\Parser\ExcludeDefinitionParser;
 use Flow\PostgreSql\Parser\ExpressionParser;
 use PHPUnit\Framework\TestCase;
+use Throwable;
+
+use function extension_loaded;
 
 final class ExcludeDefinitionParserTest extends TestCase
 {
@@ -14,7 +17,7 @@ final class ExcludeDefinitionParserTest extends TestCase
 
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
 
@@ -81,7 +84,7 @@ final class ExcludeDefinitionParserTest extends TestCase
 
     public function test_throws_on_invalid_input(): void
     {
-        $this->expectException(\Throwable::class);
+        $this->expectException(Throwable::class);
 
         $this->parser->parse('not a constraint definition at all');
     }

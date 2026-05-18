@@ -9,6 +9,7 @@ use AsyncAws\S3\Result\DeleteObjectOutput;
 use AsyncAws\S3\Result\HeadObjectOutput;
 use AsyncAws\S3\Result\ListObjectsV2Output;
 use AsyncAws\S3\S3Client;
+use Override;
 
 final class RecordingS3Client extends S3Client
 {
@@ -20,7 +21,7 @@ final class RecordingS3Client extends S3Client
 
     public int $listObjectsV2Count = 0;
 
-    #[\Override]
+    #[Override]
     public function copyObject($input): CopyObjectOutput
     {
         $this->copyObjectCount++;
@@ -28,7 +29,7 @@ final class RecordingS3Client extends S3Client
         return parent::copyObject($input);
     }
 
-    #[\Override]
+    #[Override]
     public function deleteObject($input): DeleteObjectOutput
     {
         $this->deleteObjectCount++;
@@ -36,7 +37,7 @@ final class RecordingS3Client extends S3Client
         return parent::deleteObject($input);
     }
 
-    #[\Override]
+    #[Override]
     public function headObject($input): HeadObjectOutput
     {
         $this->headObjectCount++;
@@ -44,7 +45,7 @@ final class RecordingS3Client extends S3Client
         return parent::headObject($input);
     }
 
-    #[\Override]
+    #[Override]
     public function listObjectsV2($input): ListObjectsV2Output
     {
         $this->listObjectsV2Count++;

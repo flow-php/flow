@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Cache\Implementation;
 
+use DateTimeImmutable;
 use Flow\ETL\Cache;
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Exception\KeyNotInCacheException;
@@ -15,6 +16,7 @@ use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
 use Flow\Telemetry\Tracer\Tracer;
+use Throwable;
 
 final readonly class TraceableCache implements Cache
 {
@@ -44,8 +46,8 @@ final readonly class TraceableCache implements Cache
         try {
             $this->cache->clear();
             $span->setStatus(SpanStatus::ok());
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -64,8 +66,8 @@ final readonly class TraceableCache implements Cache
         try {
             $this->cache->delete($key);
             $span->setStatus(SpanStatus::ok());
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -121,8 +123,8 @@ final readonly class TraceableCache implements Cache
         try {
             $this->cache->set($key, $value);
             $span->setStatus(SpanStatus::ok());
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;

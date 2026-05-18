@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Exception;
 
+use function sprintf;
+use function strlen;
+use function substr;
+
 final class QueryException extends ClientException
 {
     private const int SQL_PREVIEW_LENGTH = 100;
@@ -18,12 +22,12 @@ final class QueryException extends ClientException
 
     public static function executionFailed(string $sql, PostgreSqlError $error): self
     {
-        $sqlPreview = \strlen($sql) > self::SQL_PREVIEW_LENGTH
-            ? \substr($sql, 0, self::SQL_PREVIEW_LENGTH) . '...'
+        $sqlPreview = strlen($sql) > self::SQL_PREVIEW_LENGTH
+            ? substr($sql, 0, self::SQL_PREVIEW_LENGTH) . '...'
             : $sql;
 
         return new self(
-            \sprintf('Query execution failed [%s]: %s. SQL: %s', $error->sqlState, $error->safeMessage(), $sqlPreview),
+            sprintf('Query execution failed [%s]: %s. SQL: %s', $error->sqlState, $error->safeMessage(), $sqlPreview),
             $sql,
             $error,
         );

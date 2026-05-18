@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Controller;
 
+use RuntimeException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -16,7 +17,7 @@ final class TestController
 
     public function exception(): Response
     {
-        throw new \RuntimeException('Test exception');
+        throw new RuntimeException('Test exception');
     }
 
     public function index(): Response

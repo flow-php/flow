@@ -15,6 +15,7 @@ use Flow\PostgreSql\QueryBuilder\Schema\Extension\CreateExtensionBuilder;
 use Flow\PostgreSql\QueryBuilder\Schema\Extension\DropExtensionBuilder;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
 use function Flow\PostgreSql\DSL\alter;
 use function Flow\PostgreSql\DSL\create;
 use function Flow\PostgreSql\DSL\drop;
@@ -23,7 +24,7 @@ final class ExtensionBuilderTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }

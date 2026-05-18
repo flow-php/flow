@@ -10,6 +10,14 @@ use League\CommonMark\CommonMarkConverter;
 use League\CommonMark\Event\DocumentParsedEvent;
 use League\CommonMark\Extension\Table\TableExtension;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+
+use function file_put_contents;
+use function json_encode;
+use function strpos;
+use function sys_get_temp_dir;
+use function tempnam;
+use function unlink;
 
 final class FlowManifestRendererTest extends TestCase
 {
@@ -21,9 +29,9 @@ final class FlowManifestRendererTest extends TestCase
             ['name' => 'flow-php/array-dot', 'path' => 'src/lib/array-dot', 'type' => 'lib'],
         ]);
 
-        $core = \strpos($html, '<strong>Core</strong>');
-        $adapters = \strpos($html, '<strong>Adapters</strong>');
-        $libraries = \strpos($html, '<strong>Libraries</strong>');
+        $core = strpos($html, '<strong>Core</strong>');
+        $adapters = strpos($html, '<strong>Adapters</strong>');
+        $libraries = strpos($html, '<strong>Libraries</strong>');
 
         static::assertIsInt($core);
         static::assertIsInt($adapters);
@@ -114,7 +122,7 @@ final class FlowManifestRendererTest extends TestCase
                 new FlowManifestRenderer(new Manifest('/nonexistent/manifest.json')),
             );
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Flow manifest not found');
 
         $converter->convert('[FLOW_MANIFEST]');
@@ -125,13 +133,13 @@ final class FlowManifestRendererTest extends TestCase
      */
     private function render(array $packages, string $markdown = "[FLOW_MANIFEST]\n"): string
     {
-        $manifestPath = \tempnam(\sys_get_temp_dir(), 'flow-manifest-');
+        $manifestPath = tempnam(sys_get_temp_dir(), 'flow-manifest-');
 
         if ($manifestPath === false) {
             self::fail('Failed to create temp manifest file.');
         }
 
-        \file_put_contents($manifestPath, \json_encode(['packages' => $packages]));
+        file_put_contents($manifestPath, json_encode(['packages' => $packages]));
 
         try {
             $converter = new CommonMarkConverter();
@@ -142,7 +150,7 @@ final class FlowManifestRendererTest extends TestCase
 
             return (string) $converter->convert($markdown);
         } finally {
-            @\unlink($manifestPath);
+            @unlink($manifestPath);
         }
     }
 }

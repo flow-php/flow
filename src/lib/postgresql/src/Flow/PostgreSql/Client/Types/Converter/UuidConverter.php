@@ -7,6 +7,9 @@ namespace Flow\PostgreSql\Client\Types\Converter;
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\ValueConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
+use Stringable;
+
+use function is_string;
 
 final class UuidConverter implements ValueConverter
 {
@@ -21,11 +24,11 @@ final class UuidConverter implements ValueConverter
             return null;
         }
 
-        if (\is_string($value)) {
+        if (is_string($value)) {
             return $value;
         }
 
-        if ($value instanceof \Stringable) {
+        if ($value instanceof Stringable) {
             return $value->__toString();
         }
 

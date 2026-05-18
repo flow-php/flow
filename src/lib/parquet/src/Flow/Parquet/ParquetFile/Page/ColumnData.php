@@ -7,6 +7,12 @@ namespace Flow\Parquet\ParquetFile\Page;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use LogicException;
+
+use function array_merge;
+use function array_splice;
+use function count;
+use function max;
 
 final readonly class ColumnData
 {
@@ -32,19 +38,19 @@ final readonly class ColumnData
 
     public function isEmpty(): bool
     {
-        return \count($this->definitions) === 0 && \count($this->values) === 0;
+        return count($this->definitions) === 0 && count($this->values) === 0;
     }
 
     public function merge(self $columnData): self
     {
         if ($columnData->type !== $this->type) {
-            throw new \LogicException(
+            throw new LogicException(
                 'Column data type mismatch, expected ' . $this->type->name . ', got ' . $columnData->type->name,
             );
         }
 
         if ($this->logicalType?->name() !== $columnData->logicalType?->name()) {
-            throw new \LogicException(
+            throw new LogicException(
                 'Column data logical type mismatch, expected '
                 . ($this->logicalType?->name() ?? 'null')
                 . ', got '
@@ -55,19 +61,19 @@ final readonly class ColumnData
         return new self(
             $this->type,
             $this->logicalType,
-            \array_merge($this->repetitions, $columnData->repetitions),
-            \array_merge($this->definitions, $columnData->definitions),
-            \array_merge($this->values, $columnData->values),
+            array_merge($this->repetitions, $columnData->repetitions),
+            array_merge($this->definitions, $columnData->definitions),
+            array_merge($this->values, $columnData->values),
         );
     }
 
     public function size(): int
     {
-        if (!\count($this->definitions)) {
-            return \count($this->values);
+        if (!count($this->definitions)) {
+            return count($this->values);
         }
 
-        return \count($this->definitions);
+        return count($this->definitions);
     }
 
     /**
@@ -75,7 +81,7 @@ final readonly class ColumnData
      */
     public function splitLastRow(): array
     {
-        if (!\count($this->repetitions)) {
+        if (!count($this->repetitions)) {
             return [$this, new self($this->type, $this->logicalType, [], [], [])];
         }
 
@@ -86,7 +92,7 @@ final readonly class ColumnData
         /** @var array<mixed> $values */
         $values = [];
 
-        $maxDefinition = $this->definitions ? \max($this->definitions) : 0;
+        $maxDefinition = $this->definitions ? max($this->definitions) : 0;
 
         $lastRowRepetitions = [];
         $lastRowDefinitions = [];
@@ -96,7 +102,7 @@ final readonly class ColumnData
         foreach ($this->repetitions as $index => $repetition) {
             $definition = $this->definitions[$index];
 
-            if ($repetition === 0 && !\count($lastRowRepetitions)) {
+            if ($repetition === 0 && !count($lastRowRepetitions)) {
                 $lastRowRepetitions[] = $repetition;
                 $lastRowDefinitions[] = $definition;
 
@@ -109,9 +115,9 @@ final readonly class ColumnData
             }
 
             if ($repetition === 0) {
-                $repetitions = \array_merge($repetitions, $lastRowRepetitions);
-                $definitions = \array_merge($definitions, $lastRowDefinitions);
-                $values = \array_merge($values, $lastRowValues);
+                $repetitions = array_merge($repetitions, $lastRowRepetitions);
+                $definitions = array_merge($definitions, $lastRowDefinitions);
+                $values = array_merge($values, $lastRowValues);
 
                 $lastRowRepetitions = [$repetition];
                 $lastRowDefinitions = [$definition];
@@ -137,10 +143,10 @@ final readonly class ColumnData
 
         $currentValues = $this->values;
 
-        if (\count($lastRowValues) === 0) {
+        if (count($lastRowValues) === 0) {
             $lastRowValues = [];
         } else {
-            $lastRowValues = \array_splice($currentValues, -\count($lastRowValues));
+            $lastRowValues = array_splice($currentValues, -count($lastRowValues));
         }
 
         return [

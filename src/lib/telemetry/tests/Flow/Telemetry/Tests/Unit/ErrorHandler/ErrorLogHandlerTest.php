@@ -6,6 +6,19 @@ namespace Flow\Telemetry\Tests\Unit\ErrorHandler;
 
 use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+
+use function array_filter;
+use function array_values;
+use function count;
+use function explode;
+use function file_get_contents;
+use function ini_get;
+use function ini_set;
+use function is_file;
+use function sys_get_temp_dir;
+use function tempnam;
+use function unlink;
 
 final class ErrorLogHandlerTest extends TestCase
 {
@@ -15,23 +28,23 @@ final class ErrorLogHandlerTest extends TestCase
 
     protected function setUp(): void
     {
-        $logFile = \tempnam(\sys_get_temp_dir(), 'flow-telemetry-error-log-');
+        $logFile = tempnam(sys_get_temp_dir(), 'flow-telemetry-error-log-');
 
         if ($logFile === false) {
             self::fail('Could not create temp log file');
         }
 
         $this->logFile = $logFile;
-        $this->previousErrorLog = (string) \ini_get('error_log');
-        \ini_set('error_log', $this->logFile);
+        $this->previousErrorLog = (string) ini_get('error_log');
+        ini_set('error_log', $this->logFile);
     }
 
     protected function tearDown(): void
     {
-        \ini_set('error_log', $this->previousErrorLog);
+        ini_set('error_log', $this->previousErrorLog);
 
-        if (\is_file($this->logFile)) {
-            \unlink($this->logFile);
+        if (is_file($this->logFile)) {
+            unlink($this->logFile);
         }
     }
 
@@ -39,10 +52,10 @@ final class ErrorLogHandlerTest extends TestCase
     {
         $handler = new ErrorLogHandler();
 
-        $handler->handle(new \RuntimeException("line1\nline2"));
+        $handler->handle(new RuntimeException("line1\nline2"));
 
-        $contents = (string) \file_get_contents($this->logFile);
-        $lines = \array_values(\array_filter(\explode("\n", $contents), static fn(string $line): bool => $line !== ''));
+        $contents = (string) file_get_contents($this->logFile);
+        $lines = array_values(array_filter(explode("\n", $contents), static fn(string $line): bool => $line !== ''));
 
         static::assertCount(1, $lines);
         static::assertStringContainsString('line1 line2', $lines[0]);
@@ -54,16 +67,16 @@ final class ErrorLogHandlerTest extends TestCase
 
         $handler = new ErrorLogHandler();
 
-        $handler->handle(new \RuntimeException('boom'));
+        $handler->handle(new RuntimeException('boom'));
     }
 
     public function test_emits_a_single_line_with_default_settings(): void
     {
         $handler = new ErrorLogHandler();
 
-        $handler->handle(new \RuntimeException('boom'));
+        $handler->handle(new RuntimeException('boom'));
 
-        $contents = (string) \file_get_contents($this->logFile);
+        $contents = (string) file_get_contents($this->logFile);
 
         static::assertStringContainsString('[flow-telemetry]', $contents);
         static::assertStringContainsString('RuntimeException', $contents);
@@ -74,21 +87,21 @@ final class ErrorLogHandlerTest extends TestCase
     {
         $handler = new ErrorLogHandler(expandNewlines: true);
 
-        $handler->handle(new \RuntimeException("line1\nline2"));
+        $handler->handle(new RuntimeException("line1\nline2"));
 
-        $contents = (string) \file_get_contents($this->logFile);
-        $lines = \array_values(\array_filter(\explode("\n", $contents), static fn(string $line): bool => $line !== ''));
+        $contents = (string) file_get_contents($this->logFile);
+        $lines = array_values(array_filter(explode("\n", $contents), static fn(string $line): bool => $line !== ''));
 
-        static::assertGreaterThanOrEqual(2, \count($lines));
+        static::assertGreaterThanOrEqual(2, count($lines));
     }
 
     public function test_uses_a_custom_message_prefix(): void
     {
         $handler = new ErrorLogHandler(messagePrefix: '[custom-prefix]');
 
-        $handler->handle(new \RuntimeException('boom'));
+        $handler->handle(new RuntimeException('boom'));
 
-        $contents = (string) \file_get_contents($this->logFile);
+        $contents = (string) file_get_contents($this->logFile);
 
         static::assertStringContainsString('[custom-prefix]', $contents);
         static::assertStringNotContainsString('[flow-telemetry]', $contents);

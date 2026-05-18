@@ -19,6 +19,7 @@ use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\window;
+use function iterator_to_array;
 
 final class WindowFunctionPipelineTest extends TestCase
 {
@@ -30,7 +31,7 @@ final class WindowFunctionPipelineTest extends TestCase
         $pipeline->add(new WindowProcessor('row_num', row_number()->over($window)));
 
         $context = flow_context(config());
-        $result = \iterator_to_array($pipeline->process($context));
+        $result = iterator_to_array($pipeline->process($context));
 
         static::assertCount(0, $result);
     }
@@ -47,7 +48,7 @@ final class WindowFunctionPipelineTest extends TestCase
         $pipeline->add(new WindowProcessor('total', sum(ref('value'))->over($window)));
 
         $context = flow_context(config());
-        $result = \iterator_to_array($pipeline->process($context));
+        $result = iterator_to_array($pipeline->process($context));
 
         static::assertCount(1, $result);
         static::assertCount(2, $result[0]);
@@ -68,7 +69,7 @@ final class WindowFunctionPipelineTest extends TestCase
         $pipeline->add(new WindowProcessor('row_num', row_number()->over($window)));
 
         $context = flow_context(config());
-        $result = \iterator_to_array($pipeline->process($context));
+        $result = iterator_to_array($pipeline->process($context));
 
         static::assertCount(2, $result);
         static::assertCount(1, $result[0]);
@@ -89,7 +90,7 @@ final class WindowFunctionPipelineTest extends TestCase
         $pipeline->add(new WindowProcessor('row_num', row_number()->over($window)));
 
         $context = flow_context(config());
-        $result = \iterator_to_array($pipeline->process($context));
+        $result = iterator_to_array($pipeline->process($context));
 
         static::assertCount(2, $result);
 
@@ -114,7 +115,7 @@ final class WindowFunctionPipelineTest extends TestCase
         $pipeline->add(new WindowProcessor('row_num', row_number()->over($window)));
 
         $context = flow_context(config());
-        $result = \iterator_to_array($pipeline->process($context));
+        $result = iterator_to_array($pipeline->process($context));
 
         static::assertCount(1, $result);
         static::assertCount(3, $result[0]);
@@ -137,7 +138,7 @@ final class WindowFunctionPipelineTest extends TestCase
         $pipeline->add(new WindowProcessor('row_num', row_number()->over($window)));
 
         $context = flow_context(config());
-        $result = \iterator_to_array($pipeline->process($context));
+        $result = iterator_to_array($pipeline->process($context));
 
         static::assertEquals(5000, $result[0][0]->get('salary')->value());
         static::assertEquals(6000, $result[0][1]->get('salary')->value());

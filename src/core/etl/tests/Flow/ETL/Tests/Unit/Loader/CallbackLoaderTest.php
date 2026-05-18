@@ -11,6 +11,7 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\to_callable;
 
@@ -18,7 +19,7 @@ final class CallbackLoaderTest extends FlowTestCase
 {
     public function test_callback_loader(): void
     {
-        $rows = \Flow\ETL\DSL\rows(
+        $rows = rows(
             row(int_entry('number', 1), str_entry('name', 'one')),
             row(int_entry('number', 2), str_entry('name', 'two')),
         );

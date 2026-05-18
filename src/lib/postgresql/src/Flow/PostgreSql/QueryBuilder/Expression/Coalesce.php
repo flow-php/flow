@@ -7,6 +7,9 @@ namespace Flow\PostgreSql\QueryBuilder\Expression;
 use Flow\PostgreSql\Protobuf\AST\CoalesceExpr;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use InvalidArgumentException;
+
+use function count;
 
 /**
  * COALESCE(expr, expr, ...) - returns first non-null expression.
@@ -19,8 +22,8 @@ final readonly class Coalesce implements Expression
     public function __construct(
         private array $expressions,
     ) {
-        if (\count($this->expressions) < 2) {
-            throw new \InvalidArgumentException('COALESCE requires at least 2 expressions');
+        if (count($this->expressions) < 2) {
+            throw new InvalidArgumentException('COALESCE requires at least 2 expressions');
         }
     }
 
@@ -34,7 +37,7 @@ final readonly class Coalesce implements Expression
 
         $args = $coalesceExpr->getArgs();
 
-        if (\count($args) < 2) {
+        if (count($args) < 2) {
             throw InvalidAstException::invalidFieldValue('args', 'CoalesceExpr', 'must have at least 2 arguments');
         }
 

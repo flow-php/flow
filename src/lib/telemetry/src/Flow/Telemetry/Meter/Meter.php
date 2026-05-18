@@ -17,6 +17,7 @@ use Flow\Telemetry\Meter\Instrument\Throughput;
 use Flow\Telemetry\Meter\Instrument\UpDownCounter;
 use Flow\Telemetry\Resource;
 use Psr\Clock\ClockInterface;
+use Throwable;
 
 /**
  * Meter for creating metric instruments.
@@ -100,7 +101,7 @@ final class Meter
         foreach ($instrument->collect() as $metric) {
             try {
                 $this->processor->process($metric);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->errorHandler->handle($e);
             }
         }
@@ -292,14 +293,14 @@ final class Meter
         foreach ($this->collect() as $metric) {
             try {
                 $this->processor->process($metric);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->errorHandler->handle($e);
             }
         }
 
         try {
             return $this->processor->flush();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
 
             return false;

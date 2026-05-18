@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Dataset\Statistics;
 
+use DateTimeImmutable;
 use Flow\ETL\Dataset\Statistics\DistinctCounter;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -13,11 +14,11 @@ final class DistinctCounterTest extends FlowTestCase
     {
         $counter = new DistinctCounter();
 
-        $counter->add(new \DateTimeImmutable('2023-01-01 00:00:01 UTC'));
-        $counter->add(new \DateTimeImmutable('2023-01-02 00:00:01 UTC'));
-        $counter->add(new \DateTimeImmutable('2023-01-01 00:00:01 UTC')); // duplicate
-        $counter->add(new \DateTimeImmutable('2023-01-02 00:00:01 Europe/Warsaw'));
-        $counter->add(new \DateTimeImmutable('2023-01-01 00:00:01+00:00')); // duplicate
+        $counter->add(new DateTimeImmutable('2023-01-01 00:00:01 UTC'));
+        $counter->add(new DateTimeImmutable('2023-01-02 00:00:01 UTC'));
+        $counter->add(new DateTimeImmutable('2023-01-01 00:00:01 UTC')); // duplicate
+        $counter->add(new DateTimeImmutable('2023-01-02 00:00:01 Europe/Warsaw'));
+        $counter->add(new DateTimeImmutable('2023-01-01 00:00:01+00:00')); // duplicate
 
         static::assertEquals(3, $counter->count());
     }

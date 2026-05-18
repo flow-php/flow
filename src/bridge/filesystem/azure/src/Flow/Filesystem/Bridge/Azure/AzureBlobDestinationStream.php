@@ -15,6 +15,15 @@ use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockFactory;
 use Flow\Filesystem\Stream\Blocks;
 
+use function count;
+use function fclose;
+use function fopen;
+use function gettype;
+use function is_resource;
+use function rewind;
+use function stream_get_meta_data;
+use function unlink;
+
 final class AzureBlobDestinationStream implements DestinationStream
 {
     private bool $closed = false;
@@ -49,7 +58,7 @@ final class AzureBlobDestinationStream implements DestinationStream
             ),
         );
 
-        if (\count($blockList->all()) === 0) {
+        if (count($blockList->all()) === 0) {
             $blocks->append($blobService->getBlob($path->path())->content());
         }
 
@@ -101,7 +110,7 @@ final class AzureBlobDestinationStream implements DestinationStream
             $this->blocks->done();
             $this->blobService->putBlockBlobBlockList($this->path->path(), $this->blockList);
         } else {
-            $handle = \fopen($this->blocks->block()->path()->path(), 'rb');
+            $handle = fopen($this->blocks->block()->path()->path(), 'rb');
 
             if ($handle === false) {
                 throw new RuntimeException('Cannot open block file for reading');
@@ -109,11 +118,11 @@ final class AzureBlobDestinationStream implements DestinationStream
 
             $this->blobService->putBlockBlob($this->path->path(), $handle, $this->blocks->block()->size());
 
-            if (\is_resource($handle)) {
-                \fclose($handle);
+            if (is_resource($handle)) {
+                fclose($handle);
             }
 
-            \unlink($this->blocks->block()->path()->path());
+            unlink($this->blocks->block()->path()->path());
         }
 
         $this->closed = true;
@@ -121,16 +130,16 @@ final class AzureBlobDestinationStream implements DestinationStream
 
     public function fromResource($resource): self
     {
-        if (!\is_resource($resource)) {
+        if (!is_resource($resource)) {
             throw new InvalidArgumentException(
-                'DestinationStream::fromResource expects resource type, given: ' . \gettype($resource),
+                'DestinationStream::fromResource expects resource type, given: ' . gettype($resource),
             );
         }
 
-        $meta = \stream_get_meta_data($resource);
+        $meta = stream_get_meta_data($resource);
 
         if ($meta['seekable']) {
-            \rewind($resource);
+            rewind($resource);
         }
 
         $this->blocks->fromResource($resource);

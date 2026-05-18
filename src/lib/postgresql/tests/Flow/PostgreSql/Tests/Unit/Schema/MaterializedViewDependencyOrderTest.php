@@ -10,6 +10,8 @@ use Flow\PostgreSql\Schema\MaterializedView;
 use Flow\PostgreSql\Schema\MaterializedViewDependencyOrder;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
+
 final class MaterializedViewDependencyOrderTest extends TestCase
 {
     public function test_circular_dependency_throws_exception(): void
@@ -35,7 +37,7 @@ final class MaterializedViewDependencyOrderTest extends TestCase
 
         $result = (new MaterializedViewDependencyOrder(new Parser()))->order([$top, $base]);
 
-        $names = \array_map(static fn(MaterializedView $v) => $v->name, $result);
+        $names = array_map(static fn(MaterializedView $v) => $v->name, $result);
 
         static::assertSame(['base_mv', 'top_mv'], $names);
     }
@@ -47,7 +49,7 @@ final class MaterializedViewDependencyOrderTest extends TestCase
 
         $result = (new MaterializedViewDependencyOrder(new Parser()))->order([$other, $recursive]);
 
-        $names = \array_map(static fn(MaterializedView $v) => $v->name, $result);
+        $names = array_map(static fn(MaterializedView $v) => $v->name, $result);
 
         static::assertSame(['recursive_mv', 'other_mv'], $names);
     }
@@ -69,7 +71,7 @@ final class MaterializedViewDependencyOrderTest extends TestCase
 
         $result = (new MaterializedViewDependencyOrder(new Parser()))->order([$viewA, $viewB]);
 
-        $names = \array_map(static fn(MaterializedView $v) => $v->name, $result);
+        $names = array_map(static fn(MaterializedView $v) => $v->name, $result);
 
         static::assertSame(['alpha', 'beta'], $names);
     }

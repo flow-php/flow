@@ -16,6 +16,8 @@ use Flow\Filesystem\Stream\BlockFactory;
 
 use function Flow\ETL\DSL\generate_random_string;
 use function Flow\Filesystem\DSL\path;
+use function str_repeat;
+use function strlen;
 
 final class AzureBlobDestinationStreamTest extends FlowTestCase
 {
@@ -66,7 +68,7 @@ final class AzureBlobDestinationStreamTest extends FlowTestCase
                 static::isInstanceOf(PutBlockBlobBlockListOptions::class),
             );
 
-        $stream->append(\str_repeat('a', 150));
+        $stream->append(str_repeat('a', 150));
 
         $stream->close();
     }
@@ -97,7 +99,7 @@ final class AzureBlobDestinationStreamTest extends FlowTestCase
             ->with(
                 '/file.txt',
                 static::isType('resource'),
-                \strlen('Hello, World!'),
+                strlen('Hello, World!'),
                 static::isInstanceOf(PutBlockBlobOptions::class),
             );
 

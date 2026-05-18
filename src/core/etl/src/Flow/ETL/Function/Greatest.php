@@ -9,6 +9,8 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\Types\Type\ValueComparator;
 
+use function count;
+
 final class Greatest extends ScalarFunctionChain
 {
     /**
@@ -28,7 +30,7 @@ final class Greatest extends ScalarFunctionChain
             $extractedTypes[] = (new Parameter($value))->asType($row, $context);
         }
 
-        if (!\count($extractedValues)) {
+        if (!count($extractedValues)) {
             return $context
                 ->functions()
                 ->invalidResult(new InvalidArgumentException('Greatest requires at least one value'));

@@ -8,7 +8,10 @@ use Flow\Bridge\Symfony\PostgreSqlBundle\Sql\SqlFileFinder;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Context\FilesystemContext;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
+use function basename;
 use function Flow\Filesystem\DSL\native_local_filesystem;
+use function sort;
 
 final class SqlFileFinderTest extends TestCase
 {
@@ -43,9 +46,9 @@ final class SqlFileFinderTest extends TestCase
         $this->fs->writeFile('nested/deep/b.sql', 'SELECT 2');
         $this->fs->writeFile('nested/c.sql', 'SELECT 3');
 
-        $paths = \array_map(static fn($p) => \basename($p->path()), $this->finder->find($this->fs->path()));
+        $paths = array_map(static fn($p) => basename($p->path()), $this->finder->find($this->fs->path()));
 
-        \sort($paths);
+        sort($paths);
         static::assertSame(['a.sql', 'b.sql', 'c.sql'], $paths);
     }
 
@@ -74,7 +77,7 @@ final class SqlFileFinderTest extends TestCase
         $found = $this->finder->find($this->fs->path());
 
         static::assertCount(1, $found);
-        static::assertSame('keep.sql', \basename($found[0]->path()));
+        static::assertSame('keep.sql', basename($found[0]->path()));
     }
 
     public function test_skips_non_sql_files_matched_by_broad_glob(): void
@@ -85,6 +88,6 @@ final class SqlFileFinderTest extends TestCase
         $found = $this->finder->find($this->fs->path('*'));
 
         static::assertCount(1, $found);
-        static::assertSame('a.sql', \basename($found[0]->path()));
+        static::assertSame('a.sql', basename($found[0]->path()));
     }
 }

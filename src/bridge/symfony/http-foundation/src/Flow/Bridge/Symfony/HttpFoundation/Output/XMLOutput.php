@@ -9,11 +9,12 @@ use Flow\ETL\Adapter\XML\XMLWriter;
 use Flow\ETL\Adapter\XML\XMLWriter\DOMDocumentWriter;
 use Flow\ETL\Loader;
 use Flow\Filesystem\Path;
+use RuntimeException;
 
 use function Flow\ETL\Adapter\XML\to_xml;
 
 if (!function_exists('Flow\ETL\Adapter\XML\to_xml')) {
-    throw new \RuntimeException(
+    throw new RuntimeException(
         'Flow\ETL\Adapter\XML\to_xml function is not available. Make sure that composer require flow-php/etl-adapter-xml dependency is present in your composer.json.',
     );
 }

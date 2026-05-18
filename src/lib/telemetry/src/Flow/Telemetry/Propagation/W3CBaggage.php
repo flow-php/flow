@@ -6,6 +6,13 @@ namespace Flow\Telemetry\Propagation;
 
 use Flow\Telemetry\Context\Baggage;
 
+use function count;
+use function explode;
+use function implode;
+use function trim;
+use function urldecode;
+use function urlencode;
+
 /**
  * W3C Baggage propagator for propagating application-specific data.
  *
@@ -51,33 +58,33 @@ final readonly class W3CBaggage implements Propagator
         }
 
         $entries = [];
-        $members = \explode(',', $baggageHeader);
+        $members = explode(',', $baggageHeader);
 
         foreach ($members as $member) {
-            $member = \trim($member);
+            $member = trim($member);
 
             if ($member === '') {
                 continue;
             }
 
-            $parts = \explode(';', $member, 2);
+            $parts = explode(';', $member, 2);
             $keyValue = $parts[0];
 
-            $kvParts = \explode('=', $keyValue, 2);
+            $kvParts = explode('=', $keyValue, 2);
 
-            if (\count($kvParts) !== 2) {
+            if (count($kvParts) !== 2) {
                 continue;
             }
 
-            $key = \trim($kvParts[0]);
-            $value = \trim($kvParts[1]);
+            $key = trim($kvParts[0]);
+            $value = trim($kvParts[1]);
 
             if ($key === '') {
                 continue;
             }
 
-            $key = \urldecode($key);
-            $value = \urldecode($value);
+            $key = urldecode($key);
+            $value = urldecode($value);
 
             $entries[$key] = $value;
         }
@@ -105,12 +112,12 @@ final readonly class W3CBaggage implements Propagator
         $members = [];
 
         foreach ($context->baggage->all() as $key => $value) {
-            $encodedKey = \urlencode($key);
-            $encodedValue = \urlencode($value);
+            $encodedKey = urlencode($key);
+            $encodedValue = urlencode($value);
 
             $members[] = $encodedKey . '=' . $encodedValue;
         }
 
-        $carrier->set(self::HEADER_BAGGAGE, \implode(',', $members));
+        $carrier->set(self::HEADER_BAGGAGE, implode(',', $members));
     }
 }

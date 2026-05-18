@@ -11,6 +11,7 @@ use Flow\Telemetry\Tests\Mother\TracerMother;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanProcessor;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class TracerTest extends TestCase
 {
@@ -160,9 +161,9 @@ final class TracerTest extends TestCase
 
         try {
             $tracer->trace('test-span', static function (): void {
-                throw new \RuntimeException('Test error');
+                throw new RuntimeException('Test error');
             });
-        } catch (\RuntimeException) {
+        } catch (RuntimeException) {
         }
 
         static::assertCount(1, $processor->endedSpans());
@@ -172,11 +173,11 @@ final class TracerTest extends TestCase
 
     public function test_trace_rethrows_exception(): void
     {
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Test error');
 
         TracerMother::create()->trace('test-span', static function (): void {
-            throw new \RuntimeException('Test error');
+            throw new RuntimeException('Test error');
         });
     }
 
@@ -192,9 +193,9 @@ final class TracerTest extends TestCase
 
         try {
             $tracer->trace('test-span', static function (): void {
-                throw new \RuntimeException('Error');
+                throw new RuntimeException('Error');
             });
-        } catch (\RuntimeException) {
+        } catch (RuntimeException) {
         }
 
         $status = $processor->endedSpans()[0]->status();

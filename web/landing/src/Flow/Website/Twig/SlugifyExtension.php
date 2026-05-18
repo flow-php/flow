@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Website\Twig;
 
+use Override;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 
 final class SlugifyExtension extends AbstractExtension
 {
-    #[\Override]
+    #[Override]
     public function getFilters(): array
     {
         return [

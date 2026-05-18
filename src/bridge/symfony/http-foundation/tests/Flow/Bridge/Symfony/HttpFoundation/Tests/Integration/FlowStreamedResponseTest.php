@@ -18,6 +18,8 @@ use function Flow\Bridge\Symfony\HttpFoundation\http_xml_output;
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\DSL\analyze;
 use function Flow\ETL\DSL\from_array;
+use function json_decode;
+use function usort;
 
 final class FlowStreamedResponseTest extends FlowTestCase
 {
@@ -143,8 +145,8 @@ final class FlowStreamedResponseTest extends FlowTestCase
         );
 
         /** @var list<array{id: int, color: string, size: string}> $rows */
-        $rows = \json_decode($this->sendResponse($response), true, flags: JSON_THROW_ON_ERROR);
-        \usort($rows, static fn(array $a, array $b): int => $a['id'] <=> $b['id']);
+        $rows = json_decode($this->sendResponse($response), true, flags: JSON_THROW_ON_ERROR);
+        usort($rows, static fn(array $a, array $b): int => $a['id'] <=> $b['id']);
 
         static::assertSame(
             [

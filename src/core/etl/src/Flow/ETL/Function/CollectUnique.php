@@ -11,7 +11,9 @@ use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
 
+use function current;
 use function Flow\ETL\DSL\to_entry;
+use function in_array;
 
 final class CollectUnique implements AggregatingFunction
 {
@@ -35,9 +37,9 @@ final class CollectUnique implements AggregatingFunction
             $values[$this->ref->name()] = $row->valueOf($this->ref);
 
             /** @var mixed $value */
-            $value = \current($values);
+            $value = current($values);
 
-            if (!\in_array($value, $this->collection, true)) {
+            if (!in_array($value, $this->collection, true)) {
                 $this->collection[] = $value;
             }
         } catch (InvalidArgumentException $e) {

@@ -38,6 +38,20 @@ ignore = [
     { code = "redundant-docblock-type", in = [
         "src/lib/postgresql/src/Flow/PostgreSql/DSL/client.php",
     ] },
+    # `Dom\HTMLDocument::createFromString` and `::saveHtml` are PHP 8.4+ APIs.
+    # The codebase supports PHP 8.3 | 8.4 | 8.5 and gates these calls with
+    # `instanceof Dom\HTMLDocument` checks — on PHP 8.3 the class doesn't exist
+    # so the guarded branch is never entered. Mago 1.27 flags the symbol
+    # reference itself; suppress for these specific files.
+    { code = "unavailable-method", in = [
+        "src/lib/types/src/Flow/Types/Type/Logical/HTMLElementType.php",
+        "src/lib/types/src/Flow/Types/Type/Logical/HTMLType.php",
+        "src/lib/types/src/Flow/Types/Type/Native/StringType.php",
+        "src/lib/types/tests/Flow/Types/Tests/Unit/Type/Logical/HTMLElementTypeTest.php",
+        "src/lib/types/tests/Flow/Types/Tests/Unit/Type/Logical/HTMLTypeTest.php",
+        "src/lib/types/tests/Flow/Types/Tests/Unit/Type/Native/StringTypeTest.php",
+        "src/lib/types/tests/Flow/Types/Tests/Unit/Type/TypeDetectorTest.php",
+    ] },
 ]
 
 [linter]
@@ -121,3 +135,17 @@ no-redundant-variable = { enabled = true, level = "warning", exclude = [
     "**/TracableHttpClientTest.php",
 ] }
 strict-types = { enabled = true, level = "error" }
+no-fully-qualified-global-function = { enabled = true, level = "help", exclude = [
+    # File defines `function sprintf()` in Flow\ETL\DSL, so `\sprintf(...)` calls must stay fully-qualified.
+    "**/Flow/ETL/DSL/functions.php",
+] }
+no-fully-qualified-global-class-like = { enabled = true, level = "help", exclude = [
+    # These files declare `class Ulid` / `class Uuid` that intentionally shadow Symfony/Ramsey classes,
+    # so their fully-qualified references must stay as-is.
+    "**/Flow/ETL/Function/Ulid.php",
+    "**/Flow/ETL/Function/Uuid.php",
+    # Namespace has its own `Table` class (Flow\ETL\Adapter\Doctrine\Table) — importing
+    # `Doctrine\DBAL\Schema\Table` shadows it and breaks the public function signatures.
+    "**/Flow/ETL/Adapter/Doctrine/functions.php",
+] }
+no-fully-qualified-global-constant = { enabled = true, level = "help" }

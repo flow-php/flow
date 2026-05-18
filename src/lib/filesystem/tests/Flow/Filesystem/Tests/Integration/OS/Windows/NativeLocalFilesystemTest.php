@@ -7,8 +7,15 @@ namespace Flow\Filesystem\Tests\Integration\OS\Windows;
 use Flow\Filesystem\Tests\Integration\NativeLocalFilesystemTestCase;
 use Flow\Filesystem\Tests\OperatingSystem;
 
+use function file_put_contents;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function fopen;
+use function is_dir;
+use function str_replace;
+use function sys_get_temp_dir;
+use function tempnam;
+use function unlink;
 
 final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 {
@@ -27,7 +34,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = native_local_filesystem();
 
-        $resource = \fopen(__DIR__ . '/../../Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/../../Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource);
         $fs->writeTo(path(__DIR__ . '/../var/some_path_to/file.txt'))->fromResource($resource);
 
@@ -35,7 +42,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         static::assertNotNull($status);
         static::assertTrue($status->isFile());
 
-        $expectedUri = 'file://' . \str_replace('\\', '/', __DIR__ . '/../var/some_path_to/file.txt');
+        $expectedUri = 'file://' . str_replace('\\', '/', __DIR__ . '/../var/some_path_to/file.txt');
         $statusForUri = $fs->status(path(__DIR__ . '/../var/some_path_to/*.txt'));
         static::assertNotNull($statusForUri);
         static::assertSame($expectedUri, $statusForUri->path->uri());
@@ -47,7 +54,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = native_local_filesystem();
 
-        $expectedTmpDir = 'file://' . \str_replace('\\', '/', \sys_get_temp_dir());
+        $expectedTmpDir = 'file://' . str_replace('\\', '/', sys_get_temp_dir());
         static::assertSame($expectedTmpDir, $fs->getSystemTmpDir()->uri());
     }
 
@@ -55,9 +62,9 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = native_local_filesystem();
 
-        $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_test_');
+        $tempFile = tempnam(sys_get_temp_dir(), 'flow_test_');
         static::assertIsString($tempFile);
-        \file_put_contents($tempFile, 'test content');
+        file_put_contents($tempFile, 'test content');
 
         $path = path($tempFile);
         $status = $fs->status($path);
@@ -67,16 +74,16 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         static::assertMatchesRegularExpression('/^file:\/\/[a-zA-Z]:\//', $path->uri());
         static::assertMatchesRegularExpression('/^[a-zA-Z]:\//', $path->path());
 
-        \unlink($tempFile);
+        unlink($tempFile);
     }
 
     public function test_windows_drive_path_handling(): void
     {
         $fs = native_local_filesystem();
 
-        $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_test_');
+        $tempFile = tempnam(sys_get_temp_dir(), 'flow_test_');
         static::assertIsString($tempFile);
-        \file_put_contents($tempFile, 'test content');
+        file_put_contents($tempFile, 'test content');
 
         $path = path($tempFile);
         $status = $fs->status($path);
@@ -85,7 +92,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
         static::assertMatchesRegularExpression('/^file:\/\/[a-zA-Z]:\//', $path->uri());
 
-        \unlink($tempFile);
+        unlink($tempFile);
     }
 
     public function test_windows_unc_path_support(): void
@@ -93,7 +100,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         // Test UNC path handling (if accessible)
         $uncPath = '//localhost/C$/Windows/System32';
 
-        if (!\is_dir($uncPath)) {
+        if (!is_dir($uncPath)) {
             static::markTestSkipped('UNC path not accessible on this system');
         }
 

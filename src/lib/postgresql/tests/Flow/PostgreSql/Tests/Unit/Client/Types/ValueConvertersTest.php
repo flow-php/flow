@@ -19,6 +19,8 @@ use Flow\PostgreSql\Client\Types\ValueConverters;
 use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\TestCase;
 
+use function is_string;
+
 final class ValueConvertersTest extends TestCase
 {
     public function test_array_type_detection(): void
@@ -78,7 +80,7 @@ final class ValueConvertersTest extends TestCase
 
             public function toDatabase(mixed $value): ?string
             {
-                return \is_string($value) ? $value : null;
+                return is_string($value) ? $value : null;
             }
         };
 

@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Tests\Integration\Client;
 
 use Flow\PostgreSql\Client\Exception\TransactionException;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
+use RuntimeException;
 
 use function Flow\PostgreSql\DSL\agg_count;
 use function Flow\PostgreSql\DSL\asc;
@@ -205,9 +206,9 @@ final class TransactionTest extends PostgreSqlTestCase
                     $client->transaction(static function ($client): void {
                         $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('inner')));
 
-                        throw new \RuntimeException('Inner failure');
+                        throw new RuntimeException('Inner failure');
                     });
-                } catch (\RuntimeException) {
+                } catch (RuntimeException) {
                 }
 
                 $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('after inner')));
@@ -240,9 +241,9 @@ final class TransactionTest extends PostgreSqlTestCase
                         $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('inner')));
                     });
 
-                    throw new \RuntimeException('Outer failure');
+                    throw new RuntimeException('Outer failure');
                 });
-        } catch (\RuntimeException) {
+        } catch (RuntimeException) {
         }
 
         $count = $this
@@ -344,9 +345,9 @@ final class TransactionTest extends PostgreSqlTestCase
                         insert()->into('test_transaction')->columns('name')->values(literal('will be rolled back')),
                     );
 
-                    throw new \RuntimeException('Simulated failure');
+                    throw new RuntimeException('Simulated failure');
                 });
-        } catch (\RuntimeException) {
+        } catch (RuntimeException) {
         }
 
         $count = $this

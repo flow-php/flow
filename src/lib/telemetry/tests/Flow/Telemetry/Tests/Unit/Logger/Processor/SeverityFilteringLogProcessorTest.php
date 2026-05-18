@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Logger\Processor;
 
+use DateTimeImmutable;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Logger\LogProcessor;
@@ -136,7 +137,7 @@ final class SeverityFilteringLogProcessorTest extends TestCase
                 ->setBody($body),
             $this->resource,
             new InstrumentationScope('test', '1.0.0'),
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
         );
     }
 }

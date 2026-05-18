@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests\Integration;
 
+use DateTime;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
@@ -14,6 +15,7 @@ use Flow\Doctrine\Bulk\Dialect\PostgreSQLInsertOptions;
 use Flow\Doctrine\Bulk\Tests\PostgreSqlIntegrationTestCase;
 
 use function Flow\ETL\DSL\generate_random_string;
+use function json_encode;
 
 final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
 {
@@ -30,7 +32,7 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
             new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'platformOptions' => ['jsonb' => true]]),
         ]))->setPrimaryKey(['id']));
 
-        $date1 = new \DateTime();
+        $date1 = new DateTime();
 
         Bulk::create()->insert($this->databaseContext->connection(), $table, new BulkData([
             [
@@ -40,7 +42,7 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
                 'description' => 'Description One',
                 'active' => false,
                 'updated_at' => $date1,
-                'tags' => \json_encode(['a', 'b', 'c']),
+                'tags' => json_encode(['a', 'b', 'c']),
             ],
             [
                 'id' => $id2 = generate_random_string(10),
@@ -48,8 +50,8 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
                 'name' => 'Name Two',
                 'description' => null,
                 'active' => true,
-                'updated_at' => $date2 = new \DateTime(),
-                'tags' => \json_encode(['a', 'b', 'c']),
+                'updated_at' => $date2 = new DateTime(),
+                'tags' => json_encode(['a', 'b', 'c']),
             ],
             [
                 'id' => $id3 = generate_random_string(10),
@@ -57,8 +59,8 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
                 'name' => 'Name Three',
                 'description' => 'Description Three',
                 'active' => false,
-                'updated_at' => $date3 = new \DateTime(),
-                'tags' => \json_encode(['a', 'b', 'c']),
+                'updated_at' => $date3 = new DateTime(),
+                'tags' => json_encode(['a', 'b', 'c']),
             ],
         ]));
 

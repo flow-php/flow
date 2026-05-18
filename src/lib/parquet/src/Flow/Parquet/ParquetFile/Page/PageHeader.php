@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Page;
 
+use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Page\Header\DataPageHeader;
@@ -97,9 +98,7 @@ final readonly class PageHeader
         }
 
         if ($this->dataPageHeader === null) {
-            throw new \Flow\Parquet\Exception\RuntimeException(
-                'PageHeader has no encoding: missing all page sub-headers',
-            );
+            throw new RuntimeException('PageHeader has no encoding: missing all page sub-headers');
         }
 
         return $this->dataPageHeader->encoding();

@@ -11,6 +11,9 @@ use Flow\ETL\Exception\OutOfMemoryException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
+use Generator;
+
+use function max;
 
 final class MemorySort implements SortingAlgorithm
 {
@@ -29,14 +32,14 @@ final class MemorySort implements SortingAlgorithm
         }
     }
 
-    public function sortGenerator(\Generator $rows, FlowContext $context, References $refs): \Generator
+    public function sortGenerator(Generator $rows, FlowContext $context, References $refs): Generator
     {
         $memoryConsumption = new Consumption();
         $mergedRows = new Rows();
         $maxSize = 1;
 
         foreach ($rows as $batch) {
-            $maxSize = \max($batch->count(), $maxSize);
+            $maxSize = max($batch->count(), $maxSize);
             $mergedRows = $mergedRows->merge($batch);
 
             if ($memoryConsumption->currentDiff()->isGreaterThan($this->maximumMemory)) {

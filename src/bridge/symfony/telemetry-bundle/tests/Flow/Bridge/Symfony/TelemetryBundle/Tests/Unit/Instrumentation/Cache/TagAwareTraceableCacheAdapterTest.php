@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Instrumentation\Cache;
 
+use BadMethodCallException;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Cache\TagAwareTraceableCacheAdapter;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
@@ -20,6 +21,7 @@ use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Cache\CacheItemInterface;
+use RuntimeException;
 use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
 use Symfony\Component\Cache\CacheItem;
 use Symfony\Component\Cache\PruneableInterface;
@@ -227,7 +229,7 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
 
         $traceable = new TagAwareTraceableCacheAdapter($adapter, $telemetry, 'test.pool');
 
-        $this->expectException(\BadMethodCallException::class);
+        $this->expectException(BadMethodCallException::class);
         $this->expectExceptionMessage('does not implement');
 
         $traceable->delete('key');
@@ -292,7 +294,7 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
 
         $traceable = new TagAwareTraceableCacheAdapter($adapter, $telemetry, 'test.pool');
 
-        $this->expectException(\BadMethodCallException::class);
+        $this->expectException(BadMethodCallException::class);
         $this->expectExceptionMessage('does not implement');
 
         $traceable->get('key', static fn() => 'value');
@@ -376,7 +378,7 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
         $adapter = new class implements TagAwareAdapterInterface {
             public function clear(string $prefix = ''): bool
             {
-                throw new \RuntimeException('Connection lost');
+                throw new RuntimeException('Connection lost');
             }
 
             public function commit(): bool
@@ -431,7 +433,7 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
 
         try {
             $traceable->clear();
-        } catch (\RuntimeException) {
+        } catch (RuntimeException) {
             $exceptionThrown = true;
         }
 
@@ -453,7 +455,7 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
         $adapter = new class implements TagAwareAdapterInterface {
             public function clear(string $prefix = ''): bool
             {
-                throw new \RuntimeException('Connection lost');
+                throw new RuntimeException('Connection lost');
             }
 
             public function commit(): bool
@@ -506,7 +508,7 @@ final class TagAwareTraceableCacheAdapterTest extends TestCase
 
         try {
             $traceable->clear();
-        } catch (\RuntimeException) {
+        } catch (RuntimeException) {
         }
 
         $spans = $spanProcessor->endedSpans();

@@ -9,6 +9,8 @@ use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Tools\DsnParser;
 
+use function getenv;
+
 final readonly class DatabaseContext
 {
     private Connection $connection;
@@ -16,7 +18,7 @@ final readonly class DatabaseContext
     public function __construct()
     {
         $this->connection = DriverManager::getConnection((new DsnParser(['postgresql' => 'pdo_pgsql']))->parse(
-            \getenv('PGSQL_DATABASE_URL') ?: '',
+            getenv('PGSQL_DATABASE_URL') ?: '',
         ));
     }
 

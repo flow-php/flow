@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\ElasticsearchTestCase;
 use Flow\ETL\Row;
 
+use function array_map;
 use function Flow\ETL\Adapter\Elasticsearch\es_hits_to_rows;
 use function Flow\ETL\Adapter\Elasticsearch\from_es;
 use function Flow\ETL\Adapter\Elasticsearch\to_es_bulk_index;
@@ -19,8 +20,11 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\generate_random_int;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\string_entry;
+use function range;
+use function sha1;
 
 final class ElasticsearchExtractorTest extends ElasticsearchTestCase
 {
@@ -49,14 +53,14 @@ final class ElasticsearchExtractorTest extends ElasticsearchTestCase
         );
 
         $loader->load(
-            rows(...\array_map(
-                static fn(int $i): Row => \Flow\ETL\DSL\row(
-                    string_entry('id', \sha1((string) $i)),
+            rows(...array_map(
+                static fn(int $i): Row => row(
+                    string_entry('id', sha1((string) $i)),
                     int_entry('position', $i),
                     string_entry('name', 'id_' . $i),
                     bool_entry('active', (bool) generate_random_int(0, 1)),
                 ),
-                \range(1, 100),
+                range(1, 100),
             )),
             flow_context(config()),
         );
@@ -93,14 +97,14 @@ final class ElasticsearchExtractorTest extends ElasticsearchTestCase
         );
 
         $loader->load(
-            rows(...\array_map(
-                static fn(int $i): Row => \Flow\ETL\DSL\row(
-                    string_entry('id', \sha1((string) $i)),
+            rows(...array_map(
+                static fn(int $i): Row => row(
+                    string_entry('id', sha1((string) $i)),
                     int_entry('position', $i),
                     string_entry('name', 'id_' . $i),
                     bool_entry('active', (bool) generate_random_int(0, 1)),
                 ),
-                \range(1, 2000),
+                range(1, 2000),
             )),
             flow_context(config()),
         );
@@ -142,14 +146,14 @@ final class ElasticsearchExtractorTest extends ElasticsearchTestCase
         );
 
         $loader->load(
-            rows(...\array_map(
-                static fn(int $i): Row => \Flow\ETL\DSL\row(
-                    string_entry('id', \sha1((string) $i)),
+            rows(...array_map(
+                static fn(int $i): Row => row(
+                    string_entry('id', sha1((string) $i)),
                     int_entry('position', $i),
                     string_entry('name', 'id_' . $i),
                     bool_entry('active', (bool) generate_random_int(0, 1)),
                 ),
-                \range(1, 2005),
+                range(1, 2005),
             )),
             flow_context(config()),
         );
@@ -182,14 +186,14 @@ final class ElasticsearchExtractorTest extends ElasticsearchTestCase
         );
 
         $loader->load(
-            rows(...\array_map(
-                static fn(int $i): Row => \Flow\ETL\DSL\row(
-                    string_entry('id', \sha1((string) $i)),
+            rows(...array_map(
+                static fn(int $i): Row => row(
+                    string_entry('id', sha1((string) $i)),
                     int_entry('position', $i),
                     string_entry('name', 'id_' . $i),
                     bool_entry('active', (bool) generate_random_int(0, 1)),
                 ),
-                \range(1, 2005),
+                range(1, 2005),
             )),
             flow_context(config()),
         );
@@ -229,14 +233,14 @@ final class ElasticsearchExtractorTest extends ElasticsearchTestCase
         );
 
         $loader->load(
-            rows(...\array_map(
-                static fn(int $i): Row => \Flow\ETL\DSL\row(
-                    string_entry('id', \sha1((string) $i)),
+            rows(...array_map(
+                static fn(int $i): Row => row(
+                    string_entry('id', sha1((string) $i)),
                     int_entry('position', $i),
                     string_entry('name', 'id_' . $i),
                     bool_entry('active', (bool) generate_random_int(0, 1)),
                 ),
-                \range(1, 2005),
+                range(1, 2005),
             )),
             flow_context(config()),
         );

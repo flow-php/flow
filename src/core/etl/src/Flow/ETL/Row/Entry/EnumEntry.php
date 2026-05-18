@@ -9,6 +9,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition\EnumDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type\Native\EnumType;
+use UnitEnum;
 
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_optional;
@@ -27,11 +28,11 @@ final class EnumEntry implements Entry
 
     public function __construct(
         private readonly string $name,
-        private readonly ?\UnitEnum $value,
+        private readonly ?UnitEnum $value,
         ?Metadata $metadata = null,
     ) {
         /** @var class-string<\UnitEnum>&literal-string $enumClass */
-        $enumClass = $this->value === null ? \UnitEnum::class : $this->value::class;
+        $enumClass = $this->value === null ? UnitEnum::class : $this->value::class;
         $this->definition = new EnumDefinition(
             $this->name,
             $enumClass,
@@ -108,7 +109,7 @@ final class EnumEntry implements Entry
         return $this->definition->type();
     }
 
-    public function value(): ?\UnitEnum
+    public function value(): ?UnitEnum
     {
         return $this->value;
     }

@@ -4,10 +4,44 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Transport;
 
+use CurlMultiHandle;
 use Flow\Bridge\Telemetry\OTLP\Serializer\JsonSerializer;
 use Flow\Bridge\Telemetry\OTLP\Serializer\ProtobufSerializer;
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Signal\SignalType;
+use Generator;
+use RuntimeException;
+use Throwable;
+
+use function count;
+use function curl_close;
+use function curl_getinfo;
+use function curl_init;
+use function curl_multi_add_handle;
+use function curl_multi_close;
+use function curl_multi_exec;
+use function curl_multi_info_read;
+use function curl_multi_init;
+use function curl_multi_remove_handle;
+use function curl_multi_select;
+use function curl_multi_strerror;
+use function curl_setopt;
+use function curl_setopt_array;
+use function curl_strerror;
+use function extension_loaded;
+use function microtime;
+use function min;
+use function round;
+use function rtrim;
+use function sprintf;
+use function usleep;
+
+use const CURLE_OK;
+use const CURLINFO_CONNECT_TIME;
+use const CURLINFO_EFFECTIVE_URL;
+use const CURLINFO_HTTP_CODE;
+use const CURLINFO_TOTAL_TIME;
+use const CURLOPT_TIMEOUT_MS;
 
 /**
  * Asynchronous HTTP transport for OTLP using curl_multi for non-blocking I/O.
@@ -27,7 +61,7 @@ final class CurlTransport implements Transport
 
     private bool $isShutdown = false;
 
-    private readonly \CurlMultiHandle $multiHandle;
+    private readonly CurlMultiHandle $multiHandle;
 
     /** @var array<int, array{handle: \CurlHandle, signals: ?Signals}> */
     private array $pending = [];
@@ -38,11 +72,11 @@ final class CurlTransport implements Transport
         private readonly CurlTransportOptions $options = new CurlTransportOptions(),
         private readonly ?Transport $failover = null,
     ) {
-        if (!\extension_loaded('curl')) {
-            throw new \RuntimeException('ext-curl is required for CurlTransport');
+        if (!extension_loaded('curl')) {
+            throw new RuntimeException('ext-curl is required for CurlTransport');
         }
 
-        $this->multiHandle = \curl_multi_init();
+        $this->multiHandle = curl_multi_init();
     }
 
     public function send(Signals $signal): void
@@ -80,12 +114,12 @@ final class CurlTransport implements Transport
         $this->isShutdown = true;
 
         $shutdownTimeoutMs = $this->options->shutdownTimeoutMs();
-        $shutdownDeadlineMicrotime = \microtime(true) + ($shutdownTimeoutMs / 1000);
+        $shutdownDeadlineMicrotime = microtime(true) + ($shutdownTimeoutMs / 1000);
 
         // Extend per-handle deadline so slow-but-eventually-succeeds requests get the
         // longer drain budget; the wall-clock cap below still bounds total shutdown time.
         foreach ($this->pending as $entry) {
-            \curl_setopt($entry['handle'], \CURLOPT_TIMEOUT_MS, $shutdownTimeoutMs);
+            curl_setopt($entry['handle'], CURLOPT_TIMEOUT_MS, $shutdownTimeoutMs);
         }
 
         $this->waitForCompletion($shutdownDeadlineMicrotime);
@@ -98,14 +132,14 @@ final class CurlTransport implements Transport
             $this->forwardStillPendingAsShutdownTimedOut();
         }
 
-        \curl_multi_close($this->multiHandle);
+        curl_multi_close($this->multiHandle);
 
         $cascadeException = null;
 
         if ($this->failover !== null) {
             try {
                 $this->failover->shutdown();
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $cascadeException = $e;
             }
         }
@@ -119,21 +153,21 @@ final class CurlTransport implements Transport
 
         if ($cascadeException !== null) {
             throw new TransportException(
-                \sprintf('OTLP curl shutdown: failover shutdown failed: %s', $cascadeException->getMessage()),
+                sprintf('OTLP curl shutdown: failover shutdown failed: %s', $cascadeException->getMessage()),
                 0,
                 $cascadeException,
             );
         }
 
-        if (\count($this->failures) === 0) {
+        if (count($this->failures) === 0) {
             return;
         }
 
         $first = $this->failures[0];
-        $count = \count($this->failures);
+        $count = count($this->failures);
         $message = $count === 1
-            ? \sprintf('OTLP curl shutdown: 1 export failed: %s', $first->getMessage())
-            : \sprintf('OTLP curl shutdown: %d exports failed; first error: %s', $count, $first->getMessage());
+            ? sprintf('OTLP curl shutdown: 1 export failed: %s', $first->getMessage())
+            : sprintf('OTLP curl shutdown: %d exports failed; first error: %s', $count, $first->getMessage());
 
         throw new TransportException($message, 0, $first);
     }
@@ -159,7 +193,7 @@ final class CurlTransport implements Transport
 
     private function buildShutdownTimeoutError(): TransportException
     {
-        return new TransportException(\sprintf(
+        return new TransportException(sprintf(
             'OTLP curl shutdown: request still pending when configured shutdown_timeout=%dms expired',
             $this->options->shutdownTimeoutMs(),
         ));
@@ -171,25 +205,25 @@ final class CurlTransport implements Transport
             throw new TransportException('Cannot send after shutdown');
         }
 
-        $url = \rtrim($this->endpoint, '/') . $path;
+        $url = rtrim($this->endpoint, '/') . $path;
 
-        $ch = \curl_init();
+        $ch = curl_init();
 
         if ($ch === false) {
-            throw new TransportException(\sprintf('Failed to initialize curl handle for %s', $signalName));
+            throw new TransportException(sprintf('Failed to initialize curl handle for %s', $signalName));
         }
 
-        \curl_setopt_array($ch, $this->options->toCurlOptions($url, $body, $this->buildHeaders()));
+        curl_setopt_array($ch, $this->options->toCurlOptions($url, $body, $this->buildHeaders()));
 
-        $result = \curl_multi_add_handle($this->multiHandle, $ch);
+        $result = curl_multi_add_handle($this->multiHandle, $ch);
 
         if ($result !== CURLM_OK) {
-            \curl_close($ch);
+            curl_close($ch);
 
-            throw new TransportException(\sprintf(
+            throw new TransportException(sprintf(
                 'Failed to add curl handle for %s: %s',
                 $signalName,
-                \curl_multi_strerror($result),
+                curl_multi_strerror($result),
             ));
         }
 
@@ -212,7 +246,7 @@ final class CurlTransport implements Transport
             if ($item['entry'] !== null && $item['entry']['signals'] !== null && $this->failover !== null) {
                 try {
                     $this->failover->send($item['entry']['signals']);
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     $failoverError = $e;
                 }
             }
@@ -233,7 +267,7 @@ final class CurlTransport implements Transport
             if ($item['entry']['signals'] !== null) {
                 try {
                     $this->failover->send($item['entry']['signals']);
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     $failoverError = $e;
                 }
             }
@@ -245,30 +279,30 @@ final class CurlTransport implements Transport
     /**
      * @return \Generator<int, array{primaryError: ?TransportException, entry: ?array{handle: \CurlHandle, signals: ?Signals}}>
      */
-    private function iterateCompleted(): \Generator
+    private function iterateCompleted(): Generator
     {
         $running = 0;
-        \curl_multi_exec($this->multiHandle, $running);
+        curl_multi_exec($this->multiHandle, $running);
 
-        while ($info = \curl_multi_info_read($this->multiHandle)) {
+        while ($info = curl_multi_info_read($this->multiHandle)) {
             /** @var \CurlHandle $ch */
             $ch = $info['handle'];
             $id = (int) $ch;
 
             $errno = $info['result'];
-            $httpCode = (int) \curl_getinfo($ch, \CURLINFO_HTTP_CODE);
-            $effectiveUrl = (string) \curl_getinfo($ch, \CURLINFO_EFFECTIVE_URL);
+            $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $effectiveUrl = (string) curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
             $urlForMessage = $effectiveUrl !== '' ? $effectiveUrl : 'unknown url';
-            $totalTimeMs = (int) \round((float) \curl_getinfo($ch, \CURLINFO_TOTAL_TIME) * 1000);
-            $connectTimeMs = (int) \round((float) \curl_getinfo($ch, \CURLINFO_CONNECT_TIME) * 1000);
+            $totalTimeMs = (int) round((float) curl_getinfo($ch, CURLINFO_TOTAL_TIME) * 1000);
+            $connectTimeMs = (int) round((float) curl_getinfo($ch, CURLINFO_CONNECT_TIME) * 1000);
 
             $primaryError = null;
 
-            if ($errno !== \CURLE_OK) {
-                $primaryError = new TransportException(\sprintf(
+            if ($errno !== CURLE_OK) {
+                $primaryError = new TransportException(sprintf(
                     'curl error %d (%s) for %s; elapsed connect=%dms total=%dms (configured connect_timeout=%dms, timeout=%dms)',
                     $errno,
-                    \curl_strerror($errno) ?? 'unknown',
+                    curl_strerror($errno) ?? 'unknown',
                     $urlForMessage,
                     $connectTimeMs,
                     $totalTimeMs,
@@ -276,7 +310,7 @@ final class CurlTransport implements Transport
                     $this->options->timeoutMs(),
                 ));
             } elseif ($httpCode < 200 || $httpCode >= 300) {
-                $primaryError = new TransportException(\sprintf(
+                $primaryError = new TransportException(sprintf(
                     'HTTP %d from %s after %dms',
                     $httpCode,
                     $urlForMessage,
@@ -286,7 +320,7 @@ final class CurlTransport implements Transport
 
             $entry = $this->pending[$id] ?? null;
 
-            \curl_multi_remove_handle($this->multiHandle, $ch);
+            curl_multi_remove_handle($this->multiHandle, $ch);
             unset($this->pending[$id]);
 
             yield ['primaryError' => $primaryError, 'entry' => $entry];
@@ -296,10 +330,10 @@ final class CurlTransport implements Transport
     /**
      * @return \Generator<int, array{primaryError: TransportException, entry: array{handle: \CurlHandle, signals: ?Signals}}>
      */
-    private function iterateStillPending(): \Generator
+    private function iterateStillPending(): Generator
     {
         foreach ($this->pending as $id => $entry) {
-            \curl_multi_remove_handle($this->multiHandle, $entry['handle']);
+            curl_multi_remove_handle($this->multiHandle, $entry['handle']);
             unset($this->pending[$id]);
 
             yield ['primaryError' => $this->buildShutdownTimeoutError(), 'entry' => $entry];
@@ -324,35 +358,35 @@ final class CurlTransport implements Transport
 
     private function waitForCompletion(?float $deadlineMicrotime = null): void
     {
-        if (\count($this->pending) === 0) {
+        if (count($this->pending) === 0) {
             return;
         }
 
         $running = 0;
 
         do {
-            $status = \curl_multi_exec($this->multiHandle, $running);
+            $status = curl_multi_exec($this->multiHandle, $running);
         } while ($status === CURLM_CALL_MULTI_PERFORM);
 
         while ($running > 0 && $status === CURLM_OK) {
             $selectTimeout = 1.0;
 
             if ($deadlineMicrotime !== null) {
-                $remaining = $deadlineMicrotime - \microtime(true);
+                $remaining = $deadlineMicrotime - microtime(true);
 
                 if ($remaining <= 0.0) {
                     return;
                 }
 
-                $selectTimeout = \min(1.0, $remaining);
+                $selectTimeout = min(1.0, $remaining);
             }
 
-            if (\curl_multi_select($this->multiHandle, $selectTimeout) === -1) {
-                \usleep(1000);
+            if (curl_multi_select($this->multiHandle, $selectTimeout) === -1) {
+                usleep(1000);
             }
 
             do {
-                $status = \curl_multi_exec($this->multiHandle, $running);
+                $status = curl_multi_exec($this->multiHandle, $running);
             } while ($status === CURLM_CALL_MULTI_PERFORM);
         }
     }

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Data\Converter;
 
+use DateInterval;
+use DateTimeImmutable;
+use DateTimeZone;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\Converter;
@@ -13,10 +16,11 @@ use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
+use function sprintf;
 
 final class TimeConverter implements Converter
 {
-    public function fromParquetType(mixed $data): \DateInterval
+    public function fromParquetType(mixed $data): DateInterval
     {
         return $this->toDateInterval(type_integer()->assert($data));
     }
@@ -32,19 +36,18 @@ final class TimeConverter implements Converter
 
     public function toParquetType(mixed $data): int
     {
-        return $this->toInt(type_instance_of(\DateInterval::class)->assert($data));
+        return $this->toInt(type_instance_of(DateInterval::class)->assert($data));
     }
 
-    private function toDateInterval(int $microseconds): \DateInterval
+    private function toDateInterval(int $microseconds): DateInterval
     {
-
-        $base = new \DateTimeImmutable('1970-01-01 00:00:00.000000', new \DateTimeZone('UTC'));
-        $target = $base->modify(\sprintf('+%d microseconds', $microseconds));
+        $base = new DateTimeImmutable('1970-01-01 00:00:00.000000', new DateTimeZone('UTC'));
+        $target = $base->modify(sprintf('+%d microseconds', $microseconds));
 
         return $base->diff($target);
     }
 
-    private function toInt(\DateInterval $interval): int
+    private function toInt(DateInterval $interval): int
     {
         if ($interval->y !== 0) {
             throw new InvalidArgumentException(

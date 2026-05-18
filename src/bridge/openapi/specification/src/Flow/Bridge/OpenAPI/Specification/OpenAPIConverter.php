@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\OpenAPI\Specification;
 
+use BackedEnum;
 use Flow\Bridge\OpenAPI\Specification\Exception\InvalidArgumentException;
 use Flow\Bridge\OpenAPI\Specification\Exception\RuntimeException;
 use Flow\ETL\Schema;
@@ -28,7 +29,10 @@ use Flow\Types\Type\Native\EnumType;
 use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
+use UnitEnum;
 
+use function array_map;
+use function enum_exists;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;
@@ -43,6 +47,11 @@ use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_time;
 use function Flow\Types\DSL\type_uuid;
 use function Flow\Types\DSL\type_xml;
+use function is_array;
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_string;
 
 /**
  * Bidirectional converter between Flow PHP schemas and OpenAPI 3.0 specifications.
@@ -86,18 +95,18 @@ final class OpenAPIConverter
             throw new InvalidArgumentException('OpenAPI specification must have type "object"');
         }
 
-        if (!isset($openApiSpec['properties']) || !\is_array($openApiSpec['properties'])) {
+        if (!isset($openApiSpec['properties']) || !is_array($openApiSpec['properties'])) {
             throw new InvalidArgumentException('OpenAPI specification must have properties array');
         }
 
         $definitions = [];
 
         foreach ($openApiSpec['properties'] as $propertyName => $propertySpec) {
-            if (!\is_string($propertyName)) {
+            if (!is_string($propertyName)) {
                 throw new InvalidArgumentException('Property name must be a string');
             }
 
-            if (!\is_array($propertySpec)) {
+            if (!is_array($propertySpec)) {
                 throw new InvalidArgumentException("Property '{$propertyName}' specification must be an array");
             }
 
@@ -217,8 +226,8 @@ final class OpenAPIConverter
         $enumClass = $type->class;
         $values = [];
 
-        if (\enum_exists($enumClass)) {
-            $values = \array_map(static fn(\UnitEnum $case) => $case instanceof \BackedEnum
+        if (enum_exists($enumClass)) {
+            $values = array_map(static fn(UnitEnum $case) => $case instanceof BackedEnum
                 ? $case->value
                 : $case->name, $enumClass::cases());
         }
@@ -276,7 +285,7 @@ final class OpenAPIConverter
             return type_list(type_string());
         }
 
-        if (!\is_array($typeSpec['items'])) {
+        if (!is_array($typeSpec['items'])) {
             throw new InvalidArgumentException('OpenAPI array items must be an array specification');
         }
 
@@ -298,7 +307,7 @@ final class OpenAPIConverter
     {
         // If it has additionalProperties, it's a map
         if (isset($typeSpec['additionalProperties'])) {
-            if (!\is_array($typeSpec['additionalProperties'])) {
+            if (!is_array($typeSpec['additionalProperties'])) {
                 throw new InvalidArgumentException('OpenAPI additionalProperties must be an array specification');
             }
 
@@ -309,18 +318,18 @@ final class OpenAPIConverter
             return type_map(type_string(), $valueType);
         }
 
-        if (isset($typeSpec['properties']) && \is_array($typeSpec['properties'])) {
+        if (isset($typeSpec['properties']) && is_array($typeSpec['properties'])) {
             $elements = [];
             $optionalElements = [];
 
             foreach ($typeSpec['properties'] as $propName => $propSpec) {
-                if (!\is_array($propSpec)) {
+                if (!is_array($propSpec)) {
                     throw new InvalidArgumentException("Property '{$propName}' specification must be an array");
                 }
 
                 /** @var array<string, mixed> $propSpec */
                 $propType = $this->convertOpenAPITypeToFlowType($propSpec);
-                $isNullable = \is_bool($propSpec['nullable'] ?? false) ? $propSpec['nullable'] : false;
+                $isNullable = is_bool($propSpec['nullable'] ?? false) ? $propSpec['nullable'] : false;
 
                 if ($isNullable) {
                     $optionalElements[$propName] = $propType;
@@ -348,21 +357,21 @@ final class OpenAPIConverter
             throw new InvalidArgumentException("Property '{$propertyName}' must have a type");
         }
 
-        $nullable = \is_bool($propertySpec['nullable'] ?? false) ? $propertySpec['nullable'] ?? false : false;
+        $nullable = is_bool($propertySpec['nullable'] ?? false) ? $propertySpec['nullable'] ?? false : false;
         $metadata = Metadata::empty();
 
-        if (isset($propertySpec['description']) && \is_string($propertySpec['description'])) {
+        if (isset($propertySpec['description']) && is_string($propertySpec['description'])) {
             $metadata = $metadata->add('description', $propertySpec['description']);
         }
 
         if (
             isset($propertySpec['example'])
             && (
-                \is_string($propertySpec['example'])
-                || \is_int($propertySpec['example'])
-                || \is_float($propertySpec['example'])
-                || \is_bool($propertySpec['example'])
-                || \is_array($propertySpec['example'])
+                is_string($propertySpec['example'])
+                || is_int($propertySpec['example'])
+                || is_float($propertySpec['example'])
+                || is_bool($propertySpec['example'])
+                || is_array($propertySpec['example'])
             )
         ) {
             $metadata = $metadata->add('example', $propertySpec['example']);
@@ -404,7 +413,7 @@ final class OpenAPIConverter
      */
     private function convertOpenAPITypeToFlowType(array $typeSpec): Type
     {
-        if (!isset($typeSpec['type']) || !\is_string($typeSpec['type'])) {
+        if (!isset($typeSpec['type']) || !is_string($typeSpec['type'])) {
             throw new InvalidArgumentException('OpenAPI type specification must have a string type');
         }
 

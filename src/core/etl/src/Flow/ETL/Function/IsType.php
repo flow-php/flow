@@ -9,6 +9,8 @@ use Flow\ETL\Row;
 use Flow\Types\Type;
 use Flow\Types\Type\TypeFactory;
 
+use function is_string;
+
 final class IsType extends ScalarFunctionChain
 {
     /**
@@ -31,7 +33,7 @@ final class IsType extends ScalarFunctionChain
         $value = (new Parameter($this->value))->eval($row, $context);
 
         foreach ($this->types as $type) {
-            $type = \is_string($type) ? TypeFactory::fromString($type) : $type;
+            $type = is_string($type) ? TypeFactory::fromString($type) : $type;
 
             if ($type->isValid($value)) {
                 return true;

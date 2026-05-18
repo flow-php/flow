@@ -7,6 +7,7 @@ namespace Flow\PostgreSql\Schema;
 use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexMethod as QbIndexMethod;
 use Flow\PostgreSql\QueryBuilder\Sql;
 
+use function array_map;
 use function Flow\PostgreSql\DSL\create;
 use function Flow\PostgreSql\DSL\parsed_select;
 
@@ -31,7 +32,7 @@ final readonly class MaterializedView
      */
     public static function fromArray(array $data): self
     {
-        return new self(name: $data['name'], definition: $data['definition'], indexes: \array_map(
+        return new self(name: $data['name'], definition: $data['definition'], indexes: array_map(
             static fn(array $index): Index => Index::fromArray($index),
             $data['indexes'],
         ));
@@ -45,7 +46,7 @@ final readonly class MaterializedView
         return [
             'name' => $this->name,
             'definition' => $this->definition,
-            'indexes' => \array_map(static fn(Index $index): array => $index->normalize(), $this->indexes),
+            'indexes' => array_map(static fn(Index $index): array => $index->normalize(), $this->indexes),
         ];
     }
 

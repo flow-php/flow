@@ -6,8 +6,12 @@ namespace Flow\PostgreSql\Tests\Integration\Client;
 
 use Flow\PostgreSql\Client\Notification;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
+use InvalidArgumentException;
 
 use function Flow\PostgreSql\DSL\notify;
+use function hrtime;
+use function implode;
+use function usleep;
 
 final class ListenNotifyTest extends PostgreSqlTestCase
 {
@@ -18,12 +22,12 @@ final class ListenNotifyTest extends PostgreSqlTestCase
 
         $this->pgsqlContext()->spawnBackgroundNotifier('flow_test_blocking', 'delivered', 200);
 
-        $startNs = \hrtime(true);
+        $startNs = hrtime(true);
         $notification = $listener->wait(3000);
-        $elapsedMs = (\hrtime(true) - $startNs) / 1_000_000;
+        $elapsedMs = (hrtime(true) - $startNs) / 1_000_000;
 
         if ($notification === null) {
-            $stderr = \implode("\n---\n", $this->pgsqlContext()->backgroundStderrContents());
+            $stderr = implode("\n---\n", $this->pgsqlContext()->backgroundStderrContents());
             static::fail('No notification received. Background sender stderr:' . "\n" . $stderr);
         }
 
@@ -43,7 +47,7 @@ final class ListenNotifyTest extends PostgreSqlTestCase
         $listener->listen('flow_test_channel_immediate');
         $sender->execute(notify('flow_test_channel_immediate')->withPayload('immediate'));
 
-        \usleep(100_000);
+        usleep(100_000);
 
         $notification = $listener->wait(0);
 
@@ -83,7 +87,7 @@ final class ListenNotifyTest extends PostgreSqlTestCase
         $sender->execute(notify('flow_test_channel_a')->withPayload('from_a'));
         $sender->execute(notify('flow_test_channel_b')->withPayload('from_b'));
 
-        \usleep(100_000);
+        usleep(100_000);
 
         $received = [];
         $first = $listener->wait(500);
@@ -131,14 +135,14 @@ final class ListenNotifyTest extends PostgreSqlTestCase
 
         $sender->execute(notify('flow_test_channel_unsub')->withPayload('should_be_ignored'));
 
-        \usleep(100_000);
+        usleep(100_000);
 
         static::assertNull($listener->wait(300));
     }
 
     public function test_wait_for_notification_negative_timeout_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->pgsqlContext()->client->wait(-1);
     }
 
@@ -147,9 +151,9 @@ final class ListenNotifyTest extends PostgreSqlTestCase
         $listener = $this->pgsqlContext()->client;
         $listener->listen('flow_test_channel_timeout');
 
-        $startNs = \hrtime(true);
+        $startNs = hrtime(true);
         $result = $listener->wait(300);
-        $elapsedMs = (\hrtime(true) - $startNs) / 1_000_000;
+        $elapsedMs = (hrtime(true) - $startNs) / 1_000_000;
 
         static::assertNull($result);
         static::assertGreaterThanOrEqual(290, $elapsedMs);

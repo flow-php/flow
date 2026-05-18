@@ -10,6 +10,15 @@ use Flow\Azure\SDK\BlobService\GetBlobProperties\BlobProperties;
 use Flow\Azure\SDK\BlobServiceInterface;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\SourceStream;
+use Generator;
+
+use function count;
+use function explode;
+use function str_contains;
+use function strlen;
+use function strpos;
+use function substr;
+use function substr_count;
 
 final class AzureBlobSourceStream implements SourceStream
 {
@@ -35,7 +44,7 @@ final class AzureBlobSourceStream implements SourceStream
         return true;
     }
 
-    public function iterate(int $length = 1): \Generator
+    public function iterate(int $length = 1): Generator
     {
         $offset = 0;
 
@@ -59,7 +68,7 @@ final class AzureBlobSourceStream implements SourceStream
             ->content();
     }
 
-    public function readLines(string $separator = "\n", ?int $length = null): \Generator
+    public function readLines(string $separator = "\n", ?int $length = null): Generator
     {
         $offset = 0;
         $content = '';
@@ -67,32 +76,32 @@ final class AzureBlobSourceStream implements SourceStream
         while ($offset < $this->size()) {
             // Read a chunk of the file
             $chunk = $this->read($length ?? (1024 * 1024 * 9), $offset);
-            $offset += \strlen($chunk);
+            $offset += strlen($chunk);
             $content .= $chunk;
 
             // no separators found in the chunk, we are still processing single line
-            if (!\str_contains($content, $separator)) {
+            if (!str_contains($content, $separator)) {
                 continue;
             }
 
-            if (\substr_count($content, $separator) > 1) {
+            if (substr_count($content, $separator) > 1) {
                 /** @phpstan-ignore argument.type */
-                $lines = \explode($separator, $content);
+                $lines = explode($separator, $content);
 
-                $lastIndex = \count($lines) - 1;
+                $lastIndex = count($lines) - 1;
 
                 for ($i = 0; $i < $lastIndex; $i++) {
                     yield $lines[$i];
                 }
 
                 $content = $lines[$lastIndex];
-            } elseif (\substr_count($content, $separator) === 1) {
+            } elseif (substr_count($content, $separator) === 1) {
                 // Split the content by the separator
                 /**
                  * @phpstan-ignore-next-line
                  */
-                yield \substr($content, 0, \strpos($content, $separator));
-                $content = \substr($content, \strpos($content, $separator) + 1);
+                yield substr($content, 0, strpos($content, $separator));
+                $content = substr($content, strpos($content, $separator) + 1);
             }
         }
 

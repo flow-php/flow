@@ -15,15 +15,21 @@ use Flow\Parquet\Reader;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function array_map;
+use function array_merge;
+use function file_exists;
 use function Flow\ETL\DSL\generate_random_int;
 use function Flow\ETL\DSL\generate_random_string;
+use function iterator_to_array;
+use function mkdir;
+use function range;
 
 class MapsWritingTest extends ParquetIntegrationTestCase
 {
     protected function setUp(): void
     {
-        if (!\file_exists(__DIR__ . '/var')) {
-            \mkdir(__DIR__ . '/var');
+        if (!file_exists(__DIR__ . '/var')) {
+            mkdir(__DIR__ . '/var');
         }
     }
 
@@ -35,20 +41,20 @@ class MapsWritingTest extends ParquetIntegrationTestCase
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::map('map_int_int', MapKey::int32(), MapValue::int32()));
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(): array => [
                 [
                     'map_int_int' => [],
                 ],
             ],
-            \range(1, 10),
+            range(1, 10),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
@@ -65,23 +71,23 @@ class MapsWritingTest extends ParquetIntegrationTestCase
         $schema = Schema::with(NestedColumn::map('map_int_int', MapKey::int32(), MapValue::int32()));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
-                    'map_int_int' => \array_merge(...\array_map(
+                    'map_int_int' => array_merge(...array_map(
                         static fn($i) => [$i => $faker->numberBetween(0, Consts::PHP_INT32_MAX)],
-                        \range(1, generate_random_int(2, 10)),
+                        range(1, generate_random_int(2, 10)),
                     )),
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
@@ -97,20 +103,20 @@ class MapsWritingTest extends ParquetIntegrationTestCase
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::map('map_int_int', MapKey::int32(), MapValue::int32()));
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(): array => [
                 [
                     'map_int_int' => null,
                 ],
             ],
-            \range(1, 10),
+            range(1, 10),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
@@ -127,23 +133,23 @@ class MapsWritingTest extends ParquetIntegrationTestCase
         $schema = Schema::with(NestedColumn::map('map_int_string', MapKey::int32(), MapValue::string()));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
-                    'map_int_string' => \array_merge(...\array_map(
+                    'map_int_string' => array_merge(...array_map(
                         static fn($i) => [$i => $faker->text(10)],
-                        \range(1, generate_random_int(2, 10)),
+                        range(1, generate_random_int(2, 10)),
                     )),
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
@@ -160,25 +166,25 @@ class MapsWritingTest extends ParquetIntegrationTestCase
         $schema = Schema::with(NestedColumn::map('map_int_int', MapKey::int32(), MapValue::int32()));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'map_int_int' => ($i % 2) === 0
-                        ? \array_merge(...\array_map(
+                        ? array_merge(...array_map(
                             static fn($i) => [$i => $faker->numberBetween(0, Consts::PHP_INT32_MAX)],
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         ))
                         : null,
                 ],
             ],
-            \range(0, 99),
+            range(0, 99),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),

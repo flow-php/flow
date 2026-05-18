@@ -15,7 +15,11 @@ use Flow\Telemetry\Tracer\SpanKind;
 use Nyholm\Psr7\Request;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Psr\Http\Client\ClientInterface;
+use RuntimeException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+
+use function class_exists;
+use function interface_exists;
 
 #[CoversClass(PSR18TraceableClient::class)]
 #[CoversClass(Psr18ClientTelemetryPass::class)]
@@ -23,11 +27,11 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
 {
     protected function setUp(): void
     {
-        if (!\interface_exists(ClientInterface::class)) {
+        if (!interface_exists(ClientInterface::class)) {
             self::markTestSkipped('psr/http-client is not installed');
         }
 
-        if (!\class_exists(PSR18TraceableClient::class)) {
+        if (!class_exists(PSR18TraceableClient::class)) {
             self::markTestSkipped('flow-php/psr18-telemetry-bridge is not installed');
         }
 
@@ -311,7 +315,7 @@ final class Psr18ClientTelemetryPassTest extends KernelTestCase
 
         try {
             $client->sendRequest(new Request('GET', 'https://unreachable.example.com/'));
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             $exceptionThrown = true;
             static::assertSame('Connection refused', $e->getMessage());
         }

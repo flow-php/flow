@@ -8,6 +8,8 @@ use Flow\Telemetry\Resource\Attribute\HostAttribute;
 use Flow\Telemetry\Resource\Detector\HostDetector;
 use PHPUnit\Framework\TestCase;
 
+use function php_uname;
+
 final class HostDetectorTest extends TestCase
 {
     public function test_detect_returns_host_architecture(): void
@@ -50,7 +52,7 @@ final class HostDetectorTest extends TestCase
         $detector = new HostDetector();
         $resource = $detector->detect();
 
-        $expectedHostname = \php_uname('n');
+        $expectedHostname = php_uname('n');
         $actualHostname = $resource->get(HostAttribute::NAME->value);
 
         static::assertSame($expectedHostname, $actualHostname);

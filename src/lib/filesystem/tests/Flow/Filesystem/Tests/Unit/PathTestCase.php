@@ -4,18 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Unit;
 
+use Generator;
 use PHPUnit\Framework\TestCase;
 
+use function file_exists;
+use function file_put_contents;
 use function Flow\Filesystem\DSL\partition;
 use function Flow\Filesystem\DSL\partitions;
 use function Flow\Filesystem\DSL\path;
+use function mkdir;
+use function tempnam;
+use function uniqid;
 
 abstract class PathTestCase extends TestCase
 {
     /**
      * @return \Generator<int, array{string, string}>
      */
-    public static function directories(): \Generator
+    public static function directories(): Generator
     {
         yield ['/some_file.txt', '/'];
         yield ['/some/nested/file.csv', '/some/nested'];
@@ -25,7 +31,7 @@ abstract class PathTestCase extends TestCase
     /**
      * @return \Generator<int, array{string, string, string}> - string $uri, string $schema, string $parsedUri
      */
-    public static function paths(): \Generator
+    public static function paths(): Generator
     {
         yield ['/file.csv', 'file', 'file://file.csv'];
         yield ['file://file.csv', 'file', 'file://file.csv'];
@@ -42,7 +48,7 @@ abstract class PathTestCase extends TestCase
     /**
      * @return \Generator<int, array{string, string, bool}>
      */
-    public static function paths_pattern_matching(): \Generator
+    public static function paths_pattern_matching(): Generator
     {
         yield ['/file.csv', '/file.csv', true];
         yield ['/nested/folder/any/file.csv', '/nested/folder/*/file.csv', false];
@@ -55,7 +61,7 @@ abstract class PathTestCase extends TestCase
     /**
      * @return \Generator<int, array{string, \Flow\Filesystem\Partitions}>
      */
-    public static function paths_with_partitions(): \Generator
+    public static function paths_with_partitions(): Generator
     {
         yield ['/', partitions()];
         yield ['file://path/without/partitions/file.csv', partitions()];
@@ -70,7 +76,7 @@ abstract class PathTestCase extends TestCase
     /**
      * @return \Generator<int, array{string, string}>
      */
-    public static function paths_with_static_parts(): \Generator
+    public static function paths_with_static_parts(): Generator
     {
         yield ['/file.csv', '/file.csv'];
         yield ['/nested/folder', '/nested/folder/*/file.csv'];
@@ -85,8 +91,8 @@ abstract class PathTestCase extends TestCase
 
     protected function setUp(): void
     {
-        if (!\file_exists(__DIR__ . '/var')) {
-            \mkdir(__DIR__ . '/var');
+        if (!file_exists(__DIR__ . '/var')) {
+            mkdir(__DIR__ . '/var');
         }
     }
 
@@ -97,19 +103,19 @@ abstract class PathTestCase extends TestCase
 
     protected function createTempDir(): string
     {
-        \mkdir($tempDir = __DIR__ . '/var/' . \uniqid('test_dir_'));
+        mkdir($tempDir = __DIR__ . '/var/' . uniqid('test_dir_'));
 
         return $tempDir;
     }
 
     protected function createTempFile(string $content = ''): string
     {
-        if (($tempFile = \tempnam(__DIR__ . '/var', 'test_')) === false) {
+        if (($tempFile = tempnam(__DIR__ . '/var', 'test_')) === false) {
             static::fail('Could not create temporary file');
         }
 
         if ($content !== '') {
-            \file_put_contents($tempFile, $content);
+            file_put_contents($tempFile, $content);
         }
 
         return $tempFile;

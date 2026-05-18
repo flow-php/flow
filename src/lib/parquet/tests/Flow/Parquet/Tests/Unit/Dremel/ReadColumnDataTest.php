@@ -14,14 +14,17 @@ use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\Types\DSL\type_instance_of;
+use function iterator_to_array;
+
 final class ReadColumnDataTest extends TestCase
 {
     public function test_create_flat_from_flat_data(): void
     {
         $schema = Schema::with(NestedColumn::map('m', MapKey::string(), MapValue::int32()));
 
-        $keyColumn = \Flow\Types\DSL\type_instance_of(FlatColumn::class)->assert($schema->get('m.key_value.key'));
-        $valueColumn = \Flow\Types\DSL\type_instance_of(FlatColumn::class)->assert($schema->get('m.key_value.value'));
+        $keyColumn = type_instance_of(FlatColumn::class)->assert($schema->get('m.key_value.key'));
+        $valueColumn = type_instance_of(FlatColumn::class)->assert($schema->get('m.key_value.value'));
 
         $keyValuesGenerator = static function () {
             yield 'a';
@@ -42,14 +45,14 @@ final class ReadColumnDataTest extends TestCase
                 new FlatValue($keyColumn, 0, 2, 'a'),
                 new FlatValue($keyColumn, 2, 2, 'b'),
             ],
-            \iterator_to_array($columnData->iterator($keyColumn)),
+            iterator_to_array($columnData->iterator($keyColumn)),
         );
         static::assertEquals(
             [
                 new FlatValue($valueColumn, 0, 3, 1),
                 new FlatValue($valueColumn, 2, 3, 2),
             ],
-            \iterator_to_array($columnData->iterator($valueColumn)),
+            iterator_to_array($columnData->iterator($valueColumn)),
         );
     }
 
@@ -74,7 +77,7 @@ final class ReadColumnDataTest extends TestCase
                 new FlatValue($column, 0, 1, 2),
                 new FlatValue($column, 0, 1, 3),
             ],
-            \iterator_to_array($columnData->iterator($column)),
+            iterator_to_array($columnData->iterator($column)),
         );
     }
 
@@ -82,8 +85,8 @@ final class ReadColumnDataTest extends TestCase
     {
         $schema = Schema::with(NestedColumn::map('m', MapKey::string(), MapValue::int32()));
 
-        $keyColumn = \Flow\Types\DSL\type_instance_of(FlatColumn::class)->assert($schema->get('m.key_value.key'));
-        $valueColumn = \Flow\Types\DSL\type_instance_of(FlatColumn::class)->assert($schema->get('m.key_value.value'));
+        $keyColumn = type_instance_of(FlatColumn::class)->assert($schema->get('m.key_value.key'));
+        $valueColumn = type_instance_of(FlatColumn::class)->assert($schema->get('m.key_value.value'));
 
         $keyValuesGenerator = static function () {
             yield 'a';
@@ -104,7 +107,7 @@ final class ReadColumnDataTest extends TestCase
                 new FlatValue($keyColumn, 0, 2, 'a'),
                 new FlatValue($keyColumn, 2, 2, 'b'),
             ],
-            \iterator_to_array($columnData->iterator($keyColumn)),
+            iterator_to_array($columnData->iterator($keyColumn)),
         );
 
         static::assertEquals(
@@ -112,7 +115,7 @@ final class ReadColumnDataTest extends TestCase
                 new FlatValue($valueColumn, 0, 3, 1),
                 new FlatValue($valueColumn, 2, 3, 2),
             ],
-            \iterator_to_array($columnData->iterator($valueColumn)),
+            iterator_to_array($columnData->iterator($valueColumn)),
         );
     }
 }

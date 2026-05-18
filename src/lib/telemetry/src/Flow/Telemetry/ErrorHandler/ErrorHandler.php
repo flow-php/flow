@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\ErrorHandler;
 
+use Throwable;
+
 /**
  * Receives Throwables raised inside the SDK at runtime.
  *
@@ -16,5 +18,5 @@ namespace Flow\Telemetry\ErrorHandler;
  */
 interface ErrorHandler
 {
-    public function handle(\Throwable $error): void;
+    public function handle(Throwable $error): void;
 }

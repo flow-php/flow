@@ -7,6 +7,7 @@ namespace Flow\ETL\Extractor;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
+use Generator;
 
 use function Flow\ETL\DSL\array_to_rows;
 
@@ -21,7 +22,7 @@ final class ArrayExtractor implements Extractor
         private readonly iterable $dataset,
     ) {}
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         foreach ($this->dataset as $row) {
             $signal = yield array_to_rows([$row], $context->entryFactory(), [], $this->schema);

@@ -8,8 +8,11 @@ use Flow\PostgreSql\Client\Exception\MappingException;
 use Flow\PostgreSql\Client\RowMapper\StaticFactoryMapper;
 use Flow\PostgreSql\Tests\Mother\MapperContextMother;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 use function Flow\PostgreSql\DSL\static_factory_mapper;
+use function func_get_args;
+use function sprintf;
 
 final class StaticFactoryMapperTest extends TestCase
 {
@@ -105,7 +108,7 @@ final class StaticFactoryMapperTest extends TestCase
     public function test_throws_when_factory_method_does_not_exist(): void
     {
         $this->expectException(MappingException::class);
-        $this->expectExceptionMessage(\sprintf(
+        $this->expectExceptionMessage(sprintf(
             'Static factory method "%s::missing()" does not exist',
             SimpleFactoryDto::class,
         ));
@@ -116,7 +119,7 @@ final class StaticFactoryMapperTest extends TestCase
     public function test_throws_when_factory_method_is_not_public(): void
     {
         $this->expectException(MappingException::class);
-        $this->expectExceptionMessage(\sprintf(
+        $this->expectExceptionMessage(sprintf(
             'Factory method "%s::_fromRow()" must be declared public',
             PrivateFactoryDto::class,
         ));
@@ -127,7 +130,7 @@ final class StaticFactoryMapperTest extends TestCase
     public function test_throws_when_factory_method_is_not_static(): void
     {
         $this->expectException(MappingException::class);
-        $this->expectExceptionMessage(\sprintf(
+        $this->expectExceptionMessage(sprintf(
             'Factory method "%s::fromRow()" must be declared static',
             NonStaticFactoryDto::class,
         ));
@@ -145,7 +148,7 @@ final class StaticFactoryMapperTest extends TestCase
         } catch (MappingException $e) {
             $previous = $e->getPrevious();
             static::assertStringContainsString('boom', $e->getMessage());
-            static::assertInstanceOf(\RuntimeException::class, $previous);
+            static::assertInstanceOf(RuntimeException::class, $previous);
             static::assertSame('boom', $previous->getMessage());
         }
     }
@@ -178,7 +181,7 @@ final class CapturedRowFactoryDto
      */
     public static function fromRow(array $row): self
     {
-        self::$lastArgs = \func_get_args();
+        self::$lastArgs = func_get_args();
 
         return new self();
     }
@@ -213,7 +216,7 @@ final class ThrowingFactoryDto
      */
     public static function fromRow(array $row): self
     {
-        throw new \RuntimeException('boom');
+        throw new RuntimeException('boom');
     }
 }
 

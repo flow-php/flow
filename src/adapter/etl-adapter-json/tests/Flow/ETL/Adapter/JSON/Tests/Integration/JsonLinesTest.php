@@ -8,6 +8,8 @@ use Flow\ETL\Adapter\JSON\JsonLinesLoader;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function file_exists;
+use function file_get_contents;
 use function Flow\ETL\Adapter\JSON\from_json_lines;
 use function Flow\ETL\Adapter\JSON\to_json_lines;
 use function Flow\ETL\DSL\config;
@@ -18,6 +20,7 @@ use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rows;
 use function Flow\Filesystem\DSL\path;
+use function unlink;
 
 final class JsonLinesTest extends FlowTestCase
 {
@@ -37,7 +40,7 @@ final class JsonLinesTest extends FlowTestCase
             )
             ->run();
 
-        $content = \file_get_contents($path);
+        $content = file_get_contents($path);
 
         if ($content === false) {
             static::fail('Failed to read file content');
@@ -55,16 +58,16 @@ final class JsonLinesTest extends FlowTestCase
     {
         $path = __DIR__ . '/var/test_json_loader.jsonl';
 
-        if (\file_exists($path)) {
-            \unlink($path);
+        if (file_exists($path)) {
+            unlink($path);
         }
 
         df()->read(new FakeExtractor(100))->write(to_json_lines($path))->run();
 
         static::assertEquals(100, df()->read(from_json_lines($path))->count());
 
-        if (\file_exists($path)) {
-            \unlink($path);
+        if (file_exists($path)) {
+            unlink($path);
         }
     }
 
@@ -76,11 +79,11 @@ final class JsonLinesTest extends FlowTestCase
 
         $loader->closure($context);
 
-        $content = \file_get_contents($path);
+        $content = file_get_contents($path);
         static::assertEmpty($content);
 
-        if (\file_exists($path)) {
-            \unlink($path);
+        if (file_exists($path)) {
+            unlink($path);
         }
     }
 
@@ -88,8 +91,8 @@ final class JsonLinesTest extends FlowTestCase
     {
         $path = __DIR__ . '/var/test_jsonl_loader.json';
 
-        if (\file_exists($path)) {
-            \unlink($path);
+        if (file_exists($path)) {
+            unlink($path);
         }
 
         df()->read(new FakeExtractor(100))->write(to_json_lines($path))->run();
@@ -98,8 +101,8 @@ final class JsonLinesTest extends FlowTestCase
 
         static::assertEquals(100, df()->read(from_json_lines($path))->count());
 
-        if (\file_exists($path)) {
-            \unlink($path);
+        if (file_exists($path)) {
+            unlink($path);
         }
     }
 

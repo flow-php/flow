@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
+use DateTimeZone;
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
@@ -26,7 +29,7 @@ use function Flow\Types\DSL\type_structure;
 
 final class StructureTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'valid structure with required fields' => [
             'value' => ['id' => 1, 'name' => 'b'],
@@ -71,13 +74,13 @@ final class StructureTypeTest extends TestCase
         ];
 
         yield 'invalid object' => [
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()]),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid DateTimeZone' => [
-            'value' => new \DateTimeZone('UTC'),
+            'value' => new DateTimeZone('UTC'),
             'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()]),
             'exceptionClass' => InvalidTypeException::class,
         ];
@@ -222,7 +225,7 @@ final class StructureTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
         yield 'array into structure' => [
             'structure' => type_structure([
@@ -299,7 +302,7 @@ final class StructureTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'valid simple structure' => [
             'structure' => type_structure(['string' => type_string()]),

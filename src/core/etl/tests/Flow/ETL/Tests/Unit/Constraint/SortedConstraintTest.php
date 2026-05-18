@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Constraint;
 
+use DateTimeImmutable;
 use Flow\ETL\Constraint\SortedByConstraint;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -125,10 +126,10 @@ final class SortedConstraintTest extends FlowTestCase
     {
         $constraint = new SortedByConstraint(ref('date')->asc());
 
-        static::assertTrue($constraint->isSatisfiedBy(row(date_entry('date', new \DateTimeImmutable('2025-01-01')))));
-        static::assertTrue($constraint->isSatisfiedBy(row(date_entry('date', new \DateTimeImmutable('2025-01-02')))));
-        static::assertTrue($constraint->isSatisfiedBy(row(date_entry('date', new \DateTimeImmutable('2025-01-03')))));
-        static::assertFalse($constraint->isSatisfiedBy(row(date_entry('date', new \DateTimeImmutable('2025-01-01')))));
+        static::assertTrue($constraint->isSatisfiedBy(row(date_entry('date', new DateTimeImmutable('2025-01-01')))));
+        static::assertTrue($constraint->isSatisfiedBy(row(date_entry('date', new DateTimeImmutable('2025-01-02')))));
+        static::assertTrue($constraint->isSatisfiedBy(row(date_entry('date', new DateTimeImmutable('2025-01-03')))));
+        static::assertFalse($constraint->isSatisfiedBy(row(date_entry('date', new DateTimeImmutable('2025-01-01')))));
     }
 
     public function test_sorted_constraint_with_single_row(): void

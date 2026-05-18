@@ -8,6 +8,14 @@ use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Path;
 
+use function file_exists;
+use function fopen;
+use function fwrite;
+use function gettype;
+use function is_resource;
+use function stream_copy_to_stream;
+use function strlen;
+
 class Block
 {
     /**
@@ -34,11 +42,11 @@ class Block
             throw new InvalidArgumentException('Block size must be greater than 0, got: ' . $totalSize);
         }
 
-        if (\file_exists($path->path())) {
+        if (file_exists($path->path())) {
             throw new InvalidArgumentException('Block file already exists: ' . $path->path());
         }
 
-        $handle = \fopen($path->path(), 'w+b');
+        $handle = fopen($path->path(), 'w+b');
 
         if ($handle === false) {
             throw new RuntimeException('Could not open block file: ' . $path->path());
@@ -62,16 +70,16 @@ class Block
             );
         }
 
-        if (!\is_resource($this->handle)) {
+        if (!is_resource($this->handle)) {
             throw new RuntimeException('Failed to write to block, stream resource is invalid');
         }
 
-        $written = \fwrite($this->handle, $data);
+        $written = fwrite($this->handle, $data);
 
-        if ($written === false || $written !== \strlen($data)) {
+        if ($written === false || $written !== strlen($data)) {
             throw new RuntimeException(
                 'Failed to write all bytes to block, expected '
-                . \strlen($data)
+                . strlen($data)
                 . ' bytes, written: '
                 . ($written === false ? '0' : $written),
             );
@@ -85,9 +93,9 @@ class Block
      */
     public function fromResource($resource, int $offset = 0): int
     {
-        if (!\is_resource($resource)) {
+        if (!is_resource($resource)) {
             throw new InvalidArgumentException(
-                'Block::fromResource expects resource type, given: ' . \gettype($resource),
+                'Block::fromResource expects resource type, given: ' . gettype($resource),
             );
         }
 
@@ -96,7 +104,7 @@ class Block
             . $offset);
         }
 
-        $result = \stream_copy_to_stream($resource, $this->handle, $this->spaceLeft(), $offset);
+        $result = stream_copy_to_stream($resource, $this->handle, $this->spaceLeft(), $offset);
 
         if ($result === false) {
             throw new RuntimeException('Could not copy stream to block.');

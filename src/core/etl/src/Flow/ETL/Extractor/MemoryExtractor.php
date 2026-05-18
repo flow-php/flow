@@ -7,6 +7,7 @@ namespace Flow\ETL\Extractor;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Memory\Memory;
+use Generator;
 
 use function Flow\ETL\DSL\array_to_rows;
 
@@ -19,7 +20,7 @@ final readonly class MemoryExtractor implements Extractor
         private Memory $memory,
     ) {}
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         foreach ($this->memory->dump() as $row) {
             $signal = yield array_to_rows([$row], $context->entryFactory());

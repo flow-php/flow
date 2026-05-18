@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\AsyncAWS\Tests\Integration;
 
+use function file_get_contents;
 use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function fopen;
 
 final class AsyncAWSS3DestinationStreamTest extends AsyncAWSS3TestCase
 {
@@ -23,7 +25,7 @@ final class AsyncAWSS3DestinationStreamTest extends AsyncAWSS3TestCase
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
         $stream = $fs->writeTo(path('aws-s3://orders.csv'));
-        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertNotFalse($resource);
         $stream->fromResource($resource);
         $stream->close();
@@ -31,7 +33,7 @@ final class AsyncAWSS3DestinationStreamTest extends AsyncAWSS3TestCase
         static::assertTrue($fs->status(path('aws-s3://orders.csv'))?->isFile());
         static::assertFalse($fs->status(path('aws-s3://orders.csv'))->isDirectory());
         static::assertSame(
-            \file_get_contents(__DIR__ . '/Fixtures/orders.csv'),
+            file_get_contents(__DIR__ . '/Fixtures/orders.csv'),
             $fs->readFrom(path('aws-s3://orders.csv'))->content(),
         );
 

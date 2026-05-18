@@ -7,6 +7,7 @@ namespace Flow\ETL\Extractor;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Generator;
 
 final readonly class BatchExtractor implements Extractor, OverridingExtractor
 {
@@ -21,7 +22,7 @@ final readonly class BatchExtractor implements Extractor, OverridingExtractor
     /**
      * @return \Generator<int, Rows, mixed, mixed>
      */
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         $chunk = new Rows();
         $chunkSize = 0;

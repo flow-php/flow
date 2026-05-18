@@ -8,11 +8,12 @@ use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use SensitiveParameter;
 
 final readonly class ContributorsRequestFactory implements NextRequestFactory
 {
     public function __construct(
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         public string $githubToken,
         private Psr17Factory $factory = new Psr17Factory(),
     ) {}

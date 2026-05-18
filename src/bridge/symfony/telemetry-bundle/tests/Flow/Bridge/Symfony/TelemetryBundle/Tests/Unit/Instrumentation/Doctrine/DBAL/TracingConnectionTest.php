@@ -22,13 +22,18 @@ use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use stdClass;
+
+use function interface_exists;
+use function mb_strlen;
+use function str_repeat;
 
 #[CoversClass(TracingConnection::class)]
 final class TracingConnectionTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (\interface_exists('Doctrine\DBAL\VersionAwarePlatformDriver')) {
+        if (interface_exists('Doctrine\DBAL\VersionAwarePlatformDriver')) {
             self::markTestSkipped('Test requires Doctrine DBAL 4.x');
         }
     }
@@ -113,7 +118,7 @@ final class TracingConnectionTest extends TestCase
 
         $truncated = $spans[0]->attributes()['db.query.text'];
         static::assertSame('SELECT * FROM u...', $truncated);
-        static::assertSame(18, \mb_strlen($truncated));
+        static::assertSame(18, mb_strlen($truncated));
     }
 
     public function test_truncate_sql_returns_full_sql_when_max_length_negative(): void
@@ -124,7 +129,7 @@ final class TracingConnectionTest extends TestCase
         $connection = $this->createMockConnection();
         $tracing = new TracingConnection($connection, $telemetry, logSql: true, maxSqlLength: -1);
 
-        $longSql = \str_repeat('SELECT * FROM users; ', 100);
+        $longSql = str_repeat('SELECT * FROM users; ', 100);
         $tracing->exec($longSql);
 
         $spans = $spanProcessor->endedSpans();
@@ -140,7 +145,7 @@ final class TracingConnectionTest extends TestCase
         $connection = $this->createMockConnection();
         $tracing = new TracingConnection($connection, $telemetry, logSql: true, maxSqlLength: 0);
 
-        $longSql = \str_repeat('SELECT * FROM users; ', 100);
+        $longSql = str_repeat('SELECT * FROM users; ', 100);
         $tracing->exec($longSql);
 
         $spans = $spanProcessor->endedSpans();
@@ -194,7 +199,7 @@ final class TracingConnectionTest extends TestCase
 
             public function getNativeConnection(): object
             {
-                return new \stdClass();
+                return new stdClass();
             }
 
             public function getServerVersion(): string

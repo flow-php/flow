@@ -16,6 +16,9 @@ use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\types;
+use function implode;
+use function in_array;
 
 /**
  * @template TLeft
@@ -58,7 +61,7 @@ final readonly class IntersectionType implements Type
             $types[] = $this->right;
         }
 
-        $this->flatTypes = \Flow\Types\DSL\types(...$types);
+        $this->flatTypes = types(...$types);
     }
 
     /**
@@ -139,11 +142,11 @@ final readonly class IntersectionType implements Type
 
         foreach ($this->flatTypes->deduplicate()->all() as $type) {
             if ($type instanceof OptionalType) {
-                if (!\in_array($type->base()->toString(), $stringTypes, true)) {
+                if (!in_array($type->base()->toString(), $stringTypes, true)) {
                     $stringTypes[] = $type->base()->toString();
                 }
 
-                if (!\in_array('null', $stringTypes, true)) {
+                if (!in_array('null', $stringTypes, true)) {
                     $stringTypes[] = 'null';
                 }
 
@@ -155,7 +158,7 @@ final readonly class IntersectionType implements Type
 
         asort($stringTypes);
 
-        return 'intersection<' . \implode('&', $stringTypes) . '>';
+        return 'intersection<' . implode('&', $stringTypes) . '>';
     }
 
     /**

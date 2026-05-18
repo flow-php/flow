@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Cache\Implementation;
 
+use DateInterval;
 use Flow\ETL\Cache;
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Exception\KeyNotInCacheException;
@@ -14,11 +15,13 @@ use Flow\Serializer\Serializer;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
 
+use function is_string;
+
 final readonly class PSRSimpleCache implements Cache
 {
     public function __construct(
         private CacheInterface $cache,
-        private int|\DateInterval|null $ttl = null,
+        private int|DateInterval|null $ttl = null,
         private Serializer $serializer = new NativePHPSerializer(),
     ) {}
 
@@ -41,7 +44,7 @@ final readonly class PSRSimpleCache implements Cache
         }
 
         return $this->serializer->unserialize(
-            \is_string($serializedValue) ? $serializedValue : '',
+            is_string($serializedValue) ? $serializedValue : '',
             [Row::class, Rows::class, CacheIndex::class],
         );
     }

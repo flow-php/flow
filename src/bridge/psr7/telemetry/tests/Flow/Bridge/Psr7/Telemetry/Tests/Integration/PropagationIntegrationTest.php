@@ -17,6 +17,7 @@ use PHPUnit\Framework\TestCase;
 
 use function Flow\Bridge\Psr7\Telemetry\DSL\psr7_request_carrier;
 use function Flow\Bridge\Psr7\Telemetry\DSL\psr7_response_carrier;
+use function Flow\Telemetry\DSL\baggage;
 use function Flow\Telemetry\DSL\composite_propagator;
 use function Flow\Telemetry\DSL\propagation_context;
 use function Flow\Telemetry\DSL\w3c_baggage;
@@ -88,7 +89,7 @@ final class PropagationIntegrationTest extends TestCase
 
         $propagator = w3c_baggage();
         $carrier = psr7_response_carrier($response);
-        $ctx = propagation_context(baggage: \Flow\Telemetry\DSL\baggage([
+        $ctx = propagation_context(baggage: baggage([
             'userId' => 'alice',
             'serverNode' => 'DF28',
         ]));

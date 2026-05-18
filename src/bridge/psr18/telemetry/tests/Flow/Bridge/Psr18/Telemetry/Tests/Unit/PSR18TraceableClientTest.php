@@ -20,6 +20,7 @@ use Nyholm\Psr7\Request;
 use Nyholm\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
+use RuntimeException;
 
 use function Flow\Bridge\Psr18\Telemetry\DSL\psr18_traceable_client;
 
@@ -30,7 +31,7 @@ final class PSR18TraceableClientTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new VoidExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
-        $exception = new \RuntimeException('Connection failed');
+        $exception = new RuntimeException('Connection failed');
         $mockClient = $this->createMock(ClientInterface::class);
         $mockClient->method('sendRequest')->willThrowException($exception);
 
@@ -38,7 +39,7 @@ final class PSR18TraceableClientTest extends TestCase
 
         $request = new Request('GET', 'https://api.example.com/users');
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Connection failed');
 
         try {
@@ -53,7 +54,7 @@ final class PSR18TraceableClientTest extends TestCase
             static::assertSame('exception', $events[0]->name());
 
             $eventAttributes = $events[0]->attributes();
-            static::assertSame(\RuntimeException::class, $eventAttributes['exception.type']);
+            static::assertSame(RuntimeException::class, $eventAttributes['exception.type']);
             static::assertSame('Connection failed', $eventAttributes['exception.message']);
 
             static::assertNotNull($span->status());

@@ -8,6 +8,8 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function array_merge;
+
 /**
  * Scalar function that takes two other functions, checks if both of them are arrays and merges them.
  */
@@ -36,6 +38,6 @@ final class ArrayMerge extends ScalarFunctionChain
                 ->invalidResult(new InvalidArgumentException('ArrayMerge function requires two non-null arrays'));
         }
 
-        return \array_merge($left, $right);
+        return array_merge($left, $right);
     }
 }

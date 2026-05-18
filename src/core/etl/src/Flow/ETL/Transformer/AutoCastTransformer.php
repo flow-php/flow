@@ -11,6 +11,7 @@ use Flow\ETL\Row\Entry;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Flow\Types\Type\AutoCaster;
+use Throwable;
 
 final readonly class AutoCastTransformer implements Transformer
 {
@@ -34,7 +35,7 @@ final readonly class AutoCastTransformer implements Transformer
             ]);
 
             return $result;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->transformationFailed($this, $e);
 
             throw $e;

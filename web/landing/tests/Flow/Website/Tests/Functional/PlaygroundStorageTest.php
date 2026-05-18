@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Website\Tests\Functional;
 
+use Exception;
+use Override;
+
 final class PlaygroundStorageTest extends EndToEndTestCase
 {
     protected function setUp(): void
@@ -12,7 +15,7 @@ final class PlaygroundStorageTest extends EndToEndTestCase
         $this->clearStorageBeforeTest();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         $this->clearStorageBeforeTest();
@@ -65,7 +68,7 @@ final class PlaygroundStorageTest extends EndToEndTestCase
         try {
             $client = self::navigateWithRetry('/playground');
             $client->executeScript('localStorage.clear();');
-        } catch (\Exception) {
+        } catch (Exception) {
         }
     }
 }

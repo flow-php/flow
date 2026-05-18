@@ -7,6 +7,7 @@ namespace Flow\Azure\SDK\Tests\Double;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use RuntimeException;
 
 final class FixedResponseClient implements ClientInterface
 {
@@ -28,7 +29,7 @@ final class FixedResponseClient implements ClientInterface
         $response = array_shift($this->responses);
 
         if ($response === null) {
-            throw new \RuntimeException('FixedResponseClient: no more responses queued');
+            throw new RuntimeException('FixedResponseClient: no more responses queued');
         }
 
         return $response;

@@ -10,6 +10,8 @@ use Flow\ETL\Adapter\PostgreSql\ValueConverter\HTMLConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\TestCase;
 
+use function class_exists;
+
 final class HTMLConverterTest extends TestCase
 {
     public function test_delegates_string_to_next_converter(): void
@@ -21,7 +23,7 @@ final class HTMLConverterTest extends TestCase
 
     public function test_html_document_returns_html_string(): void
     {
-        if (!\class_exists(HTMLDocument::class)) {
+        if (!class_exists(HTMLDocument::class)) {
             static::markTestSkipped('Dom\HTMLDocument requires PHP 8.4+');
         }
 
@@ -36,7 +38,7 @@ final class HTMLConverterTest extends TestCase
 
     public function test_html_element_returns_html_string(): void
     {
-        if (!\class_exists(HTMLDocument::class)) {
+        if (!class_exists(HTMLDocument::class)) {
             static::markTestSkipped('Dom\HTMLDocument requires PHP 8.4+');
         }
 

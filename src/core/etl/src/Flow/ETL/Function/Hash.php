@@ -10,6 +10,10 @@ use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Row;
 use Flow\Types\Value\Json;
 
+use function gettype;
+use function is_scalar;
+use function serialize;
+
 final class Hash extends ScalarFunctionChain
 {
     public function __construct(
@@ -27,9 +31,9 @@ final class Hash extends ScalarFunctionChain
 
         return match ($value) {
             null => null,
-            default => match (\gettype($value)) {
-                'array', 'object' => $this->algorithm->hash(\serialize($value)),
-                default => $this->algorithm->hash(\is_scalar($value) ? (string) $value : ''),
+            default => match (gettype($value)) {
+                'array', 'object' => $this->algorithm->hash(serialize($value)),
+                default => $this->algorithm->hash(is_scalar($value) ? (string) $value : ''),
             },
         };
     }

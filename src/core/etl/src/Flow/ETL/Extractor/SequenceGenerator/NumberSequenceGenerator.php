@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor\SequenceGenerator;
 
+use Generator;
+
+use function range;
+
 final readonly class NumberSequenceGenerator implements SequenceGenerator
 {
     public function __construct(
@@ -12,9 +16,9 @@ final readonly class NumberSequenceGenerator implements SequenceGenerator
         private int|float $step = 1,
     ) {}
 
-    public function generate(): \Generator
+    public function generate(): Generator
     {
-        foreach (\range($this->start, $this->end, $this->step) as $item) {
+        foreach (range($this->start, $this->end, $this->step) as $item) {
             yield $item;
         }
     }

@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\Azure\Tests\Integration;
 
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function implode;
+use function iterator_to_array;
+use function strlen;
 
 final class AzureBlobSourceStreamTest extends AzureBlobServiceTestCase
 {
-    public static function line_lengths(): \Generator
+    public static function line_lengths(): Generator
     {
         yield [1];
         yield [7];
@@ -33,7 +37,7 @@ final class AzureBlobSourceStreamTest extends AzureBlobServiceTestCase
 
         $stream = azure_filesystem($this->blobService('flow-php'))->readFrom(path('azure-blob://file.txt'));
 
-        static::assertSame($content, \implode('', \iterator_to_array($stream->iterate())));
+        static::assertSame($content, implode('', iterator_to_array($stream->iterate())));
 
         $stream->close();
     }
@@ -52,11 +56,11 @@ final class AzureBlobSourceStreamTest extends AzureBlobServiceTestCase
         static::assertSame($content, $stream->content());
 
         static::assertSame('This is some', $stream->read(12, 0));
-        static::assertSame(12, \strlen($stream->read(12, 0)));
+        static::assertSame(12, strlen($stream->read(12, 0)));
         static::assertSame('multi line file', $stream->read(15, 13));
-        static::assertSame(15, \strlen($stream->read(15, 13)));
+        static::assertSame(15, strlen($stream->read(15, 13)));
         static::assertSame('that we are storing on azure blob', $stream->read(33, 29));
-        static::assertSame(33, \strlen($stream->read(33, 29)));
+        static::assertSame(33, strlen($stream->read(33, 29)));
 
         $stream->close();
     }
@@ -94,7 +98,7 @@ final class AzureBlobSourceStreamTest extends AzureBlobServiceTestCase
 
         $stream = azure_filesystem($this->blobService('flow-php'))->readFrom(path('azure-blob://falsy.csv'));
 
-        $lines = \iterator_to_array($stream->readLines());
+        $lines = iterator_to_array($stream->readLines());
 
         static::assertSame(['header', '0', '', 'value', '0', 'last'], $lines);
 

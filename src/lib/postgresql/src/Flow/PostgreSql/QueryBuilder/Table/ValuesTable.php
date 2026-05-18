@@ -12,6 +12,9 @@ use Flow\PostgreSql\Protobuf\AST\SetOperation;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 use Flow\PostgreSql\QueryBuilder\Expression\RowExpression;
+use InvalidArgumentException;
+
+use function count;
 
 /**
  * Represents a VALUES clause as a table reference: (VALUES (expr, expr), (expr, expr)).
@@ -30,8 +33,8 @@ final readonly class ValuesTable implements TableReference
     public function __construct(
         private array $rows,
     ) {
-        if (\count($this->rows) === 0) {
-            throw new \InvalidArgumentException('ValuesTable requires at least 1 row');
+        if (count($this->rows) === 0) {
+            throw new InvalidArgumentException('ValuesTable requires at least 1 row');
         }
     }
 
@@ -57,7 +60,7 @@ final readonly class ValuesTable implements TableReference
 
         $valuesLists = $selectStmt->getValuesLists();
 
-        if (\count($valuesLists) === 0) {
+        if (count($valuesLists) === 0) {
             throw InvalidAstException::invalidFieldValue('values_lists', 'SelectStmt', 'must have at least 1 row');
         }
 

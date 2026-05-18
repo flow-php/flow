@@ -7,7 +7,31 @@ namespace Flow\Bridge\PHPUnit\Telemetry;
 use Flow\Telemetry\ErrorHandler\ErrorLogMessageType;
 use Flow\Telemetry\ErrorHandler\SyslogFacility;
 use Flow\Telemetry\ErrorHandler\SyslogSeverity;
+use InvalidArgumentException;
 use PHPUnit\Runner\Extension\ParameterCollection;
+
+use function array_diff;
+use function array_merge;
+use function array_unique;
+use function array_values;
+use function ctype_digit;
+use function explode;
+use function getenv;
+use function implode;
+use function in_array;
+use function intval;
+use function is_string;
+use function sprintf;
+use function str_contains;
+use function str_starts_with;
+use function strtolower;
+use function strtoupper;
+use function trigger_error;
+use function trim;
+use function urldecode;
+
+use const E_USER_DEPRECATED;
+use const LOG_PID;
 
 final readonly class Configuration
 {
@@ -121,7 +145,7 @@ final readonly class Configuration
         if ($legacyUrl !== null) {
             self::rejectParams(
                 $parameters,
-                \array_merge(
+                array_merge(
                     self::SHARED_PARAMS,
                     self::CURL_SPECIFIC_PARAMS,
                     self::GRPC_SPECIFIC_PARAMS,
@@ -129,10 +153,7 @@ final readonly class Configuration
                 ),
                 'Deprecated parameter "otel_collector_url" cannot be mixed with new parameter "%s", migrate fully to the new parameter shape.',
             );
-            @\trigger_error(
-                'Parameter "otel_collector_url" is deprecated, use "endpoint" instead.',
-                \E_USER_DEPRECATED,
-            );
+            @trigger_error('Parameter "otel_collector_url" is deprecated, use "endpoint" instead.', E_USER_DEPRECATED);
         }
 
         return new self(
@@ -172,7 +193,7 @@ final readonly class Configuration
         $destination = self::resolve($parameters, 'error_handler_destination');
 
         if ($destination === null || $destination === '') {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Parameter "error_handler_destination" is required for error_handler "stream".',
             );
         }
@@ -192,7 +213,7 @@ final readonly class Configuration
         return new SyslogErrorHandlerConfig(
             ident: self::resolve($parameters, 'error_handler_ident') ?? 'flow-telemetry',
             facility: self::resolveSyslogFacility($parameters),
-            logOpts: self::resolveInt($parameters, 'error_handler_log_opts', \LOG_PID),
+            logOpts: self::resolveInt($parameters, 'error_handler_log_opts', LOG_PID),
             severity: self::resolveSyslogSeverity($parameters),
         );
     }
@@ -204,7 +225,7 @@ final readonly class Configuration
         $host = self::resolve($parameters, 'error_handler_host');
 
         if ($host === null || $host === '') {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Parameter "error_handler_host" is required for error_handler "udp_syslog".',
             );
         }
@@ -229,28 +250,28 @@ final readonly class Configuration
 
         $headers = [];
 
-        foreach (\explode(',', $raw) as $entry) {
-            $entry = \trim($entry);
+        foreach (explode(',', $raw) as $entry) {
+            $entry = trim($entry);
 
             if ($entry === '') {
                 continue;
             }
 
-            if (!\str_contains($entry, '=')) {
-                throw new \InvalidArgumentException(\sprintf(
+            if (!str_contains($entry, '=')) {
+                throw new InvalidArgumentException(sprintf(
                     'Invalid header entry "%s", expected format "name=value".',
                     $entry,
                 ));
             }
 
-            [$name, $value] = \explode('=', $entry, 2);
-            $name = \urldecode(\trim($name));
+            [$name, $value] = explode('=', $entry, 2);
+            $name = urldecode(trim($name));
 
             if ($name === '') {
-                throw new \InvalidArgumentException('Header name cannot be empty.');
+                throw new InvalidArgumentException('Header name cannot be empty.');
             }
 
-            $headers[$name] = \urldecode($value);
+            $headers[$name] = urldecode($value);
         }
 
         return $headers;
@@ -258,9 +279,9 @@ final readonly class Configuration
 
     private static function readEnv(string $fullName): ?string
     {
-        $value = $_ENV[$fullName] ?? $_SERVER[$fullName] ?? \getenv($fullName);
+        $value = $_ENV[$fullName] ?? $_SERVER[$fullName] ?? getenv($fullName);
 
-        if (!\is_string($value) || $value === '') {
+        if (!is_string($value) || $value === '') {
             return null;
         }
 
@@ -275,8 +296,8 @@ final readonly class Configuration
         string $type,
         array $allowedParams,
     ): void {
-        $foreign = \array_values(\array_diff(
-            \array_values(\array_unique(\array_merge(
+        $foreign = array_values(array_diff(
+            array_values(array_unique(array_merge(
                 self::ERROR_LOG_HANDLER_PARAMS,
                 self::STREAM_HANDLER_PARAMS,
                 self::SYSLOG_HANDLER_PARAMS,
@@ -287,7 +308,7 @@ final readonly class Configuration
         self::rejectParams(
             $parameters,
             $foreign,
-            \sprintf('Parameter "%%s" cannot be used with error_handler "%s".', $type),
+            sprintf('Parameter "%%s" cannot be used with error_handler "%s".', $type),
         );
     }
 
@@ -301,14 +322,14 @@ final readonly class Configuration
     ): void {
         foreach ($forbidden as $name) {
             if (self::resolve($parameters, $name) !== null) {
-                throw new \InvalidArgumentException(\sprintf($messageTemplate, $name));
+                throw new InvalidArgumentException(sprintf($messageTemplate, $name));
             }
         }
     }
 
     private static function resolve(ParameterCollection $parameters, string $name): ?string
     {
-        $env = self::readEnv(self::ENV_PREFIX . \strtoupper($name));
+        $env = self::readEnv(self::ENV_PREFIX . strtoupper($name));
 
         if ($env !== null) {
             return $env;
@@ -329,7 +350,7 @@ final readonly class Configuration
             return $default;
         }
 
-        $lower = \strtolower($value);
+        $lower = strtolower($value);
 
         if ($lower === 'true' || $lower === '1') {
             return true;
@@ -339,7 +360,7 @@ final readonly class Configuration
             return false;
         }
 
-        throw new \InvalidArgumentException(\sprintf(
+        throw new InvalidArgumentException(sprintf(
             'Invalid boolean value "%s" for parameter "%s", expected "true" or "false".',
             $value,
             $name,
@@ -356,10 +377,10 @@ final readonly class Configuration
             self::ERROR_HANDLER_STREAM => self::buildStreamErrorHandlerConfig($parameters),
             self::ERROR_HANDLER_SYSLOG => self::buildSyslogErrorHandlerConfig($parameters),
             self::ERROR_HANDLER_UDP_SYSLOG => self::buildUdpSyslogErrorHandlerConfig($parameters),
-            default => throw new \InvalidArgumentException(\sprintf(
+            default => throw new InvalidArgumentException(sprintf(
                 'Invalid error_handler "%s", expected one of: %s.',
                 $type,
-                \implode(', ', [
+                implode(', ', [
                     self::ERROR_HANDLER_LOG,
                     self::ERROR_HANDLER_NOOP,
                     self::ERROR_HANDLER_STREAM,
@@ -383,7 +404,7 @@ final readonly class Configuration
             'email' => ErrorLogMessageType::Email,
             'file' => ErrorLogMessageType::File,
             'sapi' => ErrorLogMessageType::Sapi,
-            default => throw new \InvalidArgumentException(\sprintf(
+            default => throw new InvalidArgumentException(sprintf(
                 'Invalid error_handler_message_type "%s", expected "operating_system", "email", "file" or "sapi".',
                 $value,
             )),
@@ -399,12 +420,12 @@ final readonly class Configuration
         }
 
         // Allow octal literals like "0640" by interpreting strings starting with "0" as octal.
-        $value = \str_starts_with($raw, '0') && \ctype_digit($raw)
-            ? \intval($raw, 8)
+        $value = str_starts_with($raw, '0') && ctype_digit($raw)
+            ? intval($raw, 8)
             : self::resolveInt($parameters, $name, self::DEFAULT_FILE_PERMISSIONS);
 
         if ($value < 0 || $value > 0o777) {
-            throw new \InvalidArgumentException(\sprintf(
+            throw new InvalidArgumentException(sprintf(
                 'Invalid file_permissions value "%s" for parameter "%s", expected octal between 0 and 0777.',
                 $raw,
                 $name,
@@ -422,8 +443,8 @@ final readonly class Configuration
             return $default;
         }
 
-        if (!\ctype_digit($value)) {
-            throw new \InvalidArgumentException(\sprintf(
+        if (!ctype_digit($value)) {
+            throw new InvalidArgumentException(sprintf(
                 'Invalid integer value "%s" for parameter "%s", expected a non-negative integer.',
                 $value,
                 $name,
@@ -459,7 +480,7 @@ final readonly class Configuration
         $serializer = SerializerType::tryFrom($value);
 
         if ($serializer === null) {
-            throw new \InvalidArgumentException(\sprintf(
+            throw new InvalidArgumentException(sprintf(
                 'Invalid serializer "%s" for parameter "curl_serializer", expected "json" or "protobuf".',
                 $value,
             ));
@@ -495,7 +516,7 @@ final readonly class Configuration
             'syslog' => SyslogFacility::Syslog,
             'user' => SyslogFacility::User,
             'uucp' => SyslogFacility::Uucp,
-            default => throw new \InvalidArgumentException(\sprintf('Invalid error_handler_facility "%s".', $value)),
+            default => throw new InvalidArgumentException(sprintf('Invalid error_handler_facility "%s".', $value)),
         };
     }
 
@@ -516,7 +537,7 @@ final readonly class Configuration
             'info' => SyslogSeverity::Info,
             'notice' => SyslogSeverity::Notice,
             'warning' => SyslogSeverity::Warning,
-            default => throw new \InvalidArgumentException(\sprintf('Invalid error_handler_severity "%s".', $value)),
+            default => throw new InvalidArgumentException(sprintf('Invalid error_handler_severity "%s".', $value)),
         };
     }
 
@@ -526,8 +547,8 @@ final readonly class Configuration
     ): CurlTransportConfig|GrpcTransportConfig|StreamTransportConfig {
         $transportType = self::resolve($parameters, 'transport') ?? self::TRANSPORT_CURL;
 
-        if (!\in_array($transportType, [self::TRANSPORT_CURL, self::TRANSPORT_GRPC, self::TRANSPORT_STREAM], true)) {
-            throw new \InvalidArgumentException(\sprintf(
+        if (!in_array($transportType, [self::TRANSPORT_CURL, self::TRANSPORT_GRPC, self::TRANSPORT_STREAM], true)) {
+            throw new InvalidArgumentException(sprintf(
                 'Invalid transport "%s", expected "%s", "%s" or "%s".',
                 $transportType,
                 self::TRANSPORT_CURL,
@@ -623,7 +644,7 @@ final readonly class Configuration
         $rawEndpoint = self::resolve($parameters, 'endpoint');
 
         if ($rawEndpoint === null || $rawEndpoint === '') {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Parameter "endpoint" is required for transport "stream" (file path or php:// stream wrapper URI).',
             );
         }

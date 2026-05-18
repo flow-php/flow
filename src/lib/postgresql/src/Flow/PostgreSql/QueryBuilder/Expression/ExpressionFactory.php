@@ -10,6 +10,8 @@ use Flow\PostgreSql\Protobuf\AST\MinMaxOp;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Exception\UnsupportedNodeException;
 
+use function count;
+
 /**
  * Factory for creating Expression instances from AST nodes.
  */
@@ -26,8 +28,8 @@ final class ExpressionFactory
         if ($columnRef !== null) {
             $fields = $columnRef->getFields();
 
-            if (\count($fields) > 0) {
-                $lastField = $fields[\count($fields) - 1];
+            if (count($fields) > 0) {
+                $lastField = $fields[count($fields) - 1];
 
                 if ($lastField->getAStar() !== null) {
                     return Star::fromAst($node);
@@ -131,7 +133,7 @@ final class ExpressionFactory
         return (
             $funcCall->getAggStar()
             || $funcCall->getAggDistinct()
-            || \count($funcCall->getAggOrder()) > 0
+            || count($funcCall->getAggOrder()) > 0
             || $funcCall->getAggFilter() !== null
         );
     }

@@ -12,6 +12,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Rows;
+use Throwable;
+
+use function count;
 
 final class TransactionalDbalLoader implements Loader
 {
@@ -32,7 +35,7 @@ final class TransactionalDbalLoader implements Loader
         private readonly array $connectionParams,
         Loader ...$loaders,
     ) {
-        if (\count($loaders) === 0) {
+        if (count($loaders) === 0) {
             throw new InvalidArgumentException('At least one loader must be provided');
         }
 
@@ -63,7 +66,7 @@ final class TransactionalDbalLoader implements Loader
             $this->executeInTransaction($this->connection(), $rows, $context);
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 
             throw $e;
@@ -106,7 +109,7 @@ final class TransactionalDbalLoader implements Loader
                 }
 
                 $connection->commit();
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $connection->rollBack();
 
                 throw $e;

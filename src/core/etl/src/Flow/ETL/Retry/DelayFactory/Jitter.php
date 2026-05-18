@@ -8,6 +8,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Retry\DelayFactory;
 use Flow\ETL\Time\Duration;
 
+use function max;
+use function mt_rand;
+
 final readonly class Jitter implements DelayFactory
 {
     public function __construct(
@@ -28,10 +31,10 @@ final readonly class Jitter implements DelayFactory
         }
 
         $jitterRange = (int) ($baseDelay->microseconds() * $this->jitterPercentage);
-        $jitter = \mt_rand(-$jitterRange, $jitterRange);
+        $jitter = mt_rand(-$jitterRange, $jitterRange);
 
         $jitteredDelay = $baseDelay->microseconds() + $jitter;
 
-        return Duration::fromMicroseconds(\max(0, $jitteredDelay));
+        return Duration::fromMicroseconds(max(0, $jitteredDelay));
     }
 }

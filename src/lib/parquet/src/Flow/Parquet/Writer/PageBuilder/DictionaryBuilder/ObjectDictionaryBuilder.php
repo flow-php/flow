@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Writer\PageBuilder\DictionaryBuilder;
 
+use DateTimeInterface;
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\Writer\PageBuilder\Dictionary;
+
+use function serialize;
 
 final class ObjectDictionaryBuilder
 {
@@ -21,10 +24,10 @@ final class ObjectDictionaryBuilder
                 continue;
             }
 
-            if ($value instanceof \DateTimeInterface) {
+            if ($value instanceof DateTimeInterface) {
                 $hash = $value->format('U u');
             } else {
-                $hash = \serialize($value);
+                $hash = serialize($value);
             }
 
             if (!isset($valueToIndex[$hash])) {

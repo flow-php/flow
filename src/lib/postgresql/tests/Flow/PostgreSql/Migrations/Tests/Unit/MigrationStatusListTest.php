@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Migrations\Tests\Unit;
 
+use DateTimeImmutable;
 use Flow\PostgreSql\Migrations\MigrationState;
 use Flow\PostgreSql\Migrations\MigrationStatus;
 use Flow\PostgreSql\Migrations\MigrationStatusList;
 use Flow\PostgreSql\Migrations\Version;
 use PHPUnit\Framework\TestCase;
+
+use function iterator_to_array;
 
 final class MigrationStatusListTest extends TestCase
 {
@@ -19,14 +22,14 @@ final class MigrationStatusListTest extends TestCase
                 Version::fromString('20260401120000'),
                 'first',
                 MigrationState::EXECUTED,
-                new \DateTimeImmutable(),
+                new DateTimeImmutable(),
             ),
             new MigrationStatus(Version::fromString('20260402120000'), 'second', MigrationState::PENDING, null),
             new MigrationStatus(
                 Version::fromString('20260403120000'),
                 'third',
                 MigrationState::UNAVAILABLE,
-                new \DateTimeImmutable(),
+                new DateTimeImmutable(),
             ),
         );
 
@@ -48,14 +51,14 @@ final class MigrationStatusListTest extends TestCase
                 Version::fromString('20260401120000'),
                 'first',
                 MigrationState::EXECUTED,
-                new \DateTimeImmutable(),
+                new DateTimeImmutable(),
             ),
             new MigrationStatus(Version::fromString('20260402120000'), 'second', MigrationState::PENDING, null),
             new MigrationStatus(
                 Version::fromString('20260403120000'),
                 'third',
                 MigrationState::EXECUTED,
-                new \DateTimeImmutable(),
+                new DateTimeImmutable(),
             ),
         );
 
@@ -75,11 +78,11 @@ final class MigrationStatusListTest extends TestCase
             Version::fromString('20260402120000'),
             'second',
             MigrationState::EXECUTED,
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
         );
 
         $list = new MigrationStatusList($s1, $s2);
-        $items = \iterator_to_array($list);
+        $items = iterator_to_array($list);
 
         static::assertSame([$s1, $s2], $items);
     }
@@ -91,7 +94,7 @@ final class MigrationStatusListTest extends TestCase
                 Version::fromString('20260401120000'),
                 'first',
                 MigrationState::EXECUTED,
-                new \DateTimeImmutable(),
+                new DateTimeImmutable(),
             ),
             new MigrationStatus(Version::fromString('20260402120000'), 'second', MigrationState::PENDING, null),
             new MigrationStatus(Version::fromString('20260403120000'), 'third', MigrationState::PENDING, null),

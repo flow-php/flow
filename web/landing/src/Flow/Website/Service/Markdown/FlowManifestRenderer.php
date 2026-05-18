@@ -16,6 +16,13 @@ use League\CommonMark\Extension\Table\TableSection;
 use League\CommonMark\Node\Block\Paragraph;
 use League\CommonMark\Node\Inline\Text;
 
+use function array_key_exists;
+use function array_keys;
+use function strcmp;
+use function strrpos;
+use function substr;
+use function usort;
+
 final readonly class FlowManifestRenderer
 {
     private const string PLACEHOLDER = '[FLOW_MANIFEST]';
@@ -95,15 +102,15 @@ final readonly class FlowManifestRenderer
             $grouped[$package['type']][] = $package;
         }
 
-        foreach (\array_keys(self::TYPE_GROUPS) as $type) {
-            if (!\array_key_exists($type, $grouped)) {
+        foreach (array_keys(self::TYPE_GROUPS) as $type) {
+            if (!array_key_exists($type, $grouped)) {
                 continue;
             }
 
             $body->appendChild($this->buildGroupHeadingRow(self::TYPE_GROUPS[$type]['label']));
 
             $items = $grouped[$type];
-            \usort($items, static fn(array $a, array $b): int => \strcmp($a['name'], $b['name']));
+            usort($items, static fn(array $a, array $b): int => strcmp($a['name'], $b['name']));
 
             foreach ($items as $package) {
                 $body->appendChild($this->buildPackageRow($package));
@@ -202,7 +209,7 @@ final readonly class FlowManifestRenderer
                 continue;
             }
 
-            if (!\array_key_exists($type, self::TYPE_GROUPS)) {
+            if (!array_key_exists($type, self::TYPE_GROUPS)) {
                 continue;
             }
 
@@ -218,8 +225,8 @@ final readonly class FlowManifestRenderer
 
     private static function slug(string $composerName): string
     {
-        $slash = \strrpos($composerName, '/');
+        $slash = strrpos($composerName, '/');
 
-        return $slash === false ? $composerName : \substr($composerName, $slash + 1);
+        return $slash === false ? $composerName : substr($composerName, $slash + 1);
     }
 }

@@ -9,6 +9,8 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Function\MatchCases\MatchCondition;
 use Flow\ETL\Row;
 
+use function json_encode;
+
 final class MatchCases extends ScalarFunctionChain
 {
     /**
@@ -37,7 +39,7 @@ final class MatchCases extends ScalarFunctionChain
             ->invalidResult(
                 new InvalidArgumentException(
                     'Not a single case matches row, consider using default parameter, row: '
-                        . \json_encode($row->toArray(), JSON_THROW_ON_ERROR),
+                        . json_encode($row->toArray(), JSON_THROW_ON_ERROR),
                 ),
             );
     }

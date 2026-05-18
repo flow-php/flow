@@ -6,6 +6,10 @@ namespace Flow\ETL\Transformer\Rename;
 
 use Flow\ETL\Row;
 
+use function array_flip;
+use function array_intersect_key;
+use function array_keys;
+
 final readonly class RenameMapEntryStrategy implements RenameEntryStrategy
 {
     /**
@@ -17,7 +21,7 @@ final readonly class RenameMapEntryStrategy implements RenameEntryStrategy
 
     public function rename(Row $row): Row
     {
-        $rowRenames = \array_intersect_key($this->renames, \array_flip(\array_keys($row->entries()->toArray())));
+        $rowRenames = array_intersect_key($this->renames, array_flip(array_keys($row->entries()->toArray())));
 
         return $rowRenames === [] ? $row : $row->renameMany($rowRenames);
     }

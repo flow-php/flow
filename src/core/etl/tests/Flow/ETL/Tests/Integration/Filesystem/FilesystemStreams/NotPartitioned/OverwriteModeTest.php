@@ -6,13 +6,16 @@ namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\NotPartitioned
 
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
+use Override;
 
+use function file_get_contents;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\Filesystem\DSL\path;
+use function iterator_to_array;
 
 final class OverwriteModeTest extends FilesystemStreamsTestCase
 {
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         parent::tearDown();
@@ -31,15 +34,15 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
         $fileStream = $streams->writeTo($path = $this->getPath(__FUNCTION__ . '/existing-file.txt'));
         static::assertStringContainsString(FilesystemStreams::FLOW_TMP_FILE_PREFIX, $fileStream->path()->path());
         $fileStream->append('some other content');
-        static::assertSame('some content', \file_get_contents($path->path()));
+        static::assertSame('some content', file_get_contents($path->path()));
 
         $streams->closeStreams($path);
 
-        static::assertSame('some other content', \file_get_contents($path->path()));
+        static::assertSame('some other content', file_get_contents($path->path()));
 
         static::assertCount(
             1,
-            $files = \iterator_to_array($this->fs()->list(path($path->parentDirectory()->path() . '/*'))),
+            $files = iterator_to_array($this->fs()->list(path($path->parentDirectory()->path() . '/*'))),
         );
         static::assertSame('existing-file.txt', $files[0]->path->basename());
     }
@@ -55,7 +58,7 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
         $streams->closeStreams($path);
 
         static::assertFileExists($path->path());
-        static::assertSame('some content', \file_get_contents($path->path()));
+        static::assertSame('some content', file_get_contents($path->path()));
     }
 
     protected function streams(): FilesystemStreams

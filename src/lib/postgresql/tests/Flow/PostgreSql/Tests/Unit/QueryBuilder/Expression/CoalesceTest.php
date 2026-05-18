@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Expression;
 
+use Flow\PostgreSql\ParsedQuery;
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Protobuf\AST\CoalesceExpr;
 use Flow\PostgreSql\Protobuf\AST\Node;
@@ -15,13 +16,17 @@ use Flow\PostgreSql\QueryBuilder\Expression\Column;
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+
+use function extension_loaded;
+use function function_exists;
 
 final class CoalesceTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped(
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );
@@ -39,7 +44,7 @@ final class CoalesceTest extends TestCase
 
     public function test_coalesce_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -55,14 +60,14 @@ final class CoalesceTest extends TestCase
         $parseResult = $parsed->raw();
         $parseResult->setStmts([$rawStmt]);
 
-        $deparsed = (new \Flow\PostgreSql\ParsedQuery($parseResult))->deparse();
+        $deparsed = (new ParsedQuery($parseResult))->deparse();
 
         static::assertSame("SELECT COALESCE(email, 'no-email@example.com') FROM users", $deparsed);
     }
 
     public function test_constructor_throws_on_less_than_two_expressions(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('COALESCE requires at least 2 expressions');
 
         new Coalesce([new MockExpression()]);

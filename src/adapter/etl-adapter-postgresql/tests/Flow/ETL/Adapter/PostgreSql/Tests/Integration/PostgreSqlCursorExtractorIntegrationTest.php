@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Integration;
 
 use Flow\ETL\Adapter\PostgreSql\Tests\IntegrationTestCase;
 
+use function array_column;
 use function Flow\ETL\Adapter\PostgreSql\from_pgsql_cursor;
 use function Flow\ETL\DSL\df;
 use function Flow\PostgreSql\DSL\asc;
@@ -20,6 +21,8 @@ use function Flow\PostgreSql\DSL\literal;
 use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\star;
 use function Flow\PostgreSql\DSL\table;
+use function range;
+use function sprintf;
 
 final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
 {
@@ -52,7 +55,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
         static::assertCount(25, $rows);
         static::assertSame(1, $rows[0]['id']);
         static::assertSame(25, $rows[24]['id']);
-        static::assertSame(\range(1, 25), \array_column($rows, 'id'));
+        static::assertSame(range(1, 25), array_column($rows, 'id'));
     }
 
     public function test_extracts_all_rows_without_order_by(): void
@@ -85,7 +88,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
         static::assertCount(12, $rows);
         static::assertSame(1, $rows[0]['id']);
         static::assertSame(12, $rows[11]['id']);
-        static::assertSame(\range(1, 12), \array_column($rows, 'id'));
+        static::assertSame(range(1, 12), array_column($rows, 'id'));
     }
 
     public function test_extracts_with_custom_cursor_name(): void
@@ -105,7 +108,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
         static::assertCount(25, $rows);
         static::assertSame(1, $rows[0]['id']);
         static::assertSame(25, $rows[24]['id']);
-        static::assertSame(\range(1, 25), \array_column($rows, 'id'));
+        static::assertSame(range(1, 25), array_column($rows, 'id'));
     }
 
     public function test_extracts_with_custom_fetch_size(): void
@@ -121,7 +124,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
         static::assertCount(25, $rows);
         static::assertSame(1, $rows[0]['id']);
         static::assertSame(25, $rows[24]['id']);
-        static::assertSame(\range(1, 25), \array_column($rows, 'id'));
+        static::assertSame(range(1, 25), array_column($rows, 'id'));
     }
 
     public function test_extracts_with_parameterized_query(): void
@@ -138,7 +141,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
         static::assertCount(15, $rows);
         static::assertSame(11, $rows[0]['id']);
         static::assertSame(25, $rows[14]['id']);
-        static::assertSame(\range(11, 25), \array_column($rows, 'id'));
+        static::assertSame(range(11, 25), array_column($rows, 'id'));
     }
 
     public function test_extracts_with_raw_sql(): void
@@ -154,7 +157,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
         static::assertCount(25, $rows);
         static::assertSame(1, $rows[0]['id']);
         static::assertSame(25, $rows[24]['id']);
-        static::assertSame(\range(1, 25), \array_column($rows, 'id'));
+        static::assertSame(range(1, 25), array_column($rows, 'id'));
     }
 
     public function test_returns_empty_for_empty_table(): void
@@ -174,7 +177,7 @@ final class PostgreSqlCursorExtractorIntegrationTest extends IntegrationTestCase
         $insert = insert()->into($this->tableName)->columns('id', 'name');
 
         for ($i = 1; $i <= $count; $i++) {
-            $insert = $insert->values(literal($i), literal(\sprintf('User_%02d', $i)));
+            $insert = $insert->values(literal($i), literal(sprintf('User_%02d', $i)));
         }
 
         $this->client->execute($insert);

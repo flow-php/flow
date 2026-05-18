@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ParquetViewer\Tests\Integration;
 
+use Closure;
 use Flow\ETL\Tests\CommandOutputNormalizer;
 use Flow\ParquetViewer\Parquet;
 use PHPUnit\Framework\TestCase;
@@ -12,6 +13,8 @@ use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Style\OutputStyle;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Tester\ApplicationTester;
+
+use function realpath;
 
 final class ReadMetadataTest extends TestCase
 {
@@ -23,7 +26,7 @@ final class ReadMetadataTest extends TestCase
         $application->setAutoExit(false);
         $application->setCatchExceptions(false);
 
-        $path = \realpath(__DIR__ . '/../../Fixtures/flow.json');
+        $path = realpath(__DIR__ . '/../../Fixtures/flow.json');
 
         $tester = new ApplicationTester($application);
         $tester->run([
@@ -45,7 +48,7 @@ final class ReadMetadataTest extends TestCase
         $application->setAutoExit(false);
         $application->setCatchExceptions(false);
 
-        $path = \realpath(__DIR__ . '/../../Fixtures/flow.parquet');
+        $path = realpath(__DIR__ . '/../../Fixtures/flow.parquet');
 
         $tester = new ApplicationTester($application);
         $tester->run([
@@ -65,7 +68,7 @@ final class ReadMetadataTest extends TestCase
         static::assertSame(0, $tester->getStatusCode());
     }
 
-    private function captureConsoleOutput(\Closure $closure): string
+    private function captureConsoleOutput(Closure $closure): string
     {
         $output = new BufferedOutput();
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Attributes;
 
 /**
@@ -53,5 +54,5 @@ interface SpanEvent
     /**
      * Get the event timestamp.
      */
-    public function timestamp(): \DateTimeImmutable;
+    public function timestamp(): DateTimeImmutable;
 }

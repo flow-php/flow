@@ -12,6 +12,8 @@ use Flow\PostgreSql\Protobuf\AST\ObjectWithArgs;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
+use function array_values;
+
 final readonly class DropFunctionBuilder implements DropFunctionFinalStep
 {
     use AstToSql;
@@ -33,7 +35,7 @@ final readonly class DropFunctionBuilder implements DropFunctionFinalStep
 
     public function arguments(FunctionArgument ...$args): DropFunctionFinalStep
     {
-        return new self($this->name, \array_values($args), $this->ifExists, $this->behavior);
+        return new self($this->name, array_values($args), $this->ifExists, $this->behavior);
     }
 
     public function cascade(): DropFunctionFinalStep

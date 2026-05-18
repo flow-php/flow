@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Unit\Serializer;
 
+use DateTimeImmutable;
 use Flow\Bridge\Telemetry\OTLP\Serializer\SpanSerializer;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
@@ -31,7 +32,7 @@ final class SpanSerializerTest extends TestCase
         $traceId = TraceId::fromHex('0102030405060708090a0b0c0d0e0f10');
         $spanId = SpanId::fromHex('0102030405060708');
         $context = SpanContext::create($traceId, $spanId);
-        $startTime = new \DateTimeImmutable('2024-01-01 12:00:00.000000');
+        $startTime = new DateTimeImmutable('2024-01-01 12:00:00.000000');
         $scope = new InstrumentationScope('test', '1.0.0');
 
         $span = new Span('test-span', $context, SpanKind::INTERNAL, $startTime, ResourceMother::default(), $scope);
@@ -96,7 +97,7 @@ final class SpanSerializerTest extends TestCase
     public function test_serialize_span_with_end_time(): void
     {
         $span = $this->createSpan();
-        $span->end(new \DateTimeImmutable('2024-01-01 12:00:01.000000'));
+        $span->end(new DateTimeImmutable('2024-01-01 12:00:01.000000'));
 
         $result = $this->serializer->serialize($span);
 
@@ -119,7 +120,7 @@ final class SpanSerializerTest extends TestCase
     public function test_serialize_span_with_events(): void
     {
         $span = $this->createSpan();
-        $span->recordEvent(GenericEvent::create('cache.hit', new \DateTimeImmutable(), ['key' => 'user:123']));
+        $span->recordEvent(GenericEvent::create('cache.hit', new DateTimeImmutable(), ['key' => 'user:123']));
 
         $result = $this->serializer->serialize($span);
 
@@ -167,7 +168,7 @@ final class SpanSerializerTest extends TestCase
             'child-span',
             $context,
             SpanKind::INTERNAL,
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
             ResourceMother::default(),
             new InstrumentationScope('test', '1.0.0'),
         );
@@ -185,7 +186,7 @@ final class SpanSerializerTest extends TestCase
             'test-span',
             $context,
             $kind,
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
             ResourceMother::default(),
             new InstrumentationScope('test', '1.0.0'),
         );

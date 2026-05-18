@@ -8,12 +8,15 @@ use Flow\Parquet\Engine\AdaptiveParquetEngine;
 use Flow\Parquet\Engine\ArrowParquetEngine;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+
+use function extension_loaded;
 
 final class AdaptiveParquetEngineTest extends TestCase
 {
     public function test_creates_arrow_engine_when_arrow_extension_loaded(): void
     {
-        if (!\extension_loaded('arrow')) {
+        if (!extension_loaded('arrow')) {
             static::markTestSkipped('This test requires the arrow extension to be loaded');
         }
 
@@ -21,7 +24,7 @@ final class AdaptiveParquetEngineTest extends TestCase
 
         static::assertInstanceOf(
             ArrowParquetEngine::class,
-            (new \ReflectionClass($engine))
+            (new ReflectionClass($engine))
                 ->getProperty('delegate')
                 ->getValue($engine),
         );
@@ -29,7 +32,7 @@ final class AdaptiveParquetEngineTest extends TestCase
 
     public function test_creates_php_engine_when_arrow_extension_not_loaded(): void
     {
-        if (\extension_loaded('arrow')) {
+        if (extension_loaded('arrow')) {
             static::markTestSkipped('This test requires the arrow extension to NOT be loaded');
         }
 
@@ -37,7 +40,7 @@ final class AdaptiveParquetEngineTest extends TestCase
 
         static::assertInstanceOf(
             PhpParquetEngine::class,
-            (new \ReflectionClass($engine))
+            (new ReflectionClass($engine))
                 ->getProperty('delegate')
                 ->getValue($engine),
         );

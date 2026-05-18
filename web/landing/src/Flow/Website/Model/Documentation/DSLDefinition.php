@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Website\Model\Documentation;
 
+use function base64_decode;
+use function implode;
+use function ltrim;
+use function rtrim;
+
 final readonly class DSLDefinition
 {
     /**
@@ -30,7 +35,7 @@ final readonly class DSLDefinition
 
     public function docComment(): string
     {
-        return \base64_decode((string) $this->data['doc_comment'], true);
+        return base64_decode((string) $this->data['doc_comment'], true);
     }
 
     /**
@@ -61,7 +66,7 @@ final readonly class DSLDefinition
             'https://github.com/flow-php/flow/blob/'
             . $version
             . '/'
-            . \ltrim($this->data['repository_path'], '/')
+            . ltrim($this->data['repository_path'], '/')
             . $startLine
         );
     }
@@ -119,7 +124,7 @@ final readonly class DSLDefinition
             $parameters[] = $this->parameterToString($parameter);
         }
 
-        $output .= \implode(', ', $parameters);
+        $output .= implode(', ', $parameters);
 
         $output .= ') : ';
 
@@ -167,6 +172,6 @@ final readonly class DSLDefinition
             }
         }
 
-        return \rtrim($output, '|');
+        return rtrim($output, '|');
     }
 }

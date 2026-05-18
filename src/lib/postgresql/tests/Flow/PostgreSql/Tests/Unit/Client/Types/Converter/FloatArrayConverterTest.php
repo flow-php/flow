@@ -7,22 +7,24 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\Converter\FloatArrayConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 final class FloatArrayConverterTest extends TestCase
 {
-    public static function provide_non_array_values(): \Generator
+    public static function provide_non_array_values(): Generator
     {
         yield 'string' => ['not an array', '{}'];
         yield 'integer' => [12345, '{}'];
         yield 'float' => [3.14, '{}'];
         yield 'boolean true' => [true, '{}'];
         yield 'boolean false' => [false, '{}'];
-        yield 'object' => [new \stdClass(), '{}'];
+        yield 'object' => [new stdClass(), '{}'];
     }
 
-    public static function provide_valid_values(): \Generator
+    public static function provide_valid_values(): Generator
     {
         yield 'float array' => [[1.5, 2.7, 3.9], '{1.5,2.7,3.9}'];
         yield 'empty array' => [[], '{}'];

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Tracer\Sampler;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\InstrumentationScope;
@@ -52,7 +53,7 @@ final class AlwaysOnSamplerTest extends TestCase
             $name,
             SpanContext::create(TraceId::generate(), SpanId::generate()),
             SpanKind::INTERNAL,
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
             ResourceMother::default(),
             new InstrumentationScope('test', '1.0.0'),
         );

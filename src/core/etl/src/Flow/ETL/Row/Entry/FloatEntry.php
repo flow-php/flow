@@ -12,9 +12,11 @@ use Flow\ETL\Schema\Definition\FloatDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 
+use function bccomp;
 use function Flow\ETL\DSL\is_type;
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_optional;
+use function number_format;
 
 /**
  * @implements Entry<?float>
@@ -85,7 +87,7 @@ final class FloatEntry implements Entry
             $this->is($entry->name())
             && $entry instanceof self
             && type_equals($this->type(), $entry->type()) /** @phpstan-ignore-next-line */
-            && \bccomp((string) $thisValue, (string) $entryValue) === 0
+            && bccomp((string) $thisValue, (string) $entryValue) === 0
         );
     }
 
@@ -113,7 +115,7 @@ final class FloatEntry implements Entry
             return '';
         }
 
-        return \number_format($this->value, 6, '.', '');
+        return number_format($this->value, 6, '.', '');
     }
 
     public function type(): Type

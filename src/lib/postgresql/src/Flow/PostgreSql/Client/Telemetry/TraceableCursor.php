@@ -14,6 +14,13 @@ use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
 use Flow\Telemetry\Tracer\Tracer;
+use Generator;
+use Throwable;
+use Traversable;
+
+use function array_merge;
+use function strlen;
+use function substr;
 
 /**
  * Decorator that adds telemetry instrumentation to a PostgreSQL cursor.
@@ -85,14 +92,14 @@ final class TraceableCursor implements Cursor
         try {
             $this->cursor->free();
             $this->completeSpan(SpanStatus::ok());
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->completeSpan(SpanStatus::error($e->getMessage()), $e);
 
             throw $e;
         }
     }
 
-    public function getIterator(): \Traversable
+    public function getIterator(): Traversable
     {
         return $this->iterate();
     }
@@ -100,7 +107,7 @@ final class TraceableCursor implements Cursor
     /**
      * @return \Generator<int, array<string, mixed>>
      */
-    public function iterate(): \Generator
+    public function iterate(): Generator
     {
         try {
             foreach ($this->cursor->iterate() as $row) {
@@ -110,7 +117,7 @@ final class TraceableCursor implements Cursor
             }
 
             $this->completeSpan(SpanStatus::ok());
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->completeSpan(SpanStatus::error($e->getMessage()), $e);
 
             throw $e;
@@ -124,7 +131,7 @@ final class TraceableCursor implements Cursor
      *
      * @return \Generator<int, T>
      */
-    public function map(RowMapper $mapper): \Generator
+    public function map(RowMapper $mapper): Generator
     {
         try {
             foreach ($this->cursor->map($mapper) as $object) {
@@ -134,7 +141,7 @@ final class TraceableCursor implements Cursor
             }
 
             $this->completeSpan(SpanStatus::ok());
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->completeSpan(SpanStatus::error($e->getMessage()), $e);
 
             throw $e;
@@ -179,13 +186,13 @@ final class TraceableCursor implements Cursor
 
         $maxLength = $this->telemetryConfig->options->maxQueryLength;
         $queryText =
-            $maxLength !== null && \strlen($this->query) > $maxLength
-                ? \substr($this->query, 0, $maxLength) . '...'
+            $maxLength !== null && strlen($this->query) > $maxLength
+                ? substr($this->query, 0, $maxLength) . '...'
                 : $this->query;
         $attributes[PostgreSqlTelemetryAttributes::DB_QUERY_TEXT] = $queryText;
 
         if ($this->telemetryConfig->options->includeParameters && $this->parameters !== []) {
-            $attributes = \array_merge($attributes, $this->parameterFormatter->formatList(
+            $attributes = array_merge($attributes, $this->parameterFormatter->formatList(
                 $this->parameters,
                 $this->telemetryConfig->options->maxParameters,
                 $this->telemetryConfig->options->maxParameterLength,
@@ -208,7 +215,7 @@ final class TraceableCursor implements Cursor
         return 'cursor';
     }
 
-    private function completeSpan(SpanStatus $status, ?\Throwable $exception = null): void
+    private function completeSpan(SpanStatus $status, ?Throwable $exception = null): void
     {
         $span = $this->span;
 

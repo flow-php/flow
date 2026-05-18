@@ -6,6 +6,12 @@ namespace Flow\ETL\Retry\RetryStrategy;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Retry\RetryStrategy;
+use Throwable;
+
+use function class_exists;
+use function interface_exists;
+use function is_string;
+use function is_subclass_of;
 
 final readonly class OnExceptionTypes implements RetryStrategy
 {
@@ -32,11 +38,11 @@ final readonly class OnExceptionTypes implements RetryStrategy
         }
 
         foreach ($exceptionTypes as $exceptionType) {
-            if (!\is_string($exceptionType) || !\class_exists($exceptionType) && !\interface_exists($exceptionType)) {
+            if (!is_string($exceptionType) || !class_exists($exceptionType) && !interface_exists($exceptionType)) {
                 throw new InvalidArgumentException("Class '{$exceptionType}' does not exist");
             }
 
-            if (!\is_subclass_of($exceptionType, \Throwable::class) && $exceptionType !== \Throwable::class) {
+            if (!is_subclass_of($exceptionType, Throwable::class) && $exceptionType !== Throwable::class) {
                 throw new InvalidArgumentException("Class '{$exceptionType}' is not a Throwable");
             }
         }
@@ -44,7 +50,7 @@ final readonly class OnExceptionTypes implements RetryStrategy
         $this->exceptionTypes = $exceptionTypes;
     }
 
-    public function shouldRetry(\Throwable $exception, int $attemptNumber): bool
+    public function shouldRetry(Throwable $exception, int $attemptNumber): bool
     {
         if ($attemptNumber > $this->limit) {
             return false;

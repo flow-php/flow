@@ -6,6 +6,9 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
+use function array_column;
+use function array_merge;
+use function array_unique;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\lit;
@@ -52,7 +55,7 @@ final class BatchByTest extends FlowIntegrationTestCase
             ->batchBy('order_id')
             ->run(callback: static function ($rows) use (&$results, &$batchCount): void {
                 $batchCount++;
-                $results = \array_merge($results, $rows->toArray());
+                $results = array_merge($results, $rows->toArray());
             });
 
         static::assertSame(3, $batchCount);
@@ -73,7 +76,7 @@ final class BatchByTest extends FlowIntegrationTestCase
             ]))
             ->batchBy('order_id')
             ->run(callback: static function ($rows) use (&$batches): void {
-                $orderIds = \array_unique(\array_column($rows->toArray(), 'order_id')); // @phpstan-ignore argument.type
+                $orderIds = array_unique(array_column($rows->toArray(), 'order_id')); // @phpstan-ignore argument.type
                 $batches[] = $orderIds;
             });
 
@@ -136,7 +139,7 @@ final class BatchByTest extends FlowIntegrationTestCase
             ->batchBy('order_id')
             ->withEntry('total', ref('amount')->multiply(lit(2)))
             ->run(callback: static function ($rows) use (&$results): void {
-                $results = \array_merge($results, $rows->toArray());
+                $results = array_merge($results, $rows->toArray());
             });
 
         static::assertSame(200, $results[0]['total']);

@@ -13,6 +13,8 @@ use Flow\PostgreSql\Protobuf\AST\TypeName;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
+use function array_values;
+
 final readonly class DropDomainBuilder implements DropDomainFinalStep
 {
     use AstToSql;
@@ -28,7 +30,7 @@ final readonly class DropDomainBuilder implements DropDomainFinalStep
 
     public static function create(string ...$names): DropDomainFinalStep
     {
-        return new self(\array_values($names));
+        return new self(array_values($names));
     }
 
     public function cascade(): DropDomainFinalStep

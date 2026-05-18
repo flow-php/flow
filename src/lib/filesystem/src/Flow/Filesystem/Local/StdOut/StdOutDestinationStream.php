@@ -4,9 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Local\StdOut;
 
+use Closure;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Path;
+use php_user_filter;
+
+use function fclose;
+use function fwrite;
+use function is_resource;
+use function strlen;
 
 final class StdOutDestinationStream implements DestinationStream
 {
@@ -21,8 +28,8 @@ final class StdOutDestinationStream implements DestinationStream
     public function __construct(
         private readonly Path $path,
         string $target = 'stdout',
-        ?\php_user_filter $filter = null,
-        private readonly ?\Closure $onClose = null,
+        ?php_user_filter $filter = null,
+        private readonly ?Closure $onClose = null,
     ) {
         if ($filter !== null) {
             stream_filter_register($filter::class, $filter::class);
@@ -38,13 +45,13 @@ final class StdOutDestinationStream implements DestinationStream
 
     public function append(string $data): DestinationStream
     {
-        if (\is_resource($this->handle)) {
-            $written = \fwrite($this->handle, $data);
+        if (is_resource($this->handle)) {
+            $written = fwrite($this->handle, $data);
 
-            if ($written === false || $written !== \strlen($data)) {
+            if ($written === false || $written !== strlen($data)) {
                 throw new RuntimeException(
                     'Failed to write all bytes to stream, expected '
-                    . \strlen($data)
+                    . strlen($data)
                     . ' bytes, written: '
                     . ($written === false ? '0' : $written),
                 );
@@ -56,8 +63,8 @@ final class StdOutDestinationStream implements DestinationStream
 
     public function close(): void
     {
-        if (\is_resource($this->handle)) {
-            \fclose($this->handle);
+        if (is_resource($this->handle)) {
+            fclose($this->handle);
         }
 
         if ($this->onClose !== null) {
@@ -67,7 +74,7 @@ final class StdOutDestinationStream implements DestinationStream
 
     public function fromResource($resource): DestinationStream
     {
-        if (\is_resource($this->handle)) {
+        if (is_resource($this->handle)) {
             stream_copy_to_stream($resource, $this->handle, null);
         }
 
@@ -76,7 +83,7 @@ final class StdOutDestinationStream implements DestinationStream
 
     public function isOpen(): bool
     {
-        return \is_resource($this->handle);
+        return is_resource($this->handle);
     }
 
     public function path(): Path

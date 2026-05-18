@@ -11,13 +11,14 @@ use Flow\PostgreSql\QueryBuilder\Schema\Constraint\ForeignKeyConstraint;
 use Flow\PostgreSql\QueryBuilder\Schema\ReferentialAction;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
 use function Flow\Types\DSL\type_instance_of;
 
 final class ForeignKeyConstraintTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }

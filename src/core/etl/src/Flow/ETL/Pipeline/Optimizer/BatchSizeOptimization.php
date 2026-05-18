@@ -12,6 +12,8 @@ use Flow\ETL\Processor\CollectingProcessor;
 use Flow\ETL\Processor\PartitioningProcessor;
 use Flow\ETL\Transformer;
 
+use function in_array;
+
 /**
  * The goal of this optimizer is to detect if there is a loader that supports batching and optimize pipeline to use it.
  * This optimization is only applicable for the pipelines with a default batch size (1).
@@ -64,7 +66,7 @@ final class BatchSizeOptimization implements Optimization
             return false;
         }
 
-        if (\in_array($element::class, $this->supportedLoaders, true)) {
+        if (in_array($element::class, $this->supportedLoaders, true)) {
             return true;
         }
 

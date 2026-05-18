@@ -10,6 +10,7 @@ use Flow\ETL\Loader;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformer;
+use Throwable;
 
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
@@ -40,7 +41,7 @@ final readonly class TransformerLoader implements Closure, Loader, OverridingLoa
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 
             throw $e;

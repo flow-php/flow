@@ -7,12 +7,16 @@ namespace Flow\Parquet\Tests\Unit\Writer;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Writer\StatisticsCounter;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
+
+use function pack;
 
 final class StatisticsCounterTest extends TestCase
 {
-    public static function array_values_provider(): \Generator
+    public static function array_values_provider(): Generator
     {
         yield 'empty array' => [[], 1, 0];
         yield 'single string array' => [['hello'], 1, 5];
@@ -20,7 +24,7 @@ final class StatisticsCounterTest extends TestCase
         yield 'nested array' => [['hello', ['nested', 'array']], 3, 16];
     }
 
-    public static function comparison_values_provider(): \Generator
+    public static function comparison_values_provider(): Generator
     {
         yield 'integers' => [[5, 1, 10, 3], 1, 10];
         yield 'strings' => [['zebra', 'apple', 'banana'], 'apple', 'zebra'];
@@ -29,7 +33,7 @@ final class StatisticsCounterTest extends TestCase
         yield 'single value' => [[42], 42, 42];
     }
 
-    public static function edge_case_values_provider(): \Generator
+    public static function edge_case_values_provider(): Generator
     {
         yield 'zero integer' => [0, 1, 0];
         yield 'zero float' => [0.0, 1, 0];
@@ -39,7 +43,7 @@ final class StatisticsCounterTest extends TestCase
         yield 'array with mixed nulls' => [[null, 'value', null], 3, 0];
     }
 
-    public static function simple_values_provider(): \Generator
+    public static function simple_values_provider(): Generator
     {
         yield 'string value' => ['hello', 5];
         yield 'integer value' => [42, 0];
@@ -171,7 +175,7 @@ final class StatisticsCounterTest extends TestCase
     {
         $column = FlatColumn::string('test_column');
         $statistics = new StatisticsCounter($column);
-        $object = new \stdClass();
+        $object = new stdClass();
         $object->name = 'test';
 
         $statistics->add($object);
@@ -529,8 +533,8 @@ final class StatisticsCounterTest extends TestCase
 
         $result = $statistics->toStatistics();
 
-        static::assertSame(\pack('l', 5), $result->min);
-        static::assertSame(\pack('l', 10), $result->max);
+        static::assertSame(pack('l', 5), $result->min);
+        static::assertSame(pack('l', 10), $result->max);
     }
 
     public function test_to_statistics_with_null_values_does_not_encode(): void

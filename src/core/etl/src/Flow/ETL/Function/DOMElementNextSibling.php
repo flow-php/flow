@@ -6,38 +6,42 @@ namespace Flow\ETL\Function;
 
 use Dom\CharacterData;
 use Dom\HTMLElement;
+use DOMDocument;
+use DOMElement;
+use DOMNode;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function class_exists;
 use function Flow\Types\DSL\type_instance_of;
 
 final class DOMElementNextSibling extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction|\DOMNode|CharacterData|HTMLElement $element,
+        private readonly ScalarFunction|DOMNode|CharacterData|HTMLElement $element,
         private readonly bool $allowOnlyElement,
     ) {}
 
-    public function eval(Row $row, FlowContext $context): \DOMNode|CharacterData|HTMLElement|null
+    public function eval(Row $row, FlowContext $context): DOMNode|CharacterData|HTMLElement|null
     {
         $types = [
-            type_instance_of(\DOMNode::class),
+            type_instance_of(DOMNode::class),
         ];
 
-        if (\class_exists('\Dom\HTMLElement')) {
+        if (class_exists('\Dom\HTMLElement')) {
             $types[] = type_instance_of(CharacterData::class);
             $types[] = type_instance_of(HTMLElement::class);
         }
 
         $node = (new Parameter($this->element))->as($row, $context, ...$types);
 
-        if ($node instanceof \DOMDocument) {
+        if ($node instanceof DOMDocument) {
             $node = $node->documentElement;
         }
 
         if ($this->allowOnlyElement) {
-            if (!$node instanceof \DOMElement) {
+            if (!$node instanceof DOMElement) {
                 return $context
                     ->functions()
                     ->invalidResult(

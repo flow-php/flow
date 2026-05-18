@@ -11,6 +11,8 @@ use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+use function method_exists;
+
 abstract class KernelTestCase extends TestCase
 {
     private SymfonyContext $context;
@@ -28,7 +30,7 @@ abstract class KernelTestCase extends TestCase
     protected function addCommand(Application $application, Command $command): void
     {
         /** @phpstan-ignore function.alreadyNarrowedType */
-        if (\method_exists($application, 'addCommand')) {
+        if (method_exists($application, 'addCommand')) {
             $application->addCommand($command);
         } else {
             $application->add($command);

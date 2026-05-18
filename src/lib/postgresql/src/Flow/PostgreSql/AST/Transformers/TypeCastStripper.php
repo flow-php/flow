@@ -23,6 +23,9 @@ use Flow\PostgreSql\Protobuf\AST\ResTarget;
 use Flow\PostgreSql\Protobuf\AST\RowExpr;
 use Flow\PostgreSql\Protobuf\AST\SubLink;
 use Flow\PostgreSql\Protobuf\AST\XmlExpr;
+use LogicException;
+
+use function sprintf;
 
 /**
  * Strips TypeCast wrappers from a protobuf expression AST.
@@ -77,7 +80,7 @@ final readonly class TypeCastStripper implements NodeModifier
             $node instanceof NamedArgExpr => $this->stripNamedArgExpr($node),
             $node instanceof SubLink => $this->stripSubLink($node),
             $node instanceof XmlExpr => $this->stripXmlExpr($node),
-            default => throw new \LogicException(\sprintf(
+            default => throw new LogicException(sprintf(
                 'TypeCastStripper dispatched for unhandled node type %s',
                 $node::class,
             )),

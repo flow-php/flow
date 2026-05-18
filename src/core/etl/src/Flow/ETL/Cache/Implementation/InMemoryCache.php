@@ -10,6 +10,8 @@ use Flow\ETL\Exception\KeyNotInCacheException;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
+use function array_key_exists;
+
 final class InMemoryCache implements Cache
 {
     /**
@@ -38,7 +40,7 @@ final class InMemoryCache implements Cache
      */
     public function get(string $key): Row|Rows|CacheIndex
     {
-        if (!\array_key_exists($key, $this->cache)) {
+        if (!array_key_exists($key, $this->cache)) {
             throw new KeyNotInCacheException($key);
         }
 
@@ -47,7 +49,7 @@ final class InMemoryCache implements Cache
 
     public function has(string $key): bool
     {
-        return \array_key_exists($key, $this->cache);
+        return array_key_exists($key, $this->cache);
     }
 
     public function set(string $key, CacheIndex|Rows|Row $value): void

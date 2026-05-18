@@ -6,6 +6,8 @@ namespace Flow\ETL\Adapter\GoogleSheet;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
+use function sprintf;
+
 final readonly class SheetRange
 {
     public int $endRow;
@@ -17,15 +19,15 @@ final readonly class SheetRange
         private int $maxRows,
     ) {
         if ($this->startRow < 1) {
-            throw new InvalidArgumentException(\sprintf('Start row "%d" must be greater than 0', $this->startRow));
+            throw new InvalidArgumentException(sprintf('Start row "%d" must be greater than 0', $this->startRow));
         }
 
         if ($endRow < 1) {
-            throw new InvalidArgumentException(\sprintf('End row "%d" must be greater than 0', $endRow));
+            throw new InvalidArgumentException(sprintf('End row "%d" must be greater than 0', $endRow));
         }
 
         if ($endRow < $this->startRow) {
-            throw new InvalidArgumentException(\sprintf(
+            throw new InvalidArgumentException(sprintf(
                 'End row "%d" must be greater or equal to start row "%d"',
                 $endRow,
                 $this->startRow,
@@ -33,7 +35,7 @@ final readonly class SheetRange
         }
 
         if ($this->maxRows < 1) {
-            throw new InvalidArgumentException(\sprintf('Max rows "%d" must be greater than 0', $this->maxRows));
+            throw new InvalidArgumentException(sprintf('Max rows "%d" must be greater than 0', $this->maxRows));
         }
 
         $this->endRow = min($endRow, $this->maxRows);
@@ -42,7 +44,7 @@ final readonly class SheetRange
     public function nextRows(int $count): self
     {
         if ($count < 1) {
-            throw new InvalidArgumentException(\sprintf('Count "%d" must be greater than 0', $count));
+            throw new InvalidArgumentException(sprintf('Count "%d" must be greater than 0', $count));
         }
 
         return new self(
@@ -55,7 +57,7 @@ final readonly class SheetRange
 
     public function toString(): string
     {
-        return \sprintf(
+        return sprintf(
             '%s!%s%d:%s%d',
             $this->columnRange->sheetName,
             $this->columnRange->startColumn,

@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Types\ValueType;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\PostgreSql\DSL\cast;
@@ -20,7 +21,7 @@ final class BooleanConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{string, bool}>
      */
-    public static function provide_boolean_strings(): \Generator
+    public static function provide_boolean_strings(): Generator
     {
         yield 'string true' => ['true', true];
         yield 'string false' => ['false', false];
@@ -35,7 +36,7 @@ final class BooleanConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{bool, bool}>
      */
-    public static function provide_boolean_values(): \Generator
+    public static function provide_boolean_values(): Generator
     {
         yield 'true' => [true, true];
         yield 'false' => [false, false];

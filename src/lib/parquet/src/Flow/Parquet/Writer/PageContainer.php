@@ -8,6 +8,8 @@ use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\Thrift\CompactProtocol;
 use Flow\Parquet\Thrift\MemoryBuffer;
 
+use function strlen;
+
 final class PageContainer
 {
     private ?string $serializedHeader = null;
@@ -23,12 +25,12 @@ final class PageContainer
 
     public function dataSize(): int
     {
-        return \strlen($this->compressedData);
+        return strlen($this->compressedData);
     }
 
     public function headerSize(): int
     {
-        return \strlen($this->serializedHeader());
+        return strlen($this->serializedHeader());
     }
 
     public function serializedHeader(): string

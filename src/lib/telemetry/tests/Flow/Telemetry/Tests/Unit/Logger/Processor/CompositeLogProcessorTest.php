@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Logger\Processor;
 
+use DateTimeImmutable;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Logger\LogProcessor;
@@ -14,13 +15,14 @@ use Flow\Telemetry\Tests\Mother\ErrorHandlerSpy;
 use Flow\Telemetry\Tests\Mother\LogEntryMother;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class CompositeLogProcessorTest extends TestCase
 {
     public function test_flush_continues_after_child_throws_and_routes_to_error_handler(): void
     {
         $throwing = $this->createMock(LogProcessor::class);
-        $throwing->method('flush')->willThrowException(new \RuntimeException('flush blew up'));
+        $throwing->method('flush')->willThrowException(new RuntimeException('flush blew up'));
 
         $sibling = $this->createMock(LogProcessor::class);
         $sibling->expects(self::once())->method('flush')->willReturn(true);
@@ -73,7 +75,7 @@ final class CompositeLogProcessorTest extends TestCase
     public function test_process_continues_after_child_throws_and_routes_to_error_handler(): void
     {
         $throwing = $this->createMock(LogProcessor::class);
-        $throwing->method('process')->willThrowException(new \RuntimeException('child blew up'));
+        $throwing->method('process')->willThrowException(new RuntimeException('child blew up'));
 
         $sibling = $this->createMock(LogProcessor::class);
         $sibling->expects(self::once())->method('process');
@@ -103,7 +105,7 @@ final class CompositeLogProcessorTest extends TestCase
                 ->setBody('test message'),
             ResourceMother::default(),
             new InstrumentationScope('test', '1.0.0'),
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
         );
     }
 }

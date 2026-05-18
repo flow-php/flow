@@ -4,29 +4,33 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
+use DateTime;
+use DateTimeImmutable;
 use Flow\Types\Exception\InvalidTypeException;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_object;
 
 final class ObjectTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'valid DateTimeImmutable' => [
-            'value' => new \DateTimeImmutable(),
+            'value' => new DateTimeImmutable(),
             'exceptionClass' => null,
         ];
 
         yield 'valid DateTime' => [
-            'value' => new \DateTime(),
+            'value' => new DateTime(),
             'exceptionClass' => null,
         ];
 
         yield 'valid stdClass' => [
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'exceptionClass' => null,
         ];
 
@@ -51,7 +55,7 @@ final class ObjectTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
         yield 'string to object' => [
             'value' => 'string',
@@ -66,26 +70,26 @@ final class ObjectTypeTest extends TestCase
         ];
 
         yield 'object stays as is' => [
-            'value' => $obj = new \stdClass(),
+            'value' => $obj = new stdClass(),
             'expected' => $obj,
             'exceptionClass' => null,
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'valid stdClass' => [
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'expected' => true,
         ];
 
         yield 'valid DateTimeImmutable' => [
-            'value' => new \DateTimeImmutable(),
+            'value' => new DateTimeImmutable(),
             'expected' => true,
         ];
 
         yield 'valid DateTime' => [
-            'value' => new \DateTime(),
+            'value' => new DateTime(),
             'expected' => true,
         ];
 

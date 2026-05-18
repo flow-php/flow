@@ -14,11 +14,13 @@ use Flow\PostgreSql\QueryBuilder\Schema\Constraint\UniqueConstraint;
 use Flow\PostgreSql\QueryBuilder\Schema\CreateTable\CreateTableBuilder;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
+
 final class CreateTableBuilderTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }

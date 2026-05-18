@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Provider\Clock;
 
+use DateTimeImmutable;
 use Psr\Clock\ClockInterface;
 
 /**
@@ -11,8 +12,8 @@ use Psr\Clock\ClockInterface;
  */
 final readonly class SystemClock implements ClockInterface
 {
-    public function now(): \DateTimeImmutable
+    public function now(): DateTimeImmutable
     {
-        return new \DateTimeImmutable();
+        return new DateTimeImmutable();
     }
 }

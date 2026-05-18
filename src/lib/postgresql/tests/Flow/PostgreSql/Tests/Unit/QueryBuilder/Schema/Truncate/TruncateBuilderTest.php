@@ -9,11 +9,13 @@ use Flow\PostgreSql\Protobuf\AST\TruncateStmt;
 use Flow\PostgreSql\QueryBuilder\Schema\Truncate\TruncateBuilder;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
+
 final class TruncateBuilderTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }

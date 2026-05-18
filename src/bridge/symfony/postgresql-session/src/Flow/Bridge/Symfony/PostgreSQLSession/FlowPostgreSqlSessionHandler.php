@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSQLSession;
 
+use Closure;
 use Flow\Bridge\Symfony\PostgreSQLSession\Exception\SessionException;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\ConnectionParameters;
 use Flow\PostgreSql\Client\Types\ValueType;
+use InvalidArgumentException;
+use LogicException;
+use Override;
+use SensitiveParameter;
 use Symfony\Component\HttpFoundation\Session\Storage\Handler\AbstractSessionHandler;
 
+use function array_key_exists;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\conflict_columns;
 use function Flow\PostgreSql\DSL\delete;
@@ -25,6 +31,18 @@ use function Flow\PostgreSql\DSL\table;
 use function Flow\PostgreSql\DSL\truncate_table;
 use function Flow\PostgreSql\DSL\typed;
 use function Flow\PostgreSql\DSL\update;
+use function get_debug_type;
+use function in_array;
+use function ini_get;
+use function is_int;
+use function is_resource;
+use function is_scalar;
+use function is_string;
+use function ord;
+use function sprintf;
+use function str_pad;
+use function stream_get_contents;
+use function time;
 
 final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
 {
@@ -36,7 +54,7 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
 
     private ?Client $client;
 
-    private readonly \Closure $clientFactory;
+    private readonly Closure $clientFactory;
 
     private readonly ?ConnectionParameters $connectionParameters;
 
@@ -81,7 +99,7 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
     public function __construct(
         ConnectionParameters|Client $connection,
         array $options = [],
-        ?\Closure $clientFactory = null,
+        ?Closure $clientFactory = null,
     ) {
         if ($connection instanceof Client) {
             $this->client = $connection;
@@ -103,10 +121,10 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
 
         $lockMode = $options['lock_mode'] ?? self::LOCK_TRANSACTIONAL;
 
-        if (!\in_array($lockMode, [self::LOCK_NONE, self::LOCK_ADVISORY, self::LOCK_TRANSACTIONAL], true)) {
-            throw new \InvalidArgumentException(\sprintf(
+        if (!in_array($lockMode, [self::LOCK_NONE, self::LOCK_ADVISORY, self::LOCK_TRANSACTIONAL], true)) {
+            throw new InvalidArgumentException(sprintf(
                 'Invalid lock_mode "%s". Use one of FlowPostgreSqlSessionHandler::LOCK_NONE, LOCK_ADVISORY, LOCK_TRANSACTIONAL.',
-                \is_scalar($lockMode) ? (string) $lockMode : \get_debug_type($lockMode),
+                is_scalar($lockMode) ? (string) $lockMode : get_debug_type($lockMode),
             ));
         }
 
@@ -131,7 +149,7 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
 
             $this->client()->execute(
                 delete()->from(table($this->table, $this->schema))->where(lt(col($this->lifetimeCol), param(1))),
-                [\time()],
+                [time()],
             );
         }
 
@@ -161,7 +179,7 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
     {
         return $this->client()->execute(
             delete()->from(table($this->table, $this->schema))->where(lt(col($this->lifetimeCol), param(1))),
-            [\time()],
+            [time()],
         );
     }
 
@@ -171,10 +189,10 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
      * Otherwise long-lived sessions whose payload never changes would be
      * garbage-collected even if still in active use.
      */
-    #[\Override]
-    public function updateTimestamp(#[\SensitiveParameter] string $sessionId, string $data): bool
+    #[Override]
+    public function updateTimestamp(#[SensitiveParameter] string $sessionId, string $data): bool
     {
-        $now = \time();
+        $now = time();
         $expiry = $now + $this->resolveTtl();
 
         $this->client()->execute(
@@ -192,7 +210,7 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
         return true;
     }
 
-    protected function doDestroy(#[\SensitiveParameter] string $sessionId): bool
+    protected function doDestroy(#[SensitiveParameter] string $sessionId): bool
     {
         $this->client()->execute(
             delete()->from(table($this->table, $this->schema))->where(eq(col($this->idCol), param(1))),
@@ -205,7 +223,7 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
         return true;
     }
 
-    protected function doRead(#[\SensitiveParameter] string $sessionId): string
+    protected function doRead(#[SensitiveParameter] string $sessionId): string
     {
         $this->acquireLockFor($sessionId);
 
@@ -225,18 +243,18 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
 
         $lifetime = $row[$this->lifetimeCol];
 
-        if (!\is_int($lifetime)) {
-            throw SessionException::unexpectedRowShape($this->lifetimeCol, \get_debug_type($lifetime));
+        if (!is_int($lifetime)) {
+            throw SessionException::unexpectedRowShape($this->lifetimeCol, get_debug_type($lifetime));
         }
 
-        if ($lifetime < \time()) {
+        if ($lifetime < time()) {
             return '';
         }
 
         $data = $row[$this->dataCol];
 
-        if (\is_resource($data)) {
-            $contents = \stream_get_contents($data);
+        if (is_resource($data)) {
+            $contents = stream_get_contents($data);
 
             if ($contents === false) {
                 throw SessionException::unexpectedRowShape($this->dataCol, 'resource (unreadable)');
@@ -245,16 +263,16 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
             return $contents;
         }
 
-        if (!\is_string($data)) {
-            throw SessionException::unexpectedRowShape($this->dataCol, \get_debug_type($data));
+        if (!is_string($data)) {
+            throw SessionException::unexpectedRowShape($this->dataCol, get_debug_type($data));
         }
 
         return $data;
     }
 
-    protected function doWrite(#[\SensitiveParameter] string $sessionId, string $data): bool
+    protected function doWrite(#[SensitiveParameter] string $sessionId, string $data): bool
     {
-        $now = \time();
+        $now = time();
         $expiry = $now + $this->resolveTtl();
 
         $this->client()->execute(
@@ -306,7 +324,7 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
         }
 
         if ($this->connectionParameters === null) {
-            throw new \LogicException('FlowPostgreSqlSessionHandler has no client and no connection parameters.');
+            throw new LogicException('FlowPostgreSqlSessionHandler has no client and no connection parameters.');
         }
 
         return $this->client = ($this->clientFactory)($this->connectionParameters);
@@ -327,10 +345,10 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
      */
     private function convertSessionIdToLockKey(string $sessionId): int
     {
-        $padded = \str_pad($sessionId, 8, "\0");
+        $padded = str_pad($sessionId, 8, "\0");
 
-        $int1 = (\ord($padded[7]) << 24) + (\ord($padded[6]) << 16) + (\ord($padded[5]) << 8) + \ord($padded[4]);
-        $int2 = (\ord($padded[3]) << 24) + (\ord($padded[2]) << 16) + (\ord($padded[1]) << 8) + \ord($padded[0]);
+        $int1 = (ord($padded[7]) << 24) + (ord($padded[6]) << 16) + (ord($padded[5]) << 8) + ord($padded[4]);
+        $int2 = (ord($padded[3]) << 24) + (ord($padded[2]) << 16) + (ord($padded[1]) << 8) + ord($padded[0]);
 
         return $int2 + ($int1 << 32);
     }
@@ -350,7 +368,7 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
 
     private function releaseLockFor(string $sessionId): void
     {
-        if ($this->lockMode === self::LOCK_ADVISORY && \array_key_exists($sessionId, $this->lockedSessions)) {
+        if ($this->lockMode === self::LOCK_ADVISORY && array_key_exists($sessionId, $this->lockedSessions)) {
             $key = $this->lockedSessions[$sessionId];
             unset($this->lockedSessions[$sessionId]);
             $this->client()->fetch(select(func('pg_advisory_unlock', [param(1)])), [$key]);
@@ -363,7 +381,7 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
             return $this->ttl;
         }
 
-        $iniValue = (int) \ini_get('session.gc_maxlifetime');
+        $iniValue = (int) ini_get('session.gc_maxlifetime');
 
         return $iniValue > 0 ? $iniValue : 1440;
     }

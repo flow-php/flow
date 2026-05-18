@@ -10,6 +10,9 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\StreamInterface;
 
+use function is_resource;
+use function is_string;
+
 final readonly class HttpFactory
 {
     public function __construct(
@@ -42,11 +45,11 @@ final readonly class HttpFactory
      */
     public function stream($content): StreamInterface
     {
-        if (!\is_string($content) && !\is_resource($content)) {
+        if (!is_string($content) && !is_resource($content)) {
             throw new InvalidArgumentException('Content must be a string or a resource');
         }
 
-        if (\is_string($content)) {
+        if (is_string($content)) {
             return $this->streamFactory->createStream($content);
         }
 

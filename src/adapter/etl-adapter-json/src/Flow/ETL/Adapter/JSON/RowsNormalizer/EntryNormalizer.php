@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\RowsNormalizer;
 
+use DateTimeInterface;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\DateEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
@@ -18,11 +19,16 @@ use Flow\ETL\Row\Entry\XMLElementEntry;
 use Flow\ETL\Row\Entry\XMLEntry;
 
 use function Flow\ETL\DSL\date_interval_to_microseconds;
+use function is_array;
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_string;
 
 final readonly class EntryNormalizer
 {
     public function __construct(
-        private string $dateTimeFormat = \DateTimeInterface::ATOM,
+        private string $dateTimeFormat = DateTimeInterface::ATOM,
         private string $dateFormat = 'Y-m-d',
     ) {}
 
@@ -51,12 +57,12 @@ final readonly class EntryNormalizer
      */
     private function normalizeJsonValue(mixed $value): string|float|int|bool|array|null
     {
-        if (\is_array($value)) {
+        if (is_array($value)) {
             /** @var array<string, mixed> $normalizedArray */
             $normalizedArray = [];
 
             foreach ($value as $key => $val) {
-                $normalizedArray[\is_string($key) ? $key : (string) $key] = $val;
+                $normalizedArray[is_string($key) ? $key : (string) $key] = $val;
             }
 
             return $normalizedArray;
@@ -70,16 +76,16 @@ final readonly class EntryNormalizer
      */
     private function normalizeValue(mixed $value): string|float|int|bool|array|null
     {
-        if (\is_string($value) || \is_float($value) || \is_int($value) || \is_bool($value) || $value === null) {
+        if (is_string($value) || is_float($value) || is_int($value) || is_bool($value) || $value === null) {
             return $value;
         }
 
-        if (\is_array($value)) {
+        if (is_array($value)) {
             /** @var array<string, mixed> $normalizedArray */
             $normalizedArray = [];
 
             foreach ($value as $key => $val) {
-                $normalizedArray[\is_string($key) ? $key : (string) $key] = $val;
+                $normalizedArray[is_string($key) ? $key : (string) $key] = $val;
             }
 
             return $normalizedArray;

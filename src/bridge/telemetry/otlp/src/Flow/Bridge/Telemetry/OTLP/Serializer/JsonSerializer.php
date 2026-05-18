@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Serializer;
 
+use DateTimeImmutable;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Meter\Exemplar;
@@ -15,6 +16,23 @@ use Flow\Telemetry\Tracer\SpanEvent;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanLink;
 use Flow\Telemetry\Tracer\SpanStatusCode;
+
+use function array_filter;
+use function array_map;
+use function array_merge;
+use function count;
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_string;
+use function json_encode;
+use function ksort;
+use function md5;
+use function str_starts_with;
+
+use const ARRAY_FILTER_USE_KEY;
+use const JSON_THROW_ON_ERROR;
+use const JSON_UNESCAPED_SLASHES;
 
 /**
  * JSON serializer for OTLP wire format.
@@ -58,7 +76,7 @@ final class JsonSerializer
             'resourceLogs' => $resourceLogs,
         ];
 
-        return \json_encode($payload, \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES);
+        return json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
     }
 
     /**
@@ -94,7 +112,7 @@ final class JsonSerializer
             'resourceMetrics' => $resourceMetrics,
         ];
 
-        return \json_encode($payload, \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES);
+        return json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
     }
 
     /**
@@ -130,7 +148,7 @@ final class JsonSerializer
             'resourceSpans' => $resourceSpans,
         ];
 
-        return \json_encode($payload, \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES);
+        return json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
     }
 
     /**
@@ -162,10 +180,10 @@ final class JsonSerializer
         /** @var array<float> $explicitBounds */
         $explicitBounds = $attributesArray['histogram.explicitBounds'] ?? [];
 
-        $userAttributes = \array_filter(
+        $userAttributes = array_filter(
             $attributesArray,
-            static fn(string $key): bool => !\str_starts_with($key, 'histogram.'),
-            \ARRAY_FILTER_USE_KEY,
+            static fn(string $key): bool => !str_starts_with($key, 'histogram.'),
+            ARRAY_FILTER_USE_KEY,
         );
 
         $dataPoint = [
@@ -173,21 +191,21 @@ final class JsonSerializer
             'timeUnixNano' => $timestamp,
             'attributes' => $this->serializeAttributes($userAttributes),
             'count' => (string) $count,
-            'sum' => \is_int($sum) ? (float) $sum : $sum,
-            'bucketCounts' => \array_map(static fn(int $c): string => (string) $c, $bucketCounts),
-            'explicitBounds' => \array_map(static fn(int|float $b): float => (float) $b, $explicitBounds),
+            'sum' => is_int($sum) ? (float) $sum : $sum,
+            'bucketCounts' => array_map(static fn(int $c): string => (string) $c, $bucketCounts),
+            'explicitBounds' => array_map(static fn(int|float $b): float => (float) $b, $explicitBounds),
         ];
 
         if ($min !== null) {
-            $dataPoint['min'] = \is_int($min) ? (float) $min : $min;
+            $dataPoint['min'] = is_int($min) ? (float) $min : $min;
         }
 
         if ($max !== null) {
-            $dataPoint['max'] = \is_int($max) ? (float) $max : $max;
+            $dataPoint['max'] = is_int($max) ? (float) $max : $max;
         }
 
-        if (\count($metric->exemplars) > 0) {
-            $dataPoint['exemplars'] = \array_map(fn(Exemplar $e): array => $this->serializeExemplar(
+        if (count($metric->exemplars) > 0) {
+            $dataPoint['exemplars'] = array_map(fn(Exemplar $e): array => $this->serializeExemplar(
                 $e,
             ), $metric->exemplars);
         }
@@ -211,14 +229,14 @@ final class JsonSerializer
             'attributes' => $this->serializeAttributes($metric->attributes->normalize()),
         ];
 
-        if (\is_int($metric->value)) {
+        if (is_int($metric->value)) {
             $dataPoint['asInt'] = (string) $metric->value;
         } else {
             $dataPoint['asDouble'] = $metric->value;
         }
 
-        if (\count($metric->exemplars) > 0) {
-            $dataPoint['exemplars'] = \array_map(fn(Exemplar $e): array => $this->serializeExemplar(
+        if (count($metric->exemplars) > 0) {
+            $dataPoint['exemplars'] = array_map(fn(Exemplar $e): array => $this->serializeExemplar(
                 $e,
             ), $metric->exemplars);
         }
@@ -397,9 +415,9 @@ final class JsonSerializer
     private function resourceKey(Resource $resource): string
     {
         $attributes = $resource->all();
-        \ksort($attributes);
+        ksort($attributes);
 
-        return \md5(\json_encode($attributes, \JSON_THROW_ON_ERROR));
+        return md5(json_encode($attributes, JSON_THROW_ON_ERROR));
     }
 
     /**
@@ -432,19 +450,19 @@ final class JsonSerializer
      */
     private function serializeAttributeValue(string|int|float|bool|array $value): array
     {
-        if (\is_string($value)) {
+        if (is_string($value)) {
             return ['stringValue' => $value];
         }
 
-        if (\is_int($value)) {
+        if (is_int($value)) {
             return ['intValue' => (string) $value];
         }
 
-        if (\is_float($value)) {
+        if (is_float($value)) {
             return ['doubleValue' => $value];
         }
 
-        if (\is_bool($value)) {
+        if (is_bool($value)) {
             return ['boolValue' => $value];
         }
 
@@ -503,7 +521,7 @@ final class JsonSerializer
             $result['spanId'] = $exemplar->spanId->toHex();
         }
 
-        if (\is_int($exemplar->value)) {
+        if (is_int($exemplar->value)) {
             $result['asInt'] = (string) $exemplar->value;
         } else {
             $result['asDouble'] = $exemplar->value;
@@ -588,26 +606,26 @@ final class JsonSerializer
         $dataPoint = $this->createMetricDataPoint($metric);
 
         return match ($metric->type) {
-            MetricType::COUNTER => \array_merge($result, [
+            MetricType::COUNTER => array_merge($result, [
                 'sum' => [
                     'dataPoints' => [$dataPoint],
                     'aggregationTemporality' => $metric->temporality->value,
                     'isMonotonic' => true,
                 ],
             ]),
-            MetricType::UP_DOWN_COUNTER => \array_merge($result, [
+            MetricType::UP_DOWN_COUNTER => array_merge($result, [
                 'sum' => [
                     'dataPoints' => [$dataPoint],
                     'aggregationTemporality' => $metric->temporality->value,
                     'isMonotonic' => false,
                 ],
             ]),
-            MetricType::GAUGE => \array_merge($result, [
+            MetricType::GAUGE => array_merge($result, [
                 'gauge' => [
                     'dataPoints' => [$dataPoint],
                 ],
             ]),
-            MetricType::HISTOGRAM => \array_merge($result, [
+            MetricType::HISTOGRAM => array_merge($result, [
                 'histogram' => [
                     'dataPoints' => [$this->createHistogramDataPoint($metric)],
                     'aggregationTemporality' => $metric->temporality->value,
@@ -741,7 +759,7 @@ final class JsonSerializer
     /**
      * Convert DateTimeImmutable to nanoseconds since Unix epoch as string.
      */
-    private function toNanoseconds(\DateTimeImmutable $dateTime): string
+    private function toNanoseconds(DateTimeImmutable $dateTime): string
     {
         $seconds = (int) $dateTime->format('U');
         $microseconds = (int) $dateTime->format('u');

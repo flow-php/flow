@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Telemetry\Tests\Unit;
 
+use DateTimeImmutable;
 use Flow\Bridge\Monolog\Telemetry\LogRecordConverter;
 use Flow\Bridge\Monolog\Telemetry\SeverityMapper;
 use Flow\Bridge\Monolog\Telemetry\ValueNormalizer;
 use Flow\Telemetry\Logger\Severity;
+use Generator;
 use Monolog\Level;
 use Monolog\LogRecord;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use stdClass;
 
 #[CoversClass(LogRecordConverter::class)]
 final class LogRecordConverterTest extends TestCase
@@ -20,7 +24,7 @@ final class LogRecordConverterTest extends TestCase
     /**
      * @return \Generator<string, array{Level, Severity}>
      */
-    public static function levelToSeverityProvider(): \Generator
+    public static function levelToSeverityProvider(): Generator
     {
         yield 'debug' => [Level::Debug, Severity::DEBUG];
         yield 'info' => [Level::Info, Severity::INFO];
@@ -40,7 +44,7 @@ final class LogRecordConverterTest extends TestCase
         $converter = new LogRecordConverter($customMapper);
 
         $record = new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'test',
             level: Level::Debug,
             message: 'Debug message',
@@ -57,7 +61,7 @@ final class LogRecordConverterTest extends TestCase
         $converter = new LogRecordConverter(valueNormalizer: $normalizer);
 
         $record = new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'test',
             level: Level::Info,
             message: 'Test',
@@ -76,7 +80,7 @@ final class LogRecordConverterTest extends TestCase
         $converter = new LogRecordConverter();
 
         $record = new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'test-channel',
             level: Level::Info,
             message: 'Hello World',
@@ -93,7 +97,7 @@ final class LogRecordConverterTest extends TestCase
         $converter = new LogRecordConverter();
 
         $record = new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'test',
             level: Level::Info,
             message: 'User action',
@@ -114,7 +118,7 @@ final class LogRecordConverterTest extends TestCase
         $converter = new LogRecordConverter();
 
         $record = new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'test',
             level: Level::Info,
             message: 'Request processed',
@@ -135,7 +139,7 @@ final class LogRecordConverterTest extends TestCase
         $converter = new LogRecordConverter();
 
         $record = new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'app',
             level: Level::Warning,
             message: 'Something happened',
@@ -162,7 +166,7 @@ final class LogRecordConverterTest extends TestCase
         $converter = new LogRecordConverter();
 
         $record = new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'test',
             level: Level::Info,
             message: 'Test',
@@ -185,10 +189,10 @@ final class LogRecordConverterTest extends TestCase
     public function test_handles_throwable_in_context_with_set_exception(): void
     {
         $converter = new LogRecordConverter();
-        $exception = new \RuntimeException('Something went wrong');
+        $exception = new RuntimeException('Something went wrong');
 
         $record = new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'test',
             level: Level::Error,
             message: 'Error occurred',
@@ -199,7 +203,7 @@ final class LogRecordConverterTest extends TestCase
 
         $telemetryRecord = $converter->convert($record);
 
-        static::assertSame(\RuntimeException::class, $telemetryRecord->attributes->get('exception.type'));
+        static::assertSame(RuntimeException::class, $telemetryRecord->attributes->get('exception.type'));
         static::assertSame('Something went wrong', $telemetryRecord->attributes->get('exception.message'));
         static::assertNotNull($telemetryRecord->attributes->get('exception.stacktrace'));
     }
@@ -209,7 +213,7 @@ final class LogRecordConverterTest extends TestCase
         $converter = new LogRecordConverter();
 
         $record = new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'my-channel',
             level: Level::Info,
             message: 'Test',
@@ -225,7 +229,7 @@ final class LogRecordConverterTest extends TestCase
         $converter = new LogRecordConverter();
 
         $record = new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'test',
             level: Level::Warning,
             message: 'Test',
@@ -242,7 +246,7 @@ final class LogRecordConverterTest extends TestCase
         $converter = new LogRecordConverter();
 
         $record = new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'test',
             level: $level,
             message: 'Test message',
@@ -256,10 +260,10 @@ final class LogRecordConverterTest extends TestCase
     public function test_normalizes_datetime_in_context(): void
     {
         $converter = new LogRecordConverter();
-        $datetime = new \DateTimeImmutable('2024-01-15 10:30:00');
+        $datetime = new DateTimeImmutable('2024-01-15 10:30:00');
 
         $record = new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'test',
             level: Level::Info,
             message: 'Test',
@@ -284,7 +288,7 @@ final class LogRecordConverterTest extends TestCase
         };
 
         $record = new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'test',
             level: Level::Info,
             message: 'Test',
@@ -303,12 +307,12 @@ final class LogRecordConverterTest extends TestCase
         $converter = new LogRecordConverter();
 
         $record = new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'test',
             level: Level::Info,
             message: 'Test',
             context: [
-                'object' => new \stdClass(),
+                'object' => new stdClass(),
             ],
         );
 

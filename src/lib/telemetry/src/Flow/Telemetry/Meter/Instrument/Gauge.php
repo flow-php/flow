@@ -17,6 +17,10 @@ use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tracer\SpanContext;
 use Psr\Clock\ClockInterface;
 
+use function array_filter;
+use function count;
+use function is_scalar;
+
 /**
  * Gauge instrument for recording non-additive values.
  *
@@ -116,13 +120,13 @@ final class Gauge implements Instrument
     {
         $normalized = $attributes instanceof Attributes ? $attributes->normalize() : $attributes;
         /** @var array<string, bool|float|int|string> $attrs */
-        $attrs = \array_filter($normalized, static fn($v): bool => \is_scalar($v));
+        $attrs = array_filter($normalized, static fn($v): bool => is_scalar($v));
         $key = Attributes::create($attrs)->id();
 
         if (!isset($this->aggregations[$key])) {
             $nonOverflowCount = isset($this->aggregations[$this->overflowKey])
-                ? \count($this->aggregations) - 1
-                : \count($this->aggregations);
+                ? count($this->aggregations) - 1
+                : count($this->aggregations);
 
             if ($nonOverflowCount >= $this->limits->cardinalityLimit) {
                 $key = $this->overflowKey;

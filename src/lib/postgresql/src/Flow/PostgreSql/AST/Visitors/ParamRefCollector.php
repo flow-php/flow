@@ -7,6 +7,9 @@ namespace Flow\PostgreSql\AST\Visitors;
 use Flow\PostgreSql\AST\NodeVisitor;
 use Flow\PostgreSql\Protobuf\AST\ParamRef;
 
+use function array_map;
+use function max;
+
 /**
  * A visitor that collects all ParamRef (parameter reference) nodes.
  *
@@ -40,7 +43,7 @@ final class ParamRefCollector implements NodeVisitor
             return 0;
         }
 
-        return \max(\array_map(static fn(ParamRef $ref): int => $ref->getNumber(), $this->paramRefs));
+        return max(array_map(static fn(ParamRef $ref): int => $ref->getNumber(), $this->paramRefs));
     }
 
     /**

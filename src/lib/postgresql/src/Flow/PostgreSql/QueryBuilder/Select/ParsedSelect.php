@@ -10,6 +10,9 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ParseResult;
 use Flow\PostgreSql\Protobuf\AST\RawStmt;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
+use RuntimeException;
+
+use function sprintf;
 
 final readonly class ParsedSelect implements SelectFinalStep
 {
@@ -23,13 +26,13 @@ final readonly class ParsedSelect implements SelectFinalStep
         $stmt = $parsed->raw()->getStmts()[0]->getStmt();
 
         if ($stmt === null) {
-            throw new \RuntimeException(\sprintf('Failed to parse SQL: "%s".', $sql));
+            throw new RuntimeException(sprintf('Failed to parse SQL: "%s".', $sql));
         }
 
         $selectStmt = $stmt->getSelectStmt();
 
         if ($selectStmt === null) {
-            throw new \RuntimeException(\sprintf('Expected SELECT statement, got: "%s".', $sql));
+            throw new RuntimeException(sprintf('Expected SELECT statement, got: "%s".', $sql));
         }
 
         $this->ast = $selectStmt;

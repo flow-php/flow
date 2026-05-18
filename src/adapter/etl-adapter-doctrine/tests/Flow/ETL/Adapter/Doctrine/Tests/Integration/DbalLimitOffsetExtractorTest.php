@@ -19,10 +19,12 @@ use Flow\ETL\Rows;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
 
+use function array_map;
 use function Flow\ETL\Adapter\Doctrine\from_dbal_limit_offset;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
+use function iterator_to_array;
 
 final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
 {
@@ -82,9 +84,9 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
                     ],
                 ],
             ],
-            \array_map(
+            array_map(
                 static fn(Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
+                iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build()))),
             ),
         );
     }

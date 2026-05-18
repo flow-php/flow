@@ -14,6 +14,7 @@ use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema;
 
+use function file_exists;
 use function Flow\Filesystem\DSL\path;
 
 final class Writer
@@ -80,7 +81,7 @@ final class Writer
             throw new RuntimeException('Writer is already open');
         }
 
-        if (\file_exists($path)) {
+        if (file_exists($path)) {
             throw new InvalidArgumentException("File {$path} already exists");
         }
 
@@ -104,7 +105,7 @@ final class Writer
      */
     public function write(string $path, Schema $schema, iterable $rows): void
     {
-        if (\file_exists($path)) {
+        if (file_exists($path)) {
             throw new InvalidArgumentException("File {$path} already exists");
         }
 

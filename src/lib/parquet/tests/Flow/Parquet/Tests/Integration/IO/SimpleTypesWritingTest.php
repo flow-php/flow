@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
+use DateTimeImmutable;
 use Faker\Factory;
 use Flow\Parquet\Consts;
+use Flow\Parquet\Engine\ArrowParquetEngine;
+use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -13,8 +16,23 @@ use Flow\Parquet\Reader;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function array_map;
+use function array_merge;
+use function extension_loaded;
+use function file_exists;
+use function floatval;
 use function Flow\ETL\DSL\generate_random_int;
 use function Flow\ETL\DSL\generate_random_string;
+use function iterator_to_array;
+use function json_encode;
+use function max;
+use function min;
+use function mkdir;
+use function mt_rand;
+use function range;
+use function round;
+use function sprintf;
+use function unlink;
 
 class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 {
@@ -32,10 +50,10 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
             'precision 8, scale 8' => [8, 8, 0.99999999],
         ];
 
-        $engines = ['php' => new \Flow\Parquet\Engine\PhpParquetEngine()];
+        $engines = ['php' => new PhpParquetEngine()];
 
-        if (\extension_loaded('arrow')) {
-            $engines['arrow'] = new \Flow\Parquet\Engine\ArrowParquetEngine();
+        if (extension_loaded('arrow')) {
+            $engines['arrow'] = new ArrowParquetEngine();
         }
 
         $result = [];
@@ -51,8 +69,8 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
     protected function setUp(): void
     {
-        if (!\file_exists(__DIR__ . '/var')) {
-            \mkdir(__DIR__ . '/var');
+        if (!file_exists(__DIR__ . '/var')) {
+            mkdir(__DIR__ . '/var');
         }
     }
 
@@ -64,28 +82,28 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::boolean('boolean'));
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'boolean' => ((bool) $i % 2) == 0,
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
 
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -96,28 +114,28 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::boolean('boolean'));
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'boolean' => ($i % 2) == 0 ? (bool) generate_random_int(0, 1) : null,
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
 
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -130,28 +148,28 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $faker = Factory::create();
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
-                    'date' => \DateTimeImmutable::createFromMutable($faker->dateTimeThisYear)->setTime(0, 0, 0, 0),
+                    'date' => DateTimeImmutable::createFromMutable($faker->dateTimeThisYear)->setTime(0, 0, 0, 0),
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
 
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -164,31 +182,31 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $faker = Factory::create();
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
-                    'date' => \DateTimeImmutable::createFromMutable($faker->dateTimeBetween(
+                    'date' => DateTimeImmutable::createFromMutable($faker->dateTimeBetween(
                         '1930-01-01',
                         '1969-01-01',
                     ))->setTime(0, 0, 0, 0),
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
 
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -201,30 +219,30 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $faker = Factory::create();
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'date' => ($i % 2) === 0
-                        ? \DateTimeImmutable::createFromMutable($faker->dateTimeThisYear)->setTime(0, 0, 0, 0)
+                        ? DateTimeImmutable::createFromMutable($faker->dateTimeThisYear)->setTime(0, 0, 0, 0)
                         : null,
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
 
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -237,28 +255,28 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $faker = Factory::create();
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
-                    'decimal' => \round($faker->randomFloat(2, 0, 99999999.99), 2),
+                    'decimal' => round($faker->randomFloat(2, 0, 99999999.99), 2),
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
 
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('decimalPrecisionProvider')]
@@ -274,16 +292,16 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         $schema = Schema::with(FlatColumn::decimal('decimal', $precision, $scale));
 
         $inputData = [];
-        $intDigits = \max(0, \min($precision - $scale, 9));
-        $fracDigits = \min($scale, 6);
+        $intDigits = max(0, min($precision - $scale, 9));
+        $fracDigits = min($scale, 6);
         $intMax = $intDigits > 0 ? (int) 10 ** $intDigits - 1 : 0;
         $fracMax = $fracDigits > 0 ? (int) 10 ** $fracDigits - 1 : 0;
 
         for ($i = 0; $i < 50; $i++) {
-            $intPart = $intMax > 0 ? \mt_rand(0, $intMax) : 0;
-            $fracPart = $fracMax > 0 ? \mt_rand(0, $fracMax) : 0;
+            $intPart = $intMax > 0 ? mt_rand(0, $intMax) : 0;
+            $fracPart = $fracMax > 0 ? mt_rand(0, $fracMax) : 0;
             $value = $scale > 0
-                ? \floatval(\sprintf('%d.%0' . $fracDigits . 'd', $intPart, $fracPart))
+                ? floatval(sprintf('%d.%0' . $fracDigits . 'd', $intPart, $fracPart))
                 : (float) $intPart;
             $inputData[] = ['decimal' => $value];
         }
@@ -292,15 +310,15 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
 
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -313,28 +331,28 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $faker = Factory::create();
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
-                    'decimal' => ($i % 2) === 0 ? \round($faker->randomFloat(2, 0, 99999999.99), 2) : null,
+                    'decimal' => ($i % 2) === 0 ? round($faker->randomFloat(2, 0, 99999999.99), 2) : null,
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
 
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -347,28 +365,28 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $faker = Factory::create();
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'double' => $faker->randomFloat(),
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
 
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -381,28 +399,28 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $faker = Factory::create();
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'double' => ($i % 2) === 0 ? $faker->randomFloat() : null,
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
 
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -415,28 +433,28 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $enum = ['A', 'B', 'C', 'D'];
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'enum' => $enum[generate_random_int(0, 3)],
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
 
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -447,28 +465,28 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::float('float'));
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'float' => 10.25,
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
 
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -479,28 +497,28 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::float('float'));
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'float' => ($i % 2) === 0 ? 10.25 : null,
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
 
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -513,28 +531,28 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $faker = Factory::create();
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
 
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -547,28 +565,28 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $faker = Factory::create();
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'int32' => ($i % 2) === 0 ? $faker->numberBetween(0, Consts::PHP_INT32_MAX) : null,
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
 
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -581,27 +599,27 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $faker = Factory::create();
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'int64' => $faker->numberBetween(0, Consts::PHP_INT64_MAX),
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -614,27 +632,27 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $faker = Factory::create();
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'int64' => ($i % 2) === 0 ? $faker->numberBetween(0, Consts::PHP_INT64_MAX) : null,
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -647,10 +665,10 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $faker = Factory::create();
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
-                    'json' => \json_encode([
+                    'json' => json_encode([
                         'street' => $faker->streetName,
                         'city' => $faker->city,
                         'country' => $faker->country,
@@ -658,21 +676,21 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
                     ], JSON_THROW_ON_ERROR),
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -685,11 +703,11 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $faker = Factory::create();
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'json' => ($i % 2) === 0
-                        ? \json_encode([
+                        ? json_encode([
                             'street' => $faker->streetName,
                             'city' => $faker->city,
                             'country' => $faker->country,
@@ -698,21 +716,21 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
                         : null,
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -725,27 +743,27 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $faker = Factory::create();
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'string' => $faker->text(50),
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -758,27 +776,27 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $faker = Factory::create();
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'string' => ($i % 2) === 0 ? $faker->text(50) : null,
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -789,29 +807,29 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::time('time'));
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
-                    'time' => (new \DateTimeImmutable('2023-01-01 00:00:00 UTC'))->diff(
-                        new \DateTimeImmutable('2023-01-01 15:45:00 UTC'),
+                    'time' => (new DateTimeImmutable('2023-01-01 00:00:00 UTC'))->diff(
+                        new DateTimeImmutable('2023-01-01 15:45:00 UTC'),
                     ),
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -822,31 +840,31 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(FlatColumn::time('time'));
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'time' => ($i % 2) === 0
-                        ? (new \DateTimeImmutable('2023-01-01 00:00:00 UTC'))->diff(
-                            new \DateTimeImmutable('2023-01-01 15:45:00 UTC'),
+                        ? (new DateTimeImmutable('2023-01-01 00:00:00 UTC'))->diff(
+                            new DateTimeImmutable('2023-01-01 15:45:00 UTC'),
                         )
                         : null,
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -859,27 +877,27 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $faker = Factory::create();
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'dateTime' => $faker->dateTimeThisYear,
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -892,27 +910,27 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $faker = Factory::create();
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'dateTime' => $faker->dateTimeBetween('1930-01-01', '1969-01-01'),
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -925,27 +943,27 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $faker = Factory::create();
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'dateTime' => ($i % 2) === 0 ? $faker->dateTimeThisYear : null,
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -958,27 +976,27 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $faker = Factory::create();
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'uuid' => $faker->uuid,
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -991,26 +1009,26 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
 
         $faker = Factory::create();
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'uuid' => ($i % 2) === 0 ? $faker->uuid : null,
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertEquals(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
-        static::assertTrue(\file_exists($path));
-        \unlink($path);
+        static::assertTrue(file_exists($path));
+        unlink($path);
     }
 }

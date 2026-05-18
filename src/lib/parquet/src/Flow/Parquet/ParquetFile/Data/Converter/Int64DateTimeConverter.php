@@ -4,18 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Data\Converter;
 
+use DateTimeImmutable;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\Converter;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 
+use function number_format;
+
 final class Int64DateTimeConverter implements Converter
 {
-    public function fromParquetType(mixed $data): \DateTimeImmutable
+    public function fromParquetType(mixed $data): DateTimeImmutable
     {
         /** @var int $data */
-        return new \DateTimeImmutable('@' . \number_format($data / 1_000_000, 6, '.', ''));
+        return new DateTimeImmutable('@' . number_format($data / 1_000_000, 6, '.', ''));
     }
 
     public function isFor(FlatColumn $column, Options $options): bool

@@ -38,6 +38,12 @@ use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
 
+use function array_flip;
+use function array_key_exists;
+use function count;
+use function is_a;
+use function sprintf;
+
 final class TypesMap
 {
     /**
@@ -100,16 +106,16 @@ final class TypesMap
     public function __construct(array $map)
     {
         foreach ($map as $flowType => $dbalType) {
-            if (!\is_a($flowType, FlowType::class, true)) {
-                throw new InvalidArgumentException(\sprintf('"%s" is not a valid type.', $flowType));
+            if (!is_a($flowType, FlowType::class, true)) {
+                throw new InvalidArgumentException(sprintf('"%s" is not a valid type.', $flowType));
             }
 
-            if (!\is_a($dbalType, DbalType::class, true)) {
-                throw new InvalidArgumentException(\sprintf('"%s" is not a valid Doctrine DBAL type.', $dbalType));
+            if (!is_a($dbalType, DbalType::class, true)) {
+                throw new InvalidArgumentException(sprintf('"%s" is not a valid Doctrine DBAL type.', $dbalType));
             }
         }
 
-        if (!\count($map)) {
+        if (!count($map)) {
             $this->map = self::FLOW_TYPES;
         } else {
             $this->map = $map;
@@ -124,13 +130,13 @@ final class TypesMap
     public function flowRowTypes(Row $row): array
     {
         $types = [];
-        $typeClassToName = \array_flip(DbalType::getTypesMap());
+        $typeClassToName = array_flip(DbalType::getTypesMap());
 
         foreach ($row->entries() as $entry) {
             $dbalTypeClass = $this->toDbalType($entry->type()::class);
 
-            if (!\array_key_exists($dbalTypeClass, $typeClassToName)) {
-                throw new \InvalidArgumentException(\sprintf('DBAL type "%s" is not registered.', $dbalTypeClass));
+            if (!array_key_exists($dbalTypeClass, $typeClassToName)) {
+                throw new \InvalidArgumentException(sprintf('DBAL type "%s" is not registered.', $dbalTypeClass));
             }
 
             $types[$entry->name()] = DbalType::getType($typeClassToName[$dbalTypeClass]);
@@ -146,8 +152,8 @@ final class TypesMap
      */
     public function toDbalType(string $flowType): string
     {
-        if (!\array_key_exists($flowType, $this->map)) {
-            throw new \InvalidArgumentException(\sprintf('"%s" is not a valid type.', $flowType));
+        if (!array_key_exists($flowType, $this->map)) {
+            throw new \InvalidArgumentException(sprintf('"%s" is not a valid type.', $flowType));
         }
 
         return $this->map[$flowType];
@@ -160,8 +166,8 @@ final class TypesMap
      */
     public function toFlowType(string $dbalType): FlowType
     {
-        if (!\array_key_exists($dbalType, self::DBAL_TYPES)) {
-            throw new \InvalidArgumentException(\sprintf('"%s" is not a valid Doctrine DBAL type.', $dbalType));
+        if (!array_key_exists($dbalType, self::DBAL_TYPES)) {
+            throw new \InvalidArgumentException(sprintf('"%s" is not a valid Doctrine DBAL type.', $dbalType));
         }
 
         $type = self::DBAL_TYPES[$dbalType];

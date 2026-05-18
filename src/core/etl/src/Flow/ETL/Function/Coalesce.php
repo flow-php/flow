@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
@@ -24,7 +25,7 @@ final class Coalesce extends ScalarFunctionChain
         foreach ($this->values as $value) {
             try {
                 $result = (new Parameter($value))->eval($row, $context);
-            } catch (\Exception) {
+            } catch (Exception) {
                 continue;
             }
 

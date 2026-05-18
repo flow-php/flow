@@ -18,8 +18,10 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function count;
 use function Flow\CLI\option_include_file;
 use function Flow\CLI\option_list_of_strings_nullable;
+use function in_array;
 
 final class DatabaseTableListCommand extends Command
 {
@@ -64,13 +66,13 @@ final class DatabaseTableListCommand extends Command
             $dbTables[] = [
                 $dbTable->getName(),
                 (string) $dbTable->getNamespaceName() === '' ? 'public' : $dbTable->getNamespaceName(),
-                \count($dbTable->getColumns()),
+                count($dbTable->getColumns()),
             ];
-            $totalColumns += \count($dbTable->getColumns());
+            $totalColumns += count($dbTable->getColumns());
         }
 
         if ($namespaces) {
-            $dbTables = array_filter($dbTables, static fn(array $row) => \in_array($row[1], $namespaces, true));
+            $dbTables = array_filter($dbTables, static fn(array $row) => in_array($row[1], $namespaces, true));
         }
 
         // order $rows by namespace, name
@@ -82,8 +84,8 @@ final class DatabaseTableListCommand extends Command
         $style->definitionList(
             'Summary',
             new TableSeparator(),
-            ['Total tables' => \count($dbTables)],
-            ['Total namespaces' => \count(array_unique(array_column($dbTables, 1)))],
+            ['Total tables' => count($dbTables)],
+            ['Total namespaces' => count(array_unique(array_column($dbTables, 1)))],
             ['Total columns' => $totalColumns],
         );
 

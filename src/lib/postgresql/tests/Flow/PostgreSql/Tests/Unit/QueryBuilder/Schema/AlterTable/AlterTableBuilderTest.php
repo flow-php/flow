@@ -19,6 +19,7 @@ use Flow\PostgreSql\QueryBuilder\Schema\Constraint\UniqueConstraint;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
 use function Flow\PostgreSql\DSL\literal;
 use function Flow\Types\DSL\type_instance_of;
 
@@ -26,7 +27,7 @@ final class AlterTableBuilderTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }

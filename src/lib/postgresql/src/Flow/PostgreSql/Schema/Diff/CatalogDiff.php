@@ -18,6 +18,10 @@ use Flow\PostgreSql\Schema\Table;
 use Flow\PostgreSql\Schema\View;
 use Flow\PostgreSql\Schema\ViewDependencyOrder;
 
+use function array_filter;
+use function array_flip;
+use function array_key_exists;
+use function array_values;
 use function Flow\PostgreSql\DSL\create;
 use function Flow\PostgreSql\DSL\drop;
 use function Flow\PostgreSql\DSL\parsed_select;
@@ -150,16 +154,16 @@ final readonly class CatalogDiff implements Diff
             return $resolved;
         }
 
-        $excludeSet = \array_flip($excludedNames);
+        $excludeSet = array_flip($excludedNames);
 
         return new DependentViews(
-            \array_values(\array_filter(
+            array_values(array_filter(
                 $resolved->toDrop,
-                static fn(DependentView $dv): bool => !\array_key_exists($dv->qualifiedName(), $excludeSet),
+                static fn(DependentView $dv): bool => !array_key_exists($dv->qualifiedName(), $excludeSet),
             )),
-            \array_values(\array_filter(
+            array_values(array_filter(
                 $resolved->toCreate,
-                static fn(DependentView $dv): bool => !\array_key_exists($dv->qualifiedName(), $excludeSet),
+                static fn(DependentView $dv): bool => !array_key_exists($dv->qualifiedName(), $excludeSet),
             )),
         );
     }

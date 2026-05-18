@@ -14,6 +14,7 @@ use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
 use PHPUnit\Framework\TestCase;
 
+use function array_values;
 use function Flow\Bridge\OpenAPI\Specification\DSL\schema_from_openapi_specification;
 use function Flow\Bridge\OpenAPI\Specification\DSL\schema_to_openapi_specification;
 use function Flow\ETL\DSL\bool_schema;
@@ -56,7 +57,7 @@ final class OpenAPIConverterTest extends TestCase
 
         static::assertCount(6, $convertedSchema->definitions());
 
-        $definitions = \array_values($convertedSchema->definitions());
+        $definitions = array_values($convertedSchema->definitions());
 
         static::assertSame('id', $definitions[0]->entry()->name());
         static::assertSame(IntegerType::class, $definitions[0]->type()::class);
@@ -112,7 +113,7 @@ final class OpenAPIConverterTest extends TestCase
         $convertedSchema = schema_from_openapi_specification($openApiSpec);
 
         static::assertCount(3, $convertedSchema->definitions());
-        $definitions = \array_values($convertedSchema->definitions());
+        $definitions = array_values($convertedSchema->definitions());
         static::assertSame('id', $definitions[0]->entry()->name());
         static::assertSame('name', $definitions[1]->entry()->name());
         static::assertSame('active', $definitions[2]->entry()->name());

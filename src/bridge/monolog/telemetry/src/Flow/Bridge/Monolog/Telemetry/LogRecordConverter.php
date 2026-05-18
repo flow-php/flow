@@ -6,6 +6,7 @@ namespace Flow\Bridge\Monolog\Telemetry;
 
 use Flow\Telemetry\Logger\LogRecord as TelemetryLogRecord;
 use Monolog\LogRecord;
+use Throwable;
 
 /**
  * Convert Monolog LogRecord to Telemetry LogRecord with proper attribute mapping.
@@ -39,7 +40,7 @@ final readonly class LogRecordConverter
         );
 
         foreach ($record->context as $key => $value) {
-            if ($value instanceof \Throwable) {
+            if ($value instanceof Throwable) {
                 $telemetryRecord = $telemetryRecord->setException($value);
 
                 continue;

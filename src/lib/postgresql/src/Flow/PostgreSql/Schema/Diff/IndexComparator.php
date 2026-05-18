@@ -6,6 +6,8 @@ namespace Flow\PostgreSql\Schema\Diff;
 
 use Flow\PostgreSql\Schema\Index;
 
+use function array_values;
+
 final readonly class IndexComparator
 {
     public function __construct(
@@ -93,8 +95,8 @@ final readonly class IndexComparator
         }
 
         return new ChangeSet(
-            \array_values($addedMap),
-            \array_values($removedMap),
+            array_values($addedMap),
+            array_values($removedMap),
             renamed: $renamed !== [] ? $renamed : null,
         );
     }

@@ -15,6 +15,8 @@ use Flow\PostgreSql\QueryBuilder\Expression\AliasedExpression;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 
+use function count;
+
 final readonly class SimilarTo implements Condition
 {
     public function __construct(
@@ -60,11 +62,11 @@ final readonly class SimilarTo implements Condition
             $funcCall = $rexpr->getFuncCall();
             $args = $funcCall?->getArgs();
 
-            if ($args !== null && \count($args) > 0) {
+            if ($args !== null && count($args) > 0) {
                 $pattern = ExpressionFactory::fromAst($args[0]);
             }
 
-            if ($args !== null && \count($args) > 1) {
+            if ($args !== null && count($args) > 1) {
                 $escape = ExpressionFactory::fromAst($args[1]);
             }
         } else {

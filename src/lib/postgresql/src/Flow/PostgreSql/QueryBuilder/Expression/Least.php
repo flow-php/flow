@@ -8,6 +8,9 @@ use Flow\PostgreSql\Protobuf\AST\MinMaxExpr;
 use Flow\PostgreSql\Protobuf\AST\MinMaxOp;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use InvalidArgumentException;
+
+use function count;
 
 /**
  * LEAST(expr, expr, ...) - returns smallest value from list of expressions.
@@ -20,8 +23,8 @@ final readonly class Least implements Expression
     public function __construct(
         private array $expressions,
     ) {
-        if (\count($this->expressions) < 2) {
-            throw new \InvalidArgumentException('LEAST requires at least 2 expressions');
+        if (count($this->expressions) < 2) {
+            throw new InvalidArgumentException('LEAST requires at least 2 expressions');
         }
     }
 
@@ -39,7 +42,7 @@ final readonly class Least implements Expression
 
         $args = $minMaxExpr->getArgs();
 
-        if (\count($args) < 2) {
+        if (count($args) < 2) {
             throw InvalidAstException::invalidFieldValue('args', 'MinMaxExpr', 'must have at least 2 arguments');
         }
 

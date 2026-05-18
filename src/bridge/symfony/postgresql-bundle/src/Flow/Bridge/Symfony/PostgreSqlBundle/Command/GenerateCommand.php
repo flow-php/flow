@@ -17,6 +17,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
+use function realpath;
+use function sprintf;
 
 #[AsCommand(name: 'flow:migrations:generate', description: 'Generate a blank migration class')]
 final class GenerateCommand extends Command
@@ -53,9 +55,9 @@ final class GenerateCommand extends Command
         $version = $generator->generateDataMigration($name);
 
         $directory = $configuration->migrationsDirectory . '/' . $version . ($name !== null ? '_' . $name : '');
-        $realDirectory = \realpath($directory) ?: $directory;
+        $realDirectory = realpath($directory) ?: $directory;
 
-        $io->success(\sprintf('Generated migration: %s', $version));
+        $io->success(sprintf('Generated migration: %s', $version));
 
         $io->table(['File', 'Path'], [
             ['<fg=cyan>Migration</>', $realDirectory . '/' . $configuration->migrationFileName],

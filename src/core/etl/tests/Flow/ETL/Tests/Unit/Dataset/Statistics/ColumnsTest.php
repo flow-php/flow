@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Dataset\Statistics;
 
 use Flow\ETL\Dataset\Statistics\Columns;
 use Flow\ETL\Tests\FlowTestCase;
+use InvalidArgumentException;
 
 use function Flow\ETL\DSL\integer_entry;
 use function Flow\ETL\DSL\string_entry;
@@ -31,7 +32,7 @@ final class ColumnsTest extends FlowTestCase
     {
         $columns = new Columns();
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Column "non_existing" does not exist.');
 
         $columns->get('non_existing');

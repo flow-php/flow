@@ -26,6 +26,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Loader;
 use Flow\ETL\Schema;
 
+use function is_array;
+use function is_string;
+
 /**
  * @param array<string, mixed>|Connection $connection
  * @param string $query
@@ -37,7 +40,7 @@ function dbal_dataframe_factory(
     string $query,
     QueryParameter ...$parameters,
 ): DbalDataFrameFactory {
-    return \is_array($connection)
+    return is_array($connection)
         ? new DbalDataFrameFactory($connection, $query, ...$parameters)
         : DbalDataFrameFactory::fromConnection($connection, $query, ...$parameters);
 }
@@ -61,7 +64,7 @@ function from_dbal_limit_offset(
 ): DbalLimitOffsetExtractor {
     $loader = DbalLimitOffsetExtractor::table(
         $connection,
-        \is_string($table) ? new Table($table) : $table,
+        is_string($table) ? new Table($table) : $table,
         $order_by instanceof OrderBy ? [$order_by] : $order_by,
     )->withPageSize($page_size);
 
@@ -193,7 +196,7 @@ function dbal_from_query(
 #[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'database_upsert')]
 function to_dbal_table_insert(array|Connection $connection, string $table, ?InsertOptions $options = null): DbalLoader
 {
-    return \is_array($connection)
+    return is_array($connection)
         ? (new DbalLoader($table, $connection))->withOperationOptions($options)
         : DbalLoader::fromConnection($connection, $table, $options);
 }
@@ -210,7 +213,7 @@ function to_dbal_table_insert(array|Connection $connection, string $table, ?Inse
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::LOADER)]
 function to_dbal_table_update(array|Connection $connection, string $table, ?UpdateOptions $options = null): DbalLoader
 {
-    return \is_array($connection)
+    return is_array($connection)
         ? (new DbalLoader($table, $connection))
             ->withOperation('update')
             ->withOperationOptions($options)
@@ -327,7 +330,7 @@ function postgresql_update_options(array $primary_key_columns = [], array $updat
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::LOADER)]
 function to_dbal_transaction(array|Connection $connection, Loader ...$loaders): TransactionalDbalLoader
 {
-    return \is_array($connection)
+    return is_array($connection)
         ? new TransactionalDbalLoader($connection, ...$loaders)
         : TransactionalDbalLoader::fromConnection($connection, ...$loaders);
 }

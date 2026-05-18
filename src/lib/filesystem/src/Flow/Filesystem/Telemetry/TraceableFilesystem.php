@@ -14,6 +14,7 @@ use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\SourceStream;
 use Flow\Telemetry\Logger\Logger;
 use Flow\Telemetry\PackageVersion;
+use Generator;
 
 final readonly class TraceableFilesystem implements Filesystem
 {
@@ -48,7 +49,7 @@ final readonly class TraceableFilesystem implements Filesystem
     /**
      * @return \Generator<FileStatus>
      */
-    public function list(Path $path, Filter $pathFilter = new KeepAll()): \Generator
+    public function list(Path $path, Filter $pathFilter = new KeepAll()): Generator
     {
         $this->logOperation('list', $path);
 

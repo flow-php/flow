@@ -10,6 +10,9 @@ use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
 use Flow\Types\Type;
 
+use function call_user_func;
+use function is_callable;
+
 final class CallUserFunc extends ScalarFunctionChain
 {
     /**
@@ -34,7 +37,7 @@ final class CallUserFunc extends ScalarFunctionChain
     {
         $callable = (new Parameter($this->callable))->eval($row, $context);
 
-        if (!\is_callable($callable)) {
+        if (!is_callable($callable)) {
             return $context
                 ->functions()
                 ->invalidResult(new InvalidArgumentException('CallUserFunc requires a valid callable'));
@@ -47,9 +50,9 @@ final class CallUserFunc extends ScalarFunctionChain
         }
 
         if ($this->returnType) {
-            return new ScalarResult(\call_user_func($callable, ...$parameters), $this->returnType);
+            return new ScalarResult(call_user_func($callable, ...$parameters), $this->returnType);
         }
 
-        return \call_user_func($callable, ...$parameters);
+        return call_user_func($callable, ...$parameters);
     }
 }

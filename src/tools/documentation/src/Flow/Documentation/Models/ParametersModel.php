@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
+use ReflectionFunction;
+use ReflectionMethod;
+
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_list;
 
@@ -26,7 +29,7 @@ final readonly class ParametersModel
         return new self(array_map(static fn(array $argument) => ParameterModel::fromArray($argument), $data));
     }
 
-    public static function fromFunctionReflection(\ReflectionFunction $reflectionFunction): self
+    public static function fromFunctionReflection(ReflectionFunction $reflectionFunction): self
     {
         $arguments = [];
 
@@ -37,7 +40,7 @@ final readonly class ParametersModel
         return new self($arguments);
     }
 
-    public static function fromMethodReflection(\ReflectionMethod $reflectionMethod): self
+    public static function fromMethodReflection(ReflectionMethod $reflectionMethod): self
     {
         $arguments = [];
 

@@ -7,6 +7,7 @@ namespace Flow\PostgreSql\Tests\Integration\QueryBuilder\Database;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFromStep;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
+use function count;
 use function Flow\PostgreSql\DSL\agg_sum;
 use function Flow\PostgreSql\DSL\and_;
 use function Flow\PostgreSql\DSL\col;
@@ -151,7 +152,7 @@ final class SelectDatabaseTest extends PostgreSqlTestCase
 
         $rows = $this->pgsqlContext()->client()->fetchAll($query->toSql());
 
-        static::assertGreaterThanOrEqual(1, \count($rows));
+        static::assertGreaterThanOrEqual(1, count($rows));
     }
 
     public function test_select_with_group_by_and_aggregate(): void

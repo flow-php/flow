@@ -8,6 +8,8 @@ use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 
+use function is_callable;
+
 /**
  * @implements Type<callable>
  */
@@ -33,7 +35,7 @@ final readonly class CallableType implements Type
 
     public function isValid(mixed $value): bool
     {
-        return \is_callable($value);
+        return is_callable($value);
     }
 
     public function normalize(): array

@@ -12,6 +12,7 @@ use function Flow\PostgreSql\DSL\pgsql_client;
 use function Flow\PostgreSql\DSL\pgsql_connection_dsn;
 use function Flow\PostgreSql\DSL\postgresql_context;
 use function Flow\Types\DSL\type_integer;
+use function getenv;
 
 /**
  * @implements RowMapper<array{row_value: mixed, tenant_id: int, side_query_value: int}>
@@ -38,7 +39,7 @@ final class ContextTest extends PostgreSqlTestCase
 {
     public function test_mapper_reads_user_data_and_executes_side_query_via_client(): void
     {
-        $dsn = \getenv('PGSQL_DATABASE_URL');
+        $dsn = getenv('PGSQL_DATABASE_URL');
         static::assertNotFalse($dsn);
 
         $client = pgsql_client(pgsql_connection_dsn($dsn), null, postgresql_context(['tenant_id' => 42]));

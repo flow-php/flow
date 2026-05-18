@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Logger\Processor;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Logger\LogEntry;
@@ -17,6 +18,7 @@ use Flow\Telemetry\Tests\Mother\ErrorHandlerSpy;
 use Flow\Telemetry\Tests\Mother\LogEntryMother;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class PassThroughLogProcessorTest extends TestCase
 {
@@ -81,7 +83,7 @@ final class PassThroughLogProcessorTest extends TestCase
     public function test_process_routes_exporter_throwable_to_error_handler(): void
     {
         $exporter = $this->createMock(Exporter::class);
-        $exporter->method('export')->willThrowException(new \RuntimeException('exporter exploded'));
+        $exporter->method('export')->willThrowException(new RuntimeException('exporter exploded'));
         $spy = new ErrorHandlerSpy();
 
         $processor = new PassThroughLogProcessor($exporter, $spy);
@@ -103,7 +105,7 @@ final class PassThroughLogProcessorTest extends TestCase
                 ->setAttributes($attributes),
             $this->resource,
             new InstrumentationScope('test', '1.0.0'),
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
         );
     }
 }

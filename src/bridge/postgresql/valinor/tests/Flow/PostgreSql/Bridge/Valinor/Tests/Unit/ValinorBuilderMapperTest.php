@@ -18,6 +18,7 @@ use function Flow\PostgreSql\DSL\type_mapper;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function sprintf;
 
 final class ValinorBuilderMapperTest extends TestCase
 {
@@ -87,7 +88,7 @@ final class ValinorBuilderMapperTest extends TestCase
             static::fail('Expected MappingException was not thrown');
         } catch (MappingException $e) {
             static::assertInstanceOf(MappingError::class, $e->getPrevious());
-            static::assertStringStartsWith(\sprintf('Failed to map row to "%s":', SimpleDto::class), $e->getMessage());
+            static::assertStringStartsWith(sprintf('Failed to map row to "%s":', SimpleDto::class), $e->getMessage());
         }
     }
 }

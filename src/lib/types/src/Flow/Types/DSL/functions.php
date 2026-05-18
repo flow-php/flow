@@ -6,6 +6,8 @@ namespace Flow\Types\DSL;
 
 use Dom\HTMLDocument;
 use Dom\HTMLElement;
+use DOMDocument;
+use DOMElement;
 use Flow\ETL\Attribute\DocumentationDSL;
 use Flow\ETL\Attribute\Module;
 use Flow\ETL\Attribute\Type as DSLType;
@@ -508,11 +510,11 @@ function type_class_string(?string $class = null): Type
 
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
 function dom_element_to_string(
-    \DOMElement $element,
+    DOMElement $element,
     bool $format_output = false,
     bool $preserver_white_space = false,
 ): string|false {
-    $doc = new \DOMDocument('1.0', 'UTF-8');
+    $doc = new DOMDocument('1.0', 'UTF-8');
     $doc->formatOutput = $format_output;
     $doc->preserveWhiteSpace = $preserver_white_space;
 

@@ -10,6 +10,10 @@ use Flow\PostgreSql\Client\Context;
 use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
 use Flow\PostgreSql\Client\Types\ValueConverters;
 
+use function array_key_exists;
+use function sha1;
+use function sprintf;
+
 final class StaticClient
 {
     /** @var array<string, Client> */
@@ -60,7 +64,7 @@ final class StaticClient
             return PgSqlClient::connect($params, $converters, $context);
         }
 
-        $key = \sha1(\sprintf(
+        $key = sha1(sprintf(
             '%s:%d:%s:%s',
             $params->host(),
             $params->port(),
@@ -68,7 +72,7 @@ final class StaticClient
             $params->user() ?? '',
         ));
 
-        if (!\array_key_exists($key, self::$clients) || !self::$clients[$key]->isConnected()) {
+        if (!array_key_exists($key, self::$clients) || !self::$clients[$key]->isConnected()) {
             self::$clients[$key] = PgSqlClient::connect($params, $converters, $context);
 
             if (self::$transactionActive) {

@@ -9,6 +9,8 @@ use Flow\Parquet\Data\RLEBitPackedHybrid;
 use Flow\Parquet\DataSize;
 use PHPUnit\Framework\TestCase;
 
+use function chr;
+
 final class RLEBitPackedHybridTest extends TestCase
 {
     public function test_decode_bit_packed_with_byte_count_greater_than_raw_bytes_length(): void
@@ -22,10 +24,7 @@ final class RLEBitPackedHybridTest extends TestCase
 
         $binaryReader->expects(self::once())->method('remainingLength')->willReturn(new DataSize(1));
 
-        $binaryReader
-            ->expects(self::once())
-            ->method('readBytes')
-            ->willReturn(\chr(8));
+        $binaryReader->expects(self::once())->method('readBytes')->willReturn(chr(8));
 
         $result = [];
         $rleBitPackedHybrid->decodeBitPacked($binaryReader, $bitWidth, $varInt, $maxItems, $result);
@@ -47,7 +46,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $binaryReader
             ->expects(self::once())
             ->method('readBytes')
-            ->willReturn(\chr(8) . \chr(4));
+            ->willReturn(chr(8) . chr(4));
 
         $result = [];
         $rleBitPackedHybrid->decodeBitPacked($binaryReader, $bitWidth, $varInt, $maxItems, $result);
@@ -66,10 +65,7 @@ final class RLEBitPackedHybridTest extends TestCase
 
         $binaryReader->expects(self::once())->method('remainingLength')->willReturn(new DataSize(1));
 
-        $binaryReader
-            ->expects(self::once())
-            ->method('readBytes')
-            ->willReturn(\chr(8));
+        $binaryReader->expects(self::once())->method('readBytes')->willReturn(chr(8));
 
         $result = [];
         $rleBitPackedHybrid->decodeBitPacked($binaryReader, $bitWidth, $varInt, $maxItems, $result);
@@ -101,10 +97,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $intVar = 4; // Even intVar, so isLiteralRun will be false
         $maxItems = 2;
 
-        $binaryReader
-            ->expects(self::once())
-            ->method('readBytes')
-            ->willReturn(\chr(2));
+        $binaryReader->expects(self::once())->method('readBytes')->willReturn(chr(2));
 
         $result = [];
         $rleBitPackedHybrid->decodeRLE($binaryReader, $bitWidth, $intVar, $maxItems, $result);

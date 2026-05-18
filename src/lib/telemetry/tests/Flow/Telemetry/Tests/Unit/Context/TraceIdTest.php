@@ -5,12 +5,19 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\Context;
 
 use Flow\Telemetry\Context\TraceId;
+use Generator;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function random_bytes;
+use function str_repeat;
+use function strlen;
+use function strtolower;
+
 final class TraceIdTest extends TestCase
 {
-    public static function provideInvalidBytesLength(): \Generator
+    public static function provideInvalidBytesLength(): Generator
     {
         yield 'too short (8 bytes)' => [8];
         yield 'too short (15 bytes)' => [15];
@@ -19,7 +26,7 @@ final class TraceIdTest extends TestCase
         yield 'empty' => [0];
     }
 
-    public static function provideInvalidHexStrings(): \Generator
+    public static function provideInvalidHexStrings(): Generator
     {
         yield 'too short' => ['0af7651916cd43dd', 'TraceId hex string must be exactly 32 characters'];
         yield 'too long' => ['0af7651916cd43dd8448eb211c80319c00', 'TraceId hex string must be exactly 32 characters'];
@@ -38,7 +45,7 @@ final class TraceIdTest extends TestCase
         yield 'empty' => ['', 'TraceId hex string must be exactly 32 characters'];
     }
 
-    public static function provideValidHexStrings(): \Generator
+    public static function provideValidHexStrings(): Generator
     {
         yield 'lowercase' => ['0af7651916cd43dd8448eb211c80319c'];
         yield 'uppercase' => ['0AF7651916CD43DD8448EB211C80319C'];
@@ -73,7 +80,7 @@ final class TraceIdTest extends TestCase
 
     public function test_from_bytes_allows_all_zeros(): void
     {
-        $traceId = TraceId::fromBytes(\str_repeat("\0", 16));
+        $traceId = TraceId::fromBytes(str_repeat("\0", 16));
 
         static::assertFalse($traceId->isValid());
         static::assertSame(TraceId::INVALID, $traceId->toHex());
@@ -81,7 +88,7 @@ final class TraceIdTest extends TestCase
 
     public function test_from_bytes_creates_trace_id(): void
     {
-        $bytes = \random_bytes(16);
+        $bytes = random_bytes(16);
         $traceId = TraceId::fromBytes($bytes);
 
         static::assertSame($bytes, $traceId->toBytes());
@@ -90,10 +97,10 @@ final class TraceIdTest extends TestCase
     #[DataProvider('provideInvalidBytesLength')]
     public function test_from_bytes_throws_on_invalid_length(int $length): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('TraceId must be exactly 16 bytes');
 
-        TraceId::fromBytes(\str_repeat("\x01", $length));
+        TraceId::fromBytes(str_repeat("\x01", $length));
     }
 
     #[DataProvider('provideValidHexStrings')]
@@ -101,8 +108,8 @@ final class TraceIdTest extends TestCase
     {
         $traceId = TraceId::fromHex($hex);
 
-        static::assertSame(\strtolower($hex), $traceId->toHex());
-        static::assertSame(16, \strlen($traceId->toBytes()));
+        static::assertSame(strtolower($hex), $traceId->toHex());
+        static::assertSame(16, strlen($traceId->toBytes()));
     }
 
     public function test_from_hex_allows_all_zeros(): void
@@ -116,7 +123,7 @@ final class TraceIdTest extends TestCase
     #[DataProvider('provideInvalidHexStrings')]
     public function test_from_hex_throws_on_invalid_hex_strings(string $hex, string $expectedMessage): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage($expectedMessage);
 
         TraceId::fromHex($hex);
@@ -126,8 +133,8 @@ final class TraceIdTest extends TestCase
     {
         $traceId = TraceId::generate();
 
-        static::assertSame(32, \strlen($traceId->toHex()));
-        static::assertSame(16, \strlen($traceId->toBytes()));
+        static::assertSame(32, strlen($traceId->toHex()));
+        static::assertSame(16, strlen($traceId->toBytes()));
     }
 
     public function test_generate_creates_unique_trace_ids(): void
@@ -141,7 +148,7 @@ final class TraceIdTest extends TestCase
     public function test_invalid_constant_has_correct_value(): void
     {
         static::assertSame('00000000000000000000000000000000', TraceId::INVALID);
-        static::assertSame(32, \strlen(TraceId::INVALID));
+        static::assertSame(32, strlen(TraceId::INVALID));
     }
 
     public function test_invalid_returns_all_zeros_trace_id(): void
@@ -149,7 +156,7 @@ final class TraceIdTest extends TestCase
         $traceId = TraceId::invalid();
 
         static::assertSame(TraceId::INVALID, $traceId->toHex());
-        static::assertSame(\str_repeat("\0", 16), $traceId->toBytes());
+        static::assertSame(str_repeat("\0", 16), $traceId->toBytes());
     }
 
     public function test_is_valid_returns_false_for_invalid_trace_id(): void
@@ -198,7 +205,7 @@ final class TraceIdTest extends TestCase
         $traceId = TraceId::generate();
         $hex = $traceId->toHex();
 
-        static::assertSame(\strtolower($hex), $hex);
+        static::assertSame(strtolower($hex), $hex);
     }
 
     public function test_to_string_returns_hex(): void

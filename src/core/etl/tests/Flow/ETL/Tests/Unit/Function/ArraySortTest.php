@@ -16,6 +16,7 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\Types\DSL\type_array;
+use function json_decode;
 
 final class ArraySortTest extends FlowTestCase
 {
@@ -38,7 +39,7 @@ final class ArraySortTest extends FlowTestCase
                 ->eval(
                     row(json_entry(
                         'array',
-                        type_array()->assert(\json_decode($this->jsonDifferentOrder(), true, 512, JSON_THROW_ON_ERROR)),
+                        type_array()->assert(json_decode($this->jsonDifferentOrder(), true, 512, JSON_THROW_ON_ERROR)),
                     )),
                     flow_context(),
                 ),
@@ -47,7 +48,7 @@ final class ArraySortTest extends FlowTestCase
                 ->eval(
                     row(json_entry(
                         'array',
-                        type_array()->assert(\json_decode($this->json(), true, 512, JSON_THROW_ON_ERROR)),
+                        type_array()->assert(json_decode($this->json(), true, 512, JSON_THROW_ON_ERROR)),
                     )),
                     flow_context(),
                 ),

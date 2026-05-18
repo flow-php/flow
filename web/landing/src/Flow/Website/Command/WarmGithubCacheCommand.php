@@ -11,6 +11,9 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function count;
+use function sprintf;
+
 #[AsCommand(name: 'app:github:warm-cache', description: 'Fetch GitHub contributors and warm the cache')]
 final class WarmGithubCacheCommand extends Command
 {
@@ -26,7 +29,7 @@ final class WarmGithubCacheCommand extends Command
 
         $contributors = $this->github->contributors();
 
-        $io->success(\sprintf('Fetched %d contributors', \count($contributors)));
+        $io->success(sprintf('Fetched %d contributors', count($contributors)));
 
         return Command::SUCCESS;
     }

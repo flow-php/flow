@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Clause;
 
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Clause\FrameBound;
 use Flow\PostgreSql\QueryBuilder\Clause\FrameBoundType;
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
@@ -42,7 +43,7 @@ final class FrameBoundTest extends TestCase
         $bound = FrameBound::currentRow();
         $node = $bound->toAst();
 
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\Node::class, $node);
+        static::assertInstanceOf(Node::class, $node);
     }
 
     public function test_to_ast_with_offset(): void
@@ -51,7 +52,7 @@ final class FrameBoundTest extends TestCase
         $bound = FrameBound::preceding($offset);
         $node = $bound->toAst();
 
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\Node::class, $node);
+        static::assertInstanceOf(Node::class, $node);
     }
 
     public function test_unbounded_following(): void

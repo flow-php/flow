@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Table;
 
+use Flow\PostgreSql\Protobuf\AST\Alias;
 use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeSubselect;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 use Flow\PostgreSql\QueryBuilder\Table\AliasedTable;
 use Flow\PostgreSql\QueryBuilder\Table\DerivedTable;
@@ -33,17 +36,17 @@ final class DerivedTableTest extends TestCase
         static::assertTrue($node->hasRangeSubselect());
 
         $rangeSubselect = $node->getRangeSubselect();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\RangeSubselect::class, $rangeSubselect);
+        static::assertInstanceOf(RangeSubselect::class, $rangeSubselect);
 
         $alias = $rangeSubselect->getAlias();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\Alias::class, $alias);
+        static::assertInstanceOf(Alias::class, $alias);
         static::assertSame('subq', $alias->getAliasname());
         static::assertCount(0, $alias->getColnames());
 
         static::assertFalse($rangeSubselect->getLateral());
 
         $subqueryNode = $rangeSubselect->getSubquery();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\Node::class, $subqueryNode);
+        static::assertInstanceOf(Node::class, $subqueryNode);
         static::assertTrue($subqueryNode->hasSelectStmt());
     }
 
@@ -55,21 +58,21 @@ final class DerivedTableTest extends TestCase
         $node = $derived->toAst();
 
         $rangeSubselect = $node->getRangeSubselect();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\RangeSubselect::class, $rangeSubselect);
+        static::assertInstanceOf(RangeSubselect::class, $rangeSubselect);
         $alias = $rangeSubselect->getAlias();
 
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\Alias::class, $alias);
+        static::assertInstanceOf(Alias::class, $alias);
         static::assertSame('subq', $alias->getAliasname());
 
         $colnames = $alias->getColnames();
         static::assertCount(2, $colnames);
 
         $col1 = $colnames[0]->getString();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\PBString::class, $col1);
+        static::assertInstanceOf(PBString::class, $col1);
         static::assertSame('id', $col1->getSval());
 
         $col2 = $colnames[1]->getString();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\PBString::class, $col2);
+        static::assertInstanceOf(PBString::class, $col2);
         static::assertSame('name', $col2->getSval());
     }
 
@@ -81,7 +84,7 @@ final class DerivedTableTest extends TestCase
         $node = $derived->toAst();
 
         $rangeSubselect = $node->getRangeSubselect();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\RangeSubselect::class, $rangeSubselect);
+        static::assertInstanceOf(RangeSubselect::class, $rangeSubselect);
         static::assertTrue($rangeSubselect->getLateral());
     }
 

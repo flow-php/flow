@@ -11,6 +11,7 @@ use Flow\ETL\Schema\Definition\FloatDefinition;
 use Flow\ETL\Schema\Definition\IntegerDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\float_schema;
@@ -21,7 +22,7 @@ use function Flow\ETL\DSL\string_schema;
 
 final class IntegerDefinitionTest extends FlowTestCase
 {
-    public static function provideIsCompatibleCases(): \Generator
+    public static function provideIsCompatibleCases(): Generator
     {
         yield 'same type and name' => [
             int_schema('id'),
@@ -48,7 +49,7 @@ final class IntegerDefinitionTest extends FlowTestCase
         ];
     }
 
-    public static function provideMergeCases(): \Generator
+    public static function provideMergeCases(): Generator
     {
         yield 'same type' => [
             int_schema('id'),
@@ -69,7 +70,7 @@ final class IntegerDefinitionTest extends FlowTestCase
         ];
     }
 
-    public static function provideMergeWithExpectedTypeCases(): \Generator
+    public static function provideMergeWithExpectedTypeCases(): Generator
     {
         yield 'with float produces float' => [
             int_schema('col'),

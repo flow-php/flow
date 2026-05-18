@@ -14,8 +14,19 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
+use Generator;
 
+use function array_combine;
+use function array_keys;
+use function array_map;
+use function count;
 use function Flow\ETL\DSL\array_to_rows;
+use function is_numeric;
+use function is_scalar;
+use function is_string;
+use function str_getcsv;
+use function str_pad;
+use function trim;
 
 final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -47,7 +58,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         $this->resetLimit();
     }
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
@@ -68,8 +79,8 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
             $rowNormalizer = new CSVRowNormalizer($this->emptyToNull);
 
             foreach ($csvLineReader->readLines($stream) as $csvLine) {
-                $rowData = \str_getcsv($csvLine, $separator, $enclosure, $escape);
-                $rowDataCount = \count($rowData);
+                $rowData = str_getcsv($csvLine, $separator, $enclosure, $escape);
+                $rowDataCount = count($rowData);
 
                 if ([] === $headers) {
                     if ($this->withHeader) {
@@ -86,7 +97,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
 
                 $rowData = $rowNormalizer->normalize($rowData, $headersCount);
 
-                $row = \array_combine($headers, $rowData);
+                $row = array_combine($headers, $rowData);
 
                 if ($streamUri !== null) {
                     $row['_input_file_uri'] = $streamUri;
@@ -186,7 +197,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         $headers = [];
 
         for ($i = 0; $i < $count; $i++) {
-            $headers[$i] = 'e' . \str_pad((string) $i, 2, '0', STR_PAD_LEFT);
+            $headers[$i] = 'e' . str_pad((string) $i, 2, '0', STR_PAD_LEFT);
         }
 
         return $headers;
@@ -199,19 +210,19 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
      */
     private function mapHeaders(array $headers): array
     {
-        $headers = \array_map(static fn(mixed $header): string => \trim(match (true) {
-            \is_string($header) => $header,
-            \is_numeric($header) => (string) $header,
+        $headers = array_map(static fn(mixed $header): string => trim(match (true) {
+            is_string($header) => $header,
+            is_numeric($header) => (string) $header,
             $header === null => '',
-            default => \is_scalar($header) ? (string) $header : '',
+            default => is_scalar($header) ? (string) $header : '',
         }), $headers);
 
-        return \array_map(
+        return array_map(
             static fn(string $header, int $index): string => $header !== ''
                 ? $header
-                : 'e' . \str_pad((string) $index, 2, '0', STR_PAD_LEFT),
+                : 'e' . str_pad((string) $index, 2, '0', STR_PAD_LEFT),
             $headers,
-            \array_keys($headers),
+            array_keys($headers),
         );
     }
 }

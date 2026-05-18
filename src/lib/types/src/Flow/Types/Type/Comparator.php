@@ -20,8 +20,11 @@ use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\Native\UnionType;
 
+use function array_key_exists;
+use function count;
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_instance_of;
+use function in_array;
 
 final class Comparator
 {
@@ -78,8 +81,8 @@ final class Comparator
         }
 
         if (
-            \in_array($left::class, [StringType::class, JsonType::class], true)
-            && \in_array($right::class, [StringType::class, JsonType::class], true)
+            in_array($left::class, [StringType::class, JsonType::class], true)
+            && in_array($right::class, [StringType::class, JsonType::class], true)
         ) {
             return true;
         }
@@ -119,14 +122,14 @@ final class Comparator
         }
 
         if ($left instanceof StructureType && $right instanceof StructureType) {
-            if (\count($left->elements()) !== \count($right->elements())) {
+            if (count($left->elements()) !== count($right->elements())) {
                 return false;
             }
 
             $rightElements = $right->elements();
 
             foreach ($left->elements() as $name => $field) {
-                if (!\array_key_exists($name, $rightElements)) {
+                if (!array_key_exists($name, $rightElements)) {
                     return false;
                 }
 

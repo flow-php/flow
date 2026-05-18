@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem;
 
+use Generator;
+
 interface SourceStream extends Stream
 {
     public function content(): string;
@@ -13,7 +15,7 @@ interface SourceStream extends Stream
      *
      * @return \Generator<string>
      */
-    public function iterate(int $length = 1): \Generator;
+    public function iterate(int $length = 1): Generator;
 
     /**
      * @param int<1, max> $length number of bytes to read from the stream
@@ -29,7 +31,7 @@ interface SourceStream extends Stream
      *
      * @return \Generator<string>
      */
-    public function readLines(string $separator = "\n", ?int $length = null): \Generator;
+    public function readLines(string $separator = "\n", ?int $length = null): Generator;
 
     /**
      * @return null|int The size of the stream in bytes

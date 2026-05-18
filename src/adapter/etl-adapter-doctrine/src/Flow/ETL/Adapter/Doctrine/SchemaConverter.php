@@ -14,8 +14,15 @@ use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 
+use function array_key_exists;
+use function array_keys;
+use function count;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_string;
+use function implode;
+use function in_array;
+use function is_scalar;
+use function sprintf;
 
 final readonly class SchemaConverter
 {
@@ -81,7 +88,7 @@ final readonly class SchemaConverter
         if ($column->getDefault() !== null) {
             $defaultValue = $column->getDefault();
 
-            if (\is_scalar($defaultValue)) {
+            if (is_scalar($defaultValue)) {
                 $metadata = $metadata->merge(DbalMetadata::default($defaultValue));
             }
         }
@@ -126,7 +133,7 @@ final readonly class SchemaConverter
             if (
                 $index->isUnique()
                 && !$index->isPrimary()
-                && \in_array($column->getName(), $index->getColumns(), true)
+                && in_array($column->getName(), $index->getColumns(), true)
             ) {
                 $metadata = $metadata->merge(DbalMetadata::indexUnique($index->getName()));
             }
@@ -134,7 +141,7 @@ final readonly class SchemaConverter
             if (
                 !$index->isUnique()
                 && !$index->isPrimary()
-                && \in_array($column->getName(), $index->getColumns(), true)
+                && in_array($column->getName(), $index->getColumns(), true)
             ) {
                 $metadata = $metadata->merge(DbalMetadata::index($index->getName()));
             }
@@ -165,7 +172,7 @@ final readonly class SchemaConverter
         }
 
         if ($dbalType === null) {
-            throw new InvalidArgumentException(\sprintf('"%s" is not a valid Doctrine DBAL type.', $dbalType));
+            throw new InvalidArgumentException(sprintf('"%s" is not a valid Doctrine DBAL type.', $dbalType));
         }
 
         $options = [
@@ -228,7 +235,7 @@ final readonly class SchemaConverter
             if ($definition->metadata()->has(DbalMetadata::INDEX->value)) {
                 $index = (string) $definition->metadata()->getAs(DbalMetadata::INDEX->value, type_string());
 
-                if (!\array_key_exists($index, $indexesData)) {
+                if (!array_key_exists($index, $indexesData)) {
                     $indexesData[$index] = [];
                 }
 
@@ -241,7 +248,7 @@ final readonly class SchemaConverter
                     type_string(),
                 );
 
-                if (!\array_key_exists($uniqueIndex, $uniqueIndexesData)) {
+                if (!array_key_exists($uniqueIndex, $uniqueIndexesData)) {
                     $uniqueIndexesData[$uniqueIndex] = [];
                 }
 
@@ -255,10 +262,9 @@ final readonly class SchemaConverter
                 );
                 $primaryKey[$primaryKeyName][] = $definition->entry()->name();
 
-                if (\count($primaryKey) > 1) {
+                if (count($primaryKey) > 1) {
                     throw new InvalidArgumentException(
-                        'Each table can have only one primary key, provided: '
-                            . \implode(', ', \array_keys($primaryKey)),
+                        'Each table can have only one primary key, provided: ' . implode(', ', array_keys($primaryKey)),
                     );
                 }
             }

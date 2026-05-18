@@ -11,7 +11,10 @@ use Flow\Filesystem\Bridge\Azure\AzureBlobFilesystem;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use stdClass;
 use Symfony\Component\HttpClient\Psr18Client;
+
+use function base64_encode;
 
 final class AzureBlobFilesystemFactoryTest extends TestCase
 {
@@ -19,7 +22,7 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
     {
         $filesystem = (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'c',
-            'client' => ['account_name' => 'a', 'auth' => ['shared_key' => \base64_encode('k')]],
+            'client' => ['account_name' => 'a', 'auth' => ['shared_key' => base64_encode('k')]],
             'options' => ['block_size' => 8 * 1024 * 1024, 'list_blob_max_results' => 100],
         ]);
 
@@ -43,7 +46,7 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
             'container' => 'c',
             'client' => [
                 'account_name' => 'a',
-                'auth' => ['shared_key' => \base64_encode('k')],
+                'auth' => ['shared_key' => base64_encode('k')],
                 'http_client' => new Psr18Client(),
                 'request_factory' => new Psr17Factory(),
                 'stream_factory' => new Psr17Factory(),
@@ -60,7 +63,7 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
             'container' => 'my-container',
             'client' => [
                 'account_name' => 'myaccount',
-                'auth' => ['shared_key' => \base64_encode('secret-key')],
+                'auth' => ['shared_key' => base64_encode('secret-key')],
             ],
         ]);
 
@@ -73,7 +76,7 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
             'container' => 'my-container',
             'client' => [
                 'account_name' => 'devstoreaccount1',
-                'auth' => ['shared_key' => \base64_encode('devkey')],
+                'auth' => ['shared_key' => base64_encode('devkey')],
                 'url_factory' => ['host' => '127.0.0.1', 'port' => '10000', 'https' => false],
             ],
         ]);
@@ -120,7 +123,7 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
 
         (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'c',
-            'client' => ['account_name' => 'a', 'auth' => ['shared_key' => \base64_encode('k'), 'sas_token' => 'x']],
+            'client' => ['account_name' => 'a', 'auth' => ['shared_key' => base64_encode('k'), 'sas_token' => 'x']],
         ]);
     }
 
@@ -131,7 +134,7 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
 
         (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'c',
-            'client' => ['account_name' => 'a', 'auth' => ['shared_key' => \base64_encode('k')], 'nope' => 1],
+            'client' => ['account_name' => 'a', 'auth' => ['shared_key' => base64_encode('k')], 'nope' => 1],
         ]);
     }
 
@@ -142,7 +145,7 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
 
         (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'c',
-            'client' => ['account_name' => 'a', 'auth' => ['shared_key' => \base64_encode('k')]],
+            'client' => ['account_name' => 'a', 'auth' => ['shared_key' => base64_encode('k')]],
             'options' => ['nope' => 1],
         ]);
     }
@@ -154,7 +157,7 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
 
         (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'c',
-            'client' => ['account_name' => 'a', 'auth' => ['shared_key' => \base64_encode('k')]],
+            'client' => ['account_name' => 'a', 'auth' => ['shared_key' => base64_encode('k')]],
             'bucket' => 'no',
         ]);
     }
@@ -166,7 +169,7 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
 
         (new AzureBlobFilesystemFactory())->create('azure-blob', [
             'container' => 'c',
-            'client' => new \stdClass(),
+            'client' => new stdClass(),
         ]);
     }
 
@@ -179,8 +182,8 @@ final class AzureBlobFilesystemFactoryTest extends TestCase
             'container' => 'c',
             'client' => [
                 'account_name' => 'a',
-                'auth' => ['shared_key' => \base64_encode('k')],
-                'http_client' => new \stdClass(),
+                'auth' => ['shared_key' => base64_encode('k')],
+                'http_client' => new stdClass(),
             ],
         ]);
     }

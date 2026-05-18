@@ -11,6 +11,7 @@ use Flow\ETL\Transformer\CallbackRowTransformer;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\integer_entry;
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\string_entry;
 
@@ -21,10 +22,10 @@ class CallbackRowTransformerTest extends FlowTestCase
         $callbackTransformer = new CallbackRowTransformer(static fn(Row $row): Row => $row->remove('old-int'));
 
         $rows = $callbackTransformer->transform(
-            rows(\Flow\ETL\DSL\row(integer_entry('old-int', 1000), string_entry('string-entry ', 'String entry'))),
+            rows(row(integer_entry('old-int', 1000), string_entry('string-entry ', 'String entry'))),
             flow_context(config()),
         );
 
-        static::assertEquals(rows(\Flow\ETL\DSL\row(string_entry('string-entry ', 'String entry'))), $rows);
+        static::assertEquals(rows(row(string_entry('string-entry ', 'String entry'))), $rows);
     }
 }

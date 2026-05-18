@@ -20,6 +20,9 @@ use Flow\PostgreSql\Migrations\Version;
 use Flow\PostgreSql\Schema\Catalog;
 use PHPUnit\Framework\TestCase;
 
+use function array_filter;
+use function iterator_to_array;
+
 final class MigratorTest extends TestCase
 {
     public function test_execute_version_down(): void
@@ -385,8 +388,8 @@ final class MigratorTest extends TestCase
         static::assertCount(2, $status);
         static::assertCount(1, $status->executed());
 
-        $items = \iterator_to_array($status);
-        $unavailable = \array_filter($items, static fn($s) => $s->state === MigrationState::UNAVAILABLE);
+        $items = iterator_to_array($status);
+        $unavailable = array_filter($items, static fn($s) => $s->state === MigrationState::UNAVAILABLE);
 
         static::assertCount(1, $unavailable);
     }

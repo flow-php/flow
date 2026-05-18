@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Explain\Plan;
 
+use function in_array;
+use function strcasecmp;
+
 enum PlanNodeType: string
 {
     case AGGREGATE = 'Aggregate';
@@ -50,7 +53,7 @@ enum PlanNodeType: string
     public static function fromString(string $nodeType): self
     {
         foreach (self::cases() as $case) {
-            if (\strcasecmp($case->value, $nodeType) === 0) {
+            if (strcasecmp($case->value, $nodeType) === 0) {
                 return $case;
             }
         }
@@ -60,7 +63,7 @@ enum PlanNodeType: string
 
     public function isAggregate(): bool
     {
-        return \in_array(
+        return in_array(
             $this,
             [
                 self::AGGREGATE,
@@ -74,7 +77,7 @@ enum PlanNodeType: string
 
     public function isJoin(): bool
     {
-        return \in_array(
+        return in_array(
             $this,
             [
                 self::NESTED_LOOP,
@@ -87,7 +90,7 @@ enum PlanNodeType: string
 
     public function isScan(): bool
     {
-        return \in_array(
+        return in_array(
             $this,
             [
                 self::SEQ_SCAN,
@@ -111,7 +114,7 @@ enum PlanNodeType: string
 
     public function isSort(): bool
     {
-        return \in_array(
+        return in_array(
             $this,
             [
                 self::SORT,

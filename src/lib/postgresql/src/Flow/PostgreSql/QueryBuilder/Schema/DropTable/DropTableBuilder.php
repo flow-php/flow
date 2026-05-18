@@ -13,6 +13,8 @@ use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
+use function array_values;
+
 final readonly class DropTableBuilder implements DropTableFinalStep
 {
     use AstToSql;
@@ -28,7 +30,7 @@ final readonly class DropTableBuilder implements DropTableFinalStep
 
     public static function create(string ...$tables): DropTableFinalStep
     {
-        return new self(\array_values($tables));
+        return new self(array_values($tables));
     }
 
     public function cascade(): DropTableFinalStep

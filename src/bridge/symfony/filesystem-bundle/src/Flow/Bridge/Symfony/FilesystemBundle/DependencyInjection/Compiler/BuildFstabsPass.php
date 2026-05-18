@@ -14,6 +14,16 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 
+use function array_key_exists;
+use function array_keys;
+use function implode;
+use function is_array;
+use function is_string;
+use function lcfirst;
+use function sprintf;
+use function str_replace;
+use function ucwords;
+
 final class BuildFstabsPass implements CompilerPassInterface
 {
     public const string CONFIG_PARAMETER = 'flow.filesystem.config';
@@ -34,11 +44,11 @@ final class BuildFstabsPass implements CompilerPassInterface
         $fstabs = $config['fstabs'];
         $defaultFstab = $config['default_fstab'];
 
-        if ($defaultFstab !== null && !\array_key_exists($defaultFstab, $fstabs)) {
-            throw new LogicException(\sprintf(
+        if ($defaultFstab !== null && !array_key_exists($defaultFstab, $fstabs)) {
+            throw new LogicException(sprintf(
                 'flow_filesystem: default_fstab "%s" does not match any configured fstab. Available: [%s].',
                 $defaultFstab,
-                \implode(', ', \array_keys($fstabs)),
+                implode(', ', array_keys($fstabs)),
             ));
         }
 
@@ -48,13 +58,13 @@ final class BuildFstabsPass implements CompilerPassInterface
             $resolvedFilesystems = [];
 
             foreach ($fstabConfig['filesystems'] as $mountName => $entry) {
-                if (!\array_key_exists($entry['type'], $availableTypes)) {
-                    throw new LogicException(\sprintf(
+                if (!array_key_exists($entry['type'], $availableTypes)) {
+                    throw new LogicException(sprintf(
                         'Fstab "%s" mount "%s": no filesystem factory registered for type "%s". Available types: [%s].',
                         $fstabName,
                         $mountName,
                         $entry['type'],
-                        \implode(', ', \array_keys($availableTypes)),
+                        implode(', ', array_keys($availableTypes)),
                     ));
                 }
 
@@ -104,15 +114,15 @@ final class BuildFstabsPass implements CompilerPassInterface
         $telemetryServiceId = $telemetry['telemetry_service_id'] ?? null;
         $clockServiceId = $telemetry['clock_service_id'] ?? null;
 
-        if (!\is_string($telemetryServiceId) || $telemetryServiceId === '') {
-            throw new LogicException(\sprintf(
+        if (!is_string($telemetryServiceId) || $telemetryServiceId === '') {
+            throw new LogicException(sprintf(
                 'Fstab "%s" telemetry: telemetry_service_id must be a non-empty string when enabled.',
                 $fstabName,
             ));
         }
 
-        if (!\is_string($clockServiceId) || $clockServiceId === '') {
-            throw new LogicException(\sprintf(
+        if (!is_string($clockServiceId) || $clockServiceId === '') {
+            throw new LogicException(sprintf(
                 'Fstab "%s" telemetry: clock_service_id must be a non-empty string when enabled.',
                 $fstabName,
             ));
@@ -143,7 +153,7 @@ final class BuildFstabsPass implements CompilerPassInterface
 
     private function camelCase(string $name): string
     {
-        return \lcfirst(\str_replace(' ', '', \ucwords(\str_replace('_', ' ', $name))));
+        return lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', $name))));
     }
 
     /**
@@ -155,7 +165,7 @@ final class BuildFstabsPass implements CompilerPassInterface
 
         foreach ($container->findTaggedServiceIds(RegisterFilesystemFactoriesPass::TAG) as $serviceId => $tags) {
             foreach ($tags as $tag) {
-                if (\array_key_exists('type', $tag) && \is_string($tag['type']) && $tag['type'] !== '') {
+                if (array_key_exists('type', $tag) && is_string($tag['type']) && $tag['type'] !== '') {
                     $types[$tag['type']] = $serviceId;
                 }
             }
@@ -172,20 +182,20 @@ final class BuildFstabsPass implements CompilerPassInterface
     private function resolveAwsS3References(array $entry): array
     {
         if (
-            \array_key_exists('client_service_id', $entry)
-            && \is_string($entry['client_service_id'])
+            array_key_exists('client_service_id', $entry)
+            && is_string($entry['client_service_id'])
             && $entry['client_service_id'] !== ''
         ) {
             $entry['client'] = new Reference($entry['client_service_id']);
             unset($entry['client_service_id']);
         }
 
-        if (\array_key_exists('client', $entry) && \is_array($entry['client'])) {
+        if (array_key_exists('client', $entry) && is_array($entry['client'])) {
             $client = $entry['client'];
 
             if (
-                \array_key_exists('http_client_service_id', $client)
-                && \is_string($client['http_client_service_id'])
+                array_key_exists('http_client_service_id', $client)
+                && is_string($client['http_client_service_id'])
                 && $client['http_client_service_id'] !== ''
             ) {
                 $client['http_client'] = new Reference($client['http_client_service_id']);
@@ -193,8 +203,8 @@ final class BuildFstabsPass implements CompilerPassInterface
             }
 
             if (
-                \array_key_exists('logger_service_id', $client)
-                && \is_string($client['logger_service_id'])
+                array_key_exists('logger_service_id', $client)
+                && is_string($client['logger_service_id'])
                 && $client['logger_service_id'] !== ''
             ) {
                 $client['logger'] = new Reference($client['logger_service_id']);
@@ -215,15 +225,15 @@ final class BuildFstabsPass implements CompilerPassInterface
     private function resolveAzureBlobReferences(array $entry): array
     {
         if (
-            \array_key_exists('client_service_id', $entry)
-            && \is_string($entry['client_service_id'])
+            array_key_exists('client_service_id', $entry)
+            && is_string($entry['client_service_id'])
             && $entry['client_service_id'] !== ''
         ) {
             $entry['client'] = new Reference($entry['client_service_id']);
             unset($entry['client_service_id']);
         }
 
-        if (\array_key_exists('client', $entry) && \is_array($entry['client'])) {
+        if (array_key_exists('client', $entry) && is_array($entry['client'])) {
             $client = $entry['client'];
 
             $serviceKeyMap = [
@@ -235,8 +245,8 @@ final class BuildFstabsPass implements CompilerPassInterface
 
             foreach ($serviceKeyMap as $configKey => $resolvedKey) {
                 if (
-                    \array_key_exists($configKey, $client)
-                    && \is_string($client[$configKey])
+                    array_key_exists($configKey, $client)
+                    && is_string($client[$configKey])
                     && $client[$configKey] !== ''
                 ) {
                     $client[$resolvedKey] = new Reference($client[$configKey]);

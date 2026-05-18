@@ -41,6 +41,14 @@ use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\Log\Logger as SymfonyDefaultLogger;
 
+use function bin2hex;
+use function extension_loaded;
+use function is_file;
+use function random_bytes;
+use function sys_get_temp_dir;
+use function uniqid;
+use function unlink;
+
 #[CoversClass(FlowTelemetryExtension::class)]
 #[CoversClass(OTLPAvailabilityPass::class)]
 #[CoversClass(FrameworkLoggerPass::class)]
@@ -68,7 +76,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
     public function test_caching_detector_writes_to_configured_path(): void
     {
-        $cachePath = \sys_get_temp_dir() . '/flow_telemetry_resource_' . \uniqid() . '.cache';
+        $cachePath = sys_get_temp_dir() . '/flow_telemetry_resource_' . uniqid() . '.cache';
 
         try {
             $this->bootKernel([
@@ -95,8 +103,8 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             static::assertSame('cached-service', $resource->get('service.name'));
             static::assertFileExists($cachePath);
         } finally {
-            if (\is_file($cachePath)) {
-                \unlink($cachePath);
+            if (is_file($cachePath)) {
+                unlink($cachePath);
             }
         }
     }
@@ -498,7 +506,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
     public function test_otlp_transport_failover_inline_grpc_with_curl_failover(): void
     {
-        if (!\extension_loaded('grpc')) {
+        if (!extension_loaded('grpc')) {
             static::markTestSkipped('ext-grpc is required');
         }
 
@@ -671,7 +679,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
     public function test_stream_handler_is_registered_with_destination(): void
     {
-        $destination = \sys_get_temp_dir() . '/flow-telemetry-test-' . \uniqid() . '.log';
+        $destination = sys_get_temp_dir() . '/flow-telemetry-test-' . uniqid() . '.log';
 
         try {
             $this->bootKernel([
@@ -693,8 +701,8 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             $container = $this->getContainer();
             static::assertInstanceOf(StreamHandler::class, $container->get('flow.telemetry.error_handler.to_file'));
         } finally {
-            if (\is_file($destination)) {
-                \unlink($destination);
+            if (is_file($destination)) {
+                unlink($destination);
             }
         }
     }
@@ -718,7 +726,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
     public function test_stream_transport_is_built_inline_for_file_path(): void
     {
-        $path = \sys_get_temp_dir() . '/flow-otlp-bundle-' . \bin2hex(\random_bytes(4)) . '.jsonl';
+        $path = sys_get_temp_dir() . '/flow-otlp-bundle-' . bin2hex(random_bytes(4)) . '.jsonl';
 
         try {
             $this->bootKernel([
@@ -748,8 +756,8 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
             );
             static::assertInstanceOf(OTLPExporter::class, $container->get('flow.telemetry.exporter.otlp_stream'));
         } finally {
-            if (\is_file($path)) {
-                \unlink($path);
+            if (is_file($path)) {
+                unlink($path);
             }
         }
     }
@@ -809,7 +817,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
     public function test_two_separate_otlp_backends(): void
     {
-        if (!\extension_loaded('grpc')) {
+        if (!extension_loaded('grpc')) {
             static::markTestSkipped(
                 'grpc PHP extension is required to instantiate GrpcTransport during container compilation',
             );

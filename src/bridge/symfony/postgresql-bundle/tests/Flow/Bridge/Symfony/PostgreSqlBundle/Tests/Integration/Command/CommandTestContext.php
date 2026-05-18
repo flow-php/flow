@@ -16,8 +16,15 @@ use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+use function bin2hex;
+use function dirname;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function getenv;
+use function mkdir;
+use function preg_match;
+use function preg_replace;
+use function random_bytes;
 
 final class CommandTestContext
 {
@@ -33,9 +40,9 @@ final class CommandTestContext
     {
         $this->symfonyContext = new SymfonyContext();
         $this->filesystem = native_local_filesystem();
-        $this->testDsn = \getenv('PGSQL_DATABASE_URL') ?: 'postgresql://postgres:postgres@localhost:5432/postgres';
-        $this->migrationsDir = \dirname(__DIR__, 8) . '/var/tests/flow_test_migrations_' . \bin2hex(\random_bytes(4));
-        \mkdir($this->migrationsDir, 0755, true);
+        $this->testDsn = getenv('PGSQL_DATABASE_URL') ?: 'postgresql://postgres:postgres@localhost:5432/postgres';
+        $this->migrationsDir = dirname(__DIR__, 8) . '/var/tests/flow_test_migrations_' . bin2hex(random_bytes(4));
+        mkdir($this->migrationsDir, 0755, true);
 
         $client = PgSqlClient::connect((new DsnParser())->parse($this->testDsn));
         $client->execute('DROP TABLE IF EXISTS test_users, flow_migrations_test CASCADE');
@@ -44,7 +51,7 @@ final class CommandTestContext
 
     public function bootForDatabaseManagement(string $targetDatabase): void
     {
-        $targetDsn = \preg_replace('#/[^/?]+(\?|$)#', '/' . $targetDatabase . '$1', $this->testDsn);
+        $targetDsn = preg_replace('#/[^/?]+(\?|$)#', '/' . $targetDatabase . '$1', $this->testDsn);
 
         $this->symfonyContext->bootKernel([
             'config' => static function (TestKernel $kernel) use ($targetDsn): void {
@@ -88,7 +95,7 @@ final class CommandTestContext
 
     public function bootWithMigrationsForDatabase(string $database): void
     {
-        $targetDsn = \preg_replace('#/[^/?]+(\?|$)#', '/' . $database . '$1', $this->testDsn);
+        $targetDsn = preg_replace('#/[^/?]+(\?|$)#', '/' . $database . '$1', $this->testDsn);
 
         $this->symfonyContext->bootKernel([
             'config' => function (TestKernel $kernel) use ($targetDsn): void {
@@ -181,7 +188,7 @@ final class CommandTestContext
         $tester = new CommandTester($command);
         $tester->execute(['name' => 'create_test_users']);
 
-        \preg_match('/Generated migration: (\S+)/', $tester->getDisplay(), $matches);
+        preg_match('/Generated migration: (\S+)/', $tester->getDisplay(), $matches);
 
         return $matches[1];
     }
@@ -233,7 +240,7 @@ final class CommandTestContext
 
     public function tableExistsInDatabase(string $database, string $table, string $schema = 'public'): bool
     {
-        $targetDsn = \preg_replace('#/[^/?]+(\?|$)#', '/' . $database . '$1', $this->testDsn);
+        $targetDsn = preg_replace('#/[^/?]+(\?|$)#', '/' . $database . '$1', $this->testDsn);
         $client = PgSqlClient::connect((new DsnParser())->parse($targetDsn));
         $result = $client->fetch('SELECT 1 FROM information_schema.tables WHERE table_schema = $1 AND table_name = $2', [
             $schema,

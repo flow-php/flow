@@ -7,6 +7,7 @@ namespace Flow\ETL\Sort;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
+use Generator;
 
 /**
  * @internal
@@ -20,5 +21,5 @@ interface SortingAlgorithm
      *
      * @return \Generator<Rows>
      */
-    public function sortGenerator(\Generator $rows, FlowContext $context, References $refs): \Generator;
+    public function sortGenerator(Generator $rows, FlowContext $context, References $refs): Generator;
 }

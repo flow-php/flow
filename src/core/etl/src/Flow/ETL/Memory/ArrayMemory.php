@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Memory;
 
+use Countable;
 use Flow\ETL\Exception\InvalidArgumentException;
 
+use function array_chunk;
+use function array_merge;
 use function array_values;
+use function count;
+use function is_array;
 
-final class ArrayMemory implements \Countable, Memory
+final class ArrayMemory implements Countable, Memory
 {
     /**
      * @param array<array-key, array<string, mixed>> $memory
@@ -32,7 +37,7 @@ final class ArrayMemory implements \Countable, Memory
 
         $chunks = [];
 
-        foreach (\array_chunk($this->memory, $size) as $chunk) {
+        foreach (array_chunk($this->memory, $size) as $chunk) {
             $chunks[] = new self($chunk);
         }
 
@@ -41,7 +46,7 @@ final class ArrayMemory implements \Countable, Memory
 
     public function count(): int
     {
-        return \count($this->memory);
+        return count($this->memory);
     }
 
     /**
@@ -67,10 +72,10 @@ final class ArrayMemory implements \Countable, Memory
         $data = [];
 
         foreach ($this->memory as $entry) {
-            $data[] = \array_values($entry);
+            $data[] = array_values($entry);
         }
 
-        return \array_merge(...$data);
+        return array_merge(...$data);
     }
 
     /**
@@ -96,7 +101,7 @@ final class ArrayMemory implements \Countable, Memory
     {
         $this->assertMemoryStructure($data);
 
-        $this->memory = \array_merge($this->memory, $data);
+        $this->memory = array_merge($this->memory, $data);
     }
 
     /**
@@ -107,7 +112,7 @@ final class ArrayMemory implements \Countable, Memory
     private function assertMemoryStructure(array $memory): void
     {
         foreach ($memory as $entry) {
-            if (!\is_array($entry)) {
+            if (!is_array($entry)) {
                 throw new InvalidArgumentException('Memory expects nested array data structure: array<array<mixed>>');
             }
         }

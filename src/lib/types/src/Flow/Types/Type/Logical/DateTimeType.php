@@ -4,16 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
+use DateInterval;
+use DateTime;
+use DateTimeImmutable;
+use DateTimeInterface;
+use DOMElement;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+use Throwable;
+
+use function is_bool;
+use function is_numeric;
+use function is_string;
 
 /**
  * @implements Type<\DateTimeInterface>
  */
 final readonly class DateTimeType implements Type
 {
-    public function assert(mixed $value): \DateTimeInterface
+    public function assert(mixed $value): DateTimeInterface
     {
         if ($this->isValid($value)) {
             return $value;
@@ -22,37 +32,37 @@ final readonly class DateTimeType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
-    public function cast(mixed $value): \DateTimeInterface
+    public function cast(mixed $value): DateTimeInterface
     {
-        if ($value instanceof \DateTimeImmutable) {
+        if ($value instanceof DateTimeImmutable) {
             return $value;
         }
 
-        if ($value instanceof \DateTime) {
-            return \DateTimeImmutable::createFromMutable($value);
+        if ($value instanceof DateTime) {
+            return DateTimeImmutable::createFromMutable($value);
         }
 
-        if ($value instanceof \DOMElement) {
+        if ($value instanceof DOMElement) {
             $value = $value->nodeValue;
         }
 
         try {
-            if (\is_string($value)) {
-                return new \DateTimeImmutable($value);
+            if (is_string($value)) {
+                return new DateTimeImmutable($value);
             }
 
-            if (\is_numeric($value)) {
-                return new \DateTimeImmutable('@' . $value);
+            if (is_numeric($value)) {
+                return new DateTimeImmutable('@' . $value);
             }
 
-            if (\is_bool($value)) {
-                return new \DateTimeImmutable('@' . (int) $value);
+            if (is_bool($value)) {
+                return new DateTimeImmutable('@' . (int) $value);
             }
 
-            if ($value instanceof \DateInterval) {
-                return (new \DateTimeImmutable('@0'))->add($value);
+            if ($value instanceof DateInterval) {
+                return (new DateTimeImmutable('@0'))->add($value);
             }
-        } catch (\Throwable) {
+        } catch (Throwable) {
             throw new CastingException($value, $this);
         }
 
@@ -61,7 +71,7 @@ final readonly class DateTimeType implements Type
 
     public function isValid(mixed $value): bool
     {
-        return $value instanceof \DateTimeInterface;
+        return $value instanceof DateTimeInterface;
     }
 
     public function normalize(): array

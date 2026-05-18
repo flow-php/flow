@@ -11,6 +11,8 @@ use Symfony\Component\Messenger\Stamp\DelayStamp;
 use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
 use Symfony\Component\Messenger\Transport\Serialization\PhpSerializer;
 
+use function iterator_to_array;
+
 final class FlowPostgreSqlTransportTest extends MessengerIntegrationTestCase
 {
     public function test_find_all_returns_sent_messages(): void
@@ -24,7 +26,7 @@ final class FlowPostgreSqlTransportTest extends MessengerIntegrationTestCase
         $transport->send(new Envelope(new IntegrationTestMessage('two')));
         $transport->send(new Envelope(new IntegrationTestMessage('three')));
 
-        static::assertCount(3, \iterator_to_array($transport->all(), false));
+        static::assertCount(3, iterator_to_array($transport->all(), false));
     }
 
     public function test_find_by_id_returns_envelope(): void
@@ -73,7 +75,7 @@ final class FlowPostgreSqlTransportTest extends MessengerIntegrationTestCase
 
         static::assertSame(2, $transport->getMessageCount());
 
-        \iterator_to_array($transport->get(), false);
+        iterator_to_array($transport->get(), false);
 
         static::assertSame(1, $transport->getMessageCount());
     }
@@ -85,7 +87,7 @@ final class FlowPostgreSqlTransportTest extends MessengerIntegrationTestCase
             new PhpSerializer(),
         );
 
-        static::assertSame([], \iterator_to_array($transport->get(), false));
+        static::assertSame([], iterator_to_array($transport->get(), false));
     }
 
     public function test_keepalive_keeps_message_marked_as_delivered(): void
@@ -96,7 +98,7 @@ final class FlowPostgreSqlTransportTest extends MessengerIntegrationTestCase
         );
 
         $transport->send(new Envelope(new IntegrationTestMessage('keep-alive')));
-        $received = \iterator_to_array($transport->get(), false);
+        $received = iterator_to_array($transport->get(), false);
         static::assertCount(1, $received);
 
         $transport->keepalive($received[0]);
@@ -113,8 +115,8 @@ final class FlowPostgreSqlTransportTest extends MessengerIntegrationTestCase
 
         $transport->send(new Envelope(new IntegrationTestMessage('timeout')));
 
-        static::assertCount(1, \iterator_to_array($transport->get(), false));
-        static::assertCount(1, \iterator_to_array($transport->get(), false));
+        static::assertCount(1, iterator_to_array($transport->get(), false));
+        static::assertCount(1, iterator_to_array($transport->get(), false));
     }
 
     public function test_second_get_does_not_return_already_delivered_message(): void
@@ -126,9 +128,9 @@ final class FlowPostgreSqlTransportTest extends MessengerIntegrationTestCase
 
         $transport->send(new Envelope(new IntegrationTestMessage('first')));
 
-        \iterator_to_array($transport->get(), false);
+        iterator_to_array($transport->get(), false);
 
-        static::assertSame([], \iterator_to_array($transport->get(), false));
+        static::assertSame([], iterator_to_array($transport->get(), false));
     }
 
     public function test_send_and_get_message(): void
@@ -141,7 +143,7 @@ final class FlowPostgreSqlTransportTest extends MessengerIntegrationTestCase
         $sent = $transport->send(new Envelope(new IntegrationTestMessage('hello')));
         static::assertNotNull($sent->last(TransportMessageIdStamp::class));
 
-        $received = \iterator_to_array($transport->get(), false);
+        $received = iterator_to_array($transport->get(), false);
 
         static::assertCount(1, $received);
         static::assertInstanceOf(IntegrationTestMessage::class, $received[0]->getMessage());
@@ -157,7 +159,7 @@ final class FlowPostgreSqlTransportTest extends MessengerIntegrationTestCase
 
         $transport->send(new Envelope(new IntegrationTestMessage('ack-me')));
 
-        $received = \iterator_to_array($transport->get(), false);
+        $received = iterator_to_array($transport->get(), false);
         static::assertCount(1, $received);
 
         $transport->ack($received[0]);
@@ -174,7 +176,7 @@ final class FlowPostgreSqlTransportTest extends MessengerIntegrationTestCase
 
         $transport->send(new Envelope(new IntegrationTestMessage('reject-me')));
 
-        $received = \iterator_to_array($transport->get(), false);
+        $received = iterator_to_array($transport->get(), false);
         static::assertCount(1, $received);
 
         $transport->reject($received[0]);
@@ -191,6 +193,6 @@ final class FlowPostgreSqlTransportTest extends MessengerIntegrationTestCase
 
         $transport->send((new Envelope(new IntegrationTestMessage('delayed')))->with(new DelayStamp(60000)));
 
-        static::assertCount(0, \iterator_to_array($transport->get(), false));
+        static::assertCount(0, iterator_to_array($transport->get(), false));
     }
 }

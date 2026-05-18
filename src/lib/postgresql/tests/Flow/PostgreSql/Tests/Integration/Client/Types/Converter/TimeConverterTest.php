@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\PostgreSql\DSL\cast;
@@ -19,7 +20,7 @@ final class TimeConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{string, string}>
      */
-    public static function provide_time_values(): \Generator
+    public static function provide_time_values(): Generator
     {
         yield 'standard time' => ['14:30:00', '14:30:00'];
         yield 'midnight' => ['00:00:00', '00:00:00'];
@@ -30,7 +31,7 @@ final class TimeConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{string, string}>
      */
-    public static function provide_time_with_microseconds(): \Generator
+    public static function provide_time_with_microseconds(): Generator
     {
         yield 'with microseconds' => ['14:30:00.123456', '14:30:00.123456'];
         yield 'milliseconds only' => ['14:30:00.123', '14:30:00.123'];
@@ -39,7 +40,7 @@ final class TimeConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{string, string, string}>
      */
-    public static function provide_timetz_values(): \Generator
+    public static function provide_timetz_values(): Generator
     {
         yield 'utc time' => ['14:30:00+00', '14:30:00', '+00:00'];
         yield 'positive offset' => ['14:30:00+02', '14:30:00', '+02:00'];

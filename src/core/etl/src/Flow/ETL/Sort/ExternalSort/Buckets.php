@@ -4,9 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Sort\ExternalSort;
 
+use ArrayIterator;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Generator;
+use Iterator;
+use IteratorIterator;
+
+use function array_keys;
+use function is_array;
 
 final class Buckets
 {
@@ -21,12 +27,12 @@ final class Buckets
     public function __construct(array $buckets)
     {
         foreach ($buckets as $bucket) {
-            if (\is_array($bucket->rows)) {
-                $this->buckets[$bucket->id] = new \ArrayIterator($bucket->rows);
-            } elseif ($bucket->rows instanceof \Iterator) {
+            if (is_array($bucket->rows)) {
+                $this->buckets[$bucket->id] = new ArrayIterator($bucket->rows);
+            } elseif ($bucket->rows instanceof Iterator) {
                 $this->buckets[$bucket->id] = $bucket->rows;
             } else {
-                $this->buckets[$bucket->id] = new \IteratorIterator($bucket->rows);
+                $this->buckets[$bucket->id] = new IteratorIterator($bucket->rows);
             }
         }
     }
@@ -36,13 +42,13 @@ final class Buckets
      */
     public function bucketIds(): array
     {
-        return \array_keys($this->buckets);
+        return array_keys($this->buckets);
     }
 
     /**
      * @return \Generator<Row>
      */
-    public function sort(Reference ...$refs): \Generator
+    public function sort(Reference ...$refs): Generator
     {
         $heap = new RowsMinHeap(...$refs);
 

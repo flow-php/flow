@@ -13,7 +13,10 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\ParquetFile\Statistics;
 
+use function count;
 use function Flow\Parquet\array_flatten;
+use function is_array;
+use function is_string;
 
 final class StatisticsCounter
 {
@@ -45,12 +48,12 @@ final class StatisticsCounter
      */
     public function add(string|int|float|array|bool|object|null $value): void
     {
-        if (\is_array($value)) {
+        if (is_array($value)) {
             $value = array_flatten($value);
         }
 
-        if (\is_array($value)) {
-            $arrayValuesCount = \count($value);
+        if (is_array($value)) {
+            $arrayValuesCount = count($value);
             $this->valuesCount += $arrayValuesCount ?: 1;
         } else {
             $this->valuesCount++;
@@ -62,7 +65,7 @@ final class StatisticsCounter
             return;
         }
 
-        if (\is_array($value)) {
+        if (is_array($value)) {
             // @mago-ignore analysis:mixed-assignment
             foreach ($value as $val) {
                 if ($this->comparator->isLessThan($val, $this->min)) {
@@ -89,7 +92,7 @@ final class StatisticsCounter
      */
     public function addBatch(array $values): void
     {
-        $this->valuesCount += \count($values);
+        $this->valuesCount += count($values);
 
         foreach ($values as $value) {
             if ($value === null) {
@@ -177,7 +180,7 @@ final class StatisticsCounter
         $max = $this->max();
 
         if ($min !== null) {
-            if ($this->column->type() === PhysicalType::BYTE_ARRAY && \is_string($min)) {
+            if ($this->column->type() === PhysicalType::BYTE_ARRAY && is_string($min)) {
                 (new BinaryBufferWriter($minBuffer))->append($min);
             } else {
                 (new PlainValuesPacker(new BinaryBufferWriter($minBuffer), $this->byteOrder))->packValues(
@@ -188,7 +191,7 @@ final class StatisticsCounter
         }
 
         if ($max !== null) {
-            if ($this->column->type() === PhysicalType::BYTE_ARRAY && \is_string($max)) {
+            if ($this->column->type() === PhysicalType::BYTE_ARRAY && is_string($max)) {
                 (new BinaryBufferWriter($maxBuffer))->append($max);
             } else {
                 (new PlainValuesPacker(new BinaryBufferWriter($maxBuffer), $this->byteOrder))->packValues(

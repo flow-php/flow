@@ -4,30 +4,36 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
+use DateTime;
+use DateTimeImmutable;
+use DateTimeZone;
+use DOMElement;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_time_zone;
 
 final class TimeZoneTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'valid DateTimeZone UTC' => [
-            'value' => new \DateTimeZone('UTC'),
+            'value' => new DateTimeZone('UTC'),
             'exceptionClass' => null,
         ];
 
         yield 'valid DateTimeZone America/New_York' => [
-            'value' => new \DateTimeZone('America/New_York'),
+            'value' => new DateTimeZone('America/New_York'),
             'exceptionClass' => null,
         ];
 
         yield 'valid DateTimeZone Europe/Warsaw' => [
-            'value' => new \DateTimeZone('Europe/Warsaw'),
+            'value' => new DateTimeZone('Europe/Warsaw'),
             'exceptionClass' => null,
         ];
 
@@ -37,12 +43,12 @@ final class TimeZoneTypeTest extends TestCase
         ];
 
         yield 'invalid DateTimeImmutable' => [
-            'value' => new \DateTimeImmutable(),
+            'value' => new DateTimeImmutable(),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid DateTime' => [
-            'value' => new \DateTime(),
+            'value' => new DateTime(),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
@@ -67,70 +73,70 @@ final class TimeZoneTypeTest extends TestCase
         ];
 
         yield 'invalid object' => [
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'exceptionClass' => InvalidTypeException::class,
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
         yield 'DateTimeZone UTC' => [
-            'value' => new \DateTimeZone('UTC'),
-            'expected' => new \DateTimeZone('UTC'),
+            'value' => new DateTimeZone('UTC'),
+            'expected' => new DateTimeZone('UTC'),
             'exceptionClass' => null,
         ];
 
         yield 'DateTimeZone America/New_York' => [
-            'value' => new \DateTimeZone('America/New_York'),
-            'expected' => new \DateTimeZone('America/New_York'),
+            'value' => new DateTimeZone('America/New_York'),
+            'expected' => new DateTimeZone('America/New_York'),
             'exceptionClass' => null,
         ];
 
         yield 'string UTC' => [
             'value' => 'UTC',
-            'expected' => new \DateTimeZone('UTC'),
+            'expected' => new DateTimeZone('UTC'),
             'exceptionClass' => null,
         ];
 
         yield 'string America/New_York' => [
             'value' => 'America/New_York',
-            'expected' => new \DateTimeZone('America/New_York'),
+            'expected' => new DateTimeZone('America/New_York'),
             'exceptionClass' => null,
         ];
 
         yield 'string Europe/Warsaw' => [
             'value' => 'Europe/Warsaw',
-            'expected' => new \DateTimeZone('Europe/Warsaw'),
+            'expected' => new DateTimeZone('Europe/Warsaw'),
             'exceptionClass' => null,
         ];
 
         yield 'string +00:00' => [
             'value' => '+00:00',
-            'expected' => new \DateTimeZone('+00:00'),
+            'expected' => new DateTimeZone('+00:00'),
             'exceptionClass' => null,
         ];
 
         yield 'string +05:30' => [
             'value' => '+05:30',
-            'expected' => new \DateTimeZone('+05:30'),
+            'expected' => new DateTimeZone('+05:30'),
             'exceptionClass' => null,
         ];
 
         yield 'DateTimeImmutable with timezone' => [
-            'value' => new \DateTimeImmutable('now', new \DateTimeZone('America/New_York')),
-            'expected' => new \DateTimeZone('America/New_York'),
+            'value' => new DateTimeImmutable('now', new DateTimeZone('America/New_York')),
+            'expected' => new DateTimeZone('America/New_York'),
             'exceptionClass' => null,
         ];
 
         yield 'DateTime with timezone' => [
-            'value' => new \DateTime('now', new \DateTimeZone('Europe/London')),
-            'expected' => new \DateTimeZone('Europe/London'),
+            'value' => new DateTime('now', new DateTimeZone('Europe/London')),
+            'expected' => new DateTimeZone('Europe/London'),
             'exceptionClass' => null,
         ];
 
         yield 'DOMElement with timezone string' => [
-            'value' => new \DOMElement('timezone', 'UTC'),
-            'expected' => new \DateTimeZone('UTC'),
+            'value' => new DOMElement('timezone', 'UTC'),
+            'expected' => new DateTimeZone('UTC'),
             'exceptionClass' => null,
         ];
 
@@ -153,15 +159,15 @@ final class TimeZoneTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'valid DateTimeZone UTC' => [
-            'value' => new \DateTimeZone('UTC'),
+            'value' => new DateTimeZone('UTC'),
             'expected' => true,
         ];
 
         yield 'valid DateTimeZone America/New_York' => [
-            'value' => new \DateTimeZone('America/New_York'),
+            'value' => new DateTimeZone('America/New_York'),
             'expected' => true,
         ];
 
@@ -171,12 +177,12 @@ final class TimeZoneTypeTest extends TestCase
         ];
 
         yield 'invalid DateTimeImmutable' => [
-            'value' => new \DateTimeImmutable(),
+            'value' => new DateTimeImmutable(),
             'expected' => false,
         ];
 
         yield 'invalid DateTime' => [
-            'value' => new \DateTime(),
+            'value' => new DateTime(),
             'expected' => false,
         ];
 
@@ -206,7 +212,7 @@ final class TimeZoneTypeTest extends TestCase
             $this->expectException($exceptionClass);
             type_time_zone()->assert($value);
         } else {
-            static::assertInstanceOf(\DateTimeZone::class, type_time_zone()->assert($value));
+            static::assertInstanceOf(DateTimeZone::class, type_time_zone()->assert($value));
         }
     }
 

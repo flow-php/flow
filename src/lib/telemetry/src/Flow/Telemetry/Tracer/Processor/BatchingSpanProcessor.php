@@ -10,6 +10,9 @@ use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanProcessor;
+use Throwable;
+
+use function count;
 
 /**
  * Batches spans for efficient export.
@@ -36,7 +39,7 @@ final class BatchingSpanProcessor implements SpanProcessor
 
     public function flush(): bool
     {
-        if (\count($this->buffer) === 0) {
+        if (count($this->buffer) === 0) {
             return true;
         }
 
@@ -45,7 +48,7 @@ final class BatchingSpanProcessor implements SpanProcessor
 
         try {
             return $this->exporter->export(Signals::traces($spans));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
 
             return false;
@@ -56,7 +59,7 @@ final class BatchingSpanProcessor implements SpanProcessor
     {
         $this->buffer[] = $span;
 
-        if (\count($this->buffer) >= $this->batchSize) {
+        if (count($this->buffer) >= $this->batchSize) {
             $this->flush();
         }
     }
@@ -75,7 +78,7 @@ final class BatchingSpanProcessor implements SpanProcessor
 
         try {
             $this->exporter->shutdown();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
         }
     }

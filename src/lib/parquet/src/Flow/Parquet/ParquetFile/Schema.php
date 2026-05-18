@@ -10,6 +10,10 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\ThriftModel\SchemaElement;
 
+use function array_key_exists;
+use function array_merge;
+use function count;
+
 final class Schema
 {
     /**
@@ -26,13 +30,13 @@ final class Schema
      */
     public static function fromThrift(array $schemaElements): self
     {
-        if (!\count($schemaElements)) {
+        if (!count($schemaElements)) {
             throw new InvalidArgumentException('Schema must have at least one element');
         }
 
         $schema = self::processSchema($schemaElements);
 
-        if (\count($schema) !== 1) {
+        if (count($schema) !== 1) {
             throw new InvalidArgumentException('Schema must have exactly one root element');
         }
 
@@ -64,7 +68,7 @@ final class Schema
         $columns = [];
 
         foreach ($this->schemaRoot->children() as $column) {
-            $columns = \array_merge($columns, $this->flattener($column));
+            $columns = array_merge($columns, $this->flattener($column));
         }
 
         return $columns;
@@ -72,13 +76,13 @@ final class Schema
 
     public function get(string $name): Column
     {
-        if (!\count($this->cache)) {
+        if (!count($this->cache)) {
             foreach ($this->columns() as $column) {
                 $this->cache($column);
             }
         }
 
-        if (\array_key_exists($name, $this->cache)) {
+        if (array_key_exists($name, $this->cache)) {
             return $this->cache[$name];
         }
 
@@ -87,13 +91,13 @@ final class Schema
 
     public function getFlat(string $flatPath): FlatColumn
     {
-        if (!\count($this->cache)) {
+        if (!count($this->cache)) {
             foreach ($this->columns() as $column) {
                 $this->cache($column);
             }
         }
 
-        if (\array_key_exists($flatPath, $this->cache)) {
+        if (array_key_exists($flatPath, $this->cache)) {
             $column = $this->cache[$flatPath];
 
             if (!$column instanceof FlatColumn) {
@@ -162,7 +166,7 @@ final class Schema
         $columns = [];
 
         foreach ($column->children() as $child) {
-            $columns = \array_merge($columns, $this->flattener($child));
+            $columns = array_merge($columns, $this->flattener($child));
         }
 
         return $columns;
@@ -199,7 +203,7 @@ final class Schema
             $children = [];
 
             for ($i = 0; $i < $element->num_children; $i++) {
-                $children = \array_merge($children, self::processSchema($schemaElements, $index));
+                $children = array_merge($children, self::processSchema($schemaElements, $index));
             }
 
             return [

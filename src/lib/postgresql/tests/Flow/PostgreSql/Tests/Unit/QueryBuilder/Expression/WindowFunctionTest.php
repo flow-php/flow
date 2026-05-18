@@ -14,6 +14,7 @@ use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PostgreSql\QueryBuilder\Expression\Column;
 use Flow\PostgreSql\QueryBuilder\Expression\WindowFunction;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
 final class WindowFunctionTest extends TestCase
 {
@@ -141,7 +142,7 @@ final class WindowFunctionTest extends TestCase
     {
         $this->expectException(InvalidExpressionException::class);
 
-        (new \ReflectionClass(WindowFunction::class))->newInstance([]);
+        (new ReflectionClass(WindowFunction::class))->newInstance([]);
     }
 
     public function test_with_args_creates_new_instance(): void

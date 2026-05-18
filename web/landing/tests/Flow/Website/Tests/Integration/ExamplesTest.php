@@ -6,6 +6,7 @@ namespace Flow\Website\Tests\Integration;
 
 use Flow\Website\Service\Examples;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class ExamplesTest extends TestCase
 {
@@ -110,7 +111,7 @@ final class ExamplesTest extends TestCase
         $path = __DIR__ . '/../Fixtures/InvalidCode';
         $service = new Examples($path);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessageMatches('/Code example doesn\'t exists, it should be located in path: ".*"./');
 
         $service->code('topic_1', 'example_1');
@@ -121,7 +122,7 @@ final class ExamplesTest extends TestCase
         $path = __DIR__ . '/../Fixtures/InvalidExample';
         $service = new Examples($path);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessageMatches(
             '/Topic "non_existing_topic" doesn\'t exists, it should be located in path: ".*"./',
         );
@@ -134,7 +135,7 @@ final class ExamplesTest extends TestCase
         $path = __DIR__ . '/../Fixtures/InvalidExample';
         $service = new Examples($path);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
             'Topic "topic_1" doesn\'t have any example, there should be at least one example in path',
         );
@@ -147,7 +148,7 @@ final class ExamplesTest extends TestCase
         $path = __DIR__ . '/../Fixtures/InvalidTopic';
         $service = new Examples($path);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Topics root directory doesn\'t exists, it should be located in path:');
 
         $service->topics();

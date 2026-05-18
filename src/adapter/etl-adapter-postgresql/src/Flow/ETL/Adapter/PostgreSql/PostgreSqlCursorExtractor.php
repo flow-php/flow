@@ -11,11 +11,14 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\Sql;
+use Generator;
 
+use function bin2hex;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\PostgreSql\DSL\close_cursor;
 use function Flow\PostgreSql\DSL\declare_cursor;
 use function Flow\PostgreSql\DSL\fetch;
+use function random_bytes;
 
 /**
  * PostgreSQL extractor using server-side cursors for memory-efficient extraction.
@@ -45,9 +48,9 @@ final class PostgreSqlCursorExtractor implements Extractor
         private readonly array $parameters = [],
     ) {}
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
-        $cursorName = $this->cursorName ?? 'flow_cursor_' . \bin2hex(\random_bytes(8));
+        $cursorName = $this->cursorName ?? 'flow_cursor_' . bin2hex(random_bytes(8));
 
         $ownTransaction = $this->client->getTransactionNestingLevel() === 0;
 

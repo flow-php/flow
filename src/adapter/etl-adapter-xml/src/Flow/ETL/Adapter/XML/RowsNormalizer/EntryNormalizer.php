@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\RowsNormalizer;
 
+use ArrayIterator;
 use Flow\ETL\Adapter\XML\Abstraction\XMLAttribute;
 use Flow\ETL\Adapter\XML\Abstraction\XMLNode;
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
@@ -24,6 +25,13 @@ use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
+use MultipleIterator;
+
+use function count;
+use function is_array;
+use function str_starts_with;
+use function strlen;
+use function substr;
 
 final readonly class EntryNormalizer
 {
@@ -36,9 +44,9 @@ final readonly class EntryNormalizer
      */
     public function normalize(Entry $entry): XMLNode|XMLAttribute
     {
-        if (\str_starts_with($entry->name(), $this->valueNormalizer->attributePrefix)) {
+        if (str_starts_with($entry->name(), $this->valueNormalizer->attributePrefix)) {
             return new XMLAttribute(
-                \substr($entry->name(), \strlen($this->valueNormalizer->attributePrefix)),
+                substr($entry->name(), strlen($this->valueNormalizer->attributePrefix)),
                 $entry->toString(),
             );
         }
@@ -88,7 +96,7 @@ final readonly class EntryNormalizer
 
         $listValue = $entry->value();
 
-        if (!\is_array($listValue) || !\count($listValue)) {
+        if (!is_array($listValue) || !count($listValue)) {
             return $node;
         }
 
@@ -142,7 +150,7 @@ final readonly class EntryNormalizer
         $node = XMLNode::nestedNode($entry->name());
         $mapValue = $entry->value();
 
-        if (!\is_array($mapValue) || !\count($mapValue)) {
+        if (!is_array($mapValue) || !count($mapValue)) {
             return $node;
         }
 
@@ -174,16 +182,16 @@ final readonly class EntryNormalizer
 
         $value = $entry->value();
 
-        if (!\is_array($value) || !\count($value)) {
+        if (!is_array($value) || !count($value)) {
             return $node;
         }
 
         /** @var StructureType<array<string, mixed>> $type */
         $type = $entry->type();
 
-        $structureIterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
-        $structureIterator->attachIterator(new \ArrayIterator($type->elements()), 'structure_element');
-        $structureIterator->attachIterator(new \ArrayIterator($value), 'value_element');
+        $structureIterator = new MultipleIterator(MultipleIterator::MIT_KEYS_ASSOC);
+        $structureIterator->attachIterator(new ArrayIterator($type->elements()), 'structure_element');
+        $structureIterator->attachIterator(new ArrayIterator($value), 'value_element');
 
         foreach ($structureIterator as $keys => $element) {
             /** @var Type<mixed> $structureElementType */

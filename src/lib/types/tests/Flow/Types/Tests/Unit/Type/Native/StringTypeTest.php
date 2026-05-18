@@ -4,20 +4,33 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
+use DateInterval;
+use DateTime;
+use DateTimeImmutable;
+use DateTimeZone;
 use Dom\HTMLDocument;
+use DOMDocument;
+use DOMElement;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Tests\Unit\Type\Fixtures\StringableObject;
 use Flow\Types\Type\Native\StringType;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
+use stdClass;
+use Stringable;
 
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_string;
+use function trim;
+
+use const LIBXML_HTML_NOIMPLIED;
+use const LIBXML_NOERROR;
 
 final class StringTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'valid string 1234' => [
             'value' => '1234',
@@ -50,27 +63,27 @@ final class StringTypeTest extends TestCase
         ];
 
         yield 'invalid object' => [
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid DateTimeImmutable' => [
-            'value' => new \DateTimeImmutable(),
+            'value' => new DateTimeImmutable(),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid DateTime' => [
-            'value' => new \DateTime(),
+            'value' => new DateTime(),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid DateTimeZone' => [
-            'value' => new \DateTimeZone('UTC'),
+            'value' => new DateTimeZone('UTC'),
             'exceptionClass' => InvalidTypeException::class,
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
         yield 'string' => [
             'value' => 'string',
@@ -103,13 +116,13 @@ final class StringTypeTest extends TestCase
         ];
 
         yield 'DateTimeInterface' => [
-            'value' => new \DateTimeImmutable('2021-01-01 00:00:00'),
+            'value' => new DateTimeImmutable('2021-01-01 00:00:00'),
             'expected' => '2021-01-01T00:00:00+00:00',
             'exceptionClass' => null,
         ];
 
         yield 'Stringable' => [
-            'value' => new class() implements \Stringable {
+            'value' => new class() implements Stringable {
                 public function __toString(): string
                 {
                     return 'stringable';
@@ -120,12 +133,12 @@ final class StringTypeTest extends TestCase
         ];
 
         yield 'DOMDocument' => [
-            'value' => new \DOMDocument(),
+            'value' => new DOMDocument(),
             'expected' => '<?xml version="1.0"?>',
             'exceptionClass' => null,
         ];
 
-        $xml = new \DOMDocument();
+        $xml = new DOMDocument();
         $xml->loadXML('<xml>Some Happy XML</xml>');
 
         yield 'Not Empty DOMDocument' => [
@@ -135,27 +148,27 @@ final class StringTypeTest extends TestCase
         ];
 
         yield 'DOMElement' => [
-            'value' => new \DOMElement('element'),
+            'value' => new DOMElement('element'),
             'expected' => '<element/>',
             'exceptionClass' => null,
         ];
 
         yield 'DateTimeZone' => [
-            'value' => new \DateTimeZone('UTC'),
+            'value' => new DateTimeZone('UTC'),
             'expected' => 'UTC',
             'exceptionClass' => null,
         ];
     }
 
-    public static function is_stringable_data_provider(): \Generator
+    public static function is_stringable_data_provider(): Generator
     {
         yield 'DateTimeImmutable' => [
-            'value' => new \DateTimeImmutable(),
+            'value' => new DateTimeImmutable(),
             'expected' => false,
         ];
 
         yield 'DateInterval' => [
-            'value' => new \DateInterval('P1D'),
+            'value' => new DateInterval('P1D'),
             'expected' => false,
         ];
 
@@ -165,7 +178,7 @@ final class StringTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'valid string' => [
             'value' => 'string',
@@ -222,17 +235,14 @@ final class StringTypeTest extends TestCase
             $this->expectException($exceptionClass);
             type_string()->cast($value);
         } else {
-            static::assertSame($expected, \trim(type_string()->cast($value)));
+            static::assertSame($expected, trim(type_string()->cast($value)));
         }
     }
 
     #[RequiresPhp('>= 8.4')]
     public function test_cast_html_document(): void
     {
-        $element = HTMLDocument::createFromString(
-            '<p><span>foobar</span></p>',
-            \LIBXML_HTML_NOIMPLIED | \LIBXML_NOERROR,
-        );
+        $element = HTMLDocument::createFromString('<p><span>foobar</span></p>', LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
 
         static::assertSame('<p><span>foobar</span></p>', type_string()->cast($element));
     }
@@ -240,10 +250,7 @@ final class StringTypeTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function test_cast_html_element(): void
     {
-        $element = HTMLDocument::createFromString(
-            '<p><span>foobar</span></p>',
-            \LIBXML_HTML_NOIMPLIED | \LIBXML_NOERROR,
-        );
+        $element = HTMLDocument::createFromString('<p><span>foobar</span></p>', LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
 
         static::assertSame('<span>foobar</span>', type_string()->cast($element->documentElement));
     }

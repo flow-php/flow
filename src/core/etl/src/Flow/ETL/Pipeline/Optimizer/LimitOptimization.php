@@ -21,6 +21,9 @@ use Flow\ETL\Transformer\RenameEntryTransformer;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\Transformer\SelectEntriesTransformer;
 
+use function count;
+use function in_array;
+
 final class LimitOptimization implements Optimization
 {
     /**
@@ -69,7 +72,7 @@ final class LimitOptimization implements Optimization
             return $pipeline->add($element);
         }
 
-        if ($element instanceof LimitTransformer && !\count($pipeline->segments()->steps())) {
+        if ($element instanceof LimitTransformer && !count($pipeline->segments()->steps())) {
             $extractor->changeLimit($element->limit);
 
             return $pipeline;
@@ -82,7 +85,7 @@ final class LimitOptimization implements Optimization
                 }
             }
 
-            if (!\in_array($pipelineElement::class, $this->nonExpandingTransformers, true)) {
+            if (!in_array($pipelineElement::class, $this->nonExpandingTransformers, true)) {
                 break;
             }
 

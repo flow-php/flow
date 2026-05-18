@@ -14,6 +14,8 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Tests\OperatingSystem;
 use Symfony\Component\Console\Tester\CommandTester;
 
+use function method_exists;
+
 final class DatabaseTableSchemaCommandTest extends FlowTestCase
 {
     protected ?DatabaseContext $dbContext = null;
@@ -61,7 +63,7 @@ final class DatabaseTableSchemaCommandTest extends FlowTestCase
         // columns were also getting precision set to 10 due to a bug that was executing precision set
         // even when precision value was null.
         /** @phpstan-ignore-next-line */
-        if (!\method_exists(Table::class, 'changeColumn')) {
+        if (!method_exists(Table::class, 'changeColumn')) {
             static::assertSame(<<<'PHP'
                 \Flow\ETL\DSL\schema(
                     \Flow\ETL\DSL\integer_schema("id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["dbal_column_primary" => "table_01_pkey"])),
@@ -86,7 +88,7 @@ final class DatabaseTableSchemaCommandTest extends FlowTestCase
     {
         // We don't need to test this edge case on doctrine/dbal below version 4.0 since the logic does not change.
         /** @phpstan-ignore-next-line */
-        if (\method_exists(Table::class, 'changeColumn')) {
+        if (method_exists(Table::class, 'changeColumn')) {
             static::markTestSkipped('This test is not supported in doctrine/dbal 4.0');
         }
 
@@ -120,7 +122,7 @@ final class DatabaseTableSchemaCommandTest extends FlowTestCase
     {
         // We don't need to test this edge case on doctrine/dbal below version 4.0 since the logic does not change.
         /** @phpstan-ignore-next-line */
-        if (\method_exists(Table::class, 'changeColumn')) {
+        if (method_exists(Table::class, 'changeColumn')) {
             static::markTestSkipped('This test is not supported in doctrine/dbal 4.0');
         }
 

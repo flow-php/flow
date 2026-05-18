@@ -8,6 +8,7 @@ use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
+use DOMDocument;
 use Flow\Doctrine\Bulk\Dialect\SqliteInsertOptions;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 
@@ -344,13 +345,13 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
 
         $loader = to_dbal_table_insert($this->sqliteConnectionParams(), $table);
 
-        $documentA = new \DOMDocument();
+        $documentA = new DOMDocument();
         $documentA->loadXml('<xml>Description One</xml>');
 
-        $documentB = new \DOMDocument();
+        $documentB = new DOMDocument();
         $documentB->loadXml('<xml>Description Two</xml>');
 
-        $documentC = new \DOMDocument();
+        $documentC = new DOMDocument();
         $documentC->loadXml('<xml>Description Three</xml>');
 
         data_frame()
@@ -383,13 +384,13 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
 
         $loader = to_dbal_table_insert($this->sqliteConnectionParams(), $table);
 
-        $documentA = new \DOMDocument();
+        $documentA = new DOMDocument();
         $documentA->loadXml('<xml>Description One</xml>');
 
-        $documentB = new \DOMDocument();
+        $documentB = new DOMDocument();
         $documentB->loadXml('<xml>Description Two</xml>');
 
-        $documentC = new \DOMDocument();
+        $documentC = new DOMDocument();
         $documentC->loadXml('<b>Description Three</b>');
 
         data_frame()

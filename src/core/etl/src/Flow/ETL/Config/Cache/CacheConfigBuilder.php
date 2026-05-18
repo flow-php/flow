@@ -13,6 +13,8 @@ use Flow\Filesystem\FilesystemTable;
 use Flow\Serializer\Serializer;
 
 use function Flow\Filesystem\DSL\path_real;
+use function getenv;
+use function sys_get_temp_dir;
 
 final class CacheConfigBuilder
 {
@@ -31,8 +33,8 @@ final class CacheConfigBuilder
         ?TelemetryConfig $telemetryConfig = null,
         string $dataframeName = 'flow_dataframe',
     ): CacheConfig {
-        $cachePath = \getenv(CacheConfig::CACHE_DIR_ENV) ?: '';
-        $cachePath = path_real($cachePath !== '' ? $cachePath : \sys_get_temp_dir() . '/flow_php/cache');
+        $cachePath = getenv(CacheConfig::CACHE_DIR_ENV) ?: '';
+        $cachePath = path_real($cachePath !== '' ? $cachePath : sys_get_temp_dir() . '/flow_php/cache');
 
         $cache = $this->cache ?? new FilesystemCache(
             $fstab->for($this->filesystemProtocol),

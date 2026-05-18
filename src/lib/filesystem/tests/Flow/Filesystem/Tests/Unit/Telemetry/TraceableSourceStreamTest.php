@@ -9,11 +9,16 @@ use Flow\Filesystem\SourceStream;
 use Flow\Filesystem\Telemetry\FilesystemTelemetryAttributes;
 use Flow\Filesystem\Telemetry\TraceableSourceStream;
 use Flow\Filesystem\Tests\Mother\FilesystemTelemetryConfigMother;
+use Generator;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 use function Flow\Filesystem\DSL\filesystem_telemetry_options;
 use function Flow\Telemetry\DSL\memory_span_processor;
 use function Flow\Telemetry\DSL\void_exporter;
+use function implode;
+use function iterator_to_array;
+use function strlen;
 
 final class TraceableSourceStreamTest extends TestCase
 {
@@ -38,7 +43,7 @@ final class TraceableSourceStreamTest extends TestCase
         static::assertSame('source', $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE]);
         static::assertSame($path->uri(), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_PATH_URI]);
         static::assertSame(
-            \strlen($content),
+            strlen($content),
             $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ],
         );
         $status = $spans[0]->status();
@@ -51,7 +56,7 @@ final class TraceableSourceStreamTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
-        $exception = new \RuntimeException('Close failed');
+        $exception = new RuntimeException('Close failed');
 
         $mockStream = $this->createMock(SourceStream::class);
         $mockStream->method('path')->willReturn($path);
@@ -61,7 +66,7 @@ final class TraceableSourceStreamTest extends TestCase
         $stream = new TraceableSourceStream($mockStream, $config);
         $stream->content();
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Close failed');
 
         try {
@@ -116,7 +121,7 @@ final class TraceableSourceStreamTest extends TestCase
         static::assertCount(1, $spans);
         static::assertSame('Read test.txt', $spans[0]->name());
         static::assertSame(
-            \strlen($content),
+            strlen($content),
             $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ],
         );
     }
@@ -148,12 +153,12 @@ final class TraceableSourceStreamTest extends TestCase
         $mockStream->method('path')->willReturn($path);
         $mockStream
             ->method('iterate')
-            ->willReturnCallback(static function () use ($chunks): \Generator {
+            ->willReturnCallback(static function () use ($chunks): Generator {
                 yield from $chunks;
             });
 
         $stream = new TraceableSourceStream($mockStream, $config);
-        $result = \iterator_to_array($stream->iterate());
+        $result = iterator_to_array($stream->iterate());
 
         static::assertSame($chunks, $result);
 
@@ -163,7 +168,7 @@ final class TraceableSourceStreamTest extends TestCase
         static::assertCount(1, $spans);
         static::assertSame('Read test.txt', $spans[0]->name());
         static::assertSame(
-            \strlen(\implode('', $chunks)),
+            strlen(implode('', $chunks)),
             $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ],
         );
     }
@@ -215,12 +220,12 @@ final class TraceableSourceStreamTest extends TestCase
         $mockStream->method('path')->willReturn($path);
         $mockStream
             ->method('readLines')
-            ->willReturnCallback(static function () use ($lines): \Generator {
+            ->willReturnCallback(static function () use ($lines): Generator {
                 yield from $lines;
             });
 
         $stream = new TraceableSourceStream($mockStream, $config);
-        $result = \iterator_to_array($stream->readLines());
+        $result = iterator_to_array($stream->readLines());
 
         static::assertSame($lines, $result);
 
@@ -253,7 +258,7 @@ final class TraceableSourceStreamTest extends TestCase
         static::assertCount(1, $spans);
         static::assertSame('Read test.txt', $spans[0]->name());
         static::assertSame(
-            \strlen($content),
+            strlen($content),
             $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ],
         );
     }

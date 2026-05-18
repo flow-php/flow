@@ -48,6 +48,7 @@ use Flow\PostgreSql\AST\Nodes\Statement\UpdateStatement;
 use Flow\PostgreSql\AST\Nodes\Statement\VacuumStatement;
 use Flow\PostgreSql\AST\Nodes\Statement\ViewStatement;
 use Flow\PostgreSql\Protobuf\AST\Node;
+use LogicException;
 
 final class StatementFactory
 {
@@ -186,7 +187,7 @@ final class StatementFactory
             return new RevokeStatement($grantStmt);
         }
 
-        throw new \LogicException('createGrantOrRevokeStatement called without GrantStmt');
+        throw new LogicException('createGrantOrRevokeStatement called without GrantStmt');
     }
 
     /**
@@ -204,6 +205,6 @@ final class StatementFactory
             return new RevokeStatement($grantRoleStmt);
         }
 
-        throw new \LogicException('createGrantRoleStatement called without GrantRoleStmt');
+        throw new LogicException('createGrantRoleStatement called without GrantRoleStmt');
     }
 }

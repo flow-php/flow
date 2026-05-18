@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\XMLWriter;
 
+use DOMDocument;
+use DOMElement;
 use Flow\ETL\Adapter\XML\Abstraction\XMLNode;
 use Flow\ETL\Adapter\XML\XMLWriter;
 use Flow\ETL\Exception\RuntimeException;
@@ -12,7 +14,7 @@ final class DOMDocumentWriter implements XMLWriter
 {
     public function write(XMLNode $node): string
     {
-        $dom = new \DOMDocument();
+        $dom = new DOMDocument();
         $element = $this->createDOMElement($dom, $node);
         $dom->appendChild($element);
 
@@ -25,7 +27,7 @@ final class DOMDocumentWriter implements XMLWriter
         return $output;
     }
 
-    private function createDOMElement(\DOMDocument $dom, XMLNode $node): \DOMElement
+    private function createDOMElement(DOMDocument $dom, XMLNode $node): DOMElement
     {
         $element = $dom->createElement($node->name);
 

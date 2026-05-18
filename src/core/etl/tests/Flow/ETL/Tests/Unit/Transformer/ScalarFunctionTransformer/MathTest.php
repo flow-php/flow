@@ -9,6 +9,7 @@ use Flow\ETL\Row\Entry\FloatEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\float_entry;
@@ -21,7 +22,7 @@ use function Flow\ETL\DSL\rows;
 
 final class MathTest extends FlowTestCase
 {
-    public static function divide_data_provider(): \Generator
+    public static function divide_data_provider(): Generator
     {
         yield [
             float_entry('a', 0.3),
@@ -40,7 +41,7 @@ final class MathTest extends FlowTestCase
         ];
     }
 
-    public static function minus_data_provider(): \Generator
+    public static function minus_data_provider(): Generator
     {
         yield [
             float_entry('a', 0.3),
@@ -60,7 +61,7 @@ final class MathTest extends FlowTestCase
         ];
     }
 
-    public static function multiply_data_provider(): \Generator
+    public static function multiply_data_provider(): Generator
     {
         yield [
             float_entry('a', 0.3),
@@ -75,7 +76,7 @@ final class MathTest extends FlowTestCase
         ];
     }
 
-    public static function plus_data_provider(): \Generator
+    public static function plus_data_provider(): Generator
     {
         yield [
             float_entry('a', 0.3),
@@ -90,7 +91,7 @@ final class MathTest extends FlowTestCase
         ];
     }
 
-    public static function power_data_provider(): \Generator
+    public static function power_data_provider(): Generator
     {
         yield [
             float_entry('a', -0.3),

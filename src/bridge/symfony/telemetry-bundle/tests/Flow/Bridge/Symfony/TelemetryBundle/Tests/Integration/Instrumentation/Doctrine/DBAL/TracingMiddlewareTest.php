@@ -7,6 +7,7 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\Instrumentation\
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Driver\Middleware as DBALMiddlewareInterface;
 use Doctrine\DBAL\DriverManager;
+use Exception;
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\DBALTelemetryPass;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\TracingMiddleware;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
@@ -16,13 +17,17 @@ use Flow\Telemetry\Tracer\SpanKind;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
+use function array_map;
+use function interface_exists;
+use function mb_strlen;
+
 #[CoversClass(TracingMiddleware::class)]
 #[CoversClass(DBALTelemetryPass::class)]
 final class TracingMiddlewareTest extends KernelTestCase
 {
     protected function setUp(): void
     {
-        if (!\interface_exists(DBALMiddlewareInterface::class)) {
+        if (!interface_exists(DBALMiddlewareInterface::class)) {
             self::markTestSkipped('doctrine/dbal is not installed');
         }
 
@@ -354,7 +359,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        $spanNames = \array_map(static fn($s) => $s->name(), $spans);
+        $spanNames = array_map(static fn($s) => $s->name(), $spans);
 
         static::assertContains('doctrine.dbal.transaction.begin', $spanNames);
         static::assertContains('doctrine.dbal.transaction.rollback', $spanNames);
@@ -438,7 +443,7 @@ final class TracingMiddlewareTest extends KernelTestCase
 
         $truncatedSql = $querySpan->attributes()['db.query.text'];
         static::assertSame('SELECT * FROM test_t...', $truncatedSql);
-        static::assertSame(23, \mb_strlen($truncatedSql));
+        static::assertSame(23, mb_strlen($truncatedSql));
     }
 
     public function test_prepared_statement_creates_prepare_and_execute_spans(): void
@@ -491,7 +496,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        $spanNames = \array_map(static fn($s) => $s->name(), $spans);
+        $spanNames = array_map(static fn($s) => $s->name(), $spans);
 
         static::assertContains('doctrine.dbal.connection', $spanNames);
         static::assertContains('doctrine.dbal.connection.exec', $spanNames);
@@ -624,7 +629,7 @@ final class TracingMiddlewareTest extends KernelTestCase
 
         try {
             $connection->executeQuery('SELECT * FROM non_existent_table');
-        } catch (\Exception) {
+        } catch (Exception) {
             $exceptionThrown = true;
         }
 
@@ -765,7 +770,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        $spanNames = \array_map(static fn($s) => $s->name(), $spans);
+        $spanNames = array_map(static fn($s) => $s->name(), $spans);
 
         static::assertContains('doctrine.dbal.transaction.begin', $spanNames);
         static::assertContains('doctrine.dbal.transaction.commit', $spanNames);

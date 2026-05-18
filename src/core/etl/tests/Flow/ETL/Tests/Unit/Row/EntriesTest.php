@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row;
 
+use DateTimeImmutable;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entries;
@@ -386,7 +387,7 @@ final class EntriesTest extends FlowTestCase
         $entries = new Entries(
             integer_entry('id', 1234),
             boolean_entry('deleted', false),
-            new DateTimeEntry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
+            new DateTimeEntry('created-at', new DateTimeImmutable('2020-07-13 15:00')),
             string_entry('phase', null),
             structure_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure([
                 'item-id' => type_integer(),
@@ -398,7 +399,7 @@ final class EntriesTest extends FlowTestCase
 
         static::assertEquals(
             new Entries(
-                new DateTimeEntry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
+                new DateTimeEntry('created-at', new DateTimeImmutable('2020-07-13 15:00')),
                 boolean_entry('deleted', false),
                 integer_entry('id', 1234),
                 structure_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure([
@@ -416,7 +417,7 @@ final class EntriesTest extends FlowTestCase
         $entries = new Entries(
             integer_entry('id', 1234),
             boolean_entry('deleted', false),
-            new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
+            new DateTimeEntry('created-at', $createdAt = new DateTimeImmutable('2020-07-13 15:00')),
             string_entry('phase', null),
             structure_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure([
                 'item-id' => type_integer(),
@@ -446,7 +447,7 @@ final class EntriesTest extends FlowTestCase
         $entries = new Entries(
             integer_entry('id', 1234),
             boolean_entry('deleted', false),
-            new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
+            new DateTimeEntry('created-at', $createdAt = new DateTimeImmutable('2020-07-13 15:00')),
             string_entry('phase', null),
             structure_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure([
                 'item-id' => type_integer(),

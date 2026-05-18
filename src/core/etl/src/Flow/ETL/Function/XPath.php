@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use DOMDocument;
+use DOMNameSpaceNode;
+use DOMNode;
+use DOMXPath;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -20,7 +24,7 @@ final class XPath extends ScalarFunctionChain
      */
     public function eval(Row $row, FlowContext $context): ?array
     {
-        $value = (new Parameter($this->value))->asInstanceOf($row, $context, \DOMNode::class);
+        $value = (new Parameter($this->value))->asInstanceOf($row, $context, DOMNode::class);
         $path = (new Parameter($this->path))->asString($row, $context);
 
         if ($value === null) {
@@ -33,8 +37,8 @@ final class XPath extends ScalarFunctionChain
             return $context->functions()->invalidResult(new InvalidArgumentException('XPath requires non-null path'));
         }
 
-        if ($value instanceof \DOMNode && !$value instanceof \DOMDocument) {
-            $dom = $value->ownerDocument ?? new \DOMDocument();
+        if ($value instanceof DOMNode && !$value instanceof DOMDocument) {
+            $dom = $value->ownerDocument ?? new DOMDocument();
             $importedNode = $dom->importNode($value, true);
 
             if (!$importedNode->parentNode) {
@@ -44,7 +48,7 @@ final class XPath extends ScalarFunctionChain
             $value = $dom;
         }
 
-        $xpath = new \DOMXPath($value);
+        $xpath = new DOMXPath($value);
         $result = @$xpath->query($path);
 
         if ($result === false) {
@@ -58,7 +62,7 @@ final class XPath extends ScalarFunctionChain
         $nodes = [];
 
         foreach ($result as $node) {
-            if ($node instanceof \DOMNameSpaceNode) {
+            if ($node instanceof DOMNameSpaceNode) {
                 continue;
             }
 

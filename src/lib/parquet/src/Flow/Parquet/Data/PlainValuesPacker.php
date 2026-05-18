@@ -9,13 +9,18 @@ use Flow\Parquet\BinaryWriter;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use RuntimeException;
 
+use function array_filter;
 use function Flow\Parquet\Binary\encode_decimal;
 use function Flow\Parquet\Binary\encode_f32;
 use function Flow\Parquet\Binary\encode_f64;
 use function Flow\Parquet\Binary\encode_i32;
 use function Flow\Parquet\Binary\encode_i64;
 use function Flow\Parquet\Binary\encode_u32;
+use function hex2bin;
+use function str_replace;
+use function strlen;
 
 final readonly class PlainValuesPacker
 {
@@ -29,7 +34,7 @@ final readonly class PlainValuesPacker
      */
     public function packValues(FlatColumn $column, array $values): void
     {
-        $values = \array_filter($values, static fn(mixed $value) => $value !== null);
+        $values = array_filter($values, static fn(mixed $value) => $value !== null);
 
         switch ($column->type()) {
             case PhysicalType::BOOLEAN:
@@ -113,7 +118,7 @@ final readonly class PlainValuesPacker
                 break;
 
             default:
-                throw new \RuntimeException(
+                throw new RuntimeException(
                     'Writing physical type "' . $column->type()->name . '" is not implemented yet',
                 );
         }
@@ -138,7 +143,7 @@ final readonly class PlainValuesPacker
     private function packByteArrays(array $values): void
     {
         foreach ($values as $value) {
-            $this->writer->append(encode_u32($this->byteOrder, [\strlen($value)]));
+            $this->writer->append(encode_u32($this->byteOrder, [strlen($value)]));
             $this->writer->append($value);
         }
     }
@@ -201,7 +206,7 @@ final readonly class PlainValuesPacker
     private function packStrings(array $strings): void
     {
         foreach ($strings as $string) {
-            $this->writer->append(encode_u32($this->byteOrder, [\strlen($string)]));
+            $this->writer->append(encode_u32($this->byteOrder, [strlen($string)]));
             $this->writer->append($string);
         }
     }
@@ -212,11 +217,11 @@ final readonly class PlainValuesPacker
     private function packUuids(array $uuids): void
     {
         foreach ($uuids as $uuid) {
-            $hex = \str_replace('-', '', $uuid);
-            $binary = \hex2bin($hex);
+            $hex = str_replace('-', '', $uuid);
+            $binary = hex2bin($hex);
 
             if ($binary === false) {
-                throw new \RuntimeException('Invalid UUID format: ' . $uuid);
+                throw new RuntimeException('Invalid UUID format: ' . $uuid);
             }
 
             $this->writer->append($binary);

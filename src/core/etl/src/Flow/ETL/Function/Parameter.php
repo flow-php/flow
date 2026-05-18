@@ -17,6 +17,14 @@ use UnitEnum;
 use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\get_type;
 use function Flow\Types\DSL\type_null;
+use function is_a;
+use function is_array;
+use function is_float;
+use function is_int;
+use function is_numeric;
+use function is_object;
+use function is_scalar;
+use function is_string;
 
 final readonly class Parameter
 {
@@ -58,14 +66,14 @@ final readonly class Parameter
             return $result->toArray();
         }
 
-        return \is_array($result) ? $result : null;
+        return is_array($result) ? $result : null;
     }
 
     public function asBoolean(Row $row, FlowContext $context): bool
     {
         $result = $this->eval($row, $context);
 
-        return \is_scalar($result) ? (bool) $result : false;
+        return is_scalar($result) ? (bool) $result : false;
     }
 
     /**
@@ -88,18 +96,18 @@ final readonly class Parameter
      *
      * @return null|T
      */
-    public function asEnum(Row $row, FlowContext $context, string $enumClass): ?\UnitEnum
+    public function asEnum(Row $row, FlowContext $context, string $enumClass): ?UnitEnum
     {
         $result = $this->eval($row, $context);
 
-        return \is_object($result) && \is_a($result, $enumClass) ? $result : null;
+        return is_object($result) && is_a($result, $enumClass) ? $result : null;
     }
 
     public function asFloat(Row $row, FlowContext $context): ?float
     {
         $result = $this->eval($row, $context);
 
-        return \is_float($result) ? $result : null;
+        return is_float($result) ? $result : null;
     }
 
     /**
@@ -114,7 +122,7 @@ final readonly class Parameter
     {
         $result = $this->eval($row, $context);
 
-        return \is_object($result) && \is_a($result, $class) ? $result : null;
+        return is_object($result) && is_a($result, $class) ? $result : null;
     }
 
     /**
@@ -124,7 +132,7 @@ final readonly class Parameter
     {
         $result = $this->eval($row, $context);
 
-        return \is_int($result) ? $result : $default;
+        return is_int($result) ? $result : $default;
     }
 
     /**
@@ -134,12 +142,12 @@ final readonly class Parameter
     {
         $result = $this->eval($row, $context);
 
-        if (!\is_array($result)) {
+        if (!is_array($result)) {
             return null;
         }
 
         foreach ($result as $item) {
-            if (!\is_object($item) || !\is_a($item, $class)) {
+            if (!is_object($item) || !is_a($item, $class)) {
                 return null;
             }
         }
@@ -155,12 +163,12 @@ final readonly class Parameter
     {
         $result = $this->eval($row, $context);
 
-        if (!\is_numeric($result)) {
+        if (!is_numeric($result)) {
             return $default;
         }
 
         return match (true) {
-            \is_int($result), \is_float($result) => $result,
+            is_int($result), is_float($result) => $result,
             $result == (int) $result => (int) $result,
             $result == (float) $result => (float) $result,
             default => $default,
@@ -171,7 +179,7 @@ final readonly class Parameter
     {
         $result = $this->eval($row, $context);
 
-        return \is_object($result) ? $result : null;
+        return is_object($result) ? $result : null;
     }
 
     /**
@@ -181,7 +189,7 @@ final readonly class Parameter
     {
         $result = $this->eval($row, $context);
 
-        return \is_string($result) ? $result : $default;
+        return is_string($result) ? $result : $default;
     }
 
     /**

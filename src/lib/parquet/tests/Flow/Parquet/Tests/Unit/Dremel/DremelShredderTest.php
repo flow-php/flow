@@ -16,6 +16,8 @@ use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use PHPUnit\Framework\TestCase;
 
+use function array_keys;
+
 final class DremelShredderTest extends TestCase
 {
     public function test_complex_schema(): void
@@ -66,7 +68,7 @@ final class DremelShredderTest extends TestCase
                 'metadata.key_value.key',
                 'metadata.key_value.value',
             ],
-            \array_keys($result),
+            array_keys($result),
         );
 
         static::assertSame([1, 2, 3], $result['id']->values());
@@ -87,7 +89,7 @@ final class DremelShredderTest extends TestCase
         $shredder = new DremelShredder(new DisabledValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
 
-        static::assertSame(['id'], \array_keys($result));
+        static::assertSame(['id'], array_keys($result));
         static::assertSame([1, 3], $result['id']->values());
         static::assertSame([0, 0, 0], $result['id']->repetitionLevels());
         static::assertSame([1, 0, 1], $result['id']->definitionLevels());
@@ -101,7 +103,7 @@ final class DremelShredderTest extends TestCase
         $shredder = new DremelShredder(new DisabledValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
 
-        static::assertSame(['id'], \array_keys($result));
+        static::assertSame(['id'], array_keys($result));
         static::assertSame([], $result['id']->values());
         static::assertSame([0, 0, 0], $result['id']->repetitionLevels());
         static::assertSame([0, 0, 0], $result['id']->definitionLevels());
@@ -115,7 +117,7 @@ final class DremelShredderTest extends TestCase
         $shredder = new DremelShredder(new DisabledValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
 
-        static::assertSame(['id'], \array_keys($result));
+        static::assertSame(['id'], array_keys($result));
         static::assertSame([1, 2, 3], $result['id']->values());
         static::assertSame([0, 0, 0], $result['id']->repetitionLevels());
         static::assertSame([0, 0, 0], $result['id']->definitionLevels());
@@ -134,7 +136,7 @@ final class DremelShredderTest extends TestCase
         $shredder = new DremelShredder(new DisabledValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
 
-        static::assertSame(['tags.list.element'], \array_keys($result));
+        static::assertSame(['tags.list.element'], array_keys($result));
         static::assertSame(['a', 'b', 'c', 'd'], $result['tags.list.element']->values());
         static::assertSame([0, 0, 0, 1, 1, 0], $result['tags.list.element']->repetitionLevels());
         static::assertSame([0, 1, 3, 3, 3, 3], $result['tags.list.element']->definitionLevels());
@@ -156,7 +158,7 @@ final class DremelShredderTest extends TestCase
         $shredder = new DremelShredder(new DisabledValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
 
-        static::assertSame(['items.list.element.id', 'items.list.element.name'], \array_keys($result));
+        static::assertSame(['items.list.element.id', 'items.list.element.name'], array_keys($result));
         static::assertSame([1, 2, 3], $result['items.list.element.id']->values());
         static::assertSame(['a', 'b', 'c'], $result['items.list.element.name']->values());
     }
@@ -174,7 +176,7 @@ final class DremelShredderTest extends TestCase
         $shredder = new DremelShredder(new DisabledValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
 
-        static::assertSame(['props.key_value.key', 'props.key_value.value'], \array_keys($result));
+        static::assertSame(['props.key_value.key', 'props.key_value.value'], array_keys($result));
         static::assertSame(['a', 'b', 'c'], $result['props.key_value.key']->values());
         static::assertSame([1, 2, 3], $result['props.key_value.value']->values());
     }
@@ -200,7 +202,7 @@ final class DremelShredderTest extends TestCase
 
         static::assertSame(
             ['data.key_value.key', 'data.key_value.value.x', 'data.key_value.value.y'],
-            \array_keys($result),
+            array_keys($result),
         );
         static::assertSame(['k1', 'k2', 'k3'], $result['data.key_value.key']->values());
         static::assertSame([1, 2, 3], $result['data.key_value.value.x']->values());
@@ -219,7 +221,7 @@ final class DremelShredderTest extends TestCase
         $shredder = new DremelShredder(new DisabledValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
 
-        static::assertSame(['id', 'name', 'active'], \array_keys($result));
+        static::assertSame(['id', 'name', 'active'], array_keys($result));
         static::assertSame([1, 3], $result['id']->values());
         static::assertSame(['alice', 'charlie'], $result['name']->values());
         static::assertSame([true, false], $result['active']->values());
@@ -238,7 +240,7 @@ final class DremelShredderTest extends TestCase
         $shredder = new DremelShredder(new DisabledValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
 
-        static::assertSame(['matrix.list.element.list.element'], \array_keys($result));
+        static::assertSame(['matrix.list.element.list.element'], array_keys($result));
         static::assertSame([1, 2, 3, 4], $result['matrix.list.element.list.element']->values());
     }
 
@@ -257,7 +259,7 @@ final class DremelShredderTest extends TestCase
         $shredder = new DremelShredder(new DisabledValidator(), DataConverter::initialize(Options::default()));
         $result = $shredder->shred($schema, $rows);
 
-        static::assertSame(['s.a', 's.b'], \array_keys($result));
+        static::assertSame(['s.a', 's.b'], array_keys($result));
         static::assertSame([1], $result['s.a']->values());
         static::assertSame(['x', 'y'], $result['s.b']->values());
     }

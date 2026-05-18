@@ -13,6 +13,8 @@ use Flow\PostgreSql\Protobuf\AST\SubLink;
 use Flow\PostgreSql\Protobuf\AST\SubLinkType;
 use Flow\PostgreSql\QueryBuilder\Exception\UnsupportedNodeException;
 
+use function in_array;
+
 /**
  * Factory for creating Condition instances from AST nodes.
  */
@@ -99,7 +101,7 @@ final class ConditionFactory
             if ($stringNode !== null) {
                 $operator = $stringNode->getSval();
 
-                if (\in_array($operator, ['=', '<>', '<', '<=', '>', '>='], true)) {
+                if (in_array($operator, ['=', '<>', '<', '<=', '>', '>='], true)) {
                     return Comparison::fromAst($node);
                 }
             }

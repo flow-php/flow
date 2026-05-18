@@ -9,6 +9,13 @@ use Flow\Telemetry\Context\TraceFlags;
 use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\Context\TraceState;
 use Flow\Telemetry\Tracer\SpanContext;
+use InvalidArgumentException;
+
+use function count;
+use function ctype_xdigit;
+use function explode;
+use function sprintf;
+use function strlen;
 
 /**
  * W3C Trace Context propagator for distributed tracing.
@@ -56,9 +63,9 @@ final readonly class W3CTraceContext implements Propagator
             return new PropagationContext();
         }
 
-        $parts = \explode('-', $traceparent);
+        $parts = explode('-', $traceparent);
 
-        if (\count($parts) !== 4) {
+        if (count($parts) !== 4) {
             return new PropagationContext();
         }
 
@@ -68,15 +75,15 @@ final readonly class W3CTraceContext implements Propagator
             return new PropagationContext();
         }
 
-        if (\strlen($traceIdHex) !== 32 || !\ctype_xdigit($traceIdHex)) {
+        if (strlen($traceIdHex) !== 32 || !ctype_xdigit($traceIdHex)) {
             return new PropagationContext();
         }
 
-        if (\strlen($spanIdHex) !== 16 || !\ctype_xdigit($spanIdHex)) {
+        if (strlen($spanIdHex) !== 16 || !ctype_xdigit($spanIdHex)) {
             return new PropagationContext();
         }
 
-        if (\strlen($flagsHex) !== 2 || !\ctype_xdigit($flagsHex)) {
+        if (strlen($flagsHex) !== 2 || !ctype_xdigit($flagsHex)) {
             return new PropagationContext();
         }
 
@@ -84,7 +91,7 @@ final readonly class W3CTraceContext implements Propagator
             $traceId = TraceId::fromHex($traceIdHex);
             $spanId = SpanId::fromHex($spanIdHex);
             $traceFlags = TraceFlags::fromHex($flagsHex);
-        } catch (\InvalidArgumentException) {
+        } catch (InvalidArgumentException) {
             return new PropagationContext();
         }
 
@@ -98,7 +105,7 @@ final readonly class W3CTraceContext implements Propagator
         if ($tracestateHeader !== null) {
             try {
                 $traceState = TraceState::fromString($tracestateHeader);
-            } catch (\InvalidArgumentException) {
+            } catch (InvalidArgumentException) {
             }
         }
 
@@ -122,7 +129,7 @@ final readonly class W3CTraceContext implements Propagator
             return;
         }
 
-        $traceparent = \sprintf(
+        $traceparent = sprintf(
             '%s-%s-%s-%s',
             self::VERSION,
             $context->spanContext->traceId->toHex(),

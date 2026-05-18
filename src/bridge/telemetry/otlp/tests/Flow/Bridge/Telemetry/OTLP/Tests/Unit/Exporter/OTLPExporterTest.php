@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Unit\Exporter;
 
+use DateTimeImmutable;
 use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
 use Flow\Bridge\Telemetry\OTLP\Transport\Transport;
 use Flow\Bridge\Telemetry\OTLP\Transport\TransportException;
@@ -70,7 +71,7 @@ final class OTLPExporterTest extends TestCase
                 ->setBody('hello'),
             ResourceMother::default(),
             InstrumentationScopeMother::default(),
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
         );
 
         static::assertTrue($exporter->export(Signals::logs([$entry])));
@@ -86,7 +87,7 @@ final class OTLPExporterTest extends TestCase
             type: MetricType::COUNTER,
             value: 1,
             attributes: Attributes::empty(),
-            timestamp: new \DateTimeImmutable(),
+            timestamp: new DateTimeImmutable(),
             resource: ResourceMother::default(),
             scope: InstrumentationScopeMother::default(),
         );

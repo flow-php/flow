@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use DateTimeInterface;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -14,10 +15,12 @@ use Flow\ETL\Row\Reference;
 use function Flow\ETL\DSL\datetime_entry;
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\int_entry;
+use function is_numeric;
+use function min;
 
 final class Min implements AggregatingFunction
 {
-    private float|\DateTimeInterface|null $min;
+    private float|DateTimeInterface|null $min;
 
     public function __construct(
         private readonly Reference $ref,
@@ -32,16 +35,16 @@ final class Min implements AggregatingFunction
             $value = $row->valueOf($this->ref);
 
             if ($this->min === null) {
-                if (\is_numeric($value)) {
+                if (is_numeric($value)) {
                     $this->min = (float) $value;
-                } elseif ($value instanceof \DateTimeInterface) {
+                } elseif ($value instanceof DateTimeInterface) {
                     $this->min = $value;
                 }
             } else {
-                if (\is_numeric($value)) {
-                    $this->min = \min($this->min, (float) $value);
-                } elseif ($value instanceof \DateTimeInterface) {
-                    $this->min = \min($this->min, $value);
+                if (is_numeric($value)) {
+                    $this->min = min($this->min, (float) $value);
+                } elseif ($value instanceof DateTimeInterface) {
+                    $this->min = min($this->min, $value);
                 }
             }
         } catch (InvalidArgumentException $e) {
@@ -62,7 +65,7 @@ final class Min implements AggregatingFunction
             return int_entry($this->ref->name(), null);
         }
 
-        if ($this->min instanceof \DateTimeInterface) {
+        if ($this->min instanceof DateTimeInterface) {
             return datetime_entry($this->ref->name(), $this->min);
         }
 

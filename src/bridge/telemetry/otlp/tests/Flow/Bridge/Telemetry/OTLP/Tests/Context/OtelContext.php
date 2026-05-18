@@ -13,6 +13,7 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
+use RuntimeException;
 use Symfony\Component\HttpClient\Psr18Client;
 
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_exporter;
@@ -24,6 +25,7 @@ use function Flow\Telemetry\DSL\meter_provider;
 use function Flow\Telemetry\DSL\resource;
 use function Flow\Telemetry\DSL\telemetry;
 use function Flow\Telemetry\DSL\tracer_provider;
+use function getenv;
 
 /**
  * Test context for OTLP integration tests.
@@ -50,20 +52,20 @@ final class OtelContext
         $this->httpClient = new Psr18Client();
         $this->psr17Factory = new Psr17Factory();
 
-        $httpEndpoint = \getenv('OTEL_RECEIVER_HTTP_ENDPOINT');
-        $grpcEndpoint = \getenv('OTEL_RECEIVER_GRPC_ENDPOINT');
-        $metricsEndpoint = \getenv('OTEL_COLLECTOR_METRICS_ENDPOINT');
+        $httpEndpoint = getenv('OTEL_RECEIVER_HTTP_ENDPOINT');
+        $grpcEndpoint = getenv('OTEL_RECEIVER_GRPC_ENDPOINT');
+        $metricsEndpoint = getenv('OTEL_COLLECTOR_METRICS_ENDPOINT');
 
         if ($httpEndpoint === false) {
-            throw new \RuntimeException('Missing required environment variable: OTEL_RECEIVER_HTTP_ENDPOINT');
+            throw new RuntimeException('Missing required environment variable: OTEL_RECEIVER_HTTP_ENDPOINT');
         }
 
         if ($grpcEndpoint === false) {
-            throw new \RuntimeException('Missing required environment variable: OTEL_RECEIVER_GRPC_ENDPOINT');
+            throw new RuntimeException('Missing required environment variable: OTEL_RECEIVER_GRPC_ENDPOINT');
         }
 
         if ($metricsEndpoint === false) {
-            throw new \RuntimeException('Missing required environment variable: OTEL_COLLECTOR_METRICS_ENDPOINT');
+            throw new RuntimeException('Missing required environment variable: OTEL_COLLECTOR_METRICS_ENDPOINT');
         }
 
         $this->httpEndpoint = $httpEndpoint;

@@ -8,12 +8,22 @@ use Flow\Bridge\Telemetry\OTLP\Serializer\GrpcRequestFactory;
 use Flow\Bridge\Telemetry\OTLP\Serializer\ProtobufSerializer;
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Signal\SignalType;
+use Generator;
 use Google\Protobuf\Internal\Message;
 use Grpc\ChannelCredentials;
 use Grpc\UnaryCall;
+use InvalidArgumentException;
 use Opentelemetry\Proto\Collector\Logs\V1\LogsServiceClient;
 use Opentelemetry\Proto\Collector\Metrics\V1\MetricsServiceClient;
 use Opentelemetry\Proto\Collector\Trace\V1\TraceServiceClient;
+use RuntimeException;
+use Throwable;
+
+use function count;
+use function extension_loaded;
+use function microtime;
+use function sprintf;
+use function strtolower;
 
 use const Grpc\STATUS_ABORTED;
 use const Grpc\STATUS_ALREADY_EXISTS;
@@ -81,17 +91,17 @@ final class GrpcTransport implements Transport
         private readonly int $shutdownTimeoutMs = self::DEFAULT_SHUTDOWN_TIMEOUT_MS,
         private readonly ?Transport $failover = null,
     ) {
-        if (!\extension_loaded('grpc')) {
-            throw new \RuntimeException('The grpc PHP extension is required for GrpcTransport. '
+        if (!extension_loaded('grpc')) {
+            throw new RuntimeException('The grpc PHP extension is required for GrpcTransport. '
             . 'Install it via: pecl install grpc');
         }
 
         if ($timeoutMs < 0) {
-            throw new \InvalidArgumentException('Timeout must be non-negative');
+            throw new InvalidArgumentException('Timeout must be non-negative');
         }
 
         if ($shutdownTimeoutMs < 0) {
-            throw new \InvalidArgumentException('Shutdown timeout must be non-negative');
+            throw new InvalidArgumentException('Shutdown timeout must be non-negative');
         }
 
         $this->requestFactory = new ProtobufSerializer();
@@ -145,7 +155,7 @@ final class GrpcTransport implements Transport
 
         $this->isShutdown = true;
 
-        $shutdownDeadlineMicrotime = \microtime(true) + ($this->shutdownTimeoutMs / 1000);
+        $shutdownDeadlineMicrotime = microtime(true) + ($this->shutdownTimeoutMs / 1000);
 
         if ($this->failover === null) {
             $this->shutdownWithoutFailover($shutdownDeadlineMicrotime);
@@ -161,7 +171,7 @@ final class GrpcTransport implements Transport
 
         try {
             $this->failover->shutdown();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $cascadeException = $e;
         }
 
@@ -174,7 +184,7 @@ final class GrpcTransport implements Transport
 
         if ($cascadeException !== null) {
             throw new TransportException(
-                \sprintf('OTLP gRPC shutdown: failover shutdown failed: %s', $cascadeException->getMessage()),
+                sprintf('OTLP gRPC shutdown: failover shutdown failed: %s', $cascadeException->getMessage()),
                 0,
                 $cascadeException,
             );
@@ -189,7 +199,7 @@ final class GrpcTransport implements Transport
         $metadata = [];
 
         foreach ($this->headers as $key => $value) {
-            $metadata[\strtolower($key)] = [$value];
+            $metadata[strtolower($key)] = [$value];
         }
 
         return $metadata;
@@ -197,7 +207,7 @@ final class GrpcTransport implements Transport
 
     private function buildShutdownTimeoutError(): TransportException
     {
-        return new TransportException(\sprintf(
+        return new TransportException(sprintf(
             'OTLP gRPC shutdown: call cancelled when configured shutdown_timeout=%dms expired',
             $this->shutdownTimeoutMs,
         ));
@@ -242,7 +252,7 @@ final class GrpcTransport implements Transport
             if ($item['entry']['signals'] !== null && $this->failover !== null) {
                 try {
                     $this->failover->send($item['entry']['signals']);
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     $failoverError = $e;
                 }
             }
@@ -281,13 +291,13 @@ final class GrpcTransport implements Transport
     /**
      * @return \Generator<int, array{primaryError: ?\Throwable, entry: array{call: UnaryCall<covariant Message>, signals: ?Signals}}>
      */
-    private function iteratePending(?float $deadlineMicrotime = null): \Generator
+    private function iteratePending(?float $deadlineMicrotime = null): Generator
     {
         $pending = $this->pending;
         $this->pending = [];
 
         foreach ($pending as $entry) {
-            if ($deadlineMicrotime !== null && \microtime(true) >= $deadlineMicrotime) {
+            if ($deadlineMicrotime !== null && microtime(true) >= $deadlineMicrotime) {
                 $entry['call']->cancel();
                 yield ['primaryError' => $this->buildShutdownTimeoutError(), 'entry' => $entry];
 
@@ -300,14 +310,14 @@ final class GrpcTransport implements Transport
                 [, $status] = $entry['call']->wait();
 
                 if ($status->code !== STATUS_OK) {
-                    $primaryError = new TransportException(\sprintf(
+                    $primaryError = new TransportException(sprintf(
                         'gRPC status %d (%s): %s',
                         $status->code,
                         self::grpcStatusName($status->code),
                         $status->details ?? '',
                     ));
                 }
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $primaryError = $e;
             }
 
@@ -328,15 +338,15 @@ final class GrpcTransport implements Transport
 
         $this->closeClients();
 
-        if (\count($failures) === 0) {
+        if (count($failures) === 0) {
             return;
         }
 
         $first = $failures[0];
-        $count = \count($failures);
+        $count = count($failures);
         $message = $count === 1
-            ? \sprintf('OTLP gRPC shutdown: 1 export failed: %s', $first->getMessage())
-            : \sprintf('OTLP gRPC shutdown: %d exports failed; first error: %s', $count, $first->getMessage());
+            ? sprintf('OTLP gRPC shutdown: 1 export failed: %s', $first->getMessage())
+            : sprintf('OTLP gRPC shutdown: %d exports failed; first error: %s', $count, $first->getMessage());
 
         throw new TransportException($message, 0, $first);
     }

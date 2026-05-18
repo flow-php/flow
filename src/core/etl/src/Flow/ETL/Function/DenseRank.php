@@ -10,6 +10,9 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Window;
 
+use function count;
+use function in_array;
+
 final class DenseRank implements WindowFunction
 {
     private ?Window $window;
@@ -25,11 +28,11 @@ final class DenseRank implements WindowFunction
 
         $orderBy = $this->window()->order();
 
-        if (\count($orderBy) > 1) {
+        if (count($orderBy) > 1) {
             throw new \RuntimeException('Dens Rank window function supports only one order by column');
         }
 
-        if (\count($orderBy) === 0) {
+        if (count($orderBy) === 0) {
             throw new \RuntimeException('Dens Rank window function requires to be ordered by one column');
         }
 
@@ -41,7 +44,7 @@ final class DenseRank implements WindowFunction
             $partitionValue = $partitionRow->valueOf($orderBy[0]->name());
 
             if ($value < $partitionValue) {
-                if (!\in_array($partitionValue, $countedValues, true)) {
+                if (!in_array($partitionValue, $countedValues, true)) {
                     $rank++;
                     $countedValues[] = $partitionValue;
                 }

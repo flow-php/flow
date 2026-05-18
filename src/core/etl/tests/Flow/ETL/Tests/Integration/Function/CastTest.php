@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
+use DateTimeImmutable;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -21,7 +22,7 @@ final class CastTest extends FlowTestCase
     {
         df()
             ->read(from_array([
-                ['date' => new \DateTimeImmutable('2023-01-01')],
+                ['date' => new DateTimeImmutable('2023-01-01')],
             ]))
             ->withEntry('date', ref('date')->cast('string'))
             ->write(to_memory($memory = new ArrayMemory()))

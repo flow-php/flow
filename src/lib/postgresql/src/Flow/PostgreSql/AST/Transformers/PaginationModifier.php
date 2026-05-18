@@ -19,6 +19,8 @@ use Flow\PostgreSql\Protobuf\AST\ResTarget;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 use Flow\PostgreSql\Protobuf\AST\SetOperation;
 
+use function count;
+
 /**
  * Modifies SELECT queries to add LIMIT/OFFSET pagination.
  *
@@ -87,7 +89,7 @@ final readonly class PaginationModifier implements NodeModifier
 
     private function hasOrderBy(SelectStmt $stmt): bool
     {
-        return \count($stmt->getSortClause()) > 0;
+        return count($stmt->getSortClause()) > 0;
     }
 
     private function isSetOperation(SelectStmt $stmt): bool

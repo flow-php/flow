@@ -4,13 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
+use ArrayAccess;
+use ArrayIterator;
+use Countable;
 use Flow\ETL\Exception\InvalidArgumentException;
+use IteratorAggregate;
+use Traversable;
+
+use function array_key_exists;
+use function array_reverse;
+use function array_values;
+use function count;
+use function current;
 
 /**
  * @implements \ArrayAccess<string, Reference>
  * @implements \IteratorAggregate<string, Reference>
  */
-final class References implements \ArrayAccess, \Countable, \IteratorAggregate
+final class References implements ArrayAccess, Countable, IteratorAggregate
 {
     /**
      * @var array<string, Reference>
@@ -40,7 +51,7 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
     {
         $reference = EntryReference::init($ref);
 
-        if (\array_key_exists($reference->name(), $this->without)) {
+        if (array_key_exists($reference->name(), $this->without)) {
             return $this;
         }
 
@@ -54,29 +65,29 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
      */
     public function all(): array
     {
-        return \array_values($this->refs);
+        return array_values($this->refs);
     }
 
     public function count(): int
     {
-        return \count($this->refs);
+        return count($this->refs);
     }
 
     public function first(): Reference
     {
-        if (!\count($this->refs)) {
+        if (!count($this->refs)) {
             throw new InvalidArgumentException('References are empty.');
         }
 
-        return \current($this->refs);
+        return current($this->refs);
     }
 
     /**
      * @return \Traversable<string, Reference>
      */
-    public function getIterator(): \Traversable
+    public function getIterator(): Traversable
     {
-        return new \ArrayIterator($this->refs);
+        return new ArrayIterator($this->refs);
     }
 
     public function has(string|Reference $reference): bool
@@ -113,7 +124,7 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
      */
     public function offsetExists($offset): bool
     {
-        return \array_key_exists($offset, $this->refs);
+        return array_key_exists($offset, $this->refs);
     }
 
     /**
@@ -144,7 +155,7 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
 
     public function reverse(): self
     {
-        return new self(...\array_reverse($this->refs));
+        return new self(...array_reverse($this->refs));
     }
 
     public function without(string|Reference ...$reference): self
@@ -154,7 +165,7 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
 
             $this->without[$refName] = true;
 
-            if (\array_key_exists($refName, $this->refs)) {
+            if (array_key_exists($refName, $this->refs)) {
                 unset($this->refs[$refName]);
             }
         }

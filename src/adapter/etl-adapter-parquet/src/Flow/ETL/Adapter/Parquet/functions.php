@@ -13,8 +13,11 @@ use Flow\Filesystem\Path;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
+use Generator;
 
+use function count;
 use function Flow\Filesystem\DSL\path_real;
+use function is_string;
 
 /**
  * @param Path|string $path
@@ -32,7 +35,7 @@ function from_parquet(
     ByteOrder $byte_order = ByteOrder::LITTLE_ENDIAN,
     ?int $offset = null,
 ): ParquetExtractor {
-    $loader = (new ParquetExtractor(\is_string($path) ? path_real($path) : $path))
+    $loader = (new ParquetExtractor(is_string($path) ? path_real($path) : $path))
         ->withOptions($options)
         ->withByteOrder($byte_order);
 
@@ -40,7 +43,7 @@ function from_parquet(
         $loader->withOffset($offset);
     }
 
-    if (\count($columns)) {
+    if (count($columns)) {
         $loader->withColumns($columns);
     }
 
@@ -61,7 +64,7 @@ function to_parquet(
     Compressions $compressions = Compressions::SNAPPY,
     ?Schema $schema = null,
 ): ParquetLoader {
-    $loader = (new ParquetLoader(\is_string($path) ? path_real($path) : $path))->withCompressions($compressions);
+    $loader = (new ParquetLoader(is_string($path) ? path_real($path) : $path))->withCompressions($compressions);
 
     if ($options !== null) {
         $loader->withOptions($options);
@@ -82,7 +85,7 @@ function to_parquet(
  * @return \Generator<T>
  */
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::HELPER)]
-function array_to_generator(array $data): \Generator
+function array_to_generator(array $data): Generator
 {
     foreach ($data as $row) {
         yield $row;
@@ -90,7 +93,7 @@ function array_to_generator(array $data): \Generator
 }
 
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::HELPER)]
-function empty_generator(): \Generator
+function empty_generator(): Generator
 {
     yield from [];
 }

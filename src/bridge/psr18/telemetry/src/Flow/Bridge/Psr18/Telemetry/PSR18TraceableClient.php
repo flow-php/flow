@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Psr18\Telemetry;
 
+use DateTimeImmutable;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
@@ -12,6 +13,7 @@ use Flow\Telemetry\Tracer\Tracer;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Throwable;
 
 final readonly class PSR18TraceableClient implements ClientInterface
 {
@@ -62,8 +64,8 @@ final readonly class PSR18TraceableClient implements ClientInterface
             }
 
             return $response;
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;

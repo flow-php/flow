@@ -10,6 +10,8 @@ use Flow\PostgreSql\Protobuf\AST\RangeFunction;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Expression\FunctionCall;
 
+use function count;
+
 /**
  * Represents a table-valued function: generate_series(1, 10), unnest(array), etc.
  * Supports WITH ORDINALITY to add row numbering.
@@ -35,7 +37,7 @@ final readonly class TableFunction implements TableReference
 
         $functions = $rangeFunction->getFunctions();
 
-        if (\count($functions) === 0) {
+        if (count($functions) === 0) {
             throw InvalidAstException::missingRequiredField('functions', 'RangeFunction');
         }
 
@@ -48,7 +50,7 @@ final readonly class TableFunction implements TableReference
 
         $items = $list->getItems();
 
-        if (\count($items) === 0) {
+        if (count($items) === 0) {
             throw InvalidAstException::invalidFieldValue('functions', 'RangeFunction', 'List cannot be empty');
         }
 

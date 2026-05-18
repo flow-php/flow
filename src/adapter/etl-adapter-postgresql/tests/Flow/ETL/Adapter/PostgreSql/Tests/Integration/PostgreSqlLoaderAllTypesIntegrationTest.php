@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Integration;
 
+use DateInterval;
+use DateTimeImmutable;
+use DateTimeInterface;
+use DOMDocument;
 use Flow\ETL\Adapter\PostgreSql\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Adapter\PostgreSql\Tests\IntegrationTestCase;
 
@@ -51,6 +55,9 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function is_string;
+use function json_decode;
+use function sprintf;
 
 final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
 {
@@ -86,15 +93,15 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
 
     public function test_inserts_all_entry_types(): void
     {
-        $date = new \DateTimeImmutable('2024-01-15');
-        $dateTime = new \DateTimeImmutable('2024-01-15 10:30:00+00:00');
-        $time = new \DateInterval('PT10H30M15S');
+        $date = new DateTimeImmutable('2024-01-15');
+        $dateTime = new DateTimeImmutable('2024-01-15 10:30:00+00:00');
+        $time = new DateInterval('PT10H30M15S');
         $uuid = '550e8400-e29b-41d4-a716-446655440000';
 
-        $xmlDoc = new \DOMDocument();
+        $xmlDoc = new DOMDocument();
         $xmlDoc->loadXML('<root><item>test</item></root>');
 
-        $xmlElementDoc = new \DOMDocument();
+        $xmlElementDoc = new DOMDocument();
         $xmlElementDoc->loadXML('<root><item id="elem">element</item></root>');
         $xmlElement = $xmlElementDoc->getElementsByTagName('item')->item(0);
 
@@ -141,24 +148,24 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
         static::assertTrue($row['col_boolean']);
         static::assertSame(
             '2024-01-15',
-            $row['col_date'] instanceof \DateTimeInterface ? $row['col_date']->format('Y-m-d') : $row['col_date'],
+            $row['col_date'] instanceof DateTimeInterface ? $row['col_date']->format('Y-m-d') : $row['col_date'],
         );
         static::assertStringStartsWith(
             '2024-01-15',
-            $row['col_datetime'] instanceof \DateTimeInterface // @phpstan-ignore argument.type
+            $row['col_datetime'] instanceof DateTimeInterface // @phpstan-ignore argument.type
                 ? $row['col_datetime']->format('Y-m-d H:i:s')
                 : $row['col_datetime'],
         );
         static::assertSame(
             '10:30:15',
-            $row['col_time'] instanceof \DateInterval
-                ? \sprintf('%02d:%02d:%02d', $row['col_time']->h, $row['col_time']->i, $row['col_time']->s)
+            $row['col_time'] instanceof DateInterval
+                ? sprintf('%02d:%02d:%02d', $row['col_time']->h, $row['col_time']->i, $row['col_time']->s)
                 : $row['col_time'],
         );
         static::assertSame($uuid, $row['col_uuid']);
         static::assertEquals(
             ['key' => 'value', 'number' => 123],
-            \is_string($row['col_json']) ? \json_decode($row['col_json'], true) : $row['col_json'],
+            is_string($row['col_json']) ? json_decode($row['col_json'], true) : $row['col_json'],
         );
         static::assertStringContainsString('<root><item>test</item></root>', $row['col_xml']); // @phpstan-ignore argument.type
         static::assertStringContainsString('<item id="elem">element</item>', $row['col_xml_element']); // @phpstan-ignore argument.type
@@ -167,15 +174,15 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
         static::assertSame('one', $row['col_enum']);
         static::assertEquals(
             [1, 2, 3],
-            \is_string($row['col_list']) ? \json_decode($row['col_list'], true) : $row['col_list'],
+            is_string($row['col_list']) ? json_decode($row['col_list'], true) : $row['col_list'],
         );
         static::assertEquals(
             ['a' => 1, 'b' => 2],
-            \is_string($row['col_map']) ? \json_decode($row['col_map'], true) : $row['col_map'],
+            is_string($row['col_map']) ? json_decode($row['col_map'], true) : $row['col_map'],
         );
         static::assertEquals(
             ['name' => 'John', 'age' => 30],
-            \is_string($row['col_structure']) ? \json_decode($row['col_structure'], true) : $row['col_structure'],
+            is_string($row['col_structure']) ? json_decode($row['col_structure'], true) : $row['col_structure'],
         );
     }
 

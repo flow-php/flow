@@ -13,12 +13,13 @@ use Flow\Parquet\ParquetFile\Page\Header\Type;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\Writer\PageContainer;
 use Flow\Parquet\Writer\PageContainers;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class PageContainersTest extends TestCase
 {
-    public static function buffer_size_provider(): \Generator
+    public static function buffer_size_provider(): Generator
     {
         yield 'small buffer' => [10, 20];
         yield 'medium buffer' => [100, 200];
@@ -26,7 +27,7 @@ final class PageContainersTest extends TestCase
         yield 'empty buffer' => [0, 0];
     }
 
-    public static function container_count_provider(): \Generator
+    public static function container_count_provider(): Generator
     {
         yield 'empty' => [0];
         yield 'single' => [1];
@@ -34,7 +35,7 @@ final class PageContainersTest extends TestCase
         yield 'many' => [10];
     }
 
-    public static function encoding_types_provider(): \Generator
+    public static function encoding_types_provider(): Generator
     {
         yield 'plain' => [Encodings::PLAIN];
         yield 'rle' => [Encodings::RLE];
@@ -43,7 +44,7 @@ final class PageContainersTest extends TestCase
         yield 'delta_binary_packed' => [Encodings::DELTA_BINARY_PACKED];
     }
 
-    public static function page_types_provider(): \Generator
+    public static function page_types_provider(): Generator
     {
         yield 'data page' => [Type::DATA_PAGE, 'data page container'];
         yield 'data page v2' => [Type::DATA_PAGE_V2, 'data page v2 container'];

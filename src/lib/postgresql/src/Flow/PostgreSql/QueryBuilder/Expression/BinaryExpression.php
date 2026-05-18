@@ -10,6 +10,8 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
+use function count;
+
 /**
  * Binary expression: left op right (e.g., a + b, x * y, s1 || s2).
  */
@@ -46,11 +48,11 @@ final readonly class BinaryExpression implements Expression
 
         $name = $aExpr->getName();
 
-        if (\count($name) === 0) {
+        if (count($name) === 0) {
             throw InvalidAstException::missingRequiredField('name', 'A_Expr');
         }
 
-        $operatorNode = $name[\count($name) - 1];
+        $operatorNode = $name[count($name) - 1];
         $operatorString = $operatorNode->getString();
 
         if ($operatorString === null) {

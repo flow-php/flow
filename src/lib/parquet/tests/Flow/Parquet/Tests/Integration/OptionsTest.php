@@ -10,6 +10,8 @@ use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
 use PHPUnit\Framework\TestCase;
 
+use function count;
+
 final class OptionsTest extends TestCase
 {
     public function test_columns_compressions_integration_with_compressions_enum(): void
@@ -71,7 +73,7 @@ final class OptionsTest extends TestCase
         // Verify compressions
         $columnsCompressions = $options->getArray(Option::COLUMNS_COMPRESSIONS);
         static::assertIsArray($columnsCompressions);
-        static::assertSame(6, \count($columnsCompressions));
+        static::assertSame(6, count($columnsCompressions));
         static::assertSame(Compressions::SNAPPY, $columnsCompressions['user.id']);
         static::assertSame(Compressions::LZ4, $columnsCompressions['orders.list.element.id']);
         static::assertSame(Compressions::UNCOMPRESSED, $columnsCompressions['metadata.key_value.value']);
@@ -79,7 +81,7 @@ final class OptionsTest extends TestCase
         // Verify encodings
         $columnsEncodings = $options->getArray(Option::COLUMNS_ENCODINGS);
         static::assertIsArray($columnsEncodings);
-        static::assertSame(6, \count($columnsEncodings));
+        static::assertSame(6, count($columnsEncodings));
         static::assertSame(Encodings::DELTA_BINARY_PACKED, $columnsEncodings['user.id']);
         static::assertSame(Encodings::RLE_DICTIONARY, $columnsEncodings['user.profile.name']);
         static::assertSame(Encodings::PLAIN, $columnsEncodings['metadata.key_value.value']);
@@ -198,12 +200,12 @@ final class OptionsTest extends TestCase
 
         $columnsCompressions = $options->getArray(Option::COLUMNS_COMPRESSIONS);
         static::assertIsArray($columnsCompressions);
-        static::assertSame(0, \count($columnsCompressions));
+        static::assertSame(0, count($columnsCompressions));
         static::assertTrue($options->has(Option::COLUMNS_COMPRESSIONS));
 
         $columnsEncodings = $options->getArray(Option::COLUMNS_ENCODINGS);
         static::assertIsArray($columnsEncodings);
-        static::assertSame(0, \count($columnsEncodings));
+        static::assertSame(0, count($columnsEncodings));
         static::assertTrue($options->has(Option::COLUMNS_ENCODINGS));
     }
 }

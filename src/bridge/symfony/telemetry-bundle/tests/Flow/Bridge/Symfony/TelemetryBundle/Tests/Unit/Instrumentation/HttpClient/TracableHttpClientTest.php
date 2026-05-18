@@ -19,6 +19,7 @@ use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Symfony\Contracts\HttpClient\ChunkInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
@@ -117,7 +118,7 @@ final class TracableHttpClientTest extends TestCase
                 ResponseInterface|iterable $responses,
                 ?float $timeout = null,
             ): ResponseStreamInterface {
-                throw new \RuntimeException('Not implemented');
+                throw new RuntimeException('Not implemented');
             }
 
             /** @param array<string, mixed> $options */
@@ -191,14 +192,14 @@ final class TracableHttpClientTest extends TestCase
             /** @param array<string, mixed> $options */
             public function request(string $method, string $url, array $options = []): ResponseInterface
             {
-                throw new \RuntimeException('Connection timeout');
+                throw new RuntimeException('Connection timeout');
             }
 
             public function stream(
                 ResponseInterface|iterable $responses,
                 ?float $timeout = null,
             ): ResponseStreamInterface {
-                throw new \RuntimeException('Not implemented');
+                throw new RuntimeException('Not implemented');
             }
 
             /** @param array<string, mixed> $options */
@@ -214,7 +215,7 @@ final class TracableHttpClientTest extends TestCase
 
         try {
             $tracable->request('GET', 'https://api.example.com/users');
-        } catch (\RuntimeException) {
+        } catch (RuntimeException) {
             $exceptionThrown = true;
         }
 
@@ -379,7 +380,7 @@ final class TracableHttpClientTest extends TestCase
             /** @param array<string, mixed> $options */
             public function request(string $method, string $url, array $options = []): ResponseInterface
             {
-                throw new \RuntimeException('Not implemented');
+                throw new RuntimeException('Not implemented');
             }
 
             public function stream(
@@ -469,7 +470,7 @@ final class TracableHttpClientTest extends TestCase
                 ResponseInterface|iterable $responses,
                 ?float $timeout = null,
             ): ResponseStreamInterface {
-                throw new \RuntimeException('Not implemented');
+                throw new RuntimeException('Not implemented');
             }
 
             /** @param array<string, mixed> $options */

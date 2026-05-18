@@ -9,6 +9,11 @@ use Flow\Website\Service\Manifest\PackageMeta;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
+use function file_put_contents;
+use function json_encode;
+use function sys_get_temp_dir;
+use function tempnam;
+
 final class PackageMetaTest extends TestCase
 {
     /**
@@ -16,9 +21,9 @@ final class PackageMetaTest extends TestCase
      */
     public function buildMeta(array $packages): PackageMeta
     {
-        $path = \tempnam(\sys_get_temp_dir(), 'flow-manifest-');
+        $path = tempnam(sys_get_temp_dir(), 'flow-manifest-');
         self::assertNotFalse($path);
-        \file_put_contents($path, \json_encode(['packages' => $packages]));
+        file_put_contents($path, json_encode(['packages' => $packages]));
 
         return new PackageMeta(new Manifest($path));
     }

@@ -16,8 +16,11 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function file_exists;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
+use function realpath;
+use function sprintf;
 
 #[AsCommand(
     name: 'flow:migrations:diff',
@@ -65,15 +68,15 @@ final class DiffCommand extends Command
         }
 
         $directory = $configuration->migrationsDirectory . '/' . $version . ($name !== null ? '_' . $name : '');
-        $realDirectory = \realpath($directory) ?: $directory;
+        $realDirectory = realpath($directory) ?: $directory;
         $migrationPath = $realDirectory . '/' . $configuration->migrationFileName;
         $rollbackPath = $realDirectory . '/' . $configuration->rollbackFileName;
 
-        $io->success(\sprintf('Generated migration: %s', $version));
+        $io->success(sprintf('Generated migration: %s', $version));
 
         $rows = [['<fg=cyan>Migration</>', $migrationPath]];
 
-        if (\file_exists($rollbackPath)) {
+        if (file_exists($rollbackPath)) {
             $rows[] = ['<fg=cyan>Rollback</>', $rollbackPath];
         }
 

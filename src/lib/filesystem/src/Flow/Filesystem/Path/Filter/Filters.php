@@ -7,6 +7,8 @@ namespace Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Path\Filter;
 
+use function array_merge;
+
 final readonly class Filters implements Filter
 {
     /**
@@ -32,6 +34,6 @@ final readonly class Filters implements Filter
 
     public function add(Filter $filter): self
     {
-        return new self(...\array_merge($this->filters, [$filter]));
+        return new self(...array_merge($this->filters, [$filter]));
     }
 }

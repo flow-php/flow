@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Meter;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\Meter\Exemplar;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class ExemplarTest extends TestCase
 {
-    public static function attributeTypeProvider(): \Generator
+    public static function attributeTypeProvider(): Generator
     {
         yield 'string attribute' => [['key' => 'value']];
         yield 'int attribute' => [['count' => 100]];
@@ -26,7 +28,7 @@ final class ExemplarTest extends TestCase
         ]];
     }
 
-    public static function valueTypeProvider(): \Generator
+    public static function valueTypeProvider(): Generator
     {
         yield 'integer' => [42];
         yield 'zero' => [0];
@@ -40,7 +42,7 @@ final class ExemplarTest extends TestCase
     {
         $exemplar = new Exemplar(
             value: $value,
-            timestamp: new \DateTimeImmutable(),
+            timestamp: new DateTimeImmutable(),
             traceId: TraceId::generate(),
             spanId: SpanId::generate(),
         );
@@ -56,7 +58,7 @@ final class ExemplarTest extends TestCase
     {
         $exemplar = new Exemplar(
             value: 1,
-            timestamp: new \DateTimeImmutable(),
+            timestamp: new DateTimeImmutable(),
             traceId: TraceId::generate(),
             spanId: SpanId::generate(),
             filteredAttributes: $attributes,
@@ -67,7 +69,7 @@ final class ExemplarTest extends TestCase
 
     public function test_creates_exemplar_with_all_properties(): void
     {
-        $timestamp = new \DateTimeImmutable('2024-01-15 10:30:00');
+        $timestamp = new DateTimeImmutable('2024-01-15 10:30:00');
         $traceId = TraceId::generate();
         $spanId = SpanId::generate();
 
@@ -90,7 +92,7 @@ final class ExemplarTest extends TestCase
     {
         $exemplar = new Exemplar(
             value: 42,
-            timestamp: new \DateTimeImmutable(),
+            timestamp: new DateTimeImmutable(),
             traceId: TraceId::generate(),
             spanId: SpanId::generate(),
         );
@@ -118,7 +120,7 @@ final class ExemplarTest extends TestCase
 
     public function test_normalize_from_array_round_trip(): void
     {
-        $timestamp = new \DateTimeImmutable('2024-01-15 10:30:00');
+        $timestamp = new DateTimeImmutable('2024-01-15 10:30:00');
         $traceId = TraceId::generate();
         $spanId = SpanId::generate();
 
@@ -142,7 +144,7 @@ final class ExemplarTest extends TestCase
 
     public function test_normalize_returns_array_representation(): void
     {
-        $timestamp = new \DateTimeImmutable('2024-01-15 10:30:00');
+        $timestamp = new DateTimeImmutable('2024-01-15 10:30:00');
         $traceId = TraceId::generate();
         $spanId = SpanId::generate();
 

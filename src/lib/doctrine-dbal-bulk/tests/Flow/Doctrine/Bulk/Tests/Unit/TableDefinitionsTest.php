@@ -12,12 +12,13 @@ use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Flow\Doctrine\Bulk\TableDefinition;
 use Flow\Doctrine\Bulk\TableDefinitions;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class TableDefinitionsTest extends TestCase
 {
-    public static function provide_table_names(): \Generator
+    public static function provide_table_names(): Generator
     {
         yield 'simple name' => ['users'];
         yield 'with underscore' => ['user_profiles'];

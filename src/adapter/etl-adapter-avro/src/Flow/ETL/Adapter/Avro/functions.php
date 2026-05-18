@@ -13,15 +13,16 @@ use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
 
 use function Flow\Filesystem\DSL\path_real;
+use function is_string;
 
 #[DocumentationDSL(module: Module::AVRO, type: Type::EXTRACTOR)]
 function from_avro(Path|string $path): AvroExtractor
 {
-    return new AvroExtractor(\is_string($path) ? path_real($path) : $path);
+    return new AvroExtractor(is_string($path) ? path_real($path) : $path);
 }
 
 #[DocumentationDSL(module: Module::AVRO, type: Type::LOADER)]
 function to_avro(Path|string $path, ?Schema $schema = null): AvroLoader
 {
-    return new AvroLoader(\is_string($path) ? path_real($path) : $path, $schema);
+    return new AvroLoader(is_string($path) ? path_real($path) : $path, $schema);
 }

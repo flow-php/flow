@@ -10,6 +10,9 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Iterator;
+
+use function array_key_exists;
 
 final readonly class ReadColumnData
 {
@@ -33,14 +36,14 @@ final readonly class ReadColumnData
         }
 
         if ($column instanceof FlatColumn) {
-            if (!\array_key_exists($column->flatPath(), $indexedFlatValues)) {
+            if (!array_key_exists($column->flatPath(), $indexedFlatValues)) {
                 throw new InvalidArgumentException("Flat column '{$column->flatPath()}' is missing in flat values.");
             }
         }
 
         if ($column instanceof NestedColumn) {
             foreach ($column->childrenFlat() as $columnChild) {
-                if (!\array_key_exists($columnChild->flatPath(), $indexedFlatValues)) {
+                if (!array_key_exists($columnChild->flatPath(), $indexedFlatValues)) {
                     throw new InvalidArgumentException(
                         "Flat column '{$columnChild->flatPath()}' is missing in flat values.",
                     );
@@ -55,7 +58,7 @@ final readonly class ReadColumnData
     /**
      * @return \Iterator<array-key, FlatValue>
      */
-    public function iterator(FlatColumn $column): \Iterator
+    public function iterator(FlatColumn $column): Iterator
     {
         return $this->flatValues[$column->flatPath()]->iterator();
     }

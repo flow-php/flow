@@ -4,9 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native;
 
+use DateInterval;
+use DateTimeImmutable;
+use DOMElement;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+
+use function is_array;
+use function is_float;
+use function is_scalar;
 
 /**
  * @implements Type<float>
@@ -29,22 +36,22 @@ final readonly class FloatType implements Type
             return $value;
         }
 
-        if ($value instanceof \DOMElement) {
+        if ($value instanceof DOMElement) {
             return (float) $value->nodeValue;
         }
 
-        if ($value instanceof \DateTimeImmutable) {
+        if ($value instanceof DateTimeImmutable) {
             return (float) $value->format('Uu');
         }
 
-        if ($value instanceof \DateInterval) {
-            $reference = new \DateTimeImmutable();
+        if ($value instanceof DateInterval) {
+            $reference = new DateTimeImmutable();
             $endTime = $reference->add($value);
 
             return (float) $endTime->format('Uu') - (float) $reference->format('Uu');
         }
 
-        if (\is_scalar($value) || null === $value || \is_array($value)) {
+        if (is_scalar($value) || null === $value || is_array($value)) {
             return (float) $value;
         }
 
@@ -53,7 +60,7 @@ final readonly class FloatType implements Type
 
     public function isValid(mixed $value): bool
     {
-        return \is_float($value);
+        return is_float($value);
     }
 
     public function normalize(): array

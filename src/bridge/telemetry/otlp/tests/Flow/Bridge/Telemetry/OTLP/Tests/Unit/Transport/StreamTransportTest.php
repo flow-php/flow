@@ -12,8 +12,25 @@ use Flow\Telemetry\Signal\SignalType;
 use Flow\Telemetry\Tests\Mother\LogEntryMother;
 use Flow\Telemetry\Tests\Mother\MetricMother;
 use Flow\Telemetry\Tests\Mother\SpanMother;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
+
+use function array_filter;
+use function array_values;
+use function explode;
+use function floor;
+use function json_decode;
+use function rewind;
+use function rtrim;
+use function stream_get_contents;
+use function stream_set_chunk_size;
+use function stream_wrapper_register;
+use function stream_wrapper_unregister;
+use function strlen;
+use function substr_count;
+
+use const JSON_THROW_ON_ERROR;
 
 final class StreamTransportTest extends TestCase
 {
@@ -36,9 +53,9 @@ final class StreamTransportTest extends TestCase
         $transport->send(Signals::logs([LogEntryMother::deterministic('first', Severity::INFO)]));
         $transport->send(Signals::logs([LogEntryMother::deterministic('second', Severity::WARN)]));
 
-        \rewind($transport->stream());
-        $contents = (string) \stream_get_contents($transport->stream());
-        $lines = \array_values(\array_filter(\explode("\n", $contents), static fn(string $l): bool => $l !== ''));
+        rewind($transport->stream());
+        $contents = (string) stream_get_contents($transport->stream());
+        $lines = array_values(array_filter(explode("\n", $contents), static fn(string $l): bool => $l !== ''));
 
         static::assertCount(2, $lines);
     }
@@ -47,14 +64,14 @@ final class StreamTransportTest extends TestCase
     {
         $transport = new StreamTransport('php://memory');
 
-        $previous = \stream_set_chunk_size($transport->stream(), 8192);
+        $previous = stream_set_chunk_size($transport->stream(), 8192);
 
         static::assertSame(StreamTransport::STREAM_CHUNK_SIZE, $previous);
     }
 
     public function test_empty_destination_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('non-empty');
 
         new StreamTransport('');
@@ -68,13 +85,13 @@ final class StreamTransportTest extends TestCase
         $transport->send(Signals::metrics([]));
         $transport->send(Signals::traces([]));
 
-        \rewind($transport->stream());
-        static::assertSame('', (string) \stream_get_contents($transport->stream()));
+        rewind($transport->stream());
+        static::assertSame('', (string) stream_get_contents($transport->stream()));
     }
 
     public function test_failed_write_throws(): void
     {
-        \stream_wrapper_register('flow-failwrite', FailingWriteStreamWrapper::class);
+        stream_wrapper_register('flow-failwrite', FailingWriteStreamWrapper::class);
 
         try {
             $transport = new StreamTransport('flow-failwrite://buf');
@@ -84,7 +101,7 @@ final class StreamTransportTest extends TestCase
 
             $transport->send(Signals::logs([LogEntryMother::deterministic('hello', Severity::INFO)]));
         } finally {
-            \stream_wrapper_unregister('flow-failwrite');
+            stream_wrapper_unregister('flow-failwrite');
         }
     }
 
@@ -92,7 +109,7 @@ final class StreamTransportTest extends TestCase
     #[TestWith([01000])]
     public function test_out_of_range_file_permissions_throw(int $perm): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('between 0 and 0777');
 
         new StreamTransport('php://memory', filePermissions: $perm);
@@ -100,7 +117,7 @@ final class StreamTransportTest extends TestCase
 
     public function test_partial_write_throws(): void
     {
-        \stream_wrapper_register('flow-partial', PartialWriteStreamWrapper::class);
+        stream_wrapper_register('flow-partial', PartialWriteStreamWrapper::class);
 
         try {
             $transport = new StreamTransport('flow-partial://buf');
@@ -112,7 +129,7 @@ final class StreamTransportTest extends TestCase
 
             $transport->send(Signals::logs([LogEntryMother::deterministic('hello', Severity::INFO)]));
         } finally {
-            \stream_wrapper_unregister('flow-partial');
+            stream_wrapper_unregister('flow-partial');
         }
     }
 
@@ -154,14 +171,14 @@ final class StreamTransportTest extends TestCase
             SignalType::TRACES => Signals::traces([SpanMother::withName('span')]),
         });
 
-        \rewind($transport->stream());
-        $contents = (string) \stream_get_contents($transport->stream());
+        rewind($transport->stream());
+        $contents = (string) stream_get_contents($transport->stream());
 
         static::assertStringEndsWith("\n", $contents);
-        static::assertSame(1, \substr_count($contents, "\n"));
+        static::assertSame(1, substr_count($contents, "\n"));
 
         /** @var array<string, mixed> $decoded */
-        $decoded = \json_decode(\rtrim($contents, "\n"), true, flags: \JSON_THROW_ON_ERROR);
+        $decoded = json_decode(rtrim($contents, "\n"), true, flags: JSON_THROW_ON_ERROR);
         static::assertArrayHasKey($expectedKey, $decoded);
     }
 }
@@ -208,7 +225,7 @@ final class PartialWriteStreamWrapper
 
     public function stream_write(string $data): int
     {
-        return (int) \floor(\strlen($data) / 2);
+        return (int) floor(strlen($data) / 2);
     }
 
     public function url_stat(string $path, int $flags): false

@@ -15,6 +15,8 @@ use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
+use function array_values;
+
 final readonly class CreateProcedureBuilder implements
     CreateProcedureArgsStep,
     CreateProcedureFinalStep,
@@ -43,7 +45,7 @@ final readonly class CreateProcedureBuilder implements
 
     public function arguments(FunctionArgument ...$args): CreateProcedureOptionsStep
     {
-        return new self($this->name, $this->schema, $this->replace, \array_values($args), $this->options);
+        return new self($this->name, $this->schema, $this->replace, array_values($args), $this->options);
     }
 
     public function as(string $definition): CreateProcedureFinalStep

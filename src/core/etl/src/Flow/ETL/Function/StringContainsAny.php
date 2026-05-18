@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function count;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
 use function Symfony\Component\String\s;
@@ -36,7 +37,7 @@ final class StringContainsAny extends ScalarFunctionChain
             return false;
         }
 
-        if ($needles === null || \count($needles) === 0) {
+        if ($needles === null || count($needles) === 0) {
             $context
                 ->functions()
                 ->invalidResult(

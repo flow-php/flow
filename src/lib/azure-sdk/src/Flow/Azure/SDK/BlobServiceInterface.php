@@ -22,6 +22,7 @@ use Flow\Azure\SDK\BlobService\PutBlockBlob\PutBlockBlobOptions;
 use Flow\Azure\SDK\BlobService\PutBlockBlobBlock\PutBlockBlobBlockOptions;
 use Flow\Azure\SDK\BlobService\PutBlockBlobBlockList\PutBlockBlobBlockListOptions;
 use Flow\Azure\SDK\BlobService\PutBlockBlobBlockList\SimpleXMLSerializer;
+use Generator;
 
 interface BlobServiceInterface
 {
@@ -48,7 +49,7 @@ interface BlobServiceInterface
     /**
      * @return \Generator<Blob>
      */
-    public function listBlobs(ListBlobOptions $options = new ListBlobOptions()): \Generator;
+    public function listBlobs(ListBlobOptions $options = new ListBlobOptions()): Generator;
 
     /**
      * @param null|resource|string $content

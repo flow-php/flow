@@ -4,14 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem;
 
+use ArrayAccess;
+use ArrayIterator;
+use Countable;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use IteratorAggregate;
+use Traversable;
+
+use function array_key_exists;
+use function array_values;
+use function count;
+use function hash;
+use function uasort;
 
 /**
  * @implements \ArrayAccess<int, Partition>
  * @implements \IteratorAggregate<int, Partition>
  */
-final readonly class Partitions implements \ArrayAccess, \Countable, \IteratorAggregate
+final readonly class Partitions implements ArrayAccess, Countable, IteratorAggregate
 {
     /**
      * @var array<int, Partition>
@@ -20,12 +31,12 @@ final readonly class Partitions implements \ArrayAccess, \Countable, \IteratorAg
 
     public function __construct(Partition ...$partitions)
     {
-        $this->partitions = \array_values($partitions);
+        $this->partitions = array_values($partitions);
     }
 
     public function count(): int
     {
-        return \count($this->partitions);
+        return count($this->partitions);
     }
 
     public function get(string $name): Partition
@@ -39,9 +50,9 @@ final readonly class Partitions implements \ArrayAccess, \Countable, \IteratorAg
         throw new InvalidArgumentException("Partition with name: '{$name}' not found");
     }
 
-    public function getIterator(): \Traversable
+    public function getIterator(): Traversable
     {
-        return new \ArrayIterator($this->partitions);
+        return new ArrayIterator($this->partitions);
     }
 
     public function has(string $name): bool
@@ -58,7 +69,7 @@ final readonly class Partitions implements \ArrayAccess, \Countable, \IteratorAg
     public function id(): string
     {
         $partitions = $this->partitions;
-        \uasort($partitions, static fn(Partition $a, Partition $b) => $a->name <=> $b->name);
+        uasort($partitions, static fn(Partition $a, Partition $b) => $a->name <=> $b->name);
 
         $id = '|';
 
@@ -66,12 +77,12 @@ final readonly class Partitions implements \ArrayAccess, \Countable, \IteratorAg
             $id .= $partition->name . '_' . $partition->value . '|';
         }
 
-        return \hash('xxh128', $id);
+        return hash('xxh128', $id);
     }
 
     public function offsetExists(mixed $offset): bool
     {
-        return \array_key_exists($offset, $this->partitions);
+        return array_key_exists($offset, $this->partitions);
     }
 
     /**

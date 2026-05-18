@@ -4,11 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
+use InvalidArgumentException;
+use ReflectionParameter;
+use Throwable;
+
+use function addslashes;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function is_array;
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_object;
+use function is_string;
+use function str_replace;
 
 final readonly class ParameterModel
 {
@@ -55,7 +67,7 @@ final readonly class ParameterModel
         );
     }
 
-    public static function fromReflection(\ReflectionParameter $reflectionParameter): self
+    public static function fromReflection(ReflectionParameter $reflectionParameter): self
     {
         $defaultValue = null;
         $hasDefaultValue = false;
@@ -64,14 +76,14 @@ final readonly class ParameterModel
             $default = $reflectionParameter->getDefaultValue();
             $hasDefaultValue = true;
             $defaultValue = self::exportDefaultValue($default);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $hasDefaultValue = false;
         }
 
         $reflectionType = $reflectionParameter->getType();
 
         if ($reflectionType === null) {
-            throw new \InvalidArgumentException('ReflectionType must be instance of ReflectionNamedType');
+            throw new InvalidArgumentException('ReflectionType must be instance of ReflectionNamedType');
         }
 
         return new self(
@@ -105,22 +117,22 @@ final readonly class ParameterModel
             return 'null';
         }
 
-        if (\is_bool($value)) {
+        if (is_bool($value)) {
             return $value ? 'true' : 'false';
         }
 
-        if (\is_string($value)) {
-            $escaped = \addslashes($value);
-            $escaped = \str_replace(["\n", "\r", "\t"], ['\\n', '\\r', '\\t'], $escaped);
+        if (is_string($value)) {
+            $escaped = addslashes($value);
+            $escaped = str_replace(["\n", "\r", "\t"], ['\\n', '\\r', '\\t'], $escaped);
 
             return "'" . $escaped . "'";
         }
 
-        if (\is_int($value) || \is_float($value)) {
+        if (is_int($value) || is_float($value)) {
             return (string) $value;
         }
 
-        if (\is_array($value)) {
+        if (is_array($value)) {
             if (empty($value)) {
                 return '[]';
             }
@@ -128,7 +140,7 @@ final readonly class ParameterModel
             return '[...]';
         }
 
-        if (\is_object($value)) {
+        if (is_object($value)) {
             return $value::class . '::...';
         }
 

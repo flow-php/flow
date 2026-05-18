@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Flow\ArrayComparison\Tests\Unit;
 
 use Flow\ArrayComparison\ArraySortByKey;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function json_encode;
+
 final class ArraySortByKeyTest extends TestCase
 {
-    public static function arrays(): \Generator
+    public static function arrays(): Generator
     {
         yield 'simple array' => [
             ['name' => 'one', 'priority' => 'high', 'id' => 1, 'color' => 'red', 'active' => true],
@@ -120,8 +123,8 @@ final class ArraySortByKeyTest extends TestCase
         // serialize to JSON to be sure that array is sorted exactly as expected
 
         static::assertEquals(
-            \json_encode($sorted, JSON_THROW_ON_ERROR),
-            \json_encode((new ArraySortByKey())($origin), JSON_THROW_ON_ERROR),
+            json_encode($sorted, JSON_THROW_ON_ERROR),
+            json_encode((new ArraySortByKey())($origin), JSON_THROW_ON_ERROR),
         );
     }
 }

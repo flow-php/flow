@@ -7,6 +7,12 @@ namespace Flow\ETL\Config\Sort;
 use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Sort\SortAlgorithms;
 
+use function getenv;
+use function ini_get;
+use function is_string;
+
+use const PHP_INT_MAX;
+
 final class SortConfigBuilder
 {
     public const int DEFAULT_SORT_MEMORY_PERCENTAGE = 70;
@@ -27,15 +33,15 @@ final class SortConfigBuilder
     public function build(): SortConfig
     {
         if ($this->sortMemoryLimit === null) {
-            $sortMemory = \getenv(SortConfig::SORT_MAX_MEMORY_ENV);
+            $sortMemory = getenv(SortConfig::SORT_MAX_MEMORY_ENV);
 
-            if (\is_string($sortMemory)) {
+            if (is_string($sortMemory)) {
                 $this->sortMemoryLimit = Unit::fromString($sortMemory);
             } else {
-                $memoryLimit = \ini_get('memory_limit');
+                $memoryLimit = ini_get('memory_limit');
 
                 if ($memoryLimit === '-1') {
-                    $this->sortMemoryLimit = Unit::fromBytes(\PHP_INT_MAX);
+                    $this->sortMemoryLimit = Unit::fromBytes(PHP_INT_MAX);
                 } else {
                     $this->sortMemoryLimit = Unit::fromString(
                         $memoryLimit,

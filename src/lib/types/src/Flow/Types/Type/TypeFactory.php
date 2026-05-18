@@ -17,6 +17,7 @@ use Flow\Types\Type\Native\EnumType;
 use Flow\Types\Type\Native\IntersectionType;
 use Flow\Types\Type\Native\UnionType;
 
+use function array_key_exists;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_callable;
@@ -41,6 +42,7 @@ use function Flow\Types\DSL\type_time_zone;
 use function Flow\Types\DSL\type_uuid;
 use function Flow\Types\DSL\type_xml;
 use function Flow\Types\DSL\type_xml_element;
+use function mb_strtolower;
 
 final class TypeFactory
 {
@@ -53,7 +55,7 @@ final class TypeFactory
     {
         type_array()->assert($data);
 
-        if (!\array_key_exists('type', $data)) {
+        if (!array_key_exists('type', $data)) {
             throw new InvalidArgumentException("Missing 'type' key in type definition");
         }
 
@@ -105,7 +107,7 @@ final class TypeFactory
      */
     public static function fromString(string $name): Type
     {
-        return match (\mb_strtolower($name)) {
+        return match (mb_strtolower($name)) {
             'int', 'integer' => self::fromArray(['type' => 'integer', 'scalar_type' => 'integer']),
             'float' => self::fromArray(['type' => 'float', 'scalar_type' => 'float']),
             'string' => self::fromArray(['type' => 'string', 'scalar_type' => 'string']),

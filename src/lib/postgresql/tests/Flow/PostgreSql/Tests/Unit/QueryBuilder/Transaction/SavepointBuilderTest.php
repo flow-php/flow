@@ -13,11 +13,14 @@ use Flow\PostgreSql\Protobuf\AST\TransactionStmtKind;
 use Flow\PostgreSql\QueryBuilder\Transaction\SavepointBuilder;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
+use function function_exists;
+
 final class SavepointBuilderTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped(
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );
@@ -37,7 +40,7 @@ final class SavepointBuilderTest extends TestCase
 
     public function test_release_savepoint_deparsed(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -60,7 +63,7 @@ final class SavepointBuilderTest extends TestCase
 
     public function test_savepoint_deparsed(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 

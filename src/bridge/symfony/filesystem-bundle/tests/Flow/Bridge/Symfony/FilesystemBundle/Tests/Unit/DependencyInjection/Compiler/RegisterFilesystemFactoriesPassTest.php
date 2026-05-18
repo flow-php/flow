@@ -14,6 +14,9 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 
+use function array_map;
+use function sort;
+
 final class RegisterFilesystemFactoriesPassTest extends TestCase
 {
     public function test_does_nothing_when_registry_definition_absent(): void
@@ -45,8 +48,8 @@ final class RegisterFilesystemFactoriesPassTest extends TestCase
         static::assertCount(2, $argument);
         static::assertContainsOnlyInstancesOf(Reference::class, $argument);
 
-        $ids = \array_map(static fn(Reference $r): string => (string) $r, $argument);
-        \sort($ids);
+        $ids = array_map(static fn(Reference $r): string => (string) $r, $argument);
+        sort($ids);
         static::assertSame(['.flow.filesystem.factory.file', '.flow.filesystem.factory.memory'], $ids);
     }
 

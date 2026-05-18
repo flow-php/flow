@@ -9,8 +9,10 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
 
+use function dirname;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\rows;
+use function iterator_to_array;
 
 /**
  * Base test case for testing FLow, designed mostly for unit tests.
@@ -26,7 +28,7 @@ abstract class FlowTestCase extends TestCase
     ): void {
         $flowContext ??= flow_context();
 
-        static::assertCount($expectedCount, \iterator_to_array($extractor->extract($flowContext)), $message);
+        static::assertCount($expectedCount, iterator_to_array($extractor->extract($flowContext)), $message);
     }
 
     final public static function assertExtractedBatchesSize(
@@ -104,6 +106,6 @@ abstract class FlowTestCase extends TestCase
      */
     public function repositoryRoot(): string
     {
-        return \dirname(__DIR__, 7);
+        return dirname(__DIR__, 7);
     }
 }

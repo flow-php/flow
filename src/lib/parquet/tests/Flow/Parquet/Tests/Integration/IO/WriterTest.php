@@ -8,6 +8,7 @@ use Composer\InstalledVersions;
 use Faker\Factory;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
 use Flow\Parquet\Consts;
+use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
@@ -20,17 +21,25 @@ use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
+use RuntimeException;
 
+use function array_map;
+use function file_exists;
 use function Flow\ETL\DSL\generate_random_int;
 use function Flow\ETL\DSL\generate_random_string;
 use function Flow\Filesystem\DSL\path;
+use function fopen;
+use function iterator_to_array;
+use function mkdir;
+use function range;
+use function unlink;
 
 class WriterTest extends ParquetIntegrationTestCase
 {
     protected function setUp(): void
     {
-        if (!\file_exists(__DIR__ . '/var')) {
-            \mkdir(__DIR__ . '/var');
+        if (!file_exists(__DIR__ . '/var')) {
+            mkdir(__DIR__ . '/var');
         }
     }
 
@@ -39,7 +48,7 @@ class WriterTest extends ParquetIntegrationTestCase
     {
         $writer = new Writer(engine: $engine);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Writer is not open');
 
         $writer->close();
@@ -74,7 +83,7 @@ class WriterTest extends ParquetIntegrationTestCase
 
         $writer->open($path, $schema);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Writer is already open');
 
         $writer->open($path, $schema);
@@ -140,14 +149,14 @@ class WriterTest extends ParquetIntegrationTestCase
 
         static::assertSame(
             $rows,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
 
-        \unlink($path);
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -155,7 +164,7 @@ class WriterTest extends ParquetIntegrationTestCase
     {
         $writer = new Writer(engine: $engine);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Writer is not open');
 
         $writer->writeBatch([$this->createRow()]);
@@ -170,7 +179,7 @@ class WriterTest extends ParquetIntegrationTestCase
 
         $schema = Schema::with($column = FlatColumn::int32('int32'));
 
-        $writer->write($path, $schema, \array_map(static fn($i) => ['int32' => $i], \range(1, 100)));
+        $writer->write($path, $schema, array_map(static fn($i) => ['int32' => $i], range(1, 100)));
 
         $statistics = (new Reader(engine: $engine))
             ->read($path)
@@ -186,7 +195,7 @@ class WriterTest extends ParquetIntegrationTestCase
         static::assertSame(0, $statistics->nullCount());
 
         static::assertFileExists($path);
-        \unlink($path);
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -221,7 +230,7 @@ class WriterTest extends ParquetIntegrationTestCase
         static::assertSame(0, $chunks['all_string']->statistics()?->nullCount());
         static::assertSame(1, $chunks['mixed']->statistics()?->nullCount());
 
-        \unlink($path);
+        unlink($path);
     }
 
     public function test_writing_data_page_v2_statistics(): void
@@ -233,9 +242,9 @@ class WriterTest extends ParquetIntegrationTestCase
 
         $schema = Schema::with($column = FlatColumn::int32('int32'));
 
-        $writer->write($path, $schema, \array_map(static fn($i) => ['int32' => $i], \range(1, 100)));
+        $writer->write($path, $schema, array_map(static fn($i) => ['int32' => $i], range(1, 100)));
 
-        foreach ((new Reader(options: $options, engine: new \Flow\Parquet\Engine\PhpParquetEngine()))
+        foreach ((new Reader(options: $options, engine: new PhpParquetEngine()))
             ->read($path)
             ->pageHeaders() as $pageHeader) {
             $dataPageHeaderV2 = $pageHeader->pageHeader->dataPageHeaderV2();
@@ -251,7 +260,7 @@ class WriterTest extends ParquetIntegrationTestCase
             static::assertSame(0, $statistics->nullCount());
         }
 
-        \unlink($path);
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -276,14 +285,14 @@ class WriterTest extends ParquetIntegrationTestCase
 
         static::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
         static::assertFileExists($path);
-        \unlink($path);
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -307,14 +316,14 @@ class WriterTest extends ParquetIntegrationTestCase
 
         static::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
         static::assertFileExists($path);
-        \unlink($path);
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -328,7 +337,7 @@ class WriterTest extends ParquetIntegrationTestCase
 
         $row = $this->createRow();
 
-        $stream = \fopen($path, 'wb+');
+        $stream = fopen($path, 'wb+');
         $writer->openForStream(new NativeLocalDestinationStream(path($path), $stream), $schema);
         $writer->writeBatch([$row, $row]);
         $writer->writeBatch([$row, $row]);
@@ -340,14 +349,14 @@ class WriterTest extends ParquetIntegrationTestCase
 
         static::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
         static::assertFileExists($path);
-        \unlink($path);
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -391,7 +400,7 @@ class WriterTest extends ParquetIntegrationTestCase
         );
 
         static::assertFileExists($path);
-        \unlink($path);
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -399,7 +408,7 @@ class WriterTest extends ParquetIntegrationTestCase
     {
         $writer = new Writer(engine: $engine);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Writer is not open');
 
         $writer->writeRow($this->createRow());
@@ -419,14 +428,14 @@ class WriterTest extends ParquetIntegrationTestCase
 
         static::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
         static::assertFileExists($path);
-        \unlink($path);
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -450,14 +459,14 @@ class WriterTest extends ParquetIntegrationTestCase
         );
         static::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
         static::assertFileExists($path);
-        \unlink($path);
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -470,7 +479,7 @@ class WriterTest extends ParquetIntegrationTestCase
         $schema = $this->createSchema();
         $row = $this->createRow();
 
-        $stream = \fopen($path, 'wb+');
+        $stream = fopen($path, 'wb+');
 
         $writer->writeStream(new NativeLocalDestinationStream(path($path), $stream), $schema, [
             $row,
@@ -487,14 +496,14 @@ class WriterTest extends ParquetIntegrationTestCase
 
         static::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
         static::assertFileExists($path);
-        \unlink($path);
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -515,14 +524,14 @@ class WriterTest extends ParquetIntegrationTestCase
 
         static::assertSame(
             $rows,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
 
-        \unlink($path);
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -542,14 +551,14 @@ class WriterTest extends ParquetIntegrationTestCase
 
         static::assertSame(
             $rows,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
 
-        \unlink($path);
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -574,14 +583,14 @@ class WriterTest extends ParquetIntegrationTestCase
 
         static::assertSame(
             $rows,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
 
-        \unlink($path);
+        unlink($path);
     }
 
     /**
@@ -597,14 +606,11 @@ class WriterTest extends ParquetIntegrationTestCase
                 'boolean' => $faker->boolean,
                 'string' => $faker->text(150),
                 'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                'list_of_int' => \array_map(
+                'list_of_int' => array_map(
                     static fn($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                    \range(1, generate_random_int(2, 10)),
+                    range(1, generate_random_int(2, 10)),
                 ),
-                'list_of_string' => \array_map(
-                    static fn($i) => $faker->text(10),
-                    \range(1, generate_random_int(2, 10)),
-                ),
+                'list_of_string' => array_map(static fn($i) => $faker->text(10), range(1, generate_random_int(2, 10))),
             ],
         ];
     }

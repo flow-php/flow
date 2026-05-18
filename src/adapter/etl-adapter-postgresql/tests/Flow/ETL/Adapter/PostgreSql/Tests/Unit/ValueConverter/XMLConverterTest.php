@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit\ValueConverter;
 
+use DOMDocument;
+use DOMElement;
 use Flow\ETL\Adapter\PostgreSql\ValueConverter\XMLConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\TestCase;
@@ -21,7 +23,7 @@ final class XMLConverterTest extends TestCase
     {
         $converter = new XMLConverter();
 
-        $doc = new \DOMDocument();
+        $doc = new DOMDocument();
         $doc->loadXML('<root><item>test</item></root>');
 
         $result = $converter->toDatabase($doc);
@@ -34,11 +36,11 @@ final class XMLConverterTest extends TestCase
     {
         $converter = new XMLConverter();
 
-        $doc = new \DOMDocument();
+        $doc = new DOMDocument();
         $doc->loadXML('<root><item id="test">Hello</item></root>');
         $element = $doc->getElementsByTagName('item')->item(0);
 
-        static::assertInstanceOf(\DOMElement::class, $element);
+        static::assertInstanceOf(DOMElement::class, $element);
 
         $result = $converter->toDatabase($element);
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use DateTimeImmutable;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -41,7 +42,7 @@ final class HashTest extends FlowTestCase
     {
         static::assertSame('5347d10de38eb5570c044eb710a5120a', ref('value')
             ->hash()
-            ->eval(row(datetime_entry('value', new \DateTimeImmutable('2021-01-01'))), flow_context()));
+            ->eval(row(datetime_entry('value', new DateTimeImmutable('2021-01-01'))), flow_context()));
     }
 
     public function test_hashing_null_value(): void

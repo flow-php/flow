@@ -5,10 +5,24 @@ declare(strict_types=1);
 namespace Flow\Types\Value;
 
 use Flow\Types\Exception\InvalidArgumentException;
+use JsonSerializable;
+use Stringable;
 
+use function array_is_list;
 use function Flow\Types\DSL\type_array;
+use function is_array;
+use function json_decode;
+use function json_encode;
+use function json_validate;
+use function ksort;
+use function serialize;
+use function str_ends_with;
+use function str_starts_with;
+use function usort;
 
-final readonly class Json implements \JsonSerializable, \Stringable
+use const JSON_THROW_ON_ERROR;
+
+final readonly class Json implements JsonSerializable, Stringable
 {
     private bool $isObject;
 
@@ -21,7 +35,7 @@ final readonly class Json implements \JsonSerializable, \Stringable
         }
 
         $this->value = $value;
-        $this->isObject = \str_starts_with($value, '{') && \str_ends_with($value, '}');
+        $this->isObject = str_starts_with($value, '{') && str_ends_with($value, '}');
     }
 
     /**
@@ -33,7 +47,7 @@ final readonly class Json implements \JsonSerializable, \Stringable
             return new self('{}');
         }
 
-        return new self(\json_encode($value, \JSON_THROW_ON_ERROR));
+        return new self(json_encode($value, JSON_THROW_ON_ERROR));
     }
 
     public static function fromString(string $value): self
@@ -52,13 +66,13 @@ final readonly class Json implements \JsonSerializable, \Stringable
         }
 
         if (
-            !(\str_starts_with($value, '{') && \str_ends_with($value, '}'))
-            && !(\str_starts_with($value, '[') && \str_ends_with($value, ']'))
+            !(str_starts_with($value, '{') && str_ends_with($value, '}'))
+            && !(str_starts_with($value, '[') && str_ends_with($value, ']'))
         ) {
             return false;
         }
 
-        return \json_validate($value);
+        return json_validate($value);
     }
 
     public function __toString(): string
@@ -71,7 +85,7 @@ final readonly class Json implements \JsonSerializable, \Stringable
         $a = $this->sortRecursive($this->toArray());
         $b = $this->sortRecursive($json->toArray());
 
-        return \json_encode($a, \JSON_THROW_ON_ERROR) === \json_encode($b, \JSON_THROW_ON_ERROR);
+        return json_encode($a, JSON_THROW_ON_ERROR) === json_encode($b, JSON_THROW_ON_ERROR);
     }
 
     public function isObject(): bool
@@ -92,7 +106,7 @@ final readonly class Json implements \JsonSerializable, \Stringable
      */
     public function toArray(): array
     {
-        return type_array()->assert(\json_decode($this->value, true, flags: \JSON_THROW_ON_ERROR));
+        return type_array()->assert(json_decode($this->value, true, flags: JSON_THROW_ON_ERROR));
     }
 
     public function toString(): string
@@ -109,15 +123,15 @@ final readonly class Json implements \JsonSerializable, \Stringable
     {
         // @mago-ignore analysis:mixed-assignment
         foreach ($array as $key => $value) {
-            if (\is_array($value)) {
+            if (is_array($value)) {
                 $array[$key] = $this->sortRecursive($value);
             }
         }
 
-        if (\array_is_list($array)) {
-            \usort($array, static fn(mixed $a, mixed $b): int => \serialize($a) <=> \serialize($b));
+        if (array_is_list($array)) {
+            usort($array, static fn(mixed $a, mixed $b): int => serialize($a) <=> serialize($b));
         } else {
-            \ksort($array);
+            ksort($array);
         }
 
         return $array;

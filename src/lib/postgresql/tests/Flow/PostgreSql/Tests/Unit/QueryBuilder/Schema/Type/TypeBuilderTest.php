@@ -19,6 +19,7 @@ use Flow\PostgreSql\QueryBuilder\Schema\Type\DropTypeBuilder;
 use Flow\PostgreSql\QueryBuilder\Schema\Type\TypeAttribute;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
 use function Flow\PostgreSql\DSL\alter;
 use function Flow\PostgreSql\DSL\column_type_text;
 use function Flow\PostgreSql\DSL\column_type_varchar;
@@ -30,7 +31,7 @@ final class TypeBuilderTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }

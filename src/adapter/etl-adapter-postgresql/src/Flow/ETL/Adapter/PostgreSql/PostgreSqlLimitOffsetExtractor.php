@@ -11,7 +11,9 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\Sql;
+use Generator;
 
+use function ceil;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\PostgreSql\DSL\sql_parse;
 use function Flow\PostgreSql\DSL\sql_query_order_by;
@@ -35,7 +37,7 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
         private readonly array $parameters = [],
     ) {}
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         $sql = $this->query instanceof Sql ? $this->query->toSql() : $this->query;
 
@@ -52,7 +54,7 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
         }
 
         $totalFetched = 0;
-        $pages = (int) \ceil($total / $this->pageSize);
+        $pages = (int) ceil($total / $this->pageSize);
 
         for ($page = 0; $page < $pages; $page++) {
             $offset = $page * $this->pageSize;

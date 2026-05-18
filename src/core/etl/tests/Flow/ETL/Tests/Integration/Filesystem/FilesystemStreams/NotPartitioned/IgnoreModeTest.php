@@ -6,12 +6,14 @@ namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\NotPartitioned
 
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
+use Override;
 
+use function file_get_contents;
 use function Flow\ETL\DSL\ignore;
 
 final class IgnoreModeTest extends FilesystemStreamsTestCase
 {
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         parent::tearDown();
@@ -33,7 +35,7 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
         $streams->closeStreams($path);
 
         static::assertFileExists($path->path());
-        static::assertSame('some content', \file_get_contents($path->path()));
+        static::assertSame('some content', file_get_contents($path->path()));
     }
 
     public function test_open_stream_for_non_existing_file(): void
@@ -49,7 +51,7 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
         $streams->closeStreams($path);
 
         static::assertFileExists($path->path());
-        static::assertSame('some content', \file_get_contents($path->path()));
+        static::assertSame('some content', file_get_contents($path->path()));
     }
 
     protected function streams(): FilesystemStreams

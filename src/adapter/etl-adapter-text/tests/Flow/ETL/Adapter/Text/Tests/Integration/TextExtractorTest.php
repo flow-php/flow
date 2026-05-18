@@ -13,6 +13,7 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\Filesystem\DSL\path_real;
+use function iterator_to_array;
 
 final class TextExtractorTest extends FlowTestCase
 {
@@ -34,7 +35,7 @@ final class TextExtractorTest extends FlowTestCase
         $extractor = from_text(path_real(__DIR__ . '/../Fixtures/orders_flow.csv'));
         $extractor->changeLimit(2);
 
-        static::assertCount(2, \iterator_to_array($extractor->extract(flow_context(config()))));
+        static::assertCount(2, iterator_to_array($extractor->extract(flow_context(config()))));
     }
 
     public function test_signal_stop(): void

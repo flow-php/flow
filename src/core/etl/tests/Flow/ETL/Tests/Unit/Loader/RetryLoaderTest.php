@@ -10,7 +10,9 @@ use Flow\ETL\Loader;
 use Flow\ETL\Retry\RetryStrategy\OnExceptionTypes;
 use Flow\ETL\Rows;
 use Flow\ETL\Time\FakeSleep;
+use LogicException;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\delay_fixed;
@@ -31,7 +33,7 @@ final class RetryLoaderTest extends TestCase
         $context = flow_context(config());
         $sleep = new FakeSleep();
 
-        $exception = new \RuntimeException('Persistent error');
+        $exception = new RuntimeException('Persistent error');
         $mockLoader
             ->expects(self::exactly(4)) // 1 initial + 3 retries
             ->method('load')
@@ -67,7 +69,7 @@ final class RetryLoaderTest extends TestCase
                 $this->loads++;
 
                 if ($this->loads === 2) {
-                    throw new \RuntimeException('Simulated transient failure on attempt 2');
+                    throw new RuntimeException('Simulated transient failure on attempt 2');
                 }
 
                 $this->loadedRows[] = $rows->toArray();
@@ -111,7 +113,7 @@ final class RetryLoaderTest extends TestCase
                 $callCount++;
 
                 if ($callCount === 1) {
-                    throw new \RuntimeException('Transient error');
+                    throw new RuntimeException('Transient error');
                 }
             });
 
@@ -135,12 +137,12 @@ final class RetryLoaderTest extends TestCase
         $context = flow_context(config());
         $sleep = new FakeSleep();
 
-        $exception = new \LogicException('Logic error');
+        $exception = new LogicException('Logic error');
         $mockLoader->expects(self::once())->method('load')->with($rows, $context)->willThrowException($exception);
 
         $retryLoader = write_with_retries(
             $mockLoader,
-            new OnExceptionTypes([\RuntimeException::class], 3),
+            new OnExceptionTypes([RuntimeException::class], 3),
             delay_fixed(duration_milliseconds(100)),
             $sleep,
         );

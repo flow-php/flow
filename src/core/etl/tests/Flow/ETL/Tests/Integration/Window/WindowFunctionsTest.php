@@ -7,6 +7,8 @@ namespace Flow\ETL\Tests\Integration\Window;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function array_map;
+use function array_merge;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\dense_rank;
 use function Flow\ETL\DSL\from_all;
@@ -14,6 +16,7 @@ use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\rank;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\window;
+use function iterator_to_array;
 
 final class WindowFunctionsTest extends FlowTestCase
 {
@@ -48,7 +51,7 @@ final class WindowFunctionsTest extends FlowTestCase
                 ['id' => 1, 'name' => 'Greg', 'department' => 'IT', 'salary' => 6000, 'rank' => 1],
                 ['id' => 2, 'name' => 'Michal', 'department' => 'IT', 'salary' => 5000, 'rank' => 2],
             ],
-            \array_merge(...\array_map(static fn(Rows $r) => $r->toArray(), \iterator_to_array($rows, false))),
+            array_merge(...array_map(static fn(Rows $r) => $r->toArray(), iterator_to_array($rows, false))),
         );
     }
 
@@ -81,7 +84,7 @@ final class WindowFunctionsTest extends FlowTestCase
                     ['id' => 6, 'name' => 'Janet', 'department' => 'Finances', 'salary' => 4000, 'rank' => 6],
                 ],
             ],
-            \array_map(static fn(Rows $r) => $r->toArray(), \iterator_to_array($rows, false)),
+            array_map(static fn(Rows $r) => $r->toArray(), iterator_to_array($rows, false)),
         );
     }
 }

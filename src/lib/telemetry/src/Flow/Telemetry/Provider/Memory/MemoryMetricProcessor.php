@@ -11,6 +11,11 @@ use Flow\Telemetry\Meter\Metric;
 use Flow\Telemetry\Meter\MetricProcessor;
 use Flow\Telemetry\Meter\MetricType;
 use Flow\Telemetry\Signal\Signals;
+use Throwable;
+
+use function array_filter;
+use function array_values;
+use function count;
 
 /**
  * Processor that stores metrics in memory and exports via configured exporter.
@@ -31,18 +36,18 @@ final class MemoryMetricProcessor implements MetricProcessor
 
     public function countMetrics(): int
     {
-        return \count($this->metrics);
+        return count($this->metrics);
     }
 
     public function flush(): bool
     {
-        if (\count($this->metrics) === 0) {
+        if (count($this->metrics) === 0) {
             return true;
         }
 
         try {
             return $this->metricExporter->export(Signals::metrics($this->metrics));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
 
             return false;
@@ -62,7 +67,7 @@ final class MemoryMetricProcessor implements MetricProcessor
      */
     public function metricsOfType(MetricType $type): array
     {
-        return \array_values(\array_filter($this->metrics, static fn(Metric $metric): bool => $metric->type === $type));
+        return array_values(array_filter($this->metrics, static fn(Metric $metric): bool => $metric->type === $type));
     }
 
     /**
@@ -70,7 +75,7 @@ final class MemoryMetricProcessor implements MetricProcessor
      */
     public function metricsWithName(string $name): array
     {
-        return \array_values(\array_filter($this->metrics, static fn(Metric $metric): bool => $metric->name === $name));
+        return array_values(array_filter($this->metrics, static fn(Metric $metric): bool => $metric->name === $name));
     }
 
     public function process(Metric $metric): void
@@ -95,7 +100,7 @@ final class MemoryMetricProcessor implements MetricProcessor
 
         try {
             $this->metricExporter->shutdown();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
         }
     }

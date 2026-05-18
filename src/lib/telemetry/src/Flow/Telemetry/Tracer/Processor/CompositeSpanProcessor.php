@@ -8,6 +8,7 @@ use Flow\Telemetry\ErrorHandler\ErrorHandler;
 use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanProcessor;
+use Throwable;
 
 /**
  * Forwards spans to multiple processors.
@@ -36,7 +37,7 @@ final readonly class CompositeSpanProcessor implements SpanProcessor
                 if (!$processor->flush()) {
                     $success = false;
                 }
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->errorHandler->handle($e);
                 $success = false;
             }
@@ -50,7 +51,7 @@ final readonly class CompositeSpanProcessor implements SpanProcessor
         foreach ($this->processors as $processor) {
             try {
                 $processor->onEnd($span);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->errorHandler->handle($e);
             }
         }
@@ -61,7 +62,7 @@ final readonly class CompositeSpanProcessor implements SpanProcessor
         foreach ($this->processors as $processor) {
             try {
                 $processor->onStart($span);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->errorHandler->handle($e);
             }
         }
@@ -82,7 +83,7 @@ final readonly class CompositeSpanProcessor implements SpanProcessor
         foreach ($this->processors as $processor) {
             try {
                 $processor->shutdown();
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->errorHandler->handle($e);
             }
         }

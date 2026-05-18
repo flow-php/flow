@@ -7,8 +7,10 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\PostgreSql\Client\Client;
 
+use function extension_loaded;
 use function Flow\Bridge\PHPUnit\PostgreSQL\DSL\static_pgsql_client;
 use function Flow\PostgreSql\DSL\pgsql_connection_dsn;
+use function getenv;
 
 abstract class IntegrationTestCase extends FlowTestCase
 {
@@ -16,15 +18,15 @@ abstract class IntegrationTestCase extends FlowTestCase
 
     protected function setUp(): void
     {
-        if (!\extension_loaded('pgsql')) {
+        if (!extension_loaded('pgsql')) {
             static::markTestSkipped('ext-pgsql is not available');
         }
 
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             static::markTestSkipped('ext-pg_query is not available');
         }
 
-        $dsn = \getenv('PGSQL_DATABASE_URL');
+        $dsn = getenv('PGSQL_DATABASE_URL');
 
         if (!$dsn) {
             static::markTestSkipped('PGSQL_DATABASE_URL environment variable is not set');

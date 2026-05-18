@@ -8,12 +8,13 @@ use Flow\Telemetry\Context\Baggage;
 use Flow\Telemetry\Propagation\ArrayCarrier;
 use Flow\Telemetry\Propagation\PropagationContext;
 use Flow\Telemetry\Propagation\W3CBaggage;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class W3CBaggageTest extends TestCase
 {
-    public static function provideValidBaggageHeaders(): \Generator
+    public static function provideValidBaggageHeaders(): Generator
     {
         yield 'single entry' => [
             'key=value',

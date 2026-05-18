@@ -13,8 +13,10 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function count;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
+use function sprintf;
 
 #[AsCommand(name: 'flow:migrations:up-to-date', description: 'Check if all migrations have been executed')]
 final class UpToDateCommand extends Command
@@ -42,7 +44,7 @@ final class UpToDateCommand extends Command
         $status = $migrator->status();
         $pending = $status->pending();
 
-        if (\count($pending) === 0) {
+        if (count($pending) === 0) {
             $io->success('All migrations are up to date.');
 
             return Command::SUCCESS;
@@ -54,7 +56,7 @@ final class UpToDateCommand extends Command
             $rows[] = ['<fg=yellow>PENDING</>', (string) $migration->version, $migration->name];
         }
 
-        $io->error(\sprintf('Out of date! %d pending migration(s).', \count($pending)));
+        $io->error(sprintf('Out of date! %d pending migration(s).', count($pending)));
         $io->table(['Status', 'Version', 'Name'], $rows);
         $io->text('  Run <fg=yellow>flow:migrations:migrate</> to execute pending migrations.');
         $io->newLine();

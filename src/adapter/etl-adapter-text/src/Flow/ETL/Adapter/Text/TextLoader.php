@@ -14,6 +14,9 @@ use Flow\ETL\Rows;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
+use Throwable;
+
+use function sprintf;
 
 final class TextLoader implements Closure, FileLoader, Loader
 {
@@ -50,7 +53,7 @@ final class TextLoader implements Closure, FileLoader, Loader
             if ($rows->partitions()->count()) {
                 foreach ($rows as $row) {
                     if ($row->entries()->count() > 1) {
-                        throw new RuntimeException(\sprintf(
+                        throw new RuntimeException(sprintf(
                             'Text data loader supports only a single entry rows, and you have %d rows.',
                             $row->entries()->count(),
                         ));
@@ -64,7 +67,7 @@ final class TextLoader implements Closure, FileLoader, Loader
             } else {
                 foreach ($rows as $row) {
                     if ($row->entries()->count() > 1) {
-                        throw new RuntimeException(\sprintf(
+                        throw new RuntimeException(sprintf(
                             'Text data loader supports only a single entry rows, and you have %d rows.',
                             $row->entries()->count(),
                         ));
@@ -78,7 +81,7 @@ final class TextLoader implements Closure, FileLoader, Loader
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 
             throw $e;

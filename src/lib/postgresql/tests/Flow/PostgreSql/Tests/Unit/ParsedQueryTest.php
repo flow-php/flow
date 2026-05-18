@@ -19,6 +19,8 @@ use Flow\PostgreSql\ParsedQuery;
 use Flow\PostgreSql\Protobuf\AST\ParseResult;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
+use function extension_loaded;
 use function Flow\PostgreSql\DSL\sql_parse;
 use function Flow\PostgreSql\DSL\sql_query_columns;
 use function Flow\PostgreSql\DSL\sql_query_functions;
@@ -28,7 +30,7 @@ final class ParsedQueryTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped(
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );
@@ -43,11 +45,11 @@ final class ParsedQueryTest extends TestCase
         $orderColumns = sql_query_columns($result)->forTable('o');
 
         static::assertCount(2, $userColumns);
-        $userColumnNames = \array_map(static fn(Column $c) => $c->name(), $userColumns);
+        $userColumnNames = array_map(static fn(Column $c) => $c->name(), $userColumns);
         static::assertContains('id', $userColumnNames);
 
         static::assertCount(2, $orderColumns);
-        $orderColumnNames = \array_map(static fn(Column $c) => $c->name(), $orderColumns);
+        $orderColumnNames = array_map(static fn(Column $c) => $c->name(), $orderColumns);
         static::assertContains('order_date', $orderColumnNames);
         static::assertContains('user_id', $orderColumnNames);
     }
@@ -60,7 +62,7 @@ final class ParsedQueryTest extends TestCase
 
         static::assertCount(2, $columns);
 
-        $columnNames = \array_map(static fn(Column $c) => $c->name(), $columns);
+        $columnNames = array_map(static fn(Column $c) => $c->name(), $columns);
         static::assertContains('id', $columnNames);
         static::assertContains('name', $columnNames);
     }
@@ -71,7 +73,7 @@ final class ParsedQueryTest extends TestCase
 
         $columns = sql_query_columns($result)->all();
 
-        $columnNames = \array_map(static fn(Column $c) => $c->name(), $columns);
+        $columnNames = array_map(static fn(Column $c) => $c->name(), $columns);
         static::assertContains('active', $columnNames);
         static::assertContains('name', $columnNames);
     }
@@ -127,7 +129,7 @@ final class ParsedQueryTest extends TestCase
 
         static::assertCount(2, $functions);
 
-        $functionNames = \array_map(static fn(FunctionCall $f) => $f->name(), $functions);
+        $functionNames = array_map(static fn(FunctionCall $f) => $f->name(), $functions);
         static::assertContains('count', $functionNames);
         static::assertContains('sum', $functionNames);
     }
@@ -140,7 +142,7 @@ final class ParsedQueryTest extends TestCase
 
         static::assertCount(2, $functions);
 
-        $functionNames = \array_map(static fn(FunctionCall $f) => $f->name(), $functions);
+        $functionNames = array_map(static fn(FunctionCall $f) => $f->name(), $functions);
         static::assertContains('upper', $functionNames);
         static::assertContains('concat', $functionNames);
     }
@@ -311,7 +313,7 @@ final class ParsedQueryTest extends TestCase
 
         static::assertCount(2, $tables);
 
-        $tableNames = \array_map(static fn(Table $t) => $t->name(), $tables);
+        $tableNames = array_map(static fn(Table $t) => $t->name(), $tables);
         static::assertContains('users', $tableNames);
         static::assertContains('active_users', $tableNames);
     }
@@ -344,7 +346,7 @@ final class ParsedQueryTest extends TestCase
 
         static::assertCount(2, $tables);
 
-        $tableNames = \array_map(static fn(Table $t) => $t->name(), $tables);
+        $tableNames = array_map(static fn(Table $t) => $t->name(), $tables);
         static::assertContains('users', $tableNames);
         static::assertContains('orders', $tableNames);
     }

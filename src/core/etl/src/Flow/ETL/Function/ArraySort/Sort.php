@@ -6,6 +6,8 @@ namespace Flow\ETL\Function\ArraySort;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
+use function strtolower;
+
 enum Sort: string
 {
     case arsort = 'arsort';
@@ -20,7 +22,7 @@ enum Sort: string
 
     public static function fromString(string $value): self
     {
-        $value = \strtolower($value);
+        $value = strtolower($value);
 
         foreach (self::cases() as $case) {
             if ($value === $case->name) {

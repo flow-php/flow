@@ -4,10 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Telemetry\Tests\Unit;
 
+use DateTime;
+use DateTimeImmutable;
+use Error;
 use Flow\Bridge\Monolog\Telemetry\ValueNormalizer;
+use Generator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use stdClass;
+
+use function fclose;
+use function fopen;
 
 #[CoversClass(ValueNormalizer::class)]
 final class ValueNormalizerTest extends TestCase
@@ -15,7 +24,7 @@ final class ValueNormalizerTest extends TestCase
     /**
      * @return \Generator<string, array{mixed, mixed}>
      */
-    public static function scalarValuesProvider(): \Generator
+    public static function scalarValuesProvider(): Generator
     {
         yield 'string' => ['hello', 'hello'];
         yield 'empty string' => ['', ''];
@@ -84,7 +93,7 @@ final class ValueNormalizerTest extends TestCase
 
         $input = [
             'obj' => $object,
-            'std' => new \stdClass(),
+            'std' => new stdClass(),
         ];
 
         $result = $normalizer->normalize($input);
@@ -97,9 +106,9 @@ final class ValueNormalizerTest extends TestCase
     public function test_normalizes_closed_resource_to_debug_type(): void
     {
         $normalizer = new ValueNormalizer();
-        $resource = \fopen('php://memory', 'rb');
+        $resource = fopen('php://memory', 'rb');
         static::assertIsResource($resource);
-        \fclose($resource);
+        fclose($resource);
 
         $result = $normalizer->normalize($resource);
 
@@ -109,7 +118,7 @@ final class ValueNormalizerTest extends TestCase
     public function test_normalizes_datetime_unchanged(): void
     {
         $normalizer = new ValueNormalizer();
-        $datetime = new \DateTimeImmutable('2024-01-15 10:30:00');
+        $datetime = new DateTimeImmutable('2024-01-15 10:30:00');
 
         static::assertSame($datetime, $normalizer->normalize($datetime));
     }
@@ -117,7 +126,7 @@ final class ValueNormalizerTest extends TestCase
     public function test_normalizes_error_unchanged(): void
     {
         $normalizer = new ValueNormalizer();
-        $error = new \Error('Fatal error');
+        $error = new Error('Fatal error');
 
         static::assertSame($error, $normalizer->normalize($error));
     }
@@ -125,7 +134,7 @@ final class ValueNormalizerTest extends TestCase
     public function test_normalizes_mutable_datetime_unchanged(): void
     {
         $normalizer = new ValueNormalizer();
-        $datetime = new \DateTime('2024-01-15 10:30:00');
+        $datetime = new DateTime('2024-01-15 10:30:00');
 
         static::assertSame($datetime, $normalizer->normalize($datetime));
     }
@@ -174,7 +183,7 @@ final class ValueNormalizerTest extends TestCase
     public function test_normalizes_object_without_to_string_to_class_name(): void
     {
         $normalizer = new ValueNormalizer();
-        $object = new \stdClass();
+        $object = new stdClass();
 
         static::assertSame('stdClass', $normalizer->normalize($object));
     }
@@ -182,12 +191,12 @@ final class ValueNormalizerTest extends TestCase
     public function test_normalizes_resource_to_debug_type(): void
     {
         $normalizer = new ValueNormalizer();
-        $resource = \fopen('php://memory', 'rb');
+        $resource = fopen('php://memory', 'rb');
         static::assertIsResource($resource);
 
         $result = $normalizer->normalize($resource);
 
-        \fclose($resource);
+        fclose($resource);
 
         static::assertSame('resource (stream)', $result);
     }
@@ -203,7 +212,7 @@ final class ValueNormalizerTest extends TestCase
     public function test_normalizes_throwable_unchanged(): void
     {
         $normalizer = new ValueNormalizer();
-        $exception = new \RuntimeException('Something went wrong');
+        $exception = new RuntimeException('Something went wrong');
 
         static::assertSame($exception, $normalizer->normalize($exception));
     }

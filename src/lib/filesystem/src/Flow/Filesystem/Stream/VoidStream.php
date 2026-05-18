@@ -7,6 +7,7 @@ namespace Flow\Filesystem\Stream;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\SourceStream;
+use Generator;
 
 final readonly class VoidStream implements DestinationStream, SourceStream
 {
@@ -36,7 +37,7 @@ final readonly class VoidStream implements DestinationStream, SourceStream
         return true;
     }
 
-    public function iterate(int $length = 1): \Generator
+    public function iterate(int $length = 1): Generator
     {
         yield from [];
     }
@@ -51,7 +52,7 @@ final readonly class VoidStream implements DestinationStream, SourceStream
         return '';
     }
 
-    public function readLines(string $separator = "\n", ?int $length = null): \Generator
+    public function readLines(string $separator = "\n", ?int $length = null): Generator
     {
         yield from [];
     }

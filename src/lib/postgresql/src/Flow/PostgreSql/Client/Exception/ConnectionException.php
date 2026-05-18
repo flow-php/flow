@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Exception;
 
+use function sprintf;
+
 final class ConnectionException extends ClientException
 {
     public static function connectionFailed(string $error): self
     {
-        return new self(\sprintf('Failed to connect to PostgreSQL: %s', $error));
+        return new self(sprintf('Failed to connect to PostgreSQL: %s', $error));
     }
 
     public static function extensionNotLoaded(string $extension): self
     {
-        return new self(\sprintf('PHP extension "%s" is not loaded', $extension));
+        return new self(sprintf('PHP extension "%s" is not loaded', $extension));
     }
 
     public static function notConnected(): self
@@ -23,6 +25,6 @@ final class ConnectionException extends ClientException
 
     public static function notificationWaitFailed(string $error): self
     {
-        return new self(\sprintf('Failed to wait for PostgreSQL notification: %s', $error));
+        return new self(sprintf('Failed to wait for PostgreSQL notification: %s', $error));
     }
 }

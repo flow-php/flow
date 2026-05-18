@@ -11,6 +11,8 @@ use Flow\PostgreSql\Schema\Catalog;
 use Flow\PostgreSql\Schema\CatalogProvider;
 use Flow\PostgreSql\Schema\Diff\CatalogComparator;
 
+use function array_map;
+
 final readonly class DiffMigrationGenerator
 {
     public function __construct(
@@ -32,12 +34,12 @@ final readonly class DiffMigrationGenerator
             throw MigrationException::noChangesDetected();
         }
 
-        $upSql = \array_map(static fn(Sql $query) => $query->toSql(), $diff->generate());
+        $upSql = array_map(static fn(Sql $query) => $query->toSql(), $diff->generate());
 
         $downSql = null;
 
         if ($this->generateRollback) {
-            $downSql = \array_map(
+            $downSql = array_map(
                 static fn(Sql $query) => $query->toSql(),
                 $this->comparator->compare($target, $this->sourceCatalog->get())->generate(),
             );

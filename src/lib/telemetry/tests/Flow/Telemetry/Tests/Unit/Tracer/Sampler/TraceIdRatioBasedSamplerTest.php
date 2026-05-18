@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Tracer\Sampler;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\InstrumentationScope;
@@ -13,12 +14,14 @@ use Flow\Telemetry\Tracer\Sampler\TraceIdRatioBasedSampler;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanContext;
 use Flow\Telemetry\Tracer\SpanKind;
+use Generator;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class TraceIdRatioBasedSamplerTest extends TestCase
 {
-    public static function provideInvalidRatios(): \Generator
+    public static function provideInvalidRatios(): Generator
     {
         yield 'negative' => [-0.1];
         yield 'more than 100%' => [1.1];
@@ -28,7 +31,7 @@ final class TraceIdRatioBasedSamplerTest extends TestCase
     #[DataProvider('provideInvalidRatios')]
     public function test_constructor_throws_on_invalid_ratio(float $ratio): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Sampling ratio must be between 0.0 and 1.0');
 
         new TraceIdRatioBasedSampler($ratio);
@@ -113,7 +116,7 @@ final class TraceIdRatioBasedSamplerTest extends TestCase
             $name,
             SpanContext::create($traceId ?? TraceId::generate(), SpanId::generate()),
             SpanKind::INTERNAL,
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
             ResourceMother::default(),
             new InstrumentationScope('test', '1.0.0'),
         );

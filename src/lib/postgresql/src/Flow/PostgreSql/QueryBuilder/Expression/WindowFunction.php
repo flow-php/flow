@@ -12,6 +12,9 @@ use Flow\PostgreSql\QueryBuilder\Clause\OrderBy;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 
+use function array_values;
+use function count;
+
 final readonly class WindowFunction implements Expression
 {
     /**
@@ -47,7 +50,7 @@ final readonly class WindowFunction implements Expression
 
         $funcNameNodes = $funcCall->getFuncname();
 
-        if (\count($funcNameNodes) === 0) {
+        if (count($funcNameNodes) === 0) {
             throw InvalidAstException::missingRequiredField('funcname', 'FuncCall');
         }
 
@@ -186,16 +189,16 @@ final readonly class WindowFunction implements Expression
 
     public function withArgs(Expression ...$args): self
     {
-        return new self($this->funcName, \array_values($args), $this->partitionBy, $this->orderBy);
+        return new self($this->funcName, array_values($args), $this->partitionBy, $this->orderBy);
     }
 
     public function withOrderBy(OrderBy ...$orderBy): self
     {
-        return new self($this->funcName, $this->args, $this->partitionBy, \array_values($orderBy));
+        return new self($this->funcName, $this->args, $this->partitionBy, array_values($orderBy));
     }
 
     public function withPartitionBy(Expression ...$partitionBy): self
     {
-        return new self($this->funcName, $this->args, \array_values($partitionBy), $this->orderBy);
+        return new self($this->funcName, $this->args, array_values($partitionBy), $this->orderBy);
     }
 }

@@ -6,11 +6,13 @@ namespace Flow\ETL\Tests\Unit;
 
 use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use ValueError;
 
 final class NativePHPRandomValueGeneratorTest extends FlowTestCase
 {
-    public static function integers_provider(): \Generator
+    public static function integers_provider(): Generator
     {
         foreach (range(1, 10) as $i) {
             yield [$i];
@@ -64,7 +66,7 @@ final class NativePHPRandomValueGeneratorTest extends FlowTestCase
     #[DataProvider('invalid_range_provider')]
     public function test_fail_on_invalid_range(int $min, int $max): void
     {
-        self::expectException(\ValueError::class);
+        self::expectException(ValueError::class);
         (new NativePHPRandomValueGenerator())->int($min, $max);
     }
 

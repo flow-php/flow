@@ -6,6 +6,10 @@ namespace Flow\ETL\Formatter\ASCII;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
+use function count;
+use function max;
+use function str_repeat;
+
 final readonly class ASCIIBody
 {
     public function __construct(
@@ -29,7 +33,7 @@ final readonly class ASCIIBody
                     $value = new ASCIIValue('');
                 }
 
-                $length = \max($header->length($truncate), $this->body->maximumLength($name, $truncate));
+                $length = max($header->length($truncate), $this->body->maximumLength($name, $truncate));
 
                 $buffer .= ' ' . ASCIIValue::mb_str_pad($value->print($truncate), $length, ' ', STR_PAD_LEFT) . ' |';
             }
@@ -42,12 +46,12 @@ final readonly class ASCIIBody
         foreach ($this->headers->names() as $name) {
             $headerName = new ASCIIValue($name);
 
-            $length = \max($headerName->length($truncate), $this->body->maximumLength($name, $truncate));
+            $length = max($headerName->length($truncate), $this->body->maximumLength($name, $truncate));
 
-            $buffer .= '-' . \str_repeat('-', $length) . '-+';
+            $buffer .= '-' . str_repeat('-', $length) . '-+';
         }
 
-        if (\count($this->body->partitions())) {
+        if (count($this->body->partitions())) {
             $buffer .= PHP_EOL;
             $buffer .= 'Partitions:';
 

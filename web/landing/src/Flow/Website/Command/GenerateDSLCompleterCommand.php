@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Command;
 
+use DateTime;
 use Flow\Website\Model\Documentation\DSLDefinition;
 use Flow\Website\Service\Documentation\DSLDefinitions;
 use Flow\Website\Service\FlowConfigFactory;
@@ -14,7 +15,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Twig\Environment;
 
+use function array_filter;
+use function array_map;
+use function count;
 use function Flow\Filesystem\DSL\path;
+use function sprintf;
+use function str_replace;
+use function strtolower;
 
 #[AsCommand(name: 'app:generate:dsl-completer', description: 'Generate CodeMirror completer for all DSL functions')]
 final class GenerateDSLCompleterCommand extends Command
@@ -34,14 +41,14 @@ final class GenerateDSLCompleterCommand extends Command
 
         $io->title('Generating DSL Functions Completer');
 
-        $dslFunctions = \array_filter(
+        $dslFunctions = array_filter(
             $this->dslDefinitions->all(),
             static fn(DSLDefinition $definition): bool => $definition->type() !== null,
         );
 
-        $io->info(\sprintf('Found %d DSL functions', \count($dslFunctions)));
+        $io->info(sprintf('Found %d DSL functions', count($dslFunctions)));
 
-        $functionsData = \array_map(fn(DSLDefinition $definition): array => [
+        $functionsData = array_map(fn(DSLDefinition $definition): array => [
             'name' => $definition->name(),
             'fullName' => '\\' . $definition->data()['namespace'] . '\\' . $definition->name(),
             'doc_comment' => $definition->data()['doc_comment'],
@@ -52,8 +59,8 @@ final class GenerateDSLCompleterCommand extends Command
 
         $content = $this->twig->render('completers/dsl-codemirror.js.twig', [
             'functions' => $functionsData,
-            'generated_at' => new \DateTime(),
-            'total_count' => \count($functionsData),
+            'generated_at' => new DateTime(),
+            'total_count' => count($functionsData),
         ]);
 
         $outputFile = $this->projectDir . '/assets/codemirror/completions/dsl.js';
@@ -61,7 +68,7 @@ final class GenerateDSLCompleterCommand extends Command
         $this->configFactory->filesystem()->writeTo(path($outputFile))->append($content)->close();
 
         $io->success("Generated DSL completer: {$outputFile}");
-        $io->info('Functions included: ' . \count($functionsData));
+        $io->info('Functions included: ' . count($functionsData));
 
         return Command::SUCCESS;
     }
@@ -70,6 +77,6 @@ final class GenerateDSLCompleterCommand extends Command
     {
         $type = $definition->type();
 
-        return $type ? \strtolower(\str_replace(' ', '-', $type->value)) : 'unknown';
+        return $type ? strtolower(str_replace(' ', '-', $type->value)) : 'unknown';
     }
 }

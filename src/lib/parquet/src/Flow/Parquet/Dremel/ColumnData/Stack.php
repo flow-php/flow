@@ -6,6 +6,12 @@ namespace Flow\Parquet\Dremel\ColumnData;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
 
+use function array_merge;
+use function count;
+use function get_debug_type;
+use function is_array;
+use function sprintf;
+
 final class Stack
 {
     /**
@@ -43,67 +49,67 @@ final class Stack
 
         $valueNode = null;
         // @mago-ignore analysis:mixed-assignment
-        $lastStackNode = &$this->stack[\count($this->stack) - 1];
+        $lastStackNode = &$this->stack[count($this->stack) - 1];
 
         for ($l = 1; $l < $level; $l++) {
             if ($valueNode === null) {
-                if (!\is_array($value)) {
-                    throw new InvalidArgumentException(\sprintf(
+                if (!is_array($value)) {
+                    throw new InvalidArgumentException(sprintf(
                         'Expected array for value, got %s',
-                        \get_debug_type($value),
+                        get_debug_type($value),
                     ));
                 }
 
-                if (!\count($value)) {
+                if (!count($value)) {
                     throw new InvalidArgumentException('Cannot access last element of empty array');
                 }
                 // @mago-ignore analysis:mixed-assignment
-                $valueNode = &$value[\count($value) - 1];
+                $valueNode = &$value[count($value) - 1];
             } else {
-                if (!\is_array($valueNode)) {
-                    throw new InvalidArgumentException(\sprintf(
+                if (!is_array($valueNode)) {
+                    throw new InvalidArgumentException(sprintf(
                         'Expected array for value node, got %s',
-                        \get_debug_type($valueNode),
+                        get_debug_type($valueNode),
                     ));
                 }
 
-                if (!\count($valueNode)) {
+                if (!count($valueNode)) {
                     throw new InvalidArgumentException('Cannot access last element of empty array');
                 }
                 // @mago-ignore analysis:mixed-assignment
-                $valueNode = &$valueNode[\count($valueNode) - 1];
+                $valueNode = &$valueNode[count($valueNode) - 1];
             }
 
-            if (!\is_array($lastStackNode)) {
-                throw new InvalidArgumentException(\sprintf(
+            if (!is_array($lastStackNode)) {
+                throw new InvalidArgumentException(sprintf(
                     'Expected array for last stack node, got %s',
-                    \get_debug_type($lastStackNode),
+                    get_debug_type($lastStackNode),
                 ));
             }
 
-            if (!\count($lastStackNode)) {
+            if (!count($lastStackNode)) {
                 throw new InvalidArgumentException('Cannot access last element of empty array');
             }
             // @mago-ignore analysis:mixed-assignment
-            $lastStackNode = &$lastStackNode[\count($lastStackNode) - 1];
+            $lastStackNode = &$lastStackNode[count($lastStackNode) - 1];
         }
         // @mago-ignore analysis:mixed-assignment
         $valueNode ??= $value;
 
-        if (!\is_array($lastStackNode)) {
-            throw new InvalidArgumentException(\sprintf(
+        if (!is_array($lastStackNode)) {
+            throw new InvalidArgumentException(sprintf(
                 'Expected array for last stack node, got %s',
-                \get_debug_type($lastStackNode),
+                get_debug_type($lastStackNode),
             ));
         }
 
-        if (!\is_array($valueNode)) {
-            throw new InvalidArgumentException(\sprintf(
+        if (!is_array($valueNode)) {
+            throw new InvalidArgumentException(sprintf(
                 'Expected array for value node, got %s',
-                \get_debug_type($valueNode),
+                get_debug_type($valueNode),
             ));
         }
-        $lastStackNode = \array_merge($lastStackNode, $valueNode);
+        $lastStackNode = array_merge($lastStackNode, $valueNode);
 
         unset($lastStackNode, $valueNode);
     }

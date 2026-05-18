@@ -18,6 +18,7 @@ use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\TracerProvider;
+use Override;
 
 final class TraceableCacheTestSuite extends CacheBaseTestSuite
 {
@@ -25,7 +26,7 @@ final class TraceableCacheTestSuite extends CacheBaseTestSuite
 
     private Telemetry $telemetry;
 
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         $clock = new SystemClock();

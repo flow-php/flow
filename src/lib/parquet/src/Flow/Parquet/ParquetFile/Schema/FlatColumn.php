@@ -8,6 +8,14 @@ use Flow\Parquet\Consts;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ThriftModel\SchemaElement;
 
+use function array_filter;
+use function array_reverse;
+use function array_values;
+use function ceil;
+use function explode;
+use function implode;
+use function log;
+
 final class FlatColumn implements Column
 {
     private ?string $flatPath = null;
@@ -76,8 +84,8 @@ final class FlatColumn implements Column
             throw new InvalidArgumentException('Scale must be between 1 and 38, ' . $scale . ' given.');
         }
 
-        $bitsNeeded = \ceil(\log(10 ** $precision, 2));
-        $byteLength = (int) \ceil($bitsNeeded / 8);
+        $bitsNeeded = ceil(log(10 ** $precision, 2));
+        $byteLength = (int) ceil($bitsNeeded / 8);
 
         return new self(
             $name,
@@ -263,8 +271,8 @@ final class FlatColumn implements Column
             }
         }
 
-        $path = \array_reverse($path);
-        $this->flatPath = \implode('.', $path);
+        $path = array_reverse($path);
+        $this->flatPath = implode('.', $path);
 
         return $this->flatPath;
     }
@@ -365,7 +373,7 @@ final class FlatColumn implements Column
 
     public function path(): array
     {
-        return \explode('.', $this->flatPath());
+        return explode('.', $this->flatPath());
     }
 
     public function precision(): ?int
@@ -397,7 +405,7 @@ final class FlatColumn implements Column
             $parent = $parent->parent();
         }
 
-        $this->repetitions = new Repetitions(...\array_reverse(\array_values(\array_filter($repetitions))));
+        $this->repetitions = new Repetitions(...array_reverse(array_values(array_filter($repetitions))));
 
         return $this->repetitions;
     }

@@ -6,6 +6,14 @@ namespace Flow\ETL\Adapter\CSV\Detector;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
+use function array_reduce;
+use function count;
+use function is_array;
+use function is_string;
+use function mb_strlen;
+use function round;
+use function str_getcsv;
+
 final class Option
 {
     private const int COLUMN_SCORE_WEIGHT = 100_000;
@@ -22,11 +30,11 @@ final class Option
         public string $enclosure,
         public string $escape = '\\',
     ) {
-        if (\mb_strlen($this->separator) !== 1) {
+        if (mb_strlen($this->separator) !== 1) {
             throw new InvalidArgumentException('Separator must be a single character');
         }
 
-        if (\mb_strlen($this->enclosure) !== 1) {
+        if (mb_strlen($this->enclosure) !== 1) {
             throw new InvalidArgumentException('Enclosure must be a single character');
         }
 
@@ -38,17 +46,17 @@ final class Option
         $columnsCount = null;
 
         foreach ($this->rows as $row) {
-            if (!\is_array($row)) {
+            if (!is_array($row)) {
                 return false;
             }
 
             if ($columnsCount === null) {
-                $columnsCount = \count($row);
+                $columnsCount = count($row);
 
                 continue;
             }
 
-            if ($columnsCount !== \count($row)) {
+            if ($columnsCount !== count($row)) {
                 return false;
             }
         }
@@ -62,7 +70,7 @@ final class Option
 
     public function parse(string $line): void
     {
-        $this->rows[] = \str_getcsv($line, $this->separator, $this->enclosure, '\\');
+        $this->rows[] = str_getcsv($line, $this->separator, $this->enclosure, '\\');
     }
 
     public function reset(): self
@@ -76,29 +84,29 @@ final class Option
             return 0;
         }
 
-        if (!\count($this->rows)) {
+        if (!count($this->rows)) {
             return 0;
         }
 
         $firstRow = $this->rows[0];
 
-        if (!\is_array($firstRow)) {
+        if (!is_array($firstRow)) {
             return 0;
         }
 
-        $columnScore = \count($firstRow) * self::COLUMN_SCORE_WEIGHT;
-        $totalLength = \array_reduce(
+        $columnScore = count($firstRow) * self::COLUMN_SCORE_WEIGHT;
+        $totalLength = array_reduce(
             $this->rows,
             static fn(int $carry, array $row): int => $carry
-            + \array_reduce(
+            + array_reduce(
                 $row,
-                static fn(int $carry, mixed $column): int => $carry + (\is_string($column) ? \mb_strlen($column) : 0),
+                static fn(int $carry, mixed $column): int => $carry + (is_string($column) ? mb_strlen($column) : 0),
                 0,
             ),
             0,
         );
 
-        $lengthScore = (int) \round((1 / ($totalLength + 1)) * self::COLUMNS_LENGTH_WEIGHT);
+        $lengthScore = (int) round((1 / ($totalLength + 1)) * self::COLUMNS_LENGTH_WEIGHT);
 
         return $columnScore + $lengthScore;
     }

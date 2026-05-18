@@ -10,6 +10,7 @@ use Flow\Parquet\Data\BitWidth;
 use Flow\Parquet\Data\RLEBitPackedHybrid;
 
 use function Flow\Parquet\Binary\encode_i32;
+use function strlen;
 
 final readonly class RLEBitPackedPacker
 {
@@ -53,7 +54,7 @@ final readonly class RLEBitPackedPacker
         $this->bitPackedHybrid->encodeHybrid(new BinaryBufferWriter($dataBuffer), $bitWidth, $values);
         $outputBuffer = '';
         $outputWriter = new BinaryBufferWriter($outputBuffer);
-        $outputWriter->append(encode_i32($this->byteOrder, [\strlen($dataBuffer)]));
+        $outputWriter->append(encode_i32($this->byteOrder, [strlen($dataBuffer)]));
         $outputWriter->append($dataBuffer);
 
         return $outputBuffer;

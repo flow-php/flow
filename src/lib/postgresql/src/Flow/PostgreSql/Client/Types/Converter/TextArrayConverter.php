@@ -9,6 +9,12 @@ use Flow\PostgreSql\Client\Types\StringEscaper;
 use Flow\PostgreSql\Client\Types\ValueConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
 
+use function array_map;
+use function implode;
+use function is_array;
+use function is_scalar;
+use function is_string;
+
 final class TextArrayConverter implements ValueConverter
 {
     public function supportedTypes(): array
@@ -25,11 +31,11 @@ final class TextArrayConverter implements ValueConverter
             return null;
         }
 
-        if (!\is_array($value)) {
+        if (!is_array($value)) {
             return '{}';
         }
 
-        return '{' . \implode(',', \array_map(self::encodeElement(...), $value)) . '}';
+        return '{' . implode(',', array_map(self::encodeElement(...), $value)) . '}';
     }
 
     private static function encodeElement(mixed $element): string
@@ -38,11 +44,11 @@ final class TextArrayConverter implements ValueConverter
             return 'NULL';
         }
 
-        if (\is_string($element)) {
+        if (is_string($element)) {
             return StringEscaper::escape($element);
         }
 
-        if (\is_scalar($element)) {
+        if (is_scalar($element)) {
             return (string) $element;
         }
 

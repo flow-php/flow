@@ -9,11 +9,13 @@ use Flow\PostgreSql\Schema\Diff\CatalogDiff;
 use Flow\PostgreSql\Schema\Diff\SchemaDiff;
 use PHPUnit\Framework\TestCase;
 
+use function count;
 use function Flow\PostgreSql\DSL\schema;
 use function Flow\PostgreSql\DSL\schema_column_integer;
 use function Flow\PostgreSql\DSL\schema_column_text;
 use function Flow\PostgreSql\DSL\schema_sequence;
 use function Flow\PostgreSql\DSL\schema_table;
+use function str_contains;
 
 final class CatalogDiffTest extends TestCase
 {
@@ -50,7 +52,7 @@ final class CatalogDiffTest extends TestCase
 
         $sqls = $diff->generate();
 
-        static::assertGreaterThanOrEqual(3, \count($sqls));
+        static::assertGreaterThanOrEqual(3, count($sqls));
         static::assertSame('CREATE SCHEMA IF NOT EXISTS audit', $sqls[0]->toSql());
         static::assertStringContainsString('CREATE SEQUENCE', $sqls[1]->toSql());
         static::assertStringContainsString('events_id_seq', $sqls[1]->toSql());
@@ -175,11 +177,11 @@ final class CatalogDiffTest extends TestCase
         $dropSchemaIdx = null;
 
         foreach ($sqls as $i => $sql) {
-            if (\str_contains($sql->toSql(), 'CREATE TABLE') && $createTableIdx === null) {
+            if (str_contains($sql->toSql(), 'CREATE TABLE') && $createTableIdx === null) {
                 $createTableIdx = $i;
             }
 
-            if (\str_contains($sql->toSql(), 'DROP SCHEMA old CASCADE') && $dropSchemaIdx === null) {
+            if (str_contains($sql->toSql(), 'DROP SCHEMA old CASCADE') && $dropSchemaIdx === null) {
                 $dropSchemaIdx = $i;
             }
         }
@@ -226,7 +228,7 @@ final class CatalogDiffTest extends TestCase
 
         $sqls = $diff->generate();
 
-        static::assertGreaterThanOrEqual(2, \count($sqls));
+        static::assertGreaterThanOrEqual(2, count($sqls));
         static::assertSame('CREATE SCHEMA IF NOT EXISTS audit', $sqls[0]->toSql());
         static::assertStringContainsString('CREATE TABLE', $sqls[1]->toSql());
         static::assertStringContainsString('events', $sqls[1]->toSql());
@@ -292,11 +294,11 @@ final class CatalogDiffTest extends TestCase
         $dropSchemaIdx = null;
 
         foreach ($sqls as $i => $sql) {
-            if (\str_contains($sql->toSql(), 'DROP TABLE') && $dropTableIdx === null) {
+            if (str_contains($sql->toSql(), 'DROP TABLE') && $dropTableIdx === null) {
                 $dropTableIdx = $i;
             }
 
-            if (\str_contains($sql->toSql(), 'DROP SCHEMA new CASCADE') && $dropSchemaIdx === null) {
+            if (str_contains($sql->toSql(), 'DROP SCHEMA new CASCADE') && $dropSchemaIdx === null) {
                 $dropSchemaIdx = $i;
             }
         }

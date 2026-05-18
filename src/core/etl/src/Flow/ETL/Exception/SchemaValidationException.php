@@ -6,6 +6,8 @@ namespace Flow\ETL\Exception;
 
 use Flow\ETL\Schema;
 
+use function count;
+
 final class SchemaValidationException extends RuntimeException
 {
     public function __construct(
@@ -70,7 +72,7 @@ final class SchemaValidationException extends RuntimeException
 
         $message = '';
 
-        if (\count($missingDefinitions)) {
+        if (count($missingDefinitions)) {
             $message .= "  Missing Definitions: \n";
 
             foreach ($missingDefinitions as $missingDefinition) {
@@ -78,7 +80,7 @@ final class SchemaValidationException extends RuntimeException
             }
         }
 
-        if (\count($mismatchedDefinitions)) {
+        if (count($mismatchedDefinitions)) {
             $message .= "  Mismatched Definitions: \n";
 
             foreach ($mismatchedDefinitions as $mismatchedDefinition) {
@@ -86,7 +88,7 @@ final class SchemaValidationException extends RuntimeException
             }
         }
 
-        if (\count($unexpectedDefinitions)) {
+        if (count($unexpectedDefinitions)) {
             $message .= "  Unexpected Definitions: \n";
 
             foreach ($unexpectedDefinitions as $unexpectedDefinition) {

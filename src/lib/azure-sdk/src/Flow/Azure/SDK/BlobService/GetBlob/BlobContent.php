@@ -6,6 +6,9 @@ namespace Flow\Azure\SDK\BlobService\GetBlob;
 
 use Flow\Azure\SDK\Exception\Exception;
 use Psr\Http\Message\ResponseInterface;
+use RuntimeException;
+
+use function is_resource;
 
 final readonly class BlobContent
 {
@@ -13,7 +16,7 @@ final readonly class BlobContent
         private ResponseInterface $response,
     ) {
         if ($this->response->getStatusCode() < 200 || $this->response->getStatusCode() >= 300) {
-            throw new \RuntimeException('Blob content could not be fetched');
+            throw new RuntimeException('Blob content could not be fetched');
         }
     }
 
@@ -34,7 +37,7 @@ final readonly class BlobContent
     {
         $stream = $this->response->getBody()->detach();
 
-        if (!\is_resource($stream)) {
+        if (!is_resource($stream)) {
             throw new Exception('Blob content stream could not be accessed');
         }
 

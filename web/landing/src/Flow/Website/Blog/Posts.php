@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Website\Blog;
 
+use InvalidArgumentException;
+
+use function array_map;
+use function array_reverse;
+
 final class Posts
 {
     private array $posts = [
@@ -38,7 +43,7 @@ final class Posts
      */
     public function all(): array
     {
-        return \array_map(static fn(array $data): Post => Post::fromArray($data), \array_reverse($this->posts));
+        return array_map(static fn(array $data): Post => Post::fromArray($data), array_reverse($this->posts));
     }
 
     public function findByDateAndSlug(string $date, string $slug): Post
@@ -49,6 +54,6 @@ final class Posts
             }
         }
 
-        throw new \InvalidArgumentException('Post not found');
+        throw new InvalidArgumentException('Post not found');
     }
 }

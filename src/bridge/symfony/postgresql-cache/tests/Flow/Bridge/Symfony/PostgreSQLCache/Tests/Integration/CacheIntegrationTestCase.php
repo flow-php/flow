@@ -6,13 +6,15 @@ namespace Flow\Bridge\Symfony\PostgreSQLCache\Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
+
 abstract class CacheIntegrationTestCase extends TestCase
 {
     private ?CacheTestContext $context = null;
 
     protected function setUp(): void
     {
-        if (!\extension_loaded('pgsql')) {
+        if (!extension_loaded('pgsql')) {
             static::markTestSkipped('ext-pgsql is not available');
         }
 

@@ -8,6 +8,13 @@ use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
 
+use function bcadd;
+use function bccomp;
+use function bcsub;
+use function is_float;
+use function ord;
+use function strlen;
+
 final readonly class DeltaBinaryPackedDecoder
 {
     private const int DEFAULT_BLOCK_SIZE = 128;
@@ -74,7 +81,7 @@ final readonly class DeltaBinaryPackedDecoder
         $bitWidths = [];
 
         for ($i = 0; $i < $miniblockCount; $i++) {
-            $bitWidths[] = \ord($reader->readBytes(1));
+            $bitWidths[] = ord($reader->readBytes(1));
         }
 
         $deltas = [];
@@ -88,8 +95,7 @@ final readonly class DeltaBinaryPackedDecoder
             $bitWidth = $bitWidths[$miniblockIndex] ?? null;
 
             if ($bitWidth === null) {
-                throw new \Flow\Parquet\Exception\RuntimeException('Missing bit width for miniblock index '
-                . $miniblockIndex);
+                throw new RuntimeException('Missing bit width for miniblock index ' . $miniblockIndex);
             }
             $miniblockSize = $this->miniblockSize;
 
@@ -113,18 +119,18 @@ final readonly class DeltaBinaryPackedDecoder
                     // Handle float overflow precisely using BCMath
                     // @mago-ignore analysis:impossible-condition
                     // @phpstan-ignore-next-line
-                    if (\is_float($result)) {
+                    if (is_float($result)) {
                         // Use BCMath for precise integer arithmetic
-                        $preciseResult = \bcadd((string) $delta, (string) $minDelta, 0);
+                        $preciseResult = bcadd((string) $delta, (string) $minDelta, 0);
 
                         // Apply 2's complement wrapping for 64-bit integers
                         // @mago-ignore analysis:redundant-condition
                         // @mago-ignore analysis:redundant-comparison
                         if (PHP_INT_SIZE === 8) {
-                            if (\bccomp($preciseResult, (string) PHP_INT_MAX, 0) > 0) {
-                                $preciseResult = \bcsub($preciseResult, '18446744073709551616', 0);
-                            } elseif (\bccomp($preciseResult, (string) PHP_INT_MIN, 0) < 0) {
-                                $preciseResult = \bcadd($preciseResult, '18446744073709551616', 0);
+                            if (bccomp($preciseResult, (string) PHP_INT_MAX, 0) > 0) {
+                                $preciseResult = bcsub($preciseResult, '18446744073709551616', 0);
+                            } elseif (bccomp($preciseResult, (string) PHP_INT_MIN, 0) < 0) {
+                                $preciseResult = bcadd($preciseResult, '18446744073709551616', 0);
                             }
                         }
 
@@ -208,7 +214,7 @@ final readonly class DeltaBinaryPackedDecoder
 
         $values = [];
         $bitOffset = 0;
-        $dataLen = \strlen($packedData);
+        $dataLen = strlen($packedData);
 
         for ($valueIndex = 0; $valueIndex < $valuesToRead; $valueIndex++) {
             $value = 0;
@@ -221,7 +227,7 @@ final readonly class DeltaBinaryPackedDecoder
                     break;
                 }
 
-                $byte = \ord($packedData[$byteIndex]);
+                $byte = ord($packedData[$byteIndex]);
                 $bitValue = ($byte >> $bitIndex) & 1;
                 $value |= $bitValue << $bit;
                 $bitOffset++;
@@ -239,7 +245,7 @@ final readonly class DeltaBinaryPackedDecoder
     private function unpackMiniblockFromStringSafe(string $packedData, int $bitWidth, int $valuesToRead): array
     {
         $values = [];
-        $dataLen = \strlen($packedData);
+        $dataLen = strlen($packedData);
         $globalBitOffset = 0;
 
         for ($valueIndex = 0; $valueIndex < $valuesToRead; $valueIndex++) {
@@ -250,7 +256,7 @@ final readonly class DeltaBinaryPackedDecoder
                 $bitIndex = $globalBitOffset % 8;
 
                 if ($byteIndex < $dataLen) {
-                    $byte = \ord($packedData[$byteIndex]);
+                    $byte = ord($packedData[$byteIndex]);
                     $bitValue = ($byte >> $bitIndex) & 1;
 
                     if ($bitValue) {

@@ -12,6 +12,7 @@ use Flow\Filesystem\Mount;
 use Flow\Filesystem\Telemetry\TraceableFilesystem;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Telemetry;
+use Override;
 
 use function Flow\ETL\DSL\analyze;
 use function Flow\ETL\DSL\config_builder;
@@ -28,10 +29,11 @@ use function Flow\Telemetry\DSL\resource;
 use function Flow\Telemetry\DSL\telemetry;
 use function Flow\Telemetry\DSL\tracer_provider;
 use function Flow\Telemetry\DSL\void_exporter;
+use function str_replace;
 
 final class ConfigBuilderTest extends FlowIntegrationTestCase
 {
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         putenv(CacheConfig::CACHE_DIR_ENV . '=' . $this->cacheDir->path());
@@ -71,8 +73,8 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         $config = config_builder()->build();
 
         static::assertSame(
-            \str_replace('\\', '/', $config->cache->localFilesystemCacheDir->path()),
-            \str_replace('\\', '/', __DIR__ . '/var/cache'),
+            str_replace('\\', '/', $config->cache->localFilesystemCacheDir->path()),
+            str_replace('\\', '/', __DIR__ . '/var/cache'),
         );
     }
 
@@ -82,8 +84,8 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         $config = config_builder()->build();
 
         static::assertSame(
-            \str_replace('\\', '/', sys_get_temp_dir() . '/flow_php/cache'),
-            \str_replace('\\', '/', $config->cache->localFilesystemCacheDir->path()),
+            str_replace('\\', '/', sys_get_temp_dir() . '/flow_php/cache'),
+            str_replace('\\', '/', $config->cache->localFilesystemCacheDir->path()),
         );
     }
 

@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\XML;
 use Flow\ETL\Adapter\XML\Abstraction\XMLNode;
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer;
 use Flow\ETL\Rows;
+use Generator;
 
 final readonly class RowsNormalizer
 {
@@ -18,7 +19,7 @@ final readonly class RowsNormalizer
     /**
      * @return \Generator<XMLNode>
      */
-    public function normalize(Rows $rows): \Generator
+    public function normalize(Rows $rows): Generator
     {
         foreach ($rows as $row) {
             $node = XMLNode::nestedNode($this->rowNodeName);

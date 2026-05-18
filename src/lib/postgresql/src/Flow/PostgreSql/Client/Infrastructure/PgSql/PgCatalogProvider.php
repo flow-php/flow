@@ -39,7 +39,12 @@ use Flow\PostgreSql\Schema\Trigger;
 use Flow\PostgreSql\Schema\TriggerEvent;
 use Flow\PostgreSql\Schema\TriggerTiming;
 use Flow\PostgreSql\Schema\View;
+use RuntimeException;
 
+use function array_map;
+use function array_values;
+use function end;
+use function explode;
 use function Flow\PostgreSql\DSL\agg;
 use function Flow\PostgreSql\DSL\and_;
 use function Flow\PostgreSql\DSL\any_;
@@ -72,6 +77,11 @@ use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_union;
+use function preg_match;
+use function sprintf;
+use function str_replace;
+use function strtolower;
+use function trim;
 
 final readonly class PgCatalogProvider implements CatalogProvider
 {
@@ -154,7 +164,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
         $sval = $aConst->getSval();
 
         if ($sval !== null) {
-            return "'" . \str_replace("'", "''", $sval->getSval()) . "'";
+            return "'" . str_replace("'", "''", $sval->getSval()) . "'";
         }
 
         if ($aConst->getIval() !== null) {
@@ -181,9 +191,9 @@ final readonly class PgCatalogProvider implements CatalogProvider
 
         $types = [];
 
-        foreach (\explode(', ', $arguments) as $arg) {
-            $parts = \explode(' ', \trim($arg));
-            $types[] = \end($parts);
+        foreach (explode(', ', $arguments) as $arg) {
+            $parts = explode(' ', trim($arg));
+            $types[] = end($parts);
         }
 
         return $types;
@@ -194,13 +204,13 @@ final readonly class PgCatalogProvider implements CatalogProvider
      */
     private function parseArrayLiteral(string $literal): array
     {
-        $trimmed = \trim($literal, '{}');
+        $trimmed = trim($literal, '{}');
 
         if ($trimmed === '') {
-            throw new \RuntimeException(\sprintf('Expected non-empty array literal, got "%s".', $literal));
+            throw new RuntimeException(sprintf('Expected non-empty array literal, got "%s".', $literal));
         }
 
-        return \array_values(\array_map('trim', \explode(',', $trimmed)));
+        return array_values(array_map('trim', explode(',', $trimmed)));
     }
 
     /**
@@ -321,7 +331,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
         }
 
         if ($columns === []) {
-            throw new \RuntimeException(\sprintf('Table "%s"."%s" has no columns.', $schemaName, $tableName));
+            throw new RuntimeException(sprintf('Table "%s"."%s" has no columns.', $schemaName, $tableName));
         }
 
         return $columns;
@@ -729,7 +739,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
             [$tableName, $schemaName],
         );
 
-        return \array_map(static fn(array $row): string => type_string()->assert($row['parent']), $rows);
+        return array_map(static fn(array $row): string => type_string()->assert($row['parent']), $rows);
     }
 
     /**
@@ -777,7 +787,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
         );
 
         if ($rows === []) {
-            throw new \RuntimeException(\sprintf(
+            throw new RuntimeException(sprintf(
                 'Could not read partition info for table "%s"."%s".',
                 $schemaName,
                 $tableName,
@@ -788,7 +798,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
         $partdef = type_string()->assert($firstRow['partdef']);
 
         if ($partdef === '') {
-            throw new \RuntimeException(\sprintf(
+            throw new RuntimeException(sprintf(
                 'Could not read partition info for table "%s"."%s".',
                 $schemaName,
                 $tableName,
@@ -797,13 +807,13 @@ final readonly class PgCatalogProvider implements CatalogProvider
 
         $matches = [];
 
-        if (!\preg_match('/^(HASH|LIST|RANGE)\s*\((.+)\)$/i', $partdef, $matches)) {
-            throw new \RuntimeException(\sprintf('Could not parse partition definition: "%s".', $partdef));
+        if (!preg_match('/^(HASH|LIST|RANGE)\s*\((.+)\)$/i', $partdef, $matches)) {
+            throw new RuntimeException(sprintf('Could not parse partition definition: "%s".', $partdef));
         }
 
         return [
-            PartitionStrategy::from(\strtolower($matches[1])),
-            \array_map('trim', \explode(',', $matches[2])),
+            PartitionStrategy::from(strtolower($matches[1])),
+            array_map('trim', explode(',', $matches[2])),
         ];
     }
 
@@ -1054,7 +1064,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
                 $conditions,
                 not_(in_(
                     col('relname', 'c'),
-                    \array_map(static fn(string $t): Literal => literal($t), $this->excludeTables),
+                    array_map(static fn(string $t): Literal => literal($t), $this->excludeTables),
                 )),
             );
         }
@@ -1271,7 +1281,7 @@ final readonly class PgCatalogProvider implements CatalogProvider
     private function resolveSchemaNames(): array
     {
         return (
-            $this->schemaNames ?? \array_values(\array_map(
+            $this->schemaNames ?? array_values(array_map(
                 static fn(array $row): string => type_string()->assert($row['nspname']),
                 $this->client->fetchAllInto(
                     type_mapper(type_structure(['nspname' => type_string()])),

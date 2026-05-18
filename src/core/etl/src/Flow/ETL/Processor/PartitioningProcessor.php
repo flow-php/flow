@@ -15,9 +15,17 @@ use Flow\ETL\Processor;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\Filesystem\Partition;
+use Generator;
 
+use function array_key_exists;
+use function array_keys;
+use function array_map;
+use function bin2hex;
+use function count;
 use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_cache;
+use function implode;
+use function random_bytes;
 
 /**
  * Partitions rows by column values and caches each partition.
@@ -38,13 +46,13 @@ final readonly class PartitioningProcessor implements Processor
         private array $partitionBy = [],
         private array $orderBy = [],
     ) {
-        if (!\count($this->partitionBy)) {
+        if (!count($this->partitionBy)) {
             throw new InvalidArgumentException('PartitioningProcessor requires at least one partitionBy entry');
         }
         $this->hashAlgorithm = new NativePHPHash();
     }
 
-    public function process(\Generator $rows, FlowContext $context): \Generator
+    public function process(Generator $rows, FlowContext $context): Generator
     {
         /** @var array<string, CacheIndex> $partitionIndexes */
         $partitionIndexes = [];
@@ -56,17 +64,17 @@ final readonly class PartitioningProcessor implements Processor
 
                 $partitionId = $this->hashAlgorithm->hash(
                     $context->config->id() . '_'
-                        . \implode('_', \array_map(
+                        . implode('_', array_map(
                             static fn(Partition $partition): string => $partition->id(),
                             $partitionedRows->partitions()->toArray(),
                         )),
                 );
 
-                if (!\array_key_exists($partitionId, $partitionIndexes)) {
+                if (!array_key_exists($partitionId, $partitionIndexes)) {
                     $partitionIndexes[$partitionId] = new CacheIndex($partitionId);
                 }
 
-                $context->cache()->set($rowsCacheId = \bin2hex(\random_bytes(16)), $sortedRows);
+                $context->cache()->set($rowsCacheId = bin2hex(random_bytes(16)), $sortedRows);
                 $partitionIndexes[$partitionId]->add($rowsCacheId);
             }
         }
@@ -75,9 +83,9 @@ final readonly class PartitioningProcessor implements Processor
             $context->cache()->set($partitionIndex->key, $partitionIndex);
         }
 
-        yield from from_all(...\array_map(
+        yield from from_all(...array_map(
             static fn(string $id): Extractor => new CollectingExtractor(from_cache($id, clear: true)),
-            \array_keys($partitionIndexes),
+            array_keys($partitionIndexes),
         ))
             ->extract($context);
     }

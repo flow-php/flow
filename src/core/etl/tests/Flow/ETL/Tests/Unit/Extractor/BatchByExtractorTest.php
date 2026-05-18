@@ -15,6 +15,7 @@ use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function iterator_to_array;
 
 final class BatchByExtractorTest extends TestCase
 {
@@ -32,7 +33,7 @@ final class BatchByExtractorTest extends TestCase
             3,
         );
 
-        $batches = \iterator_to_array($extractor->extract(flow_context(config())));
+        $batches = iterator_to_array($extractor->extract(flow_context(config())));
 
         static::assertCount(2, $batches);
         static::assertCount(3, $batches[0]);
@@ -53,7 +54,7 @@ final class BatchByExtractorTest extends TestCase
             null,
         );
 
-        $batches = \iterator_to_array($extractor->extract(flow_context(config())));
+        $batches = iterator_to_array($extractor->extract(flow_context(config())));
 
         static::assertCount(3, $batches);
         static::assertCount(2, $batches[0]);
@@ -73,7 +74,7 @@ final class BatchByExtractorTest extends TestCase
             null,
         );
 
-        $batches = \iterator_to_array($extractor->extract(flow_context(config())));
+        $batches = iterator_to_array($extractor->extract(flow_context(config())));
 
         static::assertCount(3, $batches);
         static::assertCount(1, $batches[0]);
@@ -85,7 +86,7 @@ final class BatchByExtractorTest extends TestCase
     {
         $extractor = batched_by(from_rows(rows()), ref('order_id'), null);
 
-        $batches = \iterator_to_array($extractor->extract(flow_context(config())));
+        $batches = iterator_to_array($extractor->extract(flow_context(config())));
 
         static::assertCount(0, $batches);
     }
@@ -105,7 +106,7 @@ final class BatchByExtractorTest extends TestCase
             2,
         );
 
-        $batches = \iterator_to_array($extractor->extract(flow_context(config())));
+        $batches = iterator_to_array($extractor->extract(flow_context(config())));
 
         static::assertCount(2, $batches);
         static::assertCount(5, $batches[0]);
@@ -124,7 +125,7 @@ final class BatchByExtractorTest extends TestCase
             null,
         );
 
-        $batches = \iterator_to_array($extractor->extract(flow_context(config())));
+        $batches = iterator_to_array($extractor->extract(flow_context(config())));
 
         static::assertCount(1, $batches);
         static::assertCount(3, $batches[0]);

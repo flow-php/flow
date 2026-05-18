@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use Exception;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
+use Throwable;
 
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -37,7 +39,7 @@ final readonly class SelectEntriesTransformer implements Transformer
                 foreach ($this->refs as $ref) {
                     try {
                         $newRowEntries[] = $row->get($ref);
-                    } catch (\Exception) {
+                    } catch (Exception) {
                         $newRowEntries[] = str_entry($ref->name(), null);
                     }
                 }
@@ -52,7 +54,7 @@ final readonly class SelectEntriesTransformer implements Transformer
             ]);
 
             return $result;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->transformationFailed($this, $e);
 
             throw $e;

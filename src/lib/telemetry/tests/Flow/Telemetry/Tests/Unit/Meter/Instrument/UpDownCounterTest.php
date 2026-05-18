@@ -11,6 +11,9 @@ use Flow\Telemetry\Tests\Mother\InstrumentationScopeMother;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use PHPUnit\Framework\TestCase;
 
+use function array_filter;
+use function array_values;
+
 final class UpDownCounterTest extends TestCase
 {
     public function test_add_multiple_values_aggregates(): void
@@ -103,11 +106,8 @@ final class UpDownCounterTest extends TestCase
 
         static::assertCount(2, $metrics);
 
-        $tasksMetrics = \array_values(\array_filter(
-            $metrics,
-            static fn($m) => $m->attributes->get('queue') === 'tasks',
-        ));
-        $jobsMetrics = \array_values(\array_filter($metrics, static fn($m) => $m->attributes->get('queue') === 'jobs'));
+        $tasksMetrics = array_values(array_filter($metrics, static fn($m) => $m->attributes->get('queue') === 'tasks'));
+        $jobsMetrics = array_values(array_filter($metrics, static fn($m) => $m->attributes->get('queue') === 'jobs'));
 
         static::assertCount(1, $tasksMetrics);
         static::assertCount(1, $jobsMetrics);

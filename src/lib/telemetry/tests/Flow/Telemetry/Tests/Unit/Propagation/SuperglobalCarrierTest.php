@@ -8,6 +8,8 @@ use Flow\Telemetry\Exception\RuntimeException;
 use Flow\Telemetry\Propagation\SuperglobalCarrier;
 use PHPUnit\Framework\TestCase;
 
+use function str_starts_with;
+
 final class SuperglobalCarrierTest extends TestCase
 {
     /**
@@ -42,7 +44,7 @@ final class SuperglobalCarrierTest extends TestCase
         $_COOKIE = [];
 
         foreach ($_SERVER as $key => $_) {
-            if (\str_starts_with($key, 'HTTP_')) {
+            if (str_starts_with($key, 'HTTP_')) {
                 unset($_SERVER[$key]);
             }
         }

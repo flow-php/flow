@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Command;
 
+use DateTime;
 use Flow\Website\Service\FlowConfigFactory;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -12,11 +13,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Twig\Environment;
 
+use function count;
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\Filesystem\DSL\path;
+use function sprintf;
 
 #[AsCommand(name: 'app:generate:flow-completer', description: 'Generate CodeMirror completer for Flow methods')]
 final class GenerateFlowCompleterCommand extends Command
@@ -73,7 +76,7 @@ final class GenerateFlowCompleterCommand extends Command
             ->fetch()
             ->reduceToArray('name');
 
-        $io->info(\sprintf('Found %d DSL functions returning Flow', \count($flowReturningFunctions)));
+        $io->info(sprintf('Found %d DSL functions returning Flow', count($flowReturningFunctions)));
 
         $methodsData = df($this->configFactory->configBuilder('flow_completer'))
             ->read(from_json($apiJsonPath))
@@ -83,13 +86,13 @@ final class GenerateFlowCompleterCommand extends Command
             ->fetch()
             ->toArray();
 
-        $io->info(\sprintf('Found %d Flow methods', \count($methodsData)));
+        $io->info(sprintf('Found %d Flow methods', count($methodsData)));
 
         $codeMirrorContent = $this->twig->render('completers/flow-codemirror.js.twig', [
             'flow_methods' => $methodsData,
             'flow_functions' => $flowReturningFunctions,
-            'generated_at' => new \DateTime(),
-            'total_count' => \count($methodsData),
+            'generated_at' => new DateTime(),
+            'total_count' => count($methodsData),
         ]);
 
         $codeMirrorOutputFile = $this->projectDir . '/assets/codemirror/completions/flow.js';
@@ -97,8 +100,8 @@ final class GenerateFlowCompleterCommand extends Command
         $fs->writeTo(path($codeMirrorOutputFile))->append($codeMirrorContent)->close();
 
         $io->success("Generated Flow completer: {$codeMirrorOutputFile}");
-        $io->info('Flow methods: ' . \count($methodsData));
-        $io->info('Flow-returning functions: ' . \count($flowReturningFunctions));
+        $io->info('Flow methods: ' . count($methodsData));
+        $io->info('Flow-returning functions: ' . count($flowReturningFunctions));
 
         return Command::SUCCESS;
     }

@@ -8,11 +8,12 @@ use Flow\ETL\Adapter\GoogleSheet\Columns;
 use Flow\ETL\Adapter\GoogleSheet\SheetRange;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class SheetRangeTest extends FlowTestCase
 {
-    public static function example_string_ranges(): \Generator
+    public static function example_string_ranges(): Generator
     {
         yield 'one cell' => [
             new SheetRange(new Columns('Sheet2', 'B', 'B'), 2, 2, 10),
@@ -36,7 +37,7 @@ final class SheetRangeTest extends FlowTestCase
         ];
     }
 
-    public static function invalid_cases(): \Generator
+    public static function invalid_cases(): Generator
     {
         yield 'start row under 0' => [
             0,

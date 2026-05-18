@@ -30,6 +30,8 @@ use Flow\PostgreSql\QueryBuilder\Expression\BinaryExpression;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
+use function array_values;
+
 /**
  * Create an equality comparison (column = value).
  */
@@ -133,7 +135,7 @@ function between(string|Expression $expr, string|Expression $low, string|Express
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function in_(string|Expression $expr, array $values): In
 {
-    return new In($expr instanceof Expression ? $expr : col($expr), \array_values($values));
+    return new In($expr instanceof Expression ? $expr : col($expr), array_values($values));
 }
 
 /**

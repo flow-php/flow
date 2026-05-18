@@ -8,19 +8,20 @@ use Flow\Telemetry\Context\Baggage;
 use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class ContextTest extends TestCase
 {
-    public static function provideBaggageEntries(): \Generator
+    public static function provideBaggageEntries(): Generator
     {
         yield 'empty' => [[]];
         yield 'single entry' => [['key' => 'value']];
         yield 'multiple entries' => [['user.id' => '12345', 'request.id' => 'abc-123']];
     }
 
-    public static function provideContextConfigurations(): \Generator
+    public static function provideContextConfigurations(): Generator
     {
         yield 'root context' => [false];
         yield 'with active span' => [true];

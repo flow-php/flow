@@ -7,22 +7,24 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\Converter\CidrConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 final class CidrConverterTest extends TestCase
 {
-    public static function provide_invalid_values(): \Generator
+    public static function provide_invalid_values(): Generator
     {
         yield 'integer' => [12345];
         yield 'array' => [['array']];
         yield 'float' => [3.14];
         yield 'boolean true' => [true];
         yield 'boolean false' => [false];
-        yield 'object' => [new \stdClass()];
+        yield 'object' => [new stdClass()];
     }
 
-    public static function provide_valid_values(): \Generator
+    public static function provide_valid_values(): Generator
     {
         yield 'IPv4 network /8' => ['10.0.0.0/8', '10.0.0.0/8'];
         yield 'IPv4 network /16' => ['172.16.0.0/16', '172.16.0.0/16'];

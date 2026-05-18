@@ -28,6 +28,8 @@ use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
 use PHPUnit\Framework\TestCase;
 
+use function assert;
+use function extension_loaded;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\cte;
 use function Flow\PostgreSql\DSL\eq;
@@ -38,12 +40,13 @@ use function Flow\PostgreSql\DSL\param;
 use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\table;
 use function Flow\PostgreSql\DSL\with;
+use function function_exists;
 
 final class MergeBuilderTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped(
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );
@@ -116,7 +119,7 @@ final class MergeBuilderTest extends TestCase
 
     public function test_merge_deparsed_simple_update(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -142,7 +145,7 @@ final class MergeBuilderTest extends TestCase
 
     public function test_merge_deparsed_with_alias(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -776,7 +779,7 @@ final class MergeBuilderTest extends TestCase
 
         $builder = MergeBuilder::create()->into('users')->using('source', 's');
 
-        \assert($builder instanceof MergeFinalStep);
+        assert($builder instanceof MergeFinalStep);
         $builder->toAst();
     }
 
@@ -798,7 +801,7 @@ final class MergeBuilderTest extends TestCase
         $this->expectException(InvalidExpressionException::class);
 
         $builder = MergeBuilder::create()->into('users');
-        \assert($builder instanceof MergeFinalStep);
+        assert($builder instanceof MergeFinalStep);
         $builder->toAst();
     }
 
@@ -807,7 +810,7 @@ final class MergeBuilderTest extends TestCase
         $this->expectException(InvalidExpressionException::class);
 
         $builder = MergeBuilder::create();
-        \assert($builder instanceof MergeFinalStep);
+        assert($builder instanceof MergeFinalStep);
         $builder->toAst();
     }
 

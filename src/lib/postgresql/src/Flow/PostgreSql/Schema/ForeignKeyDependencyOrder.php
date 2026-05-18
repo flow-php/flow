@@ -6,6 +6,17 @@ namespace Flow\PostgreSql\Schema;
 
 use Flow\PostgreSql\Schema\Exception\SchemaException;
 
+use function array_diff;
+use function array_filter;
+use function array_keys;
+use function array_map;
+use function array_shift;
+use function array_values;
+use function count;
+use function implode;
+use function in_array;
+use function sprintf;
+
 /**
  * @implements ExecutionOrderStrategy<Table>
  */
@@ -23,7 +34,7 @@ final readonly class ForeignKeyDependencyOrder implements ExecutionOrderStrategy
      */
     public function order(array $items): array
     {
-        if (\count($items) <= 1) {
+        if (count($items) <= 1) {
             return $items;
         }
 
@@ -70,12 +81,12 @@ final readonly class ForeignKeyDependencyOrder implements ExecutionOrderStrategy
         $sorted = [];
 
         while ($queue !== []) {
-            $current = \array_shift($queue);
+            $current = array_shift($queue);
             $sorted[] = $tablesByQualifiedName[$current];
 
             foreach ($tablesByQualifiedName as $name => $table) {
-                if (\in_array($current, $dependsOn[$name], true)) {
-                    $dependsOn[$name] = \array_values(\array_filter(
+                if (in_array($current, $dependsOn[$name], true)) {
+                    $dependsOn[$name] = array_values(array_filter(
                         $dependsOn[$name],
                         static fn(string $dep): bool => $dep !== $current,
                     ));
@@ -88,13 +99,13 @@ final readonly class ForeignKeyDependencyOrder implements ExecutionOrderStrategy
             }
         }
 
-        if (\count($sorted) !== \count($tablesByQualifiedName)) {
-            $unsorted = \array_diff(
-                \array_keys($tablesByQualifiedName),
-                \array_map(static fn(Table $t): string => $t->qualifiedName(), $sorted),
+        if (count($sorted) !== count($tablesByQualifiedName)) {
+            $unsorted = array_diff(
+                array_keys($tablesByQualifiedName),
+                array_map(static fn(Table $t): string => $t->qualifiedName(), $sorted),
             );
 
-            throw new SchemaException(\sprintf('Circular foreign key dependency detected between tables: %s. Use deferred constraints to handle circular references.', \implode(
+            throw new SchemaException(sprintf('Circular foreign key dependency detected between tables: %s. Use deferred constraints to handle circular references.', implode(
                 ', ',
                 $unsorted,
             )));

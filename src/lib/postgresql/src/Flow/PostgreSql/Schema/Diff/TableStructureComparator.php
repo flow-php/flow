@@ -8,6 +8,10 @@ use Flow\PostgreSql\Schema\Column;
 use Flow\PostgreSql\Schema\Constraint\PrimaryKey;
 use Flow\PostgreSql\Schema\Table;
 
+use function array_values;
+use function count;
+use function sort;
+
 final readonly class TableStructureComparator
 {
     public function __construct(
@@ -52,8 +56,8 @@ final readonly class TableStructureComparator
         }
 
         return new ChangeSet(
-            \array_values($addedMap),
-            \array_values($removedMap),
+            array_values($addedMap),
+            array_values($removedMap),
             renamed: $renamed !== [] ? $renamed : null,
         );
     }
@@ -74,8 +78,8 @@ final readonly class TableStructureComparator
 
         $aPartCols = $a->partitionColumns;
         $bPartCols = $b->partitionColumns;
-        \sort($aPartCols);
-        \sort($bPartCols);
+        sort($aPartCols);
+        sort($bPartCols);
 
         if ($aPartCols !== $bPartCols) {
             return false;
@@ -83,8 +87,8 @@ final readonly class TableStructureComparator
 
         $aInherits = $a->inherits;
         $bInherits = $b->inherits;
-        \sort($aInherits);
-        \sort($bInherits);
+        sort($aInherits);
+        sort($bInherits);
 
         if ($aInherits !== $bInherits) {
             return false;
@@ -127,7 +131,7 @@ final readonly class TableStructureComparator
      */
     private function columnListsEqual(array $a, array $b): bool
     {
-        if (\count($a) !== \count($b)) {
+        if (count($a) !== count($b)) {
             return false;
         }
 
@@ -143,7 +147,7 @@ final readonly class TableStructureComparator
             $mapB[$col->name] = $col;
         }
 
-        if (\count($mapA) !== \count($mapB)) {
+        if (count($mapA) !== count($mapB)) {
             return false;
         }
 
@@ -169,7 +173,7 @@ final readonly class TableStructureComparator
      */
     private function listsStructurallyEqual(array $a, array $b, callable $equalsFn): bool
     {
-        if (\count($a) !== \count($b)) {
+        if (count($a) !== count($b)) {
             return false;
         }
 

@@ -10,7 +10,9 @@ use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 use Flow\PostgreSql\Protobuf\AST\SetOperation;
 
+use function count;
 use function Flow\Types\DSL\type_boolean;
+use function iterator_to_array;
 
 /**
  * @implements Statement<SelectStmt>
@@ -25,7 +27,7 @@ final readonly class SelectStatement implements Statement
 
     public function from(): From
     {
-        return new From(\iterator_to_array($this->stmt->getFromClause()));
+        return new From(iterator_to_array($this->stmt->getFromClause()));
     }
 
     public function hasCte(): bool
@@ -45,7 +47,7 @@ final readonly class SelectStatement implements Statement
 
     public function hasLockingClause(): bool
     {
-        return \count($this->stmt->getLockingClause()) > 0;
+        return count($this->stmt->getLockingClause()) > 0;
     }
 
     public function hasOffset(): bool

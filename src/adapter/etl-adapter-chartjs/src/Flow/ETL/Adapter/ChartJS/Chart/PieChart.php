@@ -9,6 +9,12 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
 
+use function array_key_exists;
+use function array_map;
+use function array_merge;
+use function array_values;
+use function is_scalar;
+
 final class PieChart implements Chart
 {
     /**
@@ -39,15 +45,15 @@ final class PieChart implements Chart
     {
         foreach ($rows as $row) {
             foreach ($this->datasets as $dataset) {
-                if (!\array_key_exists('pie', $this->data['datasets'])) {
+                if (!array_key_exists('pie', $this->data['datasets'])) {
                     $this->data['datasets']['pie'] = [
                         'data' => [$row->valueOf($dataset)],
-                        'label' => \is_scalar($row->valueOf($this->label)) ? (string) $row->valueOf($this->label) : '',
+                        'label' => is_scalar($row->valueOf($this->label)) ? (string) $row->valueOf($this->label) : '',
                     ];
                 } else {
                     $this->data['datasets']['pie']['data'][] = $row->valueOf($dataset);
                     $labelValue = $row->valueOf($this->label);
-                    $this->data['datasets']['pie']['label'] = \is_scalar($labelValue) ? (string) $labelValue : '';
+                    $this->data['datasets']['pie']['label'] = is_scalar($labelValue) ? (string) $labelValue : '';
                 }
             }
         }
@@ -71,7 +77,7 @@ final class PieChart implements Chart
             'type' => 'pie',
             'data' => [
                 'labels' => $labels,
-                'datasets' => \array_values(\array_map(static fn(array $dataset): array => \array_merge(
+                'datasets' => array_values(array_map(static fn(array $dataset): array => array_merge(
                     $dataset,
                     $options,
                 ), $this->data['datasets'])),

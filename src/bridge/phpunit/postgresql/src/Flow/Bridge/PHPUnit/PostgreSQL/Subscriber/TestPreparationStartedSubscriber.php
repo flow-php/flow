@@ -11,6 +11,7 @@ use PHPUnit\Event\Code\TestMethod;
 use PHPUnit\Event\Test\PreparationStarted;
 use PHPUnit\Event\Test\PreparationStartedSubscriber;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
 final readonly class TestPreparationStartedSubscriber implements PreparationStartedSubscriber
 {
@@ -34,7 +35,7 @@ final readonly class TestPreparationStartedSubscriber implements PreparationStar
             return false;
         }
 
-        $reflectionClass = new \ReflectionClass($test->className());
+        $reflectionClass = new ReflectionClass($test->className());
 
         if ($reflectionClass->getAttributes(SkipTransactionRollback::class)) {
             return true;

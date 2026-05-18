@@ -7,6 +7,7 @@ namespace Flow\PostgreSql\Schema;
 use Flow\PostgreSql\QueryBuilder\Schema\Function\FunctionArgument;
 use Flow\PostgreSql\QueryBuilder\Sql;
 
+use function array_map;
 use function Flow\PostgreSql\DSL\column_type_from_string;
 use function Flow\PostgreSql\DSL\create;
 
@@ -60,10 +61,9 @@ final readonly class Procedure
         $builder = create()->procedure($this->name)->orReplace();
 
         if ($this->argumentTypes !== []) {
-            $args = \array_map(
-                static fn(string $type): FunctionArgument => FunctionArgument::of(column_type_from_string($type)),
-                $this->argumentTypes,
-            );
+            $args = array_map(static fn(string $type): FunctionArgument => FunctionArgument::of(column_type_from_string(
+                $type,
+            )), $this->argumentTypes);
             $builder = $builder->arguments(...$args);
         }
 

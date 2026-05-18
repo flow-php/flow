@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\FilesystemBundle\Command;
 
+use DateTimeImmutable;
 use Flow\Filesystem\SizeUnits;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -12,10 +13,14 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Throwable;
 
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
+use function in_array;
+use function json_encode;
+use function sprintf;
 
 #[AsCommand(
     name: 'flow:filesystem:stat',
@@ -56,8 +61,8 @@ final class StatCommand extends Command
             $fstabName = type_union(type_string(), type_null())->assert($input->getOption('fstab'));
             $format = type_string()->assert($input->getOption('format'));
 
-            if (!\in_array($format, ['human', 'json'], true)) {
-                $io->getErrorStyle()->error(\sprintf('Unsupported --format "%s". Use "human" or "json".', $format));
+            if (!in_array($format, ['human', 'json'], true)) {
+                $io->getErrorStyle()->error(sprintf('Unsupported --format "%s". Use "human" or "json".', $format));
 
                 return Command::FAILURE;
             }
@@ -66,7 +71,7 @@ final class StatCommand extends Command
             $path = $this->resolver->parseUri($rawPath);
 
             if ($path->isPattern()) {
-                $io->getErrorStyle()->error(\sprintf('Pattern paths are not supported by stat. Got: %s', $path->uri()));
+                $io->getErrorStyle()->error(sprintf('Pattern paths are not supported by stat. Got: %s', $path->uri()));
 
                 return Command::FAILURE;
             }
@@ -76,25 +81,25 @@ final class StatCommand extends Command
             $status = $filesystem->status($path);
 
             if ($status === null) {
-                $io->getErrorStyle()->error(\sprintf('Path not found: %s', $path->uri()));
+                $io->getErrorStyle()->error(sprintf('Path not found: %s', $path->uri()));
 
                 return Command::FAILURE;
             }
 
             $type = $status->isFile() ? 'file' : 'directory';
             $size = $status->size;
-            $modified = $status->lastModifiedAt?->format(\DateTimeImmutable::ATOM);
+            $modified = $status->lastModifiedAt?->format(DateTimeImmutable::ATOM);
             $protocolName = $status->path->protocol();
             $uri = $status->path->uri();
             $cleanPath = $status->path->path();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $io->getErrorStyle()->error($e->getMessage());
 
             return Command::FAILURE;
         }
 
         if ($format === 'json') {
-            $output->writeln((string) \json_encode([
+            $output->writeln((string) json_encode([
                 'uri' => $uri,
                 'protocol' => $protocolName,
                 'path' => $cleanPath,

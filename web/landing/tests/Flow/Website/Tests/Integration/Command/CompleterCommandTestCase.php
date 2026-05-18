@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Website\Tests\Integration\Command;
 
 use Flow\Website\Kernel;
+use Override;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -35,7 +36,7 @@ abstract class CompleterCommandTestCase extends KernelTestCase
         return self::$kernel->getProjectDir() . '/assets/codemirror/completions/' . $filename;
     }
 
-    #[\Override]
+    #[Override]
     protected static function getKernelClass(): string
     {
         return Kernel::class;

@@ -4,19 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
+use DateTimeImmutable;
+use DateTimeZone;
+use DOMElement;
 use Flow\Types\Exception\InvalidTypeException;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_xml_element;
 
 final class XMLElementTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'valid DOMElement' => [
-            'value' => new \DOMElement('xml'),
+            'value' => new DOMElement('xml'),
             'exceptionClass' => null,
         ];
 
@@ -46,40 +51,40 @@ final class XMLElementTypeTest extends TestCase
         ];
 
         yield 'invalid object' => [
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid DateTimeZone' => [
-            'value' => new \DateTimeZone('UTC'),
+            'value' => new DateTimeZone('UTC'),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid DateTimeImmutable' => [
-            'value' => new \DateTimeImmutable(),
+            'value' => new DateTimeImmutable(),
             'exceptionClass' => InvalidTypeException::class,
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
         yield 'DOMElement stays as is' => [
-            'value' => $element = new \DOMElement('xml'),
+            'value' => $element = new DOMElement('xml'),
             'expected' => $element,
             'exceptionClass' => null,
         ];
 
         yield 'string to DOMElement' => [
             'value' => '<xml></xml>',
-            'expected' => new \DOMElement('xml'),
+            'expected' => new DOMElement('xml'),
             'exceptionClass' => null,
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'valid DOMElement' => [
-            'value' => new \DOMElement('xml'),
+            'value' => new DOMElement('xml'),
             'expected' => true,
         ];
 
@@ -109,7 +114,7 @@ final class XMLElementTypeTest extends TestCase
             $this->expectException($exceptionClass);
             type_xml_element()->assert($value);
         } else {
-            static::assertInstanceOf(\DOMElement::class, type_xml_element()->assert($value));
+            static::assertInstanceOf(DOMElement::class, type_xml_element()->assert($value));
         }
     }
 
@@ -125,7 +130,7 @@ final class XMLElementTypeTest extends TestCase
         } else {
             $result = type_xml_element()->cast($value);
 
-            if ($expected instanceof \DOMElement) {
+            if ($expected instanceof DOMElement) {
                 static::assertEquals($expected->nodeName, $result->nodeName);
             } else {
                 static::assertSame($expected, $result);

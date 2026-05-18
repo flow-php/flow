@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Diff;
 
+use function count;
+use function usort;
+
 final readonly class GreedySimilarityRenameStrategy implements RenameStrategy
 {
     public function __construct(
@@ -23,7 +26,7 @@ final readonly class GreedySimilarityRenameStrategy implements RenameStrategy
         $matchedRemoved = [];
 
         foreach ($candidatesByAdded as $addedName => $removedCandidates) {
-            if (\count($removedCandidates) !== 1) {
+            if (count($removedCandidates) !== 1) {
                 continue;
             }
 
@@ -55,7 +58,7 @@ final readonly class GreedySimilarityRenameStrategy implements RenameStrategy
             }
         }
 
-        \usort($pairs, static fn(array $a, array $b): int => $b['score'] <=> $a['score']);
+        usort($pairs, static fn(array $a, array $b): int => $b['score'] <=> $a['score']);
 
         foreach ($pairs as $pair) {
             if (

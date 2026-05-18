@@ -4,20 +4,30 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Writer\PageBuilder;
 
+use DateTimeImmutable;
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Writer\PageBuilder\Dictionary;
 use Flow\Parquet\Writer\PageBuilder\DictionaryBuilder;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+
+use function Flow\Types\DSL\type_float;
+use function is_nan;
+use function str_repeat;
+
+use const INF;
+use const NAN;
 
 final class DictionaryBuilderTest extends TestCase
 {
     private DictionaryBuilder $builder;
 
-    public static function byte_array_date_time_logical_types_provider(): \Generator
+    public static function byte_array_date_time_logical_types_provider(): Generator
     {
         yield 'BYTE_ARRAY with DATE logical type' => [PhysicalType::BYTE_ARRAY, LogicalType::date()];
         yield 'BYTE_ARRAY with TIME logical type' => [PhysicalType::BYTE_ARRAY, LogicalType::time()];
@@ -36,7 +46,7 @@ final class DictionaryBuilderTest extends TestCase
         ];
     }
 
-    public static function byte_array_string_logical_types_provider(): \Generator
+    public static function byte_array_string_logical_types_provider(): Generator
     {
         yield 'BYTE_ARRAY with STRING logical type' => [PhysicalType::BYTE_ARRAY, LogicalType::string()];
         yield 'BYTE_ARRAY with JSON logical type' => [PhysicalType::BYTE_ARRAY, LogicalType::json()];
@@ -65,13 +75,13 @@ final class DictionaryBuilderTest extends TestCase
         ];
     }
 
-    public static function float_double_physical_types_provider(): \Generator
+    public static function float_double_physical_types_provider(): Generator
     {
         yield 'FLOAT physical type' => [PhysicalType::FLOAT];
         yield 'DOUBLE physical type' => [PhysicalType::DOUBLE];
     }
 
-    public static function int64_int32_physical_types_provider(): \Generator
+    public static function int64_int32_physical_types_provider(): Generator
     {
         yield 'INT64 with DATE logical type' => [PhysicalType::INT64, LogicalType::date()];
         yield 'INT64 with TIME logical type' => [PhysicalType::INT64, LogicalType::time()];
@@ -129,10 +139,10 @@ final class DictionaryBuilderTest extends TestCase
         PhysicalType $physicalType,
         LogicalType $logicalType,
     ): void {
-        $date1 = new \DateTimeImmutable('2023-01-01');
-        $date2 = new \DateTimeImmutable('2023-01-02');
-        $date3 = new \DateTimeImmutable('2023-01-03');
-        $date4 = new \DateTimeImmutable('2023-01-04');
+        $date1 = new DateTimeImmutable('2023-01-01');
+        $date2 = new DateTimeImmutable('2023-01-02');
+        $date3 = new DateTimeImmutable('2023-01-03');
+        $date4 = new DateTimeImmutable('2023-01-04');
 
         $column = new FlatColumn('test_column', $physicalType, logicalType: $logicalType);
         $data = new WriteFlatColumnValues($column, values: [
@@ -221,7 +231,7 @@ final class DictionaryBuilderTest extends TestCase
     public function test_float_with_special_values(): void
     {
         $column = new FlatColumn('test_column', PhysicalType::FLOAT);
-        $data = new WriteFlatColumnValues($column, values: [1.0, \INF, -\INF, \NAN, 1.0, \INF, null]);
+        $data = new WriteFlatColumnValues($column, values: [1.0, INF, -INF, NAN, 1.0, INF, null]);
 
         $result = $this->builder->build($column, $data);
 
@@ -229,9 +239,9 @@ final class DictionaryBuilderTest extends TestCase
         static::assertCount(4, $result->dictionary);
         static::assertSame([0, 1, 2, 3, 0, 1], $result->indices);
         static::assertSame(1.0, $result->dictionary[0]);
-        static::assertSame(\INF, $result->dictionary[1]);
-        static::assertSame(-\INF, $result->dictionary[2]);
-        static::assertTrue(\is_nan(\Flow\Types\DSL\type_float()->assert($result->dictionary[3])));
+        static::assertSame(INF, $result->dictionary[1]);
+        static::assertSame(-INF, $result->dictionary[2]);
+        static::assertTrue(is_nan(type_float()->assert($result->dictionary[3])));
     }
 
     #[DataProvider('int64_int32_physical_types_provider')]
@@ -266,9 +276,9 @@ final class DictionaryBuilderTest extends TestCase
 
     public function test_large_string_values(): void
     {
-        $longString1 = \str_repeat('a', 1000);
-        $longString2 = \str_repeat('b', 1000);
-        $longString3 = \str_repeat('c', 1000);
+        $longString1 = str_repeat('a', 1000);
+        $longString2 = str_repeat('b', 1000);
+        $longString3 = str_repeat('c', 1000);
 
         $column = new FlatColumn('test_column', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $data = new WriteFlatColumnValues($column, values: [
@@ -315,7 +325,7 @@ final class DictionaryBuilderTest extends TestCase
         $column = new FlatColumn('test_column', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::integer());
         $data = new WriteFlatColumnValues($column, values: [1, 2, 3]);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Building dictionary for "INTEGER" is not supported');
 
         $this->builder->build($column, $data);
@@ -326,7 +336,7 @@ final class DictionaryBuilderTest extends TestCase
         $column = new FlatColumn('test_column', PhysicalType::INT96);
         $data = new WriteFlatColumnValues($column, values: [1, 2, 3]);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Building dictionary for "INT96" is not supported');
 
         $this->builder->build($column, $data);

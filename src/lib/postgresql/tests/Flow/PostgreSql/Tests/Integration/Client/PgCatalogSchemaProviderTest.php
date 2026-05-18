@@ -13,6 +13,7 @@ use Flow\PostgreSql\Schema\TriggerEvent;
 use Flow\PostgreSql\Schema\TriggerTiming;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
+use function array_map;
 use function Flow\PostgreSql\DSL\agg_count;
 use function Flow\PostgreSql\DSL\check_constraint;
 use function Flow\PostgreSql\DSL\client_catalog_provider;
@@ -248,7 +249,7 @@ final class PgCatalogSchemaProviderTest extends PostgreSqlTestCase
 
         static::assertTrue($schema->hasSequence('invoice_number_seq'));
 
-        $sequenceNames = \array_map(static fn($seq) => $seq->name, $schema->sequences);
+        $sequenceNames = array_map(static fn($seq) => $seq->name, $schema->sequences);
         static::assertNotContains('audit_log_id_seq', $sequenceNames);
         static::assertContains('invoice_number_seq', $sequenceNames);
 
@@ -258,7 +259,7 @@ final class PgCatalogSchemaProviderTest extends PostgreSqlTestCase
         static::assertCount(1, $schema->materializedViews);
         static::assertSame('user_post_counts', $schema->materializedViews[0]->name);
 
-        $functionNames = \array_map(static fn($f) => $f->name, $schema->functions);
+        $functionNames = array_map(static fn($f) => $f->name, $schema->functions);
         static::assertContains('update_modified_column', $functionNames);
 
         static::assertCount(1, $schema->domains);

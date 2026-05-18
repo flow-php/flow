@@ -6,12 +6,15 @@ namespace Flow\Azure\SDK\Normalizer;
 
 use Flow\Azure\SDK\Exception\Exception;
 use Flow\Azure\SDK\Normalizer;
+use SimpleXMLElement;
+
+use function class_exists;
 
 final class SimpleXMLNormalizer implements Normalizer
 {
     public function __construct()
     {
-        if (!\class_exists('SimpleXMLElement')) {
+        if (!class_exists('SimpleXMLElement')) {
             throw new Exception('SimpleXML extension is required to use this normalizer');
         }
     }
@@ -21,13 +24,13 @@ final class SimpleXMLNormalizer implements Normalizer
      */
     public function toArray(string $data): array
     {
-        return $this->normalize(new \SimpleXMLElement($data));
+        return $this->normalize(new SimpleXMLElement($data));
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function normalize(\SimpleXMLElement $xml): array
+    private function normalize(SimpleXMLElement $xml): array
     {
         $children = $xml->children();
 
@@ -70,7 +73,7 @@ final class SimpleXMLNormalizer implements Normalizer
     /**
      * @return null|array<string, mixed>|string
      */
-    private function valueOf(\SimpleXMLElement $element): array|string|null
+    private function valueOf(SimpleXMLElement $element): array|string|null
     {
         if ($element->count() > 0) {
             $value = $this->normalize($element);

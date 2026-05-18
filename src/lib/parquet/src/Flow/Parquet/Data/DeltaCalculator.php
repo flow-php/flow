@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Data;
 
+use function bcadd;
+use function bccomp;
+use function bcsub;
+use function is_float;
+
 final readonly class DeltaCalculator
 {
     public function calculateDelta(int $previous, int $current): int
@@ -12,30 +17,30 @@ final readonly class DeltaCalculator
 
         // @mago-ignore analysis:impossible-condition
         // @phpstan-ignore-next-line
-        if (\is_float($result)) {
+        if (is_float($result)) {
             // Use BCMath for precise calculation without overflow
-            $deltaString = \bcsub((string) $current, (string) $previous, 0);
+            $deltaString = bcsub((string) $current, (string) $previous, 0);
 
             // For 64-bit systems, implement proper 2's complement wrapping
             // @mago-ignore analysis:redundant-condition
             // @mago-ignore analysis:redundant-comparison
             if (PHP_INT_SIZE === 8) {
                 // If delta is out of range, wrap it using 2^64
-                while (\bccomp($deltaString, (string) PHP_INT_MAX, 0) > 0) {
-                    $deltaString = \bcsub($deltaString, '18446744073709551616', 0); // 2^64
+                while (bccomp($deltaString, (string) PHP_INT_MAX, 0) > 0) {
+                    $deltaString = bcsub($deltaString, '18446744073709551616', 0); // 2^64
                 }
 
-                while (\bccomp($deltaString, (string) PHP_INT_MIN, 0) < 0) {
-                    $deltaString = \bcadd($deltaString, '18446744073709551616', 0); // 2^64
+                while (bccomp($deltaString, (string) PHP_INT_MIN, 0) < 0) {
+                    $deltaString = bcadd($deltaString, '18446744073709551616', 0); // 2^64
                 }
             } else {
                 // For 32-bit systems
-                while (\bccomp($deltaString, (string) PHP_INT_MAX, 0) > 0) {
-                    $deltaString = \bcsub($deltaString, '4294967296', 0); // 2^32
+                while (bccomp($deltaString, (string) PHP_INT_MAX, 0) > 0) {
+                    $deltaString = bcsub($deltaString, '4294967296', 0); // 2^32
                 }
 
-                while (\bccomp($deltaString, (string) PHP_INT_MIN, 0) < 0) {
-                    $deltaString = \bcadd($deltaString, '4294967296', 0); // 2^32
+                while (bccomp($deltaString, (string) PHP_INT_MIN, 0) < 0) {
+                    $deltaString = bcadd($deltaString, '4294967296', 0); // 2^32
                 }
             }
 
@@ -68,30 +73,30 @@ final readonly class DeltaCalculator
 
         // @mago-ignore analysis:impossible-condition
         // @phpstan-ignore-next-line
-        if (\is_float($result)) {
+        if (is_float($result)) {
             // Use BCMath for precise calculation without overflow
-            $deltaString = \bcsub((string) $delta, (string) $minDelta, 0);
+            $deltaString = bcsub((string) $delta, (string) $minDelta, 0);
 
             // For 64-bit systems, implement proper 2's complement wrapping
             // @mago-ignore analysis:redundant-condition
             // @mago-ignore analysis:redundant-comparison
             if (PHP_INT_SIZE === 8) {
                 // If delta is out of range, wrap it using 2^64
-                while (\bccomp($deltaString, (string) PHP_INT_MAX, 0) > 0) {
-                    $deltaString = \bcsub($deltaString, '18446744073709551616', 0); // 2^64
+                while (bccomp($deltaString, (string) PHP_INT_MAX, 0) > 0) {
+                    $deltaString = bcsub($deltaString, '18446744073709551616', 0); // 2^64
                 }
 
-                while (\bccomp($deltaString, (string) PHP_INT_MIN, 0) < 0) {
-                    $deltaString = \bcadd($deltaString, '18446744073709551616', 0); // 2^64
+                while (bccomp($deltaString, (string) PHP_INT_MIN, 0) < 0) {
+                    $deltaString = bcadd($deltaString, '18446744073709551616', 0); // 2^64
                 }
             } else {
                 // For 32-bit systems
-                while (\bccomp($deltaString, (string) PHP_INT_MAX, 0) > 0) {
-                    $deltaString = \bcsub($deltaString, '4294967296', 0); // 2^32
+                while (bccomp($deltaString, (string) PHP_INT_MAX, 0) > 0) {
+                    $deltaString = bcsub($deltaString, '4294967296', 0); // 2^32
                 }
 
-                while (\bccomp($deltaString, (string) PHP_INT_MIN, 0) < 0) {
-                    $deltaString = \bcadd($deltaString, '4294967296', 0); // 2^32
+                while (bccomp($deltaString, (string) PHP_INT_MIN, 0) < 0) {
+                    $deltaString = bcadd($deltaString, '4294967296', 0); // 2^32
                 }
             }
 
@@ -116,30 +121,30 @@ final readonly class DeltaCalculator
             $result = $currentValue + $delta;
 
             // @mago-ignore analysis:impossible-condition
-            if (\is_float($result)) {
+            if (is_float($result)) {
                 // Use BCMath for precise calculation without overflow
-                $nextValueString = \bcadd((string) $currentValue, (string) $delta, 0);
+                $nextValueString = bcadd((string) $currentValue, (string) $delta, 0);
 
                 // For 64-bit systems, implement proper 2's complement wrapping
                 // @mago-ignore analysis:redundant-condition
                 // @mago-ignore analysis:redundant-comparison
                 if (PHP_INT_SIZE === 8) {
                     // If result is out of range, wrap it using 2^64
-                    while (\bccomp($nextValueString, (string) PHP_INT_MAX, 0) > 0) {
-                        $nextValueString = \bcsub($nextValueString, '18446744073709551616', 0); // 2^64
+                    while (bccomp($nextValueString, (string) PHP_INT_MAX, 0) > 0) {
+                        $nextValueString = bcsub($nextValueString, '18446744073709551616', 0); // 2^64
                     }
 
-                    while (\bccomp($nextValueString, (string) PHP_INT_MIN, 0) < 0) {
-                        $nextValueString = \bcadd($nextValueString, '18446744073709551616', 0); // 2^64
+                    while (bccomp($nextValueString, (string) PHP_INT_MIN, 0) < 0) {
+                        $nextValueString = bcadd($nextValueString, '18446744073709551616', 0); // 2^64
                     }
                 } else {
                     // For 32-bit systems
-                    while (\bccomp($nextValueString, (string) PHP_INT_MAX, 0) > 0) {
-                        $nextValueString = \bcsub($nextValueString, '4294967296', 0); // 2^32
+                    while (bccomp($nextValueString, (string) PHP_INT_MAX, 0) > 0) {
+                        $nextValueString = bcsub($nextValueString, '4294967296', 0); // 2^32
                     }
 
-                    while (\bccomp($nextValueString, (string) PHP_INT_MIN, 0) < 0) {
-                        $nextValueString = \bcadd($nextValueString, '4294967296', 0); // 2^32
+                    while (bccomp($nextValueString, (string) PHP_INT_MIN, 0) < 0) {
+                        $nextValueString = bcadd($nextValueString, '4294967296', 0); // 2^32
                     }
                 }
 

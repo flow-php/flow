@@ -16,7 +16,9 @@ use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
+use function array_fill;
 use function Flow\PostgreSql\DSL\pgsql_connection_params;
 use function Flow\PostgreSql\DSL\postgresql_telemetry_config;
 use function Flow\PostgreSql\DSL\postgresql_telemetry_options;
@@ -31,6 +33,8 @@ use function Flow\Telemetry\DSL\resource;
 use function Flow\Telemetry\DSL\telemetry;
 use function Flow\Telemetry\DSL\tracer_provider;
 use function Flow\Telemetry\DSL\void_exporter;
+use function str_repeat;
+use function strlen;
 
 final class TraceableClientTest extends TestCase
 {
@@ -142,13 +146,13 @@ final class TraceableClientTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
-        $exception = new \RuntimeException('Query failed');
+        $exception = new RuntimeException('Query failed');
         $mockClient = $this->createMockClient();
         $mockClient->method('execute')->willThrowException($exception);
 
         $client = traceable_postgresql_client($mockClient, $config);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Query failed');
 
         try {
@@ -302,7 +306,7 @@ final class TraceableClientTest extends TestCase
 
         $client = traceable_postgresql_client($mockClient, $config);
 
-        $parameters = \array_fill(0, 20, 'value');
+        $parameters = array_fill(0, 20, 'value');
         $client->execute('SELECT * FROM users WHERE id IN ($1, $2, ...)', $parameters);
 
         $spans = $spanProcessor->endedSpans();
@@ -336,7 +340,7 @@ final class TraceableClientTest extends TestCase
 
         $client = traceable_postgresql_client($mockClient, $config);
 
-        $parameters = \array_fill(0, 20, 'value');
+        $parameters = array_fill(0, 20, 'value');
         $client->execute('SELECT * FROM users WHERE id IN ($1, $2, ...)', $parameters);
 
         $spans = $spanProcessor->endedSpans();
@@ -387,7 +391,7 @@ final class TraceableClientTest extends TestCase
 
         $client = traceable_postgresql_client($mockClient, $config);
 
-        $longValue = \str_repeat('a', 200);
+        $longValue = str_repeat('a', 200);
         $client->execute('UPDATE users SET name = $1', [$longValue]);
 
         $spans = $spanProcessor->endedSpans();
@@ -395,7 +399,7 @@ final class TraceableClientTest extends TestCase
 
         $paramValue = $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1'];
         static::assertIsString($paramValue);
-        static::assertSame(103, \strlen($paramValue));
+        static::assertSame(103, strlen($paramValue));
         static::assertStringEndsWith('...', $paramValue);
     }
 
@@ -412,7 +416,7 @@ final class TraceableClientTest extends TestCase
 
         $client = traceable_postgresql_client($mockClient, $config);
 
-        $longValue = \str_repeat('a', 200);
+        $longValue = str_repeat('a', 200);
         $client->execute('UPDATE users SET name = $1', [$longValue]);
 
         $spans = $spanProcessor->endedSpans();
@@ -420,7 +424,7 @@ final class TraceableClientTest extends TestCase
 
         $paramValue = $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1'];
         static::assertIsString($paramValue);
-        static::assertSame(200, \strlen($paramValue));
+        static::assertSame(200, strlen($paramValue));
         static::assertSame($longValue, $paramValue);
     }
 
@@ -471,7 +475,7 @@ final class TraceableClientTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, postgresql_telemetry_options(maxQueryLength: null));
 
-        $longQuery = 'SELECT * FROM users WHERE ' . \str_repeat('id = 1 AND ', 100) . 'active = true';
+        $longQuery = 'SELECT * FROM users WHERE ' . str_repeat('id = 1 AND ', 100) . 'active = true';
         $mockClient = $this->createMockClient();
         $mockClient->method('execute')->willReturn(1);
 

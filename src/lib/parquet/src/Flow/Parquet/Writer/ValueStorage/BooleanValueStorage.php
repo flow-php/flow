@@ -7,6 +7,9 @@ namespace Flow\Parquet\Writer\ValueStorage;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
+use function count;
+use function is_bool;
+
 final class BooleanValueStorage implements ValueStorage
 {
     /**
@@ -18,7 +21,7 @@ final class BooleanValueStorage implements ValueStorage
     {
         // @mago-ignore analysis:mixed-assignment
         foreach ($values as $value) {
-            if (\is_bool($value)) {
+            if (is_bool($value)) {
                 $this->values[] = $value;
             }
         }
@@ -44,7 +47,7 @@ final class BooleanValueStorage implements ValueStorage
 
     public function isEmpty(): bool
     {
-        return !\count($this->values);
+        return !count($this->values);
     }
 
     public function reset(): void
@@ -54,6 +57,6 @@ final class BooleanValueStorage implements ValueStorage
 
     public function size(): int
     {
-        return \count($this->values);
+        return count($this->values);
     }
 }

@@ -7,6 +7,8 @@ namespace Flow\Parquet\Tests\Unit\BinaryReader;
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use PHPUnit\Framework\TestCase;
 
+use function pack;
+
 final class BinaryBufferReaderTest extends TestCase
 {
     public function test_read_var_int(): void
@@ -14,7 +16,7 @@ final class BinaryBufferReaderTest extends TestCase
         // Using examples:
         // 1 is encoded as 00000001
         // 300 is encoded as 10101100 00000010
-        $buffer = \pack('C*', 0x01, 0xAC, 0x02);
+        $buffer = pack('C*', 0x01, 0xAC, 0x02);
         $reader = new BinaryBufferReader($buffer);
 
         // First varint should be 1

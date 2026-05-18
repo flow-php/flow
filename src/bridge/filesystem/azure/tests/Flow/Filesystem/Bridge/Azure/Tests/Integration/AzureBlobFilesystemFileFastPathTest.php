@@ -11,6 +11,7 @@ use Flow\Filesystem\Tests\Double\RejectingFilter;
 
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function iterator_to_array;
 
 final class AzureBlobFilesystemFileFastPathTest extends AzureBlobServiceTestCase
 {
@@ -23,7 +24,7 @@ final class AzureBlobFilesystemFileFastPathTest extends AzureBlobServiceTestCase
 
         $blobService->resetCounters();
 
-        $statuses = \iterator_to_array($fs->list(path('azure-blob://orders/orders.csv')));
+        $statuses = iterator_to_array($fs->list(path('azure-blob://orders/orders.csv')));
 
         static::assertCount(1, $statuses);
         static::assertSame(
@@ -43,7 +44,7 @@ final class AzureBlobFilesystemFileFastPathTest extends AzureBlobServiceTestCase
 
         $blobService->resetCounters();
 
-        $statuses = \iterator_to_array($fs->list(path('azure-blob://orders/orders.csv'), new RejectingFilter()));
+        $statuses = iterator_to_array($fs->list(path('azure-blob://orders/orders.csv'), new RejectingFilter()));
 
         static::assertCount(0, $statuses);
         static::assertSame(1, $blobService->getBlobPropertiesCount);
@@ -60,7 +61,7 @@ final class AzureBlobFilesystemFileFastPathTest extends AzureBlobServiceTestCase
 
         $blobService->resetCounters();
 
-        $statuses = \iterator_to_array($fs->list(path('azure-blob://orders/')));
+        $statuses = iterator_to_array($fs->list(path('azure-blob://orders/')));
 
         static::assertCount(2, $statuses);
         static::assertSame(
@@ -78,7 +79,7 @@ final class AzureBlobFilesystemFileFastPathTest extends AzureBlobServiceTestCase
 
         $blobService->resetCounters();
 
-        $statuses = \iterator_to_array($fs->list(path('azure-blob://missing/file.csv')));
+        $statuses = iterator_to_array($fs->list(path('azure-blob://missing/file.csv')));
 
         static::assertCount(0, $statuses);
         static::assertSame(
@@ -99,7 +100,7 @@ final class AzureBlobFilesystemFileFastPathTest extends AzureBlobServiceTestCase
 
         $blobService->resetCounters();
 
-        $statuses = \iterator_to_array($fs->list(path('azure-blob://orders/*.csv')));
+        $statuses = iterator_to_array($fs->list(path('azure-blob://orders/*.csv')));
 
         static::assertCount(2, $statuses);
         static::assertSame(
@@ -119,7 +120,7 @@ final class AzureBlobFilesystemFileFastPathTest extends AzureBlobServiceTestCase
 
         $blobService->resetCounters();
 
-        \iterator_to_array($fs->list(path('azure-blob:///')));
+        iterator_to_array($fs->list(path('azure-blob:///')));
 
         static::assertSame(0, $blobService->getBlobPropertiesCount);
         static::assertSame(1, $blobService->listBlobsCount);
@@ -135,7 +136,7 @@ final class AzureBlobFilesystemFileFastPathTest extends AzureBlobServiceTestCase
 
         $blobService->resetCounters();
 
-        $statuses = \iterator_to_array($fs->list(path('azure-blob://orders/file.txt')));
+        $statuses = iterator_to_array($fs->list(path('azure-blob://orders/file.txt')));
 
         static::assertCount(1, $statuses);
         static::assertSame('azure-blob://orders/file.txt', $statuses[0]->path->uri());
@@ -152,7 +153,7 @@ final class AzureBlobFilesystemFileFastPathTest extends AzureBlobServiceTestCase
 
         $blobService->resetCounters();
 
-        $statuses = \iterator_to_array($fs->list(path('azure-blob://orders/orders.csv'), new OnlyFiles()));
+        $statuses = iterator_to_array($fs->list(path('azure-blob://orders/orders.csv'), new OnlyFiles()));
 
         static::assertCount(1, $statuses);
         static::assertSame('azure-blob://orders/orders.csv', $statuses[0]->path->uri());

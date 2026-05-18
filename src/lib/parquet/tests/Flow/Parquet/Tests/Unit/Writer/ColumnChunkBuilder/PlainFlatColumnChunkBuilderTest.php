@@ -13,26 +13,28 @@ use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Writer\ColumnChunkBuilder\PlainFlatColumnChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkContainer;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class PlainFlatColumnChunkBuilderTest extends TestCase
 {
-    public static function compression_types_provider(): \Generator
+    public static function compression_types_provider(): Generator
     {
         yield 'uncompressed' => [Compressions::UNCOMPRESSED];
         yield 'gzip' => [Compressions::GZIP];
         yield 'snappy' => [Compressions::SNAPPY];
     }
 
-    public static function page_size_provider(): \Generator
+    public static function page_size_provider(): Generator
     {
         yield 'small page' => [1024];
         yield 'medium page' => [8192];
         yield 'large page' => [65536];
     }
 
-    public static function physical_types_provider(): \Generator
+    public static function physical_types_provider(): Generator
     {
         yield 'int32' => [PhysicalType::INT32, 42];
         yield 'int64' => [PhysicalType::INT64, 1234567890123];
@@ -42,7 +44,7 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         yield 'byte_array' => [PhysicalType::BYTE_ARRAY, 'test_string'];
     }
 
-    public static function writer_version_provider(): \Generator
+    public static function writer_version_provider(): Generator
     {
         yield 'version 1' => [1];
         yield 'version 2' => [2];
@@ -259,7 +261,7 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], [42]));
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
             'Flow Parquet Writer does not support given version of Parquet format, supported versions are [1,2], given: 3',
         );

@@ -6,6 +6,9 @@ namespace Flow\ETL\Dataset\Memory;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
+use function ini_get;
+use function str_starts_with;
+
 final class Configuration
 {
     private ?Unit $limit = null;
@@ -18,9 +21,9 @@ final class Configuration
             );
         }
 
-        $limitConfig = \ini_get('memory_limit');
+        $limitConfig = ini_get('memory_limit');
 
-        if ($limitConfig !== false && !\str_starts_with($limitConfig, '-')) {
+        if ($limitConfig !== false && !str_starts_with($limitConfig, '-')) {
             $this->limit = Unit::fromString($limitConfig)->percentage(100 - $safetyBufferPercentage);
         }
     }

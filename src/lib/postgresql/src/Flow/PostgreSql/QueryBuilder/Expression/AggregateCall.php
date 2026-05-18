@@ -11,6 +11,9 @@ use Flow\PostgreSql\QueryBuilder\Clause\OrderBy;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 
+use function array_values;
+use function count;
+
 /**
  * Represents an aggregate function call with optional DISTINCT, ORDER BY, and FILTER clauses.
  * Examples: COUNT(*), SUM(x), AVG(DISTINCT value), COUNT(*) FILTER (WHERE condition).
@@ -52,7 +55,7 @@ final readonly class AggregateCall implements Expression
 
         $funcNameNodes = $funcCall->getFuncname();
 
-        if (\count($funcNameNodes) === 0) {
+        if (count($funcNameNodes) === 0) {
             throw InvalidAstException::missingRequiredField('funcname', 'FuncCall');
         }
 
@@ -215,7 +218,7 @@ final readonly class AggregateCall implements Expression
             $this->args,
             $this->star,
             $this->distinct,
-            \array_values($orderBy),
+            array_values($orderBy),
             $this->filter,
         );
     }

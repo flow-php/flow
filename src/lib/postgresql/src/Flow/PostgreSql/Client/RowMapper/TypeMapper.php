@@ -7,6 +7,7 @@ namespace Flow\PostgreSql\Client\RowMapper;
 use Flow\PostgreSql\Client\Exception\MappingException;
 use Flow\PostgreSql\Client\RowMapper;
 use Flow\Types\Type;
+use Throwable;
 
 /**
  * Maps database rows to typed values using flow-php/types.
@@ -35,7 +36,7 @@ final readonly class TypeMapper implements RowMapper
     {
         try {
             $result = $this->type->cast($row);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             throw new MappingException('Failed to map database row to type: ' . $e->getMessage(), previous: $e);
         }
 

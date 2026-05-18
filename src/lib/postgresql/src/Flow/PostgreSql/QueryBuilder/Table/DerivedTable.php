@@ -10,6 +10,8 @@ use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\RangeSubselect;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
+use function count;
+
 /**
  * Represents a derived table (subquery): (SELECT ...) AS alias or LATERAL (SELECT ...) AS alias (col1, col2).
  */
@@ -87,7 +89,7 @@ final readonly class DerivedTable implements TableReference
     {
         $colnames = $alias->getColnames();
 
-        if (\count($colnames) === 0) {
+        if (count($colnames) === 0) {
             return null;
         }
 
@@ -103,6 +105,6 @@ final readonly class DerivedTable implements TableReference
             $columnAliases[] = $string->getSval();
         }
 
-        return \count($columnAliases) > 0 ? $columnAliases : null;
+        return count($columnAliases) > 0 ? $columnAliases : null;
     }
 }

@@ -15,7 +15,11 @@ use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
 use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
+use Throwable;
 
+use function array_filter;
+use function array_map;
+use function array_values;
 use function Flow\PostgreSql\DSL\column;
 use function Flow\PostgreSql\DSL\column_type_serial;
 use function Flow\PostgreSql\DSL\column_type_text;
@@ -40,6 +44,7 @@ use function Flow\Telemetry\DSL\resource;
 use function Flow\Telemetry\DSL\telemetry;
 use function Flow\Telemetry\DSL\tracer_provider;
 use function Flow\Telemetry\DSL\void_exporter;
+use function str_contains;
 
 final class TraceableClientTest extends PostgreSqlTestCase
 {
@@ -71,10 +76,10 @@ final class TraceableClientTest extends PostgreSqlTestCase
         static::assertCount(2, $rows);
 
         $spans = $spanProcessor->endedSpans();
-        $cursorSpan = \array_filter($spans, static fn($s) => \str_contains($s->name(), 'cursor'));
+        $cursorSpan = array_filter($spans, static fn($s) => str_contains($s->name(), 'cursor'));
         static::assertNotEmpty($cursorSpan);
 
-        $cursorSpan = \array_values($cursorSpan)[0];
+        $cursorSpan = array_values($cursorSpan)[0];
         static::assertSame(2, $cursorSpan->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
 
@@ -116,7 +121,7 @@ final class TraceableClientTest extends PostgreSqlTestCase
 
         try {
             $client->execute(select(star())->from(table('nonexistent_table_12345')));
-        } catch (\Throwable) {
+        } catch (Throwable) {
         }
 
         $spans = $spanProcessor->endedSpans();
@@ -149,8 +154,8 @@ final class TraceableClientTest extends PostgreSqlTestCase
         static::assertCount(3, $result);
 
         $spans = $spanProcessor->endedSpans();
-        $selectSpan = \array_filter($spans, static fn($s) => \str_contains($s->name(), 'SELECT'));
-        $selectSpan = \array_values($selectSpan)[0];
+        $selectSpan = array_filter($spans, static fn($s) => str_contains($s->name(), 'SELECT'));
+        $selectSpan = array_values($selectSpan)[0];
 
         static::assertSame(3, $selectSpan->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
     }
@@ -223,7 +228,7 @@ final class TraceableClientTest extends PostgreSqlTestCase
         $spans = $spanProcessor->endedSpans();
         static::assertCount(2, $spans);
 
-        $spanNames = \array_map(static fn($s) => $s->name(), $spans);
+        $spanNames = array_map(static fn($s) => $s->name(), $spans);
         static::assertContains('BEGIN TRANSACTION', $spanNames);
         static::assertContains('BEGIN SAVEPOINT', $spanNames);
     }
@@ -244,8 +249,8 @@ final class TraceableClientTest extends PostgreSqlTestCase
         $client->execute(insert()->into('test_params')->columns('name')->values(param(1)), ['John']);
 
         $spans = $spanProcessor->endedSpans();
-        $insertSpan = \array_filter($spans, static fn($s) => \str_contains($s->name(), 'INSERT'));
-        $insertSpan = \array_values($insertSpan)[0];
+        $insertSpan = array_filter($spans, static fn($s) => str_contains($s->name(), 'INSERT'));
+        $insertSpan = array_values($insertSpan)[0];
 
         static::assertSame(
             'John',

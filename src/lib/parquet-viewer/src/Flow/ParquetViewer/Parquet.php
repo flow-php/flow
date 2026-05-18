@@ -7,6 +7,7 @@ namespace Flow\ParquetViewer;
 use Flow\ParquetViewer\Command\ReadDataCommand;
 use Flow\ParquetViewer\Command\ReadDDLCommand;
 use Flow\ParquetViewer\Command\ReadMetadataCommand;
+use Override;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\CompleteCommand;
 use Symfony\Component\Console\Command\DumpCompletionCommand;
@@ -15,7 +16,7 @@ use Symfony\Component\Console\Command\ListCommand;
 
 final class Parquet extends Application
 {
-    #[\Override]
+    #[Override]
     protected function getDefaultCommands(): array
     {
         return [

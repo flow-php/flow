@@ -12,12 +12,13 @@ use Flow\Telemetry\Propagation\ArrayCarrier;
 use Flow\Telemetry\Propagation\PropagationContext;
 use Flow\Telemetry\Propagation\W3CTraceContext;
 use Flow\Telemetry\Tracer\SpanContext;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class W3CTraceContextTest extends TestCase
 {
-    public static function provideInvalidTraceparentHeaders(): \Generator
+    public static function provideInvalidTraceparentHeaders(): Generator
     {
         yield 'wrong version' => ['01-0af7651916cd43dd8448eb211c80319c-00f067aa0ba902b7-01'];
         yield 'missing parts' => ['00-0af7651916cd43dd8448eb211c80319c-00f067aa0ba902b7'];
@@ -35,7 +36,7 @@ final class W3CTraceContextTest extends TestCase
         yield 'all zeros span id' => ['00-0af7651916cd43dd8448eb211c80319c-0000000000000000-01'];
     }
 
-    public static function provideValidTraceparentHeaders(): \Generator
+    public static function provideValidTraceparentHeaders(): Generator
     {
         yield 'sampled' => [
             '00-0af7651916cd43dd8448eb211c80319c-00f067aa0ba902b7-01',

@@ -9,6 +9,9 @@ use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
+use function file_exists;
+use function unlink;
+
 final class FileConvertCommandTest extends TestCase
 {
     /**
@@ -39,8 +42,8 @@ final class FileConvertCommandTest extends TestCase
         /** @var array<string, mixed> $options */
         $output = __DIR__ . '/var/' . bin2hex(random_bytes(16)) . '.' . $outputFormat;
 
-        if (\file_exists($output)) {
-            \unlink($output);
+        if (file_exists($output)) {
+            unlink($output);
         }
 
         $tester = new CommandTester(new FileConvertCommand('convert'));
@@ -62,8 +65,8 @@ final class FileConvertCommandTest extends TestCase
     {
         $output = __DIR__ . '/var/' . bin2hex(random_bytes(16)) . '.json';
 
-        if (\file_exists($output)) {
-            \unlink($output);
+        if (file_exists($output)) {
+            unlink($output);
         }
 
         $tester = new CommandTester(new FileConvertCommand('convert'));
@@ -96,8 +99,8 @@ final class FileConvertCommandTest extends TestCase
     {
         $output = __DIR__ . '/var/' . bin2hex(random_bytes(16)) . '.json';
 
-        if (\file_exists($output)) {
-            \unlink($output);
+        if (file_exists($output)) {
+            unlink($output);
         }
 
         $tester = new CommandTester(new FileConvertCommand('convert'));

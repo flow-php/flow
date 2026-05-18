@@ -18,13 +18,14 @@ use Flow\PostgreSql\QueryBuilder\Schema\Grant\RevokeRoleBuilder;
 use Flow\PostgreSql\QueryBuilder\Schema\Grant\TablePrivilege;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
 use function Flow\Types\DSL\type_instance_of;
 
 final class GrantBuilderTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }

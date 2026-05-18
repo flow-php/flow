@@ -9,12 +9,15 @@ use Flow\Snappy\Snappy;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\ETL\DSL\generate_random_int;
+use function function_exists;
+use function snappy_compress;
+use function snappy_uncompress;
 
 final class SnappyTest extends TestCase
 {
     public function test_decompress_text_compressed_with_extension(): void
     {
-        if (!\function_exists('snappy_compress')) {
+        if (!function_exists('snappy_compress')) {
             static::markTestSkipped('Snappy extension is not installed');
         }
 
@@ -22,12 +25,12 @@ final class SnappyTest extends TestCase
 
         $snappy = new Snappy();
 
-        static::assertSame($string, $snappy->uncompress(\snappy_compress($string)));
+        static::assertSame($string, $snappy->uncompress(snappy_compress($string)));
     }
 
     public function test_decompress_with_extension_text_compressed_with_library(): void
     {
-        if (!\function_exists('snappy_uncompress')) {
+        if (!function_exists('snappy_uncompress')) {
             static::markTestSkipped('Snappy extension is not installed');
         }
 
@@ -35,7 +38,7 @@ final class SnappyTest extends TestCase
 
         $snappy = new Snappy();
 
-        static::assertSame($string, \snappy_uncompress($snappy->compress($string)));
+        static::assertSame($string, snappy_uncompress($snappy->compress($string)));
     }
 
     public function test_snappy_compression(): void

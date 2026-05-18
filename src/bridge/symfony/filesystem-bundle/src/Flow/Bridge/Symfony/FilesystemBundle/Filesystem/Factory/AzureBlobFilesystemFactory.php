@@ -16,6 +16,9 @@ use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Log\LoggerInterface;
 
+use function array_diff;
+use function array_key_exists;
+use function array_keys;
 use function Flow\Azure\SDK\DSL\azure_blob_service;
 use function Flow\Azure\SDK\DSL\azure_blob_service_config;
 use function Flow\Azure\SDK\DSL\azure_http_factory;
@@ -23,23 +26,29 @@ use function Flow\Azure\SDK\DSL\azure_shared_key_authorization_factory;
 use function Flow\Azure\SDK\DSL\azure_url_factory;
 use function Flow\Azure\SDK\DSL\azurite_url_factory;
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
+use function get_debug_type;
+use function implode;
+use function is_array;
+use function is_int;
+use function is_string;
+use function sprintf;
 
 final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
 {
     public function create(string $protocol, array $config): Filesystem
     {
         $allowed = ['container', 'client', 'options'];
-        $unknown = \array_diff(\array_keys($config), $allowed);
+        $unknown = array_diff(array_keys($config), $allowed);
 
         if ($unknown !== []) {
-            throw new InvalidArgumentException(\sprintf(
+            throw new InvalidArgumentException(sprintf(
                 'Filesystem factory for backend "azure_blob" received unknown keys: [%s]. Allowed: [%s].',
-                \implode(', ', $unknown),
-                \implode(', ', $allowed),
+                implode(', ', $unknown),
+                implode(', ', $allowed),
             ));
         }
 
-        if (!\is_string($config['container'] ?? null) || $config['container'] === '') {
+        if (!is_string($config['container'] ?? null) || $config['container'] === '') {
             throw new InvalidArgumentException(
                 'Filesystem factory for backend "azure_blob" requires a non-empty `container` option.',
             );
@@ -47,7 +56,7 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
 
         $containerName = $config['container'];
 
-        if (!\array_key_exists('client', $config) || $config['client'] === null) {
+        if (!array_key_exists('client', $config) || $config['client'] === null) {
             throw new InvalidArgumentException(
                 'Filesystem factory for backend "azure_blob" requires exactly one of `client_service_id` or `client`.',
             );
@@ -57,14 +66,14 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
 
         if ($client instanceof BlobServiceInterface) {
             $blobService = $client;
-        } elseif (\is_array($client)) {
+        } elseif (is_array($client)) {
             /** @var array<string, mixed> $client */
             $blobService = $this->buildBlobService($containerName, $client);
         } else {
-            throw new InvalidArgumentException(\sprintf(
+            throw new InvalidArgumentException(sprintf(
                 'Filesystem factory for backend "azure_blob" `client` must be an array or %s instance, got %s.',
                 BlobServiceInterface::class,
-                \get_debug_type($client),
+                get_debug_type($client),
             ));
         }
 
@@ -92,17 +101,17 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
             'stream_factory',
             'logger',
         ];
-        $unknown = \array_diff(\array_keys($clientConfig), $allowed);
+        $unknown = array_diff(array_keys($clientConfig), $allowed);
 
         if ($unknown !== []) {
-            throw new InvalidArgumentException(\sprintf(
+            throw new InvalidArgumentException(sprintf(
                 'Filesystem factory for backend "azure_blob" `client` contains unknown keys: [%s]. Allowed: [%s].',
-                \implode(', ', $unknown),
-                \implode(', ', $allowed),
+                implode(', ', $unknown),
+                implode(', ', $allowed),
             ));
         }
 
-        if (!\is_string($clientConfig['account_name'] ?? null) || $clientConfig['account_name'] === '') {
+        if (!is_string($clientConfig['account_name'] ?? null) || $clientConfig['account_name'] === '') {
             throw new InvalidArgumentException(
                 'Filesystem factory for backend "azure_blob" `client.account_name` must be a non-empty string.',
             );
@@ -111,8 +120,8 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
         $accountName = $clientConfig['account_name'];
 
         if (
-            !\is_array($clientConfig['auth'] ?? null)
-            || !\is_string($clientConfig['auth']['shared_key'] ?? null)
+            !is_array($clientConfig['auth'] ?? null)
+            || !is_string($clientConfig['auth']['shared_key'] ?? null)
             || $clientConfig['auth']['shared_key'] === ''
         ) {
             throw new InvalidArgumentException(
@@ -121,13 +130,13 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
         }
 
         $authAllowed = ['shared_key'];
-        $authUnknown = \array_diff(\array_keys($clientConfig['auth']), $authAllowed);
+        $authUnknown = array_diff(array_keys($clientConfig['auth']), $authAllowed);
 
         if ($authUnknown !== []) {
-            throw new InvalidArgumentException(\sprintf(
+            throw new InvalidArgumentException(sprintf(
                 'Filesystem factory for backend "azure_blob" `client.auth` contains unknown keys: [%s]. Allowed: [%s].',
-                \implode(', ', $authUnknown),
-                \implode(', ', $authAllowed),
+                implode(', ', $authUnknown),
+                implode(', ', $authAllowed),
             ));
         }
 
@@ -160,13 +169,13 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
         $urlFactoryConfig = $clientConfig['url_factory'] ?? null;
 
         if (
-            \is_array($urlFactoryConfig)
-            && \is_string($urlFactoryConfig['host'] ?? null)
+            is_array($urlFactoryConfig)
+            && is_string($urlFactoryConfig['host'] ?? null)
             && $urlFactoryConfig['host'] !== ''
         ) {
             $host = $urlFactoryConfig['host'];
             $portRaw = $urlFactoryConfig['port'] ?? '10000';
-            $port = \is_string($portRaw) ? $portRaw : (string) (\is_int($portRaw) ? $portRaw : '10000');
+            $port = is_string($portRaw) ? $portRaw : (string) (is_int($portRaw) ? $portRaw : '10000');
             $https = (bool) ($urlFactoryConfig['https'] ?? false);
             $urlFactory = azurite_url_factory($host, $port, $https);
         } else {
@@ -184,35 +193,35 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
             return $options;
         }
 
-        if (!\is_array($optionsConfig)) {
+        if (!is_array($optionsConfig)) {
             throw new InvalidArgumentException(
                 'Filesystem factory for backend "azure_blob" `options` must be an array.',
             );
         }
 
         $allowed = ['block_size', 'list_blob_max_results'];
-        $unknown = \array_diff(\array_keys($optionsConfig), $allowed);
+        $unknown = array_diff(array_keys($optionsConfig), $allowed);
 
         if ($unknown !== []) {
-            throw new InvalidArgumentException(\sprintf(
+            throw new InvalidArgumentException(sprintf(
                 'Filesystem factory for backend "azure_blob" `options` contains unknown keys: [%s]. Allowed: [%s].',
-                \implode(', ', $unknown),
-                \implode(', ', $allowed),
+                implode(', ', $unknown),
+                implode(', ', $allowed),
             ));
         }
 
-        if (\array_key_exists('block_size', $optionsConfig) && $optionsConfig['block_size'] !== null) {
-            if (!\is_int($optionsConfig['block_size'])) {
+        if (array_key_exists('block_size', $optionsConfig) && $optionsConfig['block_size'] !== null) {
+            if (!is_int($optionsConfig['block_size'])) {
                 throw new InvalidArgumentException('`options.block_size` must be an integer.');
             }
             $options = $options->withBlockSize($optionsConfig['block_size']);
         }
 
         if (
-            \array_key_exists('list_blob_max_results', $optionsConfig)
+            array_key_exists('list_blob_max_results', $optionsConfig)
             && $optionsConfig['list_blob_max_results'] !== null
         ) {
-            if (!\is_int($optionsConfig['list_blob_max_results'])) {
+            if (!is_int($optionsConfig['list_blob_max_results'])) {
                 throw new InvalidArgumentException('`options.list_blob_max_results` must be an integer.');
             }
             $options = $options->withListBlobMaxResults($optionsConfig['list_blob_max_results']);
@@ -235,7 +244,7 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
         }
 
         if (!$service instanceof $expectedClass) {
-            throw new InvalidArgumentException(\sprintf(
+            throw new InvalidArgumentException(sprintf(
                 'Filesystem factory for backend "azure_blob" `client.%s` must reference a service implementing %s.',
                 $configKey,
                 $expectedClass,

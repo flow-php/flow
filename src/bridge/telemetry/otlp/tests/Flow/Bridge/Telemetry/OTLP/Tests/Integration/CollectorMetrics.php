@@ -8,6 +8,10 @@ use Flow\ETL\Dataset\Statistics\HighResolutionTime;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 
+use function preg_match_all;
+use function preg_quote;
+use function usleep;
+
 /**
  * Helper class to query OTEL Collector's Prometheus metrics endpoint.
  *
@@ -88,7 +92,7 @@ final readonly class CollectorMetrics
 
         $total = 0;
 
-        if (\preg_match_all('/' . \preg_quote($metricName, '/') . '\{[^}]*\}\s+(\d+)/', $body, $matches)) {
+        if (preg_match_all('/' . preg_quote($metricName, '/') . '\{[^}]*\}\s+(\d+)/', $body, $matches)) {
             foreach ($matches[1] as $value) {
                 $total += (int) $value;
             }
@@ -115,7 +119,7 @@ final readonly class CollectorMetrics
                 return $value;
             }
 
-            \usleep($pollIntervalMs * 1000);
+            usleep($pollIntervalMs * 1000);
         }
     }
 }

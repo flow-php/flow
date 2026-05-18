@@ -9,6 +9,10 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 
+use function count;
+use function gettype;
+use function sprintf;
+
 final class DeltaBinaryPackedValueStorage implements ValueStorage
 {
     /**
@@ -26,9 +30,9 @@ final class DeltaBinaryPackedValueStorage implements ValueStorage
         foreach ($values as $value) {
             if ($value !== null) {
                 if (!is_int($value)) {
-                    throw new InvalidArgumentException(\sprintf(
+                    throw new InvalidArgumentException(sprintf(
                         'Delta encoding requires integer values, got %s',
-                        \gettype($value),
+                        gettype($value),
                     ));
                 }
 
@@ -39,7 +43,7 @@ final class DeltaBinaryPackedValueStorage implements ValueStorage
 
     public function getBuffer(): string
     {
-        if (!\count($this->values)) {
+        if (!count($this->values)) {
             return '';
         }
 
@@ -58,6 +62,6 @@ final class DeltaBinaryPackedValueStorage implements ValueStorage
 
     public function size(): int
     {
-        return \count($this->values);
+        return count($this->values);
     }
 }

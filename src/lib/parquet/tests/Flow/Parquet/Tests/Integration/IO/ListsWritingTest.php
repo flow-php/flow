@@ -16,15 +16,21 @@ use Flow\Parquet\Reader;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function array_map;
+use function array_merge;
+use function file_exists;
 use function Flow\ETL\DSL\generate_random_int;
 use function Flow\ETL\DSL\generate_random_string;
+use function iterator_to_array;
+use function mkdir;
+use function range;
 
 class ListsWritingTest extends ParquetIntegrationTestCase
 {
     protected function setUp(): void
     {
-        if (!\file_exists(__DIR__ . '/var')) {
-            \mkdir(__DIR__ . '/var');
+        if (!file_exists(__DIR__ . '/var')) {
+            mkdir(__DIR__ . '/var');
         }
     }
 
@@ -36,20 +42,20 @@ class ListsWritingTest extends ParquetIntegrationTestCase
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'list_of_ints' => [],
                 ],
             ],
-            \range(1, 1),
+            range(1, 1),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
@@ -66,23 +72,23 @@ class ListsWritingTest extends ParquetIntegrationTestCase
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
-                    'list_of_ints' => \array_map(
+                    'list_of_ints' => array_map(
                         static fn($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                        \range(1, generate_random_int(2, 10)),
+                        range(1, generate_random_int(2, 10)),
                     ),
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
@@ -99,23 +105,23 @@ class ListsWritingTest extends ParquetIntegrationTestCase
         $schema = Schema::with(NestedColumn::list('list_of_strings', ListElement::string()));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
-                    'list_of_strings' => \array_map(
+                    'list_of_strings' => array_map(
                         static fn($i) => $faker->text(10),
-                        \range(1, generate_random_int(2, 10)),
+                        range(1, generate_random_int(2, 10)),
                     ),
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
@@ -135,26 +141,26 @@ class ListsWritingTest extends ParquetIntegrationTestCase
         ])));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
-                    'list_of_structs' => \array_map(
+                    'list_of_structs' => array_map(
                         static fn($i) => [
                             'id' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                             'name' => $faker->text(10),
                         ],
-                        \range(1, generate_random_int(2, 10)),
+                        range(1, generate_random_int(2, 10)),
                     ),
                 ],
             ],
-            \range(1, 10),
+            range(1, 10),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
@@ -171,25 +177,25 @@ class ListsWritingTest extends ParquetIntegrationTestCase
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'list_of_ints' => ($i % 2) === 0
-                        ? \array_map(
+                        ? array_map(
                             static fn($a) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         )
                         : null,
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
@@ -206,25 +212,25 @@ class ListsWritingTest extends ParquetIntegrationTestCase
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'list_of_ints' => ($i % 2) === 0
-                        ? \array_map(
+                        ? array_map(
                             static fn($a) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, generate_random_int(2, 2)),
+                            range(1, generate_random_int(2, 2)),
                         )
                         : [null, null],
                 ],
             ],
-            \range(1, 10),
+            range(1, 10),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
@@ -241,25 +247,25 @@ class ListsWritingTest extends ParquetIntegrationTestCase
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'list_of_ints' => ($i % 2) === 0
-                        ? \array_map(
+                        ? array_map(
                             static fn($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         )
                         : null,
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
@@ -279,28 +285,28 @@ class ListsWritingTest extends ParquetIntegrationTestCase
         ])));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'list_of_structs' => ($i % 2) === 0
-                        ? \array_map(
+                        ? array_map(
                             static fn($i) => [
                                 'id' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                                 'name' => $faker->text(10),
                             ],
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         )
                         : null,
                 ],
             ],
-            \range(1, 10),
+            range(1, 10),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
@@ -319,25 +325,25 @@ class ListsWritingTest extends ParquetIntegrationTestCase
         ], true)));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
-                    'list_of_structs' => \array_map(
+                    'list_of_structs' => array_map(
                         static fn($i) => [
                             'id' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                         ],
-                        \range(1, generate_random_int(2, 10)),
+                        range(1, generate_random_int(2, 10)),
                     ),
                 ],
             ],
-            \range(1, 10),
+            range(1, 10),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
@@ -353,20 +359,20 @@ class ListsWritingTest extends ParquetIntegrationTestCase
         $writer = new Writer(engine: $engine);
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'list_of_ints' => null,
                 ],
             ],
-            \range(1, 10),
+            range(1, 10),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),

@@ -5,11 +5,16 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Cache;
 
 use Psr\Cache\CacheItemInterface;
+use ReflectionClass;
 use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
 use Symfony\Component\Cache\CacheItem;
 use Symfony\Component\Cache\PruneableInterface;
 use Symfony\Component\Cache\ResettableInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
+
+use function array_flip;
+use function array_keys;
+use function str_starts_with;
 
 final class TagAwareArrayCacheAdapter implements
     PruneableInterface,
@@ -35,8 +40,8 @@ final class TagAwareArrayCacheAdapter implements
             return true;
         }
 
-        foreach (\array_keys($this->cache) as $key) {
-            if (\str_starts_with($key, $prefix)) {
+        foreach (array_keys($this->cache) as $key) {
+            if (str_starts_with($key, $prefix)) {
                 unset($this->cache[$key], $this->tags[$key]);
             }
         }
@@ -100,7 +105,7 @@ final class TagAwareArrayCacheAdapter implements
     public function getItem(mixed $key): CacheItem
     {
         $item = new CacheItem();
-        $reflection = new \ReflectionClass($item);
+        $reflection = new ReflectionClass($item);
 
         $keyProperty = $reflection->getProperty('key');
         $keyProperty->setValue($item, $key);
@@ -138,7 +143,7 @@ final class TagAwareArrayCacheAdapter implements
      */
     public function invalidateTags(array $tags): bool
     {
-        $tagsSet = \array_flip($tags);
+        $tagsSet = array_flip($tags);
 
         foreach ($this->tags as $key => $itemTags) {
             foreach ($itemTags as $tag) {
@@ -167,7 +172,7 @@ final class TagAwareArrayCacheAdapter implements
 
     public function save(CacheItemInterface $item): bool
     {
-        $reflection = new \ReflectionClass($item);
+        $reflection = new ReflectionClass($item);
         $valueProperty = $reflection->getProperty('value');
         $this->cache[$item->getKey()] = $valueProperty->getValue($item);
 

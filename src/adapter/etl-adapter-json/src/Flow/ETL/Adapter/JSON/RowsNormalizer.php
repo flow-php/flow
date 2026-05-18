@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\JSON;
 
 use Flow\ETL\Adapter\JSON\RowsNormalizer\EntryNormalizer;
 use Flow\ETL\Rows;
+use Generator;
 
 final readonly class RowsNormalizer
 {
@@ -16,7 +17,7 @@ final readonly class RowsNormalizer
     /**
      * @return \Generator<array<string, null|array<string, mixed>|bool|float|int|string>>
      */
-    public function normalize(Rows $rows): \Generator
+    public function normalize(Rows $rows): Generator
     {
         foreach ($rows as $row) {
             $normalizedRow = [];

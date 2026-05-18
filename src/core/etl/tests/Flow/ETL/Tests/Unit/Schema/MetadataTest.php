@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema;
 
+use DateTimeImmutable;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\Types\DSL\type_integer;
@@ -15,7 +17,7 @@ use function Flow\Types\DSL\type_string;
 
 final class MetadataTest extends FlowTestCase
 {
-    public static function provider_test_get_as(): \Generator
+    public static function provider_test_get_as(): Generator
     {
         yield ['test', type_string(), 'test'];
         yield [1.01, type_string(), '1.01'];
@@ -95,6 +97,6 @@ final class MetadataTest extends FlowTestCase
     {
         $this->expectExceptionMessage('Metadata value must be a scalar or an array of scalars');
 
-        Metadata::empty()->add('object', [new \DateTimeImmutable()]);
+        Metadata::empty()->add('object', [new DateTimeImmutable()]);
     }
 }

@@ -9,11 +9,13 @@ use Flow\PostgreSql\AST\Nodes\Tables;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
+
 final class TablesTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped(
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );

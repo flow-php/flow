@@ -6,6 +6,12 @@ namespace Flow\Bridge\Symfony\PostgreSQLCache\Tests\Unit\Double;
 
 use Symfony\Component\Cache\Marshaller\MarshallerInterface;
 
+use function in_array;
+use function serialize;
+use function str_starts_with;
+use function substr;
+use function unserialize;
+
 final class SpyMarshaller implements MarshallerInterface
 {
     public int $marshallCalls = 0;
@@ -39,13 +45,13 @@ final class SpyMarshaller implements MarshallerInterface
         $out = [];
 
         foreach ($values as $key => $value) {
-            if (\in_array((string) $key, $this->failKeys, true)) {
+            if (in_array((string) $key, $this->failKeys, true)) {
                 $failed[] = (string) $key;
 
                 continue;
             }
 
-            $encoded = 'spy:' . \serialize($value);
+            $encoded = 'spy:' . serialize($value);
             $this->marshalled[(string) $key] = $encoded;
             $out[$key] = $encoded;
         }
@@ -57,10 +63,10 @@ final class SpyMarshaller implements MarshallerInterface
     {
         $this->unmarshallCalls++;
 
-        if (!\str_starts_with($value, 'spy:')) {
-            return \unserialize($value);
+        if (!str_starts_with($value, 'spy:')) {
+            return unserialize($value);
         }
 
-        return \unserialize(\substr($value, 4));
+        return unserialize(substr($value, 4));
     }
 }

@@ -8,6 +8,12 @@ use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\StringEscaper;
 use Flow\PostgreSql\Client\Types\ValueConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
+use JsonException;
+
+use function array_map;
+use function implode;
+use function is_array;
+use function json_encode;
 
 final class JsonArrayConverter implements ValueConverter
 {
@@ -25,11 +31,11 @@ final class JsonArrayConverter implements ValueConverter
             return null;
         }
 
-        if (!\is_array($value)) {
+        if (!is_array($value)) {
             return '{}';
         }
 
-        return '{' . \implode(',', \array_map(self::encodeElement(...), $value)) . '}';
+        return '{' . implode(',', array_map(self::encodeElement(...), $value)) . '}';
     }
 
     private static function encodeElement(mixed $element): string
@@ -39,8 +45,8 @@ final class JsonArrayConverter implements ValueConverter
         }
 
         try {
-            return StringEscaper::escapeAlwaysQuoted(\json_encode($element, JSON_THROW_ON_ERROR));
-        } catch (\JsonException) {
+            return StringEscaper::escapeAlwaysQuoted(json_encode($element, JSON_THROW_ON_ERROR));
+        } catch (JsonException) {
             throw ValueConversionException::cannotConvert($element, 'JSON array element');
         }
     }

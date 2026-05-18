@@ -8,6 +8,7 @@ use Flow\ETL\Adapter\Parquet\ParquetExtractor;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
 
+use function count;
 use function Flow\CLI\option_int_nullable;
 use function Flow\CLI\option_list_of_strings;
 use function Flow\ETL\Adapter\Parquet\from_parquet;
@@ -27,7 +28,7 @@ final readonly class ParquetExtractorFactory
         $columns = option_list_of_strings($this->columns, $input);
         $offset = option_int_nullable($this->offset, $input);
 
-        if (\count($columns)) {
+        if (count($columns)) {
             $extractor->withColumns($columns);
         }
 

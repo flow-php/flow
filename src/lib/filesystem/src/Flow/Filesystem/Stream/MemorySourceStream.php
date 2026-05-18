@@ -7,6 +7,13 @@ namespace Flow\Filesystem\Stream;
 use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\SourceStream;
+use Generator;
+
+use function explode;
+use function Flow\Filesystem\DSL\path;
+use function str_split;
+use function strlen;
+use function substr;
 
 final readonly class MemorySourceStream implements SourceStream
 {
@@ -18,7 +25,7 @@ final readonly class MemorySourceStream implements SourceStream
     public function __construct(
         private string $content,
     ) {
-        if (!\strlen($this->content)) {
+        if (!strlen($this->content)) {
             throw new InvalidArgumentException('MemorySourceStream expects non-empty content');
         }
     }
@@ -35,28 +42,28 @@ final readonly class MemorySourceStream implements SourceStream
         return true;
     }
 
-    public function iterate(int $length = 1): \Generator
+    public function iterate(int $length = 1): Generator
     {
-        foreach (\str_split($this->content, $length) as $chunk) {
+        foreach (str_split($this->content, $length) as $chunk) {
             yield $chunk;
         }
     }
 
     public function path(): Path
     {
-        return \Flow\Filesystem\DSL\path('memory://');
+        return path('memory://');
     }
 
     public function read(int $length, int $offset): string
     {
-        return \substr($this->content, $offset, $length);
+        return substr($this->content, $offset, $length);
     }
 
-    public function readLines(string $separator = "\n", ?int $length = null): \Generator
+    public function readLines(string $separator = "\n", ?int $length = null): Generator
     {
         /** @phpstan-ignore-next-line */
-        foreach (\explode($separator, $this->content) as $line) {
-            if (\strlen($line)) {
+        foreach (explode($separator, $this->content) as $line) {
+            if (strlen($line)) {
                 yield $line;
             }
         }
@@ -64,6 +71,6 @@ final readonly class MemorySourceStream implements SourceStream
 
     public function size(): int
     {
-        return \strlen($this->content);
+        return strlen($this->content);
     }
 }

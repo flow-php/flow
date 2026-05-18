@@ -14,6 +14,7 @@ use Flow\PostgreSql\QueryBuilder\Expression\Column;
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use Flow\PostgreSql\QueryBuilder\Expression\WhenClause;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
 final class CaseExpressionTest extends TestCase
 {
@@ -184,7 +185,7 @@ final class CaseExpressionTest extends TestCase
     {
         $this->expectException(InvalidExpressionException::class);
 
-        (new \ReflectionClass(CaseExpression::class))->newInstance(null, []);
+        (new ReflectionClass(CaseExpression::class))->newInstance(null, []);
     }
 
     public function test_with_else_creates_new_instance(): void

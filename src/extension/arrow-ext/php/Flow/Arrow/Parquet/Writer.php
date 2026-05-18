@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Flow\Arrow\Parquet;
 
 use Flow\Arrow\OutputStream;
+use RuntimeException;
 
-if (\extension_loaded('arrow')) {
+use function extension_loaded;
+
+if (extension_loaded('arrow')) {
     return;
 }
 
@@ -28,7 +31,7 @@ final class Writer
         string $compression = 'SNAPPY',
         array $options = [],
     ) {
-        throw new \RuntimeException(
+        throw new RuntimeException(
             'The arrow PHP extension is not loaded. Install ext-arrow to use Flow\Arrow\Parquet\Writer.',
         );
     }

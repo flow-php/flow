@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger;
 
+use DateTimeImmutable;
 use Flow\Telemetry\AttributeLimitsEnforcer;
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Context\ContextStorage;
@@ -13,6 +14,7 @@ use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tracer\SpanContext;
 use Psr\Clock\ClockInterface;
+use Throwable;
 
 /**
  * Logger implementation for emitting log records.
@@ -61,8 +63,8 @@ final class Logger
     public function debug(
         string $body,
         array|Attributes $attributes = [],
-        ?\DateTimeImmutable $timestamp = null,
-        ?\DateTimeImmutable $observedTimestamp = null,
+        ?DateTimeImmutable $timestamp = null,
+        ?DateTimeImmutable $observedTimestamp = null,
         ?SpanContext $spanContext = null,
     ): void {
         $this->emit(
@@ -122,7 +124,7 @@ final class Logger
 
         try {
             $this->processor->process($entry);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
         }
     }
@@ -142,8 +144,8 @@ final class Logger
     public function error(
         string $body,
         array|Attributes $attributes = [],
-        ?\DateTimeImmutable $timestamp = null,
-        ?\DateTimeImmutable $observedTimestamp = null,
+        ?DateTimeImmutable $timestamp = null,
+        ?DateTimeImmutable $observedTimestamp = null,
         ?SpanContext $spanContext = null,
     ): void {
         $this->emit(
@@ -173,8 +175,8 @@ final class Logger
     public function fatal(
         string $body,
         array|Attributes $attributes = [],
-        ?\DateTimeImmutable $timestamp = null,
-        ?\DateTimeImmutable $observedTimestamp = null,
+        ?DateTimeImmutable $timestamp = null,
+        ?DateTimeImmutable $observedTimestamp = null,
         ?SpanContext $spanContext = null,
     ): void {
         $this->emit(
@@ -196,7 +198,7 @@ final class Logger
     {
         try {
             return $this->processor->flush();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
 
             return false;
@@ -218,8 +220,8 @@ final class Logger
     public function info(
         string $body,
         array|Attributes $attributes = [],
-        ?\DateTimeImmutable $timestamp = null,
-        ?\DateTimeImmutable $observedTimestamp = null,
+        ?DateTimeImmutable $timestamp = null,
+        ?DateTimeImmutable $observedTimestamp = null,
         ?SpanContext $spanContext = null,
     ): void {
         $this->emit(
@@ -265,8 +267,8 @@ final class Logger
     public function trace(
         string $body,
         array|Attributes $attributes = [],
-        ?\DateTimeImmutable $timestamp = null,
-        ?\DateTimeImmutable $observedTimestamp = null,
+        ?DateTimeImmutable $timestamp = null,
+        ?DateTimeImmutable $observedTimestamp = null,
         ?SpanContext $spanContext = null,
     ): void {
         $this->emit(
@@ -296,8 +298,8 @@ final class Logger
     public function warn(
         string $body,
         array|Attributes $attributes = [],
-        ?\DateTimeImmutable $timestamp = null,
-        ?\DateTimeImmutable $observedTimestamp = null,
+        ?DateTimeImmutable $timestamp = null,
+        ?DateTimeImmutable $observedTimestamp = null,
         ?SpanContext $spanContext = null,
     ): void {
         $this->emit(

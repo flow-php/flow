@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
+use DateInterval;
+use DateTimeImmutable;
 use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Reader;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function array_filter;
+use function array_merge_recursive;
+use function count;
 use function Flow\Types\DSL\type_array;
+use function iterator_to_array;
 
 class SimpleTypesReadingTest extends ParquetIntegrationTestCase
 {
@@ -22,10 +28,10 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         static::assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('bool')->type());
         static::assertNull($file->metadata()->schema()->get('bool')->logicalType());
 
-        $results = type_array()->assert(\array_merge_recursive(...\iterator_to_array($file->values(['bool'])))['bool']);
+        $results = type_array()->assert(array_merge_recursive(...iterator_to_array($file->values(['bool'])))['bool']);
         static::assertCount(100, $results);
         static::assertContainsOnlyBool($results);
-        static::assertSame($file->metadata()->rowsNumber(), \count($results));
+        static::assertSame($file->metadata()->rowsNumber(), count($results));
     }
 
     #[DataProvider('engine_provider')]
@@ -38,7 +44,7 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         static::assertNull($file->metadata()->schema()->get('bool')->logicalType());
 
         $results = type_array()->assert(
-            \array_merge_recursive(...\iterator_to_array($file->values(['bool'], limit: 50)))['bool'],
+            array_merge_recursive(...iterator_to_array($file->values(['bool'], limit: 50)))['bool'],
         );
         static::assertCount(50, $results);
         static::assertContainsOnlyBool($results);
@@ -54,12 +60,12 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         static::assertNull($file->metadata()->schema()->get('bool_nullable')->logicalType());
 
         $results = type_array()->assert(
-            \array_merge_recursive(...\iterator_to_array($file->values(['bool_nullable'])))['bool_nullable'],
+            array_merge_recursive(...iterator_to_array($file->values(['bool_nullable'])))['bool_nullable'],
         );
         static::assertCount(100, $results);
-        static::assertSame($file->metadata()->rowsNumber(), \count($results));
-        static::assertCount(50, \array_filter($results, static fn($value) => $value === null));
-        static::assertCount(50, \array_filter($results, static fn($value) => $value !== null));
+        static::assertSame($file->metadata()->rowsNumber(), count($results));
+        static::assertCount(50, array_filter($results, static fn($value) => $value === null));
+        static::assertCount(50, array_filter($results, static fn($value) => $value !== null));
     }
 
     #[DataProvider('engine_provider')]
@@ -72,14 +78,11 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         static::assertNull($file->metadata()->schema()->get('bool_nullable')->logicalType());
 
         $results = type_array()->assert(
-            \array_merge_recursive(...\iterator_to_array($file->values(
-                ['bool_nullable'],
-                $limit = 50,
-            )))['bool_nullable'],
+            array_merge_recursive(...iterator_to_array($file->values(['bool_nullable'], $limit = 50)))['bool_nullable'],
         );
         static::assertCount($limit, $results);
-        static::assertCount($limit / 2, \array_filter($results, static fn($value) => $value === null));
-        static::assertCount($limit / 2, \array_filter($results, static fn($value) => $value !== null));
+        static::assertCount($limit / 2, array_filter($results, static fn($value) => $value === null));
+        static::assertCount($limit / 2, array_filter($results, static fn($value) => $value !== null));
     }
 
     #[DataProvider('engine_provider')]
@@ -94,7 +97,7 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['date']) as $row) {
-            static::assertInstanceOf(\DateTimeImmutable::class, $row['date']);
+            static::assertInstanceOf(DateTimeImmutable::class, $row['date']);
             $count++;
         }
         static::assertSame(100, $count);
@@ -114,7 +117,7 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
 
         foreach ($file->values(['date_nullable']) as $rowIndex => $row) {
             if (($rowIndex % 2) === 0) {
-                static::assertInstanceOf(\DateTimeImmutable::class, $row['date_nullable']);
+                static::assertInstanceOf(DateTimeImmutable::class, $row['date_nullable']);
             } else {
                 static::assertNull($row['date_nullable']);
             }
@@ -494,7 +497,7 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['time']) as $row) {
-            static::assertInstanceOf(\DateInterval::class, $row['time']);
+            static::assertInstanceOf(DateInterval::class, $row['time']);
             $count++;
         }
         static::assertSame(100, $count);
@@ -514,7 +517,7 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
 
         foreach ($file->values(['time_nullable']) as $rowIndex => $row) {
             if (($rowIndex % 2) === 0) {
-                static::assertInstanceOf(\DateInterval::class, $row['time_nullable']);
+                static::assertInstanceOf(DateInterval::class, $row['time_nullable']);
             } else {
                 static::assertNull($row['time_nullable']);
             }
@@ -536,7 +539,7 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['timestamp']) as $row) {
-            static::assertInstanceOf(\DateTimeImmutable::class, $row['timestamp']);
+            static::assertInstanceOf(DateTimeImmutable::class, $row['timestamp']);
             $count++;
         }
         static::assertSame(100, $count);
@@ -559,7 +562,7 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
 
         foreach ($file->values(['timestamp_nullable']) as $rowIndex => $row) {
             if (($rowIndex % 2) === 0) {
-                static::assertInstanceOf(\DateTimeImmutable::class, $row['timestamp_nullable']);
+                static::assertInstanceOf(DateTimeImmutable::class, $row['timestamp_nullable']);
             } else {
                 static::assertNull($row['timestamp_nullable']);
             }

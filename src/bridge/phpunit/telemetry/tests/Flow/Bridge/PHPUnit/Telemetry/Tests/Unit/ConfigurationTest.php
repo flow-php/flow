@@ -18,8 +18,11 @@ use Flow\Bridge\PHPUnit\Telemetry\UdpSyslogErrorHandlerConfig;
 use Flow\Telemetry\ErrorHandler\ErrorLogMessageType;
 use Flow\Telemetry\ErrorHandler\SyslogFacility;
 use Flow\Telemetry\ErrorHandler\SyslogSeverity;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Runner\Extension\ParameterCollection;
+
+use function putenv;
 
 final class ConfigurationTest extends TestCase
 {
@@ -68,7 +71,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_curl_headers_empty_name_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Header name cannot be empty');
 
         Configuration::fromParameters(ParameterCollection::fromArray([
@@ -88,7 +91,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_curl_headers_missing_equals_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid header entry "Authorization", expected format "name=value"');
 
         Configuration::fromParameters(ParameterCollection::fromArray([
@@ -149,7 +152,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_curl_serializer_invalid_value_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid serializer "xml" for parameter "curl_serializer"');
 
         Configuration::fromParameters(ParameterCollection::fromArray([
@@ -210,7 +213,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_curl_transport_rejects_stream_params(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Parameter "stream_file_permissions" cannot be used with transport "curl"');
 
         Configuration::fromParameters(ParameterCollection::fromArray([
@@ -221,7 +224,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_curl_with_grpc_specific_param_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Parameter "grpc_insecure" cannot be used with transport "curl"');
 
         Configuration::fromParameters(ParameterCollection::fromArray([
@@ -232,7 +235,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_curl_with_grpc_timeout_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Parameter "grpc_timeout_ms" cannot be used with transport "curl"');
 
         Configuration::fromParameters(ParameterCollection::fromArray([
@@ -310,7 +313,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_empty_env_var_treated_as_unset(): void
     {
-        \putenv('FLOW_PHPUNIT_OTEL_ENDPOINT=');
+        putenv('FLOW_PHPUNIT_OTEL_ENDPOINT=');
 
         try {
             $config = Configuration::fromParameters(ParameterCollection::fromArray([
@@ -320,7 +323,7 @@ final class ConfigurationTest extends TestCase
             static::assertInstanceOf(CurlTransportConfig::class, $config->transport);
             static::assertSame('https://xml:4318', $config->transport->endpoint);
         } finally {
-            \putenv('FLOW_PHPUNIT_OTEL_ENDPOINT');
+            putenv('FLOW_PHPUNIT_OTEL_ENDPOINT');
         }
     }
 
@@ -341,7 +344,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_env_var_alone_used_when_xml_parameter_absent(): void
     {
-        \putenv('FLOW_PHPUNIT_OTEL_ENDPOINT=https://env-collector:4318');
+        putenv('FLOW_PHPUNIT_OTEL_ENDPOINT=https://env-collector:4318');
 
         try {
             $config = Configuration::fromParameters(ParameterCollection::fromArray([]));
@@ -349,14 +352,14 @@ final class ConfigurationTest extends TestCase
             static::assertInstanceOf(CurlTransportConfig::class, $config->transport);
             static::assertSame('https://env-collector:4318', $config->transport->endpoint);
         } finally {
-            \putenv('FLOW_PHPUNIT_OTEL_ENDPOINT');
+            putenv('FLOW_PHPUNIT_OTEL_ENDPOINT');
         }
     }
 
     public function test_env_var_boolean_parsing_supports_false_and_0(): void
     {
-        \putenv('FLOW_PHPUNIT_OTEL_EMIT_METRICS=0');
-        \putenv('FLOW_PHPUNIT_OTEL_EMIT_TRACES=false');
+        putenv('FLOW_PHPUNIT_OTEL_EMIT_METRICS=0');
+        putenv('FLOW_PHPUNIT_OTEL_EMIT_TRACES=false');
 
         try {
             $config = Configuration::fromParameters(ParameterCollection::fromArray([]));
@@ -364,28 +367,28 @@ final class ConfigurationTest extends TestCase
             static::assertFalse($config->emitMetrics);
             static::assertFalse($config->emitTraces);
         } finally {
-            \putenv('FLOW_PHPUNIT_OTEL_EMIT_METRICS');
-            \putenv('FLOW_PHPUNIT_OTEL_EMIT_TRACES');
+            putenv('FLOW_PHPUNIT_OTEL_EMIT_METRICS');
+            putenv('FLOW_PHPUNIT_OTEL_EMIT_TRACES');
         }
     }
 
     public function test_env_var_headers_invalid_format_throws(): void
     {
-        \putenv('FLOW_PHPUNIT_OTEL_HEADERS=broken');
+        putenv('FLOW_PHPUNIT_OTEL_HEADERS=broken');
 
         try {
-            $this->expectException(\InvalidArgumentException::class);
+            $this->expectException(InvalidArgumentException::class);
             $this->expectExceptionMessage('Invalid header entry "broken"');
 
             Configuration::fromParameters(ParameterCollection::fromArray([]));
         } finally {
-            \putenv('FLOW_PHPUNIT_OTEL_HEADERS');
+            putenv('FLOW_PHPUNIT_OTEL_HEADERS');
         }
     }
 
     public function test_env_var_headers_parsed_same_as_xml(): void
     {
-        \putenv('FLOW_PHPUNIT_OTEL_HEADERS=Authorization=Bearer%20env-token');
+        putenv('FLOW_PHPUNIT_OTEL_HEADERS=Authorization=Bearer%20env-token');
 
         try {
             $config = Configuration::fromParameters(ParameterCollection::fromArray([]));
@@ -393,13 +396,13 @@ final class ConfigurationTest extends TestCase
             static::assertInstanceOf(CurlTransportConfig::class, $config->transport);
             static::assertSame(['Authorization' => 'Bearer env-token'], $config->transport->headers);
         } finally {
-            \putenv('FLOW_PHPUNIT_OTEL_HEADERS');
+            putenv('FLOW_PHPUNIT_OTEL_HEADERS');
         }
     }
 
     public function test_env_var_legacy_collector_url_emits_deprecation(): void
     {
-        \putenv('FLOW_PHPUNIT_OTEL_COLLECTOR_URL=http://env-legacy:4318');
+        putenv('FLOW_PHPUNIT_OTEL_COLLECTOR_URL=http://env-legacy:4318');
 
         try {
             $captured = DeprecationCapture::around(static fn() => Configuration::fromParameters(ParameterCollection::fromArray([])));
@@ -409,13 +412,13 @@ final class ConfigurationTest extends TestCase
             static::assertNotNull($captured['message']);
             static::assertStringContainsString('otel_collector_url', $captured['message']);
         } finally {
-            \putenv('FLOW_PHPUNIT_OTEL_COLLECTOR_URL');
+            putenv('FLOW_PHPUNIT_OTEL_COLLECTOR_URL');
         }
     }
 
     public function test_env_var_overrides_xml_parameter_for_service_name(): void
     {
-        \putenv('FLOW_PHPUNIT_OTEL_SERVICE_NAME=env-suite');
+        putenv('FLOW_PHPUNIT_OTEL_SERVICE_NAME=env-suite');
 
         try {
             $config = Configuration::fromParameters(ParameterCollection::fromArray([
@@ -424,7 +427,7 @@ final class ConfigurationTest extends TestCase
 
             static::assertSame('env-suite', $config->serviceName);
         } finally {
-            \putenv('FLOW_PHPUNIT_OTEL_SERVICE_NAME');
+            putenv('FLOW_PHPUNIT_OTEL_SERVICE_NAME');
         }
     }
 
@@ -458,7 +461,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_env_var_transport_selects_grpc_when_xml_says_curl(): void
     {
-        \putenv('FLOW_PHPUNIT_OTEL_TRANSPORT=grpc');
+        putenv('FLOW_PHPUNIT_OTEL_TRANSPORT=grpc');
 
         try {
             $config = Configuration::fromParameters(ParameterCollection::fromArray([
@@ -468,7 +471,7 @@ final class ConfigurationTest extends TestCase
 
             static::assertInstanceOf(GrpcTransportConfig::class, $config->transport);
         } finally {
-            \putenv('FLOW_PHPUNIT_OTEL_TRANSPORT');
+            putenv('FLOW_PHPUNIT_OTEL_TRANSPORT');
         }
     }
 
@@ -483,7 +486,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_error_log_handler_invalid_message_type_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid error_handler_message_type "smoke"');
 
         Configuration::fromParameters(ParameterCollection::fromArray([
@@ -570,7 +573,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_grpc_with_curl_specific_param_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Parameter "curl_compression" cannot be used with transport "grpc"');
 
         Configuration::fromParameters(ParameterCollection::fromArray([
@@ -582,7 +585,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_grpc_with_curl_timeout_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Parameter "curl_timeout_ms" cannot be used with transport "grpc"');
 
         Configuration::fromParameters(ParameterCollection::fromArray([
@@ -594,7 +597,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_invalid_boolean_value_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid boolean value "yes" for parameter "emit_traces"');
 
         Configuration::fromParameters(ParameterCollection::fromArray([
@@ -604,7 +607,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_invalid_error_handler_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
             'Invalid error_handler "smoke", expected one of: error_log, noop, stream, syslog, udp_syslog',
         );
@@ -616,7 +619,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_invalid_integer_value_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid integer value "abc" for parameter "curl_timeout_ms"');
 
         Configuration::fromParameters(ParameterCollection::fromArray([
@@ -626,7 +629,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_invalid_transport_value_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid transport "rest", expected "curl", "grpc" or "stream"');
 
         Configuration::fromParameters(ParameterCollection::fromArray([
@@ -636,7 +639,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_legacy_otel_collector_url_combined_with_new_endpoint_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
             'Deprecated parameter "otel_collector_url" cannot be mixed with new parameter "endpoint"',
         );
@@ -649,7 +652,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_legacy_otel_collector_url_combined_with_transport_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
             'Deprecated parameter "otel_collector_url" cannot be mixed with new parameter "transport"',
         );
@@ -676,7 +679,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_noop_error_handler_rejects_specific_params(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
             'Parameter "error_handler_message_prefix" cannot be used with error_handler "noop".',
         );
@@ -690,7 +693,7 @@ final class ConfigurationTest extends TestCase
     public function test_server_superglobal_wins_over_getenv(): void
     {
         $_SERVER['FLOW_PHPUNIT_OTEL_ENDPOINT'] = 'https://from-server:4318';
-        \putenv('FLOW_PHPUNIT_OTEL_ENDPOINT=https://from-getenv:4318');
+        putenv('FLOW_PHPUNIT_OTEL_ENDPOINT=https://from-getenv:4318');
 
         try {
             $config = Configuration::fromParameters(ParameterCollection::fromArray([]));
@@ -699,7 +702,7 @@ final class ConfigurationTest extends TestCase
             static::assertSame('https://from-server:4318', $config->transport->endpoint);
         } finally {
             unset($_SERVER['FLOW_PHPUNIT_OTEL_ENDPOINT']);
-            \putenv('FLOW_PHPUNIT_OTEL_ENDPOINT');
+            putenv('FLOW_PHPUNIT_OTEL_ENDPOINT');
         }
     }
 
@@ -731,7 +734,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_stream_error_handler_rejects_syslog_params(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Parameter "error_handler_facility" cannot be used with error_handler "stream".');
 
         Configuration::fromParameters(ParameterCollection::fromArray([
@@ -743,7 +746,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_stream_error_handler_requires_destination(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Parameter "error_handler_destination" is required for error_handler "stream"');
 
         Configuration::fromParameters(ParameterCollection::fromArray([
@@ -781,7 +784,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_stream_transport_rejects_curl_params(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Parameter "curl_compression" cannot be used with transport "stream"');
 
         Configuration::fromParameters(ParameterCollection::fromArray([
@@ -793,7 +796,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_stream_transport_rejects_shutdown_timeout_ms(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Parameter "shutdown_timeout_ms" cannot be used with transport "stream"');
 
         Configuration::fromParameters(ParameterCollection::fromArray([
@@ -805,7 +808,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_stream_transport_requires_endpoint(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Parameter "endpoint" is required for transport "stream"');
 
         Configuration::fromParameters(ParameterCollection::fromArray([
@@ -815,7 +818,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_syslog_error_handler_invalid_facility_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid error_handler_facility "invalid"');
 
         Configuration::fromParameters(ParameterCollection::fromArray([
@@ -862,7 +865,7 @@ final class ConfigurationTest extends TestCase
 
     public function test_udp_syslog_error_handler_requires_host(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Parameter "error_handler_host" is required for error_handler "udp_syslog"');
 
         Configuration::fromParameters(ParameterCollection::fromArray([

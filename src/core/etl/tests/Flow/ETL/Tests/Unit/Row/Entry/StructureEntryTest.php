@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\struct_entry;
@@ -18,10 +19,12 @@ use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function serialize;
+use function unserialize;
 
 final class StructureEntryTest extends FlowTestCase
 {
-    public static function is_equal_data_provider(): \Generator
+    public static function is_equal_data_provider(): Generator
     {
         yield 'equal names and equal simple same array entries' => [
             true,
@@ -195,9 +198,9 @@ final class StructureEntryTest extends FlowTestCase
             'json' => type_array(),
         ]));
 
-        $serialized = \serialize($string);
+        $serialized = serialize($string);
         /** @var StructureEntry<array<array-key, mixed>> $unserialized */
-        $unserialized = \unserialize($serialized);
+        $unserialized = unserialize($serialized);
 
         static::assertTrue($string->isEqual($unserialized));
     }

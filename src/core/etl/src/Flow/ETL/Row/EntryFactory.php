@@ -39,6 +39,8 @@ use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\Native\UnionType;
 use Flow\Types\Type\TypeDetector;
+use TypeError;
+use UnitEnum;
 
 use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\date_entry;
@@ -60,6 +62,7 @@ use function Flow\ETL\DSL\xml_element_entry;
 use function Flow\ETL\DSL\xml_entry;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
+use function is_object;
 
 final readonly class EntryFactory
 {
@@ -191,7 +194,7 @@ final readonly class EntryFactory
 
                 return enum_entry(
                     $entryName,
-                    \is_object($castValue) && $castValue instanceof \UnitEnum ? $castValue : null,
+                    is_object($castValue) && $castValue instanceof UnitEnum ? $castValue : null,
                     $metadata,
                 );
             }
@@ -247,7 +250,7 @@ final readonly class EntryFactory
 
                 return new ListEntry($entryName, $processedValue, $type, $metadata);
             }
-        } catch (InvalidArgumentException|CastingException|\TypeError $e) {
+        } catch (InvalidArgumentException|CastingException|TypeError $e) {
             throw new InvalidArgumentException(
                 "Entry \"{$entryName}\" conversion exception. {$e->getMessage()}",
                 previous: $e,

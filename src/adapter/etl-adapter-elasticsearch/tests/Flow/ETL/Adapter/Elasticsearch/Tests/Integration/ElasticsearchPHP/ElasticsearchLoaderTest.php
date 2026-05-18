@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration\ElasticsearchPHP;
 
+use DateTimeImmutable;
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\ElasticsearchTestCase;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\JsonEntry;
 
+use function array_map;
 use function Flow\ETL\Adapter\Elasticsearch\entry_id_factory;
 use function Flow\ETL\Adapter\Elasticsearch\hash_id_factory;
 use function Flow\ETL\Adapter\Elasticsearch\to_es_bulk_index;
@@ -19,6 +21,8 @@ use function Flow\ETL\DSL\integer_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\string_entry;
+use function sha1;
+use function sort;
 
 final class ElasticsearchLoaderTest extends ElasticsearchTestCase
 {
@@ -72,10 +76,10 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
 
         $loader->load(
             rows(
-                row(string_entry('id', \sha1('id' . generate_random_string())), string_entry('name', 'Łukasz')),
-                row(string_entry('id', \sha1('id' . generate_random_string())), string_entry('name', 'Norbert')),
-                row(string_entry('id', \sha1('id' . generate_random_string())), string_entry('name', 'Dawid')),
-                row(string_entry('id', \sha1('id' . generate_random_string())), string_entry('name', 'Tomek')),
+                row(string_entry('id', sha1('id' . generate_random_string())), string_entry('name', 'Łukasz')),
+                row(string_entry('id', sha1('id' . generate_random_string())), string_entry('name', 'Norbert')),
+                row(string_entry('id', sha1('id' . generate_random_string())), string_entry('name', 'Dawid')),
+                row(string_entry('id', sha1('id' . generate_random_string())), string_entry('name', 'Tomek')),
             ),
             flow_context(config()),
         );
@@ -93,8 +97,8 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
 
         static::assertSame(4, $response['hits']['total']['value']);
 
-        $names = \array_map(static fn(array $hit): string => $hit['_source']['name'], $response['hits']['hits']);
-        \sort($names);
+        $names = array_map(static fn(array $hit): string => $hit['_source']['name'], $response['hits']['hits']);
+        sort($names);
 
         static::assertSame(['Dawid', 'Norbert', 'Tomek', 'Łukasz'], $names);
     }
@@ -126,7 +130,7 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
 
         static::assertSame(1, $response['hits']['total']['value']);
 
-        $json = \array_map(static fn(array $hit): array => $hit['_source']['json'], $response['hits']['hits']);
+        $json = array_map(static fn(array $hit): array => $hit['_source']['json'], $response['hits']['hits']);
 
         static::assertSame([['foo' => 'bar']], $json);
     }
@@ -145,7 +149,7 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
                 integer_entry('id', 1),
                 string_entry('name', 'Some Name'),
                 string_entry('status', 'NEW'),
-                new DateTimeEntry('updated_at', new \DateTimeImmutable('2022-01-01 00:00:00')),
+                new DateTimeEntry('updated_at', new DateTimeImmutable('2022-01-01 00:00:00')),
             )),
             flow_context(config()),
         );
@@ -175,7 +179,7 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
 
         static::assertSame(1, $response['hits']['total']['value']);
 
-        $data = \array_map(static fn(array $hit): array => $hit['_source'], $response['hits']['hits']);
+        $data = array_map(static fn(array $hit): array => $hit['_source'], $response['hits']['hits']);
 
         static::assertSame(
             [
@@ -226,8 +230,8 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
 
         static::assertSame(4, $response['hits']['total']['value']);
 
-        $names = \array_map(static fn(array $hit): string => $hit['_source']['name'], $response['hits']['hits']);
-        \sort($names);
+        $names = array_map(static fn(array $hit): string => $hit['_source']['name'], $response['hits']['hits']);
+        sort($names);
 
         static::assertSame(['Dawid', 'Norbert', 'Tomek', 'Łukasz'], $names);
     }

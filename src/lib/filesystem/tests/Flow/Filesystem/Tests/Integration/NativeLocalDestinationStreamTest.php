@@ -6,7 +6,9 @@ namespace Flow\Filesystem\Tests\Integration;
 
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 
+use function file_get_contents;
 use function Flow\Filesystem\DSL\path;
+use function fopen;
 
 final class NativeLocalDestinationStreamTest extends NativeLocalFilesystemTestCase
 {
@@ -23,7 +25,7 @@ final class NativeLocalDestinationStreamTest extends NativeLocalFilesystemTestCa
     {
         $fs = new NativeLocalFilesystem();
 
-        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource);
 
         $stream = $fs->writeTo(path(__DIR__ . '/var/orders.csv'));
@@ -35,7 +37,7 @@ final class NativeLocalDestinationStreamTest extends NativeLocalFilesystemTestCa
         static::assertTrue($status->isFile());
         static::assertFalse($status->isDirectory());
         static::assertSame(
-            \file_get_contents(__DIR__ . '/Fixtures/orders.csv'),
+            file_get_contents(__DIR__ . '/Fixtures/orders.csv'),
             $fs->readFrom(path(__DIR__ . '/var/orders.csv'))->content(),
         );
 

@@ -7,6 +7,18 @@ namespace Flow\ETL\Formatter\ASCII;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\XMLElementEntry;
 use Flow\ETL\Row\Entry\XMLEntry;
+use JsonException;
+
+use function floor;
+use function gettype;
+use function is_int;
+use function json_encode;
+use function mb_strlen;
+use function mb_substr;
+use function str_repeat;
+use function str_replace;
+
+use const JSON_THROW_ON_ERROR;
 
 final class ASCIIValue
 {
@@ -39,20 +51,20 @@ final class ASCIIValue
     ): string {
         $result = $input;
 
-        if (($paddingRequired = $length - \mb_strlen($input, $encoding)) > 0) {
+        if (($paddingRequired = $length - mb_strlen($input, $encoding)) > 0) {
             switch ($padType) {
                 case STR_PAD_LEFT:
-                    return \mb_substr(\str_repeat($padding, $paddingRequired), 0, $paddingRequired, $encoding) . $input;
+                    return mb_substr(str_repeat($padding, $paddingRequired), 0, $paddingRequired, $encoding) . $input;
                 case STR_PAD_RIGHT:
-                    return $input . \mb_substr(\str_repeat($padding, $paddingRequired), 0, $paddingRequired, $encoding);
+                    return $input . mb_substr(str_repeat($padding, $paddingRequired), 0, $paddingRequired, $encoding);
                 case STR_PAD_BOTH:
-                    $leftPaddingLength = (int) \floor($paddingRequired / 2);
+                    $leftPaddingLength = (int) floor($paddingRequired / 2);
                     $rightPaddingLength = $paddingRequired - $leftPaddingLength;
 
                     return (
-                        \mb_substr(\str_repeat($padding, $leftPaddingLength), 0, $leftPaddingLength, $encoding)
+                        mb_substr(str_repeat($padding, $leftPaddingLength), 0, $leftPaddingLength, $encoding)
                         . $input
-                        . \mb_substr(\str_repeat($padding, $rightPaddingLength), 0, $rightPaddingLength, $encoding)
+                        . mb_substr(str_repeat($padding, $rightPaddingLength), 0, $rightPaddingLength, $encoding)
                     );
             }
         }
@@ -62,7 +74,7 @@ final class ASCIIValue
 
     public function length(int|bool $truncate = 20): int
     {
-        return \mb_strlen($this->print($truncate));
+        return mb_strlen($this->print($truncate));
     }
 
     public function print(int|bool $truncate = 20): string
@@ -75,20 +87,20 @@ final class ASCIIValue
             return $this->stringValue();
         }
 
-        if (\is_int($truncate)) {
-            if (\mb_strlen($this->stringValue()) <= $truncate) {
+        if (is_int($truncate)) {
+            if (mb_strlen($this->stringValue()) <= $truncate) {
                 return $this->stringValue();
             }
 
-            return \mb_substr($this->stringValue(), 0, $truncate);
+            return mb_substr($this->stringValue(), 0, $truncate);
         }
 
         // $truncate = true - default 20
-        if (\mb_strlen($this->stringValue()) <= 20) {
+        if (mb_strlen($this->stringValue()) <= 20) {
             return $this->stringValue();
         }
 
-        return \mb_substr($this->stringValue(), 0, 20);
+        return mb_substr($this->stringValue(), 0, 20);
     }
 
     private function stringValue(): string
@@ -101,7 +113,7 @@ final class ASCIIValue
                     $this->stringValue = $val->toString();
 
                     if ($val instanceof XMLEntry || $val instanceof XMLElementEntry) {
-                        $this->stringValue = \str_replace("\n", '', $this->stringValue);
+                        $this->stringValue = str_replace("\n", '', $this->stringValue);
                     }
 
                     return $this->stringValue;
@@ -113,13 +125,13 @@ final class ASCIIValue
                     return $this->stringValue;
                 }
 
-                $this->stringValue = match (\gettype($val)) {
+                $this->stringValue = match (gettype($val)) {
                     'string' => $val,
                     'boolean' => $val ? 'true' : 'false',
                     'double', 'integer' => (string) $val,
-                    'array' => \json_encode($val, \JSON_THROW_ON_ERROR),
+                    'array' => json_encode($val, JSON_THROW_ON_ERROR),
                 };
-            } catch (\JsonException) {
+            } catch (JsonException) {
                 $this->stringValue = '{...}';
             }
         }

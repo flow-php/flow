@@ -16,33 +16,34 @@ use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Writer\RowGroupBuilder;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class RowGroupBuilderTest extends TestCase
 {
-    public static function compression_types_provider(): \Generator
+    public static function compression_types_provider(): Generator
     {
         yield 'uncompressed' => [Compressions::UNCOMPRESSED];
         yield 'gzip' => [Compressions::GZIP];
         yield 'snappy' => [Compressions::SNAPPY];
     }
 
-    public static function page_check_interval_provider(): \Generator
+    public static function page_check_interval_provider(): Generator
     {
         yield 'small interval' => [10];
         yield 'medium interval' => [100];
         yield 'large interval' => [1000];
     }
 
-    public static function row_group_size_provider(): \Generator
+    public static function row_group_size_provider(): Generator
     {
         yield 'small row group' => [124];
         yield 'medium row group' => [512];
         yield 'large row group' => [1024];
     }
 
-    public static function schema_types_provider(): \Generator
+    public static function schema_types_provider(): Generator
     {
         yield 'single flat column' => [
             Schema::with(FlatColumn::int32('id')),

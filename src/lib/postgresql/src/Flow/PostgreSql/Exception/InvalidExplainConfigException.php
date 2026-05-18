@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Exception;
 
-final class InvalidExplainConfigException extends \InvalidArgumentException
+use InvalidArgumentException;
+
+final class InvalidExplainConfigException extends InvalidArgumentException
 {
     public static function buffersRequiresAnalyze(): self
     {

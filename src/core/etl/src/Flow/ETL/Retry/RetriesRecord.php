@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Retry;
 
-final class RetriesRecord implements \Countable
+use Countable;
+
+use function count;
+use function end;
+
+final class RetriesRecord implements Countable
 {
     /**
      * @var array<FailedRetry>
@@ -26,7 +31,7 @@ final class RetriesRecord implements \Countable
 
     public function count(): int
     {
-        return \count($this->attempts);
+        return count($this->attempts);
     }
 
     public function last(): ?FailedRetry
@@ -35,6 +40,6 @@ final class RetriesRecord implements \Countable
             return null;
         }
 
-        return \end($this->attempts);
+        return end($this->attempts);
     }
 }

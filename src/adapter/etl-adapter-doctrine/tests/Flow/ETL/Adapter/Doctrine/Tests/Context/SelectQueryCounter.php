@@ -8,6 +8,11 @@ use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
+use Stringable;
+
+use function is_string;
+use function str_starts_with;
+use function trim;
 
 final class SelectQueryCounter extends AbstractLogger implements LoggerAwareInterface
 {
@@ -25,7 +30,7 @@ final class SelectQueryCounter extends AbstractLogger implements LoggerAwareInte
         $this->logger = new NullLogger();
     }
 
-    public function log(mixed $level, string|\Stringable $message, array $context = []): void
+    public function log(mixed $level, string|Stringable $message, array $context = []): void
     {
         if (!isset($context['sql'])) {
             return;
@@ -33,10 +38,10 @@ final class SelectQueryCounter extends AbstractLogger implements LoggerAwareInte
 
         $sql = $context['sql'];
 
-        if (\is_string($sql) || $sql instanceof \Stringable) {
+        if (is_string($sql) || $sql instanceof Stringable) {
             $sqlString = (string) $sql;
 
-            if (\str_starts_with(\trim($sqlString), 'SELECT')) {
+            if (str_starts_with(trim($sqlString), 'SELECT')) {
                 $this->count++;
                 $this->queries[] = $sqlString;
             }

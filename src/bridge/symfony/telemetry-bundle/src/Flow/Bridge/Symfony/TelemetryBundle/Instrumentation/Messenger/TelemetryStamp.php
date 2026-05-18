@@ -6,6 +6,8 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger;
 
 use Symfony\Component\Messenger\Stamp\StampInterface;
 
+use function strtolower;
+
 /**
  * Messenger stamp holding propagated telemetry context.
  *
@@ -39,10 +41,10 @@ final readonly class TelemetryStamp implements StampInterface
      */
     public function get(string $key): ?string
     {
-        $lowercaseKey = \strtolower($key);
+        $lowercaseKey = strtolower($key);
 
         foreach ($this->context as $contextKey => $value) {
-            if (\strtolower($contextKey) === $lowercaseKey) {
+            if (strtolower($contextKey) === $lowercaseKey) {
                 return $value;
             }
         }

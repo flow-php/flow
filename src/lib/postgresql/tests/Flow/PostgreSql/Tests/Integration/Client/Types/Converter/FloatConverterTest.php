@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Types\ValueType;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\PostgreSql\DSL\cast;
@@ -22,7 +23,7 @@ final class FloatConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{float, float}>
      */
-    public static function provide_float4_values(): \Generator
+    public static function provide_float4_values(): Generator
     {
         yield 'zero' => [0.0, 0.0];
         yield 'positive' => [3.14, 3.14];
@@ -33,7 +34,7 @@ final class FloatConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{float, float}>
      */
-    public static function provide_float8_values(): \Generator
+    public static function provide_float8_values(): Generator
     {
         yield 'zero' => [0.0, 0.0];
         yield 'pi' => [3.14159265358979, 3.14159265358979];
@@ -45,7 +46,7 @@ final class FloatConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{string, string}>
      */
-    public static function provide_numeric_values(): \Generator
+    public static function provide_numeric_values(): Generator
     {
         yield 'zero' => ['0', '0'];
         yield 'integer' => ['12345', '12345'];

@@ -7,14 +7,18 @@ namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
 use Flow\ETL\Row;
 
+use function array_map;
 use function Flow\ETL\Adapter\Elasticsearch\es_hits_to_rows;
 use function Flow\ETL\Adapter\Elasticsearch\from_es;
 use function Flow\ETL\Adapter\Elasticsearch\to_es_bulk_index;
 use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\string_entry;
+use function range;
+use function sha1;
 
 final class ElasticsearchIntegrationTest extends ElasticsearchTestCase
 {
@@ -41,14 +45,14 @@ final class ElasticsearchIntegrationTest extends ElasticsearchTestCase
     public function test_loading_and_extraction_with_limit_and_transformation(): void
     {
         $this->elasticsearchContext->loadRows(
-            rows(...\array_map(
-                static fn(int $i): Row => \Flow\ETL\DSL\row(
-                    string_entry('id', \sha1((string) $i)),
+            rows(...array_map(
+                static fn(int $i): Row => row(
+                    string_entry('id', sha1((string) $i)),
                     int_entry('position', $i),
                     string_entry('name', 'id_' . $i),
                     bool_entry('active', false),
                 ),
-                \range(1, 2005),
+                range(1, 2005),
             )),
             self::SOURCE_INDEX,
             new EntryIdFactory('id'),
@@ -80,14 +84,14 @@ final class ElasticsearchIntegrationTest extends ElasticsearchTestCase
 
         static::assertCount($limit, $results);
         static::assertSame(
-            \array_map(
+            array_map(
                 static fn(int $i): array => [
-                    'id' => \sha1((string) $i),
+                    'id' => sha1((string) $i),
                     'position' => $i,
                     'name' => 'id_' . $i,
                     'active' => false,
                 ],
-                \range(1, $limit),
+                range(1, $limit),
             ),
             $results->toArray(),
         );

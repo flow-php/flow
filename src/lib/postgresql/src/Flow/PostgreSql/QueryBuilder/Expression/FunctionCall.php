@@ -10,6 +10,9 @@ use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 
+use function array_values;
+use function count;
+
 /**
  * Represents a function call: func(args).
  */
@@ -38,7 +41,7 @@ final readonly class FunctionCall implements Expression
 
         $funcNameNodes = $funcCall->getFuncname();
 
-        if (\count($funcNameNodes) === 0) {
+        if (count($funcNameNodes) === 0) {
             throw InvalidAstException::missingRequiredField('funcname', 'FuncCall');
         }
 
@@ -121,6 +124,6 @@ final readonly class FunctionCall implements Expression
 
     public function withArgs(Expression ...$args): self
     {
-        return new self($this->funcName, \array_values($args));
+        return new self($this->funcName, array_values($args));
     }
 }

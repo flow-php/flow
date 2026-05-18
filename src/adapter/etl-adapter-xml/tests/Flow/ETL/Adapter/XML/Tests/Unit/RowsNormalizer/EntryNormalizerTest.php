@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Unit\RowsNormalizer;
 
+use DateTimeImmutable;
 use Flow\ETL\Adapter\XML\Abstraction\XMLAttribute;
 use Flow\ETL\Adapter\XML\Abstraction\XMLNode;
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer;
@@ -39,14 +40,14 @@ final class EntryNormalizerTest extends FlowTestCase
                 'id' => 1,
                 'name' => 'name',
                 'active' => true,
-                'date' => new \DateTimeImmutable('2024-04-04 00:00:00 UTC'),
+                'date' => new DateTimeImmutable('2024-04-04 00:00:00 UTC'),
                 'list' => [1, 2, 3],
                 'map' => ['a' => 1, 'b' => 2],
                 'nested_structure' => [
                     'id' => 2,
                     'name' => 'nested-name',
                     'active' => false,
-                    'date' => new \DateTimeImmutable('2024-04-04 00:00:00 UTC'),
+                    'date' => new DateTimeImmutable('2024-04-04 00:00:00 UTC'),
                     'list' => [4, 5, 6],
                     'map' => ['c' => 3, 'd' => 4],
                 ],

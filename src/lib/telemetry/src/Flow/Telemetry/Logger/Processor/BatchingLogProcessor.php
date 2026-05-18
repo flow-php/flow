@@ -10,6 +10,9 @@ use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Logger\LogProcessor;
 use Flow\Telemetry\Signal\Signals;
+use Throwable;
+
+use function count;
 
 /**
  * Batches log records for efficient export.
@@ -36,7 +39,7 @@ final class BatchingLogProcessor implements LogProcessor
 
     public function flush(): bool
     {
-        if (\count($this->buffer) === 0) {
+        if (count($this->buffer) === 0) {
             return true;
         }
 
@@ -45,7 +48,7 @@ final class BatchingLogProcessor implements LogProcessor
 
         try {
             return $this->exporter->export(Signals::logs($entries));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
 
             return false;
@@ -56,7 +59,7 @@ final class BatchingLogProcessor implements LogProcessor
     {
         $this->buffer[] = $entry;
 
-        if (\count($this->buffer) >= $this->batchSize) {
+        if (count($this->buffer) >= $this->batchSize) {
             $this->flush();
         }
     }
@@ -73,7 +76,7 @@ final class BatchingLogProcessor implements LogProcessor
 
         try {
             $this->exporter->shutdown();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
         }
     }

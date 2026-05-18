@@ -11,6 +11,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\Rename\RenameEntryStrategy;
+use Throwable;
 
 final readonly class RenameEachEntryTransformer implements Transformer
 {
@@ -47,7 +48,7 @@ final readonly class RenameEachEntryTransformer implements Transformer
             ]);
 
             return $result;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->transformationFailed($this, $e);
 
             throw $e;

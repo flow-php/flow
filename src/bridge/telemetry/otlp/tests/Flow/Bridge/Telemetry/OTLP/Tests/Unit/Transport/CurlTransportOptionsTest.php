@@ -5,9 +5,27 @@ declare(strict_types=1);
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Unit\Transport;
 
 use Flow\Bridge\Telemetry\OTLP\Transport\CurlTransportOptions;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_curl_options;
+
+use const CURLOPT_CAINFO;
+use const CURLOPT_CONNECTTIMEOUT_MS;
+use const CURLOPT_ENCODING;
+use const CURLOPT_FOLLOWLOCATION;
+use const CURLOPT_HTTPHEADER;
+use const CURLOPT_MAXREDIRS;
+use const CURLOPT_POST;
+use const CURLOPT_POSTFIELDS;
+use const CURLOPT_PROXY;
+use const CURLOPT_RETURNTRANSFER;
+use const CURLOPT_SSL_VERIFYHOST;
+use const CURLOPT_SSL_VERIFYPEER;
+use const CURLOPT_SSLCERT;
+use const CURLOPT_SSLKEY;
+use const CURLOPT_TIMEOUT_MS;
+use const CURLOPT_URL;
 
 final class CurlTransportOptionsTest extends TestCase
 {
@@ -75,17 +93,17 @@ final class CurlTransportOptionsTest extends TestCase
             ['Content-Type: application/json'],
         );
 
-        static::assertSame('http://localhost:4318/v1/traces', $curlOptions[\CURLOPT_URL]);
-        static::assertTrue($curlOptions[\CURLOPT_POST]);
-        static::assertSame('{"data": "test"}', $curlOptions[\CURLOPT_POSTFIELDS]);
-        static::assertTrue($curlOptions[\CURLOPT_RETURNTRANSFER]);
-        static::assertSame(CurlTransportOptions::DEFAULT_TIMEOUT_MS, $curlOptions[\CURLOPT_TIMEOUT_MS]);
-        static::assertSame(CurlTransportOptions::DEFAULT_CONNECT_TIMEOUT_MS, $curlOptions[\CURLOPT_CONNECTTIMEOUT_MS]);
-        static::assertSame(['Content-Type: application/json'], $curlOptions[\CURLOPT_HTTPHEADER]);
-        static::assertTrue($curlOptions[\CURLOPT_FOLLOWLOCATION]);
-        static::assertSame(3, $curlOptions[\CURLOPT_MAXREDIRS]);
-        static::assertTrue($curlOptions[\CURLOPT_SSL_VERIFYPEER]);
-        static::assertSame(2, $curlOptions[\CURLOPT_SSL_VERIFYHOST]);
+        static::assertSame('http://localhost:4318/v1/traces', $curlOptions[CURLOPT_URL]);
+        static::assertTrue($curlOptions[CURLOPT_POST]);
+        static::assertSame('{"data": "test"}', $curlOptions[CURLOPT_POSTFIELDS]);
+        static::assertTrue($curlOptions[CURLOPT_RETURNTRANSFER]);
+        static::assertSame(CurlTransportOptions::DEFAULT_TIMEOUT_MS, $curlOptions[CURLOPT_TIMEOUT_MS]);
+        static::assertSame(CurlTransportOptions::DEFAULT_CONNECT_TIMEOUT_MS, $curlOptions[CURLOPT_CONNECTTIMEOUT_MS]);
+        static::assertSame(['Content-Type: application/json'], $curlOptions[CURLOPT_HTTPHEADER]);
+        static::assertTrue($curlOptions[CURLOPT_FOLLOWLOCATION]);
+        static::assertSame(3, $curlOptions[CURLOPT_MAXREDIRS]);
+        static::assertTrue($curlOptions[CURLOPT_SSL_VERIFYPEER]);
+        static::assertSame(2, $curlOptions[CURLOPT_SSL_VERIFYHOST]);
     }
 
     public function test_to_curl_options_with_all_settings(): void
@@ -101,15 +119,15 @@ final class CurlTransportOptionsTest extends TestCase
 
         $curlOptions = $options->toCurlOptions('http://example.com', 'body', ['Header: value']);
 
-        static::assertSame(2000, $curlOptions[\CURLOPT_TIMEOUT_MS]);
-        static::assertSame(500, $curlOptions[\CURLOPT_CONNECTTIMEOUT_MS]);
-        static::assertFalse($curlOptions[\CURLOPT_SSL_VERIFYPEER]);
-        static::assertSame(0, $curlOptions[\CURLOPT_SSL_VERIFYHOST]);
-        static::assertSame('/path/to/cert.pem', $curlOptions[\CURLOPT_SSLCERT]);
-        static::assertSame('/path/to/key.pem', $curlOptions[\CURLOPT_SSLKEY]);
-        static::assertSame('/path/to/ca.crt', $curlOptions[\CURLOPT_CAINFO]);
-        static::assertSame('http://proxy:8080', $curlOptions[\CURLOPT_PROXY]);
-        static::assertSame('', $curlOptions[\CURLOPT_ENCODING]);
+        static::assertSame(2000, $curlOptions[CURLOPT_TIMEOUT_MS]);
+        static::assertSame(500, $curlOptions[CURLOPT_CONNECTTIMEOUT_MS]);
+        static::assertFalse($curlOptions[CURLOPT_SSL_VERIFYPEER]);
+        static::assertSame(0, $curlOptions[CURLOPT_SSL_VERIFYHOST]);
+        static::assertSame('/path/to/cert.pem', $curlOptions[CURLOPT_SSLCERT]);
+        static::assertSame('/path/to/key.pem', $curlOptions[CURLOPT_SSLKEY]);
+        static::assertSame('/path/to/ca.crt', $curlOptions[CURLOPT_CAINFO]);
+        static::assertSame('http://proxy:8080', $curlOptions[CURLOPT_PROXY]);
+        static::assertSame('', $curlOptions[CURLOPT_ENCODING]);
     }
 
     public function test_with_ca_info(): void
@@ -144,7 +162,7 @@ final class CurlTransportOptionsTest extends TestCase
 
     public function test_with_connect_timeout_rejects_negative_value(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Connect timeout must be non-negative');
 
         (new CurlTransportOptions())->withConnectTimeout(-1);
@@ -167,7 +185,7 @@ final class CurlTransportOptionsTest extends TestCase
 
     public function test_with_follow_redirects_rejects_negative_max_redirects(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Max redirects must be non-negative');
 
         (new CurlTransportOptions())->withFollowRedirects(true, -1);
@@ -229,7 +247,7 @@ final class CurlTransportOptionsTest extends TestCase
 
     public function test_with_shutdown_timeout_rejects_negative_value(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Shutdown timeout must be non-negative');
 
         (new CurlTransportOptions())->withShutdownTimeout(-1);
@@ -276,7 +294,7 @@ final class CurlTransportOptionsTest extends TestCase
 
     public function test_with_timeout_rejects_negative_value(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Timeout must be non-negative');
 
         (new CurlTransportOptions())->withTimeout(-1);

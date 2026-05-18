@@ -9,6 +9,9 @@ use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Meter\Metric;
 use Flow\Telemetry\Tracer\Span;
 
+use function count;
+use function sprintf;
+
 /**
  * A typed collection of telemetry items for one signal type.
  *
@@ -70,7 +73,7 @@ final readonly class Signals
     public function allLogs(): array
     {
         if ($this->type !== SignalType::LOGS) {
-            throw new RuntimeException(\sprintf(
+            throw new RuntimeException(sprintf(
                 'Signals collection of type %s does not carry log entries',
                 $this->type->name,
             ));
@@ -89,7 +92,7 @@ final readonly class Signals
     public function allMetrics(): array
     {
         if ($this->type !== SignalType::METRICS) {
-            throw new RuntimeException(\sprintf(
+            throw new RuntimeException(sprintf(
                 'Signals collection of type %s does not carry metrics',
                 $this->type->name,
             ));
@@ -108,7 +111,7 @@ final readonly class Signals
     public function allSpans(): array
     {
         if ($this->type !== SignalType::TRACES) {
-            throw new RuntimeException(\sprintf(
+            throw new RuntimeException(sprintf(
                 'Signals collection of type %s does not carry spans',
                 $this->type->name,
             ));
@@ -120,9 +123,9 @@ final readonly class Signals
     public function count(): int
     {
         return match ($this->type) {
-            SignalType::LOGS => \count($this->logEntries),
-            SignalType::METRICS => \count($this->metrics),
-            SignalType::TRACES => \count($this->spans),
+            SignalType::LOGS => count($this->logEntries),
+            SignalType::METRICS => count($this->metrics),
+            SignalType::TRACES => count($this->spans),
         };
     }
 

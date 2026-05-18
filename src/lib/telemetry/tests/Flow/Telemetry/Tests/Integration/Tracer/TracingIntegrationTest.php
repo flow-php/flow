@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Integration\Tracer;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Provider\Void\VoidExporter;
@@ -14,6 +15,7 @@ use Flow\Telemetry\Tracer\SpanStatus;
 use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
+use RuntimeException;
 
 use function Flow\Telemetry\DSL\context;
 
@@ -97,13 +99,13 @@ final class TracingIntegrationTest extends TestCase
         $provider = new TracerProvider($processor, $this->clock(), new MemoryContextStorage());
         $tracer = $provider->tracer($this->resource, 'test');
 
-        $exception = new \RuntimeException('Database connection failed');
+        $exception = new RuntimeException('Database connection failed');
 
         try {
             $tracer->trace('database-operation', static function () use ($exception): void {
                 throw $exception;
             });
-        } catch (\RuntimeException) {
+        } catch (RuntimeException) {
         }
 
         static::assertCount(1, $processor->endedSpans());
@@ -118,7 +120,7 @@ final class TracingIntegrationTest extends TestCase
         static::assertCount(1, $span->events());
         $event = $span->events()[0];
         static::assertSame('exception', $event->name());
-        static::assertSame(\RuntimeException::class, $event->attributes()['exception.type']);
+        static::assertSame(RuntimeException::class, $event->attributes()['exception.type']);
     }
 
     public function test_multiple_tracers_completing_spans_independently_preserve_context(): void
@@ -219,7 +221,7 @@ final class TracingIntegrationTest extends TestCase
     private function clock(): ClockInterface
     {
         $clock = $this->createMock(ClockInterface::class);
-        $clock->method('now')->willReturn(new \DateTimeImmutable());
+        $clock->method('now')->willReturn(new DateTimeImmutable());
 
         return $clock;
     }

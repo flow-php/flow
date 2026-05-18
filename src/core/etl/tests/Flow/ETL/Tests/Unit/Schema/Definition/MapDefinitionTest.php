@@ -11,6 +11,7 @@ use Flow\ETL\Schema\Definition\JsonDefinition;
 use Flow\ETL\Schema\Definition\MapDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\int_entry;
@@ -23,7 +24,7 @@ use function Flow\Types\DSL\type_string;
 
 final class MapDefinitionTest extends FlowTestCase
 {
-    public static function provideIsCompatibleCases(): \Generator
+    public static function provideIsCompatibleCases(): Generator
     {
         yield 'same type and name' => [
             map_schema('data', type_map(type_string(), type_integer())),
@@ -62,7 +63,7 @@ final class MapDefinitionTest extends FlowTestCase
         ];
     }
 
-    public static function provideMergeCases(): \Generator
+    public static function provideMergeCases(): Generator
     {
         yield 'same type' => [
             map_schema('data', type_map(type_string(), type_integer())),
@@ -83,7 +84,7 @@ final class MapDefinitionTest extends FlowTestCase
         ];
     }
 
-    public static function provideMergeWithExpectedTypeCases(): \Generator
+    public static function provideMergeWithExpectedTypeCases(): Generator
     {
         yield 'different map type produces json' => [
             map_schema('col', type_map(type_string(), type_integer())),

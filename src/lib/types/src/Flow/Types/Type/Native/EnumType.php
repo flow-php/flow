@@ -4,15 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native;
 
+use BackedEnum;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+use Throwable;
 use UnitEnum;
 
+use function enum_exists;
 use function Flow\Types\DSL\type_class_string;
 use function Flow\Types\DSL\type_literal;
 use function Flow\Types\DSL\type_structure;
+use function is_a;
+use function is_int;
+use function is_object;
+use function is_string;
+use function is_subclass_of;
+use function sprintf;
 
 /**
  * @template T of UnitEnum
@@ -27,7 +36,7 @@ final readonly class EnumType implements Type
     public function __construct(
         public string $class,
     ) {
-        if ($class !== \UnitEnum::class && $this->class !== \BackedEnum::class && !\enum_exists($class)) {
+        if ($class !== UnitEnum::class && $this->class !== BackedEnum::class && !enum_exists($class)) {
             throw new InvalidArgumentException("Enum {$class} not found");
         }
     }
@@ -46,14 +55,14 @@ final readonly class EnumType implements Type
             'class' => type_class_string(),
         ])->assert($data);
 
-        if (!\is_subclass_of($data['class'], \UnitEnum::class)) {
-            throw new InvalidArgumentException(\sprintf('Class %s is not a UnitEnum', $data['class']));
+        if (!is_subclass_of($data['class'], UnitEnum::class)) {
+            throw new InvalidArgumentException(sprintf('Class %s is not a UnitEnum', $data['class']));
         }
 
         return new self($data['class']);
     }
 
-    public function assert(mixed $value): \UnitEnum
+    public function assert(mixed $value): UnitEnum
     {
         if ($this->isValid($value)) {
             return $value;
@@ -62,7 +71,7 @@ final readonly class EnumType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
-    public function cast(mixed $value): \UnitEnum
+    public function cast(mixed $value): UnitEnum
     {
         if ($this->isValid($value)) {
             return $value;
@@ -71,8 +80,8 @@ final readonly class EnumType implements Type
         try {
             $enumClass = $this->class;
 
-            if (\is_a($enumClass, \BackedEnum::class, true)) {
-                if (!\is_int($value) && !\is_string($value)) {
+            if (is_a($enumClass, BackedEnum::class, true)) {
+                if (!is_int($value) && !is_string($value)) {
                     throw new CastingException($value, $this);
                 }
 
@@ -81,14 +90,14 @@ final readonly class EnumType implements Type
             }
 
             throw new CastingException($value, $this);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             throw new CastingException($value, $this);
         }
     }
 
     public function isValid(mixed $value): bool
     {
-        return (\is_object($value) || \is_string($value)) && \is_a($value, $this->class, true);
+        return (is_object($value) || is_string($value)) && is_a($value, $this->class, true);
     }
 
     public function normalize(): array

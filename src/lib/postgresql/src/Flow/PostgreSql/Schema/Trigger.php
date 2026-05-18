@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema;
 
+use function array_map;
+
 /**
  * @phpstan-type TriggerShape = array{name: string, table_name: string, timing: string, events: non-empty-list<string>, function_name: string, for_each_row: bool, when_condition: ?string}
  */
@@ -31,7 +33,7 @@ final readonly class Trigger
             name: $data['name'],
             tableName: $data['table_name'],
             timing: TriggerTiming::from($data['timing']),
-            events: \array_map(static fn(string $event): TriggerEvent => TriggerEvent::from($event), $data['events']),
+            events: array_map(static fn(string $event): TriggerEvent => TriggerEvent::from($event), $data['events']),
             functionName: $data['function_name'],
             forEachRow: $data['for_each_row'],
             whenCondition: $data['when_condition'] ?? null,
@@ -67,7 +69,7 @@ final readonly class Trigger
             'name' => $this->name,
             'table_name' => $this->tableName,
             'timing' => $this->timing->value,
-            'events' => \array_map(static fn(TriggerEvent $event): string => $event->value, $this->events),
+            'events' => array_map(static fn(TriggerEvent $event): string => $event->value, $this->events),
             'function_name' => $this->functionName,
             'for_each_row' => $this->forEachRow,
             'when_condition' => $this->whenCondition,

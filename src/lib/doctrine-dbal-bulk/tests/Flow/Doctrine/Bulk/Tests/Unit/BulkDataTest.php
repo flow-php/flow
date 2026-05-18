@@ -15,12 +15,13 @@ use Flow\Doctrine\Bulk\Columns;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use Flow\Doctrine\Bulk\SQLParametersStyle;
 use Flow\Doctrine\Bulk\TableDefinition;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class BulkDataTest extends TestCase
 {
-    public static function provide_parameter_style_combinations(): \Generator
+    public static function provide_parameter_style_combinations(): Generator
     {
         yield 'named parameters' => [SQLParametersStyle::NAMED, ':'];
         yield 'positional parameters' => [SQLParametersStyle::POSITIONAL, '?'];
@@ -29,7 +30,7 @@ final class BulkDataTest extends TestCase
     /**
      * @return \Generator<string, array{array<string, mixed>, string}>
      */
-    public static function provide_single_row_data(): \Generator
+    public static function provide_single_row_data(): Generator
     {
         yield 'integer column' => [['id' => 42], 'INTEGER'];
         yield 'string column' => [['name' => 'test'], 'VARCHAR'];

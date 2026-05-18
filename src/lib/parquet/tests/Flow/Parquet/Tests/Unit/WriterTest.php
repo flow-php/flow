@@ -8,12 +8,15 @@ use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Writer;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+
+use function extension_loaded;
 
 final class WriterTest extends TestCase
 {
     public function test_arrow_factory_throws_when_extension_not_loaded(): void
     {
-        if (\extension_loaded('arrow')) {
+        if (extension_loaded('arrow')) {
             static::markTestSkipped('This test requires the arrow extension to NOT be loaded');
         }
 
@@ -28,7 +31,7 @@ final class WriterTest extends TestCase
 
         static::assertInstanceOf(
             PhpParquetEngine::class,
-            (new \ReflectionClass($writer))
+            (new ReflectionClass($writer))
                 ->getProperty('engine')
                 ->getValue($writer),
         );

@@ -4,10 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
+use DOMElement;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Value\Json;
+use Throwable;
+
+use function is_array;
+use function is_scalar;
+use function is_string;
+use function json_encode;
+
+use const JSON_THROW_ON_ERROR;
 
 /**
  * @implements Type<Json>
@@ -29,25 +38,25 @@ final readonly class JsonType implements Type
             return $value;
         }
 
-        if ($value instanceof \DOMElement) {
+        if ($value instanceof DOMElement) {
             $value = $value->nodeValue;
         }
 
-        if (\is_string($value) && Json::isValid($value)) {
+        if (is_string($value) && Json::isValid($value)) {
             return new Json($value);
         }
 
         try {
-            if (\is_scalar($value)) {
+            if (is_scalar($value)) {
                 throw new CastingException($value, $this);
             }
 
-            if (\is_array($value)) {
+            if (is_array($value)) {
                 return Json::fromArray($value);
             }
 
-            return new Json(\json_encode($value, \JSON_THROW_ON_ERROR));
-        } catch (\Throwable $e) {
+            return new Json(json_encode($value, JSON_THROW_ON_ERROR));
+        } catch (Throwable $e) {
             if ($e instanceof CastingException) {
                 throw $e;
             }

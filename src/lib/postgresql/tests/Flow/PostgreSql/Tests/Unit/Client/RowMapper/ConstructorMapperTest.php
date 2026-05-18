@@ -4,10 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Client\RowMapper;
 
+use DateTimeImmutable;
 use Flow\PostgreSql\Client\Exception\MappingException;
 use Flow\PostgreSql\Client\RowMapper\ConstructorMapper;
 use Flow\PostgreSql\Tests\Mother\MapperContextMother;
 use PHPUnit\Framework\TestCase;
+
+use function json_decode;
+
+use const INF;
+use const JSON_THROW_ON_ERROR;
+use const NAN;
 
 final class ConstructorMapperTest extends TestCase
 {
@@ -41,7 +48,7 @@ final class ConstructorMapperTest extends TestCase
 
     public function test_maps_all_supported_types(): void
     {
-        $createdAt = new \DateTimeImmutable('2024-03-15 14:30:00');
+        $createdAt = new DateTimeImmutable('2024-03-15 14:30:00');
         $metadata = '{"settings":{"theme":"dark"}}';
         $uuid = '550e8400-e29b-41d4-a716-446655440000';
         $tags = ['important', 'urgent'];
@@ -101,7 +108,7 @@ final class ConstructorMapperTest extends TestCase
 
     public function test_maps_datetime_type(): void
     {
-        $createdAt = new \DateTimeImmutable('2024-03-15 14:30:00');
+        $createdAt = new DateTimeImmutable('2024-03-15 14:30:00');
         $row = [
             'id' => 1,
             'createdAt' => $createdAt,
@@ -117,14 +124,14 @@ final class ConstructorMapperTest extends TestCase
     {
         $row = [
             'id' => 1,
-            'price' => \INF,
-            'discount' => \NAN,
+            'price' => INF,
+            'discount' => NAN,
         ];
 
         $result = (new ConstructorMapper(FloatDto::class))->map($row, MapperContextMother::any());
 
         static::assertInstanceOf(FloatDto::class, $result);
-        static::assertSame(\INF, $result->price);
+        static::assertSame(INF, $result->price);
         static::assertNan($result->discount);
     }
 
@@ -157,7 +164,7 @@ final class ConstructorMapperTest extends TestCase
         static::assertSame($json, $result->metadata);
         static::assertSame(
             ['name' => 'John', 'age' => 30],
-            \json_decode($result->metadata, true, 512, \JSON_THROW_ON_ERROR),
+            json_decode($result->metadata, true, 512, JSON_THROW_ON_ERROR),
         );
     }
 
@@ -179,7 +186,7 @@ final class ConstructorMapperTest extends TestCase
 
     public function test_maps_nullable_complex_types_with_values(): void
     {
-        $createdAt = new \DateTimeImmutable('2024-01-01');
+        $createdAt = new DateTimeImmutable('2024-01-01');
         $metadata = '{"key":"value"}';
         $uuid = '550e8400-e29b-41d4-a716-446655440000';
         $tags = ['tag1', 'tag2'];
@@ -334,7 +341,7 @@ final readonly class DateTimeDto
 {
     public function __construct(
         public int $id,
-        public \DateTimeImmutable $createdAt,
+        public DateTimeImmutable $createdAt,
     ) {}
 }
 
@@ -374,7 +381,7 @@ final readonly class NullableTypedDto
      */
     public function __construct(
         public int $id,
-        public ?\DateTimeImmutable $createdAt = null,
+        public ?DateTimeImmutable $createdAt = null,
         public ?string $metadata = null,
         public ?string $uuid = null,
         public ?array $tags = null,
@@ -391,7 +398,7 @@ final readonly class FullTypedDto
         public string $name,
         public float $price,
         public bool $active,
-        public \DateTimeImmutable $createdAt,
+        public DateTimeImmutable $createdAt,
         public string $metadata,
         public string $uuid,
         public array $tags,

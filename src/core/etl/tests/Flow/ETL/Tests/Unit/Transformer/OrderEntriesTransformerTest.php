@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use DateTimeImmutable;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\OrderEntriesTransformer;
 use Ramsey\Uuid\Uuid;
 
+use function array_keys;
 use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\compare_entries_by_name;
 use function Flow\ETL\DSL\compare_entries_by_name_desc;
@@ -49,8 +51,8 @@ final class OrderEntriesTransformerTest extends FlowTestCase
             bool_entry('bool', false),
             bool_entry('bool_a', false),
             bool_entry('bool_c', false),
-            datetime_entry('datetime_d', new \DateTimeImmutable('now')),
-            datetime_entry('datetime_z', new \DateTimeImmutable('now')),
+            datetime_entry('datetime_d', new DateTimeImmutable('now')),
+            datetime_entry('datetime_z', new DateTimeImmutable('now')),
             str_entry('string_a', 'string'),
             str_entry('string_b', 'string'),
             uuid_entry('uuid', new \Flow\Types\Value\Uuid(Uuid::uuid4())),
@@ -102,7 +104,7 @@ final class OrderEntriesTransformerTest extends FlowTestCase
                 'map',
                 'struct',
             ],
-            \array_keys(
+            array_keys(
                 (new OrderEntriesTransformer(compare_entries_by_type_and_name()))
                     ->transform($rows, flow_context(config()))
                     ->toArray()[0],
@@ -143,7 +145,7 @@ final class OrderEntriesTransformerTest extends FlowTestCase
             int_entry('int', 1),
             float_entry('float', generate_random_int(100, 100000) / 100),
             bool_entry('bool', false),
-            datetime_entry('datetime', new \DateTimeImmutable('now')),
+            datetime_entry('datetime', new DateTimeImmutable('now')),
             str_entry('null', null),
             uuid_entry('uuid', new \Flow\Types\Value\Uuid(Uuid::uuid4())),
             json_entry('json', ['id' => 1, 'status' => 'NEW']),
@@ -174,7 +176,7 @@ final class OrderEntriesTransformerTest extends FlowTestCase
 
         static::assertSame(
             ['uuid', 'int', 'bool', 'float', 'datetime', 'null', 'enum', 'list', 'json', 'map', 'struct'],
-            \array_keys(
+            array_keys(
                 (new OrderEntriesTransformer(compare_entries_by_type()))
                     ->transform($rows, flow_context(config()))
                     ->toArray()[0],
@@ -194,7 +196,7 @@ final class OrderEntriesTransformerTest extends FlowTestCase
                 'map',
                 'struct',
             ]),
-            \array_keys(
+            array_keys(
                 (new OrderEntriesTransformer(compare_entries_by_type_desc()))
                     ->transform($rows, flow_context(config()))
                     ->toArray()[0],

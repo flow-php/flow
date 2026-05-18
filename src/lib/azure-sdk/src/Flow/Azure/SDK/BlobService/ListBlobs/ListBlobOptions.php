@@ -8,6 +8,8 @@ use Flow\Azure\SDK\BlobService;
 use Flow\Azure\SDK\EndpointOptions;
 use Flow\Azure\SDK\Endpoints\UserAgentHeader;
 
+use function array_map;
+
 final class ListBlobOptions implements EndpointOptions
 {
     use UserAgentHeader;
@@ -76,10 +78,7 @@ final class ListBlobOptions implements EndpointOptions
         }
 
         if ($this->include !== null) {
-            $uriParameters['include'] = \array_map(
-                static fn(OptionInclude $include) => $include->value,
-                $this->include,
-            );
+            $uriParameters['include'] = array_map(static fn(OptionInclude $include) => $include->value, $this->include);
         }
 
         if ($this->showOnly !== null) {

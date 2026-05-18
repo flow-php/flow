@@ -12,6 +12,8 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function sprintf;
+
 #[AsCommand(name: 'flow:postgresql:session:purge', description: 'Purges sessions from the PostgreSQL session store.')]
 final class SessionPurgeCommand extends Command
 {
@@ -52,7 +54,7 @@ final class SessionPurgeCommand extends Command
         }
 
         $count = $this->handler->purgeExpired();
-        $io->success(\sprintf('Purged %d expired session(s).', $count));
+        $io->success(sprintf('Purged %d expired session(s).', $count));
 
         return Command::SUCCESS;
     }

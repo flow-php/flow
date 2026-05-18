@@ -12,6 +12,7 @@ use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path\Filter;
 use Flow\Types\Type\AutoCaster;
 
+use function array_map;
 use function Flow\ETL\DSL\row;
 
 final readonly class ScalarFunctionFilter implements Filter
@@ -26,7 +27,7 @@ final readonly class ScalarFunctionFilter implements Filter
     public function accept(FileStatus $status): bool
     {
         return (bool) $this->function->eval(
-            row(...\array_map(fn(Partition $partition) => $this->entryFactory->create(
+            row(...array_map(fn(Partition $partition) => $this->entryFactory->create(
                 $partition->name,
                 $this->caster->cast($partition->value),
             ), $status->path->partitions()->toArray())),

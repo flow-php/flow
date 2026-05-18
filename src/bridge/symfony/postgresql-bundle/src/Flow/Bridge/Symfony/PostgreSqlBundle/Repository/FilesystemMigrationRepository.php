@@ -16,6 +16,8 @@ use Flow\PostgreSql\Migrations\Repository\MigrationRepository;
 use Flow\PostgreSql\Migrations\Rollback;
 use Flow\PostgreSql\Migrations\Version;
 
+use function preg_match;
+
 final readonly class FilesystemMigrationRepository implements MigrationRepository
 {
     public function __construct(
@@ -36,10 +38,10 @@ final readonly class FilesystemMigrationRepository implements MigrationRepositor
 
             $dirName = $entry->path->basename();
 
-            if (\preg_match('/^(\w+?)_(.+)$/', $dirName, $matches) === 1) {
+            if (preg_match('/^(\w+?)_(.+)$/', $dirName, $matches) === 1) {
                 $version = Version::fromString($matches[1]);
                 $name = $matches[2];
-            } elseif (\preg_match('/^(\w+)$/', $dirName, $matches) === 1) {
+            } elseif (preg_match('/^(\w+)$/', $dirName, $matches) === 1) {
                 $version = Version::fromString($matches[1]);
                 $name = $matches[1];
             } else {

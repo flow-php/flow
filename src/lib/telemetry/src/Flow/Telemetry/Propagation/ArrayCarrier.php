@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Propagation;
 
+use function strtolower;
+
 /**
  * Carrier backed by an associative array.
  *
@@ -35,10 +37,10 @@ final class ArrayCarrier implements Carrier
 
     public function get(string $key): ?string
     {
-        $lowerKey = \strtolower($key);
+        $lowerKey = strtolower($key);
 
         foreach ($this->data as $k => $v) {
-            if (\strtolower($k) === $lowerKey) {
+            if (strtolower($k) === $lowerKey) {
                 return $v;
             }
         }

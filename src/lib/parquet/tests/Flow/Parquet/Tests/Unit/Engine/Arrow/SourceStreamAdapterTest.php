@@ -9,12 +9,15 @@ use Flow\Filesystem\Path;
 use Flow\Parquet\Engine\Arrow\SourceStreamAdapter;
 use PHPUnit\Framework\TestCase;
 
+use function fopen;
+use function fwrite;
+
 final class SourceStreamAdapterTest extends TestCase
 {
     public function test_read_delegates_to_source_stream(): void
     {
-        $handle = \fopen('php://memory', 'r+b');
-        \fwrite($handle, 'hello world');
+        $handle = fopen('php://memory', 'r+b');
+        fwrite($handle, 'hello world');
         $stream = new MemoryStream($handle, Path::realpath('/tmp/test'));
 
         $adapter = new SourceStreamAdapter($stream);
@@ -26,8 +29,8 @@ final class SourceStreamAdapterTest extends TestCase
 
     public function test_size_delegates_to_source_stream(): void
     {
-        $handle = \fopen('php://memory', 'r+b');
-        \fwrite($handle, 'hello world');
+        $handle = fopen('php://memory', 'r+b');
+        fwrite($handle, 'hello world');
         $stream = new MemoryStream($handle, Path::realpath('/tmp/test'));
 
         $adapter = new SourceStreamAdapter($stream);

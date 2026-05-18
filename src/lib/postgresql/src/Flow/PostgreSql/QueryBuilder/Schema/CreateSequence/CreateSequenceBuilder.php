@@ -16,6 +16,8 @@ use Flow\PostgreSql\Protobuf\AST\TypeName;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
+use function strtolower;
+
 final readonly class CreateSequenceBuilder implements CreateSequenceNameStep, CreateSequenceOptionsStep
 {
     use AstToSql;
@@ -63,7 +65,7 @@ final readonly class CreateSequenceBuilder implements CreateSequenceNameStep, Cr
             'int8' => 'int8',
         ];
 
-        $pgType = $typeMap[\strtolower($dataType)] ?? $dataType;
+        $pgType = $typeMap[strtolower($dataType)] ?? $dataType;
 
         $typeName = new TypeName();
         $names = [];

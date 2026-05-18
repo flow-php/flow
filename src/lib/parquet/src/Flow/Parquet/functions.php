@@ -5,6 +5,12 @@ declare(strict_types=1);
 namespace Flow\Parquet;
 
 use Flow\Parquet\Dremel\ColumnData\NullLevel;
+use Flow\Parquet\Exception\InvalidArgumentException;
+
+use function get_debug_type;
+use function is_array;
+use function is_int;
+use function is_string;
 
 /**
  * @param array<array-key, mixed> $array1
@@ -18,7 +24,7 @@ function array_merge_recursive(array $array1, array $array2): array
 
     // @mago-ignore analysis:mixed-assignment
     foreach ($array2 as $key => &$value) {
-        if (\is_array($value) && isset($merged[$key]) && \is_array($merged[$key])) {
+        if (is_array($value) && isset($merged[$key]) && is_array($merged[$key])) {
             $merged[$key] = array_merge_recursive($merged[$key], $value);
         } else {
             $merged[$key] = $value;
@@ -63,13 +69,11 @@ function dremel_array_combine_recursive(array $keys, array $values): array
             continue;
         }
 
-        if (\is_array($keyValue) && \is_array($value)) {
+        if (is_array($keyValue) && is_array($value)) {
             $result[] = dremel_array_combine_recursive($keyValue, $value);
         } else {
-            if (!\is_int($keyValue) && !\is_string($keyValue)) {
-                throw new \Flow\Parquet\Exception\InvalidArgumentException(
-                    'Map key must be int or string, got ' . \get_debug_type($keyValue),
-                );
+            if (!is_int($keyValue) && !is_string($keyValue)) {
+                throw new InvalidArgumentException('Map key must be int or string, got ' . get_debug_type($keyValue));
             }
             $result[$keyValue] = $value;
         }
@@ -112,7 +116,7 @@ function array_flatten(array $array): array
     $flatten = static function (array $arr) use (&$result, &$flatten): void {
         // @mago-ignore analysis:mixed-assignment
         foreach ($arr as $item) {
-            if (\is_array($item)) {
+            if (is_array($item)) {
                 $flatten($item);
             } else {
                 $result[] = $item;

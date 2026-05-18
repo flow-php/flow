@@ -11,6 +11,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\KernelTestCase;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Tracer\SpanKind;
+use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,7 +22,7 @@ use Symfony\Component\Routing\Router;
 #[CoversClass(PathExclusionRule::class)]
 final class HttpKernelSpanSubscriberTest extends KernelTestCase
 {
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         restore_exception_handler();

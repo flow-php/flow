@@ -8,15 +8,18 @@ use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockLifecycle;
 use Flow\Filesystem\Stream\Blocks;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+
+use function str_repeat;
 
 final class BlocksTest extends TestCase
 {
     /**
      * @return \Generator<string, array{int}>
      */
-    public static function nonPositiveBlockSizeProvider(): \Generator
+    public static function nonPositiveBlockSizeProvider(): Generator
     {
         yield 'zero' => [0];
         yield 'negative' => [-1];
@@ -39,10 +42,10 @@ final class BlocksTest extends TestCase
 
         $blocks = new Blocks(100, new NativeLocalFileBlocksFactory(), $blockLifecycle);
 
-        $blocks->append(\str_repeat('a', 100)); // block 1
-        $blocks->append(\str_repeat('a', 150)); // block 2 and 3
-        $blocks->append(\str_repeat('a', 70)); // block 3 and 4
-        $blocks->append(\str_repeat('a', 90)); // block 5
+        $blocks->append(str_repeat('a', 100)); // block 1
+        $blocks->append(str_repeat('a', 150)); // block 2 and 3
+        $blocks->append(str_repeat('a', 70)); // block 3 and 4
+        $blocks->append(str_repeat('a', 90)); // block 5
 
         static::assertSame(410, $blocks->size());
         static::assertSame(90, $blocks->block()->spaceLeft());

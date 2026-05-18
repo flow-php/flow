@@ -17,6 +17,7 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\string_entry;
+use function iterator_to_array;
 
 final class GoogleSheetExtractorTest extends FlowTestCase
 {
@@ -42,7 +43,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Max rows "0" must be greater than 0');
 
-        \iterator_to_array($extractor->extract(flow_context((new ConfigBuilder())->putInputIntoRows()->build())));
+        iterator_to_array($extractor->extract(flow_context((new ConfigBuilder())->putInputIntoRows()->build())));
     }
 
     public function test_its_stop_fetching_data_if_processed_row_count_is_less_then_last_range_end_row(): void
@@ -72,7 +73,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $sheetNameEntry = string_entry('_sheet_name', $sheetName);
 
         /** @var array<Rows> $rowsArray */
-        $rowsArray = \iterator_to_array($extractor->extract(
+        $rowsArray = iterator_to_array($extractor->extract(
             flow_context((new ConfigBuilder())->putInputIntoRows()->build()),
         ));
         static::assertCount(2, $rowsArray);
@@ -116,7 +117,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $service->spreadsheets_values = $spreadsheetsValues;
 
         /** @var array<Rows> $rowsArray */
-        $rowsArray = \iterator_to_array($extractor->extract(flow_context((new ConfigBuilder())->build())));
+        $rowsArray = iterator_to_array($extractor->extract(flow_context((new ConfigBuilder())->build())));
         static::assertCount(0, $rowsArray);
     }
 

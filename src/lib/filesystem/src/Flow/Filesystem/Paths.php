@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem;
 
+use function array_values;
+
 final class Paths
 {
     private ?Partitions $partitions;
@@ -30,7 +32,7 @@ final class Paths
                 }
             }
 
-            $this->partitions = new Partitions(...\array_values($partitions));
+            $this->partitions = new Partitions(...array_values($partitions));
         }
 
         return $this->partitions;

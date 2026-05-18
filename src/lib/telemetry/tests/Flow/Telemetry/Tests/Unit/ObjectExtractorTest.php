@@ -6,6 +6,7 @@ namespace Flow\Telemetry\Tests\Unit;
 
 use Flow\Telemetry\ObjectExtractor;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 final class ObjectExtractorTest extends TestCase
 {
@@ -38,7 +39,7 @@ final class ObjectExtractorTest extends TestCase
 
     public function test_simple_class_name(): void
     {
-        static::assertSame('stdClass', ObjectExtractor::shortName(new \stdClass()));
+        static::assertSame('stdClass', ObjectExtractor::shortName(new stdClass()));
     }
 
     public function test_single_letter_class(): void

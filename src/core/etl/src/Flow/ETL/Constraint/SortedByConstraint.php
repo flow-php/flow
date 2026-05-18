@@ -10,6 +10,9 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\SortOrder;
 
+use function implode;
+use function var_export;
+
 final class SortedByConstraint implements Constraint
 {
     private bool $firstRow = true;
@@ -74,7 +77,7 @@ final class SortedByConstraint implements Constraint
             $columns[] = $reference->name() . ' ' . $reference->sort()->name;
         }
 
-        return sprintf('Sorted constraint on [%s]', \implode(', ', $columns));
+        return sprintf('Sorted constraint on [%s]', implode(', ', $columns));
     }
 
     public function violation(Row $row): string
@@ -91,10 +94,10 @@ final class SortedByConstraint implements Constraint
                 $entry->type()->toString(),
                 $reference->sort()->name,
                 $entry->toString(),
-                $previousValue === null ? 'null' : \var_export($previousValue, true),
+                $previousValue === null ? 'null' : var_export($previousValue, true),
             );
         }
 
-        return \implode('; ', $violations);
+        return implode('; ', $violations);
     }
 }

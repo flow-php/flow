@@ -6,6 +6,8 @@ namespace Flow\Website\Tests\Integration\Command;
 
 use Symfony\Component\Console\Command\Command;
 
+use function file_get_contents;
+
 final class GenerateScalarFunctionChainCompleterCommandTest extends CompleterCommandTestCase
 {
     public function test_command_executes_successfully(): void
@@ -20,7 +22,7 @@ final class GenerateScalarFunctionChainCompleterCommandTest extends CompleterCom
     {
         $this->executeCommand('app:generate:scalar-function-chain-completer');
 
-        $content = \file_get_contents($this->getOutputPath('scalarfunctionchain.js'));
+        $content = file_get_contents($this->getOutputPath('scalarfunctionchain.js'));
 
         $coreMethods = ['equals', 'isNull', 'isNotNull', 'cast', 'trim', 'lower', 'upper'];
 
@@ -37,7 +39,7 @@ final class GenerateScalarFunctionChainCompleterCommandTest extends CompleterCom
     {
         $this->executeCommand('app:generate:scalar-function-chain-completer');
 
-        $content = \file_get_contents($this->getOutputPath('scalarfunctionchain.js'));
+        $content = file_get_contents($this->getOutputPath('scalarfunctionchain.js'));
 
         static::assertStringContainsString('CodeMirror Completer', $content);
         static::assertStringContainsString('scalarFunctionChainMethods', $content);
@@ -49,7 +51,7 @@ final class GenerateScalarFunctionChainCompleterCommandTest extends CompleterCom
     {
         $this->executeCommand('app:generate:scalar-function-chain-completer');
 
-        $content = \file_get_contents($this->getOutputPath('scalarfunctionchain.js'));
+        $content = file_get_contents($this->getOutputPath('scalarfunctionchain.js'));
 
         static::assertMatchesRegularExpression(
             '/label:\s*"[a-zA-Z]+"/i',

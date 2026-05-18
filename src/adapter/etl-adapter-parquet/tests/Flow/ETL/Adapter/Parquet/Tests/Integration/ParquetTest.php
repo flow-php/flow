@@ -12,6 +12,8 @@ use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Ramsey\Uuid\Uuid;
 
+use function array_diff;
+use function file_exists;
 use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\Adapter\Parquet\to_parquet;
 use function Flow\ETL\DSL\config;
@@ -22,6 +24,11 @@ use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\Filesystem\DSL\path;
+use function is_dir;
+use function is_file;
+use function rmdir;
+use function scandir;
+use function unlink;
 
 final class ParquetTest extends FlowTestCase
 {
@@ -108,18 +115,18 @@ final class ParquetTest extends FlowTestCase
      */
     private function cleanDirectory(string $path): void
     {
-        if (\file_exists($path) && \is_dir($path)) {
-            $files = \array_diff(\scandir($path), ['..', '.']);
+        if (file_exists($path) && is_dir($path)) {
+            $files = array_diff(scandir($path), ['..', '.']);
 
             foreach ($files as $file) {
-                if (\is_file($path . DIRECTORY_SEPARATOR . $file)) {
+                if (is_file($path . DIRECTORY_SEPARATOR . $file)) {
                     $this->removeFile($path . DIRECTORY_SEPARATOR . $file);
                 } else {
                     $this->cleanDirectory($path . DIRECTORY_SEPARATOR . $file);
                 }
             }
 
-            \rmdir($path);
+            rmdir($path);
         }
     }
 
@@ -128,11 +135,11 @@ final class ParquetTest extends FlowTestCase
      */
     private function removeFile(string $path): void
     {
-        if (\file_exists($path)) {
-            if (\is_dir($path)) {
+        if (file_exists($path)) {
+            if (is_dir($path)) {
                 $this->cleanDirectory($path);
             } else {
-                \unlink($path);
+                unlink($path);
             }
         }
     }

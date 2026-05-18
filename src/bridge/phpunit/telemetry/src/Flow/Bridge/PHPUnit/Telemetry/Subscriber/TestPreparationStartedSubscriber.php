@@ -10,6 +10,7 @@ use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Telemetry;
 use PHPUnit\Event\Test\PreparationStarted;
 use PHPUnit\Event\Test\PreparationStartedSubscriber;
+use Throwable;
 
 final readonly class TestPreparationStartedSubscriber implements PreparationStartedSubscriber
 {
@@ -46,7 +47,7 @@ final readonly class TestPreparationStartedSubscriber implements PreparationStar
             ]);
 
             $this->spanStack->push($span);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             // Silent failure - telemetry must never break tests
         }
     }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Sort;
 
+use function in_array;
+
 enum SortAlgorithms
 {
     case EXTERNAL_SORT;
@@ -13,6 +15,6 @@ enum SortAlgorithms
 
     public function useMemory(): bool
     {
-        return \in_array($this, [self::MEMORY_SORT, self::MEMORY_FALLBACK_EXTERNAL_SORT], true);
+        return in_array($this, [self::MEMORY_SORT, self::MEMORY_FALLBACK_EXTERNAL_SORT], true);
     }
 }

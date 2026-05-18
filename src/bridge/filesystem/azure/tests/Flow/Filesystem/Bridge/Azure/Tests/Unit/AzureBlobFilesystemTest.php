@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function iterator_to_array;
 
 final class AzureBlobFilesystemTest extends TestCase
 {
@@ -27,7 +28,7 @@ final class AzureBlobFilesystemTest extends TestCase
     {
         $this->expectException(InvalidSchemeException::class);
 
-        \iterator_to_array(
+        iterator_to_array(
             azure_filesystem($this->createMock(BlobServiceInterface::class))->list(path('file:///var/foo.txt')),
         );
     }

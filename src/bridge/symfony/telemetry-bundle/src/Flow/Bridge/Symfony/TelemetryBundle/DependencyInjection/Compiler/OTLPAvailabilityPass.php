@@ -8,13 +8,15 @@ use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
+use function class_exists;
+
 final class OTLPAvailabilityPass implements CompilerPassInterface
 {
     private const string OTLP_BRIDGE_CLASS = 'Flow\\Bridge\\Telemetry\\OTLP\\Exporter\\OTLPExporter';
 
     public function process(ContainerBuilder $container): void
     {
-        $otlpAvailable = \class_exists(self::OTLP_BRIDGE_CLASS);
+        $otlpAvailable = class_exists(self::OTLP_BRIDGE_CLASS);
         $container->setParameter('flow.telemetry.otlp_available', $otlpAvailable);
 
         $otlpConfigured =

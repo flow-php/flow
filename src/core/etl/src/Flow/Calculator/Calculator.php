@@ -9,8 +9,12 @@ use Brick\Math\BigInteger;
 use Brick\Math\Exception\DivisionByZeroException;
 use Brick\Math\Exception\RoundingNecessaryException;
 use Brick\Math\RoundingMode;
+use DivisionByZeroError;
 use Flow\Calculator\Exception\InvalidScaleException;
 use Flow\Calculator\Exception\NonNumericValueException;
+
+use function defined;
+use function method_exists;
 
 final class Calculator
 {
@@ -49,7 +53,7 @@ final class Calculator
             $aDecimal = BigDecimal::of((string) $a);
             $effectiveScale = $scale ?? $aDecimal->getScale();
 
-            $useNewNaming = \defined('Brick\Math\RoundingMode::Up');
+            $useNewNaming = defined('Brick\Math\RoundingMode::Up');
 
             $brickMode = match ($rounding) {
                 Rounding::UP => $useNewNaming ? RoundingMode::Up : RoundingMode::UP,
@@ -72,7 +76,7 @@ final class Calculator
 
             return $result->toFloat();
         } catch (DivisionByZeroException $e) {
-            throw new \DivisionByZeroError('Division by zero.', $e->getCode(), $e);
+            throw new DivisionByZeroError('Division by zero.', $e->getCode(), $e);
         } catch (RoundingNecessaryException $e) {
             throw new Exception\RoundingNecessaryException($e->getMessage(), $e->getCode(), $e);
         }
@@ -134,7 +138,7 @@ final class Calculator
 
     private static function hasNonZeroFractionalPart(BigDecimal $result): bool
     {
-        if (\method_exists($result, 'hasNonZeroFractionalPart')) {
+        if (method_exists($result, 'hasNonZeroFractionalPart')) {
             return $result->hasNonZeroFractionalPart();
         }
 

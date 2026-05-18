@@ -9,6 +9,8 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction\UnpackResults;
 use Flow\ETL\Row;
 
+use function in_array;
+
 final class ArrayUnpack extends ScalarFunctionChain implements UnpackResults
 {
     /**
@@ -48,7 +50,7 @@ final class ArrayUnpack extends ScalarFunctionChain implements UnpackResults
         foreach ($array as $key => $value) {
             $entryName = (string) $key;
 
-            if (\in_array($entryName, $skipKeys, true)) {
+            if (in_array($entryName, $skipKeys, true)) {
                 continue;
             }
 

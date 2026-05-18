@@ -6,8 +6,10 @@ namespace Flow\PostgreSql\Tests\Unit\Parser;
 
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
 use function Flow\PostgreSql\DSL\column_type_from_string;
 use function Flow\Types\DSL\type_instance_of;
 
@@ -15,7 +17,7 @@ final class ColumnTypeParserTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }
@@ -90,7 +92,7 @@ final class ColumnTypeParserTest extends TestCase
 
     public function test_parse_empty_throws_exception(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
 
         column_type_from_string('');
     }

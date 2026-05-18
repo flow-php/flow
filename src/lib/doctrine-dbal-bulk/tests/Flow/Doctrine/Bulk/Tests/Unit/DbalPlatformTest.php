@@ -16,6 +16,8 @@ use Flow\Doctrine\Bulk\Dialect\SqliteDialect;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use PHPUnit\Framework\TestCase;
 
+use function class_exists;
+
 final class DbalPlatformTest extends TestCase
 {
     public function test_is_mysql(): void
@@ -42,13 +44,13 @@ final class DbalPlatformTest extends TestCase
 
     public function test_is_sqlite_sql_with_lowercase_l_class_name(): void
     {
-        if (!\class_exists(\Doctrine\DBAL\Platforms\SqlitePlatform::class)) {
+        if (!class_exists(SQLitePlatform::class)) {
             static::markTestSkipped(
                 'Doctrine\\DBAL\\Platforms\\SqlitePlatform class is not available on this DBAL version.',
             );
         }
 
-        $platform = new DbalPlatform(new \Doctrine\DBAL\Platforms\SqlitePlatform());
+        $platform = new DbalPlatform(new SQLitePlatform());
 
         static::assertInstanceOf(SqliteDialect::class, $platform->dialect());
     }

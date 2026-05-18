@@ -39,6 +39,7 @@ use Flow\PostgreSql\Schema\Catalog;
 use Flow\PostgreSql\Schema\ChainCatalogProvider;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Telemetry;
+use LogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -213,7 +214,7 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
 
     public function test_cache_pool_unknown_connection_throws(): void
     {
-        $this->expectException(\LogicException::class);
+        $this->expectException(LogicException::class);
         $this->expectExceptionMessage('references unknown connection "missing"');
 
         $this->bootKernel([
@@ -1252,7 +1253,7 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
 
     public function test_session_unknown_connection_throws(): void
     {
-        $this->expectException(\LogicException::class);
+        $this->expectException(LogicException::class);
         $this->expectExceptionMessage('Session references unknown connection "missing"');
 
         $this->bootKernel([

@@ -10,6 +10,7 @@ use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Logger\LogProcessor;
 use Flow\Telemetry\Signal\Signals;
+use Throwable;
 
 /**
  * Exports each log record immediately when processed.
@@ -34,7 +35,7 @@ final readonly class PassThroughLogProcessor implements LogProcessor
     {
         try {
             $this->exporter->export(Signals::logs([$entry]));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
         }
     }
@@ -43,7 +44,7 @@ final readonly class PassThroughLogProcessor implements LogProcessor
     {
         try {
             $this->exporter->shutdown();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
         }
     }

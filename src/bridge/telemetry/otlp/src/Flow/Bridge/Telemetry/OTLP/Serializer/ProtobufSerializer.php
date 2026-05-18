@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Serializer;
 
+use DateTimeImmutable;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Logger\Severity;
@@ -46,6 +47,25 @@ use Opentelemetry\Proto\Trace\V1\Span\Link;
 use Opentelemetry\Proto\Trace\V1\Span\SpanKind as ProtoSpanKind;
 use Opentelemetry\Proto\Trace\V1\Status;
 use Opentelemetry\Proto\Trace\V1\Status\StatusCode;
+use RuntimeException;
+
+use function array_filter;
+use function array_map;
+use function class_exists;
+use function count;
+use function hex2bin;
+use function is_array;
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_string;
+use function json_encode;
+use function ksort;
+use function md5;
+use function str_starts_with;
+
+use const ARRAY_FILTER_USE_KEY;
+use const JSON_THROW_ON_ERROR;
 
 /**
  * Serializes Flow Telemetry objects to OTLP Protobuf wire format.
@@ -56,8 +76,8 @@ final class ProtobufSerializer implements GrpcRequestFactory
 {
     public function __construct()
     {
-        if (!\class_exists('Google\Protobuf\Internal\Message')) {
-            throw new \RuntimeException('The google/protobuf package is required for ProtobufSerializer. '
+        if (!class_exists('Google\Protobuf\Internal\Message')) {
+            throw new RuntimeException('The google/protobuf package is required for ProtobufSerializer. '
             . 'Install it via: composer require google/protobuf');
         }
     }
@@ -210,15 +230,15 @@ final class ProtobufSerializer implements GrpcRequestFactory
     {
         $anyValue = new AnyValue();
 
-        if (\is_string($value)) {
+        if (is_string($value)) {
             $anyValue->setStringValue($value);
-        } elseif (\is_int($value)) {
+        } elseif (is_int($value)) {
             $anyValue->setIntValue($value);
-        } elseif (\is_float($value)) {
+        } elseif (is_float($value)) {
             $anyValue->setDoubleValue($value);
-        } elseif (\is_bool($value)) {
+        } elseif (is_bool($value)) {
             $anyValue->setBoolValue($value);
-        } elseif (\is_array($value)) {
+        } elseif (is_array($value)) {
             $arrayValue = new ArrayValue();
             $values = [];
 
@@ -261,27 +281,27 @@ final class ProtobufSerializer implements GrpcRequestFactory
         /** @var array<float> $explicitBounds */
         $explicitBounds = $attributesArray['histogram.explicitBounds'] ?? [];
 
-        $userAttributes = \array_filter(
+        $userAttributes = array_filter(
             $attributesArray,
-            static fn(string $key): bool => !\str_starts_with($key, 'histogram.'),
-            \ARRAY_FILTER_USE_KEY,
+            static fn(string $key): bool => !str_starts_with($key, 'histogram.'),
+            ARRAY_FILTER_USE_KEY,
         );
 
         $dataPoint->setAttributes($this->createKeyValues($userAttributes));
         $dataPoint->setCount($count);
-        $dataPoint->setSum(\is_int($sum) ? (float) $sum : $sum);
+        $dataPoint->setSum(is_int($sum) ? (float) $sum : $sum);
         $dataPoint->setBucketCounts($bucketCounts);
-        $dataPoint->setExplicitBounds(\array_map(static fn(int|float $b): float => (float) $b, $explicitBounds));
+        $dataPoint->setExplicitBounds(array_map(static fn(int|float $b): float => (float) $b, $explicitBounds));
 
         if ($min !== null) {
-            $dataPoint->setMin(\is_int($min) ? (float) $min : $min);
+            $dataPoint->setMin(is_int($min) ? (float) $min : $min);
         }
 
         if ($max !== null) {
-            $dataPoint->setMax(\is_int($max) ? (float) $max : $max);
+            $dataPoint->setMax(is_int($max) ? (float) $max : $max);
         }
 
-        if (\count($metric->exemplars) > 0) {
+        if (count($metric->exemplars) > 0) {
             $exemplars = [];
 
             foreach ($metric->exemplars as $exemplar) {
@@ -331,8 +351,8 @@ final class ProtobufSerializer implements GrpcRequestFactory
         $logRecord->setAttributes($this->createKeyValues($entry->record->attributes->normalize()));
 
         if ($entry->spanContext !== null && $entry->spanContext->isValid()) {
-            $logRecord->setTraceId(\hex2bin($entry->spanContext->traceId->toHex()) ?: '');
-            $logRecord->setSpanId(\hex2bin($entry->spanContext->spanId->toHex()) ?: '');
+            $logRecord->setTraceId(hex2bin($entry->spanContext->traceId->toHex()) ?: '');
+            $logRecord->setSpanId(hex2bin($entry->spanContext->spanId->toHex()) ?: '');
 
             if ($entry->spanContext->traceFlags->isSampled()) {
                 $logRecord->setFlags(1);
@@ -351,13 +371,13 @@ final class ProtobufSerializer implements GrpcRequestFactory
         $dataPoint->setTimeUnixNano($timestamp);
         $dataPoint->setAttributes($this->createKeyValues($metric->attributes->normalize()));
 
-        if (\is_int($metric->value)) {
+        if (is_int($metric->value)) {
             $dataPoint->setAsInt($metric->value);
         } else {
             $dataPoint->setAsDouble($metric->value);
         }
 
-        if (\count($metric->exemplars) > 0) {
+        if (count($metric->exemplars) > 0) {
             $exemplars = [];
 
             foreach ($metric->exemplars as $exemplar) {
@@ -376,16 +396,16 @@ final class ProtobufSerializer implements GrpcRequestFactory
         $protoExemplar->setTimeUnixNano($this->toNanoseconds($exemplar->timestamp));
 
         if ($exemplar->traceId->isValid()) {
-            $protoExemplar->setTraceId(\hex2bin($exemplar->traceId->toHex()) ?: '');
+            $protoExemplar->setTraceId(hex2bin($exemplar->traceId->toHex()) ?: '');
         }
 
         if ($exemplar->spanId->isValid()) {
-            $protoExemplar->setSpanId(\hex2bin($exemplar->spanId->toHex()) ?: '');
+            $protoExemplar->setSpanId(hex2bin($exemplar->spanId->toHex()) ?: '');
         }
 
         $protoExemplar->setFilteredAttributes($this->createKeyValues($exemplar->filteredAttributes));
 
-        if (\is_int($exemplar->value)) {
+        if (is_int($exemplar->value)) {
             $protoExemplar->setAsInt($exemplar->value);
         } else {
             $protoExemplar->setAsDouble($exemplar->value);
@@ -444,8 +464,8 @@ final class ProtobufSerializer implements GrpcRequestFactory
         $protoSpan = new ProtoSpan();
         $context = $span->context();
 
-        $protoSpan->setTraceId(\hex2bin($context->traceId->toHex()) ?: '');
-        $protoSpan->setSpanId(\hex2bin($context->spanId->toHex()) ?: '');
+        $protoSpan->setTraceId(hex2bin($context->traceId->toHex()) ?: '');
+        $protoSpan->setSpanId(hex2bin($context->spanId->toHex()) ?: '');
         $protoSpan->setName($span->name());
         $protoSpan->setKind($this->mapSpanKind($span->kind()));
         $protoSpan->setStartTimeUnixNano($this->toNanoseconds($span->startTime()));
@@ -471,7 +491,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         $protoSpan->setStatus($this->createSpanStatus($span));
 
         if ($context->parentSpanId !== null) {
-            $protoSpan->setParentSpanId(\hex2bin($context->parentSpanId->toHex()) ?: '');
+            $protoSpan->setParentSpanId(hex2bin($context->parentSpanId->toHex()) ?: '');
         }
 
         $endTime = $span->endTime();
@@ -504,8 +524,8 @@ final class ProtobufSerializer implements GrpcRequestFactory
         }
 
         $protoLink = new Link();
-        $protoLink->setTraceId(\hex2bin($link->context->traceId->toHex()) ?: '');
-        $protoLink->setSpanId(\hex2bin($link->context->spanId->toHex()) ?: '');
+        $protoLink->setTraceId(hex2bin($link->context->traceId->toHex()) ?: '');
+        $protoLink->setSpanId(hex2bin($link->context->spanId->toHex()) ?: '');
         $protoLink->setAttributes($this->createKeyValues($link->attributes->normalize()));
 
         return $protoLink;
@@ -711,9 +731,9 @@ final class ProtobufSerializer implements GrpcRequestFactory
     private function resourceKey(Resource $resource): string
     {
         $attributes = $resource->all();
-        \ksort($attributes);
+        ksort($attributes);
 
-        return \md5(\json_encode($attributes, \JSON_THROW_ON_ERROR));
+        return md5(json_encode($attributes, JSON_THROW_ON_ERROR));
     }
 
     private function setCounterData(ProtoMetric $protoMetric, Metric $metric, bool $isMonotonic): ProtoMetric
@@ -752,7 +772,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         return $protoMetric;
     }
 
-    private function toNanoseconds(\DateTimeImmutable $dateTime): int
+    private function toNanoseconds(DateTimeImmutable $dateTime): int
     {
         $seconds = (int) $dateTime->format('U');
         $microseconds = (int) $dateTime->format('u');

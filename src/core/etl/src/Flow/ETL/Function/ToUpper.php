@@ -8,6 +8,8 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function mb_strtoupper;
+
 final class ToUpper extends ScalarFunctionChain
 {
     public function __construct(
@@ -24,6 +26,6 @@ final class ToUpper extends ScalarFunctionChain
                 ->invalidResult(new InvalidArgumentException('ToUpper function requires non-null value'));
         }
 
-        return \mb_strtoupper($value);
+        return mb_strtoupper($value);
     }
 }

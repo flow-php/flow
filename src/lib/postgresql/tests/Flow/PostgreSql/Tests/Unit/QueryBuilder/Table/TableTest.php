@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Table;
 
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\QueryBuilder\Table\AliasedTable;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
 use PHPUnit\Framework\TestCase;
@@ -38,7 +39,7 @@ final class TableTest extends TestCase
         static::assertTrue($node->hasRangeVar());
 
         $rangeVar = $node->getRangeVar();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\RangeVar::class, $rangeVar);
+        static::assertInstanceOf(RangeVar::class, $rangeVar);
         static::assertSame('users', $rangeVar->getRelname());
         static::assertSame('public', $rangeVar->getSchemaname());
         static::assertTrue($rangeVar->getInh());
@@ -53,7 +54,7 @@ final class TableTest extends TestCase
         static::assertTrue($node->hasRangeVar());
 
         $rangeVar = $node->getRangeVar();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\RangeVar::class, $rangeVar);
+        static::assertInstanceOf(RangeVar::class, $rangeVar);
         static::assertSame('users', $rangeVar->getRelname());
         static::assertSame('', $rangeVar->getSchemaname());
         static::assertTrue($rangeVar->getInh());

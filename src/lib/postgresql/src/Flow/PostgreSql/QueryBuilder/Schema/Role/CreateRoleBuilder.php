@@ -14,6 +14,9 @@ use Flow\PostgreSql\Protobuf\AST\RoleSpec;
 use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
 use Flow\PostgreSql\Protobuf\AST\RoleStmtType;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
+use SensitiveParameter;
+
+use function array_values;
 
 final readonly class CreateRoleBuilder implements CreateRoleFinalStep, CreateRoleOptionsStep
 {
@@ -61,7 +64,7 @@ final readonly class CreateRoleBuilder implements CreateRoleFinalStep, CreateRol
 
     public function inRole(string ...$roles): CreateRoleOptionsStep
     {
-        return new self($this->name, $this->options, \array_values($roles));
+        return new self($this->name, $this->options, array_values($roles));
     }
 
     public function login(): CreateRoleOptionsStep
@@ -174,7 +177,7 @@ final readonly class CreateRoleBuilder implements CreateRoleFinalStep, CreateRol
         return $this->withStringOption('validUntil', $timestamp);
     }
 
-    public function withPassword(#[\SensitiveParameter] string $password): CreateRoleOptionsStep
+    public function withPassword(#[SensitiveParameter] string $password): CreateRoleOptionsStep
     {
         return $this->withStringOption('password', $password);
     }

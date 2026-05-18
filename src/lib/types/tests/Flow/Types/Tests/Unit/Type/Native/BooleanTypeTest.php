@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
+use DateInterval;
+use DateTimeImmutable;
+use DOMDocument;
+use DOMElement;
 use Flow\Types\Exception\InvalidTypeException;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -13,7 +18,7 @@ use function Flow\Types\DSL\type_from_array;
 
 final class BooleanTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'valid true' => [
             'value' => true,
@@ -41,7 +46,7 @@ final class BooleanTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
         yield 'string' => [
             'value' => 'string',
@@ -122,37 +127,37 @@ final class BooleanTypeTest extends TestCase
         ];
 
         yield 'DateTimeInterface' => [
-            'value' => new \DateTimeImmutable('2021-01-01 00:00:00'),
+            'value' => new DateTimeImmutable('2021-01-01 00:00:00'),
             'expected' => true,
             'exceptionClass' => null,
         ];
 
         yield 'DateInterval' => [
-            'value' => new \DateInterval('P1D'),
+            'value' => new DateInterval('P1D'),
             'expected' => true,
             'exceptionClass' => null,
         ];
 
         yield 'DOMDocument' => [
-            'value' => new \DOMDocument(),
+            'value' => new DOMDocument(),
             'expected' => true,
             'exceptionClass' => null,
         ];
 
         yield 'DOMElement - true' => [
-            'value' => new \DOMElement('element', 'true'),
+            'value' => new DOMElement('element', 'true'),
             'expected' => true,
             'exceptionClass' => null,
         ];
 
         yield 'DOMElement - false' => [
-            'value' => new \DOMElement('element', 'false'),
+            'value' => new DOMElement('element', 'false'),
             'expected' => false,
             'exceptionClass' => null,
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'valid true' => [
             'value' => true,

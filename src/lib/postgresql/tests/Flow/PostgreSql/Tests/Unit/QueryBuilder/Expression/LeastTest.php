@@ -10,13 +10,16 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Expression\AliasedExpression;
 use Flow\PostgreSql\QueryBuilder\Expression\Least;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+
+use function extension_loaded;
 
 final class LeastTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped(
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );
@@ -34,7 +37,7 @@ final class LeastTest extends TestCase
 
     public function test_constructor_throws_on_less_than_two_expressions(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('LEAST requires at least 2 expressions');
 
         new Least([new MockExpression()]);

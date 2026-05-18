@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
 
@@ -36,7 +37,7 @@ final readonly class Exemplar
      */
     public function __construct(
         public int|float $value,
-        public \DateTimeImmutable $timestamp,
+        public DateTimeImmutable $timestamp,
         public TraceId $traceId,
         public SpanId $spanId,
         public array $filteredAttributes = [],
@@ -57,7 +58,7 @@ final readonly class Exemplar
     {
         return new self(
             $data['value'],
-            new \DateTimeImmutable($data['timestamp']),
+            new DateTimeImmutable($data['timestamp']),
             TraceId::fromArray($data['traceId']),
             SpanId::fromArray($data['spanId']),
             $data['filteredAttributes'],

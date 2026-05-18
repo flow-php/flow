@@ -9,6 +9,8 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Row;
 
+use function is_array;
+
 final class ArraySort extends ScalarFunctionChain
 {
     public function __construct(
@@ -48,7 +50,7 @@ final class ArraySort extends ScalarFunctionChain
     {
         /** @var mixed $value */
         foreach ($array as &$value) {
-            if ($recursive && \is_array($value)) {
+            if ($recursive && is_array($value)) {
                 $this->recursiveSort($value, $function, $flags, true);
             }
         }

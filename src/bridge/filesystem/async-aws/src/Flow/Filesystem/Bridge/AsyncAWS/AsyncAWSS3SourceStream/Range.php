@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\AsyncAWS\AsyncAWSS3SourceStream;
 
+use InvalidArgumentException;
+
 final readonly class Range
 {
     /**
@@ -17,11 +19,11 @@ final readonly class Range
         private ?int $limit = null,
     ) {
         if ($offset !== null && $offset < 0) {
-            throw new \InvalidArgumentException('Offset must be >= 0 if provided, $offset provided: ' . $offset);
+            throw new InvalidArgumentException('Offset must be >= 0 if provided, $offset provided: ' . $offset);
         }
 
         if ($limit !== null && $limit <= 0) {
-            throw new \InvalidArgumentException('Limit must be > 0 if provided, $limit provided: ' . $limit);
+            throw new InvalidArgumentException('Limit must be > 0 if provided, $limit provided: ' . $limit);
         }
     }
 

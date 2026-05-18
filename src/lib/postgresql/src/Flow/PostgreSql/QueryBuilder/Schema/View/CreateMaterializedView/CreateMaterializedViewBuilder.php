@@ -15,6 +15,8 @@ use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
+use function array_values;
+
 final readonly class CreateMaterializedViewBuilder implements
     CreateMatViewAsStep,
     CreateMatViewDataStep,
@@ -67,7 +69,7 @@ final readonly class CreateMaterializedViewBuilder implements
         return new self(
             $this->name,
             $this->schema,
-            \array_values($columns),
+            array_values($columns),
             $this->query,
             $this->ifNotExists,
             $this->accessMethod,

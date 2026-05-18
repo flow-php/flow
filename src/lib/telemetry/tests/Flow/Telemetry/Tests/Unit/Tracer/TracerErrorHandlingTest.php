@@ -12,13 +12,14 @@ use Flow\Telemetry\Tests\Mother\ResourceMother;
 use Flow\Telemetry\Tracer\SpanProcessor;
 use Flow\Telemetry\Tracer\Tracer;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class TracerErrorHandlingTest extends TestCase
 {
     public function test_complete_routes_on_end_throwable_to_error_handler(): void
     {
         $processor = $this->createMock(SpanProcessor::class);
-        $processor->method('onEnd')->willThrowException(new \RuntimeException('end exploded'));
+        $processor->method('onEnd')->willThrowException(new RuntimeException('end exploded'));
         $spy = new ErrorHandlerSpy();
 
         $tracer = new Tracer(
@@ -40,7 +41,7 @@ final class TracerErrorHandlingTest extends TestCase
     public function test_flush_routes_processor_throwable_to_error_handler(): void
     {
         $processor = $this->createMock(SpanProcessor::class);
-        $processor->method('flush')->willThrowException(new \RuntimeException('flush exploded'));
+        $processor->method('flush')->willThrowException(new RuntimeException('flush exploded'));
         $spy = new ErrorHandlerSpy();
 
         $tracer = new Tracer(
@@ -60,7 +61,7 @@ final class TracerErrorHandlingTest extends TestCase
     public function test_span_routes_on_start_throwable_to_error_handler(): void
     {
         $processor = $this->createMock(SpanProcessor::class);
-        $processor->method('onStart')->willThrowException(new \RuntimeException('start exploded'));
+        $processor->method('onStart')->willThrowException(new RuntimeException('start exploded'));
         $spy = new ErrorHandlerSpy();
 
         $tracer = new Tracer(

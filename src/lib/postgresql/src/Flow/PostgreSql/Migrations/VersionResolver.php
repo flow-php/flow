@@ -8,6 +8,9 @@ use Flow\PostgreSql\Migrations\Exception\MigrationException;
 use Flow\PostgreSql\Migrations\Repository\MigrationRepository;
 use Flow\PostgreSql\Migrations\Store\MigrationStore;
 
+use function count;
+use function iterator_to_array;
+
 final readonly class VersionResolver
 {
     public function __construct(
@@ -94,12 +97,12 @@ final readonly class VersionResolver
             throw MigrationException::versionNotFound(Version::fromString('prev'));
         }
 
-        $items = \iterator_to_array($this->repository->all()->upTo($latest->version));
+        $items = iterator_to_array($this->repository->all()->upTo($latest->version));
 
-        if (\count($items) < 2) {
+        if (count($items) < 2) {
             return Version::fromString('0');
         }
 
-        return $items[\count($items) - 2]->version;
+        return $items[count($items) - 2]->version;
     }
 }

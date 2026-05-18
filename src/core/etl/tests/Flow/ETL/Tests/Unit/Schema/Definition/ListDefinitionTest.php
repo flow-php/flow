@@ -11,6 +11,7 @@ use Flow\ETL\Schema\Definition\JsonDefinition;
 use Flow\ETL\Schema\Definition\ListDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\int_entry;
@@ -24,7 +25,7 @@ use function Flow\Types\DSL\type_string;
 
 final class ListDefinitionTest extends FlowTestCase
 {
-    public static function provideIsCompatibleCases(): \Generator
+    public static function provideIsCompatibleCases(): Generator
     {
         yield 'same type and name' => [
             list_schema('items', type_list(type_integer())),
@@ -57,7 +58,7 @@ final class ListDefinitionTest extends FlowTestCase
         ];
     }
 
-    public static function provideMergeCases(): \Generator
+    public static function provideMergeCases(): Generator
     {
         yield 'same type' => [
             list_schema('items', type_list(type_integer())),
@@ -78,7 +79,7 @@ final class ListDefinitionTest extends FlowTestCase
         ];
     }
 
-    public static function provideMergeWithExpectedTypeCases(): \Generator
+    public static function provideMergeWithExpectedTypeCases(): Generator
     {
         yield 'integer list with float list produces float list' => [
             list_schema('col', type_list(type_integer())),

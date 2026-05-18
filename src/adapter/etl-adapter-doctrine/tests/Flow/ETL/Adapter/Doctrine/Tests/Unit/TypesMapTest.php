@@ -37,6 +37,7 @@ use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 final class TypesMapTest extends TestCase
 {
@@ -82,7 +83,7 @@ final class TypesMapTest extends TestCase
 
         /** @phpstan-ignore-next-line */
         new TypesMap([
-            StringType::class => \stdClass::class,
+            StringType::class => stdClass::class,
         ]);
     }
 
@@ -104,7 +105,7 @@ final class TypesMapTest extends TestCase
 
         /** @phpstan-ignore-next-line */
         new TypesMap([
-            \stdClass::class => \Doctrine\DBAL\Types\StringType::class,
+            stdClass::class => \Doctrine\DBAL\Types\StringType::class,
         ]);
     }
 

@@ -11,12 +11,15 @@ use Flow\Bridge\Psr3\Telemetry\ValueNormalizer;
 use Flow\Telemetry\Logger\Severity;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LogLevel;
+use RuntimeException;
+use stdClass;
+use Stringable;
 
 final class LogRecordConverterTest extends TestCase
 {
     public function test_accepts_stringable_message(): void
     {
-        $message = new class implements \Stringable {
+        $message = new class implements Stringable {
             public function __toString(): string
             {
                 return 'rendered body';
@@ -50,13 +53,13 @@ final class LogRecordConverterTest extends TestCase
 
     public function test_exception_in_context_is_routed_via_set_exception(): void
     {
-        $exception = new \RuntimeException('boom');
+        $exception = new RuntimeException('boom');
 
         $record = (new LogRecordConverter())->convert(LogLevel::ERROR, 'failure', [
             'exception' => $exception,
         ]);
 
-        static::assertSame(\RuntimeException::class, $record->attributes->get('exception.type'));
+        static::assertSame(RuntimeException::class, $record->attributes->get('exception.type'));
         static::assertSame('boom', $record->attributes->get('exception.message'));
         static::assertNotNull($record->attributes->get('exception.stacktrace'));
         static::assertFalse($record->attributes->has('exception'));
@@ -78,8 +81,8 @@ final class LogRecordConverterTest extends TestCase
     {
         $record = (new LogRecordConverter())->convert(LogLevel::INFO, 'Tags {tags} error {exception} obj {obj}', [
             'tags' => ['a', 'b'],
-            'exception' => new \RuntimeException('x'),
-            'obj' => new \stdClass(),
+            'exception' => new RuntimeException('x'),
+            'obj' => new stdClass(),
         ]);
 
         static::assertSame('Tags {tags} error {exception} obj {obj}', $record->body);
@@ -87,7 +90,7 @@ final class LogRecordConverterTest extends TestCase
 
     public function test_interpolation_uses_stringable_objects(): void
     {
-        $stringable = new class implements \Stringable {
+        $stringable = new class implements Stringable {
             public function __toString(): string
             {
                 return 'CTX';
@@ -124,11 +127,11 @@ final class LogRecordConverterTest extends TestCase
     {
         $record = (new LogRecordConverter())->convert(LogLevel::INFO, 'msg', [
             'nullable' => null,
-            'object' => new \stdClass(),
+            'object' => new stdClass(),
         ]);
 
         static::assertSame('null', $record->attributes->get('nullable'));
-        static::assertSame(\stdClass::class, $record->attributes->get('object'));
+        static::assertSame(stdClass::class, $record->attributes->get('object'));
     }
 
     public function test_severity_mapping_uses_provided_mapper(): void

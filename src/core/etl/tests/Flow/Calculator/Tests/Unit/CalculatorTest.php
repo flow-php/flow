@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Calculator\Tests\Unit;
 
+use DivisionByZeroError;
 use Flow\Calculator\Calculator;
 use Flow\Calculator\Rounding;
 use PHPUnit\Framework\Attributes\TestWith;
@@ -69,7 +70,7 @@ final class CalculatorTest extends TestCase
 
     public function test_divide_by_zero(): void
     {
-        $this->expectException(\DivisionByZeroError::class);
+        $this->expectException(DivisionByZeroError::class);
         $this->expectExceptionMessage('Division by zero');
 
         (new Calculator())->divide(1, 0);
@@ -77,7 +78,7 @@ final class CalculatorTest extends TestCase
 
     public function test_divide_by_zero_as_float(): void
     {
-        $this->expectException(\DivisionByZeroError::class);
+        $this->expectException(DivisionByZeroError::class);
         $this->expectExceptionMessage('Division by zero');
 
         (new Calculator())->divide(1, 0.0);
@@ -85,7 +86,7 @@ final class CalculatorTest extends TestCase
 
     public function test_divide_by_zero_as_string(): void
     {
-        $this->expectException(\DivisionByZeroError::class);
+        $this->expectException(DivisionByZeroError::class);
         $this->expectExceptionMessage('Division by zero');
 
         (new Calculator())->divide(1, '0');

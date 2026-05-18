@@ -9,6 +9,8 @@ use Flow\ETL\Row;
 
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
+use function implode;
+use function is_string;
 
 final class Concat extends ScalarFunctionChain
 {
@@ -28,15 +30,15 @@ final class Concat extends ScalarFunctionChain
         $concatValues = [];
 
         foreach ($this->refs as $value) {
-            $value = \is_string($value)
+            $value = is_string($value)
                 ? $value
                 : type_optional(type_string())->cast((new Parameter($value))->eval($row, $context));
 
-            if (\is_string($value)) {
+            if (is_string($value)) {
                 $concatValues[] = $value;
             }
         }
 
-        return \implode('', $concatValues);
+        return implode('', $concatValues);
     }
 }

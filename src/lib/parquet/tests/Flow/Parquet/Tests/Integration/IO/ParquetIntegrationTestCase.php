@@ -8,6 +8,8 @@ use Flow\Parquet\Engine\ArrowParquetEngine;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
+
 abstract class ParquetIntegrationTestCase extends TestCase
 {
     /**
@@ -17,7 +19,7 @@ abstract class ParquetIntegrationTestCase extends TestCase
     {
         $engines = ['php' => [new PhpParquetEngine()]];
 
-        if (\extension_loaded('arrow')) {
+        if (extension_loaded('arrow')) {
             $engines['arrow'] = [new ArrowParquetEngine()];
         }
 

@@ -14,6 +14,12 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
+use function file_exists;
+use function file_get_contents;
+use function is_file;
+use function str_ends_with;
+use function str_replace;
+
 final class DocumentationController extends AbstractController
 {
     public function __construct(
@@ -29,13 +35,13 @@ final class DocumentationController extends AbstractController
         $projectDir = $this->getParameter('kernel.project_dir');
         $docsDir = $projectDir . '/build/documentation/api';
 
-        if (!\file_exists($docsDir . '/' . $page) || !\is_file($docsDir . '/' . $page)) {
-            if (!\str_ends_with($page, '.html')) {
+        if (!file_exists($docsDir . '/' . $page) || !is_file($docsDir . '/' . $page)) {
+            if (!str_ends_with($page, '.html')) {
                 return $this->redirectToRoute('documentation_api', ['page' => $page . '/index.html']);
             }
         }
 
-        if (\file_exists($docsDir . '/' . $page)) {
+        if (file_exists($docsDir . '/' . $page)) {
             $extension = pathinfo($docsDir . '/' . $page, PATHINFO_EXTENSION);
 
             $contentType = match ($extension) {
@@ -44,10 +50,10 @@ final class DocumentationController extends AbstractController
                 default => 'text/html',
             };
 
-            $body = \file_get_contents($docsDir . '/' . $page);
+            $body = file_get_contents($docsDir . '/' . $page);
 
             if ($extension === 'html' && $body !== false) {
-                $body = \str_replace(
+                $body = str_replace(
                     '</head>',
                     '<link rel="stylesheet" href="/styles/api-overrides.css"></head>',
                     $body,

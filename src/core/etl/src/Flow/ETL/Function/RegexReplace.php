@@ -8,6 +8,8 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function preg_replace;
+
 final class RegexReplace extends ScalarFunctionChain
 {
     public function __construct(
@@ -48,6 +50,6 @@ final class RegexReplace extends ScalarFunctionChain
                 ->invalidResult(new InvalidArgumentException('RegexReplace requires non-null limit'));
         }
 
-        return \preg_replace($pattern, $replacement, $subject, $limit);
+        return preg_replace($pattern, $replacement, $subject, $limit);
     }
 }

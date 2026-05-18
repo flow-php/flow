@@ -8,6 +8,7 @@ use Flow\ETL\Cache;
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Exception\KeyNotInCacheException;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Override;
 
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -15,7 +16,7 @@ use function Flow\ETL\DSL\str_entry;
 
 abstract class CacheBaseTestSuite extends FlowIntegrationTestCase
 {
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -23,7 +24,7 @@ abstract class CacheBaseTestSuite extends FlowIntegrationTestCase
         $this->cache()->clear();
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         parent::tearDown();

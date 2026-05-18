@@ -14,6 +14,12 @@ use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 
+use function count;
+use function gettype;
+use function is_array;
+use function is_object;
+use function is_scalar;
+
 final readonly class DremelShredder
 {
     public function __construct(
@@ -215,7 +221,7 @@ final readonly class DremelShredder
                 $definitionLevel++;
             }
 
-            if (!\count($listValue)) {
+            if (!count($listValue)) {
                 $repLvl = $repetitionLevel - 1;
 
                 if (!isset($rowFirstWrite[$fp])) {
@@ -277,7 +283,7 @@ final readonly class DremelShredder
                 $definitionLevel++;
             }
 
-            if (!\count($listValue)) {
+            if (!count($listValue)) {
                 if ($shouldValidate && $plan->elementColumn !== null) {
                     $this->validator->validate($plan->elementColumn, null);
                 }
@@ -331,7 +337,7 @@ final readonly class DremelShredder
                 $definitionLevel++;
             }
 
-            if (!\count($listValue)) {
+            if (!count($listValue)) {
                 if ($shouldValidate && $plan->elementColumn !== null) {
                     $this->validator->validate($plan->elementColumn, null);
                 }
@@ -384,7 +390,7 @@ final readonly class DremelShredder
             $definitionLevel++;
         }
 
-        if (!\count($listValue)) {
+        if (!count($listValue)) {
             if ($shouldValidate && $plan->elementColumn !== null) {
                 $this->validator->validate($plan->elementColumn, null);
             }
@@ -524,7 +530,7 @@ final readonly class DremelShredder
                 $definitionLevel++;
             }
 
-            if (!\count($mapValue)) {
+            if (!count($mapValue)) {
                 $optKeyFp = $plan->optionalKey['flatPath'];
                 $optKeyTarget = $plan->optionalKey['target'];
 
@@ -635,7 +641,7 @@ final readonly class DremelShredder
                 $definitionLevel++;
             }
 
-            if (!\count($mapValue)) {
+            if (!count($mapValue)) {
                 if ($shouldValidate && $plan->valueColumn !== null) {
                     $this->validator->validate($plan->valueColumn, null);
                 }
@@ -734,7 +740,7 @@ final readonly class DremelShredder
                 $definitionLevel++;
             }
 
-            if (!\count($mapValue)) {
+            if (!count($mapValue)) {
                 if ($shouldValidate && $plan->valueColumn !== null) {
                     $this->validator->validate($plan->valueColumn, null);
                 }
@@ -832,7 +838,7 @@ final readonly class DremelShredder
             $definitionLevel++;
         }
 
-        if (!\count($mapValue)) {
+        if (!count($mapValue)) {
             if ($shouldValidate && $plan->valueColumn !== null) {
                 $this->validator->validate($plan->valueColumn, null);
             }
@@ -970,7 +976,7 @@ final readonly class DremelShredder
             $definitionLevel++;
         }
 
-        if (!\is_array($structureData) || !\count($structureData)) {
+        if (!is_array($structureData) || !count($structureData)) {
             foreach ($plan->children as $child) {
                 if ($child instanceof FlatPlan) {
                     $fp = $child->flatPath;
@@ -1105,11 +1111,11 @@ final readonly class DremelShredder
 
     private function narrowFlatValue(mixed $value): null|object|bool|float|int|string
     {
-        if ($value === null || \is_scalar($value) || \is_object($value)) {
+        if ($value === null || is_scalar($value) || is_object($value)) {
             return $value;
         }
 
-        throw new InvalidArgumentException('Flat column value must be null|scalar|object, got ' . \gettype($value));
+        throw new InvalidArgumentException('Flat column value must be null|scalar|object, got ' . gettype($value));
     }
 
     /**
@@ -1117,10 +1123,10 @@ final readonly class DremelShredder
      */
     private function narrowArrayOrNull(mixed $value): ?array
     {
-        if ($value === null || \is_array($value)) {
+        if ($value === null || is_array($value)) {
             return $value;
         }
 
-        throw new InvalidArgumentException('List/map column value must be array|null, got ' . \gettype($value));
+        throw new InvalidArgumentException('List/map column value must be array|null, got ' . gettype($value));
     }
 }

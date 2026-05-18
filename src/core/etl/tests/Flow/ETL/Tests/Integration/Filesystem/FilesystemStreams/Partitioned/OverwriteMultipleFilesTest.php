@@ -7,13 +7,18 @@ namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\Partitioned;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
 use Flow\Filesystem\Partition;
+use Override;
 
+use function array_map;
+use function file_get_contents;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\Filesystem\DSL\path;
+use function iterator_to_array;
+use function sort;
 
 final class OverwriteMultipleFilesTest extends FilesystemStreamsTestCase
 {
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         parent::tearDown();
@@ -38,21 +43,21 @@ final class OverwriteMultipleFilesTest extends FilesystemStreamsTestCase
         $ordersStream->append('orders data');
         $ordersStreams->closeStreams($ordersFile);
 
-        $files = \iterator_to_array($this->fs()->list(path(
+        $files = iterator_to_array($this->fs()->list(path(
             $this->filesDirectory() . '/' . __FUNCTION__ . '/partition=value/*',
         )));
 
         static::assertCount(2, $files);
 
-        $basenames = \array_map(static fn($file) => $file->path->basename(), $files);
-        \sort($basenames);
+        $basenames = array_map(static fn($file) => $file->path->basename(), $files);
+        sort($basenames);
 
         static::assertSame(['orders.csv', 'sales.csv'], $basenames);
 
         $contentByBasename = [];
 
         foreach ($files as $file) {
-            $contentByBasename[$file->path->basename()] = \file_get_contents($file->path->path());
+            $contentByBasename[$file->path->basename()] = file_get_contents($file->path->path());
         }
 
         static::assertSame('sales data', $contentByBasename['sales.csv']);
@@ -77,13 +82,13 @@ final class OverwriteMultipleFilesTest extends FilesystemStreamsTestCase
         $fileStream->append('overwritten content');
         $streams->closeStreams($file);
 
-        $files = \iterator_to_array($this->fs()->list(path(
+        $files = iterator_to_array($this->fs()->list(path(
             $this->filesDirectory() . '/' . __FUNCTION__ . '/partition=value/*',
         )));
 
         static::assertCount(1, $files);
         static::assertSame('file.csv', $files[0]->path->basename());
-        static::assertSame('overwritten content', \file_get_contents($files[0]->path->path()));
+        static::assertSame('overwritten content', file_get_contents($files[0]->path->path()));
     }
 
     public function test_overwrite_does_not_delete_files_with_different_basename(): void
@@ -103,14 +108,14 @@ final class OverwriteMultipleFilesTest extends FilesystemStreamsTestCase
         $ordersStream->append('orders data');
         $streams->closeStreams($ordersFile);
 
-        $files = \iterator_to_array($this->fs()->list(path(
+        $files = iterator_to_array($this->fs()->list(path(
             $this->filesDirectory() . '/' . __FUNCTION__ . '/partition=value/*',
         )));
 
         static::assertCount(2, $files);
 
-        $basenames = \array_map(static fn($file) => $file->path->basename(), $files);
-        \sort($basenames);
+        $basenames = array_map(static fn($file) => $file->path->basename(), $files);
+        sort($basenames);
 
         static::assertSame(['orders.csv', 'sales.csv'], $basenames);
     }
@@ -132,13 +137,13 @@ final class OverwriteMultipleFilesTest extends FilesystemStreamsTestCase
         $fileStream->append('new content');
         $streams->closeStreams($file);
 
-        $files = \iterator_to_array($this->fs()->list(path(
+        $files = iterator_to_array($this->fs()->list(path(
             $this->filesDirectory() . '/' . __FUNCTION__ . '/partition=value/*',
         )));
 
         static::assertCount(1, $files);
         static::assertSame('file.csv', $files[0]->path->basename());
-        static::assertSame('new content', \file_get_contents($files[0]->path->path()));
+        static::assertSame('new content', file_get_contents($files[0]->path->path()));
     }
 
     protected function streams(): FilesystemStreams

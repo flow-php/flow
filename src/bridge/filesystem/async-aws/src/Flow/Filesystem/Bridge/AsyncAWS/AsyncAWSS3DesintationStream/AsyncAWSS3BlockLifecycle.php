@@ -11,6 +11,11 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Block;
 use Flow\Filesystem\Stream\BlockLifecycle;
 
+use function fclose;
+use function fopen;
+use function is_resource;
+use function unlink;
+
 final readonly class AsyncAWSS3BlockLifecycle implements BlockLifecycle
 {
     public function __construct(
@@ -23,7 +28,7 @@ final readonly class AsyncAWSS3BlockLifecycle implements BlockLifecycle
 
     public function filled(Block $block): void
     {
-        $handle = \fopen($block->path()->path(), 'rb');
+        $handle = fopen($block->path()->path(), 'rb');
 
         if ($handle === false) {
             throw new RuntimeException('Cannot open block file for reading');
@@ -42,11 +47,11 @@ final readonly class AsyncAWSS3BlockLifecycle implements BlockLifecycle
          */
         $etag = $uploadPartResponse->getETag();
 
-        if (\is_resource($handle)) {
-            \fclose($handle);
+        if (is_resource($handle)) {
+            fclose($handle);
         }
 
-        \unlink($block->path()->path());
+        unlink($block->path()->path());
 
         $this->blockList->add($etag);
     }

@@ -6,17 +6,18 @@ namespace Flow\Bridge\Telemetry\OTLP\Tests\Double;
 
 use Flow\Bridge\Telemetry\OTLP\Transport\Transport;
 use Flow\Telemetry\Signal\Signals;
+use Throwable;
 
 final class RecordingTransport implements Transport
 {
-    public ?\Throwable $sendException = null;
+    public ?Throwable $sendException = null;
 
     /** @var list<Signals> */
     public array $sent = [];
 
     public int $shutdownCalls = 0;
 
-    public ?\Throwable $shutdownException = null;
+    public ?Throwable $shutdownException = null;
 
     public function send(Signals $signal): void
     {

@@ -4,15 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Retry\RetryStrategy;
 
+use Error;
+use Exception;
 use Flow\ETL\Retry\RetryStrategy\AnyThrowable;
+use InvalidArgumentException;
+use LogicException;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use TypeError;
 
 final class AnyThrowableTest extends TestCase
 {
     public function test_respects_max_attempts(): void
     {
         $strategy = new AnyThrowable(3);
-        $exception = new \RuntimeException('test');
+        $exception = new RuntimeException('test');
 
         static::assertTrue($strategy->shouldRetry($exception, 1));
         static::assertTrue($strategy->shouldRetry($exception, 2));
@@ -25,12 +31,12 @@ final class AnyThrowableTest extends TestCase
     {
         $strategy = new AnyThrowable(5);
 
-        static::assertTrue($strategy->shouldRetry(new \Exception('test'), 1));
-        static::assertTrue($strategy->shouldRetry(new \RuntimeException('test'), 1));
-        static::assertTrue($strategy->shouldRetry(new \InvalidArgumentException('test'), 1));
-        static::assertTrue($strategy->shouldRetry(new \LogicException('test'), 2));
-        static::assertTrue($strategy->shouldRetry(new \Error('test'), 1));
-        static::assertTrue($strategy->shouldRetry(new \TypeError('test'), 1));
+        static::assertTrue($strategy->shouldRetry(new Exception('test'), 1));
+        static::assertTrue($strategy->shouldRetry(new RuntimeException('test'), 1));
+        static::assertTrue($strategy->shouldRetry(new InvalidArgumentException('test'), 1));
+        static::assertTrue($strategy->shouldRetry(new LogicException('test'), 2));
+        static::assertTrue($strategy->shouldRetry(new Error('test'), 1));
+        static::assertTrue($strategy->shouldRetry(new TypeError('test'), 1));
     }
 
     public function test_throws_exception_for_negative_limit(): void
@@ -51,8 +57,8 @@ final class AnyThrowableTest extends TestCase
 
     public function test_works_with_custom_exceptions(): void
     {
-        $customException = new class('test') extends \Exception {};
-        $anotherException = new class('test') extends \Error {};
+        $customException = new class('test') extends Exception {};
+        $anotherException = new class('test') extends Error {};
 
         $strategy = new AnyThrowable(3);
 

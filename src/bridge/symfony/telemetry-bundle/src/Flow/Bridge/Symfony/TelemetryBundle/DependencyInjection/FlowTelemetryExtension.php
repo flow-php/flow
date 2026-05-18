@@ -80,6 +80,17 @@ use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
 use Twig\Extension\AbstractExtension;
 
+use function array_key_exists;
+use function class_exists;
+use function count;
+use function interface_exists;
+use function is_array;
+use function is_string;
+use function sprintf;
+use function ucfirst;
+
+use const LOG_PID;
+
 final class FlowTelemetryExtension extends Extension
 {
     private const string MESSENGER_MIDDLEWARE_INTERFACE = 'Symfony\\Component\\Messenger\\Middleware\\MiddlewareInterface';
@@ -131,7 +142,7 @@ final class FlowTelemetryExtension extends Extension
             $customServiceId = $transportConfig['service_id'] ?? null;
 
             if ($customServiceId === null) {
-                throw new RuntimeException(\sprintf(
+                throw new RuntimeException(sprintf(
                     'service_id is required when exporter "%s" transport type is "service"',
                     $exporterName,
                 ));
@@ -143,8 +154,8 @@ final class FlowTelemetryExtension extends Extension
 
         $endpoint = $transportConfig['endpoint'] ?? null;
 
-        if (!\is_string($endpoint) || $endpoint === '') {
-            throw new RuntimeException(\sprintf('exporter "%s" transport requires an endpoint', $exporterName));
+        if (!is_string($endpoint) || $endpoint === '') {
+            throw new RuntimeException(sprintf('exporter "%s" transport requires an endpoint', $exporterName));
         }
 
         if ($type === 'stream') {
@@ -260,7 +271,7 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             default:
-                throw new RuntimeException(\sprintf(
+                throw new RuntimeException(sprintf(
                     'Unknown transport type "%s" for exporter "%s"',
                     (string) $type,
                     $exporterName,
@@ -294,8 +305,8 @@ final class FlowTelemetryExtension extends Extension
             case 'stream':
                 $destination = $handlerConfig['destination'] ?? null;
 
-                if (!\is_string($destination) || $destination === '') {
-                    throw new RuntimeException(\sprintf(
+                if (!is_string($destination) || $destination === '') {
+                    throw new RuntimeException(sprintf(
                         'error_handler "%s" of type "stream" requires a non-empty "destination"',
                         $name,
                     ));
@@ -313,7 +324,7 @@ final class FlowTelemetryExtension extends Extension
                 $definition = new Definition(SyslogHandler::class);
                 $definition->setArgument(0, $handlerConfig['ident'] ?? 'flow-telemetry');
                 $definition->setArgument(1, $this->mapSyslogFacility($handlerConfig['facility'] ?? 'user'));
-                $definition->setArgument(2, $handlerConfig['log_opts'] ?? \LOG_PID);
+                $definition->setArgument(2, $handlerConfig['log_opts'] ?? LOG_PID);
                 $definition->setArgument(3, $this->mapSyslogSeverity($handlerConfig['severity'] ?? 'error'));
                 $container->setDefinition($serviceId, $definition);
 
@@ -322,8 +333,8 @@ final class FlowTelemetryExtension extends Extension
             case 'udp_syslog':
                 $host = $handlerConfig['host'] ?? null;
 
-                if (!\is_string($host) || $host === '') {
-                    throw new RuntimeException(\sprintf(
+                if (!is_string($host) || $host === '') {
+                    throw new RuntimeException(sprintf(
                         'error_handler "%s" of type "udp_syslog" requires a non-empty "host"',
                         $name,
                     ));
@@ -341,8 +352,8 @@ final class FlowTelemetryExtension extends Extension
             case 'composite':
                 $children = $handlerConfig['handlers'] ?? [];
 
-                if (!\is_array($children) || \count($children) === 0) {
-                    throw new RuntimeException(\sprintf(
+                if (!is_array($children) || count($children) === 0) {
+                    throw new RuntimeException(sprintf(
                         'error_handler "%s" of type "composite" requires a non-empty "handlers" list',
                         $name,
                     ));
@@ -364,8 +375,8 @@ final class FlowTelemetryExtension extends Extension
             case 'service':
                 $customServiceId = $handlerConfig['service_id'] ?? null;
 
-                if (!\is_string($customServiceId) || $customServiceId === '') {
-                    throw new RuntimeException(\sprintf(
+                if (!is_string($customServiceId) || $customServiceId === '') {
+                    throw new RuntimeException(sprintf(
                         'error_handler "%s" of type "service" requires a non-empty "service_id"',
                         $name,
                     ));
@@ -375,7 +386,7 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             default:
-                throw new RuntimeException(\sprintf(
+                throw new RuntimeException(sprintf(
                     'Unknown error_handler type "%s" for handler "%s"',
                     (string) $type,
                     $name,
@@ -398,7 +409,7 @@ final class FlowTelemetryExtension extends Extension
 
         $failoverConfig = $transportConfig['failover'] ?? null;
 
-        if (!\is_array($failoverConfig) || $failoverConfig === []) {
+        if (!is_array($failoverConfig) || $failoverConfig === []) {
             return null;
         }
 
@@ -521,7 +532,7 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             default:
-                throw new RuntimeException(\sprintf('Unknown log processor type: %s', (string) $type));
+                throw new RuntimeException(sprintf('Unknown log processor type: %s', (string) $type));
         }
 
         return $processorServiceId;
@@ -625,7 +636,7 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             default:
-                throw new RuntimeException(\sprintf('Unknown metric processor type: %s', (string) $type));
+                throw new RuntimeException(sprintf('Unknown metric processor type: %s', (string) $type));
         }
 
         return $processorServiceId;
@@ -679,7 +690,7 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             default:
-                throw new RuntimeException(\sprintf('Unknown sampler type: %s', (string) $type));
+                throw new RuntimeException(sprintf('Unknown sampler type: %s', (string) $type));
         }
 
         return $samplerServiceId;
@@ -759,7 +770,7 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             default:
-                throw new RuntimeException(\sprintf('Unknown span processor type: %s', (string) $type));
+                throw new RuntimeException(sprintf('Unknown span processor type: %s', (string) $type));
         }
 
         return $processorServiceId;
@@ -794,7 +805,7 @@ final class FlowTelemetryExtension extends Extension
             'email' => ErrorLogMessageType::Email,
             'file' => ErrorLogMessageType::File,
             'sapi' => ErrorLogMessageType::Sapi,
-            default => throw new RuntimeException(\sprintf('Unknown error_log message_type: %s', $value)),
+            default => throw new RuntimeException(sprintf('Unknown error_log message_type: %s', $value)),
         };
     }
 
@@ -807,7 +818,7 @@ final class FlowTelemetryExtension extends Extension
             'warn' => Severity::WARN,
             'error' => Severity::ERROR,
             'fatal' => Severity::FATAL,
-            default => throw new RuntimeException(\sprintf('Unknown severity level: %s', $severity)),
+            default => throw new RuntimeException(sprintf('Unknown severity level: %s', $severity)),
         };
     }
 
@@ -832,7 +843,7 @@ final class FlowTelemetryExtension extends Extension
             'syslog' => SyslogFacility::Syslog,
             'user' => SyslogFacility::User,
             'uucp' => SyslogFacility::Uucp,
-            default => throw new RuntimeException(\sprintf('Unknown syslog facility: %s', $value)),
+            default => throw new RuntimeException(sprintf('Unknown syslog facility: %s', $value)),
         };
     }
 
@@ -847,7 +858,7 @@ final class FlowTelemetryExtension extends Extension
             'info' => SyslogSeverity::Info,
             'notice' => SyslogSeverity::Notice,
             'warning' => SyslogSeverity::Warning,
-            default => throw new RuntimeException(\sprintf('Unknown syslog severity: %s', $value)),
+            default => throw new RuntimeException(sprintf('Unknown syslog severity: %s', $value)),
         };
     }
 
@@ -864,7 +875,7 @@ final class FlowTelemetryExtension extends Extension
      */
     private function registerErrorHandlers(array $config, ContainerBuilder $container): void
     {
-        if (!\array_key_exists('default', $config)) {
+        if (!array_key_exists('default', $config)) {
             $config = ['default' => ['type' => 'error_log']] + $config;
         }
 
@@ -954,7 +965,7 @@ final class FlowTelemetryExtension extends Extension
         $messengerConfig = $config['messenger'] ?? [];
 
         if ($this->readConfigEnabled('instrumentation.messenger', $container, $messengerConfig)) {
-            if (!\interface_exists(self::MESSENGER_MIDDLEWARE_INTERFACE)) {
+            if (!interface_exists(self::MESSENGER_MIDDLEWARE_INTERFACE)) {
                 throw new RuntimeException(
                     'Messenger instrumentation requires symfony/messenger package. Install it via composer: composer require symfony/messenger',
                 );
@@ -972,7 +983,7 @@ final class FlowTelemetryExtension extends Extension
         $twigConfig = $config['twig'] ?? [];
 
         if ($this->readConfigEnabled('instrumentation.twig', $container, $twigConfig)) {
-            if (!\class_exists(AbstractExtension::class)) {
+            if (!class_exists(AbstractExtension::class)) {
                 throw new RuntimeException(
                     'Twig instrumentation requires twig/twig package. Install it via composer: composer require twig/twig',
                 );
@@ -1002,7 +1013,7 @@ final class FlowTelemetryExtension extends Extension
 
             $attributes = $loggerConfig['attributes'] ?? [];
 
-            if (\count($attributes) > 0) {
+            if (count($attributes) > 0) {
                 $attributesDefinition = new Definition(Attributes::class);
                 $attributesDefinition->setFactory([Attributes::class, 'create']);
                 $attributesDefinition->setArgument(0, $attributes);
@@ -1037,7 +1048,7 @@ final class FlowTelemetryExtension extends Extension
 
             $attributes = $meterConfig['attributes'] ?? [];
 
-            if (\count($attributes) > 0) {
+            if (count($attributes) > 0) {
                 $attributesDefinition = new Definition(Attributes::class);
                 $attributesDefinition->setFactory([Attributes::class, 'create']);
                 $attributesDefinition->setArgument(0, $attributes);
@@ -1059,44 +1070,41 @@ final class FlowTelemetryExtension extends Extension
         foreach ($config as $name => $exporterConfig) {
             $serviceId = 'flow.telemetry.exporter.' . $name;
 
-            if (\array_key_exists('void', $exporterConfig)) {
+            if (array_key_exists('void', $exporterConfig)) {
                 $container->setDefinition($serviceId, new Definition(VoidExporter::class));
 
                 continue;
             }
 
-            if (\array_key_exists('memory', $exporterConfig)) {
+            if (array_key_exists('memory', $exporterConfig)) {
                 $container->setDefinition($serviceId, new Definition(MemoryExporter::class));
 
                 continue;
             }
 
-            if (\array_key_exists('console', $exporterConfig)) {
+            if (array_key_exists('console', $exporterConfig)) {
                 $container->setDefinition($serviceId, new Definition(ConsoleExporter::class));
 
                 continue;
             }
 
-            if (\array_key_exists('service', $exporterConfig)) {
+            if (array_key_exists('service', $exporterConfig)) {
                 $customServiceId = $exporterConfig['service']['id'] ?? null;
 
-                if (!\is_string($customServiceId) || $customServiceId === '') {
-                    throw new RuntimeException(\sprintf(
-                        'exporter "%s" of type "service" requires "service.id"',
-                        $name,
-                    ));
+                if (!is_string($customServiceId) || $customServiceId === '') {
+                    throw new RuntimeException(sprintf('exporter "%s" of type "service" requires "service.id"', $name));
                 }
                 $container->setAlias($serviceId, $customServiceId);
 
                 continue;
             }
 
-            if (\array_key_exists('otlp', $exporterConfig)) {
+            if (array_key_exists('otlp', $exporterConfig)) {
                 $container->setParameter('flow.telemetry.otlp_configured', true);
                 $transportConfig = $exporterConfig['otlp']['transport'] ?? null;
 
-                if (!\is_array($transportConfig) || \count($transportConfig) === 0) {
-                    throw new RuntimeException(\sprintf(
+                if (!is_array($transportConfig) || count($transportConfig) === 0) {
+                    throw new RuntimeException(sprintf(
                         'exporter "%s" of type "otlp" requires an inline "transport" configuration',
                         $name,
                     ));
@@ -1114,7 +1122,7 @@ final class FlowTelemetryExtension extends Extension
                 continue;
             }
 
-            throw new RuntimeException(\sprintf(
+            throw new RuntimeException(sprintf(
                 'exporter "%s" must declare exactly one of: otlp, service, console, memory, void',
                 $name,
             ));
@@ -1196,7 +1204,7 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             default:
-                throw new RuntimeException(\sprintf('Unknown propagator type: %s', (string) $type));
+                throw new RuntimeException(sprintf('Unknown propagator type: %s', (string) $type));
         }
     }
 
@@ -1248,7 +1256,7 @@ final class FlowTelemetryExtension extends Extension
             $staticDetectorRefs[] = new Reference('flow.telemetry.resource.detector.deployment');
         }
 
-        if (\count($customAttributes) > 0) {
+        if (count($customAttributes) > 0) {
             $manualDefinition = new Definition(ManualDetector::class);
             $manualDefinition->setArgument(0, $customAttributes);
             $container->setDefinition('flow.telemetry.resource.detector.custom', $manualDefinition);
@@ -1292,7 +1300,7 @@ final class FlowTelemetryExtension extends Extension
             $dynamicDetectorRefs[] = new Reference('flow.telemetry.resource.detector.process');
         }
 
-        if (\count($dynamicDetectorRefs) > 0) {
+        if (count($dynamicDetectorRefs) > 0) {
             $dynamicChainDefinition = new Definition(ChainDetector::class);
             $dynamicChainDefinition->setArguments($dynamicDetectorRefs);
             $container->setDefinition('flow.telemetry.resource.detector.dynamic', $dynamicChainDefinition);
@@ -1347,7 +1355,7 @@ final class FlowTelemetryExtension extends Extension
 
             $attributes = $tracerConfig['attributes'] ?? [];
 
-            if (\count($attributes) > 0) {
+            if (count($attributes) > 0) {
                 $attributesDefinition = new Definition(Attributes::class);
                 $attributesDefinition->setFactory([Attributes::class, 'create']);
                 $attributesDefinition->setArgument(0, $attributes);
@@ -1363,14 +1371,14 @@ final class FlowTelemetryExtension extends Extension
 
     private function resolveErrorHandlerReference(mixed $name, ContainerBuilder $container): Reference
     {
-        if (!\is_string($name) || $name === '') {
+        if (!is_string($name) || $name === '') {
             $name = 'default';
         }
 
         $serviceId = 'flow.telemetry.error_handler.' . $name;
 
         if (!$container->hasDefinition($serviceId) && !$container->hasAlias($serviceId)) {
-            throw new RuntimeException(\sprintf(
+            throw new RuntimeException(sprintf(
                 'Unknown error_handler "%s"; declare it under flow_telemetry.error_handlers',
                 $name,
             ));
@@ -1384,8 +1392,8 @@ final class FlowTelemetryExtension extends Extension
         mixed $exporterName,
         ContainerBuilder $container,
     ): Reference {
-        if (!\is_string($exporterName) || $exporterName === '') {
-            throw new RuntimeException(\sprintf(
+        if (!is_string($exporterName) || $exporterName === '') {
+            throw new RuntimeException(sprintf(
                 'Missing "exporter" reference for %s processor; expected a name from top-level "exporters"',
                 $signalLabel,
             ));
@@ -1394,9 +1402,9 @@ final class FlowTelemetryExtension extends Extension
         $serviceId = 'flow.telemetry.exporter.' . $exporterName;
 
         if (!$container->hasDefinition($serviceId) && !$container->hasAlias($serviceId)) {
-            throw new RuntimeException(\sprintf(
+            throw new RuntimeException(sprintf(
                 '%s processor references unknown exporter "%s"',
-                \ucfirst($signalLabel),
+                ucfirst($signalLabel),
                 $exporterName,
             ));
         }

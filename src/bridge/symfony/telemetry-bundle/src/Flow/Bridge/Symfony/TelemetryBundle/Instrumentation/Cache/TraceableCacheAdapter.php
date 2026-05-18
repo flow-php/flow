@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Cache;
 
+use BadMethodCallException;
+use DateTimeImmutable;
 use Flow\Telemetry\Meter\Instrument\Counter;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
 use Flow\Telemetry\Tracer\Tracer;
+use Generator;
 use Psr\Cache\CacheItemInterface;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\Cache\CacheItem;
@@ -17,6 +20,10 @@ use Symfony\Component\Cache\PruneableInterface;
 use Symfony\Component\Cache\ResettableInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Throwable;
+
+use function count;
+use function sprintf;
 
 final readonly class TraceableCacheAdapter implements
     AdapterInterface,
@@ -59,8 +66,8 @@ final readonly class TraceableCacheAdapter implements
             $span->setStatus(SpanStatus::ok());
 
             return $result;
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -81,8 +88,8 @@ final readonly class TraceableCacheAdapter implements
             $span->setStatus(SpanStatus::ok());
 
             return $result;
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -94,7 +101,7 @@ final readonly class TraceableCacheAdapter implements
     public function delete(string $key): bool
     {
         if (!$this->adapter instanceof CacheInterface) {
-            throw new \BadMethodCallException(\sprintf(
+            throw new BadMethodCallException(sprintf(
                 'The adapter "%s" does not implement "%s".',
                 $this->adapter::class,
                 CacheInterface::class,
@@ -112,8 +119,8 @@ final readonly class TraceableCacheAdapter implements
             $span->setStatus(SpanStatus::ok());
 
             return $result;
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -135,8 +142,8 @@ final readonly class TraceableCacheAdapter implements
             $span->setStatus(SpanStatus::ok());
 
             return $result;
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -153,7 +160,7 @@ final readonly class TraceableCacheAdapter implements
         $span = $this->tracer->span("Cache DeleteItems {$this->poolName}", SpanKind::CLIENT, [
             'cache.operation' => 'deleteItems',
             'cache.pool' => $this->poolName,
-            'cache.key_count' => \count($keys),
+            'cache.key_count' => count($keys),
         ]);
 
         try {
@@ -161,8 +168,8 @@ final readonly class TraceableCacheAdapter implements
             $span->setStatus(SpanStatus::ok());
 
             return $result;
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -177,7 +184,7 @@ final readonly class TraceableCacheAdapter implements
     public function get(string $key, callable $callback, ?float $beta = null, ?array &$metadata = null): mixed
     {
         if (!$this->adapter instanceof CacheInterface) {
-            throw new \BadMethodCallException(\sprintf(
+            throw new BadMethodCallException(sprintf(
                 'The adapter "%s" does not implement "%s".',
                 $this->adapter::class,
                 CacheInterface::class,
@@ -220,7 +227,7 @@ final readonly class TraceableCacheAdapter implements
      *
      * @return \Generator<string, CacheItem>
      */
-    public function getItems(array $keys = []): \Generator
+    public function getItems(array $keys = []): Generator
     {
         $hits = 0;
         $misses = 0;
@@ -273,8 +280,8 @@ final readonly class TraceableCacheAdapter implements
             $span->setStatus(SpanStatus::ok());
 
             return $result;
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -297,8 +304,8 @@ final readonly class TraceableCacheAdapter implements
         try {
             $this->adapter->reset();
             $span->setStatus(SpanStatus::ok());
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -321,8 +328,8 @@ final readonly class TraceableCacheAdapter implements
             $span->setStatus(SpanStatus::ok());
 
             return $result;
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -345,8 +352,8 @@ final readonly class TraceableCacheAdapter implements
             $span->setStatus(SpanStatus::ok());
 
             return $result;
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;

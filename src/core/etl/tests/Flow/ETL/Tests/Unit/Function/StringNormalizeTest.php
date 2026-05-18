@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use Flow\ETL\Tests\FlowTestCase;
+use Normalizer;
 
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
@@ -17,7 +18,7 @@ final class StringNormalizeTest extends FlowTestCase
     public function test_normalize_already_normalized(): void
     {
         static::assertSame('hello', ref('str')
-            ->stringNormalize(\Normalizer::NFC)
+            ->stringNormalize(Normalizer::NFC)
             ->eval(row(str_entry('str', 'hello')), flow_context()));
     }
 
@@ -36,14 +37,14 @@ final class StringNormalizeTest extends FlowTestCase
     public function test_normalize_nfc_explicit(): void
     {
         static::assertSame('é', ref('str')
-            ->stringNormalize(\Normalizer::NFC)
+            ->stringNormalize(Normalizer::NFC)
             ->eval(row(str_entry('str', "e\u{0301}")), flow_context()));
     }
 
     public function test_normalize_nfd(): void
     {
         static::assertSame("e\u{0301}", ref('str')
-            ->stringNormalize(\Normalizer::NFD)
+            ->stringNormalize(Normalizer::NFD)
             ->eval(row(str_entry('str', 'é')), flow_context()));
     }
 
@@ -56,7 +57,7 @@ final class StringNormalizeTest extends FlowTestCase
     {
         $normalized = ref('str')
             ->stringNormalize(ref('form'))
-            ->eval(row(str_entry('str', "e\u{0301}"), int_entry('form', \Normalizer::NFC)), flow_context());
+            ->eval(row(str_entry('str', "e\u{0301}"), int_entry('form', Normalizer::NFC)), flow_context());
 
         static::assertSame('é', $normalized);
     }

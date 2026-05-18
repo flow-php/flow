@@ -6,6 +6,14 @@ namespace Flow\PostgreSql\Client\Types;
 
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 
+use function floatval;
+use function hex2bin;
+use function substr;
+
+use const INF;
+use const NAN;
+use const PHP_INT_SIZE;
+
 /**
  * Casts PostgreSQL result values to unambiguous PHP types.
  *
@@ -27,7 +35,7 @@ final readonly class ResultCaster
         return match ($typeName) {
             'bool' => $value === 't',
             'int2', 'int4' => (int) $value,
-            'int8' => \PHP_INT_SIZE >= 8 ? (int) $value : $value,
+            'int8' => PHP_INT_SIZE >= 8 ? (int) $value : $value,
             'float4', 'float8' => $this->castFloat($value),
             'bytea' => $this->castBytea($value),
             default => $value,
@@ -36,7 +44,7 @@ final readonly class ResultCaster
 
     private function castBytea(string $value): string
     {
-        $decoded = \hex2bin(\substr($value, 2));
+        $decoded = hex2bin(substr($value, 2));
 
         if ($decoded === false) {
             throw ValueConversionException::invalidByteaData($value);
@@ -48,10 +56,10 @@ final readonly class ResultCaster
     private function castFloat(string $value): float
     {
         return match ($value) {
-            'Infinity' => \INF,
-            '-Infinity' => -\INF,
-            'NaN' => \NAN,
-            default => \floatval($value),
+            'Infinity' => INF,
+            '-Infinity' => -INF,
+            'NaN' => NAN,
+            default => floatval($value),
         };
     }
 }

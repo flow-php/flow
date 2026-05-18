@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Types\ValueType;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\PostgreSql\DSL\cast;
@@ -22,7 +23,7 @@ final class IntegerConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{int, int}>
      */
-    public static function provide_int2_values(): \Generator
+    public static function provide_int2_values(): Generator
     {
         yield 'zero' => [0, 0];
         yield 'positive' => [123, 123];
@@ -34,7 +35,7 @@ final class IntegerConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{int, int}>
      */
-    public static function provide_int4_values(): \Generator
+    public static function provide_int4_values(): Generator
     {
         yield 'zero' => [0, 0];
         yield 'positive' => [123456, 123456];
@@ -46,7 +47,7 @@ final class IntegerConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{int, int}>
      */
-    public static function provide_int8_values(): \Generator
+    public static function provide_int8_values(): Generator
     {
         yield 'zero' => [0, 0];
         yield 'positive large' => [9223372036854775000, 9223372036854775000];

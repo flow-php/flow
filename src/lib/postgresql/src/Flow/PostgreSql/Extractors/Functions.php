@@ -8,6 +8,10 @@ use Flow\PostgreSql\AST\Nodes\FunctionCall;
 use Flow\PostgreSql\AST\Visitors\FuncCallCollector;
 use Flow\PostgreSql\ParsedQuery;
 
+use function array_filter;
+use function array_map;
+use function array_values;
+
 final readonly class Functions
 {
     public function __construct(
@@ -22,8 +26,8 @@ final readonly class Functions
         $collector = new FuncCallCollector();
         $this->query->traverse($collector);
 
-        return \array_values(\array_filter(
-            \array_map(static fn($ref) => new FunctionCall($ref), $collector->getFuncCalls()),
+        return array_values(array_filter(
+            array_map(static fn($ref) => new FunctionCall($ref), $collector->getFuncCalls()),
             static fn($func) => $func->name() !== null,
         ));
     }

@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use DateInterval;
+use DateTimeImmutable;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Partition;
 
+use function array_map;
+use function array_merge;
+use function file_exists;
 use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\Adapter\Text\to_text;
 use function Flow\ETL\DSL\collect;
@@ -26,6 +31,13 @@ use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\rows_partitioned;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\Filesystem\DSL\partition;
+use function iterator_to_array;
+use function range;
+use function rmdir;
+use function sort;
+use function str_replace;
+use function unlink;
+use function usort;
 
 final class PartitioningTest extends FlowIntegrationTestCase
 {
@@ -48,14 +60,14 @@ final class PartitioningTest extends FlowIntegrationTestCase
 
     public function test_overwrite_save_mode_not_dropping_old_partitions(): void
     {
-        if (\file_exists(__DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-03')) {
-            \unlink(__DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-03/file.txt');
-            \rmdir(__DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-03');
+        if (file_exists(__DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-03')) {
+            unlink(__DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-03/file.txt');
+            rmdir(__DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-03');
         }
 
-        if (\file_exists(__DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-04')) {
-            \unlink(__DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-04/file.txt');
-            \rmdir(__DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-04');
+        if (file_exists(__DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-04')) {
+            unlink(__DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-04/file.txt');
+            rmdir(__DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-04');
         }
 
         df()
@@ -71,35 +83,35 @@ final class PartitioningTest extends FlowIntegrationTestCase
         $partitions = df()->read(from_path_partitions(__DIR__ . '/Fixtures/Partitioning/overwrite/**/*.txt'))->fetch();
 
         $actualData = $partitions->toArray();
-        \usort($actualData, static fn(array $a, array $b): int => $a['path'] <=> $b['path']);
+        usort($actualData, static fn(array $a, array $b): int => $a['path'] <=> $b['path']);
 
         static::assertSame(
             [
                 [
                     'path' =>
                         'file://'
-                            . ltrim(\str_replace('\\', '/', __DIR__), '/')
+                            . ltrim(str_replace('\\', '/', __DIR__), '/')
                             . '/Fixtures/Partitioning/overwrite/date=2024-04-01/file.txt',
                     'partitions' => ['date' => '2024-04-01'],
                 ],
                 [
                     'path' =>
                         'file://'
-                            . ltrim(\str_replace('\\', '/', __DIR__), '/')
+                            . ltrim(str_replace('\\', '/', __DIR__), '/')
                             . '/Fixtures/Partitioning/overwrite/date=2024-04-02/file.txt',
                     'partitions' => ['date' => '2024-04-02'],
                 ],
                 [
                     'path' =>
                         'file://'
-                            . ltrim(\str_replace('\\', '/', __DIR__), '/')
+                            . ltrim(str_replace('\\', '/', __DIR__), '/')
                             . '/Fixtures/Partitioning/overwrite/date=2024-04-03/file.txt',
                     'partitions' => ['date' => '2024-04-03'],
                 ],
                 [
                     'path' =>
                         'file://'
-                            . ltrim(\str_replace('\\', '/', __DIR__), '/')
+                            . ltrim(str_replace('\\', '/', __DIR__), '/')
                             . '/Fixtures/Partitioning/overwrite/date=2024-04-04/file.txt',
                     'partitions' => ['date' => '2024-04-04'],
                 ],
@@ -110,7 +122,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
             ->read(from_text(__DIR__ . '/Fixtures/Partitioning/overwrite/**/*.txt'))
             ->fetch()
             ->toArray();
-        \usort($textRows, static fn(array $a, array $b): int => $a['text'] <=> $b['text']);
+        usort($textRows, static fn(array $a, array $b): int => $a['text'] <=> $b['text']);
         static::assertSame(
             [
                 ['text' => '2024-04-01', 'date' => '2024-04-01'],
@@ -157,14 +169,14 @@ final class PartitioningTest extends FlowIntegrationTestCase
                     partition('country', 'US'),
                 ]),
             ],
-            \iterator_to_array($rows),
+            iterator_to_array($rows),
         );
     }
 
     public function test_partition_by_partitions_order(): void
     {
         df()
-            ->read(from_array(\array_merge(...\array_map(
+            ->read(from_array(array_merge(...array_map(
                 static function (int $i): array {
                     $data = [];
 
@@ -173,8 +185,8 @@ final class PartitioningTest extends FlowIntegrationTestCase
                     for ($d = 0; $d < $maxItems; $d++) {
                         $data[] = [
                             'id' => generate_random_string(),
-                            'created_at' => (new \DateTimeImmutable('2020-01-01'))->add(
-                                new \DateInterval('P' . $i . 'D'),
+                            'created_at' => (new DateTimeImmutable('2020-01-01'))->add(
+                                new DateInterval('P' . $i . 'D'),
                             )->setTime(
                                 generate_random_int(0, 23),
                                 generate_random_int(0, 59),
@@ -186,7 +198,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
 
                     return $data;
                 },
-                \range(1, 10),
+                range(1, 10),
             ))))
             ->withEntry('year', ref('created_at')->dateFormat('Y'))
             ->withEntry('month', ref('created_at')->dateFormat('m'))
@@ -199,7 +211,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
                         'day',
                         'month', // order is changed on purpose
                     ],
-                    \array_map(static fn(Partition $p) => $p->name, $rows->partitions()->toArray()),
+                    array_map(static fn(Partition $p) => $p->name, $rows->partitions()->toArray()),
                 );
             });
     }
@@ -218,7 +230,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
             ->fetch();
 
         $days = $rows->reduceToArray('day');
-        \sort($days);
+        sort($days);
         static::assertCount(2, $rows);
         static::assertSame([1, 2], $days);
     }
@@ -238,7 +250,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
                         ref('day')->cast('string')->strPadLeft(2, '0'),
                     )
                     ->cast('date')
-                    ->greaterThanEqual(lit(new \DateTimeImmutable('2023-01-01'))),
+                    ->greaterThanEqual(lit(new DateTimeImmutable('2023-01-01'))),
             )
             ->collect()
             ->select('year')

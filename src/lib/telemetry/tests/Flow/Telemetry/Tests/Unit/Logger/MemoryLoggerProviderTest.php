@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Logger;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Context\SpanId;
@@ -127,7 +128,7 @@ final class MemoryLoggerProviderTest extends TestCase
         $processor = $this->createProcessor();
         $provider = new LoggerProvider($processor, ClockMother::frozen(), new MemoryContextStorage());
         $logger = $provider->logger($this->resource, 'service', '1.0');
-        $observedTimestamp = new \DateTimeImmutable('2024-01-15 10:35:00');
+        $observedTimestamp = new DateTimeImmutable('2024-01-15 10:35:00');
 
         $logger->info('message with observed timestamp', [], null, $observedTimestamp);
 
@@ -153,7 +154,7 @@ final class MemoryLoggerProviderTest extends TestCase
         $processor = $this->createProcessor();
         $provider = new LoggerProvider($processor, ClockMother::frozen(), new MemoryContextStorage());
         $logger = $provider->logger($this->resource, 'service', '1.0');
-        $customTimestamp = new \DateTimeImmutable('2024-01-15 10:30:00');
+        $customTimestamp = new DateTimeImmutable('2024-01-15 10:30:00');
 
         $logger->info('message with custom timestamp', [], $customTimestamp);
 
@@ -166,8 +167,8 @@ final class MemoryLoggerProviderTest extends TestCase
         $processor = $this->createProcessor();
         $provider = new LoggerProvider($processor, ClockMother::frozen(), new MemoryContextStorage());
         $logger = $provider->logger($this->resource, 'service', '1.0');
-        $timestamp = new \DateTimeImmutable('2024-01-15 10:30:00');
-        $observedTimestamp = new \DateTimeImmutable('2024-01-15 10:35:00');
+        $timestamp = new DateTimeImmutable('2024-01-15 10:30:00');
+        $observedTimestamp = new DateTimeImmutable('2024-01-15 10:35:00');
         $spanContext = SpanContext::create(TraceId::generate(), SpanId::generate());
 
         $logger->trace('trace msg', [], $timestamp, $observedTimestamp, $spanContext);

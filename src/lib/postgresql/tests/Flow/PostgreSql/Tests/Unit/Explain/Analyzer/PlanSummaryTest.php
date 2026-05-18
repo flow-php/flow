@@ -7,6 +7,8 @@ namespace Flow\PostgreSql\Tests\Unit\Explain\Analyzer;
 use Flow\PostgreSql\Explain\Analyzer\PlanSummary;
 use PHPUnit\Framework\TestCase;
 
+use function array_keys;
+
 final class PlanSummaryTest extends TestCase
 {
     public function test_from_array_and_normalize_are_inverse(): void
@@ -181,7 +183,7 @@ final class PlanSummaryTest extends TestCase
             'actual_rows',
         ];
 
-        static::assertSame($expectedKeys, \array_keys($normalized));
+        static::assertSame($expectedKeys, array_keys($normalized));
     }
 
     public function test_normalize_with_null_values(): void

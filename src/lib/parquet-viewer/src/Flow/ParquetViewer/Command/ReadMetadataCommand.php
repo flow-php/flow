@@ -19,9 +19,16 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function array_map;
+use function count;
+use function file_exists;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_scalar;
 use function Flow\Types\DSL\type_string;
+use function implode;
+use function number_format;
+use function realpath;
+use function sprintf;
 
 #[AsCommand(name: 'read:metadata', description: 'Read metadata from parquet file')]
 final class ReadMetadataCommand extends Command
@@ -43,8 +50,8 @@ final class ReadMetadataCommand extends Command
         $filePath = $input->getArgument('file');
         $filePath = type_string()->assert($filePath);
 
-        if (!\file_exists($filePath)) {
-            $style->error(\sprintf('File "%s" does not exist', $filePath));
+        if (!file_exists($filePath)) {
+            $style->error(sprintf('File "%s" does not exist', $filePath));
 
             return Command::FAILURE;
         }
@@ -61,7 +68,7 @@ final class ReadMetadataCommand extends Command
         try {
             $metadata = $parquetFile->metadata();
         } catch (InvalidArgumentException $_e) {
-            $style->error(\sprintf('File "%s" is not a valid parquet file', $filePath));
+            $style->error(sprintf('File "%s" is not a valid parquet file', $filePath));
 
             return Command::FAILURE;
         }
@@ -74,10 +81,10 @@ final class ReadMetadataCommand extends Command
         $metadataTable->setHeaders(['file path', 'parquet version', 'created by', 'rows']);
         $metadataTable->setRows([
             [
-                \realpath($filePath),
+                realpath($filePath),
                 $metadata->version(),
                 $metadata->createdBy(),
-                \number_format($metadata->rowsNumber(), 0, '.', ','),
+                number_format($metadata->rowsNumber(), 0, '.', ','),
             ],
         ]);
 
@@ -123,13 +130,13 @@ final class ReadMetadataCommand extends Command
             foreach ($metadata->rowGroups()->all() as $rowGroup) {
                 $totalRowGroups++;
                 $rowGroupsTable->addRow([
-                    \number_format($rowGroup->rowsCount()),
-                    \number_format($rowGroup->totalByteSize()),
-                    \count($rowGroup->columnChunks()),
+                    number_format($rowGroup->rowsCount()),
+                    number_format($rowGroup->totalByteSize()),
+                    count($rowGroup->columnChunks()),
                 ]);
             }
 
-            $rowGroupsTable->setFooterTitle('Total: ' . \number_format($totalRowGroups));
+            $rowGroupsTable->setFooterTitle('Total: ' . number_format($totalRowGroups));
             $rowGroupsTable->render();
             $style->newLine();
         }
@@ -155,18 +162,18 @@ final class ReadMetadataCommand extends Command
                     $totalChunks++;
                     $chunksTable->addRow([
                         $columnChunk->flatPath(),
-                        '[' . \implode(',', \array_map(static fn($e) => $e->name, $columnChunk->encodings())) . ']',
+                        '[' . implode(',', array_map(static fn($e) => $e->name, $columnChunk->encodings())) . ']',
                         $columnChunk->codec()->name,
-                        \number_format($columnChunk->fileOffset()),
-                        \number_format($columnChunk->valuesCount()),
+                        number_format($columnChunk->fileOffset()),
+                        number_format($columnChunk->valuesCount()),
                         $columnChunk->dictionaryPageOffset()
-                            ? \number_format($columnChunk->dictionaryPageOffset())
+                            ? number_format($columnChunk->dictionaryPageOffset())
                             : '-',
-                        $columnChunk->dataPageOffset() ? \number_format($columnChunk->dataPageOffset()) : '-',
+                        $columnChunk->dataPageOffset() ? number_format($columnChunk->dataPageOffset()) : '-',
                     ]);
                 }
             }
-            $chunksTable->setFooterTitle('Total: ' . \number_format($totalChunks));
+            $chunksTable->setFooterTitle('Total: ' . number_format($totalChunks));
             $chunksTable->render();
             $style->newLine();
         }
@@ -224,9 +231,9 @@ final class ReadMetadataCommand extends Command
                             $maxValue = $statistics->maxValue($column) ?? '-';
                         }
 
-                        $nullCount = $statistics->nullCount() ? \number_format($statistics->nullCount()) : '-';
+                        $nullCount = $statistics->nullCount() ? number_format($statistics->nullCount()) : '-';
                         $distinctCount = $statistics->distinctCount()
-                            ? \number_format($statistics->distinctCount())
+                            ? number_format($statistics->distinctCount())
                             : '-';
 
                         $statisticsTable->addRow([
@@ -251,7 +258,7 @@ final class ReadMetadataCommand extends Command
                     }
                 }
             }
-            $statisticsTable->setFooterTitle('Total: ' . \number_format($totalChunks));
+            $statisticsTable->setFooterTitle('Total: ' . number_format($totalChunks));
             $statisticsTable->render();
             $style->newLine();
         }
@@ -277,18 +284,18 @@ final class ReadMetadataCommand extends Command
                     $columnPageHeader->column->flatPath(),
                     $columnPageHeader->pageHeader->type()->name,
                     $columnPageHeader->pageHeader->encoding()->name,
-                    \number_format($columnPageHeader->pageHeader->compressedPageSize()),
-                    \number_format($columnPageHeader->pageHeader->uncompressedPageSize()),
+                    number_format($columnPageHeader->pageHeader->compressedPageSize()),
+                    number_format($columnPageHeader->pageHeader->uncompressedPageSize()),
                     $columnPageHeader->pageHeader->dictionaryValuesCount()
-                        ? \number_format($columnPageHeader->pageHeader->dictionaryValuesCount())
+                        ? number_format($columnPageHeader->pageHeader->dictionaryValuesCount())
                         : '-',
                     $columnPageHeader->pageHeader->dataValuesCount()
-                        ? \number_format($columnPageHeader->pageHeader->dataValuesCount())
+                        ? number_format($columnPageHeader->pageHeader->dataValuesCount())
                         : '-',
                 ]);
             }
 
-            $pageHeadersTable->setFooterTitle('Total: ' . \number_format($totalPageHeaders));
+            $pageHeadersTable->setFooterTitle('Total: ' . number_format($totalPageHeaders));
             $pageHeadersTable->render();
             $style->newLine();
         }

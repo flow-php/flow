@@ -17,6 +17,7 @@ use PHPUnit\Runner\Extension\Extension;
 use PHPUnit\Runner\Extension\Facade;
 use PHPUnit\Runner\Extension\ParameterCollection;
 use PHPUnit\TextUI\Configuration\Configuration as PHPUnitConfiguration;
+use Throwable;
 
 final class TelemetryExtension implements Extension
 {
@@ -42,7 +43,7 @@ final class TelemetryExtension implements Extension
                 new TestMarkedIncompleteSubscriber($statusRegistry),
                 new TestFinishedSubscriber($telemetry, $spanStack, $config, $statusRegistry),
             );
-        } catch (\Throwable) {
+        } catch (Throwable) {
             // Silent failure - telemetry must never break tests
         }
     }

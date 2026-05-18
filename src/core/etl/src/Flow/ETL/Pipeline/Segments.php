@@ -8,6 +8,8 @@ use Flow\ETL\Loader;
 use Flow\ETL\Processor;
 use Flow\ETL\Transformer;
 
+use function count;
+
 /**
  * Manages pipeline segments, grouping steps at Processor boundaries.
  *
@@ -56,7 +58,7 @@ final class Segments
             return $this->currentSegment;
         }
 
-        return $this->segments[\count($this->segments) - 1];
+        return $this->segments[count($this->segments) - 1];
     }
 
     /**

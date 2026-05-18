@@ -6,13 +6,24 @@ namespace Flow\Azure\SDK\AuthorizationFactory;
 
 use Flow\Azure\SDK\AuthorizationFactory;
 use Psr\Http\Message\RequestInterface;
+use SensitiveParameter;
+
+use function count;
+use function implode;
+use function ksort;
+use function ltrim;
+use function rtrim;
+use function str_replace;
+use function str_starts_with;
+use function strtolower;
+use function strtoupper;
 
 final readonly class SharedKeyFactory implements AuthorizationFactory
 {
     public function __construct(
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         private string $account,
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         private string $accountKey,
     ) {}
 
@@ -44,17 +55,17 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
         $normalizedHeaders = [];
 
         foreach ($headers as $header => $value) {
-            $header = \strtolower($header);
+            $header = strtolower($header);
 
-            if (\str_starts_with($header, 'x-ms-')) {
-                $stringValue = \ltrim(\str_replace("\r\n", ' ', $value));
-                $header = \rtrim($header);
+            if (str_starts_with($header, 'x-ms-')) {
+                $stringValue = ltrim(str_replace("\r\n", ' ', $value));
+                $header = rtrim($header);
 
                 $normalizedHeaders[$header] = $stringValue;
             }
         }
 
-        \ksort($normalizedHeaders);
+        ksort($normalizedHeaders);
 
         foreach ($normalizedHeaders as $key => $value) {
             $canonicalizedHeaders[] = $key . ':' . $value;
@@ -74,8 +85,8 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
 
         $canonicalizedResource .= (string) parse_url($url, PHP_URL_PATH);
 
-        if (\count($queryParams) > 0) {
-            \ksort($queryParams);
+        if (count($queryParams) > 0) {
+            ksort($queryParams);
         }
 
         foreach ($queryParams as $key => $value) {
@@ -95,7 +106,7 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
         $canonicalizedResource = $this->computeCanonicalizedResource($url, $queryParams);
 
         $stringToSign = [];
-        $stringToSign[] = \strtoupper($httpMethod);
+        $stringToSign[] = strtoupper($httpMethod);
 
         $includedHeaders = [
             'content-encoding',
@@ -118,12 +129,12 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
         }
 
         if (count($canonicalizedHeaders) > 0) {
-            $stringToSign[] = \implode("\n", $canonicalizedHeaders);
+            $stringToSign[] = implode("\n", $canonicalizedHeaders);
         }
 
         $stringToSign[] = $canonicalizedResource;
 
-        return \implode("\n", $stringToSign);
+        return implode("\n", $stringToSign);
     }
 
     /**

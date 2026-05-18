@@ -14,7 +14,9 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Transformer;
+use Throwable;
 
+use function array_map;
 use function Flow\Types\DSL\type_array;
 
 final readonly class ScalarFunctionTransformer implements Transformer
@@ -42,7 +44,7 @@ final readonly class ScalarFunctionTransformer implements Transformer
             ]);
 
             return $result;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->transformationFailed($this, $e);
 
             throw $e;
@@ -52,7 +54,7 @@ final readonly class ScalarFunctionTransformer implements Transformer
     private function doTransform(Rows $rows, FlowContext $context): Rows
     {
         if ($this->function instanceof ExpandResults) {
-            return $rows->flatMap(fn(Row $r): array => \array_map(
+            return $rows->flatMap(fn(Row $r): array => array_map(
                 fn($val): Row => new Row($r->entries()->set($context->entryFactory()->create(
                     $this->entryName(),
                     $val,

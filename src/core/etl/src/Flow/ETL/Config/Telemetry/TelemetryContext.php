@@ -22,6 +22,11 @@ use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
 use Flow\Telemetry\Tracer\Tracer;
+use Throwable;
+
+use function array_map;
+use function array_merge;
+use function round;
 
 /**
  * @phpstan-import-type TAttributeValueMap from Attributes
@@ -92,12 +97,12 @@ final class TelemetryContext
 
         if ($this->dataFrameExecutionTime !== null) {
             $durationSeconds = HighResolutionTime::now()->diff($this->dataFrameExecutionTime)->toSeconds();
-            $throughput = $durationSeconds > 0 ? \round($this->totalRowsProcessed / $durationSeconds, 2) : 0.0;
+            $throughput = $durationSeconds > 0 ? round($this->totalRowsProcessed / $durationSeconds, 2) : 0.0;
         }
 
         $this->tracer->complete(
             $this->dataFrameSpan
-                ->setAttributes(\array_merge($attributes, [
+                ->setAttributes(array_merge($attributes, [
                     'dataframe.id' => $context->config->id(),
                     'dataframe.name' => $context->config->name(),
                     'rows.total' => $this->totalRowsProcessed,
@@ -128,7 +133,7 @@ final class TelemetryContext
     /**
      * @param TAttributeValueMap $attributes
      */
-    public function dataFrameFailed(FlowContext $context, \Throwable $exception, array $attributes = []): void
+    public function dataFrameFailed(FlowContext $context, Throwable $exception, array $attributes = []): void
     {
         if ($this->dataFrameSpan === null) {
             return;
@@ -144,12 +149,12 @@ final class TelemetryContext
 
         if ($this->dataFrameExecutionTime !== null) {
             $durationSeconds = HighResolutionTime::now()->diff($this->dataFrameExecutionTime)->toSeconds();
-            $throughput = $durationSeconds > 0 ? \round($this->totalRowsProcessed / $durationSeconds, 2) : 0.0;
+            $throughput = $durationSeconds > 0 ? round($this->totalRowsProcessed / $durationSeconds, 2) : 0.0;
         }
 
         $this->tracer->complete(
             $this->dataFrameSpan
-                ->setAttributes(\array_merge($attributes, [
+                ->setAttributes(array_merge($attributes, [
                     'dataframe.id' => $context->config->id(),
                     'dataframe.name' => $context->config->name(),
                     'rows.total' => $this->totalRowsProcessed,
@@ -196,7 +201,7 @@ final class TelemetryContext
                 'dataframe_name' => $context->config->name(),
                 'cache' => $context->cache()::class,
                 'serializer' => $context->config->serializer()::class,
-                'optimizers' => \array_map(
+                'optimizers' => array_map(
                     static fn(Optimization $optimization) => $optimization::class,
                     $context->config->optimizer()->optimizations(),
                 ),
@@ -205,7 +210,7 @@ final class TelemetryContext
                     'trace_transformations' => $this->options->traceTransformations,
                     'collect_metrics' => $this->options->collectMetrics,
                 ],
-                'fstab' => \array_map(
+                'fstab' => array_map(
                     static fn(Filesystem $filesystem) => $filesystem::class,
                     $context->config->fstab()->filesystems(),
                 ),
@@ -246,7 +251,7 @@ final class TelemetryContext
     /**
      * @param TAttributeValueMap $attributes
      */
-    public function loadingFailed(Loader $loader, \Throwable $exception, array $attributes = []): void
+    public function loadingFailed(Loader $loader, Throwable $exception, array $attributes = []): void
     {
         if ($this->loadingSpan === null) {
             return;
@@ -272,7 +277,7 @@ final class TelemetryContext
         $this->loadingSpan = $this->tracer->span(
             ObjectExtractor::shortName($loader),
             SpanKind::INTERNAL,
-            Attributes::create(\array_merge([
+            Attributes::create(array_merge([
                 'loader.class' => $loader::class,
                 'dataframe.name' => $this->context?->config->name(),
             ], $attributes)),
@@ -300,7 +305,7 @@ final class TelemetryContext
     /**
      * @param TAttributeValueMap $attributes
      */
-    public function transformationFailed(Transformer $transformer, \Throwable $exception, array $attributes = []): void
+    public function transformationFailed(Transformer $transformer, Throwable $exception, array $attributes = []): void
     {
         if ($this->transformationSpan === null) {
             return;
@@ -331,7 +336,7 @@ final class TelemetryContext
         $this->transformationSpan = $this->tracer->span(
             ObjectExtractor::shortName($transformer),
             SpanKind::INTERNAL,
-            Attributes::create(\array_merge([
+            Attributes::create(array_merge([
                 'transformer.class' => $transformer::class,
                 'dataframe.name' => $this->context?->config->name(),
             ], $attributes)),

@@ -4,20 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
+use DateTimeImmutable;
+use DateTimeZone;
+use DOMDocument;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_xml;
 
 final class XMLTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'valid DOMDocument' => [
-            'value' => new \DOMDocument(),
+            'value' => new DOMDocument(),
             'exceptionClass' => null,
         ];
 
@@ -47,22 +52,22 @@ final class XMLTypeTest extends TestCase
         ];
 
         yield 'invalid object' => [
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid DateTimeZone' => [
-            'value' => new \DateTimeZone('UTC'),
+            'value' => new DateTimeZone('UTC'),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid DateTimeImmutable' => [
-            'value' => new \DateTimeImmutable(),
+            'value' => new DateTimeImmutable(),
             'exceptionClass' => InvalidTypeException::class,
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
         yield 'string to XML' => [
             'value' => '<items><item>1</item></items>',
@@ -77,10 +82,10 @@ final class XMLTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'valid DOMDocument' => [
-            'value' => new \DOMDocument(),
+            'value' => new DOMDocument(),
             'expected' => true,
         ];
 
@@ -110,7 +115,7 @@ final class XMLTypeTest extends TestCase
             $this->expectException($exceptionClass);
             type_xml()->assert($value);
         } else {
-            static::assertInstanceOf(\DOMDocument::class, type_xml()->assert($value));
+            static::assertInstanceOf(DOMDocument::class, type_xml()->assert($value));
         }
     }
 

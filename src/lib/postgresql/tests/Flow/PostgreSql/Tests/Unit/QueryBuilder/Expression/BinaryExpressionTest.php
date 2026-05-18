@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Expression;
 
+use Flow\PostgreSql\ParsedQuery;
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Protobuf\AST\A_Expr;
 use Flow\PostgreSql\Protobuf\AST\A_Expr_Kind;
@@ -19,11 +20,14 @@ use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
+use function function_exists;
+
 final class BinaryExpressionTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped(
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );
@@ -41,7 +45,7 @@ final class BinaryExpressionTest extends TestCase
 
     public function test_binary_expression_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -57,7 +61,7 @@ final class BinaryExpressionTest extends TestCase
         $parseResult = $parsed->raw();
         $parseResult->setStmts([$rawStmt]);
 
-        $deparsed = (new \Flow\PostgreSql\ParsedQuery($parseResult))->deparse();
+        $deparsed = (new ParsedQuery($parseResult))->deparse();
 
         static::assertSame('SELECT price * 1.1 FROM products', $deparsed);
     }

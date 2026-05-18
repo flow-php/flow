@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\HTTP\Tests\Unit;
 
 use Flow\ETL\Adapter\Http\ContentTypeDetector;
 use Flow\ETL\Adapter\Http\ResponseType;
+use Generator;
 use Nyholm\Psr7\Response;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -13,7 +14,7 @@ use Psr\Http\Message\ResponseInterface;
 
 final class ContentTypeDetectorTest extends TestCase
 {
-    public static function responses(): \Generator
+    public static function responses(): Generator
     {
         yield 'application/json' => [
             new Response(headers: ['Content-Type' => 'application/json']),

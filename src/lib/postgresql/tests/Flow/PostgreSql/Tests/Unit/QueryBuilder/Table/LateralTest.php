@@ -52,7 +52,7 @@ final class LateralTest extends TestCase
         static::assertTrue($node->hasRangeFunction());
 
         $rangeFunction = $node->getRangeFunction();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\RangeFunction::class, $rangeFunction);
+        static::assertInstanceOf(RangeFunction::class, $rangeFunction);
         static::assertTrue($rangeFunction->getLateral());
         static::assertFalse($rangeFunction->getOrdinality());
     }
@@ -67,10 +67,10 @@ final class LateralTest extends TestCase
         static::assertTrue($node->hasRangeSubselect());
 
         $rangeSubselect = $node->getRangeSubselect();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\RangeSubselect::class, $rangeSubselect);
+        static::assertInstanceOf(RangeSubselect::class, $rangeSubselect);
         static::assertTrue($rangeSubselect->getLateral());
         $subqueryNode = $rangeSubselect->getSubquery();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\Node::class, $subqueryNode);
+        static::assertInstanceOf(Node::class, $subqueryNode);
     }
 
     public function test_creates_lateral_with_function(): void

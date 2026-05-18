@@ -6,9 +6,12 @@ namespace Flow\Filesystem\Bridge\Azure\Tests\Integration;
 
 use Flow\Filesystem\Bridge\Azure\Options;
 
+use function file_get_contents;
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem_options;
 use function Flow\Filesystem\DSL\path;
+use function fopen;
+use function str_repeat;
 
 final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
 {
@@ -43,16 +46,16 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
         $output = '';
 
         for ($i = 0; $i < 10; $i++) {
-            $output .= \str_repeat('a', 1024) . "\n";
-            $stream->append(\str_repeat('a', 1024) . "\n");
+            $output .= str_repeat('a', 1024) . "\n";
+            $stream->append(str_repeat('a', 1024) . "\n");
         }
         $stream->close();
 
         $stream = $fs->appendTo(path('azure-blob://file.txt'));
 
         for ($i = 0; $i < 10; $i++) {
-            $output .= \str_repeat('n', 1024) . "\n";
-            $stream->append(\str_repeat('n', 1024) . "\n");
+            $output .= str_repeat('n', 1024) . "\n";
+            $stream->append(str_repeat('n', 1024) . "\n");
         }
         $stream->close();
 
@@ -75,8 +78,8 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
         $output = "This is first line\n";
 
         for ($i = 0; $i < 10; $i++) {
-            $output .= \str_repeat('a', 1024) . "\n";
-            $stream->append(\str_repeat('a', 1024) . "\n");
+            $output .= str_repeat('a', 1024) . "\n";
+            $stream->append(str_repeat('a', 1024) . "\n");
         }
         $stream->close();
 
@@ -91,7 +94,7 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource);
         $fs->writeTo(path('azure-blob://file.txt'))->fromResource($resource)->close();
 
@@ -102,7 +105,7 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource);
         $fs->writeTo(path('azure-blob://nested/orders/orders.txt'))->fromResource($resource)->close();
 
@@ -135,7 +138,7 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource);
         $fs->writeTo(path('azure-blob://some_path_to/file.txt'))->fromResource($resource)->close();
 
@@ -146,7 +149,7 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource);
         $fs->writeTo(path('azure-blob://some_path_to/file.txt'))->fromResource($resource)->close();
 
@@ -180,13 +183,13 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        $resource1 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource1 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource1);
         $fs->writeTo(path('azure-blob://nested/orders/orders.txt'))->fromResource($resource1)->close();
-        $resource2 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource2 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource2);
         $fs->writeTo(path('azure-blob://nested/orders/orders.csv'))->fromResource($resource2)->close();
-        $resource3 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource3 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource3);
         $fs->writeTo(path('azure-blob://nested/orders/orders_01.csv'))->fromResource($resource3)->close();
 
@@ -200,13 +203,13 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        $resource1 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource1 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource1);
         $fs->writeTo(path('azure-blob://orders.csv'))->fromResource($resource1)->close();
-        $resource2 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource2 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource2);
         $fs->writeTo(path('azure-blob://nested/orders/orders.csv'))->fromResource($resource2)->close();
-        $resource3 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource3 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource3);
         $fs->writeTo(path('azure-blob://nested/orders/orders_01.csv'))->fromResource($resource3)->close();
 
@@ -224,13 +227,13 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        $resource1 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource1 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource1);
         $fs->writeTo(path('azure-blob://nested/orders/orders.txt'))->fromResource($resource1)->close();
-        $resource2 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource2 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource2);
         $fs->writeTo(path('azure-blob://nested/orders/orders.csv'))->fromResource($resource2)->close();
-        $resource3 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource3 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource3);
         $fs->writeTo(path('azure-blob://nested/orders/orders_01.csv'))->fromResource($resource3)->close();
 
@@ -325,7 +328,7 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
         $fs = azure_filesystem($this->blobService('flow-php'));
 
         $stream = $fs->writeTo(path('azure-blob://orders.csv'));
-        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource);
         $stream->fromResource($resource);
         $stream->close();
@@ -333,7 +336,7 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
         static::assertTrue($fs->status(path('azure-blob://orders.csv'))?->isFile());
         static::assertFalse($fs->status(path('azure-blob://orders.csv'))->isDirectory());
         static::assertSame(
-            \file_get_contents(__DIR__ . '/Fixtures/orders.csv'),
+            file_get_contents(__DIR__ . '/Fixtures/orders.csv'),
             $fs->readFrom(path('azure-blob://orders.csv'))->content(),
         );
 
@@ -347,7 +350,7 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
         $stream = $fs->writeTo(path('azure-blob://block_blob.csv'));
 
         for ($i = 0; $i < 10; $i++) {
-            $stream->append(\str_repeat('a', 1024) . "\n");
+            $stream->append(str_repeat('a', 1024) . "\n");
         }
 
         $stream->close();

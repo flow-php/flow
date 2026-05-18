@@ -8,6 +8,10 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function array_merge;
+use function array_values;
+use function is_array;
+
 final class ArrayMergeCollection extends ScalarFunctionChain
 {
     /**
@@ -31,7 +35,7 @@ final class ArrayMergeCollection extends ScalarFunctionChain
         }
 
         foreach ($array as $element) {
-            if (!\is_array($element)) {
+            if (!is_array($element)) {
                 return $context
                     ->functions()
                     ->invalidResult(
@@ -43,6 +47,6 @@ final class ArrayMergeCollection extends ScalarFunctionChain
         }
 
         /** @var array<array<mixed>> $array */
-        return \array_merge(...\array_values($array));
+        return array_merge(...array_values($array));
     }
 }

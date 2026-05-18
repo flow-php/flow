@@ -8,6 +8,8 @@ use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 
+use function is_resource;
+
 /**
  * @implements Type<resource>
  */
@@ -33,7 +35,7 @@ final readonly class ResourceType implements Type
 
     public function isValid(mixed $value): bool
     {
-        return \is_resource($value);
+        return is_resource($value);
     }
 
     public function normalize(): array

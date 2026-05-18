@@ -14,6 +14,7 @@ use Flow\Types\Value\Uuid;
 
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_optional;
+use function is_string;
 
 /**
  * @implements Entry<?Uuid>
@@ -38,7 +39,7 @@ final class UuidEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        if (\is_string($value)) {
+        if (is_string($value)) {
             $this->value = Uuid::fromString($value);
         } else {
             $this->value = $value;

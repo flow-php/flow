@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry;
 
+use DateTimeInterface;
+use Throwable;
+
 /**
  * Entity metadata attached to all telemetry signals.
  *
@@ -84,7 +87,7 @@ final readonly class Resource
      *
      * @return null|array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable The attribute value, or null if not found
      */
-    public function get(string $key): string|int|float|bool|\DateTimeInterface|\Throwable|array|null
+    public function get(string $key): string|int|float|bool|DateTimeInterface|Throwable|array|null
     {
         return $this->attributes->get($key);
     }

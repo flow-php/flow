@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use DateTimeImmutable;
 use Flow\ArrayDot\Exception\InvalidPathException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ExecutionMode;
@@ -60,7 +61,7 @@ final class ArrayGetTest extends FlowTestCase
             'id' => 1,
             'status' => 'PENDING',
             'enabled' => true,
-            'datetime' => new \DateTimeImmutable('2020-01-01 00:00:00 UTC'),
+            'datetime' => new DateTimeImmutable('2020-01-01 00:00:00 UTC'),
             'array' => ['foo' => 'bar'],
         ]));
         static::assertNull(array_get(ref('array_entry'), '?invalid_path')->eval($row, flow_context()));
@@ -78,7 +79,7 @@ final class ArrayGetTest extends FlowTestCase
                 'id' => 1,
                 'status' => 'PENDING',
                 'enabled' => true,
-                'datetime' => new \DateTimeImmutable('2020-01-01 00:00:00 UTC'),
+                'datetime' => new DateTimeImmutable('2020-01-01 00:00:00 UTC'),
                 'array' => ['foo' => 'bar'],
             ])),
             flow_context(),

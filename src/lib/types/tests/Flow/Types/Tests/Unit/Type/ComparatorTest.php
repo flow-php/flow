@@ -14,6 +14,7 @@ use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\ResourceType;
 use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\Native\UnionType;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -35,7 +36,7 @@ use function Flow\Types\DSL\type_union;
 
 final class ComparatorTest extends TestCase
 {
-    public static function type_comparable_data_provider(): \Generator
+    public static function type_comparable_data_provider(): Generator
     {
         yield [type_integer(), type_integer()];
         yield [type_json(), type_string()];
@@ -59,7 +60,7 @@ final class ComparatorTest extends TestCase
         yield [type_structure(['id' => type_integer()]), type_array()];
     }
 
-    public static function type_comparison_data_provider(): \Generator
+    public static function type_comparison_data_provider(): Generator
     {
         yield [type_integer(), type_float(), false];
         yield [type_integer(), type_string(), false];
@@ -102,7 +103,7 @@ final class ComparatorTest extends TestCase
         ];
     }
 
-    public static function type_not_comparable_data_provider(): \Generator
+    public static function type_not_comparable_data_provider(): Generator
     {
         yield [type_integer(), type_union(type_float(), type_integer())];
         yield [type_integer(), type_boolean()];

@@ -15,6 +15,7 @@ use Flow\Types\Type\Logical\XMLType;
 
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_xml;
+use function sprintf;
 
 /**
  * @implements Definition<\DOMDocument>
@@ -107,7 +108,7 @@ final class XMLDefinition implements Definition
     public function merge(Definition $definition): Definition
     {
         if (!$this->ref->is($definition->entry())) {
-            throw new RuntimeException(\sprintf(
+            throw new RuntimeException(sprintf(
                 'Cannot merge different definitions, %s and %s',
                 $this->ref->name(),
                 $definition->entry()->name(),
@@ -156,7 +157,7 @@ final class XMLDefinition implements Definition
             );
         }
 
-        throw new RuntimeException(\sprintf('Cannot merge %s with %s', self::class, $definition::class));
+        throw new RuntimeException(sprintf('Cannot merge %s with %s', self::class, $definition::class));
     }
 
     public function metadata(): Metadata

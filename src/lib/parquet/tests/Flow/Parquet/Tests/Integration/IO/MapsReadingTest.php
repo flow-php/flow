@@ -8,6 +8,7 @@ use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\Reader;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function array_key_first;
 use function Flow\Types\DSL\type_array;
 
 class MapsReadingTest extends ParquetIntegrationTestCase
@@ -25,7 +26,7 @@ class MapsReadingTest extends ParquetIntegrationTestCase
 
         foreach ($file->values(['map']) as $row) {
             $map = type_array()->assert($row['map']);
-            $firstKey = \array_key_first($map);
+            $firstKey = array_key_first($map);
             static::assertIsString($firstKey);
             static::assertIsInt($map[$firstKey]);
             $count++;
@@ -48,7 +49,7 @@ class MapsReadingTest extends ParquetIntegrationTestCase
         foreach ($file->values(['map_nullable']) as $rowIndex => $row) {
             if (($rowIndex % 2) === 0) {
                 $map = type_array()->assert($row['map_nullable']);
-                $firstKey = \array_key_first($map);
+                $firstKey = array_key_first($map);
                 static::assertIsString($firstKey);
                 static::assertIsInt($map[$firstKey]);
             } else {

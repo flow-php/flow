@@ -31,6 +31,8 @@ use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
 
+use function array_keys;
+use function array_map;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
 use function Flow\ETL\DSL\datetime_schema;
@@ -39,6 +41,7 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\time_schema;
@@ -64,7 +67,7 @@ final class SchemaConverter
      */
     public function toFlow(ParquetSchema $schema): Schema
     {
-        return \Flow\ETL\DSL\schema(...\array_map(fn(Column $parquetColumn) => $this->parquetToFlowDefinition(
+        return schema(...array_map(fn(Column $parquetColumn) => $this->parquetToFlowDefinition(
             $parquetColumn,
         ), $schema->columns()));
     }
@@ -166,14 +169,14 @@ final class SchemaConverter
             case StructureType::class:
                 return NestedColumn::struct(
                     $name,
-                    \array_map(
+                    array_map(
                         function (string $elementName, Type $elementType) {
                             $elementOptional = $elementType instanceof OptionalType;
                             $elementType = $elementType instanceof OptionalType ? $elementType->base() : $elementType;
 
                             return $this->flowToParquet($elementName, $elementType, $elementOptional);
                         },
-                        \array_keys($type->elements()),
+                        array_keys($type->elements()),
                         $type->elements(),
                     ),
                     $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED,

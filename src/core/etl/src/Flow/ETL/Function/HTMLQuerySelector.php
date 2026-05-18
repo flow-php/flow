@@ -12,6 +12,7 @@ use Flow\ETL\Exception\RequiredPHPVersionException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function class_exists;
 use function Flow\Types\DSL\type_instance_of;
 
 final class HTMLQuerySelector extends ScalarFunctionChain
@@ -20,7 +21,7 @@ final class HTMLQuerySelector extends ScalarFunctionChain
         private readonly mixed $value,
         private readonly ScalarFunction|string $selector,
     ) {
-        if (!\class_exists('\Dom\HTMLDocument')) {
+        if (!class_exists('\Dom\HTMLDocument')) {
             throw new RequiredPHPVersionException('\Dom\HTMLDocument', '8.4');
         }
     }

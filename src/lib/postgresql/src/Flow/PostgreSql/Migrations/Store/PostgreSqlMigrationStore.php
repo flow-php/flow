@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Migrations\Store;
 
+use DateTimeImmutable;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Migrations\Configuration;
 use Flow\PostgreSql\Migrations\ExecutedMigration;
 use Flow\PostgreSql\Migrations\Version;
 
+use function array_map;
 use function Flow\PostgreSql\DSL\and_;
 use function Flow\PostgreSql\DSL\asc;
 use function Flow\PostgreSql\DSL\col;
@@ -51,7 +53,7 @@ final readonly class PostgreSqlMigrationStore implements MigrationStore
                 ->orderBy(asc('version')),
         );
 
-        return new ExecutedMigrations(...\array_map(
+        return new ExecutedMigrations(...array_map(
             static function (array $row): ExecutedMigration {
                 /** @var string $version */
                 $version = $row['version'];
@@ -62,7 +64,7 @@ final readonly class PostgreSqlMigrationStore implements MigrationStore
 
                 return new ExecutedMigration(
                     Version::fromString($version),
-                    new \DateTimeImmutable($executedAt),
+                    new DateTimeImmutable($executedAt),
                     $executionTimeMs,
                 );
             },

@@ -10,14 +10,16 @@ use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Reader;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
+use function extension_loaded;
 use function Flow\Filesystem\DSL\path_real;
 
 final class ReaderTest extends TestCase
 {
     public function test_arrow_factory_creates_reader_with_arrow_engine(): void
     {
-        if (!\extension_loaded('arrow')) {
+        if (!extension_loaded('arrow')) {
             $this->expectException(RuntimeException::class);
             Reader::arrow();
 
@@ -28,7 +30,7 @@ final class ReaderTest extends TestCase
 
         static::assertInstanceOf(
             ArrowParquetEngine::class,
-            (new \ReflectionClass($reader))
+            (new ReflectionClass($reader))
                 ->getProperty('engine')
                 ->getValue($reader),
         );
@@ -40,7 +42,7 @@ final class ReaderTest extends TestCase
 
         static::assertInstanceOf(
             PhpParquetEngine::class,
-            (new \ReflectionClass($reader))
+            (new ReflectionClass($reader))
                 ->getProperty('engine')
                 ->getValue($reader),
         );

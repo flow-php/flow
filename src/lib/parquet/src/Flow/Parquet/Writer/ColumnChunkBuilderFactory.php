@@ -15,6 +15,8 @@ use Flow\Parquet\Writer\ColumnChunkBuilder\DeltaBinaryPackedColumnChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkBuilder\PlainFlatColumnChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkBuilder\RLEDictionaryChunkBuilder;
 
+use function array_key_exists;
+
 final class ColumnChunkBuilderFactory
 {
     public static function createBuilder(
@@ -28,7 +30,7 @@ final class ColumnChunkBuilderFactory
         if ($options->has(Option::COLUMNS_COMPRESSIONS)) {
             $columnsCompressions = $options->getArray(Option::COLUMNS_COMPRESSIONS);
 
-            if ($columnsCompressions !== null && \array_key_exists($flatPath, $columnsCompressions)) {
+            if ($columnsCompressions !== null && array_key_exists($flatPath, $columnsCompressions)) {
                 // Options::getArray returns array<mixed>; instanceof narrows below.
                 // @mago-ignore analysis:mixed-assignment
                 $compression = $columnsCompressions[$flatPath];
@@ -42,7 +44,7 @@ final class ColumnChunkBuilderFactory
         if ($options->has(Option::COLUMNS_ENCODINGS)) {
             $columnsEncodings = $options->getArray(Option::COLUMNS_ENCODINGS);
 
-            if ($columnsEncodings !== null && \array_key_exists($flatPath, $columnsEncodings)) {
+            if ($columnsEncodings !== null && array_key_exists($flatPath, $columnsEncodings)) {
                 // @mago-ignore analysis:mixed-assignment
                 $encoding = $columnsEncodings[$flatPath];
 

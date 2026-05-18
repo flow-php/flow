@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use Flow\Doctrine\Bulk\SQLParametersStyle;
 use Flow\ETL\Function\Parameter;
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
@@ -13,7 +15,9 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\Native\BooleanType;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use stdClass;
 
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
@@ -28,7 +32,7 @@ use function Flow\Types\DSL\type_string;
 
 final class ParameterTest extends FlowTestCase
 {
-    public static function boolean_data_provider(): \Generator
+    public static function boolean_data_provider(): Generator
     {
         yield 'string true' => ['true', true];
         yield 'string false' => ['false', true];
@@ -43,11 +47,11 @@ final class ParameterTest extends FlowTestCase
         yield 'boolean true' => [true, true];
         yield 'boolean false' => [false, false];
         yield 'array non-scalar' => [['value'], false];
-        yield 'object non-scalar' => [new \stdClass(), false];
+        yield 'object non-scalar' => [new stdClass(), false];
         yield 'null non-scalar' => [null, false];
     }
 
-    public static function float_data_provider(): \Generator
+    public static function float_data_provider(): Generator
     {
         yield 'valid float' => [3.14, 3.14];
         yield 'zero float' => [0.0, 0.0];
@@ -59,7 +63,7 @@ final class ParameterTest extends FlowTestCase
         yield 'null not float' => [null, null];
     }
 
-    public static function int_data_provider(): \Generator
+    public static function int_data_provider(): Generator
     {
         yield 'valid integer' => [42, null, 42];
         yield 'zero integer' => [0, null, 0];
@@ -71,7 +75,7 @@ final class ParameterTest extends FlowTestCase
         yield 'float not integer without default' => [3.14, null, null];
     }
 
-    public static function number_data_provider(): \Generator
+    public static function number_data_provider(): Generator
     {
         yield 'integer' => [42, null, 42];
         yield 'float' => [3.14, null, 3.14];
@@ -90,7 +94,7 @@ final class ParameterTest extends FlowTestCase
         yield 'string without default' => ['not numeric', null, null];
     }
 
-    public static function string_data_provider(): \Generator
+    public static function string_data_provider(): Generator
     {
         yield 'valid string' => ['hello', null, 'hello'];
         yield 'empty string' => ['', null, ''];
@@ -193,22 +197,22 @@ final class ParameterTest extends FlowTestCase
     public function test_as_instance_of_with_invalid_type(): void
     {
         $parameter = new Parameter(lit('not an object'));
-        static::assertNull($parameter->asInstanceOf(row(), flow_context(), \DateTimeImmutable::class));
+        static::assertNull($parameter->asInstanceOf(row(), flow_context(), DateTimeImmutable::class));
 
-        $dateTime = new \DateTimeImmutable('2023-01-01');
+        $dateTime = new DateTimeImmutable('2023-01-01');
         $parameter = new Parameter(lit($dateTime));
-        static::assertNull($parameter->asInstanceOf(row(), flow_context(), \stdClass::class));
+        static::assertNull($parameter->asInstanceOf(row(), flow_context(), stdClass::class));
     }
 
     public function test_as_instance_of_with_valid_object(): void
     {
-        $dateTime = new \DateTimeImmutable('2023-01-01');
+        $dateTime = new DateTimeImmutable('2023-01-01');
         $parameter = new Parameter(lit($dateTime));
 
-        $result = $parameter->asInstanceOf(row(), flow_context(), \DateTimeImmutable::class);
+        $result = $parameter->asInstanceOf(row(), flow_context(), DateTimeImmutable::class);
         static::assertSame($dateTime, $result);
 
-        $result = $parameter->asInstanceOf(row(), flow_context(), \DateTimeInterface::class);
+        $result = $parameter->asInstanceOf(row(), flow_context(), DateTimeInterface::class);
         static::assertSame($dateTime, $result);
     }
 
@@ -222,42 +226,42 @@ final class ParameterTest extends FlowTestCase
     public function test_as_list_of_objects_with_empty_array(): void
     {
         $parameter = new Parameter(lit([]));
-        $result = $parameter->asListOfObjects(row(), flow_context(), \DateTimeImmutable::class);
+        $result = $parameter->asListOfObjects(row(), flow_context(), DateTimeImmutable::class);
 
         static::assertSame([], $result);
     }
 
     public function test_as_list_of_objects_with_mixed_types(): void
     {
-        $date = new \DateTimeImmutable('2023-01-01');
+        $date = new DateTimeImmutable('2023-01-01');
         $parameter = new Parameter(lit([$date, 'not an object']));
 
-        static::assertNull($parameter->asListOfObjects(row(), flow_context(), \DateTimeImmutable::class));
+        static::assertNull($parameter->asListOfObjects(row(), flow_context(), DateTimeImmutable::class));
     }
 
     public function test_as_list_of_objects_with_non_array(): void
     {
         $parameter = new Parameter(lit('not an array'));
-        static::assertNull($parameter->asListOfObjects(row(), flow_context(), \DateTimeImmutable::class));
+        static::assertNull($parameter->asListOfObjects(row(), flow_context(), DateTimeImmutable::class));
     }
 
     public function test_as_list_of_objects_with_valid_array(): void
     {
-        $date1 = new \DateTimeImmutable('2023-01-01');
-        $date2 = new \DateTimeImmutable('2023-01-02');
+        $date1 = new DateTimeImmutable('2023-01-01');
+        $date2 = new DateTimeImmutable('2023-01-02');
         $parameter = new Parameter(lit([$date1, $date2]));
 
-        $result = $parameter->asListOfObjects(row(), flow_context(), \DateTimeImmutable::class);
+        $result = $parameter->asListOfObjects(row(), flow_context(), DateTimeImmutable::class);
         static::assertSame([$date1, $date2], $result);
     }
 
     public function test_as_list_of_objects_with_wrong_object_type(): void
     {
-        $date = new \DateTimeImmutable('2023-01-01');
-        $std = new \stdClass();
+        $date = new DateTimeImmutable('2023-01-01');
+        $std = new stdClass();
         $parameter = new Parameter(lit([$date, $std]));
 
-        static::assertNull($parameter->asListOfObjects(row(), flow_context(), \DateTimeImmutable::class));
+        static::assertNull($parameter->asListOfObjects(row(), flow_context(), DateTimeImmutable::class));
     }
 
     #[DataProvider('number_data_provider')]
@@ -281,7 +285,7 @@ final class ParameterTest extends FlowTestCase
 
     public function test_as_object_with_valid_object(): void
     {
-        $object = new \stdClass();
+        $object = new stdClass();
         $object->property = 'value';
         $parameter = new Parameter(lit($object));
 

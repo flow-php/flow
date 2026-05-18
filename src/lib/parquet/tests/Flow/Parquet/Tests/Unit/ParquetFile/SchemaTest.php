@@ -12,6 +12,8 @@ use Flow\Parquet\ParquetFile\Schema\Repetition;
 use Flow\Parquet\ThriftModel\SchemaElement;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
+
 final class SchemaTest extends TestCase
 {
     public function test_calculating_repetition_and_definition_for_data_structure_used_in_dremel_paper(): void
@@ -112,7 +114,7 @@ final class SchemaTest extends TestCase
                 'list',
                 'element',
             ],
-            \array_map(static fn(SchemaElement $e) => $e->name, $schema->toThrift()),
+            array_map(static fn(SchemaElement $e) => $e->name, $schema->toThrift()),
         );
     }
 

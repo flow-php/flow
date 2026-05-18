@@ -11,6 +11,7 @@ use Flow\Bridge\Symfony\PostgreSQLMessenger\FlowPostgreSqlTransport;
 use Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit\Double\FakeSerializer;
 use Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit\Double\SpyClient;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 final class FlowPostgreSqlTransportFactoryTest extends TestCase
 {
@@ -89,7 +90,7 @@ final class FlowPostgreSqlTransportFactoryTest extends TestCase
 
     public function test_create_transport_throws_when_service_is_not_a_client(): void
     {
-        $factory = new FlowPostgreSqlTransportFactory(new ArrayClientLocator(['default' => new \stdClass()]));
+        $factory = new FlowPostgreSqlTransportFactory(new ArrayClientLocator(['default' => new stdClass()]));
 
         $this->expectException(TransportException::class);
         $this->expectExceptionMessage('must be an instance of');

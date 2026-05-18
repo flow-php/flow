@@ -7,6 +7,14 @@ namespace Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ThriftModel\SchemaElement;
 
+use function array_filter;
+use function array_merge;
+use function array_reverse;
+use function array_values;
+use function count;
+use function explode;
+use function implode;
+
 final class NestedColumn implements Column
 {
     private ?bool $cachedIsList = null;
@@ -167,7 +175,7 @@ final class NestedColumn implements Column
 
         foreach ($this->children as $child) {
             if ($child instanceof self) {
-                $flat = \array_merge($flat, $child->childrenFlat());
+                $flat = array_merge($flat, $child->childrenFlat());
             } else {
                 // @mago-ignore analysis:redundant-docblock-type
                 /** @var FlatColumn $child */
@@ -223,8 +231,8 @@ final class NestedColumn implements Column
             }
         }
 
-        $path = \array_reverse($path);
-        $this->flatPath = \implode('.', $path);
+        $path = array_reverse($path);
+        $this->flatPath = implode('.', $path);
 
         return $this->flatPath;
     }
@@ -410,7 +418,7 @@ final class NestedColumn implements Column
 
     public function path(): array
     {
-        return \explode('.', $this->flatPath());
+        return explode('.', $this->flatPath());
     }
 
     public function repetition(): ?Repetition
@@ -438,7 +446,7 @@ final class NestedColumn implements Column
             $parent = $parent->parent();
         }
 
-        $this->repetitions = new Repetitions(...\array_reverse(\array_values(\array_filter($repetitions))));
+        $this->repetitions = new Repetitions(...array_reverse(array_values(array_filter($repetitions))));
 
         return $this->repetitions;
     }
@@ -463,7 +471,7 @@ final class NestedColumn implements Column
         $elements = [
             new SchemaElement([
                 'name' => $this->name(),
-                'num_children' => \count($this->children),
+                'num_children' => count($this->children),
                 'converted_type' => $this->convertedType?->value,
                 'repetition_type' => $this->repetition()?->value,
                 'logicalType' => $this->logicalType()?->toThrift(),
@@ -476,7 +484,7 @@ final class NestedColumn implements Column
             }
 
             if ($child instanceof self) {
-                $elements = \array_merge($elements, $child->toThrift());
+                $elements = array_merge($elements, $child->toThrift());
             }
         }
 

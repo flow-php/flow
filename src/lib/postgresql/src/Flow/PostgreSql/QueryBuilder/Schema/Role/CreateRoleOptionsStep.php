@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Schema\Role;
 
+use SensitiveParameter;
+
 interface CreateRoleOptionsStep extends CreateRoleFinalStep
 {
     public function bypassRls(): self;
@@ -40,5 +42,5 @@ interface CreateRoleOptionsStep extends CreateRoleFinalStep
 
     public function validUntil(string $timestamp): self;
 
-    public function withPassword(#[\SensitiveParameter] string $password): self;
+    public function withPassword(#[SensitiveParameter] string $password): self;
 }

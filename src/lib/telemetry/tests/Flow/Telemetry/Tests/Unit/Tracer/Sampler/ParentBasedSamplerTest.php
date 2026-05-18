@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Tracer\Sampler;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceFlags;
 use Flow\Telemetry\Context\TraceId;
@@ -134,7 +135,7 @@ final class ParentBasedSamplerTest extends TestCase
             'root-span',
             SpanContext::create(TraceId::generate(), SpanId::generate()),
             SpanKind::INTERNAL,
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
             ResourceMother::default(),
             new InstrumentationScope('test', '1.0.0'),
         );
@@ -150,7 +151,7 @@ final class ParentBasedSamplerTest extends TestCase
             'child-span',
             $context,
             SpanKind::INTERNAL,
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
             ResourceMother::default(),
             new InstrumentationScope('test', '1.0.0'),
         );

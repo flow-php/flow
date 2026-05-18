@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Attributes;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class AttributesTest extends TestCase
 {
-    public static function id_provider(): \Generator
+    public static function id_provider(): Generator
     {
         yield 'empty attributes' => [
             [],
@@ -68,12 +71,12 @@ final class AttributesTest extends TestCase
         ];
 
         yield 'datetime is formatted as ISO 8601' => [
-            ['ts' => new \DateTimeImmutable('2024-01-15T10:30:00+00:00')],
+            ['ts' => new DateTimeImmutable('2024-01-15T10:30:00+00:00')],
             'ts=2024-01-15T10:30:00+00:00',
         ];
 
         yield 'throwable uses message' => [
-            ['error' => new \RuntimeException('something broke')],
+            ['error' => new RuntimeException('something broke')],
             'error=something broke',
         ];
 

@@ -23,6 +23,7 @@ use Flow\Azure\SDK\BlobService\PutBlockBlobBlockList\PutBlockBlobBlockListOption
 use Flow\Azure\SDK\BlobService\PutBlockBlobBlockList\SimpleXMLSerializer;
 use Flow\Azure\SDK\BlobServiceInterface;
 use Flow\Azure\SDK\Serializer;
+use Generator;
 
 final class RecordingBlobService implements BlobServiceInterface
 {
@@ -81,7 +82,7 @@ final class RecordingBlobService implements BlobServiceInterface
         return $this->delegate->getContainerProperties($options);
     }
 
-    public function listBlobs(ListBlobOptions $options = new ListBlobOptions()): \Generator
+    public function listBlobs(ListBlobOptions $options = new ListBlobOptions()): Generator
     {
         $this->listBlobsCount++;
 

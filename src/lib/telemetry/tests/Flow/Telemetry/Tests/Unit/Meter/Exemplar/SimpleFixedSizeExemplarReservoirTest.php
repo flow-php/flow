@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Meter\Exemplar;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceFlags;
 use Flow\Telemetry\Context\TraceId;
@@ -11,13 +12,16 @@ use Flow\Telemetry\Meter\Exemplar\SimpleFixedSizeExemplarReservoir;
 use Flow\Telemetry\Tracer\SpanContext;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
+use function array_unique;
+
 final class SimpleFixedSizeExemplarReservoirTest extends TestCase
 {
     public function test_bucket_index_is_ignored(): void
     {
         $reservoir = new SimpleFixedSizeExemplarReservoir(2);
         $context = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::sampled());
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = new DateTimeImmutable();
 
         $reservoir->offer(100, [], $context, $timestamp, bucketIndex: 5);
         $reservoir->offer(200, [], $context, $timestamp, bucketIndex: 10);
@@ -30,7 +34,7 @@ final class SimpleFixedSizeExemplarReservoirTest extends TestCase
     {
         $reservoir = new SimpleFixedSizeExemplarReservoir(3);
         $context = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::sampled());
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = new DateTimeImmutable();
 
         $reservoir->offer(10, [], $context, $timestamp);
         $reservoir->offer(20, [], $context, $timestamp);
@@ -44,7 +48,7 @@ final class SimpleFixedSizeExemplarReservoirTest extends TestCase
     {
         $reservoir = new SimpleFixedSizeExemplarReservoir(2);
         $context = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::sampled());
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = new DateTimeImmutable();
 
         $reservoir->offer(100, [], $context, $timestamp);
         $reservoir->offer(200, [], $context, $timestamp);
@@ -60,7 +64,7 @@ final class SimpleFixedSizeExemplarReservoirTest extends TestCase
     {
         $reservoir = new SimpleFixedSizeExemplarReservoir(2);
         $context = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::sampled());
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = new DateTimeImmutable();
 
         $reservoir->offer(100, [], $context, $timestamp);
 
@@ -77,7 +81,7 @@ final class SimpleFixedSizeExemplarReservoirTest extends TestCase
         $traceId = TraceId::generate();
         $spanId = SpanId::generate();
         $context = SpanContext::create($traceId, $spanId, null, TraceFlags::sampled());
-        $timestamp = new \DateTimeImmutable('2024-01-15 10:30:00');
+        $timestamp = new DateTimeImmutable('2024-01-15 10:30:00');
 
         $reservoir->offer(42.5, ['key' => 'value'], $context, $timestamp);
 
@@ -93,7 +97,7 @@ final class SimpleFixedSizeExemplarReservoirTest extends TestCase
     {
         $reservoir = new SimpleFixedSizeExemplarReservoir(3);
         $context = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::sampled());
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = new DateTimeImmutable();
 
         $reservoir->offer(100, ['http.method' => 'GET'], $context, $timestamp);
 
@@ -109,7 +113,7 @@ final class SimpleFixedSizeExemplarReservoirTest extends TestCase
     {
         $reservoir = new SimpleFixedSizeExemplarReservoir(2);
         $context = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::sampled());
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = new DateTimeImmutable();
 
         for ($i = 0; $i < 1000; $i++) {
             $reservoir->offer($i, [], $context, $timestamp);
@@ -118,15 +122,15 @@ final class SimpleFixedSizeExemplarReservoirTest extends TestCase
         $exemplars = $reservoir->collect();
         static::assertCount(2, $exemplars);
 
-        $values = \array_map(static fn($e) => $e->value, $exemplars);
-        static::assertCount(2, \array_unique($values));
+        $values = array_map(static fn($e) => $e->value, $exemplars);
+        static::assertCount(2, array_unique($values));
     }
 
     public function test_reservoir_with_size_one(): void
     {
         $reservoir = new SimpleFixedSizeExemplarReservoir(1);
         $context = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::sampled());
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = new DateTimeImmutable();
 
         $reservoir->offer(100, [], $context, $timestamp);
         $reservoir->offer(200, [], $context, $timestamp);
@@ -140,7 +144,7 @@ final class SimpleFixedSizeExemplarReservoirTest extends TestCase
     {
         $reservoir = new SimpleFixedSizeExemplarReservoir(2);
         $context = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::sampled());
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = new DateTimeImmutable();
 
         $reservoir->offer(100, [], $context, $timestamp);
         $reservoir->offer(200, [], $context, $timestamp);

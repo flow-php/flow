@@ -14,6 +14,9 @@ use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
+use function class_exists;
+use function interface_exists;
+
 final class FlowTelemetryBundle extends Bundle
 {
     private const string CACHE_ADAPTER_INTERFACE = 'Symfony\\Component\\Cache\\Adapter\\AdapterInterface';
@@ -33,19 +36,19 @@ final class FlowTelemetryBundle extends Bundle
         $container->addCompilerPass(new OTLPAvailabilityPass());
         $container->addCompilerPass(new FrameworkLoggerPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, -64);
 
-        if (\interface_exists(self::HTTP_CLIENT_INTERFACE)) {
+        if (interface_exists(self::HTTP_CLIENT_INTERFACE)) {
             $container->addCompilerPass(new HttpClientTelemetryPass());
         }
 
-        if (\interface_exists(self::PSR18_CLIENT_INTERFACE) && \class_exists(self::PSR18_TRACEABLE_CLIENT)) {
+        if (interface_exists(self::PSR18_CLIENT_INTERFACE) && class_exists(self::PSR18_TRACEABLE_CLIENT)) {
             $container->addCompilerPass(new Psr18ClientTelemetryPass());
         }
 
-        if (\interface_exists(self::DBAL_MIDDLEWARE_INTERFACE)) {
+        if (interface_exists(self::DBAL_MIDDLEWARE_INTERFACE)) {
             $container->addCompilerPass(new DBALTelemetryPass());
         }
 
-        if (\interface_exists(self::CACHE_ADAPTER_INTERFACE)) {
+        if (interface_exists(self::CACHE_ADAPTER_INTERFACE)) {
             $container->addCompilerPass(new CacheTelemetryPass());
         }
     }

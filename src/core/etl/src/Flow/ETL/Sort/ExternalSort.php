@@ -12,6 +12,14 @@ use Flow\ETL\Rows;
 use Flow\ETL\Sort\ExternalSort\Bucket;
 use Flow\ETL\Sort\ExternalSort\Buckets;
 use Flow\ETL\Sort\ExternalSort\BucketsCache;
+use Generator;
+
+use function abs;
+use function array_chunk;
+use function bin2hex;
+use function count;
+use function max;
+use function random_bytes;
 
 /**
  * External sorting is explained here:.
@@ -36,7 +44,7 @@ final class ExternalSort implements SortingAlgorithm
         }
     }
 
-    public function sortGenerator(\Generator $rows, FlowContext $context, References $refs): \Generator
+    public function sortGenerator(Generator $rows, FlowContext $context, References $refs): Generator
     {
         $sortedBuckets = [];
 
@@ -52,7 +60,7 @@ final class ExternalSort implements SortingAlgorithm
      *
      * @return \Generator<int, Buckets>
      */
-    private function createBucketsFromGenerator(\Generator $generator, References $refs): \Generator
+    private function createBucketsFromGenerator(Generator $generator, References $refs): Generator
     {
         /** @var array<Bucket> $buckets */
         $buckets = [];
@@ -69,15 +77,15 @@ final class ExternalSort implements SortingAlgorithm
             foreach ($batch as $row) {
                 $buffer[] = $row;
 
-                if (\count($buffer) >= $minBatchSize) {
+                if (count($buffer) >= $minBatchSize) {
                     $batchRows = new Rows(...$buffer);
                     $buffer = [];
 
-                    $bucketId = \bin2hex(\random_bytes(16));
+                    $bucketId = bin2hex(random_bytes(16));
                     $this->bucketsCache->set($bucketId, $batchRows->sortBy(...$refs));
                     $buckets[] = new Bucket($bucketId, $this->bucketsCache->get($bucketId));
 
-                    if (\count($buckets) >= $this->bucketsCount) {
+                    if (count($buckets) >= $this->bucketsCount) {
                         yield new Buckets($buckets);
                         $buckets = [];
                     }
@@ -87,7 +95,7 @@ final class ExternalSort implements SortingAlgorithm
 
         if ($buffer !== []) {
             $batchRows = new Rows(...$buffer);
-            $bucketId = \bin2hex(\random_bytes(16));
+            $bucketId = bin2hex(random_bytes(16));
             $this->bucketsCache->set($bucketId, $batchRows->sortBy(...$refs));
             $buckets[] = new Bucket($bucketId, $this->bucketsCache->get($bucketId));
         }
@@ -102,9 +110,9 @@ final class ExternalSort implements SortingAlgorithm
      *
      * @return \Generator<Rows>
      */
-    private function extractSortedBuckets(array $sortBuckets): \Generator
+    private function extractSortedBuckets(array $sortBuckets): Generator
     {
-        $outputBatchSize = \max(1, \abs($this->batchSize));
+        $outputBatchSize = max(1, abs($this->batchSize));
 
         foreach ($sortBuckets as $bucket) {
             $rows = new Rows();
@@ -133,7 +141,7 @@ final class ExternalSort implements SortingAlgorithm
      */
     private function mergeBuckets(array $buckets, References $refs): array
     {
-        $bucketChunks = \array_chunk($buckets, $this->bucketsCount, true);
+        $bucketChunks = array_chunk($buckets, $this->bucketsCount, true);
 
         $buckets = [];
 
@@ -141,7 +149,7 @@ final class ExternalSort implements SortingAlgorithm
             $buckets[] = $this->sortBuckets(new Buckets($runBuckets), $refs);
         }
 
-        while (\count($buckets) > 1) {
+        while (count($buckets) > 1) {
             $buckets = $this->mergeBuckets($buckets, $refs);
         }
 
@@ -150,7 +158,7 @@ final class ExternalSort implements SortingAlgorithm
 
     private function sortBuckets(Buckets $sortBuckets, References $refs): Bucket
     {
-        $this->bucketsCache->set($nextBucketId = \bin2hex(\random_bytes(16)), $sortBuckets->sort(...$refs->all()));
+        $this->bucketsCache->set($nextBucketId = bin2hex(random_bytes(16)), $sortBuckets->sort(...$refs->all()));
 
         foreach ($sortBuckets->bucketIds() as $bucketId) {
             $this->bucketsCache->remove($bucketId);

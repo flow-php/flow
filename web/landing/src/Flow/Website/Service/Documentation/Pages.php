@@ -5,9 +5,17 @@ declare(strict_types=1);
 namespace Flow\Website\Service\Documentation;
 
 use Flow\Website\Model\Documentation\Page;
+use RuntimeException;
 
+use function file_exists;
+use function file_get_contents;
 use function Flow\Filesystem\DSL\fstab;
 use function Flow\Filesystem\DSL\path;
+use function realpath;
+use function rtrim;
+use function str_ends_with;
+use function str_replace;
+use function str_starts_with;
 
 final readonly class Pages
 {
@@ -25,15 +33,15 @@ final readonly class Pages
         $pages = [];
 
         foreach ($files as $file) {
-            $relativePath = \str_replace(\realpath($this->basePath) . '/', '', $file->path->path());
+            $relativePath = str_replace(realpath($this->basePath) . '/', '', $file->path->path());
 
-            if (\str_starts_with($relativePath, '_')) {
+            if (str_starts_with($relativePath, '_')) {
                 continue;
             }
 
             $relativePath = str_replace('.md', '', $relativePath);
 
-            $pages[] = new Page($relativePath, \file_get_contents($file->path->path()));
+            $pages[] = new Page($relativePath, file_get_contents($file->path->path()));
         }
 
         return $pages;
@@ -41,16 +49,16 @@ final readonly class Pages
 
     public function get(string $path): Page
     {
-        $path = \rtrim($path, '/');
+        $path = rtrim($path, '/');
 
-        if (!\str_ends_with($path, '.md')) {
+        if (!str_ends_with($path, '.md')) {
             $path .= '.md';
         }
 
-        if (\file_exists($this->basePath . '/' . $path)) {
-            return new Page($path, \file_get_contents($this->basePath . '/' . $path));
+        if (file_exists($this->basePath . '/' . $path)) {
+            return new Page($path, file_get_contents($this->basePath . '/' . $path));
         }
 
-        throw new \RuntimeException('Page not found: ' . $path);
+        throw new RuntimeException('Page not found: ' . $path);
     }
 }

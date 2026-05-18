@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry;
 
+use function array_slice;
+use function count;
+use function is_array;
+use function is_string;
+use function mb_strlen;
+use function mb_substr;
+
 /**
  * Stateless service that enforces attribute limits per OpenTelemetry specification.
  *
@@ -27,9 +34,9 @@ final readonly class AttributeLimitsEnforcer
         $normalized = $attributes->normalize();
         $droppedCount = 0;
 
-        if (\count($normalized) > $countLimit) {
-            $droppedCount = \count($normalized) - $countLimit;
-            $normalized = \array_slice($normalized, 0, $countLimit, true);
+        if (count($normalized) > $countLimit) {
+            $droppedCount = count($normalized) - $countLimit;
+            $normalized = array_slice($normalized, 0, $countLimit, true);
         }
 
         if ($valueLengthLimit !== null) {
@@ -47,8 +54,8 @@ final readonly class AttributeLimitsEnforcer
     private function truncateArrayValues(array $values, int $maxLength): array
     {
         foreach ($values as $index => $value) {
-            if (\is_string($value) && \mb_strlen($value) > $maxLength) {
-                $values[$index] = \mb_substr($value, 0, $maxLength);
+            if (is_string($value) && mb_strlen($value) > $maxLength) {
+                $values[$index] = mb_substr($value, 0, $maxLength);
             }
         }
 
@@ -63,9 +70,9 @@ final readonly class AttributeLimitsEnforcer
     private function truncateStringValues(array $values, int $maxLength): array
     {
         foreach ($values as $key => $value) {
-            if (\is_string($value) && \mb_strlen($value) > $maxLength) {
-                $values[$key] = \mb_substr($value, 0, $maxLength);
-            } elseif (\is_array($value)) {
+            if (is_string($value) && mb_strlen($value) > $maxLength) {
+                $values[$key] = mb_substr($value, 0, $maxLength);
+            } elseif (is_array($value)) {
                 $values[$key] = $this->truncateArrayValues($value, $maxLength);
             }
         }

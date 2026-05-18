@@ -17,6 +17,8 @@ use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\eq;
 use function Flow\PostgreSql\DSL\param;
 use function Flow\PostgreSql\DSL\update;
+use function in_array;
+use function sprintf;
 
 final readonly class UpdateQueryBuilder
 {
@@ -41,7 +43,7 @@ final readonly class UpdateQueryBuilder
         $assignments = [];
 
         foreach ($row->entries() as $entry) {
-            if (\in_array($entry->name(), $primaryKeys, true)) {
+            if (in_array($entry->name(), $primaryKeys, true)) {
                 continue;
             }
 
@@ -57,7 +59,7 @@ final readonly class UpdateQueryBuilder
 
         foreach ($primaryKeys as $key) {
             if (!$row->has($key)) {
-                throw new RuntimeException(\sprintf('Primary key "%s" not found in row', $key));
+                throw new RuntimeException(sprintf('Primary key "%s" not found in row', $key));
             }
 
             $entry = $row->get($key);

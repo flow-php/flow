@@ -8,6 +8,9 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
 use Flow\Parquet\ParquetFile\Schema\Repetitions;
 
+use function array_key_exists;
+use function is_array;
+
 /**
  * Converts definition levels to actual values.
  * Initially this class was much simpler but in order to keep the performance and not to repeat the same operations
@@ -32,7 +35,7 @@ final class DefinitionConverter
 
     public function toValue(Repetitions $repetitions, int $definitionLevel, mixed $value): mixed
     {
-        if (!\array_key_exists($repetitions->id, $this->templates)) {
+        if (!array_key_exists($repetitions->id, $this->templates)) {
             $this->generateTemplates($repetitions, $repetitions->maxDefinitionLevel());
         }
 
@@ -59,7 +62,7 @@ final class DefinitionConverter
 
             $template = $this->templates[$repetitions->id]['templates'][$definitionLevel];
 
-            if (!\is_array($template)) {
+            if (!is_array($template)) {
                 throw new InvalidArgumentException('Template for maxDefinitionLevel must be an array');
             }
 
@@ -100,21 +103,17 @@ final class DefinitionConverter
             return $partialValue;
         }
 
-        if (!\is_array($partialValue)) {
+        if (!is_array($partialValue)) {
             throw new InvalidArgumentException(
                 'Internal invariant: repeated last repetition must produce an array template',
             );
         }
 
-        $unwrapped = $partialValue[0];
-
-        if ($unwrapped === null) {
-            throw new InvalidArgumentException(
-                'Internal invariant: repeated template must not contain null at index 0',
-            );
+        if (!array_key_exists(0, $partialValue)) {
+            throw new InvalidArgumentException('Internal invariant: repeated template must contain index 0');
         }
 
-        return $unwrapped;
+        return $partialValue[0];
     }
 
     /**
@@ -128,7 +127,7 @@ final class DefinitionConverter
      */
     private function generateTemplates(Repetitions $repetitions, int $maxDefinitionLevel): void
     {
-        if (\array_key_exists($repetitions->id, $this->templates)) {
+        if (array_key_exists($repetitions->id, $this->templates)) {
             return;
         }
 
@@ -155,7 +154,7 @@ final class DefinitionConverter
             return [$value];
         }
 
-        if (\array_key_exists(0, $template) && \is_array($template[0])) {
+        if (array_key_exists(0, $template) && is_array($template[0])) {
             $template[0] = $this->pushValueToLevel($template[0], $value);
         }
 

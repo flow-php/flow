@@ -6,6 +6,7 @@ namespace Flow\Parquet\Tests\Unit\Thrift;
 
 use Flow\Parquet\Thrift\CompactProtocol;
 use Flow\Parquet\Thrift\MemoryBuffer;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Thrift\Exception\TProtocolException;
@@ -14,7 +15,7 @@ use Thrift\Type\TType;
 
 final class CompactProtocolTest extends TestCase
 {
-    public static function byte_data(): \Generator
+    public static function byte_data(): Generator
     {
         yield 'zero' => [0];
         yield 'positive' => [42];
@@ -23,7 +24,7 @@ final class CompactProtocolTest extends TestCase
         yield 'max negative' => [-128];
     }
 
-    public static function double_data(): \Generator
+    public static function double_data(): Generator
     {
         yield 'zero' => [0.0];
         yield 'positive small' => [3.14159];
@@ -34,7 +35,7 @@ final class CompactProtocolTest extends TestCase
         yield 'very small negative' => [-0.000000001];
     }
 
-    public static function i16_data(): \Generator
+    public static function i16_data(): Generator
     {
         yield 'zero' => [0];
         yield 'positive small' => [42];
@@ -45,7 +46,7 @@ final class CompactProtocolTest extends TestCase
         yield 'max negative' => [-32768];
     }
 
-    public static function i32_data(): \Generator
+    public static function i32_data(): Generator
     {
         yield 'zero' => [0];
         yield 'positive small' => [42];
@@ -56,7 +57,7 @@ final class CompactProtocolTest extends TestCase
         yield 'max negative' => [-2147483648];
     }
 
-    public static function i64_data(): \Generator
+    public static function i64_data(): Generator
     {
         yield 'zero' => [0];
         yield 'positive small' => [42];
@@ -67,7 +68,7 @@ final class CompactProtocolTest extends TestCase
         yield 'negative 32bit boundary' => [-4294967296];
     }
 
-    public static function list_data(): \Generator
+    public static function list_data(): Generator
     {
         yield 'empty list' => [TType::STRING, []];
         yield 'string list' => [TType::STRING, ['item1', 'item2', 'item3']];
@@ -75,7 +76,7 @@ final class CompactProtocolTest extends TestCase
         yield 'large list' => [TType::I32, range(1, 20)];
     }
 
-    public static function map_data(): \Generator
+    public static function map_data(): Generator
     {
         yield 'empty map' => [TType::STRING, TType::STRING, []];
         yield 'string to string map' => [TType::STRING, TType::STRING, ['key1' => 'value1', 'key2' => 'value2']];
@@ -84,14 +85,14 @@ final class CompactProtocolTest extends TestCase
         yield 'int to int map' => [TType::I32, TType::I32, [1 => 100, 2 => 200]];
     }
 
-    public static function set_data(): \Generator
+    public static function set_data(): Generator
     {
         yield 'empty set' => [TType::STRING, []];
         yield 'string set' => [TType::STRING, ['item1', 'item2', 'item3']];
         yield 'int set' => [TType::I32, [1, 2, 3, 4, 5]];
     }
 
-    public static function skip_type_data(): \Generator
+    public static function skip_type_data(): Generator
     {
         yield 'skip bool' => [TType::BOOL];
         yield 'skip byte' => [TType::BYTE];
@@ -106,7 +107,7 @@ final class CompactProtocolTest extends TestCase
         yield 'skip list' => [TType::LST];
     }
 
-    public static function string_data(): \Generator
+    public static function string_data(): Generator
     {
         yield 'empty string' => [''];
         yield 'simple string' => ['hello'];
@@ -117,7 +118,7 @@ final class CompactProtocolTest extends TestCase
         yield 'string with null byte' => ["hello\0world"];
     }
 
-    public static function varint_data(): \Generator
+    public static function varint_data(): Generator
     {
         yield 'zero' => [0, "\x00"];
         yield 'small positive' => [127, "\x7F"];
@@ -126,7 +127,7 @@ final class CompactProtocolTest extends TestCase
         yield 'very large positive' => [2097152, "\x80\x80\x80\x01"];
     }
 
-    public static function zigzag_encode_decode_data(): \Generator
+    public static function zigzag_encode_decode_data(): Generator
     {
         yield 'positive number 16 bit' => [123, 16, 246];
         yield 'negative number 16 bit' => [-123, 16, 245];

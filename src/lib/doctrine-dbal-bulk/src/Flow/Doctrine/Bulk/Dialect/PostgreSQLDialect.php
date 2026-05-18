@@ -12,6 +12,11 @@ use Flow\Doctrine\Bulk\InsertOptions;
 use Flow\Doctrine\Bulk\TableDefinition;
 use Flow\Doctrine\Bulk\UpdateOptions;
 
+use function array_map;
+use function count;
+use function implode;
+use function sprintf;
+
 final readonly class PostgreSQLDialect implements Dialect
 {
     public function __construct(
@@ -28,11 +33,11 @@ final readonly class PostgreSQLDialect implements Dialect
     {
         $columns = $bulkData->columns()->all();
 
-        return \sprintf(
+        return sprintf(
             'DELETE FROM %s WHERE (%s) IN (%s)',
             $table->name(),
             // @mago-expect analysis:deprecated-method
-            \implode(', ', \array_map(fn($column) => $this->platform->quoteIdentifier($column), $columns)),
+            implode(', ', array_map(fn($column) => $this->platform->quoteIdentifier($column), $columns)),
             $bulkData->toSqlCastedPlaceholders($table),
         );
     }
@@ -54,17 +59,17 @@ final readonly class PostgreSQLDialect implements Dialect
             . $options::class);
         }
 
-        if (\count($options->conflictColumns)) {
-            return \sprintf(
+        if (count($options->conflictColumns)) {
+            return sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT (%s) DO UPDATE SET %s',
                 $table->name(),
                 // @mago-expect analysis:deprecated-method
-                \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+                implode(',', array_map(fn(string $column): string => $this->platform->quoteIdentifier(
                     $column,
                 ), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders(),
-                \implode(',', $options->conflictColumns),
-                \count($options->updateColumns)
+                implode(',', $options->conflictColumns),
+                count($options->updateColumns)
                     ? $this->updatedSelectedColumns(
                         $options->updateColumns,
                         $bulkData->columns(),
@@ -76,16 +81,16 @@ final readonly class PostgreSQLDialect implements Dialect
         }
 
         if ($options->constraint) {
-            return \sprintf(
+            return sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT ON CONSTRAINT %s DO UPDATE SET %s',
                 $table->name(),
                 // @mago-expect analysis:deprecated-method
-                \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+                implode(',', array_map(fn(string $column): string => $this->platform->quoteIdentifier(
                     $column,
                 ), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders(),
                 $options->constraint,
-                \count($options->updateColumns)
+                count($options->updateColumns)
                     ? $this->updatedSelectedColumns(
                         $options->updateColumns,
                         $bulkData->columns(),
@@ -97,22 +102,22 @@ final readonly class PostgreSQLDialect implements Dialect
         }
 
         if ($options->skipConflicts === true) {
-            return \sprintf(
+            return sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT DO NOTHING',
                 $table->name(),
                 // @mago-expect analysis:deprecated-method
-                \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+                implode(',', array_map(fn(string $column): string => $this->platform->quoteIdentifier(
                     $column,
                 ), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders(),
             );
         }
 
-        return \sprintf(
+        return sprintf(
             'INSERT INTO %s (%s) VALUES %s',
             $table->name(),
             // @mago-expect analysis:deprecated-method
-            \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+            implode(',', array_map(fn(string $column): string => $this->platform->quoteIdentifier(
                 $column,
             ), $bulkData->columns()->all())),
             $bulkData->toSqlPlaceholders(),
@@ -138,7 +143,7 @@ final readonly class PostgreSQLDialect implements Dialect
             . $options::class);
         }
 
-        if (!\count($options->primaryKeyColumns)) {
+        if (!count($options->primaryKeyColumns)) {
             throw new RuntimeException('primary_key_columns option is required for update.');
         }
 
@@ -146,10 +151,10 @@ final readonly class PostgreSQLDialect implements Dialect
             throw new RuntimeException('All columns from primary_key_columns must be in bulk data columns.');
         }
 
-        return \sprintf(
+        return sprintf(
             'UPDATE %s as existing_table SET %s FROM (VALUES %s) as excluded (%s) WHERE %s',
             $table->name(),
-            \count($options->updateColumns)
+            count($options->updateColumns)
                 ? $this->updatedSelectedColumns(
                     $options->updateColumns,
                     $bulkData->columns()->without(...$options->primaryKeyColumns),
@@ -159,7 +164,7 @@ final readonly class PostgreSQLDialect implements Dialect
                 : $this->updateAllColumns($bulkData->columns()->without(...$options->primaryKeyColumns)),
             $bulkData->toSqlCastedPlaceholders($table),
             // @mago-expect analysis:deprecated-method
-            \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+            implode(',', array_map(fn(string $column): string => $this->platform->quoteIdentifier(
                 $column,
             ), $bulkData->columns()->all())),
             $this->updatedIndexColumns($options->primaryKeyColumns),
@@ -173,7 +178,7 @@ final readonly class PostgreSQLDialect implements Dialect
          * The SET and WHERE clauses in ON CONFLICT DO UPDATE have access to the existing row using the
          * table's name (or an alias), and to rows proposed for insertion using the special EXCLUDED table.
          */
-        return \implode(
+        return implode(
             ',',
             $columns->map(
                 // @mago-expect analysis:deprecated-method
@@ -190,7 +195,7 @@ final readonly class PostgreSQLDialect implements Dialect
      */
     private function updatedIndexColumns(array $updateColumns): string
     {
-        return \implode(' AND ', \array_map(
+        return implode(' AND ', array_map(
             // @mago-expect analysis:deprecated-method
             // @mago-expect analysis:deprecated-method
             fn(string $column): string => "{$this->platform->quoteIdentifier('existing_table.'
@@ -214,8 +219,8 @@ final readonly class PostgreSQLDialect implements Dialect
          * table's name (or an alias), and to rows proposed for insertion using the special EXCLUDED table.
          */
         return (
-            \count($updateColumns)
-                ? \implode(',', \array_map(
+            count($updateColumns)
+                ? implode(',', array_map(
                     function (string $column) use ($tableName, $preserveExistingValues): string {
                         // @mago-expect analysis:deprecated-method
                         $clause = "{$this->platform->quoteIdentifier($column)} = ";

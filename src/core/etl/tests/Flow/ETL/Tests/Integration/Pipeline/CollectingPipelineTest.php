@@ -12,6 +12,7 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
+use function iterator_to_array;
 
 final class CollectingPipelineTest extends FlowTestCase
 {
@@ -40,6 +41,6 @@ final class CollectingPipelineTest extends FlowTestCase
         ));
         $pipeline->add(new CollectingProcessor());
 
-        static::assertCount(1, \iterator_to_array($pipeline->process(flow_context(config()))));
+        static::assertCount(1, iterator_to_array($pipeline->process(flow_context(config()))));
     }
 }

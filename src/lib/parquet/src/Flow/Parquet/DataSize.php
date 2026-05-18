@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet;
 
+use function round;
+
 final class DataSize
 {
     private ?int $bytes = null;
@@ -21,13 +23,13 @@ final class DataSize
     {
         if ($bits instanceof self) {
             $this->bits += $bits->bits;
-            $this->bytes = (int) \round($this->bits / 8, 0, PHP_ROUND_HALF_DOWN);
+            $this->bytes = (int) round($this->bits / 8, 0, PHP_ROUND_HALF_DOWN);
 
             return;
         }
 
         $this->bits += $bits;
-        $this->bytes = (int) \round($this->bits / 8, 0, PHP_ROUND_HALF_DOWN);
+        $this->bytes = (int) round($this->bits / 8, 0, PHP_ROUND_HALF_DOWN);
     }
 
     public function addBytes(int $bytes): void
@@ -43,7 +45,7 @@ final class DataSize
     public function bytes(): int
     {
         if ($this->bytes === null) {
-            $this->bytes = (int) \round($this->bits / 8, 0, PHP_ROUND_HALF_DOWN);
+            $this->bytes = (int) round($this->bits / 8, 0, PHP_ROUND_HALF_DOWN);
         }
 
         return $this->bytes;
@@ -53,13 +55,13 @@ final class DataSize
     {
         if ($bits instanceof self) {
             $this->bits -= $bits->bits;
-            $this->bytes = (int) \round($this->bits / 8, 0, PHP_ROUND_HALF_DOWN);
+            $this->bytes = (int) round($this->bits / 8, 0, PHP_ROUND_HALF_DOWN);
 
             return;
         }
 
         $this->bits -= $bits;
-        $this->bytes = (int) \round($this->bits / 8, 0, PHP_ROUND_HALF_DOWN);
+        $this->bytes = (int) round($this->bits / 8, 0, PHP_ROUND_HALF_DOWN);
     }
 
     public function subBytes(int $bytes): void

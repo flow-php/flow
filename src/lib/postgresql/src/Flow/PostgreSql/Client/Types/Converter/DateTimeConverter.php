@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Types\Converter;
 
+use DateTimeInterface;
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\ValueConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
+
+use function is_string;
 
 final class DateTimeConverter implements ValueConverter
 {
@@ -24,11 +27,11 @@ final class DateTimeConverter implements ValueConverter
             return null;
         }
 
-        if ($value instanceof \DateTimeInterface) {
+        if ($value instanceof DateTimeInterface) {
             return $value->format('Y-m-d H:i:s.uP');
         }
 
-        if (\is_string($value)) {
+        if (is_string($value)) {
             return $value;
         }
 

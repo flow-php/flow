@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ArrayComparison\Tests\Unit;
 
+use DateTimeImmutable;
 use Flow\ArrayComparison\ArrayComparison;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 final class ArrayComparisonTest extends TestCase
 {
-    public static function equal_arrays(): \Generator
+    public static function equal_arrays(): Generator
     {
         yield 'simple arrays' => [
             ['id' => 1, 'name' => 'one', 'color' => 'red'],
@@ -23,13 +26,13 @@ final class ArrayComparisonTest extends TestCase
         ];
 
         yield 'arrays with datetimes' => [
-            ['date' => new \DateTimeImmutable('2020-01-01 00:00:00 UTC')],
-            ['date' => new \DateTimeImmutable('2020-01-01 00:00:00 UTC')],
+            ['date' => new DateTimeImmutable('2020-01-01 00:00:00 UTC')],
+            ['date' => new DateTimeImmutable('2020-01-01 00:00:00 UTC')],
         ];
 
         yield 'arrays with objects' => [
-            ['date' => new \stdClass()],
-            ['date' => new \stdClass()],
+            ['date' => new stdClass()],
+            ['date' => new stdClass()],
         ];
 
         yield 'complex arrays' => [
@@ -96,7 +99,7 @@ final class ArrayComparisonTest extends TestCase
         ];
     }
 
-    public static function not_equal_arrays(): \Generator
+    public static function not_equal_arrays(): Generator
     {
         yield 'simple arrays' => [
             ['id' => 1, 'name' => 'one', 'color' => 'red'],

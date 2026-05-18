@@ -4,6 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client;
 
+use InvalidArgumentException;
+use SensitiveParameter;
+
+use function array_diff_key;
+use function array_flip;
+use function array_merge;
+use function implode;
+use function preg_match_all;
+use function sprintf;
+
+use const PREG_SET_ORDER;
+
 final readonly class ConnectionParameters
 {
     /**
@@ -14,7 +26,7 @@ final readonly class ConnectionParameters
         private int $port,
         private string $database,
         private ?string $user,
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         private ?string $password,
         private array $options,
     ) {}
@@ -29,7 +41,7 @@ final readonly class ConnectionParameters
         string $host = 'localhost',
         int $port = 5432,
         ?string $user = null,
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         ?string $password = null,
         array $options = [],
     ): self {
@@ -51,12 +63,12 @@ final readonly class ConnectionParameters
      *
      * @throws \InvalidArgumentException if dbname is missing
      */
-    public static function fromString(#[\SensitiveParameter] string $connectionString): self
+    public static function fromString(#[SensitiveParameter] string $connectionString): self
     {
         $parts = [];
         $matches = [];
         $pattern = '/(\w+)=(?:\'([^\']*)\'|([^\s]*))/';
-        \preg_match_all($pattern, $connectionString, $matches, \PREG_SET_ORDER);
+        preg_match_all($pattern, $connectionString, $matches, PREG_SET_ORDER);
 
         foreach ($matches as $match) {
             $key = $match[1];
@@ -67,7 +79,7 @@ final readonly class ConnectionParameters
         }
 
         if (!isset($parts['dbname'])) {
-            throw new \InvalidArgumentException('Missing dbname in connection string');
+            throw new InvalidArgumentException('Missing dbname in connection string');
         }
 
         return new self(
@@ -76,7 +88,7 @@ final readonly class ConnectionParameters
             database: $parts['dbname'],
             user: $parts['user'] ?? null,
             password: $parts['password'] ?? null,
-            options: \array_diff_key($parts, \array_flip(['host', 'port', 'dbname', 'user', 'password'])),
+            options: array_diff_key($parts, array_flip(['host', 'port', 'dbname', 'user', 'password'])),
         );
     }
 
@@ -131,24 +143,24 @@ final readonly class ConnectionParameters
     public function toString(): string
     {
         $parts = [
-            \sprintf('host=%s', $this->host),
-            \sprintf('port=%d', $this->port),
-            \sprintf('dbname=%s', $this->database),
+            sprintf('host=%s', $this->host),
+            sprintf('port=%d', $this->port),
+            sprintf('dbname=%s', $this->database),
         ];
 
         if ($this->user !== null) {
-            $parts[] = \sprintf('user=%s', $this->user);
+            $parts[] = sprintf('user=%s', $this->user);
         }
 
         if ($this->password !== null) {
-            $parts[] = \sprintf('password=%s', $this->password);
+            $parts[] = sprintf('password=%s', $this->password);
         }
 
         foreach ($this->options as $key => $value) {
-            $parts[] = \sprintf('%s=%s', $key, $value);
+            $parts[] = sprintf('%s=%s', $key, $value);
         }
 
-        return \implode(' ', $parts);
+        return implode(' ', $parts);
     }
 
     public function user(): ?string
@@ -188,7 +200,7 @@ final readonly class ConnectionParameters
             database: $this->database,
             user: $this->user,
             password: $this->password,
-            options: \array_merge($this->options, [$key => $value]),
+            options: array_merge($this->options, [$key => $value]),
         );
     }
 
@@ -207,7 +219,7 @@ final readonly class ConnectionParameters
         );
     }
 
-    public function withPassword(#[\SensitiveParameter] ?string $password): self
+    public function withPassword(#[SensitiveParameter] ?string $password): self
     {
         return new self(
             host: $this->host,

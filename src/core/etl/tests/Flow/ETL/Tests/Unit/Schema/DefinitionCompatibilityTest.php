@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Schema;
 
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\int_schema;
@@ -23,7 +24,7 @@ use function Flow\Types\DSL\type_structure;
 
 final class DefinitionCompatibilityTest extends FlowTestCase
 {
-    public static function list_compatibility_provider(): \Generator
+    public static function list_compatibility_provider(): Generator
     {
         yield [list_schema('list', type_list(type_integer())), list_schema('list', type_list(type_integer())), true];
         yield [
@@ -85,7 +86,7 @@ final class DefinitionCompatibilityTest extends FlowTestCase
         ];
     }
 
-    public static function map_compatibility_provider(): \Generator
+    public static function map_compatibility_provider(): Generator
     {
         yield [
             map_schema('map', type_map(type_string(), type_integer())),
@@ -141,7 +142,7 @@ final class DefinitionCompatibilityTest extends FlowTestCase
         ];
     }
 
-    public static function scalar_types_compatibility_provider(): \Generator
+    public static function scalar_types_compatibility_provider(): Generator
     {
         yield [int_schema('int'), int_schema('int'), true];
         yield [int_schema('int', true), int_schema('int'), true];
@@ -156,7 +157,7 @@ final class DefinitionCompatibilityTest extends FlowTestCase
         yield [string_schema('string', true), string_schema('other-string', true), false];
     }
 
-    public static function structure_types_compatibility_provider(): \Generator
+    public static function structure_types_compatibility_provider(): Generator
     {
         yield [
             structure_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),

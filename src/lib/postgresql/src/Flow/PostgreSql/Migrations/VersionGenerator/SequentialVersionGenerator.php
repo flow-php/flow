@@ -8,6 +8,10 @@ use Flow\PostgreSql\Migrations\Store\MigrationStore;
 use Flow\PostgreSql\Migrations\Version;
 use Flow\PostgreSql\Migrations\VersionGenerator;
 
+use function str_pad;
+
+use const STR_PAD_LEFT;
+
 final readonly class SequentialVersionGenerator implements VersionGenerator
 {
     public function __construct(
@@ -20,6 +24,6 @@ final readonly class SequentialVersionGenerator implements VersionGenerator
         $latest = $this->store->executedMigrations()->latest();
         $next = $latest === null ? 1 : (int) (string) $latest->version + 1;
 
-        return Version::fromString(\str_pad((string) $next, $this->padding, '0', \STR_PAD_LEFT));
+        return Version::fromString(str_pad((string) $next, $this->padding, '0', STR_PAD_LEFT));
     }
 }

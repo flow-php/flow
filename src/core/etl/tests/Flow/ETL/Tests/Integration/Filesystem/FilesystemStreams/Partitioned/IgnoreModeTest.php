@@ -7,13 +7,16 @@ namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\Partitioned;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
 use Flow\Filesystem\Partition;
+use Override;
 
+use function file_get_contents;
 use function Flow\ETL\DSL\ignore;
 use function Flow\Filesystem\DSL\path;
+use function iterator_to_array;
 
 final class IgnoreModeTest extends FilesystemStreamsTestCase
 {
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         parent::tearDown();
@@ -37,12 +40,12 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
         $fileStream->append('new content');
         $streams->closeStreams($file);
 
-        $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/**/*.txt')));
+        $files = iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/**/*.txt')));
 
         static::assertCount(1, $files);
 
         static::assertStringStartsWith('file.txt', $files[0]->path->basename());
-        static::assertSame('file content', \file_get_contents($files[0]->path->path()));
+        static::assertSame('file content', file_get_contents($files[0]->path->path()));
     }
 
     public function test_open_stream_for_existing_partition_without_existing_file(): void
@@ -60,12 +63,12 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
         $fileStream->append('appended content');
         $streams->closeStreams($file);
 
-        $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/**/*.txt')));
+        $files = iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/**/*.txt')));
 
         static::assertCount(1, $files);
 
         static::assertSame('file.txt', $files[0]->path->basename());
-        static::assertSame('appended content', \file_get_contents($files[0]->path->path()));
+        static::assertSame('appended content', file_get_contents($files[0]->path->path()));
     }
 
     public function test_open_stream_for_non_existing_partition(): void
@@ -80,12 +83,12 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
         $appendedFile = $streams->writeTo($file, partitions: [new Partition('partition', 'value')]);
         $appendedFile->append('appended content');
         $streams->closeStreams($file);
-        $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/partition=value/*')));
+        $files = iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/partition=value/*')));
 
         static::assertCount(1, $files);
 
         static::assertSame('file.txt', $files[0]->path->basename());
-        static::assertSame('appended content', \file_get_contents($files[0]->path->path()));
+        static::assertSame('appended content', file_get_contents($files[0]->path->path()));
     }
 
     protected function streams(): FilesystemStreams

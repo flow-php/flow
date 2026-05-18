@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Unit\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
 
+use DateTimeImmutable;
 use Flow\ETL\Adapter\XML\Abstraction\XMLAttribute;
 use Flow\ETL\Adapter\XML\Abstraction\XMLNode;
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
@@ -87,7 +88,7 @@ final class StructureNormalizationTest extends FlowTestCase
                 ]),
             ]),
             [
-                '_created-at' => new \DateTimeImmutable('2024-08-22 00:00:00'),
+                '_created-at' => new DateTimeImmutable('2024-08-22 00:00:00'),
                 'name' => 'John',
                 'age' => 30,
                 'address' => ['street' => 'Main St.', 'city' => 'New York', 'zip' => '10001'],

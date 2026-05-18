@@ -9,6 +9,9 @@ use Flow\PostgreSql\Schema\Constraint\ExcludeConstraint;
 use Flow\PostgreSql\Schema\Constraint\ForeignKey;
 use Flow\PostgreSql\Schema\Constraint\UniqueConstraint;
 
+use function implode;
+use function sort;
+
 final readonly class ConstraintComparator
 {
     /**
@@ -56,13 +59,13 @@ final readonly class ConstraintComparator
             $targetFks,
             static fn(ForeignKey $fk): string => (
                 $fk->name
-                ?? \implode(',', $fk->columns)
+                ?? implode(',', $fk->columns)
                 . '=>'
                 . $fk->referenceSchema
                 . '.'
                 . $fk->referenceTable
                 . '('
-                . \implode(',', $fk->referenceColumns)
+                . implode(',', $fk->referenceColumns)
                 . ')'
             ),
             static fn(ForeignKey $a, ForeignKey $b): bool => $a->isEqualStructure($b),
@@ -86,9 +89,9 @@ final readonly class ConstraintComparator
                 }
 
                 $cols = $uc->columns;
-                \sort($cols);
+                sort($cols);
 
-                return \implode(',', $cols);
+                return implode(',', $cols);
             },
             static fn(UniqueConstraint $a, UniqueConstraint $b): bool => $a->isEqualStructure($b),
         );

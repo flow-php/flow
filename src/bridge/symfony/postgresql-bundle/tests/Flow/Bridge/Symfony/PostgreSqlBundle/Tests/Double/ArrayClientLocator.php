@@ -6,6 +6,10 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Double;
 
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
+use RuntimeException;
+
+use function array_key_exists;
+use function sprintf;
 
 final class ArrayClientLocator implements ContainerInterface
 {
@@ -18,8 +22,8 @@ final class ArrayClientLocator implements ContainerInterface
 
     public function get(string $id): mixed
     {
-        if (!\array_key_exists($id, $this->services)) {
-            throw new class(\sprintf('Service "%s" not found.', $id)) extends \RuntimeException implements
+        if (!array_key_exists($id, $this->services)) {
+            throw new class(sprintf('Service "%s" not found.', $id)) extends RuntimeException implements
                 NotFoundExceptionInterface {};
         }
 
@@ -28,6 +32,6 @@ final class ArrayClientLocator implements ContainerInterface
 
     public function has(string $id): bool
     {
-        return \array_key_exists($id, $this->services);
+        return array_key_exists($id, $this->services);
     }
 }

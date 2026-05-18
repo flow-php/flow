@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Telemetry\Tests\Unit;
 
+use DateTimeImmutable;
 use Flow\Bridge\Monolog\Telemetry\TelemetryHandler;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
@@ -15,6 +16,7 @@ use Monolog\Level;
 use Monolog\Logger as MonologLogger;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
+use RuntimeException;
 
 final class TelemetryHandlerErrorHandlingTest extends TestCase
 {
@@ -23,9 +25,9 @@ final class TelemetryHandlerErrorHandlingTest extends TestCase
         $this->expectNotToPerformAssertions();
 
         $throwingClock = new class implements ClockInterface {
-            public function now(): \DateTimeImmutable
+            public function now(): DateTimeImmutable
             {
-                throw new \RuntimeException('clock blew up');
+                throw new RuntimeException('clock blew up');
             }
         };
 
@@ -48,9 +50,9 @@ final class TelemetryHandlerErrorHandlingTest extends TestCase
     public function test_routes_emit_failures_to_error_handler(): void
     {
         $throwingClock = new class implements ClockInterface {
-            public function now(): \DateTimeImmutable
+            public function now(): DateTimeImmutable
             {
-                throw new \RuntimeException('clock blew up');
+                throw new RuntimeException('clock blew up');
             }
         };
 

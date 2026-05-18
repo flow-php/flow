@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
@@ -24,7 +25,7 @@ final class Exists extends ScalarFunctionChain
             (new Parameter($this->ref))->eval($row, $context);
 
             return true;
-        } catch (\Exception) {
+        } catch (Exception) {
             return false;
         }
     }

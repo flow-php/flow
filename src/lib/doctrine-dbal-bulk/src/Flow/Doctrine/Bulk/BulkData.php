@@ -8,10 +8,19 @@ use Doctrine\DBAL\Types\Type;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use Flow\Types\Exception\InvalidTypeException;
 
+use function array_key_exists;
+use function array_keys;
+use function array_map;
+use function array_merge;
+use function array_values;
+use function count;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_string;
+use function implode;
+use function sprintf;
+use function str_repeat;
 
 final readonly class BulkData
 {
@@ -31,20 +40,20 @@ final readonly class BulkData
         private array $types = [],
         private SQLParametersStyle $parametersStyle = SQLParametersStyle::POSITIONAL,
     ) {
-        if (0 === \count($rows)) {
+        if (0 === count($rows)) {
             throw new RuntimeException('Bulk data cannot be empty');
         }
 
         try {
-            $rows = type_list(type_map(type_string(), type_mixed()))->assert(\array_values($rows));
+            $rows = type_list(type_map(type_string(), type_mixed()))->assert(array_values($rows));
         } catch (InvalidTypeException) {
             throw new RuntimeException('Each row must be an array');
         }
 
-        $columns = \array_keys($rows[0]);
+        $columns = array_keys($rows[0]);
 
         foreach ($rows as $row) {
-            if ($columns !== \array_keys($row)) {
+            if ($columns !== array_keys($row)) {
                 throw new RuntimeException('Each row must be have the same keys in the same order');
             }
         }
@@ -60,7 +69,7 @@ final readonly class BulkData
 
     public function count(): int
     {
-        return \count($this->rows);
+        return count($this->rows);
     }
 
     public function parametersStyle(): SQLParametersStyle
@@ -119,7 +128,7 @@ final readonly class BulkData
 
     public function toSqlNamedCastedPlaceholders(TableDefinition $table): string
     {
-        return \implode(',', \array_map(
+        return implode(',', array_map(
             /**
              * @param int $index
              * @param array<string, mixed> $row
@@ -133,7 +142,7 @@ final readonly class BulkData
                  * @var mixed $_value
                  */
                 foreach ($row as $columnName => $_value) {
-                    if (\array_key_exists($columnName, $this->types)) {
+                    if (array_key_exists($columnName, $this->types)) {
                         $type = $this->types[$columnName];
                     } else {
                         $type = $table->dbalColumn($columnName)->getType();
@@ -149,9 +158,9 @@ final readonly class BulkData
                         . ')';
                 }
 
-                return \sprintf('(%s)', \implode(',', $keys));
+                return sprintf('(%s)', implode(',', $keys));
             },
-            \array_keys($this->rows),
+            array_keys($this->rows),
             $this->rows,
         ));
     }
@@ -175,13 +184,13 @@ final readonly class BulkData
              * @var mixed $entry
              */
             foreach ($row as $column => $entry) {
-                $rows[$index][$column . '_' . $index] = \array_key_exists($column, $this->types)
+                $rows[$index][$column . '_' . $index] = array_key_exists($column, $this->types)
                     ? $this->types[$column]->convertToDatabaseValue($entry, $table->platform())
                     : $table->dbalColumn($column)->getType()->convertToDatabaseValue($entry, $table->platform());
             }
         }
 
-        return \array_merge(...$rows);
+        return array_merge(...$rows);
     }
 
     /**
@@ -190,9 +199,9 @@ final readonly class BulkData
      */
     public function toSqlNamedPlaceholders(): string
     {
-        return \implode(',', \array_map(static fn(array $row): string => \sprintf('(:%s)', \implode(
+        return implode(',', array_map(static fn(array $row): string => sprintf('(:%s)', implode(
             ',:',
-            \array_keys($row),
+            array_keys($row),
         )), $this->sqlRows()));
     }
 
@@ -217,7 +226,7 @@ final readonly class BulkData
 
     public function toSqlPositionalCastedPlaceholders(TableDefinition $table): string
     {
-        return \implode(',', \array_map(
+        return implode(',', array_map(
             /**
              * @param array<string, mixed> $row
              *
@@ -230,7 +239,7 @@ final readonly class BulkData
                  * @var mixed $_value
                  */
                 foreach ($row as $columnName => $_value) {
-                    if (\array_key_exists($columnName, $this->types)) {
+                    if (array_key_exists($columnName, $this->types)) {
                         $type = $this->types[$columnName];
                     } else {
                         $dbColumn = $table->dbalColumn($columnName);
@@ -240,7 +249,7 @@ final readonly class BulkData
                     $keys[] = 'CAST(? as ' . $type->getSQLDeclaration([], $table->platform()) . ')';
                 }
 
-                return \sprintf('(%s)', \implode(',', $keys));
+                return sprintf('(%s)', implode(',', $keys));
             },
             $this->rows,
         ));
@@ -262,7 +271,7 @@ final readonly class BulkData
              * @var mixed $entry
              */
             foreach ($row as $column => $entry) {
-                $parameters[] = \array_key_exists($column, $this->types)
+                $parameters[] = array_key_exists($column, $this->types)
                     ? $this->types[$column]->convertToDatabaseValue($entry, $table->platform())
                     : $table->dbalColumn($column)->getType()->convertToDatabaseValue($entry, $table->platform());
             }
@@ -277,12 +286,12 @@ final readonly class BulkData
      */
     public function toSqlPositionalPlaceholders(): string
     {
-        $columnCount = \count($this->columns->all());
+        $columnCount = count($this->columns->all());
         $rowCount = $this->count();
 
-        $rowPlaceholder = '(' . \str_repeat('?,', $columnCount - 1) . '?)';
+        $rowPlaceholder = '(' . str_repeat('?,', $columnCount - 1) . '?)';
 
-        return \str_repeat($rowPlaceholder . ',', $rowCount - 1) . $rowPlaceholder;
+        return str_repeat($rowPlaceholder . ',', $rowCount - 1) . $rowPlaceholder;
     }
 
     /**

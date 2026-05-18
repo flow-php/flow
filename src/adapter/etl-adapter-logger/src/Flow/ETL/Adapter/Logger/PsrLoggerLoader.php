@@ -11,6 +11,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
+use Throwable;
 
 final readonly class PsrLoggerLoader implements Loader
 {
@@ -36,7 +37,7 @@ final readonly class PsrLoggerLoader implements Loader
             $rows->each($loader);
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 
             throw $e;

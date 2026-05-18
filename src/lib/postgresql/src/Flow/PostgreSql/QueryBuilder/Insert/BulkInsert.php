@@ -6,6 +6,13 @@ namespace Flow\PostgreSql\QueryBuilder\Insert;
 
 use Flow\PostgreSql\QueryBuilder\Clause\ConflictTarget;
 use Flow\PostgreSql\QueryBuilder\Sql;
+use InvalidArgumentException;
+
+use function array_diff;
+use function array_map;
+use function count;
+use function implode;
+use function sprintf;
 
 /**
  * Optimized bulk INSERT query builder for high-performance multi-row inserts.
@@ -36,11 +43,11 @@ final readonly class BulkInsert implements Sql
     public static function into(string $table, array $columns, int $rowCount): self
     {
         if ($rowCount < 1) {
-            throw new \InvalidArgumentException('Row count must be at least 1');
+            throw new InvalidArgumentException('Row count must be at least 1');
         }
 
         if ($columns === []) {
-            throw new \InvalidArgumentException('At least one column is required');
+            throw new InvalidArgumentException('At least one column is required');
         }
 
         return new self($table, $columns, $rowCount);
@@ -61,7 +68,7 @@ final readonly class BulkInsert implements Sql
      */
     public function onConflictDoUpdate(ConflictTarget $target, ?array $updateColumns = null): self
     {
-        $columnsToUpdate = $updateColumns ?? \array_diff($this->columns, $target->getColumns());
+        $columnsToUpdate = $updateColumns ?? array_diff($this->columns, $target->getColumns());
         $assignments = [];
 
         foreach ($columnsToUpdate as $column) {
@@ -73,8 +80,8 @@ final readonly class BulkInsert implements Sql
 
     public function toSql(): string
     {
-        $columnCount = \count($this->columns);
-        $quotedColumns = \implode(', ', \array_map(static fn(string $col): string => '"' . $col . '"', $this->columns));
+        $columnCount = count($this->columns);
+        $quotedColumns = implode(', ', array_map(static fn(string $col): string => '"' . $col . '"', $this->columns));
 
         $rows = [];
 
@@ -86,10 +93,10 @@ final readonly class BulkInsert implements Sql
                 $placeholders[] = '$' . ($offset + $c);
             }
 
-            $rows[] = '(' . \implode(', ', $placeholders) . ')';
+            $rows[] = '(' . implode(', ', $placeholders) . ')';
         }
 
-        $sql = \sprintf('INSERT INTO "%s" (%s) VALUES %s', $this->table, $quotedColumns, \implode(', ', $rows));
+        $sql = sprintf('INSERT INTO "%s" (%s) VALUES %s', $this->table, $quotedColumns, implode(', ', $rows));
 
         if ($this->doNothing) {
             $sql .= ' ON CONFLICT';
@@ -112,7 +119,7 @@ final readonly class BulkInsert implements Sql
                 $updates[] = '"' . $column . '" = ' . $expression;
             }
 
-            $sql .= ' DO UPDATE SET ' . \implode(', ', $updates);
+            $sql .= ' DO UPDATE SET ' . implode(', ', $updates);
         }
 
         return $sql;
@@ -129,9 +136,9 @@ final readonly class BulkInsert implements Sql
         $columns = $target->getColumns();
 
         if ($columns !== []) {
-            $quotedColumns = \array_map(static fn(string $col): string => '"' . $col . '"', $columns);
+            $quotedColumns = array_map(static fn(string $col): string => '"' . $col . '"', $columns);
 
-            return '(' . \implode(', ', $quotedColumns) . ')';
+            return '(' . implode(', ', $quotedColumns) . ')';
         }
 
         return '';

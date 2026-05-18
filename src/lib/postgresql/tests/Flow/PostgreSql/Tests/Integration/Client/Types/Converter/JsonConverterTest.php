@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Types\ValueType;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\PostgreSql\DSL\cast;
@@ -15,13 +16,16 @@ use function Flow\PostgreSql\DSL\literal;
 use function Flow\PostgreSql\DSL\param;
 use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\typed;
+use function json_decode;
+
+use const JSON_THROW_ON_ERROR;
 
 final class JsonConverterTest extends PostgreSqlTestCase
 {
     /**
      * @return \Generator<string, array{array<mixed>, string}>
      */
-    public static function provide_json_arrays(): \Generator
+    public static function provide_json_arrays(): Generator
     {
         yield 'json array' => [
             ['name' => 'John', 'age' => 30],
@@ -36,7 +40,7 @@ final class JsonConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{string}>
      */
-    public static function provide_json_strings(): \Generator
+    public static function provide_json_strings(): Generator
     {
         yield 'empty object' => ['{}'];
         yield 'empty array' => ['[]'];
@@ -47,7 +51,7 @@ final class JsonConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{string, string}>
      */
-    public static function provide_jsonb_strings(): \Generator
+    public static function provide_jsonb_strings(): Generator
     {
         yield 'empty object' => ['{}', '{}'];
         yield 'empty array' => ['[]', '[]'];
@@ -58,7 +62,7 @@ final class JsonConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{array<mixed>}>
      */
-    public static function provide_nested_json(): \Generator
+    public static function provide_nested_json(): Generator
     {
         yield 'nested object' => [
             [
@@ -132,7 +136,7 @@ final class JsonConverterTest extends PostgreSqlTestCase
                 ValueType::JSON,
             )]);
 
-        static::assertSame($input, \json_decode($result, true, 512, \JSON_THROW_ON_ERROR));
+        static::assertSame($input, json_decode($result, true, 512, JSON_THROW_ON_ERROR));
     }
 
     public function test_null_json(): void

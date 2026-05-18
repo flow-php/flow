@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\ETL\Pipeline\Segments;
+use Generator;
 
 /**
  * @internal
@@ -49,7 +50,7 @@ final readonly class Pipeline
      *
      * @return \Generator<int, Rows>
      */
-    public function process(FlowContext $context): \Generator
+    public function process(FlowContext $context): Generator
     {
         $generator = $this->extractor->extract($context);
 

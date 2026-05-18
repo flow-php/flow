@@ -9,6 +9,9 @@ use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
 
+use function str_starts_with;
+use function trim;
+
 final class ProxyLogger extends AbstractLogger implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
@@ -26,7 +29,7 @@ final class ProxyLogger extends AbstractLogger implements LoggerAwareInterface
             return;
         }
 
-        if (\str_starts_with(\trim((string) $context['sql']), 'INSERT')) {
+        if (str_starts_with(trim((string) $context['sql']), 'INSERT')) {
             $this->count++;
         }
     }

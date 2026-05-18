@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Exception;
 
-final class ExplainParseException extends \RuntimeException
+use RuntimeException;
+use Throwable;
+
+final class ExplainParseException extends RuntimeException
 {
     public static function invalidJson(string $message): self
     {
@@ -16,7 +19,7 @@ final class ExplainParseException extends \RuntimeException
         return new self("Missing required field in EXPLAIN output: {$field}");
     }
 
-    public static function unexpectedFormat(string $expected, string $actual, ?\Throwable $previous = null): self
+    public static function unexpectedFormat(string $expected, string $actual, ?Throwable $previous = null): self
     {
         return new self("Unexpected EXPLAIN format: expected {$expected}, got {$actual}", 0, $previous);
     }

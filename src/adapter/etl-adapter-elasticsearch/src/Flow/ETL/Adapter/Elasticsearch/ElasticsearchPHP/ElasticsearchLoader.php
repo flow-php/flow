@@ -13,6 +13,9 @@ use Flow\ETL\Loader;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Rows;
+use Throwable;
+
+use function class_exists;
 
 final class ElasticsearchLoader implements Loader
 {
@@ -101,7 +104,7 @@ final class ElasticsearchLoader implements Loader
             $this->client()->bulk($parameters);
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 
             throw $e;
@@ -124,7 +127,7 @@ final class ElasticsearchLoader implements Loader
     private function client(): Client|\Elastic\Elasticsearch\Client
     {
         if ($this->client === null) {
-            if (\class_exists("Elasticsearch\ClientBuilder")) {
+            if (class_exists("Elasticsearch\ClientBuilder")) {
                 $this->client = ClientBuilder::fromConfig($this->config);
             } else {
                 $this->client = \Elastic\Elasticsearch\ClientBuilder::fromConfig($this->config);

@@ -4,10 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
+use InvalidArgumentException;
+use ReflectionClass;
+use ReflectionNamedType;
+use ReflectionType;
+
+use function class_exists;
+use function enum_exists;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function interface_exists;
 
 final readonly class TypeModel
 {
@@ -33,19 +41,19 @@ final readonly class TypeModel
         return new self($data['name'], $data['namespace'], $data['is_nullable'], $data['is_variadic']);
     }
 
-    public static function fromReflection(\ReflectionType $reflectionType): self
+    public static function fromReflection(ReflectionType $reflectionType): self
     {
-        if (!$reflectionType instanceof \ReflectionNamedType) {
-            throw new \InvalidArgumentException('ReflectionType must be instance of ReflectionNamedType');
+        if (!$reflectionType instanceof ReflectionNamedType) {
+            throw new InvalidArgumentException('ReflectionType must be instance of ReflectionNamedType');
         }
 
         $name = $reflectionType->getName();
 
-        $isClass = \class_exists($name) || \interface_exists($name) || \enum_exists($name);
+        $isClass = class_exists($name) || interface_exists($name) || enum_exists($name);
 
         return new self(
-            $isClass ? (new \ReflectionClass($name))->getShortName() : $name,
-            $isClass ? (new \ReflectionClass($name))->getNamespaceName() : null,
+            $isClass ? (new ReflectionClass($name))->getShortName() : $name,
+            $isClass ? (new ReflectionClass($name))->getNamespaceName() : null,
             $reflectionType->allowsNull(),
             false,
         );
@@ -53,8 +61,8 @@ final readonly class TypeModel
 
     public function name(): string
     {
-        if (\class_exists($this->name)) {
-            return (new \ReflectionClass($this->name))->getShortName();
+        if (class_exists($this->name)) {
+            return (new ReflectionClass($this->name))->getShortName();
         }
 
         return $this->name;
@@ -62,8 +70,8 @@ final readonly class TypeModel
 
     public function namespace(): ?string
     {
-        if (\class_exists($this->name)) {
-            return (new \ReflectionClass($this->name))->getNamespaceName();
+        if (class_exists($this->name)) {
+            return (new ReflectionClass($this->name))->getNamespaceName();
         }
 
         return null;

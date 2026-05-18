@@ -21,6 +21,7 @@ use function Flow\PostgreSql\DSL\param;
 use function Flow\PostgreSql\DSL\select;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
+use function sprintf;
 
 #[AsCommand(name: 'flow:database:create', description: 'Create the configured database')]
 final class CreateDatabaseCommand extends Command
@@ -61,12 +62,12 @@ final class CreateDatabaseCommand extends Command
             $maintenanceClient->close();
 
             if ($input->getOption('if-not-exists')) {
-                $output->writeln(\sprintf('<info>Database "%s" already exists.</info>', $params->database()));
+                $output->writeln(sprintf('<info>Database "%s" already exists.</info>', $params->database()));
 
                 return Command::SUCCESS;
             }
 
-            $output->writeln(\sprintf('<error>Database "%s" already exists.</error>', $params->database()));
+            $output->writeln(sprintf('<error>Database "%s" already exists.</error>', $params->database()));
 
             return Command::FAILURE;
         }
@@ -74,7 +75,7 @@ final class CreateDatabaseCommand extends Command
         $maintenanceClient->execute(create()->database($params->database()));
         $maintenanceClient->close();
 
-        $output->writeln(\sprintf('<info>Database "%s" created successfully.</info>', $params->database()));
+        $output->writeln(sprintf('<info>Database "%s" created successfully.</info>', $params->database()));
 
         return Command::SUCCESS;
     }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Constraint;
 
+use function sort;
+
 /**
  * @phpstan-type PrimaryKeyShape = array{columns: non-empty-list<string>, name: ?string}
  */
@@ -34,8 +36,8 @@ final readonly class PrimaryKey
     {
         $aCols = $this->columns;
         $bCols = $other->columns;
-        \sort($aCols);
-        \sort($bCols);
+        sort($aCols);
+        sort($bCols);
 
         return $aCols === $bCols;
     }

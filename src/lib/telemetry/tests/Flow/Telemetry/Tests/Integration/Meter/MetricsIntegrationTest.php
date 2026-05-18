@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Integration\Meter;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Meter\MetricType;
 use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
@@ -12,6 +13,8 @@ use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
+
+use function array_filter;
 
 final class MetricsIntegrationTest extends TestCase
 {
@@ -22,7 +25,7 @@ final class MetricsIntegrationTest extends TestCase
     protected function setUp(): void
     {
         $this->clock = $this->createMock(ClockInterface::class);
-        $this->clock->method('now')->willReturn(new \DateTimeImmutable('2024-01-01 12:00:00.123456'));
+        $this->clock->method('now')->willReturn(new DateTimeImmutable('2024-01-01 12:00:00.123456'));
         $this->resource = ResourceMother::default();
     }
 
@@ -57,10 +60,10 @@ final class MetricsIntegrationTest extends TestCase
         $processor->flush();
 
         $metrics = $processor->metrics();
-        $counterMetrics = \array_filter($metrics, static fn($m) => $m->type === MetricType::COUNTER);
-        $histogramMetrics = \array_filter($metrics, static fn($m) => $m->type === MetricType::HISTOGRAM);
-        $gaugeMetrics = \array_filter($metrics, static fn($m) => $m->type === MetricType::GAUGE);
-        $upDownCounterMetrics = \array_filter($metrics, static fn($m) => $m->type === MetricType::UP_DOWN_COUNTER);
+        $counterMetrics = array_filter($metrics, static fn($m) => $m->type === MetricType::COUNTER);
+        $histogramMetrics = array_filter($metrics, static fn($m) => $m->type === MetricType::HISTOGRAM);
+        $gaugeMetrics = array_filter($metrics, static fn($m) => $m->type === MetricType::GAUGE);
+        $upDownCounterMetrics = array_filter($metrics, static fn($m) => $m->type === MetricType::UP_DOWN_COUNTER);
 
         static::assertCount(8, $metrics);
         static::assertCount(3, $counterMetrics);
@@ -91,8 +94,8 @@ final class MetricsIntegrationTest extends TestCase
         $processor->flush();
 
         $metrics = $processor->metrics();
-        $requestsMetrics = \array_filter($metrics, static fn($m) => $m->name === 'requests.total');
-        $errorsMetrics = \array_filter($metrics, static fn($m) => $m->name === 'errors.total');
+        $requestsMetrics = array_filter($metrics, static fn($m) => $m->name === 'requests.total');
+        $errorsMetrics = array_filter($metrics, static fn($m) => $m->name === 'errors.total');
 
         static::assertCount(3, $metrics);
         static::assertCount(1, $requestsMetrics);
@@ -175,8 +178,8 @@ final class MetricsIntegrationTest extends TestCase
         $processor->flush();
 
         $metrics = $processor->metrics();
-        $counterMetrics = \array_filter($metrics, static fn($m) => $m->type === MetricType::COUNTER);
-        $histogramMetrics = \array_filter($metrics, static fn($m) => $m->type === MetricType::HISTOGRAM);
+        $counterMetrics = array_filter($metrics, static fn($m) => $m->type === MetricType::COUNTER);
+        $histogramMetrics = array_filter($metrics, static fn($m) => $m->type === MetricType::HISTOGRAM);
 
         static::assertCount(5, $metrics);
         static::assertCount(3, $counterMetrics);

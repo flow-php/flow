@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Logger;
 
 use Psr\Log\AbstractLogger;
+use Stringable;
 
 final class StubLogger extends AbstractLogger
 {
@@ -14,7 +15,7 @@ final class StubLogger extends AbstractLogger
     /**
      * @param array<array-key, mixed> $context
      */
-    public function log($level, string|\Stringable $message, array $context = []): void
+    public function log($level, string|Stringable $message, array $context = []): void
     {
         $this->records[] = [
             'level' => $level,

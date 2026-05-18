@@ -5,25 +5,28 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use Dom\HTMlElement;
+use DOMElement;
+use DOMNode;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function class_exists;
 use function Flow\Types\DSL\type_instance_of;
 
 final class DOMElementAttributesCount extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction|\DOMNode|HTMlElement $domElement,
+        private readonly ScalarFunction|DOMNode|HTMlElement $domElement,
     ) {}
 
     public function eval(Row $row, FlowContext $context): ?int
     {
         $types = [
-            type_instance_of(\DOMElement::class),
+            type_instance_of(DOMElement::class),
         ];
 
-        if (\class_exists('\Dom\HTMLElement')) {
+        if (class_exists('\Dom\HTMLElement')) {
             $types[] = type_instance_of(HTMLElement::class);
         }
 

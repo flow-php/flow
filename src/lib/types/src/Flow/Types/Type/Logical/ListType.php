@@ -8,13 +8,21 @@ use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Value\Json;
+use Throwable;
 
+use function array_is_list;
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_literal;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function is_array;
+use function is_string;
+use function json_decode;
+use function str_starts_with;
+
+use const JSON_THROW_ON_ERROR;
 
 /**
  * @template T
@@ -65,11 +73,11 @@ final readonly class ListType implements Type
                 $value = $value->toArray();
             }
 
-            if (\is_string($value) && (\str_starts_with($value, '{') || \str_starts_with($value, '['))) {
-                return $this->assert(\json_decode($value, true, 512, \JSON_THROW_ON_ERROR));
+            if (is_string($value) && (str_starts_with($value, '{') || str_starts_with($value, '['))) {
+                return $this->assert(json_decode($value, true, 512, JSON_THROW_ON_ERROR));
             }
 
-            if (!\is_array($value)) {
+            if (!is_array($value)) {
                 return [$this->element()->cast($value)];
             }
 
@@ -81,7 +89,7 @@ final readonly class ListType implements Type
             }
 
             return $this->assert($castedList);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             throw new CastingException($value, $this);
         }
     }
@@ -96,11 +104,11 @@ final readonly class ListType implements Type
 
     public function isValid(mixed $value): bool
     {
-        if (!\is_array($value)) {
+        if (!is_array($value)) {
             return false;
         }
 
-        if ([] !== $value && !\array_is_list($value)) {
+        if ([] !== $value && !array_is_list($value)) {
             return false;
         }
 

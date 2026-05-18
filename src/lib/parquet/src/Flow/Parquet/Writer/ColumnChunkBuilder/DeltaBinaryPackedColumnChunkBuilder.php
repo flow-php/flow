@@ -33,6 +33,9 @@ use Flow\Parquet\Writer\StatisticsCounter;
 use Flow\Parquet\Writer\ValueStorage\DeltaBinaryPackedValueStorage;
 use Flow\Parquet\Writer\ValueStorage\ValueStorage;
 
+use function count;
+use function strlen;
+
 final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
 {
     private readonly ByteOrder $byteOrder;
@@ -227,13 +230,13 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
 
         $pageHeader = new PageHeader(
             Type::DATA_PAGE,
-            \strlen($compressedBuffer),
-            \strlen($pageBuffer),
+            strlen($compressedBuffer),
+            strlen($pageBuffer),
             dataPageHeader: new DataPageHeader(
                 encoding: Encodings::DELTA_BINARY_PACKED,
                 repetitionLevelEncoding: Encodings::RLE,
                 definitionLevelEncoding: Encodings::RLE,
-                valuesCount: \count($this->definitionLevels),
+                valuesCount: count($this->definitionLevels),
             ),
             dataPageHeaderV2: null,
             dictionaryPageHeader: null,
@@ -254,7 +257,7 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
                 BitWidth::calculate($this->column->maxRepetitionsLevel()),
                 $this->repetitionLevels,
             );
-            $repetitionsLength = \strlen($repetitionsBuffer);
+            $repetitionsLength = strlen($repetitionsBuffer);
         } else {
             $repetitionsBuffer = '';
             $repetitionsLength = 0;
@@ -265,7 +268,7 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
                 BitWidth::calculate($this->column->maxDefinitionsLevel()),
                 $this->definitionLevels,
             );
-            $definitionsLength = \strlen($definitionsBuffer);
+            $definitionsLength = strlen($definitionsBuffer);
         } else {
             $definitionsBuffer = '';
             $definitionsLength = 0;
@@ -276,11 +279,11 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
 
         $pageHeader = new PageHeader(
             Type::DATA_PAGE_V2,
-            \strlen($compressedBuffer) + $repetitionsLength + $definitionsLength,
-            \strlen($encodedValues) + $repetitionsLength + $definitionsLength,
+            strlen($compressedBuffer) + $repetitionsLength + $definitionsLength,
+            strlen($encodedValues) + $repetitionsLength + $definitionsLength,
             dataPageHeader: null,
             dataPageHeaderV2: new DataPageHeaderV2(
-                valuesCount: \count($this->definitionLevels),
+                valuesCount: count($this->definitionLevels),
                 nullsCount: $this->nullCount,
                 rowsCount: $this->rowsCount,
                 encoding: Encodings::DELTA_BINARY_PACKED,

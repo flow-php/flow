@@ -6,6 +6,13 @@ namespace Flow\ETL\Dataset\Memory;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
+use function abs;
+use function ctype_digit;
+use function round;
+use function str_replace;
+use function strtoupper;
+use function substr;
+
 final readonly class Unit
 {
     private function __construct(
@@ -37,23 +44,23 @@ final readonly class Unit
      */
     public static function fromString(string $memoryString): self
     {
-        $limit = \str_replace(' ', '', $memoryString);
+        $limit = str_replace(' ', '', $memoryString);
 
-        $unit = \substr($limit, -1);
+        $unit = substr($limit, -1);
 
-        switch (\strtoupper($unit)) {
+        switch (strtoupper($unit)) {
             case 'K':
             case 'B':
-                return self::fromKb((int) \substr($limit, 0, -1));
+                return self::fromKb((int) substr($limit, 0, -1));
             case 'M':
             case 'MB':
-                return self::fromMb((int) \substr($limit, 0, -1));
+                return self::fromMb((int) substr($limit, 0, -1));
             case 'G':
             case 'GB':
-                return self::fromGb((int) \substr($limit, 0, -1));
+                return self::fromGb((int) substr($limit, 0, -1));
 
             default:
-                if (\ctype_digit($limit)) {
+                if (ctype_digit($limit)) {
                     return self::fromBytes((int) $limit);
                 }
 
@@ -63,7 +70,7 @@ final readonly class Unit
 
     public function absolute(): self
     {
-        return new self(\abs($this->bytes));
+        return new self(abs($this->bytes));
     }
 
     public function diff(self $unit): self
@@ -78,17 +85,17 @@ final readonly class Unit
 
     public function inGb(int $precision = 2): float
     {
-        return \round($this->inMb($precision) / 1000, $precision);
+        return round($this->inMb($precision) / 1000, $precision);
     }
 
     public function inKb(int $precision = 2): float
     {
-        return \round($this->bytes / 1000, $precision);
+        return round($this->bytes / 1000, $precision);
     }
 
     public function inMb(int $precision = 2): float
     {
-        return \round($this->inKb($precision) / 1000, $precision);
+        return round($this->inKb($precision) / 1000, $precision);
     }
 
     public function isGreaterThan(self $unit): bool
@@ -103,6 +110,6 @@ final readonly class Unit
 
     public function percentage(int $value): self
     {
-        return new self((int) \round(($value / 100) * $this->bytes));
+        return new self((int) round(($value / 100) * $this->bytes));
     }
 }

@@ -19,6 +19,14 @@ use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
+use Throwable;
+
+use function array_key_exists;
+use function array_keys;
+use function array_map;
+use function array_values;
+use function count;
+use function implode;
 
 final class XMLLoader implements Closure, FileLoader, Loader
 {
@@ -99,7 +107,7 @@ final class XMLLoader implements Closure, FileLoader, Loader
             $this->write($rows, $rows->partitions()->toArray(), $context, $normalizer);
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 
             throw $e;
@@ -182,14 +190,14 @@ final class XMLLoader implements Closure, FileLoader, Loader
         if (!$streams->isOpen($this->path, $partitions)) {
             $stream = $streams->writeTo($this->path, $partitions);
 
-            if (!\array_key_exists($stream->path()->path(), $this->writes)) {
+            if (!array_key_exists($stream->path()->path(), $this->writes)) {
                 $this->writes[$stream->path()->path()] = 0;
             }
 
-            $xmlAttributes = \implode(' ', \array_map(
+            $xmlAttributes = implode(' ', array_map(
                 static fn(string $key, string $value) => $key . '="' . $value . '"',
-                \array_keys($this->xmlAttributes),
-                \array_values($this->xmlAttributes),
+                array_keys($this->xmlAttributes),
+                array_values($this->xmlAttributes),
             ));
 
             $stream->append('<?xml ' . $xmlAttributes . "?>\n<" . $this->rootElementName . ">\n");
@@ -206,7 +214,7 @@ final class XMLLoader implements Closure, FileLoader, Loader
      */
     public function writeXML(Rows $rows, DestinationStream $stream, RowsNormalizer $normalizer): void
     {
-        if (!\count($rows)) {
+        if (!count($rows)) {
             return;
         }
 

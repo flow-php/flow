@@ -17,6 +17,10 @@ use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
+use function array_map;
+use function array_values;
+use function strtolower;
+
 final readonly class RevokeBuilder implements RevokeFinalStep, RevokeFromStep, RevokeOnStep
 {
     use AstToSql;
@@ -37,11 +41,11 @@ final readonly class RevokeBuilder implements RevokeFinalStep, RevokeFromStep, R
 
     public static function create(TablePrivilege|string ...$privileges): RevokeOnStep
     {
-        $privs = \array_map(static fn(TablePrivilege|string $p): string => $p instanceof TablePrivilege
+        $privs = array_map(static fn(TablePrivilege|string $p): string => $p instanceof TablePrivilege
             ? $p->value
             : $p, $privileges);
 
-        return new self(\array_values($privs));
+        return new self(array_values($privs));
     }
 
     public function cascade(): RevokeFinalStep
@@ -63,7 +67,7 @@ final readonly class RevokeBuilder implements RevokeFinalStep, RevokeFromStep, R
             $this->targetType,
             $this->objectType,
             $this->objects,
-            \array_values($roles),
+            array_values($roles),
             $this->behavior,
         );
     }
@@ -79,7 +83,7 @@ final readonly class RevokeBuilder implements RevokeFinalStep, RevokeFromStep, R
             $this->privileges,
             GrantTargetType::ACL_TARGET_ALL_IN_SCHEMA,
             ObjectType::OBJECT_TABLE,
-            \array_values($schemas),
+            array_values($schemas),
             $this->grantees,
             $this->behavior,
         );
@@ -91,7 +95,7 @@ final readonly class RevokeBuilder implements RevokeFinalStep, RevokeFromStep, R
             $this->privileges,
             GrantTargetType::ACL_TARGET_OBJECT,
             ObjectType::OBJECT_TABLE,
-            \array_values($tables),
+            array_values($tables),
             $this->grantees,
             $this->behavior,
         );
@@ -120,7 +124,7 @@ final readonly class RevokeBuilder implements RevokeFinalStep, RevokeFromStep, R
         $privilegeNodes = [];
 
         foreach ($this->privileges as $privilege) {
-            if (\strtolower($privilege) === 'all') {
+            if (strtolower($privilege) === 'all') {
                 $privilegeNodes = [];
 
                 break;
@@ -174,7 +178,7 @@ final readonly class RevokeBuilder implements RevokeFinalStep, RevokeFromStep, R
         foreach ($this->grantees as $grantee) {
             $roleSpec = new RoleSpec();
 
-            if (\strtolower($grantee) === 'public') {
+            if (strtolower($grantee) === 'public') {
                 $roleSpec->setRoletype(RoleSpecType::ROLESPEC_PUBLIC);
             } else {
                 $roleSpec->setRoletype(RoleSpecType::ROLESPEC_CSTRING);

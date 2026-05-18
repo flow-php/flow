@@ -6,6 +6,8 @@ namespace Flow\PostgreSql\AST\Nodes;
 
 use Flow\PostgreSql\Protobuf\AST\FuncCall;
 
+use function count;
+
 final readonly class FunctionCall
 {
     public function __construct(
@@ -16,11 +18,11 @@ final readonly class FunctionCall
     {
         $funcname = $this->funcCall->getFuncname();
 
-        if (\count($funcname) === 0) {
+        if (count($funcname) === 0) {
             return null;
         }
 
-        $funcnameCount = \count($funcname);
+        $funcnameCount = count($funcname);
         $nameNode = $funcname[$funcnameCount - 1];
         $stringNode = $nameNode->getString();
 
@@ -40,7 +42,7 @@ final readonly class FunctionCall
     {
         $funcname = $this->funcCall->getFuncname();
 
-        if (\count($funcname) <= 1) {
+        if (count($funcname) <= 1) {
             return null;
         }
 

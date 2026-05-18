@@ -18,6 +18,7 @@ use Flow\PostgreSql\Migrations\Tests\Double\SpyMigration;
 use Flow\PostgreSql\Migrations\Tests\Double\SpyRollback;
 use Flow\PostgreSql\Migrations\Version;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class DefaultMigrationExecutorTest extends TestCase
 {
@@ -29,7 +30,7 @@ final class DefaultMigrationExecutorTest extends TestCase
         $result = $executor->execute($plan, new MigrationContext(new SpyClient()));
 
         static::assertFalse($result->isSuccessful());
-        static::assertInstanceOf(\RuntimeException::class, $result->error);
+        static::assertInstanceOf(RuntimeException::class, $result->error);
         static::assertSame('Migration failed', $result->error->getMessage());
     }
 
@@ -158,7 +159,7 @@ final class DefaultMigrationExecutorTest extends TestCase
             Direction::UP,
             0,
             false,
-            new \RuntimeException('error'),
+            new RuntimeException('error'),
         );
 
         static::assertFalse($result->isSuccessful());

@@ -4,22 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Data;
 
+use DateInterval;
+use DateTimeInterface;
+use Stringable;
+
+use function serialize;
+
 final class ObjectToString
 {
     public static function toString(object $object): string
     {
-        if ($object instanceof \Stringable) {
+        if ($object instanceof Stringable) {
             return (string) $object;
         }
 
-        if ($object instanceof \DateTimeInterface) {
+        if ($object instanceof DateTimeInterface) {
             return (string) $object->getTimestamp() . '.' . $object->format('u') . ' ' . $object->getOffset();
         }
 
-        if ($object instanceof \DateInterval) {
+        if ($object instanceof DateInterval) {
             return $object->format('%R%yY%mM%dDT%hH%iM%sS.%f');
         }
 
-        return \serialize($object);
+        return serialize($object);
     }
 }

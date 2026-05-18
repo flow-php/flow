@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use Flow\Telemetry\Attributes;
+use Throwable;
 
 /**
  * Value object representing a log record.
@@ -44,8 +47,8 @@ final readonly class LogRecord
         public Severity $severity = Severity::INFO,
         public string $body = '',
         Attributes|array $attributes = new Attributes(),
-        public ?\DateTimeImmutable $timestamp = null,
-        public ?\DateTimeImmutable $observedTimestamp = null,
+        public ?DateTimeImmutable $timestamp = null,
+        public ?DateTimeImmutable $observedTimestamp = null,
     ) {
         $this->attributes = $attributes instanceof Attributes ? $attributes : Attributes::create($attributes);
     }
@@ -67,8 +70,8 @@ final readonly class LogRecord
             Severity::from($data['severity']),
             $data['body'],
             Attributes::fromArray($data['attributes']),
-            $data['timestamp'] !== null ? new \DateTimeImmutable($data['timestamp']) : null,
-            $data['observedTimestamp'] !== null ? new \DateTimeImmutable($data['observedTimestamp']) : null,
+            $data['timestamp'] !== null ? new DateTimeImmutable($data['timestamp']) : null,
+            $data['observedTimestamp'] !== null ? new DateTimeImmutable($data['observedTimestamp']) : null,
         );
     }
 
@@ -104,7 +107,7 @@ final readonly class LogRecord
      *
      * @return self New instance with attribute set
      */
-    public function setAttribute(string $key, string|int|float|bool|\DateTimeInterface|\Throwable|array $value): self
+    public function setAttribute(string $key, string|int|float|bool|DateTimeInterface|Throwable|array $value): self
     {
         return new self(
             $this->severity,
@@ -159,7 +162,7 @@ final readonly class LogRecord
      *
      * @return self New instance with exception attributes set
      */
-    public function setException(\Throwable $exception): self
+    public function setException(Throwable $exception): self
     {
         return $this->setAttributes([
             'exception.type' => $exception::class,
@@ -179,7 +182,7 @@ final readonly class LogRecord
      *
      * @return self New instance with observed timestamp set
      */
-    public function setObservedTimestamp(\DateTimeImmutable $observedTimestamp): self
+    public function setObservedTimestamp(DateTimeImmutable $observedTimestamp): self
     {
         return new self($this->severity, $this->body, $this->attributes, $this->timestamp, $observedTimestamp);
     }
@@ -206,7 +209,7 @@ final readonly class LogRecord
      *
      * @return self New instance with timestamp set
      */
-    public function setTimestamp(\DateTimeImmutable $timestamp): self
+    public function setTimestamp(DateTimeImmutable $timestamp): self
     {
         return new self($this->severity, $this->body, $this->attributes, $timestamp, $this->observedTimestamp);
     }
