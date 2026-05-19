@@ -11,7 +11,12 @@ use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\SortOrder;
 
+use function count;
 use function Flow\ETL\DSL\str_entry;
+use function implode;
+use function is_string;
+use function rsort;
+use function sort;
 
 final class StringAggregate implements AggregatingFunction
 {
@@ -30,7 +35,7 @@ final class StringAggregate implements AggregatingFunction
     {
         $stringValue = $row->valueOf($this->ref->to());
 
-        if (\is_string($stringValue)) {
+        if (is_string($stringValue)) {
             $this->values[] = $stringValue;
         }
     }
@@ -44,14 +49,14 @@ final class StringAggregate implements AggregatingFunction
             $this->ref->as($this->ref->to() . '_str_agg');
         }
 
-        if (!\count($this->values)) {
+        if (!count($this->values)) {
             return str_entry($this->ref->name(), '');
         }
 
         if ($this->sort) {
-            $this->sort === SortOrder::ASC ? \sort($this->values) : \rsort($this->values);
+            $this->sort === SortOrder::ASC ? sort($this->values) : rsort($this->values);
         }
 
-        return str_entry($this->ref->name(), \implode($this->separator, $this->values));
+        return str_entry($this->ref->name(), implode($this->separator, $this->values));
     }
 }

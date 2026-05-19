@@ -10,6 +10,7 @@ use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\FloatDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\float_entry;
@@ -20,7 +21,7 @@ use function Flow\ETL\DSL\string_schema;
 
 final class FloatDefinitionTest extends FlowTestCase
 {
-    public static function provideIsCompatibleCases(): \Generator
+    public static function provideIsCompatibleCases(): Generator
     {
         yield 'same type and name' => [
             float_schema('amount'),
@@ -47,7 +48,7 @@ final class FloatDefinitionTest extends FlowTestCase
         ];
     }
 
-    public static function provideMergeCases(): \Generator
+    public static function provideMergeCases(): Generator
     {
         yield 'same type' => [
             float_schema('amount'),
@@ -68,7 +69,7 @@ final class FloatDefinitionTest extends FlowTestCase
         ];
     }
 
-    public static function provideMergeWithExpectedTypeCases(): \Generator
+    public static function provideMergeWithExpectedTypeCases(): Generator
     {
         yield 'with integer produces float' => [
             float_schema('col'),

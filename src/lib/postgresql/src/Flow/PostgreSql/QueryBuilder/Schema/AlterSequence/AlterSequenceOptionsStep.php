@@ -43,4 +43,6 @@ interface AlterSequenceOptionsStep extends AlterSequenceFinalStep
     public function setUnlogged(): AlterSequenceLoggingFinalStep;
 
     public function startWith(int $start): self;
+
+    public function withIfExists(): self;
 }

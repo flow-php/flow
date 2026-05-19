@@ -12,9 +12,12 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type\Native\EnumType;
+use UnitEnum;
 
+use function enum_exists;
 use function Flow\Types\DSL\type_enum;
 use function Flow\Types\DSL\type_equals;
+use function sprintf;
 
 /**
  * @template TEnum of \UnitEnum
@@ -41,8 +44,8 @@ final class EnumDefinition implements Definition
         private readonly bool $nullable = false,
         ?Metadata $metadata = null,
     ) {
-        if ($enumClass !== \UnitEnum::class && !\enum_exists($enumClass)) {
-            throw new InvalidArgumentException(\sprintf('Enum of type "%s" not found', $enumClass));
+        if ($enumClass !== UnitEnum::class && !enum_exists($enumClass)) {
+            throw new InvalidArgumentException(sprintf('Enum of type "%s" not found', $enumClass));
         }
 
         $this->ref = EntryReference::init($ref);
@@ -127,7 +130,7 @@ final class EnumDefinition implements Definition
     public function merge(Definition $definition): Definition
     {
         if (!$this->ref->is($definition->entry())) {
-            throw new RuntimeException(\sprintf(
+            throw new RuntimeException(sprintf(
                 'Cannot merge different definitions, %s and %s',
                 $this->ref->name(),
                 $definition->entry()->name(),
@@ -177,7 +180,7 @@ final class EnumDefinition implements Definition
             );
         }
 
-        throw new RuntimeException(\sprintf('Cannot merge %s with %s', self::class, $definition::class));
+        throw new RuntimeException(sprintf('Cannot merge %s with %s', self::class, $definition::class));
     }
 
     public function metadata(): Metadata

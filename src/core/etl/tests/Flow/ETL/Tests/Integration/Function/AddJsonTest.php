@@ -13,6 +13,8 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
 
+use const JSON_FORCE_OBJECT;
+
 final class AddJsonTest extends FlowTestCase
 {
     public function test_add_json_into_existing_reference(): void
@@ -54,7 +56,7 @@ final class AddJsonTest extends FlowTestCase
         data_frame()
             ->read(from_array([['id' => 1]]))
             ->withEntry('json', lit(['id' => 1, 'name' => 'test']))
-            ->withEntry('json', ref('json')->jsonEncode(\JSON_FORCE_OBJECT))
+            ->withEntry('json', ref('json')->jsonEncode(JSON_FORCE_OBJECT))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

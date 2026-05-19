@@ -4,11 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroup;
 
+use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\ParquetFile\Statistics;
+use Flow\Parquet\ThriftModel\ColumnChunk as ThriftColumnChunk;
 use Flow\Parquet\ThriftModel\ColumnMetaData;
+
+use function array_filter;
+use function array_map;
+use function implode;
+use function min;
 
 final readonly class ColumnChunk
 {
@@ -40,7 +47,7 @@ final readonly class ColumnChunk
         private ?Statistics $statistics,
     ) {}
 
-    public static function fromThrift(\Flow\Parquet\ThriftModel\ColumnChunk $thrift): self
+    public static function fromThrift(ThriftColumnChunk $thrift): self
     {
         return new self(
             PhysicalType::from($thrift->meta_data->type),
@@ -48,15 +55,23 @@ final readonly class ColumnChunk
             (int) $thrift->meta_data->num_values,
             (int) $thrift->file_offset,
             $thrift->meta_data->path_in_schema,
-            \array_map(static fn($encoding) => Encodings::from($encoding), $thrift->meta_data->encodings),
+            array_map(static fn($encoding) => Encodings::from($encoding), $thrift->meta_data->encodings),
             (int) $thrift->meta_data->total_compressed_size,
             (int) $thrift->meta_data->total_uncompressed_size,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             $thrift->meta_data->dictionary_page_offset !== null
                 ? (int) $thrift->meta_data->dictionary_page_offset
                 : null,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             $thrift->meta_data->data_page_offset !== null ? (int) $thrift->meta_data->data_page_offset : null,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             $thrift->meta_data->index_page_offset !== null ? (int) $thrift->meta_data->index_page_offset : null,
-            $thrift->meta_data->statistics ? Statistics::fromThrift($thrift->meta_data->statistics) : null,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
+            $thrift->meta_data->statistics !== null ? Statistics::fromThrift($thrift->meta_data->statistics) : null,
         );
     }
 
@@ -90,19 +105,25 @@ final readonly class ColumnChunk
 
     public function flatPath(): string
     {
-        return \implode('.', $this->path);
+        return implode('.', $this->path);
     }
 
     public function pageOffset(): int
     {
-        return \min(
-            // @phpstan-ignore-next-line
-            \array_filter([
+        $offsets = array_filter(
+            [
                 $this->dictionaryPageOffset,
                 $this->dataPageOffset,
                 $this->indexPageOffset,
-            ]),
+            ],
+            static fn(?int $offset): bool => $offset !== null,
         );
+
+        if ($offsets === []) {
+            throw new RuntimeException('ColumnChunk has no page offsets');
+        }
+
+        return min($offsets);
     }
 
     public function statistics(): ?StatisticsReader
@@ -124,13 +145,13 @@ final readonly class ColumnChunk
         return $this->totalUncompressedSize;
     }
 
-    public function toThrift(): \Flow\Parquet\ThriftModel\ColumnChunk
+    public function toThrift(): ThriftColumnChunk
     {
-        return new \Flow\Parquet\ThriftModel\ColumnChunk([
+        return new ThriftColumnChunk([
             'file_offset' => $this->fileOffset,
             'meta_data' => new ColumnMetaData([
                 'type' => $this->type->value,
-                'encodings' => \array_map(static fn(Encodings $encoding) => $encoding->value, $this->encodings),
+                'encodings' => array_map(static fn(Encodings $encoding) => $encoding->value, $this->encodings),
                 'path_in_schema' => $this->path,
                 'codec' => $this->codec->value,
                 'num_values' => $this->valuesCount,

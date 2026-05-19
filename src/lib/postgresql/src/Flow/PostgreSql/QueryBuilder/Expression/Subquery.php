@@ -9,6 +9,8 @@ use Flow\PostgreSql\Protobuf\AST\SubLink;
 use Flow\PostgreSql\Protobuf\AST\SubLinkType;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
+use function sprintf;
+
 final readonly class Subquery implements Expression
 {
     public function __construct(
@@ -27,7 +29,7 @@ final readonly class Subquery implements Expression
             throw InvalidAstException::invalidFieldValue(
                 'subLinkType',
                 'SubLink',
-                \sprintf('expected EXPR_SUBLINK (%d), got %d', SubLinkType::EXPR_SUBLINK, $subLink->getSubLinkType()),
+                sprintf('expected EXPR_SUBLINK (%d), got %d', SubLinkType::EXPR_SUBLINK, $subLink->getSubLinkType()),
             );
         }
 

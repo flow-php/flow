@@ -11,6 +11,7 @@ use Flow\ETL\Schema\Definition\JsonDefinition;
 use Flow\ETL\Schema\Definition\StructureDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\int_entry;
@@ -23,7 +24,7 @@ use function Flow\Types\DSL\type_structure;
 
 final class StructureDefinitionTest extends FlowTestCase
 {
-    public static function provideIsCompatibleCases(): \Generator
+    public static function provideIsCompatibleCases(): Generator
     {
         yield 'same type and name' => [
             structure_schema('data', type_structure(['name' => type_string(), 'age' => type_integer()])),
@@ -62,7 +63,7 @@ final class StructureDefinitionTest extends FlowTestCase
         ];
     }
 
-    public static function provideMergeCases(): \Generator
+    public static function provideMergeCases(): Generator
     {
         yield 'same type' => [
             structure_schema('data', type_structure(['name' => type_string()])),
@@ -83,7 +84,7 @@ final class StructureDefinitionTest extends FlowTestCase
         ];
     }
 
-    public static function provideMergeWithExpectedTypeCases(): \Generator
+    public static function provideMergeWithExpectedTypeCases(): Generator
     {
         yield 'different structure type produces json' => [
             structure_schema('col', type_structure(['name' => type_string()])),

@@ -11,8 +11,12 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
+use Generator;
 
+use function count;
 use function Flow\ETL\DSL\array_to_rows;
+use function is_numeric;
+use function method_exists;
 
 final class DbalLimitOffsetExtractor implements Extractor
 {
@@ -34,7 +38,7 @@ final class DbalLimitOffsetExtractor implements Extractor
      */
     public static function table(Connection $connection, Table $table, array $orderBy): self
     {
-        if (!\count($orderBy)) {
+        if (!count($orderBy)) {
             throw new InvalidArgumentException('There must be at least one column to order by, zero given');
         }
 
@@ -50,7 +54,7 @@ final class DbalLimitOffsetExtractor implements Extractor
         return new self($connection, $queryBuilder);
     }
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         if ($this->maximum === null && $this->queryBuilder->getMaxResults()) {
             $this->maximum = $this->queryBuilder->getMaxResults();
@@ -65,7 +69,7 @@ final class DbalLimitOffsetExtractor implements Extractor
         } else {
             $countQuery = (clone $this->queryBuilder)->select('COUNT(*)');
 
-            $nonGroupByQuery = \method_exists($countQuery, 'resetGroupBy')
+            $nonGroupByQuery = method_exists($countQuery, 'resetGroupBy')
                 ? (clone $this->queryBuilder)->select('COUNT(*)')->resetGroupBy()
                 : $countQuery->resetQueryPart('groupBy');
 
@@ -73,7 +77,7 @@ final class DbalLimitOffsetExtractor implements Extractor
                 /**
                  * @phpstan-ignore-next-line
                  */
-                if (\method_exists($countQuery, 'resetOrderBy')) {
+                if (method_exists($countQuery, 'resetOrderBy')) {
                     $countQuery->resetOrderBy();
                 } else {
                     /**
@@ -87,7 +91,7 @@ final class DbalLimitOffsetExtractor implements Extractor
                     $countQuery->getParameters(),
                     $countQuery->getParameterTypes(),
                 );
-                $total = \is_numeric($totalValue) ? (int) $totalValue : 0;
+                $total = is_numeric($totalValue) ? (int) $totalValue : 0;
             } else {
                 // For grouped queries, wrap in a subquery to get accurate count
                 $totalValue = $this->connection
@@ -97,7 +101,7 @@ final class DbalLimitOffsetExtractor implements Extractor
                         $countQuery->getParameterTypes(),
                     )
                     ->fetchOne();
-                $total = \is_numeric($totalValue) ? (int) $totalValue : 0;
+                $total = is_numeric($totalValue) ? (int) $totalValue : 0;
             }
         }
 

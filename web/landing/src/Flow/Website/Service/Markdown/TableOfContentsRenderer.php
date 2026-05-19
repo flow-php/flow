@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service\Markdown;
 
+use InvalidArgumentException;
 use League\CommonMark\Extension\TableOfContents\Node\TableOfContents;
 use League\CommonMark\Node\Node;
 use League\CommonMark\Renderer\ChildNodeRendererInterface;
@@ -15,7 +16,7 @@ final class TableOfContentsRenderer implements NodeRendererInterface
     public function render(Node $node, ChildNodeRendererInterface $childRenderer): HtmlElement|string|null
     {
         if (!$node instanceof TableOfContents) {
-            throw new \InvalidArgumentException('Incompatible node type: ' . $node::class);
+            throw new InvalidArgumentException('Incompatible node type: ' . $node::class);
         }
 
         $tocContent = $childRenderer->renderNodes($node->children());

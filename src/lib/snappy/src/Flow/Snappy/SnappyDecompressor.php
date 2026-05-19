@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Snappy;
 
+use function array_fill;
+use function count;
+
 /**
  * @internal This class is not meant to be used by library users. Please use Flow\Snappy\Snappy instead.
  */
@@ -21,7 +24,7 @@ final class SnappyDecompressor
     public function __construct(
         private readonly array $array,
     ) {
-        $this->arrayLength = \count($this->array);
+        $this->arrayLength = count($this->array);
     }
 
     public function readUncompressedLength(): int
@@ -53,12 +56,18 @@ final class SnappyDecompressor
      */
     public function uncompressToBuffer(array &$outBuffer): bool
     {
-        $outBuffer = \array_fill(0, $this->readUncompressedLength(), 0);
+        $uncompressedLength = $this->readUncompressedLength();
+
+        if ($uncompressedLength < 0) {
+            return false;
+        }
+
+        $outBuffer = array_fill(0, $uncompressedLength, 0);
         $pos = $this->pos;
         $outPos = 0;
         $len = $offset = 0;
 
-        while ($pos < \count($this->array)) {
+        while ($pos < count($this->array)) {
             $c = $this->array[$pos];
             $pos++;
 

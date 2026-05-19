@@ -11,6 +11,12 @@ use League\CommonMark\Event\DocumentParsedEvent;
 use League\CommonMark\Extension\FrontMatter\FrontMatterExtension;
 use PHPUnit\Framework\TestCase;
 
+use function file_put_contents;
+use function json_encode;
+use function sys_get_temp_dir;
+use function tempnam;
+use function unlink;
+
 final class FlowPackageNavRendererTest extends TestCase
 {
     public function test_component_variant_omits_installation_link_when_links_documentation_present(): void
@@ -166,13 +172,13 @@ final class FlowPackageNavRendererTest extends TestCase
      */
     private function render(array $packages, string $markdown): string
     {
-        $manifestPath = \tempnam(\sys_get_temp_dir(), 'flow-manifest-');
+        $manifestPath = tempnam(sys_get_temp_dir(), 'flow-manifest-');
 
         if ($manifestPath === false) {
             self::fail('Failed to create temp manifest file.');
         }
 
-        \file_put_contents($manifestPath, \json_encode(['packages' => $packages]));
+        file_put_contents($manifestPath, json_encode(['packages' => $packages]));
 
         try {
             $converter = new CommonMarkConverter();
@@ -183,7 +189,7 @@ final class FlowPackageNavRendererTest extends TestCase
 
             return (string) $converter->convert($markdown);
         } finally {
-            @\unlink($manifestPath);
+            @unlink($manifestPath);
         }
     }
 }

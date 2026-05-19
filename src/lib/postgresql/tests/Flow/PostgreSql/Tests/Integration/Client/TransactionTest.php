@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Tests\Integration\Client;
 
 use Flow\PostgreSql\Client\Exception\TransactionException;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
+use RuntimeException;
 
 use function Flow\PostgreSql\DSL\agg_count;
 use function Flow\PostgreSql\DSL\asc;
@@ -57,7 +58,7 @@ final class TransactionTest extends PostgreSqlTestCase
         $count = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(agg_count())->from(table('test_transaction')));
+            ->fetchScalarInt(select(agg_count())->from(table('test_transaction')));
         static::assertSame(0, $count);
 
         static::assertSame(0, $this->pgsqlContext()->client()->getTransactionNestingLevel());
@@ -84,7 +85,7 @@ final class TransactionTest extends PostgreSqlTestCase
         $count = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(agg_count())->from(table('test_transaction')));
+            ->fetchScalarInt(select(agg_count())->from(table('test_transaction')));
         static::assertSame(1, $count);
     }
 
@@ -118,7 +119,7 @@ final class TransactionTest extends PostgreSqlTestCase
         $count = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(agg_count())->from(table('test_transaction')));
+            ->fetchScalarInt(select(agg_count())->from(table('test_transaction')));
         static::assertSame(3, $count);
     }
 
@@ -134,7 +135,7 @@ final class TransactionTest extends PostgreSqlTestCase
         $count = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(agg_count())->from(table('test_transaction')));
+            ->fetchScalarInt(select(agg_count())->from(table('test_transaction')));
         static::assertSame(1, $count);
     }
 
@@ -150,7 +151,7 @@ final class TransactionTest extends PostgreSqlTestCase
         $count = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(agg_count())->from(table('test_transaction')));
+            ->fetchScalarInt(select(agg_count())->from(table('test_transaction')));
         static::assertSame(0, $count);
     }
 
@@ -168,7 +169,7 @@ final class TransactionTest extends PostgreSqlTestCase
         $count = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(agg_count())->from(table('test_transaction')));
+            ->fetchScalarInt(select(agg_count())->from(table('test_transaction')));
 
         static::assertSame(3, $count);
     }
@@ -189,7 +190,7 @@ final class TransactionTest extends PostgreSqlTestCase
         $count = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(agg_count())->from(table('test_transaction')));
+            ->fetchScalarInt(select(agg_count())->from(table('test_transaction')));
         static::assertSame(2, $count);
     }
 
@@ -205,9 +206,9 @@ final class TransactionTest extends PostgreSqlTestCase
                     $client->transaction(static function ($client): void {
                         $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('inner')));
 
-                        throw new \RuntimeException('Inner failure');
+                        throw new RuntimeException('Inner failure');
                     });
-                } catch (\RuntimeException) {
+                } catch (RuntimeException) {
                 }
 
                 $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('after inner')));
@@ -216,7 +217,7 @@ final class TransactionTest extends PostgreSqlTestCase
         $count = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(agg_count())->from(table('test_transaction')));
+            ->fetchScalarInt(select(agg_count())->from(table('test_transaction')));
         static::assertSame(2, $count);
 
         $names = $this
@@ -240,15 +241,15 @@ final class TransactionTest extends PostgreSqlTestCase
                         $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('inner')));
                     });
 
-                    throw new \RuntimeException('Outer failure');
+                    throw new RuntimeException('Outer failure');
                 });
-        } catch (\RuntimeException) {
+        } catch (RuntimeException) {
         }
 
         $count = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(agg_count())->from(table('test_transaction')));
+            ->fetchScalarInt(select(agg_count())->from(table('test_transaction')));
         static::assertSame(0, $count);
     }
 
@@ -296,7 +297,7 @@ final class TransactionTest extends PostgreSqlTestCase
             ->transaction(static function ($client) {
                 $client->execute(insert()->into('test_transaction')->columns('name')->values(literal('query test')));
 
-                return $client->fetchScalar(select(agg_count())->from(table('test_transaction')));
+                return $client->fetchScalarInt(select(agg_count())->from(table('test_transaction')));
             });
 
         static::assertSame(1, $result);
@@ -314,7 +315,7 @@ final class TransactionTest extends PostgreSqlTestCase
         $count = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(agg_count())->from(table('test_transaction')));
+            ->fetchScalarInt(select(agg_count())->from(table('test_transaction')));
 
         static::assertSame(1, $count);
     }
@@ -344,15 +345,15 @@ final class TransactionTest extends PostgreSqlTestCase
                         insert()->into('test_transaction')->columns('name')->values(literal('will be rolled back')),
                     );
 
-                    throw new \RuntimeException('Simulated failure');
+                    throw new RuntimeException('Simulated failure');
                 });
-        } catch (\RuntimeException) {
+        } catch (RuntimeException) {
         }
 
         $count = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(agg_count())->from(table('test_transaction')));
+            ->fetchScalarInt(select(agg_count())->from(table('test_transaction')));
 
         static::assertSame(0, $count);
     }

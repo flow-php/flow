@@ -10,6 +10,12 @@ use Flow\Filesystem\Path\Options;
 use Flow\Filesystem\Path\UnixPath;
 use Flow\Filesystem\Path\WindowsPath;
 use Flow\Filesystem\Stream\ResourceContext;
+use UnitEnum;
+
+use function array_map;
+use function Flow\Types\DSL\type_instance_of;
+
+use const PHP_OS_FAMILY;
 
 final readonly class Path
 {
@@ -22,7 +28,7 @@ final readonly class Path
      */
     public static function from(string $uri, array|Options $options = []): self
     {
-        return new self(\PHP_OS_FAMILY === 'Windows' ? new WindowsPath($uri, $options) : new UnixPath($uri, $options));
+        return new self(PHP_OS_FAMILY === 'Windows' ? new WindowsPath($uri, $options) : new UnixPath($uri, $options));
     }
 
     /**
@@ -35,7 +41,7 @@ final readonly class Path
     public static function realpath(string $path, array|Options $options = []): self
     {
         return new self(
-            \PHP_OS_FAMILY === 'Windows' ? WindowsPath::realpath($path, $options) : UnixPath::realpath($path, $options),
+            PHP_OS_FAMILY === 'Windows' ? WindowsPath::realpath($path, $options) : UnixPath::realpath($path, $options),
         );
     }
 
@@ -76,8 +82,8 @@ final readonly class Path
 
     public function getOption(
         string|Option $option,
-        string|int|bool|float|\UnitEnum|null $default = null,
-    ): string|int|bool|float|\UnitEnum|null {
+        string|int|bool|float|UnitEnum|null $default = null,
+    ): string|int|bool|float|UnitEnum|null {
         return $this->implementation->options()->get($option, $default);
     }
 
@@ -88,7 +94,11 @@ final readonly class Path
 
     public function isEqual(self $path): bool
     {
-        return $this->implementation->isEqual($path->implementation);
+        if ($this->implementation instanceof UnixPath) {
+            return $this->implementation->isEqual(type_instance_of(UnixPath::class)->assert($path->implementation));
+        }
+
+        return $this->implementation->isEqual(type_instance_of(WindowsPath::class)->assert($path->implementation));
     }
 
     public function isLocal(): bool
@@ -103,7 +113,11 @@ final readonly class Path
 
     public function matches(self $path): bool
     {
-        return $this->implementation->matches($path->implementation);
+        if ($this->implementation instanceof UnixPath) {
+            return $this->implementation->matches(type_instance_of(UnixPath::class)->assert($path->implementation));
+        }
+
+        return $this->implementation->matches(type_instance_of(WindowsPath::class)->assert($path->implementation));
     }
 
     /**
@@ -129,7 +143,7 @@ final readonly class Path
      */
     public function partitionsPaths(): array
     {
-        return \array_map(static fn($implPath) => new self($implPath), $this->implementation->partitionsPaths());
+        return array_map(static fn($implPath) => new self($implPath), $this->implementation->partitionsPaths());
     }
 
     /**
@@ -160,7 +174,7 @@ final readonly class Path
         return new self($this->implementation->setExtension($extension));
     }
 
-    public function setOption(string|Option $option, string|int|bool|float|\UnitEnum|null $value): self
+    public function setOption(string|Option $option, string|int|bool|float|UnitEnum|null $value): self
     {
         return new self($this->implementation->withOptions($this->implementation->options()->set(
             $option instanceof Option ? $option->value : $option,
@@ -168,7 +182,7 @@ final readonly class Path
         )));
     }
 
-    public function setOptionWhenEmpty(string|Option $option, string|int|bool|float|\UnitEnum|null $value): self
+    public function setOptionWhenEmpty(string|Option $option, string|int|bool|float|UnitEnum|null $value): self
     {
         return new self($this->implementation->withOptions($this->implementation->options()->setWhenEmpty(
             $option,

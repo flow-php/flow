@@ -8,6 +8,7 @@ use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
+use Throwable;
 
 final readonly class DropPartitionsTransformer implements Transformer
 {
@@ -28,7 +29,7 @@ final readonly class DropPartitionsTransformer implements Transformer
             ]);
 
             return $result;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->transformationFailed($this, $e);
 
             throw $e;

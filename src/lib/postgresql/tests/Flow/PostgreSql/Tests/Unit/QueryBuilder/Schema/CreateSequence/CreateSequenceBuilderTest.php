@@ -4,15 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\CreateSequence;
 
+use Flow\PostgreSql\Protobuf\AST\Boolean;
 use Flow\PostgreSql\Protobuf\AST\CreateSeqStmt;
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\QueryBuilder\Schema\CreateSequence\CreateSequenceBuilder;
 use PHPUnit\Framework\TestCase;
+
+use function extension_loaded;
+use function Flow\Types\DSL\type_instance_of;
 
 final class CreateSequenceBuilderTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }
@@ -41,7 +49,7 @@ final class CreateSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'maxvalue') {
+            if ($defElem !== null && $defElem->getDefname() === 'maxvalue') {
                 $optionFound = true;
                 static::assertFalse($defElem->hasArg());
             }
@@ -63,7 +71,7 @@ final class CreateSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'minvalue') {
+            if ($defElem !== null && $defElem->getDefname() === 'minvalue') {
                 $optionFound = true;
                 static::assertFalse($defElem->hasArg());
             }
@@ -85,14 +93,23 @@ final class CreateSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'owned_by') {
+            if ($defElem !== null && $defElem->getDefname() === 'owned_by') {
                 $optionFound = true;
                 static::assertTrue($defElem->hasArg());
                 $list = $defElem->getArg()?->getList();
                 static::assertNotNull($list);
-                static::assertCount(2, $list->getItems());
-                static::assertSame('users', $list->getItems()[0]->getString()?->getSval());
-                static::assertSame('id', $list->getItems()[1]->getString()?->getSval());
+                $items = iterator_to_array($list->getItems());
+                static::assertCount(2, $items);
+                $first = $items[0];
+                $second = $items[1];
+                static::assertInstanceOf(Node::class, $first);
+                static::assertInstanceOf(Node::class, $second);
+                $firstString = $first->getString();
+                $secondString = $second->getString();
+                static::assertInstanceOf(PBString::class, $firstString);
+                static::assertInstanceOf(PBString::class, $secondString);
+                static::assertSame('users', $firstString->getSval());
+                static::assertSame('id', $secondString->getSval());
             }
         }
         static::assertTrue($optionFound);
@@ -112,13 +129,18 @@ final class CreateSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'owned_by') {
+            if ($defElem !== null && $defElem->getDefname() === 'owned_by') {
                 $optionFound = true;
                 static::assertTrue($defElem->hasArg());
                 $list = $defElem->getArg()?->getList();
                 static::assertNotNull($list);
-                static::assertCount(1, $list->getItems());
-                static::assertSame('none', $list->getItems()[0]->getString()?->getSval());
+                $items = iterator_to_array($list->getItems());
+                static::assertCount(1, $items);
+                $first = $items[0];
+                static::assertInstanceOf(Node::class, $first);
+                $firstString = $first->getString();
+                static::assertInstanceOf(PBString::class, $firstString);
+                static::assertSame('none', $firstString->getSval());
             }
         }
         static::assertTrue($optionFound);
@@ -138,15 +160,28 @@ final class CreateSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'owned_by') {
+            if ($defElem !== null && $defElem->getDefname() === 'owned_by') {
                 $optionFound = true;
                 static::assertTrue($defElem->hasArg());
                 $list = $defElem->getArg()?->getList();
                 static::assertNotNull($list);
-                static::assertCount(3, $list->getItems());
-                static::assertSame('public', $list->getItems()[0]->getString()?->getSval());
-                static::assertSame('users', $list->getItems()[1]->getString()?->getSval());
-                static::assertSame('id', $list->getItems()[2]->getString()?->getSval());
+                $items = iterator_to_array($list->getItems());
+                static::assertCount(3, $items);
+                $first = $items[0];
+                $second = $items[1];
+                $third = $items[2];
+                static::assertInstanceOf(Node::class, $first);
+                static::assertInstanceOf(Node::class, $second);
+                static::assertInstanceOf(Node::class, $third);
+                $firstString = $first->getString();
+                $secondString = $second->getString();
+                $thirdString = $third->getString();
+                static::assertInstanceOf(PBString::class, $firstString);
+                static::assertInstanceOf(PBString::class, $secondString);
+                static::assertInstanceOf(PBString::class, $thirdString);
+                static::assertSame('public', $firstString->getSval());
+                static::assertSame('users', $secondString->getSval());
+                static::assertSame('id', $thirdString->getSval());
             }
         }
         static::assertTrue($optionFound);
@@ -184,7 +219,7 @@ final class CreateSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'as') {
+            if ($defElem !== null && $defElem->getDefname() === 'as') {
                 $optionFound = true;
                 static::assertTrue($defElem->hasArg());
             }
@@ -206,10 +241,12 @@ final class CreateSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'cache') {
+            if ($defElem !== null && $defElem->getDefname() === 'cache') {
                 $optionFound = true;
-                /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns int instead of Integer class) */
-                static::assertSame(20, $defElem->getArg()?->getInteger()?->getIval());
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $integer = type_instance_of(Integer::class)->assert($arg->getInteger());
+                static::assertSame(20, $integer->getIval());
             }
         }
         static::assertTrue($optionFound);
@@ -229,10 +266,12 @@ final class CreateSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'cycle') {
+            if ($defElem !== null && $defElem->getDefname() === 'cycle') {
                 $optionFound = true;
-                /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns bool instead of Boolean class) */
-                static::assertTrue($defElem->getArg()?->getBoolean()?->getBoolval());
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $boolean = type_instance_of(Boolean::class)->assert($arg->getBoolean());
+                static::assertTrue($boolean->getBoolval());
             }
         }
         static::assertTrue($optionFound);
@@ -252,10 +291,12 @@ final class CreateSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'increment') {
+            if ($defElem !== null && $defElem->getDefname() === 'increment') {
                 $optionFound = true;
-                /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns int instead of Integer class) */
-                static::assertSame(10, $defElem->getArg()?->getInteger()?->getIval());
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $integer = type_instance_of(Integer::class)->assert($arg->getInteger());
+                static::assertSame(10, $integer->getIval());
             }
         }
         static::assertTrue($optionFound);
@@ -275,10 +316,12 @@ final class CreateSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'maxvalue') {
+            if ($defElem !== null && $defElem->getDefname() === 'maxvalue') {
                 $optionFound = true;
-                /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns int instead of Integer class) */
-                static::assertSame(9999999, $defElem->getArg()?->getInteger()?->getIval());
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $integer = type_instance_of(Integer::class)->assert($arg->getInteger());
+                static::assertSame(9999999, $integer->getIval());
             }
         }
         static::assertTrue($optionFound);
@@ -298,10 +341,12 @@ final class CreateSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'minvalue') {
+            if ($defElem !== null && $defElem->getDefname() === 'minvalue') {
                 $optionFound = true;
-                /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns int instead of Integer class) */
-                static::assertSame(1, $defElem->getArg()?->getInteger()?->getIval());
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $integer = type_instance_of(Integer::class)->assert($arg->getInteger());
+                static::assertSame(1, $integer->getIval());
             }
         }
         static::assertTrue($optionFound);
@@ -321,10 +366,12 @@ final class CreateSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'cycle') {
+            if ($defElem !== null && $defElem->getDefname() === 'cycle') {
                 $optionFound = true;
-                /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns bool instead of Boolean class) */
-                static::assertFalse($defElem->getArg()?->getBoolean()?->getBoolval());
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $boolean = type_instance_of(Boolean::class)->assert($arg->getBoolean());
+                static::assertFalse($boolean->getBoolval());
             }
         }
         static::assertTrue($optionFound);
@@ -337,10 +384,10 @@ final class CreateSequenceBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(CreateSeqStmt::class, $ast);
-        /** @phpstan-ignore method.nonObject (protobuf returns nullable but we know it's set) */
-        static::assertSame('user_id_seq', $ast->getSequence()->getRelname());
-        /** @phpstan-ignore method.nonObject (protobuf returns nullable but we know it's set) */
-        static::assertSame('public', $ast->getSequence()->getSchemaname());
+        $sequence = $ast->getSequence();
+        static::assertInstanceOf(RangeVar::class, $sequence);
+        static::assertSame('user_id_seq', $sequence->getRelname());
+        static::assertSame('public', $sequence->getSchemaname());
     }
 
     public function test_create_sequence_with_start_value(): void
@@ -357,10 +404,12 @@ final class CreateSequenceBuilderTest extends TestCase
         foreach ($ast->getOptions() as $option) {
             $defElem = $option->getDefElem();
 
-            if ($defElem?->getDefname() === 'start') {
+            if ($defElem !== null && $defElem->getDefname() === 'start') {
                 $optionFound = true;
-                /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns int instead of Integer class) */
-                static::assertSame(100, $defElem->getArg()?->getInteger()?->getIval());
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $integer = type_instance_of(Integer::class)->assert($arg->getInteger());
+                static::assertSame(100, $integer->getIval());
             }
         }
         static::assertTrue($optionFound);
@@ -373,8 +422,9 @@ final class CreateSequenceBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(CreateSeqStmt::class, $ast);
-        /** @phpstan-ignore method.nonObject (protobuf returns nullable but we know it's set) */
-        static::assertSame('t', $ast->getSequence()->getRelpersistence());
+        $sequence = $ast->getSequence();
+        static::assertInstanceOf(RangeVar::class, $sequence);
+        static::assertSame('t', $sequence->getRelpersistence());
     }
 
     public function test_create_unlogged_sequence(): void
@@ -384,8 +434,9 @@ final class CreateSequenceBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(CreateSeqStmt::class, $ast);
-        /** @phpstan-ignore method.nonObject (protobuf returns nullable but we know it's set) */
-        static::assertSame('u', $ast->getSequence()->getRelpersistence());
+        $sequence = $ast->getSequence();
+        static::assertInstanceOf(RangeVar::class, $sequence);
+        static::assertSame('u', $sequence->getRelpersistence());
     }
 
     public function test_immutability(): void
@@ -404,9 +455,9 @@ final class CreateSequenceBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(CreateSeqStmt::class, $ast);
-        /** @phpstan-ignore method.nonObject (protobuf returns nullable but we know it's set) */
-        static::assertSame('user_id_seq', $ast->getSequence()->getRelname());
-        /** @phpstan-ignore method.nonObject (protobuf returns nullable but we know it's set) */
-        static::assertSame('p', $ast->getSequence()->getRelpersistence());
+        $sequence = $ast->getSequence();
+        static::assertInstanceOf(RangeVar::class, $sequence);
+        static::assertSame('user_id_seq', $sequence->getRelname());
+        static::assertSame('p', $sequence->getRelpersistence());
     }
 }

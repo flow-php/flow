@@ -15,6 +15,8 @@ use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
+use function array_values;
+
 final readonly class CreateProcedureBuilder implements
     CreateProcedureArgsStep,
     CreateProcedureFinalStep,
@@ -43,7 +45,7 @@ final readonly class CreateProcedureBuilder implements
 
     public function arguments(FunctionArgument ...$args): CreateProcedureOptionsStep
     {
-        return new self($this->name, $this->schema, $this->replace, \array_values($args), $this->options);
+        return new self($this->name, $this->schema, $this->replace, array_values($args), $this->options);
     }
 
     public function as(string $definition): CreateProcedureFinalStep
@@ -66,9 +68,7 @@ final readonly class CreateProcedureBuilder implements
         $integer = new Integer();
         $integer->setIval(1);
 
-        $argNode = new Node();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $argNode->setInteger($integer);
+        $argNode = new Node(['integer' => $integer]);
 
         return $this->withOption('security_definer', $argNode);
     }
@@ -78,9 +78,7 @@ final readonly class CreateProcedureBuilder implements
         $integer = new Integer();
         $integer->setIval(0);
 
-        $argNode = new Node();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $argNode->setInteger($integer);
+        $argNode = new Node(['integer' => $integer]);
 
         return $this->withOption('security_definer', $argNode);
     }

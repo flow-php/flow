@@ -8,6 +8,17 @@ use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Resource\ResourceDetector;
 
+use function dirname;
+use function file_get_contents;
+use function file_put_contents;
+use function is_dir;
+use function is_file;
+use function is_readable;
+use function mkdir;
+use function serialize;
+use function sys_get_temp_dir;
+use function unserialize;
+
 /**
  * Decorator that caches resource detection results to a file.
  *
@@ -44,12 +55,12 @@ final readonly class CachingDetector implements ResourceDetector
         private ResourceDetector $detector,
         ?string $cachePath = null,
     ) {
-        $this->cachePath = $cachePath ?? \sys_get_temp_dir() . '/flow_telemetry_resource.cache';
+        $this->cachePath = $cachePath ?? sys_get_temp_dir() . '/flow_telemetry_resource.cache';
     }
 
     public function detect(): Resource
     {
-        if (\is_file($this->cachePath) && \is_readable($this->cachePath)) {
+        if (is_file($this->cachePath) && is_readable($this->cachePath)) {
             $cached = $this->loadFromCache();
 
             if ($cached !== null) {
@@ -65,29 +76,28 @@ final readonly class CachingDetector implements ResourceDetector
 
     private function loadFromCache(): ?Resource
     {
-        $contents = @\file_get_contents($this->cachePath);
+        $contents = @file_get_contents($this->cachePath);
 
         if ($contents === false) {
             return null;
         }
 
-        $data = @\unserialize($contents, ['allowed_classes' => [Resource::class, Attributes::class]]);
+        return self::asResource(@unserialize($contents, ['allowed_classes' => [Resource::class, Attributes::class]]));
+    }
 
-        if (!$data instanceof Resource) {
-            return null;
-        }
-
-        return $data;
+    private static function asResource(mixed $value): ?Resource
+    {
+        return $value instanceof Resource ? $value : null;
     }
 
     private function saveToCache(Resource $resource): void
     {
-        $directory = \dirname($this->cachePath);
+        $directory = dirname($this->cachePath);
 
-        if (!\is_dir($directory)) {
-            @\mkdir($directory, 0777, true);
+        if (!is_dir($directory)) {
+            @mkdir($directory, 0777, true);
         }
 
-        @\file_put_contents($this->cachePath, \serialize($resource));
+        @file_put_contents($this->cachePath, serialize($resource));
     }
 }

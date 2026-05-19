@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Processor\HashJoin;
 
+use Countable;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
+use function count;
 use function Flow\ETL\DSL\rows;
 
-final class Bucket implements \Countable
+final class Bucket implements Countable
 {
     private ?Rows $rows;
 
@@ -43,7 +45,7 @@ final class Bucket implements \Countable
 
     public function count(): int
     {
-        return \count($this->rowsArray);
+        return count($this->rowsArray);
     }
 
     public function findMatch(Row $row, Expression $expression): ?Row

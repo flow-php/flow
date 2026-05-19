@@ -8,6 +8,16 @@ use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Stream\Block\BlockVoidLifecycle;
 use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 
+use function array_merge;
+use function count;
+use function feof;
+use function ftell;
+use function gettype;
+use function is_resource;
+use function str_split;
+use function strlen;
+use function substr;
+
 /**
  * Blocks is a collection of blocks that are filled with data.
  * Each file can be created from a single block or multiple blocks.
@@ -30,14 +40,21 @@ final class Blocks
     private int $size = 0;
 
     /**
-     * @param BlockFactory $blockFactory
-     * @param int $blockSize block size in bytes
+     * @param int<1, max> $blockSize block size in bytes
      */
     public function __construct(
         private readonly int $blockSize,
         private readonly BlockFactory $blockFactory = new NativeLocalFileBlocksFactory(),
         private readonly BlockLifecycle $blockLifecycle = new BlockVoidLifecycle(),
     ) {
+        /**
+         * @mago-ignore analysis:impossible-condition
+         * @mago-ignore analysis:redundant-comparison
+         */
+        if ($this->blockSize < 1) {
+            throw new InvalidArgumentException('Block size must be greater than 0');
+        }
+
         $this->currentBlock = $this->blockFactory->create($this->blockSize);
     }
 
@@ -46,26 +63,23 @@ final class Blocks
      */
     public function all(): array
     {
-        return \array_merge($this->blocks, [$this->currentBlock]);
+        return array_merge($this->blocks, [$this->currentBlock]);
     }
 
     public function append(string $data): void
     {
-        /**
-         * @phpstan-ignore-next-line
-         */
-        foreach (\str_split($data, $this->blockSize) as $chunk) {
-            if ($this->block()->spaceLeft() < \strlen($chunk)) {
+        foreach (str_split($data, $this->blockSize) as $chunk) {
+            if ($this->block()->spaceLeft() < strlen($chunk)) {
                 // cut the chunk to fit into the block, store it in the block and move remaining part to next block
                 $spaceLeft = $this->block()->spaceLeft();
-                $this->block()->append(\substr($chunk, 0, $spaceLeft));
-                $this->block()->append(\substr($chunk, $spaceLeft));
+                $this->block()->append(substr($chunk, 0, $spaceLeft));
+                $this->block()->append(substr($chunk, $spaceLeft));
             } else {
                 $this->block()->append($chunk);
             }
         }
 
-        $this->size += \strlen($data);
+        $this->size += strlen($data);
     }
 
     /**
@@ -84,7 +98,7 @@ final class Blocks
 
     public function count(): int
     {
-        return \count($this->blocks) + 1;
+        return count($this->blocks) + 1;
     }
 
     public function done(): void
@@ -102,20 +116,20 @@ final class Blocks
      */
     public function fromResource($resource): void
     {
-        if (!\is_resource($resource)) {
+        if (!is_resource($resource)) {
             throw new InvalidArgumentException(
-                'DestinationStream::fromResource expects resource type, given: ' . \gettype($resource),
+                'DestinationStream::fromResource expects resource type, given: ' . gettype($resource),
             );
         }
 
         // use Block::fromStream and simply move offset after each block
-        $offset = \ftell($resource);
+        $offset = ftell($resource);
 
         if ($offset === false) {
             throw new InvalidArgumentException('Cannot determine current position in the stream');
         }
 
-        while (!\feof($resource)) {
+        while (!feof($resource)) {
             $bytesCopied = $this->block()->fromResource($resource, $offset);
             $offset += $bytesCopied;
             $this->size += $bytesCopied;

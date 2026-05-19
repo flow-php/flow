@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
+use DateTimeImmutable;
+use DOMDocument;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -14,7 +17,7 @@ use function Flow\Types\DSL\type_from_array;
 
 final class ArrayTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'valid empty array' => [
             'value' => [],
@@ -57,7 +60,7 @@ final class ArrayTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
         yield 'array stays as is' => [
             'value' => ['test'],
@@ -72,7 +75,7 @@ final class ArrayTypeTest extends TestCase
         ];
 
         yield 'datetime to array' => [
-            'value' => new \DateTimeImmutable('2021-01-01 00:00:00 UTC'),
+            'value' => new DateTimeImmutable('2021-01-01 00:00:00 UTC'),
             'expected' => ['date' => '2021-01-01 00:00:00.000000', 'timezone_type' => 3, 'timezone' => 'UTC'],
             'exceptionClass' => null,
         ];
@@ -102,7 +105,7 @@ final class ArrayTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'empty array' => [
             'value' => [],
@@ -140,6 +143,9 @@ final class ArrayTypeTest extends TestCase
         ];
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('assert_data_provider')]
     public function test_assert(mixed $value, ?string $exceptionClass = null): void
     {
@@ -151,6 +157,9 @@ final class ArrayTypeTest extends TestCase
         }
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('cast_data_provider')]
     public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass): void
     {
@@ -164,7 +173,7 @@ final class ArrayTypeTest extends TestCase
 
     public function test_casting_xml_document_to_array(): void
     {
-        $xml = new \DOMDocument();
+        $xml = new DOMDocument();
         $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
 
         static::assertSame(

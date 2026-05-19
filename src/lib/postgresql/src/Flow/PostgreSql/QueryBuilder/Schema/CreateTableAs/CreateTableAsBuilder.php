@@ -13,6 +13,8 @@ use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
+use function array_values;
+
 final readonly class CreateTableAsBuilder implements CreateTableAsFinalStep
 {
     use AstToSql;
@@ -40,7 +42,7 @@ final readonly class CreateTableAsBuilder implements CreateTableAsFinalStep
             $this->table,
             $this->schema,
             $this->query,
-            \array_values($names),
+            array_values($names),
             $this->ifNotExists,
             $this->withNoData,
         );

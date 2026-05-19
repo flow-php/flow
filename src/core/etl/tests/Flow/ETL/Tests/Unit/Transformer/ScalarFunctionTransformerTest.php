@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use DOMDocument;
+use DOMXPath;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ArrayExpand;
 use Flow\ETL\Function\ArrayUnpack;
@@ -113,9 +115,9 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
     public function test_xml_xpath_expression_when_there_is_more_than_one_node_under_given_path(): void
     {
         $xml = '<root><foo baz="buz">bar</foo><foo>baz</foo></root>';
-        $document = new \DOMDocument();
+        $document = new DOMDocument();
         $document->loadXML($xml);
-        $xpath = new \DOMXPath($document);
+        $xpath = new DOMXPath($document);
 
         $nodes = $xpath->query('/root/foo');
         $expected = $nodes ? [$nodes->item(0), $nodes->item(1)] : null;

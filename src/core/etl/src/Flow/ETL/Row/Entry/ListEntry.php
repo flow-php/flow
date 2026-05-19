@@ -15,6 +15,8 @@ use Flow\Types\Type\TypeDetector;
 
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_optional;
+use function is_array;
+use function json_encode;
 
 /**
  * @template T
@@ -110,7 +112,7 @@ final class ListEntry implements Entry
             $this->is($entry->name())
             && $entry instanceof self
             && type_equals($this->type(), $entry->type())
-            && (new ArrayComparison())->equals($thisValue, \is_array($entryValue) ? $entryValue : null)
+            && (new ArrayComparison())->equals($thisValue, is_array($entryValue) ? $entryValue : null)
         );
     }
 
@@ -135,7 +137,7 @@ final class ListEntry implements Entry
             return '';
         }
 
-        return \json_encode($this->value(), JSON_THROW_ON_ERROR);
+        return json_encode($this->value(), JSON_THROW_ON_ERROR);
     }
 
     /**

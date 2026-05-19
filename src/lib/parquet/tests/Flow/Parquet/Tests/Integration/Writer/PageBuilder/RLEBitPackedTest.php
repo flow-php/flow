@@ -9,14 +9,16 @@ use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\Data\BitWidth;
 use Flow\Parquet\Data\RLEBitPackedHybrid;
 use Flow\Parquet\Writer\PageBuilder\RLEBitPackedPacker;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function count;
 use function Flow\Parquet\Binary\decode_i32;
 
 final class RLEBitPackedTest extends TestCase
 {
-    public static function values_provider(): \Generator
+    public static function values_provider(): Generator
     {
         yield [
             [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -37,6 +39,7 @@ final class RLEBitPackedTest extends TestCase
     #[DataProvider('values_provider')]
     public function test_packing_and_unpacking_with_length(array $values, int $length): void
     {
+        static::assertContainsOnlyInt($values);
         $byteOrder = ByteOrder::LITTLE_ENDIAN;
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
         $packer = new RLEBitPackedPacker($rleBitPackedHybrid, $byteOrder);
@@ -44,7 +47,7 @@ final class RLEBitPackedTest extends TestCase
         $buffer = $packer->packWithLength(BitWidth::fromArray($values), $values);
         $reader = new BinaryBufferReader($buffer);
         static::assertSame($length, decode_i32($byteOrder, $reader->readBytes(4))[0]);
-        $unpacked = $rleBitPackedHybrid->decodeHybrid($reader, BitWidth::fromArray($values), \count($values));
+        $unpacked = $rleBitPackedHybrid->decodeHybrid($reader, BitWidth::fromArray($values), count($values));
 
         static::assertSame($values, $unpacked);
     }

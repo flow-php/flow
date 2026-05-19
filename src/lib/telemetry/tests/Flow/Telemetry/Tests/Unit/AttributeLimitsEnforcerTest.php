@@ -8,6 +8,9 @@ use Flow\Telemetry\AttributeLimitsEnforcer;
 use Flow\Telemetry\Attributes;
 use PHPUnit\Framework\TestCase;
 
+use function str_repeat;
+use function strlen;
+
 final class AttributeLimitsEnforcerTest extends TestCase
 {
     public function test_applies_both_count_and_length_limits(): void
@@ -115,14 +118,14 @@ final class AttributeLimitsEnforcerTest extends TestCase
     {
         $enforcer = new AttributeLimitsEnforcer();
         $attributes = Attributes::create([
-            'long' => \str_repeat('a', 1000),
+            'long' => str_repeat('a', 1000),
         ]);
 
         $result = $enforcer->enforce($attributes, 10, null);
 
         $value = $result->attributes->get('long');
         static::assertIsString($value);
-        static::assertSame(1000, \strlen($value));
+        static::assertSame(1000, strlen($value));
     }
 
     public function test_preserves_array_with_non_string_values(): void

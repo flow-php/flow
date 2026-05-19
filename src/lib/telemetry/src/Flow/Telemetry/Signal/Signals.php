@@ -9,6 +9,9 @@ use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Meter\Metric;
 use Flow\Telemetry\Tracer\Span;
 
+use function count;
+use function sprintf;
+
 /**
  * A typed collection of telemetry items for one signal type.
  *
@@ -19,11 +22,15 @@ use Flow\Telemetry\Tracer\Span;
 final readonly class Signals
 {
     /**
-     * @param array<LogEntry>|array<Metric>|array<Span> $items
+     * @param array<LogEntry> $logEntries
+     * @param array<Metric> $metrics
+     * @param array<Span> $spans
      */
     private function __construct(
         public SignalType $type,
-        private array $items,
+        private array $logEntries = [],
+        private array $metrics = [],
+        private array $spans = [],
     ) {}
 
     /**
@@ -33,7 +40,7 @@ final readonly class Signals
      */
     public static function logs(array $entries): self
     {
-        return new self(SignalType::LOGS, $entries);
+        return new self(SignalType::LOGS, logEntries: $entries);
     }
 
     /**
@@ -43,7 +50,7 @@ final readonly class Signals
      */
     public static function metrics(array $metrics): self
     {
-        return new self(SignalType::METRICS, $metrics);
+        return new self(SignalType::METRICS, metrics: $metrics);
     }
 
     /**
@@ -53,7 +60,7 @@ final readonly class Signals
      */
     public static function traces(array $spans): self
     {
-        return new self(SignalType::TRACES, $spans);
+        return new self(SignalType::TRACES, spans: $spans);
     }
 
     /**
@@ -66,14 +73,13 @@ final readonly class Signals
     public function allLogs(): array
     {
         if ($this->type !== SignalType::LOGS) {
-            throw new RuntimeException(\sprintf(
+            throw new RuntimeException(sprintf(
                 'Signals collection of type %s does not carry log entries',
                 $this->type->name,
             ));
         }
 
-        /** @phpstan-ignore return.type */
-        return $this->items;
+        return $this->logEntries;
     }
 
     /**
@@ -86,14 +92,13 @@ final readonly class Signals
     public function allMetrics(): array
     {
         if ($this->type !== SignalType::METRICS) {
-            throw new RuntimeException(\sprintf(
+            throw new RuntimeException(sprintf(
                 'Signals collection of type %s does not carry metrics',
                 $this->type->name,
             ));
         }
 
-        /** @phpstan-ignore return.type */
-        return $this->items;
+        return $this->metrics;
     }
 
     /**
@@ -106,23 +111,26 @@ final readonly class Signals
     public function allSpans(): array
     {
         if ($this->type !== SignalType::TRACES) {
-            throw new RuntimeException(\sprintf(
+            throw new RuntimeException(sprintf(
                 'Signals collection of type %s does not carry spans',
                 $this->type->name,
             ));
         }
 
-        /** @phpstan-ignore return.type */
-        return $this->items;
+        return $this->spans;
     }
 
     public function count(): int
     {
-        return \count($this->items);
+        return match ($this->type) {
+            SignalType::LOGS => count($this->logEntries),
+            SignalType::METRICS => count($this->metrics),
+            SignalType::TRACES => count($this->spans),
+        };
     }
 
     public function isEmpty(): bool
     {
-        return \count($this->items) === 0;
+        return $this->count() === 0;
     }
 }

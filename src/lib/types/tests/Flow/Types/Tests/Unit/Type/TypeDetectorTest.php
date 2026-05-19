@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type;
 
+use DateInterval;
+use DateTime;
+use DateTimeZone;
+use Dom\HTMLDocument;
+use DOMDocument;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\DateTimeType;
@@ -26,9 +31,11 @@ use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\TypeDetector;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_float;
@@ -37,7 +44,7 @@ use function Flow\Types\DSL\type_string;
 
 final class TypeDetectorTest extends TestCase
 {
-    public static function provide_logical_types_data(): \Generator
+    public static function provide_logical_types_data(): Generator
     {
         yield 'null' => [
             null,
@@ -52,31 +59,31 @@ final class TypeDetectorTest extends TestCase
         ];
 
         yield 'time' => [
-            new \DateInterval('PT1H'),
+            new DateInterval('PT1H'),
             TimeType::class,
             'time',
         ];
 
         yield 'timezone' => [
-            new \DateTimeZone('UTC'),
+            new DateTimeZone('UTC'),
             TimeZoneType::class,
             'timezone',
         ];
 
         yield 'timezone_america' => [
-            new \DateTimeZone('America/New_York'),
+            new DateTimeZone('America/New_York'),
             TimeZoneType::class,
             'timezone',
         ];
 
         yield 'date' => [
-            new \DateTime('2024-01-01'),
+            new DateTime('2024-01-01'),
             DateType::class,
             'date',
         ];
 
         yield 'datetime' => [
-            new \DateTime(),
+            new DateTime(),
             DateTimeType::class,
             'datetime',
         ];
@@ -93,7 +100,7 @@ final class TypeDetectorTest extends TestCase
             'uuid',
         ];
 
-        $xml = new \DOMDocument();
+        $xml = new DOMDocument();
         $xml->loadXML('<xml><items><item>1</item></items></xml>');
         yield 'xml' => [
             $xml,
@@ -417,14 +424,14 @@ final class TypeDetectorTest extends TestCase
         ];
     }
 
-    public static function provide_object_data(): \Generator
+    public static function provide_object_data(): Generator
     {
         yield 'stdclass' => [
-            new \stdClass(),
+            new stdClass(),
         ];
     }
 
-    public static function provide_scalar_data(): \Generator
+    public static function provide_scalar_data(): Generator
     {
         yield 'bool' => [
             true,
@@ -459,7 +466,7 @@ final class TypeDetectorTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function test_logical_html_element_type(): void
     {
-        $document = \Dom\HTMLDocument::createFromString(
+        $document = HTMLDocument::createFromString(
             '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
         );
 
@@ -472,7 +479,7 @@ final class TypeDetectorTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function test_logical_html_type(): void
     {
-        $type = (new TypeDetector())->detectType(\Dom\HTMLDocument::createFromString(
+        $type = (new TypeDetector())->detectType(HTMLDocument::createFromString(
             '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
         ));
 
@@ -480,6 +487,9 @@ final class TypeDetectorTest extends TestCase
         static::assertSame('html', $type->toString());
     }
 
+    /**
+     * @param class-string $class
+     */
     #[DataProvider('provide_logical_types_data')]
     public function test_logical_types(mixed $data, string $class, string $description): void
     {

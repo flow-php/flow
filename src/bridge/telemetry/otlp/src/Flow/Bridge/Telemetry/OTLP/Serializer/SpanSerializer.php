@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Serializer;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanEvent;
 use Flow\Telemetry\Tracer\SpanKind;
@@ -164,7 +165,7 @@ final readonly class SpanSerializer
     /**
      * Convert DateTimeImmutable to nanoseconds since Unix epoch as string.
      */
-    private function toNanoseconds(\DateTimeImmutable $dateTime): string
+    private function toNanoseconds(DateTimeImmutable $dateTime): string
     {
         $seconds = (int) $dateTime->format('U');
         $microseconds = (int) $dateTime->format('u');

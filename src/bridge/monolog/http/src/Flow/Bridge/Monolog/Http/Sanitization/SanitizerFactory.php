@@ -7,6 +7,7 @@ namespace Flow\Bridge\Monolog\Http\Sanitization;
 use Flow\Bridge\Monolog\Http\Exception\InvalidArgumentException;
 
 use function Flow\Types\DSL\type_string;
+use function sprintf;
 
 final class SanitizerFactory
 {
@@ -28,7 +29,7 @@ final class SanitizerFactory
 
         return match ($type) {
             'mask' => Mask::fromArray($data),
-            default => throw new InvalidArgumentException(\sprintf('Unsupported sanitizer type: %s', $type)),
+            default => throw new InvalidArgumentException(sprintf('Unsupported sanitizer type: %s', $type)),
         };
     }
 }

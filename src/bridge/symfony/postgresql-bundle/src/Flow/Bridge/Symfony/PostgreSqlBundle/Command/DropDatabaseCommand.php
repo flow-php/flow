@@ -24,6 +24,7 @@ use function Flow\PostgreSql\DSL\param;
 use function Flow\PostgreSql\DSL\select;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
+use function sprintf;
 
 #[AsCommand(name: 'flow:database:drop', description: 'Drop the configured database')]
 final class DropDatabaseCommand extends Command
@@ -69,12 +70,12 @@ final class DropDatabaseCommand extends Command
             $maintenanceClient->close();
 
             if ($input->getOption('if-exists')) {
-                $output->writeln(\sprintf('<info>Database "%s" does not exist.</info>', $params->database()));
+                $output->writeln(sprintf('<info>Database "%s" does not exist.</info>', $params->database()));
 
                 return Command::SUCCESS;
             }
 
-            $output->writeln(\sprintf('<error>Database "%s" does not exist.</error>', $params->database()));
+            $output->writeln(sprintf('<error>Database "%s" does not exist.</error>', $params->database()));
 
             return Command::FAILURE;
         }
@@ -88,7 +89,7 @@ final class DropDatabaseCommand extends Command
         $maintenanceClient->execute(drop()->database($params->database()));
         $maintenanceClient->close();
 
-        $output->writeln(\sprintf('<info>Database "%s" dropped successfully.</info>', $params->database()));
+        $output->writeln(sprintf('<info>Database "%s" dropped successfully.</info>', $params->database()));
 
         return Command::SUCCESS;
     }

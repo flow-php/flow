@@ -10,6 +10,8 @@ use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 
+use function count;
+
 /**
  * Represents a column reference in SQL (e.g., "name", "table.column", "schema.table.column").
  */
@@ -42,7 +44,7 @@ final readonly class Column implements Expression
 
         $fields = $columnRef->getFields();
 
-        if ($fields === null || \count($fields) === 0) {
+        if (count($fields) === 0) {
             throw InvalidAstException::missingRequiredField('fields', 'ColumnRef');
         }
 
@@ -100,7 +102,7 @@ final readonly class Column implements Expression
 
     public function columnName(): string
     {
-        return $this->parts[\count($this->parts) - 1];
+        return $this->parts[count($this->parts) - 1];
     }
 
     /**
@@ -113,7 +115,7 @@ final readonly class Column implements Expression
 
     public function schemaName(): ?string
     {
-        if (\count($this->parts) < 3) {
+        if (count($this->parts) < 3) {
             return null;
         }
 
@@ -122,11 +124,11 @@ final readonly class Column implements Expression
 
     public function tableName(): ?string
     {
-        if (\count($this->parts) < 2) {
+        if (count($this->parts) < 2) {
             return null;
         }
 
-        return $this->parts[\count($this->parts) - 2];
+        return $this->parts[count($this->parts) - 2];
     }
 
     public function toAst(): Node

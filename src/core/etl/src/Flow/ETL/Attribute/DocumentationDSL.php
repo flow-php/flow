@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Attribute;
 
-#[\Attribute]
+use Attribute;
+
+#[Attribute]
 final readonly class DocumentationDSL
 {
     public function __construct(

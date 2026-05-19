@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Http\Tests\Unit;
 
+use DateTimeImmutable;
 use Flow\Bridge\Monolog\Http\Config;
 use Flow\Bridge\Monolog\Http\Config\RequestConfig;
 use Flow\Bridge\Monolog\Http\Config\ResponseConfig;
@@ -29,7 +30,7 @@ final class PSR7ProcessorTest extends FlowTestCase
         $processor = new PSR7Processor();
 
         $record = $processor(new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'http',
             level: Level::Debug,
             message: 'HTTP Request',
@@ -65,7 +66,7 @@ final class PSR7ProcessorTest extends FlowTestCase
         $processor = new PSR7Processor(new Config(new RequestConfig(withBody: true)));
 
         $record = $processor(new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'http',
             level: Level::Debug,
             message: 'HTTP Request',
@@ -102,7 +103,7 @@ final class PSR7ProcessorTest extends FlowTestCase
         $processor = new PSR7Processor(new Config(new RequestConfig(withBody: true, bodySizeLimit: 5)));
 
         $record = $processor(new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'http',
             level: Level::Debug,
             message: 'HTTP Request',
@@ -136,7 +137,7 @@ final class PSR7ProcessorTest extends FlowTestCase
         $processor = new PSR7Processor(new Config(new RequestConfig(headers: [])));
 
         $record = $processor(new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'http',
             level: Level::Debug,
             message: 'HTTP Request',
@@ -167,7 +168,7 @@ final class PSR7ProcessorTest extends FlowTestCase
         $processor = new PSR7Processor();
 
         $record = $processor(new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'http',
             level: Level::Debug,
             message: 'HTTP Response',
@@ -202,7 +203,7 @@ final class PSR7ProcessorTest extends FlowTestCase
         $processor = new PSR7Processor(new Config(response: new ResponseConfig(withoutStatusCodes: [404])));
 
         $record = $processor(new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'http',
             level: Level::Debug,
             message: 'HTTP Response',
@@ -225,7 +226,7 @@ final class PSR7ProcessorTest extends FlowTestCase
         $processor = new PSR7Processor(new Config(response: new ResponseConfig(withBody: true)));
 
         $record = $processor(new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'http',
             level: Level::Debug,
             message: 'HTTP Response',
@@ -261,7 +262,7 @@ final class PSR7ProcessorTest extends FlowTestCase
         $processor = new PSR7Processor(new Config(response: new ResponseConfig(withBody: true, bodySizeLimit: 5)));
 
         $record = $processor(new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'http',
             level: Level::Debug,
             message: 'HTTP Response',
@@ -296,7 +297,7 @@ final class PSR7ProcessorTest extends FlowTestCase
         $processor = new PSR7Processor(new Config(response: new ResponseConfig(withBody: true)));
 
         $record = $processor(new LogRecord(
-            datetime: new \DateTimeImmutable(),
+            datetime: new DateTimeImmutable(),
             channel: 'http',
             level: Level::Debug,
             message: 'HTTP Response',

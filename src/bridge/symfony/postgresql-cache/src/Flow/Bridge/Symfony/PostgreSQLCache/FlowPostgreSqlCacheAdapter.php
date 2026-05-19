@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\PostgreSQLCache;
 
+use Closure;
 use Flow\Bridge\Symfony\PostgreSQLCache\Exception\CacheException;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\ConnectionParameters;
 use Flow\PostgreSql\Client\Types\ValueType;
+use LogicException;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
 use Symfony\Component\Cache\Marshaller\DefaultMarshaller;
 use Symfony\Component\Cache\Marshaller\MarshallerInterface;
 use Symfony\Component\Cache\PruneableInterface;
 
+use function array_merge;
+use function array_values;
 use function Flow\PostgreSql\DSL\and_;
 use function Flow\PostgreSql\DSL\binary_expr;
 use function Flow\PostgreSql\DSL\case_when;
@@ -37,6 +41,11 @@ use function Flow\PostgreSql\DSL\table;
 use function Flow\PostgreSql\DSL\truncate_table;
 use function Flow\PostgreSql\DSL\typed;
 use function Flow\PostgreSql\DSL\when;
+use function get_debug_type;
+use function is_string;
+use function preg_match;
+use function sprintf;
+use function time;
 
 final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements PruneableInterface
 {
@@ -44,7 +53,7 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
 
     private ?Client $client;
 
-    private readonly \Closure $clientFactory;
+    private readonly Closure $clientFactory;
 
     private readonly ?ConnectionParameters $connectionParameters;
 
@@ -74,10 +83,10 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
         int $defaultLifetime = 0,
         array $options = [],
         ?MarshallerInterface $marshaller = null,
-        ?\Closure $clientFactory = null,
+        ?Closure $clientFactory = null,
     ) {
-        if (isset($namespace[0]) && \preg_match('#[^-+.A-Za-z0-9]#', $namespace, $match)) {
-            throw new InvalidArgumentException(\sprintf(
+        if (isset($namespace[0]) && preg_match('#[^-+.A-Za-z0-9]#', $namespace, $match)) {
+            throw new InvalidArgumentException(sprintf(
                 'Namespace contains "%s" but only characters in [-+.A-Za-z0-9] are allowed.',
                 $match[0],
             ));
@@ -112,7 +121,7 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
             is_null(col($this->lifetimeCol), not: true),
             le(binary_expr(col($this->lifetimeCol), '+', col($this->timeCol)), param(1)),
         ];
-        $parameters = [\time()];
+        $parameters = [time()];
 
         if ($this->poolNamespace !== '') {
             $conditions[] = like(col($this->idCol), param(2));
@@ -152,7 +161,7 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
             return true;
         }
 
-        $values = \array_values($ids);
+        $values = array_values($ids);
         $placeholders = [];
         $position = 1;
 
@@ -179,8 +188,8 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
             return;
         }
 
-        $now = \time();
-        $values = \array_values($ids);
+        $now = time();
+        $values = array_values($ids);
 
         $placeholders = [];
         $position = 2;
@@ -203,7 +212,7 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
             select(col($this->idCol), $dataExpression->as($this->dataCol))
                 ->from(table($this->table, $this->schema))
                 ->where(in_(col($this->idCol), $placeholders)),
-            \array_merge([$now], $values),
+            array_merge([$now], $values),
         );
 
         $expired = [];
@@ -212,8 +221,8 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
             $rowId = $row[$this->idCol];
             $rowData = $row[$this->dataCol];
 
-            if (!\is_string($rowId)) {
-                throw CacheException::unexpectedRowShape($this->idCol, \get_debug_type($rowId));
+            if (!is_string($rowId)) {
+                throw CacheException::unexpectedRowShape($this->idCol, get_debug_type($rowId));
             }
 
             if ($rowData === null) {
@@ -222,8 +231,8 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
                 continue;
             }
 
-            if (!\is_string($rowData)) {
-                throw CacheException::unexpectedRowShape($this->dataCol, \get_debug_type($rowData));
+            if (!is_string($rowData)) {
+                throw CacheException::unexpectedRowShape($this->dataCol, get_debug_type($rowData));
             }
 
             yield $rowId => $this->marshaller->unmarshall($rowData);
@@ -247,7 +256,7 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
                     ),
                 ))
                 ->limit(1),
-            [$id, \time()],
+            [$id, time()],
         );
 
         return $row !== null;
@@ -268,7 +277,7 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
         }
 
         $this->client()->transaction(function (Client $client) use ($marshalled, $lifetime): void {
-            $now = \time();
+            $now = time();
             $expiry = $lifetime > 0 ? $lifetime : null;
 
             foreach ($marshalled as $id => $data) {
@@ -302,7 +311,7 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
         }
 
         if ($this->connectionParameters === null) {
-            throw new \LogicException('FlowPostgreSqlCacheAdapter has no client and no connection parameters.');
+            throw new LogicException('FlowPostgreSqlCacheAdapter has no client and no connection parameters.');
         }
 
         return $this->client = ($this->clientFactory)($this->connectionParameters);

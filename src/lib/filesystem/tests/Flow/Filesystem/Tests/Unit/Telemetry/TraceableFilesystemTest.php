@@ -14,12 +14,15 @@ use Flow\Filesystem\Telemetry\TraceableDestinationStream;
 use Flow\Filesystem\Telemetry\TraceableFilesystem;
 use Flow\Filesystem\Telemetry\TraceableSourceStream;
 use Flow\Filesystem\Tests\Mother\FilesystemTelemetryConfigMother;
+use Generator;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 use function Flow\Filesystem\DSL\filesystem_telemetry_options;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Telemetry\DSL\memory_span_processor;
 use function Flow\Telemetry\DSL\void_exporter;
+use function iterator_to_array;
 
 final class TraceableFilesystemTest extends TestCase
 {
@@ -51,7 +54,7 @@ final class TraceableFilesystemTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
-        $exception = new \RuntimeException('Append failed');
+        $exception = new RuntimeException('Append failed');
 
         $mockFilesystem = $this->createMock(Filesystem::class);
         $mockFilesystem->method('mount')->willReturn(new Mount('file'));
@@ -59,7 +62,7 @@ final class TraceableFilesystemTest extends TestCase
 
         $fs = new TraceableFilesystem($mockFilesystem, $config);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Append failed');
 
         $fs->appendTo($path);
@@ -109,12 +112,12 @@ final class TraceableFilesystemTest extends TestCase
         $mockFilesystem->method('mount')->willReturn(new Mount('file'));
         $mockFilesystem
             ->method('list')
-            ->willReturnCallback(static function (): \Generator {
+            ->willReturnCallback(static function (): Generator {
                 yield from [];
             });
 
         $fs = new TraceableFilesystem($mockFilesystem, $config);
-        \iterator_to_array($fs->list($path));
+        iterator_to_array($fs->list($path));
 
         static::assertEmpty($spanProcessor->endedSpans());
     }
@@ -157,7 +160,7 @@ final class TraceableFilesystemTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
-        $exception = new \RuntimeException('Read failed');
+        $exception = new RuntimeException('Read failed');
 
         $mockFilesystem = $this->createMock(Filesystem::class);
         $mockFilesystem->method('mount')->willReturn(new Mount('file'));
@@ -165,7 +168,7 @@ final class TraceableFilesystemTest extends TestCase
 
         $fs = new TraceableFilesystem($mockFilesystem, $config);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Read failed');
 
         $fs->readFrom($path);
@@ -252,7 +255,7 @@ final class TraceableFilesystemTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
-        $exception = new \RuntimeException('Write failed');
+        $exception = new RuntimeException('Write failed');
 
         $mockFilesystem = $this->createMock(Filesystem::class);
         $mockFilesystem->method('mount')->willReturn(new Mount('file'));
@@ -260,7 +263,7 @@ final class TraceableFilesystemTest extends TestCase
 
         $fs = new TraceableFilesystem($mockFilesystem, $config);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Write failed');
 
         $fs->writeTo($path);

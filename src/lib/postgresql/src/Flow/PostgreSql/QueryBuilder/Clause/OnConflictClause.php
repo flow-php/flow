@@ -64,17 +64,15 @@ final readonly class OnConflictClause implements AstConvertible
         $updates = [];
         $targetList = $onConflictClause->getTargetList();
 
-        if ($targetList !== null) {
-            foreach ($targetList as $targetNode) {
-                $resTarget = $targetNode->getResTarget();
+        foreach ($targetList as $targetNode) {
+            $resTarget = $targetNode->getResTarget();
 
-                if ($resTarget !== null) {
-                    $name = $resTarget->getName();
-                    $valNode = $resTarget->getVal();
+            if ($resTarget !== null) {
+                $name = $resTarget->getName();
+                $valNode = $resTarget->getVal();
 
-                    if ($name !== '' && $valNode !== null) {
-                        $updates[$name] = ExpressionFactory::fromAst($valNode);
-                    }
+                if ($name !== '' && $valNode !== null) {
+                    $updates[$name] = ExpressionFactory::fromAst($valNode);
                 }
             }
         }

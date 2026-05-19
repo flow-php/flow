@@ -8,10 +8,13 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function array_merge;
 use function Flow\ETL\DSL\is_type;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
+use function implode;
+use function is_string;
 
 final class ConcatWithSeparator extends ScalarFunctionChain
 {
@@ -31,7 +34,7 @@ final class ConcatWithSeparator extends ScalarFunctionChain
     {
         $separator = (new Parameter($this->separator))->asString($row, $context);
 
-        if (!\is_string($separator)) {
+        if (!is_string($separator)) {
             $context
                 ->functions()
                 ->invalidResult(
@@ -49,16 +52,16 @@ final class ConcatWithSeparator extends ScalarFunctionChain
 
             if (is_type(type_list(type_string()), $value)) {
                 /** @var list<string> $value */
-                $concatValues = \array_merge($concatValues, $value);
+                $concatValues = array_merge($concatValues, $value);
             } else {
-                $value = \is_string($value) ? $value : type_optional(type_string())->cast($value);
+                $value = is_string($value) ? $value : type_optional(type_string())->cast($value);
 
-                if (\is_string($value)) {
+                if (is_string($value)) {
                     $concatValues[] = $value;
                 }
             }
         }
 
-        return \implode($separator, $concatValues);
+        return implode($separator, $concatValues);
     }
 }

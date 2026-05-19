@@ -25,6 +25,10 @@ use Flow\PostgreSql\QueryBuilder\Table\Table;
 use Flow\PostgreSql\QueryBuilder\Table\TableFunction;
 use Flow\PostgreSql\QueryBuilder\Table\TableReference;
 
+use function array_map;
+use function assert;
+use function count;
+
 /**
  * Builder for UPDATE statements.
  */
@@ -59,7 +63,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
 
         if ($updateStmt->hasWithClause()) {
             $withClauseProto = $updateStmt->getWithClause();
-            \assert($withClauseProto !== null);
+            assert($withClauseProto !== null);
             $with = WithClause::fromAst($withClauseProto);
         }
 
@@ -85,13 +89,13 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
 
         if ($relation->hasAlias()) {
             $aliasProto = $relation->getAlias();
-            \assert($aliasProto !== null);
+            assert($aliasProto !== null);
             $alias = $aliasProto->getAliasname();
         }
 
         $targetList = $updateStmt->getTargetList();
 
-        if ($targetList === null || \count($targetList) === 0) {
+        if (count($targetList) === 0) {
             throw InvalidAstException::missingRequiredField('targetList', 'UpdateStmt');
         }
 
@@ -115,7 +119,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
             }
 
             $val = $resTarget->getVal();
-            \assert($val !== null);
+            assert($val !== null);
 
             $assignments[$columnName] = ExpressionFactory::fromAst($val);
         }
@@ -123,7 +127,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         $from = [];
         $fromClause = $updateStmt->getFromClause();
 
-        if ($fromClause !== null && \count($fromClause) > 0) {
+        if (count($fromClause) > 0) {
             foreach ($fromClause as $fromNode) {
                 $from[] = self::tableReferenceFromAst($fromNode);
             }
@@ -133,14 +137,14 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
 
         if ($updateStmt->hasWhereClause()) {
             $whereNode = $updateStmt->getWhereClause();
-            \assert($whereNode !== null);
+            assert($whereNode !== null);
             $where = ConditionFactory::fromAst($whereNode);
         }
 
         $returning = [];
         $returningList = $updateStmt->getReturningList();
 
-        if ($returningList !== null && \count($returningList) > 0) {
+        if (count($returningList) > 0) {
             foreach ($returningList as $returningNode) {
                 $returning[] = ExpressionFactory::fromAst($returningNode);
             }
@@ -156,7 +160,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
 
     public function from(string|TableReference ...$tables): UpdateWhereStep
     {
-        $tables = \array_map(static function (string|TableReference $t): TableReference {
+        $tables = array_map(static function (string|TableReference $t): TableReference {
             if ($t instanceof TableReference) {
                 return $t;
             }
@@ -298,7 +302,7 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         if ($this->with !== null) {
             $withClauseNode = $this->with->toAst();
             $withClauseProto = $withClauseNode->getWithClause();
-            \assert($withClauseProto !== null);
+            assert($withClauseProto !== null);
             $updateStmt->setWithClause($withClauseProto);
         }
 

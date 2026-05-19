@@ -49,6 +49,19 @@ lint-links:
 analyze *args:
     tools/phpstan/vendor/bin/phpstan analyze -c phpstan.neon --memory-limit=-1 {{args}}
 
+# Run Mago static analyzer, scoped to packages we've finished migrating (add package paths below).
+analyze-mago *args:
+    tools/mago/vendor/bin/mago analyze {{args}} \
+        src/lib/types \
+        src/lib/telemetry \
+        src/lib/postgresql \
+        src/lib/filesystem \
+        src/lib/array-dot \
+        src/lib/azure-sdk \
+        src/lib/doctrine-dbal-bulk \
+        src/lib/snappy \
+        src/lib/parquet
+
 # Auto-fix code style with Mago (format + lint --fix).
 fix:
     tools/mago/vendor/bin/mago format

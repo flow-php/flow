@@ -9,6 +9,7 @@ use Flow\ETL\Extractor\SequenceGenerator\SequenceGenerator;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Generator;
 
 final readonly class SequenceExtractor implements Extractor
 {
@@ -17,7 +18,7 @@ final readonly class SequenceExtractor implements Extractor
         private string $entryName = 'entry',
     ) {}
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         /** @var mixed $item */
         foreach ($this->generator->generate() as $item) {

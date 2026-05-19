@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Integration\Function;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\data_frame;
@@ -16,7 +17,7 @@ use function Flow\ETL\DSL\to_memory;
 
 final class HashTest extends FlowTestCase
 {
-    public static function provideValues(): \Generator
+    public static function provideValues(): Generator
     {
         yield 'array' => [[1, 2, 3], 'f1c4574435e8e2806215a6b677d5e06b'];
         yield 'string' => ['value', 'd7ab8cce59abd5050d59506fb013961a'];

@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Page;
 
+use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Page\Header\DataPageHeader;
 use Flow\Parquet\ParquetFile\Page\Header\DataPageHeaderV2;
 use Flow\Parquet\ParquetFile\Page\Header\DictionaryPageHeader;
 use Flow\Parquet\ParquetFile\Page\Header\Type;
+use Flow\Parquet\ThriftModel\PageHeader as ThriftPageHeader;
 
 final readonly class PageHeader
 {
@@ -22,16 +24,22 @@ final readonly class PageHeader
         private ?DictionaryPageHeader $dictionaryPageHeader,
     ) {}
 
-    public static function fromThrift(\Flow\Parquet\ThriftModel\PageHeader $thrift, Options $options): self
+    public static function fromThrift(ThriftPageHeader $thrift, Options $options): self
     {
         return new self(
             Type::from($thrift->type),
             (int) $thrift->compressed_page_size,
             (int) $thrift->uncompressed_page_size,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             $thrift->data_page_header !== null ? DataPageHeader::fromThrift($thrift->data_page_header) : null,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             $thrift->data_page_header_v2 !== null
                 ? DataPageHeaderV2::fromThrift($thrift->data_page_header_v2, $options)
                 : null,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             $thrift->dictionary_page_header !== null
                 ? DictionaryPageHeader::fromThrift($thrift->dictionary_page_header)
                 : null,
@@ -82,23 +90,24 @@ final readonly class PageHeader
 
     public function encoding(): Encodings
     {
-        if ($this->dictionaryPageHeader) {
+        if ($this->dictionaryPageHeader !== null) {
             return $this->dictionaryPageHeader->encoding();
         }
 
-        if ($this->dataPageHeaderV2) {
+        if ($this->dataPageHeaderV2 !== null) {
             return $this->dataPageHeaderV2->encoding();
         }
 
-        /**
-         * @phpstan-ignore-next-line
-         */
+        if ($this->dataPageHeader === null) {
+            throw new RuntimeException('PageHeader has no encoding: missing all page sub-headers');
+        }
+
         return $this->dataPageHeader->encoding();
     }
 
-    public function toThrift(): \Flow\Parquet\ThriftModel\PageHeader
+    public function toThrift(): ThriftPageHeader
     {
-        return new \Flow\Parquet\ThriftModel\PageHeader([
+        return new ThriftPageHeader([
             'type' => $this->type->value,
             'compressed_page_size' => $this->compressedPageSize,
             'uncompressed_page_size' => $this->uncompressedPageSize,

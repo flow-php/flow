@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
+use function ceil;
+
 final readonly class Pages
 {
     public function __construct(
@@ -13,6 +15,6 @@ final readonly class Pages
 
     public function pages(): int
     {
-        return (int) \ceil($this->total / $this->pageSize);
+        return (int) ceil($this->total / $this->pageSize);
     }
 }

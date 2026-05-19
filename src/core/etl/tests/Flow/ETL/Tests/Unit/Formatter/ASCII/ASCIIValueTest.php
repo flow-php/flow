@@ -4,31 +4,33 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Formatter\ASCII;
 
+use DateTimeImmutable;
 use Flow\ETL\Formatter\ASCII\ASCIIValue;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\datetime_entry;
 
 final class ASCIIValueTest extends FlowTestCase
 {
-    public static function values_with_truncating(): \Generator
+    public static function values_with_truncating(): Generator
     {
         yield ['string', 'str'];
         yield [false, 'fal'];
         yield [true, 'tru'];
-        yield [datetime_entry('test', new \DateTimeImmutable('2023-01-01 00:00:00 UTC')), '202'];
+        yield [datetime_entry('test', new DateTimeImmutable('2023-01-01 00:00:00 UTC')), '202'];
         yield [['a' => 1, 'b' => 2, 'c' => ['test']], '{"a'];
     }
 
-    public static function values_without_truncating(): \Generator
+    public static function values_without_truncating(): Generator
     {
         yield ['string', 'string'];
         yield [1, '1'];
         yield [false, 'false'];
         yield [true, 'true'];
-        yield [datetime_entry('test', new \DateTimeImmutable('2023-01-01 00:00:00 UTC')), '2023-01-01T00:00:00+00:00'];
+        yield [datetime_entry('test', new DateTimeImmutable('2023-01-01 00:00:00 UTC')), '2023-01-01T00:00:00+00:00'];
         yield [['a' => 1, 'b' => 2, 'c' => ['test']], '{"a":1,"b":2,"c":["test"]}'];
     }
 

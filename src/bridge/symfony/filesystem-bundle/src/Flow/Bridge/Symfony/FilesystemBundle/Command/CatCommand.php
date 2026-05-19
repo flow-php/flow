@@ -11,10 +11,12 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Throwable;
 
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
+use function sprintf;
 
 #[AsCommand(name: 'flow:filesystem:cat', description: 'Stream a file URI to STDOUT.', aliases: ['flow:fs:cat'])]
 final class CatCommand extends Command
@@ -48,13 +50,13 @@ final class CatCommand extends Command
             $status = $filesystem->status($path);
 
             if ($status === null) {
-                $io->getErrorStyle()->error(\sprintf('File not found: %s', $path->uri()));
+                $io->getErrorStyle()->error(sprintf('File not found: %s', $path->uri()));
 
                 return Command::FAILURE;
             }
 
             if ($status->isDirectory()) {
-                $io->getErrorStyle()->error(\sprintf('Refusing to cat directory: %s', $path->uri()));
+                $io->getErrorStyle()->error(sprintf('Refusing to cat directory: %s', $path->uri()));
 
                 return Command::FAILURE;
             }
@@ -66,7 +68,7 @@ final class CatCommand extends Command
             }
 
             $stream->close();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $io->getErrorStyle()->error($e->getMessage());
 
             return Command::FAILURE;

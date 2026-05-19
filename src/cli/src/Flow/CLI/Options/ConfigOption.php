@@ -11,6 +11,7 @@ use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputInterface;
 
 use function Flow\CLI\option_string_nullable;
+use function Flow\ETL\DSL\config;
 use function Flow\Filesystem\DSL\path_real;
 
 final readonly class ConfigOption
@@ -24,7 +25,7 @@ final readonly class ConfigOption
         $configPath = option_string_nullable($this->optionName, $input);
 
         if ($configPath === null) {
-            return \Flow\ETL\DSL\config();
+            return config();
         }
 
         $path = path_real($configPath);

@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\FilesystemBundle\Tests\Context;
 
 use Flow\Bridge\Symfony\FilesystemBundle\Tests\Fixtures\TestKernel;
+use LogicException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
 use function Flow\Types\DSL\type_instance_of;
+use function is_callable;
 
 final class SymfonyContext
 {
@@ -25,7 +27,7 @@ final class SymfonyContext
 
         $this->kernel = new TestKernel('test', false);
 
-        if (isset($options['config']) && \is_callable($options['config'])) {
+        if (isset($options['config']) && is_callable($options['config'])) {
             $options['config']($this->kernel);
         }
 
@@ -37,7 +39,7 @@ final class SymfonyContext
     public function getContainer(): ContainerInterface
     {
         if ($this->kernel === null) {
-            throw new \LogicException('Kernel has not been booted. Call bootKernel() first.');
+            throw new LogicException('Kernel has not been booted. Call bootKernel() first.');
         }
 
         return $this->kernel->getContainer();
@@ -46,7 +48,7 @@ final class SymfonyContext
     public function getKernel(): TestKernel
     {
         if ($this->kernel === null) {
-            throw new \LogicException('Kernel has not been booted. Call bootKernel() first.');
+            throw new LogicException('Kernel has not been booted. Call bootKernel() first.');
         }
 
         return $this->kernel;

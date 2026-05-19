@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
+use DateTimeImmutable;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -21,14 +22,14 @@ final class AddDynamicEntriesTest extends FlowTestCase
                 ['id' => 1],
                 ['id' => 2],
             ]))
-            ->withEntry('updated_at', lit(new \DateTimeImmutable('2020-01-01 00:00:00 UTC')))
+            ->withEntry('updated_at', lit(new DateTimeImmutable('2020-01-01 00:00:00 UTC')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         static::assertEquals(
             [
-                ['id' => 1, 'updated_at' => new \DateTimeImmutable('2020-01-01T00:00:00+00:00')],
-                ['id' => 2, 'updated_at' => new \DateTimeImmutable('2020-01-01T00:00:00+00:00')],
+                ['id' => 1, 'updated_at' => new DateTimeImmutable('2020-01-01T00:00:00+00:00')],
+                ['id' => 2, 'updated_at' => new DateTimeImmutable('2020-01-01T00:00:00+00:00')],
             ],
             $memory->dump(),
         );

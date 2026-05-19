@@ -14,6 +14,8 @@ use Flow\PostgreSql\Schema\Table;
 use Flow\PostgreSql\Schema\View;
 use Flow\PostgreSql\Schema\ViewDependencyOrder;
 
+use function in_array;
+
 final readonly class CatalogComparator
 {
     /**
@@ -80,19 +82,19 @@ final readonly class CatalogComparator
         $modifiedSchemas = [];
 
         foreach ($targetNames as $name) {
-            if (!\in_array($name, $sourceNames, true)) {
+            if (!in_array($name, $sourceNames, true)) {
                 $addedSchemas[] = $target->get($name);
             }
         }
 
         foreach ($sourceNames as $name) {
-            if (!\in_array($name, $targetNames, true)) {
+            if (!in_array($name, $targetNames, true)) {
                 $removedSchemas[] = $source->get($name);
             }
         }
 
         foreach ($sourceNames as $name) {
-            if (!\in_array($name, $targetNames, true)) {
+            if (!in_array($name, $targetNames, true)) {
                 continue;
             }
 

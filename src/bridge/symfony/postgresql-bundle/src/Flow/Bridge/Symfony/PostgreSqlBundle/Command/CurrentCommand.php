@@ -13,6 +13,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function count;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
 
@@ -55,7 +56,7 @@ final class CurrentCommand extends Command
             ['Version' => "<fg=cyan>{$latest->version}</>"],
             ['Executed at' => '<fg=gray>' . $latest->executedAt->format('Y-m-d H:i:s') . '</>'],
             ['Execution time' => $latest->executionTimeMs !== null ? $latest->executionTimeMs . 'ms' : '<fg=gray>-</>'],
-            ['Total executed' => (string) \count($executed)],
+            ['Total executed' => (string) count($executed)],
         );
 
         return Command::SUCCESS;

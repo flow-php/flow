@@ -5,16 +5,20 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Tests\Integration;
 
 use Flow\Filesystem\Local\NativeLocalFilesystem;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\Filesystem\DSL\path;
+use function implode;
+use function iterator_to_array;
+use function strlen;
 
 final class NativeLocalSourceStreamTest extends NativeLocalFilesystemTestCase
 {
     /**
      * @return \Generator<int, array{int<1, max>}>
      */
-    public static function line_lengths(): \Generator
+    public static function line_lengths(): Generator
     {
         yield [1];
         yield [7];
@@ -36,7 +40,7 @@ final class NativeLocalSourceStreamTest extends NativeLocalFilesystemTestCase
 
         $stream = (new NativeLocalFilesystem())->readFrom(path(__DIR__ . '/var/file.txt'));
 
-        static::assertSame($content, \implode('', \iterator_to_array($stream->iterate())));
+        static::assertSame($content, implode('', iterator_to_array($stream->iterate())));
 
         $stream->close();
     }
@@ -55,11 +59,11 @@ final class NativeLocalSourceStreamTest extends NativeLocalFilesystemTestCase
         static::assertSame($content, $stream->content());
 
         static::assertSame('This is some', $stream->read(12, 0));
-        static::assertSame(12, \strlen($stream->read(12, 0)));
+        static::assertSame(12, strlen($stream->read(12, 0)));
         static::assertSame('multi line file', $stream->read(15, 13));
-        static::assertSame(15, \strlen($stream->read(15, 13)));
+        static::assertSame(15, strlen($stream->read(15, 13)));
         static::assertSame('that we are storing on azure blob', $stream->read(33, 29));
-        static::assertSame(33, \strlen($stream->read(33, 29)));
+        static::assertSame(33, strlen($stream->read(33, 29)));
 
         $stream->close();
     }

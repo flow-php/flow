@@ -61,9 +61,15 @@ use Flow\ETL\Transformer\SelectEntriesTransformer;
 use Flow\ETL\Transformer\UntilTransformer;
 use Flow\Filesystem\Path\Filter;
 use Flow\Types\Type\AutoCaster;
+use Generator;
+use Throwable;
 
+use function array_merge;
+use function array_unshift;
+use function count;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\to_output;
+use function is_string;
 
 final class DataFrame
 {
@@ -214,7 +220,7 @@ final class DataFrame
 
     public function constrain(Constraint $constraint, Constraint ...$constraints): self
     {
-        $constraints = \array_merge([$constraint], $constraints);
+        $constraints = array_merge([$constraint], $constraints);
 
         $this->pipeline->add(new ConstrainedProcessor($constraints));
 
@@ -234,7 +240,7 @@ final class DataFrame
                 $total += $rows->count();
             }
             $this->context->telemetry()->dataFrameCompleted($this->context);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->context->telemetry()->dataFrameFailed($this->context, $e);
 
             throw $e;
@@ -277,7 +283,7 @@ final class DataFrame
                 $output .= $formatter->format($rows, $truncate);
             }
             $this->context->telemetry()->dataFrameCompleted($this->context);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->context->telemetry()->dataFrameFailed($this->context, $e);
 
             throw $e;
@@ -358,7 +364,7 @@ final class DataFrame
                 $rows = $rows->merge($nextRows);
             }
             $this->context->telemetry()->dataFrameCompleted($this->context);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->context->telemetry()->dataFrameFailed($this->context, $e);
 
             throw $e;
@@ -436,14 +442,14 @@ final class DataFrame
      *
      * @return \Generator<Rows>
      */
-    public function get(): \Generator
+    public function get(): Generator
     {
         try {
             foreach ($this->pipeline->process($this->context) as $rows) {
                 yield $rows;
             }
             $this->context->telemetry()->dataFrameCompleted($this->context);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->context->telemetry()->dataFrameFailed($this->context, $e);
 
             throw $e;
@@ -457,14 +463,14 @@ final class DataFrame
      *
      * @return \Generator<array<array<mixed>>>
      */
-    public function getAsArray(): \Generator
+    public function getAsArray(): Generator
     {
         try {
             foreach ($this->pipeline->process($this->context) as $rows) {
                 yield $rows->toArray();
             }
             $this->context->telemetry()->dataFrameCompleted($this->context);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->context->telemetry()->dataFrameFailed($this->context, $e);
 
             throw $e;
@@ -478,7 +484,7 @@ final class DataFrame
      *
      * @return \Generator<Row>
      */
-    public function getEach(): \Generator
+    public function getEach(): Generator
     {
         try {
             foreach ($this->pipeline->process($this->context) as $rows) {
@@ -487,7 +493,7 @@ final class DataFrame
                 }
             }
             $this->context->telemetry()->dataFrameCompleted($this->context);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->context->telemetry()->dataFrameFailed($this->context, $e);
 
             throw $e;
@@ -501,7 +507,7 @@ final class DataFrame
      *
      * @return \Generator<array<mixed>>
      */
-    public function getEachAsArray(): \Generator
+    public function getEachAsArray(): Generator
     {
         try {
             foreach ($this->pipeline->process($this->context) as $rows) {
@@ -510,7 +516,7 @@ final class DataFrame
                 }
             }
             $this->context->telemetry()->dataFrameCompleted($this->context);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->context->telemetry()->dataFrameFailed($this->context, $e);
 
             throw $e;
@@ -530,7 +536,7 @@ final class DataFrame
      */
     public function join(self $dataFrame, Expression $on, string|Join $type = Join::left): self
     {
-        if (\is_string($type)) {
+        if (is_string($type)) {
             $type = Join::from($type);
         }
 
@@ -674,7 +680,7 @@ final class DataFrame
      */
     public function partitionBy(string|Reference $entry, string|Reference ...$entries): self
     {
-        \array_unshift($entries, $entry);
+        array_unshift($entries, $entry);
 
         $this->pipeline->add(new PartitioningProcessor(References::init(...$entries)->all()));
 
@@ -788,7 +794,7 @@ final class DataFrame
             }
 
             $collector->end();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $collector->end($e);
 
             throw $e;
@@ -821,7 +827,7 @@ final class DataFrame
                 $schema = $schema->merge($rows->schema());
             }
             $this->context->telemetry()->dataFrameCompleted($this->context);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->context->telemetry()->dataFrameFailed($this->context, $e);
 
             throw $e;
@@ -940,14 +946,14 @@ final class DataFrame
     public function withEntry(string|Definition $entry, ScalarFunction|WindowFunction $reference): self
     {
         if ($reference instanceof WindowFunction) {
-            if (\count($reference->window()->partitions())) {
+            if (count($reference->window()->partitions())) {
                 $this->pipeline->add(
                     new PartitioningProcessor($reference->window()->partitions(), $reference->window()->order()),
                 );
             } else {
                 $this->collect();
 
-                if (\count($reference->window()->order())) {
+                if (count($reference->window()->order())) {
                     $this->sortBy(...$reference->window()->order());
                 }
             }

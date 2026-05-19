@@ -11,12 +11,13 @@ use Doctrine\DBAL\Tools\DsnParser;
 use Flow\Doctrine\Bulk\Tests\Context\DatabaseContext;
 
 use function Flow\Types\DSL\type_string;
+use function getenv;
 
 abstract class SqliteIntegrationTestCase extends IntegrationTestCase
 {
     protected function setUp(): void
     {
-        $path = type_string()->assert(\getenv('SQLITE_DATABASE_PATH'));
+        $path = type_string()->assert(getenv('SQLITE_DATABASE_PATH'));
         $folder = pathinfo($path, PATHINFO_DIRNAME);
 
         if (!is_dir($folder)) {

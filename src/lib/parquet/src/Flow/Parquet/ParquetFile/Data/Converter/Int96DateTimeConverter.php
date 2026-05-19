@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Data\Converter;
 
+use DateTimeImmutable;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
@@ -11,9 +12,16 @@ use Flow\Parquet\ParquetFile\Data\Converter;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 
+use function array_values;
+use function bin2hex;
+use function floor;
+use function round;
+use function sprintf;
+use function unpack;
+
 final class Int96DateTimeConverter implements Converter
 {
-    public function fromParquetType(mixed $data): \DateTimeImmutable
+    public function fromParquetType(mixed $data): DateTimeImmutable
     {
         /** @var string $data */
         return $this->convertRawBytesToDateTime($data);
@@ -38,16 +46,16 @@ final class Int96DateTimeConverter implements Converter
         );
     }
 
-    private function convertRawBytesToDateTime(string $bytes): \DateTimeImmutable
+    private function convertRawBytesToDateTime(string $bytes): DateTimeImmutable
     {
-        $unpacked = \unpack('C*', $bytes);
+        $unpacked = unpack('C*', $bytes);
 
         if ($unpacked === false) {
-            throw new RuntimeException('Failed to unpack INT96 bytes: ' . \bin2hex($bytes));
+            throw new RuntimeException('Failed to unpack INT96 bytes: ' . bin2hex($bytes));
         }
 
         /** @var array<int, int> $bytesArray */
-        $bytesArray = \array_values($unpacked);
+        $bytesArray = array_values($unpacked);
         $daysInEpoch = $bytesArray[8] | ($bytesArray[9] << 8) | ($bytesArray[10] << 16) | ($bytesArray[11] << 24);
 
         // Convert the first 8 bytes to the number of nanoseconds within the day
@@ -70,16 +78,16 @@ final class Int96DateTimeConverter implements Converter
         $timestampSeconds = ($daysSinceUnixEpoch * 86400) + ($nanosecondsWithinDay / 1e9);
 
         // Separate the seconds and fractional seconds parts of the timestamp
-        $seconds = \floor($timestampSeconds);
+        $seconds = floor($timestampSeconds);
         $fraction = $timestampSeconds - $seconds;
 
         // Convert the fractional seconds to milliseconds
-        $microseconds = \round($fraction * 1e6);
+        $microseconds = round($fraction * 1e6);
 
-        $dateTime = \DateTimeImmutable::createFromFormat('U.u', \sprintf('%d.%06d', $seconds, $microseconds));
+        $dateTime = DateTimeImmutable::createFromFormat('U.u', sprintf('%d.%06d', $seconds, $microseconds));
 
         if ($dateTime === false) {
-            throw new RuntimeException('Failed to convert INT96 to DateTime, given bytes: ' . \bin2hex($bytes));
+            throw new RuntimeException('Failed to convert INT96 to DateTime, given bytes: ' . bin2hex($bytes));
         }
 
         return $dateTime;

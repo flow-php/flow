@@ -18,6 +18,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Rows;
 use Flow\PostgreSql\Client\Client;
+use Throwable;
 
 /**
  * PostgreSQL loader for ETL pipelines.
@@ -59,7 +60,7 @@ final class PostgreSqlLoader implements Loader
             };
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 
             throw $e;

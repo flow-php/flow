@@ -12,6 +12,7 @@ use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
+use Throwable;
 
 final readonly class JoinEachRowsTransformer implements Transformer
 {
@@ -64,7 +65,7 @@ final readonly class JoinEachRowsTransformer implements Transformer
             ]);
 
             return $result;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->transformationFailed($this, $e);
 
             throw $e;

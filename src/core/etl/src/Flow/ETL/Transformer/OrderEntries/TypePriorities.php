@@ -19,6 +19,8 @@ use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Row\Entry\XMLElementEntry;
 use Flow\ETL\Row\Entry\XMLEntry;
 
+use function array_key_exists;
+
 final readonly class TypePriorities
 {
     /**
@@ -52,7 +54,7 @@ final readonly class TypePriorities
      */
     public function for(Entry $entry): int
     {
-        if (!\array_key_exists($entry::class, $this->priorities)) {
+        if (!array_key_exists($entry::class, $this->priorities)) {
             return 99999;
         }
 

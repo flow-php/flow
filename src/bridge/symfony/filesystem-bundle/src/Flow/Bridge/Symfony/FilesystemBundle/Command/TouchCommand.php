@@ -11,11 +11,13 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Throwable;
 
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
+use function sprintf;
 
 #[AsCommand(name: 'flow:filesystem:touch', description: 'Create an empty file at a URI.', aliases: ['flow:fs:touch'])]
 final class TouchCommand extends Command
@@ -54,7 +56,7 @@ final class TouchCommand extends Command
             $filesystem = $table->for($path);
 
             if ($filesystem->status($path) !== null && !$force) {
-                $io->getErrorStyle()->error(\sprintf(
+                $io->getErrorStyle()->error(sprintf(
                     'File already exists: %s. Use --force to overwrite.',
                     $path->uri(),
                 ));
@@ -65,13 +67,13 @@ final class TouchCommand extends Command
             $stream = $filesystem->writeTo($path);
             $stream->append('');
             $stream->close();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $io->getErrorStyle()->error($e->getMessage());
 
             return Command::FAILURE;
         }
 
-        $io->success(\sprintf('Touched %s', $path->uri()));
+        $io->success(sprintf('Touched %s', $path->uri()));
 
         return Command::SUCCESS;
     }

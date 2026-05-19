@@ -12,6 +12,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Sort\ExternalSort;
 use Flow\ETL\Sort\ExternalSort\BucketsCache\FilesystemBucketsCache;
 use Flow\ETL\Sort\MemorySort;
+use Generator;
 
 /**
  * Sorts all rows by the specified columns.
@@ -26,7 +27,7 @@ final readonly class SortingProcessor implements Processor
         private References $refs,
     ) {}
 
-    public function process(\Generator $rows, FlowContext $context): \Generator
+    public function process(Generator $rows, FlowContext $context): Generator
     {
         $minMemoryForMemorySort = Unit::fromMb(1);
 
@@ -49,7 +50,7 @@ final readonly class SortingProcessor implements Processor
      *
      * @return \Generator<Rows>
      */
-    private function externalSort(\Generator $rows, FlowContext $context): \Generator
+    private function externalSort(Generator $rows, FlowContext $context): Generator
     {
         return (new ExternalSort(
             new FilesystemBucketsCache(

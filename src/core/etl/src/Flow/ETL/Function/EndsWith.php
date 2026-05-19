@@ -8,6 +8,8 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function str_ends_with;
+
 final class EndsWith extends ScalarFunctionChain
 {
     public function __construct(
@@ -30,6 +32,6 @@ final class EndsWith extends ScalarFunctionChain
             return false;
         }
 
-        return \str_ends_with($haystack, $needle);
+        return str_ends_with($haystack, $needle);
     }
 }

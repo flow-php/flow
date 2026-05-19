@@ -203,9 +203,9 @@ final class TableBuilderTest extends TestCase
     {
         $builder = create()
             ->table('users')
-            ->ifNotExists()
             ->column(column('id', column_type_serial())->primaryKey())
-            ->column(column('name', column_type_varchar(100)));
+            ->column(column('name', column_type_varchar(100)))
+            ->ifNotExists();
 
         static::assertSame(
             'CREATE TABLE IF NOT EXISTS users (id serial PRIMARY KEY, name varchar(100))',

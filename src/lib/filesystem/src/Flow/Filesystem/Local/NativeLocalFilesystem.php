@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Local;
 
+use DateTimeImmutable;
+use EmptyIterator;
 use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\InvalidSchemeException;
@@ -17,12 +19,33 @@ use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Filesystem\SourceStream;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
 use Flow\Filesystem\Stream\NativeLocalSourceStream;
+use Generator;
+use Iterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use Webmozart\Glob\Glob;
 use Webmozart\Glob\Iterator\GlobFilterIterator;
 use Webmozart\Glob\Iterator\GlobIterator;
 
+use function file_exists;
+use function filemtime;
+use function filesize;
+use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_string;
+use function in_array;
+use function is_dir;
+use function is_file;
+use function mkdir;
+use function preg_replace;
+use function rename;
+use function rmdir;
+use function scandir;
+use function sprintf;
+use function str_ends_with;
+use function str_replace;
+use function sys_get_temp_dir;
+use function unlink;
 
 /**
  * This implementation is based on the native PHP filesystem functions documented here: https://www.php.net/manual/en/book.filesystem.php
@@ -40,7 +63,9 @@ final readonly class NativeLocalFilesystem implements Filesystem
             throw new RuntimeException('Cannot write to system tmp directory');
         }
 
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if ($path->isPattern()) {
             throw new InvalidArgumentException("Pattern paths can't be written: " . $path->uri());
@@ -48,10 +73,10 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
         if (!$this->status($path->parentDirectory())) {
             if (
-                !\mkdir($concurrentDirectory = $path->parentDirectory()->path(), recursive: true)
-                && !\is_dir($concurrentDirectory)
+                !mkdir($concurrentDirectory = $path->parentDirectory()->path(), recursive: true)
+                && !is_dir($concurrentDirectory)
             ) {
-                throw new RuntimeException(\sprintf('Directory "%s" was not created', $concurrentDirectory));
+                throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
             }
         }
 
@@ -60,12 +85,14 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
     public function getSystemTmpDir(): Path
     {
-        return \Flow\Filesystem\DSL\path(\sys_get_temp_dir());
+        return path(sys_get_temp_dir());
     }
 
-    public function list(Path $path, Filter $pathFilter = new OnlyFiles()): \Generator
+    public function list(Path $path, Filter $pathFilter = new OnlyFiles()): Generator
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if (!$path->isPattern()) {
             if ($pathFilter->accept($status = self::statFor($path, $path->path()))) {
@@ -92,14 +119,18 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
     public function mv(Path $from, Path $to): bool
     {
-        $this->mount->supports($from) || throw new InvalidSchemeException($from->protocol(), $this->mount->protocol);
-        $this->mount->supports($to) || throw new InvalidSchemeException($to->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($from)) {
+            throw new InvalidSchemeException($from->protocol(), $this->mount->protocol);
+        }
+        if (!$this->mount->supports($to)) {
+            throw new InvalidSchemeException($to->protocol(), $this->mount->protocol);
+        }
 
-        if (\file_exists($to->path())) {
+        if (file_exists($to->path())) {
             $this->rm($to);
         }
 
-        if (!\rename($from->path(), $to->path())) {
+        if (!rename($from->path(), $to->path())) {
             return false;
         }
 
@@ -108,7 +139,9 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
     public function readFrom(Path $path): SourceStream
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if ($path->isPattern()) {
             throw new InvalidArgumentException("Pattern paths can't be open: " . $path->uri());
@@ -116,10 +149,10 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
         if (!$this->status($path->parentDirectory())) {
             if (
-                !\mkdir($concurrentDirectory = $path->parentDirectory()->path(), recursive: true)
-                && !\is_dir($concurrentDirectory)
+                !mkdir($concurrentDirectory = $path->parentDirectory()->path(), recursive: true)
+                && !is_dir($concurrentDirectory)
             ) {
-                throw new RuntimeException(\sprintf('Directory "%s" was not created', $concurrentDirectory));
+                throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
             }
         }
 
@@ -128,17 +161,19 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
     public function rm(Path $path): bool
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if (!$path->isPattern()) {
-            if (!\file_exists($path->path())) {
+            if (!file_exists($path->path())) {
                 return false;
             }
 
-            if (\is_dir($path->path())) {
+            if (is_dir($path->path())) {
                 $this->rmdir($path->path());
             } else {
-                \unlink($path->path());
+                unlink($path->path());
             }
 
             return true;
@@ -149,10 +184,10 @@ final readonly class NativeLocalFilesystem implements Filesystem
         foreach ($this->matchChildFirst($path->path()) as $filePath) {
             $filePath = type_string()->assert($filePath);
 
-            if (\is_dir($filePath)) {
+            if (is_dir($filePath)) {
                 $this->rmdir($filePath);
             } else {
-                \unlink($filePath);
+                unlink($filePath);
             }
 
             $deletedCount++;
@@ -163,10 +198,12 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
     public function status(Path $path): ?FileStatus
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if (!$path->isPattern()) {
-            if (!\file_exists($path->path())) {
+            if (!file_exists($path->path())) {
                 return null;
             }
 
@@ -176,8 +213,8 @@ final readonly class NativeLocalFilesystem implements Filesystem
         foreach (new GlobIterator($path->path()) as $filePath) {
             $filePath = type_string()->assert($filePath);
 
-            if (\file_exists($filePath)) {
-                return self::statFor(\Flow\Filesystem\DSL\path($filePath, $path->options()), $filePath);
+            if (file_exists($filePath)) {
+                return self::statFor(path($filePath, $path->options()), $filePath);
             }
         }
 
@@ -190,7 +227,9 @@ final readonly class NativeLocalFilesystem implements Filesystem
             throw new RuntimeException('Cannot write to system tmp directory');
         }
 
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if ($path->isPattern()) {
             throw new InvalidArgumentException("Pattern paths can't be written: " . $path->uri());
@@ -198,10 +237,10 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
         if (!$this->status($path->parentDirectory())) {
             if (
-                !\mkdir($concurrentDirectory = $path->parentDirectory()->path(), recursive: true)
-                && !\is_dir($concurrentDirectory)
+                !mkdir($concurrentDirectory = $path->parentDirectory()->path(), recursive: true)
+                && !is_dir($concurrentDirectory)
             ) {
-                throw new RuntimeException(\sprintf('Directory "%s" was not created', $concurrentDirectory));
+                throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
             }
         }
 
@@ -212,21 +251,24 @@ final readonly class NativeLocalFilesystem implements Filesystem
      * Lazy iterator over glob matches in CHILD_FIRST order so callers can safely delete each match
      * without confusing webmozart/glob's internal RecursiveIteratorIterator (which descends with SELF_FIRST).
      */
-    private function matchChildFirst(string $glob): \Iterator
+    /**
+     * @return \Iterator<int|string, string>
+     */
+    private function matchChildFirst(string $glob): Iterator
     {
         $glob = self::canonicalizePath($glob);
         $basePath = Glob::getBasePath($glob);
 
-        if (!\is_dir($basePath)) {
-            return new \EmptyIterator();
+        if (!is_dir($basePath)) {
+            return new EmptyIterator();
         }
 
-        $recursive = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator(
+        $recursive = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(
                 $basePath,
-                \RecursiveDirectoryIterator::CURRENT_AS_PATHNAME | \RecursiveDirectoryIterator::SKIP_DOTS,
+                RecursiveDirectoryIterator::CURRENT_AS_PATHNAME | RecursiveDirectoryIterator::SKIP_DOTS,
             ),
-            \RecursiveIteratorIterator::CHILD_FIRST,
+            RecursiveIteratorIterator::CHILD_FIRST,
         );
 
         return new GlobFilterIterator(
@@ -242,52 +284,52 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
     private function rmdir(string $dirPath): void
     {
-        if (!\is_dir($dirPath)) {
+        if (!is_dir($dirPath)) {
             throw new InvalidArgumentException("{$dirPath} must be a directory");
         }
 
-        if (!\str_ends_with($dirPath, '/')) {
+        if (!str_ends_with($dirPath, '/')) {
             $dirPath .= '/';
         }
 
-        $files = \scandir($dirPath);
+        $files = scandir($dirPath);
 
         if (!$files) {
             throw new RuntimeException("Can't read directory: {$dirPath}");
         }
 
         foreach ($files as $file) {
-            if (\in_array($file, ['.', '..'], true)) {
+            if (in_array($file, ['.', '..'], true)) {
                 continue;
             }
 
             $filePath = $dirPath . $file;
 
-            if (\is_dir($filePath)) {
+            if (is_dir($filePath)) {
                 $this->rmdir($filePath);
             } else {
-                \unlink($filePath);
+                unlink($filePath);
             }
         }
 
-        \rmdir($dirPath);
+        rmdir($dirPath);
     }
 
     private static function canonicalizePath(string $path): string
     {
-        return type_string()->cast(\preg_replace('#/+#', '/', \str_replace('\\', '/', $path)));
+        return type_string()->cast(preg_replace('#/+#', '/', str_replace('\\', '/', $path)));
     }
 
     private static function statFor(Path $path, string $absolutePath): FileStatus
     {
-        $isFile = \is_file($absolutePath);
-        $mtime = \filemtime($absolutePath);
+        $isFile = is_file($absolutePath);
+        $mtime = filemtime($absolutePath);
 
         return new FileStatus(
             $path,
             $isFile,
-            $isFile ? (\filesize($absolutePath) ?: null) : null,
-            $mtime !== false ? new \DateTimeImmutable('@' . $mtime) : null,
+            $isFile ? (filesize($absolutePath) ?: null) : null,
+            $mtime !== false ? new DateTimeImmutable('@' . $mtime) : null,
         );
     }
 }

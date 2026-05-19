@@ -6,8 +6,10 @@ namespace Flow\Types\Tests\Unit\Type\Native;
 
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type\Native\UnionType;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_float;
@@ -22,7 +24,7 @@ use function Flow\Types\DSL\types;
 
 final class UnionTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'valid string' => [
             'type' => type_union(type_integer(), type_string()),
@@ -86,12 +88,12 @@ final class UnionTypeTest extends TestCase
 
         yield 'invalid object' => [
             'type' => type_union(type_integer(), type_string()),
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'exceptionClass' => InvalidTypeException::class,
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
         yield 'string to integer' => [
             'type' => type_union(type_integer(), type_string()),
@@ -122,7 +124,7 @@ final class UnionTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'valid string' => [
             'type' => type_union(type_integer(), type_string()),
@@ -161,6 +163,9 @@ final class UnionTypeTest extends TestCase
         ];
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('assert_data_provider')]
     public function test_assert(UnionType $type, mixed $value, ?string $exceptionClass = null): void
     {
@@ -172,6 +177,9 @@ final class UnionTypeTest extends TestCase
         }
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('cast_data_provider')]
     public function test_cast(UnionType $type, mixed $value, mixed $expected, ?string $exceptionClass): void
     {
@@ -185,9 +193,11 @@ final class UnionTypeTest extends TestCase
 
     public function test_is_optional_type(): void
     {
-        static::assertTrue(type_union(type_integer(), type_null())->isOptionalType());
-        static::assertFalse(type_union(type_null(), type_null())->isOptionalType());
-        static::assertFalse(type_union(type_integer(), type_null(), type_optional(type_string()))->isOptionalType());
+        static::assertTrue((new UnionType(type_integer(), type_null()))->isOptionalType());
+        static::assertFalse((new UnionType(type_null(), type_null()))->isOptionalType());
+        static::assertFalse(
+            (new UnionType(new UnionType(type_integer(), type_null()), type_optional(type_string())))->isOptionalType(),
+        );
     }
 
     #[DataProvider('is_valid_data_provider')]
@@ -227,22 +237,28 @@ final class UnionTypeTest extends TestCase
 
     public function test_types(): void
     {
-        static::assertEquals(types(type_integer(), type_string()), type_union(type_integer(), type_string())->types());
+        static::assertEquals(
+            types(type_integer(), type_string()),
+            (new UnionType(type_integer(), type_string()))->types(),
+        );
         static::assertEquals(
             types(type_integer(), type_string(), type_null()),
-            type_union(type_integer(), type_string(), type_null())->types(),
+            (new UnionType(new UnionType(type_integer(), type_string()), type_null()))->types(),
         );
         static::assertEquals(
             types(type_integer(), type_string(), type_optional(type_string())),
-            type_union(type_integer(), type_string(), type_optional(type_string()))->types(),
+            (new UnionType(new UnionType(type_integer(), type_string()), type_optional(type_string())))->types(),
         );
         static::assertEquals(
             types(type_integer(), type_string(), type_float(), type_boolean()),
-            type_union(type_integer(), type_string(), type_union(type_float(), type_boolean()))->types(),
+            (new UnionType(
+                new UnionType(type_integer(), type_string()),
+                new UnionType(type_float(), type_boolean()),
+            ))->types(),
         );
         static::assertEquals(
             types(type_integer(), type_float(), type_boolean()),
-            type_union(type_integer(), type_integer(), type_union(type_float(), type_boolean()))
+            (new UnionType(new UnionType(type_integer(), type_integer()), new UnionType(type_float(), type_boolean())))
                 ->types()
                 ->deduplicate(),
         );

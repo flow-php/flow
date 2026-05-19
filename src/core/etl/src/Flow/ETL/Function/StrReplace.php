@@ -11,6 +11,7 @@ use Flow\ETL\Row;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
+use function str_replace;
 
 final class StrReplace extends ScalarFunctionChain
 {
@@ -54,6 +55,6 @@ final class StrReplace extends ScalarFunctionChain
         $typedSearch = type_union(type_string(), type_list(type_string()))->assert($search);
         $typedReplace = type_union(type_string(), type_list(type_string()))->assert($replace);
 
-        return \str_replace($typedSearch, $typedReplace, $value);
+        return str_replace($typedSearch, $typedReplace, $value);
     }
 }

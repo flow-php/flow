@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile\Page\Header;
 
 use Flow\Parquet\ParquetFile\Encodings;
+use Flow\Parquet\ThriftModel\DictionaryPageHeader as ThriftDictionaryPageHeader;
 
 final readonly class DictionaryPageHeader
 {
@@ -13,7 +14,7 @@ final readonly class DictionaryPageHeader
         private int $valuesCount,
     ) {}
 
-    public static function fromThrift(\Flow\Parquet\ThriftModel\DictionaryPageHeader $thrift): self
+    public static function fromThrift(ThriftDictionaryPageHeader $thrift): self
     {
         return new self(Encodings::from($thrift->encoding), (int) $thrift->num_values);
     }
@@ -23,9 +24,9 @@ final readonly class DictionaryPageHeader
         return $this->encoding;
     }
 
-    public function toThrift(): \Flow\Parquet\ThriftModel\DictionaryPageHeader
+    public function toThrift(): ThriftDictionaryPageHeader
     {
-        return new \Flow\Parquet\ThriftModel\DictionaryPageHeader([
+        return new ThriftDictionaryPageHeader([
             'encoding' => $this->encoding->value,
             'num_values' => $this->valuesCount,
             'is_sorted' => false,

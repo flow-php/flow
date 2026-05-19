@@ -8,14 +8,17 @@ use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\String\StringTypeNarrower;
 use Flow\Types\Value\Json;
 
+use function count;
 use function Flow\Types\DSL\get_type;
 use function Flow\Types\DSL\type_float;
+use function is_array;
+use function is_string;
 
 final readonly class AutoCaster
 {
     public function cast(mixed $value): mixed
     {
-        if (\is_string($value)) {
+        if (is_string($value)) {
             return $this->castToString($value);
         }
 
@@ -23,7 +26,7 @@ final readonly class AutoCaster
             return $this->castArray($value->toArray());
         }
 
-        if (\is_array($value)) {
+        if (is_array($value)) {
             return $this->castArray($value);
         }
 
@@ -40,6 +43,7 @@ final readonly class AutoCaster
         $keyTypes = [];
         $valueTypes = [];
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($value as $key => $item) {
             $keyType = get_type($key);
             $valueType = get_type($item);
@@ -47,9 +51,10 @@ final readonly class AutoCaster
             $valueTypes[$valueType->toString()] = $valueType;
         }
 
-        if (isset($valueTypes['integer'], $valueTypes['float']) && \count($valueTypes) === 2) {
+        if (isset($valueTypes['integer'], $valueTypes['float']) && count($valueTypes) === 2) {
             $castedArray = [];
 
+            // @mago-ignore analysis:mixed-assignment
             foreach ($value as $key => $item) {
                 $castedArray[$key] = type_float()->cast($item);
             }

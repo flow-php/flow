@@ -17,6 +17,7 @@ use function Flow\PostgreSql\DSL\row_expr;
 use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\star;
 use function Flow\PostgreSql\DSL\values_table;
+use function iterator_to_array;
 
 final class PgSqlCursorTest extends PostgreSqlTestCase
 {
@@ -50,7 +51,7 @@ final class PgSqlCursorTest extends PostgreSqlTestCase
             ->client()
             ->cursor(select(func('generate_series', [literal(1), literal(2)])->as('num')));
 
-        $rows = \iterator_to_array($cursor->iterate());
+        $rows = iterator_to_array($cursor->iterate());
 
         static::assertCount(2, $rows);
     }
@@ -69,6 +70,9 @@ final class PgSqlCursorTest extends PostgreSqlTestCase
         }
 
         static::assertCount(3, $rows);
+        static::assertNotNull($rows[0]);
+        static::assertNotNull($rows[1]);
+        static::assertNotNull($rows[2]);
         static::assertSame(1, $rows[0]['num']);
         static::assertSame(2, $rows[1]['num']);
         static::assertSame(3, $rows[2]['num']);
@@ -87,7 +91,7 @@ final class PgSqlCursorTest extends PostgreSqlTestCase
                     )->as('t', ['id', 'name'])),
             );
 
-        $objects = \iterator_to_array($cursor->map(constructor_mapper(CursorTestUser::class)));
+        $objects = iterator_to_array($cursor->map(constructor_mapper(CursorTestUser::class)));
 
         static::assertCount(2, $objects);
         static::assertInstanceOf(CursorTestUser::class, $objects[0]);
@@ -144,7 +148,7 @@ final class PgSqlCursorTest extends PostgreSqlTestCase
 
         static::assertSame(0, $cursor->count());
         static::assertNull($cursor->next());
-        static::assertSame([], \iterator_to_array($cursor));
+        static::assertSame([], iterator_to_array($cursor));
     }
 }
 

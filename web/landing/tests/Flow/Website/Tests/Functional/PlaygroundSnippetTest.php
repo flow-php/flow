@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Website\Tests\Functional;
 
+use function parse_str;
+use function parse_url;
+
 final class PlaygroundSnippetTest extends EndToEndTestCase
 {
     public function test_create_and_load_snippet(): void
@@ -33,8 +36,8 @@ final class PlaygroundSnippetTest extends EndToEndTestCase
 
         static::assertStringContainsString('/playground?snippet=', $currentUrl, 'URL should contain snippet parameter');
 
-        $parsedUrl = \parse_url($currentUrl);
-        \parse_str($parsedUrl['query'] ?? '', $queryParams);
+        $parsedUrl = parse_url($currentUrl);
+        parse_str($parsedUrl['query'] ?? '', $queryParams);
         $snippetId = $queryParams['snippet'] ?? null;
 
         static::assertNotNull($snippetId, 'Snippet ID should be extracted from URL');

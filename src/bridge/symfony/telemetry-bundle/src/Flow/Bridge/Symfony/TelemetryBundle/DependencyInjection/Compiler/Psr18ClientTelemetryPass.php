@@ -12,6 +12,10 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 
+use function class_exists;
+use function is_a;
+use function preg_match;
+
 final class Psr18ClientTelemetryPass implements CompilerPassInterface
 {
     public function process(ContainerBuilder $container): void
@@ -62,11 +66,11 @@ final class Psr18ClientTelemetryPass implements CompilerPassInterface
             return false;
         }
 
-        if (!\class_exists($class)) {
+        if (!class_exists($class)) {
             return false;
         }
 
-        return \is_a($class, ClientInterface::class, true);
+        return is_a($class, ClientInterface::class, true);
     }
 
     /**
@@ -85,7 +89,7 @@ final class Psr18ClientTelemetryPass implements CompilerPassInterface
 
     private function matchesPattern(string $serviceId, string $pattern): bool
     {
-        $result = @\preg_match($pattern, $serviceId);
+        $result = @preg_match($pattern, $serviceId);
 
         if ($result !== false) {
             return (bool) $result;

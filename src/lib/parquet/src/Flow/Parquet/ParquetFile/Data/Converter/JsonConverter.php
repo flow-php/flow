@@ -10,11 +10,13 @@ use Flow\Parquet\ParquetFile\Data\Converter;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
 
+use function is_string;
+
 final class JsonConverter implements Converter
 {
     public function fromParquetType(mixed $data): string
     {
-        if (!\is_string($data)) {
+        if (!is_string($data)) {
             throw new RuntimeException('Json must be read as a string from Parquet file');
         }
 
@@ -32,7 +34,7 @@ final class JsonConverter implements Converter
 
     public function toParquetType(mixed $data): string
     {
-        if (!\is_string($data)) {
+        if (!is_string($data)) {
             throw new RuntimeException('Json must be written as a string from Parquet file');
         }
 

@@ -7,6 +7,7 @@ namespace Flow\Bridge\Psr3\Telemetry;
 use Flow\Bridge\Psr3\Telemetry\Exception\InvalidArgumentException;
 use Flow\Telemetry\Logger\Severity;
 use Psr\Log\LogLevel;
+use Stringable;
 
 final readonly class SeverityMapper
 {
@@ -43,7 +44,7 @@ final readonly class SeverityMapper
     /**
      * @throws InvalidArgumentException When the level is not a known PSR-3 LogLevel string
      */
-    public function map(string|\Stringable $level): Severity
+    public function map(string|Stringable $level): Severity
     {
         $key = (string) $level;
 

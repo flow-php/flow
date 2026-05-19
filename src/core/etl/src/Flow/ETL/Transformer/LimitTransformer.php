@@ -10,6 +10,9 @@ use Flow\ETL\Exception\LimitReachedException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
+use Throwable;
+
+use function count;
 
 final class LimitTransformer implements Transformer
 {
@@ -40,7 +43,7 @@ final class LimitTransformer implements Transformer
                     TelemetryAttributes::ATTR_TRANSFORMATION_OUTPUT_ROWS => $rows->count(),
                 ]);
 
-                if (\count($rows)) {
+                if (count($rows)) {
                     return $rows;
                 }
 
@@ -55,7 +58,7 @@ final class LimitTransformer implements Transformer
             return $rows;
         } catch (LimitReachedException $e) {
             throw $e;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->transformationFailed($this, $e);
 
             throw $e;

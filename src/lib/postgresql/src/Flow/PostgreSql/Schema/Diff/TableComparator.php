@@ -9,6 +9,10 @@ use Flow\PostgreSql\Schema\Constraint\PrimaryKey;
 use Flow\PostgreSql\Schema\Table;
 use Flow\PostgreSql\Schema\Trigger;
 
+use function array_diff;
+use function array_values;
+use function sort;
+
 final readonly class TableComparator
 {
     public function __construct(
@@ -81,18 +85,18 @@ final readonly class TableComparator
 
         $sourceInherits = $source->inherits;
         $targetInherits = $target->inherits;
-        \sort($sourceInherits);
-        \sort($targetInherits);
-        $addedInherits = \array_values(\array_diff($targetInherits, $sourceInherits));
-        $removedInherits = \array_values(\array_diff($sourceInherits, $targetInherits));
+        sort($sourceInherits);
+        sort($targetInherits);
+        $addedInherits = array_values(array_diff($targetInherits, $sourceInherits));
+        $removedInherits = array_values(array_diff($sourceInherits, $targetInherits));
 
         $tablespaceChanged = $source->tablespace !== $target->tablespace;
 
         return new TableDiff(
             $source,
             $target,
-            \array_values($addedColumns),
-            \array_values($removedColumns),
+            array_values($addedColumns),
+            array_values($removedColumns),
             $modifiedColumns,
             $this->diffPrimaryKeyAdded($source->primaryKey, $target->primaryKey),
             $this->diffPrimaryKeyRemoved($source->primaryKey, $target->primaryKey),

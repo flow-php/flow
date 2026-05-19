@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Explain\Plan;
 
+use function array_map;
+
 /**
  * @phpstan-import-type TimingShape from Timing
  * @phpstan-import-type BuffersShape from Buffers
@@ -34,14 +36,14 @@ namespace Flow\PostgreSql\Explain\Plan;
  *     sort_method: ?string,
  *     sort_space_used: ?int,
  *     sort_space_type: ?string,
- *     raw_data: array<string, mixed>
+ *     raw_data: array<array-key, mixed>
  * }
  */
 final readonly class PlanNode
 {
     /**
      * @param array<PlanNode> $children
-     * @param array<string, mixed> $rawData
+     * @param array<array-key, mixed> $rawData
      */
     public function __construct(
         private PlanNodeType $nodeType,
@@ -240,7 +242,7 @@ final readonly class PlanNode
             'cost' => $this->cost->normalize(),
             'estimated_rows' => $this->estimatedRows,
             'row_width' => $this->rowWidth,
-            'children' => \array_map(static fn(self $child): array => $child->normalize(), $this->children),
+            'children' => array_map(static fn(self $child): array => $child->normalize(), $this->children),
             'relation_name' => $this->relationName,
             'schema' => $this->schema,
             'alias' => $this->alias,
@@ -271,7 +273,7 @@ final readonly class PlanNode
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
     public function rawData(): array
     {

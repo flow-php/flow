@@ -20,7 +20,12 @@ use Flow\Parquet\ParquetFile\Page\Header\DictionaryPageHeader;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 
+use function array_fill;
+use function array_key_exists;
+use function count;
 use function Flow\ETL\Adapter\Parquet\empty_generator;
+use function iterator_to_array;
+use function ord;
 
 final readonly class ColumnDataDecoder
 {
@@ -47,7 +52,7 @@ final readonly class ColumnDataDecoder
                 $pageHeader->valuesCount(),
             );
         } else {
-            $repetitionLevels = \array_fill(0, $pageHeader->valuesCount(), 0);
+            $repetitionLevels = array_fill(0, max(0, $pageHeader->valuesCount()), 0);
         }
 
         if ($column->maxDefinitionsLevel()) {
@@ -59,7 +64,7 @@ final readonly class ColumnDataDecoder
                 $pageHeader->valuesCount(),
             );
         } else {
-            $definitionLevels = \array_fill(0, $pageHeader->valuesCount(), $column->maxDefinitionsLevel());
+            $definitionLevels = array_fill(0, max(0, $pageHeader->valuesCount()), $column->maxDefinitionsLevel());
         }
 
         $nonEmptyValuesCount = $this->countValues($definitionLevels, $column);
@@ -101,14 +106,13 @@ final readonly class ColumnDataDecoder
             || $pageHeader->encoding() === Encodings::PLAIN_DICTIONARY
         ) {
             if ($nonEmptyValuesCount) {
-                $bitWidth = \ord($reader->readBytes(1));
+                $bitWidth = ord($reader->readBytes(1));
 
-                /** @var array<int> $indices */
                 $indices = $this->readRLEBitPackedHybrid($reader, $RLEBitPackedHybrid, $bitWidth, $nonEmptyValuesCount);
 
                 $valuesGenerator = static function () use ($indices, $dictionary) {
                     foreach ($indices as $index) {
-                        yield $dictionary && \array_key_exists($index, $dictionary->values)
+                        yield $dictionary && array_key_exists($index, $dictionary->values)
                             ? $dictionary->values[$index]
                             : null;
                     }
@@ -141,7 +145,7 @@ final readonly class ColumnDataDecoder
                 $pageHeader->valuesCount(),
             );
         } else {
-            $repetitionLevels = \array_fill(0, $pageHeader->valuesCount(), 0);
+            $repetitionLevels = array_fill(0, max(0, $pageHeader->valuesCount()), 0);
         }
 
         if ($column->maxDefinitionsLevel()) {
@@ -152,7 +156,7 @@ final readonly class ColumnDataDecoder
                 $pageHeader->valuesCount(),
             );
         } else {
-            $definitionLevels = \array_fill(0, $pageHeader->valuesCount(), $column->maxDefinitionsLevel());
+            $definitionLevels = array_fill(0, max(0, $pageHeader->valuesCount()), $column->maxDefinitionsLevel());
         }
 
         $nonEmptyValuesCount = $this->countValues($definitionLevels, $column);
@@ -193,10 +197,9 @@ final readonly class ColumnDataDecoder
             $pageHeader->encoding() === Encodings::RLE_DICTIONARY
             || $pageHeader->encoding() === Encodings::PLAIN_DICTIONARY
         ) {
-            if (\count($definitionLevels)) {
-                $bitWidth = \ord($reader->readBytes(1));
+            if (count($definitionLevels)) {
+                $bitWidth = ord($reader->readBytes(1));
 
-                /** @var array<int> $indices */
                 $indices = $this->readRLEBitPackedHybrid($reader, $RLEBitPackedHybrid, $bitWidth, $nonEmptyValuesCount);
 
                 $valuesGenerator = static function () use ($indices, $dictionary) {
@@ -218,7 +221,7 @@ final readonly class ColumnDataDecoder
     {
         $reader = new BinaryBufferReader($buffer);
 
-        return new Dictionary(\iterator_to_array((new PlainValueUnpacker($reader, $this->byteOrder))->unpack(
+        return new Dictionary(iterator_to_array((new PlainValueUnpacker($reader, $this->byteOrder))->unpack(
             $column,
             $pageHeader->valuesCount(),
         )));

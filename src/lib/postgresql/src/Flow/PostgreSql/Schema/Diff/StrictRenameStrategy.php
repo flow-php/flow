@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Diff;
 
+use function count;
+
 final readonly class StrictRenameStrategy implements RenameStrategy
 {
     public function resolve(array $candidates): array
@@ -18,7 +20,7 @@ final readonly class StrictRenameStrategy implements RenameStrategy
         $matchedRemoved = [];
 
         foreach ($candidatesByAdded as $addedName => $removedCandidates) {
-            if (\count($removedCandidates) !== 1) {
+            if (count($removedCandidates) !== 1) {
                 continue;
             }
 

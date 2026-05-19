@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use DateTime;
+use DateTimeImmutable;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Type;
+use stdClass;
 
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
@@ -22,6 +25,9 @@ use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_time_zone;
 use function Flow\Types\DSL\type_xml;
+use function gettype;
+use function json_encode;
+use function mb_strtolower;
 
 final class Cast extends ScalarFunctionChain
 {
@@ -56,13 +62,13 @@ final class Cast extends ScalarFunctionChain
 
         /** @var string $type */
         try {
-            $result = match (\mb_strtolower($type)) {
+            $result = match (mb_strtolower($type)) {
                 'datetime' => new ScalarResult(type_datetime()->cast($value), type_datetime()),
-                'date' => new ScalarResult(match (\gettype($value)) {
-                    'string' => (new \DateTimeImmutable($value))->setTime(0, 0, 0, 0),
-                    'integer' => \DateTimeImmutable::createFromFormat('U', (string) $value),
+                'date' => new ScalarResult(match (gettype($value)) {
+                    'string' => (new DateTimeImmutable($value))->setTime(0, 0, 0, 0),
+                    'integer' => DateTimeImmutable::createFromFormat('U', (string) $value),
                     'object' => match ($value::class) {
-                        \DateTime::class, \DateTimeImmutable::class => $value->setTime(0, 0, 0, 0),
+                        DateTime::class, DateTimeImmutable::class => $value->setTime(0, 0, 0, 0),
                         default => null,
                     },
                     default => null,
@@ -74,12 +80,12 @@ final class Cast extends ScalarFunctionChain
                 'bool', 'boolean' => new ScalarResult(type_boolean()->cast($value), type_boolean()),
                 'array' => new ScalarResult(type_array()->cast($value), type_array()),
                 'object' => new ScalarResult(
-                    type_instance_of(\stdClass::class)->cast($value),
-                    type_instance_of(\stdClass::class),
+                    type_instance_of(stdClass::class)->cast($value),
+                    type_instance_of(stdClass::class),
                 ),
                 'json' => new ScalarResult(type_json()->cast($value), type_json()),
                 'json_pretty' => new ScalarResult(
-                    \json_encode($value, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT),
+                    json_encode($value, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT),
                     type_json(),
                 ),
                 'xml' => new ScalarResult(type_xml()->cast($value), type_xml()),

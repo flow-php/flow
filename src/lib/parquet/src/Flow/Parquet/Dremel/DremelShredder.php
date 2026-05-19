@@ -6,12 +6,19 @@ namespace Flow\Parquet\Dremel;
 
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\Dremel\Validator\DisabledValidator;
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Data\Converter;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+
+use function count;
+use function gettype;
+use function is_array;
+use function is_object;
+use function is_scalar;
 
 final readonly class DremelShredder
 {
@@ -54,6 +61,7 @@ final readonly class DremelShredder
 
         foreach ($plans as $plan) {
             foreach ($rows as $row) {
+                // @mago-ignore analysis:mixed-assignment
                 $value = $row[$plan->childName] ?? null;
 
                 if ($shouldValidate) {
@@ -77,16 +85,15 @@ final readonly class DremelShredder
                     $target->definitionLevels[] = $defLvl;
 
                     if ($value !== null) {
-                        /** @phpstan-ignore assign.propertyType */
-                        $target->values[] = $converter !== null ? $converter->toParquetType($value) : $value;
+                        $target->values[] = $this->narrowFlatValue(
+                            $converter !== null ? $converter->toParquetType($value) : $value,
+                        );
                     }
                 } elseif ($plan instanceof ListPlan) {
-                    /** @phpstan-ignore-next-line */
-                    $this->execList($plan, $value, 0, 0, 0, $shouldValidate, $rowFirstWrite);
+                    $this->execList($plan, $this->narrowArrayOrNull($value), 0, 0, 0, $shouldValidate, $rowFirstWrite);
                 } elseif ($plan instanceof MapPlan) {
-                    /** @phpstan-ignore-next-line */
-                    $this->execMap($plan, $value, 0, 0, 0, $shouldValidate, $rowFirstWrite);
-                } elseif ($plan instanceof StructPlan) {
+                    $this->execMap($plan, $this->narrowArrayOrNull($value), 0, 0, 0, $shouldValidate, $rowFirstWrite);
+                } else {
                     $this->execStruct($plan, $value, 0, 0, 0, $shouldValidate, $rowFirstWrite);
                 }
             }
@@ -214,7 +221,7 @@ final readonly class DremelShredder
                 $definitionLevel++;
             }
 
-            if (!\count($listValue)) {
+            if (!count($listValue)) {
                 $repLvl = $repetitionLevel - 1;
 
                 if (!isset($rowFirstWrite[$fp])) {
@@ -230,6 +237,7 @@ final readonly class DremelShredder
 
             $definitionLevel++;
 
+            // @mago-ignore analysis:mixed-assignment
             foreach ($listValue as $i => $value) {
                 $defLvl = $definitionLevel;
                 $repLvl = $i === 0 ? $repetitionLevel - 1 : $depth;
@@ -247,8 +255,9 @@ final readonly class DremelShredder
                 $target->definitionLevels[] = $defLvl;
 
                 if ($value !== null) {
-                    /** @phpstan-ignore assign.propertyType */
-                    $target->values[] = $converter !== null ? $converter->toParquetType($value) : $value;
+                    $target->values[] = $this->narrowFlatValue(
+                        $converter !== null ? $converter->toParquetType($value) : $value,
+                    );
                 }
             }
 
@@ -274,7 +283,7 @@ final readonly class DremelShredder
                 $definitionLevel++;
             }
 
-            if (!\count($listValue)) {
+            if (!count($listValue)) {
                 if ($shouldValidate && $plan->elementColumn !== null) {
                     $this->validator->validate($plan->elementColumn, null);
                 }
@@ -293,10 +302,11 @@ final readonly class DremelShredder
 
             $definitionLevel++;
 
+            // @mago-ignore analysis:mixed-assignment
             foreach ($listValue as $i => $value) {
                 $this->execList(
                     $element,
-                    $value,
+                    $this->narrowArrayOrNull($value),
                     $definitionLevel,
                     $i === 0 ? $repetitionLevel - 1 : $depth,
                     $depth,
@@ -327,7 +337,7 @@ final readonly class DremelShredder
                 $definitionLevel++;
             }
 
-            if (!\count($listValue)) {
+            if (!count($listValue)) {
                 if ($shouldValidate && $plan->elementColumn !== null) {
                     $this->validator->validate($plan->elementColumn, null);
                 }
@@ -346,10 +356,11 @@ final readonly class DremelShredder
 
             $definitionLevel++;
 
+            // @mago-ignore analysis:mixed-assignment
             foreach ($listValue as $i => $mapValue) {
                 $this->execMap(
                     $element,
-                    $mapValue,
+                    $this->narrowArrayOrNull($mapValue),
                     $definitionLevel,
                     $i === 0 ? $repetitionLevel - 1 : $depth,
                     $depth,
@@ -361,7 +372,6 @@ final readonly class DremelShredder
             return;
         }
 
-        /** @var StructPlan $element */
         if ($listValue === null) {
             $this->execStruct(
                 $element,
@@ -380,7 +390,7 @@ final readonly class DremelShredder
             $definitionLevel++;
         }
 
-        if (!\count($listValue)) {
+        if (!count($listValue)) {
             if ($shouldValidate && $plan->elementColumn !== null) {
                 $this->validator->validate($plan->elementColumn, null);
             }
@@ -399,6 +409,7 @@ final readonly class DremelShredder
 
         $definitionLevel++;
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($listValue as $i => $listElementValue) {
             $this->execStruct(
                 $element,
@@ -456,6 +467,7 @@ final readonly class DremelShredder
             $definitionLevel++;
             $index = 0;
 
+            // @mago-ignore analysis:mixed-assignment
             foreach ($mapValue as $key => $value) {
                 $repLvl = $index === 0 ? $repetitionLevel - 1 : $repetitionLevel;
 
@@ -468,8 +480,9 @@ final readonly class DremelShredder
 
                 $keyTarget->repetitionLevels[] = $repLvl;
                 $keyTarget->definitionLevels[] = $defLvl;
-                /** @phpstan-ignore assign.propertyType */
-                $keyTarget->values[] = $keyConverter !== null ? $keyConverter->toParquetType($key) : $key;
+                $keyTarget->values[] = $this->narrowFlatValue(
+                    $keyConverter !== null ? $keyConverter->toParquetType($key) : $key,
+                );
                 $index++;
             }
 
@@ -517,7 +530,7 @@ final readonly class DremelShredder
                 $definitionLevel++;
             }
 
-            if (!\count($mapValue)) {
+            if (!count($mapValue)) {
                 $optKeyFp = $plan->optionalKey['flatPath'];
                 $optKeyTarget = $plan->optionalKey['target'];
 
@@ -548,6 +561,7 @@ final readonly class DremelShredder
 
             $index = 0;
 
+            // @mago-ignore analysis:mixed-assignment
             foreach ($mapValue as $key => $value) {
                 $repLevel = $index === 0 ? $repetitionLevel - 1 : $depth;
 
@@ -565,8 +579,9 @@ final readonly class DremelShredder
 
                 $keyTarget->repetitionLevels[] = $repLvl;
                 $keyTarget->definitionLevels[] = $defLvl;
-                /** @phpstan-ignore assign.propertyType */
-                $keyTarget->values[] = $keyConverter !== null ? $keyConverter->toParquetType($key) : $key;
+                $keyTarget->values[] = $this->narrowFlatValue(
+                    $keyConverter !== null ? $keyConverter->toParquetType($key) : $key,
+                );
 
                 $defLvl = $definitionLevel;
                 $repLvl = $repLevel;
@@ -584,8 +599,9 @@ final readonly class DremelShredder
                 $valTarget->definitionLevels[] = $defLvl;
 
                 if ($value !== null) {
-                    /** @phpstan-ignore assign.propertyType */
-                    $valTarget->values[] = $valConverter !== null ? $valConverter->toParquetType($value) : $value;
+                    $valTarget->values[] = $this->narrowFlatValue(
+                        $valConverter !== null ? $valConverter->toParquetType($value) : $value,
+                    );
                 }
 
                 $index++;
@@ -625,7 +641,7 @@ final readonly class DremelShredder
                 $definitionLevel++;
             }
 
-            if (!\count($mapValue)) {
+            if (!count($mapValue)) {
                 if ($shouldValidate && $plan->valueColumn !== null) {
                     $this->validator->validate($plan->valueColumn, null);
                 }
@@ -660,6 +676,7 @@ final readonly class DremelShredder
             $keyConverter = $keyPlan->converter;
             $index = 0;
 
+            // @mago-ignore analysis:mixed-assignment
             foreach ($mapValue as $key => $value) {
                 $repLevel = $index === 0 ? $repetitionLevel - 1 : $depth;
 
@@ -677,11 +694,12 @@ final readonly class DremelShredder
 
                 $keyTarget->repetitionLevels[] = $repLvl;
                 $keyTarget->definitionLevels[] = $defLvl;
-                /** @phpstan-ignore assign.propertyType */
-                $keyTarget->values[] = $keyConverter !== null ? $keyConverter->toParquetType($key) : $key;
+                $keyTarget->values[] = $this->narrowFlatValue(
+                    $keyConverter !== null ? $keyConverter->toParquetType($key) : $key,
+                );
                 $this->execList(
                     $valuePlan,
-                    $value,
+                    $this->narrowArrayOrNull($value),
                     $definitionLevel,
                     $repLevel,
                     $depth,
@@ -722,7 +740,7 @@ final readonly class DremelShredder
                 $definitionLevel++;
             }
 
-            if (!\count($mapValue)) {
+            if (!count($mapValue)) {
                 if ($shouldValidate && $plan->valueColumn !== null) {
                     $this->validator->validate($plan->valueColumn, null);
                 }
@@ -757,6 +775,7 @@ final readonly class DremelShredder
             $keyConverter = $keyPlan->converter;
             $index = 0;
 
+            // @mago-ignore analysis:mixed-assignment
             foreach ($mapValue as $key => $value) {
                 $repLevel = $index === 0 ? $repetitionLevel - 1 : $depth;
 
@@ -774,11 +793,12 @@ final readonly class DremelShredder
 
                 $keyTarget->repetitionLevels[] = $repLvl;
                 $keyTarget->definitionLevels[] = $defLvl;
-                /** @phpstan-ignore assign.propertyType */
-                $keyTarget->values[] = $keyConverter !== null ? $keyConverter->toParquetType($key) : $key;
+                $keyTarget->values[] = $this->narrowFlatValue(
+                    $keyConverter !== null ? $keyConverter->toParquetType($key) : $key,
+                );
                 $this->execMap(
                     $valuePlan,
-                    $value,
+                    $this->narrowArrayOrNull($value),
                     $definitionLevel,
                     $repLevel,
                     $depth,
@@ -791,7 +811,6 @@ final readonly class DremelShredder
             return;
         }
 
-        /** @var StructPlan $valuePlan */
         if ($mapValue === null) {
             $repLvl = $repetitionLevel - 1;
 
@@ -819,7 +838,7 @@ final readonly class DremelShredder
             $definitionLevel++;
         }
 
-        if (!\count($mapValue)) {
+        if (!count($mapValue)) {
             if ($shouldValidate && $plan->valueColumn !== null) {
                 $this->validator->validate($plan->valueColumn, null);
             }
@@ -854,6 +873,7 @@ final readonly class DremelShredder
         $keyConverter = $keyPlan->converter;
         $index = 0;
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($mapValue as $key => $value) {
             $repLevel = $index === 0 ? $repetitionLevel - 1 : $depth;
 
@@ -871,8 +891,9 @@ final readonly class DremelShredder
 
             $keyTarget->repetitionLevels[] = $repLvl;
             $keyTarget->definitionLevels[] = $defLvl;
-            /** @phpstan-ignore assign.propertyType */
-            $keyTarget->values[] = $keyConverter !== null ? $keyConverter->toParquetType($key) : $key;
+            $keyTarget->values[] = $this->narrowFlatValue(
+                $keyConverter !== null ? $keyConverter->toParquetType($key) : $key,
+            );
             $this->execStruct($valuePlan, $value, $definitionLevel, $repLevel, $depth, $shouldValidate, $rowFirstWrite);
             $index++;
         }
@@ -937,7 +958,6 @@ final readonly class DremelShredder
                     continue;
                 }
 
-                /** @var StructPlan $child */
                 $this->execStruct(
                     $child,
                     null,
@@ -956,7 +976,7 @@ final readonly class DremelShredder
             $definitionLevel++;
         }
 
-        if (!\is_array($structureData) || !\count($structureData)) {
+        if (!is_array($structureData) || !count($structureData)) {
             foreach ($plan->children as $child) {
                 if ($child instanceof FlatPlan) {
                     $fp = $child->flatPath;
@@ -1003,7 +1023,6 @@ final readonly class DremelShredder
                     continue;
                 }
 
-                /** @var StructPlan $child */
                 $this->execStruct(
                     $child,
                     null,
@@ -1022,6 +1041,7 @@ final readonly class DremelShredder
             if ($child instanceof FlatPlan) {
                 $fp = $child->flatPath;
                 $target = $child->target;
+                // @mago-ignore analysis:mixed-assignment
                 $value = $structureData[$child->childName] ?? null;
 
                 $defLvl = $definitionLevel;
@@ -1041,7 +1061,9 @@ final readonly class DremelShredder
 
                 if ($value !== null) {
                     $converter = $child->converter;
-                    $target->values[] = $converter !== null ? $converter->toParquetType($value) : $value;
+                    $target->values[] = $this->narrowFlatValue(
+                        $converter !== null ? $converter->toParquetType($value) : $value,
+                    );
                 }
 
                 continue;
@@ -1050,7 +1072,7 @@ final readonly class DremelShredder
             if ($child instanceof ListPlan) {
                 $this->execList(
                     $child,
-                    $structureData[$child->childName] ?? null,
+                    $this->narrowArrayOrNull($structureData[$child->childName] ?? null),
                     $definitionLevel,
                     $repetitionLevel,
                     $depth,
@@ -1064,7 +1086,7 @@ final readonly class DremelShredder
             if ($child instanceof MapPlan) {
                 $this->execMap(
                     $child,
-                    $structureData[$child->childName] ?? null,
+                    $this->narrowArrayOrNull($structureData[$child->childName] ?? null),
                     $definitionLevel,
                     $repetitionLevel,
                     $depth,
@@ -1075,7 +1097,6 @@ final readonly class DremelShredder
                 continue;
             }
 
-            /** @var StructPlan $child */
             $this->execStruct(
                 $child,
                 $structureData[$child->childName] ?? null,
@@ -1086,5 +1107,26 @@ final readonly class DremelShredder
                 $rowFirstWrite,
             );
         }
+    }
+
+    private function narrowFlatValue(mixed $value): null|object|bool|float|int|string
+    {
+        if ($value === null || is_scalar($value) || is_object($value)) {
+            return $value;
+        }
+
+        throw new InvalidArgumentException('Flat column value must be null|scalar|object, got ' . gettype($value));
+    }
+
+    /**
+     * @return array<array-key, mixed>|null
+     */
+    private function narrowArrayOrNull(mixed $value): ?array
+    {
+        if ($value === null || is_array($value)) {
+            return $value;
+        }
+
+        throw new InvalidArgumentException('List/map column value must be array|null, got ' . gettype($value));
     }
 }

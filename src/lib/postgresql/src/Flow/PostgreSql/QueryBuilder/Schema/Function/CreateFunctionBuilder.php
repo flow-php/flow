@@ -17,6 +17,9 @@ use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 
+use function array_merge;
+use function array_values;
+
 final readonly class CreateFunctionBuilder implements
     CreateFunctionArgsStep,
     CreateFunctionFinalStep,
@@ -54,7 +57,7 @@ final readonly class CreateFunctionBuilder implements
             $this->name,
             $this->schema,
             $this->replace,
-            \array_values($args),
+            array_values($args),
             $this->returnType,
             $this->setof,
             $this->tableColumns,
@@ -305,7 +308,7 @@ final readonly class CreateFunctionBuilder implements
                 $currentParams[] = $existingParam;
             }
 
-            $stmt->setParameters(\array_merge($currentParams, $parameterNodes));
+            $stmt->setParameters(array_merge($currentParams, $parameterNodes));
         }
 
         $optionNodes = [];
@@ -358,9 +361,7 @@ final readonly class CreateFunctionBuilder implements
         $integer = new Integer();
         $integer->setIval($value ? 1 : 0);
 
-        $argNode = new Node();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $argNode->setInteger($integer);
+        $argNode = new Node(['integer' => $integer]);
 
         return $this->withOption($name, $argNode);
     }
@@ -370,9 +371,7 @@ final readonly class CreateFunctionBuilder implements
         $integer = new Integer();
         $integer->setIval($value);
 
-        $aConst = new A_Const();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $aConst->setIval($integer);
+        $aConst = new A_Const(['ival' => $integer]);
 
         $argNode = new Node();
         $argNode->setAConst($aConst);

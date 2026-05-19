@@ -13,6 +13,8 @@ use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
+use function array_values;
+
 final readonly class CreateCompositeTypeBuilder implements
     CreateCompositeTypeAttributesStep,
     CreateCompositeTypeFinalStep
@@ -37,7 +39,7 @@ final readonly class CreateCompositeTypeBuilder implements
 
     public function attributes(TypeAttribute ...$attributes): CreateCompositeTypeFinalStep
     {
-        return new self($this->name, $this->schema, \array_values($attributes));
+        return new self($this->name, $this->schema, array_values($attributes));
     }
 
     public function toAst(): CompositeTypeStmt

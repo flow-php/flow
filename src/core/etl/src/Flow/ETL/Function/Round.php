@@ -8,6 +8,8 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function round;
+
 final class Round extends ScalarFunctionChain
 {
     public function __construct(
@@ -32,6 +34,6 @@ final class Round extends ScalarFunctionChain
             $mode = 1;
         }
 
-        return $precision === 0 ? (int) \round($value, $precision, $mode) : \round($value, $precision, $mode);
+        return $precision === 0 ? (int) round($value, $precision, $mode) : round($value, $precision, $mode);
     }
 }

@@ -15,19 +15,20 @@ use Flow\Parquet\Writer\ColumnChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkBuilder\NestedColumnChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkBuilder\PlainFlatColumnChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkContainer;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class NestedColumnChunkBuilderTest extends TestCase
 {
-    public static function compression_types_provider(): \Generator
+    public static function compression_types_provider(): Generator
     {
         yield 'uncompressed' => [Compressions::UNCOMPRESSED];
         yield 'gzip' => [Compressions::GZIP];
         yield 'snappy' => [Compressions::SNAPPY];
     }
 
-    public static function nested_column_structures_provider(): \Generator
+    public static function nested_column_structures_provider(): Generator
     {
         yield 'single child' => [
             [new FlatColumn('child1', PhysicalType::INT32)],

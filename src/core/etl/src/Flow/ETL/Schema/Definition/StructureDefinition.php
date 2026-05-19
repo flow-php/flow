@@ -13,8 +13,11 @@ use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Logical\StructureType;
 
+use function array_key_exists;
+use function count;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_equals;
+use function sprintf;
 
 /**
  * @template TElement
@@ -72,12 +75,12 @@ final class StructureDefinition implements Definition
         $thisElements = $this->type->elements();
         $definitionElements = $definition->type->elements();
 
-        if (\count($thisElements) !== \count($definitionElements)) {
+        if (count($thisElements) !== count($definitionElements)) {
             return false;
         }
 
         foreach ($thisElements as $name => $element) {
-            if (!\array_key_exists($name, $definitionElements)) {
+            if (!array_key_exists($name, $definitionElements)) {
                 return false;
             }
 
@@ -154,7 +157,7 @@ final class StructureDefinition implements Definition
     public function merge(Definition $definition): Definition
     {
         if (!$this->ref->is($definition->entry())) {
-            throw new RuntimeException(\sprintf(
+            throw new RuntimeException(sprintf(
                 'Cannot merge different definitions, %s and %s',
                 $this->ref->name(),
                 $definition->entry()->name(),
@@ -212,7 +215,7 @@ final class StructureDefinition implements Definition
             );
         }
 
-        throw new RuntimeException(\sprintf('Cannot merge %s with %s', self::class, $definition::class));
+        throw new RuntimeException(sprintf('Cannot merge %s with %s', self::class, $definition::class));
     }
 
     public function metadata(): Metadata

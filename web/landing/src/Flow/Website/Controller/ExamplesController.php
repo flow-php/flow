@@ -10,6 +10,9 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
+use function array_filter;
+use function file_exists;
+
 final class ExamplesController extends AbstractController
 {
     public function __construct(
@@ -26,7 +29,7 @@ final class ExamplesController extends AbstractController
     {
         $filePath = $this->examples->dataFilePath($topic, $example, $path);
 
-        if (null === $filePath || !\file_exists($filePath)) {
+        if (null === $filePath || !file_exists($filePath)) {
             throw $this->createNotFoundException();
         }
 
@@ -80,7 +83,7 @@ final class ExamplesController extends AbstractController
             'option' => $firstOption,
             'code' => $this->examples->code($topic, $example, $firstOption),
             'data_files' => $this->examples->dataFiles($topic, $example, $firstOption),
-            'backUrl' => $this->generateUrl($firstOption ? 'example_option' : 'example', \array_filter([
+            'backUrl' => $this->generateUrl($firstOption ? 'example_option' : 'example', array_filter([
                 'topic' => $topic,
                 'example' => $example,
                 'option' => $firstOption,
@@ -115,7 +118,7 @@ final class ExamplesController extends AbstractController
     {
         $filePath = $this->examples->dataFilePath($topic, $example, $path, $option);
 
-        if (null === $filePath || !\file_exists($filePath)) {
+        if (null === $filePath || !file_exists($filePath)) {
             throw $this->createNotFoundException();
         }
 

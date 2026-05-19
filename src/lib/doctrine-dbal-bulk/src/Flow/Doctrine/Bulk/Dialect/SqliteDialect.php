@@ -12,6 +12,11 @@ use Flow\Doctrine\Bulk\InsertOptions;
 use Flow\Doctrine\Bulk\TableDefinition;
 use Flow\Doctrine\Bulk\UpdateOptions;
 
+use function array_map;
+use function count;
+use function implode;
+use function sprintf;
+
 final readonly class SqliteDialect implements Dialect
 {
     public function __construct(
@@ -28,10 +33,11 @@ final readonly class SqliteDialect implements Dialect
     {
         $columns = $bulkData->columns()->all();
 
-        return \sprintf(
+        return sprintf(
             'DELETE FROM %s WHERE (%s) IN (%s)',
             $table->name(),
-            \implode(', ', \array_map(fn($column) => $this->platform->quoteIdentifier($column), $columns)),
+            // @mago-expect analysis:deprecated-method
+            implode(', ', array_map(fn($column) => $this->platform->quoteIdentifier($column), $columns)),
             $bulkData->toSqlPlaceholders(),
         );
     }
@@ -48,15 +54,16 @@ final readonly class SqliteDialect implements Dialect
         }
 
         if ($options->conflictColumns) {
-            return \sprintf(
+            return sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT (%s) DO UPDATE SET %s',
                 $table->name(),
-                \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+                // @mago-expect analysis:deprecated-method
+                implode(',', array_map(fn(string $column): string => $this->platform->quoteIdentifier(
                     $column,
                 ), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders(),
-                \implode(',', $options->conflictColumns),
-                \count($options->updateColumns)
+                implode(',', $options->conflictColumns),
+                count($options->updateColumns)
                     ? $this->updateSelectedColumns(
                         $options->updateColumns,
                         $bulkData->columns(),
@@ -68,20 +75,22 @@ final readonly class SqliteDialect implements Dialect
         }
 
         if ($options->skipConflicts) {
-            return \sprintf(
+            return sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT DO NOTHING',
                 $table->name(),
-                \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+                // @mago-expect analysis:deprecated-method
+                implode(',', array_map(fn(string $column): string => $this->platform->quoteIdentifier(
                     $column,
                 ), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders(),
             );
         }
 
-        return \sprintf(
+        return sprintf(
             'INSERT INTO %s (%s) VALUES %s',
             $table->name(),
-            \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+            // @mago-expect analysis:deprecated-method
+            implode(',', array_map(fn(string $column): string => $this->platform->quoteIdentifier(
                 $column,
             ), $bulkData->columns()->all())),
             $bulkData->toSqlPlaceholders(),
@@ -90,10 +99,11 @@ final readonly class SqliteDialect implements Dialect
 
     public function prepareUpdate(TableDefinition $table, BulkData $bulkData, ?UpdateOptions $options = null): string
     {
-        return \sprintf(
+        return sprintf(
             'REPLACE INTO %s (%s) VALUES %s',
             $table->name(),
-            \implode(',', \array_map(fn(string $column): string => $this->platform->quoteIdentifier(
+            // @mago-expect analysis:deprecated-method
+            implode(',', array_map(fn(string $column): string => $this->platform->quoteIdentifier(
                 $column,
             ), $bulkData->columns()->all())),
             $bulkData->toSqlPlaceholders(),
@@ -102,9 +112,11 @@ final readonly class SqliteDialect implements Dialect
 
     private function updateAllColumns(Columns $columns): string
     {
-        return \implode(
+        return implode(
             ',',
             $columns->map(
+                // @mago-expect analysis:deprecated-method
+                // @mago-expect analysis:deprecated-method
                 fn(string $column): string => "{$this->platform->quoteIdentifier(
                     $column,
                 )} = {$this->platform->quoteIdentifier('excluded.' . $column)}",
@@ -121,21 +133,29 @@ final readonly class SqliteDialect implements Dialect
         string $tableName,
         ?bool $preserveExistingValues = null,
     ): string {
-        return [] !== $updateColumns ? \implode(',', \array_map(function (string $column) use (
-                $tableName,
-                $preserveExistingValues,
-            ): string {
-                $clause = "{$this->platform->quoteIdentifier($column)} = ";
+        return (
+            [] !== $updateColumns
+                ? implode(',', array_map(
+                    function (string $column) use ($tableName, $preserveExistingValues): string {
+                        // @mago-expect analysis:deprecated-method
+                        $clause = "{$this->platform->quoteIdentifier($column)} = ";
 
-                if (true === $preserveExistingValues) {
-                    return (
-                        $clause
-                        . "COALESCE({$this->platform->quoteIdentifier('excluded.'
-                        . $column)}, {$tableName}.{$this->platform->quoteIdentifier($column)})"
-                    );
-                }
+                        if (true === $preserveExistingValues) {
+                            return (
+                                $clause
+                                // @mago-expect analysis:deprecated-method
+                                // @mago-expect analysis:deprecated-method
+                                . "COALESCE({$this->platform->quoteIdentifier('excluded.'
+                                . $column)}, {$tableName}.{$this->platform->quoteIdentifier($column)})"
+                            );
+                        }
 
-                return $clause . "{$this->platform->quoteIdentifier('excluded.' . $column)}";
-            }, $updateColumns)) : $this->updateAllColumns($columns);
+                        // @mago-expect analysis:deprecated-method
+                        return $clause . "{$this->platform->quoteIdentifier('excluded.' . $column)}";
+                    },
+                    $updateColumns,
+                ))
+                : $this->updateAllColumns($columns)
+        );
     }
 }

@@ -5,19 +5,21 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\Context;
 
 use Flow\Telemetry\Context\TraceFlags;
+use Generator;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class TraceFlagsTest extends TestCase
 {
-    public static function provideInvalidBytes(): \Generator
+    public static function provideInvalidBytes(): Generator
     {
         yield 'negative' => [-1];
         yield 'too large' => [256];
         yield 'much too large' => [1000];
     }
 
-    public static function provideInvalidHexStrings(): \Generator
+    public static function provideInvalidHexStrings(): Generator
     {
         yield 'too short' => ['0', 'TraceFlags hex string must be exactly 2 characters'];
         yield 'too long' => ['001', 'TraceFlags hex string must be exactly 2 characters'];
@@ -25,7 +27,7 @@ final class TraceFlagsTest extends TestCase
         yield 'empty' => ['', 'TraceFlags hex string must be exactly 2 characters'];
     }
 
-    public static function provideValidBytes(): \Generator
+    public static function provideValidBytes(): Generator
     {
         yield 'none' => [0x00, false, false];
         yield 'sampled' => [0x01, true, false];
@@ -55,7 +57,7 @@ final class TraceFlagsTest extends TestCase
     #[DataProvider('provideInvalidBytes')]
     public function test_from_byte_throws_on_invalid_byte(int $byte): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('TraceFlags byte must be between 0 and 255');
 
         TraceFlags::fromByte($byte);
@@ -80,7 +82,7 @@ final class TraceFlagsTest extends TestCase
     #[DataProvider('provideInvalidHexStrings')]
     public function test_from_hex_throws_on_invalid_hex(string $hex, string $expectedMessage): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage($expectedMessage);
 
         TraceFlags::fromHex($hex);

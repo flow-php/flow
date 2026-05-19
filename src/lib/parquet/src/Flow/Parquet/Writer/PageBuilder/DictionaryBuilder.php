@@ -11,6 +11,7 @@ use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Writer\PageBuilder\DictionaryBuilder\FloatDictionaryBuilder;
 use Flow\Parquet\Writer\PageBuilder\DictionaryBuilder\ObjectDictionaryBuilder;
 use Flow\Parquet\Writer\PageBuilder\DictionaryBuilder\ScalarDictionaryBuilder;
+use RuntimeException;
 
 final class DictionaryBuilder
 {
@@ -45,13 +46,15 @@ final class DictionaryBuilder
                     LogicalType::TIME,
                     LogicalType::TIMESTAMP,
                         => (new ObjectDictionaryBuilder())->build($data),
-                    default => throw new \RuntimeException(
-                        'Building dictionary for "' . $column->logicalType()?->name() . '" is not supported',
+                    default => throw new RuntimeException(
+                        'Building dictionary for "'
+                        . ($column->logicalType()?->name() ?? 'null')
+                        . '" is not supported',
                     ),
                 };
 
             default:
-                throw new \RuntimeException('Building dictionary for "' . $column->type()->name . '" is not supported');
+                throw new RuntimeException('Building dictionary for "' . $column->type()->name . '" is not supported');
         }
     }
 }

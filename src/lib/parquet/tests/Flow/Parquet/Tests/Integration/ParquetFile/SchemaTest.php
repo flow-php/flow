@@ -18,6 +18,8 @@ use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
 use PHPUnit\Framework\TestCase;
 
+use function iterator_to_array;
+
 final class SchemaTest extends TestCase
 {
     public function test_dremel_paper_data_schema(): void
@@ -31,13 +33,22 @@ final class SchemaTest extends TestCase
         );
         $assembler = new DremelAssembler($converter);
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($rows as $row) {
+            /** @var array<string, mixed> $row */
+            static::assertIsArray($row);
             $shredResult = $shredder->shred($schema, [$row]);
 
             foreach ($schema->columns() as $column) {
                 $readFlatValues = [];
 
-                $flatChildren = $column instanceof FlatColumn ? [$column] : $column->childrenFlat();
+                if ($column instanceof FlatColumn) {
+                    $flatChildren = [$column];
+                } elseif ($column instanceof NestedColumn) {
+                    $flatChildren = $column->childrenFlat();
+                } else {
+                    static::fail('Unknown column type: ' . $column::class);
+                }
 
                 foreach ($flatChildren as $flatChild) {
                     $fp = $flatChild->flatPath();
@@ -54,10 +65,11 @@ final class SchemaTest extends TestCase
                 }
 
                 $readData = new ReadColumnData($column, $readFlatValues);
-                static::assertEquals(
-                    $row[$column->name()],
-                    \iterator_to_array($assembler->assemble($column, $readData))[0][$column->name()],
-                );
+                $assembled = iterator_to_array($assembler->assemble($column, $readData));
+                /** @var array<string, mixed> $firstAssembled */
+                $firstAssembled = $assembled[0];
+                static::assertIsArray($firstAssembled);
+                static::assertEquals($row[$column->name()], $firstAssembled[$column->name()]);
             }
         }
     }

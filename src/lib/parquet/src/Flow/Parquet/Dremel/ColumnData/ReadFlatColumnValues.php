@@ -6,6 +6,9 @@ namespace Flow\Parquet\Dremel\ColumnData;
 
 use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Generator;
+
+use function count;
 
 final readonly class ReadFlatColumnValues
 {
@@ -17,7 +20,7 @@ final readonly class ReadFlatColumnValues
      */
     public function __construct(
         public FlatColumn $column,
-        private \Generator $values,
+        private Generator $values,
         private array $repetitionLevels,
         private array $definitionLevels,
     ) {}
@@ -25,12 +28,14 @@ final readonly class ReadFlatColumnValues
     /**
      * @return \Generator<array-key, mixed>
      */
-    public function assembleFlat(DataConverter $dataConverter): \Generator
+    public function assembleFlat(DataConverter $dataConverter): Generator
     {
         $maxDefinitionLevel = $this->column->repetitions()->maxDefinitionLevel();
 
         foreach ($this->definitionLevels as $definitionLevel) {
             if ($definitionLevel === $maxDefinitionLevel) {
+                // Iterator over decoded parquet column values (any scalar/object the converter accepts).
+                // @mago-ignore analysis:mixed-assignment
                 $value = $this->values->valid() ? $this->values->current() : null;
                 $this->values->next();
 
@@ -56,13 +61,13 @@ final readonly class ReadFlatColumnValues
 
     public function isEmpty(): bool
     {
-        return !\count($this->repetitionLevels) && !\count($this->definitionLevels);
+        return !count($this->repetitionLevels) && !count($this->definitionLevels);
     }
 
     /**
      * @return \Generator<array-key, FlatValue>
      */
-    public function iterator(): \Generator
+    public function iterator(): Generator
     {
         $maxDefinitionLevel = $this->column->repetitions()->maxDefinitionLevel();
 
@@ -82,7 +87,7 @@ final readonly class ReadFlatColumnValues
     /**
      * @return \Generator<mixed>
      */
-    public function rawValues(): \Generator
+    public function rawValues(): Generator
     {
         yield from $this->values;
     }

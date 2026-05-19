@@ -17,6 +17,7 @@ use Flow\Telemetry\Meter\Instrument\Throughput;
 use Flow\Telemetry\Meter\Instrument\UpDownCounter;
 use Flow\Telemetry\Resource;
 use Psr\Clock\ClockInterface;
+use Throwable;
 
 /**
  * Meter for creating metric instruments.
@@ -48,7 +49,7 @@ final class Meter
     private array $instruments = [];
 
     /**
-     * @param resource $resource The resource context for all metrics from this meter
+     * @param \Flow\Telemetry\Resource $resource The resource context for all metrics from this meter
      * @param InstrumentationScope $scope The instrumentation scope
      * @param MetricProcessor $processor The metric processor
      * @param ClockInterface $clock Clock for timestamps
@@ -100,7 +101,7 @@ final class Meter
         foreach ($instrument->collect() as $metric) {
             try {
                 $this->processor->process($metric);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->errorHandler->handle($e);
             }
         }
@@ -181,7 +182,7 @@ final class Meter
      * @param string $name Metric name (e.g., 'http.request.duration', 'flow.batch.size')
      * @param null|string $unit Unit of measurement (e.g., 'ms', 'bytes', 'rows')
      * @param null|string $description Human-readable description
-     * @param null|array<float> $boundaries Explicit bucket boundaries (null uses default)
+     * @param null|list<float> $boundaries Explicit bucket boundaries (null uses default)
      */
     public function createHistogram(
         string $name,
@@ -292,14 +293,14 @@ final class Meter
         foreach ($this->collect() as $metric) {
             try {
                 $this->processor->process($metric);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->errorHandler->handle($e);
             }
         }
 
         try {
             return $this->processor->flush();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
 
             return false;

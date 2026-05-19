@@ -8,9 +8,14 @@ use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Operations\Copy;
 use PHPUnit\Framework\TestCase;
 
+use function bin2hex;
+use function file_get_contents;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function random_bytes;
+use function sys_get_temp_dir;
+use function unlink;
 
 final class CopyTest extends TestCase
 {
@@ -23,14 +28,14 @@ final class CopyTest extends TestCase
         $srcStream->append('copy-payload');
         $srcStream->close();
 
-        $destPath = \sys_get_temp_dir() . '/flow_copy_test_' . \bin2hex(\random_bytes(4));
+        $destPath = sys_get_temp_dir() . '/flow_copy_test_' . bin2hex(random_bytes(4));
         $dest = path('file://' . $destPath);
 
         static::assertTrue((new Copy($fstab))->execute($src, $dest));
 
         static::assertNotNull($fstab->for($src)->status($src));
-        static::assertSame('copy-payload', \file_get_contents($destPath));
-        @\unlink($destPath);
+        static::assertSame('copy-payload', file_get_contents($destPath));
+        @unlink($destPath);
     }
 
     public function test_copies_within_a_single_mount(): void

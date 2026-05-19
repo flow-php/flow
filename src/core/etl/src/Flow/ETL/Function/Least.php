@@ -9,6 +9,9 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\Types\Type\ValueComparator;
 
+use function count;
+use function min;
+
 final class Least extends ScalarFunctionChain
 {
     /**
@@ -28,7 +31,7 @@ final class Least extends ScalarFunctionChain
             $extractedTypes[] = (new Parameter($value))->asType($row, $context);
         }
 
-        if (!\count($extractedValues)) {
+        if (!count($extractedValues)) {
             return $context
                 ->functions()
                 ->invalidResult(new InvalidArgumentException('Least requires at least one value'));
@@ -36,6 +39,6 @@ final class Least extends ScalarFunctionChain
 
         (new ValueComparator())->assertAllTypesComparable($extractedTypes, '<');
 
-        return \min($extractedValues);
+        return min($extractedValues);
     }
 }

@@ -4,6 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Context;
 
+use InvalidArgumentException;
+use Stringable;
+
+use function array_slice;
+use function count;
+use function explode;
+use function implode;
+use function ord;
+use function preg_match;
+use function sprintf;
+use function strlen;
+use function trim;
+
 /**
  * W3C Trace Context tracestate header value.
  *
@@ -20,7 +33,7 @@ namespace Flow\Telemetry\Context;
  *
  * @see https://www.w3.org/TR/trace-context/#tracestate-header
  */
-final readonly class TraceState implements \Stringable
+final readonly class TraceState implements Stringable
 {
     private const string KEY_PATTERN = '/^(?:[a-z][a-z0-9_\-*\/]{0,255}|[a-z0-9][a-z0-9_\-*\/]{0,240}@[a-z][a-z0-9_\-*\/]{0,13})$/';
 
@@ -65,29 +78,29 @@ final readonly class TraceState implements \Stringable
         }
 
         $entries = [];
-        $pairs = \explode(',', $string);
+        $pairs = explode(',', $string);
 
         foreach ($pairs as $pair) {
-            $pair = \trim($pair);
+            $pair = trim($pair);
 
             if ($pair === '') {
                 continue;
             }
 
-            $parts = \explode('=', $pair, 2);
+            $parts = explode('=', $pair, 2);
 
-            if (\count($parts) !== 2) {
-                throw new \InvalidArgumentException(\sprintf('Invalid tracestate entry: "%s"', $pair));
+            if (count($parts) !== 2) {
+                throw new InvalidArgumentException(sprintf('Invalid tracestate entry: "%s"', $pair));
             }
 
             [$key, $value] = $parts;
-            $key = \trim($key);
-            $value = \trim($value);
+            $key = trim($key);
+            $value = trim($value);
 
             self::validateKey($key);
             self::validateValue($value);
 
-            if (\count($entries) >= self::MAX_ENTRIES) {
+            if (count($entries) >= self::MAX_ENTRIES) {
                 break;
             }
 
@@ -163,7 +176,7 @@ final readonly class TraceState implements \Stringable
             $pairs[] = $key . '=' . $value;
         }
 
-        return \implode(',', $pairs);
+        return implode(',', $pairs);
     }
 
     /**
@@ -183,8 +196,8 @@ final readonly class TraceState implements \Stringable
 
         $entries = [$key => $value] + $entries;
 
-        if (\count($entries) > self::MAX_ENTRIES) {
-            $entries = \array_slice($entries, 0, self::MAX_ENTRIES, true);
+        if (count($entries) > self::MAX_ENTRIES) {
+            $entries = array_slice($entries, 0, self::MAX_ENTRIES, true);
         }
 
         return new self($entries);
@@ -213,11 +226,11 @@ final readonly class TraceState implements \Stringable
     private static function validateKey(string $key): void
     {
         if ($key === '') {
-            throw new \InvalidArgumentException('TraceState key cannot be empty');
+            throw new InvalidArgumentException('TraceState key cannot be empty');
         }
 
-        if (!\preg_match(self::KEY_PATTERN, $key)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid TraceState key: "%s"', $key));
+        if (!preg_match(self::KEY_PATTERN, $key)) {
+            throw new InvalidArgumentException(sprintf('Invalid TraceState key: "%s"', $key));
         }
     }
 
@@ -229,21 +242,21 @@ final readonly class TraceState implements \Stringable
     private static function validateValue(string $value): void
     {
         if ($value === '') {
-            throw new \InvalidArgumentException('TraceState value cannot be empty');
+            throw new InvalidArgumentException('TraceState value cannot be empty');
         }
 
-        if (\strlen($value) > 256) {
-            throw new \InvalidArgumentException(\sprintf(
+        if (strlen($value) > 256) {
+            throw new InvalidArgumentException(sprintf(
                 'TraceState value exceeds maximum length of 256: %d',
-                \strlen($value),
+                strlen($value),
             ));
         }
 
-        for ($i = 0; $i < \strlen($value); $i++) {
-            $ord = \ord($value[$i]);
+        for ($i = 0; $i < strlen($value); $i++) {
+            $ord = ord($value[$i]);
 
             if ($ord < 0x20 || $ord > 0x7E || $value[$i] === ',' || $value[$i] === '=') {
-                throw new \InvalidArgumentException(\sprintf(
+                throw new InvalidArgumentException(sprintf(
                     'TraceState value contains invalid character at position %d',
                     $i,
                 ));

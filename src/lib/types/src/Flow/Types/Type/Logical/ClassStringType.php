@@ -9,9 +9,14 @@ use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 
+use function class_exists;
 use function Flow\Types\DSL\type_class_string;
 use function Flow\Types\DSL\type_literal;
 use function Flow\Types\DSL\type_structure;
+use function interface_exists;
+use function is_a;
+use function is_object;
+use function is_string;
 
 /**
  * @template T of object
@@ -26,7 +31,7 @@ final readonly class ClassStringType implements Type
     public function __construct(
         public ?string $class = null,
     ) {
-        if ($class !== null && (!\class_exists($class) && !\interface_exists($class))) {
+        if ($class !== null && (!class_exists($class) && !interface_exists($class))) {
             throw new InvalidArgumentException("Class {$class} not found");
         }
     }
@@ -60,19 +65,19 @@ final readonly class ClassStringType implements Type
             return $value;
         }
 
-        if (\is_string($value)) {
-            if (\class_exists($value) || \interface_exists($value)) {
-                if ($this->class === null || \is_a($value, $this->class, true)) {
+        if (is_string($value)) {
+            if (class_exists($value) || interface_exists($value)) {
+                if ($this->class === null || is_a($value, $this->class, true)) {
                     /** @phpstan-ignore-next-line */
                     return $value;
                 }
             }
         }
 
-        if (\is_object($value)) {
+        if (is_object($value)) {
             $className = $value::class;
 
-            if ($this->class === null || \is_a($className, $this->class, true)) {
+            if ($this->class === null || is_a($className, $this->class, true)) {
                 /** @phpstan-ignore-next-line */
                 return $className;
             }
@@ -83,11 +88,11 @@ final readonly class ClassStringType implements Type
 
     public function isValid(mixed $value): bool
     {
-        if (!\is_string($value)) {
+        if (!is_string($value)) {
             return false;
         }
 
-        if (!\class_exists($value) && !\interface_exists($value)) {
+        if (!class_exists($value) && !interface_exists($value)) {
             return false;
         }
 
@@ -95,7 +100,7 @@ final readonly class ClassStringType implements Type
             return true;
         }
 
-        return \is_a($value, $this->class, true);
+        return is_a($value, $this->class, true);
     }
 
     public function normalize(): array

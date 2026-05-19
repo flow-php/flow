@@ -7,24 +7,30 @@ namespace Flow\ETL\Adapter\Logger\Tests\Unit\Logger;
 use Flow\ETL\Adapter\Logger\Logger\DumpLogger;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function class_exists;
+use function extension_loaded;
+use function ob_end_clean;
+use function ob_get_contents;
+use function ob_start;
+
 final class DumpLoggerTest extends FlowTestCase
 {
     public function test_logger(): void
     {
-        if (\extension_loaded('xdebug')) {
+        if (extension_loaded('xdebug')) {
             static::markTestSkipped('Xdebug extension is loaded and it will affect DumpLogger');
         }
 
-        if (\class_exists('\\Symfony\\Component\\VarDumper\\VarDumper')) {
+        if (class_exists('\\Symfony\\Component\\VarDumper\\VarDumper')) {
             static::markTestSkipped('Symfony VarDumper is loaded and it will affect DumpLogger output format');
         }
 
         $logger = new DumpLogger();
 
-        \ob_start();
+        ob_start();
         $logger->error('error', ['id' => 1]);
-        $output = \ob_get_contents();
-        \ob_end_clean();
+        $output = ob_get_contents();
+        ob_end_clean();
 
         if ($output === false) {
             static::fail('Failed to get output buffer contents');

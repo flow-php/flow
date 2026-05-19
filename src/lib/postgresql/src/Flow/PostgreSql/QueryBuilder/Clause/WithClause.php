@@ -8,6 +8,8 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\WithClause as ProtobufWithClause;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
+use function count;
+
 /**
  * Represents a WITH clause containing one or more CTEs.
  */
@@ -25,7 +27,7 @@ final readonly class WithClause
     {
         $cteNodes = $withClause->getCtes();
 
-        if ($cteNodes === null || \count($cteNodes) === 0) {
+        if (count($cteNodes) === 0) {
             throw InvalidAstException::missingRequiredField('ctes', 'WithClause');
         }
 

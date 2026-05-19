@@ -31,9 +31,19 @@ use Flow\PostgreSql\Explain\ExplainParser;
 use Flow\PostgreSql\Explain\Plan\Plan;
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\QueryBuilder\Sql;
+use InvalidArgumentException;
 use PgSql\Connection;
 use PgSql\Result;
+use Throwable;
 
+use function array_combine;
+use function array_key_exists;
+use function array_keys;
+use function array_map;
+use function array_values;
+use function error_clear_last;
+use function error_get_last;
+use function extension_loaded;
 use function Flow\PostgreSql\DSL\begin;
 use function Flow\PostgreSql\DSL\commit;
 use function Flow\PostgreSql\DSL\listen;
@@ -41,6 +51,56 @@ use function Flow\PostgreSql\DSL\release_savepoint;
 use function Flow\PostgreSql\DSL\rollback;
 use function Flow\PostgreSql\DSL\savepoint;
 use function Flow\PostgreSql\DSL\unlisten;
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
+use function hrtime;
+use function intdiv;
+use function is_array;
+use function is_int;
+use function is_string;
+use function pg_affected_rows;
+use function pg_close;
+use function pg_connect;
+use function pg_connection_status;
+use function pg_consume_input;
+use function pg_fetch_all;
+use function pg_fetch_assoc;
+use function pg_fetch_result;
+use function pg_field_type;
+use function pg_free_result;
+use function pg_get_notify;
+use function pg_get_result;
+use function pg_last_error;
+use function pg_num_rows;
+use function pg_query;
+use function pg_result_error;
+use function pg_result_error_field;
+use function pg_result_status;
+use function pg_send_query_params;
+use function pg_socket;
+use function sprintf;
+use function str_contains;
+use function stream_select;
+use function strval;
+
+use const PGSQL_ASSOC;
+use const PGSQL_CONNECT_FORCE_NEW;
+use const PGSQL_CONNECTION_OK;
+use const PGSQL_DIAG_COLUMN_NAME;
+use const PGSQL_DIAG_CONSTRAINT_NAME;
+use const PGSQL_DIAG_MESSAGE_DETAIL;
+use const PGSQL_DIAG_MESSAGE_HINT;
+use const PGSQL_DIAG_MESSAGE_PRIMARY;
+use const PGSQL_DIAG_SCHEMA_NAME;
+use const PGSQL_DIAG_SQLSTATE;
+use const PGSQL_DIAG_STATEMENT_POSITION;
+use const PGSQL_DIAG_TABLE_NAME;
+use const PGSQL_FATAL_ERROR;
+use const PGSQL_NONFATAL_ERROR;
 
 final class PgSqlClient implements Client
 {
@@ -71,15 +131,15 @@ final class PgSqlClient implements Client
         ?ValueConverters $valueConverters = null,
         ?ClientContext $context = null,
     ): self {
-        if (!\extension_loaded('pgsql')) {
+        if (!extension_loaded('pgsql')) {
             throw ConnectionException::extensionNotLoaded('pgsql');
         }
 
-        \error_clear_last();
-        $connection = @\pg_connect($params->toString(), \PGSQL_CONNECT_FORCE_NEW);
+        error_clear_last();
+        $connection = @pg_connect($params->toString(), PGSQL_CONNECT_FORCE_NEW);
 
         if ($connection === false) {
-            $error = \error_get_last();
+            $error = error_get_last();
 
             throw ConnectionException::connectionFailed($error['message'] ?? 'Unknown error');
         }
@@ -111,7 +171,7 @@ final class PgSqlClient implements Client
     public function close(): void
     {
         if ($this->connection !== null) {
-            @\pg_close($this->connection);
+            @pg_close($this->connection);
             $this->connection = null;
         }
     }
@@ -147,8 +207,8 @@ final class PgSqlClient implements Client
     public function execute(Sql|string $sql, array $parameters = []): int
     {
         $result = $this->query($sql, $parameters);
-        $affected = \pg_affected_rows($result);
-        \pg_free_result($result);
+        $affected = pg_affected_rows($result);
+        pg_free_result($result);
 
         return $affected;
     }
@@ -170,16 +230,16 @@ final class PgSqlClient implements Client
     public function fetch(Sql|string $sql, array $parameters = []): ?array
     {
         $result = $this->query($sql, $parameters);
-        $row = \pg_fetch_assoc($result);
+        $row = pg_fetch_assoc($result);
 
         if ($row === false) {
-            \pg_free_result($result);
+            pg_free_result($result);
 
             return null;
         }
 
         $converted = $this->convertRow($result, $row);
-        \pg_free_result($result);
+        pg_free_result($result);
 
         return $converted;
     }
@@ -187,13 +247,16 @@ final class PgSqlClient implements Client
     public function fetchAll(Sql|string $sql, array $parameters = []): array
     {
         $result = $this->query($sql, $parameters);
-        $rows = \pg_fetch_all($result) ?: [];
+        $rows = pg_fetch_all($result) ?: [];
+        $converted = [];
 
-        if ($rows !== []) {
-            $rows = \array_map(fn(array $row) => $this->convertRow($result, $row), $rows);
+        foreach ($rows as $row) {
+            $converted[] = $this->convertRow($result, $row);
         }
 
-        \pg_free_result($result);
+        $rows = $converted;
+
+        pg_free_result($result);
 
         return $rows;
     }
@@ -202,10 +265,13 @@ final class PgSqlClient implements Client
     {
         $context = $this->buildContext($sql, $parameters);
 
-        return \array_values(\array_map(
-            static fn(array $row) => $mapper->map($row, $context),
-            $this->fetchAll($sql, $parameters),
-        ));
+        $mapped = [];
+
+        foreach ($this->fetchAll($sql, $parameters) as $row) {
+            $mapped[] = $mapper->map($row, $context);
+        }
+
+        return $mapped;
     }
 
     public function fetchInto(RowMapper $mapper, Sql|string $sql, array $parameters = []): mixed
@@ -222,30 +288,30 @@ final class PgSqlClient implements Client
     public function fetchOne(Sql|string $sql, array $parameters = []): ?array
     {
         $result = $this->query($sql, $parameters);
-        $count = \pg_num_rows($result);
+        $count = pg_num_rows($result);
 
         if ($count === 0) {
-            \pg_free_result($result);
+            pg_free_result($result);
 
             return null;
         }
 
         if ($count > 1) {
-            \pg_free_result($result);
+            pg_free_result($result);
 
             throw new TooManyRowsException($count);
         }
 
-        $row = \pg_fetch_assoc($result);
+        $row = pg_fetch_assoc($result);
 
         if ($row === false) {
-            \pg_free_result($result);
+            pg_free_result($result);
 
             return null;
         }
 
         $converted = $this->convertRow($result, $row);
-        \pg_free_result($result);
+        pg_free_result($result);
 
         return $converted;
     }
@@ -265,71 +331,47 @@ final class PgSqlClient implements Client
     {
         $result = $this->query($sql, $parameters);
 
-        if (\pg_num_rows($result) === 0) {
-            \pg_free_result($result);
+        if (pg_num_rows($result) === 0) {
+            pg_free_result($result);
 
             return null;
         }
 
-        $value = \pg_fetch_result($result, 0, 0);
+        $value = pg_fetch_result($result, 0, 0);
 
         if ($value === false) {
-            \pg_free_result($result);
+            pg_free_result($result);
 
             return null;
         }
 
         if ($value !== null) {
-            $value = $this->resultCaster->cast($value, \pg_field_type($result, 0));
+            $value = $this->resultCaster->cast($value, pg_field_type($result, 0));
         }
 
-        \pg_free_result($result);
+        pg_free_result($result);
 
         return $value;
     }
 
     public function fetchScalarBool(Sql|string $sql, array $parameters = []): bool
     {
-        $value = $this->fetchScalar($sql, $parameters);
-
-        if (!\is_bool($value)) {
-            throw ResultException::unexpectedScalarType('bool', \get_debug_type($value));
-        }
-
-        return $value;
+        return type_boolean()->assert($this->fetchScalar($sql, $parameters));
     }
 
     public function fetchScalarFloat(Sql|string $sql, array $parameters = []): float
     {
-        $value = $this->fetchScalar($sql, $parameters);
-
-        if (!\is_float($value)) {
-            throw ResultException::unexpectedScalarType('float', \get_debug_type($value));
-        }
-
-        return $value;
+        return type_float()->assert($this->fetchScalar($sql, $parameters));
     }
 
     public function fetchScalarInt(Sql|string $sql, array $parameters = []): int
     {
-        $value = $this->fetchScalar($sql, $parameters);
-
-        if (!\is_int($value)) {
-            throw ResultException::unexpectedScalarType('int', \get_debug_type($value));
-        }
-
-        return $value;
+        return type_integer()->assert($this->fetchScalar($sql, $parameters));
     }
 
     public function fetchScalarString(Sql|string $sql, array $parameters = []): string
     {
-        $value = $this->fetchScalar($sql, $parameters);
-
-        if (!\is_string($value)) {
-            throw ResultException::unexpectedScalarType('string', \get_debug_type($value));
-        }
-
-        return $value;
+        return type_string()->assert($this->fetchScalar($sql, $parameters));
     }
 
     public function fetchSingle(Sql|string $sql, array $parameters = []): array
@@ -360,32 +402,29 @@ final class PgSqlClient implements Client
 
     public function isConnected(): bool
     {
-        return $this->connection !== null && \pg_connection_status($this->connection) === \PGSQL_CONNECTION_OK;
+        return $this->connection !== null && pg_connection_status($this->connection) === PGSQL_CONNECTION_OK;
     }
 
     public function lastInsertId(string $sequenceName): int|string
     {
         try {
-            $result = $this->fetchScalar('SELECT currval($1)', [$sequenceName]);
+            return type_union(type_integer(), type_string())->assert(
+                $this->fetchScalar('SELECT currval($1)', [$sequenceName]) ?? throw ResultException::sequenceNotUsed(
+                    $sequenceName,
+                ),
+            );
         } catch (QueryException $e) {
-            if (\str_contains($e->getMessage(), 'is not yet defined in this session')) {
+            if (str_contains($e->getMessage(), 'is not yet defined in this session')) {
                 throw ResultException::sequenceNotUsed($sequenceName);
             }
 
             throw $e;
         }
-
-        if ($result === null) {
-            throw ResultException::sequenceNotUsed($sequenceName);
-        }
-
-        /** @var int|string $result */
-        return $result;
     }
 
     public function listen(string $channel): void
     {
-        if (\array_key_exists($channel, $this->listeningChannels)) {
+        if (array_key_exists($channel, $this->listeningChannels)) {
             return;
         }
 
@@ -440,7 +479,7 @@ final class PgSqlClient implements Client
             $this->commit();
 
             return $returnValue;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->rollBack();
 
             throw $e;
@@ -449,7 +488,7 @@ final class PgSqlClient implements Client
 
     public function unlisten(string $channel): void
     {
-        if (!\array_key_exists($channel, $this->listeningChannels)) {
+        if (!array_key_exists($channel, $this->listeningChannels)) {
             return;
         }
 
@@ -460,7 +499,7 @@ final class PgSqlClient implements Client
     public function wait(int $milliseconds): ?Notification
     {
         if ($milliseconds < 0) {
-            throw new \InvalidArgumentException(\sprintf('Timeout must be non-negative, got %d', $milliseconds));
+            throw new InvalidArgumentException(sprintf('Timeout must be non-negative, got %d', $milliseconds));
         }
 
         $this->assertConnected();
@@ -468,9 +507,9 @@ final class PgSqlClient implements Client
         /** @var Connection $connection */
         $connection = $this->connection;
 
-        $immediate = @\pg_get_notify($connection, \PGSQL_ASSOC);
+        $immediate = self::tryGetNotify($connection);
 
-        if (\is_array($immediate)) {
+        if ($immediate !== null) {
             return self::notificationFromRaw($immediate);
         }
 
@@ -478,16 +517,16 @@ final class PgSqlClient implements Client
             return null;
         }
 
-        $socket = @\pg_socket($connection);
+        $socket = @pg_socket($connection);
 
         if ($socket === false) {
             throw ConnectionException::notificationWaitFailed('pg_socket() failed to return connection socket');
         }
 
-        $deadlineNs = \hrtime(true) + ($milliseconds * 1_000_000);
+        $deadlineNs = hrtime(true) + ($milliseconds * 1_000_000);
 
         while (true) {
-            $remainingNs = $deadlineNs - \hrtime(true);
+            $remainingNs = $deadlineNs - hrtime(true);
 
             if ($remainingNs <= 0) {
                 return null;
@@ -496,16 +535,16 @@ final class PgSqlClient implements Client
             $read = [$socket];
             $write = null;
             $except = null;
-            $selected = @\stream_select(
+            $selected = @stream_select(
                 $read,
                 $write,
                 $except,
-                (int) \intdiv($remainingNs, 1_000_000_000),
-                (int) \intdiv($remainingNs % 1_000_000_000, 1000),
+                (int) intdiv((int) $remainingNs, 1_000_000_000),
+                (int) intdiv((int) $remainingNs % 1_000_000_000, 1000),
             );
 
             if ($selected === false) {
-                $lastError = \error_get_last();
+                $lastError = error_get_last();
 
                 throw ConnectionException::notificationWaitFailed(
                     'stream_select() failed: ' . ($lastError['message'] ?? 'unknown error'),
@@ -516,15 +555,15 @@ final class PgSqlClient implements Client
                 return null;
             }
 
-            if (!@\pg_consume_input($connection)) {
+            if (!@pg_consume_input($connection)) {
                 throw ConnectionException::notificationWaitFailed(
-                    'pg_consume_input() failed: ' . \pg_last_error($connection),
+                    'pg_consume_input() failed: ' . pg_last_error($connection),
                 );
             }
 
-            $raw = @\pg_get_notify($connection, \PGSQL_ASSOC);
+            $raw = self::tryGetNotify($connection);
 
-            if (\is_array($raw)) {
+            if ($raw !== null) {
                 return self::notificationFromRaw($raw);
             }
         }
@@ -552,84 +591,93 @@ final class PgSqlClient implements Client
      */
     private function convertParameters(array $parameters): array
     {
-        $converted = [];
+        return array_values(array_map($this->convertParameter(...), $parameters));
+    }
 
-        foreach ($parameters as $value) {
-            if ($value === null) {
-                $converted[] = null;
-            } elseif ($value instanceof TypedValue) {
-                $converter = $this->valueConverters->forValueType($value->targetType);
-                $converted[] = $converter->toDatabase($value->value);
-            } else {
-                if (\is_array($value)) {
-                    throw ValueConversionException::ambiguousArrayType();
-                }
-
-                $converted[] = $this->valueConverters->forValueType(ValueType::TEXT)->toDatabase($value);
-            }
+    private function convertParameter(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
         }
 
-        return $converted;
+        if ($value instanceof TypedValue) {
+            return $this->valueConverters->forValueType($value->targetType)->toDatabase($value->value);
+        }
+
+        if (is_array($value)) {
+            throw ValueConversionException::ambiguousArrayType();
+        }
+
+        return $this->valueConverters->forValueType(ValueType::TEXT)->toDatabase($value);
     }
 
     /**
-     * @param array<int|string, null|string> $row
+     * @param array<array-key, mixed> $row
      *
      * @return array<string, mixed>
      */
     private function convertRow(Result $result, array $row): array
     {
-        $converted = [];
-        $i = 0;
+        $keys = array_map(strval(...), array_keys($row));
+        $values = array_values($row);
+        $converted = array_map(
+            fn(int $i, mixed $value): mixed => $this->convertColumnValue($result, $i, $value),
+            array_keys($values),
+            $values,
+        );
 
-        foreach ($row as $column => $value) {
-            $key = (string) $column;
-
-            if ($value === null) {
-                $converted[$key] = null;
-            } else {
-                $converted[$key] = $this->resultCaster->cast($value, \pg_field_type($result, $i));
-            }
-
-            $i++;
-        }
-
-        return $converted;
+        return array_combine($keys, $converted);
     }
 
+    private function convertColumnValue(Result $result, int $columnIndex, mixed $value): mixed
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_string($value)) {
+            return $this->resultCaster->cast($value, pg_field_type($result, $columnIndex));
+        }
+
+        return $value;
+    }
+
+    /**
+     * @param callable(string): \Throwable $exceptionFactory
+     */
     private function executeTransactionCommand(Sql $query, callable $exceptionFactory): void
     {
         /** @var Connection $connection */
         $connection = $this->connection;
 
-        $result = @\pg_query($connection, $query->toSql());
+        $result = @pg_query($connection, $query->toSql());
 
         if ($result === false) {
             $this->transactionContext->reset();
 
-            throw $exceptionFactory(\pg_last_error($connection) ?: 'Unknown error');
+            throw $exceptionFactory(pg_last_error($connection) ?: 'Unknown error');
         }
 
-        \pg_free_result($result);
+        pg_free_result($result);
     }
 
     private function extractError(Connection $connection, ?Result $result): PostgreSqlError
     {
         if ($result !== null) {
-            $sqlState = \pg_result_error_field($result, \PGSQL_DIAG_SQLSTATE);
-            $message = \pg_result_error_field($result, \PGSQL_DIAG_MESSAGE_PRIMARY);
-            $detail = \pg_result_error_field($result, \PGSQL_DIAG_MESSAGE_DETAIL);
-            $hint = \pg_result_error_field($result, \PGSQL_DIAG_MESSAGE_HINT);
-            $schema = \pg_result_error_field($result, \PGSQL_DIAG_SCHEMA_NAME);
-            $table = \pg_result_error_field($result, \PGSQL_DIAG_TABLE_NAME);
-            $column = \pg_result_error_field($result, \PGSQL_DIAG_COLUMN_NAME);
-            $constraint = \pg_result_error_field($result, \PGSQL_DIAG_CONSTRAINT_NAME);
-            $position = \pg_result_error_field($result, \PGSQL_DIAG_STATEMENT_POSITION);
+            $sqlState = pg_result_error_field($result, PGSQL_DIAG_SQLSTATE);
+            $message = pg_result_error_field($result, PGSQL_DIAG_MESSAGE_PRIMARY);
+            $detail = pg_result_error_field($result, PGSQL_DIAG_MESSAGE_DETAIL);
+            $hint = pg_result_error_field($result, PGSQL_DIAG_MESSAGE_HINT);
+            $schema = pg_result_error_field($result, PGSQL_DIAG_SCHEMA_NAME);
+            $table = pg_result_error_field($result, PGSQL_DIAG_TABLE_NAME);
+            $column = pg_result_error_field($result, PGSQL_DIAG_COLUMN_NAME);
+            $constraint = pg_result_error_field($result, PGSQL_DIAG_CONSTRAINT_NAME);
+            $position = pg_result_error_field($result, PGSQL_DIAG_STATEMENT_POSITION);
 
             if ($sqlState !== false && $sqlState !== null) {
                 return PostgreSqlError::fromDiagnostics(
                     $sqlState,
-                    $message !== false && $message !== null ? $message : (\pg_result_error($result) ?: 'Unknown error'),
+                    $message !== false && $message !== null ? $message : (pg_result_error($result) ?: 'Unknown error'),
                     $detail !== false && $detail !== null ? $detail : null,
                     $hint !== false && $hint !== null ? $hint : null,
                     $schema !== false && $schema !== null ? $schema : null,
@@ -641,7 +689,7 @@ final class PgSqlClient implements Client
             }
         }
 
-        $errorMessage = \pg_last_error($connection);
+        $errorMessage = pg_last_error($connection);
 
         return PostgreSqlError::unknown($errorMessage !== '' ? $errorMessage : 'Unknown error');
     }
@@ -659,26 +707,26 @@ final class PgSqlClient implements Client
         $query = $sql instanceof Sql ? $sql->toSql() : $sql;
         $convertedParams = $this->convertParameters($parameters);
 
-        $success = @\pg_send_query_params($connection, $query, $convertedParams);
+        $success = @pg_send_query_params($connection, $query, $convertedParams);
 
         if ($success === false) {
             throw QueryException::executionFailed($query, $this->extractError($connection, null));
         }
 
-        $result = \pg_get_result($connection);
+        $result = pg_get_result($connection);
 
         if ($result === false) {
             throw QueryException::executionFailed($query, $this->extractError($connection, null));
         }
 
-        while (\pg_get_result($connection) !== false) {
+        while (pg_get_result($connection) !== false) {
         }
 
-        $status = \pg_result_status($result);
+        $status = pg_result_status($result);
 
-        if ($status === \PGSQL_FATAL_ERROR || $status === \PGSQL_NONFATAL_ERROR) {
+        if ($status === PGSQL_FATAL_ERROR || $status === PGSQL_NONFATAL_ERROR) {
             $error = $this->extractError($connection, $result);
-            \pg_free_result($result);
+            pg_free_result($result);
 
             throw QueryException::executionFailed($query, $error);
         }
@@ -687,18 +735,28 @@ final class PgSqlClient implements Client
     }
 
     /**
+     * @return null|array<array-key, mixed>
+     */
+    private static function tryGetNotify(Connection $connection): ?array
+    {
+        $result = type_union(type_array(), type_boolean())->assert(@pg_get_notify($connection, PGSQL_ASSOC));
+
+        return is_array($result) ? $result : null;
+    }
+
+    /**
      * @param array<array-key, mixed> $raw
      */
     private static function notificationFromRaw(array $raw): Notification
     {
-        $channel = $raw['message'] ?? '';
-        $payload = $raw['payload'] ?? '';
-        $pid = $raw['pid'] ?? 0;
-
-        if (!\is_string($channel) || !\is_string($payload) || !\is_int($pid)) {
+        if (
+            !is_string($raw['message'] ?? null)
+            || !is_string($raw['payload'] ?? null)
+            || !is_int($raw['pid'] ?? null)
+        ) {
             throw ConnectionException::notificationWaitFailed('Malformed notification payload from pg_get_notify()');
         }
 
-        return new Notification($channel, $payload, $pid);
+        return new Notification($raw['message'], $raw['payload'], $raw['pid']);
     }
 }

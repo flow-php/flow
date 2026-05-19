@@ -94,6 +94,16 @@ use Flow\PostgreSql\QueryBuilder\Unlisten\UnlistenFinalStep;
 use Flow\PostgreSql\QueryBuilder\Update\UpdateBuilder;
 use Flow\PostgreSql\QueryBuilder\Update\UpdateTableStep;
 use Flow\PostgreSql\QueryBuilder\With\WithBuilder;
+use InvalidArgumentException;
+
+use function array_map;
+use function array_values;
+use function count;
+use function Flow\Types\DSL\type_string;
+use function is_float;
+use function is_int;
+use function is_string;
+use function str_contains;
 
 /**
  * Create a new SELECT query builder.
@@ -107,7 +117,7 @@ function select(string|Expression ...$expressions): SelectBuilder
         return SelectBuilder::create();
     }
 
-    $expressions = \array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+    $expressions = array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
         ? $e
         : col($e), $expressions);
 
@@ -133,7 +143,7 @@ function parsed_select(string $sql): ParsedSelect
 function with(CTE ...$ctes): WithBuilder
 {
     if ($ctes === []) {
-        throw new \InvalidArgumentException('At least one CTE is required');
+        throw new InvalidArgumentException('At least one CTE is required');
     }
 
     return new WithBuilder(new WithClause($ctes));
@@ -268,21 +278,17 @@ function col(string $column, ?string $table = null, ?string $schema = null): Col
             throw new InvalidExpressionException('Cannot specify schema without table in col()');
         }
 
-        if (\str_contains($column, '.')) {
+        if (str_contains($column, '.')) {
             throw new InvalidExpressionException(
                 'Column name cannot contain dots when table or schema is specified. Use col("table.column") or col("column", "table") but not both.',
             );
         }
 
-        if ($schema !== null && $table !== null) {
-            return Column::schemaTableColumn($schema, $table, $column);
+        if ($schema !== null) {
+            return Column::schemaTableColumn($schema, type_string()->assert($table), $column);
         }
 
-        if ($table === null) {
-            return Column::fromParts(QualifiedIdentifier::parse($column)->parts());
-        }
-
-        return Column::tableColumn($table, $column);
+        return Column::tableColumn(type_string()->assert($table), $column);
     }
 
     return Column::fromParts(QualifiedIdentifier::parse($column)->parts());
@@ -312,10 +318,10 @@ function literal(string|int|float|bool|null $value): Literal
 {
     return match (true) {
         $value === null => Literal::null(),
-        \is_string($value) => Literal::string($value),
-        \is_int($value) => Literal::int($value),
-        \is_float($value) => Literal::float($value),
-        \is_bool($value) => Literal::bool($value),
+        is_string($value) => Literal::string($value),
+        is_int($value) => Literal::int($value),
+        is_float($value) => Literal::float($value),
+        default => Literal::bool($value),
     };
 }
 
@@ -335,11 +341,11 @@ function param(int $position): Parameter
 function parameters(int $count, int $startAt = 1): array
 {
     if ($count < 1) {
-        throw new \InvalidArgumentException('Parameter count must be at least 1');
+        throw new InvalidArgumentException('Parameter count must be at least 1');
     }
 
     if ($startAt < 1) {
-        throw new \InvalidArgumentException('Start position must be at least 1');
+        throw new InvalidArgumentException('Start position must be at least 1');
     }
 
     $params = [];
@@ -362,7 +368,7 @@ function func(string $name, array $args = []): FunctionCall
 {
     return new FunctionCall(
         QualifiedIdentifier::parse($name)->parts(),
-        \array_map(static fn(string|Expression $e): Expression => $e instanceof Expression ? $e : col($e), $args),
+        array_map(static fn(string|Expression $e): Expression => $e instanceof Expression ? $e : col($e), $args),
     );
 }
 
@@ -378,7 +384,7 @@ function agg(string $name, array $args = [], bool $distinct = false): AggregateC
 {
     return new AggregateCall(
         [$name],
-        \array_map(static fn(string|Expression $e): Expression => $e instanceof Expression ? $e : col($e), $args),
+        array_map(static fn(string|Expression $e): Expression => $e instanceof Expression ? $e : col($e), $args),
         false,
         $distinct,
     );
@@ -450,9 +456,9 @@ function agg_max(string|Expression $expr): AggregateCall
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function coalesce(string|Expression ...$expressions): Coalesce
 {
-    return new Coalesce(\array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+    return new Coalesce(array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
         ? $e
-        : col($e), \array_values($expressions)));
+        : col($e), array_values($expressions)));
 }
 
 /**
@@ -475,9 +481,9 @@ function nullif(string|Expression $expr1, string|Expression $expr2): NullIf
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function greatest(string|Expression ...$expressions): Greatest
 {
-    return new Greatest(\array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+    return new Greatest(array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
         ? $e
-        : col($e), \array_values($expressions)));
+        : col($e), array_values($expressions)));
 }
 
 /**
@@ -488,15 +494,15 @@ function greatest(string|Expression ...$expressions): Greatest
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function least(string|Expression ...$expressions): Least
 {
-    return new Least(\array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+    return new Least(array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
         ? $e
-        : col($e), \array_values($expressions)));
+        : col($e), array_values($expressions)));
 }
 
 /**
  * Create a type cast expression.
  *
- * @param Expression $expr Expression to cast
+ * @param Expression|string $expr Expression to cast
  * @param ColumnType $dataType Target data type (use column_type_* functions)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
@@ -565,7 +571,7 @@ function case_when(
 ): CaseExpression {
     return new CaseExpression(
         $operand === null ? null : ($operand instanceof Expression ? $operand : col($operand)),
-        \array_values($whenClauses),
+        array_values($whenClauses),
         $elseResult === null ? null : ($elseResult instanceof Expression ? $elseResult : col($elseResult)),
     );
 }
@@ -602,9 +608,9 @@ function sub_select(SelectFinalStep $query): Subquery
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function array_expr(array $elements): ArrayExpression
 {
-    return new ArrayExpression(\array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+    return new ArrayExpression(array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
         ? $e
-        : col($e), \array_values($elements)));
+        : col($e), array_values($elements)));
 }
 
 /**
@@ -615,9 +621,9 @@ function array_expr(array $elements): ArrayExpression
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function row_expr(array $elements): RowExpression
 {
-    return new RowExpression(\array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+    return new RowExpression(array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
         ? $e
-        : col($e), \array_values($elements)));
+        : col($e), array_values($elements)));
 }
 
 /**
@@ -648,9 +654,9 @@ function window_func(string $name, array $args = [], array $partitionBy = [], ar
 
     return new WindowFunction(
         [$name],
-        \array_map($coerce, \array_values($args)),
-        \array_map($coerce, \array_values($partitionBy)),
-        \array_values($orderBy),
+        array_map($coerce, array_values($args)),
+        array_map($coerce, array_values($partitionBy)),
+        array_values($orderBy),
     );
 }
 
@@ -665,17 +671,17 @@ function window_func(string $name, array $args = [], array $partitionBy = [], ar
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function concat(string|Expression ...$expressions): BinaryExpression
 {
-    if (\count($expressions) < 2) {
+    if (count($expressions) < 2) {
         throw InvalidExpressionException::emptyArray('concat requires at least 2 expressions');
     }
 
-    $expressions = \array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+    $expressions = array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
         ? $e
         : col($e), $expressions);
 
     $result = $expressions[0];
 
-    for ($i = 1; $i < \count($expressions); $i++) {
+    for ($i = 1; $i < count($expressions); $i++) {
         $result = new BinaryExpression($result, '||', $expressions[$i]);
     }
 
@@ -827,10 +833,10 @@ function window_def(
 ): WindowDefinition {
     return new WindowDefinition(
         $name,
-        \array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+        array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
             ? $e
-            : col($e), \array_values($partitionBy)),
-        \array_values($orderBy),
+            : col($e), array_values($partitionBy)),
+        array_values($orderBy),
         $frame,
     );
 }
@@ -906,7 +912,7 @@ function lock_for(
     array $tables = [],
     LockWaitPolicy $waitPolicy = LockWaitPolicy::DEFAULT,
 ): LockingClause {
-    return new LockingClause($strength, \array_values($tables), $waitPolicy);
+    return new LockingClause($strength, array_values($tables), $waitPolicy);
 }
 
 /**
@@ -917,7 +923,7 @@ function lock_for(
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function for_update(array $tables = []): LockingClause
 {
-    return LockingClause::forUpdate(\array_values($tables));
+    return LockingClause::forUpdate(array_values($tables));
 }
 
 /**
@@ -928,7 +934,7 @@ function for_update(array $tables = []): LockingClause
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function for_share(array $tables = []): LockingClause
 {
-    return LockingClause::forShare(\array_values($tables));
+    return LockingClause::forShare(array_values($tables));
 }
 
 /**
@@ -949,7 +955,7 @@ function on_conflict_nothing(?ConflictTarget $target = null): OnConflictClause
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function on_conflict_update(ConflictTarget $target, array $updates): OnConflictClause
 {
-    return OnConflictClause::doUpdate($target, \array_map(static fn(string|Expression $e): Expression => $e
+    return OnConflictClause::doUpdate($target, array_map(static fn(string|Expression $e): Expression => $e
         instanceof Expression
             ? $e
             : col($e), $updates));
@@ -963,7 +969,7 @@ function on_conflict_update(ConflictTarget $target, array $updates): OnConflictC
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function conflict_columns(array $columns): ConflictTarget
 {
-    return ConflictTarget::columns(\array_values($columns));
+    return ConflictTarget::columns(array_values($columns));
 }
 
 /**
@@ -983,9 +989,9 @@ function conflict_constraint(string $name): ConflictTarget
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function returning(string|Expression ...$expressions): ReturningClause
 {
-    return new ReturningClause(\array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+    return new ReturningClause(array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
         ? $e
-        : col($e), \array_values($expressions)));
+        : col($e), array_values($expressions)));
 }
 
 /**

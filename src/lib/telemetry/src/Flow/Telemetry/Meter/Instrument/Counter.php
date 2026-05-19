@@ -16,7 +16,12 @@ use Flow\Telemetry\Meter\MetricLimits;
 use Flow\Telemetry\Meter\MetricType;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tracer\SpanContext;
+use InvalidArgumentException;
 use Psr\Clock\ClockInterface;
+
+use function array_filter;
+use function count;
+use function is_scalar;
 
 /**
  * Counter instrument for recording non-negative increments.
@@ -49,7 +54,7 @@ final class Counter implements Instrument
 
     /**
      * @param string $name Instrument name
-     * @param resource $resource The resource context for this instrument
+     * @param \Flow\Telemetry\Resource $resource The resource context for this instrument
      * @param InstrumentationScope $scope Instrumentation scope that created this instrument
      * @param ClockInterface $clock Clock for timestamps
      * @param AggregationTemporality $temporality Aggregation temporality
@@ -84,18 +89,18 @@ final class Counter implements Instrument
     public function add(int|float $amount, array|Attributes $attributes = [], ?SpanContext $context = null): void
     {
         if ($amount < 0) {
-            throw new \InvalidArgumentException('Counter amount must be >= 0, got ' . $amount);
+            throw new InvalidArgumentException('Counter amount must be >= 0, got ' . $amount);
         }
 
         $normalized = $attributes instanceof Attributes ? $attributes->normalize() : $attributes;
         /** @var array<string, bool|float|int|string> $attrs */
-        $attrs = \array_filter($normalized, static fn($v): bool => \is_scalar($v));
+        $attrs = array_filter($normalized, static fn($v): bool => is_scalar($v));
         $key = Attributes::create($attrs)->id();
 
         if (!isset($this->aggregations[$key])) {
             $nonOverflowCount = isset($this->aggregations[$this->overflowKey])
-                ? \count($this->aggregations) - 1
-                : \count($this->aggregations);
+                ? count($this->aggregations) - 1
+                : count($this->aggregations);
 
             if ($nonOverflowCount >= $this->limits->cardinalityLimit) {
                 $key = $this->overflowKey;

@@ -7,6 +7,8 @@ namespace Flow\Types\Type\Native;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 
+use function is_object;
+
 /**
  * @implements Type<object>
  */
@@ -34,7 +36,7 @@ final class ObjectType implements Type
 
     public function isValid(mixed $value): bool
     {
-        return \is_object($value);
+        return is_object($value);
     }
 
     public function normalize(): array

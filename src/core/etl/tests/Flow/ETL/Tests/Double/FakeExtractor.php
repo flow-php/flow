@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
+use DateTimeImmutable;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
+use Flow\Types\Value\Uuid as FlowUuid;
+use Generator;
 use Ramsey\Uuid\Uuid;
 
 use function Flow\ETL\DSL\bool_entry;
@@ -31,6 +34,7 @@ use function Flow\ETL\DSL\map_schema;
 use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\struct_entry;
 use function Flow\ETL\DSL\structure_schema;
@@ -45,6 +49,7 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function random_int;
 
 final readonly class FakeExtractor implements Extractor
 {
@@ -57,7 +62,7 @@ final readonly class FakeExtractor implements Extractor
      */
     public static function schema(): Schema
     {
-        return \Flow\ETL\DSL\schema(
+        return schema(
             int_schema('int'),
             float_schema('float'),
             bool_schema('bool'),
@@ -88,7 +93,7 @@ final readonly class FakeExtractor implements Extractor
      *
      * @return \Generator<int, Rows, mixed, void>
      */
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         for ($i = 0; $i < $this->total; $i++) {
             $id = $i;
@@ -96,15 +101,15 @@ final readonly class FakeExtractor implements Extractor
             yield rows(row(
                 int_entry('int', $id),
                 float_entry('float', generate_random_int(100, 100000) / 100),
-                bool_entry('bool', \random_int(0, 1) === 1),
-                datetime_entry('datetime', new \DateTimeImmutable('now')),
+                bool_entry('bool', random_int(0, 1) === 1),
+                datetime_entry('datetime', new DateTimeImmutable('now')),
                 null_entry('null'),
-                uuid_entry('uuid', new \Flow\Types\Value\Uuid(Uuid::uuid4())),
+                uuid_entry('uuid', new FlowUuid(Uuid::uuid4())),
                 json_entry('json', ['id' => $id, 'status' => 'NEW']),
                 list_entry('list', [1, 2, 3], type_list(type_integer())),
                 list_entry(
                     'list_of_datetimes',
-                    [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()],
+                    [new DateTimeImmutable(), new DateTimeImmutable(), new DateTimeImmutable()],
                     type_list(type_datetime()),
                 ),
                 map_entry('map', ['NEW', 'PENDING'], type_map(type_integer(), type_string())),

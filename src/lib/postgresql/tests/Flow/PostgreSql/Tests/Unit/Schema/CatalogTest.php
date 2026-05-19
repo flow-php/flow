@@ -33,11 +33,13 @@ use Flow\PostgreSql\Schema\TriggerTiming;
 use Flow\PostgreSql\Schema\View;
 use PHPUnit\Framework\TestCase;
 
+use function count;
 use function Flow\PostgreSql\DSL\schema;
 use function Flow\PostgreSql\DSL\schema_column_integer;
 use function Flow\PostgreSql\DSL\schema_column_text;
 use function Flow\PostgreSql\DSL\schema_column_varchar;
 use function Flow\PostgreSql\DSL\schema_table;
+use function sprintf;
 
 final class CatalogTest extends TestCase
 {
@@ -321,7 +323,7 @@ final class CatalogTest extends TestCase
         foreach ($columns as $i => $originalColumn) {
             static::assertTrue(
                 $originalColumn->type->isEqual($restoredTable->columns[$i]->type),
-                \sprintf('Column type mismatch for %s', $originalColumn->name),
+                sprintf('Column type mismatch for %s', $originalColumn->name),
             );
         }
     }
@@ -470,7 +472,7 @@ final class CatalogTest extends TestCase
             static::assertSame($volatility, $restoredFunctions[$i]->volatility);
         }
 
-        static::assertNull($restoredFunctions[\count(FunctionVolatility::cases())]->volatility);
+        static::assertNull($restoredFunctions[count(FunctionVolatility::cases())]->volatility);
     }
 
     public function test_normalize_and_from_array_with_partition_strategies(): void
@@ -582,6 +584,7 @@ final class CatalogTest extends TestCase
 
         $restoredTable = $restoredSchema->table('users');
         static::assertCount(3, $restoredTable->columns);
+        static::assertNotNull($restoredTable->primaryKey);
         static::assertSame('users_pkey', $restoredTable->primaryKey->name);
         static::assertCount(1, $restoredTable->indexes);
         static::assertCount(1, $restoredTable->uniqueConstraints);
@@ -655,6 +658,7 @@ final class CatalogTest extends TestCase
 
         $restoredTable = $restored->get('public')->table('orders');
 
+        static::assertNotNull($restoredTable->primaryKey);
         static::assertSame('orders_pkey', $restoredTable->primaryKey->name);
         static::assertSame(['id'], $restoredTable->primaryKey->columns);
 
@@ -716,13 +720,16 @@ final class CatalogTest extends TestCase
 
         static::assertArrayHasKey('schemas', $normalized);
         static::assertCount(1, $normalized['schemas']);
-        static::assertSame('public', $normalized['schemas'][0]['name']);
-        static::assertArrayHasKey('tables', $normalized['schemas'][0]);
-        static::assertSame('simple', $normalized['schemas'][0]['tables'][0]['name']);
-        static::assertSame('public', $normalized['schemas'][0]['tables'][0]['schema']);
-        static::assertArrayHasKey('columns', $normalized['schemas'][0]['tables'][0]);
-        static::assertSame('id', $normalized['schemas'][0]['tables'][0]['columns'][0]['name']);
-        static::assertSame('int4', $normalized['schemas'][0]['tables'][0]['columns'][0]['type']['name']);
+        $schema = $normalized['schemas'][0];
+        static::assertSame('public', $schema['name']);
+        static::assertArrayHasKey('tables', $schema);
+        $tables = $schema['tables'] ?? [];
+        $table = $tables[0];
+        static::assertSame('simple', $table['name']);
+        static::assertSame('public', $table['schema'] ?? null);
+        static::assertArrayHasKey('columns', $table);
+        static::assertSame('id', $table['columns'][0]['name']);
+        static::assertSame('int4', $table['columns'][0]['type']['name']);
     }
 
     public function test_round_trip_preserves_column_default_value(): void

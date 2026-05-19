@@ -6,6 +6,8 @@ namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
 use Elastic\Elasticsearch\Response\Elasticsearch;
 
+use function is_array;
+
 final class PointInTime
 {
     /**
@@ -18,7 +20,7 @@ final class PointInTime
      */
     public function __construct(array|Elasticsearch $pit)
     {
-        $this->pit = \is_array($pit) ? $pit : $pit->asArray();
+        $this->pit = is_array($pit) ? $pit : $pit->asArray();
     }
 
     public function id(): string

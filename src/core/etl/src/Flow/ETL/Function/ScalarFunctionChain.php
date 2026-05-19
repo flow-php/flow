@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use DateTimeInterface;
+use DateTimeZone;
 use Flow\Calculator\Rounding;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function;
@@ -14,6 +16,7 @@ use Flow\ETL\Hash\Algorithm;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\String\StringStyles;
 use Flow\Types\Type;
+use Normalizer;
 
 use function Flow\ETL\DSL\lit;
 
@@ -710,7 +713,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new StringMatchAll($this, $pattern);
     }
 
-    public function stringNormalize(ScalarFunction|int $form = \Normalizer::NFC): StringNormalize
+    public function stringNormalize(ScalarFunction|int $form = Normalizer::NFC): StringNormalize
     {
         return new StringNormalize($this, $form);
     }
@@ -770,8 +773,8 @@ abstract class ScalarFunctionChain implements ScalarFunction
      * @param ScalarFunction|string $format - current format of the date that will be used to create DateTimeImmutable instance
      */
     public function toDate(
-        ScalarFunction|string $format = \DateTimeInterface::RFC3339,
-        ScalarFunction|\DateTimeZone $timeZone = new \DateTimeZone('UTC'),
+        ScalarFunction|string $format = DateTimeInterface::RFC3339,
+        ScalarFunction|DateTimeZone $timeZone = new DateTimeZone('UTC'),
     ): ToDate {
         return new ToDate($this, $format, $timeZone);
     }
@@ -782,7 +785,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
      */
     public function toDateTime(
         ScalarFunction|string $format = 'Y-m-d H:i:s',
-        ScalarFunction|\DateTimeZone $timeZone = new \DateTimeZone('UTC'),
+        ScalarFunction|DateTimeZone $timeZone = new DateTimeZone('UTC'),
     ): ToDateTime {
         return new ToDateTime($this, $format, $timeZone);
     }

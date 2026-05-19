@@ -10,10 +10,13 @@ use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Extractor;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformations;
+use Override;
 use Symfony\Component\HttpFoundation\Response;
 
+use function bin2hex;
 use function Flow\ETL\DSL\df;
 use function Flow\Filesystem\DSL\path;
+use function random_bytes;
 
 final class FlowBufferedResponse extends Response
 {
@@ -38,7 +41,7 @@ final class FlowBufferedResponse extends Response
         parent::__construct(null, $status, $headers);
     }
 
-    #[\Override]
+    #[Override]
     public function getContent(): string
     {
         $this->evaluate();
@@ -46,7 +49,7 @@ final class FlowBufferedResponse extends Response
         return $this->content;
     }
 
-    #[\Override]
+    #[Override]
     public function sendContent(): static
     {
         $this->evaluate();
@@ -64,7 +67,7 @@ final class FlowBufferedResponse extends Response
 
         $config = $this->config instanceof ConfigBuilder ? $this->config->build() : $this->config;
 
-        $id = \bin2hex(\random_bytes(16)) . '.memory';
+        $id = bin2hex(random_bytes(16)) . '.memory';
         $bufferPath = path($this->filesystem . '://' . $id, ['stream' => 'temp']);
 
         df($config)

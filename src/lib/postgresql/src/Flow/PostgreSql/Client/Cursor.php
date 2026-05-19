@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client;
 
+use Countable;
+use Generator;
+use IteratorAggregate;
+
 /**
  * Cursor for lazy iteration over large result sets.
  * Use Client::cursor() to obtain a cursor.
@@ -12,7 +16,7 @@ namespace Flow\PostgreSql\Client;
  *
  * @extends \IteratorAggregate<int, array<string, mixed>>
  */
-interface Cursor extends \Countable, \IteratorAggregate
+interface Cursor extends Countable, IteratorAggregate
 {
     /**
      * Get the number of rows in the result set.
@@ -31,7 +35,7 @@ interface Cursor extends \Countable, \IteratorAggregate
      *
      * @return \Generator<int, array<string, mixed>>
      */
-    public function iterate(): \Generator;
+    public function iterate(): Generator;
 
     /**
      * Iterate all remaining rows, mapping each using the provided mapper.
@@ -43,7 +47,7 @@ interface Cursor extends \Countable, \IteratorAggregate
      *
      * @return \Generator<int, T>
      */
-    public function map(RowMapper $mapper): \Generator;
+    public function map(RowMapper $mapper): Generator;
 
     /**
      * Fetch the next row. Returns null when exhausted.

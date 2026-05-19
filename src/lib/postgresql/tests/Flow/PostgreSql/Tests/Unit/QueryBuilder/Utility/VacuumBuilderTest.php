@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Utility;
 
+use Flow\PostgreSql\Protobuf\AST\Integer;
 use Flow\PostgreSql\Protobuf\AST\VacuumStmt;
 use Flow\PostgreSql\QueryBuilder\Utility\IndexCleanup;
 use Flow\PostgreSql\QueryBuilder\Utility\VacuumBuilder;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
+use function Flow\Types\DSL\type_instance_of;
+
 final class VacuumBuilderTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }
@@ -118,9 +122,13 @@ final class VacuumBuilderTest extends TestCase
         foreach ($options as $opt) {
             $defElem = $opt->getDefElem();
 
-            if ($defElem?->getDefname() === 'index_cleanup') {
+            if ($defElem !== null && $defElem->getDefname() === 'index_cleanup') {
                 $indexCleanupFound = true;
-                static::assertSame('on', $defElem->getArg()?->getString()?->getSval());
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $string = $arg->getString();
+                static::assertNotNull($string);
+                static::assertSame('on', $string->getSval());
             }
         }
         static::assertTrue($indexCleanupFound);
@@ -157,10 +165,12 @@ final class VacuumBuilderTest extends TestCase
         foreach ($options as $opt) {
             $defElem = $opt->getDefElem();
 
-            if ($defElem?->getDefname() === 'parallel') {
+            if ($defElem !== null && $defElem->getDefname() === 'parallel') {
                 $parallelFound = true;
-                /** @phpstan-ignore method.nonObject (protobuf PHPDoc incorrectly returns int instead of Integer class) */
-                static::assertSame(4, $defElem->getArg()?->getInteger()?->getIval());
+                $arg = $defElem->getArg();
+                static::assertNotNull($arg);
+                $integer = type_instance_of(Integer::class)->assert($arg->getInteger());
+                static::assertSame(4, $integer->getIval());
             }
         }
         static::assertTrue($parallelFound);

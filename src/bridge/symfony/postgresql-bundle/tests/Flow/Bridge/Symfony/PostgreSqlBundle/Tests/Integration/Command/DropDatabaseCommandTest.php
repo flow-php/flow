@@ -8,12 +8,15 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
+use function bin2hex;
+use function random_bytes;
+
 final class DropDatabaseCommandTest extends TestCase
 {
     public function test_drop_requires_force(): void
     {
         $context = new CommandTestContext();
-        $testDbName = 'flow_test_drop_' . \bin2hex(\random_bytes(4));
+        $testDbName = 'flow_test_drop_' . bin2hex(random_bytes(4));
 
         try {
             $context->bootForDatabaseManagement($testDbName);
@@ -33,7 +36,7 @@ final class DropDatabaseCommandTest extends TestCase
     public function test_drop_with_if_exists_succeeds_when_database_missing(): void
     {
         $context = new CommandTestContext();
-        $testDbName = 'flow_test_drop_nonexistent_' . \bin2hex(\random_bytes(4));
+        $testDbName = 'flow_test_drop_nonexistent_' . bin2hex(random_bytes(4));
 
         try {
             static::assertFalse($context->databaseExists($testDbName));
@@ -54,7 +57,7 @@ final class DropDatabaseCommandTest extends TestCase
     public function test_drops_database(): void
     {
         $context = new CommandTestContext();
-        $testDbName = 'flow_test_drop_' . \bin2hex(\random_bytes(4));
+        $testDbName = 'flow_test_drop_' . bin2hex(random_bytes(4));
 
         try {
             $context->createDatabase($testDbName);
@@ -79,7 +82,7 @@ final class DropDatabaseCommandTest extends TestCase
     public function test_drops_postgres_database(): void
     {
         $context = new CommandTestContext();
-        $testDbName = 'flow_test_postgres_drop_' . \bin2hex(\random_bytes(4));
+        $testDbName = 'flow_test_postgres_drop_' . bin2hex(random_bytes(4));
 
         try {
             $context->createDatabase($testDbName);

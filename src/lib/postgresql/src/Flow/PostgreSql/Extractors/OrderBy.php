@@ -8,6 +8,8 @@ use Flow\PostgreSql\AST\Visitors\SortByCollector;
 use Flow\PostgreSql\ParsedQuery;
 use Flow\PostgreSql\QueryBuilder\Clause\OrderBy as OrderByClause;
 
+use function array_map;
+
 final readonly class OrderBy
 {
     public function __construct(
@@ -22,7 +24,7 @@ final readonly class OrderBy
         $collector = new SortByCollector();
         $this->query->traverse($collector);
 
-        return \array_map(static fn($sortBy) => OrderByClause::fromAst($sortBy), $collector->getSortByClauses());
+        return array_map(static fn($sortBy) => OrderByClause::fromAst($sortBy), $collector->getSortByClauses());
     }
 
     public function hasOrderBy(): bool

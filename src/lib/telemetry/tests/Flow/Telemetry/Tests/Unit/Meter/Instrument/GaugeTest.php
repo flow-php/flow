@@ -11,6 +11,9 @@ use Flow\Telemetry\Tests\Mother\InstrumentationScopeMother;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use PHPUnit\Framework\TestCase;
 
+use function array_filter;
+use function array_values;
+
 final class GaugeTest extends TestCase
 {
     public function test_collect_resets_gauge(): void
@@ -48,11 +51,11 @@ final class GaugeTest extends TestCase
 
         static::assertCount(2, $metrics);
 
-        $server1Metrics = \array_values(\array_filter(
+        $server1Metrics = array_values(array_filter(
             $metrics,
             static fn($m) => $m->attributes->get('host') === 'server-1',
         ));
-        $server2Metrics = \array_values(\array_filter(
+        $server2Metrics = array_values(array_filter(
             $metrics,
             static fn($m) => $m->attributes->get('host') === 'server-2',
         ));

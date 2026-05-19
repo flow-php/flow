@@ -5,22 +5,27 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\Context;
 
 use Flow\Telemetry\Context\TraceState;
+use Generator;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function array_keys;
+use function str_repeat;
+
 final class TraceStateTest extends TestCase
 {
-    public static function provideInvalidKeys(): \Generator
+    public static function provideInvalidKeys(): Generator
     {
         yield 'starts with digit' => ['1vendor', 'Invalid TraceState key'];
         yield 'contains uppercase' => ['VENDOR', 'Invalid TraceState key'];
         yield 'contains invalid char' => ['vendor!key', 'Invalid TraceState key'];
         yield 'empty key' => ['', 'TraceState key cannot be empty'];
-        yield 'too long simple key' => [\str_repeat('a', 257), 'Invalid TraceState key'];
+        yield 'too long simple key' => [str_repeat('a', 257), 'Invalid TraceState key'];
         yield 'invalid multi-tenant format' => ['vendor@', 'Invalid TraceState key'];
     }
 
-    public static function provideValidKeys(): \Generator
+    public static function provideValidKeys(): Generator
     {
         yield 'simple lowercase' => ['vendor'];
         yield 'with hyphen' => ['vendor-key'];
@@ -31,7 +36,7 @@ final class TraceStateTest extends TestCase
         yield 'digit after first char' => ['vendor1'];
     }
 
-    public static function provideValidTraceStateStrings(): \Generator
+    public static function provideValidTraceStateStrings(): Generator
     {
         yield 'single entry' => ['congo=t61rcWkgMzE', ['congo' => 't61rcWkgMzE']];
         yield 'multiple entries' => [
@@ -51,7 +56,7 @@ final class TraceStateTest extends TestCase
         $state = TraceState::empty()->with('first', '1')->with('second', '2')->with('third', '3');
 
         $all = $state->all();
-        $keys = \array_keys($all);
+        $keys = array_keys($all);
 
         static::assertSame(['third', 'second', 'first'], $keys);
     }
@@ -77,7 +82,7 @@ final class TraceStateTest extends TestCase
 
     public function test_from_string_throws_on_invalid_entries(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid tracestate entry');
 
         TraceState::fromString('valid=value,invalid,also=valid');
@@ -154,7 +159,7 @@ final class TraceStateTest extends TestCase
     {
         $state = TraceState::empty()->with('first', '1')->with('second', '2')->with('first', 'updated');
 
-        $keys = \array_keys($state->all());
+        $keys = array_keys($state->all());
 
         static::assertSame('first', $keys[0]);
     }
@@ -187,7 +192,7 @@ final class TraceStateTest extends TestCase
     #[DataProvider('provideInvalidKeys')]
     public function test_with_throws_on_invalid_key(string $key, string $expectedMessage): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage($expectedMessage);
 
         TraceState::empty()->with($key, 'value');

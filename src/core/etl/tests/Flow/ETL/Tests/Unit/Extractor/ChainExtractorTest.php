@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Extractor;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 
 use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\int_entry;
@@ -18,13 +19,13 @@ final class ChainExtractorTest extends FlowTestCase
     public function test_chain_extractor(): void
     {
         $extractor = from_all(new class implements Extractor {
-            public function extract(FlowContext $context): \Generator
+            public function extract(FlowContext $context): Generator
             {
                 yield rows(row(int_entry('id', 1)));
                 yield rows(row(int_entry('id', 2)));
             }
         }, new class implements Extractor {
-            public function extract(FlowContext $context): \Generator
+            public function extract(FlowContext $context): Generator
             {
                 yield rows(row(int_entry('id', 3)));
                 yield rows(row(int_entry('id', 4)));

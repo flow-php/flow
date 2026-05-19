@@ -303,9 +303,10 @@ final class ExplainParserTest extends TestCase
 
         static::assertSame(150, $plan->rootNode()->actualRows());
         static::assertSame(1, $plan->rootNode()->actualLoops());
-        static::assertNotNull($plan->rootNode()->timing());
-        static::assertSame(0.012, $plan->rootNode()->timing()->startupTime());
-        static::assertSame(1.234, $plan->rootNode()->timing()->totalTime());
+        $timing = $plan->rootNode()->timing();
+        static::assertNotNull($timing);
+        static::assertSame(0.012, $timing->startupTime());
+        static::assertSame(1.234, $timing->totalTime());
     }
 
     public function test_parse_with_buffers_data(): void

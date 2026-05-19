@@ -12,6 +12,7 @@ use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanStatus;
 use PHPUnit\Event\Test\Finished;
 use PHPUnit\Event\Test\FinishedSubscriber;
+use Throwable;
 
 final readonly class TestFinishedSubscriber implements FinishedSubscriber
 {
@@ -78,7 +79,7 @@ final readonly class TestFinishedSubscriber implements FinishedSubscriber
 
             $tracer->complete($span);
             $this->statusRegistry->clear($testId);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             // Silent failure - telemetry must never break tests
         }
     }

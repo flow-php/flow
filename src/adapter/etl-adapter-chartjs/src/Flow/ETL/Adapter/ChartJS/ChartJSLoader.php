@@ -10,6 +10,13 @@ use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Rows;
 use Flow\Filesystem\Path;
+use Throwable;
+
+use function Flow\Filesystem\DSL\path;
+use function implode;
+use function iterator_to_array;
+use function json_encode;
+use function str_replace;
 
 final class ChartJSLoader implements Closure, Loader
 {
@@ -25,7 +32,7 @@ final class ChartJSLoader implements Closure, Loader
     public function __construct(
         private readonly Chart $type,
     ) {
-        $this->template = \Flow\Filesystem\DSL\path(__DIR__ . '/Resources/template/full_page.html');
+        $this->template = path(__DIR__ . '/Resources/template/full_page.html');
     }
 
     public function closure(FlowContext $context): void
@@ -43,14 +50,10 @@ final class ChartJSLoader implements Closure, Loader
 
             $templateStream = $context->streams()->read($this->template);
 
-            $template = \implode('', \iterator_to_array($templateStream->readLines()));
+            $template = implode('', iterator_to_array($templateStream->readLines()));
             $templateStream->close();
 
-            $content = \str_replace(
-                '%_CHART_DATA_%',
-                \json_encode($this->type->data(), JSON_THROW_ON_ERROR),
-                $template,
-            );
+            $content = str_replace('%_CHART_DATA_%', json_encode($this->type->data(), JSON_THROW_ON_ERROR), $template);
 
             $output->append($content);
 
@@ -74,7 +77,7 @@ final class ChartJSLoader implements Closure, Loader
             $this->type->collect($rows);
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 
             throw $e;

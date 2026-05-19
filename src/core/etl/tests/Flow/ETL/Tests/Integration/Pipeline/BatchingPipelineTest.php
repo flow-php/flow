@@ -9,10 +9,12 @@ use Flow\ETL\Processor\BatchingProcessor;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function array_map;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
+use function iterator_to_array;
 
 final class BatchingPipelineTest extends FlowTestCase
 {
@@ -36,7 +38,7 @@ final class BatchingPipelineTest extends FlowTestCase
         ));
         $pipeline->add(new BatchingProcessor(10));
 
-        static::assertCount(1, \iterator_to_array($pipeline->process(flow_context(config()))));
+        static::assertCount(1, iterator_to_array($pipeline->process(flow_context(config()))));
     }
 
     public function test_that_rows_are_not_lost(): void
@@ -72,9 +74,9 @@ final class BatchingPipelineTest extends FlowTestCase
                     ['id' => 10],
                 ],
             ],
-            \array_map(
+            array_map(
                 static fn(Rows $r) => $r->toArray(),
-                \iterator_to_array($pipeline->process(flow_context(config()))),
+                iterator_to_array($pipeline->process(flow_context(config()))),
             ),
         );
     }
@@ -99,7 +101,7 @@ final class BatchingPipelineTest extends FlowTestCase
         ));
         $pipeline->add(new BatchingProcessor(11));
 
-        static::assertCount(1, \iterator_to_array($pipeline->process(flow_context(config()))));
+        static::assertCount(1, iterator_to_array($pipeline->process(flow_context(config()))));
     }
 
     public function test_using_smaller_batch_size_than_total_number_of_rows(): void
@@ -118,6 +120,6 @@ final class BatchingPipelineTest extends FlowTestCase
         ])));
         $pipeline->add(new BatchingProcessor(5));
 
-        static::assertCount(2, \iterator_to_array($pipeline->process(flow_context(config()))));
+        static::assertCount(2, iterator_to_array($pipeline->process(flow_context(config()))));
     }
 }

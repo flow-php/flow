@@ -6,6 +6,8 @@ namespace Flow\ETL\Adapter\Excel\Sheet;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
+use function preg_match;
+
 final class SheetNameAssertion
 {
     private const string SHEET_NAME_REGEX = '/^(?!.{32,})[^\/*?:[\]]+$/';
@@ -19,6 +21,6 @@ final class SheetNameAssertion
 
     public static function isValid(string $sheetName): bool
     {
-        return \preg_match(self::SHEET_NAME_REGEX, $sheetName) === 1;
+        return preg_match(self::SHEET_NAME_REGEX, $sheetName) === 1;
     }
 }

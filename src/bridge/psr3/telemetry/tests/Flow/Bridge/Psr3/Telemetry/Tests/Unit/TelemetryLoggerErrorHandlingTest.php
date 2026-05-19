@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Psr3\Telemetry\Tests\Unit;
 
+use DateTimeImmutable;
 use Flow\Bridge\Psr3\Telemetry\Exception\InvalidArgumentException;
 use Flow\Bridge\Psr3\Telemetry\TelemetryLogger;
 use Flow\Telemetry\Context\MemoryContextStorage;
@@ -16,6 +17,8 @@ use Flow\Telemetry\Tests\Mother\ErrorHandlerSpy;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
 use Psr\Log\LogLevel;
+use RuntimeException;
+use stdClass;
 
 final class TelemetryLoggerErrorHandlingTest extends TestCase
 {
@@ -49,7 +52,7 @@ final class TelemetryLoggerErrorHandlingTest extends TestCase
         $psr3 = new TelemetryLogger($logger, errorHandler: $spy);
 
         try {
-            $psr3->log(new \stdClass(), 'message');
+            $psr3->log(new stdClass(), 'message');
         } catch (InvalidArgumentException) {
         }
 
@@ -59,9 +62,9 @@ final class TelemetryLoggerErrorHandlingTest extends TestCase
     public function test_routes_emit_failures_to_error_handler(): void
     {
         $throwingClock = new class implements ClockInterface {
-            public function now(): \DateTimeImmutable
+            public function now(): DateTimeImmutable
             {
-                throw new \RuntimeException('clock blew up');
+                throw new RuntimeException('clock blew up');
             }
         };
 
@@ -95,6 +98,6 @@ final class TelemetryLoggerErrorHandlingTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
 
-        $psr3->log(new \stdClass(), 'message');
+        $psr3->log(new stdClass(), 'message');
     }
 }

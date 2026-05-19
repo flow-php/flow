@@ -11,6 +11,7 @@ use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\Filesystem\DSL\path_real;
+use function iterator_to_array;
 
 final class PaginationTest extends FlowTestCase
 {
@@ -76,6 +77,6 @@ final class PaginationTest extends FlowTestCase
 
         $extractor = from_parquet(path_real(__DIR__ . '/Fixtures/orders_1k.parquet'))->withOffset($totalRows - 100);
 
-        static::assertCount(100, \iterator_to_array($extractor->extract(flow_context(config()))));
+        static::assertCount(100, iterator_to_array($extractor->extract(flow_context(config()))));
     }
 }

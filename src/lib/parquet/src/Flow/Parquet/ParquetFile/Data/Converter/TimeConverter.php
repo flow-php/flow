@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Data\Converter;
 
+use DateInterval;
+use DateTimeImmutable;
+use DateTimeZone;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\Converter;
@@ -11,14 +14,19 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 
-use function Flow\Types\DSL\type_instance_of;
-use function Flow\Types\DSL\type_integer;
+use function get_debug_type;
+use function is_int;
+use function sprintf;
 
 final class TimeConverter implements Converter
 {
-    public function fromParquetType(mixed $data): \DateInterval
+    public function fromParquetType(mixed $data): DateInterval
     {
-        return $this->toDateInterval(type_integer()->assert($data));
+        if (!is_int($data)) {
+            throw new InvalidArgumentException(sprintf('Expected int, got %s', get_debug_type($data)));
+        }
+
+        return $this->toDateInterval($data);
     }
 
     public function isFor(FlatColumn $column, Options $options): bool
@@ -32,34 +40,22 @@ final class TimeConverter implements Converter
 
     public function toParquetType(mixed $data): int
     {
-        return $this->toInt(type_instance_of(\DateInterval::class)->assert($data));
+        if (!$data instanceof DateInterval) {
+            throw new InvalidArgumentException(sprintf('Expected DateInterval, got %s', get_debug_type($data)));
+        }
+
+        return $this->toInt($data);
     }
 
-    private function toDateInterval(int $microseconds): \DateInterval
+    private function toDateInterval(int $microseconds): DateInterval
     {
-        $seconds = (int) \floor($microseconds / 1000000);
-        $remainingMicroseconds = $microseconds % 1000000;
+        $base = new DateTimeImmutable('1970-01-01 00:00:00.000000', new DateTimeZone('UTC'));
+        $target = $base->modify(sprintf('+%d microseconds', $microseconds));
 
-        $minutes = (int) \floor($seconds / 60);
-        $remainingSeconds = $seconds % 60;
-
-        $hours = (int) \floor($minutes / 60);
-        $remainingMinutes = $minutes % 60;
-
-        $remainingHours = $hours % 24;
-
-        $intervalSpec = \sprintf('PT%dH%dM%dS', $remainingHours, $remainingMinutes, $remainingSeconds);
-
-        $interval = new \DateInterval($intervalSpec);
-        $interval->y = 0;
-        $interval->m = 0;
-        $interval->d = 0;
-        $interval->f = $remainingMicroseconds / 1000000;
-
-        return $interval;
+        return $base->diff($target);
     }
 
-    private function toInt(\DateInterval $interval): int
+    private function toInt(DateInterval $interval): int
     {
         if ($interval->y !== 0) {
             throw new InvalidArgumentException(

@@ -16,6 +16,8 @@ use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tracer\Sampler\Sampler;
 use Psr\Clock\ClockInterface;
+use SplStack;
+use Throwable;
 
 /**
  * Creates and manages spans within a trace.
@@ -51,7 +53,7 @@ final class Tracer
     /**
      * @var \SplStack<SpanContext>
      */
-    private readonly \SplStack $spanStack;
+    private readonly SplStack $spanStack;
 
     public function __construct(
         private readonly Resource $resource,
@@ -64,7 +66,7 @@ final class Tracer
         private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
         /** @var \SplStack<SpanContext> $stack */
-        $stack = new \SplStack();
+        $stack = new SplStack();
         $this->spanStack = $stack;
     }
 
@@ -105,7 +107,7 @@ final class Tracer
         if ($span->isRecording()) {
             try {
                 $this->processor->onEnd($span);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->errorHandler->handle($e);
             }
         }
@@ -126,7 +128,7 @@ final class Tracer
     {
         try {
             return $this->processor->flush();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
 
             return false;
@@ -276,7 +278,7 @@ final class Tracer
         if ($span->isRecording()) {
             try {
                 $this->processor->onStart($span);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->errorHandler->handle($e);
             }
         }
@@ -315,7 +317,7 @@ final class Tracer
             $span->setStatus(SpanStatus::ok());
 
             return $result;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $span->recordException($e, $this->clock->now());
             $span->setStatus(SpanStatus::error($e->getMessage()));
 

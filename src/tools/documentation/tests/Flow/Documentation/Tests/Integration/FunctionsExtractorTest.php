@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Tests\Integration;
 
+use DateTimeInterface;
 use Flow\Documentation\FunctionCollector;
 use Flow\Documentation\FunctionsExtractor;
 use PHPUnit\Framework\TestCase;
+
+use function iterator_to_array;
 
 final class FunctionsExtractorTest extends TestCase
 {
@@ -14,7 +17,7 @@ final class FunctionsExtractorTest extends TestCase
     {
         $functionsExtractor = new FunctionsExtractor(__DIR__, new FunctionCollector());
 
-        $functions = \iterator_to_array($functionsExtractor->extract([__DIR__ . '/functions.php']));
+        $functions = iterator_to_array($functionsExtractor->extract([__DIR__ . '/functions.php']));
 
         static::assertCount(1, $functions);
         static::assertEquals(
@@ -26,7 +29,7 @@ final class FunctionsExtractorTest extends TestCase
                         'name' => 'argument',
                         'type' => [
                             [
-                                'name' => \DateTimeInterface::class,
+                                'name' => DateTimeInterface::class,
                                 'is_nullable' => false,
                                 'is_variadic' => false,
                                 'namespace' => null,

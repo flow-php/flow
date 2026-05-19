@@ -9,6 +9,16 @@ use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 
+use function array_key_exists;
+use function count;
+use function in_array;
+use function is_array;
+use function is_string;
+use function sprintf;
+use function ucfirst;
+
+use const LOG_PID;
+
 final class Configuration implements ConfigurationInterface
 {
     public function getConfigTreeBuilder(): TreeBuilder
@@ -434,11 +444,11 @@ final class Configuration implements ConfigurationInterface
         $node
             ->beforeNormalization()
             ->always(static function (mixed $v) use ($allowFailover): mixed {
-                if (!\is_array($v)) {
+                if (!is_array($v)) {
                     return $v;
                 }
 
-                if (($v['type'] ?? null) === 'grpc' && \array_key_exists('connect_timeout_ms', $v)) {
+                if (($v['type'] ?? null) === 'grpc' && array_key_exists('connect_timeout_ms', $v)) {
                     throw new InvalidConfigurationException(
                         'The "connect_timeout_ms" parameter is not supported when transport.type is "grpc"; gRPC uses the per-call deadline (timeout_ms) for connection establishment too.',
                     );
@@ -463,8 +473,8 @@ final class Configuration implements ConfigurationInterface
                     ];
 
                     foreach ($forbidden as $key) {
-                        if (\array_key_exists($key, $v)) {
-                            throw new InvalidConfigurationException(\sprintf(
+                        if (array_key_exists($key, $v)) {
+                            throw new InvalidConfigurationException(sprintf(
                                 'The "%s" parameter is not supported when transport.type is "stream".',
                                 $key,
                             ));
@@ -478,8 +488,8 @@ final class Configuration implements ConfigurationInterface
                     default => null,
                 };
 
-                if ($encodingRejection !== null && \array_key_exists('encoding', $v)) {
-                    throw new InvalidConfigurationException(\sprintf(
+                if ($encodingRejection !== null && array_key_exists('encoding', $v)) {
+                    throw new InvalidConfigurationException(sprintf(
                         'The "encoding" parameter is not supported when transport.type is "%s"; %s.',
                         $v['type'],
                         $encodingRejection,
@@ -488,14 +498,14 @@ final class Configuration implements ConfigurationInterface
 
                 if (
                     $allowFailover
-                    && \array_key_exists('failover', $v)
-                    && \is_array($v['failover'])
+                    && array_key_exists('failover', $v)
+                    && is_array($v['failover'])
                     && $v['failover'] !== []
                 ) {
                     $primaryType = $v['type'] ?? 'curl';
 
-                    if (!\in_array($primaryType, ['curl', 'grpc'], true)) {
-                        throw new InvalidConfigurationException(\sprintf(
+                    if (!in_array($primaryType, ['curl', 'grpc'], true)) {
+                        throw new InvalidConfigurationException(sprintf(
                             'The "failover" block is only supported for transport.type "curl" or "grpc"; got "%s".',
                             $primaryType,
                         ));
@@ -513,7 +523,7 @@ final class Configuration implements ConfigurationInterface
 
                 $endpoint = $v['endpoint'] ?? null;
 
-                return !\is_string($endpoint) || $endpoint === '';
+                return !is_string($endpoint) || $endpoint === '';
             })
             ->thenInvalid(
                 'The "endpoint" parameter is required and must be a non-empty string when transport.type is "stream" (used as the destination file path or php:// stream wrapper URI).',
@@ -707,7 +717,7 @@ final class Configuration implements ConfigurationInterface
             ->end()
             ->integerNode('log_opts')
             ->info('Bitmask of LOG_* options passed to openlog() (only for type: syslog)')
-            ->defaultValue(\LOG_PID)
+            ->defaultValue(LOG_PID)
             ->end()
             ->enumNode('severity')
             ->info('Syslog severity (syslog + udp_syslog)')
@@ -758,7 +768,7 @@ final class Configuration implements ConfigurationInterface
                 $set = 0;
 
                 foreach ($supportedTypes as $type) {
-                    if (\array_key_exists($type, $v) && $v[$type] !== null) {
+                    if (array_key_exists($type, $v) && $v[$type] !== null) {
                         $set++;
                     }
                 }
@@ -838,7 +848,7 @@ final class Configuration implements ConfigurationInterface
             ->info('OTLP exporter — embeds its transport configuration inline')
             ->canBeUnset()
             ->validate()
-            ->ifTrue(static fn(array $v): bool => !\is_array($v['transport'] ?? null) || \count($v['transport']) === 0)
+            ->ifTrue(static fn(array $v): bool => !is_array($v['transport'] ?? null) || count($v['transport']) === 0)
             ->thenInvalid('OTLP exporter requires a "transport" configuration block.')
             ->end()
             ->children()
@@ -867,7 +877,7 @@ final class Configuration implements ConfigurationInterface
         }
 
         $node
-            ->info(\ucfirst($signalType) . ' processor configuration')
+            ->info(ucfirst($signalType) . ' processor configuration')
             ->addDefaultsIfNotSet()
             ->children()
             ->enumNode('type')

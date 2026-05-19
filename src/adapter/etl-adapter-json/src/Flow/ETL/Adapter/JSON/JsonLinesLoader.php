@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON;
 
+use DateTimeInterface;
 use Flow\ETL\Adapter\JSON\RowsNormalizer\EntryNormalizer;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\Exception\RuntimeException;
@@ -17,10 +18,14 @@ use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
+use JsonException;
+use Throwable;
+
+use function count;
 
 final class JsonLinesLoader implements Closure, FileLoader, Loader
 {
-    private string $dateTimeFormat = \DateTimeInterface::ATOM;
+    private string $dateTimeFormat = DateTimeInterface::ATOM;
 
     private int $flags = JSON_THROW_ON_ERROR;
 
@@ -55,7 +60,7 @@ final class JsonLinesLoader implements Closure, FileLoader, Loader
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 
             throw $e;
@@ -98,7 +103,7 @@ final class JsonLinesLoader implements Closure, FileLoader, Loader
      */
     private function writeJSON(Rows $rows, DestinationStream $stream, RowsNormalizer $normalizer): void
     {
-        if (!\count($rows)) {
+        if (!count($rows)) {
             return;
         }
 
@@ -109,7 +114,7 @@ final class JsonLinesLoader implements Closure, FileLoader, Loader
                 if ($json === false) {
                     throw new RuntimeException('Failed to encode JSON: ' . json_last_error_msg());
                 }
-            } catch (\JsonException $e) {
+            } catch (JsonException $e) {
                 throw new RuntimeException('Failed to encode JSON: ' . $e->getMessage(), 0, $e);
             }
 

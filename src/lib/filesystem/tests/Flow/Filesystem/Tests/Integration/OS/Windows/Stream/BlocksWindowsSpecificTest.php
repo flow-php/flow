@@ -9,6 +9,19 @@ use Flow\Filesystem\SizeUnits;
 use Flow\Filesystem\Stream\Blocks;
 use Flow\Filesystem\Tests\OperatingSystem;
 use PHPUnit\Framework\TestCase;
+use Throwable;
+
+use function ceil;
+use function count;
+use function file_exists;
+use function file_put_contents;
+use function filesize;
+use function fopen;
+use function str_repeat;
+use function strlen;
+use function sys_get_temp_dir;
+use function tempnam;
+use function unlink;
 
 /**
  * Stream Blocks tests that are specific to Windows and may fail on Unix
@@ -31,8 +44,8 @@ final class BlocksWindowsSpecificTest extends TestCase
     {
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
-        $file = \fopen(__DIR__ . '/../../../Fixtures/orders.csv', 'rb');
-        $fileSize = \filesize(__DIR__ . '/../../../Fixtures/orders.csv');
+        $file = fopen(__DIR__ . '/../../../Fixtures/orders.csv', 'rb');
+        $fileSize = filesize(__DIR__ . '/../../../Fixtures/orders.csv');
 
         if ($file === false || $fileSize === false) {
             static::markTestSkipped('Could not open test fixture file');
@@ -42,7 +55,7 @@ final class BlocksWindowsSpecificTest extends TestCase
             $blocks->fromResource($file);
 
             static::assertSame($fileSize, $blocks->size());
-            static::assertSame((int) \ceil($fileSize / $blockSize), \count($blocks->all()));
+            static::assertSame((int) ceil($fileSize / $blockSize), count($blocks->all()));
         } catch (RuntimeException $e) {
             // On Windows, this might fail due to file locking or permissions
             // Mark as skipped rather than failed for now
@@ -54,19 +67,19 @@ final class BlocksWindowsSpecificTest extends TestCase
     {
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
-        $file = \fopen(__DIR__ . '/../../../Fixtures/orders.csv', 'rb');
-        $fileSize = \filesize(__DIR__ . '/../../../Fixtures/orders.csv');
+        $file = fopen(__DIR__ . '/../../../Fixtures/orders.csv', 'rb');
+        $fileSize = filesize(__DIR__ . '/../../../Fixtures/orders.csv');
 
         if ($file === false || $fileSize === false) {
             static::markTestSkipped('Could not open test fixture file');
         }
 
         try {
-            $blocks->append(\str_repeat('a', 100));
+            $blocks->append(str_repeat('a', 100));
             $blocks->fromResource($file);
 
             static::assertSame($fileSize + 100, $blocks->size());
-            static::assertCount((int) \ceil($fileSize / $blockSize), $blocks->all());
+            static::assertCount((int) ceil($fileSize / $blockSize), $blocks->all());
         } catch (RuntimeException $e) {
             // On Windows, this might fail due to file locking or permissions
             // Mark as skipped rather than failed for now
@@ -82,60 +95,64 @@ final class BlocksWindowsSpecificTest extends TestCase
         $testContent = "Windows test content\r\nWith CRLF line endings\r\n";
         $blocks->append($testContent);
 
-        static::assertSame(\strlen($testContent), $blocks->size());
-        static::assertGreaterThan(0, \count($blocks->all()));
+        static::assertSame(strlen($testContent), $blocks->size());
+        static::assertGreaterThan(0, count($blocks->all()));
 
         // Verify blocks are created correctly
-        static::assertGreaterThan(0, \count($blocks->all()));
+        static::assertGreaterThan(0, count($blocks->all()));
     }
 
     public function test_windows_temp_file_streaming(): void
     {
-        // Create a temporary file in Windows temp directory
-        $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_blocks_test_');
-        $content = \str_repeat("Windows temp file content\r\n", 100);
-        \file_put_contents($tempFile, $content);
+        $tempFile = tempnam(sys_get_temp_dir(), 'flow_blocks_test_');
+
+        if ($tempFile === false) {
+            static::markTestSkipped('Could not create temporary file');
+        }
+
+        $content = str_repeat("Windows temp file content\r\n", 100);
+        file_put_contents($tempFile, $content);
 
         $blocks = new Blocks(SizeUnits::kbToBytes(1));
 
         try {
-            $file = \fopen($tempFile, 'rb');
+            $file = fopen($tempFile, 'rb');
             static::assertNotFalse($file, 'Should be able to open Windows temp file');
 
             $blocks->fromResource($file);
-            static::assertSame(\strlen($content), $blocks->size());
+            static::assertSame(strlen($content), $blocks->size());
         } catch (RuntimeException $e) {
             // If there are Windows-specific issues, skip the test
             static::markTestSkipped('Windows temp file handling issue: ' . $e->getMessage());
         } finally {
-            if (\file_exists($tempFile)) {
-                \unlink($tempFile);
+            if (file_exists($tempFile)) {
+                unlink($tempFile);
             }
         }
     }
 
     public function test_windows_unicode_filename_streaming(): void
     {
-        $tempDir = \sys_get_temp_dir();
+        $tempDir = sys_get_temp_dir();
         $unicodeFileName = $tempDir . '\\flow_test_ñáéíóú.txt';
 
         $content = "Unicode filename test content\r\n";
 
         try {
-            \file_put_contents($unicodeFileName, $content);
+            file_put_contents($unicodeFileName, $content);
 
             $blocks = new Blocks(SizeUnits::kbToBytes(1));
-            $file = \fopen($unicodeFileName, 'rb');
+            $file = fopen($unicodeFileName, 'rb');
 
             if ($file !== false) {
                 $blocks->fromResource($file);
-                static::assertSame(\strlen($content), $blocks->size());
+                static::assertSame(strlen($content), $blocks->size());
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             static::markTestSkipped('Unicode filename not supported on this Windows system: ' . $e->getMessage());
         } finally {
-            if (\file_exists($unicodeFileName)) {
-                \unlink($unicodeFileName);
+            if (file_exists($unicodeFileName)) {
+                unlink($unicodeFileName);
             }
         }
     }

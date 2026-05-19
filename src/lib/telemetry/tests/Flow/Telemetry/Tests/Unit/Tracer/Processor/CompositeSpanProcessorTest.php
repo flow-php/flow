@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Tracer\Processor;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\InstrumentationScope;
@@ -15,13 +16,14 @@ use Flow\Telemetry\Tracer\SpanContext;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanProcessor;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class CompositeSpanProcessorTest extends TestCase
 {
     public function test_flush_continues_after_child_throws_and_routes_to_error_handler(): void
     {
         $throwing = $this->createMock(SpanProcessor::class);
-        $throwing->method('flush')->willThrowException(new \RuntimeException('flush blew up'));
+        $throwing->method('flush')->willThrowException(new RuntimeException('flush blew up'));
 
         $sibling = $this->createMock(SpanProcessor::class);
         $sibling->expects(self::once())->method('flush')->willReturn(true);
@@ -86,7 +88,7 @@ final class CompositeSpanProcessorTest extends TestCase
     public function test_on_end_continues_after_child_throws_and_routes_to_error_handler(): void
     {
         $throwing = $this->createMock(SpanProcessor::class);
-        $throwing->method('onEnd')->willThrowException(new \RuntimeException('end blew up'));
+        $throwing->method('onEnd')->willThrowException(new RuntimeException('end blew up'));
 
         $sibling = $this->createMock(SpanProcessor::class);
         $sibling->expects(self::once())->method('onEnd');
@@ -101,7 +103,7 @@ final class CompositeSpanProcessorTest extends TestCase
     public function test_on_start_continues_after_child_throws_and_routes_to_error_handler(): void
     {
         $throwing = $this->createMock(SpanProcessor::class);
-        $throwing->method('onStart')->willThrowException(new \RuntimeException('start blew up'));
+        $throwing->method('onStart')->willThrowException(new RuntimeException('start blew up'));
 
         $sibling = $this->createMock(SpanProcessor::class);
         $sibling->expects(self::once())->method('onStart');
@@ -129,7 +131,7 @@ final class CompositeSpanProcessorTest extends TestCase
             'test-span',
             SpanContext::create(TraceId::generate(), SpanId::generate()),
             SpanKind::INTERNAL,
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
             ResourceMother::default(),
             new InstrumentationScope('test', '1.0.0'),
         );

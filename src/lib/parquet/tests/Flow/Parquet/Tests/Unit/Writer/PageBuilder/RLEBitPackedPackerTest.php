@@ -10,6 +10,7 @@ use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\Data\BitWidth;
 use Flow\Parquet\Data\RLEBitPackedHybrid;
 use Flow\Parquet\Writer\PageBuilder\RLEBitPackedPacker;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -21,7 +22,7 @@ final class RLEBitPackedPackerTest extends TestCase
 
     private RLEBitPackedPacker $packer;
 
-    public static function pack_basic_values_provider(): \Generator
+    public static function pack_basic_values_provider(): Generator
     {
         yield '1-bit single value' => [1, [1], '1-bit single value'];
         yield '1-bit multiple values' => [1, [0, 1, 0, 1], '1-bit multiple values'];
@@ -35,7 +36,7 @@ final class RLEBitPackedPackerTest extends TestCase
         yield 'sequential values' => [8, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 'sequential values'];
     }
 
-    public static function pack_with_bit_width_provider(): \Generator
+    public static function pack_with_bit_width_provider(): Generator
     {
         yield '1-bit single value' => [1, [1], '1-bit single value with bit width'];
         yield '1-bit multiple values' => [1, [0, 1, 0, 1], '1-bit multiple values with bit width'];
@@ -57,7 +58,7 @@ final class RLEBitPackedPackerTest extends TestCase
         yield 'sequential values' => [8, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 'sequential values with bit width'];
     }
 
-    public static function pack_with_length_provider(): \Generator
+    public static function pack_with_length_provider(): Generator
     {
         yield '1-bit single value' => [1, [1], '1-bit single value with length'];
         yield '1-bit multiple values' => [1, [0, 1, 0, 1], '1-bit multiple values with length'];
@@ -84,6 +85,8 @@ final class RLEBitPackedPackerTest extends TestCase
     #[DataProvider('pack_basic_values_provider')]
     public function test_pack_basic_values(int $bitWidth, array $values, string $description): void
     {
+        static::assertContainsOnlyInt($values);
+
         $result = $this->packer->pack($bitWidth, $values);
 
         static::assertIsString($result);
@@ -164,6 +167,8 @@ final class RLEBitPackedPackerTest extends TestCase
     #[DataProvider('pack_with_bit_width_provider')]
     public function test_pack_with_bit_width(int $bitWidth, array $values, string $description): void
     {
+        static::assertContainsOnlyInt($values);
+
         $result = $this->packer->packWithBitWidth($bitWidth, $values);
 
         static::assertIsString($result);
@@ -278,6 +283,8 @@ final class RLEBitPackedPackerTest extends TestCase
     #[DataProvider('pack_with_length_provider')]
     public function test_pack_with_length(int $bitWidth, array $values, string $description): void
     {
+        static::assertContainsOnlyInt($values);
+
         $result = $this->packer->packWithLength($bitWidth, $values);
 
         static::assertIsString($result);

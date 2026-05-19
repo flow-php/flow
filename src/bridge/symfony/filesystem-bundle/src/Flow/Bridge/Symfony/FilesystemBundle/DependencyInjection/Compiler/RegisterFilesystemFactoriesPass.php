@@ -9,6 +9,10 @@ use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 
+use function array_key_exists;
+use function is_string;
+use function sprintf;
+
 final class RegisterFilesystemFactoriesPass implements CompilerPassInterface
 {
     public const string REGISTRY_SERVICE_ID = '.flow.filesystem.factory_registry';
@@ -26,8 +30,8 @@ final class RegisterFilesystemFactoriesPass implements CompilerPassInterface
 
         foreach ($container->findTaggedServiceIds(self::TAG) as $serviceId => $tags) {
             foreach ($tags as $tag) {
-                if (!\array_key_exists('type', $tag) || !\is_string($tag['type']) || $tag['type'] === '') {
-                    throw new LogicException(\sprintf(
+                if (!array_key_exists('type', $tag) || !is_string($tag['type']) || $tag['type'] === '') {
+                    throw new LogicException(sprintf(
                         'Service "%s" is tagged with "%s" but is missing a non-empty "type" attribute.',
                         $serviceId,
                         self::TAG,
@@ -36,8 +40,8 @@ final class RegisterFilesystemFactoriesPass implements CompilerPassInterface
 
                 $type = $tag['type'];
 
-                if (\array_key_exists($type, $seen)) {
-                    throw new LogicException(\sprintf(
+                if (array_key_exists($type, $seen)) {
+                    throw new LogicException(sprintf(
                         'Duplicate filesystem factory for type "%s" (services "%s" and "%s").',
                         $type,
                         $seen[$type],

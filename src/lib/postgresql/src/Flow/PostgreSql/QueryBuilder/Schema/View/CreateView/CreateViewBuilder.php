@@ -14,6 +14,8 @@ use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 
+use function array_values;
+
 final readonly class CreateViewBuilder implements
     CreateViewAsStep,
     CreateViewCheckOptionStep,
@@ -66,7 +68,7 @@ final readonly class CreateViewBuilder implements
         return new self(
             $this->name,
             $this->schema,
-            \array_values($columns),
+            array_values($columns),
             $this->query,
             $this->replace,
             $this->temporary,
@@ -123,7 +125,9 @@ final readonly class CreateViewBuilder implements
             throw InvalidExpressionException::invalidValue('view name', 'null or empty');
         }
 
-        if ($this->query === null) {
+        $query = $this->query;
+
+        if ($query === null) {
             throw InvalidExpressionException::invalidValue('query', 'null');
         }
 
@@ -163,7 +167,7 @@ final readonly class CreateViewBuilder implements
         }
 
         $queryNode = new Node();
-        $queryNode->setSelectStmt($this->query->toAst());
+        $queryNode->setSelectStmt($query->toAst());
         $stmt->setQuery($queryNode);
 
         if ($this->checkOption !== null) {

@@ -10,6 +10,10 @@ use Flow\ETL\Join\Comparison\Equal;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 
+use function gettype;
+use function is_array;
+use function is_string;
+
 final readonly class Expression
 {
     public function __construct(
@@ -22,7 +26,7 @@ final readonly class Expression
      */
     public static function on(array|Comparison $comparison, string $joinPrefix = ''): self
     {
-        if (\is_array($comparison)) {
+        if (is_array($comparison)) {
             /** @var array<Comparison> $comparisons */
             $comparisons = [];
 
@@ -33,15 +37,15 @@ final readonly class Expression
                     continue;
                 }
 
-                if (!\is_string($left)) {
+                if (!is_string($left)) {
                     throw new RuntimeException(
-                        'Expected left entry name to be string, got ' . \gettype($left) . ". Example: ['id' => 'id']",
+                        'Expected left entry name to be string, got ' . gettype($left) . ". Example: ['id' => 'id']",
                     );
                 }
 
-                if (!\is_string($right)) {
+                if (!is_string($right)) {
                     throw new RuntimeException(
-                        'Expected right entry name to be string, got ' . \gettype($right) . ". Example: ['id' => 'id']",
+                        'Expected right entry name to be string, got ' . gettype($right) . ". Example: ['id' => 'id']",
                     );
                 }
 

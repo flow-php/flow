@@ -11,11 +11,13 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Throwable;
 
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
+use function sprintf;
 
 #[AsCommand(
     name: 'flow:filesystem:rm',
@@ -55,28 +57,25 @@ final class RmCommand extends Command
             $status = $filesystem->status($path);
 
             if ($status === null) {
-                $io->getErrorStyle()->error(\sprintf('Path not found: %s', $path->uri()));
+                $io->getErrorStyle()->error(sprintf('Path not found: %s', $path->uri()));
 
                 return Command::FAILURE;
             }
 
             if ($status->isDirectory() && !$recursive) {
-                $io->getErrorStyle()->error(\sprintf(
-                    '%s is a directory; pass --recursive to delete it.',
-                    $path->uri(),
-                ));
+                $io->getErrorStyle()->error(sprintf('%s is a directory; pass --recursive to delete it.', $path->uri()));
 
                 return Command::FAILURE;
             }
 
             $filesystem->rm($path);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $io->getErrorStyle()->error($e->getMessage());
 
             return Command::FAILURE;
         }
 
-        $io->success(\sprintf('Removed %s', $path->uri()));
+        $io->success(sprintf('Removed %s', $path->uri()));
 
         return Command::SUCCESS;
     }

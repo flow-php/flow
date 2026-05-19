@@ -15,6 +15,7 @@ use Flow\Types\Type\Native\StringType;
 
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_string;
+use function sprintf;
 
 /**
  * @implements Definition<string>
@@ -107,7 +108,7 @@ final class StringDefinition implements Definition
     public function merge(Definition $definition): Definition
     {
         if (!$this->ref->is($definition->entry())) {
-            throw new RuntimeException(\sprintf(
+            throw new RuntimeException(sprintf(
                 'Cannot merge different definitions, %s and %s',
                 $this->ref->name(),
                 $definition->entry()->name(),

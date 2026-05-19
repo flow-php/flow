@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
+use Elastic\Elasticsearch\Client as ElasticClient;
+use Elastic\Elasticsearch\ClientBuilder as ElasticClientBuilder;
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
 use Flow\ETL\Adapter\Elasticsearch\IdFactory;
@@ -13,11 +15,14 @@ use Flow\ETL\Loader;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Rows;
+use Throwable;
+
+use function class_exists;
 
 final class ElasticsearchLoader implements Loader
 {
     /** @phpstan-ignore-next-line */
-    private Client|\Elastic\Elasticsearch\Client|null $client;
+    private Client|ElasticClient|null $client;
 
     private string $method;
 
@@ -101,7 +106,7 @@ final class ElasticsearchLoader implements Loader
             $this->client()->bulk($parameters);
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 
             throw $e;
@@ -121,13 +126,13 @@ final class ElasticsearchLoader implements Loader
     /**
      * @phpstan-ignore-next-line
      */
-    private function client(): Client|\Elastic\Elasticsearch\Client
+    private function client(): Client|ElasticClient
     {
         if ($this->client === null) {
-            if (\class_exists("Elasticsearch\ClientBuilder")) {
+            if (class_exists("Elasticsearch\ClientBuilder")) {
                 $this->client = ClientBuilder::fromConfig($this->config);
             } else {
-                $this->client = \Elastic\Elasticsearch\ClientBuilder::fromConfig($this->config);
+                $this->client = ElasticClientBuilder::fromConfig($this->config);
             }
         }
 

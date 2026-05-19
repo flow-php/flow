@@ -14,19 +14,15 @@ use Flow\Doctrine\Bulk\Dialect\MySQLDialect;
 use Flow\Doctrine\Bulk\Dialect\PostgreSQLDialect;
 use Flow\Doctrine\Bulk\Dialect\SqliteDialect;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+
+use function class_exists;
 
 final class DbalPlatformTest extends TestCase
 {
-    public static function provideSQLitePlatform(): iterable
-    {
-        yield 'legacy' => [\Doctrine\DBAL\Platforms\SqlitePlatform::class];
-        yield 'new' => [SQLitePlatform::class];
-    }
-
     public function test_is_mysql(): void
     {
+        // @mago-expect analysis:deprecated-class
         $platform = new DbalPlatform(new MySQL80Platform());
 
         static::assertInstanceOf(MySQLDialect::class, $platform->dialect());
@@ -46,14 +42,22 @@ final class DbalPlatformTest extends TestCase
         static::assertInstanceOf(PostgreSQLDialect::class, $platform->dialect());
     }
 
-    #[DataProvider('provideSQLitePlatform')]
-    public function test_is_sqlite_sql(string $className): void
+    public function test_is_sqlite_sql_with_lowercase_l_class_name(): void
     {
-        if (\class_exists($className)) {
-            $platform = new DbalPlatform(new $className());
-        } else {
-            static::markTestSkipped('Unknown platform class: ' . $className);
+        if (!class_exists(SQLitePlatform::class)) {
+            static::markTestSkipped(
+                'Doctrine\\DBAL\\Platforms\\SqlitePlatform class is not available on this DBAL version.',
+            );
         }
+
+        $platform = new DbalPlatform(new SQLitePlatform());
+
+        static::assertInstanceOf(SqliteDialect::class, $platform->dialect());
+    }
+
+    public function test_is_sqlite_sql_with_uppercase_l_class_name(): void
+    {
+        $platform = new DbalPlatform(new SQLitePlatform());
 
         static::assertInstanceOf(SqliteDialect::class, $platform->dialect());
     }

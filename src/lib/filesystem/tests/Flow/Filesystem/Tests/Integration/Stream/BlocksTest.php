@@ -8,6 +8,10 @@ use Flow\Filesystem\SizeUnits;
 use Flow\Filesystem\Stream\Blocks;
 use PHPUnit\Framework\TestCase;
 
+use function count;
+use function str_repeat;
+use function strlen;
+
 final class BlocksTest extends TestCase
 {
     public function test_basic_blocks_operations(): void
@@ -17,21 +21,21 @@ final class BlocksTest extends TestCase
         $testContent = 'Basic test content for blocks functionality';
         $blocks->append($testContent);
 
-        static::assertSame(\strlen($testContent), $blocks->size());
-        static::assertGreaterThan(0, \count($blocks->all()));
+        static::assertSame(strlen($testContent), $blocks->size());
+        static::assertGreaterThan(0, count($blocks->all()));
     }
 
     public function test_blocks_with_multiple_appends(): void
     {
         $blocks = new Blocks(SizeUnits::kbToBytes(1));
 
-        $content1 = \str_repeat('a', 500);
-        $content2 = \str_repeat('b', 600);
+        $content1 = str_repeat('a', 500);
+        $content2 = str_repeat('b', 600);
 
         $blocks->append($content1);
         $blocks->append($content2);
 
-        static::assertSame(\strlen($content1) + \strlen($content2), $blocks->size());
-        static::assertGreaterThan(1, \count($blocks->all()));
+        static::assertSame(strlen($content1) + strlen($content2), $blocks->size());
+        static::assertGreaterThan(1, count($blocks->all()));
     }
 }

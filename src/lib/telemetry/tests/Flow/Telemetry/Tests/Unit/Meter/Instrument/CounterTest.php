@@ -11,7 +11,11 @@ use Flow\Telemetry\Tests\Mother\ClockMother;
 use Flow\Telemetry\Tests\Mother\InstrumentationScopeMother;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use Flow\Telemetry\Tests\Mother\SpanContextMother;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+
+use function array_filter;
+use function array_values;
 
 final class CounterTest extends TestCase
 {
@@ -43,7 +47,7 @@ final class CounterTest extends TestCase
             ClockMother::frozen(),
         );
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Counter amount must be >= 0, got -5');
 
         $counter->add(-5);
@@ -153,11 +157,8 @@ final class CounterTest extends TestCase
 
         static::assertCount(2, $metrics);
 
-        $getMetrics = \array_values(\array_filter($metrics, static fn($m) => $m->attributes->get('method') === 'GET'));
-        $postMetrics = \array_values(\array_filter(
-            $metrics,
-            static fn($m) => $m->attributes->get('method') === 'POST',
-        ));
+        $getMetrics = array_values(array_filter($metrics, static fn($m) => $m->attributes->get('method') === 'GET'));
+        $postMetrics = array_values(array_filter($metrics, static fn($m) => $m->attributes->get('method') === 'POST'));
 
         static::assertCount(1, $getMetrics);
         static::assertCount(1, $postMetrics);

@@ -13,14 +13,18 @@ use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Writer;
 
+use function file_exists;
 use function Flow\ETL\DSL\generate_random_string;
+use function iterator_to_array;
+use function mkdir;
+use function unlink;
 
 class WriterValidatorTest extends ParquetIntegrationTestCase
 {
     protected function setUp(): void
     {
-        if (!\file_exists(__DIR__ . '/var')) {
-            \mkdir(__DIR__ . '/var');
+        if (!file_exists(__DIR__ . '/var')) {
+            mkdir(__DIR__ . '/var');
         }
     }
 
@@ -121,10 +125,10 @@ class WriterValidatorTest extends ParquetIntegrationTestCase
                     'string' => null,
                 ],
             ],
-            \iterator_to_array($file->values()),
+            iterator_to_array($file->values()),
         );
 
-        \unlink($path);
+        unlink($path);
     }
 
     public function test_writing_row_with_missing_optional_columns_in_different_columns(): void
@@ -153,7 +157,7 @@ class WriterValidatorTest extends ParquetIntegrationTestCase
                 ['id' => 123, 'string' => null],
                 ['id' => null, 'string' => 'string'],
             ],
-            \iterator_to_array($file->values()),
+            iterator_to_array($file->values()),
         );
 
         unlink($path);

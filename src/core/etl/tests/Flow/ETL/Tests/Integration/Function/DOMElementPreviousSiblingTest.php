@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
+use DOMDocument;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 
@@ -69,7 +70,7 @@ final class DOMElementPreviousSiblingTest extends FlowTestCase
 
     public function test_xml_sibling_element_value(): void
     {
-        $dom = new \DOMDocument();
+        $dom = new DOMDocument();
         $dom->loadXML('<user><name>User Name</name><number>01</number></user>');
 
         $rows = df()

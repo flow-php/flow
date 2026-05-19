@@ -10,6 +10,7 @@ use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Meter\Metric;
 use Flow\Telemetry\Meter\MetricProcessor;
 use Flow\Telemetry\Signal\Signals;
+use Throwable;
 
 /**
  * Exports each metric immediately when processed.
@@ -34,7 +35,7 @@ final readonly class PassThroughMetricProcessor implements MetricProcessor
     {
         try {
             $this->exporter->export(Signals::metrics([$metric]));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
         }
     }
@@ -43,7 +44,7 @@ final readonly class PassThroughMetricProcessor implements MetricProcessor
     {
         try {
             $this->exporter->shutdown();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
         }
     }

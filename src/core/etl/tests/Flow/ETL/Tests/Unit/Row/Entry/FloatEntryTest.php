@@ -7,14 +7,17 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 use Flow\ETL\Row\Entry\FloatEntry;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\float_entry;
 use function Flow\Types\DSL\type_instance_of;
+use function serialize;
+use function unserialize;
 
 final class FloatEntryTest extends FlowTestCase
 {
-    public static function is_equal_data_provider(): \Generator
+    public static function is_equal_data_provider(): Generator
     {
         yield 'equal names and values' => [true, float_entry('name', 1.0), float_entry('name', 1.0)];
         yield 'different names and values' => [false, float_entry('name', 1.0), float_entry('different_name', 1.0)];
@@ -96,9 +99,9 @@ final class FloatEntryTest extends FlowTestCase
     {
         $float = float_entry('name', 1.0);
 
-        $serialized = \serialize($float);
+        $serialized = serialize($float);
         /** @var FloatEntry $unserialized */
-        $unserialized = type_instance_of(FloatEntry::class)->assert(\unserialize($serialized));
+        $unserialized = type_instance_of(FloatEntry::class)->assert(unserialize($serialized));
 
         static::assertTrue($float->isEqual($unserialized));
     }

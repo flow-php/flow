@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
+use ReflectionAttribute;
+use ReflectionClass;
+
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_string;
@@ -37,9 +40,9 @@ final readonly class AttributeModel
     /**
      * @param \ReflectionAttribute<object> $reflectionAttribute
      */
-    public static function fromReflection(\ReflectionAttribute $reflectionAttribute): self
+    public static function fromReflection(ReflectionAttribute $reflectionAttribute): self
     {
-        $attributeReflectionClass = new \ReflectionClass($reflectionAttribute->getName());
+        $attributeReflectionClass = new ReflectionClass($reflectionAttribute->getName());
 
         return new self(
             $attributeReflectionClass->getShortName(),

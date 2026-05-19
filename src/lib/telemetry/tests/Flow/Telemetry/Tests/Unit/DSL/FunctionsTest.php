@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\DSL;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Context\Baggage;
 use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\MemoryContextStorage;
@@ -33,6 +34,7 @@ use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
 
+use function array_filter;
 use function Flow\Telemetry\DSL\baggage;
 use function Flow\Telemetry\DSL\context;
 use function Flow\Telemetry\DSL\instrumentation_scope;
@@ -52,6 +54,7 @@ use function Flow\Telemetry\DSL\tracer_provider;
 use function Flow\Telemetry\DSL\void_log_processor;
 use function Flow\Telemetry\DSL\void_metric_processor;
 use function Flow\Telemetry\DSL\void_span_processor;
+use function strlen;
 
 final class FunctionsTest extends TestCase
 {
@@ -85,7 +88,7 @@ final class FunctionsTest extends TestCase
         $ctx = context();
 
         static::assertInstanceOf(Context::class, $ctx);
-        static::assertSame(32, \strlen($ctx->traceId->toHex()));
+        static::assertSame(32, strlen($ctx->traceId->toHex()));
         static::assertTrue($ctx->baggage->isEmpty());
     }
 
@@ -162,7 +165,7 @@ final class FunctionsTest extends TestCase
     public function test_logger_provider_works_correctly(): void
     {
         $clock = $this->createMock(ClockInterface::class);
-        $clock->method('now')->willReturn(new \DateTimeImmutable());
+        $clock->method('now')->willReturn(new DateTimeImmutable());
         $processor = $this->createLogProcessor();
         $contextStorage = new MemoryContextStorage();
 
@@ -192,7 +195,7 @@ final class FunctionsTest extends TestCase
     public function test_meter_provider_with_limits(): void
     {
         $clock = $this->createMock(ClockInterface::class);
-        $clock->method('now')->willReturn(new \DateTimeImmutable());
+        $clock->method('now')->willReturn(new DateTimeImmutable());
         $processor = $this->createMetricProcessor();
         $limits = metric_limits(cardinalityLimit: 5);
 
@@ -207,7 +210,7 @@ final class FunctionsTest extends TestCase
         $metrics = $counter->collect();
 
         static::assertCount(6, $metrics);
-        $overflowMetrics = \array_filter($metrics, static fn($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE));
+        $overflowMetrics = array_filter($metrics, static fn($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE));
         static::assertCount(1, $overflowMetrics);
     }
 
@@ -274,7 +277,7 @@ final class FunctionsTest extends TestCase
 
     public function test_span_event_creates_event(): void
     {
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = new DateTimeImmutable();
         $event = span_event('test.event', $timestamp);
 
         static::assertInstanceOf(GenericEvent::class, $event);
@@ -285,7 +288,7 @@ final class FunctionsTest extends TestCase
 
     public function test_span_event_with_attributes(): void
     {
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = new DateTimeImmutable();
         $event = span_event('test.event', $timestamp, ['key' => 'value']);
 
         static::assertSame(['key' => 'value'], $event->attributes());
@@ -305,7 +308,7 @@ final class FunctionsTest extends TestCase
         $spanId = span_id();
 
         static::assertInstanceOf(SpanId::class, $spanId);
-        static::assertSame(16, \strlen($spanId->toHex()));
+        static::assertSame(16, strlen($spanId->toHex()));
     }
 
     public function test_span_limits_creates_custom_limits(): void
@@ -361,7 +364,7 @@ final class FunctionsTest extends TestCase
         $traceId = trace_id();
 
         static::assertInstanceOf(TraceId::class, $traceId);
-        static::assertSame(32, \strlen($traceId->toHex()));
+        static::assertSame(32, strlen($traceId->toHex()));
     }
 
     public function test_tracer_provider_creates_provider(): void
@@ -378,7 +381,7 @@ final class FunctionsTest extends TestCase
     public function test_tracer_provider_with_context_storage(): void
     {
         $clock = $this->createMock(ClockInterface::class);
-        $clock->method('now')->willReturn(new \DateTimeImmutable());
+        $clock->method('now')->willReturn(new DateTimeImmutable());
         $ctx = context();
         $storage = new MemoryContextStorage($ctx);
         $processor = $this->createSpanProcessor();

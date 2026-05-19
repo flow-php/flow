@@ -14,6 +14,10 @@ use Flow\Telemetry\Tests\Mother\ResourceMother;
 use Flow\Telemetry\Tests\Mother\SpanContextMother;
 use PHPUnit\Framework\TestCase;
 
+use function strlen;
+use function strrchr;
+use function substr;
+
 final class ThroughputTest extends TestCase
 {
     public function test_add_accumulates_counts(): void
@@ -155,7 +159,6 @@ final class ThroughputTest extends TestCase
         foreach ($metrics as $metric) {
             $source = $metric->attributes->get('source');
             static::assertIsString($source);
-            /** @var string $source */
             $metricsBySource[$source] = $metric;
         }
 
@@ -248,7 +251,7 @@ final class ThroughputTest extends TestCase
         $metrics = $throughput->collect();
 
         $rateString = (string) $metrics[0]->value;
-        $rateDecimalPlaces = \strlen(\substr(\strrchr($rateString, '.') ?: '', 1));
+        $rateDecimalPlaces = strlen(substr(strrchr($rateString, '.') ?: '', 1));
         static::assertLessThanOrEqual(0, $rateDecimalPlaces);
     }
 
@@ -327,7 +330,7 @@ final class ThroughputTest extends TestCase
         $metrics = $throughput->collect();
 
         $valueString = (string) $metrics[0]->value;
-        $decimalPlaces = \strlen(\substr(\strrchr($valueString, '.') ?: '', 1));
+        $decimalPlaces = strlen(substr(strrchr($valueString, '.') ?: '', 1));
 
         static::assertLessThanOrEqual(4, $decimalPlaces);
     }
@@ -373,7 +376,7 @@ final class ThroughputTest extends TestCase
         $metrics = $throughput->collect();
 
         $valueString = (string) $metrics[0]->value;
-        $decimalPlaces = \strlen(\substr(\strrchr($valueString, '.') ?: '', 1));
+        $decimalPlaces = strlen(substr(strrchr($valueString, '.') ?: '', 1));
 
         static::assertLessThanOrEqual(2, $decimalPlaces);
     }

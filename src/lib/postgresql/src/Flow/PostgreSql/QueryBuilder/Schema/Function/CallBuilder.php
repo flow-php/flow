@@ -14,6 +14,15 @@ use Flow\PostgreSql\Protobuf\AST\PBFloat;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
+use function array_filter;
+use function array_map;
+use function array_merge;
+use function array_values;
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_string;
+
 final readonly class CallBuilder implements CallFinalStep
 {
     use AstToSql;
@@ -56,25 +65,25 @@ final readonly class CallBuilder implements CallFinalStep
 
     public function with(mixed ...$args): CallFinalStep
     {
-        $argNodes = [];
+        $argNodes = array_values(array_filter(
+            array_map($this->createArgumentNode(...), $args),
+            static fn(?Node $node): bool => $node !== null,
+        ));
 
-        foreach ($args as $arg) {
-            if ($arg instanceof Node) {
-                $argNodes[] = $arg;
-            } elseif (\is_int($arg)) {
-                $argNodes[] = $this->createIntegerNode($arg);
-            } elseif (\is_string($arg)) {
-                $argNodes[] = $this->createStringNode($arg);
-            } elseif (\is_bool($arg)) {
-                $argNodes[] = $this->createBoolNode($arg);
-            } elseif (\is_float($arg)) {
-                $argNodes[] = $this->createFloatNode($arg);
-            } elseif ($arg === null) {
-                $argNodes[] = $this->createNullNode();
-            }
-        }
+        return new self($this->procedure, array_values(array_merge($this->arguments, $argNodes)));
+    }
 
-        return new self($this->procedure, \array_merge($this->arguments, $argNodes));
+    private function createArgumentNode(mixed $arg): ?Node
+    {
+        return match (true) {
+            $arg instanceof Node => $arg,
+            is_int($arg) => $this->createIntegerNode($arg),
+            is_string($arg) => $this->createStringNode($arg),
+            is_bool($arg) => $this->createBoolNode($arg),
+            is_float($arg) => $this->createFloatNode($arg),
+            $arg === null => $this->createNullNode(),
+            default => null,
+        };
     }
 
     private function createBoolNode(bool $value): Node
@@ -82,9 +91,7 @@ final readonly class CallBuilder implements CallFinalStep
         $boolean = new Boolean();
         $boolean->setBoolval($value);
 
-        $aConst = new A_Const();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says bool but actually expects Boolean) */
-        $aConst->setBoolval($boolean);
+        $aConst = new A_Const(['boolval' => $boolean]);
 
         $node = new Node();
         $node->setAConst($aConst);
@@ -111,9 +118,7 @@ final readonly class CallBuilder implements CallFinalStep
         $integer = new Integer();
         $integer->setIval($value);
 
-        $aConst = new A_Const();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $aConst->setIval($integer);
+        $aConst = new A_Const(['ival' => $integer]);
 
         $node = new Node();
         $node->setAConst($aConst);

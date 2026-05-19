@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\date_time_format;
@@ -19,15 +21,15 @@ final class DateTimeFormatTest extends FlowTestCase
     public function test_date_time_format(): void
     {
         static::assertEquals('2020-01-01 00:00:00', date_time_format(ref('date_time'), 'Y-m-d H:i:s')->eval(
-            row(datetime_entry('date_time', new \DateTimeImmutable('2020-01-01 00:00:00', new \DateTimeZone('UTC')))),
+            row(datetime_entry('date_time', new DateTimeImmutable('2020-01-01 00:00:00', new DateTimeZone('UTC')))),
             flow_context(),
         ));
     }
 
     public function test_formatting_now(): void
     {
-        static::assertInstanceOf(\DateTimeImmutable::class, now()->eval(
-            row(datetime_entry('date_time', new \DateTimeImmutable('2020-01-01 00:00:00', new \DateTimeZone('UTC')))),
+        static::assertInstanceOf(DateTimeImmutable::class, now()->eval(
+            row(datetime_entry('date_time', new DateTimeImmutable('2020-01-01 00:00:00', new DateTimeZone('UTC')))),
             flow_context(),
         ));
     }

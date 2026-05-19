@@ -8,6 +8,7 @@ use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Generator;
 
 final class CacheExtractor implements Extractor
 {
@@ -19,7 +20,7 @@ final class CacheExtractor implements Extractor
         private readonly string $id,
     ) {}
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         if (!$context->cache()->has($this->id)) {
             if ($this->fallbackExtractor !== null) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service\Markdown;
 
+use InvalidArgumentException;
 use League\CommonMark\Extension\CommonMark\Node\Inline\Link;
 use League\CommonMark\Node\Node;
 use League\CommonMark\Renderer\ChildNodeRendererInterface;
@@ -17,7 +18,7 @@ class FlowLinkRenderer implements NodeRendererInterface
     public function render(Node $node, ChildNodeRendererInterface $childRenderer)
     {
         if (!$node instanceof Link) {
-            throw new \InvalidArgumentException('Incompatible node type: ' . $node::class);
+            throw new InvalidArgumentException('Incompatible node type: ' . $node::class);
         }
 
         $attrs = $node->data->get('attributes');

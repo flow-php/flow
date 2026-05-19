@@ -9,6 +9,9 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction\ExpandResults;
 use Flow\ETL\Row;
 
+use function array_keys;
+use function array_map;
+
 final class ArrayExpand extends ScalarFunctionChain implements ExpandResults
 {
     public function __construct(
@@ -30,11 +33,11 @@ final class ArrayExpand extends ScalarFunctionChain implements ExpandResults
         }
 
         if ($this->expand === ArrayExpand\ArrayExpand::KEYS) {
-            return \array_keys($array);
+            return array_keys($array);
         }
 
         if ($this->expand === ArrayExpand\ArrayExpand::BOTH) {
-            return \array_map(static fn($key, $value) => [$key => $value], \array_keys($array), $array);
+            return array_map(static fn($key, $value) => [$key => $value], array_keys($array), $array);
         }
 
         return $array;

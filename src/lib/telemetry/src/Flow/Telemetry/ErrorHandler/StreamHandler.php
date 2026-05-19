@@ -4,6 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\ErrorHandler;
 
+use InvalidArgumentException;
+use Throwable;
+
+use function chmod;
+use function dirname;
+use function fclose;
+use function flock;
+use function fopen;
+use function fwrite;
+use function is_dir;
+use function is_file;
+use function is_resource;
+use function mkdir;
+use function sprintf;
+use function str_starts_with;
+
+use const LOCK_EX;
+use const LOCK_UN;
+
 /**
  * Appends formatted Throwables (one per line) to a file path or php:// stream
  * wrapper. The stream is opened lazily on the first handle() call and reused
@@ -24,23 +43,23 @@ final class StreamHandler implements ErrorHandler
         private readonly string $messagePrefix = '[flow-telemetry]',
     ) {
         if ($destination === '') {
-            throw new \InvalidArgumentException('StreamHandler destination must be a non-empty string');
+            throw new InvalidArgumentException('StreamHandler destination must be a non-empty string');
         }
 
         if ($filePermissions < 0 || $filePermissions > 0777) {
-            throw new \InvalidArgumentException('File permissions must be between 0 and 0777');
+            throw new InvalidArgumentException('File permissions must be between 0 and 0777');
         }
     }
 
     public function __destruct()
     {
-        if (\is_resource($this->stream)) {
-            @\fclose($this->stream);
+        if (is_resource($this->stream)) {
+            @fclose($this->stream);
             $this->stream = null;
         }
     }
 
-    public function handle(\Throwable $error): void
+    public function handle(Throwable $error): void
     {
         try {
             $stream = $this->openStream();
@@ -49,7 +68,7 @@ final class StreamHandler implements ErrorHandler
                 return;
             }
 
-            $payload = \sprintf(
+            $payload = sprintf(
                 "%s %s: %s in %s:%d\n",
                 $this->messagePrefix,
                 $error::class,
@@ -58,14 +77,14 @@ final class StreamHandler implements ErrorHandler
                 $error->getLine(),
             );
 
-            @\flock($stream, \LOCK_EX);
+            @flock($stream, LOCK_EX);
 
             try {
-                @\fwrite($stream, $payload);
+                @fwrite($stream, $payload);
             } finally {
-                @\flock($stream, \LOCK_UN);
+                @flock($stream, LOCK_UN);
             }
-        } catch (\Throwable) {
+        } catch (Throwable) {
         }
     }
 
@@ -74,29 +93,29 @@ final class StreamHandler implements ErrorHandler
      */
     private function openStream()
     {
-        if (\is_resource($this->stream)) {
+        if (is_resource($this->stream)) {
             return $this->stream;
         }
 
-        $isStreamWrapper = \str_starts_with($this->destination, 'php://');
-        $existedBefore = !$isStreamWrapper && \is_file($this->destination);
+        $isStreamWrapper = str_starts_with($this->destination, 'php://');
+        $existedBefore = !$isStreamWrapper && is_file($this->destination);
 
         if (!$isStreamWrapper && $this->createDirectories) {
-            $directory = \dirname($this->destination);
+            $directory = dirname($this->destination);
 
-            if (!\is_dir($directory)) {
-                @\mkdir($directory, 0755, true);
+            if (!is_dir($directory)) {
+                @mkdir($directory, 0755, true);
             }
         }
 
-        $handle = @\fopen($this->destination, 'a+b');
+        $handle = @fopen($this->destination, 'a+b');
 
-        if (!\is_resource($handle)) {
+        if (!is_resource($handle)) {
             return null;
         }
 
         if (!$isStreamWrapper && !$existedBefore) {
-            @\chmod($this->destination, $this->filePermissions);
+            @chmod($this->destination, $this->filePermissions);
         }
 
         $this->stream = $handle;

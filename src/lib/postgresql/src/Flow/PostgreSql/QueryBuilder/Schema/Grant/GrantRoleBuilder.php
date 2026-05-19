@@ -12,6 +12,8 @@ use Flow\PostgreSql\Protobuf\AST\RoleSpec;
 use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
+use function array_values;
+
 final readonly class GrantRoleBuilder implements GrantRoleFinalStep, GrantRoleToStep
 {
     use AstToSql;
@@ -28,12 +30,12 @@ final readonly class GrantRoleBuilder implements GrantRoleFinalStep, GrantRoleTo
 
     public static function create(string ...$roles): GrantRoleToStep
     {
-        return new self(\array_values($roles));
+        return new self(array_values($roles));
     }
 
     public function to(string ...$roles): GrantRoleFinalStep
     {
-        return new self($this->grantedRoles, \array_values($roles), $this->adminOption);
+        return new self($this->grantedRoles, array_values($roles), $this->adminOption);
     }
 
     public function toAst(): GrantRoleStmt
@@ -73,9 +75,7 @@ final readonly class GrantRoleBuilder implements GrantRoleFinalStep, GrantRoleTo
             $boolean = new Boolean();
             $boolean->setBoolval(true);
 
-            $argNode = new Node();
-            /** @phpstan-ignore argument.type (protobuf PHPDoc says bool but actually expects Boolean) */
-            $argNode->setBoolean($boolean);
+            $argNode = new Node(['boolean' => $boolean]);
 
             $defElem = new DefElem();
             $defElem->setDefname('admin');

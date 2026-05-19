@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\Client\Types;
 
 use Flow\PostgreSql\Client\Types\StringEscaper;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class StringEscaperTest extends TestCase
 {
-    public static function provide_escape_always_quoted_cases(): \Generator
+    public static function provide_escape_always_quoted_cases(): Generator
     {
         yield 'simple string' => ['hello', '"hello"'];
         yield 'empty string' => ['', '""'];
@@ -20,7 +21,7 @@ final class StringEscaperTest extends TestCase
         yield 'json with backslash' => ['{"path":"c:\\\\dir"}', '"{\"path\":\"c:\\\\\\\\dir\"}"'];
     }
 
-    public static function provide_escape_cases(): \Generator
+    public static function provide_escape_cases(): Generator
     {
         yield 'simple string' => ['hello', 'hello'];
         yield 'numeric string' => ['123', '123'];

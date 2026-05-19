@@ -4,9 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Schema;
 
+use Countable;
 use Flow\Parquet\Exception\InvalidArgumentException;
+use Stringable;
 
-final class Repetitions implements \Countable, \Stringable
+use function array_key_exists;
+use function array_values;
+use function count;
+use function implode;
+use function sprintf;
+
+final class Repetitions implements Countable, Stringable
 {
     public readonly string $id;
 
@@ -26,7 +34,7 @@ final class Repetitions implements \Countable, \Stringable
 
     public function __construct(Repetition ...$repetitions)
     {
-        if (!\count($repetitions)) {
+        if (!count($repetitions)) {
             throw new InvalidArgumentException('Repetitions cannot be empty');
         }
 
@@ -41,8 +49,8 @@ final class Repetitions implements \Countable, \Stringable
             }
         }
 
-        $this->repetitions = \array_values($repetitions);
-        $this->id = \implode(',', $idParts);
+        $this->repetitions = array_values($repetitions);
+        $this->id = implode(',', $idParts);
         $this->repeatedCount = $repeatedCount;
     }
 
@@ -53,7 +61,7 @@ final class Repetitions implements \Countable, \Stringable
 
     public function count(): int
     {
-        return \count($this->repetitions);
+        return count($this->repetitions);
     }
 
     public function first(): Repetition
@@ -63,8 +71,8 @@ final class Repetitions implements \Countable, \Stringable
 
     public function get(int $index): Repetition
     {
-        if (!\array_key_exists($index, $this->repetitions)) {
-            throw new InvalidArgumentException(\sprintf(
+        if (!array_key_exists($index, $this->repetitions)) {
+            throw new InvalidArgumentException(sprintf(
                 'Repetition index %d does not exist: %s',
                 $index,
                 $this->__toString(),
@@ -76,7 +84,7 @@ final class Repetitions implements \Countable, \Stringable
 
     public function last(): Repetition
     {
-        return $this->repetitions[\count($this->repetitions) - 1];
+        return $this->repetitions[count($this->repetitions) - 1];
     }
 
     public function left(int $index): self

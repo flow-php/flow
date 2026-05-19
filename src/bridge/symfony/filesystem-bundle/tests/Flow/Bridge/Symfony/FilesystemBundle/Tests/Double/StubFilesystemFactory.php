@@ -6,6 +6,7 @@ namespace Flow\Bridge\Symfony\FilesystemBundle\Tests\Double;
 
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FilesystemFactory;
 use Flow\Filesystem\Filesystem;
+use RuntimeException;
 
 final readonly class StubFilesystemFactory implements FilesystemFactory
 {
@@ -17,7 +18,7 @@ final readonly class StubFilesystemFactory implements FilesystemFactory
     public function create(string $protocol, array $config): Filesystem
     {
         if ($this->filesystem === null) {
-            throw new \RuntimeException('StubFilesystemFactory was not configured with a Filesystem instance.');
+            throw new RuntimeException('StubFilesystemFactory was not configured with a Filesystem instance.');
         }
 
         return $this->filesystem;

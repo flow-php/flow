@@ -4,11 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tracer;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use Flow\Telemetry\AttributeLimitsEnforcer;
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Context\Scope;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Resource;
+use Throwable;
+
+use function array_map;
+use function count;
+use function is_array;
+use function is_string;
+use function mb_strlen;
+use function mb_substr;
 
 /**
  * Represents a single operation within a trace.
@@ -43,7 +53,7 @@ final class Span
 
     private int $droppedLinksCount = 0;
 
-    private ?\DateTimeImmutable $endTime = null;
+    private ?DateTimeImmutable $endTime = null;
 
     /**
      * @var array<SpanEvent>
@@ -61,7 +71,7 @@ final class Span
         private string $name,
         private readonly SpanContext $context,
         private readonly SpanKind $kind,
-        private readonly \DateTimeImmutable $startTime,
+        private readonly DateTimeImmutable $startTime,
         private readonly Resource $resource,
         private readonly InstrumentationScope $scope,
         private readonly bool $isRecording = true,
@@ -88,7 +98,7 @@ final class Span
      *     droppedAttributeCount?: int,
      *     events: array<array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount?: int}>,
      *     droppedEventsCount?: int,
-     *     links: array<array{context: array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool}, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount?: int}>,
+     *     links: array<array{context: array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags?: array{byte: int}, traceState?: array{entries: array<string, string>}}, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount?: int}>,
      *     droppedLinksCount?: int,
      *     status: null|array{code: int, description: null|string},
      *     isRecording: bool
@@ -100,7 +110,7 @@ final class Span
             $data['name'],
             SpanContext::fromArray($data['context']),
             SpanKind::from($data['kind']),
-            new \DateTimeImmutable($data['startTime']),
+            new DateTimeImmutable($data['startTime']),
             Resource::fromArray($data['resource']),
             InstrumentationScope::fromArray($data['scope']),
             $data['isRecording'],
@@ -124,7 +134,7 @@ final class Span
         }
 
         if ($data['endTime'] !== null) {
-            $span->endTime = new \DateTimeImmutable($data['endTime']);
+            $span->endTime = new DateTimeImmutable($data['endTime']);
         }
 
         return $span;
@@ -140,7 +150,7 @@ final class Span
      */
     public function addLink(SpanLink $link): self
     {
-        if (\count($this->links) >= $this->limits->linkCountLimit) {
+        if (count($this->links) >= $this->limits->linkCountLimit) {
             $this->droppedLinksCount++;
 
             return $this;
@@ -234,10 +244,10 @@ final class Span
             return null;
         }
 
-        $startMicros = (float) $this->startTime->format('U.u');
-        $endMicros = (float) $this->endTime->format('U.u');
+        $startMicros = ($this->startTime->getTimestamp() * 1_000_000) + (int) $this->startTime->format('u');
+        $endMicros = ($this->endTime->getTimestamp() * 1_000_000) + (int) $this->endTime->format('u');
 
-        return ($endMicros - $startMicros) * 1000;
+        return ($endMicros - $startMicros) / 1000;
     }
 
     /**
@@ -247,10 +257,10 @@ final class Span
      *
      * @return $this
      */
-    public function end(?\DateTimeImmutable $endTime = null): self
+    public function end(?DateTimeImmutable $endTime = null): self
     {
         if ($this->endTime === null) {
-            $this->endTime = $endTime ?? new \DateTimeImmutable();
+            $this->endTime = $endTime ?? new DateTimeImmutable();
         }
 
         return $this;
@@ -259,7 +269,7 @@ final class Span
     /**
      * Get the span end time, if ended.
      */
-    public function endTime(): ?\DateTimeImmutable
+    public function endTime(): ?DateTimeImmutable
     {
         return $this->endTime;
     }
@@ -335,7 +345,7 @@ final class Span
      *     droppedAttributeCount: int,
      *     events: array<array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount: int}>,
      *     droppedEventsCount: int,
-     *     links: array<array{context: array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool}, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount: int}>,
+     *     links: array<array{context: array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags: array{byte: int}, traceState: array{entries: array<string, string>}}, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount: int}>,
      *     droppedLinksCount: int,
      *     status: null|array{code: int, description: null|string},
      *     isRecording: bool
@@ -384,7 +394,7 @@ final class Span
      */
     public function recordEvent(SpanEvent $event): self
     {
-        if (\count($this->events) >= $this->limits->eventCountLimit) {
+        if (count($this->events) >= $this->limits->eventCountLimit) {
             $this->droppedEventsCount++;
 
             return $this;
@@ -426,8 +436,8 @@ final class Span
      * @return $this
      */
     public function recordException(
-        \Throwable $exception,
-        \DateTimeImmutable $timestamp,
+        Throwable $exception,
+        DateTimeImmutable $timestamp,
         Attributes|array $attributes = [],
     ): self {
         $attrs = $attributes instanceof Attributes ? $attributes : Attributes::create($attributes);
@@ -480,7 +490,7 @@ final class Span
      *
      * @return $this
      */
-    public function setAttribute(string $key, string|int|float|bool|\DateTimeInterface|\Throwable|array $value): self
+    public function setAttribute(string $key, string|int|float|bool|DateTimeInterface|Throwable|array $value): self
     {
         if (!$this->attributes->has($key) && $this->attributes->count() >= $this->limits->attributeCountLimit) {
             $this->droppedAttributeCount++;
@@ -548,7 +558,7 @@ final class Span
     /**
      * Get the span start time.
      */
-    public function startTime(): \DateTimeImmutable
+    public function startTime(): DateTimeImmutable
     {
         return $this->startTime;
     }
@@ -568,20 +578,22 @@ final class Span
      *
      * @return TAttributeValue
      */
-    private function truncateValue(string|int|float|bool|\DateTimeInterface|\Throwable|array $value): string|int|float|bool|\DateTimeInterface|\Throwable|array
+    private function truncateValue(string|int|float|bool|DateTimeInterface|Throwable|array $value): string|int|float|bool|DateTimeInterface|Throwable|array
     {
-        if ($this->limits->attributeValueLengthLimit === null) {
+        $limit = $this->limits->attributeValueLengthLimit;
+
+        if ($limit === null) {
             return $value;
         }
 
-        if (\is_string($value) && \mb_strlen($value) > $this->limits->attributeValueLengthLimit) {
-            return \mb_substr($value, 0, $this->limits->attributeValueLengthLimit);
+        if (is_string($value) && mb_strlen($value) > $limit) {
+            return mb_substr($value, 0, $limit);
         }
 
-        if (\is_array($value)) {
-            return \array_map(function ($item) {
-                if (\is_string($item) && \mb_strlen($item) > $this->limits->attributeValueLengthLimit) {
-                    return \mb_substr($item, 0, $this->limits->attributeValueLengthLimit);
+        if (is_array($value)) {
+            return array_map(static function ($item) use ($limit) {
+                if (is_string($item) && mb_strlen($item) > $limit) {
+                    return mb_substr($item, 0, $limit);
                 }
 
                 return $item;

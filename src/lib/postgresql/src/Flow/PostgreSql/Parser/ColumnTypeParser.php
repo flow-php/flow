@@ -7,13 +7,16 @@ namespace Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
+use InvalidArgumentException;
+
+use function count;
 
 final readonly class ColumnTypeParser
 {
     public function parse(string $typeName): ColumnType
     {
         if ($typeName === '') {
-            throw new \InvalidArgumentException('Type name cannot be empty');
+            throw new InvalidArgumentException('Type name cannot be empty');
         }
 
         $parser = new Parser();
@@ -21,7 +24,7 @@ final readonly class ColumnTypeParser
 
         $stmts = $parsed->raw()->getStmts();
 
-        if ($stmts === null || \count($stmts) === 0) {
+        if (count($stmts) === 0) {
             throw InvalidAstException::invalidFieldValue('stmts', 'ParseResult', 'expected at least one statement');
         }
 
@@ -33,7 +36,7 @@ final readonly class ColumnTypeParser
 
         $targetList = $selectStmt->getTargetList();
 
-        if ($targetList === null || \count($targetList) === 0) {
+        if (count($targetList) === 0) {
             throw InvalidAstException::invalidFieldValue('targetList', 'SelectStmt', 'expected at least one target');
         }
 

@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Flow\Types\Exception;
 
 use Flow\Types\Type;
+use Throwable;
+
+use function get_debug_type;
+use function sprintf;
 
 final class CastingException extends RuntimeException
 {
@@ -16,10 +20,10 @@ final class CastingException extends RuntimeException
     public function __construct(
         public readonly mixed $value,
         public readonly Type $type,
-        ?\Throwable $previous = null,
+        ?Throwable $previous = null,
     ) {
         parent::__construct(
-            \sprintf("Can't cast \"%s\" into \"%s\" type", \get_debug_type($value), $type->toString()),
+            sprintf("Can't cast \"%s\" into \"%s\" type", get_debug_type($value), $type->toString()),
             0,
             $previous,
         );

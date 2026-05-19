@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST;
 
+use Flow\PostgreSql\Exception\ParserException;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ParseResult;
+
+use function array_pop;
 
 /**
  * AST Traverser for PostgreSQL parse trees.
@@ -235,8 +238,13 @@ final class Traverser
         $replacement = null;
 
         $innerNodes = $this->extractInnerNodes($node);
-        /** @phpstan-ignore argument.type (parseResult is always set by traverse() before traverseNode() is called) */
-        $context = new ModificationContext($this->ancestorStack, $this->currentDepth, $this->parseResult);
+        $parseResult = $this->parseResult;
+
+        if ($parseResult === null) {
+            throw new ParserException('traverseNode() called before traverse() initialized the parse result.');
+        }
+
+        $context = new ModificationContext($this->ancestorStack, $this->currentDepth, $parseResult);
 
         foreach ($innerNodes as $innerNode) {
             $nodeClass = $innerNode::class;
@@ -283,7 +291,7 @@ final class Traverser
             $this->ancestorStack[] = $node;
             $this->currentDepth++;
             $this->traverseNodeChildren($node);
-            \array_pop($this->ancestorStack);
+            array_pop($this->ancestorStack);
             $this->currentDepth--;
         }
 
@@ -324,31 +332,43 @@ final class Traverser
             $this->traverseRepeatedField($selectStmt->getValuesLists());
             $this->traverseRepeatedField($selectStmt->getLockingClause());
 
-            if ($selectStmt->getWhereClause() !== null) {
-                $this->traverseNode($selectStmt->getWhereClause());
+            $whereClause = $selectStmt->getWhereClause();
+
+            if ($whereClause !== null) {
+                $this->traverseNode($whereClause);
             }
 
-            if ($selectStmt->getHavingClause() !== null) {
-                $this->traverseNode($selectStmt->getHavingClause());
+            $havingClause = $selectStmt->getHavingClause();
+
+            if ($havingClause !== null) {
+                $this->traverseNode($havingClause);
             }
 
-            if ($selectStmt->getLimitOffset() !== null) {
-                $this->traverseNode($selectStmt->getLimitOffset());
+            $limitOffset = $selectStmt->getLimitOffset();
+
+            if ($limitOffset !== null) {
+                $this->traverseNode($limitOffset);
             }
 
-            if ($selectStmt->getLimitCount() !== null) {
-                $this->traverseNode($selectStmt->getLimitCount());
+            $limitCount = $selectStmt->getLimitCount();
+
+            if ($limitCount !== null) {
+                $this->traverseNode($limitCount);
             }
 
-            if ($selectStmt->getLarg() !== null) {
+            $largStmt = $selectStmt->getLarg();
+
+            if ($largStmt !== null) {
                 $larg = new Node();
-                $larg->setSelectStmt($selectStmt->getLarg());
+                $larg->setSelectStmt($largStmt);
                 $this->traverseNode($larg);
             }
 
-            if ($selectStmt->getRarg() !== null) {
+            $rargStmt = $selectStmt->getRarg();
+
+            if ($rargStmt !== null) {
                 $rarg = new Node();
-                $rarg->setSelectStmt($selectStmt->getRarg());
+                $rarg->setSelectStmt($rargStmt);
                 $this->traverseNode($rarg);
             }
 
@@ -362,16 +382,20 @@ final class Traverser
         $insertStmt = $node->getInsertStmt();
 
         if ($insertStmt !== null) {
-            if ($insertStmt->getRelation() !== null) {
+            $insertRelation = $insertStmt->getRelation();
+
+            if ($insertRelation !== null) {
                 $relationNode = new Node();
-                $relationNode->setRangeVar($insertStmt->getRelation());
+                $relationNode->setRangeVar($insertRelation);
                 $this->traverseNode($relationNode);
             }
             $this->traverseRepeatedField($insertStmt->getCols());
             $this->traverseRepeatedField($insertStmt->getReturningList());
 
-            if ($insertStmt->getSelectStmt() !== null) {
-                $this->traverseNode($insertStmt->getSelectStmt());
+            $insertSelectStmt = $insertStmt->getSelectStmt();
+
+            if ($insertSelectStmt !== null) {
+                $this->traverseNode($insertSelectStmt);
             }
 
             $withClause = $insertStmt->getWithClause();
@@ -384,17 +408,21 @@ final class Traverser
         $updateStmt = $node->getUpdateStmt();
 
         if ($updateStmt !== null) {
-            if ($updateStmt->getRelation() !== null) {
+            $updateRelation = $updateStmt->getRelation();
+
+            if ($updateRelation !== null) {
                 $relationNode = new Node();
-                $relationNode->setRangeVar($updateStmt->getRelation());
+                $relationNode->setRangeVar($updateRelation);
                 $this->traverseNode($relationNode);
             }
             $this->traverseRepeatedField($updateStmt->getTargetList());
             $this->traverseRepeatedField($updateStmt->getFromClause());
             $this->traverseRepeatedField($updateStmt->getReturningList());
 
-            if ($updateStmt->getWhereClause() !== null) {
-                $this->traverseNode($updateStmt->getWhereClause());
+            $updateWhereClause = $updateStmt->getWhereClause();
+
+            if ($updateWhereClause !== null) {
+                $this->traverseNode($updateWhereClause);
             }
 
             $withClause = $updateStmt->getWithClause();
@@ -407,16 +435,20 @@ final class Traverser
         $deleteStmt = $node->getDeleteStmt();
 
         if ($deleteStmt !== null) {
-            if ($deleteStmt->getRelation() !== null) {
+            $deleteRelation = $deleteStmt->getRelation();
+
+            if ($deleteRelation !== null) {
                 $relationNode = new Node();
-                $relationNode->setRangeVar($deleteStmt->getRelation());
+                $relationNode->setRangeVar($deleteRelation);
                 $this->traverseNode($relationNode);
             }
             $this->traverseRepeatedField($deleteStmt->getUsingClause());
             $this->traverseRepeatedField($deleteStmt->getReturningList());
 
-            if ($deleteStmt->getWhereClause() !== null) {
-                $this->traverseNode($deleteStmt->getWhereClause());
+            $deleteWhereClause = $deleteStmt->getWhereClause();
+
+            if ($deleteWhereClause !== null) {
+                $this->traverseNode($deleteWhereClause);
             }
 
             $withClause = $deleteStmt->getWithClause();
@@ -429,42 +461,64 @@ final class Traverser
         $joinExpr = $node->getJoinExpr();
 
         if ($joinExpr !== null) {
-            if ($joinExpr->getLarg() !== null) {
-                $this->traverseNode($joinExpr->getLarg());
+            $joinLarg = $joinExpr->getLarg();
+
+            if ($joinLarg !== null) {
+                $this->traverseNode($joinLarg);
             }
 
-            if ($joinExpr->getRarg() !== null) {
-                $this->traverseNode($joinExpr->getRarg());
+            $joinRarg = $joinExpr->getRarg();
+
+            if ($joinRarg !== null) {
+                $this->traverseNode($joinRarg);
             }
 
-            if ($joinExpr->getQuals() !== null) {
-                $this->traverseNode($joinExpr->getQuals());
+            $joinQuals = $joinExpr->getQuals();
+
+            if ($joinQuals !== null) {
+                $this->traverseNode($joinQuals);
             }
             $this->traverseRepeatedField($joinExpr->getUsingClause());
         }
 
         $subLink = $node->getSubLink();
 
-        if ($subLink !== null && $subLink->getSubselect() !== null) {
-            $this->traverseNode($subLink->getSubselect());
+        if ($subLink !== null) {
+            $subselect = $subLink->getSubselect();
+
+            if ($subselect !== null) {
+                $this->traverseNode($subselect);
+            }
         }
 
         $rangeSubselect = $node->getRangeSubselect();
 
-        if ($rangeSubselect !== null && $rangeSubselect->getSubquery() !== null) {
-            $this->traverseNode($rangeSubselect->getSubquery());
+        if ($rangeSubselect !== null) {
+            $subquery = $rangeSubselect->getSubquery();
+
+            if ($subquery !== null) {
+                $this->traverseNode($subquery);
+            }
         }
 
         $cte = $node->getCommonTableExpr();
 
-        if ($cte !== null && $cte->getCtequery() !== null) {
-            $this->traverseNode($cte->getCtequery());
+        if ($cte !== null) {
+            $ctequery = $cte->getCtequery();
+
+            if ($ctequery !== null) {
+                $this->traverseNode($ctequery);
+            }
         }
 
         $resTarget = $node->getResTarget();
 
-        if ($resTarget !== null && $resTarget->getVal() !== null) {
-            $this->traverseNode($resTarget->getVal());
+        if ($resTarget !== null) {
+            $resTargetVal = $resTarget->getVal();
+
+            if ($resTargetVal !== null) {
+                $this->traverseNode($resTargetVal);
+            }
         }
 
         $funcCall = $node->getFuncCall();
@@ -473,20 +527,26 @@ final class Traverser
             $this->traverseRepeatedField($funcCall->getArgs());
             $this->traverseRepeatedField($funcCall->getAggOrder());
 
-            if ($funcCall->getAggFilter() !== null) {
-                $this->traverseNode($funcCall->getAggFilter());
+            $aggFilter = $funcCall->getAggFilter();
+
+            if ($aggFilter !== null) {
+                $this->traverseNode($aggFilter);
             }
         }
 
         $aExpr = $node->getAExpr();
 
         if ($aExpr !== null) {
-            if ($aExpr->getLexpr() !== null) {
-                $this->traverseNode($aExpr->getLexpr());
+            $lexpr = $aExpr->getLexpr();
+
+            if ($lexpr !== null) {
+                $this->traverseNode($lexpr);
             }
 
-            if ($aExpr->getRexpr() !== null) {
-                $this->traverseNode($aExpr->getRexpr());
+            $rexpr = $aExpr->getRexpr();
+
+            if ($rexpr !== null) {
+                $this->traverseNode($rexpr);
             }
         }
 
@@ -501,24 +561,32 @@ final class Traverser
         if ($caseExpr !== null) {
             $this->traverseRepeatedField($caseExpr->getArgs());
 
-            if ($caseExpr->getArg() !== null) {
-                $this->traverseNode($caseExpr->getArg());
+            $caseArg = $caseExpr->getArg();
+
+            if ($caseArg !== null) {
+                $this->traverseNode($caseArg);
             }
 
-            if ($caseExpr->getDefresult() !== null) {
-                $this->traverseNode($caseExpr->getDefresult());
+            $defresult = $caseExpr->getDefresult();
+
+            if ($defresult !== null) {
+                $this->traverseNode($defresult);
             }
         }
 
         $caseWhen = $node->getCaseWhen();
 
         if ($caseWhen !== null) {
-            if ($caseWhen->getExpr() !== null) {
-                $this->traverseNode($caseWhen->getExpr());
+            $caseWhenExpr = $caseWhen->getExpr();
+
+            if ($caseWhenExpr !== null) {
+                $this->traverseNode($caseWhenExpr);
             }
 
-            if ($caseWhen->getResult() !== null) {
-                $this->traverseNode($caseWhen->getResult());
+            $caseWhenResult = $caseWhen->getResult();
+
+            if ($caseWhenResult !== null) {
+                $this->traverseNode($caseWhenResult);
             }
         }
 
@@ -530,20 +598,32 @@ final class Traverser
 
         $nullTest = $node->getNullTest();
 
-        if ($nullTest !== null && $nullTest->getArg() !== null) {
-            $this->traverseNode($nullTest->getArg());
+        if ($nullTest !== null) {
+            $nullTestArg = $nullTest->getArg();
+
+            if ($nullTestArg !== null) {
+                $this->traverseNode($nullTestArg);
+            }
         }
 
         $typeCast = $node->getTypeCast();
 
-        if ($typeCast !== null && $typeCast->getArg() !== null) {
-            $this->traverseNode($typeCast->getArg());
+        if ($typeCast !== null) {
+            $typeCastArg = $typeCast->getArg();
+
+            if ($typeCastArg !== null) {
+                $this->traverseNode($typeCastArg);
+            }
         }
 
         $sortBy = $node->getSortBy();
 
-        if ($sortBy !== null && $sortBy->getNode() !== null) {
-            $this->traverseNode($sortBy->getNode());
+        if ($sortBy !== null) {
+            $sortByNode = $sortBy->getNode();
+
+            if ($sortByNode !== null) {
+                $this->traverseNode($sortByNode);
+            }
         }
 
         $rangeFunction = $node->getRangeFunction();
@@ -554,8 +634,12 @@ final class Traverser
 
         $booleanTest = $node->getBooleanTest();
 
-        if ($booleanTest !== null && $booleanTest->getArg() !== null) {
-            $this->traverseNode($booleanTest->getArg());
+        if ($booleanTest !== null) {
+            $booleanTestArg = $booleanTest->getArg();
+
+            if ($booleanTestArg !== null) {
+                $this->traverseNode($booleanTestArg);
+            }
         }
 
         $rowExpr = $node->getRowExpr();
@@ -573,8 +657,10 @@ final class Traverser
         $indirection = $node->getAIndirection();
 
         if ($indirection !== null) {
-            if ($indirection->getArg() !== null) {
-                $this->traverseNode($indirection->getArg());
+            $indirectionArg = $indirection->getArg();
+
+            if ($indirectionArg !== null) {
+                $this->traverseNode($indirectionArg);
             }
             $this->traverseRepeatedField($indirection->getIndirection());
         }
@@ -587,8 +673,12 @@ final class Traverser
 
         $namedArgExpr = $node->getNamedArgExpr();
 
-        if ($namedArgExpr !== null && $namedArgExpr->getArg() !== null) {
-            $this->traverseNode($namedArgExpr->getArg());
+        if ($namedArgExpr !== null) {
+            $namedArgExprArg = $namedArgExpr->getArg();
+
+            if ($namedArgExprArg !== null) {
+                $this->traverseNode($namedArgExprArg);
+            }
         }
 
         $xmlExpr = $node->getXmlExpr();

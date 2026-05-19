@@ -14,8 +14,13 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function array_slice;
+use function count;
+use function end;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
+use function iterator_to_array;
+use function sprintf;
 
 #[AsCommand(name: 'flow:migrations:latest', description: 'Output the latest available migration version')]
 final class LatestCommand extends Command
@@ -42,7 +47,7 @@ final class LatestCommand extends Command
 
         $statuses = $migrator->status();
 
-        if (\count($statuses) === 0) {
+        if (count($statuses) === 0) {
             $io->note('No migrations available.');
 
             return Command::SUCCESS;
@@ -50,13 +55,13 @@ final class LatestCommand extends Command
 
         $io->title('Latest Migrations');
 
-        $all = \iterator_to_array($statuses);
-        $latest = \array_slice($all, -5);
+        $all = iterator_to_array($statuses);
+        $latest = array_slice($all, -5);
 
         $rows = [];
 
         foreach ($latest as $migration) {
-            $isLast = $migration === \end($all);
+            $isLast = $migration === end($all);
             $stateLabel = match ($migration->state) {
                 MigrationState::EXECUTED => '<fg=green>EXECUTED</>',
                 MigrationState::PENDING => '<fg=yellow>PENDING</>',
@@ -73,8 +78,8 @@ final class LatestCommand extends Command
 
         $io->table(['', 'Status', 'Version', 'Name'], $rows);
 
-        if (\count($all) > 5) {
-            $io->text(\sprintf('  <fg=gray>Showing last 5 of %d migrations</>', \count($all)));
+        if (count($all) > 5) {
+            $io->text(sprintf('  <fg=gray>Showing last 5 of %d migrations</>', count($all)));
             $io->newLine();
         }
 

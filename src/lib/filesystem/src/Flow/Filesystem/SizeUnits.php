@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem;
 
+use function number_format;
+
 final class SizeUnits
 {
     public const int GiB_SIZE = 1073741824;
@@ -12,6 +14,11 @@ final class SizeUnits
 
     public const int MiB_SIZE = 1048576;
 
+    /**
+     * @param positive-int $gb
+     *
+     * @return positive-int
+     */
     public static function gbToBytes(int $gb): int
     {
         return $gb * self::GiB_SIZE;
@@ -39,7 +46,7 @@ final class SizeUnits
         }
 
         if ($bytes < self::KiB_SIZE) {
-            return \number_format($bytes, 0, $decimalSeparator, $thousandsSeparator) . ' B';
+            return number_format($bytes, 0, $decimalSeparator, $thousandsSeparator) . ' B';
         }
 
         $units = ['KiB', 'MiB', 'GiB', 'TiB', 'PiB'];
@@ -55,14 +62,24 @@ final class SizeUnits
             }
         }
 
-        return \number_format($value, $decimals, $decimalSeparator, $thousandsSeparator) . ' ' . $unit;
+        return number_format($value, $decimals, $decimalSeparator, $thousandsSeparator) . ' ' . $unit;
     }
 
+    /**
+     * @param positive-int $kb
+     *
+     * @return positive-int
+     */
     public static function kbToBytes(int $kb): int
     {
         return $kb * self::KiB_SIZE;
     }
 
+    /**
+     * @param positive-int $mb
+     *
+     * @return positive-int
+     */
     public static function mbToBytes(int $mb): int
     {
         return $mb * self::MiB_SIZE;

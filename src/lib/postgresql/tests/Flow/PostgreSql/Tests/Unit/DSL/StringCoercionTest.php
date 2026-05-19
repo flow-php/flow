@@ -4,14 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\DSL;
 
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
 use function Flow\PostgreSql\DSL\agg_sum;
 use function Flow\PostgreSql\DSL\asc;
+use function Flow\PostgreSql\DSL\between;
+use function Flow\PostgreSql\DSL\cast;
+use function Flow\PostgreSql\DSL\coalesce;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\delete;
 use function Flow\PostgreSql\DSL\eq;
+use function Flow\PostgreSql\DSL\is_null;
+use function Flow\PostgreSql\DSL\like;
 use function Flow\PostgreSql\DSL\literal;
+use function Flow\PostgreSql\DSL\nullif;
 use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\star;
 use function Flow\PostgreSql\DSL\table;
@@ -21,7 +29,7 @@ final class StringCoercionTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded...');
         }
     }
@@ -50,11 +58,11 @@ final class StringCoercionTest extends TestCase
         static::assertSame(
             select(star())
                 ->from(table('users'))
-                ->where(\Flow\PostgreSql\DSL\between(col('age'), literal(18), literal(65)))
+                ->where(between(col('age'), literal(18), literal(65)))
                 ->toSql(),
             select(star())
                 ->from('users')
-                ->where(\Flow\PostgreSql\DSL\between('age', literal(18), literal(65)))
+                ->where(between('age', literal(18), literal(65)))
                 ->toSql(),
         );
     }
@@ -62,20 +70,16 @@ final class StringCoercionTest extends TestCase
     public function test_cast_with_string_in_select(): void
     {
         static::assertSame(
-            select(\Flow\PostgreSql\DSL\cast(col('id'), \Flow\PostgreSql\QueryBuilder\Schema\ColumnType::integer()))
-                ->from(table('users'))
-                ->toSql(),
-            select(\Flow\PostgreSql\DSL\cast('id', \Flow\PostgreSql\QueryBuilder\Schema\ColumnType::integer()))
-                ->from('users')
-                ->toSql(),
+            select(cast(col('id'), ColumnType::integer()))->from(table('users'))->toSql(),
+            select(cast('id', ColumnType::integer()))->from('users')->toSql(),
         );
     }
 
     public function test_coalesce_with_mixed_strings_in_select(): void
     {
         static::assertSame(
-            select(\Flow\PostgreSql\DSL\coalesce(col('name'), literal('unknown')))->from(table('users'))->toSql(),
-            select(\Flow\PostgreSql\DSL\coalesce('name', literal('unknown')))->from('users')->toSql(),
+            select(coalesce(col('name'), literal('unknown')))->from(table('users'))->toSql(),
+            select(coalesce('name', literal('unknown')))->from('users')->toSql(),
         );
     }
 
@@ -87,7 +91,7 @@ final class StringCoercionTest extends TestCase
                 ->using(table('orders'))
                 ->where(eq(col('users.id'), col('orders.user_id')))
                 ->toSql(),
-            delete()->from('users')->using('orders')->where(eq('users.id', 'orders.user_id'))->toSql(),
+            delete()->from('users')->using(table('orders'))->where(eq('users.id', 'orders.user_id'))->toSql(),
         );
     }
 
@@ -148,12 +152,9 @@ final class StringCoercionTest extends TestCase
         static::assertSame(
             select(star())
                 ->from(table('users'))
-                ->where(\Flow\PostgreSql\DSL\is_null(col('email')))
+                ->where(is_null(col('email')))
                 ->toSql(),
-            select(star())
-                ->from('users')
-                ->where(\Flow\PostgreSql\DSL\is_null('email'))
-                ->toSql(),
+            select(star())->from('users')->where(is_null('email'))->toSql(),
         );
     }
 
@@ -184,11 +185,11 @@ final class StringCoercionTest extends TestCase
         static::assertSame(
             select(star())
                 ->from(table('users'))
-                ->where(\Flow\PostgreSql\DSL\like(col('name'), literal('%test%')))
+                ->where(like(col('name'), literal('%test%')))
                 ->toSql(),
             select(star())
                 ->from('users')
-                ->where(\Flow\PostgreSql\DSL\like('name', literal('%test%')))
+                ->where(like('name', literal('%test%')))
                 ->toSql(),
         );
     }
@@ -196,8 +197,8 @@ final class StringCoercionTest extends TestCase
     public function test_nullif_with_strings_in_select(): void
     {
         static::assertSame(
-            select(\Flow\PostgreSql\DSL\nullif(col('a'), col('b')))->from(table('users'))->toSql(),
-            select(\Flow\PostgreSql\DSL\nullif('a', 'b'))->from('users')->toSql(),
+            select(nullif(col('a'), col('b')))->from(table('users'))->toSql(),
+            select(nullif('a', 'b'))->from('users')->toSql(),
         );
     }
 
@@ -245,7 +246,7 @@ final class StringCoercionTest extends TestCase
             update()
                 ->update('users')
                 ->set('name', literal('test'))
-                ->from('logs')
+                ->from(table('logs'))
                 ->where(eq('users.id', 'logs.user_id'))
                 ->toSql(),
         );

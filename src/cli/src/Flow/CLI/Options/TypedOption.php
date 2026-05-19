@@ -4,8 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Options;
 
+use Stringable;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputInterface;
+
+use function count;
+use function filter_var;
+use function is_array;
+use function is_bool;
+use function is_int;
+use function is_numeric;
+use function is_scalar;
+use function is_string;
 
 final readonly class TypedOption
 {
@@ -26,17 +36,17 @@ final readonly class TypedOption
             return null;
         }
 
-        if (\is_string($option)) {
-            $option = \filter_var($option, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        if (is_string($option)) {
+            $option = filter_var($option, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
 
             return $option ?? null;
         }
 
-        if (\is_int($option)) {
+        if (is_int($option)) {
             return (bool) $option;
         }
 
-        if (!\is_bool($option)) {
+        if (!is_bool($option)) {
             throw new InvalidArgumentException("Option '{$this->name}' must be a boolean.");
         }
 
@@ -62,7 +72,7 @@ final readonly class TypedOption
             return null;
         }
 
-        if (!\is_numeric($option)) {
+        if (!is_numeric($option)) {
             throw new InvalidArgumentException("Option '{$this->name}' must be an integer.");
         }
 
@@ -90,11 +100,11 @@ final readonly class TypedOption
             return null;
         }
 
-        if (!\is_array($option)) {
+        if (!is_array($option)) {
             throw new InvalidArgumentException("Option '{$this->name}' must be an array.");
         }
 
-        if (!\count($option)) {
+        if (!count($option)) {
             return null;
         }
 
@@ -104,7 +114,7 @@ final readonly class TypedOption
         $options = [];
 
         foreach ($option as $value) {
-            $options[] = \is_scalar($value) || $value instanceof \Stringable ? (string) $value : '';
+            $options[] = is_scalar($value) || $value instanceof Stringable ? (string) $value : '';
         }
 
         return $options;
@@ -129,7 +139,7 @@ final readonly class TypedOption
             return null;
         }
 
-        if (!\is_string($option)) {
+        if (!is_string($option)) {
             throw new InvalidArgumentException("Option '{$this->name}' must be a string.");
         }
 

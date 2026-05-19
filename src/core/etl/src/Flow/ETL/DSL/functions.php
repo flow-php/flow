@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
+use DateInterval;
+use DatePeriod;
+use DateTimeInterface;
+use DateTimeZone;
 use Dom\HTMLDocument;
 use Dom\HTMLElement;
+use DOMDocument;
+use DOMElement;
 use Flow\Calculator\Rounding;
 use Flow\Clock\SystemClock;
 use Flow\ETL\Analyze;
@@ -48,6 +54,7 @@ use Flow\ETL\Formatter;
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\All;
 use Flow\ETL\Function\Any;
+use Flow\ETL\Function\ArrayExpand as ArrayExpandFunction;
 use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ArrayGet;
 use Flow\ETL\Function\ArrayGetCollection;
@@ -255,10 +262,29 @@ use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\TypeFactory;
 use Flow\Types\Value\Json;
+use Flow\Types\Value\Uuid as FlowUuid;
 use Psr\Clock\ClockInterface;
+use UnitEnum;
 
+use function array_is_list;
+use function array_key_exists;
+use function array_map;
+use function array_values;
+use function class_exists;
+use function enum_exists;
+use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_array;
+use function is_array;
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_object;
+use function is_string;
+use function json_decode;
+use function json_encode;
+use function str_pad;
+use function strtolower;
 
 /**
  * Alias for data_frame() : Flow.
@@ -308,7 +334,7 @@ function from_rows(Rows ...$rows): RowsExtractor
 #[DocumentationExample(topic: 'partitioning', example: 'path_partitions')]
 function from_path_partitions(Path|string $path): PathPartitionsExtractor
 {
-    return new PathPartitionsExtractor(\is_string($path) ? \Flow\Filesystem\DSL\path($path) : $path);
+    return new PathPartitionsExtractor(is_string($path) ? path($path) : $path);
 }
 
 /**
@@ -365,7 +391,7 @@ function from_memory(Memory $memory): MemoryExtractor
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
 function files(string|Path $directory): FilesExtractor
 {
-    return new FilesExtractor(\is_string($directory) ? \Flow\Filesystem\DSL\path($directory) : $directory);
+    return new FilesExtractor(is_string($directory) ? path($directory) : $directory);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
@@ -374,7 +400,7 @@ function filesystem_cache(
     Filesystem $filesystem = new NativeLocalFilesystem(),
     Serializer $serializer = new NativePHPSerializer(),
 ): FilesystemCache {
-    return new FilesystemCache($filesystem, $serializer, \is_string($cache_dir) ? path_real($cache_dir) : $cache_dir);
+    return new FilesystemCache($filesystem, $serializer, is_string($cache_dir) ? path_real($cache_dir) : $cache_dir);
 }
 
 /**
@@ -414,13 +440,13 @@ function from_data_frame(DataFrame $data_frame): DataFrameExtractor
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
 function from_sequence_date_period(
     string $entry_name,
-    \DateTimeInterface $start,
-    \DateInterval $interval,
-    \DateTimeInterface $end,
+    DateTimeInterface $start,
+    DateInterval $interval,
+    DateTimeInterface $end,
     int $options = 0,
 ): SequenceExtractor {
     return new SequenceExtractor(
-        new DatePeriodSequenceGenerator(new \DatePeriod($start, $interval, $end, $options)),
+        new DatePeriodSequenceGenerator(new DatePeriod($start, $interval, $end, $options)),
         $entry_name,
     );
 }
@@ -428,13 +454,13 @@ function from_sequence_date_period(
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
 function from_sequence_date_period_recurrences(
     string $entry_name,
-    \DateTimeInterface $start,
-    \DateInterval $interval,
+    DateTimeInterface $start,
+    DateInterval $interval,
     int $recurrences,
     int $options = 0,
 ): SequenceExtractor {
     return new SequenceExtractor(
-        new DatePeriodSequenceGenerator(new \DatePeriod($start, $interval, $recurrences, $options)),
+        new DatePeriodSequenceGenerator(new DatePeriod($start, $interval, $recurrences, $options)),
         $entry_name,
     );
 }
@@ -585,7 +611,7 @@ function boolean_entry(string $name, ?bool $value, ?Metadata $metadata = null): 
  * @return Entry<?\DateTimeInterface>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function datetime_entry(string $name, \DateTimeInterface|string|null $value, ?Metadata $metadata = null): Entry
+function datetime_entry(string $name, DateTimeInterface|string|null $value, ?Metadata $metadata = null): Entry
 {
     return new DateTimeEntry($name, $value, $metadata);
 }
@@ -594,7 +620,7 @@ function datetime_entry(string $name, \DateTimeInterface|string|null $value, ?Me
  * @return Entry<?\DateInterval>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function time_entry(string $name, \DateInterval|string|null $value, ?Metadata $metadata = null): Entry
+function time_entry(string $name, DateInterval|string|null $value, ?Metadata $metadata = null): Entry
 {
     return new TimeEntry($name, $value, $metadata);
 }
@@ -603,7 +629,7 @@ function time_entry(string $name, \DateInterval|string|null $value, ?Metadata $m
  * @return Entry<?\DateTimeInterface>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function date_entry(string $name, \DateTimeInterface|string|null $value, ?Metadata $metadata = null): Entry
+function date_entry(string $name, DateTimeInterface|string|null $value, ?Metadata $metadata = null): Entry
 {
     return new DateEntry($name, $value, $metadata);
 }
@@ -630,7 +656,7 @@ function integer_entry(string $name, ?int $value, ?Metadata $metadata = null): E
  * @return Entry<?\UnitEnum>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function enum_entry(string $name, ?\UnitEnum $enum, ?Metadata $metadata = null): Entry
+function enum_entry(string $name, ?UnitEnum $enum, ?Metadata $metadata = null): Entry
 {
     return new EnumEntry($name, $enum, $metadata);
 }
@@ -669,7 +695,7 @@ function json_object_entry(string $name, array|string|Json|null $data, ?Metadata
         return new JsonEntry($name, $data, $metadata);
     }
 
-    if (\is_string($data)) {
+    if (is_string($data)) {
         return new JsonEntry($name, $data, $metadata);
     }
 
@@ -716,7 +742,7 @@ function string_entry(string $name, ?string $value, ?Metadata $metadata = null):
  * @return Entry<?\Flow\Types\Value\Uuid>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function uuid_entry(string $name, \Flow\Types\Value\Uuid|string|null $value, ?Metadata $metadata = null): Entry
+function uuid_entry(string $name, FlowUuid|string|null $value, ?Metadata $metadata = null): Entry
 {
     return new UuidEntry($name, $value, $metadata);
 }
@@ -725,7 +751,7 @@ function uuid_entry(string $name, \Flow\Types\Value\Uuid|string|null $value, ?Me
  * @return Entry<?\DOMDocument>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function xml_entry(string $name, \DOMDocument|string|null $value, ?Metadata $metadata = null): Entry
+function xml_entry(string $name, DOMDocument|string|null $value, ?Metadata $metadata = null): Entry
 {
     return new XMLEntry($name, $value, $metadata);
 }
@@ -734,7 +760,7 @@ function xml_entry(string $name, \DOMDocument|string|null $value, ?Metadata $met
  * @return Entry<?\DOMElement>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function xml_element_entry(string $name, \DOMElement|string|null $value, ?Metadata $metadata = null): Entry
+function xml_element_entry(string $name, DOMElement|string|null $value, ?Metadata $metadata = null): Entry
 {
     return new XMLElementEntry($name, $value, $metadata);
 }
@@ -781,45 +807,65 @@ function struct_entry(string $name, ?array $value, StructureType $type, ?Metadat
 }
 
 /**
- * @template T
- *
  * @param ?array<string, mixed> $value
- * @param StructureType<T> $type
+ * @param Type<mixed> $type
  *
- * @return Entry<?array<string, T>>
+ * @return Entry<?array<string, mixed>>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function structure_entry(string $name, ?array $value, StructureType $type, ?Metadata $metadata = null): Entry
+function structure_entry(string $name, ?array $value, Type $type, ?Metadata $metadata = null): Entry
 {
+    if (!$type instanceof StructureType) {
+        // @mago-expect linter:no-fully-qualified-global-function
+        throw new InvalidArgumentException(\sprintf(
+            'Structure entry "%s" requires a StructureType, got %s',
+            $name,
+            $type::class,
+        ));
+    }
+
     return new StructureEntry($name, $value, $type, $metadata);
 }
 
 /**
- * @template T
- *
  * @param null|list<mixed> $value
- * @param ListType<T> $type
+ * @param Type<mixed> $type
  *
  * @return Entry<mixed>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function list_entry(string $name, ?array $value, ListType $type, ?Metadata $metadata = null): Entry
+function list_entry(string $name, ?array $value, Type $type, ?Metadata $metadata = null): Entry
 {
+    if (!$type instanceof ListType) {
+        // @mago-expect linter:no-fully-qualified-global-function
+        throw new InvalidArgumentException(\sprintf(
+            'List entry "%s" requires a ListType, got %s',
+            $name,
+            $type::class,
+        ));
+    }
+
     return new ListEntry($name, $value, $type, $metadata);
 }
 
 /**
- * @template TKey of array-key
- * @template TValue
- *
  * @param ?array<array-key, mixed> $value
- * @param MapType<TKey, TValue> $mapType
+ * @param Type<mixed> $mapType
  *
- * @return Entry<?array<TKey, TValue>>
+ * @return Entry<?array<array-key, mixed>>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function map_entry(string $name, ?array $value, MapType $mapType, ?Metadata $metadata = null): Entry
+function map_entry(string $name, ?array $value, Type $mapType, ?Metadata $metadata = null): Entry
 {
+    if (!$mapType instanceof MapType) {
+        // @mago-expect linter:no-fully-qualified-global-function
+        throw new InvalidArgumentException(\sprintf(
+            'Map entry "%s" requires a MapType, got %s',
+            $name,
+            $mapType::class,
+        ));
+    }
+
     return new MapEntry($name, $value, $mapType, $metadata);
 }
 
@@ -1049,7 +1095,7 @@ function array_reverse(ScalarFunction|array $function, ScalarFunction|bool $pres
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function now(\DateTimeZone|ScalarFunction $time_zone = new \DateTimeZone('UTC')): Now
+function now(DateTimeZone|ScalarFunction $time_zone = new DateTimeZone('UTC')): Now
 {
     return new Now($time_zone);
 }
@@ -1068,7 +1114,7 @@ function between(
 function to_date_time(
     mixed $ref,
     ScalarFunction|string $format = 'Y-m-d H:i:s',
-    ScalarFunction|\DateTimeZone $timeZone = new \DateTimeZone('UTC'),
+    ScalarFunction|DateTimeZone $timeZone = new DateTimeZone('UTC'),
 ): ToDateTime {
     return new ToDateTime($ref, $format, $timeZone);
 }
@@ -1077,7 +1123,7 @@ function to_date_time(
 function to_date(
     mixed $ref,
     ScalarFunction|string $format = 'Y-m-d',
-    ScalarFunction|\DateTimeZone $timeZone = new \DateTimeZone('UTC'),
+    ScalarFunction|DateTimeZone $timeZone = new DateTimeZone('UTC'),
 ): ToDate {
     return new ToDate($ref, $format, $timeZone);
 }
@@ -1218,11 +1264,9 @@ function array_unpack(
  *   +--+--------+
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function array_expand(
-    ScalarFunction $function,
-    ArrayExpand $expand = ArrayExpand::VALUES,
-): \Flow\ETL\Function\ArrayExpand {
-    return new \Flow\ETL\Function\ArrayExpand($function, $expand);
+function array_expand(ScalarFunction $function, ArrayExpand $expand = ArrayExpand::VALUES): ArrayExpandFunction
+{
+    return new ArrayExpandFunction($function, $expand);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
@@ -1238,7 +1282,7 @@ function uuid_v4(): Uuid
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function uuid_v7(ScalarFunction|\DateTimeInterface|null $value = null): Uuid
+function uuid_v7(ScalarFunction|DateTimeInterface|null $value = null): Uuid
 {
     return Uuid::uuid7($value);
 }
@@ -1286,10 +1330,8 @@ function not(ScalarFunction $value): Not
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function to_timezone(
-    ScalarFunction|\DateTimeInterface $value,
-    ScalarFunction|\DateTimeZone|string $timeZone,
-): ToTimeZone {
+function to_timezone(ScalarFunction|DateTimeInterface $value, ScalarFunction|DateTimeZone|string $timeZone): ToTimeZone
+{
     return new ToTimeZone($value, $timeZone);
 }
 
@@ -1421,7 +1463,7 @@ function array_to_row(
     $entries = [];
 
     foreach ($data as $key => $value) {
-        $name = \is_int($key) ? 'e' . \str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key;
+        $name = is_int($key) ? 'e' . str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key;
 
         try {
             $entries[$name] = $entryFactory->create($name, $value, $schema);
@@ -1433,7 +1475,7 @@ function array_to_row(
     }
 
     foreach ($partitions as $partition) {
-        if (!\array_key_exists($partition->name, $entries)) {
+        if (!array_key_exists($partition->name, $entries)) {
             try {
                 $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value, $schema);
             } catch (SchemaDefinitionNotFoundException $e) {
@@ -1446,13 +1488,13 @@ function array_to_row(
 
     if ($schema !== null) {
         foreach ($schema->definitions() as $definition) {
-            if (!\array_key_exists($definition->entry()->name(), $entries)) {
+            if (!array_key_exists($definition->entry()->name(), $entries)) {
                 $entries[$definition->entry()->name()] = str_entry($definition->entry()->name(), null);
             }
         }
     }
 
-    return Row::create(...\array_values($entries));
+    return Row::create(...array_values($entries));
 }
 
 /**
@@ -1467,12 +1509,12 @@ function array_to_rows(
     array|Partitions $partitions = [],
     ?Schema $schema = null,
 ): Rows {
-    $partitions = \is_array($partitions) ? new Partitions(...$partitions) : $partitions;
+    $partitions = is_array($partitions) ? new Partitions(...$partitions) : $partitions;
 
     $isRows = true;
 
     foreach ($data as $v) {
-        if (!\is_array($v)) {
+        if (!is_array($v)) {
             $isRows = false;
 
             break;
@@ -1514,7 +1556,7 @@ function dense_rank(): DenseRank
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
 function average(EntryReference|string $ref, int $scale = 2, Rounding $rounding = Rounding::HALF_UP): Average
 {
-    return new Average(\is_string($ref) ? ref($ref) : $ref, $scale, $rounding);
+    return new Average(is_string($ref) ? ref($ref) : $ref, $scale, $rounding);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
@@ -1532,19 +1574,19 @@ function least(mixed ...$values): Least
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
 function collect(EntryReference|string $ref): Collect
 {
-    return new Collect(\is_string($ref) ? ref($ref) : $ref);
+    return new Collect(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
 function string_agg(EntryReference|string $ref, string $separator = ', ', ?SortOrder $sort = null): StringAggregate
 {
-    return new StringAggregate(\is_string($ref) ? ref($ref) : $ref, $separator, $sort);
+    return new StringAggregate(is_string($ref) ? ref($ref) : $ref, $separator, $sort);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
 function collect_unique(EntryReference|string $ref): CollectUnique
 {
-    return new CollectUnique(\is_string($ref) ? ref($ref) : $ref);
+    return new CollectUnique(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
@@ -1556,31 +1598,31 @@ function window(): Window
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
 function sum(EntryReference|string $ref): Sum
 {
-    return new Sum(\is_string($ref) ? ref($ref) : $ref);
+    return new Sum(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
 function first(EntryReference|string $ref): First
 {
-    return new First(\is_string($ref) ? ref($ref) : $ref);
+    return new First(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
 function last(EntryReference|string $ref): Last
 {
-    return new Last(\is_string($ref) ? ref($ref) : $ref);
+    return new Last(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
 function max(EntryReference|string $ref): Max
 {
-    return new Max(\is_string($ref) ? ref($ref) : $ref);
+    return new Max(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
 function min(EntryReference|string $ref): Min
 {
-    return new Min(\is_string($ref) ? ref($ref) : $ref);
+    return new Min(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
@@ -1664,7 +1706,7 @@ function schema_selective_validator(): SelectiveValidator
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
 function schema_from_json(string $schema): Schema
 {
-    $decodedSchema = \json_decode($schema, true, 512, JSON_THROW_ON_ERROR);
+    $decodedSchema = json_decode($schema, true, 512, JSON_THROW_ON_ERROR);
     $decodedSchema = type_array()->assert($decodedSchema);
 
     return Schema::fromArray($decodedSchema);
@@ -1859,11 +1901,11 @@ function uuid_schema(string $name, bool $nullable = false, ?Metadata $metadata =
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
 function definition_from_array(array $definition): Definition
 {
-    if (!\array_key_exists('ref', $definition) || !\is_string($definition['ref'])) {
+    if (!array_key_exists('ref', $definition) || !is_string($definition['ref'])) {
         throw new RuntimeException('Definition array must have a string "ref" key');
     }
 
-    if (!\array_key_exists('type', $definition) || !\is_array($definition['type'])) {
+    if (!array_key_exists('type', $definition) || !is_array($definition['type'])) {
         throw new RuntimeException('Definition array must have an array "type" key');
     }
 
@@ -1873,10 +1915,10 @@ function definition_from_array(array $definition): Definition
     $typeData = $definition['type'];
     $type = TypeFactory::fromArray($typeData);
 
-    $nullable = isset($definition['nullable']) && \is_bool($definition['nullable']) ? $definition['nullable'] : false;
+    $nullable = isset($definition['nullable']) && is_bool($definition['nullable']) ? $definition['nullable'] : false;
 
     /** @var array<string, array<mixed>|bool|float|int|string> $metadataData */
-    $metadataData = isset($definition['metadata']) && \is_array($definition['metadata']) ? $definition['metadata'] : [];
+    $metadataData = isset($definition['metadata']) && is_array($definition['metadata']) ? $definition['metadata'] : [];
     $metadata = Metadata::fromArray($metadataData);
 
     return definition_from_type($ref, $type, $nullable, $metadata);
@@ -1915,6 +1957,7 @@ function definition_from_type(
         $type instanceof HTMLElementType => new HTMLElementDefinition($ref, $nullable, $metadata),
         $type instanceof XMLType => new XMLDefinition($ref, $nullable, $metadata),
         $type instanceof XMLElementType => new XMLElementDefinition($ref, $nullable, $metadata),
+        // @mago-expect linter:no-fully-qualified-global-function
         default => throw new RuntimeException(\sprintf('Cannot create Definition from type: %s', $type::class)),
     };
 }
@@ -2119,16 +2162,16 @@ function is_type(Type|array $type, mixed $value): bool
     }
 
     foreach ($type as $nextType) {
-        if (\is_string($nextType)) {
-            if (match (\strtolower($nextType)) {
-                'str', 'string' => \is_string($value),
-                'int', 'integer' => \is_int($value),
-                'float' => \is_float($value),
+        if (is_string($nextType)) {
+            if (match (strtolower($nextType)) {
+                'str', 'string' => is_string($value),
+                'int', 'integer' => is_int($value),
+                'float' => is_float($value),
                 'null' => null === $value,
-                'object' => \is_object($value),
-                'array' => \is_array($value),
-                'list' => \is_array($value) && \array_is_list($value),
-                default => match (\class_exists($nextType) || \enum_exists($nextType)) {
+                'object' => is_object($value),
+                'array' => is_array($value),
+                'list' => is_array($value) && array_is_list($value),
+                default => match (class_exists($nextType) || enum_exists($nextType)) {
                     true => $value instanceof $nextType,
                     false => throw new RuntimeException('Unexpected type: ' . $nextType),
                 },
@@ -2171,12 +2214,12 @@ function random_string(
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function date_interval_to_milliseconds(\DateInterval $interval): int
+function date_interval_to_milliseconds(DateInterval $interval): int
 {
     if ($interval->y !== 0 || $interval->m !== 0) {
         throw new InvalidArgumentException(
             "Relative DateInterval (with months/years) can't be converted to milliseconds. Given"
-                . \json_encode($interval, JSON_THROW_ON_ERROR),
+                . json_encode($interval, JSON_THROW_ON_ERROR),
         );
     }
 
@@ -2188,12 +2231,12 @@ function date_interval_to_milliseconds(\DateInterval $interval): int
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function date_interval_to_seconds(\DateInterval $interval): int
+function date_interval_to_seconds(DateInterval $interval): int
 {
     if ($interval->y !== 0 || $interval->m !== 0) {
         throw new InvalidArgumentException(
             "Relative DateInterval (with months/years) can't be converted to seconds. Given"
-                . \json_encode($interval, JSON_THROW_ON_ERROR),
+                . json_encode($interval, JSON_THROW_ON_ERROR),
         );
     }
 
@@ -2205,12 +2248,12 @@ function date_interval_to_seconds(\DateInterval $interval): int
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function date_interval_to_microseconds(\DateInterval $interval): int
+function date_interval_to_microseconds(DateInterval $interval): int
 {
     if ($interval->y !== 0 || $interval->m !== 0) {
         throw new InvalidArgumentException(
             "Relative DateInterval (with months/years) can't be converted to microseconds. Given"
-                . \json_encode($interval, JSON_THROW_ON_ERROR),
+                . json_encode($interval, JSON_THROW_ON_ERROR),
         );
     }
 
@@ -2236,7 +2279,7 @@ function constraint_unique(string $reference, string ...$references): UniqueCons
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
 function constraint_sorted_by(string|Reference $column, string|Reference ...$columns): SortedByConstraint
 {
-    $references = \array_map(static fn(string|Reference $ref) => EntryReference::init($ref), [$column, ...$columns]);
+    $references = array_map(static fn(string|Reference $ref) => EntryReference::init($ref), [$column, ...$columns]);
 
     return new SortedByConstraint(...$references);
 }
@@ -2341,5 +2384,5 @@ function write_with_retries(
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
 function clock(string $time_zone = 'UTC'): ClockInterface
 {
-    return new SystemClock(new \DateTimeZone($time_zone));
+    return new SystemClock(new DateTimeZone($time_zone));
 }

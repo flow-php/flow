@@ -19,6 +19,7 @@ use function Flow\Filesystem\DSL\filesystem_telemetry_config;
 use function Flow\Filesystem\DSL\filesystem_telemetry_options;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\traceable_filesystem;
+use function ltrim;
 
 final readonly class FlowConfigFactory
 {
@@ -75,7 +76,7 @@ final readonly class FlowConfigFactory
             new FilesystemAdapter(
                 'flow-website',
                 $ttl,
-                directory: $this->parameters->get('kernel.cache_dir') . '/' . \ltrim($directoryName, '/'),
+                directory: $this->parameters->get('kernel.cache_dir') . '/' . ltrim($directoryName, '/'),
             ),
         ));
     }

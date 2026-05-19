@@ -9,6 +9,10 @@ use Flow\Parquet\ParquetFile\Page\ColumnPageHeader;
 use Flow\Parquet\Reader;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function array_map;
+use function array_sum;
+use function iterator_to_array;
+
 class ReaderTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
@@ -21,21 +25,22 @@ class ReaderTest extends ParquetIntegrationTestCase
         $rows = 0;
 
         foreach ($file->values() as $row) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($row as $column => $value) {
                 static::assertNotNull($value);
             }
             $rows++;
         }
 
-        $headers = \iterator_to_array($file->pageHeaders());
+        $headers = iterator_to_array($file->pageHeaders());
 
         static::assertCount(79, $headers);
         static::assertSame(128, $headers[0]->pageHeader->dataValuesCount());
         static::assertSame(16, $headers[78]->pageHeader->dataValuesCount());
         static::assertSame(
             10_000,
-            \array_sum(\array_map(
-                static fn(ColumnPageHeader $header) => $header->pageHeader->dataValuesCount(),
+            array_sum(array_map(
+                static fn(ColumnPageHeader $header) => $header->pageHeader->dataValuesCount() ?? 0,
                 $headers,
             )),
         );
@@ -52,6 +57,7 @@ class ReaderTest extends ParquetIntegrationTestCase
         $rows = 0;
 
         foreach ($file->values() as $row) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($row as $column => $value) {
                 static::assertNotNull($value, "Column {$column} is null");
             }

@@ -24,6 +24,9 @@ use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
 
+use function array_values;
+use function count;
+
 final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateStep, InsertIntoStep
 {
     use AstToSql;
@@ -87,16 +90,14 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
         $columns = [];
         $colsNodes = $insertStmt->getCols();
 
-        if ($colsNodes !== null) {
-            foreach ($colsNodes as $colNode) {
-                $resTarget = $colNode->getResTarget();
+        foreach ($colsNodes as $colNode) {
+            $resTarget = $colNode->getResTarget();
 
-                if ($resTarget !== null) {
-                    $name = $resTarget->getName();
+            if ($resTarget !== null) {
+                $name = $resTarget->getName();
 
-                    if ($name !== '') {
-                        $columns[] = $name;
-                    }
+                if ($name !== '') {
+                    $columns[] = $name;
                 }
             }
         }
@@ -112,7 +113,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             if ($selectStmt !== null) {
                 $valuesListsNodes = $selectStmt->getValuesLists();
 
-                if ($valuesListsNodes !== null && \count($valuesListsNodes) > 0) {
+                if (count($valuesListsNodes) > 0) {
                     foreach ($valuesListsNodes as $listNode) {
                         $list = $listNode->getList();
 
@@ -120,10 +121,8 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
                             $rowValues = [];
                             $elements = $list->getItems();
 
-                            if ($elements !== null) {
-                                foreach ($elements as $element) {
-                                    $rowValues[] = ExpressionFactory::fromAst($element);
-                                }
+                            foreach ($elements as $element) {
+                                $rowValues[] = ExpressionFactory::fromAst($element);
                             }
 
                             $valuesList[] = $rowValues;
@@ -132,7 +131,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
                 } else {
                     $targetList = $selectStmt->getTargetList();
 
-                    if ($targetList === null || \count($targetList) === 0) {
+                    if (count($targetList) === 0) {
                         $defaultValues = true;
                     } else {
                         $selectQuery = new readonly class($selectStmt) implements SelectFinalStep {
@@ -176,25 +175,23 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
         $returningAll = false;
         $returningListNodes = $insertStmt->getReturningList();
 
-        if ($returningListNodes !== null) {
-            foreach ($returningListNodes as $retNode) {
-                $resTarget = $retNode->getResTarget();
+        foreach ($returningListNodes as $retNode) {
+            $resTarget = $retNode->getResTarget();
 
-                if ($resTarget !== null) {
-                    $valNode = $resTarget->getVal();
+            if ($resTarget !== null) {
+                $valNode = $resTarget->getVal();
 
-                    if ($valNode !== null) {
-                        $expr = ExpressionFactory::fromAst($valNode);
+                if ($valNode !== null) {
+                    $expr = ExpressionFactory::fromAst($valNode);
 
-                        if ($expr instanceof Star && !$expr->isQualified()) {
-                            $returningAll = true;
-                            $returning = [];
+                    if ($expr instanceof Star && !$expr->isQualified()) {
+                        $returningAll = true;
+                        $returning = [];
 
-                            break;
-                        }
-
-                        $returning[] = $expr;
+                        break;
                     }
+
+                    $returning[] = $expr;
                 }
             }
         }
@@ -233,7 +230,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             $this->table,
             $this->schema,
             $this->alias,
-            \array_values([...$columns]),
+            array_values([...$columns]),
             $this->valuesList,
             $this->selectQuery,
             $this->defaultValues,
@@ -337,7 +334,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             $this->selectQuery,
             $this->defaultValues,
             $this->onConflict,
-            \array_values([...$expressions]),
+            array_values([...$expressions]),
             false,
         );
     }
@@ -499,7 +496,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             $this->schema,
             $this->alias,
             $this->columns,
-            [...$this->valuesList, \array_values([...$values])],
+            [...$this->valuesList, array_values([...$values])],
             $this->selectQuery,
             $this->defaultValues,
             $this->onConflict,

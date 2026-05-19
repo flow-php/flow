@@ -8,6 +8,7 @@ use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema;
+use Generator;
 
 interface ParquetEngine
 {
@@ -31,7 +32,7 @@ interface ParquetEngine
         array $columns = [],
         ?int $limit = null,
         ?int $offset = null,
-    ): \Generator;
+    ): Generator;
 
     /**
      * @param iterable<array<string, mixed>> $rows

@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Meter\Exemplar;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceFlags;
 use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\Meter\Exemplar\AlignedHistogramBucketExemplarReservoir;
 use Flow\Telemetry\Tracer\SpanContext;
 use PHPUnit\Framework\TestCase;
+
+use function array_map;
+use function sort;
 
 final class AlignedHistogramBucketExemplarReservoirTest extends TestCase
 {
@@ -18,7 +22,7 @@ final class AlignedHistogramBucketExemplarReservoirTest extends TestCase
         $bucketCount = 5;
         $reservoir = new AlignedHistogramBucketExemplarReservoir($bucketCount);
         $context = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::sampled());
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = new DateTimeImmutable();
 
         for ($i = 0; $i < $bucketCount; $i++) {
             $reservoir->offer($i * 10, [], $context, $timestamp, bucketIndex: $i);
@@ -27,8 +31,8 @@ final class AlignedHistogramBucketExemplarReservoirTest extends TestCase
         $exemplars = $reservoir->collect();
         static::assertCount($bucketCount, $exemplars);
 
-        $values = \array_map(static fn($e) => $e->value, $exemplars);
-        \sort($values);
+        $values = array_map(static fn($e) => $e->value, $exemplars);
+        sort($values);
         static::assertSame([0, 10, 20, 30, 40], $values);
     }
 
@@ -36,7 +40,7 @@ final class AlignedHistogramBucketExemplarReservoirTest extends TestCase
     {
         $reservoir = new AlignedHistogramBucketExemplarReservoir(5);
         $context = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::sampled());
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = new DateTimeImmutable();
 
         $reservoir->offer(10, [], $context, $timestamp, bucketIndex: 1);
         $reservoir->offer(20, [], $context, $timestamp, bucketIndex: 3);
@@ -49,7 +53,7 @@ final class AlignedHistogramBucketExemplarReservoirTest extends TestCase
     {
         $reservoir = new AlignedHistogramBucketExemplarReservoir(3);
         $context = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::sampled());
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = new DateTimeImmutable();
 
         $reservoir->offer(10, [], $context, $timestamp, bucketIndex: 0);
         $reservoir->offer(20, [], $context, $timestamp, bucketIndex: 1);
@@ -66,7 +70,7 @@ final class AlignedHistogramBucketExemplarReservoirTest extends TestCase
     {
         $reservoir = new AlignedHistogramBucketExemplarReservoir(2);
         $context = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::sampled());
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = new DateTimeImmutable();
 
         $reservoir->offer(100, [], $context, $timestamp, bucketIndex: 0);
 
@@ -83,7 +87,7 @@ final class AlignedHistogramBucketExemplarReservoirTest extends TestCase
         $traceId = TraceId::generate();
         $spanId = SpanId::generate();
         $context = SpanContext::create($traceId, $spanId, null, TraceFlags::sampled());
-        $timestamp = new \DateTimeImmutable('2024-01-15 10:30:00');
+        $timestamp = new DateTimeImmutable('2024-01-15 10:30:00');
 
         $reservoir->offer(42.5, ['key' => 'value'], $context, $timestamp, bucketIndex: 1);
 
@@ -100,7 +104,7 @@ final class AlignedHistogramBucketExemplarReservoirTest extends TestCase
     {
         $reservoir = new AlignedHistogramBucketExemplarReservoir(3);
         $context = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::sampled());
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = new DateTimeImmutable();
 
         $reservoir->offer(100, [], $context, $timestamp, bucketIndex: 3);
         $reservoir->offer(200, [], $context, $timestamp, bucketIndex: 10);
@@ -113,7 +117,7 @@ final class AlignedHistogramBucketExemplarReservoirTest extends TestCase
     {
         $reservoir = new AlignedHistogramBucketExemplarReservoir(3);
         $context = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::sampled());
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = new DateTimeImmutable();
 
         $reservoir->offer(100, [], $context, $timestamp, bucketIndex: -1);
 
@@ -125,7 +129,7 @@ final class AlignedHistogramBucketExemplarReservoirTest extends TestCase
     {
         $reservoir = new AlignedHistogramBucketExemplarReservoir(3);
         $context = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::sampled());
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = new DateTimeImmutable();
 
         $reservoir->offer(100, ['first' => true], $context, $timestamp, bucketIndex: 1);
         $reservoir->offer(200, ['second' => true], $context, $timestamp, bucketIndex: 1);
@@ -140,7 +144,7 @@ final class AlignedHistogramBucketExemplarReservoirTest extends TestCase
     {
         $reservoir = new AlignedHistogramBucketExemplarReservoir(5);
         $context = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::sampled());
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = new DateTimeImmutable();
 
         $reservoir->offer(100, ['http.method' => 'GET'], $context, $timestamp, bucketIndex: 2);
 
@@ -154,7 +158,7 @@ final class AlignedHistogramBucketExemplarReservoirTest extends TestCase
     {
         $reservoir = new AlignedHistogramBucketExemplarReservoir(5);
         $context = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::sampled());
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = new DateTimeImmutable();
 
         $reservoir->offer(10, [], $context, $timestamp, bucketIndex: 0);
         $reservoir->offer(20, [], $context, $timestamp, bucketIndex: 2);
@@ -163,7 +167,7 @@ final class AlignedHistogramBucketExemplarReservoirTest extends TestCase
         $exemplars = $reservoir->collect();
         static::assertCount(3, $exemplars);
 
-        $values = \array_map(static fn($e) => $e->value, $exemplars);
+        $values = array_map(static fn($e) => $e->value, $exemplars);
         static::assertContains(10, $values);
         static::assertContains(20, $values);
         static::assertContains(30, $values);
@@ -173,7 +177,7 @@ final class AlignedHistogramBucketExemplarReservoirTest extends TestCase
     {
         $reservoir = new AlignedHistogramBucketExemplarReservoir(3);
         $context = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::sampled());
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = new DateTimeImmutable();
 
         $reservoir->offer(10, [], $context, $timestamp, bucketIndex: 0);
         $reservoir->offer(20, [], $context, $timestamp, bucketIndex: 1);

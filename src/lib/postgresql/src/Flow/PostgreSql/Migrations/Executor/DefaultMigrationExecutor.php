@@ -8,32 +8,37 @@ use Flow\PostgreSql\Migrations\Direction;
 use Flow\PostgreSql\Migrations\Exception\MigrationException;
 use Flow\PostgreSql\Migrations\MigrationContext;
 use Flow\PostgreSql\Migrations\MigrationPlan;
+use Throwable;
+
+use function hrtime;
 
 final readonly class DefaultMigrationExecutor implements MigrationExecutor
 {
     public function execute(MigrationPlan $plan, MigrationContext $context): ExecutionResult
     {
-        $start = \hrtime(true);
+        $start = hrtime(true);
+        $direction = $plan->direction;
+        $version = $plan->version;
 
         try {
-            match ($plan->direction) {
+            match ($direction) {
                 Direction::UP => $this->executeUp($plan, $context),
                 Direction::DOWN => $this->executeDown($plan, $context),
             };
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return new ExecutionResult(
-                $plan->version,
-                $plan->direction,
-                (int) ((\hrtime(true) - $start) / 1_000_000),
+                $version,
+                $direction,
+                (int) (((int) hrtime(true) - (int) $start) / 1_000_000),
                 false,
                 $e,
             );
         }
 
         return new ExecutionResult(
-            $plan->version,
-            $plan->direction,
-            (int) ((\hrtime(true) - $start) / 1_000_000),
+            $version,
+            $direction,
+            (int) (((int) hrtime(true) - (int) $start) / 1_000_000),
             false,
             null,
         );

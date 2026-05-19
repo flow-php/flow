@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration\Local;
 
+use DateTimeImmutable;
 use Flow\ETL\Filesystem\ScalarFunctionFilter;
 use Flow\Filesystem\Exception\InvalidSchemeException;
 use Flow\Filesystem\FileStatus;
@@ -11,6 +12,7 @@ use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\Tests\Integration\NativeLocalFilesystemTestCase;
 use Flow\Types\Type\AutoCaster;
 
+use function array_map;
 use function Flow\ETL\DSL\all;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
@@ -18,6 +20,9 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\Filesystem\DSL\memory_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function fopen;
+use function iterator_to_array;
+use function sort;
 
 final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
 {
@@ -72,7 +77,7 @@ final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = memory_filesystem();
 
-        $resource = \fopen(__DIR__ . '/../Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/../Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource);
         $fs->writeTo(path('memory:///var/file.txt'))->fromResource($resource);
 
@@ -100,7 +105,7 @@ final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = memory_filesystem();
 
-        $resource = \fopen(__DIR__ . '/../Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/../Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource);
         $fs->writeTo(path('memory:///var/some_path_to/file.txt'))->fromResource($resource);
 
@@ -111,7 +116,7 @@ final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = memory_filesystem();
 
-        $resource = \fopen(__DIR__ . '/../Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/../Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource);
         $fs->writeTo(path('memory:///var/some_path_to/file.txt'))->fromResource($resource);
 
@@ -128,7 +133,7 @@ final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $this->expectException(InvalidSchemeException::class);
 
-        \iterator_to_array(memory_filesystem()->list(path('file:///var/foo.txt')));
+        iterator_to_array(memory_filesystem()->list(path('file:///var/foo.txt')));
     }
 
     public function test_move_blob(): void
@@ -172,14 +177,14 @@ final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
             'Hello, World!',
         );
 
-        $paths = \iterator_to_array($fs->list(
+        $paths = iterator_to_array($fs->list(
             path('memory:///var/multi_partitions/**/*.txt'),
             new ScalarFunctionFilter(
                 all(
                     ref('country')->equals(lit('pl')),
                     all(
-                        ref('date')->cast('date')->greaterThanEqual(lit(new \DateTimeImmutable('2022-01-02'))),
-                        ref('date')->cast('date')->lessThan(lit(new \DateTimeImmutable('2022-01-04'))),
+                        ref('date')->cast('date')->greaterThanEqual(lit(new DateTimeImmutable('2022-01-02'))),
+                        ref('date')->cast('date')->lessThan(lit(new DateTimeImmutable('2022-01-04'))),
                     ),
                 ),
                 flow_context(config())->entryFactory(),
@@ -187,14 +192,14 @@ final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
                 flow_context(),
             ),
         ));
-        \sort($paths);
+        sort($paths);
 
         $path1 = path('memory:///var/multi_partitions/date=2022-01-02/country=pl/file.txt');
         $path1->partitions();
         $path2 = path('memory:///var/multi_partitions/date=2022-01-03/country=pl/file.txt');
         $path2->partitions();
 
-        $uris = \array_map(static fn(FileStatus $s): string => $s->path->uri(), $paths);
+        $uris = array_map(static fn(FileStatus $s): string => $s->path->uri(), $paths);
         static::assertSame([$path1->uri(), $path2->uri()], $uris);
     }
 
@@ -223,7 +228,7 @@ final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
 
         $fs->rm(path('memory:///*.txt'));
         static::assertNull($fs->status($stream->path()));
-        static::assertEmpty(\iterator_to_array($fs->list(path('memory:///*.txt'), new KeepAll())));
+        static::assertEmpty(iterator_to_array($fs->list(path('memory:///*.txt'), new KeepAll())));
     }
 
     public function test_rm_rejects_mismatched_scheme(): void
@@ -255,9 +260,9 @@ final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
         $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-04/country=de/file.txt'))->append('hello world');
         $fs->writeTo(path('memory:///var/multi_partitions/date=2022-01-05/country=pl/file.txt'))->append('hello world');
 
-        $statuses = \iterator_to_array($fs->list(path('memory:///var/multi_partitions/**/*.txt')));
+        $statuses = iterator_to_array($fs->list(path('memory:///var/multi_partitions/**/*.txt')));
 
-        $uris = \array_map(static fn(FileStatus $s): string => $s->path->uri(), $statuses);
+        $uris = array_map(static fn(FileStatus $s): string => $s->path->uri(), $statuses);
 
         static::assertSame(
             [

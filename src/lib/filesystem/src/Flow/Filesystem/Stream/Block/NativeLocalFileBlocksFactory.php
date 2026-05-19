@@ -8,8 +8,12 @@ use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Stream\Block;
 use Flow\Filesystem\Stream\BlockFactory;
 
+use function file_exists;
 use function Flow\ETL\DSL\generate_random_string;
 use function Flow\Filesystem\DSL\path;
+use function is_dir;
+use function mkdir;
+use function sys_get_temp_dir;
 
 final readonly class NativeLocalFileBlocksFactory implements BlockFactory
 {
@@ -23,15 +27,15 @@ final readonly class NativeLocalFileBlocksFactory implements BlockFactory
     public function __construct(?string $blockLocation = null)
     {
         if ($blockLocation) {
-            if (!\file_exists($blockLocation) || !\is_dir($blockLocation)) {
-                if (!\mkdir($blockLocation, 0777, true) && !\is_dir($blockLocation)) {
+            if (!file_exists($blockLocation) || !is_dir($blockLocation)) {
+                if (!mkdir($blockLocation, 0777, true) && !is_dir($blockLocation)) {
                     throw new InvalidArgumentException('Block location must be a valid directory, got: '
                     . $blockLocation);
                 }
             }
         }
 
-        $this->blockLocation = $blockLocation ?: \sys_get_temp_dir();
+        $this->blockLocation = $blockLocation ?: sys_get_temp_dir();
     }
 
     public function create(int $size): Block

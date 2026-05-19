@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Azure\SDK\BlobService\BlockBlob;
 
+use function array_pop;
+use function count;
+
 final class BlockList
 {
     /**
@@ -33,12 +36,12 @@ final class BlockList
 
     public function last(): ?Block
     {
-        if (!\count($this->blocks)) {
+        if (!count($this->blocks)) {
             return null;
         }
 
         $blocks = $this->blocks;
 
-        return \array_pop($blocks);
+        return array_pop($blocks);
     }
 }

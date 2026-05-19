@@ -12,32 +12,34 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Writer\ColumnChunkBuilder\DeltaBinaryPackedColumnChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkContainer;
+use Generator;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
 {
-    public static function compression_types_provider(): \Generator
+    public static function compression_types_provider(): Generator
     {
         yield 'uncompressed' => [Compressions::UNCOMPRESSED];
         yield 'gzip' => [Compressions::GZIP];
         yield 'snappy' => [Compressions::SNAPPY];
     }
 
-    public static function page_size_provider(): \Generator
+    public static function page_size_provider(): Generator
     {
         yield 'small page' => [1024];
         yield 'medium page' => [8192];
         yield 'large page' => [65536];
     }
 
-    public static function physical_types_provider(): \Generator
+    public static function physical_types_provider(): Generator
     {
         yield 'int32' => [PhysicalType::INT32, 42];
         yield 'int64' => [PhysicalType::INT64, 1234567890123];
     }
 
-    public static function writer_version_provider(): \Generator
+    public static function writer_version_provider(): Generator
     {
         yield 'version 1' => [1];
         yield 'version 2' => [2];
@@ -45,7 +47,7 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
 
     public function test_constructor_rejects_unsupported_types(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Delta encoding only supports INT32 and INT64 physical types');
 
         new DeltaBinaryPackedColumnChunkBuilder(

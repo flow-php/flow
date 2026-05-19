@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Pagination;
 
+use function array_reverse;
+
 final readonly class KeySet
 {
     /**
@@ -13,6 +15,6 @@ final readonly class KeySet
 
     public function __construct(Key ...$keys)
     {
-        $this->keys = \array_reverse($keys);
+        $this->keys = array_reverse($keys);
     }
 }

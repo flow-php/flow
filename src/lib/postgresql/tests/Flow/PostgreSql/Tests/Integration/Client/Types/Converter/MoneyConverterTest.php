@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Types\ValueType;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\PostgreSql\DSL\cast;
@@ -20,7 +21,7 @@ final class MoneyConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{string, string}>
      */
-    public static function provide_money_values(): \Generator
+    public static function provide_money_values(): Generator
     {
         yield 'zero' => ['$0.00', '$0.00'];
         yield 'positive' => ['$1,234.56', '$1,234.56'];
@@ -32,7 +33,7 @@ final class MoneyConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(literal(99.99), column_type_custom('money'))->as('val'))->toSql());
+            ->fetchScalarString(select(cast(literal(99.99), column_type_custom('money'))->as('val'))->toSql());
 
         static::assertSame('$99.99', $result);
     }
@@ -43,7 +44,7 @@ final class MoneyConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_custom('money'))->as('val'))->toSql(), [typed(
+            ->fetchScalarString(select(cast(param(1), column_type_custom('money'))->as('val'))->toSql(), [typed(
                 $input,
                 ValueType::MONEY,
             )]);
@@ -53,11 +54,11 @@ final class MoneyConverterTest extends PostgreSqlTestCase
 
     public function test_null_money(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal(null), column_type_custom('money'))->as('val'))->toSql());
-
-        static::assertNull($result);
+        static::assertNull(
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalar(select(cast(literal(null), column_type_custom('money'))->as('val'))->toSql()),
+        );
     }
 }

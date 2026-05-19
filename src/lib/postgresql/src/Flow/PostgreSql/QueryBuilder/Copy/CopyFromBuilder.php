@@ -14,6 +14,9 @@ use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
+use function array_values;
+use function Flow\Types\DSL\type_string;
+
 /**
  * Builder for COPY FROM statements (data import).
  */
@@ -55,7 +58,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         return new self(
             $this->table,
             $this->schema,
-            \array_values($columns),
+            array_values($columns),
             $this->filename,
             $this->isProgram,
             $this->isStdin,
@@ -175,7 +178,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
             $this->header,
             $this->quote,
             $this->escape,
-            \array_values($columns),
+            array_values($columns),
             $this->forceNullColumns,
             $this->encoding,
             $this->onError,
@@ -198,7 +201,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
             $this->quote,
             $this->escape,
             $this->forceNotNullColumns,
-            \array_values($columns),
+            array_values($columns),
             $this->encoding,
             $this->onError,
         );
@@ -343,7 +346,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         return new self(
             $identifier->name(),
             $identifier->schema(),
-            \array_values($columns),
+            array_values($columns),
             $this->filename,
             $this->isProgram,
             $this->isStdin,
@@ -377,7 +380,7 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         if ($this->isStdin) {
             $copyStmt->setFilename('');
         } else {
-            $copyStmt->setFilename($this->filename ?? '');
+            $copyStmt->setFilename(type_string()->assert($this->filename));
         }
 
         $rangeVar = new RangeVar([

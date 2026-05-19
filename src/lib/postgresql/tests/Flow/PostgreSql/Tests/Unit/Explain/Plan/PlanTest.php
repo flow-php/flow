@@ -11,6 +11,8 @@ use Flow\PostgreSql\Explain\Plan\PlanNodeType;
 use Flow\PostgreSql\Explain\Plan\Timing;
 use PHPUnit\Framework\TestCase;
 
+use function array_keys;
+
 final class PlanTest extends TestCase
 {
     public function test_from_array_and_normalize_are_inverse(): void
@@ -161,7 +163,7 @@ final class PlanTest extends TestCase
             'memory_peak',
         ];
 
-        static::assertSame($expectedKeys, \array_keys($normalized));
+        static::assertSame($expectedKeys, array_keys($normalized));
     }
 
     public function test_normalize_with_null_values(): void

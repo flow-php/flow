@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Meter\Processor;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Meter\Metric;
@@ -15,6 +16,7 @@ use Flow\Telemetry\Tests\Mother\ErrorHandlerSpy;
 use Flow\Telemetry\Tests\Mother\InstrumentationScopeMother;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class BatchingMetricProcessorTest extends TestCase
 {
@@ -77,7 +79,7 @@ final class BatchingMetricProcessorTest extends TestCase
     public function test_flush_routes_exporter_throwable_to_error_handler(): void
     {
         $exporter = $this->createMock(Exporter::class);
-        $exporter->method('export')->willThrowException(new \RuntimeException('exporter exploded'));
+        $exporter->method('export')->willThrowException(new RuntimeException('exporter exploded'));
         $spy = new ErrorHandlerSpy();
 
         $processor = new BatchingMetricProcessor($exporter, 10, $spy);
@@ -95,7 +97,7 @@ final class BatchingMetricProcessorTest extends TestCase
             MetricType::COUNTER,
             1,
             Attributes::empty(),
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
             ResourceMother::default(),
             InstrumentationScopeMother::default(),
         );

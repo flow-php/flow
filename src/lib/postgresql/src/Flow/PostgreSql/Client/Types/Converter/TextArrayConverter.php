@@ -9,6 +9,12 @@ use Flow\PostgreSql\Client\Types\StringEscaper;
 use Flow\PostgreSql\Client\Types\ValueConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
 
+use function array_map;
+use function implode;
+use function is_array;
+use function is_scalar;
+use function is_string;
+
 final class TextArrayConverter implements ValueConverter
 {
     public function supportedTypes(): array
@@ -25,24 +31,27 @@ final class TextArrayConverter implements ValueConverter
             return null;
         }
 
-        if (!\is_array($value)) {
+        if (!is_array($value)) {
             return '{}';
         }
 
-        $elements = [];
+        return '{' . implode(',', array_map(self::encodeElement(...), $value)) . '}';
+    }
 
-        foreach ($value as $v) {
-            if ($v === null) {
-                $elements[] = 'NULL';
-            } elseif (\is_string($v)) {
-                $elements[] = StringEscaper::escape($v);
-            } elseif (\is_scalar($v)) {
-                $elements[] = (string) $v;
-            } else {
-                throw ValueConversionException::cannotConvert($v, 'text array element');
-            }
+    private static function encodeElement(mixed $element): string
+    {
+        if ($element === null) {
+            return 'NULL';
         }
 
-        return '{' . \implode(',', $elements) . '}';
+        if (is_string($element)) {
+            return StringEscaper::escape($element);
+        }
+
+        if (is_scalar($element)) {
+            return (string) $element;
+        }
+
+        throw ValueConversionException::cannotConvert($element, 'text array element');
     }
 }

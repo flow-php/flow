@@ -10,6 +10,18 @@ use Flow\Filesystem\Stream\Blocks;
 use Flow\Filesystem\Tests\OperatingSystem;
 use PHPUnit\Framework\TestCase;
 
+use function ceil;
+use function count;
+use function file_exists;
+use function file_put_contents;
+use function filesize;
+use function fopen;
+use function str_repeat;
+use function strlen;
+use function sys_get_temp_dir;
+use function tempnam;
+use function unlink;
+
 final class BlocksWindowsTest extends TestCase
 {
     use OperatingSystem;
@@ -27,8 +39,8 @@ final class BlocksWindowsTest extends TestCase
     {
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
-        $file = \fopen(__DIR__ . '/../../../Fixtures/orders.csv', 'rb');
-        $fileSize = \filesize(__DIR__ . '/../../../Fixtures/orders.csv');
+        $file = fopen(__DIR__ . '/../../../Fixtures/orders.csv', 'rb');
+        $fileSize = filesize(__DIR__ . '/../../../Fixtures/orders.csv');
 
         if ($file === false || $fileSize === false) {
             static::markTestSkipped('Could not open test fixture file');
@@ -38,7 +50,7 @@ final class BlocksWindowsTest extends TestCase
             $blocks->fromResource($file);
 
             static::assertSame($fileSize, $blocks->size());
-            static::assertSame((int) \ceil($fileSize / $blockSize), \count($blocks->all()));
+            static::assertSame((int) ceil($fileSize / $blockSize), count($blocks->all()));
         } catch (RuntimeException $e) {
             // On Windows, this might fail due to file locking or permissions
             // Mark as skipped rather than failed for now
@@ -50,19 +62,19 @@ final class BlocksWindowsTest extends TestCase
     {
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
-        $file = \fopen(__DIR__ . '/../../../Fixtures/orders.csv', 'rb');
-        $fileSize = \filesize(__DIR__ . '/../../../Fixtures/orders.csv');
+        $file = fopen(__DIR__ . '/../../../Fixtures/orders.csv', 'rb');
+        $fileSize = filesize(__DIR__ . '/../../../Fixtures/orders.csv');
 
         if ($file === false || $fileSize === false) {
             static::markTestSkipped('Could not open test fixture file');
         }
 
         try {
-            $blocks->append(\str_repeat('a', 100));
+            $blocks->append(str_repeat('a', 100));
             $blocks->fromResource($file);
 
             static::assertSame($fileSize + 100, $blocks->size());
-            static::assertCount((int) \ceil($fileSize / $blockSize), $blocks->all());
+            static::assertCount((int) ceil($fileSize / $blockSize), $blocks->all());
         } catch (RuntimeException $e) {
             // On Windows, this might fail due to file locking or permissions
             // Mark as skipped rather than failed for now
@@ -72,27 +84,31 @@ final class BlocksWindowsTest extends TestCase
 
     public function test_windows_large_file_streaming(): void
     {
-        // Create a temporary large file
-        $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_blocks_test_');
-        $largeContent = \str_repeat("Large file test content\r\n", 1000);
-        \file_put_contents($tempFile, $largeContent);
+        $tempFile = tempnam(sys_get_temp_dir(), 'flow_blocks_test_');
+
+        if ($tempFile === false) {
+            static::markTestSkipped('Could not create temporary file');
+        }
+
+        $largeContent = str_repeat("Large file test content\r\n", 1000);
+        file_put_contents($tempFile, $largeContent);
 
         $blocks = new Blocks(SizeUnits::kbToBytes(5));
 
         try {
-            $file = \fopen($tempFile, 'rb');
+            $file = fopen($tempFile, 'rb');
 
             if ($file !== false) {
                 $blocks->fromResource($file);
-                static::assertSame(\strlen($largeContent), $blocks->size());
-                static::assertGreaterThan(1, \count($blocks->all()));
+                static::assertSame(strlen($largeContent), $blocks->size());
+                static::assertGreaterThan(1, count($blocks->all()));
             }
         } catch (RuntimeException $e) {
             // On Windows, this might fail due to file locking
             static::markTestSkipped('Windows large file streaming issue: ' . $e->getMessage());
         } finally {
-            if (\file_exists($tempFile)) {
-                \unlink($tempFile);
+            if (file_exists($tempFile)) {
+                unlink($tempFile);
             }
         }
     }
@@ -105,10 +121,10 @@ final class BlocksWindowsTest extends TestCase
         $testContent = "Windows test content\r\nWith CRLF line endings\r\n";
         $blocks->append($testContent);
 
-        static::assertSame(\strlen($testContent), $blocks->size());
-        static::assertGreaterThan(0, \count($blocks->all()));
+        static::assertSame(strlen($testContent), $blocks->size());
+        static::assertGreaterThan(0, count($blocks->all()));
 
         // Verify blocks are created correctly
-        static::assertGreaterThan(0, \count($blocks->all()));
+        static::assertGreaterThan(0, count($blocks->all()));
     }
 }

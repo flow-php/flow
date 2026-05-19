@@ -9,6 +9,7 @@ use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
 
 use function Flow\Types\DSL\type_enum;
+use function is_string;
 
 final class ContentTypeDetector
 {
@@ -17,7 +18,7 @@ final class ContentTypeDetector
         if ($path->hasOption(Option::CONTENT_TYPE->value)) {
             $contentTypeOption = $path->getOption(Option::CONTENT_TYPE->value);
 
-            if (\is_string($contentTypeOption)) {
+            if (is_string($contentTypeOption)) {
                 $contentType = $contentTypeOption;
             } else {
                 type_enum(ContentType::class)->assert($contentTypeOption);

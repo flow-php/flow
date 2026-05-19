@@ -12,8 +12,16 @@ use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Tests\Mother\SpanMother;
 use Google\Protobuf\Internal\Message;
 use Grpc\BaseStub;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use Throwable;
+
+use function class_exists;
+use function count;
+use function extension_loaded;
+use function str_contains;
 
 final class GrpcTransportTest extends TestCase
 {
@@ -22,7 +30,7 @@ final class GrpcTransportTest extends TestCase
     {
         $this->skipIfGrpcDependenciesNotAvailable();
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Shutdown timeout must be non-negative');
 
         new GrpcTransport('localhost:4317', shutdownTimeoutMs: -1);
@@ -33,7 +41,7 @@ final class GrpcTransportTest extends TestCase
     {
         $this->skipIfGrpcDependenciesNotAvailable();
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Timeout must be non-negative');
 
         new GrpcTransport('localhost:4317', timeoutMs: -1);
@@ -41,11 +49,11 @@ final class GrpcTransportTest extends TestCase
 
     public function test_constructor_throws_when_grpc_extension_not_loaded(): void
     {
-        if (\extension_loaded('grpc')) {
+        if (extension_loaded('grpc')) {
             static::markTestSkipped('This test requires grpc extension to NOT be loaded');
         }
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('grpc PHP extension is required');
 
         new GrpcTransport('localhost:4317');
@@ -133,7 +141,7 @@ final class GrpcTransportTest extends TestCase
             static::fail('Expected FailoverTransportException');
         } catch (FailoverTransportException $e) {
             static::assertCount(1, $e->failures);
-            static::assertInstanceOf(\Throwable::class, $e->failures[0]['primary']);
+            static::assertInstanceOf(Throwable::class, $e->failures[0]['primary']);
             static::assertInstanceOf(TransportException::class, $e->failures[0]['failover']);
             static::assertStringContainsString('failover down', $e->failures[0]['failover']->getMessage());
         }
@@ -210,7 +218,7 @@ final class GrpcTransportTest extends TestCase
         $this->skipIfGrpcDependenciesNotAvailable();
 
         $failover = new RecordingTransport();
-        $failover->shutdownException = new \RuntimeException('boom');
+        $failover->shutdownException = new RuntimeException('boom');
 
         $transport = new GrpcTransport(endpoint: 'localhost:4317', failover: $failover);
 
@@ -234,8 +242,8 @@ final class GrpcTransportTest extends TestCase
             self::addToAssertionCount(1);
         } catch (TransportException $e) {
             static::assertTrue(
-                \str_contains($e->getMessage(), 'shutdown_timeout=0ms expired')
-                || \str_contains($e->getMessage(), 'gRPC status'),
+                str_contains($e->getMessage(), 'shutdown_timeout=0ms expired')
+                || str_contains($e->getMessage(), 'gRPC status'),
             );
         }
     }
@@ -261,7 +269,7 @@ final class GrpcTransportTest extends TestCase
             $transport->shutdown();
             self::addToAssertionCount(1);
         } catch (FailoverTransportException $e) {
-            static::assertGreaterThanOrEqual(1, \count($e->failures));
+            static::assertGreaterThanOrEqual(1, count($e->failures));
         }
 
         static::assertSame(1, $failover->shutdownCalls);
@@ -269,11 +277,11 @@ final class GrpcTransportTest extends TestCase
 
     private function skipIfGrpcDependenciesNotAvailable(): void
     {
-        if (!\class_exists(BaseStub::class)) {
+        if (!class_exists(BaseStub::class)) {
             self::markTestSkipped('The grpc/grpc package is not installed');
         }
 
-        if (!\class_exists(Message::class)) {
+        if (!class_exists(Message::class)) {
             self::markTestSkipped('The google/protobuf package is not installed');
         }
     }

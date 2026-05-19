@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Config\Telemetry;
 
+use DateTimeImmutable;
 use Flow\ETL\Config\Telemetry\TelemetryContext;
 use Flow\ETL\Config\Telemetry\TelemetryOptions;
 use Flow\ETL\Loader\StreamLoader;
@@ -21,7 +22,9 @@ use Flow\Telemetry\Resource;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\TracerProvider;
 use Psr\Clock\ClockInterface;
+use RuntimeException;
 
+use function count;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\int_entry;
@@ -122,7 +125,7 @@ final class TelemetryContextTest extends FlowTestCase
         static::assertArrayHasKey('memory.max.mb', $attributes);
 
         $debugLogs = $logProcessor->entriesWithSeverity(Severity::DEBUG);
-        static::assertGreaterThanOrEqual(2, \count($debugLogs));
+        static::assertGreaterThanOrEqual(2, count($debugLogs));
     }
 
     public function test_dataframe_failed_logs_error_and_sets_span_status(): void
@@ -156,7 +159,7 @@ final class TelemetryContextTest extends FlowTestCase
         $rows = rows(row(int_entry('id', 1)));
         $telemetryContext->dataFrameBatchProcessed($rows, $context);
 
-        $exception = new \RuntimeException('Processing failed due to invalid data');
+        $exception = new RuntimeException('Processing failed due to invalid data');
         $telemetryContext->dataFrameFailed($context, $exception);
 
         $errorLogs = $logProcessor->entriesWithSeverity(Severity::ERROR);
@@ -282,7 +285,7 @@ final class TelemetryContextTest extends FlowTestCase
         $telemetryContext->dataFrameStarted($context);
 
         $loader = new StreamLoader('php://memory');
-        $exception = new \RuntimeException('Loading failed due to disk error');
+        $exception = new RuntimeException('Loading failed due to disk error');
 
         $telemetryContext->loadingStarted($loader);
         $telemetryContext->loadingFailed($loader, $exception);
@@ -565,7 +568,7 @@ final class TelemetryContextTest extends FlowTestCase
         $telemetryContext->dataFrameStarted($context);
 
         $transformer = new LimitTransformer(10);
-        $exception = new \RuntimeException('Transformation failed');
+        $exception = new RuntimeException('Transformation failed');
 
         $telemetryContext->transformationStarted($transformer);
         $telemetryContext->transformationFailed($transformer, $exception);
@@ -654,14 +657,14 @@ final class TelemetryContextTest extends FlowTestCase
         static::assertSame('DataFrame flow_dataframe', $startedSpans[0]->name());
     }
 
-    private function createFrozenClock(\DateTimeImmutable $now = new \DateTimeImmutable()): ClockInterface
+    private function createFrozenClock(DateTimeImmutable $now = new DateTimeImmutable()): ClockInterface
     {
         return new readonly class($now) implements ClockInterface {
             public function __construct(
-                private \DateTimeImmutable $now,
+                private DateTimeImmutable $now,
             ) {}
 
-            public function now(): \DateTimeImmutable
+            public function now(): DateTimeImmutable
             {
                 return $this->now;
             }

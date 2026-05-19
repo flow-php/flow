@@ -7,6 +7,7 @@ namespace Flow\ETL\Processor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
+use Generator;
 
 /**
  * Discards all rows and yields an empty batch.
@@ -15,7 +16,7 @@ use Flow\ETL\Rows;
  */
 final readonly class VoidProcessor implements Processor
 {
-    public function process(\Generator $rows, FlowContext $context): \Generator
+    public function process(Generator $rows, FlowContext $context): Generator
     {
         foreach ($rows as $_batch) {
         }

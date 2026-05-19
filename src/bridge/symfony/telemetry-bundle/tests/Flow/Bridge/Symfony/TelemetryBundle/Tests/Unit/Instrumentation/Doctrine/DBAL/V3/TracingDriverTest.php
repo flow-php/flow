@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Instrumentation\Doctrine\DBAL\V3;
 
+use Doctrine\DBAL\Connection as DoctrineConnection;
 use Doctrine\DBAL\Driver;
 use Doctrine\DBAL\Driver\API\ExceptionConverter;
 use Doctrine\DBAL\Driver\Connection;
@@ -34,13 +35,17 @@ use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use stdClass;
+
+use function interface_exists;
 
 #[CoversClass(TracingDriver::class)]
 final class TracingDriverTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\interface_exists('Doctrine\DBAL\VersionAwarePlatformDriver')) {
+        if (!interface_exists('Doctrine\DBAL\VersionAwarePlatformDriver')) {
             self::markTestSkipped('Test requires Doctrine DBAL 3.x');
         }
     }
@@ -259,7 +264,7 @@ final class TracingDriverTest extends TestCase
 
                     public function getNativeConnection(): object
                     {
-                        return new \stdClass();
+                        return new stdClass();
                     }
 
                     public function getServerVersion(): string
@@ -275,12 +280,12 @@ final class TracingDriverTest extends TestCase
 
                     public function prepare(string $sql): Statement
                     {
-                        throw new \RuntimeException('Not implemented');
+                        throw new RuntimeException('Not implemented');
                     }
 
                     public function query(string $sql): Result
                     {
-                        throw new \RuntimeException('Not implemented');
+                        throw new RuntimeException('Not implemented');
                     }
 
                     /** @phpstan-ignore missingType.parameter, missingType.parameter */
@@ -308,15 +313,15 @@ final class TracingDriverTest extends TestCase
 
             /** @phpstan-ignore missingType.parameter */
             public function getSchemaManager(
-                \Doctrine\DBAL\Connection $conn,
+                DoctrineConnection $conn,
                 AbstractPlatform $platform,
             ): AbstractSchemaManager {
-                throw new \RuntimeException('Not implemented');
+                throw new RuntimeException('Not implemented');
             }
 
             public function getExceptionConverter(): ExceptionConverter
             {
-                throw new \RuntimeException('Not implemented');
+                throw new RuntimeException('Not implemented');
             }
         };
     }

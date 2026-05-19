@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\FilesystemBundle\Command;
 
+use DateTimeImmutable;
 use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter\KeepAll;
@@ -15,12 +16,20 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Throwable;
 
+use function count;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
+use function in_array;
+use function json_encode;
+use function ltrim;
+use function rtrim;
+use function sprintf;
+use function str_ends_with;
 
 #[AsCommand(
     name: 'flow:filesystem:ls',
@@ -97,8 +106,8 @@ final class LsCommand extends Command
             $pageSize = type_integer()->cast($input->getOption('page-size'));
             $format = type_string()->assert($input->getOption('format'));
 
-            if (!\in_array($format, ['table', 'json'], true)) {
-                $io->getErrorStyle()->error(\sprintf('Unsupported --format "%s". Use "table" or "json".', $format));
+            if (!in_array($format, ['table', 'json'], true)) {
+                $io->getErrorStyle()->error(sprintf('Unsupported --format "%s". Use "table" or "json".', $format));
 
                 return Command::FAILURE;
             }
@@ -126,7 +135,7 @@ final class LsCommand extends Command
             $filesystem = $table->for($userPath);
 
             $listPath = $this->buildListPath($userPath, $recursive);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $io->getErrorStyle()->error($e->getMessage());
 
             return Command::FAILURE;
@@ -148,11 +157,11 @@ final class LsCommand extends Command
         $uri = $userPath->uri();
         $suffix = $recursive ? '/**/*' : '/*';
 
-        if (\str_ends_with($uri, '://')) {
-            return Path::from($uri . \ltrim($suffix, '/'));
+        if (str_ends_with($uri, '://')) {
+            return Path::from($uri . ltrim($suffix, '/'));
         }
 
-        return Path::from(\rtrim($uri, '/') . $suffix);
+        return Path::from(rtrim($uri, '/') . $suffix);
     }
 
     /**
@@ -174,11 +183,11 @@ final class LsCommand extends Command
                 break;
             }
 
-            $output->writeln((string) \json_encode([
+            $output->writeln((string) json_encode([
                 'uri' => $status->path->uri(),
                 'type' => $status->isFile() ? 'file' : 'directory',
                 'size' => $status->size,
-                'modified' => $status->lastModifiedAt?->format(\DateTimeImmutable::ATOM),
+                'modified' => $status->lastModifiedAt?->format(DateTimeImmutable::ATOM),
             ], JSON_THROW_ON_ERROR));
 
             $count++;
@@ -226,14 +235,14 @@ final class LsCommand extends Command
                 ? [
                     $status->isFile() ? 'file' : 'directory',
                     SizeUnits::humanReadable($status->size),
-                    $status->lastModifiedAt?->format(\DateTimeImmutable::ATOM) ?? '-',
+                    $status->lastModifiedAt?->format(DateTimeImmutable::ATOM) ?? '-',
                     $status->path->uri(),
                 ]
                 : [$status->path->uri()];
 
             $rendered++;
 
-            if (\count($page) === $pageSize) {
+            if (count($page) === $pageSize) {
                 $pageCount++;
                 $io->table($headers, $page);
                 $page = [];
@@ -243,7 +252,7 @@ final class LsCommand extends Command
                 if (
                     !$limitReached
                     && $interactive
-                    && !$io->confirm(\sprintf('Show next %d entries?', $pageSize), true)
+                    && !$io->confirm(sprintf('Show next %d entries?', $pageSize), true)
                 ) {
                     return Command::SUCCESS;
                 }
@@ -256,7 +265,7 @@ final class LsCommand extends Command
         }
 
         if ($hasMore) {
-            $io->getErrorStyle()->warning(\sprintf('Output truncated at %d entries. Raise with --limit=N.', $limit));
+            $io->getErrorStyle()->warning(sprintf('Output truncated at %d entries. Raise with --limit=N.', $limit));
         }
 
         if ($pageCount === 0) {

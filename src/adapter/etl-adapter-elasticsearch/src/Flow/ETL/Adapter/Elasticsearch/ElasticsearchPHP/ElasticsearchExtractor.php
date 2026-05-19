@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
+use Elastic\Elasticsearch\Client as ElasticClient;
+use Elastic\Elasticsearch\ClientBuilder as ElasticClientBuilder;
 use Elastic\Elasticsearch\Exception\ClientResponseException;
 use Elastic\Elasticsearch\Exception\ServerResponseException;
 use Elasticsearch\Client;
@@ -11,13 +13,17 @@ use Elasticsearch\ClientBuilder;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Generator;
+
+use function class_exists;
+use function is_array;
 
 final class ElasticsearchExtractor implements Extractor
 {
     /**
      * @phpstan-ignore-next-line
      */
-    private Client|\Elastic\Elasticsearch\Client|null $client;
+    private Client|ElasticClient|null $client;
 
     /**
      * @var null|array<array-key, mixed>
@@ -45,9 +51,9 @@ final class ElasticsearchExtractor implements Extractor
         $this->client = null;
     }
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
-        $pit = \is_array($this->pointInTimeParams)
+        $pit = is_array($this->pointInTimeParams)
             /**
              * @phpstan-ignore-next-line
              */
@@ -158,13 +164,13 @@ final class ElasticsearchExtractor implements Extractor
     /**
      * @phpstan-ignore-next-line
      */
-    private function client(): Client|\Elastic\Elasticsearch\Client
+    private function client(): Client|ElasticClient
     {
         if ($this->client === null) {
-            if (\class_exists("Elasticsearch\ClientBuilder")) {
+            if (class_exists("Elasticsearch\ClientBuilder")) {
                 $this->client = ClientBuilder::fromConfig($this->config);
             } else {
-                $this->client = \Elastic\Elasticsearch\ClientBuilder::fromConfig($this->config);
+                $this->client = ElasticClientBuilder::fromConfig($this->config);
             }
         }
 

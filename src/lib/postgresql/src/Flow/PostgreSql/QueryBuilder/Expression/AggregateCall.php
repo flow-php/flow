@@ -11,6 +11,9 @@ use Flow\PostgreSql\QueryBuilder\Clause\OrderBy;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 
+use function array_values;
+use function count;
+
 /**
  * Represents an aggregate function call with optional DISTINCT, ORDER BY, and FILTER clauses.
  * Examples: COUNT(*), SUM(x), AVG(DISTINCT value), COUNT(*) FILTER (WHERE condition).
@@ -52,7 +55,7 @@ final readonly class AggregateCall implements Expression
 
         $funcNameNodes = $funcCall->getFuncname();
 
-        if ($funcNameNodes === null || \count($funcNameNodes) === 0) {
+        if (count($funcNameNodes) === 0) {
             throw InvalidAstException::missingRequiredField('funcname', 'FuncCall');
         }
 
@@ -73,27 +76,21 @@ final readonly class AggregateCall implements Expression
         }
 
         $args = [];
-        $argsNodes = $funcCall->getArgs();
 
-        if ($argsNodes !== null) {
-            foreach ($argsNodes as $argNode) {
-                $args[] = ExpressionFactory::fromAst($argNode);
-            }
+        foreach ($funcCall->getArgs() as $argNode) {
+            $args[] = ExpressionFactory::fromAst($argNode);
         }
 
         $star = $funcCall->getAggStar();
         $distinct = $funcCall->getAggDistinct();
 
         $orderBy = [];
-        $orderByNodes = $funcCall->getAggOrder();
 
-        if ($orderByNodes !== null) {
-            foreach ($orderByNodes as $orderByNode) {
-                $sortBy = $orderByNode->getSortBy();
+        foreach ($funcCall->getAggOrder() as $orderByNode) {
+            $sortBy = $orderByNode->getSortBy();
 
-                if ($sortBy !== null) {
-                    $orderBy[] = OrderBy::fromAst($sortBy);
-                }
+            if ($sortBy !== null) {
+                $orderBy[] = OrderBy::fromAst($sortBy);
             }
         }
 
@@ -221,7 +218,7 @@ final readonly class AggregateCall implements Expression
             $this->args,
             $this->star,
             $this->distinct,
-            \array_values($orderBy),
+            array_values($orderBy),
             $this->filter,
         );
     }

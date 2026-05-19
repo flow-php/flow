@@ -11,6 +11,9 @@ use Flow\ETL\Processor;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema\Definition;
+use Generator;
+
+use function serialize;
 
 /**
  * Applies window functions over partitioned and ordered data.
@@ -27,7 +30,7 @@ final readonly class WindowProcessor implements Processor
         private WindowFunction $function,
     ) {}
 
-    public function process(\Generator $rows, FlowContext $context): \Generator
+    public function process(Generator $rows, FlowContext $context): Generator
     {
         $currentPartitionKey = null;
         /** @var array<Row> $partitionRows */
@@ -80,7 +83,7 @@ final readonly class WindowProcessor implements Processor
             }
         }
 
-        return \serialize($keyParts);
+        return serialize($keyParts);
     }
 
     /**

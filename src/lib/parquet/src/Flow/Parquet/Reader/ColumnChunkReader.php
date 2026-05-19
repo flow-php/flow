@@ -13,6 +13,17 @@ use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Thrift\CompactProtocol;
 use Flow\Parquet\Thrift\PhpFileStream;
+use Flow\Parquet\ThriftModel\PageHeader as ThriftPageHeader;
+use Generator;
+use Throwable;
+
+use function fclose;
+use function fseek;
+use function ftell;
+use function fwrite;
+use function rewind;
+
+use const SEEK_END;
 
 final readonly class ColumnChunkReader
 {
@@ -24,7 +35,7 @@ final readonly class ColumnChunkReader
     /**
      * @return \Generator<ReadFlatColumnValues>
      */
-    public function read(ColumnChunk $columnChunk, FlatColumn $column, SourceStream $stream): \Generator
+    public function read(ColumnChunk $columnChunk, FlatColumn $column, SourceStream $stream): Generator
     {
         $pageStream = fopen('php://temp', 'rb+');
 
@@ -32,9 +43,14 @@ final readonly class ColumnChunkReader
             throw new RuntimeException('Cannot open temporary stream');
         }
 
-        /** @phpstan-ignore-next-line */
-        \fwrite($pageStream, $stream->read($columnChunk->totalCompressedSize(), $columnChunk->pageOffset()));
-        \rewind($pageStream);
+        $compressedSize = $columnChunk->totalCompressedSize();
+
+        if ($compressedSize <= 0) {
+            throw new RuntimeException('Cannot read column chunk with non-positive compressed size');
+        }
+
+        fwrite($pageStream, $stream->read($compressedSize, $columnChunk->pageOffset()));
+        rewind($pageStream);
 
         $header = $this->readHeader($pageStream);
 
@@ -48,13 +64,13 @@ final readonly class ColumnChunkReader
             // from total_compressed_size. Extend the buffer with the missing bytes.
             if ($columnChunk->dictionaryPageOffset() === null) {
                 /** @var int<1, max> $dictHeaderSize */
-                $dictHeaderSize = (int) \ftell($pageStream);
-                \fseek($pageStream, 0, \SEEK_END);
-                \fwrite($pageStream, $stream->read(
+                $dictHeaderSize = (int) ftell($pageStream);
+                fseek($pageStream, 0, SEEK_END);
+                fwrite($pageStream, $stream->read(
                     $dictHeaderSize,
                     $columnChunk->pageOffset() + $columnChunk->totalCompressedSize(),
                 ));
-                \fseek($pageStream, $dictHeaderSize);
+                fseek($pageStream, $dictHeaderSize);
             }
 
             $dictionary = $this->pageReader->readDictionary($column, $header, $columnChunk->codec(), $pageStream);
@@ -88,7 +104,7 @@ final readonly class ColumnChunkReader
             }
         }
 
-        \fclose($pageStream);
+        fclose($pageStream);
     }
 
     /**
@@ -96,20 +112,17 @@ final readonly class ColumnChunkReader
      */
     private function readHeader($stream): ?PageHeader
     {
-        $currentOffset = \ftell($stream);
+        $currentOffset = ftell($stream);
 
         try {
-            $thriftHeader = new \Flow\Parquet\ThriftModel\PageHeader();
+            $thriftHeader = new ThriftPageHeader();
             @$thriftHeader->read(new CompactProtocol(new PhpFileStream($stream)));
 
-            if ($thriftHeader->type === null) {
-                return null;
-            }
-
             return PageHeader::fromThrift($thriftHeader, $this->options);
-        } catch (\Throwable) {
-            /** @phpstan-ignore-next-line */
-            \fseek($stream, $currentOffset);
+        } catch (Throwable) {
+            if ($currentOffset !== false) {
+                fseek($stream, $currentOffset);
+            }
 
             return null;
         }

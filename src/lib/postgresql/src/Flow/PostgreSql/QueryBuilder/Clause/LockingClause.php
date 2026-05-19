@@ -70,16 +70,14 @@ final readonly class LockingClause implements AstConvertible
         $tables = [];
         $lockedRels = $lockingClause->getLockedRels();
 
-        if ($lockedRels !== null) {
-            foreach ($lockedRels as $relNode) {
-                $rangeVar = $relNode->getRangeVar();
+        foreach ($lockedRels as $relNode) {
+            $rangeVar = $relNode->getRangeVar();
 
-                if ($rangeVar !== null) {
-                    $relname = $rangeVar->getRelname();
+            if ($rangeVar !== null) {
+                $relname = $rangeVar->getRelname();
 
-                    if ($relname !== '') {
-                        $tables[] = $relname;
-                    }
+                if ($relname !== '') {
+                    $tables[] = $relname;
                 }
             }
         }

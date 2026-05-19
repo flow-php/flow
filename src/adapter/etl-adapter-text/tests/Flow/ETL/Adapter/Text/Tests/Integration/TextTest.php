@@ -7,12 +7,15 @@ namespace Flow\ETL\Adapter\Text\Tests\Integration;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Tests\OperatingSystem;
 
+use function file_exists;
+use function file_get_contents;
 use function Flow\ETL\Adapter\Text\to_text;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\generate_random_string;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\string_entry;
+use function unlink;
 
 final class TextTest extends FlowTestCase
 {
@@ -35,7 +38,7 @@ final class TextTest extends FlowTestCase
             ->write(to_text($path))
             ->run();
 
-        $content = \file_get_contents($path);
+        $content = file_get_contents($path);
         static::assertNotFalse($content);
         static::assertStringContainsString(<<<'TEXT'
             Norbert
@@ -43,8 +46,8 @@ final class TextTest extends FlowTestCase
             Dawid
             TEXT, $content);
 
-        if (\file_exists($path)) {
-            \unlink($path);
+        if (file_exists($path)) {
+            unlink($path);
         }
     }
 }

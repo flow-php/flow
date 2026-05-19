@@ -52,7 +52,7 @@ final readonly class OperatorCondition implements Condition
 
         $nameNodes = $aExpr->getName();
 
-        if ($nameNodes === null || $nameNodes->count() === 0) {
+        if ($nameNodes->count() === 0) {
             throw InvalidAstException::missingRequiredField('name', 'A_Expr');
         }
 

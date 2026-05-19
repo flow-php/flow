@@ -11,6 +11,9 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema;
+use Generator;
+
+use function extension_loaded;
 
 final readonly class AdaptiveParquetEngine implements ParquetEngine
 {
@@ -18,7 +21,7 @@ final readonly class AdaptiveParquetEngine implements ParquetEngine
 
     public function __construct(ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN, Options $options = new Options())
     {
-        $this->delegate = \extension_loaded('arrow')
+        $this->delegate = extension_loaded('arrow')
             ? new ArrowParquetEngine($options)
             : new PhpParquetEngine($byteOrder, $options);
     }
@@ -43,7 +46,7 @@ final readonly class AdaptiveParquetEngine implements ParquetEngine
         array $columns = [],
         ?int $limit = null,
         ?int $offset = null,
-    ): \Generator {
+    ): Generator {
         return $this->delegate->readValues($stream, $schema, $columns, $limit, $offset);
     }
 

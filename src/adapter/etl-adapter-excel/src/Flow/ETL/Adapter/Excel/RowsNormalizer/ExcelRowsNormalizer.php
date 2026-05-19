@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel\RowsNormalizer;
 
+use BackedEnum;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
@@ -24,6 +25,8 @@ use Flow\ETL\Row\Entry\TimeEntry;
 use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Row\Entry\XMLElementEntry;
 use Flow\ETL\Row\Entry\XMLEntry;
+
+use function json_encode;
 
 final readonly class ExcelRowsNormalizer
 {
@@ -89,7 +92,7 @@ final readonly class ExcelRowsNormalizer
     {
         $value = $entry->value();
 
-        if ($value instanceof \BackedEnum) {
+        if ($value instanceof BackedEnum) {
             return (string) $value->value;
         }
 
@@ -98,6 +101,6 @@ final readonly class ExcelRowsNormalizer
 
     private function normalizeToJson(mixed $value): ?string
     {
-        return $value !== null ? \json_encode($value, JSON_THROW_ON_ERROR) : null;
+        return $value !== null ? json_encode($value, JSON_THROW_ON_ERROR) : null;
     }
 }

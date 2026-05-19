@@ -16,6 +16,10 @@ use Flow\Parquet\ParquetFile\Schema\ListElement;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
+use function array_merge;
+use function range;
+
 final class WriteFlatColumnValuesTest extends TestCase
 {
     public function test_flat_column(): void
@@ -74,17 +78,17 @@ final class WriteFlatColumnValuesTest extends TestCase
         ]));
 
         $faker = Factory::create();
-        $rows = \array_merge(...\array_map(
+        $rows = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'struct' => [
                         'list_of_string' => ($i % 2) === 0
-                            ? \array_map(static fn($i) => $faker->text(10), \range(1, 3))
+                            ? array_map(static fn($i) => $faker->text(10), range(1, 3))
                             : null,
                     ],
                 ],
             ],
-            \range(1, 10),
+            range(1, 10),
         ));
 
         $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
@@ -185,17 +189,17 @@ final class WriteFlatColumnValuesTest extends TestCase
         ]));
 
         $faker = Factory::create();
-        $rows = \array_merge(...\array_map(
+        $rows = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'struct' => [
                         'list_of_string' => ($i % 2) === 0
-                            ? \array_map(static fn($i) => $faker->text(10), \range(1, 5))
+                            ? array_map(static fn($i) => $faker->text(10), range(1, 5))
                             : null,
                     ],
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));

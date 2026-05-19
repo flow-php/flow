@@ -46,22 +46,18 @@ final readonly class WindowDefinition implements AstConvertible
         $partitionBy = [];
         $partitionClause = $windowDef->getPartitionClause();
 
-        if ($partitionClause !== null) {
-            foreach ($partitionClause as $partNode) {
-                $partitionBy[] = ExpressionFactory::fromAst($partNode);
-            }
+        foreach ($partitionClause as $partNode) {
+            $partitionBy[] = ExpressionFactory::fromAst($partNode);
         }
 
         $orderBy = [];
         $orderClause = $windowDef->getOrderClause();
 
-        if ($orderClause !== null) {
-            foreach ($orderClause as $orderNode) {
-                $sortBy = $orderNode->getSortBy();
+        foreach ($orderClause as $orderNode) {
+            $sortBy = $orderNode->getSortBy();
 
-                if ($sortBy !== null) {
-                    $orderBy[] = OrderBy::fromAst($sortBy);
-                }
+            if ($sortBy !== null) {
+                $orderBy[] = OrderBy::fromAst($sortBy);
             }
         }
 
@@ -137,12 +133,16 @@ final readonly class WindowDefinition implements AstConvertible
         if ($this->frame !== null) {
             $windowDef->setFrameOptions(0);
 
-            if ($this->frame->startBound()->offset() !== null) {
-                $windowDef->setStartOffset($this->frame->startBound()->toAst());
+            $startBound = $this->frame->startBound();
+
+            if ($startBound->offset() !== null) {
+                $windowDef->setStartOffset($startBound->toAst());
             }
 
-            if ($this->frame->endBound() !== null && $this->frame->endBound()->offset() !== null) {
-                $windowDef->setEndOffset($this->frame->endBound()->toAst());
+            $endBound = $this->frame->endBound();
+
+            if ($endBound !== null && $endBound->offset() !== null) {
+                $windowDef->setEndOffset($endBound->toAst());
             }
         }
 

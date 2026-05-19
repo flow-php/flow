@@ -8,6 +8,7 @@ use Flow\Telemetry\ErrorHandler\ErrorHandler;
 use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\Meter\Metric;
 use Flow\Telemetry\Meter\MetricProcessor;
+use Throwable;
 
 /**
  * Forwards metrics to multiple processors.
@@ -36,7 +37,7 @@ final readonly class CompositeMetricProcessor implements MetricProcessor
                 if (!$processor->flush()) {
                     $success = false;
                 }
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->errorHandler->handle($e);
                 $success = false;
             }
@@ -50,7 +51,7 @@ final readonly class CompositeMetricProcessor implements MetricProcessor
         foreach ($this->processors as $processor) {
             try {
                 $processor->process($metric);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->errorHandler->handle($e);
             }
         }
@@ -71,7 +72,7 @@ final readonly class CompositeMetricProcessor implements MetricProcessor
         foreach ($this->processors as $processor) {
             try {
                 $processor->shutdown();
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->errorHandler->handle($e);
             }
         }

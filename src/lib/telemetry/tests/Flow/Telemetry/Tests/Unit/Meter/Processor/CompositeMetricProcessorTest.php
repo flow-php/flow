@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Meter\Processor;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Meter\Metric;
 use Flow\Telemetry\Meter\MetricProcessor;
@@ -13,13 +14,14 @@ use Flow\Telemetry\Tests\Mother\ErrorHandlerSpy;
 use Flow\Telemetry\Tests\Mother\InstrumentationScopeMother;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class CompositeMetricProcessorTest extends TestCase
 {
     public function test_flush_continues_after_child_throws_and_routes_to_error_handler(): void
     {
         $throwing = $this->createMock(MetricProcessor::class);
-        $throwing->method('flush')->willThrowException(new \RuntimeException('flush blew up'));
+        $throwing->method('flush')->willThrowException(new RuntimeException('flush blew up'));
 
         $sibling = $this->createMock(MetricProcessor::class);
         $sibling->expects(self::once())->method('flush')->willReturn(true);
@@ -72,7 +74,7 @@ final class CompositeMetricProcessorTest extends TestCase
     public function test_process_continues_after_child_throws_and_routes_to_error_handler(): void
     {
         $throwing = $this->createMock(MetricProcessor::class);
-        $throwing->method('process')->willThrowException(new \RuntimeException('child blew up'));
+        $throwing->method('process')->willThrowException(new RuntimeException('child blew up'));
 
         $sibling = $this->createMock(MetricProcessor::class);
         $sibling->expects(self::once())->method('process');
@@ -100,7 +102,7 @@ final class CompositeMetricProcessorTest extends TestCase
             MetricType::COUNTER,
             1,
             Attributes::create(['key' => 'value']),
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
             ResourceMother::default(),
             InstrumentationScopeMother::default(),
         );

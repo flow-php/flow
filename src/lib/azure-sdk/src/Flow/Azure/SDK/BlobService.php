@@ -28,9 +28,23 @@ use Flow\Azure\SDK\BlobService\PutBlockBlobBlockList\SimpleXMLSerializer;
 use Flow\Azure\SDK\Exception\AzureException;
 use Flow\Azure\SDK\Exception\InvalidArgumentException;
 use Flow\Azure\SDK\Normalizer\SimpleXMLNormalizer;
+use Generator;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Log\LoggerInterface;
+
+use function array_key_exists;
+use function array_merge;
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
+use function gmdate;
+use function is_array;
+use function is_resource;
+use function is_string;
+use function strlen;
 
 final readonly class BlobService implements BlobServiceInterface
 {
@@ -57,13 +71,13 @@ final readonly class BlobService implements BlobServiceInterface
             $options->toURIParameters(),
         ));
 
-        $request = $request->withHeader('date', \gmdate(
+        $request = $request->withHeader('date', gmdate(
             'D, d M Y H:i:s T',
             time(),
         ))->withHeader('x-ms-copy-source', $this->urlFactory->create($this->configuration, $fromBlob));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header, $value);
         }
 
         $this->logger->info('Azure - Blob Service - Copy Blob', ['request' => $request]);
@@ -94,10 +108,10 @@ final readonly class BlobService implements BlobServiceInterface
             $options->toURIParameters(),
         ));
 
-        $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
+        $request = $request->withHeader('date', gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header, $value);
         }
 
         $this->logger->info('Azure - Blob Service - Delete Blob', ['request' => $request]);
@@ -127,10 +141,10 @@ final readonly class BlobService implements BlobServiceInterface
             $options->toURIParameters(),
         ));
 
-        $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
+        $request = $request->withHeader('date', gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header, $value);
         }
 
         $this->logger->info('Azure - Blob Service - Delete Container', ['request' => $request]);
@@ -161,10 +175,10 @@ final readonly class BlobService implements BlobServiceInterface
         ));
 
         $request = $request->withHeader('content-type', 'application/x-www-form-urlencoded');
-        $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
+        $request = $request->withHeader('date', gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header, $value);
         }
 
         $this->logger->info('Azure - Blob Service - Get Blob', ['request' => $request]);
@@ -199,10 +213,10 @@ final readonly class BlobService implements BlobServiceInterface
         ));
 
         $request = $request->withHeader('content-type', 'application/x-www-form-urlencoded');
-        $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
+        $request = $request->withHeader('date', gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header, $value);
         }
 
         $this->logger->info('Azure - Blob Service - Get Blob Properties', ['request' => $request]);
@@ -233,13 +247,13 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $this->httpFactory->get($this->urlFactory->create(
             $this->configuration,
             $blob,
-            \array_merge($options->toURIParameters(), ['comp' => 'blocklist']),
+            array_merge($options->toURIParameters(), ['comp' => 'blocklist']),
         ));
 
-        $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
+        $request = $request->withHeader('date', gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header, $value);
         }
 
         $this->logger->info('Azure - Blob Service - Get Block Blob Block List', ['request' => $request]);
@@ -260,77 +274,49 @@ final readonly class BlobService implements BlobServiceInterface
 
         $blocks = [];
 
-        if (\array_key_exists('CommittedBlocks', $normalized) && \is_array($normalized['CommittedBlocks'])) {
-            $committedBlocks = $normalized['CommittedBlocks'];
+        if (array_key_exists('CommittedBlocks', $normalized) && is_array($normalized['CommittedBlocks'])) {
+            $committedBlocks = type_array()->assert($normalized['CommittedBlocks']);
 
-            if (\array_key_exists('Block', $committedBlocks)) {
-                $blockData = $committedBlocks['Block'];
+            if (array_key_exists('Block', $committedBlocks) && is_array($committedBlocks['Block'])) {
+                $blockData = type_array()->assert($committedBlocks['Block']);
 
-                if (
-                    \is_array($blockData)
-                    && \array_key_exists('Name', $blockData)
-                    && \array_key_exists('Size', $blockData)
-                ) {
-                    // Single block case
-                    $name = $blockData['Name'];
-                    $size = $blockData['Size'];
-
-                    if (\is_string($name) && (\is_int($size) || \is_string($size))) {
-                        $blocks[] = new Block($name, BlockState::COMMITTED, (int) $size);
-                    }
-                } elseif (\is_array($blockData)) {
-                    // Multiple blocks case
-                    foreach ($blockData as $block) {
-                        if (
-                            \is_array($block)
-                            && \array_key_exists('Name', $block)
-                            && \array_key_exists('Size', $block)
-                        ) {
-                            $name = $block['Name'];
-                            $size = $block['Size'];
-
-                            if (\is_string($name) && (\is_int($size) || \is_string($size))) {
-                                $blocks[] = new Block($name, BlockState::COMMITTED, (int) $size);
-                            }
-                        }
+                if (array_key_exists('Name', $blockData)) {
+                    $blocks[] = new Block(
+                        type_string()->assert($blockData['Name']),
+                        BlockState::COMMITTED,
+                        (int) type_union(type_integer(), type_string())->assert($blockData['Size']),
+                    );
+                } else {
+                    foreach (type_list(type_array())->assert($blockData) as $blockEntry) {
+                        $blocks[] = new Block(
+                            type_string()->assert($blockEntry['Name']),
+                            BlockState::COMMITTED,
+                            (int) type_union(type_integer(), type_string())->assert($blockEntry['Size']),
+                        );
                     }
                 }
             }
         }
 
-        if (\array_key_exists('UncommittedBlocks', $normalized) && \is_array($normalized['UncommittedBlocks'])) {
-            $uncommittedBlocks = $normalized['UncommittedBlocks'];
+        if (array_key_exists('UncommittedBlocks', $normalized) && is_array($normalized['UncommittedBlocks'])) {
+            $uncommittedBlocks = type_array()->assert($normalized['UncommittedBlocks']);
 
-            if (\array_key_exists('Block', $uncommittedBlocks)) {
-                $blockData = $uncommittedBlocks['Block'];
+            if (array_key_exists('Block', $uncommittedBlocks) && is_array($uncommittedBlocks['Block'])) {
+                $blockData = type_array()->assert($uncommittedBlocks['Block']);
 
-                if (
-                    \is_array($blockData)
-                    && \array_key_exists('Name', $blockData)
-                    && \array_key_exists('Size', $blockData)
-                ) {
-                    // Single block case
-                    $name = $blockData['Name'];
-                    $size = $blockData['Size'];
-
-                    if (\is_string($name) && (\is_int($size) || \is_string($size))) {
-                        $blocks[] = new Block($name, BlockState::UNCOMMITTED, (int) $size);
-                    }
-                } elseif (\is_array($blockData)) {
-                    // Multiple blocks case
-                    foreach ($blockData as $block) {
-                        if (
-                            \is_array($block)
-                            && \array_key_exists('Name', $block)
-                            && \array_key_exists('Size', $block)
-                        ) {
-                            $name = $block['Name'];
-                            $size = $block['Size'];
-
-                            if (\is_string($name) && (\is_int($size) || \is_string($size))) {
-                                $blocks[] = new Block($name, BlockState::UNCOMMITTED, (int) $size);
-                            }
-                        }
+                if (array_key_exists('Name', $blockData)) {
+                    $blocks[] = new Block(
+                        type_string()->assert($blockData['Name']),
+                        BlockState::UNCOMMITTED,
+                        (int) type_union(type_integer(), type_string())->assert($blockData['Size']),
+                    );
+                } else {
+                    foreach (type_list(type_array())->assert($blockData) as $blockEntry) {
+                        $blocks[] = new Block(
+                            type_string()->assert($blockEntry['Name']),
+                            BlockState::UNCOMMITTED,
+                            (int) type_union(type_integer(), type_string())->assert($blockEntry['Size']),
+                        );
                     }
                 }
             }
@@ -351,10 +337,10 @@ final readonly class BlobService implements BlobServiceInterface
             array_merge($options->toURIParameters(), ['restype' => 'container']),
         ));
 
-        $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
+        $request = $request->withHeader('date', gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header, $value);
         }
 
         $this->logger->info('Azure - Blob Service - Get Container Properties', ['request' => $request]);
@@ -383,18 +369,18 @@ final readonly class BlobService implements BlobServiceInterface
      *
      * @return \Generator<Blob>
      */
-    public function listBlobs(ListBlobOptions $options = new ListBlobOptions()): \Generator
+    public function listBlobs(ListBlobOptions $options = new ListBlobOptions()): Generator
     {
         $request = $this->httpFactory->get($this->urlFactory->create(
             $this->configuration,
-            queryParameters: \array_merge($options->toURIParameters(), ['restype' => 'container', 'comp' => 'list']),
+            queryParameters: array_merge($options->toURIParameters(), ['restype' => 'container', 'comp' => 'list']),
         ));
 
         $request = $request->withHeader('content-type', 'application/x-www-form-urlencoded');
-        $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
+        $request = $request->withHeader('date', gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header, $value);
         }
 
         $this->logger->info('Azure - Blob Service - List Blobs', ['request' => $request]);
@@ -413,34 +399,24 @@ final readonly class BlobService implements BlobServiceInterface
 
         $normalized = (new SimpleXMLNormalizer())->toArray($response->getBody()->getContents());
 
-        if ($normalized['Blobs'] === null) {
-            return;
-        }
+        if (array_key_exists('Blobs', $normalized) && is_array($normalized['Blobs'])) {
+            $blobsData = type_array()->assert($normalized['Blobs']);
 
-        $blobsData = $normalized['Blobs'];
+            if (array_key_exists('Blob', $blobsData) && is_array($blobsData['Blob'])) {
+                $blobData = type_array()->assert($blobsData['Blob']);
 
-        if (\is_array($blobsData) && \array_key_exists('Blob', $blobsData)) {
-            $blobData = $blobsData['Blob'];
-
-            if (\is_array($blobData) && \array_key_exists('Name', $blobData)) {
-                // Single blob case
-                yield new Blob($blobData);
-
-                return;
-            }
-
-            if (\is_array($blobData)) {
-                // Multiple blobs case
-                foreach ($blobData as $blob) {
-                    if (\is_array($blob)) {
-                        yield new Blob($blob);
+                if (array_key_exists('Name', $blobData)) {
+                    yield new Blob($blobData);
+                } else {
+                    foreach (type_list(type_array())->assert($blobData) as $blobEntry) {
+                        yield new Blob($blobEntry);
                     }
                 }
             }
         }
 
-        if (\is_string($normalized['NextMarker'])) {
-            yield from $this->listBlobs($options->withMarker($normalized['NextMarker']));
+        if (array_key_exists('NextMarker', $normalized) && is_string($normalized['NextMarker'])) {
+            yield from $this->listBlobs($options->withMarker(type_string()->assert($normalized['NextMarker'])));
         }
     }
 
@@ -456,7 +432,7 @@ final readonly class BlobService implements BlobServiceInterface
         PutBlockBlobOptions $options = new PutBlockBlobOptions(),
     ): void {
         if ($content !== null) {
-            if (!\is_resource($content) && !\is_string($content)) {
+            if (!is_resource($content) && !is_string($content)) {
                 throw new InvalidArgumentException('Content must be a resource or a string');
             }
 
@@ -474,10 +450,10 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $request
             ->withHeader('content-type', 'application/octet-stream')
             ->withHeader('x-ms-blob-content-type', 'application/octet-stream')
-            ->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
+            ->withHeader('date', gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header, $value);
         }
 
         if ($content) {
@@ -521,16 +497,16 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $this->httpFactory->put($this->urlFactory->create(
             $this->configuration,
             $path,
-            \array_merge($options->toURIParameters(), ['comp' => 'block', 'blockid' => $blockId]),
+            array_merge($options->toURIParameters(), ['comp' => 'block', 'blockid' => $blockId]),
         ));
 
         $request = $request
             ->withHeader('content-type', 'application/x-www-form-urlencoded')
-            ->withHeader('date', \gmdate('D, d M Y H:i:s T', time()))
+            ->withHeader('date', gmdate('D, d M Y H:i:s T', time()))
             ->withHeader('content-length', (string) $size);
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header, $value);
         }
 
         $request = $request->withBody($this->httpFactory->stream($content))->withHeader(
@@ -564,21 +540,21 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $this->httpFactory->put($this->urlFactory->create(
             $this->configuration,
             $path,
-            queryParameters: \array_merge($options->toURIParameters(), ['comp' => 'blocklist']),
+            queryParameters: array_merge($options->toURIParameters(), ['comp' => 'blocklist']),
         ));
 
-        $request = $request->withHeader(
-            'content-type',
-            'application/x-www-form-urlencoded',
-        )->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
+        $request = $request->withHeader('content-type', 'application/x-www-form-urlencoded')->withHeader('date', gmdate(
+            'D, d M Y H:i:s T',
+            time(),
+        ));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header, $value);
         }
 
         $request = $request->withBody($this->httpFactory->stream(
             $blockListString = $serializer->serialize($blockList),
-        ))->withHeader('content-length', (string) \strlen($blockListString));
+        ))->withHeader('content-length', (string) strlen($blockListString));
 
         $this->logger->info('Azure - Blob Service - Put Block Blob Block List', ['request' => $request]);
 
@@ -604,13 +580,13 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $this->httpFactory->put($this->urlFactory->create(
             $this->configuration,
             null,
-            \array_merge($options->toURIParameters(), ['restype' => 'container']),
+            array_merge($options->toURIParameters(), ['restype' => 'container']),
         ));
 
-        $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
+        $request = $request->withHeader('date', gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header, $value);
         }
 
         $this->logger->info('Azure - Blob Service - Put Container', ['request' => $request]);

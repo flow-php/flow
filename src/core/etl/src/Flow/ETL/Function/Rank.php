@@ -9,6 +9,9 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Window;
+use RuntimeException as BaseRuntimeException;
+
+use function count;
 
 final class Rank implements WindowFunction
 {
@@ -25,12 +28,12 @@ final class Rank implements WindowFunction
 
         $orderBy = $this->window()->order();
 
-        if (\count($orderBy) > 1) {
-            throw new \RuntimeException('Rank window function supports only one order by column');
+        if (count($orderBy) > 1) {
+            throw new BaseRuntimeException('Rank window function supports only one order by column');
         }
 
-        if (\count($orderBy) === 0) {
-            throw new \RuntimeException('Rank window function requires to be ordered by one column');
+        if (count($orderBy) === 0) {
+            throw new BaseRuntimeException('Rank window function requires to be ordered by one column');
         }
 
         $value = $row->valueOf($orderBy[0]->name());

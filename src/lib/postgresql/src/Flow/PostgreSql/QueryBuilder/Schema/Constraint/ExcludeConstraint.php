@@ -14,6 +14,8 @@ use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Expression\Column;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 
+use function count;
+
 final readonly class ExcludeConstraint implements TableConstraint
 {
     /**
@@ -129,7 +131,7 @@ final readonly class ExcludeConstraint implements TableConstraint
     {
         $indexElem = new IndexElem();
 
-        if ($expression instanceof Column && \count($expression->parts()) === 1) {
+        if ($expression instanceof Column && count($expression->parts()) === 1) {
             $indexElem->setName($expression->columnName());
 
             return $indexElem;

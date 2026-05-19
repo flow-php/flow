@@ -8,6 +8,8 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function array_filter;
+
 final class ArrayKeep extends ScalarFunctionChain
 {
     /**
@@ -30,6 +32,6 @@ final class ArrayKeep extends ScalarFunctionChain
 
         $value = (new Parameter($this->value))->eval($row, $context);
 
-        return \array_filter($array, static fn($item) => $item === $value);
+        return array_filter($array, static fn($item) => $item === $value);
     }
 }

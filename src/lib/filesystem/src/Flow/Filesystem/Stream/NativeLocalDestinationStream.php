@@ -9,6 +9,19 @@ use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Path;
 
+use function fclose;
+use function fopen;
+use function fseek;
+use function fwrite;
+use function gettype;
+use function is_resource;
+use function rewind;
+use function stream_copy_to_stream;
+use function stream_get_meta_data;
+use function strlen;
+
+use const SEEK_END;
+
 final class NativeLocalDestinationStream implements DestinationStream
 {
     /**
@@ -24,8 +37,8 @@ final class NativeLocalDestinationStream implements DestinationStream
         private readonly Path $path,
         $handle,
     ) {
-        if (!\is_resource($handle)) {
-            throw new InvalidArgumentException('DestinationStream expects resource type, given: ' . \gettype($handle));
+        if (!is_resource($handle)) {
+            throw new InvalidArgumentException('DestinationStream expects resource type, given: ' . gettype($handle));
         }
 
         $this->handle = $handle;
@@ -33,7 +46,7 @@ final class NativeLocalDestinationStream implements DestinationStream
 
     public static function openAppend(Path $path): self
     {
-        $resource = \fopen($path->path(), 'ab', false, $path->context()->resource());
+        $resource = fopen($path->path(), 'ab', false, $path->context()->resource());
 
         if ($resource === false) {
             throw new RuntimeException("Cannot open file: {$path->uri()}");
@@ -44,7 +57,7 @@ final class NativeLocalDestinationStream implements DestinationStream
 
     public static function openBlank(Path $path): self
     {
-        $resource = \fopen($path->path(), 'wb', false, $path->context()->resource());
+        $resource = fopen($path->path(), 'wb', false, $path->context()->resource());
 
         if ($resource === false) {
             throw new RuntimeException("Cannot open file: {$path->uri()}");
@@ -59,14 +72,14 @@ final class NativeLocalDestinationStream implements DestinationStream
             throw new RuntimeException('Cannot write to closed stream');
         }
 
-        \fseek($this->handle(), 0, \SEEK_END);
+        fseek($this->handle(), 0, SEEK_END);
 
-        $written = \fwrite($this->handle(), $data);
+        $written = fwrite($this->handle(), $data);
 
-        if ($written === false || $written !== \strlen($data)) {
+        if ($written === false || $written !== strlen($data)) {
             throw new RuntimeException(
                 'Failed to write all bytes to stream, expected '
-                . \strlen($data)
+                . strlen($data)
                 . ' bytes, written: '
                 . ($written === false ? '0' : $written),
             );
@@ -77,13 +90,13 @@ final class NativeLocalDestinationStream implements DestinationStream
 
     public function close(): void
     {
-        if (!\is_resource($this->handle)) {
+        if (!is_resource($this->handle)) {
             $this->handle = null;
 
             return;
         }
 
-        \fclose($this->handle());
+        fclose($this->handle());
         $this->handle = null;
     }
 
@@ -92,9 +105,9 @@ final class NativeLocalDestinationStream implements DestinationStream
      */
     public function fromResource($resource): self
     {
-        if (!\is_resource($resource)) {
+        if (!is_resource($resource)) {
             throw new InvalidArgumentException(
-                'DestinationStream::fromResource expects resource type, given: ' . \gettype($resource),
+                'DestinationStream::fromResource expects resource type, given: ' . gettype($resource),
             );
         }
 
@@ -102,20 +115,20 @@ final class NativeLocalDestinationStream implements DestinationStream
             throw new RuntimeException('Cannot write to closed stream');
         }
 
-        $meta = \stream_get_meta_data($resource);
+        $meta = stream_get_meta_data($resource);
 
         if ($meta['seekable']) {
-            \rewind($resource);
+            rewind($resource);
         }
 
-        \stream_copy_to_stream($resource, $this->handle());
+        stream_copy_to_stream($resource, $this->handle(), null);
 
         return $this;
     }
 
     public function isOpen(): bool
     {
-        return \is_resource($this->handle);
+        return is_resource($this->handle);
     }
 
     public function path(): Path

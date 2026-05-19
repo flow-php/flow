@@ -8,6 +8,9 @@ use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_literal;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function str_repeat;
+use function strlen;
+use function substr;
 
 final readonly class Mask implements Sanitizer
 {
@@ -53,12 +56,12 @@ final readonly class Mask implements Sanitizer
             return '';
         }
 
-        $length = \strlen($value);
+        $length = strlen($value);
 
         if ($this->offset >= $length) {
             return $value;
         }
 
-        return \substr($value, 0, $this->offset) . \str_repeat($this->character, $length - $this->offset);
+        return substr($value, 0, $this->offset) . str_repeat($this->character, $length - $this->offset);
     }
 }

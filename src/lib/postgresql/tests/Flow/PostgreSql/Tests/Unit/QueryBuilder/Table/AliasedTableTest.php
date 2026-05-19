@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Table;
 
+use Flow\PostgreSql\Protobuf\AST\Alias;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\QueryBuilder\Table\AliasedTable;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
 use PHPUnit\Framework\TestCase;
@@ -32,12 +35,12 @@ final class AliasedTableTest extends TestCase
         static::assertTrue($node->hasRangeVar());
 
         $rangeVar = $node->getRangeVar();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\RangeVar::class, $rangeVar);
+        static::assertInstanceOf(RangeVar::class, $rangeVar);
         static::assertSame('users', $rangeVar->getRelname());
         static::assertSame('public', $rangeVar->getSchemaname());
 
         $alias = $rangeVar->getAlias();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\Alias::class, $alias);
+        static::assertInstanceOf(Alias::class, $alias);
         static::assertSame('u', $alias->getAliasname());
         static::assertCount(0, $alias->getColnames());
     }
@@ -52,9 +55,9 @@ final class AliasedTableTest extends TestCase
         static::assertTrue($node->hasRangeVar());
 
         $rangeVar = $node->getRangeVar();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\RangeVar::class, $rangeVar);
+        static::assertInstanceOf(RangeVar::class, $rangeVar);
         $alias = $rangeVar->getAlias();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\Alias::class, $alias);
+        static::assertInstanceOf(Alias::class, $alias);
 
         static::assertSame('u', $alias->getAliasname());
 
@@ -62,11 +65,11 @@ final class AliasedTableTest extends TestCase
         static::assertCount(2, $colnames);
 
         $col1 = $colnames[0]->getString();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\PBString::class, $col1);
+        static::assertInstanceOf(PBString::class, $col1);
         static::assertSame('id', $col1->getSval());
 
         $col2 = $colnames[1]->getString();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\PBString::class, $col2);
+        static::assertInstanceOf(PBString::class, $col2);
         static::assertSame('name', $col2->getSval());
     }
 

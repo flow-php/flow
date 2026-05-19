@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
+use function array_slice;
+use function count;
+
 final readonly class CSVRowNormalizer
 {
     public function __construct(
@@ -23,7 +26,7 @@ final readonly class CSVRowNormalizer
      */
     public function normalize(array $rowData, int $headersCount): array
     {
-        $rowDataCount = \count($rowData);
+        $rowDataCount = count($rowData);
 
         if ($rowDataCount < $headersCount) {
             $fillValue = $this->emptyToNull ? null : '';
@@ -32,7 +35,7 @@ final readonly class CSVRowNormalizer
                 $rowData[$i] = $fillValue;
             }
         } elseif ($rowDataCount > $headersCount) {
-            $rowData = \array_slice($rowData, 0, $headersCount, true);
+            $rowData = array_slice($rowData, 0, $headersCount, true);
         }
 
         if ($this->emptyToNull) {

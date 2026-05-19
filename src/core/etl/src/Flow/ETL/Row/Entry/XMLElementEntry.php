@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
+use DOMDocument;
+use DOMElement;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
@@ -11,10 +13,17 @@ use Flow\ETL\Schema\Definition\XMLElementDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 
+use function base64_decode;
+use function base64_encode;
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
+use function gzcompress;
+use function gzuncompress;
+use function is_scalar;
+use function is_string;
+use function sprintf;
 
 /**
  * @implements Entry<?\DOMElement>
@@ -25,18 +34,18 @@ final class XMLElementEntry implements Entry
 
     private XMLElementDefinition $definition;
 
-    private readonly ?\DOMElement $value;
+    private readonly ?DOMElement $value;
 
     public function __construct(
         private readonly string $name,
-        \DOMElement|string|null $value,
+        DOMElement|string|null $value,
         ?Metadata $metadata = null,
     ) {
-        if (\is_string($value)) {
-            $doc = new \DOMDocument();
+        if (is_string($value)) {
+            $doc = new DOMDocument();
 
             if (!@$doc->loadXML($value)) {
-                throw new InvalidArgumentException(\sprintf('Given string "%s" is not valid XML', $value));
+                throw new InvalidArgumentException(sprintf('Given string "%s" is not valid XML', $value));
             }
 
             $value = $doc->documentElement;
@@ -54,7 +63,7 @@ final class XMLElementEntry implements Entry
     {
         return [
             'name' => $this->name,
-            'value' => $this->value === null ? null : \base64_encode(\gzcompress($this->toString()) ?: ''),
+            'value' => $this->value === null ? null : base64_encode(gzcompress($this->toString()) ?: ''),
         ];
     }
 
@@ -84,16 +93,16 @@ final class XMLElementEntry implements Entry
             return;
         }
 
-        $element = \gzuncompress(\base64_decode(\is_scalar($data['value']) ? (string) $data['value'] : '', true) ?: '')
+        $element = gzuncompress(base64_decode(is_scalar($data['value']) ? (string) $data['value'] : '', true) ?: '')
         ?: '';
 
-        $domDocument = new \DOMDocument();
+        $domDocument = new DOMDocument();
         @$domDocument->loadXML($element);
 
         /**
          * @phpstan-ignore-next-line
          */
-        $this->value = (new \DOMDocument())->importNode($domDocument->documentElement, true);
+        $this->value = (new DOMDocument())->importNode($domDocument->documentElement, true);
         $this->definition = new XMLElementDefinition($this->name, false, Metadata::empty());
     }
 
@@ -106,7 +115,7 @@ final class XMLElementEntry implements Entry
     {
         return new self(
             $this->name,
-            type_optional(type_instance_of(\DOMElement::class))
+            type_optional(type_instance_of(DOMElement::class))
                 ->assert($this->value ? $this->value->cloneNode(true) : null),
             $this->definition->metadata(),
         );
@@ -137,7 +146,7 @@ final class XMLElementEntry implements Entry
     public function map(callable $mapper): static
     {
         $mappedValue = $mapper($this->value());
-        $mappedValue = type_optional(type_instance_of(\DOMElement::class))->assert($mappedValue);
+        $mappedValue = type_optional(type_instance_of(DOMElement::class))->assert($mappedValue);
 
         return new self($this->name, $mappedValue);
     }
@@ -167,7 +176,7 @@ final class XMLElementEntry implements Entry
         return $this->definition->type();
     }
 
-    public function value(): ?\DOMElement
+    public function value(): ?DOMElement
     {
         return $this->value;
     }

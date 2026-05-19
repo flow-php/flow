@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Cache;
 
 use Psr\Cache\CacheItemInterface;
+use ReflectionClass;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\Cache\CacheItem;
 use Symfony\Component\Cache\PruneableInterface;
 use Symfony\Component\Cache\ResettableInterface;
 use Symfony\Contracts\Cache\CacheInterface;
+
+use function array_keys;
+use function str_starts_with;
 
 final class ArrayCacheAdapter implements AdapterInterface, CacheInterface, PruneableInterface, ResettableInterface
 {
@@ -27,8 +31,8 @@ final class ArrayCacheAdapter implements AdapterInterface, CacheInterface, Prune
             return true;
         }
 
-        foreach (\array_keys($this->cache) as $key) {
-            if (\str_starts_with($key, $prefix)) {
+        foreach (array_keys($this->cache) as $key) {
+            if (str_starts_with($key, $prefix)) {
                 unset($this->cache[$key]);
             }
         }
@@ -92,7 +96,7 @@ final class ArrayCacheAdapter implements AdapterInterface, CacheInterface, Prune
     public function getItem(mixed $key): CacheItem
     {
         $item = new CacheItem();
-        $reflection = new \ReflectionClass($item);
+        $reflection = new ReflectionClass($item);
 
         $keyProperty = $reflection->getProperty('key');
         $keyProperty->setValue($item, $key);
@@ -138,7 +142,7 @@ final class ArrayCacheAdapter implements AdapterInterface, CacheInterface, Prune
 
     public function save(CacheItemInterface $item): bool
     {
-        $reflection = new \ReflectionClass($item);
+        $reflection = new ReflectionClass($item);
         $valueProperty = $reflection->getProperty('value');
         $this->cache[$item->getKey()] = $valueProperty->getValue($item);
 

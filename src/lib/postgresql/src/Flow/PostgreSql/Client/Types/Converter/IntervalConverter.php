@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Types\Converter;
 
+use DateInterval;
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\ValueConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
+
+use function implode;
+use function is_string;
+use function sprintf;
 
 final class IntervalConverter implements ValueConverter
 {
@@ -21,18 +26,18 @@ final class IntervalConverter implements ValueConverter
             return null;
         }
 
-        if ($value instanceof \DateInterval) {
+        if ($value instanceof DateInterval) {
             return $this->formatInterval($value);
         }
 
-        if (\is_string($value)) {
+        if (is_string($value)) {
             return $value;
         }
 
         throw ValueConversionException::cannotConvert($value, 'interval');
     }
 
-    private function formatInterval(\DateInterval $interval): string
+    private function formatInterval(DateInterval $interval): string
     {
         $parts = [];
 
@@ -49,9 +54,9 @@ final class IntervalConverter implements ValueConverter
         }
 
         if ($interval->h || $interval->i || $interval->s) {
-            $parts[] = \sprintf('%02d:%02d:%02d', $interval->h, $interval->i, $interval->s);
+            $parts[] = sprintf('%02d:%02d:%02d', $interval->h, $interval->i, $interval->s);
         }
 
-        return \implode(' ', $parts) ?: '0';
+        return implode(' ', $parts) ?: '0';
     }
 }

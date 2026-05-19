@@ -105,7 +105,6 @@ final class TransactionDatabaseTest extends PostgreSqlTestCase
                     ->where(eq(col('name'), literal('Account A')))
                     ->toSql(),
             );
-        $originalBalance = $beforeRow['balance'];
 
         $this->pgsqlContext()->client()->execute(begin()->toSql());
 
@@ -127,7 +126,7 @@ final class TransactionDatabaseTest extends PostgreSqlTestCase
                     ->where(eq(col('name'), literal('Account A')))
                     ->toSql(),
             );
-        static::assertSame($originalBalance, $row['balance']);
+        static::assertSame($beforeRow['balance'], $row['balance']);
     }
 
     public function test_begin_with_isolation_level(): void

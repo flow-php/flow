@@ -11,11 +11,15 @@ use Flow\ETL\Schema\SchemaFormatter;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
 
+use function array_merge;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\rename_replace;
 use function Flow\ETL\DSL\to_output;
+use function implode;
+use function ksort;
+use function str_repeat;
 
 final readonly class ASCIISchemaFormatter implements SchemaFormatter
 {
@@ -58,10 +62,10 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
             $buffer = $this->formatEntry($definition, $buffer);
         }
 
-        \ksort($buffer);
+        ksort($buffer);
 
         $output = "schema\n";
-        $output .= \implode("\n", $buffer);
+        $output .= implode("\n", $buffer);
 
         return $output . "\n";
     }
@@ -90,7 +94,7 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
                 $fields += $this->formatStructureElement($name, $type, $fields, 1);
             }
 
-            $buffer = \array_merge($buffer, $fields);
+            $buffer = array_merge($buffer, $fields);
         } else {
             $buffer[] =
                 $indention
@@ -112,7 +116,7 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
      */
     private function formatStructureElement(string $name, Type $structureType, array $buffer, int $level): array
     {
-        $indention = \str_repeat('    ', $level);
+        $indention = str_repeat('    ', $level);
 
         if ($indention !== '') {
             $indention = '|' . $indention;
@@ -127,7 +131,7 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
                 $fields += $this->formatStructureElement($nextName, $nextType, $fields, $level + 1);
             }
 
-            $buffer = \array_merge($buffer, $fields);
+            $buffer = array_merge($buffer, $fields);
         } else {
             $buffer[] = $indention . '|-- ' . $name . ': ' . $structureType->toString();
         }

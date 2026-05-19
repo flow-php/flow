@@ -7,22 +7,27 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\Converter\JsonArrayConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
+
+use function fclose;
+use function fopen;
 
 final class JsonArrayConverterTest extends TestCase
 {
-    public static function provide_non_array_values(): \Generator
+    public static function provide_non_array_values(): Generator
     {
         yield 'string' => ['not an array', '{}'];
         yield 'integer' => [12345, '{}'];
         yield 'float' => [3.14, '{}'];
         yield 'boolean true' => [true, '{}'];
         yield 'boolean false' => [false, '{}'];
-        yield 'object' => [new \stdClass(), '{}'];
+        yield 'object' => [new stdClass(), '{}'];
     }
 
-    public static function provide_valid_values(): \Generator
+    public static function provide_valid_values(): Generator
     {
         yield 'empty array' => [[], '{}'];
         yield 'array with null' => [
@@ -47,13 +52,13 @@ final class JsonArrayConverterTest extends TestCase
     public function test_invalid_element_throws_exception(): void
     {
         $converter = new JsonArrayConverter();
-        $resource = \fopen('php://memory', 'rb');
+        $resource = fopen('php://memory', 'rb');
 
         try {
             $this->expectException(ValueConversionException::class);
             $converter->toDatabase([['key' => 'value'], $resource]);
         } finally {
-            \fclose($resource);
+            fclose($resource);
         }
     }
 

@@ -7,6 +7,7 @@ namespace Flow\Bridge\Symfony\PostgreSQLCache\Tests\Integration;
 use Flow\Bridge\Symfony\PostgreSQLCache\CacheCatalogProvider;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\ConnectionParameters;
+use RuntimeException;
 
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\drop;
@@ -16,6 +17,7 @@ use function Flow\PostgreSql\DSL\pgsql_client;
 use function Flow\PostgreSql\DSL\pgsql_connection_dsn;
 use function Flow\PostgreSql\DSL\table;
 use function Flow\PostgreSql\DSL\update;
+use function getenv;
 
 final readonly class CacheTestContext
 {
@@ -25,10 +27,10 @@ final readonly class CacheTestContext
 
     public function __construct()
     {
-        $dsn = \getenv('PGSQL_DATABASE_URL');
+        $dsn = getenv('PGSQL_DATABASE_URL');
 
         if (!$dsn) {
-            throw new \RuntimeException('PGSQL_DATABASE_URL environment variable is not set');
+            throw new RuntimeException('PGSQL_DATABASE_URL environment variable is not set');
         }
 
         $this->connectionParameters = pgsql_connection_dsn($dsn);

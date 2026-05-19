@@ -4,6 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Context;
 
+use InvalidArgumentException;
+use Stringable;
+
+use function bin2hex;
+use function ctype_xdigit;
+use function hex2bin;
+use function random_bytes;
+use function sprintf;
+use function str_repeat;
+use function strlen;
+use function strtolower;
+
 /**
  * A 16-byte (128-bit) trace identifier compatible with OpenTelemetry W3C Trace Context.
  *
@@ -20,7 +32,7 @@ namespace Flow\Telemetry\Context;
  * echo $invalid->isValid(); // false
  * ```
  */
-final readonly class TraceId implements \Stringable
+final readonly class TraceId implements Stringable
 {
     public const string INVALID = '00000000000000000000000000000000';
 
@@ -53,11 +65,11 @@ final readonly class TraceId implements \Stringable
      */
     public static function fromBytes(string $bytes): self
     {
-        if (\strlen($bytes) !== self::BYTE_LENGTH) {
-            throw new \InvalidArgumentException(\sprintf(
+        if (strlen($bytes) !== self::BYTE_LENGTH) {
+            throw new InvalidArgumentException(sprintf(
                 'TraceId must be exactly %d bytes, got %d',
                 self::BYTE_LENGTH,
-                \strlen($bytes),
+                strlen($bytes),
             ));
         }
 
@@ -73,22 +85,22 @@ final readonly class TraceId implements \Stringable
      */
     public static function fromHex(string $hex): self
     {
-        if (\strlen($hex) !== self::HEX_LENGTH) {
-            throw new \InvalidArgumentException(\sprintf(
+        if (strlen($hex) !== self::HEX_LENGTH) {
+            throw new InvalidArgumentException(sprintf(
                 'TraceId hex string must be exactly %d characters, got %d',
                 self::HEX_LENGTH,
-                \strlen($hex),
+                strlen($hex),
             ));
         }
 
-        if (!\ctype_xdigit($hex)) {
-            throw new \InvalidArgumentException('TraceId hex string must contain only hexadecimal characters');
+        if (!ctype_xdigit($hex)) {
+            throw new InvalidArgumentException('TraceId hex string must contain only hexadecimal characters');
         }
 
-        $bytes = \hex2bin(\strtolower($hex));
+        $bytes = hex2bin(strtolower($hex));
 
         if ($bytes === false) {
-            throw new \InvalidArgumentException('Failed to decode TraceId hex string');
+            throw new InvalidArgumentException('Failed to decode TraceId hex string');
         }
 
         return new self($bytes);
@@ -99,7 +111,7 @@ final readonly class TraceId implements \Stringable
      */
     public static function generate(): self
     {
-        return new self(\random_bytes(self::BYTE_LENGTH));
+        return new self(random_bytes(self::BYTE_LENGTH));
     }
 
     /**
@@ -109,7 +121,7 @@ final readonly class TraceId implements \Stringable
      */
     public static function invalid(): self
     {
-        return new self(\str_repeat("\0", self::BYTE_LENGTH));
+        return new self(str_repeat("\0", self::BYTE_LENGTH));
     }
 
     public function __toString(): string
@@ -132,7 +144,7 @@ final readonly class TraceId implements \Stringable
      */
     public function isValid(): bool
     {
-        return $this->bytes !== \str_repeat("\0", self::BYTE_LENGTH);
+        return $this->bytes !== str_repeat("\0", self::BYTE_LENGTH);
     }
 
     /**
@@ -158,6 +170,6 @@ final readonly class TraceId implements \Stringable
      */
     public function toHex(): string
     {
-        return \bin2hex($this->bytes);
+        return bin2hex($this->bytes);
     }
 }

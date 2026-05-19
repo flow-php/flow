@@ -4,11 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
+use DateTimeInterface;
+use DateTimeZone;
+use DOMDocument;
+use DOMElement;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+use Stringable;
+use Throwable;
 
 use function Flow\Types\DSL\dom_element_to_string;
+use function is_array;
+use function is_bool;
+use function is_object;
+use function is_scalar;
+use function is_string;
+use function json_encode;
 
 /**
  * @implements Type<non-empty-string>
@@ -30,32 +42,32 @@ final class NonEmptyStringType implements Type
             return $value;
         }
 
-        if (\is_bool($value)) {
+        if (is_bool($value)) {
             return $value ? 'true' : 'false';
         }
 
         try {
-            if (\is_array($value)) {
-                return $this->assert(\json_encode($value, JSON_THROW_ON_ERROR));
+            if (is_array($value)) {
+                return $this->assert(json_encode($value, JSON_THROW_ON_ERROR));
             }
 
-            if ($value instanceof \DateTimeInterface) {
-                return $this->assert($value->format(\DateTimeInterface::RFC3339));
+            if ($value instanceof DateTimeInterface) {
+                return $this->assert($value->format(DateTimeInterface::RFC3339));
             }
 
-            if ($value instanceof \DateTimeZone) {
+            if ($value instanceof DateTimeZone) {
                 return $this->assert($value->getName());
             }
 
-            if ($value instanceof \Stringable) {
+            if ($value instanceof Stringable) {
                 return $this->assert((string) $value);
             }
 
-            if ($value instanceof \DOMDocument) {
+            if ($value instanceof DOMDocument) {
                 return $this->assert($value->saveXML($value->documentElement) ?: '');
             }
 
-            if ($value instanceof \DOMElement) {
+            if ($value instanceof DOMElement) {
                 return $this->assert((string) dom_element_to_string($value));
             }
 
@@ -63,12 +75,12 @@ final class NonEmptyStringType implements Type
                 throw new CastingException($value, $this);
             }
 
-            if (\is_scalar($value) || \is_object($value) && method_exists($value, '__toString')) {
+            if (is_scalar($value) || is_object($value) && method_exists($value, '__toString')) {
                 return $this->assert((string) $value);
             }
 
             throw new CastingException($value, $this);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             throw new CastingException($value, $this);
         }
     }
@@ -76,15 +88,15 @@ final class NonEmptyStringType implements Type
     public function isStringable(mixed $value): bool
     {
         return (
-            \is_string($value)
-            || \is_object($value) && method_exists($value, '__toString')
-            || $value instanceof \Stringable
+            is_string($value)
+            || is_object($value) && method_exists($value, '__toString')
+            || $value instanceof Stringable
         );
     }
 
     public function isValid(mixed $value): bool
     {
-        return \is_string($value) && $value !== '';
+        return is_string($value) && $value !== '';
     }
 
     public function normalize(): array

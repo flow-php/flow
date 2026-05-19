@@ -8,6 +8,8 @@ use Flow\Telemetry\ErrorHandler\CompositeErrorHandler;
 use Flow\Telemetry\ErrorHandler\ErrorHandler;
 use Flow\Telemetry\Tests\Mother\ErrorHandlerSpy;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use Throwable;
 
 final class CompositeErrorHandlerTest extends TestCase
 {
@@ -15,7 +17,7 @@ final class CompositeErrorHandlerTest extends TestCase
     {
         $first = new ErrorHandlerSpy();
         $second = new ErrorHandlerSpy();
-        $error = new \RuntimeException('boom');
+        $error = new RuntimeException('boom');
 
         $composite = new CompositeErrorHandler($first, $second);
         $composite->handle($error);
@@ -27,15 +29,15 @@ final class CompositeErrorHandlerTest extends TestCase
     public function test_continues_when_a_child_throws(): void
     {
         $throwing = new class implements ErrorHandler {
-            public function handle(\Throwable $error): void
+            public function handle(Throwable $error): void
             {
-                throw new \RuntimeException('child blew up');
+                throw new RuntimeException('child blew up');
             }
         };
         $sibling = new ErrorHandlerSpy();
 
         $composite = new CompositeErrorHandler($throwing, $sibling);
-        $composite->handle(new \RuntimeException('boom'));
+        $composite->handle(new RuntimeException('boom'));
 
         static::assertSame(1, $sibling->count());
     }
@@ -54,6 +56,6 @@ final class CompositeErrorHandlerTest extends TestCase
     {
         $this->expectNotToPerformAssertions();
 
-        (new CompositeErrorHandler())->handle(new \RuntimeException('boom'));
+        (new CompositeErrorHandler())->handle(new RuntimeException('boom'));
     }
 }

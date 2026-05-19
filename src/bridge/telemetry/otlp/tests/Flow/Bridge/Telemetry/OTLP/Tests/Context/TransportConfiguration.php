@@ -6,11 +6,17 @@ namespace Flow\Bridge\Telemetry\OTLP\Tests\Context;
 
 use Flow\Bridge\Telemetry\OTLP\Transport\Transport;
 use Google\Protobuf\Internal\Message;
+use InvalidArgumentException;
 
+use function array_filter;
+use function array_values;
+use function class_exists;
+use function extension_loaded;
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_curl_transport;
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_grpc_transport;
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_json_serializer;
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_protobuf_serializer;
+use function sprintf;
 
 final readonly class TransportConfiguration
 {
@@ -37,7 +43,7 @@ final readonly class TransportConfiguration
      */
     public static function available(): array
     {
-        return \array_values(\array_filter(self::all(), static fn(self $config) => $config->isAvailable()));
+        return array_values(array_filter(self::all(), static fn(self $config) => $config->isAvailable()));
     }
 
     public static function curlJson(): self
@@ -61,19 +67,19 @@ final readonly class TransportConfiguration
             'curl' => otlp_curl_transport($ctx->httpEndpoint(), match ($this->serializer) {
                 'json' => otlp_json_serializer(),
                 'protobuf' => otlp_protobuf_serializer(),
-                default => throw new \InvalidArgumentException(\sprintf('Unknown serializer: %s', $this->serializer)),
+                default => throw new InvalidArgumentException(sprintf('Unknown serializer: %s', $this->serializer)),
             }),
             'grpc' => otlp_grpc_transport($ctx->grpcEndpoint()),
-            default => throw new \InvalidArgumentException(\sprintf('Unknown transport: %s', $this->transport)),
+            default => throw new InvalidArgumentException(sprintf('Unknown transport: %s', $this->transport)),
         };
     }
 
     public function isAvailable(): bool
     {
         if ($this->transport === 'grpc') {
-            return \extension_loaded('grpc') && \class_exists(Message::class);
+            return extension_loaded('grpc') && class_exists(Message::class);
         }
 
-        return $this->serializer !== 'protobuf' || \class_exists(Message::class);
+        return $this->serializer !== 'protobuf' || class_exists(Message::class);
     }
 }

@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Hash;
 
+use InvalidArgumentException;
+
+use function hash;
+use function hash_algos;
+use function in_array;
+use function sprintf;
+
 final readonly class NativePHPHash implements Algorithm
 {
     /**
@@ -14,8 +21,8 @@ final readonly class NativePHPHash implements Algorithm
         private bool $binary = false,
         private array $options = [],
     ) {
-        if (!\in_array($algorithm, \hash_algos(), true)) {
-            throw new \InvalidArgumentException(\sprintf('Hashing algorithm "%s" is not supported', $algorithm));
+        if (!in_array($algorithm, hash_algos(), true)) {
+            throw new InvalidArgumentException(sprintf('Hashing algorithm "%s" is not supported', $algorithm));
         }
     }
 
@@ -26,6 +33,6 @@ final readonly class NativePHPHash implements Algorithm
 
     public function hash(string $value): string
     {
-        return \hash($this->algorithm, $value, $this->binary, $this->options);
+        return hash($this->algorithm, $value, $this->binary, $this->options);
     }
 }

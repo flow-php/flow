@@ -4,6 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Provider\Console;
 
+use DateTimeImmutable;
+use JsonException;
+
+use function floor;
+use function fwrite;
+use function is_array;
+use function is_bool;
+use function json_encode;
+use function mb_strlen;
+use function mb_substr;
+use function preg_replace;
+use function sprintf;
+use function str_repeat;
+
+use const STDOUT;
+
 final class ConsoleOutput
 {
     private const string BLUE = "\033[34m";
@@ -35,7 +51,7 @@ final class ConsoleOutput
         private readonly bool $colors = true,
         $stream = null,
     ) {
-        $this->stream = $stream ?? \STDOUT;
+        $this->stream = $stream ?? STDOUT;
     }
 
     public function blue(string $text): string
@@ -50,7 +66,7 @@ final class ConsoleOutput
 
     public function border(int $width): string
     {
-        return '+' . \str_repeat('-', $width - 2) . '+';
+        return '+' . str_repeat('-', $width - 2) . '+';
     }
 
     public function cyan(string $text): string
@@ -70,17 +86,17 @@ final class ConsoleOutput
         }
 
         if ($ms < 1) {
-            return \sprintf('%.2fus', $ms * 1000);
+            return sprintf('%.2fus', $ms * 1000);
         }
 
         if ($ms < 1000) {
-            return \sprintf('%.2fms', $ms);
+            return sprintf('%.2fms', $ms);
         }
 
-        return \sprintf('%.2fs', $ms / 1000);
+        return sprintf('%.2fs', $ms / 1000);
     }
 
-    public function formatTimestamp(\DateTimeImmutable $dt): string
+    public function formatTimestamp(DateTimeImmutable $dt): string
     {
         return $dt->format('Y-m-d H:i:s.u');
     }
@@ -94,14 +110,14 @@ final class ConsoleOutput
             return 'null';
         }
 
-        if (\is_bool($value)) {
+        if (is_bool($value)) {
             return $value ? 'true' : 'false';
         }
 
-        if (\is_array($value)) {
+        if (is_array($value)) {
             try {
-                return \json_encode($value, JSON_THROW_ON_ERROR);
-            } catch (\JsonException) {
+                return json_encode($value, JSON_THROW_ON_ERROR);
+            } catch (JsonException) {
                 return '{...}';
             }
         }
@@ -126,7 +142,7 @@ final class ConsoleOutput
      */
     public function pad(string $input, int $length, string $padding = ' ', int $padType = STR_PAD_RIGHT): string
     {
-        $visibleLength = \mb_strlen($this->stripColors($input));
+        $visibleLength = mb_strlen($this->stripColors($input));
         $paddingRequired = $length - $visibleLength;
 
         if ($paddingRequired <= 0) {
@@ -134,19 +150,19 @@ final class ConsoleOutput
         }
 
         return match ($padType) {
-            STR_PAD_LEFT => \mb_substr(\str_repeat($padding, $paddingRequired), 0, $paddingRequired) . $input,
-            STR_PAD_BOTH => \mb_substr(
-                \str_repeat($padding, (int) \floor($paddingRequired / 2)),
+            STR_PAD_LEFT => mb_substr(str_repeat($padding, $paddingRequired), 0, $paddingRequired) . $input,
+            STR_PAD_BOTH => mb_substr(
+                str_repeat($padding, (int) floor($paddingRequired / 2)),
                 0,
-                (int) \floor($paddingRequired / 2),
+                (int) floor($paddingRequired / 2),
             )
                 . $input
-                . \mb_substr(
-                    \str_repeat($padding, $paddingRequired - (int) \floor($paddingRequired / 2)),
+                . mb_substr(
+                    str_repeat($padding, $paddingRequired - (int) floor($paddingRequired / 2)),
                     0,
-                    $paddingRequired - (int) \floor($paddingRequired / 2),
+                    $paddingRequired - (int) floor($paddingRequired / 2),
                 ),
-            default => $input . \mb_substr(\str_repeat($padding, $paddingRequired), 0, $paddingRequired),
+            default => $input . mb_substr(str_repeat($padding, $paddingRequired), 0, $paddingRequired),
         };
     }
 
@@ -157,19 +173,19 @@ final class ConsoleOutput
 
     public function row(string $content, int $width): string
     {
-        $contentLength = \mb_strlen($this->stripColors($content));
+        $contentLength = mb_strlen($this->stripColors($content));
         $padding = $width - 4 - $contentLength;
 
         if ($padding < 0) {
             $padding = 0;
         }
 
-        return '| ' . $content . \str_repeat(' ', $padding) . ' |';
+        return '| ' . $content . str_repeat(' ', $padding) . ' |';
     }
 
     public function stripColors(string $text): string
     {
-        return (string) \preg_replace('/\033\[[0-9;]*m/', '', $text);
+        return (string) preg_replace('/\033\[[0-9;]*m/', '', $text);
     }
 
     /**
@@ -179,16 +195,16 @@ final class ConsoleOutput
     {
         $stripped = $this->stripColors($text);
 
-        if (\mb_strlen($stripped) <= $max) {
+        if (mb_strlen($stripped) <= $max) {
             return $text;
         }
 
-        return \mb_substr($stripped, 0, $max - 3) . '...';
+        return mb_substr($stripped, 0, $max - 3) . '...';
     }
 
     public function write(string $text): void
     {
-        \fwrite($this->stream, $text . PHP_EOL);
+        fwrite($this->stream, $text . PHP_EOL);
     }
 
     public function yellow(string $text): string

@@ -5,7 +5,23 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\ErrorHandler;
 
 use Flow\Telemetry\ErrorHandler\StreamHandler;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+
+use function array_filter;
+use function array_values;
+use function bin2hex;
+use function explode;
+use function file_get_contents;
+use function glob;
+use function is_dir;
+use function is_file;
+use function mkdir;
+use function random_bytes;
+use function rmdir;
+use function sys_get_temp_dir;
+use function unlink;
 
 final class StreamHandlerTest extends TestCase
 {
@@ -13,29 +29,29 @@ final class StreamHandlerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->tmpDir = \sys_get_temp_dir() . '/flow-telemetry-stream-handler-' . \bin2hex(\random_bytes(6));
-        \mkdir($this->tmpDir, 0755, true);
+        $this->tmpDir = sys_get_temp_dir() . '/flow-telemetry-stream-handler-' . bin2hex(random_bytes(6));
+        mkdir($this->tmpDir, 0755, true);
     }
 
     protected function tearDown(): void
     {
-        if (!\is_dir($this->tmpDir)) {
+        if (!is_dir($this->tmpDir)) {
             return;
         }
 
-        $files = \glob($this->tmpDir . '/*');
+        $files = glob($this->tmpDir . '/*');
 
         if ($files === false) {
             return;
         }
 
         foreach ($files as $file) {
-            if (\is_file($file)) {
-                \unlink($file);
+            if (is_file($file)) {
+                unlink($file);
             }
         }
 
-        @\rmdir($this->tmpDir);
+        @rmdir($this->tmpDir);
     }
 
     public function test_appends_formatted_throwable_with_newline_to_destination(): void
@@ -43,9 +59,9 @@ final class StreamHandlerTest extends TestCase
         $destination = $this->tmpDir . '/errors.log';
         $handler = new StreamHandler($destination);
 
-        $handler->handle(new \RuntimeException('boom'));
+        $handler->handle(new RuntimeException('boom'));
 
-        $contents = (string) \file_get_contents($destination);
+        $contents = (string) file_get_contents($destination);
 
         static::assertStringContainsString('[flow-telemetry]', $contents);
         static::assertStringContainsString('RuntimeException', $contents);
@@ -58,11 +74,11 @@ final class StreamHandlerTest extends TestCase
         $destination = $this->tmpDir . '/errors.log';
         $handler = new StreamHandler($destination);
 
-        $handler->handle(new \RuntimeException('first'));
-        $handler->handle(new \RuntimeException('second'));
+        $handler->handle(new RuntimeException('first'));
+        $handler->handle(new RuntimeException('second'));
 
-        $contents = (string) \file_get_contents($destination);
-        $lines = \array_values(\array_filter(\explode("\n", $contents), static fn(string $line): bool => $line !== ''));
+        $contents = (string) file_get_contents($destination);
+        $lines = array_values(array_filter(explode("\n", $contents), static fn(string $line): bool => $line !== ''));
 
         static::assertCount(2, $lines);
         static::assertStringContainsString('first', $lines[0]);
@@ -74,7 +90,7 @@ final class StreamHandlerTest extends TestCase
         $destination = $this->tmpDir . '/nested/dir/errors.log';
         $handler = new StreamHandler($destination, createDirectories: true);
 
-        $handler->handle(new \RuntimeException('boom'));
+        $handler->handle(new RuntimeException('boom'));
 
         static::assertFileExists($destination);
     }
@@ -85,7 +101,7 @@ final class StreamHandlerTest extends TestCase
 
         $handler = new StreamHandler('php://memory');
 
-        $handler->handle(new \RuntimeException('boom'));
+        $handler->handle(new RuntimeException('boom'));
     }
 
     public function test_swallows_failures_when_destination_is_unwritable(): void
@@ -94,19 +110,19 @@ final class StreamHandlerTest extends TestCase
 
         $handler = new StreamHandler('/nonexistent-root-only-dir/errors.log', createDirectories: false);
 
-        $handler->handle(new \RuntimeException('boom'));
+        $handler->handle(new RuntimeException('boom'));
     }
 
     public function test_throws_on_empty_destination(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
 
         new StreamHandler('');
     }
 
     public function test_throws_on_invalid_file_permissions(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
 
         new StreamHandler($this->tmpDir . '/errors.log', filePermissions: 01000);
     }
@@ -116,8 +132,8 @@ final class StreamHandlerTest extends TestCase
         $destination = $this->tmpDir . '/errors.log';
         $handler = new StreamHandler($destination, messagePrefix: '[custom]');
 
-        $handler->handle(new \RuntimeException('boom'));
+        $handler->handle(new RuntimeException('boom'));
 
-        static::assertStringContainsString('[custom]', (string) \file_get_contents($destination));
+        static::assertStringContainsString('[custom]', (string) file_get_contents($destination));
     }
 }

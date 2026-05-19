@@ -7,6 +7,7 @@ namespace Flow\PostgreSql\Client\RowMapper;
 use Flow\PostgreSql\Client\Exception\MappingException;
 use Flow\PostgreSql\Client\RowMapper;
 use Flow\Types\Type;
+use Throwable;
 
 /**
  * Maps database rows to typed values using flow-php/types.
@@ -16,15 +17,15 @@ use Flow\Types\Type;
  * return value becomes the mapper's output.
  *
  * @template TType
- * @template TNext = TType
+ * @template TOut
  *
- * @implements RowMapper<TNext>
+ * @implements RowMapper<TOut>
  */
 final readonly class TypeMapper implements RowMapper
 {
     /**
      * @param Type<TType> $type
-     * @param null|RowMapper<TNext> $next
+     * @param null|RowMapper<TOut> $next
      */
     public function __construct(
         private Type $type,
@@ -35,12 +36,12 @@ final readonly class TypeMapper implements RowMapper
     {
         try {
             $result = $this->type->cast($row);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             throw new MappingException('Failed to map database row to type: ' . $e->getMessage(), previous: $e);
         }
 
         if ($this->next === null) {
-            /** @var TNext $result */
+            /** @var TOut $result */
             return $result;
         }
 

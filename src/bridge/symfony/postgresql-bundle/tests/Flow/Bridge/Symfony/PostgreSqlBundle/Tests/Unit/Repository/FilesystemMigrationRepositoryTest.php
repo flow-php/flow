@@ -16,8 +16,11 @@ use Flow\PostgreSql\Migrations\Version;
 use Flow\PostgreSql\Schema\Catalog;
 use PHPUnit\Framework\TestCase;
 
+use function file_put_contents;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function iterator_to_array;
+use function mkdir;
 
 final class FilesystemMigrationRepositoryTest extends TestCase
 {
@@ -105,7 +108,7 @@ final class FilesystemMigrationRepositoryTest extends TestCase
             new Configuration(new SpyClient(), new FakeCatalogProvider(new Catalog([])), $this->fixturesPath(), 'Test'),
         );
 
-        $items = \iterator_to_array($repository->all());
+        $items = iterator_to_array($repository->all());
 
         static::assertTrue(Version::fromString('20260401120000')->equals($items[0]->version));
         static::assertTrue(Version::fromString('20260402100000')->equals($items[1]->version));
@@ -152,8 +155,8 @@ final class FilesystemMigrationRepositoryTest extends TestCase
         $tmpDir = new TemporaryDirectory();
 
         try {
-            \mkdir($tmpDir->path . '/20260401120000_test', 0777, true);
-            \file_put_contents($tmpDir->path . '/20260401120000_test/migration.php', '<?php return "not a migration";');
+            mkdir($tmpDir->path . '/20260401120000_test', 0777, true);
+            file_put_contents($tmpDir->path . '/20260401120000_test/migration.php', '<?php return "not a migration";');
 
             $repository = new FilesystemMigrationRepository(
                 native_local_filesystem(),
@@ -173,12 +176,12 @@ final class FilesystemMigrationRepositoryTest extends TestCase
         $tmpDir = new TemporaryDirectory();
 
         try {
-            \mkdir($tmpDir->path . '/20260401120000_test', 0777, true);
-            \file_put_contents(
+            mkdir($tmpDir->path . '/20260401120000_test', 0777, true);
+            file_put_contents(
                 $tmpDir->path . '/20260401120000_test/migration.php',
                 '<?php return new class implements \Flow\PostgreSql\Migrations\Migration { public function migrate(\Flow\PostgreSql\Migrations\MigrationContext $context): void {} public function transactional(): bool { return true; } };',
             );
-            \file_put_contents($tmpDir->path . '/20260401120000_test/rollback.php', '<?php return "not a rollback";');
+            file_put_contents($tmpDir->path . '/20260401120000_test/rollback.php', '<?php return "not a rollback";');
 
             $repository = new FilesystemMigrationRepository(
                 native_local_filesystem(),
@@ -198,7 +201,7 @@ final class FilesystemMigrationRepositoryTest extends TestCase
         $tmpDir = new TemporaryDirectory();
 
         try {
-            \mkdir($tmpDir->path . '/20260401120000_test', 0777, true);
+            mkdir($tmpDir->path . '/20260401120000_test', 0777, true);
 
             $repository = new FilesystemMigrationRepository(
                 native_local_filesystem(),

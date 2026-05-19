@@ -6,15 +6,19 @@ namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\DropTable;
 
 use Flow\PostgreSql\Protobuf\AST\DropBehavior;
 use Flow\PostgreSql\Protobuf\AST\DropStmt;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ObjectType;
 use Flow\PostgreSql\QueryBuilder\Schema\DropTable\DropTableBuilder;
 use PHPUnit\Framework\TestCase;
+
+use function extension_loaded;
+use function Flow\Types\DSL\type_instance_of;
 
 final class DropTableBuilderTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }
@@ -78,9 +82,16 @@ final class DropTableBuilderTest extends TestCase
 
         static::assertInstanceOf(DropStmt::class, $ast);
         static::assertCount(1, $ast->getObjects());
-        static::assertCount(2, $ast->getObjects()[0]->getList()->getItems());
-        static::assertSame('public', $ast->getObjects()[0]->getList()->getItems()[0]->getString()->getSval());
-        static::assertSame('users', $ast->getObjects()[0]->getList()->getItems()[1]->getString()->getSval());
+        $list = $ast->getObjects()[0]->getList();
+        static::assertNotNull($list);
+        $items = $list->getItems();
+        static::assertCount(2, $items);
+        $schema = type_instance_of(Node::class)->assert($items[0])->getString();
+        static::assertNotNull($schema);
+        $table = type_instance_of(Node::class)->assert($items[1])->getString();
+        static::assertNotNull($table);
+        static::assertSame('public', $schema->getSval());
+        static::assertSame('users', $table->getSval());
     }
 
     public function test_immutability(): void
@@ -101,6 +112,10 @@ final class DropTableBuilderTest extends TestCase
         static::assertInstanceOf(DropStmt::class, $ast);
         static::assertSame(ObjectType::OBJECT_TABLE, $ast->getRemoveType());
         static::assertCount(1, $ast->getObjects());
-        static::assertSame('users', $ast->getObjects()[0]->getList()->getItems()[0]->getString()->getSval());
+        $list = $ast->getObjects()[0]->getList();
+        static::assertNotNull($list);
+        $string = type_instance_of(Node::class)->assert($list->getItems()[0])->getString();
+        static::assertNotNull($string);
+        static::assertSame('users', $string->getSval());
     }
 }

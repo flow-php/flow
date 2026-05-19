@@ -17,6 +17,7 @@ use Flow\PostgreSql\Schema\PartitionStrategy;
 use Flow\PostgreSql\Schema\TriggerEvent;
 use Flow\PostgreSql\Schema\TriggerTiming;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 use function Flow\PostgreSql\DSL\schema_check;
 use function Flow\PostgreSql\DSL\schema_column_integer;
@@ -649,7 +650,7 @@ final class TableDiffTest extends TestCase
 
         $diff = new TableDiff($source, $target, partitionChanged: true);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
             'Partition strategy change on table "public.events" cannot be applied via ALTER TABLE',
         );
@@ -890,7 +891,7 @@ final class TableDiffTest extends TestCase
 
         $diff = new TableDiff($table, $table, removedCheckConstraints: [schema_check('age > 0')]);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Cannot drop unnamed check constraint on table "public.users"');
 
         $diff->generate();
@@ -902,7 +903,7 @@ final class TableDiffTest extends TestCase
 
         $diff = new TableDiff($table, $table, removedExcludeConstraints: [schema_exclude('USING gist (col WITH &&)')]);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Cannot drop unnamed exclude constraint on table "public.users"');
 
         $diff->generate();
@@ -918,7 +919,7 @@ final class TableDiffTest extends TestCase
             ['id'],
         )]);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Cannot drop unnamed foreign key on table "public.users"');
 
         $diff->generate();
@@ -930,7 +931,7 @@ final class TableDiffTest extends TestCase
 
         $diff = new TableDiff($table, $table, removedPrimaryKey: schema_primary_key(['id']));
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Cannot drop unnamed primary key on table "public.users"');
 
         $diff->generate();
@@ -942,7 +943,7 @@ final class TableDiffTest extends TestCase
 
         $diff = new TableDiff($table, $table, removedUniqueConstraints: [schema_unique(['email'])]);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Cannot drop unnamed unique constraint on table "public.users"');
 
         $diff->generate();

@@ -10,6 +10,8 @@ use Flow\Bridge\Symfony\FilesystemBundle\Tests\Double\AutoconfiguredStubFilesyst
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
+use function sys_get_temp_dir;
+
 final class FlowFilesystemBundleTest extends TestCase
 {
     public function test_build_registers_as_filesystem_factory_attribute_for_autoconfiguration(): void
@@ -48,7 +50,7 @@ final class FlowFilesystemBundleTest extends TestCase
         $container = new ContainerBuilder();
         $container->setParameter('kernel.debug', false);
         $container->setParameter('kernel.environment', 'test');
-        $container->setParameter('kernel.build_dir', \sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
         $container->registerExtension($extension);
         $container->loadFromExtension($extension->getAlias(), [
             'fstabs' => [

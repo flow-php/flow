@@ -10,6 +10,8 @@ use Flow\PostgreSql\Protobuf\AST\RoleSpec;
 use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
+use function array_values;
+
 final readonly class ReassignOwnedBuilder implements ReassignOwnedFinalStep, ReassignOwnedToStep
 {
     use AstToSql;
@@ -24,7 +26,7 @@ final readonly class ReassignOwnedBuilder implements ReassignOwnedFinalStep, Rea
 
     public static function create(string ...$roles): ReassignOwnedToStep
     {
-        return new self(\array_values($roles));
+        return new self(array_values($roles));
     }
 
     public function to(string $newRole): ReassignOwnedFinalStep

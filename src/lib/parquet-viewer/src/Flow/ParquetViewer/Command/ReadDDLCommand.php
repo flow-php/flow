@@ -13,7 +13,12 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function file_exists;
 use function Flow\Types\DSL\type_string;
+use function json_encode;
+use function sprintf;
+
+use const JSON_PRETTY_PRINT;
 
 #[AsCommand(name: 'read:ddl', description: 'Read DDL from parquet file')]
 final class ReadDDLCommand extends Command
@@ -29,8 +34,8 @@ final class ReadDDLCommand extends Command
         $filePath = $input->getArgument('file');
         $filePath = type_string()->assert($filePath);
 
-        if (!\file_exists($filePath)) {
-            $style->error(\sprintf('File "%s" does not exist', $filePath));
+        if (!file_exists($filePath)) {
+            $style->error(sprintf('File "%s" does not exist', $filePath));
 
             return Command::FAILURE;
         }
@@ -40,16 +45,16 @@ final class ReadDDLCommand extends Command
         try {
             $parquetFile->metadata();
         } catch (InvalidArgumentException) {
-            $style->error(\sprintf('File "%s" is not a valid parquet file', $filePath));
+            $style->error(sprintf('File "%s" is not a valid parquet file', $filePath));
 
             return Command::FAILURE;
         }
 
         $style->title('Parquet file DDL');
 
-        $style->writeln(\json_encode(
+        $style->writeln(json_encode(
             $parquetFile->metadata()->schema()->toDDL(),
-            JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT,
+            JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT,
         ));
 
         return Command::SUCCESS;

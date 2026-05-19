@@ -8,6 +8,7 @@ use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path;
 
 use function Flow\Filesystem\DSL\path;
+use function rtrim;
 
 final readonly class SqlFileFinder
 {
@@ -26,7 +27,7 @@ final readonly class SqlFileFinder
         $status = $this->filesystem->status($path);
 
         if ($status !== null && $status->isDirectory()) {
-            $path = path(\rtrim($path->path(), '/') . '/**/*.sql', $path->options());
+            $path = path(rtrim($path->path(), '/') . '/**/*.sql', $path->options());
         }
 
         $files = [];

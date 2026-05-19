@@ -6,6 +6,12 @@ namespace Flow\Telemetry\Propagation;
 
 use Flow\Telemetry\Exception\RuntimeException;
 
+use function is_string;
+use function str_replace;
+use function str_starts_with;
+use function strtolower;
+use function substr;
+
 /**
  * Read-only carrier backed by PHP superglobals.
  *
@@ -41,26 +47,26 @@ final readonly class SuperglobalCarrier implements Carrier
         $data = [];
 
         foreach ($_COOKIE as $k => $v) {
-            if (\is_string($k) && \is_string($v)) {
-                $data[\strtolower($k)] = $v;
+            if (is_string($k) && is_string($v)) {
+                $data[strtolower($k)] = $v;
             }
         }
 
         foreach ($_POST as $k => $v) {
-            if (\is_string($k) && \is_string($v)) {
-                $data[\strtolower($k)] = $v;
+            if (is_string($k) && is_string($v)) {
+                $data[strtolower($k)] = $v;
             }
         }
 
         foreach ($_GET as $k => $v) {
-            if (\is_string($k) && \is_string($v)) {
-                $data[\strtolower($k)] = $v;
+            if (is_string($k) && is_string($v)) {
+                $data[strtolower($k)] = $v;
             }
         }
 
         foreach ($_SERVER as $key => $value) {
-            if (\is_string($key) && \str_starts_with($key, 'HTTP_') && \is_string($value)) {
-                $headerName = \strtolower(\str_replace('_', '-', \substr($key, 5)));
+            if (str_starts_with($key, 'HTTP_') && is_string($value)) {
+                $headerName = strtolower(str_replace('_', '-', substr($key, 5)));
                 $data[$headerName] = $value;
             }
         }
@@ -70,7 +76,7 @@ final readonly class SuperglobalCarrier implements Carrier
 
     public function get(string $key): ?string
     {
-        $lowerKey = \strtolower($key);
+        $lowerKey = strtolower($key);
 
         return $this->data[$lowerKey] ?? null;
     }

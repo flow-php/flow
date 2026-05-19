@@ -7,6 +7,7 @@ namespace Flow\Bridge\Monolog\Telemetry\Tests\Unit;
 use Flow\Bridge\Monolog\Telemetry\Exception\InvalidArgumentException;
 use Flow\Bridge\Monolog\Telemetry\SeverityMapper;
 use Flow\Telemetry\Logger\Severity;
+use Generator;
 use Monolog\Level;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -18,7 +19,7 @@ final class SeverityMapperTest extends TestCase
     /**
      * @return \Generator<string, array{Level, Severity}>
      */
-    public static function defaultMappingProvider(): \Generator
+    public static function defaultMappingProvider(): Generator
     {
         yield 'DEBUG → DEBUG' => [Level::Debug, Severity::DEBUG];
         yield 'INFO → INFO' => [Level::Info, Severity::INFO];

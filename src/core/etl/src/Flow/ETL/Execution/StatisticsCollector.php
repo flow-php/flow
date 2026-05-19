@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Execution;
 
+use DateTimeImmutable;
 use Flow\ETL\Analyze;
 use Flow\ETL\Dataset\Memory\Consumption;
 use Flow\ETL\Dataset\Report;
@@ -14,6 +15,9 @@ use Flow\ETL\Dataset\Statistics\HighResolutionTime;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Throwable;
+
+use function gc_collect_cycles;
 
 /**
  * @template T of Analyze|bool|null
@@ -28,7 +32,7 @@ final class StatisticsCollector
 
     private ?Schema $schema = null;
 
-    private readonly \DateTimeImmutable $startedAt;
+    private readonly DateTimeImmutable $startedAt;
 
     private readonly HighResolutionTime $startTime;
 
@@ -52,7 +56,7 @@ final class StatisticsCollector
             $this->schema = $this->analyze->collectSchema() ? new Schema() : null;
         }
 
-        \gc_collect_cycles();
+        gc_collect_cycles();
         $this->memory = new Consumption();
         $this->startedAt = $this->context->config->clock()->now();
         $this->startTime = HighResolutionTime::now();
@@ -83,7 +87,7 @@ final class StatisticsCollector
         }
     }
 
-    public function end(?\Throwable $exception = null): void
+    public function end(?Throwable $exception = null): void
     {
         if ($exception !== null) {
             $this->context->telemetry()->dataFrameFailed($this->context, $exception);

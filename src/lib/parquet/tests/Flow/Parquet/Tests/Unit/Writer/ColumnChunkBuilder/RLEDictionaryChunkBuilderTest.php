@@ -15,19 +15,25 @@ use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Writer\ColumnChunkBuilder\RLEDictionaryChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkContainer;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use RuntimeException;
+
+use function is_object;
+use function is_scalar;
 
 final class RLEDictionaryChunkBuilderTest extends TestCase
 {
-    public static function compression_types_provider(): \Generator
+    public static function compression_types_provider(): Generator
     {
         yield 'uncompressed' => [Compressions::UNCOMPRESSED];
         yield 'gzip' => [Compressions::GZIP];
         yield 'snappy' => [Compressions::SNAPPY];
     }
 
-    public static function dictionary_data_provider(): \Generator
+    public static function dictionary_data_provider(): Generator
     {
         yield 'string repetition' => [
             ['apple', 'banana', 'apple', 'cherry', 'banana', 'apple'],
@@ -55,14 +61,14 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         ];
     }
 
-    public static function page_size_provider(): \Generator
+    public static function page_size_provider(): Generator
     {
         yield 'small page' => [1024];
         yield 'medium page' => [8192];
         yield 'large page' => [65536];
     }
 
-    public static function physical_types_provider(): \Generator
+    public static function physical_types_provider(): Generator
     {
         yield 'int32' => [PhysicalType::INT32, [10, 20, 10, 30, 20]];
         yield 'int64' => [PhysicalType::INT64, [1234567890123, 9876543210987, 1234567890123]];
@@ -72,7 +78,7 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         yield 'byte_array' => [PhysicalType::BYTE_ARRAY, ['hello', 'world', 'hello', 'test', 'world']];
     }
 
-    public static function writer_version_provider(): \Generator
+    public static function writer_version_provider(): Generator
     {
         yield 'version 1' => [1];
         yield 'version 2' => [2];
@@ -106,13 +112,19 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $repLevels = [];
         $defLevels = [];
+        /** @var array<null|object|scalar> $nonNullValues */
         $nonNullValues = [];
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($values as $value) {
             $repLevels[] = 0;
             $defLevels[] = $value === null ? 0 : 1;
 
-            if ($value !== null) {
+            if ($value === null) {
+                continue;
+            }
+
+            if (is_scalar($value) || is_object($value)) {
                 $nonNullValues[] = $value;
             }
         }
@@ -191,10 +203,10 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $builder->addColumn(new WriteFlatColumnValues($column, [], [], []));
 
-        $reflectionClass = new \ReflectionClass($builder);
+        $reflectionClass = new ReflectionClass($builder);
         $buildDictionaryPageMethod = $reflectionClass->getMethod('buildDictionaryPage');
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Cannot build dictionary page without dictionary');
 
         $codec = new Codec($options);
@@ -273,7 +285,7 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $builder->addColumn(new WriteFlatColumnValues($column, [0], [1], ['test']));
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
             'Flow Parquet Writer does not support given version of Parquet format, supported versions are [1,2], given: 3',
         );

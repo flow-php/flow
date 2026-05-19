@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Psr3\Telemetry\Tests\Unit;
 
+use DateTimeImmutable;
 use Flow\Bridge\Psr3\Telemetry\ValueNormalizer;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use stdClass;
+use Stringable;
 
 final class ValueNormalizerTest extends TestCase
 {
@@ -22,7 +26,7 @@ final class ValueNormalizerTest extends TestCase
     public function test_normalizes_datetime_passthrough(): void
     {
         $normalizer = new ValueNormalizer();
-        $datetime = new \DateTimeImmutable('2024-01-15 10:30:00');
+        $datetime = new DateTimeImmutable('2024-01-15 10:30:00');
 
         static::assertSame($datetime, $normalizer->normalize($datetime));
     }
@@ -34,7 +38,7 @@ final class ValueNormalizerTest extends TestCase
 
     public function test_normalizes_object_with_to_string_to_string(): void
     {
-        $object = new class implements \Stringable {
+        $object = new class implements Stringable {
             public function __toString(): string
             {
                 return 'rendered';
@@ -46,7 +50,7 @@ final class ValueNormalizerTest extends TestCase
 
     public function test_normalizes_object_without_to_string_to_class_name(): void
     {
-        static::assertSame(\stdClass::class, (new ValueNormalizer())->normalize(new \stdClass()));
+        static::assertSame(stdClass::class, (new ValueNormalizer())->normalize(new stdClass()));
     }
 
     public function test_normalizes_resource_to_debug_type(): void
@@ -73,7 +77,7 @@ final class ValueNormalizerTest extends TestCase
 
     public function test_normalizes_throwable_passthrough(): void
     {
-        $exception = new \RuntimeException('boom');
+        $exception = new RuntimeException('boom');
 
         static::assertSame($exception, (new ValueNormalizer())->normalize($exception));
     }

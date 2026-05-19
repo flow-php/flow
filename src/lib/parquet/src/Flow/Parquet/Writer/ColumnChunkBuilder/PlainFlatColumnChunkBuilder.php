@@ -31,6 +31,10 @@ use Flow\Parquet\Writer\StatisticsCounter;
 use Flow\Parquet\Writer\ValueStorage\BooleanValueStorage;
 use Flow\Parquet\Writer\ValueStorage\BufferValueStorage;
 use Flow\Parquet\Writer\ValueStorage\ValueStorage;
+use RuntimeException;
+
+use function count;
+use function strlen;
 
 final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
 {
@@ -116,7 +120,7 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
         $pageContainer = match ($writerVersion = $this->options->getInt(Option::WRITER_VERSION)) {
             1 => $this->buildDataPage($codec, $this->compression),
             2 => $this->buildDataPageV2($codec, $this->compression),
-            default => throw new \RuntimeException(
+            default => throw new RuntimeException(
                 'Flow Parquet Writer does not support given version of Parquet format, supported versions are [1,2], given: '
                 . $writerVersion,
             ),
@@ -143,6 +147,8 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
     {
         $this->closePage();
 
+        $dictionaryPageContainer = $this->pages->dictionaryPageContainer();
+
         $containers = [new ColumnChunkContainer(
             $this->pages->buffer(),
             new ColumnChunk(
@@ -154,9 +160,9 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
                 encodings: $this->pages->encodings(),
                 totalCompressedSize: $this->pages->compressedSize(),
                 totalUncompressedSize: $this->pages->uncompressedSize(),
-                dictionaryPageOffset: $this->pages->dictionaryPageContainer() ? $fileOffset : null,
-                dataPageOffset: $this->pages->dictionaryPageContainer()
-                    ? $fileOffset + $this->pages->dictionaryPageContainer()->totalCompressedSize()
+                dictionaryPageOffset: $dictionaryPageContainer !== null ? $fileOffset : null,
+                dataPageOffset: $dictionaryPageContainer !== null
+                    ? $fileOffset + $dictionaryPageContainer->totalCompressedSize()
                     : $fileOffset,
                 indexPageOffset: null,
                 statistics: $this->chunkStatistics->toStatistics(),
@@ -187,7 +193,7 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
 
     public function isFull(): bool
     {
-        return $this->valueStorage->size() >= $this->options->get(Option::PAGE_SIZE_BYTES);
+        return $this->valueStorage->size() >= $this->options->getInt(Option::PAGE_SIZE_BYTES);
     }
 
     public function uncompressedSize(): int
@@ -223,13 +229,13 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
 
         $pageHeader = new PageHeader(
             Type::DATA_PAGE,
-            \strlen($compressedBuffer),
-            \strlen($pageBuffer),
+            strlen($compressedBuffer),
+            strlen($pageBuffer),
             dataPageHeader: new DataPageHeader(
                 encoding: Encodings::PLAIN,
                 repetitionLevelEncoding: Encodings::RLE,
                 definitionLevelEncoding: Encodings::RLE,
-                valuesCount: \count($this->definitionLevels),
+                valuesCount: count($this->definitionLevels),
             ),
             dataPageHeaderV2: null,
             dictionaryPageHeader: null,
@@ -250,7 +256,7 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
                 BitWidth::calculate($this->column->maxRepetitionsLevel()),
                 $this->repetitionLevels,
             );
-            $repetitionsLength = \strlen($repetitionsBuffer);
+            $repetitionsLength = strlen($repetitionsBuffer);
         } else {
             $repetitionsBuffer = '';
             $repetitionsLength = 0;
@@ -261,7 +267,7 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
                 BitWidth::calculate($this->column->maxDefinitionsLevel()),
                 $this->definitionLevels,
             );
-            $definitionsLength = \strlen($definitionsBuffer);
+            $definitionsLength = strlen($definitionsBuffer);
         } else {
             $definitionsBuffer = '';
             $definitionsLength = 0;
@@ -271,11 +277,11 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
 
         $pageHeader = new PageHeader(
             Type::DATA_PAGE_V2,
-            \strlen($compressedBuffer) + $repetitionsLength + $definitionsLength,
-            \strlen($this->valueStorage->getBuffer()) + $repetitionsLength + $definitionsLength,
+            strlen($compressedBuffer) + $repetitionsLength + $definitionsLength,
+            strlen($this->valueStorage->getBuffer()) + $repetitionsLength + $definitionsLength,
             dataPageHeader: null,
             dataPageHeaderV2: new DataPageHeaderV2(
-                valuesCount: \count($this->definitionLevels),
+                valuesCount: count($this->definitionLevels),
                 nullsCount: $this->nullCount,
                 rowsCount: $this->rowsCount,
                 encoding: Encodings::PLAIN,

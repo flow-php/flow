@@ -11,6 +11,7 @@ use Flow\ETL\Schema\Definition\DateTimeDefinition;
 use Flow\ETL\Schema\Definition\TimeDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\date_schema;
@@ -22,7 +23,7 @@ use function Flow\ETL\DSL\time_schema;
 
 final class TimeDefinitionTest extends FlowTestCase
 {
-    public static function provideIsCompatibleCases(): \Generator
+    public static function provideIsCompatibleCases(): Generator
     {
         yield 'same type and name' => [
             time_schema('duration'),
@@ -49,7 +50,7 @@ final class TimeDefinitionTest extends FlowTestCase
         ];
     }
 
-    public static function provideMergeCases(): \Generator
+    public static function provideMergeCases(): Generator
     {
         yield 'same type' => [
             time_schema('duration'),
@@ -70,7 +71,7 @@ final class TimeDefinitionTest extends FlowTestCase
         ];
     }
 
-    public static function provideMergeWithExpectedTypeCases(): \Generator
+    public static function provideMergeWithExpectedTypeCases(): Generator
     {
         yield 'with date produces datetime' => [
             time_schema('col'),

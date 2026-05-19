@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Mother;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Logger\LogRecord;
 use Flow\Telemetry\Logger\Severity;
@@ -27,7 +28,7 @@ final class LogEntryMother
                 ->setAttributes($attributes),
             ResourceMother::default(),
             InstrumentationScopeMother::default(),
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
             $spanContext,
         );
     }
@@ -48,7 +49,7 @@ final class LogEntryMother
                 ->setAttributes($attributes),
             ResourceMother::full(),
             InstrumentationScopeMother::default(),
-            new \DateTimeImmutable('2024-01-15T10:30:00.000000+00:00'),
+            new DateTimeImmutable('2024-01-15T10:30:00.000000+00:00'),
             $spanContext,
         );
     }

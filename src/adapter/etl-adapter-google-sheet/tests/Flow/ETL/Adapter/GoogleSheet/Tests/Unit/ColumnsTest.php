@@ -7,11 +7,12 @@ namespace Flow\ETL\Adapter\GoogleSheet\Tests\Unit;
 use Flow\ETL\Adapter\GoogleSheet\Columns;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class ColumnsTest extends FlowTestCase
 {
-    public static function invalid_cases(): \Generator
+    public static function invalid_cases(): Generator
     {
         yield 'empty sheet name' => [
             '',

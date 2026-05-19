@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML;
 
+use DOMDocument;
+use DOMNode;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
@@ -14,9 +16,14 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
+use Generator;
+use XMLParser;
+use XMLWriter;
 
+use function count;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\Types\DSL\type_string;
+use function is_scalar;
 
 final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -45,11 +52,11 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
      */
     private array $namespaceStack = [];
 
-    private ?\XMLParser $parser = null;
+    private ?XMLParser $parser = null;
 
     private ?Schema $schema = null;
 
-    private ?\XMLWriter $writer = null;
+    private ?XMLWriter $writer = null;
 
     private string $xmlNodePath = '';
 
@@ -74,21 +81,21 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         $this->resetLimit();
     }
 
-    public function characterDataHandler(\XMLParser $parser, string $data): void
+    public function characterDataHandler(XMLParser $parser, string $data): void
     {
         if ($this->capturing) {
             $this->writer()->text($data);
         }
     }
 
-    public function endElementHandler(\XMLParser $parser, string $name): void
+    public function endElementHandler(XMLParser $parser, string $name): void
     {
         if ($this->capturing) {
             $this->writer()->endElement();
 
             if (
                 implode('/', $this->currentPath) === $this->xmlNodePath
-                || $this->xmlNodePath === '' && \count($this->currentPath) === 1
+                || $this->xmlNodePath === '' && count($this->currentPath) === 1
             ) {
                 $this->capturing = false;
                 $this->elements[] = $this->writer()->outputMemory();
@@ -99,7 +106,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         array_pop($this->namespaceStack);
     }
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
@@ -115,7 +122,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
                     ));
                 }
 
-                if (\count($this->elements)) {
+                if (count($this->elements)) {
                     foreach ($this->elements as $element) {
                         if ($shouldPutInputIntoRows) {
                             $rowData = [
@@ -148,7 +155,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
 
             xml_parse($this->parser(), '', true);
 
-            if (\count($this->elements)) {
+            if (count($this->elements)) {
                 foreach ($this->elements as $element) {
                     if ($shouldPutInputIntoRows) {
                         $rowData = [
@@ -185,7 +192,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
     /**
      * @param array<string, mixed> $attrs
      */
-    public function startElementHandler(\XMLParser $parser, string $name, array $attrs): void
+    public function startElementHandler(XMLParser $parser, string $name, array $attrs): void
     {
         $this->currentPath[] = $name;
 
@@ -194,7 +201,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
 
         foreach ($attrs as $key => $value) {
             if ($key === 'xmlns' || str_starts_with($key, 'xmlns:')) {
-                $namespaceDeclarations[$key] = \is_scalar($value) ? type_string()->cast($value) : '';
+                $namespaceDeclarations[$key] = is_scalar($value) ? type_string()->cast($value) : '';
             } else {
                 $otherAttributes[$key] = $value;
             }
@@ -204,7 +211,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
 
         $isCapturedRoot =
             implode('/', $this->currentPath) === $this->xmlNodePath
-            || $this->xmlNodePath === '' && \count($this->currentPath) === 1;
+            || $this->xmlNodePath === '' && count($this->currentPath) === 1;
 
         if ($isCapturedRoot) {
             $this->capturing = true;
@@ -222,7 +229,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         }
 
         foreach ($otherAttributes as $key => $value) {
-            $this->writer()->writeAttribute($key, \is_scalar($value) ? type_string()->cast($value) : '');
+            $this->writer()->writeAttribute($key, is_scalar($value) ? type_string()->cast($value) : '');
         }
     }
 
@@ -250,9 +257,9 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         return $this;
     }
 
-    private function createDOMNode(string $xmlString): \DOMNode
+    private function createDOMNode(string $xmlString): DOMNode
     {
-        $doc = new \DOMDocument();
+        $doc = new DOMDocument();
         $doc->loadXML($xmlString);
 
         return $doc;
@@ -260,16 +267,12 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
 
     private function freeParser(): void
     {
-        if ($this->parser !== null) {
-            xml_parser_free($this->parser);
-            $this->parser = null;
-        }
-
+        $this->parser = null;
         $this->namespaceStack = [];
         $this->currentPath = [];
     }
 
-    private function parser(): \XMLParser
+    private function parser(): XMLParser
     {
         if ($this->parser === null) {
             $this->parser = xml_parser_create();
@@ -281,10 +284,10 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         return $this->parser;
     }
 
-    private function writer(): \XMLWriter
+    private function writer(): XMLWriter
     {
         if ($this->writer === null) {
-            $this->writer = new \XMLWriter();
+            $this->writer = new XMLWriter();
             $this->writer->openMemory();
             $this->writer->setIndent(true);
         }

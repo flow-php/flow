@@ -6,6 +6,11 @@ namespace Flow\Bridge\Telemetry\OTLP\Serializer;
 
 use Flow\Telemetry\Attributes;
 
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_string;
+
 /**
  * Serializes telemetry attributes to OTLP JSON format.
  *
@@ -44,19 +49,19 @@ final class AttributeSerializer
      */
     public function serializeValue(string|int|float|bool|array $value): array
     {
-        if (\is_string($value)) {
+        if (is_string($value)) {
             return ['stringValue' => $value];
         }
 
-        if (\is_int($value)) {
+        if (is_int($value)) {
             return ['intValue' => (string) $value];
         }
 
-        if (\is_float($value)) {
+        if (is_float($value)) {
             return ['doubleValue' => $value];
         }
 
-        if (\is_bool($value)) {
+        if (is_bool($value)) {
             return ['boolValue' => $value];
         }
 

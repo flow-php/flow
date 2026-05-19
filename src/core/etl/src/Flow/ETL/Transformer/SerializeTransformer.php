@@ -10,6 +10,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
+use Throwable;
 
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
@@ -39,7 +40,7 @@ final readonly class SerializeTransformer implements Transformer
             ]);
 
             return $result;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->transformationFailed($this, $e);
 
             throw $e;

@@ -9,6 +9,10 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Processor;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Generator;
+
+use function array_splice;
+use function count;
 
 /**
  * Re-batches rows into fixed-size batches.
@@ -30,7 +34,7 @@ final readonly class BatchingProcessor implements Processor
         }
     }
 
-    public function process(\Generator $rows, FlowContext $context): \Generator
+    public function process(Generator $rows, FlowContext $context): Generator
     {
         /** @var array<Row> $buffer */
         $buffer = [];
@@ -40,8 +44,8 @@ final readonly class BatchingProcessor implements Processor
             foreach ($batch as $row) {
                 $buffer[] = $row;
 
-                if (\count($buffer) >= $this->size) {
-                    yield new Rows(...\array_splice($buffer, 0, $this->size));
+                if (count($buffer) >= $this->size) {
+                    yield new Rows(...array_splice($buffer, 0, $this->size));
                 }
             }
         }

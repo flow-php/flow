@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration;
 
+use DateTimeImmutable;
 use Flow\ETL\Filesystem\ScalarFunctionFilter;
 use Flow\Filesystem\Exception\InvalidSchemeException;
 use Flow\Filesystem\FileStatus;
@@ -11,6 +12,9 @@ use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
 use Flow\Types\Type\AutoCaster;
 
+use function array_map;
+use function file_exists;
+use function file_get_contents;
 use function Flow\ETL\DSL\all;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
@@ -19,13 +23,18 @@ use function Flow\ETL\DSL\ref;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
+use function fopen;
+use function iterator_to_array;
+use function mb_substr;
+use function mkdir;
+use function sort;
 
 final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 {
     protected function setUp(): void
     {
-        if (!\file_exists(__DIR__ . '/var')) {
-            \mkdir(__DIR__ . '/var');
+        if (!file_exists(__DIR__ . '/var')) {
+            mkdir(__DIR__ . '/var');
         }
     }
 
@@ -94,7 +103,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = native_local_filesystem();
 
-        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource);
         $fs->writeTo(path(__DIR__ . '/var/file.txt'))->fromResource($resource);
 
@@ -107,7 +116,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = native_local_filesystem();
 
-        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource);
         $fs->writeTo(path(__DIR__ . '/var/nested/orders/orders.txt'))->fromResource($resource);
 
@@ -145,7 +154,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = native_local_filesystem();
 
-        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource);
         $fs->writeTo(path(__DIR__ . '/var/some_path_to/file.txt'))->fromResource($resource);
 
@@ -165,7 +174,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $this->expectException(InvalidSchemeException::class);
 
-        \iterator_to_array(native_local_filesystem()->list(path('memory:///var/foo.txt')));
+        iterator_to_array(native_local_filesystem()->list(path('memory:///var/foo.txt')));
     }
 
     public function test_move_blob(): void
@@ -198,15 +207,15 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = native_local_filesystem();
 
-        $resource1 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource1 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource1);
         $fs->writeTo(path(__DIR__ . '/var/nested/orders/orders.txt'))->fromResource($resource1);
 
-        $resource2 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource2 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource2);
         $fs->writeTo(path(__DIR__ . '/var/nested/orders/orders.csv'))->fromResource($resource2);
 
-        $resource3 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource3 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource3);
         $fs->writeTo(path(__DIR__ . '/var/nested/orders/orders_01.csv'))->fromResource($resource3);
 
@@ -225,9 +234,9 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $stream = native_local_filesystem()->readFrom(path(__FILE__));
 
-        $fileContent = \file_get_contents(__FILE__);
+        $fileContent = file_get_contents(__FILE__);
         static::assertIsString($fileContent);
-        static::assertSame(\mb_substr($fileContent, 0, 100), $stream->read(100, 0));
+        static::assertSame(mb_substr($fileContent, 0, 100), $stream->read(100, 0));
     }
 
     public function test_open_file_stream_for_non_existing_file(): void
@@ -248,14 +257,14 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     public function test_reading_multi_partitioned_path(): void
     {
-        $paths = \iterator_to_array(native_local_filesystem()->list(
+        $paths = iterator_to_array(native_local_filesystem()->list(
             path(__DIR__ . '/Fixtures/multi_partitions/**/*.txt'),
             new ScalarFunctionFilter(
                 all(
                     ref('country')->equals(lit('pl')),
                     all(
-                        ref('date')->cast('date')->greaterThanEqual(lit(new \DateTimeImmutable('2022-01-02'))),
-                        ref('date')->cast('date')->lessThan(lit(new \DateTimeImmutable('2022-01-04'))),
+                        ref('date')->cast('date')->greaterThanEqual(lit(new DateTimeImmutable('2022-01-02'))),
+                        ref('date')->cast('date')->lessThan(lit(new DateTimeImmutable('2022-01-04'))),
                     ),
                 ),
                 flow_context(config())->entryFactory(),
@@ -263,26 +272,26 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
                 flow_context(),
             ),
         ));
-        \sort($paths);
+        sort($paths);
 
         $path1 = path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-02/country=pl/file.txt');
         $path1->partitions();
         $path2 = path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-03/country=pl/file.txt');
         $path2->partitions();
 
-        $uris = \array_map(static fn(FileStatus $s): string => $s->path->uri(), $paths);
+        $uris = array_map(static fn(FileStatus $s): string => $s->path->uri(), $paths);
         static::assertSame([$path1->uri(), $path2->uri()], $uris);
     }
 
     public function test_reading_partitioned_folder(): void
     {
-        $statuses = \iterator_to_array(native_local_filesystem()->list(
+        $statuses = iterator_to_array(native_local_filesystem()->list(
             path(__DIR__ . '/Fixtures/partitioned/**/*.txt'),
             new KeepAll(),
         ));
-        \sort($statuses);
+        sort($statuses);
 
-        $uris = \array_map(static fn(FileStatus $s): string => $s->path->uri(), $statuses);
+        $uris = array_map(static fn(FileStatus $s): string => $s->path->uri(), $statuses);
         static::assertSame(
             [
                 path(__DIR__ . '/Fixtures/partitioned/partition_01=a/file_01.txt')->uri(),
@@ -297,7 +306,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         $path = path(__DIR__ . '/Fixtures/partitioned/partition_01=b/file_02.txt');
         $path->partitions();
 
-        $statuses = \iterator_to_array(native_local_filesystem()->list(
+        $statuses = iterator_to_array(native_local_filesystem()->list(
             path(__DIR__ . '/Fixtures/partitioned/**/*.txt'),
             new ScalarFunctionFilter(
                 ref('partition_01')->equals(lit('b')),
@@ -307,19 +316,19 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
             ),
         ));
 
-        $uris = \array_map(static fn(FileStatus $s): string => $s->path->uri(), $statuses);
+        $uris = array_map(static fn(FileStatus $s): string => $s->path->uri(), $statuses);
         static::assertSame([$path->uri()], $uris);
     }
 
     public function test_reading_partitioned_folder_with_pattern(): void
     {
-        $statuses = \iterator_to_array(native_local_filesystem()->list(
+        $statuses = iterator_to_array(native_local_filesystem()->list(
             path(__DIR__ . '/Fixtures/partitioned/partition_01=*/*.txt'),
             new KeepAll(),
         ));
-        \sort($statuses);
+        sort($statuses);
 
-        $uris = \array_map(static fn(FileStatus $s): string => $s->path->uri(), $statuses);
+        $uris = array_map(static fn(FileStatus $s): string => $s->path->uri(), $statuses);
         static::assertSame(
             [
                 path(__DIR__ . '/Fixtures/partitioned/partition_01=a/file_01.txt')->uri(),
@@ -396,15 +405,15 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = native_local_filesystem();
 
-        $resource1 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource1 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource1);
         $fs->writeTo(path(__DIR__ . '/var/orders.csv'))->fromResource($resource1);
 
-        $resource2 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource2 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource2);
         $fs->writeTo(path(__DIR__ . '/var/nested/orders/orders.csv'))->fromResource($resource2);
 
-        $resource3 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource3 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource3);
         $fs->writeTo(path(__DIR__ . '/var/nested/orders/orders_01.csv'))->fromResource($resource3);
 
@@ -429,15 +438,15 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = native_local_filesystem();
 
-        $resource1 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource1 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource1);
         $fs->writeTo(path(__DIR__ . '/var/nested/orders/orders.txt'))->fromResource($resource1);
 
-        $resource2 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource2 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource2);
         $fs->writeTo(path(__DIR__ . '/var/nested/orders/orders.csv'))->fromResource($resource2);
 
-        $resource3 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource3 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource3);
         $fs->writeTo(path(__DIR__ . '/var/nested/orders/orders_01.csv'))->fromResource($resource3);
 
@@ -462,7 +471,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = native_local_filesystem();
 
-        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource);
         $fs->writeTo(path(__DIR__ . '/var/redundant_slash/file.txt'))->fromResource($resource);
 
@@ -475,15 +484,15 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = native_local_filesystem();
 
-        $resource1 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource1 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource1);
         $fs->writeTo(path(__DIR__ . '/var/recursive_rm/dir_a/file1.txt'))->fromResource($resource1);
 
-        $resource2 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource2 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource2);
         $fs->writeTo(path(__DIR__ . '/var/recursive_rm/dir_a/nested/file2.txt'))->fromResource($resource2);
 
-        $resource3 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource3 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource3);
         $fs->writeTo(path(__DIR__ . '/var/recursive_rm/dir_b/file3.txt'))->fromResource($resource3);
 
@@ -503,11 +512,11 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     public function test_scan_yields_all_matching_files(): void
     {
-        $statuses = \iterator_to_array(native_local_filesystem()->list(path(__DIR__
+        $statuses = iterator_to_array(native_local_filesystem()->list(path(__DIR__
         . '/Fixtures/multi_partitions/**/*.txt')));
 
-        $uris = \array_map(static fn(FileStatus $s): string => $s->path->uri(), $statuses);
-        \sort($uris);
+        $uris = array_map(static fn(FileStatus $s): string => $s->path->uri(), $statuses);
+        sort($uris);
 
         static::assertSame(
             [
@@ -595,7 +604,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = native_local_filesystem();
 
-        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource);
 
         $stream = $fs->writeTo(path(__DIR__ . '/var/orders.csv'));
@@ -607,7 +616,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         static::assertTrue($status->isFile());
         static::assertFalse($status->isDirectory());
         static::assertSame(
-            \file_get_contents(__DIR__ . '/Fixtures/orders.csv'),
+            file_get_contents(__DIR__ . '/Fixtures/orders.csv'),
             $fs->readFrom(path(__DIR__ . '/var/orders.csv'))->content(),
         );
 

@@ -23,6 +23,8 @@ use Flow\Azure\SDK\BlobService\PutBlockBlobBlockList\PutBlockBlobBlockListOption
 use Flow\Azure\SDK\BlobService\PutBlockBlobBlockList\SimpleXMLSerializer;
 use Flow\Azure\SDK\BlobServiceInterface;
 use Flow\Azure\SDK\Serializer;
+use Generator;
+use LogicException;
 
 final class StubBlobService implements BlobServiceInterface
 {
@@ -38,7 +40,7 @@ final class StubBlobService implements BlobServiceInterface
 
     public function getBlob(string $blob, GetBlobOptions $options = new GetBlobOptions()): BlobContent
     {
-        throw new \LogicException('not implemented');
+        throw new LogicException('not implemented');
     }
 
     public function getBlobProperties(
@@ -52,7 +54,7 @@ final class StubBlobService implements BlobServiceInterface
         string $blob,
         GetBlockBlobBlockListOptions $options = new GetBlockBlobBlockListOptions(),
     ): BlockList {
-        throw new \LogicException('not implemented');
+        throw new LogicException('not implemented');
     }
 
     public function getContainerProperties(GetContainerPropertiesOptions $options = new GetContainerPropertiesOptions()): ?ContainerProperties
@@ -60,7 +62,7 @@ final class StubBlobService implements BlobServiceInterface
         return null;
     }
 
-    public function listBlobs(ListBlobOptions $options = new ListBlobOptions()): \Generator
+    public function listBlobs(ListBlobOptions $options = new ListBlobOptions()): Generator
     {
         yield from [];
     }

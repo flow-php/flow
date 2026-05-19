@@ -6,6 +6,8 @@ namespace Flow\ETL\Exception;
 
 use Flow\ETL\Retry\RetriesRecord;
 
+use function sprintf;
+
 final class FailedRetryException extends RuntimeException
 {
     public function __construct(
@@ -15,7 +17,7 @@ final class FailedRetryException extends RuntimeException
         if ($message === '') {
             $totalAttempts = $record->count();
 
-            $message = \sprintf('Retry failed after %d attempts.', $totalAttempts);
+            $message = sprintf('Retry failed after %d attempts.', $totalAttempts);
         }
 
         parent::__construct($message, 0, $record->last()?->exception);

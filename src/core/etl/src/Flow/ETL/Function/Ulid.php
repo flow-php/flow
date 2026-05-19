@@ -8,8 +8,12 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use InvalidArgumentException as BaseInvalidArgumentException;
+use Symfony\Component\Uid\Ulid as SymfonyUlid;
 
-if (!\class_exists(\Symfony\Component\Uid\Ulid::class)) {
+use function class_exists;
+
+if (!class_exists(SymfonyUlid::class)) {
     throw new RuntimeException(
         "\Symfony\Component\Uid\Ulid class not found, please add 'symfony/uid' as a dependency to the project first.",
     );
@@ -27,8 +31,8 @@ final class Ulid extends ScalarFunctionChain
 
         if (null !== $param) {
             try {
-                return \Symfony\Component\Uid\Ulid::fromString($param);
-            } catch (\InvalidArgumentException $e) {
+                return SymfonyUlid::fromString($param);
+            } catch (BaseInvalidArgumentException $e) {
                 return $context
                     ->functions()
                     ->invalidResult(
@@ -37,6 +41,6 @@ final class Ulid extends ScalarFunctionChain
             }
         }
 
-        return new \Symfony\Component\Uid\Ulid();
+        return new SymfonyUlid();
     }
 }

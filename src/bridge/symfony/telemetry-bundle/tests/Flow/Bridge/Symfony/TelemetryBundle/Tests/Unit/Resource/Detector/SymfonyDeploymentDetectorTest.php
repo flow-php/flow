@@ -6,6 +6,7 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Resource\Detector;
 
 use Flow\Bridge\Symfony\TelemetryBundle\Resource\Detector\SymfonyDeploymentDetector;
 use Flow\Telemetry\Resource\Attribute\DeploymentAttribute;
+use Generator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -16,7 +17,7 @@ final class SymfonyDeploymentDetectorTest extends TestCase
     /**
      * @return \Generator<string, array{string}>
      */
-    public static function kernelEnvironmentProvider(): \Generator
+    public static function kernelEnvironmentProvider(): Generator
     {
         yield 'dev environment' => ['dev'];
         yield 'prod environment' => ['prod'];

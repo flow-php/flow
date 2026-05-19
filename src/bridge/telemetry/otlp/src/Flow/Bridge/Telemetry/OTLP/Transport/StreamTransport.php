@@ -4,9 +4,33 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Transport;
 
+use Closure;
 use Flow\Bridge\Telemetry\OTLP\Serializer\JsonSerializer;
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Signal\SignalType;
+use InvalidArgumentException;
+
+use function chmod;
+use function dirname;
+use function fclose;
+use function flock;
+use function fopen;
+use function fwrite;
+use function is_dir;
+use function is_file;
+use function is_int;
+use function is_resource;
+use function mkdir;
+use function preg_replace;
+use function restore_error_handler;
+use function set_error_handler;
+use function sprintf;
+use function str_starts_with;
+use function stream_set_chunk_size;
+use function strlen;
+
+use const LOCK_EX;
+use const LOCK_UN;
 
 /**
  * OTLP File Exporter transport — writes JSONL to either a file path or a php://
@@ -43,24 +67,24 @@ final class StreamTransport implements Transport
         bool $createDirectories = true,
     ) {
         if ($destination === '') {
-            throw new \InvalidArgumentException('StreamTransport destination must be a non-empty string');
+            throw new InvalidArgumentException('StreamTransport destination must be a non-empty string');
         }
 
         if ($filePermissions < 0 || $filePermissions > 0777) {
-            throw new \InvalidArgumentException('File permissions must be between 0 and 0777');
+            throw new InvalidArgumentException('File permissions must be between 0 and 0777');
         }
 
-        $isStreamWrapper = \str_starts_with($destination, 'php://');
-        $existedBefore = !$isStreamWrapper && \is_file($destination);
+        $isStreamWrapper = str_starts_with($destination, 'php://');
+        $existedBefore = !$isStreamWrapper && is_file($destination);
 
         if (!$isStreamWrapper && $createDirectories) {
-            $directory = \dirname($destination);
+            $directory = dirname($destination);
 
-            if (!\is_dir($directory)) {
-                $created = $this->captureError(static fn(): bool => \mkdir($directory, 0755, true));
+            if (!is_dir($directory)) {
+                $created = $this->captureError(static fn(): bool => mkdir($directory, 0755, true));
 
-                if ($created === false && !\is_dir($directory)) {
-                    throw new TransportException(\sprintf(
+                if ($created === false && !is_dir($directory)) {
+                    throw new TransportException(sprintf(
                         'Failed to create directory "%s" for StreamTransport destination: %s',
                         $directory,
                         $this->errorMessage ?? 'unknown error',
@@ -69,10 +93,10 @@ final class StreamTransport implements Transport
             }
         }
 
-        $handle = $this->captureError(static fn() => \fopen($destination, 'a+b'));
+        $handle = $this->captureError(static fn() => fopen($destination, 'a+b'));
 
-        if (!\is_resource($handle)) {
-            throw new TransportException(\sprintf(
+        if (!is_resource($handle)) {
+            throw new TransportException(sprintf(
                 'Failed to open OTLP stream "%s": %s',
                 $destination,
                 $this->errorMessage ?? 'unknown error',
@@ -80,11 +104,11 @@ final class StreamTransport implements Transport
         }
 
         $this->stream = $handle;
-        \stream_set_chunk_size($this->stream, self::STREAM_CHUNK_SIZE);
+        stream_set_chunk_size($this->stream, self::STREAM_CHUNK_SIZE);
         $this->serializer = new JsonSerializer();
 
         if (!$isStreamWrapper && !$existedBefore) {
-            @\chmod($destination, $filePermissions);
+            @chmod($destination, $filePermissions);
         }
     }
 
@@ -107,28 +131,28 @@ final class StreamTransport implements Transport
 
         $stream = $this->stream;
 
-        @\flock($stream, \LOCK_EX);
+        @flock($stream, LOCK_EX);
 
         try {
-            $written = $this->captureError(static fn(): false|int => \fwrite($stream, $payload));
+            $written = $this->captureError(static fn(): false|int => fwrite($stream, $payload));
         } finally {
-            @\flock($stream, \LOCK_UN);
+            @flock($stream, LOCK_UN);
         }
 
-        if (!\is_int($written)) {
-            throw new TransportException(\sprintf(
+        if (!is_int($written)) {
+            throw new TransportException(sprintf(
                 'Failed to write OTLP payload to "%s": %s',
                 $this->destination,
                 $this->errorMessage ?? 'unknown error',
             ));
         }
 
-        if ($written < \strlen($payload)) {
-            throw new TransportException(\sprintf(
+        if ($written < strlen($payload)) {
+            throw new TransportException(sprintf(
                 'Partial write to OTLP stream "%s": wrote %d of %d bytes',
                 $this->destination,
                 $written,
-                \strlen($payload),
+                strlen($payload),
             ));
         }
     }
@@ -139,7 +163,7 @@ final class StreamTransport implements Transport
             return;
         }
 
-        @\fclose($this->stream);
+        @fclose($this->stream);
         $this->isShutdown = true;
     }
 
@@ -151,11 +175,11 @@ final class StreamTransport implements Transport
         return $this->stream;
     }
 
-    private function captureError(\Closure $operation): mixed
+    private function captureError(Closure $operation): mixed
     {
         $this->errorMessage = null;
-        \set_error_handler(function (int $code, string $message): bool {
-            $this->errorMessage = \preg_replace('{^\w+\(.*?\): }', '', $message);
+        set_error_handler(function (int $code, string $message): bool {
+            $this->errorMessage = preg_replace('{^\w+\(.*?\): }', '', $message);
 
             return true;
         });
@@ -163,7 +187,7 @@ final class StreamTransport implements Transport
         try {
             return $operation();
         } finally {
-            \restore_error_handler();
+            restore_error_handler();
         }
     }
 }

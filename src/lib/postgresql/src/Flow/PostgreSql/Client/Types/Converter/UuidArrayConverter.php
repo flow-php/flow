@@ -8,6 +8,11 @@ use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\ValueConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
 
+use function array_map;
+use function implode;
+use function is_array;
+use function is_string;
+
 final class UuidArrayConverter implements ValueConverter
 {
     public function supportedTypes(): array
@@ -21,22 +26,23 @@ final class UuidArrayConverter implements ValueConverter
             return null;
         }
 
-        if (!\is_array($value)) {
+        if (!is_array($value)) {
             return '{}';
         }
 
-        $elements = [];
+        return '{' . implode(',', array_map(self::encodeElement(...), $value)) . '}';
+    }
 
-        foreach ($value as $v) {
-            if ($v === null) {
-                $elements[] = 'NULL';
-            } elseif (\is_string($v)) {
-                $elements[] = $v;
-            } else {
-                throw ValueConversionException::cannotConvert($v, 'UUID array element');
-            }
+    private static function encodeElement(mixed $element): string
+    {
+        if ($element === null) {
+            return 'NULL';
         }
 
-        return '{' . \implode(',', $elements) . '}';
+        if (is_string($element)) {
+            return $element;
+        }
+
+        throw ValueConversionException::cannotConvert($element, 'UUID array element');
     }
 }

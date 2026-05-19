@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\PostgreSql\DSL\cast;
@@ -14,13 +15,14 @@ use function Flow\PostgreSql\DSL\column_type_varchar;
 use function Flow\PostgreSql\DSL\literal;
 use function Flow\PostgreSql\DSL\param;
 use function Flow\PostgreSql\DSL\select;
+use function str_repeat;
 
 final class StringConverterTest extends PostgreSqlTestCase
 {
     /**
      * @return \Generator<string, array{string, string}>
      */
-    public static function provide_char_values(): \Generator
+    public static function provide_char_values(): Generator
     {
         yield 'padded' => ['test', 'test      '];
         yield 'exact length' => ['1234567890', '1234567890'];
@@ -29,7 +31,7 @@ final class StringConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{string, string}>
      */
-    public static function provide_text_values(): \Generator
+    public static function provide_text_values(): Generator
     {
         yield 'simple string' => ['hello world', 'hello world'];
         yield 'empty string' => ['', ''];
@@ -45,10 +47,10 @@ final class StringConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{string, string}>
      */
-    public static function provide_varchar_values(): \Generator
+    public static function provide_varchar_values(): Generator
     {
         yield 'simple' => ['test', 'test'];
-        yield 'max length' => [\str_repeat('a', 255), \str_repeat('a', 255)];
+        yield 'max length' => [str_repeat('a', 255), str_repeat('a', 255)];
     }
 
     #[DataProvider('provide_char_values')]
@@ -57,19 +59,19 @@ final class StringConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_char(10))->as('val'))->toSql(), [$input]);
+            ->fetchScalarString(select(cast(param(1), column_type_char(10))->as('val'))->toSql(), [$input]);
 
         static::assertSame($expected, $result);
     }
 
     public function test_null_text(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal(null), column_type_text())->as('val'))->toSql());
-
-        static::assertNull($result);
+        static::assertNull(
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalar(select(cast(literal(null), column_type_text())->as('val'))->toSql()),
+        );
     }
 
     #[DataProvider('provide_text_values')]
@@ -78,7 +80,7 @@ final class StringConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_text())->as('val'))->toSql(), [$input]);
+            ->fetchScalarString(select(cast(param(1), column_type_text())->as('val'))->toSql(), [$input]);
 
         static::assertSame($expected, $result);
     }
@@ -89,7 +91,7 @@ final class StringConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_varchar(255))->as('val'))->toSql(), [$input]);
+            ->fetchScalarString(select(cast(param(1), column_type_varchar(255))->as('val'))->toSql(), [$input]);
 
         static::assertSame($expected, $result);
     }

@@ -6,13 +6,24 @@ namespace Flow\Azure\SDK\AuthorizationFactory;
 
 use Flow\Azure\SDK\AuthorizationFactory;
 use Psr\Http\Message\RequestInterface;
+use SensitiveParameter;
+
+use function count;
+use function implode;
+use function ksort;
+use function ltrim;
+use function rtrim;
+use function str_replace;
+use function str_starts_with;
+use function strtolower;
+use function strtoupper;
 
 final readonly class SharedKeyFactory implements AuthorizationFactory
 {
     public function __construct(
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         private string $account,
-        #[\SensitiveParameter]
+        #[SensitiveParameter]
         private string $accountKey,
     ) {}
 
@@ -34,7 +45,7 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
     }
 
     /**
-     * @param array<string, mixed> $headers
+     * @param array<string, string> $headers
      *
      * @return array<int, string>
      */
@@ -44,28 +55,17 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
         $normalizedHeaders = [];
 
         foreach ($headers as $header => $value) {
-            $header = \strtolower($header);
+            $header = strtolower($header);
 
-            if (\str_starts_with($header, 'x-ms-')) {
-                if (\is_string($value)) {
-                    $stringValue = $value;
-                } elseif (\is_int($value) || \is_float($value)) {
-                    $stringValue = (string) $value;
-                } elseif (\is_bool($value)) {
-                    $stringValue = $value ? '1' : '0';
-                } else {
-                    $stringValue = '';
-                }
-
-                $stringValue = \str_replace("\r\n", ' ', $stringValue);
-                $stringValue = \ltrim($stringValue);
-                $header = \rtrim($header);
+            if (str_starts_with($header, 'x-ms-')) {
+                $stringValue = ltrim(str_replace("\r\n", ' ', $value));
+                $header = rtrim($header);
 
                 $normalizedHeaders[$header] = $stringValue;
             }
         }
 
-        \ksort($normalizedHeaders);
+        ksort($normalizedHeaders);
 
         foreach ($normalizedHeaders as $key => $value) {
             $canonicalizedHeaders[] = $key . ':' . $value;
@@ -75,7 +75,7 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
     }
 
     /**
-     * @param array<string, mixed> $queryParams
+     * @param array<string, string> $queryParams
      */
     private function computeCanonicalizedResource(string $url, array $queryParams): string
     {
@@ -83,32 +83,22 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
 
         $canonicalizedResource = '/' . $this->account;
 
-        $canonicalizedResource .= parse_url($url, PHP_URL_PATH);
+        $canonicalizedResource .= (string) parse_url($url, PHP_URL_PATH);
 
-        if (\count($queryParams) > 0) {
-            \ksort($queryParams);
+        if (count($queryParams) > 0) {
+            ksort($queryParams);
         }
 
         foreach ($queryParams as $key => $value) {
-            if (\is_string($value)) {
-                $stringValue = $value;
-            } elseif (\is_int($value) || \is_float($value)) {
-                $stringValue = (string) $value;
-            } elseif (\is_bool($value)) {
-                $stringValue = $value ? '1' : '0';
-            } else {
-                $stringValue = '';
-            }
-
-            $canonicalizedResource .= "\n" . $key . ':' . $stringValue;
+            $canonicalizedResource .= "\n" . $key . ':' . $value;
         }
 
         return $canonicalizedResource;
     }
 
     /**
-     * @param array<string, mixed> $headers
-     * @param array<string, mixed> $queryParams
+     * @param array<string, string> $headers
+     * @param array<string, string> $queryParams
      */
     private function computeSignature(array $headers, string $url, array $queryParams, string $httpMethod): string
     {
@@ -116,7 +106,7 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
         $canonicalizedResource = $this->computeCanonicalizedResource($url, $queryParams);
 
         $stringToSign = [];
-        $stringToSign[] = \strtoupper($httpMethod);
+        $stringToSign[] = strtoupper($httpMethod);
 
         $includedHeaders = [
             'content-encoding',
@@ -135,17 +125,16 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
         $lowercaseHeaders = array_change_key_case($headers);
 
         foreach ($includedHeaders as $header) {
-            $headerValue = \array_key_exists($header, $lowercaseHeaders) ? $lowercaseHeaders[$header] : null;
-            $stringToSign[] = \is_string($headerValue) ? $headerValue : '';
+            $stringToSign[] = $lowercaseHeaders[$header] ?? '';
         }
 
         if (count($canonicalizedHeaders) > 0) {
-            $stringToSign[] = \implode("\n", $canonicalizedHeaders);
+            $stringToSign[] = implode("\n", $canonicalizedHeaders);
         }
 
         $stringToSign[] = $canonicalizedResource;
 
-        return \implode("\n", $stringToSign);
+        return implode("\n", $stringToSign);
     }
 
     /**
@@ -156,13 +145,7 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
         $headers = [];
 
         foreach ($request->getHeaders() as $key => $value) {
-            if (is_array($value) && count($value) == 1) {
-                $headers[strtolower((string) $key)] = $value[0];
-            } elseif (is_array($value)) {
-                $headers[strtolower((string) $key)] = implode(',', $value);
-            } else {
-                $headers[strtolower((string) $key)] = (string) $value;
-            }
+            $headers[strtolower((string) $key)] = count($value) === 1 ? $value[0] : implode(',', $value);
         }
 
         return $headers;
@@ -173,7 +156,6 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
      */
     private function parseQueryPart(string $queryPart, bool $urlEncoding = true): array
     {
-        /** @var array<string, string> $result */
         $result = [];
 
         if ($queryPart === '') {
@@ -186,7 +168,7 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
             $decoder = static fn(string $str): string => $str;
         }
 
-        /** @var array<string, array<string>|string> $temporaryResult */
+        /** @var array<string, array<int, string>|string> $temporaryResult */
         $temporaryResult = [];
 
         foreach (explode('&', $queryPart) as $kvp) {
@@ -204,13 +186,8 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
             }
         }
 
-        // Convert arrays to comma-separated strings to match return type
         foreach ($temporaryResult as $key => $value) {
-            if (is_array($value)) {
-                $result[$key] = implode(',', $value);
-            } else {
-                $result[$key] = $value;
-            }
+            $result[$key] = is_array($value) ? implode(',', $value) : $value;
         }
 
         return $result;

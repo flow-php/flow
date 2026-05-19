@@ -6,6 +6,8 @@ namespace Flow\ETL\Transformer\Rename;
 
 use Flow\ETL\Row;
 
+use function str_replace;
+
 final readonly class RenameReplaceEntryStrategy implements RenameEntryStrategy
 {
     /**
@@ -22,7 +24,7 @@ final readonly class RenameReplaceEntryStrategy implements RenameEntryStrategy
         $renames = [];
 
         foreach ($row->entries()->all() as $entry) {
-            $newName = \str_replace($this->search, $this->replace, $entry->name());
+            $newName = str_replace($this->search, $this->replace, $entry->name());
 
             if ($newName !== $entry->name()) {
                 $renames[$entry->name()] = $newName;

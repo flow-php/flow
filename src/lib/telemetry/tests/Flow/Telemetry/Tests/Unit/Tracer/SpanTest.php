@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Tracer;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\InstrumentationScope;
@@ -16,6 +17,9 @@ use Flow\Telemetry\Tracer\SpanLimits;
 use Flow\Telemetry\Tracer\SpanLink;
 use Flow\Telemetry\Tracer\SpanStatus;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+
+use function count;
 
 final class SpanTest extends TestCase
 {
@@ -53,7 +57,7 @@ final class SpanTest extends TestCase
     public function test_constructor_creates_span(): void
     {
         $context = SpanContext::create(TraceId::generate(), SpanId::generate());
-        $startTime = new \DateTimeImmutable();
+        $startTime = new DateTimeImmutable();
         $scope = new InstrumentationScope('test', '1.0.0');
 
         $resource = ResourceMother::default();
@@ -75,8 +79,8 @@ final class SpanTest extends TestCase
 
     public function test_duration_returns_milliseconds(): void
     {
-        $startTime = new \DateTimeImmutable('2024-01-01 12:00:00.000000');
-        $endTime = new \DateTimeImmutable('2024-01-01 12:00:00.500000');
+        $startTime = new DateTimeImmutable('2024-01-01 12:00:00.000000');
+        $endTime = new DateTimeImmutable('2024-01-01 12:00:00.500000');
         $context = SpanContext::create(TraceId::generate(), SpanId::generate());
         $span = new Span(
             'test-span',
@@ -102,8 +106,8 @@ final class SpanTest extends TestCase
     public function test_end_only_sets_once(): void
     {
         $span = $this->createSpan();
-        $firstEnd = new \DateTimeImmutable('2024-01-01 12:00:00');
-        $secondEnd = new \DateTimeImmutable('2024-01-01 13:00:00');
+        $firstEnd = new DateTimeImmutable('2024-01-01 12:00:00');
+        $secondEnd = new DateTimeImmutable('2024-01-01 13:00:00');
 
         $span->end($firstEnd);
         $span->end($secondEnd);
@@ -114,7 +118,7 @@ final class SpanTest extends TestCase
     public function test_end_sets_end_time(): void
     {
         $span = $this->createSpan();
-        $endTime = new \DateTimeImmutable();
+        $endTime = new DateTimeImmutable();
 
         $result = $span->end($endTime);
 
@@ -126,11 +130,11 @@ final class SpanTest extends TestCase
     public function test_end_uses_current_time_when_not_provided(): void
     {
         $span = $this->createSpan();
-        $before = new \DateTimeImmutable();
+        $before = new DateTimeImmutable();
 
         $span->end();
 
-        $after = new \DateTimeImmutable();
+        $after = new DateTimeImmutable();
         static::assertNotNull($span->endTime());
         static::assertGreaterThanOrEqual($before, $span->endTime());
         static::assertLessThanOrEqual($after, $span->endTime());
@@ -151,7 +155,7 @@ final class SpanTest extends TestCase
         $result = $span
             ->setAttribute('key1', 'value1')
             ->setAttributes(['key2' => 'value2'])
-            ->recordEvent(GenericEvent::create('test.event', new \DateTimeImmutable()))
+            ->recordEvent(GenericEvent::create('test.event', new DateTimeImmutable()))
             ->addLink(SpanLink::create($linkedContext))
             ->setStatus(SpanStatus::ok())
             ->rename('new-name')
@@ -284,8 +288,8 @@ final class SpanTest extends TestCase
         $span = $this->createSpanWithLimits($limits);
 
         $span->setAttributes(['k1' => 'v1', 'k2' => 'v2', 'k3' => 'v3']);
-        $span->recordEvent(GenericEvent::create('e1', new \DateTimeImmutable()));
-        $span->recordEvent(GenericEvent::create('e2', new \DateTimeImmutable()));
+        $span->recordEvent(GenericEvent::create('e1', new DateTimeImmutable()));
+        $span->recordEvent(GenericEvent::create('e2', new DateTimeImmutable()));
         $span->addLink(SpanLink::create(SpanContext::create(TraceId::generate(), SpanId::generate())));
         $span->addLink(SpanLink::create(SpanContext::create(TraceId::generate(), SpanId::generate())));
 
@@ -301,7 +305,7 @@ final class SpanTest extends TestCase
         $limits = new SpanLimits(attributePerEventCountLimit: 2, attributeValueLengthLimit: 10);
         $span = $this->createSpanWithLimits($limits);
 
-        $event = GenericEvent::create('test.event', new \DateTimeImmutable(), [
+        $event = GenericEvent::create('test.event', new DateTimeImmutable(), [
             'key1' => 'short',
             'key2' => 'this-is-a-very-long-value',
             'key3' => 'dropped',
@@ -321,9 +325,9 @@ final class SpanTest extends TestCase
         $limits = new SpanLimits(eventCountLimit: 2);
         $span = $this->createSpanWithLimits($limits);
 
-        $span->recordEvent(GenericEvent::create('event1', new \DateTimeImmutable()));
-        $span->recordEvent(GenericEvent::create('event2', new \DateTimeImmutable()));
-        $span->recordEvent(GenericEvent::create('event3', new \DateTimeImmutable()));
+        $span->recordEvent(GenericEvent::create('event1', new DateTimeImmutable()));
+        $span->recordEvent(GenericEvent::create('event2', new DateTimeImmutable()));
+        $span->recordEvent(GenericEvent::create('event3', new DateTimeImmutable()));
 
         static::assertCount(2, $span->events());
         static::assertSame(1, $span->droppedEventsCount());
@@ -377,13 +381,13 @@ final class SpanTest extends TestCase
         $spanId = SpanId::generate();
         $parentSpanId = SpanId::generate();
         $context = SpanContext::create($traceId, $spanId, $parentSpanId);
-        $startTime = new \DateTimeImmutable('2024-01-01 12:00:00');
-        $endTime = new \DateTimeImmutable('2024-01-01 12:00:01');
+        $startTime = new DateTimeImmutable('2024-01-01 12:00:00');
+        $endTime = new DateTimeImmutable('2024-01-01 12:00:01');
         $scope = new InstrumentationScope('test-lib', '1.0.0');
 
         $original = new Span('test-span', $context, SpanKind::CLIENT, $startTime, ResourceMother::default(), $scope);
         $original->setAttribute('key', 'value');
-        $original->recordEvent(GenericEvent::create('event', new \DateTimeImmutable('2024-01-01 12:00:00.500000')));
+        $original->recordEvent(GenericEvent::create('event', new DateTimeImmutable('2024-01-01 12:00:00.500000')));
         $original->addLink(SpanLink::create(SpanContext::create(TraceId::generate(), SpanId::generate()), [
             'link.attr' => 'test',
         ]));
@@ -401,8 +405,8 @@ final class SpanTest extends TestCase
         static::assertEquals($original->startTime(), $restored->startTime());
         static::assertEquals($original->endTime(), $restored->endTime());
         static::assertSame($original->attributes(), $restored->attributes());
-        static::assertCount(\count($original->events()), $restored->events());
-        static::assertCount(\count($original->links()), $restored->links());
+        static::assertCount(count($original->events()), $restored->events());
+        static::assertCount(count($original->links()), $restored->links());
         static::assertSame($original->status()?->code, $restored->status()?->code);
         static::assertSame($original->status()?->description, $restored->status()?->description);
         static::assertSame($original->scope()->name, $restored->scope()->name);
@@ -413,13 +417,13 @@ final class SpanTest extends TestCase
         $traceId = TraceId::generate();
         $spanId = SpanId::generate();
         $context = SpanContext::create($traceId, $spanId);
-        $startTime = new \DateTimeImmutable('2024-01-01 12:00:00');
-        $endTime = new \DateTimeImmutable('2024-01-01 12:00:01');
+        $startTime = new DateTimeImmutable('2024-01-01 12:00:00');
+        $endTime = new DateTimeImmutable('2024-01-01 12:00:01');
         $scope = new InstrumentationScope('test-lib', '1.0.0', 'https://schema.test');
 
         $span = new Span('test-span', $context, SpanKind::SERVER, $startTime, ResourceMother::default(), $scope);
         $span->setAttribute('http.method', 'GET');
-        $span->recordEvent(GenericEvent::create('request.start', new \DateTimeImmutable('2024-01-01 12:00:00.500000')));
+        $span->recordEvent(GenericEvent::create('request.start', new DateTimeImmutable('2024-01-01 12:00:00.500000')));
         $span->addLink(SpanLink::create(SpanContext::create(TraceId::generate(), SpanId::generate())));
         $span->setStatus(SpanStatus::ok());
         $span->end($endTime);
@@ -440,7 +444,7 @@ final class SpanTest extends TestCase
     public function test_record_event_adds_event(): void
     {
         $span = $this->createSpan();
-        $event = GenericEvent::create('test.event', new \DateTimeImmutable(), ['key' => 'value']);
+        $event = GenericEvent::create('test.event', new DateTimeImmutable(), ['key' => 'value']);
 
         $result = $span->recordEvent($event);
 
@@ -452,8 +456,8 @@ final class SpanTest extends TestCase
     public function test_record_exception_creates_exception_event(): void
     {
         $span = $this->createSpan();
-        $exception = new \RuntimeException('Test exception message');
-        $timestamp = new \DateTimeImmutable();
+        $exception = new RuntimeException('Test exception message');
+        $timestamp = new DateTimeImmutable();
 
         $result = $span->recordException($exception, $timestamp);
 
@@ -465,7 +469,7 @@ final class SpanTest extends TestCase
         static::assertSame($timestamp, $event->timestamp());
 
         $attributes = $event->attributes();
-        static::assertSame(\RuntimeException::class, $attributes['exception.type']);
+        static::assertSame(RuntimeException::class, $attributes['exception.type']);
         static::assertSame('Test exception message', $attributes['exception.message']);
         static::assertArrayHasKey('exception.stacktrace', $attributes);
     }
@@ -473,22 +477,22 @@ final class SpanTest extends TestCase
     public function test_record_exception_with_additional_attributes(): void
     {
         $span = $this->createSpan();
-        $exception = new \RuntimeException('Error');
-        $timestamp = new \DateTimeImmutable();
+        $exception = new RuntimeException('Error');
+        $timestamp = new DateTimeImmutable();
 
         $span->recordException($exception, $timestamp, ['custom.key' => 'custom.value']);
 
         $event = $span->events()[0];
         $attributes = $event->attributes();
         static::assertSame('custom.value', $attributes['custom.key']);
-        static::assertSame(\RuntimeException::class, $attributes['exception.type']);
+        static::assertSame(RuntimeException::class, $attributes['exception.type']);
     }
 
     public function test_record_multiple_events(): void
     {
         $span = $this->createSpan();
-        $event1 = GenericEvent::create('event1', new \DateTimeImmutable());
-        $event2 = GenericEvent::create('event2', new \DateTimeImmutable());
+        $event1 = GenericEvent::create('event1', new DateTimeImmutable());
+        $event2 = GenericEvent::create('event2', new DateTimeImmutable());
 
         $span->recordEvent($event1)->recordEvent($event2);
 
@@ -577,9 +581,10 @@ final class SpanTest extends TestCase
         $span->setStatus(SpanStatus::unset());
         $span->setStatus(SpanStatus::error('Error occurred'));
 
-        static::assertNotNull($span->status());
-        static::assertTrue($span->status()->isError());
-        static::assertSame('Error occurred', $span->status()->description);
+        $status = $span->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isError());
+        static::assertSame('Error occurred', $status->description);
     }
 
     public function test_set_status_sets_status(): void
@@ -596,7 +601,7 @@ final class SpanTest extends TestCase
     public function test_span_with_all_span_kinds(): void
     {
         $context = SpanContext::create(TraceId::generate(), SpanId::generate());
-        $startTime = new \DateTimeImmutable();
+        $startTime = new DateTimeImmutable();
 
         foreach (SpanKind::cases() as $kind) {
             $span = new Span(
@@ -617,7 +622,7 @@ final class SpanTest extends TestCase
             $name,
             SpanContext::create(TraceId::generate(), SpanId::generate()),
             SpanKind::INTERNAL,
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
             ResourceMother::default(),
             new InstrumentationScope('test', '1.0.0'),
         );
@@ -629,7 +634,7 @@ final class SpanTest extends TestCase
             $name,
             SpanContext::create(TraceId::generate(), SpanId::generate()),
             SpanKind::INTERNAL,
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
             ResourceMother::default(),
             new InstrumentationScope('test', '1.0.0'),
             true,

@@ -8,13 +8,15 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\SortOrder;
+use ReturnTypeWillChange;
+use SplMinHeap;
 
 /**
  * @template HeapElement
  *
  * @implements \SplMinHeap<HeapElement>
  */
-final class RowsMinHeap extends \SplMinHeap
+final class RowsMinHeap extends SplMinHeap
 {
     private readonly References $ref;
 
@@ -44,7 +46,7 @@ final class RowsMinHeap extends \SplMinHeap
         return parent::extract();
     }
 
-    #[\ReturnTypeWillChange]
+    #[ReturnTypeWillChange]
     public function insert(mixed $value): void
     {
         if (!$value instanceof BucketRow) {

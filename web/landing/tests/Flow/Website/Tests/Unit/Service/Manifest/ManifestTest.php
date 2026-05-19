@@ -5,7 +5,15 @@ declare(strict_types=1);
 namespace Flow\Website\Tests\Unit\Service\Manifest;
 
 use Flow\Website\Service\Manifest\Manifest;
+use JsonException;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+
+use function file_put_contents;
+use function json_encode;
+use function sys_get_temp_dir;
+use function tempnam;
+use function unlink;
 
 final class ManifestTest extends TestCase
 {
@@ -53,7 +61,7 @@ final class ManifestTest extends TestCase
         $manifest = new Manifest($path);
 
         $manifest->all();
-        \unlink($path);
+        unlink($path);
 
         // Second call must succeed from cache; would throw if it re-read from disk.
         static::assertNotNull($manifest->byName('flow-php/etl'));
@@ -61,9 +69,9 @@ final class ManifestTest extends TestCase
 
     public function test_skips_entries_with_non_string_name(): void
     {
-        $path = \tempnam(\sys_get_temp_dir(), 'flow-manifest-');
+        $path = tempnam(sys_get_temp_dir(), 'flow-manifest-');
         static::assertNotFalse($path);
-        \file_put_contents($path, \json_encode([
+        file_put_contents($path, json_encode([
             'packages' => [
                 ['name' => 'flow-php/etl', 'type' => 'core'],
                 ['type' => 'lib'],
@@ -76,22 +84,22 @@ final class ManifestTest extends TestCase
 
         static::assertCount(1, $all);
         static::assertArrayHasKey('flow-php/etl', $all);
-        \unlink($path);
+        unlink($path);
     }
 
     public function test_throws_on_invalid_json(): void
     {
-        $path = \tempnam(\sys_get_temp_dir(), 'flow-manifest-');
+        $path = tempnam(sys_get_temp_dir(), 'flow-manifest-');
         static::assertNotFalse($path);
-        \file_put_contents($path, '{not json');
+        file_put_contents($path, '{not json');
 
         $manifest = new Manifest($path);
 
         try {
-            $this->expectException(\JsonException::class);
+            $this->expectException(JsonException::class);
             $manifest->all();
         } finally {
-            \unlink($path);
+            unlink($path);
         }
     }
 
@@ -99,7 +107,7 @@ final class ManifestTest extends TestCase
     {
         $manifest = new Manifest('/no/such/manifest.json');
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Flow manifest not found');
 
         $manifest->all();
@@ -110,9 +118,9 @@ final class ManifestTest extends TestCase
      */
     public function writeManifest(array $packages): string
     {
-        $path = \tempnam(\sys_get_temp_dir(), 'flow-manifest-');
+        $path = tempnam(sys_get_temp_dir(), 'flow-manifest-');
         self::assertNotFalse($path);
-        \file_put_contents($path, \json_encode(['packages' => $packages]));
+        file_put_contents($path, json_encode(['packages' => $packages]));
 
         return $path;
     }

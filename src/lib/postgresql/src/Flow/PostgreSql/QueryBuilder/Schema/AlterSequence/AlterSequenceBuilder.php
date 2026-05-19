@@ -16,6 +16,8 @@ use Flow\PostgreSql\Protobuf\AST\TypeName;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
+use function strtolower;
+
 final readonly class AlterSequenceBuilder implements AlterSequenceNameStep, AlterSequenceOptionsStep
 {
     use AstToSql;
@@ -51,7 +53,7 @@ final readonly class AlterSequenceBuilder implements AlterSequenceNameStep, Alte
             'int8' => 'int8',
         ];
 
-        $pgType = $typeMap[\strtolower($dataType)] ?? $dataType;
+        $pgType = $typeMap[strtolower($dataType)] ?? $dataType;
 
         $typeName = new TypeName();
         $names = [];
@@ -261,9 +263,7 @@ final readonly class AlterSequenceBuilder implements AlterSequenceNameStep, Alte
         $boolean = new Boolean();
         $boolean->setBoolval($value);
 
-        $argNode = new Node();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says bool but actually expects Boolean) */
-        $argNode->setBoolean($boolean);
+        $argNode = new Node(['boolean' => $boolean]);
 
         return $this->withOption($name, $argNode);
     }
@@ -273,9 +273,7 @@ final readonly class AlterSequenceBuilder implements AlterSequenceNameStep, Alte
         $integer = new Integer();
         $integer->setIval($value);
 
-        $argNode = new Node();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $argNode->setInteger($integer);
+        $argNode = new Node(['integer' => $integer]);
 
         return $this->withOption($name, $argNode);
     }

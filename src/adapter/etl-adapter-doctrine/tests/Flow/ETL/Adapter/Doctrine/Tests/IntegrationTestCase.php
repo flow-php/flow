@@ -14,6 +14,7 @@ use Flow\ETL\Adapter\Doctrine\Tests\Context\SelectQueryCounter;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\Types\DSL\type_string;
+use function getenv;
 
 abstract class IntegrationTestCase extends FlowTestCase
 {
@@ -84,7 +85,7 @@ abstract class IntegrationTestCase extends FlowTestCase
      */
     protected function mysqlConnectionParams(): array
     {
-        return (new DsnParser(['mysql' => 'mysqli']))->parse(\getenv('MYSQL_DATABASE_URL') ?: '');
+        return (new DsnParser(['mysql' => 'mysqli']))->parse(getenv('MYSQL_DATABASE_URL') ?: '');
     }
 
     /**
@@ -92,7 +93,7 @@ abstract class IntegrationTestCase extends FlowTestCase
      */
     protected function postgresqlConnectionParams(): array
     {
-        return (new DsnParser(['postgresql' => 'pdo_pgsql']))->parse(\getenv('PGSQL_DATABASE_URL') ?: '');
+        return (new DsnParser(['postgresql' => 'pdo_pgsql']))->parse(getenv('PGSQL_DATABASE_URL') ?: '');
     }
 
     /**
@@ -100,7 +101,7 @@ abstract class IntegrationTestCase extends FlowTestCase
      */
     protected function sqliteConnectionParams(): array
     {
-        $path = type_string()->assert(\getenv('SQLITE_DATABASE_PATH'));
+        $path = type_string()->assert(getenv('SQLITE_DATABASE_PATH'));
         $folder = pathinfo($path, PATHINFO_DIRNAME);
 
         if (!is_dir($folder)) {

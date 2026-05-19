@@ -23,6 +23,7 @@ use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use SensitiveParameter;
 
 #[DocumentationDSL(module: Module::AZURE_SDK, type: Type::HELPER)]
 function azurite_url_factory(
@@ -35,9 +36,9 @@ function azurite_url_factory(
 
 #[DocumentationDSL(module: Module::AZURE_SDK, type: Type::HELPER)]
 function azure_shared_key_authorization_factory(
-    #[\SensitiveParameter]
+    #[SensitiveParameter]
     string $account,
-    #[\SensitiveParameter]
+    #[SensitiveParameter]
     string $key,
 ): SharedKeyFactory {
     return new SharedKeyFactory($account, $key);

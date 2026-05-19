@@ -7,6 +7,9 @@ namespace Flow\PostgreSql\Tests\Unit\Parser;
 use Flow\PostgreSql\Parser\CheckDefinitionParser;
 use Flow\PostgreSql\Parser\ExpressionParser;
 use PHPUnit\Framework\TestCase;
+use Throwable;
+
+use function extension_loaded;
 
 final class CheckDefinitionParserTest extends TestCase
 {
@@ -14,7 +17,7 @@ final class CheckDefinitionParserTest extends TestCase
 
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
 
@@ -23,7 +26,7 @@ final class CheckDefinitionParserTest extends TestCase
 
     public function test_does_not_strip_when_no_closing_paren(): void
     {
-        $this->expectException(\Throwable::class);
+        $this->expectException(Throwable::class);
 
         $this->parser->parse('CHECK (a > 0');
     }

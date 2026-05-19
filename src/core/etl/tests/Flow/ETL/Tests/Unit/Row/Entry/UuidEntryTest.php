@@ -8,13 +8,17 @@ use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Uuid;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Ramsey\Uuid\Uuid as RamseyUuid;
+use Symfony\Component\Uid\Uuid as SymfonyUuid;
 
+use function class_exists;
 use function Flow\ETL\DSL\uuid_entry;
 
 final class UuidEntryTest extends FlowTestCase
 {
-    public static function is_equal_data_provider(): \Generator
+    public static function is_equal_data_provider(): Generator
     {
         yield 'equal names and values' => [
             true,
@@ -38,7 +42,7 @@ final class UuidEntryTest extends FlowTestCase
         ];
     }
 
-    public static function valid_string_entries(): \Generator
+    public static function valid_string_entries(): Generator
     {
         yield ['00000000-0000-0000-0000-000000000000'];
         yield ['11111111-1111-1111-1111-111111111111'];
@@ -48,7 +52,7 @@ final class UuidEntryTest extends FlowTestCase
 
     protected function setUp(): void
     {
-        if (!\class_exists(\Ramsey\Uuid\Uuid::class) && !\class_exists(\Symfony\Component\Uid\Uuid::class)) {
+        if (!class_exists(RamseyUuid::class) && !class_exists(SymfonyUuid::class)) {
             self::markTestSkipped("Package 'ramsey/uuid' or 'symfony/uid' is required for this test.");
         }
     }

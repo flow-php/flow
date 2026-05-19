@@ -11,6 +11,10 @@ use Flow\Types\Type;
 use function Flow\Types\DSL\type_literal;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function is_bool;
+use function is_numeric;
+use function is_string;
+use function str_contains;
 
 /**
  * @template T of bool|float|int|string
@@ -74,11 +78,11 @@ final readonly class LiteralType implements Type
 
     public function toString(): string
     {
-        if (\is_string($this->value)) {
+        if (is_string($this->value)) {
             return "'{$this->value}'";
         }
 
-        if (\is_bool($this->value)) {
+        if (is_bool($this->value)) {
             return $this->value ? 'true' : 'false';
         }
 
@@ -90,27 +94,17 @@ final readonly class LiteralType implements Type
      */
     private static function createFromString(string $value): self
     {
-        if ($value === 'true') {
-            // @phpstan-ignore return.type
-            return new self(true);
-        }
+        return new self(self::parseScalar($value));
+    }
 
-        if ($value === 'false') {
-            // @phpstan-ignore return.type
-            return new self(false);
-        }
-
-        if (\is_numeric($value)) {
-            if (\str_contains($value, '.')) {
-                // @phpstan-ignore return.type
-                return new self((float) $value);
-            }
-
-            // @phpstan-ignore return.type
-            return new self((int) $value);
-        }
-
-        // @phpstan-ignore return.type
-        return new self($value);
+    private static function parseScalar(string $value): bool|float|int|string
+    {
+        return match (true) {
+            $value === 'true' => true,
+            $value === 'false' => false,
+            is_numeric($value) && str_contains($value, '.') => (float) $value,
+            is_numeric($value) => (int) $value,
+            default => $value,
+        };
     }
 }

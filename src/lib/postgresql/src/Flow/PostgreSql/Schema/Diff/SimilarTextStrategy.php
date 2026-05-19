@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Schema\Diff;
 
+use function similar_text;
+use function strlen;
+
 final readonly class SimilarTextStrategy implements SimilarityStrategy
 {
     public function __construct(
@@ -12,9 +15,13 @@ final readonly class SimilarTextStrategy implements SimilarityStrategy
 
     public function similarity(string $a, string $b): float
     {
-        \similar_text($a, $b, $percent);
+        $totalLength = strlen($a) + strlen($b);
 
-        return $percent;
+        if ($totalLength === 0) {
+            return 0.0;
+        }
+
+        return ((similar_text($a, $b) * 2) / $totalLength) * 100;
     }
 
     public function threshold(): float

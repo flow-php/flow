@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\ValueConverter;
 
+use DOMDocument;
+use DOMElement;
 use Flow\PostgreSql\Client\Types\Converter\StringConverter;
 use Flow\PostgreSql\Client\Types\ValueConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
@@ -25,11 +27,11 @@ final readonly class XMLConverter implements ValueConverter
             return null;
         }
 
-        if ($value instanceof \DOMDocument) {
+        if ($value instanceof DOMDocument) {
             return $value->saveXML() ?: null;
         }
 
-        if ($value instanceof \DOMElement) {
+        if ($value instanceof DOMElement) {
             return $value->ownerDocument?->saveXML($value) ?: null;
         }
 

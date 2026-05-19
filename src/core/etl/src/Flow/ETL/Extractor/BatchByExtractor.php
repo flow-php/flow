@@ -9,6 +9,9 @@ use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
+use Generator;
+
+use function count;
 
 final readonly class BatchByExtractor implements Extractor, OverridingExtractor
 {
@@ -30,7 +33,7 @@ final readonly class BatchByExtractor implements Extractor, OverridingExtractor
     /**
      * @return \Generator<int, Rows, mixed, mixed>
      */
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         $buffer = [];
         $currentGroupValue = null;
@@ -42,7 +45,7 @@ final readonly class BatchByExtractor implements Extractor, OverridingExtractor
                 if ($currentGroupValue === null) {
                     $currentGroupValue = $groupValue;
                 } elseif ($currentGroupValue !== $groupValue) {
-                    if ($this->minSize === null || \count($buffer) >= $this->minSize) {
+                    if ($this->minSize === null || count($buffer) >= $this->minSize) {
                         $signal = yield new Rows(...$buffer);
 
                         if ($signal === Signal::STOP) {
@@ -59,7 +62,7 @@ final readonly class BatchByExtractor implements Extractor, OverridingExtractor
             }
         }
 
-        if (\count($buffer) > 0) {
+        if (count($buffer) > 0) {
             yield new Rows(...$buffer);
         }
     }

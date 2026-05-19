@@ -10,6 +10,7 @@ use Flow\ETL\Schema\Definition\BooleanDefinition;
 use Flow\ETL\Schema\Definition\DateTimeDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\date_schema;
@@ -21,7 +22,7 @@ use function Flow\ETL\DSL\time_schema;
 
 final class DateTimeDefinitionTest extends FlowTestCase
 {
-    public static function provideIsCompatibleCases(): \Generator
+    public static function provideIsCompatibleCases(): Generator
     {
         yield 'same type and name' => [
             datetime_schema('created_at'),
@@ -48,7 +49,7 @@ final class DateTimeDefinitionTest extends FlowTestCase
         ];
     }
 
-    public static function provideMergeCases(): \Generator
+    public static function provideMergeCases(): Generator
     {
         yield 'same type' => [
             datetime_schema('created_at'),
@@ -69,7 +70,7 @@ final class DateTimeDefinitionTest extends FlowTestCase
         ];
     }
 
-    public static function provideMergeWithExpectedTypeCases(): \Generator
+    public static function provideMergeWithExpectedTypeCases(): Generator
     {
         yield 'with date produces datetime' => [
             datetime_schema('col'),

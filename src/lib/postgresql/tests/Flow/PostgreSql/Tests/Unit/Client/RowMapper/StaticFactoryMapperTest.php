@@ -8,8 +8,11 @@ use Flow\PostgreSql\Client\Exception\MappingException;
 use Flow\PostgreSql\Client\RowMapper\StaticFactoryMapper;
 use Flow\PostgreSql\Tests\Mother\MapperContextMother;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 use function Flow\PostgreSql\DSL\static_factory_mapper;
+use function func_get_args;
+use function sprintf;
 
 final class StaticFactoryMapperTest extends TestCase
 {
@@ -94,7 +97,6 @@ final class StaticFactoryMapperTest extends TestCase
 
     public function test_throws_when_class_does_not_exist(): void
     {
-        /** @var class-string<object> $nonExistent */
         $nonExistent = 'Flow\\PostgreSql\\Tests\\Unit\\Client\\RowMapper\\Fake\\NonExistentDto';
 
         $this->expectException(MappingException::class);
@@ -106,7 +108,7 @@ final class StaticFactoryMapperTest extends TestCase
     public function test_throws_when_factory_method_does_not_exist(): void
     {
         $this->expectException(MappingException::class);
-        $this->expectExceptionMessage(\sprintf(
+        $this->expectExceptionMessage(sprintf(
             'Static factory method "%s::missing()" does not exist',
             SimpleFactoryDto::class,
         ));
@@ -117,18 +119,18 @@ final class StaticFactoryMapperTest extends TestCase
     public function test_throws_when_factory_method_is_not_public(): void
     {
         $this->expectException(MappingException::class);
-        $this->expectExceptionMessage(\sprintf(
-            'Factory method "%s::fromRow()" must be declared public',
+        $this->expectExceptionMessage(sprintf(
+            'Factory method "%s::_fromRow()" must be declared public',
             PrivateFactoryDto::class,
         ));
 
-        new StaticFactoryMapper(PrivateFactoryDto::class, 'fromRow');
+        new StaticFactoryMapper(PrivateFactoryDto::class, '_fromRow');
     }
 
     public function test_throws_when_factory_method_is_not_static(): void
     {
         $this->expectException(MappingException::class);
-        $this->expectExceptionMessage(\sprintf(
+        $this->expectExceptionMessage(sprintf(
             'Factory method "%s::fromRow()" must be declared static',
             NonStaticFactoryDto::class,
         ));
@@ -144,9 +146,10 @@ final class StaticFactoryMapperTest extends TestCase
             ], MapperContextMother::any());
             static::fail('Expected MappingException was not thrown');
         } catch (MappingException $e) {
+            $previous = $e->getPrevious();
             static::assertStringContainsString('boom', $e->getMessage());
-            static::assertInstanceOf(\RuntimeException::class, $e->getPrevious());
-            static::assertSame('boom', $e->getPrevious()->getMessage());
+            static::assertInstanceOf(RuntimeException::class, $previous);
+            static::assertSame('boom', $previous->getMessage());
         }
     }
 }
@@ -170,7 +173,7 @@ final readonly class SimpleFactoryDto
 
 final class CapturedRowFactoryDto
 {
-    /** @var null|array<int, mixed> */
+    /** @var null|array<array-key, mixed> */
     public static ?array $lastArgs = null;
 
     /**
@@ -178,7 +181,7 @@ final class CapturedRowFactoryDto
      */
     public static function fromRow(array $row): self
     {
-        self::$lastArgs = \func_get_args();
+        self::$lastArgs = func_get_args();
 
         return new self();
     }
@@ -200,7 +203,7 @@ final class PrivateFactoryDto
     /**
      * @param array<string, mixed> $row
      */
-    private static function fromRow(array $row): self
+    private static function _fromRow(array $row): self
     {
         return new self();
     }
@@ -213,7 +216,7 @@ final class ThrowingFactoryDto
      */
     public static function fromRow(array $row): self
     {
-        throw new \RuntimeException('boom');
+        throw new RuntimeException('boom');
     }
 }
 

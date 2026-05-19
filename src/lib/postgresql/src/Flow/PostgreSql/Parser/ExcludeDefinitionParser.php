@@ -10,6 +10,11 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ParseResult;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
+use function count;
+use function ltrim;
+use function stripos;
+use function strtolower;
+
 final readonly class ExcludeDefinitionParser
 {
     public function __construct(
@@ -18,9 +23,9 @@ final readonly class ExcludeDefinitionParser
 
     public function parse(string $definition): ParsedExcludeDefinition
     {
-        $trimmed = \ltrim($definition);
+        $trimmed = ltrim($definition);
 
-        if (\stripos($trimmed, 'EXCLUDE') !== 0) {
+        if (stripos($trimmed, 'EXCLUDE') !== 0) {
             $trimmed = 'EXCLUDE ' . $trimmed;
         }
 
@@ -28,7 +33,7 @@ final readonly class ExcludeDefinitionParser
         $constraint = $this->extractConstraint($parsed->raw());
 
         return new ParsedExcludeDefinition(
-            accessMethod: \strtolower($constraint->getAccessMethod()),
+            accessMethod: strtolower($constraint->getAccessMethod()),
             elements: $this->extractElements($constraint),
             predicate: $this->extractPredicate($constraint),
             deferrable: $constraint->getDeferrable(),
@@ -40,7 +45,7 @@ final readonly class ExcludeDefinitionParser
     {
         $stmts = $parseResult->getStmts();
 
-        if ($stmts === null || \count($stmts) === 0) {
+        if (count($stmts) === 0) {
             throw InvalidAstException::invalidFieldValue('stmts', 'ParseResult', 'expected at least one statement');
         }
 

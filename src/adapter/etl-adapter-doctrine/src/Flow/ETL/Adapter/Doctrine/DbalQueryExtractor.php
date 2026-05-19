@@ -12,6 +12,7 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
+use Generator;
 
 use function Flow\ETL\DSL\array_to_rows;
 
@@ -56,7 +57,7 @@ final class DbalQueryExtractor implements Extractor
         return $extractor;
     }
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         foreach ($this->parametersSet->all() as $parameters) {
             foreach ($this->connection->fetchAllAssociative($this->query, $parameters, $this->types) as $row) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML;
 
+use DOMDocument;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
@@ -13,8 +14,12 @@ use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\Filesystem\Path;
+use Generator;
+use XMLReader;
 
+use function array_pop;
 use function Flow\ETL\DSL\array_to_rows;
+use function implode;
 
 final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -50,21 +55,21 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
         $this->resetLimit();
     }
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
-            $xmlReader = new \XMLReader();
+            $xmlReader = new XMLReader();
             $xmlReader->open($stream->path()->path());
 
             $previousDepth = 0;
             $currentPathBreadCrumbs = [];
 
             while ($xmlReader->read()) {
-                if ($xmlReader->nodeType === \XMLReader::ELEMENT) {
+                if ($xmlReader->nodeType === XMLReader::ELEMENT) {
                     if ($previousDepth === $xmlReader->depth) {
-                        \array_pop($currentPathBreadCrumbs);
+                        array_pop($currentPathBreadCrumbs);
                         $currentPathBreadCrumbs[] = $xmlReader->name;
                     }
 
@@ -73,14 +78,14 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
                     }
 
                     while ($xmlReader->depth < $previousDepth) {
-                        \array_pop($currentPathBreadCrumbs);
+                        array_pop($currentPathBreadCrumbs);
                         $previousDepth--;
                     }
 
-                    $currentPath = \implode('/', $currentPathBreadCrumbs);
+                    $currentPath = implode('/', $currentPathBreadCrumbs);
 
                     if ($currentPath === $this->xmlNodePath || $this->xmlNodePath === '' && $xmlReader->depth === 0) {
-                        $dom = new \DOMDocument('1.0', '');
+                        $dom = new DOMDocument('1.0', '');
                         $node = $xmlReader->expand($dom);
 
                         if ($shouldPutInputIntoRows) {

@@ -16,6 +16,7 @@ final class PostgreSqlBulkDeleteTest extends PostgreSqlIntegrationTestCase
 {
     public function test_delete_nonexistent_rows(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
@@ -50,6 +51,7 @@ final class PostgreSqlBulkDeleteTest extends PostgreSqlIntegrationTestCase
     }
 
     public function test_delete_rows_with_composite_key_condition(): void
+    // @mago-expect analysis:deprecated-method
     {
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
@@ -89,6 +91,7 @@ final class PostgreSqlBulkDeleteTest extends PostgreSqlIntegrationTestCase
     }
 
     public function test_delete_rows_with_single_column_condition(): void
+    // @mago-expect analysis:deprecated-method
     {
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
@@ -127,6 +130,7 @@ final class PostgreSqlBulkDeleteTest extends PostgreSqlIntegrationTestCase
 
     public function test_delete_with_custom_types_using_casted_placeholders_works_with_postgresql(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),

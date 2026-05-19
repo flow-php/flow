@@ -10,6 +10,8 @@ use Flow\PostgreSql\Protobuf\AST\RoleSpec;
 use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 
+use function array_values;
+
 final readonly class DropRoleBuilder implements DropRoleFinalStep
 {
     use AstToSql;
@@ -24,7 +26,7 @@ final readonly class DropRoleBuilder implements DropRoleFinalStep
 
     public static function create(string ...$names): DropRoleFinalStep
     {
-        return new self(\array_values($names));
+        return new self(array_values($names));
     }
 
     public function ifExists(): DropRoleFinalStep

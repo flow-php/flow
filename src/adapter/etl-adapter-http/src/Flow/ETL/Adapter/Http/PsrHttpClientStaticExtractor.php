@@ -9,10 +9,12 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Generator;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
+use function array_merge;
 use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\str_entry;
 
@@ -36,7 +38,7 @@ final class PsrHttpClientStaticExtractor implements Extractor
         private readonly iterable $requests,
     ) {}
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         $responseFactory = new ResponseEntriesFactory();
         $requestFactory = new RequestEntriesFactory();
@@ -55,7 +57,7 @@ final class PsrHttpClientStaticExtractor implements Extractor
             }
 
             if ($shouldPutInputIntoRows) {
-                $signal = yield new Rows(Row::create(...\array_merge(
+                $signal = yield new Rows(Row::create(...array_merge(
                     $responseFactory->create($response)->all(),
                     $requestFactory->create($request)->all(),
                     [
@@ -65,7 +67,7 @@ final class PsrHttpClientStaticExtractor implements Extractor
                     ],
                 )));
             } else {
-                $signal = yield new Rows(Row::create(...\array_merge(
+                $signal = yield new Rows(Row::create(...array_merge(
                     $responseFactory->create($response)->all(),
                     $requestFactory->create($request)->all(),
                 )));

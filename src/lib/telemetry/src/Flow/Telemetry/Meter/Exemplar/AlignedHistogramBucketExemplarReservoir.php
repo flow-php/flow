@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter\Exemplar;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Meter\Exemplar;
 use Flow\Telemetry\Tracer\SpanContext;
+use InvalidArgumentException;
+
+use function array_fill;
+use function is_array;
+use function max;
 
 /**
  * Histogram-aligned reservoir keeping one exemplar per bucket.
@@ -30,10 +36,10 @@ final class AlignedHistogramBucketExemplarReservoir implements ExemplarReservoir
         private readonly int $bucketCount,
     ) {
         if ($bucketCount < 1) {
-            throw new \InvalidArgumentException('Bucket count must be at least 1');
+            throw new InvalidArgumentException('Bucket count must be at least 1');
         }
 
-        $this->buckets = \array_fill(0, $bucketCount, null);
+        $this->buckets = array_fill(0, $bucketCount, null);
     }
 
     public function collect(bool $reset = true): array
@@ -57,7 +63,7 @@ final class AlignedHistogramBucketExemplarReservoir implements ExemplarReservoir
         int|float $value,
         array $attributes,
         SpanContext $context,
-        \DateTimeImmutable $timestamp,
+        DateTimeImmutable $timestamp,
         int $bucketIndex = 0,
     ): void {
         if ($bucketIndex < 0 || $bucketIndex >= $this->bucketCount) {
@@ -77,7 +83,7 @@ final class AlignedHistogramBucketExemplarReservoir implements ExemplarReservoir
 
     public function reset(): void
     {
-        $this->buckets = \array_fill(0, $this->bucketCount, null);
+        $this->buckets = array_fill(0, max(0, $this->bucketCount), null);
     }
 
     /**
@@ -92,7 +98,7 @@ final class AlignedHistogramBucketExemplarReservoir implements ExemplarReservoir
         $filtered = [];
 
         foreach ($attributes as $key => $value) {
-            if (!\is_array($value)) {
+            if (!is_array($value)) {
                 $filtered[$key] = $value;
             }
         }

@@ -4,10 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native;
 
+use DOMDocument;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\XML\XMLConverter;
+use Throwable;
+
+use function is_array;
+use function is_object;
+use function is_string;
+use function json_decode;
+use function json_encode;
+use function str_starts_with;
+
+use const JSON_THROW_ON_ERROR;
 
 /**
  * @implements Type<array>
@@ -36,31 +47,34 @@ final readonly class ArrayType implements Type
         }
 
         try {
-            if (\is_string($value) && (\str_starts_with($value, '{') || \str_starts_with($value, '['))) {
-                $decoded = \json_decode($value, true, 512, \JSON_THROW_ON_ERROR);
+            if (is_string($value) && (str_starts_with($value, '{') || str_starts_with($value, '['))) {
+                // @mago-ignore analysis:mixed-assignment
+                $decoded = json_decode($value, true, 512, JSON_THROW_ON_ERROR);
 
-                return \is_array($decoded) ? $decoded : throw new CastingException($value, $this);
+                return is_array($decoded) ? $decoded : throw new CastingException($value, $this);
             }
 
-            if ($value instanceof \DOMDocument) {
+            if ($value instanceof DOMDocument) {
                 return (new XMLConverter())->toArray($value);
             }
 
-            if (\is_object($value)) {
-                $encoded = \json_decode(\json_encode($value, \JSON_THROW_ON_ERROR), true, 512, \JSON_THROW_ON_ERROR);
+            if (is_object($value)) {
+                // @mago-ignore analysis:mixed-assignment
+                $encoded = json_decode(json_encode($value, JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
 
-                return \is_array($encoded) ? $encoded : throw new CastingException($value, $this);
+                return is_array($encoded) ? $encoded : throw new CastingException($value, $this);
             }
 
+            // @mago-ignore analysis:invalid-type-cast
             return (array) $value;
-        } catch (\Throwable) {
+        } catch (Throwable) {
             throw new CastingException($value, $this);
         }
     }
 
     public function isValid(mixed $value): bool
     {
-        if (!\is_array($value)) {
+        if (!is_array($value)) {
             return false;
         }
 

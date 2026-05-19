@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Unit\Serializer;
 
+use DateTimeImmutable;
 use Flow\Bridge\Telemetry\OTLP\Serializer\JsonSerializer;
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Context\SpanId;
@@ -24,6 +25,10 @@ use Flow\Telemetry\Tracer\SpanLink;
 use Flow\Telemetry\Tracer\SpanStatus;
 use PHPUnit\Framework\TestCase;
 
+use function json_decode;
+
+use const JSON_THROW_ON_ERROR;
+
 final class JsonSerializerTest extends TestCase
 {
     private JsonSerializer $serializer;
@@ -38,11 +43,11 @@ final class JsonSerializerTest extends TestCase
         $resource = Resource::create(['service.name' => 'test-service']);
         $scope = new InstrumentationScope('flow-php', '1.0.0');
         $logRecord = new LogRecord(Severity::INFO, 'Test log message', Attributes::create(['key' => 'value']));
-        $entry = new LogEntry($logRecord, $resource, $scope, new \DateTimeImmutable('@1704110400.123456'));
+        $entry = new LogEntry($logRecord, $resource, $scope, new DateTimeImmutable('@1704110400.123456'));
 
         $json = $this->serializer->serializeLogs([$entry]);
         /** @var array<string, mixed> $data */
-        $data = \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
 
         static::assertArrayHasKey('resourceLogs', $data);
         /** @var array<int, array<string, mixed>> $resourceLogs */
@@ -72,11 +77,11 @@ final class JsonSerializerTest extends TestCase
         $spanId = SpanId::fromHex('0102030405060708');
         $spanContext = SpanContext::create($traceId, $spanId, null, TraceFlags::sampled());
         $logRecord = new LogRecord(Severity::ERROR, 'Error occurred', Attributes::create([]));
-        $entry = new LogEntry($logRecord, $resource, $scope, new \DateTimeImmutable('@1704110400'), $spanContext);
+        $entry = new LogEntry($logRecord, $resource, $scope, new DateTimeImmutable('@1704110400'), $spanContext);
 
         $json = $this->serializer->serializeLogs([$entry]);
         /** @var array<string, mixed> $data */
-        $data = \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         /** @var array<int, array<string, mixed>> $resourceLogs */
         $resourceLogs = $data['resourceLogs'];
         /** @var array<int, array<string, mixed>> $scopeLogs */
@@ -99,7 +104,7 @@ final class JsonSerializerTest extends TestCase
             type: MetricType::COUNTER,
             value: 42,
             attributes: Attributes::create(['http.method' => 'GET']),
-            timestamp: new \DateTimeImmutable(),
+            timestamp: new DateTimeImmutable(),
             resource: $resource,
             scope: $scope,
             unit: 'requests',
@@ -108,7 +113,7 @@ final class JsonSerializerTest extends TestCase
 
         $json = $this->serializer->serializeMetrics([$metric]);
         /** @var array<string, mixed> $data */
-        $data = \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
 
         static::assertArrayHasKey('resourceMetrics', $data);
         /** @var array<int, array<string, mixed>> $resourceMetrics */
@@ -142,7 +147,7 @@ final class JsonSerializerTest extends TestCase
             type: MetricType::GAUGE,
             value: 1024.5,
             attributes: Attributes::create([]),
-            timestamp: new \DateTimeImmutable(),
+            timestamp: new DateTimeImmutable(),
             resource: $resource,
             scope: $scope,
             unit: 'bytes',
@@ -150,7 +155,7 @@ final class JsonSerializerTest extends TestCase
 
         $json = $this->serializer->serializeMetrics([$metric]);
         /** @var array<string, mixed> $data */
-        $data = \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         /** @var array<int, array<string, mixed>> $resourceMetrics */
         $resourceMetrics = $data['resourceMetrics'];
         /** @var array<int, array<string, mixed>> $scopeMetrics */
@@ -185,7 +190,7 @@ final class JsonSerializerTest extends TestCase
                 'histogram.bucketCounts' => [1, 1, 1, 1],
                 'histogram.explicitBounds' => [10.0, 50.0, 100.0],
             ]),
-            timestamp: new \DateTimeImmutable(),
+            timestamp: new DateTimeImmutable(),
             resource: $resource,
             scope: $scope,
             unit: 'ms',
@@ -193,7 +198,7 @@ final class JsonSerializerTest extends TestCase
 
         $json = $this->serializer->serializeMetrics([$metric]);
         /** @var array<string, mixed> $data */
-        $data = \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         /** @var array<int, array<string, mixed>> $resourceMetrics */
         $resourceMetrics = $data['resourceMetrics'];
         /** @var array<int, array<string, mixed>> $scopeMetrics */
@@ -222,14 +227,14 @@ final class JsonSerializerTest extends TestCase
             type: MetricType::UP_DOWN_COUNTER,
             value: 10,
             attributes: Attributes::create([]),
-            timestamp: new \DateTimeImmutable(),
+            timestamp: new DateTimeImmutable(),
             resource: $resource,
             scope: $scope,
         );
 
         $json = $this->serializer->serializeMetrics([$metric]);
         /** @var array<string, mixed> $data */
-        $data = \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         /** @var array<int, array<string, mixed>> $resourceMetrics */
         $resourceMetrics = $data['resourceMetrics'];
         /** @var array<int, array<string, mixed>> $scopeMetrics */
@@ -251,7 +256,7 @@ final class JsonSerializerTest extends TestCase
         $scope = new InstrumentationScope('flow-php', '1.0.0');
         $context = SpanContext::create(TraceId::generate(), SpanId::generate());
 
-        $span = new Span('test-span', $context, SpanKind::INTERNAL, new \DateTimeImmutable(), $resource, $scope);
+        $span = new Span('test-span', $context, SpanKind::INTERNAL, new DateTimeImmutable(), $resource, $scope);
 
         $json = $this->serializer->serializeSpans([$span]);
 
@@ -265,13 +270,13 @@ final class JsonSerializerTest extends TestCase
         $traceId = TraceId::fromHex('0102030405060708090a0b0c0d0e0f10');
         $spanId = SpanId::fromHex('0102030405060708');
         $context = SpanContext::create($traceId, $spanId);
-        $startTime = new \DateTimeImmutable('2024-01-01 12:00:00.000000');
+        $startTime = new DateTimeImmutable('2024-01-01 12:00:00.000000');
 
         $span = new Span('test-span', $context, SpanKind::INTERNAL, $startTime, $resource, $scope);
 
         $json = $this->serializer->serializeSpans([$span]);
         /** @var array<string, mixed> $data */
-        $data = \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
 
         static::assertArrayHasKey('resourceSpans', $data);
         /** @var array<int, array<string, mixed>> $resourceSpans */
@@ -304,11 +309,11 @@ final class JsonSerializerTest extends TestCase
             'scope.key' => 'scope.value',
         ]));
         $context = SpanContext::create(TraceId::generate(), SpanId::generate());
-        $span = new Span('test-span', $context, SpanKind::INTERNAL, new \DateTimeImmutable(), $resource, $scope);
+        $span = new Span('test-span', $context, SpanKind::INTERNAL, new DateTimeImmutable(), $resource, $scope);
 
         $json = $this->serializer->serializeSpans([$span]);
         /** @var array<string, mixed> $data */
-        $data = \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         /** @var array<int, array<string, mixed>> $resourceSpans */
         $resourceSpans = $data['resourceSpans'];
         /** @var array<string, mixed> $resourceData */
@@ -343,11 +348,11 @@ final class JsonSerializerTest extends TestCase
 
         foreach ($kindTests as [$kind, $expectedValue]) {
             $context = SpanContext::create(TraceId::generate(), SpanId::generate());
-            $span = new Span('test-span', $context, $kind, new \DateTimeImmutable(), $resource, $scope);
+            $span = new Span('test-span', $context, $kind, new DateTimeImmutable(), $resource, $scope);
 
             $json = $this->serializer->serializeSpans([$span]);
             /** @var array<string, mixed> $data */
-            $data = \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+            $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
             /** @var array<int, array<string, mixed>> $resourceSpans */
             $resourceSpans = $data['resourceSpans'];
             /** @var array<int, array<string, mixed>> $scopeSpans */
@@ -370,13 +375,13 @@ final class JsonSerializerTest extends TestCase
         $scope = new InstrumentationScope('flow-php', '1.0.0');
         $context = SpanContext::create(TraceId::generate(), SpanId::generate());
 
-        $span = new Span('test-span', $context, SpanKind::INTERNAL, new \DateTimeImmutable(), $resource, $scope);
+        $span = new Span('test-span', $context, SpanKind::INTERNAL, new DateTimeImmutable(), $resource, $scope);
         $span->setAttribute('tags', ['foo', 'bar', 'baz']);
         $span->setAttribute('ports', [80, 443, 8080]);
 
         $json = $this->serializer->serializeSpans([$span]);
         /** @var array<string, mixed> $data */
-        $data = \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         /** @var array<int, array<string, mixed>> $resourceSpans */
         $resourceSpans = $data['resourceSpans'];
         /** @var array<int, array<string, mixed>> $scopeSpans */
@@ -422,7 +427,7 @@ final class JsonSerializerTest extends TestCase
         $scope = new InstrumentationScope('flow-php', '1.0.0');
         $context = SpanContext::create(TraceId::generate(), SpanId::generate());
 
-        $span = new Span('test-span', $context, SpanKind::INTERNAL, new \DateTimeImmutable(), $resource, $scope);
+        $span = new Span('test-span', $context, SpanKind::INTERNAL, new DateTimeImmutable(), $resource, $scope);
         $span->setAttribute('http.method', 'GET');
         $span->setAttribute('http.status_code', 200);
         $span->setAttribute('duration', 42.5);
@@ -430,7 +435,7 @@ final class JsonSerializerTest extends TestCase
 
         $json = $this->serializer->serializeSpans([$span]);
         /** @var array<string, mixed> $data */
-        $data = \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         /** @var array<int, array<string, mixed>> $resourceSpans */
         $resourceSpans = $data['resourceSpans'];
         /** @var array<int, array<string, mixed>> $scopeSpans */
@@ -462,12 +467,12 @@ final class JsonSerializerTest extends TestCase
         $scope = new InstrumentationScope('flow-php', '1.0.0');
         $context = SpanContext::create(TraceId::generate(), SpanId::generate());
 
-        $span = new Span('test-span', $context, SpanKind::INTERNAL, new \DateTimeImmutable(), $resource, $scope);
-        $span->recordEvent(GenericEvent::create('cache.hit', new \DateTimeImmutable(), ['key' => 'user:123']));
+        $span = new Span('test-span', $context, SpanKind::INTERNAL, new DateTimeImmutable(), $resource, $scope);
+        $span->recordEvent(GenericEvent::create('cache.hit', new DateTimeImmutable(), ['key' => 'user:123']));
 
         $json = $this->serializer->serializeSpans([$span]);
         /** @var array<string, mixed> $data */
-        $data = \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         /** @var array<int, array<string, mixed>> $resourceSpans */
         $resourceSpans = $data['resourceSpans'];
         /** @var array<int, array<string, mixed>> $scopeSpans */
@@ -496,12 +501,12 @@ final class JsonSerializerTest extends TestCase
         $linkedSpanId = SpanId::generate();
         $linkedContext = SpanContext::create($linkedTraceId, $linkedSpanId);
 
-        $span = new Span('test-span', $context, SpanKind::INTERNAL, new \DateTimeImmutable(), $resource, $scope);
+        $span = new Span('test-span', $context, SpanKind::INTERNAL, new DateTimeImmutable(), $resource, $scope);
         $span->addLink(SpanLink::create($linkedContext, ['reason' => 'batch']));
 
         $json = $this->serializer->serializeSpans([$span]);
         /** @var array<string, mixed> $data */
-        $data = \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         /** @var array<int, array<string, mixed>> $resourceSpans */
         $resourceSpans = $data['resourceSpans'];
         /** @var array<int, array<string, mixed>> $scopeSpans */
@@ -527,11 +532,11 @@ final class JsonSerializerTest extends TestCase
         $parentSpanId = SpanId::generate();
         $context = SpanContext::create(TraceId::generate(), SpanId::generate(), $parentSpanId);
 
-        $span = new Span('child-span', $context, SpanKind::INTERNAL, new \DateTimeImmutable(), $resource, $scope);
+        $span = new Span('child-span', $context, SpanKind::INTERNAL, new DateTimeImmutable(), $resource, $scope);
 
         $json = $this->serializer->serializeSpans([$span]);
         /** @var array<string, mixed> $data */
-        $data = \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         /** @var array<int, array<string, mixed>> $resourceSpans */
         $resourceSpans = $data['resourceSpans'];
         /** @var array<int, array<string, mixed>> $scopeSpans */
@@ -549,11 +554,11 @@ final class JsonSerializerTest extends TestCase
         $scope = new InstrumentationScope('flow-php', '1.0.0');
         $context = SpanContext::create(TraceId::generate(), SpanId::generate(), null, TraceFlags::sampled());
 
-        $span = new Span('sampled-span', $context, SpanKind::INTERNAL, new \DateTimeImmutable(), $resource, $scope);
+        $span = new Span('sampled-span', $context, SpanKind::INTERNAL, new DateTimeImmutable(), $resource, $scope);
 
         $json = $this->serializer->serializeSpans([$span]);
         /** @var array<string, mixed> $data */
-        $data = \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         /** @var array<int, array<string, mixed>> $resourceSpans */
         $resourceSpans = $data['resourceSpans'];
         /** @var array<int, array<string, mixed>> $scopeSpans */
@@ -571,12 +576,12 @@ final class JsonSerializerTest extends TestCase
         $scope = new InstrumentationScope('flow-php', '1.0.0');
         $context = SpanContext::create(TraceId::generate(), SpanId::generate());
 
-        $span = new Span('test-span', $context, SpanKind::INTERNAL, new \DateTimeImmutable(), $resource, $scope);
+        $span = new Span('test-span', $context, SpanKind::INTERNAL, new DateTimeImmutable(), $resource, $scope);
         $span->setStatus(SpanStatus::error('Something went wrong'));
 
         $json = $this->serializer->serializeSpans([$span]);
         /** @var array<string, mixed> $data */
-        $data = \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         /** @var array<int, array<string, mixed>> $resourceSpans */
         $resourceSpans = $data['resourceSpans'];
         /** @var array<int, array<string, mixed>> $scopeSpans */

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Table;
 
 use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBList;
 use Flow\PostgreSql\Protobuf\AST\RangeFunction;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Expression\FunctionCall;
@@ -48,7 +49,7 @@ final class TableFunctionTest extends TestCase
         static::assertTrue($node->hasRangeFunction());
 
         $rangeFunction = $node->getRangeFunction();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\RangeFunction::class, $rangeFunction);
+        static::assertInstanceOf(RangeFunction::class, $rangeFunction);
         static::assertFalse($rangeFunction->getLateral());
         static::assertFalse($rangeFunction->getOrdinality());
         static::assertFalse($rangeFunction->getIsRowsfrom());
@@ -60,7 +61,7 @@ final class TableFunctionTest extends TestCase
         static::assertTrue($listNode->hasList());
 
         $list = $listNode->getList();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\PBList::class, $list);
+        static::assertInstanceOf(PBList::class, $list);
         $items = $list->getItems();
         static::assertCount(1, $items);
     }
@@ -75,7 +76,7 @@ final class TableFunctionTest extends TestCase
         static::assertTrue($node->hasRangeFunction());
 
         $rangeFunction = $node->getRangeFunction();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\RangeFunction::class, $rangeFunction);
+        static::assertInstanceOf(RangeFunction::class, $rangeFunction);
         static::assertTrue($rangeFunction->getOrdinality());
     }
 

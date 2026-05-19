@@ -7,6 +7,9 @@ namespace Flow\PostgreSql\QueryBuilder\Merge;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 
+use function array_keys;
+use function array_values;
+
 /**
  * Builder for WHEN NOT MATCHED clause in MERGE statement.
  * Supports INSERT and DO NOTHING actions.
@@ -67,8 +70,8 @@ final readonly class MergeWhenNotMatched
                 MergeActionType::INSERT,
                 $this->condition,
                 [],
-                \array_keys($columnValuePairs),
-                \array_values($columnValuePairs),
+                array_keys($columnValuePairs),
+                array_values($columnValuePairs),
             ),
         );
     }

@@ -15,6 +15,8 @@ use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnDefinition;
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\TableConstraint;
 
+use function array_values;
+
 final readonly class CreateTableBuilder implements
     CreateTableColumnsStep,
     CreateTableTemporaryStep,
@@ -117,7 +119,7 @@ final readonly class CreateTableBuilder implements
             $this->ifNotExists,
             $this->temporary,
             $this->unlogged,
-            \array_values([...$this->inherits, ...$tables]),
+            array_values([...$this->inherits, ...$tables]),
             $this->partitionStrategy,
             $this->partitionColumns,
             $this->tablespace,
@@ -191,7 +193,7 @@ final readonly class CreateTableBuilder implements
             $this->unlogged,
             $this->inherits,
             PartitionStrategy::PARTITION_STRATEGY_HASH,
-            \array_values($columns),
+            array_values($columns),
             $this->tablespace,
             $this->onCommitAction,
         );
@@ -209,7 +211,7 @@ final readonly class CreateTableBuilder implements
             $this->unlogged,
             $this->inherits,
             PartitionStrategy::PARTITION_STRATEGY_LIST,
-            \array_values($columns),
+            array_values($columns),
             $this->tablespace,
             $this->onCommitAction,
         );
@@ -227,7 +229,7 @@ final readonly class CreateTableBuilder implements
             $this->unlogged,
             $this->inherits,
             PartitionStrategy::PARTITION_STRATEGY_RANGE,
-            \array_values($columns),
+            array_values($columns),
             $this->tablespace,
             $this->onCommitAction,
         );

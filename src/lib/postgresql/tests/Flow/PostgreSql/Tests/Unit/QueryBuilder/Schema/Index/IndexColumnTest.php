@@ -5,19 +5,22 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\Index;
 
 use Flow\PostgreSql\Protobuf\AST\IndexElem;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\SortByDir;
 use Flow\PostgreSql\Protobuf\AST\SortByNulls;
 use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexColumn;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\func;
+use function Flow\Types\DSL\type_instance_of;
 
 final class IndexColumnTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }
@@ -39,8 +42,10 @@ final class IndexColumnTest extends TestCase
         $ast = $column->toAst();
 
         static::assertInstanceOf(IndexElem::class, $ast);
-        static::assertCount(1, $ast->getCollation());
-        static::assertSame('en_US', $ast->getCollation()[0]->getString()->getSval());
+        $collation = $ast->getCollation();
+        static::assertCount(1, $collation);
+        $first = type_instance_of(Node::class)->assert($collation[0]);
+        static::assertSame('en_US', $first->getString()?->getSval());
     }
 
     public function test_column_creates_index_elem(): void
@@ -127,7 +132,9 @@ final class IndexColumnTest extends TestCase
         $ast = $column->toAst();
 
         static::assertInstanceOf(IndexElem::class, $ast);
-        static::assertCount(1, $ast->getOpclass());
-        static::assertSame('text_pattern_ops', $ast->getOpclass()[0]->getString()->getSval());
+        $opclass = $ast->getOpclass();
+        static::assertCount(1, $opclass);
+        $first = type_instance_of(Node::class)->assert($opclass[0]);
+        static::assertSame('text_pattern_ops', $first->getString()?->getSval());
     }
 }

@@ -8,6 +8,10 @@ use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
+use Generator;
+
+use function bin2hex;
+use function random_bytes;
 
 /**
  * Caches pipeline output for reuse.
@@ -23,7 +27,7 @@ final readonly class CachingProcessor implements Processor
         private ?string $id = null,
     ) {}
 
-    public function process(\Generator $rows, FlowContext $context): \Generator
+    public function process(Generator $rows, FlowContext $context): Generator
     {
         $id = $this->id ?: $context->config->id();
         $cacheIndexExists = $context->cache()->has($id);
@@ -38,7 +42,7 @@ final readonly class CachingProcessor implements Processor
 
         foreach ($rows as $batch) {
             /** @var Rows $batch */
-            $cacheKey = \bin2hex(\random_bytes(16));
+            $cacheKey = bin2hex(random_bytes(16));
             $context->cache()->set($cacheKey, $batch);
             $index->add($cacheKey);
 

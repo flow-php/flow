@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Expression;
 
+use Flow\PostgreSql\ParsedQuery;
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\RawStmt;
@@ -17,11 +18,13 @@ use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
 use PHPUnit\Framework\TestCase;
 
+use function function_exists;
+
 final class AliasedExpressionTest extends TestCase
 {
     public function test_aliased_column_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -37,7 +40,7 @@ final class AliasedExpressionTest extends TestCase
         $parseResult = $parsed->raw();
         $parseResult->setStmts([$rawStmt]);
 
-        $deparsed = (new \Flow\PostgreSql\ParsedQuery($parseResult))->deparse();
+        $deparsed = (new ParsedQuery($parseResult))->deparse();
 
         static::assertSame('SELECT user_id AS id FROM users', $deparsed);
     }

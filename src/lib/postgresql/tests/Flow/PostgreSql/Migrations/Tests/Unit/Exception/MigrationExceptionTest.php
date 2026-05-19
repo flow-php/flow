@@ -7,6 +7,7 @@ namespace Flow\PostgreSql\Migrations\Tests\Unit\Exception;
 use Flow\PostgreSql\Migrations\Exception\MigrationException;
 use Flow\PostgreSql\Migrations\Version;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class MigrationExceptionTest extends TestCase
 {
@@ -68,7 +69,7 @@ final class MigrationExceptionTest extends TestCase
 
     public function test_migration_failed(): void
     {
-        $previous = new \RuntimeException('Connection lost');
+        $previous = new RuntimeException('Connection lost');
         $exception = MigrationException::migrationFailed(Version::fromString('20260403120000'), $previous);
 
         static::assertSame('Migration "20260403120000" failed: Connection lost', $exception->getMessage());

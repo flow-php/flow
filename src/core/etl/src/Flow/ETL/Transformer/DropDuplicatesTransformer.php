@@ -13,6 +13,9 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\DropDuplicates\Hashes;
+use Throwable;
+
+use function serialize;
 
 final readonly class DropDuplicatesTransformer implements Transformer
 {
@@ -54,7 +57,7 @@ final readonly class DropDuplicatesTransformer implements Transformer
                     }
                 }
 
-                $hash = $this->hashAlgorithm->hash(\serialize($values));
+                $hash = $this->hashAlgorithm->hash(serialize($values));
 
                 if (!$this->deduplication->exists($hash)) {
                     $newRows[] = $row;
@@ -70,7 +73,7 @@ final readonly class DropDuplicatesTransformer implements Transformer
             ]);
 
             return $result;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->transformationFailed($this, $e);
 
             throw $e;

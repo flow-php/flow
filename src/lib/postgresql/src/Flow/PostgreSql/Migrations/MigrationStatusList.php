@@ -4,10 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Migrations;
 
+use ArrayIterator;
+use Countable;
+use IteratorAggregate;
+
+use function array_filter;
+use function array_values;
+use function count;
+
 /**
  * @implements \IteratorAggregate<int, MigrationStatus>
  */
-final readonly class MigrationStatusList implements \Countable, \IteratorAggregate
+final readonly class MigrationStatusList implements Countable, IteratorAggregate
 {
     /**
      * @var list<MigrationStatus>
@@ -16,17 +24,17 @@ final readonly class MigrationStatusList implements \Countable, \IteratorAggrega
 
     public function __construct(MigrationStatus ...$statuses)
     {
-        $this->statuses = \array_values($statuses);
+        $this->statuses = array_values($statuses);
     }
 
     public function count(): int
     {
-        return \count($this->statuses);
+        return count($this->statuses);
     }
 
     public function executed(): self
     {
-        return new self(...\array_filter(
+        return new self(...array_filter(
             $this->statuses,
             static fn(MigrationStatus $s): bool => $s->state === MigrationState::EXECUTED,
         ));
@@ -35,9 +43,9 @@ final readonly class MigrationStatusList implements \Countable, \IteratorAggrega
     /**
      * @return \ArrayIterator<int, MigrationStatus>
      */
-    public function getIterator(): \ArrayIterator
+    public function getIterator(): ArrayIterator
     {
-        return new \ArrayIterator($this->statuses);
+        return new ArrayIterator($this->statuses);
     }
 
     public function isEmpty(): bool
@@ -47,7 +55,7 @@ final readonly class MigrationStatusList implements \Countable, \IteratorAggrega
 
     public function pending(): self
     {
-        return new self(...\array_filter(
+        return new self(...array_filter(
             $this->statuses,
             static fn(MigrationStatus $s): bool => $s->state === MigrationState::PENDING,
         ));

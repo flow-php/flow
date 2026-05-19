@@ -8,6 +8,8 @@ use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\Reader;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function iterator_to_array;
+
 class EdgeCasesReadingTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
@@ -54,7 +56,7 @@ class EdgeCasesReadingTest extends ParquetIntegrationTestCase
                     ],
                 ],
             ],
-            \iterator_to_array($reader->values()),
+            iterator_to_array($reader->values()),
         );
     }
 

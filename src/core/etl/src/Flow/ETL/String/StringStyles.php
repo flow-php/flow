@@ -8,6 +8,15 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 use Symfony\Component\String\UnicodeString;
 
+use function function_exists;
+use function implode;
+use function mb_internal_encoding;
+use function mb_strlen;
+use function mb_strtolower;
+use function mb_strtoupper;
+use function mb_substr;
+use function mb_ucfirst;
+use function method_exists;
 use function Symfony\Component\String\u;
 
 enum StringStyles: string
@@ -49,7 +58,7 @@ enum StringStyles: string
         }
 
         throw new InvalidArgumentException(
-            "Unrecognized style {$style}, please use one of following: " . \implode(', ', self::all()),
+            "Unrecognized style {$style}, please use one of following: " . implode(', ', self::all()),
         );
     }
 
@@ -59,20 +68,20 @@ enum StringStyles: string
             self::ASCII => u($value)->ascii()->toString(),
             self::CAMEL => u($value)->camel()->toString(),
             self::KEBAB => $this->kebab($value),
-            self::LOWER => \mb_strtolower($value),
+            self::LOWER => mb_strtolower($value),
             self::SLUG => $this->slug($value),
             self::SNAKE => u($value)->snake()->toString(),
             self::TITLE => u($value)->title()->toString(),
             self::UCFIRST => $this->ucFirst($value),
             self::UCWORDS => $this->ucWords($value),
-            self::UPPER => \mb_strtoupper($value),
+            self::UPPER => mb_strtoupper($value),
         };
     }
 
     private function kebab(string $value): string
     {
         // @phpstan-ignore-next-line Available from Symfony 7.2+
-        if (!\method_exists(UnicodeString::class, 'kebab')) {
+        if (!method_exists(UnicodeString::class, 'kebab')) {
             return u($value)->snake()->replace('_', '-')->toString();
         }
 
@@ -89,15 +98,13 @@ enum StringStyles: string
     private function ucFirst(string $string): string
     {
         // Available from PHP 8.4+
-        if (\function_exists('mb_ucfirst')) {
-            return \mb_ucfirst($string);
+        if (function_exists('mb_ucfirst')) {
+            return mb_ucfirst($string);
         }
 
-        $encoding = \mb_internal_encoding();
+        $encoding = mb_internal_encoding();
 
-        return (
-            \mb_strtoupper(\mb_substr($string, 0, 1, $encoding), $encoding) . \mb_substr($string, 1, null, $encoding)
-        );
+        return mb_strtoupper(mb_substr($string, 0, 1, $encoding), $encoding) . mb_substr($string, 1, null, $encoding);
     }
 
     private function ucWords(string $string): string
@@ -105,13 +112,13 @@ enum StringStyles: string
         $result = '';
         $previousCharacter = ' ';
 
-        $encoding = \mb_internal_encoding();
+        $encoding = mb_internal_encoding();
 
-        for ($i = 0, $length = \mb_strlen($string, $encoding); $i < $length; $i++) {
-            $currentCharacter = \mb_substr($string, $i, 1, $encoding);
+        for ($i = 0, $length = mb_strlen($string, $encoding); $i < $length; $i++) {
+            $currentCharacter = mb_substr($string, $i, 1, $encoding);
 
             if (' ' === $previousCharacter) {
-                $currentCharacter = \mb_strtoupper($currentCharacter, $encoding);
+                $currentCharacter = mb_strtoupper($currentCharacter, $encoding);
             }
 
             $result .= $currentCharacter;

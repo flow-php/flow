@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Unit;
 
+use DOMDocument;
 use Flow\ETL\Adapter\Doctrine\RowsNormalizer;
 use PHPUnit\Framework\TestCase;
 
@@ -34,7 +35,7 @@ final class RowsNormalizerTest extends TestCase
     public function test_normalize_preserves_entry_order(): void
     {
         $xmlContent = '<user><name>John</name></user>';
-        $doc = new \DOMDocument();
+        $doc = new DOMDocument();
         $doc->loadXML($xmlContent);
 
         $rows = rows(row(
@@ -54,12 +55,12 @@ final class RowsNormalizerTest extends TestCase
     public function test_normalize_rows_with_mixed_xml_entries(): void
     {
         $xmlContent = '<root><user><name>John Doe</name></user></root>';
-        $doc = new \DOMDocument();
+        $doc = new DOMDocument();
         $doc->loadXML($xmlContent);
         $element = $doc->getElementsByTagName('user')[0];
 
         $xmlContent2 = '<profile><bio>Software Engineer</bio></profile>';
-        $doc2 = new \DOMDocument();
+        $doc2 = new DOMDocument();
         $doc2->loadXML($xmlContent2);
 
         $rows = rows(row(
@@ -99,7 +100,7 @@ final class RowsNormalizerTest extends TestCase
     public function test_normalize_rows_with_xml_element_entry(): void
     {
         $xmlContent = '<root><user><name>John Doe</name></user></root>';
-        $doc = new \DOMDocument();
+        $doc = new DOMDocument();
         $doc->loadXML($xmlContent);
         $element = $doc->getElementsByTagName('user')[0];
 
@@ -122,7 +123,7 @@ final class RowsNormalizerTest extends TestCase
     public function test_normalize_rows_with_xml_entry(): void
     {
         $xmlContent = '<user><name>John Doe</name><email>john@example.com</email></user>';
-        $doc = new \DOMDocument();
+        $doc = new DOMDocument();
         $doc->loadXML($xmlContent);
 
         $rows = rows(row(integer_entry('id', 1), xml_entry('user_data', $doc), string_entry('status', 'active')));

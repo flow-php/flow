@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Azure\SDK\BlobService\GetBlobProperties;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use Psr\Http\Message\ResponseInterface;
 
 final readonly class BlobProperties
@@ -17,7 +19,7 @@ final readonly class BlobProperties
         return (string) $this->response->getBody();
     }
 
-    public function lastModifiedAt(): ?\DateTimeImmutable
+    public function lastModifiedAt(): ?DateTimeImmutable
     {
         $raw = $this->response->getHeaderLine('Last-Modified');
 
@@ -25,7 +27,7 @@ final readonly class BlobProperties
             return null;
         }
 
-        $parsed = \DateTimeImmutable::createFromFormat(\DateTimeImmutable::RFC7231, $raw);
+        $parsed = DateTimeImmutable::createFromFormat('D, d M Y H:i:s \G\M\T', $raw, new DateTimeZone('GMT'));
 
         return $parsed === false ? null : $parsed;
     }

@@ -7,21 +7,24 @@ namespace Flow\Filesystem\Tests\Unit;
 use Flow\Filesystem\Partitions;
 use Flow\Filesystem\Path\Option;
 use Flow\Filesystem\Path\Option\ContentType;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
+use function file_exists;
 use function Flow\Filesystem\DSL\partition;
 use function Flow\Filesystem\DSL\partitions;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
+use function mkdir;
 
 final class PathTest extends TestCase
 {
     /**
      * @return \Generator<int, array{string, string}>
      */
-    public static function directories(): \Generator
+    public static function directories(): Generator
     {
         yield ['/some_file.txt', '/'];
         yield ['/some/nested/file.csv', '/some/nested'];
@@ -31,7 +34,7 @@ final class PathTest extends TestCase
     /**
      * @return \Generator<int, array{string, string, string}>
      */
-    public static function paths(): \Generator
+    public static function paths(): Generator
     {
         yield ['/file.csv', 'file', 'file://file.csv'];
         yield ['file://file.csv', 'file', 'file://file.csv'];
@@ -48,7 +51,7 @@ final class PathTest extends TestCase
     /**
      * @return \Generator<int, array{string, string, bool}>
      */
-    public static function paths_pattern_matching(): \Generator
+    public static function paths_pattern_matching(): Generator
     {
         yield ['/file.csv', '/file.csv', true];
         yield ['/nested/folder/any/file.csv', '/nested/folder/*/file.csv', false];
@@ -61,7 +64,7 @@ final class PathTest extends TestCase
     /**
      * @return \Generator<int, array{string, Partitions}>
      */
-    public static function paths_with_partitions(): \Generator
+    public static function paths_with_partitions(): Generator
     {
         yield ['/', partitions()];
         yield ['file://path/without/partitions/file.csv', partitions()];
@@ -76,7 +79,7 @@ final class PathTest extends TestCase
     /**
      * @return \Generator<int, array{string, string}>
      */
-    public static function paths_with_static_parts(): \Generator
+    public static function paths_with_static_parts(): Generator
     {
         yield ['/file.csv', '/file.csv'];
         yield ['/nested/folder', '/nested/folder/*/file.csv'];
@@ -91,8 +94,8 @@ final class PathTest extends TestCase
 
     protected function setUp(): void
     {
-        if (!\file_exists(__DIR__ . '/var')) {
-            \mkdir(__DIR__ . '/var');
+        if (!file_exists(__DIR__ . '/var')) {
+            mkdir(__DIR__ . '/var');
         }
     }
 

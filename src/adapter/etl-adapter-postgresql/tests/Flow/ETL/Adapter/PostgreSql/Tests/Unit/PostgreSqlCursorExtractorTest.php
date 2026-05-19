@@ -12,6 +12,7 @@ use Flow\ETL\Schema;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\Cursor;
+use Generator;
 use PHPUnit\Framework\MockObject\MockObject;
 
 final class PostgreSqlCursorExtractorTest extends FlowTestCase
@@ -231,7 +232,7 @@ final class PostgreSqlCursorExtractorTest extends FlowTestCase
 
         $cursor
             ->method('iterate')
-            ->willReturnCallback(static function () use ($rows): \Generator {
+            ->willReturnCallback(static function () use ($rows): Generator {
                 foreach ($rows as $row) {
                     yield $row;
                 }

@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Parser;
 
+use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
 use function Flow\PostgreSql\DSL\column_type_from_string;
+use function Flow\Types\DSL\type_instance_of;
 
 final class ColumnTypeParserTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }
@@ -39,7 +43,8 @@ final class ColumnTypeParserTest extends TestCase
         $ast = column_type_from_string('bytea')->toAst();
 
         static::assertCount(1, $ast->getNames());
-        static::assertSame('bytea', $ast->getNames()[0]->getString()->getSval());
+        $string = type_instance_of(PBString::class)->assert($ast->getNames()[0]->getString());
+        static::assertSame('bytea', $string->getSval());
     }
 
     public function test_parse_char_with_length(): void
@@ -55,7 +60,8 @@ final class ColumnTypeParserTest extends TestCase
         $ast = column_type_from_string('cidr')->toAst();
 
         static::assertCount(1, $ast->getNames());
-        static::assertSame('cidr', $ast->getNames()[0]->getString()->getSval());
+        $string = type_instance_of(PBString::class)->assert($ast->getNames()[0]->getString());
+        static::assertSame('cidr', $string->getSval());
     }
 
     public function test_parse_custom_type(): void
@@ -63,7 +69,8 @@ final class ColumnTypeParserTest extends TestCase
         $ast = column_type_from_string('my_custom_type')->toAst();
 
         static::assertCount(1, $ast->getNames());
-        static::assertSame('my_custom_type', $ast->getNames()[0]->getString()->getSval());
+        $string = type_instance_of(PBString::class)->assert($ast->getNames()[0]->getString());
+        static::assertSame('my_custom_type', $string->getSval());
     }
 
     public function test_parse_date(): void
@@ -71,7 +78,8 @@ final class ColumnTypeParserTest extends TestCase
         $ast = column_type_from_string('date')->toAst();
 
         static::assertCount(1, $ast->getNames());
-        static::assertSame('date', $ast->getNames()[0]->getString()->getSval());
+        $string = type_instance_of(PBString::class)->assert($ast->getNames()[0]->getString());
+        static::assertSame('date', $string->getSval());
     }
 
     public function test_parse_double_precision(): void
@@ -84,7 +92,7 @@ final class ColumnTypeParserTest extends TestCase
 
     public function test_parse_empty_throws_exception(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
 
         column_type_from_string('');
     }
@@ -94,7 +102,8 @@ final class ColumnTypeParserTest extends TestCase
         $ast = column_type_from_string('inet')->toAst();
 
         static::assertCount(1, $ast->getNames());
-        static::assertSame('inet', $ast->getNames()[0]->getString()->getSval());
+        $string = type_instance_of(PBString::class)->assert($ast->getNames()[0]->getString());
+        static::assertSame('inet', $string->getSval());
     }
 
     public function test_parse_integer(): void
@@ -111,8 +120,10 @@ final class ColumnTypeParserTest extends TestCase
         $names = $ast->getNames();
 
         static::assertCount(2, $names);
-        static::assertSame('pg_catalog', $names[0]->getString()->getSval());
-        static::assertSame('int4', $names[1]->getString()->getSval());
+        $string0 = type_instance_of(PBString::class)->assert($names[0]->getString());
+        $string1 = type_instance_of(PBString::class)->assert($names[1]->getString());
+        static::assertSame('pg_catalog', $string0->getSval());
+        static::assertSame('int4', $string1->getSval());
         static::assertCount(1, $ast->getArrayBounds());
     }
 
@@ -137,7 +148,8 @@ final class ColumnTypeParserTest extends TestCase
         $ast = column_type_from_string('jsonb')->toAst();
 
         static::assertCount(1, $ast->getNames());
-        static::assertSame('jsonb', $ast->getNames()[0]->getString()->getSval());
+        $string = type_instance_of(PBString::class)->assert($ast->getNames()[0]->getString());
+        static::assertSame('jsonb', $string->getSval());
     }
 
     public function test_parse_macaddr(): void
@@ -145,7 +157,8 @@ final class ColumnTypeParserTest extends TestCase
         $ast = column_type_from_string('macaddr')->toAst();
 
         static::assertCount(1, $ast->getNames());
-        static::assertSame('macaddr', $ast->getNames()[0]->getString()->getSval());
+        $string = type_instance_of(PBString::class)->assert($ast->getNames()[0]->getString());
+        static::assertSame('macaddr', $string->getSval());
     }
 
     public function test_parse_numeric(): void
@@ -178,8 +191,10 @@ final class ColumnTypeParserTest extends TestCase
         $names = $ast->getNames();
 
         static::assertCount(2, $names);
-        static::assertSame('my_schema', $names[0]->getString()->getSval());
-        static::assertSame('my_type', $names[1]->getString()->getSval());
+        $string0 = type_instance_of(PBString::class)->assert($names[0]->getString());
+        $string1 = type_instance_of(PBString::class)->assert($names[1]->getString());
+        static::assertSame('my_schema', $string0->getSval());
+        static::assertSame('my_type', $string1->getSval());
     }
 
     public function test_parse_smallint(): void
@@ -195,7 +210,8 @@ final class ColumnTypeParserTest extends TestCase
         $ast = column_type_from_string('text')->toAst();
 
         static::assertCount(1, $ast->getNames());
-        static::assertSame('text', $ast->getNames()[0]->getString()->getSval());
+        $string = type_instance_of(PBString::class)->assert($ast->getNames()[0]->getString());
+        static::assertSame('text', $string->getSval());
     }
 
     public function test_parse_text_array(): void
@@ -204,7 +220,8 @@ final class ColumnTypeParserTest extends TestCase
         $names = $ast->getNames();
 
         static::assertCount(1, $names);
-        static::assertSame('text', $names[0]->getString()->getSval());
+        $string = type_instance_of(PBString::class)->assert($names[0]->getString());
+        static::assertSame('text', $string->getSval());
         static::assertCount(1, $ast->getArrayBounds());
     }
 
@@ -253,7 +270,8 @@ final class ColumnTypeParserTest extends TestCase
         $ast = column_type_from_string('uuid')->toAst();
 
         static::assertCount(1, $ast->getNames());
-        static::assertSame('uuid', $ast->getNames()[0]->getString()->getSval());
+        $string = type_instance_of(PBString::class)->assert($ast->getNames()[0]->getString());
+        static::assertSame('uuid', $string->getSval());
     }
 
     public function test_parse_varchar_with_length(): void

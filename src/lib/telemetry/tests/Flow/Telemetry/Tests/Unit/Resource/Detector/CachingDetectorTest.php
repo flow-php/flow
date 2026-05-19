@@ -9,19 +9,25 @@ use Flow\Telemetry\Resource\Detector\CachingDetector;
 use Flow\Telemetry\Resource\ResourceDetector;
 use PHPUnit\Framework\TestCase;
 
+use function file_put_contents;
+use function is_file;
+use function sys_get_temp_dir;
+use function uniqid;
+use function unlink;
+
 final class CachingDetectorTest extends TestCase
 {
     private string $cacheFile;
 
     protected function setUp(): void
     {
-        $this->cacheFile = \sys_get_temp_dir() . '/flow_telemetry_test_' . \uniqid() . '.cache';
+        $this->cacheFile = sys_get_temp_dir() . '/flow_telemetry_test_' . uniqid() . '.cache';
     }
 
     protected function tearDown(): void
     {
-        if (\is_file($this->cacheFile)) {
-            @\unlink($this->cacheFile);
+        if (is_file($this->cacheFile)) {
+            @unlink($this->cacheFile);
         }
     }
 
@@ -59,7 +65,7 @@ final class CachingDetectorTest extends TestCase
 
     public function test_detect_handles_corrupted_cache_gracefully(): void
     {
-        \file_put_contents($this->cacheFile, 'invalid-serialized-data');
+        file_put_contents($this->cacheFile, 'invalid-serialized-data');
 
         $innerDetector = $this->createMockDetector(['key' => 'fresh-value']);
         $detector = new CachingDetector($innerDetector, $this->cacheFile);
@@ -113,10 +119,10 @@ final class CachingDetectorTest extends TestCase
 
     public function test_detect_uses_default_cache_path_when_not_provided(): void
     {
-        $defaultCachePath = \sys_get_temp_dir() . '/flow_telemetry_resource.cache';
+        $defaultCachePath = sys_get_temp_dir() . '/flow_telemetry_resource.cache';
 
-        if (\is_file($defaultCachePath)) {
-            @\unlink($defaultCachePath);
+        if (is_file($defaultCachePath)) {
+            @unlink($defaultCachePath);
         }
 
         $innerDetector = $this->createMockDetector(['key' => 'value']);
@@ -126,7 +132,7 @@ final class CachingDetectorTest extends TestCase
 
         static::assertFileExists($defaultCachePath);
 
-        @\unlink($defaultCachePath);
+        @unlink($defaultCachePath);
     }
 
     /**

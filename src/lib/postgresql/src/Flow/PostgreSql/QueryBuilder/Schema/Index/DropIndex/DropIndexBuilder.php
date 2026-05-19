@@ -13,6 +13,8 @@ use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
+use function array_values;
+
 final readonly class DropIndexBuilder implements DropIndexFinalStep
 {
     use AstToSql;
@@ -29,7 +31,7 @@ final readonly class DropIndexBuilder implements DropIndexFinalStep
 
     public static function create(string ...$indexes): DropIndexFinalStep
     {
-        return new self(\array_values($indexes));
+        return new self(array_values($indexes));
     }
 
     public function cascade(): DropIndexFinalStep

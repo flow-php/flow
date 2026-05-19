@@ -8,6 +8,8 @@ use Flow\Bridge\Symfony\FilesystemCache\FlowFilesystemCacheAdapter;
 use Flow\Bridge\Symfony\FilesystemCache\Tests\Context\FilesystemCacheContext;
 use PHPUnit\Framework\TestCase;
 
+use function sleep;
+
 final class FlowFilesystemCacheAdapterTest extends TestCase
 {
     private FilesystemCacheContext $context;
@@ -82,7 +84,7 @@ final class FlowFilesystemCacheAdapterTest extends TestCase
         $alive->set('alive');
         $adapter->save($alive);
 
-        \sleep(2);
+        sleep(2);
 
         static::assertTrue($adapter->prune());
 

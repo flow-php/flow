@@ -9,6 +9,8 @@ use Flow\PostgreSql\Exception\InvalidExplainConfigException;
 use Flow\PostgreSql\QueryBuilder\Utility\ExplainFormat;
 use PHPUnit\Framework\TestCase;
 
+use function array_keys;
+
 final class ExplainConfigTest extends TestCase
 {
     public function test_chaining_fluent_methods(): void
@@ -257,7 +259,7 @@ final class ExplainConfigTest extends TestCase
             'format',
         ];
 
-        static::assertSame($expectedKeys, \array_keys($normalized));
+        static::assertSame($expectedKeys, array_keys($normalized));
     }
 
     public function test_with_analyze_returns_new_instance(): void

@@ -4,7 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Dremel\ColumnData;
 
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Generator;
+
+use function assert;
+use function count;
+use function gettype;
+use function is_scalar;
 
 final class WriteFlatColumnValues
 {
@@ -14,7 +21,7 @@ final class WriteFlatColumnValues
      * @param FlatColumn $column
      * @param array<int> $repetitionLevels
      * @param array<int> $definitionLevels
-     * @param array<null|scalar> $values
+     * @param array<null|object|scalar> $values
      */
     public function __construct(
         public readonly FlatColumn $column,
@@ -27,7 +34,7 @@ final class WriteFlatColumnValues
 
     public function add(FlatValue $cell): void
     {
-        \assert(
+        assert(
             $cell->column->flatPath() === $this->flatPath,
             'Cannot add data from different column, attempt to merge: ' . $this->flatPath . ' with '
                 . $cell->column->flatPath(),
@@ -64,7 +71,7 @@ final class WriteFlatColumnValues
 
     public function definitionLevelsCount(): int
     {
-        return \count($this->definitionLevels);
+        return count($this->definitionLevels);
     }
 
     public function flatPath(): string
@@ -74,25 +81,28 @@ final class WriteFlatColumnValues
 
     public function isEmpty(): bool
     {
-        return !\count($this->values) && !\count($this->repetitionLevels) && !\count($this->definitionLevels);
+        return !count($this->values) && !count($this->repetitionLevels) && !count($this->definitionLevels);
     }
 
     /**
      * @return \Generator<FlatValue>
      */
-    public function iterator(): \Generator
+    public function iterator(): Generator
     {
         $maxDefinitionLevel = $this->column->repetitions()->maxDefinitionLevel();
 
         $valueIndex = 0;
 
         foreach ($this->definitionLevels as $index => $definitionLevel) {
-            yield new FlatValue(
-                $this->column,
-                $this->repetitionLevels[$index],
-                $definitionLevel,
-                $definitionLevel === $maxDefinitionLevel ? $this->values[$valueIndex] : null,
-            );
+            $rawValue = $definitionLevel === $maxDefinitionLevel ? $this->values[$valueIndex] : null;
+
+            if ($rawValue !== null && !is_scalar($rawValue)) {
+                throw new InvalidArgumentException(
+                    'FlatValue iterator requires scalar values, got ' . gettype($rawValue),
+                );
+            }
+
+            yield new FlatValue($this->column, $this->repetitionLevels[$index], $definitionLevel, $rawValue);
 
             if ($definitionLevel === $maxDefinitionLevel) {
                 $valueIndex++;
@@ -102,7 +112,7 @@ final class WriteFlatColumnValues
 
     public function merge(self $flatData): self
     {
-        \assert(
+        assert(
             $flatData->flatPath === $this->flatPath,
             'Cannot merge different column, attempt to merge: ' . $this->flatPath . ' with ' . $flatData->flatPath,
         );
@@ -232,7 +242,7 @@ final class WriteFlatColumnValues
             if (
                 $repetitionLevel === 0
                 && $rowsInCurrentChunk >= $rowsInChunk
-                && \count($currentChunk['repetitions']) > 0
+                && count($currentChunk['repetitions']) > 0
             ) {
                 $pageBreakIndexes[] = $index;
                 $chunks[] = new self(
@@ -261,7 +271,7 @@ final class WriteFlatColumnValues
             }
         }
 
-        if (\count($currentChunk['repetitions']) > 0) {
+        if (count($currentChunk['repetitions']) > 0) {
             $chunks[] = new self(
                 $this->column,
                 $currentChunk['repetitions'],
@@ -274,7 +284,7 @@ final class WriteFlatColumnValues
     }
 
     /**
-     * @return array<null|scalar>
+     * @return array<null|object|scalar>
      */
     public function values(): array
     {

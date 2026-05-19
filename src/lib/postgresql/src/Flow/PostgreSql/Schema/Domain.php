@@ -12,6 +12,7 @@ use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Constraint\CheckConstraint;
 
+use function array_map;
 use function Flow\PostgreSql\DSL\create;
 
 /**
@@ -60,11 +61,11 @@ final readonly class Domain
         return new self(
             name: $data['name'],
             baseType: ColumnType::fromArray($data['base_type']),
-            nullable: $data['nullable'] ?? true,
+            nullable: $data['nullable'],
             default: $data['default'] ?? null,
-            checkConstraints: \array_map(static fn(array $cc): CheckConstraint => CheckConstraint::fromArray(
+            checkConstraints: array_map(static fn(array $cc): CheckConstraint => CheckConstraint::fromArray(
                 $cc,
-            ), $data['check_constraints'] ?? []),
+            ), $data['check_constraints']),
         );
     }
 
@@ -78,7 +79,7 @@ final readonly class Domain
             'base_type' => $this->baseType->normalize(),
             'nullable' => $this->nullable,
             'default' => $this->default,
-            'check_constraints' => \array_map(
+            'check_constraints' => array_map(
                 static fn(CheckConstraint $cc): array => $cc->normalize(),
                 $this->checkConstraints,
             ),

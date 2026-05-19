@@ -12,6 +12,8 @@ use Flow\PostgreSql\Migrations\Repository\AvailableMigrations;
 use Flow\PostgreSql\Migrations\Version;
 use PHPUnit\Framework\TestCase;
 
+use function iterator_to_array;
+
 final class AvailableMigrationsTest extends TestCase
 {
     public function stubMigration(): Migration
@@ -86,8 +88,9 @@ final class AvailableMigrationsTest extends TestCase
             new AvailableMigration($v1, 'first', $this->stubMigration(), null),
         );
 
-        static::assertNotNull($migrations->first());
-        static::assertTrue($v1->equals($migrations->first()->version));
+        $first = $migrations->first();
+        static::assertNotNull($first);
+        static::assertTrue($v1->equals($first->version));
     }
 
     public function test_get_returns_migration_for_existing_version(): void
@@ -134,7 +137,7 @@ final class AvailableMigrationsTest extends TestCase
             new AvailableMigration($v2, 'second', $this->stubMigration(), null),
         );
 
-        $items = \iterator_to_array($migrations);
+        $items = iterator_to_array($migrations);
 
         static::assertTrue($v1->equals($items[0]->version));
         static::assertTrue($v2->equals($items[1]->version));
@@ -151,8 +154,9 @@ final class AvailableMigrationsTest extends TestCase
             new AvailableMigration($v2, 'second', $this->stubMigration(), null),
         );
 
-        static::assertNotNull($migrations->last());
-        static::assertTrue($v2->equals($migrations->last()->version));
+        $last = $migrations->last();
+        static::assertNotNull($last);
+        static::assertTrue($v2->equals($last->version));
     }
 
     public function test_non_empty_collection_is_not_empty(): void

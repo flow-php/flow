@@ -7,6 +7,8 @@ namespace Flow\ETL\Adapter\XML\Tests\Integration\Loader;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
+use function file_exists;
+use function file_get_contents;
 use function Flow\ETL\Adapter\XML\from_xml;
 use function Flow\ETL\Adapter\XML\to_xml;
 use function Flow\ETL\DSL\df;
@@ -62,7 +64,7 @@ final class XMLLoaderTest extends FlowIntegrationTestCase
             ->write(to_xml($path = $this->cacheDir->suffix('test_xml_loader.xml')))
             ->run();
 
-        static::assertFalse(\file_exists($path->path()));
+        static::assertFalse(file_exists($path->path()));
     }
 
     public function test_writing_xml(): void
@@ -94,7 +96,7 @@ final class XMLLoaderTest extends FlowIntegrationTestCase
             ->write(to_xml($path = $this->cacheDir->suffix('test_xml_loader.xml')))
             ->run();
 
-        $content = \file_get_contents($path->path());
+        $content = file_get_contents($path->path());
         static::assertNotFalse($content);
         static::assertXmlStringEqualsXmlString(<<<'XML'
             <?xml version="1.0" encoding="UTF-8"?>

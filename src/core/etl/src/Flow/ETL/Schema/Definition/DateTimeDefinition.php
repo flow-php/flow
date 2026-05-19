@@ -15,6 +15,7 @@ use Flow\Types\Type\Logical\DateTimeType;
 
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_equals;
+use function sprintf;
 
 /**
  * @implements Definition<\DateTimeInterface>
@@ -107,7 +108,7 @@ final class DateTimeDefinition implements Definition
     public function merge(Definition $definition): Definition
     {
         if (!$this->ref->is($definition->entry())) {
-            throw new RuntimeException(\sprintf(
+            throw new RuntimeException(sprintf(
                 'Cannot merge different definitions, %s and %s',
                 $this->ref->name(),
                 $definition->entry()->name(),
@@ -176,7 +177,7 @@ final class DateTimeDefinition implements Definition
             );
         }
 
-        throw new RuntimeException(\sprintf('Cannot merge %s with %s', self::class, $definition::class));
+        throw new RuntimeException(sprintf('Cannot merge %s with %s', self::class, $definition::class));
     }
 
     public function metadata(): Metadata

@@ -20,8 +20,11 @@ use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\Native\UnionType;
 
+use function array_key_exists;
+use function count;
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_instance_of;
+use function in_array;
 
 final class Comparator
 {
@@ -78,8 +81,8 @@ final class Comparator
         }
 
         if (
-            \in_array($left::class, [StringType::class, JsonType::class], true)
-            && \in_array($right::class, [StringType::class, JsonType::class], true)
+            in_array($left::class, [StringType::class, JsonType::class], true)
+            && in_array($right::class, [StringType::class, JsonType::class], true)
         ) {
             return true;
         }
@@ -119,14 +122,14 @@ final class Comparator
         }
 
         if ($left instanceof StructureType && $right instanceof StructureType) {
-            if (\count($left->elements()) !== \count($right->elements())) {
+            if (count($left->elements()) !== count($right->elements())) {
                 return false;
             }
 
             $rightElements = $right->elements();
 
             foreach ($left->elements() as $name => $field) {
-                if (!\array_key_exists($name, $rightElements)) {
+                if (!array_key_exists($name, $rightElements)) {
                     return false;
                 }
 
@@ -142,14 +145,12 @@ final class Comparator
     }
 
     /**
-     * @template T
-     *
-     * @param Type<T> $type
+     * @param Type<mixed> $type
      * @param class-string<Type<mixed>> $typeClass
      */
     public function is(Type $type, string $typeClass): bool
     {
-        if ($type instanceof $typeClass) {
+        if ($this->isInstanceOf($type, $typeClass)) {
             return true;
         }
 
@@ -159,7 +160,7 @@ final class Comparator
 
         if ($type instanceof UnionType) {
             foreach ($type->types()->all() as $nextType) {
-                if ($nextType instanceof $typeClass) {
+                if ($this->isInstanceOf($nextType, $typeClass)) {
                     return true;
                 }
             }
@@ -171,9 +172,16 @@ final class Comparator
     }
 
     /**
-     * @template T
-     *
-     * @param Type<T> $type
+     * @param Type<mixed> $type
+     * @param class-string<Type<mixed>> $typeClass
+     */
+    private function isInstanceOf(Type $type, string $typeClass): bool
+    {
+        return $type instanceof $typeClass;
+    }
+
+    /**
+     * @param Type<mixed> $type
      * @param class-string<Type<mixed>> $typeClass
      * @param class-string<Type<mixed>> ...$typeClasses
      */

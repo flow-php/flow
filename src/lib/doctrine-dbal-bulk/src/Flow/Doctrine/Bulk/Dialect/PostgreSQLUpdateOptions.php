@@ -24,9 +24,6 @@ final readonly class PostgreSQLUpdateOptions implements UpdateOptions
         public ?bool $preserveExistingValues = null,
     ) {}
 
-    /**
-     * @param array<string, mixed> $options
-     */
     public static function fromArray(array $options): UpdateOptions
     {
         $options = type_structure(optional_elements: [
@@ -36,9 +33,9 @@ final readonly class PostgreSQLUpdateOptions implements UpdateOptions
         ])->assert($options);
 
         return new self(
-            $options['primary_key_columns'] ?? [],
-            $options['update_columns'] ?? [],
-            $options['preserve_existing_values'] ?? null,
+            type_list(type_string())->assert($options['primary_key_columns'] ?? []),
+            type_list(type_string())->assert($options['update_columns'] ?? []),
+            type_optional(type_boolean())->assert($options['preserve_existing_values'] ?? null),
         );
     }
 

@@ -9,6 +9,7 @@ use Flow\PostgreSql\Explain\Analyzer\PlanAnalyzer;
 use Flow\PostgreSql\Explain\Analyzer\PlanSummary;
 use Flow\PostgreSql\Explain\Plan\PlanNodeType;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\PostgreSql\DSL\binary_expr;
@@ -38,7 +39,7 @@ final class PgSqlExplainTest extends PostgreSqlTestCase
      *     hasBuffers: bool
      * }}>
      */
-    public static function provideExplainConfigCombinations(): \Generator
+    public static function provideExplainConfigCombinations(): Generator
     {
         yield 'forAnalysis - full execution data' => [
             ExplainConfig::forAnalysis(),

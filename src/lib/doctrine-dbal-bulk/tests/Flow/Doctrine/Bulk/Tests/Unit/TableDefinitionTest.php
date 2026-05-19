@@ -12,19 +12,21 @@ use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
+use Exception;
 use Flow\Doctrine\Bulk\BulkData;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use Flow\Doctrine\Bulk\SQLParametersStyle;
 use Flow\Doctrine\Bulk\TableDefinition;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class TableDefinitionTest extends TestCase
 {
     /**
-     * @return \Generator<string, array{array<string, mixed>, class-string<AbstractPlatform>}>
+     * @return \Generator<string, array{array{driver: 'sqlite3', memory: bool}, class-string<AbstractPlatform>}>
      */
-    public static function provide_platform_types(): \Generator
+    public static function provide_platform_types(): Generator
     {
         yield 'sqlite' => [['driver' => 'sqlite3', 'memory' => true], SQLitePlatform::class];
     }
@@ -32,7 +34,7 @@ final class TableDefinitionTest extends TestCase
     /**
      * @return \Generator<string, array{string}>
      */
-    public static function provide_table_names(): \Generator
+    public static function provide_table_names(): Generator
     {
         yield 'simple name' => ['users'];
         yield 'with underscore' => ['user_profiles'];
@@ -48,6 +50,8 @@ final class TableDefinitionTest extends TestCase
         $column1 = $tableDefinition->dbalColumn('id');
         $column2 = $tableDefinition->dbalColumn('id');
 
+        // @mago-expect analysis:deprecated-method
+        // @mago-expect analysis:deprecated-method
         static::assertSame($column1->getName(), $column2->getName());
         static::assertSame(
             Type::getTypeRegistry()->lookupName($column1->getType()),
@@ -61,7 +65,7 @@ final class TableDefinitionTest extends TestCase
 
         $tableDefinition = new TableDefinition('non_existent_table', $connection);
 
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
 
         $tableDefinition->dbalColumn('any_column');
     }
@@ -93,6 +97,7 @@ final class TableDefinitionTest extends TestCase
 
         $nameColumn = $tableDefinition->dbalColumn('name');
 
+        // @mago-expect analysis:deprecated-method
         static::assertSame('name', $nameColumn->getName());
         static::assertSame(Types::STRING, Type::getTypeRegistry()->lookupName($nameColumn->getType()));
     }
@@ -105,6 +110,7 @@ final class TableDefinitionTest extends TestCase
         $column = $tableDefinition->dbalColumn('id');
 
         static::assertInstanceOf(Column::class, $column);
+        // @mago-expect analysis:deprecated-method
         static::assertSame('id', $column->getName());
     }
 
@@ -266,7 +272,7 @@ final class TableDefinitionTest extends TestCase
     }
 
     /**
-     * @param array<string, mixed> $connectionParams
+     * @param array{driver: 'sqlite3', memory: bool} $connectionParams
      * @param class-string<AbstractPlatform> $expectedPlatformClass
      */
     #[DataProvider('provide_platform_types')]
@@ -278,7 +284,6 @@ final class TableDefinitionTest extends TestCase
 
         $tableDefinition = new TableDefinition('test_table', $connection);
 
-        /** @var class-string<AbstractPlatform> $expectedPlatformClass */
         static::assertInstanceOf($expectedPlatformClass, $tableDefinition->platform());
     }
 

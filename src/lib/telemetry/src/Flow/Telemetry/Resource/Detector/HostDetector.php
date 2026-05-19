@@ -8,6 +8,15 @@ use Flow\Telemetry\Resource;
 use Flow\Telemetry\Resource\Attribute\HostAttribute;
 use Flow\Telemetry\Resource\ResourceDetector;
 
+use function file_get_contents;
+use function is_readable;
+use function php_uname;
+use function preg_match;
+use function shell_exec;
+use function str_starts_with;
+use function strtolower;
+use function trim;
+
 /**
  * Detects host information.
  *
@@ -29,7 +38,7 @@ final readonly class HostDetector implements ResourceDetector
     {
         $attributes = [];
 
-        $hostname = \php_uname('n');
+        $hostname = php_uname('n');
 
         if ($hostname !== '') {
             $attributes[HostAttribute::NAME->value] = $hostname;
@@ -52,12 +61,12 @@ final readonly class HostDetector implements ResourceDetector
 
     private function detectArchitecture(): ?string
     {
-        $machine = \strtolower(\php_uname('m'));
+        $machine = strtolower(php_uname('m'));
 
         return match (true) {
             $machine === 'x86_64' || $machine === 'amd64' => 'amd64',
             $machine === 'aarch64' || $machine === 'arm64' => 'arm64',
-            \str_starts_with($machine, 'arm') => 'arm32',
+            str_starts_with($machine, 'arm') => 'arm32',
             $machine === 'i386' || $machine === 'i686' || $machine === 'x86' => 'x86',
             $machine === 'ia64' => 'ia64',
             $machine === 'ppc' || $machine === 'ppc32' || $machine === 'powerpc' => 'ppc32',
@@ -82,13 +91,15 @@ final readonly class HostDetector implements ResourceDetector
 
     private function readDarwinMachineId(): ?string
     {
-        $output = @\shell_exec('ioreg -rd1 -c IOPlatformExpertDevice 2>/dev/null');
+        $output = @shell_exec('ioreg -rd1 -c IOPlatformExpertDevice 2>/dev/null');
 
         if ($output === null || $output === false) {
             return null;
         }
 
-        if (\preg_match('/"IOPlatformUUID"\s*=\s*"([^"]+)"/', $output, $matches)) {
+        $matches = [];
+
+        if (preg_match('/"IOPlatformUUID"\s*=\s*"([^"]+)"/', $output, $matches)) {
             return $matches[1];
         }
 
@@ -103,11 +114,11 @@ final readonly class HostDetector implements ResourceDetector
         ];
 
         foreach ($paths as $path) {
-            if (\is_readable($path)) {
-                $content = @\file_get_contents($path);
+            if (is_readable($path)) {
+                $content = @file_get_contents($path);
 
                 if ($content !== false) {
-                    return \trim($content);
+                    return trim($content);
                 }
             }
         }

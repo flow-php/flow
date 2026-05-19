@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\Context;
 
 use Flow\Telemetry\Context\Baggage;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function count;
+
 final class BaggageTest extends TestCase
 {
-    public static function provideEntriesForCount(): \Generator
+    public static function provideEntriesForCount(): Generator
     {
         yield 'empty' => [[], 0];
         yield 'single entry' => [['a' => '1'], 1];
@@ -18,7 +21,7 @@ final class BaggageTest extends TestCase
         yield 'five entries' => [['a' => '1', 'b' => '2', 'c' => '3', 'd' => '4', 'e' => '5'], 5];
     }
 
-    public static function provideInitialEntries(): \Generator
+    public static function provideInitialEntries(): Generator
     {
         yield 'empty' => [[]];
         yield 'single entry' => [['key' => 'value']];
@@ -26,7 +29,7 @@ final class BaggageTest extends TestCase
         yield 'dotted keys' => [['service.name' => 'test', 'host.name' => 'localhost']];
     }
 
-    public static function provideKeyValuePairs(): \Generator
+    public static function provideKeyValuePairs(): Generator
     {
         yield 'simple key' => ['key', 'value'];
         yield 'dotted key' => ['user.id', '12345'];
@@ -43,8 +46,8 @@ final class BaggageTest extends TestCase
         $baggage = new Baggage($entries);
 
         static::assertSame($entries, $baggage->all());
-        static::assertSame(\count($entries), $baggage->count());
-        static::assertSame(\count($entries) === 0, $baggage->isEmpty());
+        static::assertSame(count($entries), $baggage->count());
+        static::assertSame(count($entries) === 0, $baggage->isEmpty());
     }
 
     public function test_baggage_is_immutable(): void

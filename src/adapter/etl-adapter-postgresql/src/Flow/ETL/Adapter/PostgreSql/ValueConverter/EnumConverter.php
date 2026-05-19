@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql\ValueConverter;
 
+use BackedEnum;
 use Flow\PostgreSql\Client\Types\ValueConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
+use UnitEnum;
 
 final readonly class EnumConverter implements ValueConverter
 {
@@ -24,11 +26,11 @@ final readonly class EnumConverter implements ValueConverter
             return null;
         }
 
-        if ($value instanceof \BackedEnum) {
+        if ($value instanceof BackedEnum) {
             return (string) $value->value;
         }
 
-        if ($value instanceof \UnitEnum) {
+        if ($value instanceof UnitEnum) {
             return $value->name;
         }
 

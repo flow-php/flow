@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Tests\Integration\Client;
 
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
+use function extension_loaded;
 use function Flow\PostgreSql\DSL\check_constraint;
 use function Flow\PostgreSql\DSL\client_catalog_provider;
 use function Flow\PostgreSql\DSL\col;
@@ -24,7 +25,7 @@ final class PgCatalogCheckConstraintNormalizationTest extends PostgreSqlTestCase
     {
         parent::setUp();
 
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
 

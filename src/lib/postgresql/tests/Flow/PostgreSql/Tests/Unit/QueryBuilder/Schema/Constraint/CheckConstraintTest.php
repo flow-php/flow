@@ -9,6 +9,7 @@ use Flow\PostgreSql\Protobuf\AST\ConstrType;
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\CheckConstraint;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\ge;
 use function Flow\PostgreSql\DSL\gt;
@@ -20,7 +21,7 @@ final class CheckConstraintTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }

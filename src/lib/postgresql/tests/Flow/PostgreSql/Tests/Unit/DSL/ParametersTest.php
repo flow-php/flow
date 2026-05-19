@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\DSL;
 
 use Flow\PostgreSql\QueryBuilder\Expression\Parameter;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\PostgreSql\DSL\parameters;
@@ -23,7 +24,7 @@ final class ParametersTest extends TestCase
 
     public function test_parameters_negative_count_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
 
         parameters(-1);
     }
@@ -49,14 +50,14 @@ final class ParametersTest extends TestCase
 
     public function test_parameters_zero_count_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
 
         parameters(0);
     }
 
     public function test_parameters_zero_start_throws(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
 
         parameters(3, startAt: 0);
     }

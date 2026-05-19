@@ -36,16 +36,17 @@ final class ProcedureTest extends TestCase
 
     public function test_to_sql_generates_create_procedure(): void
     {
+        $sql = schema_procedure(
+            'archive_user',
+            argumentTypes: ['integer', 'text'],
+            language: 'plpgsql',
+            definition: 'BEGIN DELETE FROM users WHERE id = $1; END;',
+        )->toSql();
+
+        static::assertNotNull($sql);
         static::assertSame(
             'CREATE OR REPLACE PROCEDURE archive_user(IN int, IN text) LANGUAGE plpgsql AS $$BEGIN DELETE FROM users WHERE id = $1; END;$$',
-            schema_procedure(
-                'archive_user',
-                argumentTypes: ['integer', 'text'],
-                language: 'plpgsql',
-                definition: 'BEGIN DELETE FROM users WHERE id = $1; END;',
-            )
-                ->toSql()
-                ->toSql(),
+            $sql->toSql(),
         );
     }
 

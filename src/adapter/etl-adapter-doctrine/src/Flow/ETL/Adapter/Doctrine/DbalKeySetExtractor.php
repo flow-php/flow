@@ -14,8 +14,13 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
+use Generator;
 
+use function array_key_exists;
+use function count;
 use function Flow\ETL\DSL\array_to_rows;
+use function method_exists;
+use function sha1;
 
 /**
  * Extractor implementing keyset pagination for Doctrine DBAL queries.
@@ -42,7 +47,7 @@ final class DbalKeySetExtractor implements Extractor
     ) {
         $qb = clone $this->queryBuilder;
 
-        $cleanQuery = \method_exists($qb, 'resetOrderBy')
+        $cleanQuery = method_exists($qb, 'resetOrderBy')
             ? (clone $this->queryBuilder)->resetOrderBy()
             : (clone $qb)->resetQueryPart('orderBy');
 
@@ -57,7 +62,7 @@ final class DbalKeySetExtractor implements Extractor
         }
     }
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         $totalFetched = 0;
         $lastRow = null;
@@ -79,7 +84,7 @@ final class DbalKeySetExtractor implements Extractor
                 foreach ($this->keySet->keys as $index => $key) {
                     $keyAlias = $this->keyAlias($key);
 
-                    if (!\array_key_exists($keyAlias, $lastRow)) {
+                    if (!array_key_exists($keyAlias, $lastRow)) {
                         throw new RuntimeException(sprintf(
                             'Column "%s" not found in last row for keyset pagination',
                             $key->column,
@@ -111,7 +116,7 @@ final class DbalKeySetExtractor implements Extractor
                     $conditions[] = $qb->expr()->and(...$subConditions);
                 }
 
-                if (\count($conditions) > 0) {
+                if (count($conditions) > 0) {
                     $qb->andWhere($qb->expr()->or(...$conditions));
 
                     foreach ($parameters as $param => $value) {
@@ -132,7 +137,7 @@ final class DbalKeySetExtractor implements Extractor
                 foreach ($this->keySet->keys as $key) {
                     $keyAlias = $this->keyAlias($key);
 
-                    if (\array_key_exists($keyAlias, $row)) {
+                    if (array_key_exists($keyAlias, $row)) {
                         unset($row[$keyAlias]);
                     }
                 }
@@ -220,7 +225,7 @@ final class DbalKeySetExtractor implements Extractor
     private function keyAlias(Key $key): string
     {
         return 'key_'
-        . \sha1((string) preg_replace(
+        . sha1((string) preg_replace(
             '/[^a-zA-Z0-9_]/',
             '_',
             str_replace('.', '_', $key->column . $this->keyAliasSuffix),

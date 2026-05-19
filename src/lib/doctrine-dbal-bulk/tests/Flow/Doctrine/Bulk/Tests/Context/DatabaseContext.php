@@ -7,6 +7,8 @@ namespace Flow\Doctrine\Bulk\Tests\Context;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Table;
 
+use function str_contains;
+
 final readonly class DatabaseContext
 {
     public function __construct(
@@ -22,7 +24,9 @@ final readonly class DatabaseContext
     {
         $schemaManager = $this->connection->createSchemaManager();
 
+        // @mago-expect analysis:deprecated-method
         if ($schemaManager->tablesExist([$table->getName()])) {
+            // @mago-expect analysis:deprecated-method
             $schemaManager->dropTable($table->getName());
         }
 
@@ -31,15 +35,19 @@ final readonly class DatabaseContext
 
     public function dropAllTables(): void
     {
+        // @mago-expect analysis:deprecated-method
         foreach ($this->connection->createSchemaManager()->listTables() as $table) {
-            if (\str_contains($table->getName(), 'innodb')) {
+            // @mago-expect analysis:deprecated-method
+            if (str_contains($table->getName(), 'innodb')) {
                 continue;
             }
 
-            if (\str_contains($table->getName(), 'mysql')) {
+            // @mago-expect analysis:deprecated-method
+            if (str_contains($table->getName(), 'mysql')) {
                 continue;
             }
 
+            // @mago-expect analysis:deprecated-method
             $this->connection->createSchemaManager()->dropTable($table->getName());
         }
     }

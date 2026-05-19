@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Unit;
 
+use DateTimeImmutable;
 use Flow\ETL\Adapter\XML\Abstraction\XMLAttribute;
 use Flow\ETL\Adapter\XML\Abstraction\XMLNode;
 use Flow\ETL\Adapter\XML\RowsNormalizer;
@@ -22,6 +23,7 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function iterator_to_array;
 
 final class RowsNormalizerTest extends FlowTestCase
 {
@@ -35,14 +37,14 @@ final class RowsNormalizerTest extends FlowTestCase
                 'id' => 1,
                 'name' => 'name',
                 'active' => true,
-                'date' => new \DateTimeImmutable('2024-04-04 00:00:00 UTC'),
+                'date' => new DateTimeImmutable('2024-04-04 00:00:00 UTC'),
                 'list' => [1, 2, 3],
                 'map' => ['a' => 1, 'b' => 2],
                 'nested_structure' => [
                     'id' => 2,
                     'name' => 'nested-name',
                     'active' => false,
-                    'date' => new \DateTimeImmutable('2024-04-04 00:00:00 UTC'),
+                    'date' => new DateTimeImmutable('2024-04-04 00:00:00 UTC'),
                     'list' => [4, 5, 6],
                     'map' => ['c' => 3, 'd' => 4],
                 ],
@@ -118,7 +120,7 @@ final class RowsNormalizerTest extends FlowTestCase
                             ),
                     ),
             ),
-            \iterator_to_array($normalizer->normalize($rows))[0],
+            iterator_to_array($normalizer->normalize($rows))[0],
         );
     }
 
@@ -130,7 +132,7 @@ final class RowsNormalizerTest extends FlowTestCase
             XMLNode::nestedNode('row')
                 ->append(new XMLAttribute('id', '1'))
                 ->append(XMLNode::flatNode('name', 'John Doe')),
-            \iterator_to_array($normalizer->normalize(rows(row(
+            iterator_to_array($normalizer->normalize(rows(row(
                 str_entry('_id', '1'),
                 str_entry('name', 'John Doe'),
             ))))[0],

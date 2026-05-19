@@ -8,6 +8,8 @@ use Flow\PostgreSql\Schema\Exception\SchemaException;
 use Flow\PostgreSql\Schema\ForeignKeyDependencyOrder;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
+use function array_search;
 use function Flow\PostgreSql\DSL\schema_column_integer;
 use function Flow\PostgreSql\DSL\schema_column_text;
 use function Flow\PostgreSql\DSL\schema_foreign_key;
@@ -73,12 +75,12 @@ final class ForeignKeyDependencyOrderTest extends TestCase
 
         $result = (new ForeignKeyDependencyOrder())->order([$bottom, $left, $right, $root]);
 
-        $names = \array_map(static fn($t) => $t->name, $result);
+        $names = array_map(static fn($t) => $t->name, $result);
 
         static::assertSame('root', $names[0]);
-        $leftIdx = \array_search('left_table', $names, true);
-        $rightIdx = \array_search('right_table', $names, true);
-        $bottomIdx = \array_search('bottom', $names, true);
+        $leftIdx = array_search('left_table', $names, true);
+        $rightIdx = array_search('right_table', $names, true);
+        $bottomIdx = array_search('bottom', $names, true);
         static::assertGreaterThan($leftIdx, $bottomIdx);
         static::assertGreaterThan($rightIdx, $bottomIdx);
     }
@@ -142,7 +144,7 @@ final class ForeignKeyDependencyOrderTest extends TestCase
 
         $result = (new ForeignKeyDependencyOrder())->order([$child, $parent, $grandparent]);
 
-        $names = \array_map(static fn($t) => $t->name, $result);
+        $names = array_map(static fn($t) => $t->name, $result);
 
         static::assertSame(['grandparent', 'parent', 'child'], $names);
     }
@@ -167,7 +169,7 @@ final class ForeignKeyDependencyOrderTest extends TestCase
 
         $result = (new ForeignKeyDependencyOrder())->order([$products, $categories]);
 
-        $names = \array_map(static fn($t) => $t->name, $result);
+        $names = array_map(static fn($t) => $t->name, $result);
 
         static::assertSame(['categories', 'products'], $names);
     }
@@ -197,7 +199,7 @@ final class ForeignKeyDependencyOrderTest extends TestCase
 
         $result = (new ForeignKeyDependencyOrder())->order([$tableA, $tableB, $tableC]);
 
-        $names = \array_map(static fn($t) => $t->name, $result);
+        $names = array_map(static fn($t) => $t->name, $result);
 
         static::assertSame(['alpha', 'beta', 'gamma'], $names);
     }

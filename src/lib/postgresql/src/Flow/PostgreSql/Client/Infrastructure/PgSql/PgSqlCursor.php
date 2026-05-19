@@ -8,7 +8,17 @@ use Flow\PostgreSql\Client\Cursor;
 use Flow\PostgreSql\Client\RowMapper;
 use Flow\PostgreSql\Client\RowMapper\Context;
 use Flow\PostgreSql\Client\Types\ResultCaster;
+use Generator;
 use PgSql\Result;
+use Traversable;
+
+use function max;
+use function pg_fetch_assoc;
+use function pg_field_name;
+use function pg_field_type;
+use function pg_free_result;
+use function pg_num_fields;
+use function pg_num_rows;
 
 final class PgSqlCursor implements Cursor
 {
@@ -37,23 +47,26 @@ final class PgSqlCursor implements Cursor
             return 0;
         }
 
-        return \max(0, \pg_num_rows($this->result));
+        return max(0, pg_num_rows($this->result));
     }
 
     public function free(): void
     {
         if ($this->result !== null) {
-            \pg_free_result($this->result);
+            pg_free_result($this->result);
             $this->result = null;
         }
     }
 
-    public function getIterator(): \Traversable
+    public function getIterator(): Traversable
     {
         return $this->iterate();
     }
 
-    public function iterate(): \Generator
+    /**
+     * @return \Generator<int, array<string, mixed>>
+     */
+    public function iterate(): Generator
     {
         while (($row = $this->next()) !== null) {
             yield $row;
@@ -62,7 +75,7 @@ final class PgSqlCursor implements Cursor
         $this->free();
     }
 
-    public function map(RowMapper $mapper): \Generator
+    public function map(RowMapper $mapper): Generator
     {
         foreach ($this->iterate() as $row) {
             yield $mapper->map($row, $this->context);
@@ -71,11 +84,11 @@ final class PgSqlCursor implements Cursor
 
     public function next(): ?array
     {
-        if ($this->result === null || $this->position >= \pg_num_rows($this->result)) {
+        if ($this->result === null || $this->position >= pg_num_rows($this->result)) {
             return null;
         }
 
-        $row = \pg_fetch_assoc($this->result, $this->position);
+        $row = pg_fetch_assoc($this->result, $this->position);
 
         if ($row === false) {
             return null;
@@ -99,13 +112,14 @@ final class PgSqlCursor implements Cursor
             return [];
         }
 
+        $result = $this->result;
         $meta = [];
-        $count = \pg_num_fields($this->result);
+        $count = pg_num_fields($result);
 
         for ($i = 0; $i < $count; $i++) {
             $meta[] = [
-                'name' => \pg_field_name($this->result, $i),
-                'type' => \pg_field_type($this->result, $i),
+                'name' => pg_field_name($result, $i),
+                'type' => pg_field_type($result, $i),
             ];
         }
 

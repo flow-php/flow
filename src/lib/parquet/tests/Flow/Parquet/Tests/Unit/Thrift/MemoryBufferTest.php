@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\Thrift;
 
 use Flow\Parquet\Thrift\MemoryBuffer;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Thrift\Exception\TTransportException;
 
+use function str_repeat;
+use function strlen;
+
 final class MemoryBufferTest extends TestCase
 {
-    public static function read_length_provider(): \Generator
+    public static function read_length_provider(): Generator
     {
         yield 'read less than available' => [10, 5, 5];
         yield 'read exact amount available' => [10, 10, 10];
@@ -20,7 +24,7 @@ final class MemoryBufferTest extends TestCase
         yield 'read zero bytes' => [10, 0, 0];
     }
 
-    public static function write_data_provider(): \Generator
+    public static function write_data_provider(): Generator
     {
         yield 'empty string' => ['', 'empty string'];
         yield 'simple text' => ['hello', 'simple text'];
@@ -32,7 +36,7 @@ final class MemoryBufferTest extends TestCase
         yield 'json data' => ['{"key": "value", "number": 123}', 'json data'];
         yield 'xml data' => ['<root><item>value</item></root>', 'xml data'];
         yield 'single character' => ['A', 'single character'];
-        yield 'repeated characters' => [\str_repeat('X', 100), 'repeated characters'];
+        yield 'repeated characters' => [str_repeat('X', 100), 'repeated characters'];
     }
 
     public function test_available_after_write(): void
@@ -103,7 +107,7 @@ final class MemoryBufferTest extends TestCase
         $buffer = new MemoryBuffer($initialData);
 
         static::assertSame($initialData, $buffer->data());
-        static::assertSame(\strlen($initialData), $buffer->available());
+        static::assertSame(strlen($initialData), $buffer->available());
     }
 
     public function test_constructor_with_unicode_data(): void
@@ -112,7 +116,7 @@ final class MemoryBufferTest extends TestCase
         $buffer = new MemoryBuffer($unicodeData);
 
         static::assertSame($unicodeData, $buffer->data());
-        static::assertSame(\strlen($unicodeData), $buffer->available());
+        static::assertSame(strlen($unicodeData), $buffer->available());
     }
 
     public function test_data_method_returns_current_buffer_content(): void
@@ -146,17 +150,17 @@ final class MemoryBufferTest extends TestCase
 
     public function test_large_data_handling(): void
     {
-        $largeData = \str_repeat('A', 10000);
+        $largeData = str_repeat('A', 10000);
         $buffer = new MemoryBuffer($largeData);
 
         static::assertSame(10000, $buffer->available());
 
         $chunk1 = $buffer->read(5000);
-        static::assertSame(\str_repeat('A', 5000), $chunk1);
+        static::assertSame(str_repeat('A', 5000), $chunk1);
         static::assertSame(5000, $buffer->available());
 
         $chunk2 = $buffer->read(5000);
-        static::assertSame(\str_repeat('A', 5000), $chunk2);
+        static::assertSame(str_repeat('A', 5000), $chunk2);
         static::assertSame(0, $buffer->available());
     }
 
@@ -262,13 +266,13 @@ final class MemoryBufferTest extends TestCase
     #[DataProvider('read_length_provider')]
     public function test_read_various_lengths(int $dataLength, int $readLength, int $expectedReadLength): void
     {
-        $data = \str_repeat('A', $dataLength);
+        $data = str_repeat('A', $dataLength);
         $buffer = new MemoryBuffer($data);
 
         $result = $buffer->read($readLength);
 
-        static::assertSame($expectedReadLength, \strlen($result));
-        static::assertSame(\str_repeat('A', $expectedReadLength), $result);
+        static::assertSame($expectedReadLength, strlen($result));
+        static::assertSame(str_repeat('A', $expectedReadLength), $result);
     }
 
     public function test_read_zero_bytes(): void
@@ -358,6 +362,6 @@ final class MemoryBufferTest extends TestCase
         $buffer->write($data);
 
         static::assertSame($data, $buffer->data());
-        static::assertSame(\strlen($data), $buffer->available());
+        static::assertSame(strlen($data), $buffer->available());
     }
 }

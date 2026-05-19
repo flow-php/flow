@@ -9,11 +9,15 @@ use Flow\ETL\Sort\ExternalSort;
 use Flow\ETL\Sort\ExternalSort\BucketsCache\FilesystemBucketsCache;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
+use function array_map;
+use function array_merge;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
 use function Flow\Filesystem\DSL\path;
+use function iterator_to_array;
+use function shuffle;
 
 final class ExternalSortTest extends FlowIntegrationTestCase
 {
@@ -35,20 +39,20 @@ final class ExternalSortTest extends FlowIntegrationTestCase
         }
 
         $randomizedInput = $input;
-        \shuffle($randomizedInput);
+        shuffle($randomizedInput);
 
         $sort = new ExternalSort(new FilesystemBucketsCache($this->fs(), $this->serializer(), 100, $cacheDir));
 
         $context = flow_context();
         $pipeline = new Pipeline(from_array($randomizedInput));
 
-        $sortedOutput = \iterator_to_array($sort->sortGenerator(
+        $sortedOutput = iterator_to_array($sort->sortGenerator(
             $pipeline->process($context),
             $context,
             refs(ref('id')->desc()),
         ));
 
-        static::assertEquals($input, \array_merge(...\array_map(static fn($row) => $row->toArray(), $sortedOutput)));
+        static::assertEquals($input, array_merge(...array_map(static fn($row) => $row->toArray(), $sortedOutput)));
 
         $this->fs()->rm($cacheDir);
     }

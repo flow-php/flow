@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Formatter\ASCII;
 
+use function max;
+use function str_repeat;
+
 final readonly class ASCIIHeaders
 {
     public function __construct(
@@ -18,9 +21,9 @@ final readonly class ASCIIHeaders
         foreach ($this->headers->names() as $name) {
             $headerName = new ASCIIValue($name);
 
-            $length = \max($headerName->length($truncate), $this->body->maximumLength($name, $truncate));
+            $length = max($headerName->length($truncate), $this->body->maximumLength($name, $truncate));
 
-            $buffer .= '-' . \str_repeat('-', $length) . '-+';
+            $buffer .= '-' . str_repeat('-', $length) . '-+';
         }
 
         $topLine = $buffer;
@@ -31,7 +34,7 @@ final readonly class ASCIIHeaders
         foreach ($this->headers->names() as $name) {
             $headerName = new ASCIIValue($name);
 
-            $length = \max($headerName->length($truncate), $this->body->maximumLength($name, $truncate));
+            $length = max($headerName->length($truncate), $this->body->maximumLength($name, $truncate));
 
             $buffer .= ' ' . ASCIIValue::mb_str_pad($headerName->print($truncate), $length, ' ', STR_PAD_LEFT) . ' |';
         }

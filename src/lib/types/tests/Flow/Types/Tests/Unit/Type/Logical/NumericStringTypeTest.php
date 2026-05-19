@@ -6,6 +6,7 @@ namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -14,7 +15,7 @@ use function Flow\Types\DSL\type_numeric_string;
 
 final class NumericStringTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'numeric string' => [
             'value' => '12345',
@@ -37,7 +38,7 @@ final class NumericStringTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
         yield 'integer' => [
             'value' => 1234,
@@ -58,7 +59,7 @@ final class NumericStringTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'string' => [
             'value' => 'string',
@@ -86,6 +87,9 @@ final class NumericStringTypeTest extends TestCase
         ];
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('assert_data_provider')]
     public function test_assert(mixed $value, ?string $exceptionClass = null): void
     {
@@ -97,6 +101,9 @@ final class NumericStringTypeTest extends TestCase
         }
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('cast_data_provider')]
     public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass): void
     {

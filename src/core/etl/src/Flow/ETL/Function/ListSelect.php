@@ -11,6 +11,9 @@ use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 
+use function array_key_exists;
+use function is_array;
+
 final readonly class ListSelect implements ScalarFunction
 {
     private Reference $ref;
@@ -44,7 +47,7 @@ final readonly class ListSelect implements ScalarFunction
             $output[$index] = [];
 
             foreach ($this->refs as $ref) {
-                if (\is_array($element) && \array_key_exists($ref->to(), $element)) {
+                if (is_array($element) && array_key_exists($ref->to(), $element)) {
                     $output[$index][$ref->name()] = $element[$ref->to()];
                 } else {
                     $output[$index][$ref->name()] = null;

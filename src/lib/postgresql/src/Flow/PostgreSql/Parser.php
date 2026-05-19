@@ -7,6 +7,7 @@ namespace Flow\PostgreSql;
 use Flow\PostgreSql\Exception\ExtensionNotLoadedException;
 use Flow\PostgreSql\Exception\ParserException;
 use Flow\PostgreSql\Protobuf\AST\ParseResult;
+use RuntimeException;
 
 final class Parser
 {
@@ -36,7 +37,7 @@ final class Parser
     {
         try {
             $json = pg_query_parse($sql);
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             throw new ParserException($e->getMessage());
         }
 
@@ -58,7 +59,7 @@ final class Parser
     {
         try {
             return pg_query_summary($sql, $options, $truncateLimit);
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             throw new ParserException($e->getMessage());
         }
     }

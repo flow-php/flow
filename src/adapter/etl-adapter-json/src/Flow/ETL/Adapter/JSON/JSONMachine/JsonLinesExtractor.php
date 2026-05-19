@@ -13,10 +13,13 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
+use Generator;
 use JsonMachine\Items;
 use JsonMachine\JsonDecoder\ExtJsonDecoder;
 
+use function count;
 use function Flow\ETL\DSL\array_to_rows;
+use function iterator_to_array;
 
 final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -35,18 +38,18 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
         $this->resetLimit();
     }
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
         // JSONL iterator modes
         $lineIterator = match ($this->pointer) {
-            null => function (string $jsonLine): \Generator {
+            null => function (string $jsonLine): Generator {
                 $jsonData = Items::fromString($jsonLine, $this->readerOptions());
-                $row = \iterator_to_array($jsonData);
+                $row = iterator_to_array($jsonData);
                 yield $row;
             },
-            default => fn(string $jsonLine): \Generator => (
+            default => fn(string $jsonLine): Generator => (
                 /** Pointed Iterator */
                 Items::fromString($jsonLine, $this->readerOptions())->getIterator()
             ),
@@ -70,7 +73,7 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
                         $row = [$this->pointer => $row];
                     }
 
-                    if (!\count($row)) {
+                    if (!count($row)) {
                         continue;
                     }
 

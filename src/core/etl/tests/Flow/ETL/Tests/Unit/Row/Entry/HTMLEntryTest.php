@@ -8,6 +8,7 @@ use Dom\HTMLDocument;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\HTMLEntry;
 use Flow\ETL\Schema\Metadata;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
@@ -15,11 +16,12 @@ use PHPUnit\Framework\TestCase;
 use function Flow\ETL\DSL\html_entry;
 use function Flow\ETL\DSL\html_schema;
 use function Flow\ETL\DSL\str_entry;
+use function preg_replace;
 
 #[RequiresPhp('>= 8.4')]
 final class HTMLEntryTest extends TestCase
 {
-    public static function is_equal_data_provider(): \Generator
+    public static function is_equal_data_provider(): Generator
     {
         /* @phpstan-ignore-next-line */
         $doc1 = HTMLDocument::createFromString(
@@ -265,8 +267,8 @@ final class HTMLEntryTest extends TestCase
 
     private function assertHtml(string $expected, string $html, bool $equals): void
     {
-        $expected = \preg_replace('/\s*/', '', $expected);
-        $html = \preg_replace('/\s*/', '', $html);
+        $expected = preg_replace('/\s*/', '', $expected);
+        $html = preg_replace('/\s*/', '', $html);
 
         if ($equals) {
             self::assertEquals($expected, $html);

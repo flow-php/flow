@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Twig;
 
+use Override;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
@@ -18,7 +19,7 @@ final class DSLExtension extends AbstractExtension
         return file_get_contents($this->dslPath);
     }
 
-    #[\Override]
+    #[Override]
     public function getFunctions()
     {
         return [

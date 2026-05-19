@@ -6,6 +6,7 @@ namespace Flow\ETL\Retry\RetryStrategy;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Retry\RetryStrategy;
+use Throwable;
 
 final readonly class AnyThrowable implements RetryStrategy
 {
@@ -17,7 +18,7 @@ final readonly class AnyThrowable implements RetryStrategy
         }
     }
 
-    public function shouldRetry(\Throwable $exception, int $attemptNumber): bool
+    public function shouldRetry(Throwable $exception, int $attemptNumber): bool
     {
         return $attemptNumber <= $this->limit;
     }

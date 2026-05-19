@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\QueryBuilder\Schema\Role;
 
 use Flow\PostgreSql\Protobuf\AST\AlterRoleStmt;
 use Flow\PostgreSql\QueryBuilder\Sql;
+use SensitiveParameter;
 
 interface AlterRoleFinalStep extends Sql
 {
@@ -45,5 +46,5 @@ interface AlterRoleFinalStep extends Sql
 
     public function validUntil(string $timestamp): self;
 
-    public function withPassword(#[\SensitiveParameter] string $password): self;
+    public function withPassword(#[SensitiveParameter] string $password): self;
 }

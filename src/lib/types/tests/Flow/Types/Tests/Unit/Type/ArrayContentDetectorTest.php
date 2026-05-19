@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type;
 
+use Flow\Types\Type;
 use Flow\Types\Type\ArrayContentDetector;
 use Flow\Types\Type\Types;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -19,7 +21,7 @@ use function Flow\Types\DSL\type_structure;
 
 final class ArrayContentDetectorTest extends TestCase
 {
-    public static function provide_list_data(): \Generator
+    public static function provide_list_data(): Generator
     {
         yield 'simple list' => [
             [
@@ -95,7 +97,7 @@ final class ArrayContentDetectorTest extends TestCase
         ];
     }
 
-    public static function provide_map_data(): \Generator
+    public static function provide_map_data(): Generator
     {
         yield 'string string' => [
             [
@@ -160,7 +162,7 @@ final class ArrayContentDetectorTest extends TestCase
         ];
     }
 
-    public static function provide_structure_data(): \Generator
+    public static function provide_structure_data(): Generator
     {
         yield 'simple list' => [
             [
@@ -249,6 +251,10 @@ final class ArrayContentDetectorTest extends TestCase
         ];
     }
 
+    /**
+     * @param array<Type<mixed>> $keys
+     * @param array<Type<mixed>> $values
+     */
     #[DataProvider('provide_list_data')]
     public function test_list_data(array $keys, array $values, bool $isList, bool $expected): void
     {
@@ -258,6 +264,10 @@ final class ArrayContentDetectorTest extends TestCase
         );
     }
 
+    /**
+     * @param array<Type<mixed>> $keys
+     * @param array<Type<mixed>> $values
+     */
     #[DataProvider('provide_map_data')]
     public function test_map_data(array $keys, array $values, bool $isList, bool $expected): void
     {
@@ -267,6 +277,10 @@ final class ArrayContentDetectorTest extends TestCase
         );
     }
 
+    /**
+     * @param array<Type<mixed>> $keys
+     * @param array<Type<mixed>> $values
+     */
     #[DataProvider('provide_structure_data')]
     public function test_structure_data(array $keys, array $values, bool $isList, bool $expected): void
     {

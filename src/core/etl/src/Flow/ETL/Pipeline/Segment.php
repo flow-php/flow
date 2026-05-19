@@ -12,6 +12,11 @@ use Flow\ETL\Loader\Closure;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
+use Generator;
+use SplObjectStorage;
+use Throwable;
+
+use function count;
 
 /**
  * A segment of the pipeline containing Transformers/Loaders until a Processor boundary.
@@ -21,17 +26,17 @@ use Flow\ETL\Transformer;
 final readonly class Segment
 {
     /** @var \SplObjectStorage<Loader|Transformer, null> */
-    private \SplObjectStorage $steps;
+    private SplObjectStorage $steps;
 
     public function __construct(
         private ?Processor $processor = null,
     ) {
-        $this->steps = new \SplObjectStorage();
+        $this->steps = new SplObjectStorage();
     }
 
     public function add(Transformer|Loader $step): void
     {
-        $this->steps->attach($step);
+        $this->steps->offsetSet($step);
     }
 
     public function contains(Transformer|Loader|Processor $step): bool
@@ -40,7 +45,7 @@ final readonly class Segment
             return $this->processor === $step;
         }
 
-        return $this->steps->contains($step);
+        return $this->steps->offsetExists($step);
     }
 
     /**
@@ -50,7 +55,7 @@ final readonly class Segment
      *
      * @return \Generator<Rows>
      */
-    public function execute(\Generator $input, FlowContext $context): \Generator
+    public function execute(Generator $input, FlowContext $context): Generator
     {
         $loaders = [];
 
@@ -80,7 +85,7 @@ final readonly class Segment
                     } elseif ($rows->count()) {
                         $step->load($rows, $context);
                     }
-                } catch (\Throwable $exception) {
+                } catch (Throwable $exception) {
                     if ($context->errorHandler()->throw($exception, $rows)) {
                         $context
                             ->telemetry()
@@ -103,7 +108,7 @@ final readonly class Segment
                 }
             }
 
-            if (\count($rows)) {
+            if (count($rows)) {
                 yield $rows;
             }
         }
@@ -153,7 +158,7 @@ final readonly class Segment
         $segment = new self($processor);
 
         foreach ($this->steps as $step) {
-            $segment->steps->attach($step);
+            $segment->steps->offsetSet($step);
         }
 
         return $segment;

@@ -36,10 +36,10 @@ final readonly class MySQLInsertOptions implements InsertOptions
         ])->assert($options);
 
         return new self(
-            $options['skip_conflicts'] ?? null,
-            $options['upsert'] ?? null,
-            $options['update_columns'] ?? [],
-            $options['preserve_existing_values'] ?? null,
+            type_optional(type_boolean())->assert($options['skip_conflicts'] ?? null),
+            type_optional(type_boolean())->assert($options['upsert'] ?? null),
+            type_list(type_string())->assert($options['update_columns'] ?? []),
+            type_optional(type_boolean())->assert($options['preserve_existing_values'] ?? null),
         );
     }
 

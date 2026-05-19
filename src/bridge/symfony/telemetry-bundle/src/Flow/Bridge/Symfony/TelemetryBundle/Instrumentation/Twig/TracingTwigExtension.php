@@ -9,16 +9,21 @@ use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\Tracer;
+use Override;
+use SplObjectStorage;
 use Twig\Extension\AbstractExtension;
 use Twig\Profiler\NodeVisitor\ProfilerNodeVisitor;
 use Twig\Profiler\Profile;
+
+use function preg_match;
+use function sprintf;
 
 final class TracingTwigExtension extends AbstractExtension
 {
     /**
      * @var \SplObjectStorage<Profile, array{span: Span, tracer: Tracer}>
      */
-    private \SplObjectStorage $activeSpans;
+    private SplObjectStorage $activeSpans;
 
     private int $excludedDepth = 0;
 
@@ -32,7 +37,7 @@ final class TracingTwigExtension extends AbstractExtension
         private readonly bool $traceMacros = false,
         private readonly array $excludeTemplates = [],
     ) {
-        $this->activeSpans = new \SplObjectStorage();
+        $this->activeSpans = new SplObjectStorage();
     }
 
     public function enter(Profile $profile): void
@@ -68,7 +73,7 @@ final class TracingTwigExtension extends AbstractExtension
         $this->activeSpans[$profile] = ['span' => $span, 'tracer' => $tracer];
     }
 
-    #[\Override]
+    #[Override]
     public function getNodeVisitors(): array
     {
         return [new ProfilerNodeVisitor(self::class)];
@@ -82,7 +87,7 @@ final class TracingTwigExtension extends AbstractExtension
             return;
         }
 
-        if (!$this->activeSpans->contains($profile)) {
+        if (!isset($this->activeSpans[$profile])) {
             return;
         }
 
@@ -90,7 +95,7 @@ final class TracingTwigExtension extends AbstractExtension
         $spanData = $this->activeSpans[$profile];
         $spanData['tracer']->complete($spanData['span']);
 
-        $this->activeSpans->detach($profile);
+        unset($this->activeSpans[$profile]);
     }
 
     private function getSpanName(Profile $profile): string
@@ -103,7 +108,7 @@ final class TracingTwigExtension extends AbstractExtension
             return $profile->getTemplate();
         }
 
-        return \sprintf('%s::%s(%s)', $profile->getTemplate(), $profile->getType(), $profile->getName());
+        return sprintf('%s::%s(%s)', $profile->getTemplate(), $profile->getType(), $profile->getName());
     }
 
     private function isTemplateExcluded(string $template): bool
@@ -119,7 +124,7 @@ final class TracingTwigExtension extends AbstractExtension
 
     private function matchesPattern(string $template, string $pattern): bool
     {
-        $result = @\preg_match($pattern, $template);
+        $result = @preg_match($pattern, $template);
 
         if ($result !== false) {
             return (bool) $result;

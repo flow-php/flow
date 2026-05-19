@@ -9,6 +9,17 @@ use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Path;
 use Psr\Container\ContainerInterface;
 
+use function array_keys;
+use function array_pop;
+use function explode;
+use function getcwd;
+use function implode;
+use function method_exists;
+use function preg_match;
+use function realpath;
+use function sprintf;
+use function str_starts_with;
+
 final readonly class FstabResolver
 {
     public function __construct(
@@ -21,14 +32,14 @@ final readonly class FstabResolver
      */
     public function availableFstabs(): array
     {
-        if (!\method_exists($this->locator, 'getProvidedServices')) {
+        if (!method_exists($this->locator, 'getProvidedServices')) {
             return [];
         }
 
         /** @var array<string, string> $services */
         $services = $this->locator->getProvidedServices();
 
-        return \array_keys($services);
+        return array_keys($services);
     }
 
     public function defaultFstabName(): string
@@ -38,12 +49,12 @@ final readonly class FstabResolver
 
     public function parseUri(string $raw): Path
     {
-        if (\preg_match('#^[a-zA-Z][a-zA-Z0-9+.-]*://#', $raw) === 1) {
+        if (preg_match('#^[a-zA-Z][a-zA-Z0-9+.-]*://#', $raw) === 1) {
             return Path::from($raw);
         }
 
-        $absolute = \str_starts_with($raw, '/') ? $raw : \getcwd() . '/' . $raw;
-        $real = \realpath($absolute);
+        $absolute = str_starts_with($raw, '/') ? $raw : getcwd() . '/' . $raw;
+        $real = realpath($absolute);
 
         return Path::from('file://' . ($real !== false ? $real : self::normalizePath($absolute)));
     }
@@ -53,10 +64,10 @@ final readonly class FstabResolver
         $name = $fstabName ?? $this->defaultFstab;
 
         if ($name === '' || !$this->locator->has($name)) {
-            throw new InvalidArgumentException(\sprintf(
+            throw new InvalidArgumentException(sprintf(
                 'Unknown fstab "%s". Available fstabs: [%s].',
                 $name,
-                \implode(', ', $this->availableFstabs()),
+                implode(', ', $this->availableFstabs()),
             ));
         }
 
@@ -66,16 +77,16 @@ final readonly class FstabResolver
 
     private static function normalizePath(string $path): string
     {
-        $isAbsolute = \str_starts_with($path, '/');
+        $isAbsolute = str_starts_with($path, '/');
         $segments = [];
 
-        foreach (\explode('/', $path) as $segment) {
+        foreach (explode('/', $path) as $segment) {
             if ($segment === '' || $segment === '.') {
                 continue;
             }
 
             if ($segment === '..') {
-                \array_pop($segments);
+                array_pop($segments);
 
                 continue;
             }
@@ -83,6 +94,6 @@ final readonly class FstabResolver
             $segments[] = $segment;
         }
 
-        return ($isAbsolute ? '/' : '') . \implode('/', $segments);
+        return ($isAbsolute ? '/' : '') . implode('/', $segments);
     }
 }

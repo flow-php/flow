@@ -21,6 +21,10 @@ use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Table\AliasedTable;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
 use Flow\PostgreSql\QueryBuilder\Table\TableReference;
+use LogicException;
+
+use function array_map;
+use function count;
 
 /**
  * Builder for DELETE statements using a fluent step-by-step API.
@@ -91,11 +95,11 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         $using = [];
         $usingClause = $deleteStmt->getUsingClause();
 
-        if ($usingClause !== null && \count($usingClause) > 0) {
+        if (count($usingClause) > 0) {
             foreach ($usingClause as $usingNode) {
-                if ($usingNode->getRangeVar() !== null) {
-                    $rangeVar = $usingNode->getRangeVar();
+                $rangeVar = $usingNode->getRangeVar();
 
+                if ($rangeVar !== null) {
                     if ($rangeVar->hasAlias()) {
                         $using[] = AliasedTable::fromAst($usingNode);
                     } else {
@@ -124,7 +128,7 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         $returningExpressions = [];
         $returningList = $deleteStmt->getReturningList();
 
-        if ($returningList !== null && \count($returningList) > 0) {
+        if (count($returningList) > 0) {
             foreach ($returningList as $resTargetNode) {
                 $resTarget = $resTargetNode->getResTarget();
 
@@ -213,7 +217,7 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
     public function toAst(): DeleteStmt
     {
         if ($this->table === null) {
-            throw new \LogicException('Cannot create DeleteStmt without table name. Call from() first.');
+            throw new LogicException('Cannot create DeleteStmt without table name. Call from() first.');
         }
 
         $deleteStmt = new DeleteStmt();
@@ -280,7 +284,7 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
 
     public function using(string|TableReference ...$tables): DeleteWhereStep
     {
-        $tables = \array_map(static function (string|TableReference $t): TableReference {
+        $tables = array_map(static function (string|TableReference $t): TableReference {
             if ($t instanceof TableReference) {
                 return $t;
             }

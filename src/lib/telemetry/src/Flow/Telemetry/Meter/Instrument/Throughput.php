@@ -19,6 +19,12 @@ use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tracer\SpanContext;
 use Psr\Clock\ClockInterface;
 
+use function array_filter;
+use function count;
+use function hrtime;
+use function is_scalar;
+use function round;
+
 /**
  * Throughput instrument for tracking rate of items processed over time.
  *
@@ -50,7 +56,7 @@ final class Throughput implements Instrument
 
     /**
      * @param string $name Instrument name
-     * @param resource $resource The resource context for this instrument
+     * @param \Flow\Telemetry\Resource $resource The resource context for this instrument
      * @param InstrumentationScope $scope Instrumentation scope that created this instrument
      * @param ClockInterface $clock Clock for timestamps
      * @param AggregationTemporality $temporality Aggregation temporality
@@ -88,13 +94,13 @@ final class Throughput implements Instrument
     {
         $normalized = $attributes instanceof Attributes ? $attributes->normalize() : $attributes;
         /** @var array<string, bool|float|int|string> $attrs */
-        $attrs = \array_filter($normalized, static fn($v): bool => \is_scalar($v));
+        $attrs = array_filter($normalized, static fn($v): bool => is_scalar($v));
         $key = Attributes::create($attrs)->id();
 
         if (!isset($this->aggregations[$key])) {
             $nonOverflowCount = isset($this->aggregations[$this->overflowKey])
-                ? \count($this->aggregations) - 1
-                : \count($this->aggregations);
+                ? count($this->aggregations) - 1
+                : count($this->aggregations);
 
             if ($nonOverflowCount >= $this->limits->cardinalityLimit) {
                 $key = $this->overflowKey;
@@ -105,7 +111,7 @@ final class Throughput implements Instrument
         if (!isset($this->aggregations[$key])) {
             $this->aggregations[$key] = [
                 'count' => 0,
-                'startTimeNs' => \hrtime(true),
+                'startTimeNs' => (int) hrtime(true),
                 'startedAt' => $this->clock->now(),
                 'attributes' => $attrs,
                 'reservoir' => new SimpleFixedSizeExemplarReservoir(1),
@@ -125,11 +131,11 @@ final class Throughput implements Instrument
         $fullUnit = $this->unit !== null ? $this->unit . '/' . $this->timeUnit->value : null;
 
         foreach ($this->aggregations as $data) {
-            $durationNs = \hrtime(true) - $data['startTimeNs'];
+            $durationNs = hrtime(true) - $data['startTimeNs'];
             $durationInTimeUnit = $this->timeUnit->fromNanoseconds($durationNs);
             $rawRate = $durationInTimeUnit > 0 ? $data['count'] / $durationInTimeUnit : 0.0;
 
-            $rate = $this->ratePrecision !== null ? \round($rawRate, $this->ratePrecision) : $rawRate;
+            $rate = $this->ratePrecision !== null ? round($rawRate, $this->ratePrecision) : $rawRate;
 
             $exemplars = $data['reservoir']->collect();
 

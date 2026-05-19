@@ -82,9 +82,7 @@ final readonly class CreateExtensionBuilder implements CreateExtensionOptionsSte
         $integer = new Integer();
         $integer->setIval($value ? 1 : 0);
 
-        $argNode = new Node();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $argNode->setInteger($integer);
+        $argNode = new Node(['integer' => $integer]);
 
         return $this->withOption($name, $argNode);
     }

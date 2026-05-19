@@ -10,6 +10,7 @@ use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Flow\ETL\Adapter\Doctrine\Order;
 use Flow\ETL\Adapter\Doctrine\OrderBy;
+use Flow\ETL\Adapter\Doctrine\Table as ETLTable;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 
 use function Flow\ETL\Adapter\Doctrine\from_dbal_limit_offset;
@@ -414,7 +415,7 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
         $data = df()
             ->read(from_dbal_limit_offset(
                 $this->sqliteDatabaseContext->connection(),
-                new \Flow\ETL\Adapter\Doctrine\Table($table, ['name']),
+                new ETLTable($table, ['name']),
                 new OrderBy('id', Order::ASC),
                 5,
                 7,

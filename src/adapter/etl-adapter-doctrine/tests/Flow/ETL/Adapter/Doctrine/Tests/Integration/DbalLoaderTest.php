@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
+use Doctrine\DBAL\Types\IntegerType as DoctrineIntegerType;
 use Doctrine\DBAL\Types\TextType;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
@@ -65,7 +66,7 @@ final class DbalLoaderTest extends IntegrationTestCase
 
         $customTypesMap = new TypesMap([
             StringType::class => TextType::class,
-            IntegerType::class => \Doctrine\DBAL\Types\IntegerType::class,
+            IntegerType::class => DoctrineIntegerType::class,
         ]);
 
         $loader = (new DbalLoader($table, $this->postgresqlConnectionParams()))->withTypesMap($customTypesMap);

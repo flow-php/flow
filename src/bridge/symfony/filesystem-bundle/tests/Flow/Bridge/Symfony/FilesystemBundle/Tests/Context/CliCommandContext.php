@@ -10,7 +10,16 @@ use Flow\Filesystem\Local\MemoryFilesystem;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 
+use function bin2hex;
 use function Flow\Filesystem\DSL\path;
+use function is_dir;
+use function is_file;
+use function mkdir;
+use function random_bytes;
+use function rmdir;
+use function scandir;
+use function sys_get_temp_dir;
+use function unlink;
 
 final class CliCommandContext
 {
@@ -20,9 +29,9 @@ final class CliCommandContext
     public function cleanup(): void
     {
         foreach ($this->tempPaths as $path) {
-            if (\is_file($path)) {
-                @\unlink($path);
-            } elseif (\is_dir($path)) {
+            if (is_file($path)) {
+                @unlink($path);
+            } elseif (is_dir($path)) {
                 $this->rmDirRecursive($path);
             }
         }
@@ -77,8 +86,8 @@ final class CliCommandContext
 
     public function tempDir(): string
     {
-        $dir = \sys_get_temp_dir() . '/flow_filesystem_cli_' . \bin2hex(\random_bytes(6));
-        \mkdir($dir, 0o777, true);
+        $dir = sys_get_temp_dir() . '/flow_filesystem_cli_' . bin2hex(random_bytes(6));
+        mkdir($dir, 0o777, true);
         $this->tempPaths[] = $dir;
 
         return $dir;
@@ -86,20 +95,20 @@ final class CliCommandContext
 
     private function rmDirRecursive(string $dir): void
     {
-        foreach (\scandir($dir) ?: [] as $entry) {
+        foreach (scandir($dir) ?: [] as $entry) {
             if ($entry === '.' || $entry === '..') {
                 continue;
             }
 
             $path = $dir . '/' . $entry;
 
-            if (\is_dir($path)) {
+            if (is_dir($path)) {
                 $this->rmDirRecursive($path);
             } else {
-                @\unlink($path);
+                @unlink($path);
             }
         }
 
-        @\rmdir($dir);
+        @rmdir($dir);
     }
 }

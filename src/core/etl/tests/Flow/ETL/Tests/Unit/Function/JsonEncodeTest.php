@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use DateTimeImmutable;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Json;
 
@@ -21,7 +22,7 @@ final class JsonEncodeTest extends FlowTestCase
     {
         $result = ref('value')
             ->jsonEncode()
-            ->eval(row(datetime_entry('value', new \DateTimeImmutable('2021-01-01'))), flow_context());
+            ->eval(row(datetime_entry('value', new DateTimeImmutable('2021-01-01'))), flow_context());
 
         static::assertInstanceOf(Json::class, $result);
         static::assertSame(

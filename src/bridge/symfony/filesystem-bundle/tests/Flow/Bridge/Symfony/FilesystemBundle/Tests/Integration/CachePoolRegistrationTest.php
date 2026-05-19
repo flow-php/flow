@@ -6,9 +6,12 @@ namespace Flow\Bridge\Symfony\FilesystemBundle\Tests\Integration;
 
 use Flow\Bridge\Symfony\FilesystemBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Symfony\FilesystemCache\FlowFilesystemCacheAdapter;
+use ReflectionObject;
 use Symfony\Component\Cache\Marshaller\DefaultMarshaller;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
+
+use function sys_get_temp_dir;
 
 final class CachePoolRegistrationTest extends KernelTestCase
 {
@@ -24,7 +27,7 @@ final class CachePoolRegistrationTest extends KernelTestCase
                         'pools' => [
                             'app' => [
                                 'filesystem' => 'file',
-                                'path' => \sys_get_temp_dir() . '/flow-fs-cache-bundle-test',
+                                'path' => sys_get_temp_dir() . '/flow-fs-cache-bundle-test',
                             ],
                         ],
                     ],
@@ -50,7 +53,7 @@ final class CachePoolRegistrationTest extends KernelTestCase
                         'pools' => [
                             'app' => [
                                 'filesystem' => 'file',
-                                'path' => \sys_get_temp_dir() . '/flow-fs-cache-bundle-test-marshaller',
+                                'path' => sys_get_temp_dir() . '/flow-fs-cache-bundle-test-marshaller',
                                 'marshaller_service_id' => 'test.marshaller',
                             ],
                         ],
@@ -69,7 +72,7 @@ final class CachePoolRegistrationTest extends KernelTestCase
         $adapter = $container->get('flow.filesystem.cache.pool.app');
         static::assertInstanceOf(FlowFilesystemCacheAdapter::class, $adapter);
 
-        $marshaller = (new \ReflectionObject($adapter))
+        $marshaller = (new ReflectionObject($adapter))
             ->getProperty('marshaller')
             ->getValue($adapter);
         static::assertSame($container->get('test.marshaller'), $marshaller);

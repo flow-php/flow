@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use DateTimeImmutable;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -23,7 +24,7 @@ final class GreatestTest extends FlowTestCase
 
     public function test_greatest_with_non_comparable_values(): void
     {
-        $greatest = greatest(null, 20, ref('int'), new \DateTimeImmutable('now'));
+        $greatest = greatest(null, 20, ref('int'), new DateTimeImmutable('now'));
 
         $this->expectExceptionMessage("Can't compare '(datetime > integer)' due to data type mismatch.");
 

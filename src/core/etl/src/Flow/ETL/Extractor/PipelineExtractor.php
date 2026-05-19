@@ -8,6 +8,7 @@ use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Rows;
+use Generator;
 
 final readonly class PipelineExtractor implements Extractor
 {
@@ -20,7 +21,7 @@ final readonly class PipelineExtractor implements Extractor
      *
      * @return \Generator<Rows>
      */
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         foreach ($this->pipeline->process($context) as $rows) {
             $signal = yield $rows;

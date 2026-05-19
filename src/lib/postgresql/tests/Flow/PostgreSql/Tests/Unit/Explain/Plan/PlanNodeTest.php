@@ -11,6 +11,8 @@ use Flow\PostgreSql\Explain\Plan\PlanNodeType;
 use Flow\PostgreSql\Explain\Plan\Timing;
 use PHPUnit\Framework\TestCase;
 
+use function array_keys;
+
 final class PlanNodeTest extends TestCase
 {
     public function test_from_array_and_normalize_are_inverse(): void
@@ -134,10 +136,12 @@ final class PlanNodeTest extends TestCase
         static::assertSame(50, $node->rowsRemovedByFilter());
         static::assertSame('Forward', $node->scanDirection());
         static::assertSame(['custom_field' => 'value'], $node->rawData());
-        static::assertNotNull($node->timing());
-        static::assertSame(0.1, $node->timing()->startupTime());
-        static::assertNotNull($node->buffers());
-        static::assertSame(50, $node->buffers()->sharedHit());
+        $timing = $node->timing();
+        static::assertNotNull($timing);
+        static::assertSame(0.1, $timing->startupTime());
+        $buffers = $node->buffers();
+        static::assertNotNull($buffers);
+        static::assertSame(50, $buffers->sharedHit());
     }
 
     public function test_normalize_returns_expected_keys(): void
@@ -180,7 +184,7 @@ final class PlanNodeTest extends TestCase
             'raw_data',
         ];
 
-        static::assertSame($expectedKeys, \array_keys($normalized));
+        static::assertSame($expectedKeys, array_keys($normalized));
     }
 
     public function test_normalize_with_null_optional_fields(): void

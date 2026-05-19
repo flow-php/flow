@@ -26,9 +26,6 @@ final readonly class PostgreSQLInsertOptions implements InsertOptions
         public ?bool $preserveExistingValues = null,
     ) {}
 
-    /**
-     * @param array<string, mixed> $options
-     */
     public static function fromArray(array $options): InsertOptions
     {
         $options = type_structure([], [
@@ -40,11 +37,11 @@ final readonly class PostgreSQLInsertOptions implements InsertOptions
         ])->assert($options);
 
         return new self(
-            $options['skip_conflicts'] ?? null,
-            $options['constraint'] ?? null,
-            $options['conflict_columns'] ?? [],
-            $options['update_columns'] ?? [],
-            $options['preserve_existing_values'] ?? null,
+            type_optional(type_boolean())->assert($options['skip_conflicts'] ?? null),
+            type_optional(type_string())->assert($options['constraint'] ?? null),
+            type_list(type_string())->assert($options['conflict_columns'] ?? []),
+            type_list(type_string())->assert($options['update_columns'] ?? []),
+            type_optional(type_boolean())->assert($options['preserve_existing_values'] ?? null),
         );
     }
 

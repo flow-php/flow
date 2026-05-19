@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Data;
 
+use function ceil;
+use function count;
+use function log;
+use function max;
+use function min;
+
 final class BitWidth
 {
     public static function calculate(int $value): int
     {
-        return (int) \ceil(\log($value + 1, 2));
+        return (int) ceil(log($value + 1, 2));
     }
 
     /**
@@ -16,12 +22,12 @@ final class BitWidth
      */
     public static function fromArray(array $ints): int
     {
-        if (!\count($ints)) {
+        if (!count($ints)) {
             return 0;
         }
 
-        $maxInt = \max($ints);
-        $minInt = \min($ints);
+        $maxInt = max($ints);
+        $minInt = min($ints);
 
         // If all values are 0, no bits needed
         if ($maxInt === 0 && $minInt === 0) {

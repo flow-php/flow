@@ -8,6 +8,14 @@ use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\ValueConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
 
+use function array_map;
+use function implode;
+use function is_array;
+use function is_float;
+use function is_int;
+use function is_numeric;
+use function is_string;
+
 final class IntArrayConverter implements ValueConverter
 {
     public function supportedTypes(): array
@@ -25,26 +33,31 @@ final class IntArrayConverter implements ValueConverter
             return null;
         }
 
-        if (!\is_array($value)) {
+        if (!is_array($value)) {
             return '{}';
         }
 
-        $elements = [];
+        return '{' . implode(',', array_map(self::encodeElement(...), $value)) . '}';
+    }
 
-        foreach ($value as $v) {
-            if ($v === null) {
-                $elements[] = 'NULL';
-            } elseif (\is_int($v)) {
-                $elements[] = (string) $v;
-            } elseif (\is_string($v) && \is_numeric($v)) {
-                $elements[] = (string) (int) $v;
-            } elseif (\is_float($v)) {
-                $elements[] = (string) (int) $v;
-            } else {
-                throw ValueConversionException::cannotConvert($v, 'integer array element');
-            }
+    private static function encodeElement(mixed $element): string
+    {
+        if ($element === null) {
+            return 'NULL';
         }
 
-        return '{' . \implode(',', $elements) . '}';
+        if (is_int($element)) {
+            return (string) $element;
+        }
+
+        if (is_string($element) && is_numeric($element)) {
+            return (string) (int) $element;
+        }
+
+        if (is_float($element)) {
+            return (string) (int) $element;
+        }
+
+        throw ValueConversionException::cannotConvert($element, 'integer array element');
     }
 }

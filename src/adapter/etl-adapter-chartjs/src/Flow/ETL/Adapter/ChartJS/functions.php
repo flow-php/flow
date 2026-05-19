@@ -15,6 +15,7 @@ use Flow\ETL\Row\References;
 use Flow\Filesystem\Path;
 
 use function Flow\Filesystem\DSL\path_real;
+use function is_string;
 
 #[DocumentationDSL(module: Module::CHART_JS, type: Type::HELPER)]
 function bar_chart(EntryReference $label, References $datasets): BarChart
@@ -48,11 +49,11 @@ function to_chartjs(Chart $type): ChartJSLoader
 #[DocumentationDSL(module: Module::CHART_JS, type: Type::LOADER)]
 function to_chartjs_file(Chart $type, Path|string|null $output = null, Path|string|null $template = null): ChartJSLoader
 {
-    if (\is_string($output)) {
+    if (is_string($output)) {
         $output = path_real($output);
     }
 
-    if (\is_string($template)) {
+    if (is_string($template)) {
         $template = path_real($template);
     }
 

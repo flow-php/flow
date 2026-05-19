@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Local\StreamFilter;
 
-final class Intercept extends \php_user_filter
+use php_user_filter;
+
+final class Intercept extends php_user_filter
 {
     public static string $buffer = '';
 

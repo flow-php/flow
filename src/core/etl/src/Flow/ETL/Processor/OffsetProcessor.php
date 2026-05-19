@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
+use Generator;
 
 /**
  * Skips the first N rows.
@@ -29,7 +30,7 @@ final readonly class OffsetProcessor implements Processor
         }
     }
 
-    public function process(\Generator $rows, FlowContext $context): \Generator
+    public function process(Generator $rows, FlowContext $context): Generator
     {
         if ($this->offset === 0) {
             yield from $rows;

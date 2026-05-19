@@ -7,6 +7,7 @@ namespace Flow\PostgreSql\Tests\Integration\Client;
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\ExcludeConstraint;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
+use function extension_loaded;
 use function Flow\PostgreSql\DSL\client_catalog_provider;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\column;
@@ -16,6 +17,9 @@ use function Flow\PostgreSql\DSL\create;
 use function Flow\PostgreSql\DSL\eq;
 use function Flow\PostgreSql\DSL\literal;
 use function Flow\PostgreSql\DSL\schema_exclude;
+use function sprintf;
+
+use const PHP_EOL;
 
 final class PgCatalogExcludeConstraintNormalizationTest extends PostgreSqlTestCase
 {
@@ -25,7 +29,7 @@ final class PgCatalogExcludeConstraintNormalizationTest extends PostgreSqlTestCa
     {
         parent::setUp();
 
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
 
@@ -73,11 +77,11 @@ final class PgCatalogExcludeConstraintNormalizationTest extends PostgreSqlTestCa
         static::assertSame('exc_room_active', $dbConstraint->name);
         static::assertTrue(
             $expected->isEqualStructure($dbConstraint),
-            \sprintf(
+            sprintf(
                 'Expected EXCLUDE constraint definitions to be structurally equal.%sExpected definition: %s%sActual definition:   %s',
-                \PHP_EOL,
+                PHP_EOL,
                 $expected->definition,
-                \PHP_EOL,
+                PHP_EOL,
                 $dbConstraint->definition,
             ),
         );

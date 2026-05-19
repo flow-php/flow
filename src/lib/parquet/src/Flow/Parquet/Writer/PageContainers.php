@@ -8,6 +8,9 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Page\Header\Type;
 
+use function array_map;
+use function array_unique;
+
 final class PageContainers
 {
     /**
@@ -99,20 +102,24 @@ final class PageContainers
         }
 
         foreach ($this->dataPageContainers as $pageContainer) {
-            if ($pageContainer->pageHeader->dataPageHeader()) {
-                $encodings[] = $pageContainer->pageHeader->dataPageHeader()->repetitionLevelEncoding()->value;
-                $encodings[] = $pageContainer->pageHeader->dataPageHeader()->definitionLevelEncoding()->value;
-                $encodings[] = $pageContainer->pageHeader->dataPageHeader()->encoding()->value;
+            $dataPageHeader = $pageContainer->pageHeader->dataPageHeader();
+
+            if ($dataPageHeader !== null) {
+                $encodings[] = $dataPageHeader->repetitionLevelEncoding()->value;
+                $encodings[] = $dataPageHeader->definitionLevelEncoding()->value;
+                $encodings[] = $dataPageHeader->encoding()->value;
             }
 
-            if ($pageContainer->pageHeader->dataPageHeaderV2()) {
-                $encodings[] = $pageContainer->pageHeader->dataPageHeaderV2()->encoding()->value;
+            $dataPageHeaderV2 = $pageContainer->pageHeader->dataPageHeaderV2();
+
+            if ($dataPageHeaderV2 !== null) {
+                $encodings[] = $dataPageHeaderV2->encoding()->value;
             }
         }
 
-        $encodings = \array_unique($encodings);
+        $encodings = array_unique($encodings);
 
-        return \array_map(static fn(int $encoding) => Encodings::from($encoding), $encodings);
+        return array_map(static fn(int $encoding) => Encodings::from($encoding), $encodings);
     }
 
     public function uncompressedSize(): int
@@ -135,7 +142,7 @@ final class PageContainers
         $count = 0;
 
         foreach ($this->dataPageContainers as $pageContainer) {
-            $count += $pageContainer->pageHeader->dataValuesCount();
+            $count += $pageContainer->pageHeader->dataValuesCount() ?? 0;
         }
 
         return $count;

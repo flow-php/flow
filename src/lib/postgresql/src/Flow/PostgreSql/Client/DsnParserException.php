@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client;
 
-final class DsnParserException extends \InvalidArgumentException
+use InvalidArgumentException;
+
+use function preg_replace;
+use function sprintf;
+
+final class DsnParserException extends InvalidArgumentException
 {
     public static function invalidDsn(string $dsn): self
     {
-        return new self(\sprintf('Invalid DSN: "%s"', self::maskPassword($dsn)));
+        return new self(sprintf('Invalid DSN: "%s"', self::maskPassword($dsn)));
     }
 
     public static function missingDatabase(): self
@@ -18,7 +23,7 @@ final class DsnParserException extends \InvalidArgumentException
 
     public static function unsupportedScheme(string $dsn): self
     {
-        return new self(\sprintf(
+        return new self(sprintf(
             'Unsupported DSN scheme. Expected "postgres://", "postgresql://", or "pgsql://", got: "%s"',
             self::maskPassword($dsn),
         ));
@@ -32,6 +37,6 @@ final class DsnParserException extends \InvalidArgumentException
      */
     private static function maskPassword(string $dsn): string
     {
-        return \preg_replace('/(:\/\/[^:]*):([^@]*)@/', '$1:***@', $dsn) ?? $dsn;
+        return preg_replace('/(:\/\/[^:]*):([^@]*)@/', '$1:***@', $dsn) ?? $dsn;
     }
 }

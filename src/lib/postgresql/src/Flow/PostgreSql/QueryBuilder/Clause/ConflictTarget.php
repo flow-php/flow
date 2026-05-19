@@ -56,16 +56,14 @@ final readonly class ConflictTarget implements AstConvertible
         $columns = [];
         $indexElems = $inferClause->getIndexElems();
 
-        if ($indexElems !== null) {
-            foreach ($indexElems as $indexElem) {
-                $indexElemNode = $indexElem->getIndexElem();
+        foreach ($indexElems as $indexElem) {
+            $indexElemNode = $indexElem->getIndexElem();
 
-                if ($indexElemNode !== null) {
-                    $name = $indexElemNode->getName();
+            if ($indexElemNode !== null) {
+                $name = $indexElemNode->getName();
 
-                    if ($name !== '') {
-                        $columns[] = $name;
-                    }
+                if ($name !== '') {
+                    $columns[] = $name;
                 }
             }
         }

@@ -9,6 +9,7 @@ use Flow\ETL\DataFrame;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
+use Throwable;
 
 final class CrossJoinRowsTransformer implements Transformer
 {
@@ -32,7 +33,7 @@ final class CrossJoinRowsTransformer implements Transformer
             ]);
 
             return $result;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->transformationFailed($this, $e);
 
             throw $e;

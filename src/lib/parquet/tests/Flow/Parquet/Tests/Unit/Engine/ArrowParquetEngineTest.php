@@ -10,11 +10,13 @@ use Flow\Parquet\ParquetFile\Compressions;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
+
 final class ArrowParquetEngineTest extends TestCase
 {
     public function test_constructor_throws_when_extension_not_loaded(): void
     {
-        if (\extension_loaded('arrow')) {
+        if (extension_loaded('arrow')) {
             static::markTestSkipped('This test requires the arrow extension to NOT be loaded');
         }
 

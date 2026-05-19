@@ -26,6 +26,7 @@ use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
+use function method_exists;
 
 final class SchemaConverterTest extends FlowTestCase
 {
@@ -109,7 +110,7 @@ final class SchemaConverterTest extends FlowTestCase
         // columns were also getting precision set to 10 due to a bug that was executing precision set
         // even when precision value was null.
         /** @phpstan-ignore-next-line */
-        if (!\method_exists(Table::class, 'changeColumn')) {
+        if (!method_exists(Table::class, 'changeColumn')) {
             static::markTestSkipped('Doctrine DBAL >= 3.6+ < 4.0');
         }
 
@@ -208,7 +209,7 @@ final class SchemaConverterTest extends FlowTestCase
         // columns were also getting precision set to 10 due to a bug that was executing precision set
         // even when precision value was null.
         /** @phpstan-ignore-next-line */
-        if (\method_exists(Table::class, 'changeColumn')) {
+        if (method_exists(Table::class, 'changeColumn')) {
             static::markTestSkipped('Doctrine DBAL >= 4.0+');
         }
 

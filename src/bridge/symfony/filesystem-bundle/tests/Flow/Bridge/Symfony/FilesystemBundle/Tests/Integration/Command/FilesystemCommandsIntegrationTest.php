@@ -20,7 +20,26 @@ use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
+use function array_filter;
+use function array_values;
+use function bin2hex;
+use function explode;
+use function file_exists;
+use function file_get_contents;
 use function Flow\Filesystem\DSL\path;
+use function is_dir;
+use function json_decode;
+use function mkdir;
+use function random_bytes;
+use function rmdir;
+use function scandir;
+use function sprintf;
+use function substr_count;
+use function sys_get_temp_dir;
+use function trim;
+use function unlink;
+
+use const JSON_THROW_ON_ERROR;
 
 final class FilesystemCommandsIntegrationTest extends KernelTestCase
 {
@@ -64,7 +83,7 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
         $exit = $tester->execute(['source' => 'memory://src.txt', 'destination' => $destUri]);
 
         static::assertSame(Command::SUCCESS, $exit);
-        static::assertSame('integration-payload', \file_get_contents($dir . '/out.txt'));
+        static::assertSame('integration-payload', file_get_contents($dir . '/out.txt'));
         static::assertNotNull($table->for(path('memory://src.txt'))->status(path('memory://src.txt')));
     }
 
@@ -106,7 +125,7 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
         $table = $resolver->resolve(null);
 
         for ($i = 0; $i < 25; $i++) {
-            $this->seed($table, \sprintf('memory://cap/f%03d.txt', $i), 'x');
+            $this->seed($table, sprintf('memory://cap/f%03d.txt', $i), 'x');
         }
 
         $tester = new CommandTester(new LsCommand($resolver));
@@ -114,7 +133,7 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
 
         $display = $tester->getDisplay();
         static::assertStringNotContainsString('Show next', $display);
-        static::assertSame(10, \substr_count($display, 'memory://cap/'));
+        static::assertSame(10, substr_count($display, 'memory://cap/'));
         static::assertStringContainsString('truncated at 10 entries', $display);
     }
 
@@ -144,7 +163,7 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
         $table = $resolver->resolve(null);
 
         for ($i = 0; $i < 25; $i++) {
-            $this->seed($table, \sprintf('memory://flow/f%03d.txt', $i), 'x');
+            $this->seed($table, sprintf('memory://flow/f%03d.txt', $i), 'x');
         }
 
         $tester = new CommandTester(new LsCommand($resolver));
@@ -152,7 +171,7 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
 
         $display = $tester->getDisplay();
         static::assertStringNotContainsString('Show next', $display);
-        static::assertSame(25, \substr_count($display, 'memory://flow/'));
+        static::assertSame(25, substr_count($display, 'memory://flow/'));
     }
 
     public function test_ls_fstab_option_routes_to_secondary(): void
@@ -177,11 +196,11 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
         $tester = new CommandTester(new LsCommand($resolver));
         $tester->execute(['path' => 'memory://j', '--format' => 'json']);
 
-        $lines = \array_values(\array_filter(\explode("\n", \trim($tester->getDisplay()))));
+        $lines = array_values(array_filter(explode("\n", trim($tester->getDisplay()))));
         static::assertCount(2, $lines);
 
         /** @var array{uri: string, size: null|int} $first */
-        $first = \json_decode($lines[0], true, flags: \JSON_THROW_ON_ERROR);
+        $first = json_decode($lines[0], true, flags: JSON_THROW_ON_ERROR);
         static::assertSame('memory://j/a.txt', $first['uri']);
         static::assertSame(1, $first['size']);
     }
@@ -199,7 +218,7 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
         $tester->execute(['path' => 'memory://lim', '--limit' => '2']);
 
         $display = $tester->getDisplay();
-        static::assertSame(2, \substr_count($display, 'memory://lim/'));
+        static::assertSame(2, substr_count($display, 'memory://lim/'));
         static::assertStringContainsString('truncated at 2 entries', $display);
     }
 
@@ -216,7 +235,7 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
         $tester->execute(['path' => 'memory://off', '--offset' => '2', '--limit' => '10']);
 
         $display = $tester->getDisplay();
-        static::assertSame(3, \substr_count($display, 'memory://off/'));
+        static::assertSame(3, substr_count($display, 'memory://off/'));
         static::assertStringNotContainsString('memory://off/f0.txt', $display);
         static::assertStringNotContainsString('memory://off/f1.txt', $display);
         static::assertStringContainsString('memory://off/f2.txt', $display);
@@ -228,7 +247,7 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
         $table = $resolver->resolve(null);
 
         for ($i = 0; $i < 25; $i++) {
-            $this->seed($table, \sprintf('memory://pg/f%03d.txt', $i), 'x');
+            $this->seed($table, sprintf('memory://pg/f%03d.txt', $i), 'x');
         }
 
         $tester = new CommandTester(new LsCommand($resolver));
@@ -237,7 +256,7 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
 
         $display = $tester->getDisplay();
         static::assertStringContainsString('Show next 10 entries?', $display);
-        static::assertSame(10, \substr_count($display, 'memory://pg/'));
+        static::assertSame(10, substr_count($display, 'memory://pg/'));
     }
 
     public function test_ls_returns_all_entries_in_single_page_when_under_page_size(): void
@@ -252,7 +271,7 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
         $tester = new CommandTester(new LsCommand($resolver));
         $tester->execute(['path' => 'memory://nl']);
 
-        static::assertSame(3, \substr_count($tester->getDisplay(), 'memory://nl/'));
+        static::assertSame(3, substr_count($tester->getDisplay(), 'memory://nl/'));
         static::assertStringNotContainsString('truncated', $tester->getDisplay());
     }
 
@@ -283,7 +302,7 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
         $exit = $tester->execute(['source' => 'memory://src.txt', 'destination' => $destUri]);
 
         static::assertSame(Command::SUCCESS, $exit);
-        static::assertSame('moving', \file_get_contents($dir . '/moved.txt'));
+        static::assertSame('moving', file_get_contents($dir . '/moved.txt'));
         static::assertNull($table->for(path('memory://src.txt'))->status(path('memory://src.txt')));
     }
 
@@ -319,7 +338,7 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
         $tester->execute(['path' => 'memory://stat.bin', '--format' => 'json']);
 
         /** @var array{uri: string, type: string, size: null|int, modified: null|string} $data */
-        $data = \json_decode(\trim($tester->getDisplay()), true, flags: \JSON_THROW_ON_ERROR);
+        $data = json_decode(trim($tester->getDisplay()), true, flags: JSON_THROW_ON_ERROR);
         static::assertSame('memory://stat.bin', $data['uri']);
         static::assertSame(4, $data['size']);
         static::assertNotNull($data['modified']);
@@ -362,8 +381,8 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
         $exit = $tester->execute(['path' => $target]);
 
         static::assertSame(Command::SUCCESS, $exit);
-        static::assertTrue(\file_exists($dir . '/touched.txt'));
-        static::assertSame('', \file_get_contents($dir . '/touched.txt'));
+        static::assertTrue(file_exists($dir . '/touched.txt'));
+        static::assertSame('', file_get_contents($dir . '/touched.txt'));
     }
 
     private function bootWithMultiFstab(): FstabResolver
@@ -398,8 +417,8 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
 
     private function makeTempDir(): string
     {
-        $dir = \sys_get_temp_dir() . '/flow_fs_cli_int_' . \bin2hex(\random_bytes(6));
-        \mkdir($dir, 0o777, true);
+        $dir = sys_get_temp_dir() . '/flow_fs_cli_int_' . bin2hex(random_bytes(6));
+        mkdir($dir, 0o777, true);
         $this->tempPaths[] = $dir;
 
         return $dir;
@@ -407,25 +426,25 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
 
     private function rmRf(string $dir): void
     {
-        if (!\is_dir($dir)) {
+        if (!is_dir($dir)) {
             return;
         }
 
-        foreach (\scandir($dir) ?: [] as $entry) {
+        foreach (scandir($dir) ?: [] as $entry) {
             if ($entry === '.' || $entry === '..') {
                 continue;
             }
 
             $p = $dir . '/' . $entry;
 
-            if (\is_dir($p)) {
+            if (is_dir($p)) {
                 $this->rmRf($p);
             } else {
-                @\unlink($p);
+                @unlink($p);
             }
         }
 
-        @\rmdir($dir);
+        @rmdir($dir);
     }
 
     private function seed(FilesystemTable $table, string $uri, string $content): void

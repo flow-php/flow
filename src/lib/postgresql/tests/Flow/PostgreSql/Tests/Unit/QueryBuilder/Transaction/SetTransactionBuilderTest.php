@@ -14,11 +14,14 @@ use Flow\PostgreSql\QueryBuilder\Transaction\IsolationLevel;
 use Flow\PostgreSql\QueryBuilder\Transaction\SetTransactionBuilder;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
+use function function_exists;
+
 final class SetTransactionBuilderTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped(
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );
@@ -35,7 +38,7 @@ final class SetTransactionBuilderTest extends TestCase
 
     public function test_set_session_transaction_deparsed(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -58,7 +61,7 @@ final class SetTransactionBuilderTest extends TestCase
 
     public function test_set_transaction_deparsed_with_isolation_level(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -70,7 +73,7 @@ final class SetTransactionBuilderTest extends TestCase
 
     public function test_set_transaction_deparsed_with_multiple_options(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -85,7 +88,7 @@ final class SetTransactionBuilderTest extends TestCase
 
     public function test_set_transaction_deparsed_with_read_only(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -97,7 +100,7 @@ final class SetTransactionBuilderTest extends TestCase
 
     public function test_set_transaction_deparsed_with_read_write(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -109,7 +112,7 @@ final class SetTransactionBuilderTest extends TestCase
 
     public function test_set_transaction_snapshot_deparsed(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 

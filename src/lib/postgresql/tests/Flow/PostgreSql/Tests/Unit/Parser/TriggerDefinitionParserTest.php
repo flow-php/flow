@@ -7,6 +7,9 @@ namespace Flow\PostgreSql\Tests\Unit\Parser;
 use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\Parser\TriggerDefinitionParser;
 use PHPUnit\Framework\TestCase;
+use Throwable;
+
+use function extension_loaded;
 
 final class TriggerDefinitionParserTest extends TestCase
 {
@@ -14,7 +17,7 @@ final class TriggerDefinitionParserTest extends TestCase
 
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
 
@@ -70,7 +73,7 @@ final class TriggerDefinitionParserTest extends TestCase
 
     public function test_throws_on_non_trigger_statement(): void
     {
-        $this->expectException(\Throwable::class);
+        $this->expectException(Throwable::class);
 
         $this->parser->parseWhenClause('SELECT 1');
     }

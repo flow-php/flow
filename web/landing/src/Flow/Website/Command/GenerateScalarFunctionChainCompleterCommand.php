@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Command;
 
+use DateTime;
 use Flow\Website\Service\FlowConfigFactory;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -12,11 +13,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Twig\Environment;
 
+use function count;
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\Filesystem\DSL\path;
+use function sprintf;
 
 #[AsCommand(
     name: 'app:generate:scalar-function-chain-completer',
@@ -62,9 +65,9 @@ final class GenerateScalarFunctionChainCompleterCommand extends Command
             ->fetch()
             ->reduceToArray('name');
 
-        $io->info(\sprintf(
+        $io->info(sprintf(
             'Found %d DSL functions with scalar_function_chain flag',
-            \count($scalarFunctionChainFunctions),
+            count($scalarFunctionChainFunctions),
         ));
 
         $methodsData = df($this->configFactory->configBuilder('scalar_function_chain_completer'))
@@ -75,13 +78,13 @@ final class GenerateScalarFunctionChainCompleterCommand extends Command
             ->fetch()
             ->toArray();
 
-        $io->info(\sprintf('Found %d ScalarFunctionChain methods', \count($methodsData)));
+        $io->info(sprintf('Found %d ScalarFunctionChain methods', count($methodsData)));
 
         $content = $this->twig->render('completers/scalarfunctionchain-codemirror.js.twig', [
             'scalarfunctionchain_methods' => $methodsData,
             'scalarfunctionchain_functions' => $scalarFunctionChainFunctions,
-            'generated_at' => new \DateTime(),
-            'total_count' => \count($methodsData),
+            'generated_at' => new DateTime(),
+            'total_count' => count($methodsData),
         ]);
 
         $outputFile = $this->projectDir . '/assets/codemirror/completions/scalarfunctionchain.js';
@@ -89,8 +92,8 @@ final class GenerateScalarFunctionChainCompleterCommand extends Command
         $fs->writeTo(path($outputFile))->append($content)->close();
 
         $io->success("Generated ScalarFunctionChain completer: {$outputFile}");
-        $io->info('ScalarFunctionChain methods: ' . \count($methodsData));
-        $io->info('ScalarFunctionChain functions: ' . \count($scalarFunctionChainFunctions));
+        $io->info('ScalarFunctionChain methods: ' . count($methodsData));
+        $io->info('ScalarFunctionChain functions: ' . count($scalarFunctionChainFunctions));
 
         return Command::SUCCESS;
     }

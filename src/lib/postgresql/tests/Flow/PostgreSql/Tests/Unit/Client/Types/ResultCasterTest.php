@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\Client\Types;
 
 use Flow\PostgreSql\Client\Types\ResultCaster;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+
+use const INF;
+use const PHP_INT_SIZE;
 
 final class ResultCasterTest extends TestCase
 {
@@ -15,7 +19,7 @@ final class ResultCasterTest extends TestCase
     /**
      * @return \Generator<string, array{string}>
      */
-    public static function provide_float_types(): \Generator
+    public static function provide_float_types(): Generator
     {
         yield 'float4' => ['float4'];
         yield 'float8' => ['float8'];
@@ -24,7 +28,7 @@ final class ResultCasterTest extends TestCase
     /**
      * @return \Generator<string, array{string}>
      */
-    public static function provide_small_integer_types(): \Generator
+    public static function provide_small_integer_types(): Generator
     {
         yield 'int2' => ['int2'];
         yield 'int4' => ['int4'];
@@ -33,7 +37,7 @@ final class ResultCasterTest extends TestCase
     /**
      * @return \Generator<string, array{string}>
      */
-    public static function provide_string_types(): \Generator
+    public static function provide_string_types(): Generator
     {
         yield 'text' => ['text'];
         yield 'varchar' => ['varchar'];
@@ -75,7 +79,7 @@ final class ResultCasterTest extends TestCase
     #[DataProvider('provide_float_types')]
     public function test_float_infinity(string $type): void
     {
-        static::assertSame(\INF, $this->caster->cast('Infinity', $type));
+        static::assertSame(INF, $this->caster->cast('Infinity', $type));
     }
 
     #[DataProvider('provide_float_types')]
@@ -87,7 +91,7 @@ final class ResultCasterTest extends TestCase
     #[DataProvider('provide_float_types')]
     public function test_float_negative_infinity(string $type): void
     {
-        static::assertSame(-\INF, $this->caster->cast('-Infinity', $type));
+        static::assertSame(-INF, $this->caster->cast('-Infinity', $type));
     }
 
     #[DataProvider('provide_float_types')]
@@ -100,7 +104,7 @@ final class ResultCasterTest extends TestCase
 
     public function test_int8_on_64bit_platform(): void
     {
-        if (\PHP_INT_SIZE < 8) {
+        if (PHP_INT_SIZE < 8) {
             static::markTestSkipped('Test requires 64-bit PHP');
         }
 

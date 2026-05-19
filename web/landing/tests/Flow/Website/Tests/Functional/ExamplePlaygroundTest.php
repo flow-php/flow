@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Website\Tests\Functional;
 
+use function strtolower;
+
 final class ExamplePlaygroundTest extends EndToEndTestCase
 {
     public function test_back_to_example_link_navigates_correctly(): void
@@ -63,6 +65,6 @@ final class ExamplePlaygroundTest extends EndToEndTestCase
         $code = $this->getPlaygroundCode($client);
 
         static::assertStringContainsString('<?php', $code);
-        static::assertStringContainsString('csv', \strtolower($code));
+        static::assertStringContainsString('csv', strtolower($code));
     }
 }

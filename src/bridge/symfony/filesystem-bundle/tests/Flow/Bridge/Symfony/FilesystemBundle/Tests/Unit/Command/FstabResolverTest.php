@@ -8,6 +8,8 @@ use Flow\Bridge\Symfony\FilesystemBundle\Exception\InvalidArgumentException;
 use Flow\Bridge\Symfony\FilesystemBundle\Tests\Context\CliCommandContext;
 use PHPUnit\Framework\TestCase;
 
+use function getcwd;
+
 final class FstabResolverTest extends TestCase
 {
     private CliCommandContext $context;
@@ -51,7 +53,7 @@ final class FstabResolverTest extends TestCase
 
     public function test_parse_uri_resolves_relative_path_against_cwd(): void
     {
-        $cwd = (string) \getcwd();
+        $cwd = (string) getcwd();
         $path = $this->context->resolver()->parseUri('file.txt');
         static::assertSame('file', $path->protocol());
         static::assertSame($cwd . '/file.txt', $path->path());

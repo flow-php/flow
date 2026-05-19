@@ -8,6 +8,7 @@ use Flow\Telemetry\Logger\Severity;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
+use RuntimeException;
 
 use function Flow\Bridge\Psr3\Telemetry\DSL\psr3_log_record_converter;
 use function Flow\Bridge\Psr3\Telemetry\DSL\psr3_severity_mapper;
@@ -74,12 +75,12 @@ final class TelemetryLoggerIntegrationTest extends TestCase
         $psrLogger = psr3_telemetry_logger($context->logger);
 
         $psrLogger->error('Something went wrong', [
-            'exception' => new \RuntimeException('boom'),
+            'exception' => new RuntimeException('boom'),
             'request_id' => 'req-1',
         ]);
 
         $entry = $context->processor->entries()[0];
-        static::assertSame(\RuntimeException::class, $entry->record->attributes->get('exception.type'));
+        static::assertSame(RuntimeException::class, $entry->record->attributes->get('exception.type'));
         static::assertSame('boom', $entry->record->attributes->get('exception.message'));
         static::assertNotNull($entry->record->attributes->get('exception.stacktrace'));
         static::assertSame('req-1', $entry->record->attributes->get('request_id'));

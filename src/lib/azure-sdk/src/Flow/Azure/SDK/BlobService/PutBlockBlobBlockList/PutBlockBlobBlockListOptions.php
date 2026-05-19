@@ -27,7 +27,7 @@ final class PutBlockBlobBlockListOptions implements EndpointOptions
     private string $version = BlobService::VERSION;
 
     /**
-     * @return array<string, int|string>
+     * @return array<string, string>
      */
     public function toHeaders(): array
     {
@@ -54,21 +54,21 @@ final class PutBlockBlobBlockListOptions implements EndpointOptions
         }
 
         if ($this->contentLength !== null) {
-            $headers['Content-Length'] = $this->contentLength;
+            $headers['Content-Length'] = (string) $this->contentLength;
         }
 
         return $headers;
     }
 
     /**
-     * @return array<string, int|string>
+     * @return array<string, string>
      */
     public function toURIParameters(): array
     {
         $uriParameters = [];
 
         if ($this->timeoutSeconds !== null) {
-            $uriParameters['timeout'] = $this->timeoutSeconds;
+            $uriParameters['timeout'] = (string) $this->timeoutSeconds;
         }
 
         return $uriParameters;

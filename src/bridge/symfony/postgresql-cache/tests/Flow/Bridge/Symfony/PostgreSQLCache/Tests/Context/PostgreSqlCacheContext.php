@@ -9,6 +9,11 @@ use Flow\Bridge\Symfony\PostgreSQLCache\Tests\Unit\Double\SpyClient;
 use Flow\Bridge\Symfony\PostgreSQLCache\Tests\Unit\Double\SpyMarshaller;
 use Symfony\Component\Cache\Marshaller\MarshallerInterface;
 
+use function array_slice;
+use function array_values;
+use function count;
+use function str_starts_with;
+
 final class PostgreSqlCacheContext
 {
     public SpyClient $client;
@@ -39,13 +44,13 @@ final class PostgreSqlCacheContext
      */
     public function onlyInsertQueries(callable $action): array
     {
-        $before = \count($this->client->executedQueries);
+        $before = count($this->client->executedQueries);
         $action();
 
         $inserts = [];
 
-        foreach (\array_slice($this->client->executedQueries, $before) as $query) {
-            if (\str_starts_with($query['sql'], 'INSERT')) {
+        foreach (array_slice($this->client->executedQueries, $before) as $query) {
+            if (str_starts_with($query['sql'], 'INSERT')) {
                 $inserts[] = $query;
             }
         }
@@ -55,6 +60,6 @@ final class PostgreSqlCacheContext
 
     public function spyMarshaller(string ...$failKeys): SpyMarshaller
     {
-        return new SpyMarshaller(\array_values($failKeys));
+        return new SpyMarshaller(array_values($failKeys));
     }
 }

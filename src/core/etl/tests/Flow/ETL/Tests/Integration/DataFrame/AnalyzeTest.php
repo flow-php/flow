@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use DateTimeImmutable;
 use Flow\Clock\FakeClock;
 use Flow\ETL\Dataset\Statistics\Columns;
 use Flow\ETL\Dataset\Statistics\HighResolutionTime;
@@ -28,7 +29,7 @@ final class AnalyzeTest extends FlowIntegrationTestCase
     {
         $config = config_builder()->clock($clock = new FakeClock())->build();
 
-        $clock->set(new \DateTimeImmutable('2025-01-01 00:00:00 UTC'));
+        $clock->set(new DateTimeImmutable('2025-01-01 00:00:00 UTC'));
         $report = df($config)
             ->read(from_array([
                 [
@@ -103,8 +104,8 @@ final class AnalyzeTest extends FlowIntegrationTestCase
         );
         static::assertSame(7, $report->schema()?->count());
         static::assertGreaterThan(0, $report->statistics()->memory->max()->inBytes());
-        static::assertInstanceOf(\DateTimeImmutable::class, $report->statistics()->executionTime->startedAt);
-        static::assertInstanceOf(\DateTimeImmutable::class, $report->statistics()->executionTime->finishedAt);
+        static::assertInstanceOf(DateTimeImmutable::class, $report->statistics()->executionTime->startedAt);
+        static::assertInstanceOf(DateTimeImmutable::class, $report->statistics()->executionTime->finishedAt);
         static::assertGreaterThanOrEqual(
             $report->statistics()->executionTime->startedAt,
             $report->statistics()->executionTime->finishedAt,
@@ -189,7 +190,7 @@ final class AnalyzeTest extends FlowIntegrationTestCase
     {
         $config = config_builder()->clock($clock = new FakeClock())->build();
 
-        $clock->set(new \DateTimeImmutable('2025-01-01 00:00:00 UTC'));
+        $clock->set(new DateTimeImmutable('2025-01-01 00:00:00 UTC'));
         $report = df($config)
             ->read(from_array([
                 [
@@ -270,7 +271,7 @@ final class AnalyzeTest extends FlowIntegrationTestCase
     {
         $config = config_builder()->clock($clock = new FakeClock())->build();
 
-        $clock->set(new \DateTimeImmutable('2025-01-01 00:00:00 UTC'));
+        $clock->set(new DateTimeImmutable('2025-01-01 00:00:00 UTC'));
         $report = df($config)
             ->read(from_array([
                 [

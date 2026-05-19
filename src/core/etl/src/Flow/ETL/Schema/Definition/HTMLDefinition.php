@@ -16,6 +16,7 @@ use Flow\Types\Type\Logical\HTMLType;
 
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_html;
+use function sprintf;
 
 /**
  * @implements Definition<HTMLDocument>
@@ -108,7 +109,7 @@ final class HTMLDefinition implements Definition
     public function merge(Definition $definition): Definition
     {
         if (!$this->ref->is($definition->entry())) {
-            throw new RuntimeException(\sprintf(
+            throw new RuntimeException(sprintf(
                 'Cannot merge different definitions, %s and %s',
                 $this->ref->name(),
                 $definition->entry()->name(),
@@ -157,7 +158,7 @@ final class HTMLDefinition implements Definition
             );
         }
 
-        throw new RuntimeException(\sprintf('Cannot merge %s with %s', self::class, $definition::class));
+        throw new RuntimeException(sprintf('Cannot merge %s with %s', self::class, $definition::class));
     }
 
     public function metadata(): Metadata

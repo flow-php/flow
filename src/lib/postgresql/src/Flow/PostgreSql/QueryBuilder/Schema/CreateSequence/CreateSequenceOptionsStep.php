@@ -28,5 +28,11 @@ interface CreateSequenceOptionsStep extends CreateSequenceFinalStep
 
     public function ownedByNone(): self;
 
+    public function ifNotExists(): self;
+
     public function startWith(int $start): self;
+
+    public function temporary(): self;
+
+    public function unlogged(): self;
 }

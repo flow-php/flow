@@ -11,13 +11,14 @@ use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Tests\Mother\ErrorHandlerSpy;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class MeterErrorHandlingTest extends TestCase
 {
     public function test_complete_routes_processor_throwable_to_error_handler(): void
     {
         $processor = $this->createMock(MetricProcessor::class);
-        $processor->method('process')->willThrowException(new \RuntimeException('process exploded'));
+        $processor->method('process')->willThrowException(new RuntimeException('process exploded'));
         $spy = new ErrorHandlerSpy();
 
         $meter = new Meter(
@@ -40,7 +41,7 @@ final class MeterErrorHandlingTest extends TestCase
     public function test_flush_routes_processor_throwable_to_error_handler(): void
     {
         $processor = $this->createMock(MetricProcessor::class);
-        $processor->method('flush')->willThrowException(new \RuntimeException('flush exploded'));
+        $processor->method('flush')->willThrowException(new RuntimeException('flush exploded'));
         $spy = new ErrorHandlerSpy();
 
         $meter = new Meter(

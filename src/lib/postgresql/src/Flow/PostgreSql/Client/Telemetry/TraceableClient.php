@@ -21,9 +21,15 @@ use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
 use Flow\Telemetry\Tracer\Tracer;
+use Throwable;
 
+use function array_merge;
+use function count;
 use function Flow\PostgreSql\DSL\listen;
 use function Flow\PostgreSql\DSL\unlisten;
+use function hrtime;
+use function strlen;
+use function substr;
 
 /**
  * Decorator that adds telemetry instrumentation to a PostgreSQL client.
@@ -91,7 +97,7 @@ final class TraceableClient implements Client
 
     public function beginTransaction(): void
     {
-        $startTime = \hrtime(true);
+        $startTime = hrtime(true);
         $nestingLevel = $this->client->getTransactionNestingLevel() + 1;
 
         try {
@@ -107,7 +113,7 @@ final class TraceableClient implements Client
             }
 
             $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
 
             throw $e;
@@ -121,7 +127,7 @@ final class TraceableClient implements Client
 
     public function commit(): void
     {
-        $startTime = \hrtime(true);
+        $startTime = hrtime(true);
         $nestingLevel = $this->client->getTransactionNestingLevel();
 
         try {
@@ -129,7 +135,7 @@ final class TraceableClient implements Client
 
             $this->completeTransactionSpan($nestingLevel, SpanStatus::ok());
             $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->completeTransactionSpan($nestingLevel, SpanStatus::error($e->getMessage()), $e);
             $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
 
@@ -207,7 +213,7 @@ final class TraceableClient implements Client
 
                 return $this->client->fetchAll($sql, $parameters);
             },
-            static fn(array $rows) => \count($rows),
+            static fn(array $rows) => count($rows),
         );
     }
 
@@ -223,7 +229,7 @@ final class TraceableClient implements Client
 
                 return $this->client->fetchAllInto($mapper, $sql, $parameters);
             },
-            static fn(array $rows) => \count($rows),
+            static fn(array $rows) => count($rows),
         );
     }
 
@@ -431,7 +437,7 @@ final class TraceableClient implements Client
 
     public function rollBack(): void
     {
-        $startTime = \hrtime(true);
+        $startTime = hrtime(true);
         $nestingLevel = $this->client->getTransactionNestingLevel();
 
         try {
@@ -439,7 +445,7 @@ final class TraceableClient implements Client
 
             $this->completeAllTransactionSpans($nestingLevel, SpanStatus::ok());
             $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->completeAllTransactionSpans($nestingLevel, SpanStatus::error($e->getMessage()), $e);
             $this->recordDuration($startTime, $this->buildTransactionAttributes($nestingLevel));
 
@@ -461,7 +467,7 @@ final class TraceableClient implements Client
             $this->commit();
 
             return $returnValue;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->rollBack();
 
             throw $e;
@@ -519,22 +525,15 @@ final class TraceableClient implements Client
 
         $maxLength = $this->telemetryConfig->options->maxQueryLength;
         $queryText =
-            $maxLength !== null && \strlen($query) > $maxLength ? \substr($query, 0, $maxLength) . '...' : $query;
+            $maxLength !== null && strlen($query) > $maxLength ? substr($query, 0, $maxLength) . '...' : $query;
         $attributes[PostgreSqlTelemetryAttributes::DB_QUERY_TEXT] = $queryText;
 
         if ($this->telemetryConfig->options->includeParameters && $parameters !== []) {
-            $maxParams = $this->telemetryConfig->options->maxParameters;
-            $maxParamLength = $this->telemetryConfig->options->maxParameterLength;
-            $count = 0;
-
-            foreach ($parameters as $index => $value) {
-                if ($maxParams !== null && $count >= $maxParams) {
-                    break;
-                }
-                $key = PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . ($index + 1);
-                $attributes[$key] = $this->parameterFormatter->format($value, $maxParamLength);
-                $count++;
-            }
+            $attributes = array_merge($attributes, $this->parameterFormatter->formatList(
+                $parameters,
+                $this->telemetryConfig->options->maxParameters,
+                $this->telemetryConfig->options->maxParameterLength,
+            ));
         }
 
         return $attributes;
@@ -587,17 +586,14 @@ final class TraceableClient implements Client
         return $operation . ' TRANSACTION';
     }
 
-    private function completeAllTransactionSpans(
-        int $fromLevel,
-        SpanStatus $status,
-        ?\Throwable $exception = null,
-    ): void {
+    private function completeAllTransactionSpans(int $fromLevel, SpanStatus $status, ?Throwable $exception = null): void
+    {
         for ($level = $fromLevel; $level >= 1; $level--) {
             $this->completeTransactionSpan($level, $status, $exception);
         }
     }
 
-    private function completeTransactionSpan(int $nestingLevel, SpanStatus $status, ?\Throwable $exception = null): void
+    private function completeTransactionSpan(int $nestingLevel, SpanStatus $status, ?Throwable $exception = null): void
     {
         $tracer = $this->tracer;
 
@@ -634,17 +630,23 @@ final class TraceableClient implements Client
     /**
      * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes
      */
-    private function recordDuration(int $startTime, array $attributes): void
+    private function recordDuration(int|float|false $startTime, array $attributes): void
     {
-        if ($this->operationDuration === null) {
+        if ($this->operationDuration === null || $startTime === false) {
             return;
         }
 
-        $duration = (\hrtime(true) - $startTime) / 1_000_000_000;
+        $now = hrtime(true);
+
+        if ($now === false) {
+            return;
+        }
+
+        $duration = ($now - $startTime) / 1_000_000_000;
         $this->operationDuration->record($duration, $attributes);
     }
 
-    private function recordFailure(Span $span, \Throwable $e): void
+    private function recordFailure(Span $span, Throwable $e): void
     {
         $span->recordException($e, $this->telemetryConfig->clock->now());
         $span->setAttribute(PostgreSqlTelemetryAttributes::ERROR_TYPE, $e::class);
@@ -689,7 +691,7 @@ final class TraceableClient implements Client
         callable $operation,
         ?callable $rowCountExtractor = null,
     ): mixed {
-        $startTime = \hrtime(true);
+        $startTime = hrtime(true);
         $queryAttrs = $this->queryAttributesExtractor->extract($query);
         $attributes = $this->buildQueryAttributes($query, $parameters, $queryAttrs);
         $span = null;
@@ -714,7 +716,7 @@ final class TraceableClient implements Client
             $this->recordDuration($startTime, $attributes);
 
             return $result;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             if ($span !== null) {
                 $this->recordFailure($span, $e);
             }

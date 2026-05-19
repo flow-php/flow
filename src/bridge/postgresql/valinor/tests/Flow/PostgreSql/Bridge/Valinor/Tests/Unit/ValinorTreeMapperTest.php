@@ -22,6 +22,7 @@ use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function sprintf;
 
 final class ValinorTreeMapperTest extends TestCase
 {
@@ -95,7 +96,7 @@ final class ValinorTreeMapperTest extends TestCase
             $mapper->map(['id' => 1], MapperContextMother::any());
             static::fail('Expected MappingException was not thrown');
         } catch (MappingException $e) {
-            static::assertStringStartsWith(\sprintf('Failed to map row to "%s":', SimpleDto::class), $e->getMessage());
+            static::assertStringStartsWith(sprintf('Failed to map row to "%s":', SimpleDto::class), $e->getMessage());
         }
     }
 

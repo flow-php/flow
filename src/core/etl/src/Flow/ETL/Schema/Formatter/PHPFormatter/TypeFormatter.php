@@ -26,6 +26,11 @@ use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\ResourceType;
 use Flow\Types\Type\Native\StringType;
+use ReflectionFunction;
+use RuntimeException;
+
+use function implode;
+use function sprintf;
 
 final class TypeFormatter
 {
@@ -48,9 +53,9 @@ final class TypeFormatter
      */
     private function formatListType(ListType $type, bool $nullable): string
     {
-        $reflection = new \ReflectionFunction('\\Flow\\Types\\DSL\\type_list');
+        $reflection = new ReflectionFunction('\\Flow\\Types\\DSL\\type_list');
 
-        return \sprintf(
+        return sprintf(
             $nullable ? '\\Flow\\Types\\DSL\\type_optional(%s(element: %s))' : '\%s(element: %s)',
             $reflection->getName(),
             $this->format($type->element()),
@@ -62,9 +67,9 @@ final class TypeFormatter
      */
     private function formatMapType(MapType $type, bool $nullable): string
     {
-        $reflection = new \ReflectionFunction('\\Flow\\Types\\DSL\\type_map');
+        $reflection = new ReflectionFunction('\\Flow\\Types\\DSL\\type_map');
 
-        return \sprintf(
+        return sprintf(
             $nullable
                 ? '\\Flow\\Types\\DSL\\type_optional(\%s(key_type: %s, value_type: %s))'
                 : '\%s(key_type: %s, value_type: %s)',
@@ -80,31 +85,31 @@ final class TypeFormatter
     private function formatSimpleType(Type $type, bool $nullable): string
     {
         $reflection = match ($type::class) {
-            ArrayType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_array'),
-            StringType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_string'),
-            IntegerType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_integer'),
-            BooleanType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_boolean'),
-            FloatType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_float'),
-            DateTimeType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_datetime'),
-            DateType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_date'),
-            TimeType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_time'),
-            ResourceType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_resource'),
-            NullType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_null'),
-            UuidType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_uuid'),
-            CallableType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_callable'),
-            JsonType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_json'),
-            HTMLType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_html'),
-            HTMLElementType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_html_element'),
-            XMLType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_xml'),
-            XMLElementType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_xml_element'),
-            default => throw new \RuntimeException('Type ' . $type->toString() . ' is not a simple definition'),
+            ArrayType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_array'),
+            StringType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_string'),
+            IntegerType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_integer'),
+            BooleanType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_boolean'),
+            FloatType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_float'),
+            DateTimeType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_datetime'),
+            DateType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_date'),
+            TimeType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_time'),
+            ResourceType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_resource'),
+            NullType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_null'),
+            UuidType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_uuid'),
+            CallableType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_callable'),
+            JsonType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_json'),
+            HTMLType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_html'),
+            HTMLElementType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_html_element'),
+            XMLType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_xml'),
+            XMLElementType::class => new ReflectionFunction('\\Flow\\Types\\DSL\\type_xml_element'),
+            default => throw new RuntimeException('Type ' . $type->toString() . ' is not a simple definition'),
         };
 
         if ($type instanceof NullType) {
-            return \sprintf('\%s()', $reflection->getName());
+            return sprintf('\%s()', $reflection->getName());
         }
 
-        return \sprintf($nullable ? '\\Flow\\Types\\DSL\\type_optional(\%s())' : '\%s()', $reflection->getName());
+        return sprintf($nullable ? '\\Flow\\Types\\DSL\\type_optional(\%s())' : '\%s()', $reflection->getName());
     }
 
     /**
@@ -112,18 +117,18 @@ final class TypeFormatter
      */
     private function formatStructureType(StructureType $type, bool $nullable): string
     {
-        $reflection = new \ReflectionFunction('\\Flow\\Types\\DSL\\type_structure');
+        $reflection = new ReflectionFunction('\\Flow\\Types\\DSL\\type_structure');
 
         $fields = [];
 
         foreach ($type->elements() as $name => $element) {
-            $fields[] = \sprintf('"%s" => %s', $name, $this->format($element));
+            $fields[] = sprintf('"%s" => %s', $name, $this->format($element));
         }
 
-        return \sprintf(
+        return sprintf(
             $nullable ? '\\Flow\\Types\\DSL\\type_optional(\%s(elements: [%s]))' : '\%s(elements: [%s])',
             $reflection->getName(),
-            \implode(', ', $fields),
+            implode(', ', $fields),
         );
     }
 }

@@ -41,6 +41,7 @@ use function Flow\PostgreSql\DSL\schema_view;
 use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\star;
 use function Flow\PostgreSql\DSL\table;
+use function ksort;
 
 final class CatalogComparatorTest extends TestCase
 {
@@ -440,7 +441,7 @@ final class CatalogComparatorTest extends TestCase
             $renames[$col->source->name] = $col->target->name;
         }
 
-        \ksort($renames);
+        ksort($renames);
         static::assertSame(
             [
                 'net_commission_cents' => 'net_commission',
@@ -517,7 +518,7 @@ final class CatalogComparatorTest extends TestCase
             $renames[$col->source->name] = $col->target->name;
         }
 
-        \ksort($renames);
+        ksort($renames);
         static::assertSame(
             [
                 'amount_cents' => 'amount',
@@ -1669,9 +1670,10 @@ final class CatalogComparatorTest extends TestCase
         $diff = catalog_comparator()->compare($source, $target);
 
         $tableDiff = $diff->modifiedSchemas[0]->modifiedTables[0];
-        static::assertNotNull($tableDiff->addedPrimaryKey);
+        $addedPrimaryKey = $tableDiff->addedPrimaryKey;
+        static::assertNotNull($addedPrimaryKey);
         static::assertNull($tableDiff->removedPrimaryKey);
-        static::assertSame(['id'], $tableDiff->addedPrimaryKey->columns);
+        static::assertSame(['id'], $addedPrimaryKey->columns);
     }
 
     public function test_primary_key_changed(): void
@@ -1704,10 +1706,12 @@ final class CatalogComparatorTest extends TestCase
         $diff = catalog_comparator()->compare($source, $target);
 
         $tableDiff = $diff->modifiedSchemas[0]->modifiedTables[0];
-        static::assertNotNull($tableDiff->addedPrimaryKey);
-        static::assertNotNull($tableDiff->removedPrimaryKey);
-        static::assertSame(['uuid'], $tableDiff->addedPrimaryKey->columns);
-        static::assertSame(['id'], $tableDiff->removedPrimaryKey->columns);
+        $addedPrimaryKey = $tableDiff->addedPrimaryKey;
+        $removedPrimaryKey = $tableDiff->removedPrimaryKey;
+        static::assertNotNull($addedPrimaryKey);
+        static::assertNotNull($removedPrimaryKey);
+        static::assertSame(['uuid'], $addedPrimaryKey->columns);
+        static::assertSame(['id'], $removedPrimaryKey->columns);
     }
 
     public function test_primary_key_removed(): void

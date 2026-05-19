@@ -8,6 +8,8 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function number_format;
+
 final class NumberFormat extends ScalarFunctionChain
 {
     public function __construct(
@@ -30,6 +32,6 @@ final class NumberFormat extends ScalarFunctionChain
                 ->invalidResult(new InvalidArgumentException('NumberFormat function requires non-null values'));
         }
 
-        return \number_format((float) $value, $decimals, $decimalSeparator, $thousandsSeparator);
+        return number_format((float) $value, $decimals, $decimalSeparator, $thousandsSeparator);
     }
 }

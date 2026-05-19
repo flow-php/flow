@@ -8,15 +8,15 @@ use Flow\Telemetry\Resource\Attribute\ProcessAttribute;
 use Flow\Telemetry\Resource\Detector\ProcessDetector;
 use PHPUnit\Framework\TestCase;
 
+use function basename;
+use function function_exists;
+use function getmypid;
+
 final class ProcessDetectorTest extends TestCase
 {
     public function test_detect_returns_command_args_when_available(): void
     {
         global $argv;
-
-        if (!isset($argv) || !\is_array($argv) || \count($argv) === 0) {
-            static::markTestSkipped('No command line arguments available');
-        }
 
         $detector = new ProcessDetector();
         $resource = $detector->detect();
@@ -35,7 +35,7 @@ final class ProcessDetectorTest extends TestCase
         $resource = $detector->detect();
 
         static::assertTrue($resource->has(ProcessAttribute::EXECUTABLE_NAME->value));
-        static::assertSame(\basename(PHP_BINARY), $resource->get(ProcessAttribute::EXECUTABLE_NAME->value));
+        static::assertSame(basename(PHP_BINARY), $resource->get(ProcessAttribute::EXECUTABLE_NAME->value));
     }
 
     public function test_detect_returns_executable_path(): void
@@ -49,7 +49,7 @@ final class ProcessDetectorTest extends TestCase
 
     public function test_detect_returns_process_owner_on_posix_systems(): void
     {
-        if (!\function_exists('posix_getuid')) {
+        if (!function_exists('posix_getuid')) {
             static::markTestSkipped('POSIX functions not available');
         }
 
@@ -74,7 +74,7 @@ final class ProcessDetectorTest extends TestCase
         $pid = $resource->get(ProcessAttribute::PID->value);
 
         static::assertIsInt($pid);
-        static::assertSame(\getmypid(), $pid);
+        static::assertSame(getmypid(), $pid);
     }
 
     public function test_detect_returns_runtime_name(): void

@@ -7,6 +7,8 @@ namespace Flow\PostgreSql\Migrations\VersionGenerator;
 use Flow\PostgreSql\Migrations\Version;
 use Flow\PostgreSql\Migrations\VersionGenerator;
 
+use function date;
+
 final readonly class TimestampVersionGenerator implements VersionGenerator
 {
     public function __construct(
@@ -15,6 +17,6 @@ final readonly class TimestampVersionGenerator implements VersionGenerator
 
     public function generate(): Version
     {
-        return Version::fromString(\date($this->format));
+        return Version::fromString(date($this->format));
     }
 }

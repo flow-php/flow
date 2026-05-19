@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Types\ValueType;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\PostgreSql\DSL\cast;
@@ -20,7 +21,7 @@ final class BooleanConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{string, bool}>
      */
-    public static function provide_boolean_strings(): \Generator
+    public static function provide_boolean_strings(): Generator
     {
         yield 'string true' => ['true', true];
         yield 'string false' => ['false', false];
@@ -35,7 +36,7 @@ final class BooleanConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{bool, bool}>
      */
-    public static function provide_boolean_values(): \Generator
+    public static function provide_boolean_values(): Generator
     {
         yield 'true' => [true, true];
         yield 'false' => [false, false];
@@ -47,7 +48,7 @@ final class BooleanConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_boolean())->as('val'))->toSql(), [typed(
+            ->fetchScalarBool(select(cast(param(1), column_type_boolean())->as('val'))->toSql(), [typed(
                 $input,
                 ValueType::BOOL,
             )]);
@@ -61,18 +62,18 @@ final class BooleanConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_boolean())->as('val'))->toSql(), [$input]);
+            ->fetchScalarBool(select(cast(param(1), column_type_boolean())->as('val'))->toSql(), [$input]);
 
         static::assertSame($expected, $result);
     }
 
     public function test_null_boolean(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal(null), column_type_boolean())->as('val'))->toSql());
-
-        static::assertNull($result);
+        static::assertNull(
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalar(select(cast(literal(null), column_type_boolean())->as('val'))->toSql()),
+        );
     }
 }

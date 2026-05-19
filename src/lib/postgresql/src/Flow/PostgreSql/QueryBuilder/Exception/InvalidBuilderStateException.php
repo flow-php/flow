@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\QueryBuilder\Exception;
 
-final class InvalidBuilderStateException extends \InvalidArgumentException
+use InvalidArgumentException;
+
+use function sprintf;
+
+final class InvalidBuilderStateException extends InvalidArgumentException
 {
     public static function emptyConditionBuilder(): self
     {
@@ -15,11 +19,11 @@ final class InvalidBuilderStateException extends \InvalidArgumentException
 
     public static function mutuallyExclusiveOptions(string $option1, string $option2): self
     {
-        return new self(\sprintf('Cannot combine %s with %s in a single statement', $option1, $option2));
+        return new self(sprintf('Cannot combine %s with %s in a single statement', $option1, $option2));
     }
 
     public static function noOperationSpecified(string $builderName): self
     {
-        return new self(\sprintf('No operation specified for %s', $builderName));
+        return new self(sprintf('No operation specified for %s', $builderName));
     }
 }

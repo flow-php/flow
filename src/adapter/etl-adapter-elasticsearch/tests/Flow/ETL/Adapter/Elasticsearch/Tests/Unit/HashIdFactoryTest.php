@@ -11,6 +11,8 @@ use Flow\ETL\Tests\FlowTestCase;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\string_entry;
+use function hash;
+use function sha1;
 
 final class HashIdFactoryTest extends FlowTestCase
 {
@@ -19,7 +21,7 @@ final class HashIdFactoryTest extends FlowTestCase
         $factory = new HashIdFactory('first_name', 'last_name');
 
         static::assertEquals(
-            string_entry('id', \hash('xxh128', 'John:Doe')),
+            string_entry('id', hash('xxh128', 'John:Doe')),
             $factory->create(row(str_entry('first_name', 'John'), str_entry('last_name', 'Doe'))),
         );
     }
@@ -29,7 +31,7 @@ final class HashIdFactoryTest extends FlowTestCase
         $factory = (new HashIdFactory('first_name', 'last_name'))->withAlgorithm(new NativePHPHash('sha1'));
 
         static::assertEquals(
-            string_entry('id', \sha1('John:Doe')),
+            string_entry('id', sha1('John:Doe')),
             $factory->create(row(str_entry('first_name', 'John'), str_entry('last_name', 'Doe'))),
         );
     }

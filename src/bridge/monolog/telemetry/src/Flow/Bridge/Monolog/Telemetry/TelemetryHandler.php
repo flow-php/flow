@@ -10,6 +10,7 @@ use Flow\Telemetry\Logger\Logger;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Level;
 use Monolog\LogRecord;
+use Throwable;
 
 /**
  * Monolog handler that forwards log records to Flow Telemetry.
@@ -55,7 +56,7 @@ final class TelemetryHandler extends AbstractProcessingHandler
     {
         try {
             $this->logger->emit($this->converter->convert($record));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
         }
     }

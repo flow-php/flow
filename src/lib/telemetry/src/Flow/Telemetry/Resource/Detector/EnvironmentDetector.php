@@ -8,6 +8,14 @@ use Flow\Telemetry\Resource;
 use Flow\Telemetry\Resource\Attribute\ServiceAttribute;
 use Flow\Telemetry\Resource\ResourceDetector;
 
+use function count;
+use function getenv;
+use function stripslashes;
+use function strlen;
+use function strpos;
+use function substr;
+use function trim;
+
 /**
  * Detects resource attributes from environment variables.
  *
@@ -54,7 +62,7 @@ final readonly class EnvironmentDetector implements ResourceDetector
 
     private function getEnv(string $name): ?string
     {
-        $value = \getenv($name);
+        $value = getenv($name);
 
         if ($value === false || $value === '') {
             return null;
@@ -78,26 +86,26 @@ final readonly class EnvironmentDetector implements ResourceDetector
         $pairs = $this->splitByComma($rawAttributes);
 
         foreach ($pairs as $pair) {
-            $pair = \trim($pair);
+            $pair = trim($pair);
 
             if ($pair === '') {
                 continue;
             }
 
-            $equalsPos = \strpos($pair, '=');
+            $equalsPos = strpos($pair, '=');
 
             if ($equalsPos === false) {
                 continue;
             }
 
-            $key = \trim(\substr($pair, 0, $equalsPos));
-            $value = \trim(\substr($pair, $equalsPos + 1));
+            $key = trim(substr($pair, 0, $equalsPos));
+            $value = trim(substr($pair, $equalsPos + 1));
 
             if ($key === '') {
                 continue;
             }
 
-            $value = \stripslashes($value);
+            $value = stripslashes($value);
             $attributes[$key] = $value;
         }
 
@@ -113,7 +121,7 @@ final readonly class EnvironmentDetector implements ResourceDetector
     {
         $result = [];
         $current = '';
-        $length = \strlen($input);
+        $length = strlen($input);
         $i = 0;
 
         while ($i < $length) {
@@ -138,7 +146,7 @@ final readonly class EnvironmentDetector implements ResourceDetector
             $i++;
         }
 
-        if ($current !== '' || \count($result) > 0) {
+        if ($current !== '' || count($result) > 0) {
             $result[] = $current;
         }
 

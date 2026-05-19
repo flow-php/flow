@@ -10,6 +10,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
+use Throwable;
 
 final class UntilTransformer implements Transformer
 {
@@ -53,7 +54,7 @@ final class UntilTransformer implements Transformer
             return $result;
         } catch (LimitReachedException $e) {
             throw $e;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->transformationFailed($this, $e);
 
             throw $e;

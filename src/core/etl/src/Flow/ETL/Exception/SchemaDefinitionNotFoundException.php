@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Exception;
 
+use function sprintf;
+
 final class SchemaDefinitionNotFoundException extends InvalidArgumentException
 {
     public function __construct(
         private readonly string $entry,
     ) {
-        parent::__construct(\sprintf('Schema definition for entry "%s" not found', $entry));
+        parent::__construct(sprintf('Schema definition for entry "%s" not found', $entry));
     }
 
     public function entry(): string

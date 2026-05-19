@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
 use Flow\ETL\Adapter\Elasticsearch\Tests\Doubles\Spy\HttpClientSpy;
 
+use function array_merge;
 use function Flow\ETL\Adapter\Elasticsearch\to_es_bulk_index;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
@@ -28,7 +29,7 @@ final class ElasticsearchTest extends ElasticsearchTestCase
                 ['id' => 5, 'text' => 'lorem ipsum'],
                 ['id' => 6, 'text' => 'lorem ipsum'],
             ]))
-            ->write(to_es_bulk_index(\array_merge($this->elasticsearchContext->clientConfig(), [
+            ->write(to_es_bulk_index(array_merge($this->elasticsearchContext->clientConfig(), [
                 'httpClient' => $httpClient = new HttpClientSpy(),
             ]), 'test', new EntryIdFactory('id')))
             ->run();

@@ -11,8 +11,10 @@ use Flow\Types\Tests\Unit\Type\Fixtures\Intersection\DateOrTime;
 use Flow\Types\Tests\Unit\Type\Fixtures\Intersection\Time;
 use Flow\Types\Type\Native\IntersectionType;
 use Flow\Types\Type\Types;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_instance_of;
@@ -24,7 +26,7 @@ use function Flow\Types\DSL\types;
 
 final class IntersectionTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'valid integer for integer&positive_integer' => [
             'type' => type_intersection(type_integer(), type_positive_integer()),
@@ -64,7 +66,7 @@ final class IntersectionTypeTest extends TestCase
 
         yield 'invalid object for integer&positive_integer' => [
             'type' => type_intersection(type_integer(), type_positive_integer()),
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
@@ -76,12 +78,12 @@ final class IntersectionTypeTest extends TestCase
 
         yield 'invalid stdClass for Date&Time' => [
             'type' => type_intersection(type_instance_of(Date::class), type_instance_of(Time::class)),
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'exceptionClass' => InvalidTypeException::class,
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
         yield 'string to integer for integer&positive_integer' => [
             'type' => type_intersection(type_integer(), type_positive_integer()),
@@ -120,13 +122,13 @@ final class IntersectionTypeTest extends TestCase
 
         yield 'stdClass cannot be cast to Date&Time' => [
             'type' => type_intersection(type_instance_of(Date::class), type_instance_of(Time::class)),
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'expected' => null,
             'exceptionClass' => CastingException::class,
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'valid positive integer for integer&positive_integer' => [
             'type' => type_intersection(type_integer(), type_positive_integer()),
@@ -172,12 +174,12 @@ final class IntersectionTypeTest extends TestCase
 
         yield 'invalid stdClass for Date&Time' => [
             'type' => type_intersection(type_instance_of(Date::class), type_instance_of(Time::class)),
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'expected' => false,
         ];
     }
 
-    public static function to_string_data_provider(): \Generator
+    public static function to_string_data_provider(): Generator
     {
         yield 'integer and positive_integer' => [
             'type' => type_intersection(type_integer(), type_positive_integer()),
@@ -200,7 +202,7 @@ final class IntersectionTypeTest extends TestCase
         ];
     }
 
-    public static function types_data_provider(): \Generator
+    public static function types_data_provider(): Generator
     {
         yield 'integer and positive_integer' => [
             'expected' => types(type_integer(), type_positive_integer()),
@@ -218,6 +220,9 @@ final class IntersectionTypeTest extends TestCase
         ];
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('assert_data_provider')]
     public function test_assert(IntersectionType $type, mixed $value, ?string $exceptionClass = null): void
     {
@@ -229,6 +234,9 @@ final class IntersectionTypeTest extends TestCase
         }
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('cast_data_provider')]
     public function test_cast(IntersectionType $type, mixed $value, mixed $expected, ?string $exceptionClass): void
     {

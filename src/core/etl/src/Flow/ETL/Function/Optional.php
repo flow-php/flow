@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Exception;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
@@ -17,7 +18,7 @@ final class Optional extends ScalarFunctionChain
     {
         try {
             return (new Parameter($this->function))->eval($row, $context);
-        } catch (\Exception) {
+        } catch (Exception) {
             return null;
         }
     }

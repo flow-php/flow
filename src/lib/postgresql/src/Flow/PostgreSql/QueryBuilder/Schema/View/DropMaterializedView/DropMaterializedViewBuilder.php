@@ -13,6 +13,8 @@ use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
+use function array_values;
+
 final readonly class DropMaterializedViewBuilder implements DropMatViewFinalStep
 {
     use AstToSql;
@@ -28,7 +30,7 @@ final readonly class DropMaterializedViewBuilder implements DropMatViewFinalStep
 
     public static function create(string ...$views): DropMatViewFinalStep
     {
-        return new self(\array_values($views));
+        return new self(array_values($views));
     }
 
     public function cascade(): DropMatViewFinalStep

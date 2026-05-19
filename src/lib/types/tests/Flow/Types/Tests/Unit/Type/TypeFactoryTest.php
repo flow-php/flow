@@ -6,6 +6,7 @@ namespace Flow\Types\Tests\Unit\Type;
 
 use Flow\Types\Tests\Unit\Type\Fixtures\SomeEnum;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
@@ -107,7 +108,7 @@ final class TypeFactoryTest extends TestCase
 
     public function test_normalizing_and_creating_object_type(): void
     {
-        $object = type_instance_of(\stdClass::class);
+        $object = type_instance_of(stdClass::class);
         static::assertEquals($object, type_from_array($object->normalize()));
     }
 
@@ -124,7 +125,7 @@ final class TypeFactoryTest extends TestCase
             'age' => type_integer(),
             'list' => type_list(type_string()),
             'map' => type_map(type_string(), type_integer()),
-            'object' => type_instance_of(\stdClass::class),
+            'object' => type_instance_of(stdClass::class),
         ]);
 
         static::assertEquals($structure, type_from_array($structure->normalize()));

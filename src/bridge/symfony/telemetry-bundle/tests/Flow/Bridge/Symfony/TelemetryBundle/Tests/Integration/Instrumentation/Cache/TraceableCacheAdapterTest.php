@@ -19,6 +19,11 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
+use function array_map;
+use function array_sum;
+use function interface_exists;
+use function iterator_to_array;
+
 #[CoversClass(TraceableCacheAdapter::class)]
 #[CoversClass(TagAwareTraceableCacheAdapter::class)]
 #[CoversClass(CacheTelemetryPass::class)]
@@ -26,7 +31,7 @@ final class TraceableCacheAdapterTest extends KernelTestCase
 {
     protected function setUp(): void
     {
-        if (!\interface_exists(AdapterInterface::class)) {
+        if (!interface_exists(AdapterInterface::class)) {
             self::markTestSkipped('symfony/cache is not installed');
         }
 
@@ -228,8 +233,8 @@ final class TraceableCacheAdapterTest extends KernelTestCase
         $hitMetrics = $processor->metricsWithName('cache.hits');
         $missMetrics = $processor->metricsWithName('cache.misses');
 
-        $totalHits = \array_sum(\array_map(static fn($m) => $m->value, $hitMetrics));
-        $totalMisses = \array_sum(\array_map(static fn($m) => $m->value, $missMetrics));
+        $totalHits = array_sum(array_map(static fn($m) => $m->value, $hitMetrics));
+        $totalMisses = array_sum(array_map(static fn($m) => $m->value, $missMetrics));
 
         static::assertSame(1, $totalHits);
         static::assertSame(2, $totalMisses);
@@ -275,7 +280,7 @@ final class TraceableCacheAdapterTest extends KernelTestCase
         $cache->get('key2', static fn() => 'value2');
 
         $items = $cache->getItems(['key1', 'key2', 'key3']);
-        \iterator_to_array($items);
+        iterator_to_array($items);
 
         /** @var Telemetry $telemetry */
         $telemetry = $container->get('flow.telemetry');
@@ -286,8 +291,8 @@ final class TraceableCacheAdapterTest extends KernelTestCase
         $hitMetrics = $processor->metricsWithName('cache.hits');
         $missMetrics = $processor->metricsWithName('cache.misses');
 
-        $totalHits = \array_sum(\array_map(static fn($m) => $m->value, $hitMetrics));
-        $totalMisses = \array_sum(\array_map(static fn($m) => $m->value, $missMetrics));
+        $totalHits = array_sum(array_map(static fn($m) => $m->value, $hitMetrics));
+        $totalMisses = array_sum(array_map(static fn($m) => $m->value, $missMetrics));
 
         static::assertSame(2, $totalHits);
         static::assertSame(3, $totalMisses);

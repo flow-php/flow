@@ -12,6 +12,7 @@ use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\RoleSpec;
 use Flow\PostgreSql\Protobuf\AST\RoleSpecType;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
+use SensitiveParameter;
 
 final readonly class AlterRoleBuilder implements AlterRoleActionStep, AlterRoleFinalStep
 {
@@ -153,7 +154,7 @@ final readonly class AlterRoleBuilder implements AlterRoleActionStep, AlterRoleF
         return $this->withStringOption('validUntil', $timestamp);
     }
 
-    public function withPassword(#[\SensitiveParameter] string $password): AlterRoleFinalStep
+    public function withPassword(#[SensitiveParameter] string $password): AlterRoleFinalStep
     {
         return $this->withStringOption('password', $password);
     }
@@ -163,9 +164,7 @@ final readonly class AlterRoleBuilder implements AlterRoleActionStep, AlterRoleF
         $integer = new Integer();
         $integer->setIval($value ? 1 : 0);
 
-        $argNode = new Node();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $argNode->setInteger($integer);
+        $argNode = new Node(['integer' => $integer]);
 
         return $this->withOption($name, $argNode);
     }
@@ -175,9 +174,7 @@ final readonly class AlterRoleBuilder implements AlterRoleActionStep, AlterRoleF
         $integer = new Integer();
         $integer->setIval($value);
 
-        $argNode = new Node();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $argNode->setInteger($integer);
+        $argNode = new Node(['integer' => $integer]);
 
         return $this->withOption($name, $argNode);
     }

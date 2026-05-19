@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Integration\Telemetry;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
@@ -25,6 +26,9 @@ use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
 
+use function array_filter;
+use function array_values;
+
 /**
  * Integration tests for signal attribute limits.
  *
@@ -38,7 +42,7 @@ final class SignalLimitsIntegrationTest extends TestCase
     protected function setUp(): void
     {
         $this->clock = $this->createMock(ClockInterface::class);
-        $this->clock->method('now')->willReturn(new \DateTimeImmutable('2024-01-01 12:00:00.123456'));
+        $this->clock->method('now')->willReturn(new DateTimeImmutable('2024-01-01 12:00:00.123456'));
     }
 
     public function test_logger_dropped_count_included_in_normalized_output(): void
@@ -125,7 +129,7 @@ final class SignalLimitsIntegrationTest extends TestCase
 
         static::assertCount(4, $metrics);
 
-        $overflowMetrics = \array_values(\array_filter($metrics, static fn($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE)));
+        $overflowMetrics = array_values(array_filter($metrics, static fn($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE)));
         static::assertCount(1, $overflowMetrics);
 
         static::assertTrue($overflowMetrics[0]->attributes->get(MetricLimits::OVERFLOW_ATTRIBUTE));
@@ -150,7 +154,7 @@ final class SignalLimitsIntegrationTest extends TestCase
 
         static::assertCount(3, $metrics);
 
-        $overflowMetrics = \array_values(\array_filter($metrics, static fn($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE)));
+        $overflowMetrics = array_values(array_filter($metrics, static fn($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE)));
         static::assertCount(1, $overflowMetrics);
     }
 
@@ -171,7 +175,7 @@ final class SignalLimitsIntegrationTest extends TestCase
 
         $metrics = $counter->collect();
 
-        $overflowMetrics = \array_values(\array_filter($metrics, static fn($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE)));
+        $overflowMetrics = array_values(array_filter($metrics, static fn($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE)));
 
         static::assertSame(12, $overflowMetrics[0]->value);
     }
@@ -192,7 +196,7 @@ final class SignalLimitsIntegrationTest extends TestCase
 
         static::assertCount(2, $metrics);
 
-        $overflowMetrics = \array_values(\array_filter($metrics, static fn($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE)));
+        $overflowMetrics = array_values(array_filter($metrics, static fn($m) => $m->attributes->has(MetricLimits::OVERFLOW_ATTRIBUTE)));
 
         static::assertTrue($overflowMetrics[0]->attributes->get(MetricLimits::OVERFLOW_ATTRIBUTE));
         static::assertCount(1, $overflowMetrics[0]->attributes->normalize());
@@ -216,8 +220,8 @@ final class SignalLimitsIntegrationTest extends TestCase
 
         static::assertCount(2, $metrics);
 
-        $attrA = \array_values(\array_filter($metrics, static fn($m) => $m->attributes->get('key') === 'a'));
-        $attrB = \array_values(\array_filter($metrics, static fn($m) => $m->attributes->get('key') === 'b'));
+        $attrA = array_values(array_filter($metrics, static fn($m) => $m->attributes->get('key') === 'a'));
+        $attrB = array_values(array_filter($metrics, static fn($m) => $m->attributes->get('key') === 'b'));
 
         static::assertSame(4, $attrA[0]->value);
         static::assertSame(6, $attrB[0]->value);
@@ -263,8 +267,8 @@ final class SignalLimitsIntegrationTest extends TestCase
 
         $span = $tracer->span('test-operation');
         $span->setAttributes(['k1' => 'v1', 'k2' => 'v2', 'k3' => 'v3']);
-        $span->recordEvent(GenericEvent::create('e1', new \DateTimeImmutable()));
-        $span->recordEvent(GenericEvent::create('e2', new \DateTimeImmutable()));
+        $span->recordEvent(GenericEvent::create('e1', new DateTimeImmutable()));
+        $span->recordEvent(GenericEvent::create('e2', new DateTimeImmutable()));
         $span->addLink(SpanLink::create(SpanContext::create(TraceId::generate(), SpanId::generate())));
         $span->addLink(SpanLink::create(SpanContext::create(TraceId::generate(), SpanId::generate())));
         $tracer->complete($span);
@@ -286,7 +290,7 @@ final class SignalLimitsIntegrationTest extends TestCase
         $tracer = $tracerProvider->tracer(ResourceMother::default(), 'test-service');
 
         $span = $tracer->span('test-operation');
-        $event = GenericEvent::create('test.event', new \DateTimeImmutable(), [
+        $event = GenericEvent::create('test.event', new DateTimeImmutable(), [
             'key1' => 'short',
             'key2' => 'this-is-a-very-long-value',
             'key3' => 'dropped-attribute',
@@ -313,10 +317,10 @@ final class SignalLimitsIntegrationTest extends TestCase
         $tracer = $tracerProvider->tracer(ResourceMother::default(), 'test-service');
 
         $span = $tracer->span('test-operation');
-        $span->recordEvent(GenericEvent::create('event1', new \DateTimeImmutable()));
-        $span->recordEvent(GenericEvent::create('event2', new \DateTimeImmutable()));
-        $span->recordEvent(GenericEvent::create('event3', new \DateTimeImmutable()));
-        $span->recordEvent(GenericEvent::create('event4', new \DateTimeImmutable()));
+        $span->recordEvent(GenericEvent::create('event1', new DateTimeImmutable()));
+        $span->recordEvent(GenericEvent::create('event2', new DateTimeImmutable()));
+        $span->recordEvent(GenericEvent::create('event3', new DateTimeImmutable()));
+        $span->recordEvent(GenericEvent::create('event4', new DateTimeImmutable()));
         $tracer->complete($span);
 
         $endedSpans = $spanProcessor->endedSpans();

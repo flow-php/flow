@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Types;
 
+use function preg_match;
+use function str_replace;
+use function strcasecmp;
+
 /**
  * Escapes string values for use in PostgreSQL array literals.
  *
@@ -26,13 +30,13 @@ final class StringEscaper
             return '""';
         }
 
-        $needsQuoting = \preg_match('/[,"{}\\\\\s]/', $value) === 1 || \strcasecmp($value, 'NULL') === 0;
+        $needsQuoting = preg_match('/[,"{}\\\\\s]/', $value) === 1 || strcasecmp($value, 'NULL') === 0;
 
         if (!$needsQuoting) {
             return $value;
         }
 
-        $escaped = \str_replace(['\\', '"'], ['\\\\', '\\"'], $value);
+        $escaped = str_replace(['\\', '"'], ['\\\\', '\\"'], $value);
 
         return '"' . $escaped . '"';
     }
@@ -43,7 +47,7 @@ final class StringEscaper
      */
     public static function escapeAlwaysQuoted(string $value): string
     {
-        $escaped = \str_replace(['\\', '"'], ['\\\\', '\\"'], $value);
+        $escaped = str_replace(['\\', '"'], ['\\\\', '\\"'], $value);
 
         return '"' . $escaped . '"';
     }

@@ -6,10 +6,11 @@ namespace Flow\Types\Exception;
 
 use Flow\Types\Type;
 use Flow\Types\Type\TypeDetector;
+use Throwable;
 
 final class InvalidTypeException extends InvalidArgumentException
 {
-    public function __construct(string $message, ?\Throwable $previous = null)
+    public function __construct(string $message, ?Throwable $previous = null)
     {
         parent::__construct($message, 0, $previous);
     }

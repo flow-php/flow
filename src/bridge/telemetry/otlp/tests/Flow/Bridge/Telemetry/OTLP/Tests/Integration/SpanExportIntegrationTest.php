@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Integration;
 
+use DateTimeImmutable;
 use Flow\Bridge\Telemetry\OTLP\Tests\Context\TransportConfiguration;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
@@ -93,8 +94,8 @@ final class SpanExportIntegrationTest extends IntegrationTestCase
         $tracer = $telemetry->tracer('test-component');
 
         $span = $tracer->span('event-test');
-        $span->recordEvent(GenericEvent::create('cache.hit', new \DateTimeImmutable(), ['cache.key' => 'user:123']));
-        $span->recordEvent(GenericEvent::create('db.query', new \DateTimeImmutable(), [
+        $span->recordEvent(GenericEvent::create('cache.hit', new DateTimeImmutable(), ['cache.key' => 'user:123']));
+        $span->recordEvent(GenericEvent::create('db.query', new DateTimeImmutable(), [
             'db.statement' => 'SELECT * FROM users',
         ]));
         $tracer->complete($span);

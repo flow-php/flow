@@ -8,6 +8,7 @@ use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Schema\Type\TypeAttribute;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
+use function array_column;
 use function Flow\PostgreSql\DSL\alter;
 use function Flow\PostgreSql\DSL\column;
 use function Flow\PostgreSql\DSL\column_type_serial;
@@ -55,7 +56,7 @@ final class TypeDatabaseTest extends PostgreSqlTestCase
             ->client()
             ->fetchAll('SELECT unnest(enum_range(NULL::' . self::ENUM_TYPE . ')) AS val');
 
-        $enumValues = \array_column($values, 'val');
+        $enumValues = array_column($values, 'val');
         static::assertContains('completed', $enumValues);
     }
 
@@ -129,7 +130,7 @@ final class TypeDatabaseTest extends PostgreSqlTestCase
             ->client()
             ->fetchAll('SELECT unnest(enum_range(NULL::' . self::ENUM_TYPE . ')) AS val');
 
-        $enumValues = \array_column($values, 'val');
+        $enumValues = array_column($values, 'val');
         static::assertNotContains('old_name', $enumValues);
         static::assertContains('new_name', $enumValues);
     }

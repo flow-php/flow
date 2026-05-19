@@ -10,6 +10,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\OrderEntries\Comparator;
+use Throwable;
 
 use function Flow\ETL\DSL\row;
 
@@ -38,7 +39,7 @@ final readonly class OrderEntriesTransformer implements Transformer
             ]);
 
             return $result;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->transformationFailed($this, $e);
 
             throw $e;

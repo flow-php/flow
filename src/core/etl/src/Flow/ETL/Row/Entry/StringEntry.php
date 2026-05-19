@@ -13,6 +13,8 @@ use Flow\Types\Type;
 
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_optional;
+use function mb_strtolower;
+use function mb_strtoupper;
 
 /**
  * @implements Entry<?string>
@@ -54,7 +56,7 @@ final class StringEntry implements Entry
      */
     public static function lowercase(string $name, string $value): self
     {
-        return new self($name, \mb_strtolower($value));
+        return new self($name, mb_strtolower($value));
     }
 
     /**
@@ -62,7 +64,7 @@ final class StringEntry implements Entry
      */
     public static function uppercase(string $name, string $value): self
     {
-        return new self($name, \mb_strtoupper($value));
+        return new self($name, mb_strtoupper($value));
     }
 
     public function __toString(): string
@@ -119,7 +121,7 @@ final class StringEntry implements Entry
 
     public function toLowercase(): self
     {
-        return new self($this->name, $this->value ? \mb_strtolower($this->value) : null);
+        return new self($this->name, $this->value ? mb_strtolower($this->value) : null);
     }
 
     public function toString(): string

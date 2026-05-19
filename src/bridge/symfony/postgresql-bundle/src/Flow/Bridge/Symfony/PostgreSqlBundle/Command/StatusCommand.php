@@ -13,8 +13,10 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function count;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
+use function sprintf;
 
 #[AsCommand(name: 'flow:migrations:status', description: 'View the migration status')]
 final class StatusCommand extends Command
@@ -41,9 +43,9 @@ final class StatusCommand extends Command
 
         $status = $migrator->status();
 
-        $total = \count($status);
-        $executed = \count($status->executed());
-        $pending = \count($status->pending());
+        $total = count($status);
+        $executed = count($status->executed());
+        $pending = count($status->pending());
 
         $io->title('Migration Status');
 
@@ -55,7 +57,7 @@ final class StatusCommand extends Command
         );
 
         if ($pending > 0) {
-            $io->warning(\sprintf(
+            $io->warning(sprintf(
                 '%d migration(s) pending. Run <fg=yellow>flow:migrations:migrate</> to execute.',
                 $pending,
             ));

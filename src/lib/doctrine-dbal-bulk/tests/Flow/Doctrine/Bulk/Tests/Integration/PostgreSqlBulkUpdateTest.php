@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests\Integration;
 
+use DateTime;
+use DateTimeImmutable;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
@@ -18,6 +20,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
 {
     public function test_update_multiple_rows_with_all_columns_and_multiple_primary_keys_at_once(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('account', Type::getType(Types::STRING), ['notnull' => true]),
@@ -34,7 +37,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
                 'name' => 'Name One',
                 'description' => 'Description One',
                 'active' => false,
-                'created_at' => new \DateTime('2021-01-01 10:00:00'),
+                'created_at' => new DateTime('2021-01-01 10:00:00'),
             ],
             [
                 'id' => 2,
@@ -42,7 +45,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
                 'name' => 'Name Two',
                 'description' => 'Description Two',
                 'active' => true,
-                'created_at' => new \DateTime('2021-01-01 10:00:00'),
+                'created_at' => new DateTime('2021-01-01 10:00:00'),
             ],
             [
                 'id' => 3,
@@ -50,7 +53,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
                 'name' => 'Name Three',
                 'description' => 'Description Three',
                 'active' => false,
-                'created_at' => new \DateTime('2021-01-01 10:00:00'),
+                'created_at' => new DateTime('2021-01-01 10:00:00'),
             ],
         ]));
 
@@ -64,7 +67,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
                     'name' => 'Changed name Two',
                     'description' => 'Changed description Two',
                     'active' => false,
-                    'created_at' => new \DateTime('2021-01-02 10:00:00'),
+                    'created_at' => new DateTime('2021-01-02 10:00:00'),
                 ],
                 [
                     'id' => 3,
@@ -72,7 +75,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
                     'name' => 'Changed name Three',
                     'description' => 'Changed description Three',
                     'active' => true,
-                    'created_at' => new \DateTime('2021-01-02 20:00:00'),
+                    'created_at' => new DateTime('2021-01-02 20:00:00'),
                 ],
             ]),
             PostgreSQLUpdateOptions::fromArray([
@@ -91,7 +94,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
                     'description' => 'Description One',
                     'active' => false,
                     'account' => 'Bob',
-                    'created_at' => (new \DateTimeImmutable('2021-01-01 10:00:00'))->format('Y-m-d H:i:s'),
+                    'created_at' => (new DateTimeImmutable('2021-01-01 10:00:00'))->format('Y-m-d H:i:s'),
                 ],
                 [
                     'id' => 2,
@@ -99,7 +102,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
                     'description' => 'Changed description Two',
                     'active' => false,
                     'account' => 'Bob',
-                    'created_at' => (new \DateTimeImmutable('2021-01-02 10:00:00'))->format('Y-m-d H:i:s'),
+                    'created_at' => (new DateTimeImmutable('2021-01-02 10:00:00'))->format('Y-m-d H:i:s'),
                 ],
                 [
                     'id' => 3,
@@ -107,7 +110,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
                     'description' => 'Changed description Three',
                     'active' => true,
                     'account' => 'Joe',
-                    'created_at' => (new \DateTimeImmutable('2021-01-02 20:00:00'))->format('Y-m-d H:i:s'),
+                    'created_at' => (new DateTimeImmutable('2021-01-02 20:00:00'))->format('Y-m-d H:i:s'),
                 ],
             ],
             $this->databaseContext->selectAll($table),
@@ -116,6 +119,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
 
     public function test_update_multiple_rows_with_all_columns_at_once(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
@@ -175,6 +179,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
 
     public function test_update_multiple_rows_with_selected_columns_at_once(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
@@ -222,6 +227,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
 
     public function test_update_when_bulk_data_has_not_all_columns_from_primary_key_columns(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
@@ -258,6 +264,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
 
     public function test_update_with_custom_types_using_casted_placeholders_works_with_postgresql(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
@@ -312,6 +319,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
 
     public function test_update_with_empty_primary_key_columns(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),

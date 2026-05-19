@@ -55,11 +55,11 @@ final class DefinitionConverterTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value);
         } else {
-            static::assertEquals(
-                $result,
-                $output = $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value),
-                'Expected ' . \json_encode($result) . ' got ' . \json_encode($output),
-            );
+            static::assertEquals($result, $this->definitionConverter()->toValue(
+                $repetitions,
+                definitionLevel: $level,
+                value: $value,
+            ));
         }
     }
 

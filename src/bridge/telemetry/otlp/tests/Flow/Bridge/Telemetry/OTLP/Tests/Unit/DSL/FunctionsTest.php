@@ -13,12 +13,17 @@ use Flow\Bridge\Telemetry\OTLP\Transport\GrpcTransport;
 use Flow\Bridge\Telemetry\OTLP\Transport\StreamTransport;
 use PHPUnit\Framework\TestCase;
 
+use function bin2hex;
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_curl_transport;
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_exporter;
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_grpc_transport;
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_json_serializer;
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_protobuf_serializer;
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_stream_transport;
+use function is_file;
+use function random_bytes;
+use function sys_get_temp_dir;
+use function unlink;
 
 final class FunctionsTest extends TestCase
 {
@@ -82,13 +87,13 @@ final class FunctionsTest extends TestCase
 
     public function test_otlp_stream_transport_returns_stream_transport_for_file_path(): void
     {
-        $path = \sys_get_temp_dir() . '/flow-otlp-dsl-test-' . \bin2hex(\random_bytes(4)) . '.jsonl';
+        $path = sys_get_temp_dir() . '/flow-otlp-dsl-test-' . bin2hex(random_bytes(4)) . '.jsonl';
 
         try {
             static::assertInstanceOf(StreamTransport::class, otlp_stream_transport($path));
         } finally {
-            if (\is_file($path)) {
-                \unlink($path);
+            if (is_file($path)) {
+                unlink($path);
             }
         }
     }

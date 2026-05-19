@@ -8,6 +8,8 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function str_pad;
+
 final class StrPad extends ScalarFunctionChain
 {
     public function __construct(
@@ -38,6 +40,6 @@ final class StrPad extends ScalarFunctionChain
                 );
         }
 
-        return \str_pad($value, $length, $padString, $type);
+        return str_pad($value, $length, $padString, $type);
     }
 }

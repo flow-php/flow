@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql;
 
+use function array_key_exists;
+
 final class NamedParameterNormalizer
 {
     /**
@@ -21,7 +23,7 @@ final class NamedParameterNormalizer
             static function (array $matches) use (&$parameters, &$position): string {
                 $name = $matches[1];
 
-                if (!\array_key_exists($name, $parameters)) {
+                if (!array_key_exists($name, $parameters)) {
                     $parameters[$name] = $position++;
                 }
 
@@ -46,7 +48,7 @@ final class NamedParameterNormalizer
             static function (array $matches) use (&$parameters, &$position): string {
                 $name = $matches[1];
 
-                if (!\array_key_exists($name, $parameters)) {
+                if (!array_key_exists($name, $parameters)) {
                     $parameters[$name] = $position++;
                 }
 

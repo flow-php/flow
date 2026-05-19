@@ -14,6 +14,9 @@ use Flow\Parquet\ParquetFile\Data\Converter\JsonConverter;
 use Flow\Parquet\ParquetFile\Data\Converter\TimeConverter;
 use Flow\Parquet\ParquetFile\Data\Converter\UuidConverter;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Throwable;
+
+use function array_key_exists;
 
 final class DataConverter
 {
@@ -53,7 +56,7 @@ final class DataConverter
 
         $flatPath = $column->flatPath();
 
-        if (\array_key_exists($flatPath, $this->cache)) {
+        if (array_key_exists($flatPath, $this->cache)) {
             if ($this->cache[$flatPath] === null) {
                 return $data;
             }
@@ -67,7 +70,7 @@ final class DataConverter
 
                 try {
                     return $converter->fromParquetType($data);
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     throw new DataConversionException(
                         "Failed to convert data from parquet type for column '{$flatPath}'. {$e->getMessage()}",
                         0,
@@ -86,7 +89,7 @@ final class DataConverter
     {
         $flatPath = $column->flatPath();
 
-        if (\array_key_exists($flatPath, $this->cache)) {
+        if (array_key_exists($flatPath, $this->cache)) {
             return $this->cache[$flatPath];
         }
 
@@ -111,7 +114,7 @@ final class DataConverter
 
         $flatPath = $column->flatPath();
 
-        if (\array_key_exists($flatPath, $this->cache)) {
+        if (array_key_exists($flatPath, $this->cache)) {
             if ($this->cache[$flatPath] === null) {
                 return $data;
             }

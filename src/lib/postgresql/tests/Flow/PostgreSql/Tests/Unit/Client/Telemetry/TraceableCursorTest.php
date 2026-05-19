@@ -13,8 +13,12 @@ use Flow\PostgreSql\Client\Telemetry\TraceableCursor;
 use Flow\PostgreSql\Tests\Unit\Client\RowMapper\Fake\SpyRowMapper;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
+use Generator;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use stdClass;
 
+use function array_fill;
 use function Flow\PostgreSql\DSL\pgsql_connection_params;
 use function Flow\PostgreSql\DSL\postgresql_telemetry_config;
 use function Flow\PostgreSql\DSL\postgresql_telemetry_options;
@@ -28,6 +32,8 @@ use function Flow\Telemetry\DSL\resource;
 use function Flow\Telemetry\DSL\telemetry;
 use function Flow\Telemetry\DSL\tracer_provider;
 use function Flow\Telemetry\DSL\void_exporter;
+use function str_repeat;
+use function strlen;
 
 final class TraceableCursorTest extends TestCase
 {
@@ -70,13 +76,13 @@ final class TraceableCursorTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor);
 
-        $exception = new \RuntimeException('Free failed');
+        $exception = new RuntimeException('Free failed');
         $mockCursor = $this->createMock(Cursor::class);
         $mockCursor->method('free')->willThrowException($exception);
 
         $cursor = new TraceableCursor($mockCursor, $config, $this->connectionParams(), 'SELECT * FROM users');
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Free failed');
 
         try {
@@ -84,8 +90,9 @@ final class TraceableCursorTest extends TestCase
         } finally {
             $spans = $spanProcessor->endedSpans();
             static::assertCount(1, $spans);
-            static::assertNotNull($spans[0]->status());
-            static::assertTrue($spans[0]->status()->isError());
+            $status = $spans[0]->status();
+            static::assertNotNull($status);
+            static::assertTrue($status->isError());
         }
     }
 
@@ -97,7 +104,7 @@ final class TraceableCursorTest extends TestCase
         $mockCursor = $this->createMock(Cursor::class);
         $mockCursor
             ->method('iterate')
-            ->willReturnCallback(static function (): \Generator {
+            ->willReturnCallback(static function (): Generator {
                 yield ['id' => 1];
                 yield ['id' => 2];
                 yield ['id' => 3];
@@ -126,15 +133,15 @@ final class TraceableCursorTest extends TestCase
         $mockCursor = $this->createMock(Cursor::class);
         $mockCursor
             ->method('iterate')
-            ->willReturnCallback(static function (): \Generator {
+            ->willReturnCallback(static function (): Generator {
                 yield ['id' => 1];
 
-                throw new \RuntimeException('Iteration failed');
+                throw new RuntimeException('Iteration failed');
             });
 
         $cursor = new TraceableCursor($mockCursor, $config, $this->connectionParams(), 'SELECT * FROM users');
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
 
         try {
             foreach ($cursor->iterate() as $_row) {
@@ -142,8 +149,9 @@ final class TraceableCursorTest extends TestCase
         } finally {
             $spans = $spanProcessor->endedSpans();
             static::assertCount(1, $spans);
-            static::assertNotNull($spans[0]->status());
-            static::assertTrue($spans[0]->status()->isError());
+            $status = $spans[0]->status();
+            static::assertNotNull($status);
+            static::assertTrue($status->isError());
             static::assertSame(1, $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_RESPONSE_RETURNED_ROWS]);
         }
     }
@@ -156,9 +164,9 @@ final class TraceableCursorTest extends TestCase
         $mockCursor = $this->createMock(Cursor::class);
         $mockCursor
             ->method('map')
-            ->willReturnCallback(static function (): \Generator {
-                yield new \stdClass();
-                yield new \stdClass();
+            ->willReturnCallback(static function (): Generator {
+                yield new stdClass();
+                yield new stdClass();
             });
 
         $cursor = new TraceableCursor($mockCursor, $config, $this->connectionParams(), 'SELECT * FROM users');
@@ -204,7 +212,7 @@ final class TraceableCursorTest extends TestCase
 
         $mockCursor = $this->createMock(Cursor::class);
 
-        $parameters = \array_fill(0, 20, 'value');
+        $parameters = array_fill(0, 20, 'value');
         $cursor = new TraceableCursor(
             $mockCursor,
             $config,
@@ -242,7 +250,7 @@ final class TraceableCursorTest extends TestCase
 
         $mockCursor = $this->createMock(Cursor::class);
 
-        $parameters = \array_fill(0, 20, 'value');
+        $parameters = array_fill(0, 20, 'value');
         $cursor = new TraceableCursor(
             $mockCursor,
             $config,
@@ -270,7 +278,7 @@ final class TraceableCursorTest extends TestCase
 
         $mockCursor = $this->createMock(Cursor::class);
 
-        $longValue = \str_repeat('a', 200);
+        $longValue = str_repeat('a', 200);
         $cursor = new TraceableCursor(
             $mockCursor,
             $config,
@@ -284,7 +292,8 @@ final class TraceableCursorTest extends TestCase
         static::assertCount(1, $spans);
 
         $paramValue = $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1'];
-        static::assertSame(103, \strlen($paramValue));
+        static::assertIsString($paramValue);
+        static::assertSame(103, strlen($paramValue));
         static::assertStringEndsWith('...', $paramValue);
     }
 
@@ -298,7 +307,7 @@ final class TraceableCursorTest extends TestCase
 
         $mockCursor = $this->createMock(Cursor::class);
 
-        $longValue = \str_repeat('a', 200);
+        $longValue = str_repeat('a', 200);
         $cursor = new TraceableCursor(
             $mockCursor,
             $config,
@@ -312,7 +321,8 @@ final class TraceableCursorTest extends TestCase
         static::assertCount(1, $spans);
 
         $paramValue = $spans[0]->attributes()[PostgreSqlTelemetryAttributes::DB_QUERY_PARAMETER_PREFIX . '1'];
-        static::assertSame(200, \strlen($paramValue));
+        static::assertIsString($paramValue);
+        static::assertSame(200, strlen($paramValue));
         static::assertSame($longValue, $paramValue);
     }
 

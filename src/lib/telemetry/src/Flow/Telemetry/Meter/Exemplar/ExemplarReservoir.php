@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter\Exemplar;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Meter\Exemplar;
 use Flow\Telemetry\Tracer\SpanContext;
 
@@ -49,7 +50,7 @@ interface ExemplarReservoir
         int|float $value,
         array $attributes,
         SpanContext $context,
-        \DateTimeImmutable $timestamp,
+        DateTimeImmutable $timestamp,
         int $bucketIndex = 0,
     ): void;
 

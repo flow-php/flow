@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Documentation;
 
+use ReflectionClass;
+use ReflectionMethod;
+
 final class MethodCollector
 {
     /**
@@ -16,8 +19,8 @@ final class MethodCollector
      */
     public function collect(string $className): void
     {
-        $reflectionClass = new \ReflectionClass($className);
-        $methods = $reflectionClass->getMethods(\ReflectionMethod::IS_PUBLIC);
+        $reflectionClass = new ReflectionClass($className);
+        $methods = $reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC);
 
         foreach ($methods as $method) {
             if ($method->getDeclaringClass()->getName() !== $className) {

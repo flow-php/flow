@@ -7,13 +7,14 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\boolean_entry;
 
 final class BooleanEntryTest extends FlowTestCase
 {
-    public static function is_equal_data_provider(): \Generator
+    public static function is_equal_data_provider(): Generator
     {
         yield 'equal names and values' => [true, boolean_entry('name', true), boolean_entry('name', true)];
         yield 'different names and values' => [

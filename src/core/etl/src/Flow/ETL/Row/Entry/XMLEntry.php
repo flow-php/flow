@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
+use DOMDocument;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
@@ -11,10 +12,16 @@ use Flow\ETL\Schema\Definition\XMLDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 
+use function base64_decode;
+use function base64_encode;
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
+use function gzcompress;
+use function gzuncompress;
+use function is_string;
+use function sprintf;
 
 /**
  * @implements Entry<?\DOMDocument>
@@ -25,18 +32,18 @@ final class XMLEntry implements Entry
 
     private XMLDefinition $definition;
 
-    private readonly ?\DOMDocument $value;
+    private readonly ?DOMDocument $value;
 
     public function __construct(
         private readonly string $name,
-        \DOMDocument|string|null $value,
+        DOMDocument|string|null $value,
         ?Metadata $metadata = null,
     ) {
-        if (\is_string($value)) {
-            $doc = new \DOMDocument();
+        if (is_string($value)) {
+            $doc = new DOMDocument();
 
             if (!@$doc->loadXML($value)) {
-                throw new InvalidArgumentException(\sprintf('Given string "%s" is not valid XML', $value));
+                throw new InvalidArgumentException(sprintf('Given string "%s" is not valid XML', $value));
             }
 
             $this->value = $doc;
@@ -52,7 +59,7 @@ final class XMLEntry implements Entry
         return [
             'name' => $this->name,
             /** @phpstan-ignore-next-line  */
-            'value' => $this->value === null ? null : \base64_encode(\gzcompress($this->toString())),
+            'value' => $this->value === null ? null : base64_encode(gzcompress($this->toString())),
         ];
     }
 
@@ -82,12 +89,12 @@ final class XMLEntry implements Entry
         }
 
         /** @phpstan-ignore-next-line  */
-        $xmlString = \gzuncompress(\base64_decode((string) $data['value'], true));
-        $doc = new \DOMDocument();
+        $xmlString = gzuncompress(base64_decode((string) $data['value'], true));
+        $doc = new DOMDocument();
 
         /** @phpstan-ignore-next-line  */
         if (!@$doc->loadXML($xmlString)) {
-            throw new InvalidArgumentException(\sprintf('Given string "%s" is not valid XML', $xmlString));
+            throw new InvalidArgumentException(sprintf('Given string "%s" is not valid XML', $xmlString));
         }
 
         $this->value = $doc;
@@ -133,7 +140,7 @@ final class XMLEntry implements Entry
     public function map(callable $mapper): static
     {
         $mappedValue = $mapper($this->value());
-        $mappedValue = type_optional(type_instance_of(\DOMDocument::class))->assert($mappedValue);
+        $mappedValue = type_optional(type_instance_of(DOMDocument::class))->assert($mappedValue);
 
         return new self($this->name, $mappedValue);
     }
@@ -163,7 +170,7 @@ final class XMLEntry implements Entry
         return $this->definition->type();
     }
 
-    public function value(): ?\DOMDocument
+    public function value(): ?DOMDocument
     {
         return $this->value;
     }

@@ -8,6 +8,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\GroupBy;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
+use Generator;
 
 /**
  * Groups all rows and applies aggregation functions.
@@ -20,7 +21,7 @@ final readonly class GroupByProcessor implements Processor
         public GroupBy $groupBy,
     ) {}
 
-    public function process(\Generator $rows, FlowContext $context): \Generator
+    public function process(Generator $rows, FlowContext $context): Generator
     {
         foreach ($rows as $batch) {
             /** @var Rows $batch */

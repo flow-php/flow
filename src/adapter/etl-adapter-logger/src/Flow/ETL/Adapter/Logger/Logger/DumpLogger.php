@@ -7,6 +7,10 @@ namespace Flow\ETL\Adapter\Logger\Logger;
 use Psr\Log\AbstractLogger;
 use Symfony\Component\VarDumper\VarDumper;
 
+use function class_exists;
+use function is_string;
+use function var_dump;
+
 final class DumpLogger extends AbstractLogger
 {
     /**
@@ -16,15 +20,15 @@ final class DumpLogger extends AbstractLogger
      */
     public function log($level, $message, array $context = []): void
     {
-        if (!\is_string($message)) {
+        if (!is_string($message)) {
             return;
         }
 
-        if (\class_exists('\\Symfony\\Component\\VarDumper\\VarDumper')) {
+        if (class_exists('\\Symfony\\Component\\VarDumper\\VarDumper')) {
             VarDumper::dump([$message => $context]);
         } else {
             /** @phpstan-ignore-next-line */
-            \var_dump([$message => $context]);
+            var_dump([$message => $context]);
         }
     }
 }

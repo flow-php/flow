@@ -6,17 +6,24 @@ namespace Flow\ETL\Adapter\Doctrine\Tests\Unit;
 
 use Doctrine\DBAL\Types\BigIntType;
 use Doctrine\DBAL\Types\BlobType;
+use Doctrine\DBAL\Types\BooleanType as DoctrineBooleanType;
 use Doctrine\DBAL\Types\DateImmutableType;
 use Doctrine\DBAL\Types\DateTimeImmutableType;
+use Doctrine\DBAL\Types\DateTimeType as DoctrineDateTimeType;
 use Doctrine\DBAL\Types\DateTimeTzImmutableType;
 use Doctrine\DBAL\Types\DateTimeTzType;
+use Doctrine\DBAL\Types\DateType as DoctrineDateType;
 use Doctrine\DBAL\Types\DecimalType;
+use Doctrine\DBAL\Types\FloatType as DoctrineFloatType;
 use Doctrine\DBAL\Types\GuidType;
+use Doctrine\DBAL\Types\IntegerType as DoctrineIntegerType;
 use Doctrine\DBAL\Types\JsonType as DbalJsonType;
 use Doctrine\DBAL\Types\SmallFloatType;
 use Doctrine\DBAL\Types\SmallIntType;
+use Doctrine\DBAL\Types\StringType as DoctrineStringType;
 use Doctrine\DBAL\Types\TextType;
 use Doctrine\DBAL\Types\TimeImmutableType;
+use Doctrine\DBAL\Types\TimeType as DoctrineTimeType;
 use Flow\ETL\Adapter\Doctrine\TypesMap;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Types\Type\Logical\DateTimeType;
@@ -36,7 +43,9 @@ use Flow\Types\Type\Native\EnumType;
 use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
+use InvalidArgumentException as BaseInvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 final class TypesMapTest extends TestCase
 {
@@ -82,7 +91,7 @@ final class TypesMapTest extends TestCase
 
         /** @phpstan-ignore-next-line */
         new TypesMap([
-            StringType::class => \stdClass::class,
+            StringType::class => stdClass::class,
         ]);
     }
 
@@ -93,7 +102,7 @@ final class TypesMapTest extends TestCase
 
         /** @phpstan-ignore-next-line */
         new TypesMap([
-            'InvalidClass' => \Doctrine\DBAL\Types\StringType::class,
+            'InvalidClass' => DoctrineStringType::class,
         ]);
     }
 
@@ -104,7 +113,7 @@ final class TypesMapTest extends TestCase
 
         /** @phpstan-ignore-next-line */
         new TypesMap([
-            \stdClass::class => \Doctrine\DBAL\Types\StringType::class,
+            stdClass::class => DoctrineStringType::class,
         ]);
     }
 
@@ -130,7 +139,7 @@ final class TypesMapTest extends TestCase
 
         $result = $typesMap->toDbalType(StringType::class);
 
-        static::assertSame(\Doctrine\DBAL\Types\StringType::class, $result);
+        static::assertSame(DoctrineStringType::class, $result);
     }
 
     public function test_constructor_with_mixed_valid_and_invalid_types(): void
@@ -141,7 +150,7 @@ final class TypesMapTest extends TestCase
         /** @phpstan-ignore-next-line */
         new TypesMap([
             StringType::class => TextType::class,
-            'InvalidFlowType' => \Doctrine\DBAL\Types\StringType::class,
+            'InvalidFlowType' => DoctrineStringType::class,
         ]);
     }
 
@@ -157,7 +166,7 @@ final class TypesMapTest extends TestCase
         static::assertSame(TextType::class, $typesMap->toDbalType(StringType::class));
         static::assertSame(BigIntType::class, $typesMap->toDbalType(IntegerType::class));
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(BaseInvalidArgumentException::class);
         $this->expectExceptionMessage('"' . BooleanType::class . '" is not a valid type.');
 
         $typesMap->toDbalType(BooleanType::class);
@@ -166,22 +175,22 @@ final class TypesMapTest extends TestCase
     public function test_default_dbal_types_constant_mapping(): void
     {
         $expectedMappings = [
-            \Doctrine\DBAL\Types\StringType::class => StringType::class,
+            DoctrineStringType::class => StringType::class,
             TextType::class => StringType::class,
-            \Doctrine\DBAL\Types\IntegerType::class => IntegerType::class,
+            DoctrineIntegerType::class => IntegerType::class,
             BigIntType::class => IntegerType::class,
             SmallIntType::class => IntegerType::class,
-            \Doctrine\DBAL\Types\FloatType::class => FloatType::class,
+            DoctrineFloatType::class => FloatType::class,
             SmallFloatType::class => FloatType::class,
-            \Doctrine\DBAL\Types\BooleanType::class => BooleanType::class,
-            \Doctrine\DBAL\Types\DateType::class => DateType::class,
+            DoctrineBooleanType::class => BooleanType::class,
+            DoctrineDateType::class => DateType::class,
             DateImmutableType::class => DateType::class,
             TimeImmutableType::class => TimeType::class,
-            \Doctrine\DBAL\Types\TimeType::class => TimeType::class,
+            DoctrineTimeType::class => TimeType::class,
             DateTimeImmutableType::class => DateTimeType::class,
             DateTimeTzImmutableType::class => DateTimeType::class,
             DateTimeTzType::class => DateTimeType::class,
-            \Doctrine\DBAL\Types\DateTimeType::class => DateTimeType::class,
+            DoctrineDateTimeType::class => DateTimeType::class,
             GuidType::class => UuidType::class,
             DbalJsonType::class => JsonType::class,
             BlobType::class => StringType::class,
@@ -194,20 +203,20 @@ final class TypesMapTest extends TestCase
     public function test_default_flow_types_constant_mapping(): void
     {
         $expectedMappings = [
-            StringType::class => \Doctrine\DBAL\Types\StringType::class,
-            IntegerType::class => \Doctrine\DBAL\Types\IntegerType::class,
-            FloatType::class => \Doctrine\DBAL\Types\FloatType::class,
-            BooleanType::class => \Doctrine\DBAL\Types\BooleanType::class,
+            StringType::class => DoctrineStringType::class,
+            IntegerType::class => DoctrineIntegerType::class,
+            FloatType::class => DoctrineFloatType::class,
+            BooleanType::class => DoctrineBooleanType::class,
             DateType::class => DateImmutableType::class,
             TimeType::class => TimeImmutableType::class,
             DateTimeType::class => DateTimeImmutableType::class,
             UuidType::class => GuidType::class,
             JsonType::class => DbalJsonType::class,
-            XMLType::class => \Doctrine\DBAL\Types\StringType::class,
-            XMLElementType::class => \Doctrine\DBAL\Types\StringType::class,
-            HTMLType::class => \Doctrine\DBAL\Types\StringType::class,
-            HTMLElementType::class => \Doctrine\DBAL\Types\StringType::class,
-            EnumType::class => \Doctrine\DBAL\Types\StringType::class,
+            XMLType::class => DoctrineStringType::class,
+            XMLElementType::class => DoctrineStringType::class,
+            HTMLType::class => DoctrineStringType::class,
+            HTMLElementType::class => DoctrineStringType::class,
+            EnumType::class => DoctrineStringType::class,
             ListType::class => DbalJsonType::class,
             MapType::class => DbalJsonType::class,
             StructureType::class => DbalJsonType::class,
@@ -230,10 +239,10 @@ final class TypesMapTest extends TestCase
     public function test_to_dbal_type_throws_exception_for_unknown_flow_type(): void
     {
         $typesMap = new TypesMap([
-            StringType::class => \Doctrine\DBAL\Types\StringType::class,
+            StringType::class => DoctrineStringType::class,
         ]);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(BaseInvalidArgumentException::class);
         $this->expectExceptionMessage('"' . IntegerType::class . '" is not a valid type.');
 
         $typesMap->toDbalType(IntegerType::class);
@@ -256,14 +265,14 @@ final class TypesMapTest extends TestCase
 
         $result = $typesMap->toDbalType(StringType::class);
 
-        static::assertSame(\Doctrine\DBAL\Types\StringType::class, $result);
+        static::assertSame(DoctrineStringType::class, $result);
     }
 
     public function test_to_flow_type_throws_exception_for_unknown_dbal_type(): void
     {
         $typesMap = new TypesMap([]);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(BaseInvalidArgumentException::class);
         $this->expectExceptionMessage('"UnknownType" is not a valid Doctrine DBAL type.');
 
         /** @phpstan-ignore-next-line */
@@ -303,7 +312,7 @@ final class TypesMapTest extends TestCase
     {
         $typesMap = new TypesMap([]);
 
-        $result = $typesMap->toFlowType(\Doctrine\DBAL\Types\StringType::class);
+        $result = $typesMap->toFlowType(DoctrineStringType::class);
 
         static::assertInstanceOf(StringType::class, $result);
     }
@@ -312,13 +321,13 @@ final class TypesMapTest extends TestCase
     {
         $typesMap = new TypesMap([]);
 
-        $stringResult = $typesMap->toFlowType(\Doctrine\DBAL\Types\StringType::class);
-        $integerResult = $typesMap->toFlowType(\Doctrine\DBAL\Types\IntegerType::class);
-        $floatResult = $typesMap->toFlowType(\Doctrine\DBAL\Types\FloatType::class);
-        $booleanResult = $typesMap->toFlowType(\Doctrine\DBAL\Types\BooleanType::class);
-        $dateResult = $typesMap->toFlowType(\Doctrine\DBAL\Types\DateType::class);
-        $timeResult = $typesMap->toFlowType(\Doctrine\DBAL\Types\TimeType::class);
-        $dateTimeResult = $typesMap->toFlowType(\Doctrine\DBAL\Types\DateTimeType::class);
+        $stringResult = $typesMap->toFlowType(DoctrineStringType::class);
+        $integerResult = $typesMap->toFlowType(DoctrineIntegerType::class);
+        $floatResult = $typesMap->toFlowType(DoctrineFloatType::class);
+        $booleanResult = $typesMap->toFlowType(DoctrineBooleanType::class);
+        $dateResult = $typesMap->toFlowType(DoctrineDateType::class);
+        $timeResult = $typesMap->toFlowType(DoctrineTimeType::class);
+        $dateTimeResult = $typesMap->toFlowType(DoctrineDateTimeType::class);
         $jsonResult = $typesMap->toFlowType(DbalJsonType::class);
 
         static::assertInstanceOf(StringType::class, $stringResult);

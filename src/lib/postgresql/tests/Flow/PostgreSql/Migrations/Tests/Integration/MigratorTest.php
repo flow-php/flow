@@ -7,8 +7,10 @@ namespace Flow\PostgreSql\Migrations\Tests\Integration;
 use Flow\PostgreSql\Migrations\Configuration;
 use Flow\PostgreSql\Migrations\Direction;
 use Flow\PostgreSql\Migrations\Executor\DefaultMigrationExecutor;
+use Flow\PostgreSql\Migrations\Migration;
 use Flow\PostgreSql\Migrations\Migrator;
 use Flow\PostgreSql\Migrations\Repository\AvailableMigration;
+use Flow\PostgreSql\Migrations\Rollback;
 use Flow\PostgreSql\Migrations\Store\PostgreSqlMigrationStore;
 use Flow\PostgreSql\Migrations\Tests\Double\FailingMigration;
 use Flow\PostgreSql\Migrations\Tests\Double\FakeCatalogProvider;
@@ -17,6 +19,9 @@ use Flow\PostgreSql\Migrations\Tests\Double\SpyMigration;
 use Flow\PostgreSql\Migrations\Version;
 use Flow\PostgreSql\Schema\Catalog;
 use PHPUnit\Framework\TestCase;
+use Throwable;
+
+use function Flow\Types\DSL\type_instance_of;
 
 final class MigratorTest extends TestCase
 {
@@ -67,7 +72,7 @@ final class MigratorTest extends TestCase
 
         try {
             $migrator->migrate(allOrNothing: true);
-        } catch (\Throwable) {
+        } catch (Throwable) {
         }
 
         static::assertCount(0, $this->store->executedMigrations());
@@ -192,19 +197,29 @@ final class MigratorTest extends TestCase
             new AvailableMigration(
                 Version::fromString('20260401120000'),
                 'create_users',
-                require $fixturesPath . '/20260401120000_create_users/migration.php',
-                require $fixturesPath . '/20260401120000_create_users/rollback.php',
+                type_instance_of(Migration::class)->assert(
+                    require $fixturesPath . '/20260401120000_create_users/migration.php',
+                ),
+                type_instance_of(Rollback::class)->assert(
+                    require $fixturesPath . '/20260401120000_create_users/rollback.php',
+                ),
             ),
             new AvailableMigration(
                 Version::fromString('20260402100000'),
                 'seed_data',
-                require $fixturesPath . '/20260402100000_seed_data/migration.php',
-                require $fixturesPath . '/20260402100000_seed_data/rollback.php',
+                type_instance_of(Migration::class)->assert(
+                    require $fixturesPath . '/20260402100000_seed_data/migration.php',
+                ),
+                type_instance_of(Rollback::class)->assert(
+                    require $fixturesPath . '/20260402100000_seed_data/rollback.php',
+                ),
             ),
             new AvailableMigration(
                 Version::fromString('20260403090000'),
                 'add_column',
-                require $fixturesPath . '/20260403090000_add_column/migration.php',
+                type_instance_of(Migration::class)->assert(
+                    require $fixturesPath . '/20260403090000_add_column/migration.php',
+                ),
                 null,
             ),
         );

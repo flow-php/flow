@@ -7,6 +7,12 @@ namespace Flow\Parquet\BinaryReader;
 use Flow\Parquet\BinaryReader;
 use Flow\Parquet\DataSize;
 use Flow\Parquet\Exception\OutOfBoundsException;
+use Generator;
+
+use function intdiv;
+use function ord;
+use function strlen;
+use function substr;
 
 final class BinaryBufferReader implements BinaryReader
 {
@@ -23,7 +29,7 @@ final class BinaryBufferReader implements BinaryReader
     ) {
         $this->positionBits = 0;
         $this->positionBytes = 0;
-        $bufferLen = \strlen($buffer);
+        $bufferLen = strlen($buffer);
         $this->remainingBytes = $bufferLen;
         $this->lengthBits = $bufferLen * 8;
     }
@@ -38,16 +44,16 @@ final class BinaryBufferReader implements BinaryReader
         return new DataSize($this->positionBits);
     }
 
-    public function readBits(int $total): \Generator
+    public function readBits(int $total): Generator
     {
         $bytePosition = $this->positionBytes;
         $bitOffset = $this->positionBits % 8;
-        $bytesNeeded = \intdiv($bitOffset + $total - 1, 8) + 1;
-        $currentBytes = \substr($this->buffer, $bytePosition, $bytesNeeded);
+        $bytesNeeded = intdiv($bitOffset + $total - 1, 8) + 1;
+        $currentBytes = substr($this->buffer, $bytePosition, $bytesNeeded);
         $bitsRead = 0;
 
         for ($i = 0; $i < $bytesNeeded; $i++) {
-            $byte = \ord($currentBytes[$i] ?? '');
+            $byte = ord($currentBytes[$i] ?? '');
 
             for ($j = $bitOffset; $j < 8; $j++) {
                 yield ($byte >> $j) & 1;
@@ -56,8 +62,8 @@ final class BinaryBufferReader implements BinaryReader
                 if ($bitsRead === $total) {
                     $bitsAdvanced = ($i * 8) + $j + 1 - $bitOffset;
                     $this->positionBits += $bitsAdvanced;
-                    $this->positionBytes = \intdiv($this->positionBits, 8);
-                    $this->remainingBytes = \intdiv($this->lengthBits - $this->positionBits, 8);
+                    $this->positionBytes = intdiv($this->positionBits, 8);
+                    $this->remainingBytes = intdiv($this->lengthBits - $this->positionBits, 8);
 
                     return;
                 }
@@ -68,7 +74,7 @@ final class BinaryBufferReader implements BinaryReader
 
     public function readBytes(int $total): string
     {
-        $raw = \substr($this->buffer, $this->positionBytes, $total);
+        $raw = substr($this->buffer, $this->positionBytes, $total);
 
         $this->positionBits += 8 * $total;
         $this->positionBytes += $total;
@@ -83,11 +89,11 @@ final class BinaryBufferReader implements BinaryReader
         $shift = 0;
 
         do {
-            if ($this->positionBytes >= \strlen($this->buffer)) {
+            if ($this->positionBytes >= strlen($this->buffer)) {
                 throw new OutOfBoundsException('Buffer overflow: attempted to read beyond buffer length in readVarInt');
             }
 
-            $byte = \ord($this->buffer[$this->positionBytes]);
+            $byte = ord($this->buffer[$this->positionBytes]);
             $this->positionBits += 8;
             $this->positionBytes++;
             $this->remainingBytes--;
@@ -107,7 +113,7 @@ final class BinaryBufferReader implements BinaryReader
     public function seekBits(int $bits): void
     {
         $this->positionBits += $bits;
-        $this->positionBytes = \intdiv($this->positionBits, 8);
+        $this->positionBytes = intdiv($this->positionBits, 8);
         $this->lengthBits -= $bits;
     }
 

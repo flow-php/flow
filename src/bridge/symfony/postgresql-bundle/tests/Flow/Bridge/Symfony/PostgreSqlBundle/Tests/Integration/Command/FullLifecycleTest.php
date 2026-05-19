@@ -8,12 +8,15 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
+use function bin2hex;
+use function random_bytes;
+
 final class FullLifecycleTest extends TestCase
 {
     public function test_create_drop_create_diff_migrate_prev_next_latest(): void
     {
         $context = new CommandTestContext();
-        $testDbName = 'flow_test_lifecycle_' . \bin2hex(\random_bytes(4));
+        $testDbName = 'flow_test_lifecycle_' . bin2hex(random_bytes(4));
 
         try {
             $context->createDatabase($testDbName);
@@ -68,7 +71,7 @@ final class FullLifecycleTest extends TestCase
     public function test_migrate_with_no_migrations_available(): void
     {
         $context = new CommandTestContext();
-        $testDbName = 'flow_test_empty_' . \bin2hex(\random_bytes(4));
+        $testDbName = 'flow_test_empty_' . bin2hex(random_bytes(4));
 
         try {
             $context->createDatabase($testDbName);

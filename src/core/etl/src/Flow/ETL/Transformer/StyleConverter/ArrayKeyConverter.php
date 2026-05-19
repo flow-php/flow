@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer\StyleConverter;
 
+use function is_array;
+use function is_string;
+
 final class ArrayKeyConverter
 {
     /**
@@ -29,9 +32,9 @@ final class ArrayKeyConverter
         $newArray = [];
 
         foreach ($array as $key => $value) {
-            $newKey = \is_string($key) ? ($this->transformer)($key) : $key;
+            $newKey = is_string($key) ? ($this->transformer)($key) : $key;
 
-            if (\is_array($value)) {
+            if (is_array($value)) {
                 $value = $this->convert($value);
             }
 

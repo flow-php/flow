@@ -8,6 +8,8 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function in_array;
+
 final class IsIn extends ScalarFunctionChain
 {
     /**
@@ -30,6 +32,6 @@ final class IsIn extends ScalarFunctionChain
                 ->invalidResult(new InvalidArgumentException('IsIn function requires non-null array'));
         }
 
-        return \in_array($needle, $haystack, true);
+        return in_array($needle, $haystack, true);
     }
 }

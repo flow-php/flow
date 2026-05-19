@@ -6,22 +6,26 @@ namespace Flow\ETL\Tests\Integration\Pipeline;
 
 use Flow\ETL\Loader;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Override;
 
+use function file_exists;
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\lit;
+use function mkdir;
+use function unlink;
 
 final class SynchronousPipelineTest extends FlowIntegrationTestCase
 {
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
 
-        if (!\file_exists(__DIR__ . '/var')) {
-            \mkdir(__DIR__ . '/var');
+        if (!file_exists(__DIR__ . '/var')) {
+            mkdir(__DIR__ . '/var');
         }
     }
 
@@ -29,8 +33,8 @@ final class SynchronousPipelineTest extends FlowIntegrationTestCase
     {
         $path = __DIR__ . '/var/synchronous_pipeline_' . __FUNCTION__ . '.csv';
 
-        if (\file_exists($path)) {
-            \unlink($path);
+        if (file_exists($path)) {
+            unlink($path);
         }
 
         df()

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Meter\Exemplar;
 
 use Flow\Telemetry\Tracer\SpanContext;
+use Stringable;
 
 /**
  * Determines whether an exemplar should be recorded for a metric measurement.
@@ -21,7 +22,7 @@ use Flow\Telemetry\Tracer\SpanContext;
  * }
  * ```
  */
-interface ExemplarFilter extends \Stringable
+interface ExemplarFilter extends Stringable
 {
     /**
      * Determine whether to record an exemplar for this measurement.

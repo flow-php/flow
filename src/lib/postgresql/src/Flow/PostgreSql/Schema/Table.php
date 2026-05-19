@@ -21,6 +21,7 @@ use Flow\PostgreSql\Schema\Constraint\PrimaryKey;
 use Flow\PostgreSql\Schema\Constraint\UniqueConstraint;
 use Flow\PostgreSql\Schema\Exception\ColumnNotFoundException;
 
+use function array_map;
 use function Flow\PostgreSql\DSL\column;
 use function Flow\PostgreSql\DSL\create;
 
@@ -34,7 +35,7 @@ use function Flow\PostgreSql\DSL\create;
  * @phpstan-import-type CheckConstraintShape from CheckConstraint
  * @phpstan-import-type ExcludeConstraintShape from ExcludeConstraint
  *
- * @phpstan-type TableShape = array{schema?: string, name: string, columns: non-empty-list<ColumnShape>, primary_key: ?PrimaryKeyShape, indexes: list<IndexShape>, foreign_keys: list<ForeignKeyShape>, unique_constraints: list<UniqueConstraintShape>, check_constraints: list<CheckConstraintShape>, exclude_constraints: list<ExcludeConstraintShape>, triggers: list<TriggerShape>, unlogged: bool, partition_strategy: ?string, partition_columns: list<string>, inherits: list<string>, tablespace: ?string}
+ * @phpstan-type TableShape = array{schema?: string, name: string, columns: non-empty-list<ColumnShape>, primary_key?: ?PrimaryKeyShape, indexes?: list<IndexShape>, foreign_keys?: list<ForeignKeyShape>, unique_constraints?: list<UniqueConstraintShape>, check_constraints?: list<CheckConstraintShape>, exclude_constraints?: list<ExcludeConstraintShape>, triggers?: list<TriggerShape>, unlogged?: bool, partition_strategy?: ?string, partition_columns?: list<string>, inherits?: list<string>, tablespace?: ?string}
  */
 final readonly class Table
 {
@@ -75,24 +76,24 @@ final readonly class Table
         return new self(
             schema: $data['schema'] ?? 'public',
             name: $data['name'],
-            columns: \array_map(static fn(array $col): Column => Column::fromArray($col), $data['columns']),
+            columns: array_map(static fn(array $col): Column => Column::fromArray($col), $data['columns']),
             primaryKey: array_key_exists('primary_key', $data) && $data['primary_key'] !== null
                 ? PrimaryKey::fromArray($data['primary_key'])
                 : null,
-            indexes: \array_map(static fn(array $idx): Index => Index::fromArray($idx), $data['indexes'] ?? []),
-            foreignKeys: \array_map(static fn(array $fk): ForeignKey => ForeignKey::fromArray(
+            indexes: array_map(static fn(array $idx): Index => Index::fromArray($idx), $data['indexes'] ?? []),
+            foreignKeys: array_map(static fn(array $fk): ForeignKey => ForeignKey::fromArray(
                 $fk,
             ), $data['foreign_keys'] ?? []),
-            uniqueConstraints: \array_map(static fn(array $uc): UniqueConstraint => UniqueConstraint::fromArray(
+            uniqueConstraints: array_map(static fn(array $uc): UniqueConstraint => UniqueConstraint::fromArray(
                 $uc,
             ), $data['unique_constraints'] ?? []),
-            checkConstraints: \array_map(static fn(array $cc): CheckConstraint => CheckConstraint::fromArray(
+            checkConstraints: array_map(static fn(array $cc): CheckConstraint => CheckConstraint::fromArray(
                 $cc,
             ), $data['check_constraints'] ?? []),
-            excludeConstraints: \array_map(static fn(array $ec): ExcludeConstraint => ExcludeConstraint::fromArray(
+            excludeConstraints: array_map(static fn(array $ec): ExcludeConstraint => ExcludeConstraint::fromArray(
                 $ec,
             ), $data['exclude_constraints'] ?? []),
-            triggers: \array_map(static fn(array $t): Trigger => Trigger::fromArray($t), $data['triggers'] ?? []),
+            triggers: array_map(static fn(array $t): Trigger => Trigger::fromArray($t), $data['triggers'] ?? []),
             unlogged: $data['unlogged'] ?? false,
             partitionStrategy: array_key_exists('partition_strategy', $data) && $data['partition_strategy'] !== null
                 ? PartitionStrategy::from($data['partition_strategy'])
@@ -119,7 +120,7 @@ final readonly class Table
      */
     public function columnNames(): array
     {
-        return \array_map(static fn(Column $c): string => $c->name, $this->columns);
+        return array_map(static fn(Column $c): string => $c->name, $this->columns);
     }
 
     public function hasColumn(string $name): bool
@@ -141,23 +142,23 @@ final readonly class Table
         return [
             'schema' => $this->schema,
             'name' => $this->name,
-            'columns' => \array_map(static fn(Column $col): array => $col->normalize(), $this->columns),
+            'columns' => array_map(static fn(Column $col): array => $col->normalize(), $this->columns),
             'primary_key' => $this->primaryKey?->normalize(),
-            'indexes' => \array_map(static fn(Index $idx): array => $idx->normalize(), $this->indexes),
-            'foreign_keys' => \array_map(static fn(ForeignKey $fk): array => $fk->normalize(), $this->foreignKeys),
-            'unique_constraints' => \array_map(
+            'indexes' => array_map(static fn(Index $idx): array => $idx->normalize(), $this->indexes),
+            'foreign_keys' => array_map(static fn(ForeignKey $fk): array => $fk->normalize(), $this->foreignKeys),
+            'unique_constraints' => array_map(
                 static fn(UniqueConstraint $uc): array => $uc->normalize(),
                 $this->uniqueConstraints,
             ),
-            'check_constraints' => \array_map(
+            'check_constraints' => array_map(
                 static fn(CheckConstraint $cc): array => $cc->normalize(),
                 $this->checkConstraints,
             ),
-            'exclude_constraints' => \array_map(
+            'exclude_constraints' => array_map(
                 static fn(ExcludeConstraint $ec): array => $ec->normalize(),
                 $this->excludeConstraints,
             ),
-            'triggers' => \array_map(static fn(Trigger $t): array => $t->normalize(), $this->triggers),
+            'triggers' => array_map(static fn(Trigger $t): array => $t->normalize(), $this->triggers),
             'unlogged' => $this->unlogged,
             'partition_strategy' => $this->partitionStrategy?->value,
             'partition_columns' => $this->partitionColumns,
@@ -292,7 +293,7 @@ final readonly class Table
         }
 
         foreach ($this->triggers as $trigger) {
-            $qbEvents = \array_map(
+            $qbEvents = array_map(
                 static fn(TriggerEvent $e): QbTriggerEvent => QbTriggerEvent::{$e->name},
                 $trigger->events,
             );

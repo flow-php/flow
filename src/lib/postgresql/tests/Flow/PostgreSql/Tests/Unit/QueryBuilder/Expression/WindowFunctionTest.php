@@ -14,6 +14,7 @@ use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PostgreSql\QueryBuilder\Expression\Column;
 use Flow\PostgreSql\QueryBuilder\Expression\WindowFunction;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
 final class WindowFunctionTest extends TestCase
 {
@@ -28,12 +29,11 @@ final class WindowFunctionTest extends TestCase
 
         $node = $windowFunc->toAst();
 
-        static::assertNotNull($node->getFuncCall());
-
         $funcCall = $node->getFuncCall();
-        static::assertNotNull($funcCall->getOver());
+        static::assertNotNull($funcCall);
 
         $over = $funcCall->getOver();
+        static::assertNotNull($over);
         static::assertNotNull($over->getPartitionClause());
         static::assertCount(1, $over->getPartitionClause());
         static::assertNotNull($over->getOrderClause());
@@ -46,9 +46,8 @@ final class WindowFunctionTest extends TestCase
 
         $node = $windowFunc->toAst();
 
-        static::assertNotNull($node->getFuncCall());
-
         $funcCall = $node->getFuncCall();
+        static::assertNotNull($funcCall);
         static::assertNotNull($funcCall->getOver());
     }
 
@@ -143,8 +142,7 @@ final class WindowFunctionTest extends TestCase
     {
         $this->expectException(InvalidExpressionException::class);
 
-        /** @phpstan-ignore argument.type (intentionally testing exception) */
-        new WindowFunction([]);
+        (new ReflectionClass(WindowFunction::class))->newInstance([]);
     }
 
     public function test_with_args_creates_new_instance(): void

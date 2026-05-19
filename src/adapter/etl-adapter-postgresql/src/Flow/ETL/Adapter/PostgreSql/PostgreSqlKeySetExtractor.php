@@ -14,9 +14,20 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\Sql;
+use Generator;
 
+use function array_key_exists;
+use function array_merge;
+use function end;
+use function explode;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\PostgreSql\DSL\sql_to_keyset_query;
+use function get_debug_type;
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_string;
+use function sprintf;
 
 final class PostgreSqlKeySetExtractor implements Extractor
 {
@@ -36,7 +47,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
         private readonly array $parameters = [],
     ) {}
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         $sql = $this->query instanceof Sql ? $this->query->toSql() : $this->query;
 
@@ -46,7 +57,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
         while (true) {
             $paginatedSql = $this->applyKeysetPagination($sql, $this->pageSize, $cursorValues);
 
-            $cursor = $this->client->cursor($paginatedSql, \array_merge($this->parameters, $cursorValues ?? []));
+            $cursor = $this->client->cursor($paginatedSql, array_merge($this->parameters, $cursorValues ?? []));
 
             $hasRows = false;
             $lastRow = null;
@@ -131,8 +142,8 @@ final class PostgreSqlKeySetExtractor implements Extractor
         foreach ($this->keySet->keys as $key) {
             $columnName = $this->getColumnName($key);
 
-            if (!\array_key_exists($columnName, $row)) {
-                throw new RuntimeException(\sprintf(
+            if (!array_key_exists($columnName, $row)) {
+                throw new RuntimeException(sprintf(
                     'Column "%s" not found in result row for keyset pagination',
                     $columnName,
                 ));
@@ -141,16 +152,16 @@ final class PostgreSqlKeySetExtractor implements Extractor
             $value = $row[$columnName];
 
             if ($value === null) {
-                throw new RuntimeException(\sprintf(
+                throw new RuntimeException(sprintf(
                     'NULL value found in column "%s" for keyset pagination; key columns must be non-null',
                     $columnName,
                 ));
             }
 
-            if (!\is_string($value) && !\is_int($value) && !\is_float($value) && !\is_bool($value)) {
-                throw new RuntimeException(\sprintf(
+            if (!is_string($value) && !is_int($value) && !is_float($value) && !is_bool($value)) {
+                throw new RuntimeException(sprintf(
                     'Unsupported value type "%s" in column "%s" for keyset pagination',
-                    \get_debug_type($value),
+                    get_debug_type($value),
                     $columnName,
                 ));
             }
@@ -163,8 +174,8 @@ final class PostgreSqlKeySetExtractor implements Extractor
 
     private function getColumnName(Key $key): string
     {
-        $parts = \explode('.', $key->column);
+        $parts = explode('.', $key->column);
 
-        return \end($parts);
+        return end($parts);
     }
 }

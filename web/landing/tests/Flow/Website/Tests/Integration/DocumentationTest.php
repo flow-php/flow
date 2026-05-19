@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Website\Tests\Integration;
 
 use Flow\Website\Kernel;
+use Override;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class DocumentationTest extends WebTestCase
@@ -39,7 +40,7 @@ final class DocumentationTest extends WebTestCase
         static::assertGreaterThan(0, $client->getCrawler()->filter('[data-dsl-type]')->count());
     }
 
-    #[\Override]
+    #[Override]
     protected static function getKernelClass(): string
     {
         return Kernel::class;

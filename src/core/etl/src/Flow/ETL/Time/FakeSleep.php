@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Time;
 
+use function count;
+
 final class FakeSleep implements Sleep
 {
     /**
@@ -27,7 +29,7 @@ final class FakeSleep implements Sleep
 
     public function sleepCount(): int
     {
-        return \count($this->sleepDurations);
+        return count($this->sleepDurations);
     }
 
     /**

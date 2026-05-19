@@ -5,16 +5,20 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Tests\Integration\OS\Windows;
 
 use Flow\Filesystem\Tests\OperatingSystem;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Filesystem\DSL\path_real;
+use function getcwd;
+use function getenv;
+use function str_replace;
 
 final class RealpathTest extends TestCase
 {
     use OperatingSystem;
 
-    public static function windows_backslash_normalization(): \Generator
+    public static function windows_backslash_normalization(): Generator
     {
         yield ['C:\\path\\to\\file.txt', 'C:/path/to/file.txt'];
         yield ['C:\\Windows\\System32', 'C:/Windows/System32'];
@@ -54,7 +58,7 @@ final class RealpathTest extends TestCase
 
     public function test_windows_home_directory_expansion(): void
     {
-        if (!\getenv('USERPROFILE')) {
+        if (!getenv('USERPROFILE')) {
             static::markTestSkipped('USERPROFILE environment variable not available');
         }
 
@@ -68,9 +72,13 @@ final class RealpathTest extends TestCase
 
     public function test_windows_relative_to_absolute_path(): void
     {
-        $currentDir = \getcwd();
+        $currentDir = getcwd();
         static::assertIsString($currentDir);
-        $cwd = \str_replace('\\', '/', $currentDir);
+        $cwd = str_replace('\\', '/', $currentDir);
+
+        if ($cwd === '') {
+            static::fail('Current working directory is empty');
+        }
 
         $relativePath = path_real('./test_file.txt');
 

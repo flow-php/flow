@@ -9,7 +9,14 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function array_map;
+use function array_values;
 use function Flow\ArrayDot\array_dot_get;
+use function implode;
+use function is_array;
+use function is_scalar;
+use function serialize;
+use function sprintf;
 
 final class ArrayGetCollection extends ScalarFunctionChain
 {
@@ -47,18 +54,18 @@ final class ArrayGetCollection extends ScalarFunctionChain
                     );
             }
 
-            $path = \sprintf(
+            $path = sprintf(
                 "{$index}.{%s}",
-                \implode(',', \array_map(
+                implode(',', array_map(
                     static fn(mixed $entryName): string => (
-                        '?' . (\is_scalar($entryName) ? (string) $entryName : \serialize($entryName))
+                        '?' . (is_scalar($entryName) ? (string) $entryName : serialize($entryName))
                     ),
                     $keys,
                 )),
             );
 
             try {
-                $array = $index === '0' ? \array_values($value) : $value;
+                $array = $index === '0' ? array_values($value) : $value;
 
                 $extractedValues = array_dot_get($array, $path);
             } catch (InvalidPathException $e) {
@@ -71,7 +78,7 @@ final class ArrayGetCollection extends ScalarFunctionChain
                     ));
             }
 
-            if (!\is_array($extractedValues)) {
+            if (!is_array($extractedValues)) {
                 return $context
                     ->functions()
                     ->invalidResult(

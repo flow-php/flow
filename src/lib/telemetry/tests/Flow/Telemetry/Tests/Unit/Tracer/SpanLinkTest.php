@@ -101,9 +101,11 @@ final class SpanLinkTest extends TestCase
 
         static::assertTrue($original->context->traceId->equals($restored->context->traceId));
         static::assertTrue($original->context->spanId->equals($restored->context->spanId));
-        static::assertNotNull($original->context->parentSpanId);
-        static::assertNotNull($restored->context->parentSpanId);
-        static::assertTrue($original->context->parentSpanId->equals($restored->context->parentSpanId));
+        $originalParentSpanId = $original->context->parentSpanId;
+        $restoredParentSpanId = $restored->context->parentSpanId;
+        static::assertNotNull($originalParentSpanId);
+        static::assertNotNull($restoredParentSpanId);
+        static::assertTrue($originalParentSpanId->equals($restoredParentSpanId));
         static::assertSame($original->attributes->normalize(), $restored->attributes->normalize());
     }
 

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use DateTimeImmutable;
+use DateTimeZone;
+use DOMDocument;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
@@ -14,6 +17,7 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
+use function is_object;
 
 final class CastTest extends FlowTestCase
 {
@@ -22,7 +26,7 @@ final class CastTest extends FlowTestCase
      */
     public static function cast_provider(): array
     {
-        $xml = new \DOMDocument();
+        $xml = new DOMDocument();
         $xml->loadXML($xmlString = '<root><foo baz="buz">bar</foo></root>');
 
         $fullXMLString = <<<'XML'
@@ -54,18 +58,18 @@ final class CastTest extends FlowTestCase
             'string_to_xml' => [$xmlString, 'xml', $xml],
             'xml_to_string' => [$xml, 'string', '<root><foo baz="buz">bar</foo></root>'],
             'full_xml_to_string' => [$fullXMLString, 'string', $fullXMLString],
-            'datetime' => [new \DateTimeImmutable('2023-01-01 00:00:00 UTC'), 'string', '2023-01-01T00:00:00+00:00'],
+            'datetime' => [new DateTimeImmutable('2023-01-01 00:00:00 UTC'), 'string', '2023-01-01T00:00:00+00:00'],
             'datetime_to_date' => [
-                new \DateTimeImmutable('2023-01-01 00:01:00 UTC'),
+                new DateTimeImmutable('2023-01-01 00:01:00 UTC'),
                 'date',
-                new \DateTimeImmutable('2023-01-01T00:00:00+00:00'),
+                new DateTimeImmutable('2023-01-01T00:00:00+00:00'),
             ],
-            'string_to_timezone' => ['UTC', 'timezone', new \DateTimeZone('UTC')],
-            'string_to_timezone_america' => ['America/New_York', 'timezone', new \DateTimeZone('America/New_York')],
+            'string_to_timezone' => ['UTC', 'timezone', new DateTimeZone('UTC')],
+            'string_to_timezone_america' => ['America/New_York', 'timezone', new DateTimeZone('America/New_York')],
             'datetime_to_timezone' => [
-                new \DateTimeImmutable('2023-01-01 00:00:00', new \DateTimeZone('Europe/London')),
+                new DateTimeImmutable('2023-01-01 00:00:00', new DateTimeZone('Europe/London')),
                 'timezone',
-                new \DateTimeZone('Europe/London'),
+                new DateTimeZone('Europe/London'),
             ],
             'uuid' => [
                 Uuid::fromString('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'),
@@ -90,7 +94,7 @@ final class CastTest extends FlowTestCase
             flow_context(),
         )?->value;
 
-        if (\is_object($expected) || \is_object($from)) {
+        if (is_object($expected) || is_object($from)) {
             static::assertEquals($expected, $resultRefCast);
             static::assertEquals($expected, $resultCastRef);
         } else {

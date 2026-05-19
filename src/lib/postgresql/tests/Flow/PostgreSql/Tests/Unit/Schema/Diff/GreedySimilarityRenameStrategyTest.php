@@ -10,6 +10,8 @@ use Flow\PostgreSql\Schema\Diff\RenameCandidate;
 use Flow\PostgreSql\Schema\Diff\SimilarTextStrategy;
 use PHPUnit\Framework\TestCase;
 
+use function ksort;
+
 final class GreedySimilarityRenameStrategyTest extends TestCase
 {
     public function test_ambiguous_candidates_resolved_by_similarity(): void
@@ -34,7 +36,7 @@ final class GreedySimilarityRenameStrategyTest extends TestCase
             $renames[$match->removedName] = $match->addedName;
         }
 
-        \ksort($renames);
+        ksort($renames);
 
         static::assertSame(
             [

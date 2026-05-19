@@ -6,6 +6,8 @@ namespace Flow\Website\Tests\Integration\Command;
 
 use Symfony\Component\Console\Command\Command;
 
+use function file_get_contents;
+
 final class GenerateDSLCompleterCommandTest extends CompleterCommandTestCase
 {
     public function test_command_executes_successfully(): void
@@ -20,7 +22,7 @@ final class GenerateDSLCompleterCommandTest extends CompleterCommandTestCase
     {
         $this->executeCommand('app:generate:dsl-completer');
 
-        $content = \file_get_contents($this->getOutputPath('dsl.js'));
+        $content = file_get_contents($this->getOutputPath('dsl.js'));
 
         $coreFunctions = ['data_frame', 'from_array', 'to_output', 'ref', 'lit', 'collect'];
 
@@ -37,7 +39,7 @@ final class GenerateDSLCompleterCommandTest extends CompleterCommandTestCase
     {
         $this->executeCommand('app:generate:dsl-completer');
 
-        $content = \file_get_contents($this->getOutputPath('dsl.js'));
+        $content = file_get_contents($this->getOutputPath('dsl.js'));
 
         static::assertStringContainsString('CodeMirror Completer', $content);
         static::assertStringContainsString('dslFunctions', $content);
@@ -49,7 +51,7 @@ final class GenerateDSLCompleterCommandTest extends CompleterCommandTestCase
     {
         $this->executeCommand('app:generate:dsl-completer');
 
-        $content = \file_get_contents($this->getOutputPath('dsl.js'));
+        $content = file_get_contents($this->getOutputPath('dsl.js'));
 
         static::assertMatchesRegularExpression(
             '/label:\s*"[a-z_]+"/i',

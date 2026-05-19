@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\Telemetry;
 
+use function preg_match;
+use function strtoupper;
+use function trim;
+
 /**
  * Extracts semantic attributes from SQL queries for telemetry purposes.
  *
@@ -22,19 +26,20 @@ final readonly class QueryAttributesExtractor
     public function extract(string $query): QueryAttributes
     {
         $operation = null;
+        $matches = [];
 
-        if (\preg_match(
+        if (preg_match(
             '/^\s*(SELECT|INSERT|UPDATE|DELETE|MERGE|WITH|EXPLAIN|COPY|CREATE|ALTER|DROP|TRUNCATE|BEGIN|COMMIT|ROLLBACK)\b/i',
             $query,
             $matches,
         )) {
-            $operation = \strtoupper($matches[1]);
+            $operation = strtoupper($matches[1]);
         }
 
         $target = null;
 
-        if (\preg_match('/\b(?:FROM|INTO|UPDATE|JOIN)\s+(["\w]+(?:\.["\w]+)?)/i', $query, $matches)) {
-            $target = \trim($matches[1], '"');
+        if (preg_match('/\b(?:FROM|INTO|UPDATE|JOIN)\s+(["\w]+(?:\.["\w]+)?)/i', $query, $matches)) {
+            $target = trim($matches[1], '"');
         }
 
         return new QueryAttributes($operation, $target);

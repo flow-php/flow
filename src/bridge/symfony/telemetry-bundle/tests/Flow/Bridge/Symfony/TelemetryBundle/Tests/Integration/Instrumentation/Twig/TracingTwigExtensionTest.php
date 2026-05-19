@@ -13,12 +13,15 @@ use Twig\Environment;
 use Twig\Extension\AbstractExtension;
 use Twig\Loader\ArrayLoader;
 
+use function class_exists;
+use function count;
+
 #[CoversClass(TracingTwigExtension::class)]
 final class TracingTwigExtensionTest extends KernelTestCase
 {
     protected function setUp(): void
     {
-        if (!\class_exists(AbstractExtension::class)) {
+        if (!class_exists(AbstractExtension::class)) {
             self::markTestSkipped('twig/twig is not installed');
         }
 
@@ -416,7 +419,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        static::assertGreaterThanOrEqual(1, \count($spans));
+        static::assertGreaterThanOrEqual(1, count($spans));
 
         $blockSpanFound = false;
 
@@ -536,7 +539,7 @@ final class TracingTwigExtensionTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        static::assertGreaterThanOrEqual(1, \count($spans));
+        static::assertGreaterThanOrEqual(1, count($spans));
 
         $templateSpanFound = false;
 

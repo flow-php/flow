@@ -7,6 +7,8 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Double;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 
 use function Flow\Filesystem\DSL\path_real;
+use function mkdir;
+use function uniqid;
 
 final readonly class TemporaryDirectory
 {
@@ -15,8 +17,8 @@ final readonly class TemporaryDirectory
     public function __construct()
     {
         $fs = new NativeLocalFilesystem();
-        $this->path = path_real($fs->getSystemTmpDir()->path() . '/flow_migrations_test_' . \uniqid())->path();
-        \mkdir($this->path, 0755, true);
+        $this->path = path_real($fs->getSystemTmpDir()->path() . '/flow_migrations_test_' . uniqid())->path();
+        mkdir($this->path, 0755, true);
     }
 
     public function cleanUp(): void

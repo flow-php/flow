@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile;
 
+use Flow\Parquet\ThriftModel\Statistics as ThriftStatistics;
+
 final readonly class Statistics
 {
     public function __construct(
@@ -17,12 +19,16 @@ final readonly class Statistics
         public ?bool $isMinValueExact = null,
     ) {}
 
-    public static function fromThrift(\Flow\Parquet\ThriftModel\Statistics $thrift): self
+    public static function fromThrift(ThriftStatistics $thrift): self
     {
         return new self(
             $thrift->max,
             $thrift->min,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             $thrift->null_count !== null ? (int) $thrift->null_count : null,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             $thrift->distinct_count !== null ? (int) $thrift->distinct_count : null,
             $thrift->max_value,
             $thrift->min_value,
@@ -31,9 +37,9 @@ final readonly class Statistics
         );
     }
 
-    public function toThrift(): \Flow\Parquet\ThriftModel\Statistics
+    public function toThrift(): ThriftStatistics
     {
-        return new \Flow\Parquet\ThriftModel\Statistics([
+        return new ThriftStatistics([
             'max' => $this->max,
             'min' => $this->min,
             'null_count' => $this->nullCount,

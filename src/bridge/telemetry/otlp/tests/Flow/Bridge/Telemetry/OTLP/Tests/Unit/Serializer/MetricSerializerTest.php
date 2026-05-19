@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Unit\Serializer;
 
+use DateTimeImmutable;
 use Flow\Bridge\Telemetry\OTLP\Serializer\MetricSerializer;
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\InstrumentationScope;
@@ -35,7 +36,7 @@ final class MetricSerializerTest extends TestCase
             type: MetricType::COUNTER,
             value: 42,
             attributes: Attributes::create(['http.method' => 'GET']),
-            timestamp: new \DateTimeImmutable(),
+            timestamp: new DateTimeImmutable(),
             resource: $this->resource,
             scope: $this->scope,
             unit: 'requests',
@@ -61,7 +62,7 @@ final class MetricSerializerTest extends TestCase
             type: MetricType::GAUGE,
             value: 1024.5,
             attributes: Attributes::create([]),
-            timestamp: new \DateTimeImmutable(),
+            timestamp: new DateTimeImmutable(),
             resource: $this->resource,
             scope: $this->scope,
             unit: 'bytes',
@@ -85,7 +86,7 @@ final class MetricSerializerTest extends TestCase
             type: MetricType::HISTOGRAM,
             value: 150.5,
             attributes: Attributes::create([]),
-            timestamp: new \DateTimeImmutable(),
+            timestamp: new DateTimeImmutable(),
             resource: $this->resource,
             scope: $this->scope,
             unit: 'ms',
@@ -109,7 +110,7 @@ final class MetricSerializerTest extends TestCase
             type: MetricType::UP_DOWN_COUNTER,
             value: 10,
             attributes: Attributes::create([]),
-            timestamp: new \DateTimeImmutable(),
+            timestamp: new DateTimeImmutable(),
             resource: $this->resource,
             scope: $this->scope,
         );
@@ -130,7 +131,7 @@ final class MetricSerializerTest extends TestCase
             type: MetricType::GAUGE,
             value: 75.5,
             attributes: Attributes::create([]),
-            timestamp: new \DateTimeImmutable(),
+            timestamp: new DateTimeImmutable(),
             resource: $this->resource,
             scope: $this->scope,
         );
@@ -151,7 +152,7 @@ final class MetricSerializerTest extends TestCase
             type: MetricType::COUNTER,
             value: 100,
             attributes: Attributes::create([]),
-            timestamp: new \DateTimeImmutable(),
+            timestamp: new DateTimeImmutable(),
             resource: $this->resource,
             scope: $this->scope,
         );
@@ -172,7 +173,7 @@ final class MetricSerializerTest extends TestCase
             type: MetricType::GAUGE,
             value: 1,
             attributes: Attributes::create([]),
-            timestamp: new \DateTimeImmutable(),
+            timestamp: new DateTimeImmutable(),
             resource: $this->resource,
             scope: $this->scope,
         );

@@ -8,6 +8,10 @@ use Composer\InstalledVersions;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Resource\Attribute\ServiceAttribute;
 use Flow\Telemetry\Resource\ResourceDetector;
+use OutOfBoundsException;
+
+use function class_exists;
+use function explode;
 
 /**
  * Detects service information from Composer's InstalledVersions.
@@ -29,17 +33,13 @@ final readonly class ComposerDetector implements ResourceDetector
 {
     public function detect(): Resource
     {
-        if (!\class_exists(InstalledVersions::class)) {
+        if (!class_exists(InstalledVersions::class)) {
             return Resource::empty();
         }
 
         $attributes = [];
 
-        $packageName = InstalledVersions::getRootPackage()['name'] ?? null;
-
-        if ($packageName === null) {
-            return Resource::empty();
-        }
+        $packageName = InstalledVersions::getRootPackage()['name'];
 
         $serviceName = $this->extractServiceName($packageName);
         $attributes[ServiceAttribute::NAME->value] = $serviceName;
@@ -69,14 +69,14 @@ final readonly class ComposerDetector implements ResourceDetector
             }
 
             return null;
-        } catch (\OutOfBoundsException) {
+        } catch (OutOfBoundsException) {
             return null;
         }
     }
 
     private function extractServiceName(string $packageName): string
     {
-        $parts = \explode('/', $packageName, 2);
+        $parts = explode('/', $packageName, 2);
 
         return $parts[1] ?? $packageName;
     }

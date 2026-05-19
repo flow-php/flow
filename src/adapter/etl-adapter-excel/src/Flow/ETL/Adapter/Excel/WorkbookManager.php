@@ -13,6 +13,10 @@ use OpenSpout\Writer\ODS\Writer as OdsWriter;
 use OpenSpout\Writer\XLSX\Options as XlsxOptions;
 use OpenSpout\Writer\XLSX\Writer as XlsxWriter;
 
+use function array_filter;
+use function array_key_exists;
+use function str_starts_with;
+
 final class WorkbookManager
 {
     private ?string $currentFilePath = null;
@@ -56,7 +60,7 @@ final class WorkbookManager
 
     public function open(string $filePath): void
     {
-        if (\array_key_exists($filePath, $this->writers)) {
+        if (array_key_exists($filePath, $this->writers)) {
             $this->currentFilePath = $filePath;
 
             return;
@@ -108,7 +112,7 @@ final class WorkbookManager
 
         $writer->addRow(OpenSpoutRow::fromValuesWithStyles(
             $values,
-            $styles ? \array_filter($styles, static fn(?Style $style): bool => $style !== null) : [],
+            $styles ? array_filter($styles, static fn(?Style $style): bool => $style !== null) : [],
         ));
     }
 
@@ -118,7 +122,7 @@ final class WorkbookManager
         $count = 0;
 
         foreach ($this->sheets as $key => $_sheet) {
-            if (\str_starts_with($key, $prefix)) {
+            if (str_starts_with($key, $prefix)) {
                 $count++;
             }
         }
@@ -144,7 +148,7 @@ final class WorkbookManager
     {
         $key = $this->sheetKey($sheetName);
 
-        if (\array_key_exists($key, $this->sheets)) {
+        if (array_key_exists($key, $this->sheets)) {
             return $this->sheets[$key];
         }
 

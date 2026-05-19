@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Generator;
 
 /**
  * @internal
@@ -18,13 +19,13 @@ final readonly class GeneratorExtractor implements Extractor
      * @param \Generator<Rows> $rows
      */
     public function __construct(
-        private \Generator $rows,
+        private Generator $rows,
     ) {}
 
     /**
      * @return \Generator<int, Rows, mixed, mixed>
      */
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         foreach ($this->rows as $row) {
             if (!$row instanceof Rows) {

@@ -11,6 +11,10 @@ use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 
 use function Flow\Types\DSL\type_instance_of;
+use function is_string;
+
+use const LIBXML_HTML_NOIMPLIED;
+use const LIBXML_NOERROR;
 
 /**
  * @implements Type<HTMLElement>
@@ -32,8 +36,8 @@ final readonly class HTMLElementType implements Type
             return $value;
         }
 
-        if (\is_string($value)) {
-            $document = HTMLDocument::createFromString($value, \LIBXML_HTML_NOIMPLIED | \LIBXML_NOERROR);
+        if (is_string($value)) {
+            $document = HTMLDocument::createFromString($value, LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
 
             return type_instance_of(HTMLElement::class)->assert($document->documentElement);
         }

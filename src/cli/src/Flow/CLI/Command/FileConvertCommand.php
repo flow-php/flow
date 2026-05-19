@@ -30,6 +30,7 @@ use function Flow\CLI\option_int;
 use function Flow\CLI\option_int_nullable;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\overwrite;
+use function number_format;
 
 final class FileConvertCommand extends Command
 {
@@ -178,7 +179,7 @@ final class FileConvertCommand extends Command
 
         if ($report !== null) {
             $style->writeln(
-                'Total Processed Rows: <info>' . \number_format($report->statistics()->totalRows()) . '</info>',
+                'Total Processed Rows: <info>' . number_format($report->statistics()->totalRows()) . '</info>',
             );
         }
 

@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use DateTimeImmutable;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\CommandOutputNormalizer;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Generator;
 
 use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\datetime_entry;
@@ -34,6 +36,8 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function ob_get_clean;
+use function ob_start;
 
 final class DisplayTest extends FlowIntegrationTestCase
 {
@@ -45,7 +49,7 @@ final class DisplayTest extends FlowIntegrationTestCase
             /**
              * @return \Generator<int, Rows, mixed, void>
              */
-            public function extract(FlowContext $context): \Generator
+            public function extract(FlowContext $context): Generator
             {
                 for ($i = 0; $i < 20; $i++) {
                     yield rows(row(
@@ -53,7 +57,7 @@ final class DisplayTest extends FlowIntegrationTestCase
                         float_entry('price', 123.45),
                         int_entry('100', 100),
                         bool_entry('deleted', false),
-                        datetime_entry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
+                        datetime_entry('created-at', new DateTimeImmutable('2020-07-13 15:00')),
                         str_entry('phase', null),
                         json_entry('array', [
                             ['id' => 1, 'status' => 'NEW'],
@@ -94,7 +98,7 @@ final class DisplayTest extends FlowIntegrationTestCase
                 /**
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract(FlowContext $context): \Generator
+                public function extract(FlowContext $context): Generator
                 {
                     for ($i = 0; $i < 5; $i++) {
                         yield rows(row(
@@ -102,7 +106,7 @@ final class DisplayTest extends FlowIntegrationTestCase
                             float_entry('price', 123.45),
                             int_entry('100', 100),
                             bool_entry('deleted', false),
-                            datetime_entry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
+                            datetime_entry('created-at', new DateTimeImmutable('2020-07-13 15:00')),
                             string_entry('group', 'A'),
                         ));
                     }
@@ -113,7 +117,7 @@ final class DisplayTest extends FlowIntegrationTestCase
                             float_entry('price', 123.45),
                             int_entry('100', 100),
                             bool_entry('deleted', false),
-                            datetime_entry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
+                            datetime_entry('created-at', new DateTimeImmutable('2020-07-13 15:00')),
                             string_entry('group', 'B'),
                         ));
                     }
@@ -210,7 +214,7 @@ final class DisplayTest extends FlowIntegrationTestCase
 
     public function test_print_rows(): void
     {
-        \ob_start();
+        ob_start();
         df()
             ->read(from_rows(
                 rows(
@@ -234,7 +238,7 @@ final class DisplayTest extends FlowIntegrationTestCase
                 ),
             ))
             ->printRows();
-        $output = \ob_get_clean() ?: '';
+        $output = ob_get_clean() ?: '';
 
         self::assertCommandOutputContains(<<<'ASCII'
             +----+---------+-----+
@@ -257,7 +261,7 @@ final class DisplayTest extends FlowIntegrationTestCase
 
     public function test_print_schema(): void
     {
-        \ob_start();
+        ob_start();
         df()
             ->read(from_rows(
                 rows(
@@ -281,7 +285,7 @@ final class DisplayTest extends FlowIntegrationTestCase
                 ),
             ))
             ->printSchema();
-        $output = \ob_get_clean() ?: '';
+        $output = ob_get_clean() ?: '';
 
         self::assertCommandOutputContains(<<<'ASCII'
             schema

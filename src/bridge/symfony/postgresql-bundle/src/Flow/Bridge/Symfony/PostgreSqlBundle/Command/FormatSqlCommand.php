@@ -13,7 +13,9 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Throwable;
 
+use function count;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\PostgreSql\DSL\sql_deparse_options;
@@ -21,6 +23,8 @@ use function Flow\PostgreSql\DSL\sql_format;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
+use function sprintf;
+use function trim;
 
 #[AsCommand(
     name: 'flow:sql:format',
@@ -103,7 +107,7 @@ final class FormatSqlCommand extends Command
         $formatted = sql_format($sql, $options);
 
         if ($check) {
-            if (\trim($formatted) !== \trim($sql)) {
+            if (trim($formatted) !== trim($sql)) {
                 $output->writeln('<error>SQL is not formatted.</error>');
 
                 return Command::FAILURE;
@@ -139,7 +143,7 @@ final class FormatSqlCommand extends Command
         $files = (new SqlFileFinder(native_local_filesystem()))->find(path($pathString));
 
         if ($files === []) {
-            $output->writeln(\sprintf('<comment>No .sql files found at: %s</comment>', $pathString));
+            $output->writeln(sprintf('<comment>No .sql files found at: %s</comment>', $pathString));
 
             return Command::SUCCESS;
         }
@@ -152,18 +156,18 @@ final class FormatSqlCommand extends Command
 
             try {
                 $formatted = sql_format($original, $options);
-            } catch (\Throwable $e) {
-                $output->writeln(\sprintf('<error>Failed to format %s: %s</error>', $file->path(), $e->getMessage()));
+            } catch (Throwable $e) {
+                $output->writeln(sprintf('<error>Failed to format %s: %s</error>', $file->path(), $e->getMessage()));
 
                 return Command::FAILURE;
             }
 
-            $isDifferent = \trim($formatted) !== \trim($original);
+            $isDifferent = trim($formatted) !== trim($original);
 
             if ($check) {
                 if ($isDifferent) {
                     $unformatted++;
-                    $output->writeln(\sprintf('<error>Not formatted: %s</error>', $file->path()));
+                    $output->writeln(sprintf('<error>Not formatted: %s</error>', $file->path()));
                 }
 
                 continue;
@@ -173,34 +177,34 @@ final class FormatSqlCommand extends Command
                 if ($isDifferent) {
                     $this->filesystem->writeTo($file)->append($formatted)->close();
                     $formattedCount++;
-                    $output->writeln(\sprintf('<info>Formatted: %s</info>', $file->path()));
+                    $output->writeln(sprintf('<info>Formatted: %s</info>', $file->path()));
                 }
 
                 continue;
             }
 
-            $output->writeln(\sprintf('<comment>-- %s</comment>', $file->path()));
+            $output->writeln(sprintf('<comment>-- %s</comment>', $file->path()));
             $output->writeln($formatted);
             $output->writeln('');
         }
 
         if ($check) {
             if ($unformatted > 0) {
-                $output->writeln(\sprintf('<error>%d file(s) not formatted.</error>', $unformatted));
+                $output->writeln(sprintf('<error>%d file(s) not formatted.</error>', $unformatted));
 
                 return Command::FAILURE;
             }
 
-            $output->writeln(\sprintf('<info>All %d file(s) are properly formatted.</info>', \count($files)));
+            $output->writeln(sprintf('<info>All %d file(s) are properly formatted.</info>', count($files)));
 
             return Command::SUCCESS;
         }
 
         if ($write) {
-            $output->writeln(\sprintf(
+            $output->writeln(sprintf(
                 '<info>%d file(s) reformatted, %d unchanged.</info>',
                 $formattedCount,
-                \count($files) - $formattedCount,
+                count($files) - $formattedCount,
             ));
         }
 

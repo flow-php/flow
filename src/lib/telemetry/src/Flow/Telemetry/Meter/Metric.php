@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Resource;
@@ -34,7 +35,7 @@ final readonly class Metric
      * @param float|int $value Recorded value
      * @param Attributes $attributes Categorization attributes
      * @param \DateTimeImmutable $timestamp When the measurement was recorded (end of measurement period)
-     * @param resource $resource The resource context for this metric
+     * @param \Flow\Telemetry\Resource $resource The resource context for this metric
      * @param InstrumentationScope $scope The instrumentation scope that created this metric
      * @param null|string $unit Unit of measurement
      * @param null|string $description Human-readable description
@@ -47,14 +48,14 @@ final readonly class Metric
         public MetricType $type,
         public int|float $value,
         public Attributes $attributes,
-        public \DateTimeImmutable $timestamp,
+        public DateTimeImmutable $timestamp,
         public Resource $resource,
         public InstrumentationScope $scope,
         public ?string $unit = null,
         public ?string $description = null,
         public AggregationTemporality $temporality = AggregationTemporality::CUMULATIVE,
         public array $exemplars = [],
-        public ?\DateTimeImmutable $startTimestamp = null,
+        public ?DateTimeImmutable $startTimestamp = null,
     ) {}
 
     /**
@@ -80,7 +81,7 @@ final readonly class Metric
             MetricType::from($data['type']),
             $data['value'],
             Attributes::fromArray($data['attributes']),
-            new \DateTimeImmutable($data['timestamp']),
+            new DateTimeImmutable($data['timestamp']),
             Resource::fromArray($data['resource']),
             InstrumentationScope::fromArray($data['scope']),
             $data['unit'],

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Logger;
 
+use DateTimeImmutable;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tracer\SpanContext;
@@ -25,7 +26,7 @@ final readonly class LogEntry
         public LogRecord $record,
         public Resource $resource,
         public InstrumentationScope $scope,
-        public \DateTimeImmutable $timestamp,
+        public DateTimeImmutable $timestamp,
         public ?SpanContext $spanContext = null,
         public int $droppedAttributeCount = 0,
     ) {}
@@ -48,7 +49,7 @@ final readonly class LogEntry
             LogRecord::fromArray($data['record']),
             Resource::fromArray($data['resource']),
             InstrumentationScope::fromArray($data['scope']),
-            new \DateTimeImmutable($data['timestamp']),
+            new DateTimeImmutable($data['timestamp']),
             $data['spanContext'] !== null ? SpanContext::fromArray($data['spanContext']) : null,
             $data['droppedAttributeCount'] ?? 0,
         );

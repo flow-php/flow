@@ -4,6 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Context;
 
+use InvalidArgumentException;
+use Stringable;
+
+use function ctype_xdigit;
+use function dechex;
+use function hexdec;
+use function sprintf;
+use function str_pad;
+use function strlen;
+
 /**
  * W3C Trace Context trace flags (single byte).
  *
@@ -20,7 +30,7 @@ namespace Flow\Telemetry\Context;
  *
  * @see https://www.w3.org/TR/trace-context/#trace-flags
  */
-final readonly class TraceFlags implements \Stringable
+final readonly class TraceFlags implements Stringable
 {
     public const int RANDOM = 0x02;
 
@@ -58,7 +68,7 @@ final readonly class TraceFlags implements \Stringable
     public static function fromByte(int $byte): self
     {
         if ($byte < 0 || $byte > 255) {
-            throw new \InvalidArgumentException(\sprintf('TraceFlags byte must be between 0 and 255, got %d', $byte));
+            throw new InvalidArgumentException(sprintf('TraceFlags byte must be between 0 and 255, got %d', $byte));
         }
 
         return new self($byte);
@@ -73,18 +83,18 @@ final readonly class TraceFlags implements \Stringable
      */
     public static function fromHex(string $hex): self
     {
-        if (\strlen($hex) !== 2) {
-            throw new \InvalidArgumentException(\sprintf(
+        if (strlen($hex) !== 2) {
+            throw new InvalidArgumentException(sprintf(
                 'TraceFlags hex string must be exactly 2 characters, got %d',
-                \strlen($hex),
+                strlen($hex),
             ));
         }
 
-        if (!\ctype_xdigit($hex)) {
-            throw new \InvalidArgumentException('TraceFlags hex string must contain only hexadecimal characters');
+        if (!ctype_xdigit($hex)) {
+            throw new InvalidArgumentException('TraceFlags hex string must contain only hexadecimal characters');
         }
 
-        return new self((int) \hexdec($hex));
+        return new self((int) hexdec($hex));
     }
 
     /**
@@ -147,7 +157,7 @@ final readonly class TraceFlags implements \Stringable
      */
     public function toHex(): string
     {
-        return \str_pad(\dechex($this->flags), 2, '0', STR_PAD_LEFT);
+        return str_pad(dechex($this->flags), 2, '0', STR_PAD_LEFT);
     }
 
     /**

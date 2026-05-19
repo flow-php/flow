@@ -15,6 +15,10 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\SourceStream;
+use Generator;
+use php_user_filter;
+
+use function usort;
 
 final readonly class MemoryFilesystem implements Filesystem
 {
@@ -22,14 +26,16 @@ final readonly class MemoryFilesystem implements Filesystem
 
     public function __construct(
         private Mount $mount = new Mount('memory'),
-        ?\php_user_filter $filter = null,
+        ?php_user_filter $filter = null,
     ) {
         $this->memory = new Memory($filter);
     }
 
     public function appendTo(Path $path): DestinationStream
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         return $this->memory->for($path);
     }
@@ -39,9 +45,11 @@ final readonly class MemoryFilesystem implements Filesystem
         throw new RuntimeException('Memory does not have a system tmp directory');
     }
 
-    public function list(Path $path, Filter $pathFilter = new KeepAll()): \Generator
+    public function list(Path $path, Filter $pathFilter = new KeepAll()): Generator
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if (!$path->isPattern()) {
             if ($this->memory->has($path) && $pathFilter->accept($status = $this->statFor($path))) {
@@ -53,7 +61,7 @@ final readonly class MemoryFilesystem implements Filesystem
 
         $paths = $this->memory->paths();
 
-        \usort($paths, static fn(Path $a, Path $b): int => $a->path() <=> $b->path());
+        usort($paths, static fn(Path $a, Path $b): int => $a->path() <=> $b->path());
 
         foreach ($paths as $nextPath) {
             if ($path->matches($nextPath) && $pathFilter->accept($status = $this->statFor($nextPath))) {
@@ -74,7 +82,9 @@ final readonly class MemoryFilesystem implements Filesystem
 
     public function readFrom(Path $path): SourceStream
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if (!$this->memory->has($path)) {
             throw new RuntimeException('File not found in memory: ' . $path->uri());
@@ -85,7 +95,9 @@ final readonly class MemoryFilesystem implements Filesystem
 
     public function rm(Path $path): bool
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if (!$path->isPattern()) {
             if (!$this->memory->has($path)) {
@@ -111,7 +123,9 @@ final readonly class MemoryFilesystem implements Filesystem
 
     public function status(Path $path): ?FileStatus
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if (!$path->isPattern()) {
             if (!$this->memory->has($path)) {
@@ -132,7 +146,9 @@ final readonly class MemoryFilesystem implements Filesystem
 
     public function writeTo(Path $path): DestinationStream
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         if ($this->status($path) !== null) {
             $this->memory->close($path);

@@ -11,6 +11,12 @@ use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Logger\LogProcessor;
 use Flow\Telemetry\Logger\Severity;
 use Flow\Telemetry\Signal\Signals;
+use Throwable;
+
+use function array_filter;
+use function array_values;
+use function count;
+use function str_contains;
 
 /**
  * Processor that stores log entries in memory and exports via configured exporter.
@@ -34,7 +40,7 @@ final class MemoryLogProcessor implements LogProcessor
      */
     public function countLogs(): int
     {
-        return \count($this->entries);
+        return count($this->entries);
     }
 
     /**
@@ -54,7 +60,7 @@ final class MemoryLogProcessor implements LogProcessor
      */
     public function entriesContaining(string $substring): array
     {
-        return \array_values(\array_filter($this->entries, static fn(LogEntry $entry): bool => \str_contains(
+        return array_values(array_filter($this->entries, static fn(LogEntry $entry): bool => str_contains(
             $entry->record->body,
             $substring,
         )));
@@ -67,7 +73,7 @@ final class MemoryLogProcessor implements LogProcessor
      */
     public function entriesWithSeverity(Severity $severity): array
     {
-        return \array_values(\array_filter(
+        return array_values(array_filter(
             $this->entries,
             static fn(LogEntry $entry): bool => $entry->record->severity === $severity,
         ));
@@ -75,13 +81,13 @@ final class MemoryLogProcessor implements LogProcessor
 
     public function flush(): bool
     {
-        if (\count($this->entries) === 0) {
+        if (count($this->entries) === 0) {
             return true;
         }
 
         try {
             return $this->logExporter->export(Signals::logs($this->entries));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
 
             return false;
@@ -110,7 +116,7 @@ final class MemoryLogProcessor implements LogProcessor
 
         try {
             $this->logExporter->shutdown();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
         }
     }

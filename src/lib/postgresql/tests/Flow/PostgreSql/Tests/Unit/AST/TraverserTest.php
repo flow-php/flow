@@ -11,17 +11,25 @@ use Flow\PostgreSql\AST\Traverser;
 use Flow\PostgreSql\AST\Visitors\ColumnRefCollector;
 use Flow\PostgreSql\AST\Visitors\FuncCallCollector;
 use Flow\PostgreSql\AST\Visitors\RangeVarCollector;
+use Flow\PostgreSql\Protobuf\AST\A_Const;
 use Flow\PostgreSql\Protobuf\AST\ColumnRef;
+use Flow\PostgreSql\Protobuf\AST\Integer as PostgreSqlInteger;
+use Flow\PostgreSql\Protobuf\AST\LimitOption;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ParseResult;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
+use function extension_loaded;
+use function pg_query_deparse;
+use function pg_query_parse;
+
 final class TraverserTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped(
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );
@@ -175,19 +183,20 @@ final class TraverserTest extends TestCase
 
             public function modify(object $node, ModificationContext $context): int|object|null
             {
-                /** @var SelectStmt $node */
+                if (!$node instanceof SelectStmt) {
+                    return null;
+                }
+
                 if ($context->isTopLevel()) {
-                    $integer = new \Flow\PostgreSql\Protobuf\AST\Integer();
+                    $integer = new PostgreSqlInteger();
                     $integer->setIval(10);
 
-                    $aConst = new \Flow\PostgreSql\Protobuf\AST\A_Const();
-                    /** @phpstan-ignore argument.type */
-                    $aConst->setIval($integer);
+                    $aConst = new A_Const(['ival' => $integer]);
 
                     $limitNode = new Node();
                     $limitNode->setAConst($aConst);
 
-                    $node->setLimitOption(\Flow\PostgreSql\Protobuf\AST\LimitOption::LIMIT_OPTION_COUNT);
+                    $node->setLimitOption(LimitOption::LIMIT_OPTION_COUNT);
                     $node->setLimitCount($limitNode);
                 }
 
@@ -199,7 +208,7 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT * FROM users');
         $traverser->traverse($result);
 
-        $deparsed = \pg_query_deparse($result->serializeToString());
+        $deparsed = pg_query_deparse($result->serializeToString());
 
         static::assertStringContainsString('LIMIT 10', $deparsed);
     }
@@ -270,7 +279,6 @@ final class TraverserTest extends TestCase
 
     public function test_modifier_is_top_level_check(): void
     {
-        /** @var array<bool> $topLevelResults */
         $topLevelResults = [];
 
         $modifier = new class($topLevelResults) implements NodeModifier {
@@ -306,7 +314,6 @@ final class TraverserTest extends TestCase
 
     public function test_modifier_receives_context_with_nested_depth(): void
     {
-        /** @var array<int> $depths */
         $depths = [];
 
         $modifier = new class($depths) implements NodeModifier {
@@ -343,7 +350,6 @@ final class TraverserTest extends TestCase
 
     public function test_modifier_receives_context_with_top_level_depth(): void
     {
-        /** @var array<int> $depths */
         $depths = [];
 
         $modifier = new class($depths) implements NodeModifier {
@@ -415,7 +421,7 @@ final class TraverserTest extends TestCase
 
         static::assertCount(2, $collector->getRangeVars());
 
-        $tableNames = \array_map(static fn($rv) => $rv->getRelname(), $collector->getRangeVars());
+        $tableNames = array_map(static fn($rv) => $rv->getRelname(), $collector->getRangeVars());
         static::assertContains('users', $tableNames);
         static::assertContains('active', $tableNames);
     }
@@ -487,10 +493,12 @@ final class TraverserTest extends TestCase
         $result = $this->parseQuery('SELECT * FROM users AS u');
         $traverser->traverse($result);
 
-        static::assertCount(1, $collector->getRangeVars());
-        static::assertSame('users', $collector->getRangeVars()[0]->getRelname());
-        static::assertNotNull($collector->getRangeVars()[0]->getAlias());
-        static::assertSame('u', $collector->getRangeVars()[0]->getAlias()->getAliasname());
+        $rangeVars = $collector->getRangeVars();
+        static::assertCount(1, $rangeVars);
+        static::assertSame('users', $rangeVars[0]->getRelname());
+        $alias = $rangeVars[0]->getAlias();
+        static::assertNotNull($alias);
+        static::assertSame('u', $alias->getAliasname());
     }
 
     public function test_range_var_collector_with_schema(): void
@@ -575,8 +583,7 @@ final class TraverserTest extends TestCase
 
     private function parseQuery(string $sql): ParseResult
     {
-        /** @var string $json */
-        $json = \pg_query_parse($sql);
+        $json = pg_query_parse($sql);
         $result = new ParseResult();
         $result->mergeFromJsonString($json);
 

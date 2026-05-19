@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Website\Model\Documentation;
 
+use function mb_strtoupper;
+use function str_replace;
+
 enum Module: string
 {
     case AVRO = 'Avro';
@@ -40,7 +43,7 @@ enum Module: string
 
     public static function fromName(string $name): self
     {
-        $name = \mb_strtoupper(\str_replace([' ', '-'], '_', $name));
+        $name = mb_strtoupper(str_replace([' ', '-'], '_', $name));
 
         return constant("self::{$name}");
     }

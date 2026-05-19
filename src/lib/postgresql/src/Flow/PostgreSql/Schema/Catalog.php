@@ -6,6 +6,11 @@ namespace Flow\PostgreSql\Schema;
 
 use Flow\PostgreSql\Schema\Exception\SchemaException;
 
+use function array_key_exists;
+use function array_map;
+use function array_values;
+use function sprintf;
+
 /**
  * @phpstan-import-type SchemaShape from Schema
  *
@@ -25,7 +30,7 @@ final readonly class Catalog
      */
     public static function fromArray(array $data): self
     {
-        return new self(schemas: \array_map(static fn(array $s): Schema => Schema::fromArray($s), $data['schemas']));
+        return new self(schemas: array_map(static fn(array $s): Schema => Schema::fromArray($s), $data['schemas']));
     }
 
     /**
@@ -44,7 +49,7 @@ final readonly class Catalog
             }
         }
 
-        throw new SchemaException(\sprintf('Schema "%s" not found in catalog.', $name));
+        throw new SchemaException(sprintf('Schema "%s" not found in catalog.', $name));
     }
 
     public function has(string $name): bool
@@ -67,12 +72,12 @@ final readonly class Catalog
         }
 
         foreach ($other->schemas as $schema) {
-            $schemas[$schema->name] = \array_key_exists($schema->name, $schemas)
+            $schemas[$schema->name] = array_key_exists($schema->name, $schemas)
                 ? $schemas[$schema->name]->merge($schema)
                 : $schema;
         }
 
-        return new self(\array_values($schemas));
+        return new self(array_values($schemas));
     }
 
     /**
@@ -80,7 +85,7 @@ final readonly class Catalog
      */
     public function names(): array
     {
-        return \array_map(static fn(Schema $s): string => $s->name, $this->schemas);
+        return array_map(static fn(Schema $s): string => $s->name, $this->schemas);
     }
 
     /**
@@ -89,7 +94,7 @@ final readonly class Catalog
     public function normalize(): array
     {
         return [
-            'schemas' => \array_map(static fn(Schema $s): array => $s->normalize(), $this->schemas),
+            'schemas' => array_map(static fn(Schema $s): array => $s->normalize(), $this->schemas),
         ];
     }
 }

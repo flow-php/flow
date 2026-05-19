@@ -8,12 +8,15 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
+use function bin2hex;
+use function random_bytes;
+
 final class CreateDatabaseCommandTest extends TestCase
 {
     public function test_create_fails_when_database_already_exists(): void
     {
         $context = new CommandTestContext();
-        $testDbName = 'flow_test_create_' . \bin2hex(\random_bytes(4));
+        $testDbName = 'flow_test_create_' . bin2hex(random_bytes(4));
 
         try {
             $context->createDatabase($testDbName);
@@ -35,7 +38,7 @@ final class CreateDatabaseCommandTest extends TestCase
     public function test_create_with_if_not_exists_succeeds_when_database_already_exists(): void
     {
         $context = new CommandTestContext();
-        $testDbName = 'flow_test_create_' . \bin2hex(\random_bytes(4));
+        $testDbName = 'flow_test_create_' . bin2hex(random_bytes(4));
 
         try {
             $context->createDatabase($testDbName);
@@ -57,7 +60,7 @@ final class CreateDatabaseCommandTest extends TestCase
     public function test_creates_database(): void
     {
         $context = new CommandTestContext();
-        $testDbName = 'flow_test_create_' . \bin2hex(\random_bytes(4));
+        $testDbName = 'flow_test_create_' . bin2hex(random_bytes(4));
 
         try {
             $context->bootForDatabaseManagement($testDbName);

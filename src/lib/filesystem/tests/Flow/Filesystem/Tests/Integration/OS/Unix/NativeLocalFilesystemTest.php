@@ -7,9 +7,25 @@ namespace Flow\Filesystem\Tests\Integration\OS\Unix;
 use Flow\Filesystem\Tests\Integration\NativeLocalFilesystemTestCase;
 use Flow\Filesystem\Tests\OperatingSystem;
 
+use function bin2hex;
+use function chmod;
+use function file_put_contents;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
+use function fopen;
+use function function_exists;
+use function getenv;
+use function is_readable;
+use function is_writable;
+use function mkdir;
+use function posix_geteuid;
+use function random_bytes;
+use function rmdir;
+use function symlink;
+use function sys_get_temp_dir;
+use function tempnam;
+use function unlink;
 
 /**
  * Tests that are specific to Unix file system behavior and will fail on Windows
@@ -32,7 +48,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = native_local_filesystem();
 
-        $resource = \fopen(__DIR__ . '/../../Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/../../Fixtures/orders.csv', 'rb');
         static::assertIsResource($resource);
         $fs->writeTo(path(__DIR__ . '/../var/some_path_to/file.txt'))->fromResource($resource);
 
@@ -52,29 +68,29 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     public function test_status_on_non_existent_path_does_not_walk_parent_directory(): void
     {
-        if (!\function_exists('chmod')) {
+        if (!function_exists('chmod')) {
             static::markTestSkipped('chmod functionality not available');
         }
 
-        if (\function_exists('posix_geteuid') && \posix_geteuid() === 0) {
+        if (function_exists('posix_geteuid') && posix_geteuid() === 0) {
             static::markTestSkipped('Cannot test permission restrictions as root');
         }
 
-        $parent = \sys_get_temp_dir() . '/flow_status_regression_' . \bin2hex(\random_bytes(4));
+        $parent = sys_get_temp_dir() . '/flow_status_regression_' . bin2hex(random_bytes(4));
         $unreadable = $parent . '/unreadable_sibling';
 
-        \mkdir($parent, 0755, true);
-        \mkdir($unreadable, 0755);
-        \chmod($unreadable, 0000);
+        mkdir($parent, 0755, true);
+        mkdir($unreadable, 0755);
+        chmod($unreadable, 0000);
 
         try {
             $status = native_local_filesystem()->status(path($parent . '/does_not_exist'));
 
             static::assertNull($status);
         } finally {
-            \chmod($unreadable, 0755);
-            \rmdir($unreadable);
-            \rmdir($parent);
+            chmod($unreadable, 0755);
+            rmdir($unreadable);
+            rmdir($parent);
         }
     }
 
@@ -82,16 +98,16 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = native_local_filesystem();
 
-        static::assertSame('file://' . ltrim(\sys_get_temp_dir(), '/'), $fs->getSystemTmpDir()->uri());
+        static::assertSame('file://' . ltrim(sys_get_temp_dir(), '/'), $fs->getSystemTmpDir()->uri());
     }
 
     public function test_unix_absolute_path_behavior(): void
     {
         $fs = native_local_filesystem();
 
-        $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_test_');
+        $tempFile = tempnam(sys_get_temp_dir(), 'flow_test_');
         static::assertIsString($tempFile);
-        \file_put_contents($tempFile, 'test content');
+        file_put_contents($tempFile, 'test content');
 
         $path = path($tempFile);
         $status = $fs->status($path);
@@ -101,12 +117,12 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         static::assertStringStartsWith('file://', $path->uri());
         static::assertStringStartsWith('/', $path->path());
 
-        \unlink($tempFile);
+        unlink($tempFile);
     }
 
     public function test_unix_home_directory_resolution(): void
     {
-        if (!\getenv('HOME')) {
+        if (!getenv('HOME')) {
             static::markTestSkipped('HOME environment variable not available');
         }
 
@@ -121,7 +137,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         native_local_filesystem();
 
         // Test path normalization on Unix (forward slashes should remain)
-        $unixPath = \sys_get_temp_dir() . '/flow_test_dir/test_file.txt';
+        $unixPath = sys_get_temp_dir() . '/flow_test_dir/test_file.txt';
         $normalizedPath = path($unixPath);
 
         // Path should maintain forward slashes on Unix
@@ -131,47 +147,47 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     public function test_unix_permissions(): void
     {
-        if (!\function_exists('chmod')) {
+        if (!function_exists('chmod')) {
             static::markTestSkipped('chmod functionality not available');
         }
 
-        $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_test_');
+        $tempFile = tempnam(sys_get_temp_dir(), 'flow_test_');
         static::assertIsString($tempFile);
-        \file_put_contents($tempFile, 'test content');
+        file_put_contents($tempFile, 'test content');
 
         // Test file permissions on Unix
-        \chmod($tempFile, 0644);
+        chmod($tempFile, 0644);
         path($tempFile);
 
-        static::assertTrue(\is_readable($tempFile));
-        static::assertTrue(\is_writable($tempFile));
+        static::assertTrue(is_readable($tempFile));
+        static::assertTrue(is_writable($tempFile));
 
-        \unlink($tempFile);
+        unlink($tempFile);
     }
 
     public function test_unix_symlink_handling(): void
     {
-        if (!\function_exists('symlink')) {
+        if (!function_exists('symlink')) {
             static::markTestSkipped('Symlink functionality not available');
         }
 
         $fs = native_local_filesystem();
 
-        $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_test_');
+        $tempFile = tempnam(sys_get_temp_dir(), 'flow_test_');
         static::assertIsString($tempFile);
         $symlinkPath = $tempFile . '_symlink';
 
-        \file_put_contents($tempFile, 'test content');
+        file_put_contents($tempFile, 'test content');
 
-        if (\symlink($tempFile, $symlinkPath)) {
+        if (symlink($tempFile, $symlinkPath)) {
             $path = path($symlinkPath);
             $status = $fs->status($path);
             static::assertNotNull($status);
             static::assertTrue($status->isFile());
 
-            \unlink($symlinkPath);
+            unlink($symlinkPath);
         }
 
-        \unlink($tempFile);
+        unlink($tempFile);
     }
 }

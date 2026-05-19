@@ -8,12 +8,20 @@ use Flow\Filesystem\Telemetry\FilesystemTelemetryAttributes;
 use Flow\Filesystem\Tests\Mother\FilesystemTelemetryConfigMother;
 use PHPUnit\Framework\TestCase;
 
+use function array_filter;
+use function array_map;
+use function array_values;
+use function fclose;
 use function Flow\Filesystem\DSL\filesystem_telemetry_options;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Telemetry\DSL\memory_metric_processor;
 use function Flow\Telemetry\DSL\memory_span_processor;
 use function Flow\Telemetry\DSL\void_exporter;
+use function fopen;
+use function implode;
+use function iterator_to_array;
+use function strlen;
 
 final class TraceableFilesystemIntegrationTest extends TestCase
 {
@@ -46,31 +54,32 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         static::assertSame($content, $readContent);
 
         $spans = $spanProcessor->endedSpans();
-        $spanNames = \array_map(static fn($span) => $span->name(), $spans);
+        $spanNames = array_map(static fn($span) => $span->name(), $spans);
 
         static::assertContains('Write test_file.txt', $spanNames);
         static::assertContains('Read test_file.txt', $spanNames);
         static::assertCount(2, $spans);
 
         foreach ($spans as $span) {
-            static::assertNotNull($span->status());
-            static::assertTrue($span->status()->isOk());
+            $status = $span->status();
+            static::assertNotNull($status);
+            static::assertTrue($status->isOk());
         }
 
-        $destinationSpans = \array_values(\array_filter(
+        $destinationSpans = array_values(array_filter(
             $spans,
             static fn($span) => $span->name() === 'Write test_file.txt',
         ));
         static::assertCount(1, $destinationSpans);
         static::assertSame(
-            \strlen($content),
+            strlen($content),
             $destinationSpans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN],
         );
 
-        $sourceSpans = \array_values(\array_filter($spans, static fn($span) => $span->name() === 'Read test_file.txt'));
+        $sourceSpans = array_values(array_filter($spans, static fn($span) => $span->name() === 'Read test_file.txt'));
         static::assertCount(1, $sourceSpans);
         static::assertSame(
-            \strlen($content),
+            strlen($content),
             $sourceSpans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ],
         );
     }
@@ -103,24 +112,25 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         }
 
         $testFile = path(__DIR__ . '/var/from_resource_test.txt');
-        $resource = \fopen($sourceFilePath, 'rb');
+        $resource = fopen($sourceFilePath, 'rb');
         static::assertIsResource($resource);
 
         $writeStream = $fs->writeTo($testFile);
         $writeStream->fromResource($resource);
         $writeStream->close();
 
-        \fclose($resource);
+        fclose($resource);
 
         $spans = $spanProcessor->endedSpans();
-        $destinationSpans = \array_values(\array_filter(
+        $destinationSpans = array_values(array_filter(
             $spans,
             static fn($span) => $span->name() === 'Write from_resource_test.txt',
         ));
 
         static::assertCount(1, $destinationSpans);
-        static::assertNotNull($destinationSpans[0]->status());
-        static::assertTrue($destinationSpans[0]->status()->isOk());
+        $status = $destinationSpans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
         static::assertSame(
             'destination',
             $destinationSpans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE],
@@ -146,17 +156,17 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         }
         $readStream->close();
 
-        static::assertSame($content, \implode('', $chunks));
+        static::assertSame($content, implode('', $chunks));
 
         $spans = $spanProcessor->endedSpans();
-        $sourceSpans = \array_values(\array_filter(
+        $sourceSpans = array_values(array_filter(
             $spans,
             static fn($span) => $span->name() === 'Read iterate_test.txt',
         ));
 
         static::assertCount(1, $sourceSpans);
         static::assertSame(
-            \strlen($content),
+            strlen($content),
             $sourceSpans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ],
         );
     }
@@ -178,7 +188,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
             ->close();
         $spanProcessor->reset();
 
-        $files = \iterator_to_array($fs->list(path($testDir . '/*.txt')));
+        $files = iterator_to_array($fs->list(path($testDir . '/*.txt')));
 
         static::assertCount(2, $files);
 
@@ -211,7 +221,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         $telemetry->flush();
 
         $metrics = $metricProcessor->metrics();
-        $metricNames = \array_map(static fn($m) => $m->name, $metrics);
+        $metricNames = array_map(static fn($m) => $m->name, $metrics);
 
         static::assertContains('write_size', $metricNames);
         static::assertContains('write_operations', $metricNames);
@@ -241,7 +251,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         $destinationSpan = $spans[0];
         static::assertSame('Write multiple_appends.txt', $destinationSpan->name());
         static::assertSame(
-            \strlen($chunk) * 10,
+            strlen($chunk) * 10,
             $destinationSpan->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN],
         );
     }
@@ -278,20 +288,18 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         $spanProcessor->reset();
 
         $readStream = $fs->readFrom($testFile);
-        $lines = \iterator_to_array($readStream->readLines());
+        $lines = iterator_to_array($readStream->readLines());
         $readStream->close();
 
         static::assertCount(3, $lines);
 
         $spans = $spanProcessor->endedSpans();
-        $sourceSpans = \array_values(\array_filter(
-            $spans,
-            static fn($span) => $span->name() === 'Read lines_test.txt',
-        ));
+        $sourceSpans = array_values(array_filter($spans, static fn($span) => $span->name() === 'Read lines_test.txt'));
 
         static::assertCount(1, $sourceSpans);
-        static::assertNotNull($sourceSpans[0]->status());
-        static::assertTrue($sourceSpans[0]->status()->isOk());
+        $status = $sourceSpans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
     }
 
     public function test_rm_operation_does_not_create_span(): void

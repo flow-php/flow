@@ -6,6 +6,11 @@ namespace Flow\Doctrine\Bulk;
 
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
+use function array_merge;
+use function array_unique;
+use function count;
+use function in_array;
+
 final readonly class Columns
 {
     /**
@@ -19,7 +24,7 @@ final readonly class Columns
             throw new RuntimeException('Columns cannot be empty');
         }
 
-        if (\array_unique($columns) !== $columns) {
+        if (array_unique($columns) !== $columns) {
             throw new RuntimeException('All columns must be unique');
         }
 
@@ -41,7 +46,7 @@ final readonly class Columns
      */
     public function has(string ...$columnNames): bool
     {
-        return \count(\array_unique(\array_merge($this->columns, $columnNames))) === \count($this->columns);
+        return count(array_unique(array_merge($this->columns, $columnNames))) === count($this->columns);
     }
 
     /**
@@ -81,7 +86,7 @@ final readonly class Columns
         $columns = [];
 
         foreach ($this->columns as $column) {
-            if (false === \in_array($column, $columnNames, true)) {
+            if (false === in_array($column, $columnNames, true)) {
                 $columns[] = $column;
             }
         }

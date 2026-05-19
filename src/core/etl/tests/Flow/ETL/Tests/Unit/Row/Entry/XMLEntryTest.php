@@ -9,18 +9,21 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\xml_entry;
 use function Flow\Types\DSL\type_instance_of;
+use function serialize;
+use function unserialize;
 
 final class XMLEntryTest extends FlowTestCase
 {
-    public static function is_equal_data_provider(): \Generator
+    public static function is_equal_data_provider(): Generator
     {
-        $doc1 = new \DOMDocument();
+        $doc1 = new DOMDocument();
         $doc1->loadXML('<root><foo>1</foo><bar>2</bar><baz>3</baz></root>');
-        $doc2 = new \DOMDocument();
+        $doc2 = new DOMDocument();
         $doc2->loadXML('<root><foo>1</foo><bar>2</bar><baz>3</baz></root>');
 
         yield 'equal names and equal simple xml documents' => [
@@ -29,9 +32,9 @@ final class XMLEntryTest extends FlowTestCase
             xml_entry('name', $doc2),
         ];
 
-        $doc1 = new \DOMDocument();
+        $doc1 = new DOMDocument();
         $doc1->loadXML('<root><foo foo="bar" bar="foo">1</foo><bar>2</bar><baz>3</baz></root>');
-        $doc2 = new \DOMDocument();
+        $doc2 = new DOMDocument();
         $doc2->loadXML('<root><foo bar="foo" foo="bar">1</foo><bar>2</bar><baz>3</baz></root>');
 
         yield 'equal names and equal simple xml documents with different order of attributes' => [
@@ -40,9 +43,9 @@ final class XMLEntryTest extends FlowTestCase
             xml_entry('name', $doc2),
         ];
 
-        $doc1 = new \DOMDocument();
+        $doc1 = new DOMDocument();
         $doc1->loadXML('<root><foo>1</foo><bar>2</bar><baz>3</baz></root>');
-        $doc2 = new \DOMDocument();
+        $doc2 = new DOMDocument();
         $doc2->loadXML('<root><foo bar="foo" foo="bar">1</foo><bar>2</bar><baz>3</baz></root>');
 
         yield 'equal nodes but different attributes' => [
@@ -51,9 +54,9 @@ final class XMLEntryTest extends FlowTestCase
             xml_entry('name', $doc2),
         ];
 
-        $doc1 = new \DOMDocument();
+        $doc1 = new DOMDocument();
         $doc1->loadXML('<root><foo>1</foo><bar>2</bar><baz>3</baz></root>');
-        $doc2 = new \DOMDocument();
+        $doc2 = new DOMDocument();
         $doc2->loadXML('<root><bar>2</bar><baz>3</baz></root>');
 
         yield 'equal attributes but different nodes' => [
@@ -62,9 +65,9 @@ final class XMLEntryTest extends FlowTestCase
             xml_entry('name', $doc2),
         ];
 
-        $doc1 = new \DOMDocument();
+        $doc1 = new DOMDocument();
         $doc1->loadXML('<root><foo>1</foo><bar>2</bar><baz>3</baz></root>');
-        $doc2 = new \DOMDocument();
+        $doc2 = new DOMDocument();
 
         yield 'compare with empty document' => [
             false,
@@ -72,8 +75,8 @@ final class XMLEntryTest extends FlowTestCase
             xml_entry('name', $doc2),
         ];
 
-        $doc1 = new \DOMDocument();
-        $doc2 = new \DOMDocument();
+        $doc1 = new DOMDocument();
+        $doc2 = new DOMDocument();
 
         yield 'compare twp empty documents' => [
             true,
@@ -89,10 +92,10 @@ final class XMLEntryTest extends FlowTestCase
      */
     public function test_canonicalization(): void
     {
-        $doc = new \DOMDocument();
+        $doc = new DOMDocument();
         $doc->loadXML('<item item_attribute_01="1"><id id_attribute_01="1">1</id></item>');
 
-        $doc2 = new \DOMDocument();
+        $doc2 = new DOMDocument();
         $doc2->loadXML(<<<'XML'
             <item item_attribute_01="1">
                         <id id_attribute_01="1">1</id>
@@ -120,7 +123,7 @@ final class XMLEntryTest extends FlowTestCase
 
     public function test_creating_xml_entry_with_empty_dom_document(): void
     {
-        $doc = new \DOMDocument();
+        $doc = new DOMDocument();
         $entry = xml_entry('name', $doc);
 
         static::assertSame('name', $entry->name());
@@ -185,8 +188,8 @@ final class XMLEntryTest extends FlowTestCase
             </xml>
             XML);
 
-        $serialized = \serialize($entry);
-        $unserialized = type_instance_of(XMLEntry::class)->assert(\unserialize($serialized));
+        $serialized = serialize($entry);
+        $unserialized = type_instance_of(XMLEntry::class)->assert(unserialize($serialized));
 
         static::assertTrue($entry->isEqual($unserialized));
     }

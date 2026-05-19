@@ -10,6 +10,8 @@ use Flow\PostgreSql\QueryBuilder\Clause\CTE;
 use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
 use PHPUnit\Framework\TestCase;
 
+use function count;
+
 final class WithClauseTest extends TestCase
 {
     public function test_converts_multiple_ctes_to_ast(): void
@@ -146,7 +148,7 @@ final class WithClauseTest extends TestCase
         static::assertNotNull($protoWithClause);
         $reconstructed = WithClause::fromAst($protoWithClause);
 
-        static::assertCount(\count($original->ctes()), $reconstructed->ctes());
+        static::assertCount(count($original->ctes()), $reconstructed->ctes());
         static::assertSame($original->recursive(), $reconstructed->recursive());
         static::assertSame($original->ctes()[0]->name(), $reconstructed->ctes()[0]->name());
     }

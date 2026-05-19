@@ -7,6 +7,7 @@ namespace Flow\ETL\Extractor;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
+use Generator;
 
 /**
  * @internal
@@ -23,7 +24,7 @@ final readonly class RowsExtractor implements Extractor
         $this->rows = $rows;
     }
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         foreach ($this->rows as $rows) {
             $signal = yield $rows;

@@ -8,6 +8,8 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function array_reverse;
+
 final class ArrayReverse extends ScalarFunctionChain
 {
     /**
@@ -33,6 +35,6 @@ final class ArrayReverse extends ScalarFunctionChain
                 ->invalidResult(new InvalidArgumentException('ArrayReverse function requires non-null array'));
         }
 
-        return \array_reverse($array, $preserveKeys);
+        return array_reverse($array, $preserveKeys);
     }
 }

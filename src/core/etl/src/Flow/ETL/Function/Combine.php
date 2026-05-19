@@ -8,6 +8,12 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function array_combine;
+use function array_is_list;
+use function count;
+use function is_int;
+use function is_string;
+
 final class Combine extends ScalarFunctionChain
 {
     /**
@@ -37,13 +43,13 @@ final class Combine extends ScalarFunctionChain
             return [];
         }
 
-        if (!\array_is_list($keys)) {
+        if (!array_is_list($keys)) {
             return $context
                 ->functions()
                 ->invalidResult(new InvalidArgumentException('Combine function requires keys to be a list'));
         }
 
-        if (\count($keys) !== \count($values)) {
+        if (count($keys) !== count($values)) {
             return $context
                 ->functions()
                 ->invalidResult(
@@ -53,7 +59,7 @@ final class Combine extends ScalarFunctionChain
                 );
         }
 
-        if (!\is_string($keys[0] ?? null) && !\is_int($keys[0] ?? null)) {
+        if (!is_string($keys[0] ?? null) && !is_int($keys[0] ?? null)) {
             return $context
                 ->functions()
                 ->invalidResult(
@@ -62,6 +68,6 @@ final class Combine extends ScalarFunctionChain
         }
 
         /** @var array<array-key, array-key> $keys */
-        return \array_combine($keys, $values);
+        return array_combine($keys, $values);
     }
 }

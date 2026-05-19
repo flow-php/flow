@@ -15,18 +15,22 @@ use Flow\Doctrine\Bulk\Columns;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use Flow\Doctrine\Bulk\SQLParametersStyle;
 use Flow\Doctrine\Bulk\TableDefinition;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class BulkDataTest extends TestCase
 {
-    public static function provide_parameter_style_combinations(): \Generator
+    public static function provide_parameter_style_combinations(): Generator
     {
         yield 'named parameters' => [SQLParametersStyle::NAMED, ':'];
         yield 'positional parameters' => [SQLParametersStyle::POSITIONAL, '?'];
     }
 
-    public static function provide_single_row_data(): \Generator
+    /**
+     * @return \Generator<string, array{array<string, mixed>, string}>
+     */
+    public static function provide_single_row_data(): Generator
     {
         yield 'integer column' => [['id' => 42], 'INTEGER'];
         yield 'string column' => [['name' => 'test'], 'VARCHAR'];
@@ -409,6 +413,9 @@ final class BulkDataTest extends TestCase
         static::assertStringNotContainsString(':name_', $result);
     }
 
+    /**
+     * @param array<string, mixed> $rowData
+     */
     #[DataProvider('provide_single_row_data')]
     public function test_to_sql_casted_placeholders_with_single_column_data(
         array $rowData,

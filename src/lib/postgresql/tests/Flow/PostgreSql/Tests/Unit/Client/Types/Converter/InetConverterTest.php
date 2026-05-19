@@ -7,22 +7,24 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\Converter\InetConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 final class InetConverterTest extends TestCase
 {
-    public static function provide_invalid_values(): \Generator
+    public static function provide_invalid_values(): Generator
     {
         yield 'integer' => [12345];
         yield 'array' => [['array']];
         yield 'float' => [3.14];
         yield 'boolean true' => [true];
         yield 'boolean false' => [false];
-        yield 'object' => [new \stdClass()];
+        yield 'object' => [new stdClass()];
     }
 
-    public static function provide_valid_values(): \Generator
+    public static function provide_valid_values(): Generator
     {
         yield 'IPv4 address' => ['192.168.1.1', '192.168.1.1'];
         yield 'IPv4 with CIDR' => ['192.168.1.1/24', '192.168.1.1/24'];

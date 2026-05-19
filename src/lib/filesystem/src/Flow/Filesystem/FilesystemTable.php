@@ -8,6 +8,8 @@ use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Telemetry\FilesystemTelemetryConfig;
 use Flow\Filesystem\Telemetry\TraceableFilesystem;
 
+use function array_key_exists;
+use function array_values;
 use function Flow\Filesystem\DSL\traceable_filesystem;
 
 final class FilesystemTable
@@ -31,14 +33,14 @@ final class FilesystemTable
      */
     public function filesystems(): array
     {
-        return \array_values($this->mounts);
+        return array_values($this->mounts);
     }
 
     public function for(Path|string $protocol): Filesystem
     {
         $name = $protocol instanceof Path ? $protocol->protocol() : $protocol;
 
-        if (!\array_key_exists($name, $this->mounts)) {
+        if (!array_key_exists($name, $this->mounts)) {
             throw new InvalidArgumentException("Filesystem with protocol {$name} is not mounted.");
         }
 
@@ -49,7 +51,7 @@ final class FilesystemTable
     {
         $protocol = $filesystem->mount()->protocol;
 
-        if (\array_key_exists($protocol, $this->mounts)) {
+        if (array_key_exists($protocol, $this->mounts)) {
             throw new InvalidArgumentException("Mount '{$protocol}' is already registered.");
         }
 
@@ -62,7 +64,7 @@ final class FilesystemTable
     {
         $protocol = $filesystem->mount()->protocol;
 
-        if (!\array_key_exists($protocol, $this->mounts)) {
+        if (!array_key_exists($protocol, $this->mounts)) {
             throw new InvalidArgumentException("Filesystem with protocol {$protocol} is not mounted.");
         }
 

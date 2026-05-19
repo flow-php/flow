@@ -7,6 +7,7 @@ namespace Flow\Filesystem\Tests\Double;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\SourceStream;
+use Generator;
 
 final class ThrowingSourceStream implements SourceStream
 {
@@ -31,9 +32,11 @@ final class ThrowingSourceStream implements SourceStream
         return !$this->closed;
     }
 
-    public function iterate(int $length = 1): \Generator
+    public function iterate(int $length = 1): Generator
     {
         throw new RuntimeException('Throwing source stream failed mid-iterate');
+
+        /** @mago-ignore analysis:unevaluated-code */
         yield;
     }
 
@@ -47,9 +50,11 @@ final class ThrowingSourceStream implements SourceStream
         throw new RuntimeException('Throwing source stream failed during read()');
     }
 
-    public function readLines(string $separator = "\n", ?int $length = null): \Generator
+    public function readLines(string $separator = "\n", ?int $length = null): Generator
     {
         throw new RuntimeException('Throwing source stream failed during readLines()');
+
+        /** @mago-ignore analysis:unevaluated-code */
         yield;
     }
 

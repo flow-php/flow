@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Execution;
 
+use DateTimeImmutable;
 use Flow\Clock\FakeClock;
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Dataset\Report;
@@ -135,7 +136,7 @@ final class StatisticsCollectorTest extends FlowTestCase
 
     public function test_report_returns_report_with_correct_execution_time(): void
     {
-        $clock = new FakeClock(new \DateTimeImmutable('2025-01-01 10:00:00 UTC'));
+        $clock = new FakeClock(new DateTimeImmutable('2025-01-01 10:00:00 UTC'));
         $config = (new ConfigBuilder())
             ->clock($clock)
             ->build();
@@ -151,11 +152,11 @@ final class StatisticsCollectorTest extends FlowTestCase
 
         static::assertNotNull($report);
         static::assertEquals(
-            new \DateTimeImmutable('2025-01-01 10:00:00 UTC'),
+            new DateTimeImmutable('2025-01-01 10:00:00 UTC'),
             $report->statistics()->executionTime->startedAt,
         );
         static::assertEquals(
-            new \DateTimeImmutable('2025-01-01 10:10:00 UTC'),
+            new DateTimeImmutable('2025-01-01 10:10:00 UTC'),
             $report->statistics()->executionTime->finishedAt,
         );
         static::assertSame(600, $report->statistics()->executionTime->inSeconds());

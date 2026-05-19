@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Arrow\Parquet;
 
-if (\extension_loaded('arrow')) {
+use Exception as BaseException;
+
+use function extension_loaded;
+
+if (extension_loaded('arrow')) {
     return;
 }
 
-final class Exception extends \Exception {}
+final class Exception extends BaseException {}

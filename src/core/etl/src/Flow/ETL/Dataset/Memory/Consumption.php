@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Dataset\Memory;
 
+use function memory_get_usage;
+
 final class Consumption
 {
     private readonly Unit $initial;
@@ -15,14 +17,14 @@ final class Consumption
     public function __construct(
         private readonly bool $realMemory = true,
     ) {
-        $this->initial = Unit::fromBytes(\memory_get_usage($this->realMemory));
+        $this->initial = Unit::fromBytes(memory_get_usage($this->realMemory));
         $this->min = $this->initial;
         $this->max = $this->initial;
     }
 
     public function capture(): Unit
     {
-        $current = Unit::fromBytes(\memory_get_usage($this->realMemory));
+        $current = Unit::fromBytes(memory_get_usage($this->realMemory));
 
         if ($current->isGreaterThan($this->max)) {
             $this->max = $current;

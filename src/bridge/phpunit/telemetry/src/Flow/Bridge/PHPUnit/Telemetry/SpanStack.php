@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Flow\Bridge\PHPUnit\Telemetry;
 
 use Flow\Telemetry\Tracer\Span;
+use SplStack;
 
 final class SpanStack
 {
     /**
      * @var \SplStack<Span>
      */
-    private \SplStack $stack;
+    private SplStack $stack;
 
     /**
      * @var array<string, Span>
@@ -21,14 +22,14 @@ final class SpanStack
     public function __construct()
     {
         /** @var \SplStack<Span> $stack */
-        $stack = new \SplStack();
+        $stack = new SplStack();
         $this->stack = $stack;
     }
 
     public function clear(): void
     {
         /** @var \SplStack<Span> $stack */
-        $stack = new \SplStack();
+        $stack = new SplStack();
         $this->stack = $stack;
         $this->suiteSpans = [];
     }

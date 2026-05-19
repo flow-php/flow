@@ -5,6 +5,13 @@ declare(strict_types=1);
 namespace Flow\Bridge\Psr3\Telemetry;
 
 use Flow\Telemetry\Logger\LogRecord;
+use Stringable;
+use Throwable;
+
+use function is_bool;
+use function is_object;
+use function is_scalar;
+use function method_exists;
 
 /**
  * Convert a PSR-3 log call (level + message + context) into a Telemetry LogRecord.
@@ -29,7 +36,7 @@ final readonly class LogRecordConverter
     /**
      * @param array<array-key, mixed> $context
      */
-    public function convert(string|\Stringable $level, string|\Stringable $message, array $context = []): LogRecord
+    public function convert(string|Stringable $level, string|Stringable $message, array $context = []): LogRecord
     {
         $record = new LogRecord(
             severity: $this->severityMapper->map($level),
@@ -47,7 +54,7 @@ final readonly class LogRecordConverter
         foreach ($context as $key => $value) {
             $key = (string) $key;
 
-            if ($key === 'exception' && $value instanceof \Throwable) {
+            if ($key === 'exception' && $value instanceof Throwable) {
                 $record = $record->setException($value);
 
                 continue;
@@ -93,19 +100,19 @@ final readonly class LogRecordConverter
             return '';
         }
 
-        if (\is_bool($value)) {
+        if (is_bool($value)) {
             return $value ? '1' : '';
         }
 
-        if (\is_scalar($value)) {
+        if (is_scalar($value)) {
             return (string) $value;
         }
 
-        if ($value instanceof \Throwable) {
+        if ($value instanceof Throwable) {
             return null;
         }
 
-        if (\is_object($value) && \method_exists($value, '__toString')) {
+        if (is_object($value) && method_exists($value, '__toString')) {
             return (string) $value;
         }
 

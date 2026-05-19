@@ -7,6 +7,14 @@ namespace Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ThriftModel\SchemaElement;
 
+use function array_filter;
+use function array_merge;
+use function array_reverse;
+use function array_values;
+use function count;
+use function explode;
+use function implode;
+
 final class NestedColumn implements Column
 {
     private ?bool $cachedIsList = null;
@@ -60,9 +68,15 @@ final class NestedColumn implements Column
     {
         return new self(
             $schemaElement->name,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             $schemaElement->repetition_type !== null ? Repetition::from($schemaElement->repetition_type) : null,
             $children,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             $schemaElement->converted_type !== null ? ConvertedType::from($schemaElement->converted_type) : null,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             $schemaElement->logicalType !== null ? LogicalType::fromThrift($schemaElement->logicalType) : null,
         );
     }
@@ -161,8 +175,9 @@ final class NestedColumn implements Column
 
         foreach ($this->children as $child) {
             if ($child instanceof self) {
-                $flat = \array_merge($flat, $child->childrenFlat());
+                $flat = array_merge($flat, $child->childrenFlat());
             } else {
+                // @mago-ignore analysis:redundant-docblock-type
                 /** @var FlatColumn $child */
                 $flat[$child->flatPath()] = $child;
             }
@@ -216,40 +231,89 @@ final class NestedColumn implements Column
             }
         }
 
-        $path = \array_reverse($path);
-        $this->flatPath = \implode('.', $path);
+        $path = array_reverse($path);
+        $this->flatPath = implode('.', $path);
 
         return $this->flatPath;
     }
 
     public function getListElement(): Column
     {
-        if ($this->isList()) {
-            /** @phpstan-ignore-next-line */
-            return $this->cachedListElement ??= $this->children()[0]->children()[0];
+        if (!$this->isList()) {
+            throw new InvalidArgumentException('Column ' . $this->flatPath() . ' is not a list');
         }
 
-        throw new InvalidArgumentException('Column ' . $this->flatPath() . ' is not a list');
+        if ($this->cachedListElement !== null) {
+            return $this->cachedListElement;
+        }
+
+        $wrapper = $this->children[0] ?? null;
+
+        if (!$wrapper instanceof self) {
+            throw new InvalidArgumentException(
+                'Malformed list column ' . $this->flatPath() . ': missing nested list wrapper',
+            );
+        }
+
+        $element = $wrapper->children[0] ?? null;
+
+        if ($element === null) {
+            throw new InvalidArgumentException(
+                'Malformed list column ' . $this->flatPath() . ': missing element column',
+            );
+        }
+
+        return $this->cachedListElement = $element;
     }
 
     public function getMapKeyColumn(): FlatColumn
     {
-        if ($this->isMap()) {
-            /** @phpstan-ignore-next-line */
-            return $this->cachedMapKeyColumn ??= $this->children()[0]->children()[0];
+        if (!$this->isMap()) {
+            throw new InvalidArgumentException('Column ' . $this->flatPath() . ' is not a map');
         }
 
-        throw new InvalidArgumentException('Column ' . $this->flatPath() . ' is not a map');
+        if ($this->cachedMapKeyColumn !== null) {
+            return $this->cachedMapKeyColumn;
+        }
+
+        $wrapper = $this->children[0] ?? null;
+
+        if (!$wrapper instanceof self) {
+            throw new InvalidArgumentException(
+                'Malformed map column ' . $this->flatPath() . ': missing key_value wrapper',
+            );
+        }
+
+        $key = $wrapper->children[0] ?? null;
+
+        if (!$key instanceof FlatColumn) {
+            throw new InvalidArgumentException(
+                'Malformed map column ' . $this->flatPath() . ': key column must be a flat column',
+            );
+        }
+
+        return $this->cachedMapKeyColumn = $key;
     }
 
     public function getMapValueColumn(): ?Column
     {
-        if ($this->isMap()) {
-            /** @phpstan-ignore-next-line */
-            return $this->cachedMapValueColumn ??= $this->children()[0]->children()[1] ?? null;
+        if (!$this->isMap()) {
+            throw new InvalidArgumentException('Column ' . $this->flatPath() . ' is not a map');
         }
 
-        throw new InvalidArgumentException('Column ' . $this->flatPath() . ' is not a map');
+        if ($this->cachedMapValueColumn !== null) {
+            return $this->cachedMapValueColumn;
+        }
+
+        $wrapper = $this->children[0] ?? null;
+
+        if (!$wrapper instanceof self) {
+            throw new InvalidArgumentException(
+                'Malformed map column ' . $this->flatPath() . ': missing key_value wrapper',
+            );
+        }
+
+        return $this->cachedMapValueColumn = $wrapper->children[1] ?? null;
     }
 
     public function isList(): bool
@@ -354,7 +418,7 @@ final class NestedColumn implements Column
 
     public function path(): array
     {
-        return \explode('.', $this->flatPath());
+        return explode('.', $this->flatPath());
     }
 
     public function repetition(): ?Repetition
@@ -382,7 +446,7 @@ final class NestedColumn implements Column
             $parent = $parent->parent();
         }
 
-        $this->repetitions = new Repetitions(...\array_reverse(\array_values(\array_filter($repetitions))));
+        $this->repetitions = new Repetitions(...array_reverse(array_values(array_filter($repetitions))));
 
         return $this->repetitions;
     }
@@ -407,7 +471,7 @@ final class NestedColumn implements Column
         $elements = [
             new SchemaElement([
                 'name' => $this->name(),
-                'num_children' => \count($this->children),
+                'num_children' => count($this->children),
                 'converted_type' => $this->convertedType?->value,
                 'repetition_type' => $this->repetition()?->value,
                 'logicalType' => $this->logicalType()?->toThrift(),
@@ -420,7 +484,7 @@ final class NestedColumn implements Column
             }
 
             if ($child instanceof self) {
-                $elements = \array_merge($elements, $child->toThrift());
+                $elements = array_merge($elements, $child->toThrift());
             }
         }
 

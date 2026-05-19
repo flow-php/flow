@@ -6,6 +6,7 @@ namespace Flow\Types\Tests\Unit\Type;
 
 use Flow\Types\Type\Logical\InstanceOfType;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
@@ -165,7 +166,7 @@ final class TypesTest extends TestCase
             types(type_instance_of(InstanceOfType::class)),
             $types->only(type_instance_of(InstanceOfType::class)),
         );
-        static::assertEquals(types(), $types->only(type_instance_of(\stdClass::class)));
+        static::assertEquals(types(), $types->only(type_instance_of(stdClass::class)));
         static::assertEquals(types(type_null()), $types->only(type_null()));
     }
 

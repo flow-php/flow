@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Unit\Transport;
 
+use DateTimeImmutable;
 use Flow\Bridge\Telemetry\OTLP\Serializer\JsonSerializer;
 use Flow\Bridge\Telemetry\OTLP\Tests\Double\RecordingTransport;
 use Flow\Bridge\Telemetry\OTLP\Transport\CurlTransport;
@@ -19,17 +20,21 @@ use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanContext;
 use Flow\Telemetry\Tracer\SpanKind;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
+use function count;
+use function extension_loaded;
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_curl_options;
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_curl_transport;
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_json_serializer;
+use function str_contains;
 
 final class CurlTransportTest extends TestCase
 {
     public function test_constructor_requires_curl_extension(): void
     {
-        if (!\extension_loaded('curl')) {
-            $this->expectException(\RuntimeException::class);
+        if (!extension_loaded('curl')) {
+            $this->expectException(RuntimeException::class);
             $this->expectExceptionMessage('ext-curl is required');
 
             new CurlTransport('http://localhost:4318', new JsonSerializer());
@@ -40,7 +45,7 @@ final class CurlTransportTest extends TestCase
 
     public function test_creates_transport_via_dsl_function(): void
     {
-        if (!\extension_loaded('curl')) {
+        if (!extension_loaded('curl')) {
             static::markTestSkipped('ext-curl is required');
         }
 
@@ -52,7 +57,7 @@ final class CurlTransportTest extends TestCase
 
     public function test_creates_transport_with_custom_headers(): void
     {
-        if (!\extension_loaded('curl')) {
+        if (!extension_loaded('curl')) {
             static::markTestSkipped('ext-curl is required');
         }
 
@@ -68,7 +73,7 @@ final class CurlTransportTest extends TestCase
 
     public function test_creates_transport_with_custom_timeouts(): void
     {
-        if (!\extension_loaded('curl')) {
+        if (!extension_loaded('curl')) {
             static::markTestSkipped('ext-curl is required');
         }
 
@@ -84,7 +89,7 @@ final class CurlTransportTest extends TestCase
 
     public function test_creates_transport_with_options_object(): void
     {
-        if (!\extension_loaded('curl')) {
+        if (!extension_loaded('curl')) {
             static::markTestSkipped('ext-curl is required');
         }
 
@@ -99,7 +104,7 @@ final class CurlTransportTest extends TestCase
 
     public function test_failover_receives_failed_batches_and_shutdown_throws_composite(): void
     {
-        if (!\extension_loaded('curl')) {
+        if (!extension_loaded('curl')) {
             static::markTestSkipped('ext-curl is required');
         }
 
@@ -139,7 +144,7 @@ final class CurlTransportTest extends TestCase
 
     public function test_failover_records_double_failure_when_failover_send_also_throws(): void
     {
-        if (!\extension_loaded('curl')) {
+        if (!extension_loaded('curl')) {
             static::markTestSkipped('ext-curl is required');
         }
 
@@ -172,7 +177,7 @@ final class CurlTransportTest extends TestCase
 
     public function test_send_after_shutdown_throws_exception(): void
     {
-        if (!\extension_loaded('curl')) {
+        if (!extension_loaded('curl')) {
             static::markTestSkipped('ext-curl is required');
         }
 
@@ -188,7 +193,7 @@ final class CurlTransportTest extends TestCase
 
     public function test_shutdown_aggregates_curl_connection_failures(): void
     {
-        if (!\extension_loaded('curl')) {
+        if (!extension_loaded('curl')) {
             static::markTestSkipped('ext-curl is required');
         }
 
@@ -209,7 +214,7 @@ final class CurlTransportTest extends TestCase
 
     public function test_shutdown_cascades_to_failover_shutdown(): void
     {
-        if (!\extension_loaded('curl')) {
+        if (!extension_loaded('curl')) {
             static::markTestSkipped('ext-curl is required');
         }
 
@@ -237,7 +242,7 @@ final class CurlTransportTest extends TestCase
 
     public function test_shutdown_is_idempotent(): void
     {
-        if (!\extension_loaded('curl')) {
+        if (!extension_loaded('curl')) {
             static::markTestSkipped('ext-curl is required');
         }
 
@@ -251,12 +256,12 @@ final class CurlTransportTest extends TestCase
 
     public function test_shutdown_surfaces_failover_shutdown_exception_when_no_deferred_failures(): void
     {
-        if (!\extension_loaded('curl')) {
+        if (!extension_loaded('curl')) {
             static::markTestSkipped('ext-curl is required');
         }
 
         $failover = new RecordingTransport();
-        $failover->shutdownException = new \RuntimeException('boom');
+        $failover->shutdownException = new RuntimeException('boom');
 
         $transport = new CurlTransport(
             'http://localhost:4318',
@@ -273,7 +278,7 @@ final class CurlTransportTest extends TestCase
 
     public function test_shutdown_with_zero_timeout_forwards_pending_to_failover(): void
     {
-        if (!\extension_loaded('curl')) {
+        if (!extension_loaded('curl')) {
             static::markTestSkipped('ext-curl is required');
         }
 
@@ -296,7 +301,7 @@ final class CurlTransportTest extends TestCase
             $transport->shutdown();
             self::addToAssertionCount(1);
         } catch (FailoverTransportException $e) {
-            static::assertGreaterThanOrEqual(1, \count($e->failures));
+            static::assertGreaterThanOrEqual(1, count($e->failures));
             // Either the still-pending path forwarded the batch, or the normal failover drain did.
             static::assertContains($batch, $failover->sent);
         }
@@ -306,7 +311,7 @@ final class CurlTransportTest extends TestCase
 
     public function test_shutdown_with_zero_timeout_marks_pending_as_failed_in_legacy_mode(): void
     {
-        if (!\extension_loaded('curl')) {
+        if (!extension_loaded('curl')) {
             static::markTestSkipped('ext-curl is required');
         }
 
@@ -329,8 +334,8 @@ final class CurlTransportTest extends TestCase
         } catch (TransportException $e) {
             // Either the shutdown-deadline-reached path OR the normal connection-refused path.
             static::assertTrue(
-                \str_contains($e->getMessage(), 'shutdown_timeout=0ms expired')
-                || \str_contains($e->getMessage(), 'curl error'),
+                str_contains($e->getMessage(), 'shutdown_timeout=0ms expired')
+                || str_contains($e->getMessage(), 'curl error'),
             );
         }
     }
@@ -344,7 +349,7 @@ final class CurlTransportTest extends TestCase
             'test-span',
             SpanContext::create(TraceId::generate(), SpanId::generate()),
             SpanKind::INTERNAL,
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
             ResourceMother::default(),
             new InstrumentationScope('test', '1.0.0'),
         )];

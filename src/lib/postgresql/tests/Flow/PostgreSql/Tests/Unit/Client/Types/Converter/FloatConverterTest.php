@@ -7,20 +7,25 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\Converter\FloatConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
+
+use const INF;
+use const NAN;
 
 final class FloatConverterTest extends TestCase
 {
-    public static function provide_invalid_values(): \Generator
+    public static function provide_invalid_values(): Generator
     {
         yield 'boolean true' => [true];
         yield 'boolean false' => [false];
         yield 'array' => [['array']];
-        yield 'object' => [new \stdClass()];
+        yield 'object' => [new stdClass()];
     }
 
-    public static function provide_valid_values(): \Generator
+    public static function provide_valid_values(): Generator
     {
         yield 'positive float' => [3.14159, '3.14159'];
         yield 'negative float' => [-123.456, '-123.456'];
@@ -29,9 +34,9 @@ final class FloatConverterTest extends TestCase
         yield 'negative integer' => [-42, '-42'];
         yield 'string numeric' => ['3.14', '3.14'];
         yield 'string negative' => ['-3.14', '-3.14'];
-        yield 'NaN' => [\NAN, 'NaN'];
-        yield 'Infinity' => [\INF, 'Infinity'];
-        yield 'negative Infinity' => [-\INF, '-Infinity'];
+        yield 'NaN' => [NAN, 'NaN'];
+        yield 'Infinity' => [INF, 'Infinity'];
+        yield 'negative Infinity' => [-INF, '-Infinity'];
         yield 'very small float' => [1.0E-10, '1.0E-10'];
         yield 'very large float' => [1.0E+100, '1.0E+100'];
         yield 'scientific notation string' => ['1.5e-10', '1.5e-10'];

@@ -4,17 +4,30 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Function\AggregatingFunction;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
+use Stringable;
 
+use function array_filter;
+use function array_key_exists;
+use function array_unique;
+use function array_values;
+use function count;
+use function current;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_union;
+use function implode;
+use function is_array;
+use function is_scalar;
+use function serialize;
 
 final class GroupBy
 {
@@ -44,7 +57,7 @@ final class GroupBy
 
     public function __construct(string|Reference ...$entries)
     {
-        $this->refs = References::init(...\array_unique($entries));
+        $this->refs = References::init(...array_unique($entries));
         $this->aggregations = [];
         $this->groupedTable = [];
         $this->pivotedTable = [];
@@ -54,13 +67,13 @@ final class GroupBy
 
     public function aggregate(AggregatingFunction ...$aggregator): void
     {
-        if (!\count($aggregator)) {
+        if (!count($aggregator)) {
             throw new InvalidArgumentException("Aggregations can't be empty");
         }
 
-        if ($this->pivot !== null && \count($aggregator) !== 1) {
+        if ($this->pivot !== null && count($aggregator) !== 1) {
             throw new RuntimeException(
-                'Pivot requires exactly one aggregation in group by, given: ' . \count($aggregator),
+                'Pivot requires exactly one aggregation in group by, given: ' . count($aggregator),
             );
         }
 
@@ -78,7 +91,7 @@ final class GroupBy
                 }
             }
 
-            $this->pivotColumns = \array_values(\array_filter(\array_unique($this->pivotColumns))); // @phpstan-ignore argument.type
+            $this->pivotColumns = array_values(array_filter(array_unique($this->pivotColumns))); // @phpstan-ignore argument.type
 
             foreach ($rows as $row) {
                 $values = [];
@@ -91,7 +104,7 @@ final class GroupBy
 
                 $pivotValue = $row->valueOf($this->pivot);
 
-                if (!\array_key_exists($indexValue, $this->pivotedTable)) {
+                if (!array_key_exists($indexValue, $this->pivotedTable)) {
                     $this->pivotedTable[$indexValue] = [];
                 }
 
@@ -105,9 +118,9 @@ final class GroupBy
 
                 $pivotValue = type_union(type_string(), type_integer())->assert($pivotValue);
 
-                if (!\array_key_exists($pivotValue, $this->pivotedTable[$indexValue])) {
+                if (!array_key_exists($pivotValue, $this->pivotedTable[$indexValue])) {
                     /** @phpstan-ignore-next-line */
-                    $this->pivotedTable[$indexValue][$pivotValue] = clone \current($this->aggregations);
+                    $this->pivotedTable[$indexValue][$pivotValue] = clone current($this->aggregations);
                 }
 
                 $aggregator = $this->pivotedTable[$indexValue][$pivotValue];
@@ -131,7 +144,7 @@ final class GroupBy
 
                 $valuesHash = $this->hash($values);
 
-                if (!\array_key_exists($valuesHash, $this->groupedTable)) {
+                if (!array_key_exists($valuesHash, $this->groupedTable)) {
                     $aggregators = [];
 
                     foreach ($this->aggregations as $aggregator) {
@@ -173,7 +186,7 @@ final class GroupBy
                 foreach ($this->pivotColumns as $column) {
                     $column = type_union(type_string(), type_integer())->assert($column);
 
-                    if (!\array_key_exists($column, $row)) {
+                    if (!array_key_exists($column, $row)) {
                         $row[$column] = null;
                     }
                 }
@@ -196,7 +209,7 @@ final class GroupBy
                 $entries[] = $aggregator->result($context->entryFactory());
             }
 
-            if (\count($entries)) {
+            if (count($entries)) {
                 $rows[] = Row::create(...$entries);
             }
         }
@@ -216,21 +229,21 @@ final class GroupBy
         foreach ($values as $value) {
             if ($value === null) {
                 $stringValues[] = 'null';
-            } elseif (\is_scalar($value)) {
+            } elseif (is_scalar($value)) {
                 $stringValues[] = (string) $value;
             } else {
-                if ($value instanceof \Stringable) {
+                if ($value instanceof Stringable) {
                     $stringValues[] = $value->__toString();
-                } elseif ($value instanceof \DateTimeInterface) {
-                    $stringValues[] = $value->format(\DateTimeImmutable::ATOM);
-                } elseif (\is_array($value)) {
+                } elseif ($value instanceof DateTimeInterface) {
+                    $stringValues[] = $value->format(DateTimeImmutable::ATOM);
+                } elseif (is_array($value)) {
                     $stringValues[] = $this->hash($value);
                 } else {
-                    $stringValues[] = \serialize($value);
+                    $stringValues[] = serialize($value);
                 }
             }
         }
 
-        return NativePHPHash::xxh128(\implode('', $stringValues));
+        return NativePHPHash::xxh128(implode('', $stringValues));
     }
 }

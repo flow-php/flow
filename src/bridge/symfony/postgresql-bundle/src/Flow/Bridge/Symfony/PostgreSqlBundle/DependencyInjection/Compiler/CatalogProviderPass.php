@@ -7,10 +7,13 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection\Compiler;
 use Flow\PostgreSql\Client\Context;
 use Flow\PostgreSql\Schema\Catalog;
 use Flow\PostgreSql\Schema\ChainCatalogProvider;
+use LogicException;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
+
+use function count;
 
 final class CatalogProviderPass implements CompilerPassInterface
 {
@@ -32,7 +35,7 @@ final class CatalogProviderPass implements CompilerPassInterface
         }
 
         if ($providerRefs === [] && $container->hasParameter('flow.postgresql.migrations.connections')) {
-            throw new \LogicException(
+            throw new LogicException(
                 'No catalog providers found. Register at least one catalog provider using #[AsCatalogProvider] attribute, "flow.postgresql.catalog_provider" tag, or "catalog_providers" configuration.',
             );
         }
@@ -81,7 +84,7 @@ final class CatalogProviderPass implements CompilerPassInterface
         $clientDef = $container->getDefinition($clientId);
         $arguments = $clientDef->getArguments();
 
-        while (\count($arguments) < 2) {
+        while (count($arguments) < 2) {
             $arguments[] = null;
         }
 

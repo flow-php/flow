@@ -10,6 +10,10 @@ use Flow\PostgreSql\AST\Nodes\StatementTrait;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 use Flow\PostgreSql\Protobuf\AST\SetOperation;
 
+use function count;
+use function Flow\Types\DSL\type_boolean;
+use function iterator_to_array;
+
 /**
  * @implements Statement<SelectStmt>
  */
@@ -23,32 +27,32 @@ final readonly class SelectStatement implements Statement
 
     public function from(): From
     {
-        return new From(\iterator_to_array($this->stmt->getFromClause()));
+        return new From(iterator_to_array($this->stmt->getFromClause()));
     }
 
     public function hasCte(): bool
     {
-        return $this->stmt->hasWithClause();
+        return type_boolean()->assert($this->stmt->hasWithClause());
     }
 
     public function hasIntoClause(): bool
     {
-        return $this->stmt->hasIntoClause();
+        return type_boolean()->assert($this->stmt->hasIntoClause());
     }
 
     public function hasLimit(): bool
     {
-        return $this->stmt->hasLimitCount();
+        return type_boolean()->assert($this->stmt->hasLimitCount());
     }
 
     public function hasLockingClause(): bool
     {
-        return \count($this->stmt->getLockingClause()) > 0;
+        return count($this->stmt->getLockingClause()) > 0;
     }
 
     public function hasOffset(): bool
     {
-        return $this->stmt->hasLimitOffset();
+        return type_boolean()->assert($this->stmt->hasLimitOffset());
     }
 
     public function hasSetOperation(): bool

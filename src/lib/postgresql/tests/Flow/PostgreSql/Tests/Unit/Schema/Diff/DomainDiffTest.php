@@ -8,6 +8,7 @@ use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\Schema\Constraint\CheckConstraint;
 use Flow\PostgreSql\Schema\Diff\DomainDiff;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 use function Flow\PostgreSql\DSL\schema_domain;
 
@@ -211,7 +212,7 @@ final class DomainDiffTest extends TestCase
             addedCheckConstraints: [new CheckConstraint('value > 0')],
         );
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Cannot add unnamed check constraint on domain "positive_int"');
         $diff->generate();
     }
@@ -224,7 +225,7 @@ final class DomainDiffTest extends TestCase
             removedCheckConstraints: [new CheckConstraint('value > 0')],
         );
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Cannot drop unnamed check constraint on domain "positive_int"');
         $diff->generate();
     }

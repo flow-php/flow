@@ -11,6 +11,8 @@ use Flow\PostgreSql\QueryBuilder\Condition\Condition;
 use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
+use function count;
+
 /**
  * Represents a joined table: table1 JOIN table2 ON condition or table1 JOIN table2 USING (col1, col2).
  */
@@ -64,7 +66,7 @@ final readonly class JoinedTable implements TableReference
         $usingColumns = null;
         $usingClause = $joinExpr->getUsingClause();
 
-        if (\count($usingClause) > 0) {
+        if (count($usingClause) > 0) {
             $usingColumns = [];
 
             foreach ($usingClause as $col) {
@@ -75,7 +77,7 @@ final readonly class JoinedTable implements TableReference
                 }
             }
 
-            if (\count($usingColumns) === 0) {
+            if (count($usingColumns) === 0) {
                 $usingColumns = null;
             }
         }

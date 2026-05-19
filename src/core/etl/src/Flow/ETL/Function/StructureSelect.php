@@ -11,6 +11,8 @@ use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 
+use function array_key_exists;
+
 final readonly class StructureSelect implements ScalarFunction
 {
     private Reference $ref;
@@ -41,7 +43,7 @@ final readonly class StructureSelect implements ScalarFunction
         $output = [];
 
         foreach ($this->refs as $ref) {
-            if (\array_key_exists($ref->to(), $structure->value() ?: [])) {
+            if (array_key_exists($ref->to(), $structure->value() ?: [])) {
                 $output[$ref->name()] = $structure->value() ? $structure->value()[$ref->to()] : null;
             } else {
                 $output[$ref->name()] = null;

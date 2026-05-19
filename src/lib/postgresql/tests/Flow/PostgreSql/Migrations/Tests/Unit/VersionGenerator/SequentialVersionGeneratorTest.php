@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Migrations\Tests\Unit\VersionGenerator;
 
+use DateTimeImmutable;
 use Flow\PostgreSql\Migrations\ExecutedMigration;
 use Flow\PostgreSql\Migrations\Store\ExecutedMigrations;
 use Flow\PostgreSql\Migrations\Store\MigrationStore;
@@ -40,9 +41,9 @@ final class SequentialVersionGeneratorTest extends TestCase
             ->method('executedMigrations')
             ->willReturn(
                 new ExecutedMigrations(
-                    new ExecutedMigration(Version::fromString('00001'), new \DateTimeImmutable(), 100),
-                    new ExecutedMigration(Version::fromString('00003'), new \DateTimeImmutable(), 200),
-                    new ExecutedMigration(Version::fromString('00002'), new \DateTimeImmutable(), 150),
+                    new ExecutedMigration(Version::fromString('00001'), new DateTimeImmutable(), 100),
+                    new ExecutedMigration(Version::fromString('00003'), new DateTimeImmutable(), 200),
+                    new ExecutedMigration(Version::fromString('00002'), new DateTimeImmutable(), 150),
                 ),
             );
 

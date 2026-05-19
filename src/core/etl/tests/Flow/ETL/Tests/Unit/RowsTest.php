@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use DateTimeImmutable;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
@@ -12,8 +13,10 @@ use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function assert;
 use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\boolean_entry;
 use function Flow\ETL\DSL\datetime_entry;
@@ -35,10 +38,15 @@ use function Flow\Filesystem\DSL\partitions;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
+use function is_int;
+use function is_numeric;
+use function iterator_to_array;
+use function serialize;
+use function unserialize;
 
 final class RowsTest extends FlowTestCase
 {
-    public static function rows_diff_left_provider(): \Generator
+    public static function rows_diff_left_provider(): Generator
     {
         yield 'one entry identical row' => [
             rows(),
@@ -71,7 +79,7 @@ final class RowsTest extends FlowTestCase
         ];
     }
 
-    public static function rows_diff_right_provider(): \Generator
+    public static function rows_diff_right_provider(): Generator
     {
         yield 'one entry identical row' => [
             rows(),
@@ -104,7 +112,7 @@ final class RowsTest extends FlowTestCase
         ];
     }
 
-    public static function unique_rows_provider(): \Generator
+    public static function unique_rows_provider(): Generator
     {
         yield 'simple identical rows' => [
             rows(row(int_entry('number', 1))),
@@ -167,7 +175,7 @@ final class RowsTest extends FlowTestCase
             row(int_entry('id', 7)),
         );
 
-        $chunk = \iterator_to_array($rows->chunks(10));
+        $chunk = iterator_to_array($rows->chunks(10));
 
         static::assertCount(1, $chunk);
         static::assertSame([1, 2, 3, 4, 5, 6, 7], $chunk[0]->reduceToArray('id'));
@@ -188,7 +196,7 @@ final class RowsTest extends FlowTestCase
             row(int_entry('id', 10)),
         );
 
-        $chunk = \iterator_to_array($rows->chunks(5));
+        $chunk = iterator_to_array($rows->chunks(5));
 
         static::assertCount(2, $chunk);
         static::assertSame([1, 2, 3, 4, 5], $chunk[0]->reduceToArray('id'));
@@ -280,13 +288,13 @@ final class RowsTest extends FlowTestCase
 
         $evenRows = static function (Row $row): bool {
             $value = $row->get('number')->value();
-            \assert(\is_int($value));
+            assert(is_int($value));
 
             return ($value % 2) === 0;
         };
         $oddRows = static function (Row $row): bool {
             $value = $row->get('number')->value();
-            \assert(\is_int($value));
+            assert(is_int($value));
 
             return ($value % 2) === 1;
         };
@@ -361,7 +369,7 @@ final class RowsTest extends FlowTestCase
 
         $rows = $rows->flatMap(static function (Row $row): array {
             $id = $row->valueOf('id');
-            \assert(\is_int($id));
+            assert(is_int($id));
 
             return [
                 $row->add(string_entry('name', $id . '-name-01')),
@@ -854,10 +862,10 @@ final class RowsTest extends FlowTestCase
     {
         $rows = rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
 
-        $serialized = \serialize($rows);
+        $serialized = serialize($rows);
 
         /** @var Rows $unserialized */
-        $unserialized = \unserialize($serialized);
+        $unserialized = unserialize($serialized);
 
         static::assertTrue($unserialized[0]->isEqual($rows[0]));
         static::assertTrue($unserialized[1]->isEqual($rows[1]));
@@ -884,13 +892,13 @@ final class RowsTest extends FlowTestCase
         );
 
         $sort = $rows->sort(static function (mixed $row, mixed $nextRow): int {
-            \assert($row instanceof \Flow\ETL\Row);
-            \assert($nextRow instanceof \Flow\ETL\Row);
+            assert($row instanceof Row);
+            assert($nextRow instanceof Row);
 
             $rowValue = $row->valueOf('number');
             $nextRowValue = $nextRow->valueOf('number');
-            \assert(\is_numeric($rowValue));
-            \assert(\is_numeric($nextRowValue));
+            assert(is_numeric($rowValue));
+            assert(is_numeric($nextRowValue));
 
             return (int) $rowValue <=> (int) $nextRowValue;
         });
@@ -980,11 +988,11 @@ final class RowsTest extends FlowTestCase
                 int_entry('id', 1),
                 boolean_entry('deleted', true),
                 string_entry('phase', null),
-                new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
+                new DateTimeEntry('created-at', new DateTimeImmutable('2020-08-13 15:00')),
             ),
             row(
                 boolean_entry('deleted', true),
-                new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
+                new DateTimeEntry('created-at', new DateTimeImmutable('2020-08-13 15:00')),
                 int_entry('id', 1),
                 string_entry('phase', null),
             ),
@@ -995,13 +1003,13 @@ final class RowsTest extends FlowTestCase
         static::assertEquals(
             rows(
                 row(
-                    new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
+                    new DateTimeEntry('created-at', new DateTimeImmutable('2020-08-13 15:00')),
                     boolean_entry('deleted', true),
                     int_entry('id', 1),
                     string_entry('phase', null),
                 ),
                 row(
-                    new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
+                    new DateTimeEntry('created-at', new DateTimeImmutable('2020-08-13 15:00')),
                     boolean_entry('deleted', true),
                     int_entry('id', 1),
                     string_entry('phase', null),

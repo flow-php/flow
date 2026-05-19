@@ -7,6 +7,13 @@ namespace Flow\PostgreSql\Client\Types\Converter;
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\ValueConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
+use Stringable;
+
+use function is_array;
+use function is_string;
+use function json_encode;
+
+use const JSON_THROW_ON_ERROR;
 
 final class JsonConverter implements ValueConverter
 {
@@ -24,16 +31,16 @@ final class JsonConverter implements ValueConverter
             return null;
         }
 
-        if (\is_string($value)) {
+        if (is_string($value)) {
             return $value;
         }
 
-        if ($value instanceof \Stringable) {
+        if ($value instanceof Stringable) {
             return $value->__toString();
         }
 
-        if (\is_array($value)) {
-            return \json_encode($value, \JSON_THROW_ON_ERROR);
+        if (is_array($value)) {
+            return json_encode($value, JSON_THROW_ON_ERROR);
         }
 
         throw ValueConversionException::cannotConvert($value, 'json');

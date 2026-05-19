@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\Azure\AzureBlobDestinationStream;
 
+use Flow\Azure\SDK\BlobService\BlockBlob\Block as AzureBlock;
 use Flow\Azure\SDK\BlobService\BlockBlob\BlockList;
 use Flow\Azure\SDK\BlobService\BlockBlob\BlockState;
 use Flow\Azure\SDK\BlobServiceInterface;
@@ -11,6 +12,12 @@ use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Block;
 use Flow\Filesystem\Stream\BlockLifecycle;
+
+use function count;
+use function fclose;
+use function fopen;
+use function is_resource;
+use function unlink;
 
 final class AzureBlobBlockLifecycle implements BlockLifecycle
 {
@@ -21,7 +28,7 @@ final class AzureBlobBlockLifecycle implements BlockLifecycle
         private readonly Path $path,
         private readonly BlockList $blockList,
     ) {
-        if (\count($this->blockList->all())) {
+        if (count($this->blockList->all())) {
             $this->initialized = true;
         }
     }
@@ -33,7 +40,7 @@ final class AzureBlobBlockLifecycle implements BlockLifecycle
             $this->initialized = true;
         }
 
-        $handle = \fopen($block->path()->path(), 'rb');
+        $handle = fopen($block->path()->path(), 'rb');
 
         if ($handle === false) {
             throw new RuntimeException('Cannot open block file for reading');
@@ -41,14 +48,12 @@ final class AzureBlobBlockLifecycle implements BlockLifecycle
 
         $this->blobService->putBlockBlobBlock($this->path->path(), $block->id(), $handle, $block->size());
 
-        if (\is_resource($handle)) {
-            \fclose($handle);
+        if (is_resource($handle)) {
+            fclose($handle);
         }
 
-        \unlink($block->path()->path());
+        unlink($block->path()->path());
 
-        $this->blockList->append(
-            new \Flow\Azure\SDK\BlobService\BlockBlob\Block($block->id(), BlockState::UNCOMMITTED),
-        );
+        $this->blockList->append(new AzureBlock($block->id(), BlockState::UNCOMMITTED));
     }
 }

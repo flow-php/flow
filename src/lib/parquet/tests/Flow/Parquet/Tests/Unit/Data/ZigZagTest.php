@@ -134,18 +134,12 @@ final class ZigZagTest extends TestCase
         static::assertSame($value, $decoded, "Value {$value} should roundtrip correctly");
     }
 
-    /**
-     * @param array<int, int> $expected
-     */
     #[DataProvider('standardMappingProvider')]
     public function test_standard_zigzag_mapping(int $original, int $expected): void
     {
         static::assertSame($expected, $this->zigzag->encode($original));
     }
 
-    /**
-     * @param array<int, int> $expected
-     */
     #[DataProvider('standardMappingProvider')]
     public function test_zigzag_roundtrip(int $original, int $encoded): void
     {

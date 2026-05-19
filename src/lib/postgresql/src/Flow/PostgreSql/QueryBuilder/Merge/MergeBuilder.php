@@ -111,11 +111,15 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
             throw InvalidExpressionException::invalidValue('source', 'null');
         }
 
-        if ($this->sourceAlias === null || $this->sourceAlias === '') {
+        $sourceAlias = $this->sourceAlias;
+
+        if ($sourceAlias === null || $sourceAlias === '') {
             throw InvalidExpressionException::invalidValue('sourceAlias', 'null or empty');
         }
 
-        if ($this->joinCondition === null) {
+        $joinCondition = $this->joinCondition;
+
+        if ($joinCondition === null) {
             throw InvalidExpressionException::invalidValue('joinCondition', 'null');
         }
 
@@ -150,12 +154,12 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
             $selectNode->setSelectStmt($this->sourceSelect->toAst());
             $rangeSubselect->setSubquery($selectNode);
             $alias = new Alias();
-            $alias->setAliasname($this->sourceAlias);
+            $alias->setAliasname($sourceAlias);
             $rangeSubselect->setAlias($alias);
             $sourceNode->setRangeSubselect($rangeSubselect);
         } else {
             $sourceRangeVar = new RangeVar([
-                'relname' => $this->sourceTable ?? '',
+                'relname' => $this->sourceTable,
                 'inh' => true,
             ]);
 
@@ -164,14 +168,14 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
             }
 
             $alias = new Alias();
-            $alias->setAliasname($this->sourceAlias);
+            $alias->setAliasname($sourceAlias);
             $sourceRangeVar->setAlias($alias);
             $sourceNode->setRangeVar($sourceRangeVar);
         }
 
         $mergeStmt->setSourceRelation($sourceNode);
 
-        $mergeStmt->setJoinCondition($this->joinCondition->toAst());
+        $mergeStmt->setJoinCondition($joinCondition->toAst());
 
         $whenClauseNodes = [];
 

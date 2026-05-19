@@ -6,6 +6,11 @@ namespace Flow\ETL\Dataset\Statistics;
 
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryReference;
+use InvalidArgumentException;
+
+use function array_key_exists;
+use function array_values;
+use function sprintf;
 
 final class Columns
 {
@@ -21,7 +26,7 @@ final class Columns
      */
     public function add(Entry $entry): void
     {
-        if (!\array_key_exists($entry->name(), $this->columns)) {
+        if (!array_key_exists($entry->name(), $this->columns)) {
             $this->columns[$entry->name()] = new Column($entry);
 
             return;
@@ -35,7 +40,7 @@ final class Columns
      */
     public function all(): array
     {
-        return \array_values($this->columns);
+        return array_values($this->columns);
     }
 
     public function get(string|EntryReference $ref): Column
@@ -44,8 +49,8 @@ final class Columns
             $ref = $ref->name();
         }
 
-        if (!\array_key_exists($ref, $this->columns)) {
-            throw new \InvalidArgumentException(\sprintf('Column "%s" does not exist.', $ref));
+        if (!array_key_exists($ref, $this->columns)) {
+            throw new InvalidArgumentException(sprintf('Column "%s" does not exist.', $ref));
         }
 
         return $this->columns[$ref];

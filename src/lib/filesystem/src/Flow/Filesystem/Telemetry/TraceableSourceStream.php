@@ -13,6 +13,10 @@ use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
 use Flow\Telemetry\Tracer\Tracer;
+use Generator;
+use Throwable;
+
+use function strlen;
 
 final class TraceableSourceStream implements SourceStream
 {
@@ -65,24 +69,26 @@ final class TraceableSourceStream implements SourceStream
 
     public function close(): void
     {
+        $span = $this->span;
+
         try {
             $this->stream->close();
 
-            if ($this->span !== null) {
-                $this->span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ, $this->totalBytesRead);
-                $this->span->setStatus(SpanStatus::ok());
+            if ($span !== null) {
+                $span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ, $this->totalBytesRead);
+                $span->setStatus(SpanStatus::ok());
             }
-        } catch (\Throwable $e) {
-            if ($this->span !== null) {
-                $this->span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ, $this->totalBytesRead);
-                $this->span->recordException($e, $this->telemetryConfig->clock->now());
-                $this->span->setStatus(SpanStatus::error($e->getMessage()));
+        } catch (Throwable $e) {
+            if ($span !== null) {
+                $span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ, $this->totalBytesRead);
+                $span->recordException($e, $this->telemetryConfig->clock->now());
+                $span->setStatus(SpanStatus::error($e->getMessage()));
             }
 
             throw $e;
         } finally {
-            if ($this->span !== null && $this->tracer !== null) {
-                $this->tracer->complete($this->span);
+            if ($span !== null && $this->tracer !== null) {
+                $this->tracer->complete($span);
                 $this->span = null;
             }
         }
@@ -91,7 +97,7 @@ final class TraceableSourceStream implements SourceStream
     public function content(): string
     {
         $result = $this->stream->content();
-        $bytesRead = \strlen($result);
+        $bytesRead = strlen($result);
         $this->totalBytesRead += $bytesRead;
 
         $this->recordMetrics($bytesRead);
@@ -109,12 +115,12 @@ final class TraceableSourceStream implements SourceStream
      *
      * @return \Generator<string>
      */
-    public function iterate(int $length = 1): \Generator
+    public function iterate(int $length = 1): Generator
     {
         $bytesReadInOperation = 0;
 
         foreach ($this->stream->iterate($length) as $chunk) {
-            $chunkSize = \strlen($chunk);
+            $chunkSize = strlen($chunk);
             $bytesReadInOperation += $chunkSize;
             $this->totalBytesRead += $chunkSize;
 
@@ -135,7 +141,7 @@ final class TraceableSourceStream implements SourceStream
     public function read(int $length, int $offset): string
     {
         $result = $this->stream->read($length, $offset);
-        $bytesRead = \strlen($result);
+        $bytesRead = strlen($result);
         $this->totalBytesRead += $bytesRead;
 
         $this->recordMetrics($bytesRead);
@@ -148,12 +154,12 @@ final class TraceableSourceStream implements SourceStream
      *
      * @return \Generator<string>
      */
-    public function readLines(string $separator = "\n", ?int $length = null): \Generator
+    public function readLines(string $separator = "\n", ?int $length = null): Generator
     {
         $bytesReadInOperation = 0;
 
         foreach ($this->stream->readLines($separator, $length) as $line) {
-            $lineSize = \strlen($line) + \strlen($separator);
+            $lineSize = strlen($line) + strlen($separator);
             $bytesReadInOperation += $lineSize;
             $this->totalBytesRead += $lineSize;
 

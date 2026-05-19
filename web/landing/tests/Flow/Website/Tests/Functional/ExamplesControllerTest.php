@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Website\Tests\Functional;
 
 use Flow\Website\Kernel;
+use Override;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class ExamplesControllerTest extends WebTestCase
@@ -98,7 +99,7 @@ final class ExamplesControllerTest extends WebTestCase
         static::assertStringContainsString('/playground/', $link->attr('href'));
     }
 
-    #[\Override]
+    #[Override]
     protected static function getKernelClass(): string
     {
         return Kernel::class;

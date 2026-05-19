@@ -4,10 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Client\Telemetry;
 
+use DateTimeImmutable;
 use Flow\PostgreSql\Client\Telemetry\ParameterFormatter;
 use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\Client\Types\ValueType;
 use PHPUnit\Framework\TestCase;
+use stdClass;
+
+use function fclose;
+use function fopen;
+use function str_repeat;
+use function strlen;
 
 final class ParameterFormatterTest extends TestCase
 {
@@ -42,7 +49,7 @@ final class ParameterFormatterTest extends TestCase
     public function test_convert_to_string_datetime(): void
     {
         $formatter = new ParameterFormatter();
-        $date = new \DateTimeImmutable('2024-01-15T10:30:00+00:00');
+        $date = new DateTimeImmutable('2024-01-15T10:30:00+00:00');
 
         static::assertSame('2024-01-15T10:30:00+00:00', $formatter->convertToString($date));
     }
@@ -84,7 +91,7 @@ final class ParameterFormatterTest extends TestCase
     public function test_convert_to_string_object_without_to_string(): void
     {
         $formatter = new ParameterFormatter();
-        $object = new \stdClass();
+        $object = new stdClass();
 
         static::assertSame('stdClass', $formatter->convertToString($object));
     }
@@ -92,11 +99,11 @@ final class ParameterFormatterTest extends TestCase
     public function test_convert_to_string_resource(): void
     {
         $formatter = new ParameterFormatter();
-        $resource = \fopen('php://memory', 'rb');
+        $resource = fopen('php://memory', 'rb');
 
         static::assertSame('resource (stream)', $formatter->convertToString($resource));
 
-        \fclose($resource);
+        fclose($resource);
     }
 
     public function test_convert_to_string_string(): void
@@ -129,7 +136,7 @@ final class ParameterFormatterTest extends TestCase
     public function test_format_does_not_truncate_when_max_length_null(): void
     {
         $formatter = new ParameterFormatter();
-        $longValue = \str_repeat('a', 200);
+        $longValue = str_repeat('a', 200);
 
         static::assertSame($longValue, $formatter->format($longValue, null));
     }
@@ -152,12 +159,18 @@ final class ParameterFormatterTest extends TestCase
     public function test_format_truncates_when_over_max_length(): void
     {
         $formatter = new ParameterFormatter();
-        $longValue = \str_repeat('a', 200);
+        $longValue = str_repeat('a', 200);
 
         $result = $formatter->format($longValue, 100);
 
-        static::assertSame(103, \strlen($result));
+        static::assertSame(103, strlen($result));
         static::assertStringEndsWith('...', $result);
-        static::assertStringStartsWith(\str_repeat('a', 100), $result);
+        $prefix = str_repeat('a', 100);
+
+        if ('' === $prefix) {
+            static::fail('prefix must be non-empty');
+        }
+
+        static::assertStringStartsWith($prefix, $result);
     }
 }

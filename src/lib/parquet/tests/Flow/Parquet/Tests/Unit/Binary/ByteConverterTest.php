@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\Binary;
 
 use Flow\Parquet\Binary\ByteOrder;
+use OverflowException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -30,6 +31,7 @@ use function Flow\Parquet\Binary\encode_u16;
 use function Flow\Parquet\Binary\encode_u32;
 use function Flow\Parquet\Binary\encode_u64;
 use function Flow\Parquet\Binary\encode_u8;
+use function strlen;
 
 final class ByteConverterTest extends TestCase
 {
@@ -118,7 +120,7 @@ final class ByteConverterTest extends TestCase
 
     public function test_decode_decimal_throws_on_precision_overflow(): void
     {
-        $this->expectException(\OverflowException::class);
+        $this->expectException(OverflowException::class);
         $this->expectExceptionMessage('exceeds maximum precision of 3 digits');
 
         $encoded = encode_decimal(ByteOrder::LITTLE_ENDIAN, 12.34, 4, 10, 2);
@@ -137,7 +139,7 @@ final class ByteConverterTest extends TestCase
 
     public function test_encode_decimal_throws_on_precision_overflow(): void
     {
-        $this->expectException(\OverflowException::class);
+        $this->expectException(OverflowException::class);
         $this->expectExceptionMessage('exceeds maximum precision of 10 digits');
 
         encode_decimal(ByteOrder::LITTLE_ENDIAN, 933162046.43, 5, 10, 2);
@@ -307,51 +309,51 @@ final class ByteConverterTest extends TestCase
 
     public function test_encode_returns_correct_byte_length_for_f32(): void
     {
-        static::assertSame(4, \strlen(encode_f32(ByteOrder::LITTLE_ENDIAN, [1.0])));
+        static::assertSame(4, strlen(encode_f32(ByteOrder::LITTLE_ENDIAN, [1.0])));
     }
 
     public function test_encode_returns_correct_byte_length_for_f64(): void
     {
-        static::assertSame(8, \strlen(encode_f64(ByteOrder::LITTLE_ENDIAN, [1.0])));
+        static::assertSame(8, strlen(encode_f64(ByteOrder::LITTLE_ENDIAN, [1.0])));
     }
 
     public function test_encode_returns_correct_byte_length_for_i16(): void
     {
-        static::assertSame(2, \strlen(encode_i16(ByteOrder::LITTLE_ENDIAN, [1])));
+        static::assertSame(2, strlen(encode_i16(ByteOrder::LITTLE_ENDIAN, [1])));
     }
 
     public function test_encode_returns_correct_byte_length_for_i32(): void
     {
-        static::assertSame(4, \strlen(encode_i32(ByteOrder::LITTLE_ENDIAN, [1])));
+        static::assertSame(4, strlen(encode_i32(ByteOrder::LITTLE_ENDIAN, [1])));
     }
 
     public function test_encode_returns_correct_byte_length_for_i64(): void
     {
-        static::assertSame(8, \strlen(encode_i64(ByteOrder::LITTLE_ENDIAN, [1])));
+        static::assertSame(8, strlen(encode_i64(ByteOrder::LITTLE_ENDIAN, [1])));
     }
 
     public function test_encode_returns_correct_byte_length_for_i8(): void
     {
-        static::assertSame(1, \strlen(encode_i8([1])));
+        static::assertSame(1, strlen(encode_i8([1])));
     }
 
     public function test_encode_returns_correct_byte_length_for_u16(): void
     {
-        static::assertSame(2, \strlen(encode_u16(ByteOrder::LITTLE_ENDIAN, [1])));
+        static::assertSame(2, strlen(encode_u16(ByteOrder::LITTLE_ENDIAN, [1])));
     }
 
     public function test_encode_returns_correct_byte_length_for_u32(): void
     {
-        static::assertSame(4, \strlen(encode_u32(ByteOrder::LITTLE_ENDIAN, [1])));
+        static::assertSame(4, strlen(encode_u32(ByteOrder::LITTLE_ENDIAN, [1])));
     }
 
     public function test_encode_returns_correct_byte_length_for_u64(): void
     {
-        static::assertSame(8, \strlen(encode_u64(ByteOrder::LITTLE_ENDIAN, [1])));
+        static::assertSame(8, strlen(encode_u64(ByteOrder::LITTLE_ENDIAN, [1])));
     }
 
     public function test_encode_returns_correct_byte_length_for_u8(): void
     {
-        static::assertSame(1, \strlen(encode_u8([1])));
+        static::assertSame(1, strlen(encode_u8([1])));
     }
 }

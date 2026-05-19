@@ -13,8 +13,19 @@ use Flow\Filesystem\Path;
 use Flow\Serializer\Base64Serializer;
 use Flow\Serializer\NativePHPSerializer;
 use Flow\Serializer\Serializer;
+use RuntimeException;
 
+use function count;
+use function file_put_contents;
+use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
+use function getenv;
+use function in_array;
+use function ini_get;
+use function ini_set;
+use function is_string;
+use function mkdir;
+use function scandir;
 
 /**
  * Test case for integration tests.
@@ -33,38 +44,38 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
 
     protected function setUp(): void
     {
-        $this->baseMemoryLimit = \ini_get('memory_limit') ?: '-1';
+        $this->baseMemoryLimit = ini_get('memory_limit') ?: '-1';
 
-        $cacheDirEnv = \getenv(CacheConfig::CACHE_DIR_ENV);
+        $cacheDirEnv = getenv(CacheConfig::CACHE_DIR_ENV);
         $this->cacheDir = path_real($cacheDirEnv ?: '');
         $this->fs = new NativeLocalFilesystem();
         $this->fstab = new FilesystemTable($this->fs, new StdOutFilesystem());
         $this->serializer = new Base64Serializer(new NativePHPSerializer());
 
         $this->cleanupCacheDir($this->cacheDir);
-        \mkdir($this->cacheDir->path(), recursive: true);
+        mkdir($this->cacheDir->path(), recursive: true);
     }
 
     protected function tearDown(): void
     {
-        if (\ini_get('memory_limit') !== $this->baseMemoryLimit) {
-            \ini_set('memory_limit', $this->baseMemoryLimit);
+        if (ini_get('memory_limit') !== $this->baseMemoryLimit) {
+            ini_set('memory_limit', $this->baseMemoryLimit);
         }
 
         $this->cleanupCacheDir($this->cacheDir);
-        \mkdir($this->cacheDir->path(), recursive: true);
+        mkdir($this->cacheDir->path(), recursive: true);
     }
 
     protected function cleanFiles(): void
     {
-        $files = \scandir($this->filesDirectory());
+        $files = scandir($this->filesDirectory());
 
         if ($files === false) {
             return;
         }
 
         foreach ($files as $file) {
-            if (\in_array($file, ['.', '..', '.gitignore'], true)) {
+            if (in_array($file, ['.', '..', '.gitignore'], true)) {
                 continue;
             }
 
@@ -74,7 +85,7 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
 
     protected function filesDirectory(): string
     {
-        throw new \RuntimeException(
+        throw new RuntimeException(
             'You need to implement filesDirectory method to point to your test files directory.',
         );
     }
@@ -91,7 +102,7 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
 
     protected function getPath(string $relativePath): Path
     {
-        return \Flow\Filesystem\DSL\path($this->filesDirectory() . DIRECTORY_SEPARATOR . $relativePath);
+        return path($this->filesDirectory() . DIRECTORY_SEPARATOR . $relativePath);
     }
 
     protected function serializer(): Serializer
@@ -105,25 +116,22 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
     protected function setupFiles(array $datasets, string $path = ''): void
     {
         foreach ($datasets as $name => $content) {
-            if (\is_string($content)) {
-                $result = \file_put_contents(
+            if (is_string($content)) {
+                $result = file_put_contents(
                     $this->filesDirectory() . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $name,
                     $content,
                 );
 
                 if ($result === false) {
-                    throw new \RuntimeException('Could not create file . ' . $name);
+                    throw new RuntimeException('Could not create file . ' . $name);
                 }
 
                 continue;
             }
 
-            \mkdir(
-                $this->filesDirectory() . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $name,
-                recursive: true,
-            );
+            mkdir($this->filesDirectory() . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $name, recursive: true);
 
-            if (\count($content)) {
+            if (count($content)) {
                 /** @var array<string,string> $content */
                 $this->setupFiles($content, $path . DIRECTORY_SEPARATOR . $name);
             }

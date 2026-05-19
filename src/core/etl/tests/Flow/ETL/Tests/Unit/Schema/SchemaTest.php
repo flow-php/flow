@@ -12,6 +12,8 @@ use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
+use JsonException;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\bool_schema;
@@ -33,10 +35,11 @@ use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function json_encode;
 
 final class SchemaTest extends FlowTestCase
 {
-    public static function provide_is_same_cases(): \Generator
+    public static function provide_is_same_cases(): Generator
     {
         yield 'identical simple schemas' => [
             schema(int_schema('id'), str_schema('name')),
@@ -234,7 +237,7 @@ final class SchemaTest extends FlowTestCase
 
     public function test_creating_schema_from_corrupted_json(): void
     {
-        $this->expectException(\JsonException::class);
+        $this->expectException(JsonException::class);
         $this->expectExceptionMessage('Syntax error');
 
         schema_from_json('{"ref": "id", "type": {"type": "integer", "nullable": false}, "metadata": []');
@@ -460,7 +463,7 @@ final class SchemaTest extends FlowTestCase
                     "metadata": []
                 }
             ]
-            JSON, \json_encode($schema->normalize(), JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
+            JSON, json_encode($schema->normalize(), JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
 
         static::assertEquals($schema, schema_from_json(schema_to_json($schema)));
     }

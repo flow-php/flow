@@ -7,6 +7,8 @@ namespace Flow\PostgreSql\AST\Visitors;
 use Flow\PostgreSql\AST\NodeVisitor;
 use Flow\PostgreSql\Protobuf\AST\SortBy;
 
+use function count;
+
 /**
  * A visitor that collects all SortBy (ORDER BY items) nodes.
  */
@@ -40,7 +42,7 @@ final class SortByCollector implements NodeVisitor
 
     public function hasSortBy(): bool
     {
-        return \count($this->sortByClauses) > 0;
+        return count($this->sortByClauses) > 0;
     }
 
     public function leave(object $node): ?int

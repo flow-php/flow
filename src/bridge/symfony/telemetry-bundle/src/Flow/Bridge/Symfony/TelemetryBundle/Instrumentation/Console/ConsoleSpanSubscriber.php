@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Console;
 
+use DateTimeImmutable;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\Span;
@@ -16,6 +17,8 @@ use Symfony\Component\Console\Event\ConsoleErrorEvent;
 use Symfony\Component\Console\Event\ConsoleSignalEvent;
 use Symfony\Component\Console\Event\ConsoleTerminateEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+
+use function preg_match;
 
 final class ConsoleSpanSubscriber implements EventSubscriberInterface
 {
@@ -69,7 +72,7 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $this->span->recordException($event->getError(), new \DateTimeImmutable());
+        $this->span->recordException($event->getError(), new DateTimeImmutable());
     }
 
     public function onSignal(ConsoleSignalEvent $event): void
@@ -104,7 +107,7 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
 
     private function matchesPattern(string $command, string $pattern): bool
     {
-        $result = @\preg_match($pattern, $command);
+        $result = @preg_match($pattern, $command);
 
         if ($result !== false) {
             return (bool) $result;

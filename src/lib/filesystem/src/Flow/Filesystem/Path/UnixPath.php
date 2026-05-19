@@ -8,6 +8,40 @@ use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Partitions;
+use InvalidArgumentException as BaseInvalidArgumentException;
+
+use function array_key_exists;
+use function array_map;
+use function array_pop;
+use function array_slice;
+use function count;
+use function explode;
+use function function_exists;
+use function getcwd;
+use function getenv;
+use function implode;
+use function is_array;
+use function is_string;
+use function ltrim;
+use function md5;
+use function parse_url;
+use function pathinfo;
+use function posix_getpwuid;
+use function posix_getuid;
+use function preg_match;
+use function preg_quote;
+use function preg_replace;
+use function random_int;
+use function rtrim;
+use function str_contains;
+use function str_ends_with;
+use function str_replace;
+use function str_starts_with;
+use function strtolower;
+use function strtr;
+use function substr;
+
+use const PHP_INT_MAX;
 
 final readonly class UnixPath
 {
@@ -22,11 +56,13 @@ final readonly class UnixPath
      */
     public function __construct(string $uri, array|Options $options = [])
     {
-        $this->options = \is_array($options) ? new Options($options) : $options;
+        $this->options = is_array($options) ? new Options($options) : $options;
 
-        if (\preg_match('/^([a-zA-Z0-9+-]+):\/\//', $uri, $matches)) {
+        $matches = [];
+
+        if (preg_match('/^([a-zA-Z0-9+-]+):\/\//', $uri, $matches)) {
             $this->protocol = $matches[1];
-            $path = \str_replace($matches[1] . '://', '', $uri);
+            $path = str_replace($matches[1] . '://', '', $uri);
         } else {
             $this->protocol = 'file';
             $path = $uri;
@@ -43,10 +79,10 @@ final readonly class UnixPath
     public static function realpath(string $path, array|Options $options = []): self
     {
         if ($path === '') {
-            return new self(\getcwd() ?: '', $options);
+            return new self(getcwd() ?: '', $options);
         }
 
-        if (($urlParts = \parse_url($path)) && \array_key_exists('scheme', $urlParts)) {
+        if (($urlParts = parse_url($path)) && array_key_exists('scheme', $urlParts)) {
             if ($urlParts['scheme'] !== 'file') {
                 return new self($path, $options);
             }
@@ -56,39 +92,45 @@ final readonly class UnixPath
         $realPath = $path;
 
         if ($realPath[0] === '~') {
-            if (\is_string($homeEnv = \getenv('HOME'))) {
-                $realPath = $homeEnv . '/' . \substr($realPath, 1);
+            if (is_string($homeEnv = getenv('HOME'))) {
+                $realPath = $homeEnv . '/' . substr($realPath, 1);
             } else {
-                if (!\function_exists('posix_getpwuid') || !\function_exists('posix_getuid')) {
+                if (!function_exists('posix_getpwuid') || !function_exists('posix_getuid')) {
                     throw new RuntimeException('Resolving homedir is not yet supported at OS :' . PHP_OS);
                 }
 
-                if (!\is_string(($userData = (array) \posix_getpwuid(\posix_getuid()))['dir'] ?? null)) {
+                if (!is_string(($userData = (array) posix_getpwuid(posix_getuid()))['dir'] ?? null)) {
                     throw new RuntimeException("Can't resolve homedir for user executing script");
                 }
 
-                if (!\array_key_exists('dir', $userData)) {
+                if (!array_key_exists('dir', $userData)) {
                     throw new RuntimeException("Can't resolve homedir for user executing script");
                 }
 
-                $realPath = $userData['dir'] . '/' . \substr($realPath, 1);
+                $realPath = $userData['dir'] . '/' . substr($realPath, 1);
             }
         }
 
         if (!self::isUnixAbsolute($realPath)) {
-            $realPath = \getcwd() . '/' . $realPath;
+            $cwd = getcwd();
+
+            if ($cwd === false) {
+                throw new RuntimeException('Cannot resolve current working directory');
+            }
+
+            $realPath = $cwd . '/' . $realPath;
         }
 
         $absoluteParts = [];
 
-        foreach (\explode('/', $realPath) as $part) {
+        foreach (explode('/', $realPath) as $part) {
             if ($part === '.' || $part === '') {
                 continue;
             }
 
             if ($part === '..') {
                 if ($absoluteParts !== []) {
-                    \array_pop($absoluteParts);
+                    array_pop($absoluteParts);
                 }
 
                 continue;
@@ -97,7 +139,7 @@ final readonly class UnixPath
             $absoluteParts[] = $part;
         }
 
-        return new self('/' . \implode('/', $absoluteParts), $options);
+        return new self('/' . implode('/', $absoluteParts), $options);
     }
 
     public function addPartitions(Partition $partition, Partition ...$partitions): self
@@ -106,10 +148,10 @@ final readonly class UnixPath
             throw new InvalidArgumentException("Can't add partitions to path pattern.");
         }
 
-        $pathInfo = \pathinfo($this->path);
+        $pathInfo = pathinfo($this->path);
         $dirname = $pathInfo['dirname'] ?? '';
-        $basename = $pathInfo['basename'] ?? '';
-        $partitionsString = \implode('/', \array_map(
+        $basename = $pathInfo['basename'];
+        $partitionsString = implode('/', array_map(
             static fn(Partition $p) => $p->name . '=' . $p->value,
             [$partition, ...$partitions],
         ));
@@ -126,14 +168,14 @@ final readonly class UnixPath
 
     public function basename(): string
     {
-        return \pathinfo($this->path, PATHINFO_BASENAME);
+        return pathinfo($this->path, PATHINFO_BASENAME);
     }
 
     public function basenamePrefix(string $prefix): self
     {
-        $pathInfo = \pathinfo($this->path);
+        $pathInfo = pathinfo($this->path);
         $dirname = $pathInfo['dirname'] ?? '';
-        $basename = $pathInfo['basename'] ?? '';
+        $basename = $pathInfo['basename'];
 
         return new self(
             $this->protocol
@@ -145,17 +187,17 @@ final readonly class UnixPath
 
     public function endsWith(string $string): bool
     {
-        return \str_ends_with($this->path, $string);
+        return str_ends_with($this->path, $string);
     }
 
     public function extension(): string|false
     {
-        return ($extension = \pathinfo($this->path, PATHINFO_EXTENSION)) === '' ? false : \strtolower($extension);
+        return ($extension = pathinfo($this->path, PATHINFO_EXTENSION)) === '' ? false : strtolower($extension);
     }
 
     public function filename(): string
     {
-        return \pathinfo($this->path, PATHINFO_FILENAME);
+        return pathinfo($this->path, PATHINFO_FILENAME);
     }
 
     public function isEqual(self $path): bool
@@ -192,7 +234,7 @@ final readonly class UnixPath
             throw new InvalidArgumentException("Can't take directory from path pattern.");
         }
 
-        $dirname = \pathinfo($this->path)['dirname'] ?? '';
+        $dirname = pathinfo($this->path)['dirname'] ?? '';
 
         return match ($dirname) {
             '', '.', '/', '\\' => new self($this->protocol . ':///', $this->options),
@@ -207,9 +249,10 @@ final readonly class UnixPath
         }
 
         $partitionsList = [];
+        $matches = [];
 
-        foreach (\explode('/', $this->path) as $part) {
-            if (\preg_match('/^([^=]+)=([^=]+)$/', $part, $matches)) {
+        foreach (explode('/', $this->path) as $part) {
+            if (preg_match('/^([^=]+)=([^=]+)$/', $part, $matches)) {
                 $partitionsList[] = new Partition($matches[1], $matches[2]);
             }
         }
@@ -228,29 +271,32 @@ final readonly class UnixPath
 
         $paths = [];
         $currentPartitionsList = [];
-        $dirname = \pathinfo($this->path)['dirname'] ?? '';
+        $dirname = pathinfo($this->path)['dirname'] ?? '';
 
         foreach ($partitions as $partition) {
             $currentPartitionsList[] = $partition;
-            $partitionsString = \implode('/', \array_map(
+            $partitionsString = implode('/', array_map(
                 static fn(Partition $p) => $p->name . '=' . $p->value,
                 $currentPartitionsList,
             ));
 
-            $paths[] = new self(
-                $this->protocol
-                . '://'
-                . (
-                    $dirname === '' || $dirname === '.'
-                        ? $partitionsString
-                        : \preg_replace(
-                            '#/' . \preg_quote($partitionsString, '#') . '/.*$#',
-                            '/' . $partitionsString,
-                            $dirname,
-                        )
-                ),
-                $this->options,
-            );
+            if ($dirname === '' || $dirname === '.') {
+                $pathPart = $partitionsString;
+            } else {
+                $replaced = preg_replace(
+                    '#/' . preg_quote($partitionsString, '#') . '/.*$#',
+                    '/' . $partitionsString,
+                    $dirname,
+                );
+
+                if ($replaced === null) {
+                    throw new RuntimeException('Failed to compute partitioned path');
+                }
+
+                $pathPart = $replaced;
+            }
+
+            $paths[] = new self($this->protocol . '://' . $pathPart, $this->options);
         }
 
         return $paths;
@@ -268,12 +314,12 @@ final readonly class UnixPath
 
     public function randomize(): self
     {
-        $pathInfo = \pathinfo($this->path);
+        $pathInfo = pathinfo($this->path);
         $dirname = $pathInfo['dirname'] ?? '';
-        $filename = $pathInfo['filename'] ?? '';
+        $filename = $pathInfo['filename'];
         $extension = $pathInfo['extension'] ?? '';
 
-        $newFilename = $filename . '_' . \substr(\md5((string) \random_int(0, \PHP_INT_MAX)), 0, 10);
+        $newFilename = $filename . '_' . substr(md5((string) random_int(0, PHP_INT_MAX)), 0, 10);
         $newBasename = $extension !== '' ? $newFilename . '.' . $extension : $newFilename;
 
         return new self(
@@ -286,16 +332,16 @@ final readonly class UnixPath
 
     public function rootDirectoryName(): ?string
     {
-        return ($pathParts = \explode('/', \ltrim($this->path, '/')))[0] !== '' && \count($pathParts) > 1
+        return ($pathParts = explode('/', ltrim($this->path, '/')))[0] !== '' && count($pathParts) > 1
             ? $pathParts[0]
             : null;
     }
 
     public function setExtension(string $extension): self
     {
-        $pathInfo = \pathinfo($this->path);
+        $pathInfo = pathinfo($this->path);
         $dirname = $pathInfo['dirname'] ?? '';
-        $filename = $pathInfo['filename'] ?? '';
+        $filename = $pathInfo['filename'];
 
         return new self(
             $this->protocol
@@ -310,14 +356,14 @@ final readonly class UnixPath
     public function skipDirectories(int $count): ?self
     {
         if ($count < 0) {
-            throw new \InvalidArgumentException('The number of folders to skip must be non-negative.');
+            throw new BaseInvalidArgumentException('The number of folders to skip must be non-negative.');
         }
 
-        if (!($remainingParts = \array_slice(\explode('/', \ltrim($this->path, '/')), $count))) {
+        if (!($remainingParts = array_slice(explode('/', ltrim($this->path, '/')), $count))) {
             return null;
         }
 
-        return new self($this->protocol . '://' . \implode('/', $remainingParts), $this->options);
+        return new self($this->protocol . '://' . implode('/', $remainingParts), $this->options);
     }
 
     public function staticPart(): self
@@ -328,7 +374,7 @@ final readonly class UnixPath
 
         $staticParts = [];
 
-        foreach (\explode('/', \ltrim($this->path, '/')) as $part) {
+        foreach (explode('/', ltrim($this->path, '/')) as $part) {
             if ($this->isPathPattern($part)) {
                 break;
             }
@@ -336,9 +382,7 @@ final readonly class UnixPath
         }
 
         return new self(
-            $this->protocol
-            . '://'
-            . (\count($staticParts) === 0 ? '/' : \ltrim('/' . \implode('/', $staticParts), '/')),
+            $this->protocol . '://' . (count($staticParts) === 0 ? '/' : ltrim('/' . implode('/', $staticParts), '/')),
             $this->options,
         );
     }
@@ -348,16 +392,14 @@ final readonly class UnixPath
         return new self(
             $this->protocol
             . '://'
-            . (
-                $this->path === '/' ? '/' . \ltrim($string, '/') : \rtrim($this->path, '/') . '/' . \ltrim($string, '/')
-            ),
+            . ($this->path === '/' ? '/' . ltrim($string, '/') : rtrim($this->path, '/') . '/' . ltrim($string, '/')),
             $this->options,
         );
     }
 
     public function uri(): string
     {
-        return $this->protocol . '://' . \ltrim($this->path, '/');
+        return $this->protocol . '://' . ltrim($this->path, '/');
     }
 
     public function withOptions(Options $options): self
@@ -373,38 +415,27 @@ final readonly class UnixPath
             }
         }
 
-        static $cmp = [];
-
-        if (isset($cmp["{$pattern}+{$flags}"])) {
-            return (bool) \preg_match($cmp["{$pattern}+{$flags}"], $filename);
-        }
-
-        $rx = \preg_quote($pattern, null);
-        $rx = \str_replace('\\*\\*', '(.*)?', $rx);
-        $rx = \str_replace('\\*', '[^/]*', $rx);
-        $rx = \strtr($rx, ['\\?' => '[^/]', '\\[' => '[', '\\]' => ']']);
+        $rx = preg_quote($pattern, null);
+        $rx = str_replace('\\*\\*', '(.*)?', $rx);
+        $rx = str_replace('\\*', '[^/]*', $rx);
+        $rx = strtr($rx, ['\\?' => '[^/]', '\\[' => '[', '\\]' => ']']);
         $rx = '{^' . $rx . '$}' . ($flags & 16 ? 'i' : '');
 
-        if (\count($cmp) >= 50) {
-            $cmp = [];
-        }
-        $cmp["{$pattern}+{$flags}"] = $rx;
-
-        return (bool) \preg_match($rx, $filename);
+        return (bool) preg_match($rx, $filename);
     }
 
     private function isAbsolutePath(string $path): bool
     {
-        return \str_starts_with($path, '/');
+        return str_starts_with($path, '/');
     }
 
     private function isPathPattern(string $path): bool
     {
         return (
-            \str_contains($path, '*')
-            || \str_contains($path, '?')
-            || \str_contains($path, '[')
-            || \str_contains($path, '{')
+            str_contains($path, '*')
+            || str_contains($path, '?')
+            || str_contains($path, '[')
+            || str_contains($path, '{')
         );
     }
 
@@ -423,27 +454,27 @@ final readonly class UnixPath
             return $path;
         }
 
-        if (\is_string($homeEnv = \getenv('HOME'))) {
-            return $homeEnv . '/' . \substr($path, 1);
+        if (is_string($homeEnv = getenv('HOME'))) {
+            return $homeEnv . '/' . substr($path, 1);
         }
 
-        if (!\function_exists('posix_getpwuid') || !\function_exists('posix_getuid')) {
+        if (!function_exists('posix_getpwuid') || !function_exists('posix_getuid')) {
             throw new RuntimeException('Resolving homedir is not yet supported at OS :' . PHP_OS);
         }
 
-        if (!\is_string(($userData = (array) \posix_getpwuid(\posix_getuid()))['dir'] ?? null)) {
+        if (!is_string(($userData = (array) posix_getpwuid(posix_getuid()))['dir'] ?? null)) {
             throw new RuntimeException("Can't resolve homedir for user executing script");
         }
 
-        if (!\array_key_exists('dir', $userData)) {
+        if (!array_key_exists('dir', $userData)) {
             throw new RuntimeException("Can't resolve homedir for user executing script");
         }
 
-        return $userData['dir'] . '/' . \substr($path, 1);
+        return $userData['dir'] . '/' . substr($path, 1);
     }
 
     private static function isUnixAbsolute(string $path): bool
     {
-        return \str_starts_with($path, '/');
+        return str_starts_with($path, '/');
     }
 }

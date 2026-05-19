@@ -20,8 +20,13 @@ use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
+use function iterator_to_array;
+
 final class DremelStructuresTest extends TestCase
 {
+    /**
+     * @param array<string, mixed> $row
+     */
     #[TestWith([
         [
             's' => null,
@@ -124,6 +129,7 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
+
             $shredder->shred($schema, [$row]);
         } else {
             $shredResult = $shredder->shred($schema, [$row]);
@@ -160,7 +166,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('s'),
                     new ReadColumnData($schema->get('s'), $readFlatValues),
                 )),
@@ -168,6 +174,9 @@ final class DremelStructuresTest extends TestCase
         }
     }
 
+    /**
+     * @param array<string, mixed> $row
+     */
     #[TestWith([
         [
             's' => null,
@@ -254,6 +263,7 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
+
             $shredder->shred($schema, [$row]);
         } else {
             $shredResult = $shredder->shred($schema, [$row]);
@@ -290,7 +300,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('s'),
                     new ReadColumnData($schema->get('s'), $readFlatValues),
                 )),
@@ -298,6 +308,9 @@ final class DremelStructuresTest extends TestCase
         }
     }
 
+    /**
+     * @param array<string, mixed> $row
+     */
     #[TestWith([
         [
             's' => null,
@@ -413,6 +426,7 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
+
             $shredder->shred($schema, [$row]);
         } else {
             $shredResult = $shredder->shred($schema, [$row]);
@@ -449,7 +463,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('s'),
                     new ReadColumnData($schema->get('s'), $readFlatValues),
                 )),
@@ -457,6 +471,9 @@ final class DremelStructuresTest extends TestCase
         }
     }
 
+    /**
+     * @param array<string, mixed> $row
+     */
     #[TestWith([
         [
             's' => null,
@@ -556,6 +573,7 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
+
             $shredder->shred($schema, [$row]);
         } else {
             $shredResult = $shredder->shred($schema, [$row]);
@@ -592,7 +610,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('s'),
                     new ReadColumnData($schema->get('s'), $readFlatValues),
                 )),
@@ -600,6 +618,9 @@ final class DremelStructuresTest extends TestCase
         }
     }
 
+    /**
+     * @param array<string, mixed> $row
+     */
     #[TestWith([
         [
             's' => null,
@@ -684,6 +705,7 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
+
             $shredder->shred($schema, [$row]);
         } else {
             $shredResult = $shredder->shred($schema, [$row]);
@@ -720,7 +742,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('s'),
                     new ReadColumnData($schema->get('s'), $readFlatValues),
                 )),
@@ -728,6 +750,9 @@ final class DremelStructuresTest extends TestCase
         }
     }
 
+    /**
+     * @param array<string, mixed> $row
+     */
     #[TestWith([
         [
             's' => null,
@@ -788,6 +813,7 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
+
             $shredder->shred($schema, [$row]);
         } else {
             $shredResult = $shredder->shred($schema, [$row]);
@@ -824,7 +850,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('s'),
                     new ReadColumnData($schema->get('s'), $readFlatValues),
                 )),
@@ -832,6 +858,9 @@ final class DremelStructuresTest extends TestCase
         }
     }
 
+    /**
+     * @param array<string, mixed> $row
+     */
     #[TestWith([
         [
             's' => null,
@@ -907,6 +936,7 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
+
             $shredder->shred($schema, [$row]);
         } else {
             $shredResult = $shredder->shred($schema, [$row]);
@@ -943,7 +973,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('s'),
                     new ReadColumnData($schema->get('s'), $readFlatValues),
                 )),
@@ -951,6 +981,9 @@ final class DremelStructuresTest extends TestCase
         }
     }
 
+    /**
+     * @param array<string, mixed> $row
+     */
     #[TestWith([
         [
             's' => null,
@@ -1030,6 +1063,7 @@ final class DremelStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
+
             $shredder->shred($schema, [$row]);
         } else {
             $shredResult = $shredder->shred($schema, [$row]);
@@ -1066,7 +1100,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('s'),
                     new ReadColumnData($schema->get('s'), $readFlatValues),
                 )),

@@ -8,6 +8,10 @@ use Flow\PostgreSql\AST\Nodes\Column;
 use Flow\PostgreSql\AST\Visitors\ColumnRefCollector;
 use Flow\PostgreSql\ParsedQuery;
 
+use function array_filter;
+use function array_map;
+use function array_values;
+
 final readonly class Columns
 {
     public function __construct(
@@ -22,8 +26,8 @@ final readonly class Columns
         $collector = new ColumnRefCollector();
         $this->query->traverse($collector);
 
-        return \array_values(\array_filter(
-            \array_map(static fn($ref) => new Column($ref), $collector->getColumnRefs()),
+        return array_values(array_filter(
+            array_map(static fn($ref) => new Column($ref), $collector->getColumnRefs()),
             static fn($col) => $col->name() !== null,
         ));
     }
@@ -33,6 +37,6 @@ final readonly class Columns
      */
     public function forTable(string $tableName): array
     {
-        return \array_values(\array_filter($this->all(), static fn($col) => $col->table() === $tableName));
+        return array_values(array_filter($this->all(), static fn($col) => $col->table() === $tableName));
     }
 }

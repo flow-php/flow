@@ -26,6 +26,9 @@ use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\Client\Types\ValueType;
 
+use function array_key_exists;
+use function array_merge;
+
 /**
  * Maps ETL Entry types to PostgreSQL types.
  *
@@ -81,7 +84,7 @@ final readonly class EntryTypesMap
      */
     public function __construct(array $overrides = [])
     {
-        $this->typeMap = \array_merge(self::DEFAULT_TYPES, $overrides);
+        $this->typeMap = array_merge(self::DEFAULT_TYPES, $overrides);
     }
 
     /**
@@ -99,7 +102,7 @@ final readonly class EntryTypesMap
 
         $entryClass = $entry::class;
 
-        if (!\array_key_exists($entryClass, $this->typeMap)) {
+        if (!array_key_exists($entryClass, $this->typeMap)) {
             throw TypeMappingException::ambiguousEntryType($entryClass);
         }
 

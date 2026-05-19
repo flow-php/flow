@@ -21,6 +21,7 @@ use function Flow\ETL\DSL\rename_style;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
+use function iterator_to_array;
 
 final class RenameTest extends FlowIntegrationTestCase
 {
@@ -64,7 +65,7 @@ final class RenameTest extends FlowIntegrationTestCase
                 ['id' => 1, 'name' => 'name', 'active' => true],
                 ['id' => 2, 'name' => 'name', 'active' => false],
             ],
-            \iterator_to_array($ds),
+            iterator_to_array($ds),
         );
     }
 
@@ -82,7 +83,7 @@ final class RenameTest extends FlowIntegrationTestCase
                 ['id' => 1, 'name' => 'name', 'active' => true],
                 ['id' => 2, 'name' => 'name', 'active' => false],
             ],
-            \iterator_to_array($ds),
+            iterator_to_array($ds),
         );
     }
 
@@ -97,7 +98,7 @@ final class RenameTest extends FlowIntegrationTestCase
                 ['ilość przedmiotów' => 0],
                 ['ilość przedmiotów' => 10],
             ],
-            \iterator_to_array($ds),
+            iterator_to_array($ds),
         );
     }
 
@@ -120,7 +121,7 @@ final class RenameTest extends FlowIntegrationTestCase
                 ['id' => 1, 'name' => 'name', 'active' => true],
                 ['id' => 2, 'name' => 'name', 'active' => false],
             ],
-            \iterator_to_array($ds),
+            iterator_to_array($ds),
         );
     }
 
@@ -135,7 +136,7 @@ final class RenameTest extends FlowIntegrationTestCase
                 ['OSMY' => 8],
                 ['DZIEWIATY' => 9],
             ],
-            \iterator_to_array($ds),
+            iterator_to_array($ds),
         );
     }
 
@@ -149,7 +150,7 @@ final class RenameTest extends FlowIntegrationTestCase
             [
                 ['ósmyIDziewiąty' => 89],
             ],
-            \iterator_to_array($ds),
+            iterator_to_array($ds),
         );
     }
 
@@ -167,7 +168,7 @@ final class RenameTest extends FlowIntegrationTestCase
             [
                 ['osmy-i-dziewiaty' => 89],
             ],
-            \iterator_to_array($ds),
+            iterator_to_array($ds),
         );
     }
 
@@ -189,7 +190,7 @@ final class RenameTest extends FlowIntegrationTestCase
                 ['id' => 1, 'user_name' => 'name', 'is_active' => true],
                 ['id' => 2, 'user_name' => 'name', 'is_active' => false],
             ],
-            \iterator_to_array($ds),
+            iterator_to_array($ds),
         );
     }
 
@@ -203,7 +204,7 @@ final class RenameTest extends FlowIntegrationTestCase
             [
                 ['Ósmy i dziewiąty' => 89],
             ],
-            \iterator_to_array($ds),
+            iterator_to_array($ds),
         );
     }
 
@@ -221,7 +222,7 @@ final class RenameTest extends FlowIntegrationTestCase
                 ['ID' => 1, 'NAME' => 'name', 'ACTIVE' => true],
                 ['ID' => 2, 'NAME' => 'name', 'ACTIVE' => false],
             ],
-            \iterator_to_array($ds),
+            iterator_to_array($ds),
         );
     }
 
@@ -239,7 +240,7 @@ final class RenameTest extends FlowIntegrationTestCase
                 ['Id' => 1, 'Name' => 'name', 'Active' => true],
                 ['Id' => 2, 'Name' => 'name', 'Active' => false],
             ],
-            \iterator_to_array($ds),
+            iterator_to_array($ds),
         );
     }
 
@@ -257,7 +258,7 @@ final class RenameTest extends FlowIntegrationTestCase
                 ['Id' => 1, 'Name' => 'name', 'Active' => true],
                 ['Id' => 2, 'Name' => 'name', 'Active' => false],
             ],
-            \iterator_to_array($ds),
+            iterator_to_array($ds),
         );
     }
 
@@ -272,7 +273,7 @@ final class RenameTest extends FlowIntegrationTestCase
                 ['Ósmy' => 8],
                 ['Dziewiąty' => 9],
             ],
-            \iterator_to_array($ds),
+            iterator_to_array($ds),
         );
     }
 
@@ -302,7 +303,7 @@ final class RenameTest extends FlowIntegrationTestCase
             [
                 ['id' => 1, 'name' => 'John'],
             ],
-            \iterator_to_array($ds),
+            iterator_to_array($ds),
         );
     }
 
@@ -359,7 +360,7 @@ final class RenameTest extends FlowIntegrationTestCase
                 ['dziewiaty' => 9],
                 ['osmy-i-dziewiaty' => 89],
             ],
-            \iterator_to_array($ds),
+            iterator_to_array($ds),
         );
     }
 

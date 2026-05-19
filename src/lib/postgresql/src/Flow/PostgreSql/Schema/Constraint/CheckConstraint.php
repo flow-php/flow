@@ -26,11 +26,7 @@ final readonly class CheckConstraint
      */
     public static function fromArray(array $data): self
     {
-        return new self(
-            expression: $data['expression'],
-            name: $data['name'] ?? null,
-            noInherit: $data['no_inherit'] ?? false,
-        );
+        return new self(expression: $data['expression'], name: $data['name'] ?? null, noInherit: $data['no_inherit']);
     }
 
     public function isEqual(self $other): bool

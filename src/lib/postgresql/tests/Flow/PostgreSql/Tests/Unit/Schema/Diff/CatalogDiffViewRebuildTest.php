@@ -13,6 +13,7 @@ use Flow\PostgreSql\Schema\Diff\SchemaDiff;
 use Flow\PostgreSql\Schema\Diff\TableDiff;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
 use function Flow\PostgreSql\DSL\ast_view_dependency_resolver;
 use function Flow\PostgreSql\DSL\noop_view_dependency_resolver;
 use function Flow\PostgreSql\DSL\schema;
@@ -65,7 +66,7 @@ final class CatalogDiffViewRebuildTest extends TestCase
             viewDependencyResolver: ast_view_dependency_resolver(),
         );
 
-        $sqls = \array_map(static fn($q) => $q->toSql(), $diff->generate());
+        $sqls = array_map(static fn($q) => $q->toSql(), $diff->generate());
 
         static::assertSame('DROP VIEW public.dashboard', $sqls[0]);
         static::assertSame('DROP VIEW report.event_summary', $sqls[1]);
@@ -110,7 +111,7 @@ final class CatalogDiffViewRebuildTest extends TestCase
             viewDependencyResolver: ast_view_dependency_resolver(),
         );
 
-        $sqls = \array_map(static fn($q) => $q->toSql(), $diff->generate());
+        $sqls = array_map(static fn($q) => $q->toSql(), $diff->generate());
 
         static::assertSame('DROP MATERIALIZED VIEW public.mv_order_stats', $sqls[0]);
         static::assertStringContainsString('ALTER TABLE public.orders ALTER COLUMN total TYPE bigint', $sqls[1]);
@@ -145,7 +146,7 @@ final class CatalogDiffViewRebuildTest extends TestCase
             viewDependencyResolver: noop_view_dependency_resolver(),
         );
 
-        $sqls = \array_map(static fn($q) => $q->toSql(), $diff->generate());
+        $sqls = array_map(static fn($q) => $q->toSql(), $diff->generate());
 
         static::assertCount(1, $sqls);
         static::assertStringContainsString('ALTER TABLE public.data ALTER COLUMN amount TYPE bigint', $sqls[0]);
@@ -189,7 +190,7 @@ final class CatalogDiffViewRebuildTest extends TestCase
             viewDependencyResolver: ast_view_dependency_resolver(),
         );
 
-        $sqls = \array_map(static fn($q) => $q->toSql(), $diff->generate());
+        $sqls = array_map(static fn($q) => $q->toSql(), $diff->generate());
 
         static::assertSame('DROP VIEW public.enriched_full_data', $sqls[0]);
         static::assertStringContainsString('ALTER TABLE enriched.full_data ALTER COLUMN amount TYPE bigint', $sqls[1]);
@@ -232,7 +233,7 @@ final class CatalogDiffViewRebuildTest extends TestCase
             viewDependencyResolver: ast_view_dependency_resolver(),
         );
 
-        $sqls = \array_map(static fn($q) => $q->toSql(), $diff->generate());
+        $sqls = array_map(static fn($q) => $q->toSql(), $diff->generate());
 
         foreach ($sqls as $sql) {
             static::assertStringNotContainsString('DROP VIEW', $sql);
@@ -268,7 +269,7 @@ final class CatalogDiffViewRebuildTest extends TestCase
             viewDependencyResolver: ast_view_dependency_resolver(),
         );
 
-        $sqls = \array_map(static fn($q) => $q->toSql(), $diff->generate());
+        $sqls = array_map(static fn($q) => $q->toSql(), $diff->generate());
 
         foreach ($sqls as $sql) {
             static::assertStringNotContainsString('DROP VIEW', $sql);

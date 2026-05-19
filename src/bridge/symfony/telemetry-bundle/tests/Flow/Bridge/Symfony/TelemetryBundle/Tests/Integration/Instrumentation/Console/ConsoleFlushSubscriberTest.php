@@ -9,6 +9,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Command\TestCommand;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\KernelTestCase;
 use Flow\Telemetry\Provider\Memory\MemoryExporter;
+use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
@@ -18,7 +19,7 @@ use Symfony\Component\Console\Output\BufferedOutput;
 #[CoversClass(ConsoleFlushSubscriber::class)]
 final class ConsoleFlushSubscriberTest extends KernelTestCase
 {
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         restore_exception_handler();

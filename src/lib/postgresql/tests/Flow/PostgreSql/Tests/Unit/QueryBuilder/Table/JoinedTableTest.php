@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Table;
 
+use Flow\PostgreSql\Protobuf\AST\JoinExpr;
 use Flow\PostgreSql\Protobuf\AST\JoinType as ProtobufJoinType;
+use Flow\PostgreSql\Protobuf\AST\Node;
+use Flow\PostgreSql\Protobuf\AST\PBString;
+use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\QueryBuilder\Condition\Comparison;
 use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
 use Flow\PostgreSql\QueryBuilder\Expression\Column;
@@ -43,25 +47,25 @@ final class JoinedTableTest extends TestCase
         static::assertTrue($node->hasJoinExpr());
 
         $joinExpr = $node->getJoinExpr();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\JoinExpr::class, $joinExpr);
+        static::assertInstanceOf(JoinExpr::class, $joinExpr);
         static::assertSame(ProtobufJoinType::JOIN_INNER, $joinExpr->getJointype());
 
         $larg = $joinExpr->getLarg();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\Node::class, $larg);
+        static::assertInstanceOf(Node::class, $larg);
         static::assertTrue($larg->hasRangeVar());
         $largRangeVar = $larg->getRangeVar();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\RangeVar::class, $largRangeVar);
+        static::assertInstanceOf(RangeVar::class, $largRangeVar);
         static::assertSame('users', $largRangeVar->getRelname());
 
         $rarg = $joinExpr->getRarg();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\Node::class, $rarg);
+        static::assertInstanceOf(Node::class, $rarg);
         static::assertTrue($rarg->hasRangeVar());
         $rargRangeVar = $rarg->getRangeVar();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\RangeVar::class, $rargRangeVar);
+        static::assertInstanceOf(RangeVar::class, $rargRangeVar);
         static::assertSame('orders', $rargRangeVar->getRelname());
 
         $quals = $joinExpr->getQuals();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\Node::class, $quals);
+        static::assertInstanceOf(Node::class, $quals);
 
         static::assertFalse($joinExpr->getIsNatural());
     }
@@ -77,7 +81,7 @@ final class JoinedTableTest extends TestCase
         $node = $joined->toAst();
 
         $joinExpr = $node->getJoinExpr();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\JoinExpr::class, $joinExpr);
+        static::assertInstanceOf(JoinExpr::class, $joinExpr);
         static::assertSame(ProtobufJoinType::JOIN_LEFT, $joinExpr->getJointype());
     }
 
@@ -91,7 +95,7 @@ final class JoinedTableTest extends TestCase
         $node = $joined->toAst();
 
         $joinExpr = $node->getJoinExpr();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\JoinExpr::class, $joinExpr);
+        static::assertInstanceOf(JoinExpr::class, $joinExpr);
         static::assertTrue($joinExpr->getIsNatural());
         static::assertNull($joinExpr->getQuals());
     }
@@ -106,13 +110,13 @@ final class JoinedTableTest extends TestCase
         $node = $joined->toAst();
 
         $joinExpr = $node->getJoinExpr();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\JoinExpr::class, $joinExpr);
+        static::assertInstanceOf(JoinExpr::class, $joinExpr);
         $usingClause = $joinExpr->getUsingClause();
 
         static::assertCount(1, $usingClause);
 
         $col = $usingClause[0]->getString();
-        static::assertInstanceOf(\Flow\PostgreSql\Protobuf\AST\PBString::class, $col);
+        static::assertInstanceOf(PBString::class, $col);
         static::assertSame('user_id', $col->getSval());
     }
 

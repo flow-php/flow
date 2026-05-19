@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Migrations\Executor;
 
 use Flow\PostgreSql\Migrations\Direction;
 use Flow\PostgreSql\Migrations\Version;
+use Throwable;
 
 final readonly class ExecutionResult
 {
@@ -14,7 +15,7 @@ final readonly class ExecutionResult
         public Direction $direction,
         public int $executionTimeMs,
         public bool $skipped,
-        public ?\Throwable $error,
+        public ?Throwable $error,
     ) {}
 
     public function isSuccessful(): bool

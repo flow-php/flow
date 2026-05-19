@@ -9,6 +9,7 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Writer\PageBuilder\Dictionary;
 use Flow\Parquet\Writer\PageBuilder\DictionaryBuilder\ScalarDictionaryBuilder;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -16,7 +17,7 @@ final class ScalarDictionaryBuilderTest extends TestCase
 {
     private ScalarDictionaryBuilder $builder;
 
-    public static function scalar_value_types_provider(): \Generator
+    public static function scalar_value_types_provider(): Generator
     {
         yield 'integers' => [
             [10, 20, 30, 20, 10],

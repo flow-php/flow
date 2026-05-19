@@ -21,6 +21,7 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\structure_schema;
 use function Flow\ETL\DSL\time_schema;
@@ -56,7 +57,7 @@ final class ParquetToFlowSchemaTest extends FlowTestCase
         ));
 
         static::assertEquals(
-            \Flow\ETL\DSL\schema(
+            schema(
                 int_schema('int32', true),
                 int_schema('int64', true),
                 str_schema('string', true),
@@ -80,10 +81,7 @@ final class ParquetToFlowSchemaTest extends FlowTestCase
 
         $flowSchema = $converted->toFlow(Schema::with(NestedColumn::list('list', ListElement::string())));
 
-        static::assertEquals(
-            \Flow\ETL\DSL\schema(list_schema('list', type_list(type_optional(type_string())), true)),
-            $flowSchema,
-        );
+        static::assertEquals(schema(list_schema('list', type_list(type_optional(type_string())), true)), $flowSchema);
     }
 
     public function test_converting_map_to_flow_schema(): void
@@ -93,7 +91,7 @@ final class ParquetToFlowSchemaTest extends FlowTestCase
         $flowSchema = $converted->toFlow(Schema::with(NestedColumn::map('map', MapKey::string(), MapValue::int64())));
 
         static::assertEquals(
-            \Flow\ETL\DSL\schema(map_schema('map', type_map(type_string(), type_optional(type_integer())), true)),
+            schema(map_schema('map', type_map(type_string(), type_optional(type_integer())), true)),
             $flowSchema,
         );
     }
@@ -109,7 +107,7 @@ final class ParquetToFlowSchemaTest extends FlowTestCase
         ])));
 
         static::assertEquals(
-            \Flow\ETL\DSL\schema(structure_schema(
+            schema(structure_schema(
                 'struct',
                 type_structure([
                     'uuid' => type_optional(type_uuid()),

@@ -13,9 +13,11 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
+use Generator;
 use JsonMachine\Items;
 use JsonMachine\JsonDecoder\ExtJsonDecoder;
 
+use function count;
 use function Flow\ETL\DSL\array_to_rows;
 
 final class JsonExtractor implements Extractor, FileExtractor, LimitableExtractor
@@ -35,7 +37,7 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
         $this->resetLimit();
     }
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
@@ -56,7 +58,7 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
                     $row = [$this->pointer => $row];
                 }
 
-                if (!\count($row)) {
+                if (!count($row)) {
                     continue;
                 }
 

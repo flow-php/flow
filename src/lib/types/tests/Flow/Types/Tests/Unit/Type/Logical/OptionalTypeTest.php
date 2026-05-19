@@ -6,6 +6,7 @@ namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\OptionalType;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -19,7 +20,7 @@ use function Flow\Types\DSL\type_union;
 
 final class OptionalTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'valid null' => [
             'type' => type_optional(type_integer()),
@@ -46,7 +47,7 @@ final class OptionalTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
         yield 'null stays as null for float type' => [
             'type' => type_optional(type_float()),
@@ -77,7 +78,7 @@ final class OptionalTypeTest extends TestCase
         ];
     }
 
-    public static function invalid_creation_data_provider(): \Generator
+    public static function invalid_creation_data_provider(): Generator
     {
         yield 'optional type from another optional type' => [
             'type' => type_optional(type_float()),
@@ -100,7 +101,7 @@ final class OptionalTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'valid null' => [
             'type' => type_optional(type_integer()),
@@ -127,6 +128,9 @@ final class OptionalTypeTest extends TestCase
         ];
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('assert_data_provider')]
     public function test_assert(OptionalType $type, mixed $value, ?string $exceptionClass = null): void
     {
@@ -138,6 +142,9 @@ final class OptionalTypeTest extends TestCase
         }
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('cast_data_provider')]
     public function test_cast(OptionalType $type, mixed $value, mixed $expected, ?string $exceptionClass): void
     {

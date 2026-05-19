@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Provider\Memory;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Meter\Metric;
@@ -15,6 +16,7 @@ use Flow\Telemetry\Tests\Mother\ErrorHandlerSpy;
 use Flow\Telemetry\Tests\Mother\InstrumentationScopeMother;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class MemoryMetricProcessorTest extends TestCase
 {
@@ -55,7 +57,7 @@ final class MemoryMetricProcessorTest extends TestCase
     public function test_flush_routes_exporter_throwable_to_error_handler(): void
     {
         $exporter = $this->createMock(Exporter::class);
-        $exporter->method('export')->willThrowException(new \RuntimeException('exporter exploded'));
+        $exporter->method('export')->willThrowException(new RuntimeException('exporter exploded'));
         $spy = new ErrorHandlerSpy();
 
         $processor = new MemoryMetricProcessor($exporter, $spy);
@@ -163,7 +165,7 @@ final class MemoryMetricProcessorTest extends TestCase
             type: $type,
             value: $value,
             attributes: Attributes::empty(),
-            timestamp: new \DateTimeImmutable(),
+            timestamp: new DateTimeImmutable(),
             resource: ResourceMother::default(),
             scope: InstrumentationScopeMother::default(),
         );

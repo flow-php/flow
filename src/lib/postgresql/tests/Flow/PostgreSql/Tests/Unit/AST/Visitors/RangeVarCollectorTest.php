@@ -10,11 +10,15 @@ use Flow\PostgreSql\Protobuf\AST\ParseResult;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
+use function extension_loaded;
+use function pg_query_parse;
+
 final class RangeVarCollectorTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped(
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );
@@ -31,7 +35,7 @@ final class RangeVarCollectorTest extends TestCase
 
         static::assertCount(2, $collector->getRangeVars());
 
-        $tableNames = \array_map(static fn(RangeVar $rv) => $rv->getRelname(), $collector->getRangeVars());
+        $tableNames = array_map(static fn(RangeVar $rv) => $rv->getRelname(), $collector->getRangeVars());
         static::assertContains('users', $tableNames);
         static::assertContains('active', $tableNames);
     }
@@ -92,10 +96,12 @@ final class RangeVarCollectorTest extends TestCase
         $traverser = new Traverser($collector);
         $traverser->traverse($this->parseQuery('SELECT * FROM users AS u'));
 
-        static::assertCount(1, $collector->getRangeVars());
-        static::assertSame('users', $collector->getRangeVars()[0]->getRelname());
-        static::assertNotNull($collector->getRangeVars()[0]->getAlias());
-        static::assertSame('u', $collector->getRangeVars()[0]->getAlias()->getAliasname());
+        $rangeVars = $collector->getRangeVars();
+        static::assertCount(1, $rangeVars);
+        static::assertSame('users', $rangeVars[0]->getRelname());
+        $alias = $rangeVars[0]->getAlias();
+        static::assertNotNull($alias);
+        static::assertSame('u', $alias->getAliasname());
     }
 
     public function test_collects_table_with_schema(): void
@@ -117,7 +123,7 @@ final class RangeVarCollectorTest extends TestCase
 
         static::assertCount(2, $collector->getRangeVars());
 
-        $tableNames = \array_map(static fn(RangeVar $rv) => $rv->getRelname(), $collector->getRangeVars());
+        $tableNames = array_map(static fn(RangeVar $rv) => $rv->getRelname(), $collector->getRangeVars());
         static::assertContains('users', $tableNames);
         static::assertContains('orders', $tableNames);
     }
@@ -165,8 +171,7 @@ final class RangeVarCollectorTest extends TestCase
 
     private function parseQuery(string $sql): ParseResult
     {
-        /** @var string $json */
-        $json = \pg_query_parse($sql);
+        $json = pg_query_parse($sql);
         $result = new ParseResult();
         $result->mergeFromJsonString($json);
 

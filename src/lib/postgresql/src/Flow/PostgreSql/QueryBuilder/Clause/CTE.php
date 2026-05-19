@@ -47,22 +47,19 @@ final readonly class CTE implements AstConvertible
         }
 
         $columnNames = [];
-        $aliasColumns = $commonTableExpr->getAliascolnames();
 
-        if ($aliasColumns !== null) {
-            foreach ($aliasColumns as $aliasNode) {
-                $stringNode = $aliasNode->getString();
+        foreach ($commonTableExpr->getAliascolnames() as $aliasNode) {
+            $stringNode = $aliasNode->getString();
 
-                if ($stringNode === null) {
-                    throw InvalidAstException::invalidFieldValue(
-                        'aliascolnames',
-                        'CommonTableExpr',
-                        'Expected String node',
-                    );
-                }
-
-                $columnNames[] = $stringNode->getSval();
+            if ($stringNode === null) {
+                throw InvalidAstException::invalidFieldValue(
+                    'aliascolnames',
+                    'CommonTableExpr',
+                    'Expected String node',
+                );
             }
+
+            $columnNames[] = $stringNode->getSval();
         }
 
         $materialization = CTEMaterialization::fromProtobuf($commonTableExpr->getCtematerialized());

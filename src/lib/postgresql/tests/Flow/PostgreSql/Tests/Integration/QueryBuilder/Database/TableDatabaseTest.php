@@ -6,6 +6,8 @@ namespace Flow\PostgreSql\Tests\Integration\QueryBuilder\Database;
 
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
+use function array_filter;
+use function count;
 use function Flow\PostgreSql\DSL\agg_count;
 use function Flow\PostgreSql\DSL\alter;
 use function Flow\PostgreSql\DSL\and_;
@@ -30,6 +32,8 @@ use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\table;
 use function Flow\PostgreSql\DSL\truncate_table;
 use function Flow\PostgreSql\DSL\unique_constraint;
+use function is_string;
+use function str_contains;
 
 final class TableDatabaseTest extends PostgreSqlTestCase
 {
@@ -126,18 +130,15 @@ final class TableDatabaseTest extends PostgreSqlTestCase
                     ))
                     ->toSql(),
             );
-        static::assertGreaterThanOrEqual(1, \count($constraints));
+        static::assertGreaterThanOrEqual(1, count($constraints));
 
-        $hasAgeConstraint = false;
-
-        foreach ($constraints as $constraint) {
-            if ($constraint['def'] !== null && \str_contains($constraint['def'], 'age')) {
-                $hasAgeConstraint = true;
-
-                break;
-            }
-        }
-        static::assertTrue($hasAgeConstraint, 'Should have a CHECK constraint on age column');
+        $matchingConstraints = array_filter(
+            $constraints,
+            static fn(array $constraint): bool => (
+                is_string($constraint['def'] ?? null) && str_contains($constraint['def'], 'age')
+            ),
+        );
+        static::assertNotEmpty($matchingConstraints, 'Should have a CHECK constraint on age column');
     }
 
     public function test_create_table_with_columns(): void

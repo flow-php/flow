@@ -9,6 +9,8 @@ use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\Data\PlainValuesPacker;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
+use function strlen;
+
 final class BufferValueStorage implements ValueStorage
 {
     private string $buffer = '';
@@ -27,7 +29,7 @@ final class BufferValueStorage implements ValueStorage
         $localBuffer = '';
         (new PlainValuesPacker(new BinaryBufferWriter($localBuffer), $this->byteOrder))->packValues($column, $values);
         $this->buffer .= $localBuffer;
-        $this->size += \strlen($localBuffer);
+        $this->size += strlen($localBuffer);
     }
 
     public function getBuffer(): string

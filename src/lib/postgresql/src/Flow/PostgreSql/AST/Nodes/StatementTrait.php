@@ -6,6 +6,8 @@ namespace Flow\PostgreSql\AST\Nodes;
 
 use Flow\PostgreSql\AST\Nodes\Exception\InvalidStatementException;
 
+use function sprintf;
+
 trait StatementTrait
 {
     /**
@@ -20,7 +22,7 @@ trait StatementTrait
     public function assert(string $statementClass): Statement
     {
         if (!$this instanceof $statementClass) {
-            throw new InvalidStatementException(\sprintf(
+            throw new InvalidStatementException(sprintf(
                 'Expected statement of type %s, got %s',
                 $statementClass,
                 static::class,

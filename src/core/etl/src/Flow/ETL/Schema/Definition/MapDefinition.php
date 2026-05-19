@@ -15,6 +15,7 @@ use Flow\Types\Type\Logical\OptionalType;
 
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_equals;
+use function sprintf;
 
 /**
  * @template TKey of array-key
@@ -140,7 +141,7 @@ final class MapDefinition implements Definition
     public function merge(Definition $definition): Definition
     {
         if (!$this->ref->is($definition->entry())) {
-            throw new RuntimeException(\sprintf(
+            throw new RuntimeException(sprintf(
                 'Cannot merge different definitions, %s and %s',
                 $this->ref->name(),
                 $definition->entry()->name(),
@@ -198,7 +199,7 @@ final class MapDefinition implements Definition
             );
         }
 
-        throw new RuntimeException(\sprintf('Cannot merge %s with %s', self::class, $definition::class));
+        throw new RuntimeException(sprintf('Cannot merge %s with %s', self::class, $definition::class));
     }
 
     public function metadata(): Metadata

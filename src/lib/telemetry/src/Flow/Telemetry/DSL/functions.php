@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\DSL;
 
+use DateTimeImmutable;
 use Flow\ETL\Attribute\DocumentationDSL;
 use Flow\ETL\Attribute\Module;
 use Flow\ETL\Attribute\Type as DSLType;
@@ -85,6 +86,10 @@ use Flow\Telemetry\Tracer\SpanLink;
 use Flow\Telemetry\Tracer\SpanProcessor;
 use Flow\Telemetry\Tracer\TracerProvider;
 use Psr\Clock\ClockInterface;
+
+use function count;
+
+use const LOG_PID;
 
 /**
  * Create a TraceId.
@@ -201,7 +206,7 @@ function span_context(TraceId $traceId, SpanId $spanId, ?SpanId $parentSpanId = 
  * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Event attributes
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::TYPE)]
-function span_event(string $name, \DateTimeImmutable $timestamp, array|Attributes $attributes = []): GenericEvent
+function span_event(string $name, DateTimeImmutable $timestamp, array|Attributes $attributes = []): GenericEvent
 {
     return GenericEvent::create($name, $timestamp, $attributes);
 }
@@ -437,7 +442,7 @@ function meter_provider(
  *
  * If providers are not specified, void providers (no-op) are used.
  *
- * @param resource $resource The resource describing the entity producing telemetry
+ * @param \Flow\Telemetry\Resource $resource The resource describing the entity producing telemetry
  * @param null|TracerProvider $tracerProvider The tracer provider (null for void/disabled)
  * @param null|MeterProvider $meterProvider The meter provider (null for void/disabled)
  * @param null|LoggerProvider $loggerProvider The logger provider (null for void/disabled)
@@ -844,7 +849,7 @@ function caching_detector(ResourceDetector $detector, ?string $cachePath = null)
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function resource_detector(array $detectors = []): ChainDetector
 {
-    if (\count($detectors) === 0) {
+    if (count($detectors) === 0) {
         return new ChainDetector(
             new OsDetector(),
             new HostDetector(),
@@ -890,7 +895,7 @@ function stream_error_handler(
 function syslog_error_handler(
     string $ident = 'flow-telemetry',
     SyslogFacility $facility = SyslogFacility::User,
-    int $logOpts = \LOG_PID,
+    int $logOpts = LOG_PID,
     SyslogSeverity $severity = SyslogSeverity::Error,
 ): SyslogHandler {
     return new SyslogHandler($ident, $facility, $logOpts, $severity);

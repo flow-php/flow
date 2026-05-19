@@ -9,6 +9,9 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
 
+use function array_key_exists;
+use function array_merge;
+
 final class HashTable
 {
     /**
@@ -32,7 +35,7 @@ final class HashTable
     {
         $hash = $this->hash($hashBy, $row);
 
-        if (!\array_key_exists($hash, $this->buckets)) {
+        if (!array_key_exists($hash, $this->buckets)) {
             $this->buckets[$hash] = new Bucket($hash);
             $this->bucketsMatches[$hash] = 0;
         }
@@ -44,7 +47,7 @@ final class HashTable
     {
         $hash = $this->hash($hashBy, $row);
 
-        if (!\array_key_exists($hash, $this->buckets)) {
+        if (!array_key_exists($hash, $this->buckets)) {
             return null;
         }
 
@@ -59,7 +62,7 @@ final class HashTable
 
         foreach ($this->buckets as $hash => $bucket) {
             if ($this->bucketsMatches[$hash] === 0) {
-                $rows = \array_merge($rows, $bucket->unmatchedRows());
+                $rows = array_merge($rows, $bucket->unmatchedRows());
             }
         }
 

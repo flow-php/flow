@@ -18,6 +18,14 @@ use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tracer\SpanContext;
 use Psr\Clock\ClockInterface;
 
+use function array_fill;
+use function array_filter;
+use function array_merge;
+use function count;
+use function is_scalar;
+use function max;
+use function min;
+
 /**
  * Histogram instrument for recording value distributions.
  *
@@ -39,7 +47,7 @@ final class Histogram implements Instrument
     /**
      * Default bucket boundaries (milliseconds, suitable for latency measurements).
      *
-     * @var array<float>
+     * @var list<float>
      */
     public const array DEFAULT_BOUNDARIES = [
         0.0,
@@ -73,7 +81,7 @@ final class Histogram implements Instrument
 
     /**
      * @param string $name Instrument name
-     * @param resource $resource The resource context for this instrument
+     * @param \Flow\Telemetry\Resource $resource The resource context for this instrument
      * @param InstrumentationScope $scope Instrumentation scope that created this instrument
      * @param ClockInterface $clock Clock for timestamps
      * @param AggregationTemporality $temporality Aggregation temporality
@@ -81,7 +89,7 @@ final class Histogram implements Instrument
      * @param MetricLimits $limits Cardinality limits for this instrument
      * @param null|string $unit Unit of measurement
      * @param null|string $description Human-readable description
-     * @param array<float> $boundaries Explicit bucket boundaries (strictly increasing)
+     * @param list<float> $boundaries Explicit bucket boundaries (strictly increasing)
      */
     public function __construct(
         private readonly string $name,
@@ -119,7 +127,7 @@ final class Histogram implements Instrument
                 name: $this->name,
                 type: MetricType::HISTOGRAM,
                 value: $data['sum'],
-                attributes: Attributes::create(\array_merge($data['attributes'], [
+                attributes: Attributes::create(array_merge($data['attributes'], [
                     'histogram.count' => $data['count'],
                     'histogram.sum' => $data['sum'],
                     'histogram.min' => $data['min'],
@@ -163,14 +171,14 @@ final class Histogram implements Instrument
     {
         $normalized = $attributes instanceof Attributes ? $attributes->normalize() : $attributes;
         /** @var array<string, bool|float|int|string> $attrs */
-        $attrs = \array_filter($normalized, static fn($v): bool => \is_scalar($v));
+        $attrs = array_filter($normalized, static fn($v): bool => is_scalar($v));
         $key = Attributes::create($attrs)->id();
         $floatValue = (float) $value;
 
         if (!isset($this->aggregations[$key])) {
             $nonOverflowCount = isset($this->aggregations[$this->overflowKey])
-                ? \count($this->aggregations) - 1
-                : \count($this->aggregations);
+                ? count($this->aggregations) - 1
+                : count($this->aggregations);
 
             if ($nonOverflowCount >= $this->limits->cardinalityLimit) {
                 $key = $this->overflowKey;
@@ -184,16 +192,16 @@ final class Histogram implements Instrument
                 'sum' => 0.0,
                 'min' => $floatValue,
                 'max' => $floatValue,
-                'bucketCounts' => \array_fill(0, \count($this->boundaries) + 1, 0),
-                'reservoir' => new AlignedHistogramBucketExemplarReservoir(\count($this->boundaries) + 1),
+                'bucketCounts' => array_fill(0, count($this->boundaries) + 1, 0),
+                'reservoir' => new AlignedHistogramBucketExemplarReservoir(count($this->boundaries) + 1),
                 'attributes' => $attrs,
             ];
         }
 
         $this->aggregations[$key]['count']++;
         $this->aggregations[$key]['sum'] += $floatValue;
-        $this->aggregations[$key]['min'] = \min($this->aggregations[$key]['min'], $floatValue);
-        $this->aggregations[$key]['max'] = \max($this->aggregations[$key]['max'], $floatValue);
+        $this->aggregations[$key]['min'] = min($this->aggregations[$key]['min'], $floatValue);
+        $this->aggregations[$key]['max'] = max($this->aggregations[$key]['max'], $floatValue);
 
         $bucketIndex = $this->findBucketIndex($floatValue);
         $this->aggregations[$key]['bucketCounts'][$bucketIndex]++;
@@ -230,6 +238,6 @@ final class Histogram implements Instrument
             }
         }
 
-        return \count($this->boundaries);
+        return count($this->boundaries);
     }
 }

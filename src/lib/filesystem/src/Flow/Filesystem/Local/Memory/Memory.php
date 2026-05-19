@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Local\Memory;
 
+use DateTimeImmutable;
 use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Path;
+use php_user_filter;
 
+use function array_key_exists;
+use function array_values;
 use function Flow\Types\DSL\type_string;
+use function in_array;
+use function mb_strtolower;
 
 final class Memory
 {
@@ -27,7 +33,7 @@ final class Memory
     private array $streams = [];
 
     public function __construct(
-        private readonly ?\php_user_filter $filter = null,
+        private readonly ?php_user_filter $filter = null,
     ) {}
 
     public function __destruct()
@@ -39,20 +45,20 @@ final class Memory
 
     public function close(Path $path): void
     {
-        if (\array_key_exists($path->uri(), $this->streams)) {
+        if (array_key_exists($path->uri(), $this->streams)) {
             unset($this->streams[$path->uri()], $this->paths[$path->uri()], $this->modifiedAt[$path->uri()]);
         }
     }
 
     public function for(Path $path): MemoryStream
     {
-        if (\array_key_exists($path->uri(), $this->streams)) {
+        if (array_key_exists($path->uri(), $this->streams)) {
             return $this->streams[$path->uri()];
         }
 
-        $outputStream = \mb_strtolower(type_string()->cast($path->getOption('stream', 'temp')));
+        $outputStream = mb_strtolower(type_string()->cast($path->getOption('stream', 'temp')));
 
-        if (!\in_array($outputStream, ['temp', 'memory'], true)) {
+        if (!in_array($outputStream, ['temp', 'memory'], true)) {
             throw new InvalidArgumentException('Invalid memory stream, allowed values are "temp" and "memory", given: '
             . $outputStream);
         }
@@ -71,17 +77,17 @@ final class Memory
         }
 
         $this->paths[$path->uri()] = $path;
-        $this->modifiedAt[$path->uri()] = new \DateTimeImmutable();
+        $this->modifiedAt[$path->uri()] = new DateTimeImmutable();
 
         return $this->streams[$path->uri()];
     }
 
     public function has(Path $path): bool
     {
-        return \array_key_exists($path->uri(), $this->streams);
+        return array_key_exists($path->uri(), $this->streams);
     }
 
-    public function lastModifiedAt(Path $path): ?\DateTimeImmutable
+    public function lastModifiedAt(Path $path): ?DateTimeImmutable
     {
         return $this->modifiedAt[$path->uri()] ?? null;
     }
@@ -91,11 +97,11 @@ final class Memory
      */
     public function paths(): array
     {
-        return \array_values($this->paths);
+        return array_values($this->paths);
     }
 
     public function size(Path $path): ?int
     {
-        return \array_key_exists($path->uri(), $this->streams) ? $this->streams[$path->uri()]->size() : null;
+        return array_key_exists($path->uri(), $this->streams) ? $this->streams[$path->uri()]->size() : null;
     }
 }

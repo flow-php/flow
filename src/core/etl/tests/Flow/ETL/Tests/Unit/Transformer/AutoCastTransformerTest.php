@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use DateTimeImmutable;
 use Flow\ETL\Transformer\AutoCastTransformer;
 use Flow\Types\Type\AutoCaster;
 use PHPUnit\Framework\TestCase;
@@ -37,7 +38,7 @@ final class AutoCastTransformerTest extends TestCase
                     'float' => 1.0,
                     'boolean' => true,
                     'json' => ['foo' => 'bar'],
-                    'datetime' => new \DateTimeImmutable('2021-01-01 00:00:00'),
+                    'datetime' => new DateTimeImmutable('2021-01-01 00:00:00'),
                     'null' => null,
                     'nil' => null,
                 ],

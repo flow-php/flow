@@ -6,6 +6,11 @@ namespace Flow\Telemetry\Tracer\Sampler;
 
 use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\Tracer\Span;
+use InvalidArgumentException;
+
+use function ord;
+use function sprintf;
+use function substr;
 
 /**
  * Sampler that samples a configurable percentage of traces.
@@ -34,7 +39,7 @@ final readonly class TraceIdRatioBasedSampler implements Sampler
         private float $ratio,
     ) {
         if ($ratio < 0.0 || $ratio > 1.0) {
-            throw new \InvalidArgumentException(\sprintf('Sampling ratio must be between 0.0 and 1.0, got %f', $ratio));
+            throw new InvalidArgumentException(sprintf('Sampling ratio must be between 0.0 and 1.0, got %f', $ratio));
         }
 
         $this->threshold = $ratio >= 1.0 ? PHP_INT_MAX : (int) ($ratio * PHP_INT_MAX);
@@ -42,7 +47,7 @@ final readonly class TraceIdRatioBasedSampler implements Sampler
 
     public function __toString(): string
     {
-        return \sprintf('TraceIdRatioBasedSampler{%.6f}', $this->ratio);
+        return sprintf('TraceIdRatioBasedSampler{%.6f}', $this->ratio);
     }
 
     public function shouldSample(Span $span): SamplingResult
@@ -72,12 +77,12 @@ final readonly class TraceIdRatioBasedSampler implements Sampler
     private function traceIdToInt(TraceId $traceId): int
     {
         $bytes = $traceId->toBytes();
-        $lowerBytes = \substr($bytes, 8, 8);
+        $lowerBytes = substr($bytes, 8, 8);
 
         $value = 0;
 
         for ($i = 0; $i < 8; $i++) {
-            $value = ($value << 8) | \ord($lowerBytes[$i]);
+            $value = ($value << 8) | ord($lowerBytes[$i]);
         }
 
         return $value & PHP_INT_MAX;

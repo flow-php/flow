@@ -10,6 +10,13 @@ use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanProcessor;
+use Throwable;
+
+use function array_keys;
+use function array_merge;
+use function array_unique;
+use function array_values;
+use function count;
 
 /**
  * Processor that stores spans in memory and exports via configured exporter.
@@ -40,7 +47,7 @@ final class MemorySpanProcessor implements SpanProcessor
      */
     public function endedSpans(): array
     {
-        return \array_merge(...\array_values($this->endedSpansByTraceId));
+        return array_merge(...array_values($this->endedSpansByTraceId));
     }
 
     /**
@@ -57,13 +64,13 @@ final class MemorySpanProcessor implements SpanProcessor
     {
         $spans = $this->endedSpans();
 
-        if (\count($spans) === 0) {
+        if (count($spans) === 0) {
             return true;
         }
 
         try {
             return $this->spanExporter->export(Signals::traces($spans));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
 
             return false;
@@ -110,7 +117,7 @@ final class MemorySpanProcessor implements SpanProcessor
 
         try {
             $this->spanExporter->shutdown();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
         }
     }
@@ -122,7 +129,7 @@ final class MemorySpanProcessor implements SpanProcessor
      */
     public function startedSpans(): array
     {
-        return \array_merge(...\array_values($this->startedSpansByTraceId));
+        return array_merge(...array_values($this->startedSpansByTraceId));
     }
 
     /**
@@ -142,9 +149,9 @@ final class MemorySpanProcessor implements SpanProcessor
      */
     public function traceIds(): array
     {
-        return \array_values(\array_unique(\array_merge(
-            \array_keys($this->startedSpansByTraceId),
-            \array_keys($this->endedSpansByTraceId),
+        return array_values(array_unique(array_merge(
+            array_keys($this->startedSpansByTraceId),
+            array_keys($this->endedSpansByTraceId),
         )));
     }
 }

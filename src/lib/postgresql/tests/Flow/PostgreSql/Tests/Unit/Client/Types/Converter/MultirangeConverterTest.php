@@ -5,22 +5,24 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Types\Converter\MultirangeConverter;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 final class MultirangeConverterTest extends TestCase
 {
-    public static function provide_non_string_values(): \Generator
+    public static function provide_non_string_values(): Generator
     {
         yield 'integer' => [12345, ''];
         yield 'array' => [['array'], ''];
         yield 'float' => [3.14, ''];
         yield 'boolean true' => [true, ''];
         yield 'boolean false' => [false, ''];
-        yield 'object' => [new \stdClass(), ''];
+        yield 'object' => [new stdClass(), ''];
     }
 
-    public static function provide_valid_values(): \Generator
+    public static function provide_valid_values(): Generator
     {
         yield 'multirange' => ['{[1,5),[10,20)}', '{[1,5),[10,20)}'];
         yield 'empty multirange' => ['{}', '{}'];

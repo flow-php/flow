@@ -32,10 +32,8 @@ final readonly class ArrayExpression implements Expression
 
         $expressions = [];
 
-        if ($elements !== null) {
-            foreach ($elements as $elementNode) {
-                $expressions[] = self::expressionFromNode($elementNode);
-            }
+        foreach ($elements as $elementNode) {
+            $expressions[] = self::expressionFromNode($elementNode);
         }
 
         return new self($expressions);

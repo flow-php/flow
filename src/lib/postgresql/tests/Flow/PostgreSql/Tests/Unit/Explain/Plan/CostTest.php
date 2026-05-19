@@ -7,6 +7,8 @@ namespace Flow\PostgreSql\Tests\Unit\Explain\Plan;
 use Flow\PostgreSql\Explain\Plan\Cost;
 use PHPUnit\Framework\TestCase;
 
+use function array_keys;
+
 final class CostTest extends TestCase
 {
     public function test_from_array_and_normalize_are_inverse(): void
@@ -53,6 +55,6 @@ final class CostTest extends TestCase
             'total_cost',
         ];
 
-        static::assertSame($expectedKeys, \array_keys($normalized));
+        static::assertSame($expectedKeys, array_keys($normalized));
     }
 }

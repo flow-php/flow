@@ -4,10 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\Website\Tests\Functional;
 
+use Exception;
 use Facebook\WebDriver\Exception\WebDriverException;
 use Flow\Website\Kernel;
 use Symfony\Component\Panther\Client;
 use Symfony\Component\Panther\PantherTestCase;
+use Throwable;
+
+use function array_merge;
+use function file_put_contents;
+use function json_encode;
+use function sprintf;
+use function sys_get_temp_dir;
+use function time;
+use function unlink;
+use function usleep;
 
 abstract class EndToEndTestCase extends PantherTestCase
 {
@@ -16,7 +27,7 @@ abstract class EndToEndTestCase extends PantherTestCase
     protected function tearDown(): void
     {
         foreach ($this->tempFiles as $file) {
-            @\unlink($file);
+            @unlink($file);
         }
 
         parent::tearDown();
@@ -31,8 +42,8 @@ abstract class EndToEndTestCase extends PantherTestCase
 
     protected function createTempFile(string $filename, string $content): string
     {
-        $path = \sys_get_temp_dir() . '/' . $filename;
-        \file_put_contents($path, $content);
+        $path = sys_get_temp_dir() . '/' . $filename;
+        file_put_contents($path, $content);
         $this->tempFiles[] = $path;
 
         return $path;
@@ -42,13 +53,13 @@ abstract class EndToEndTestCase extends PantherTestCase
     {
         try {
             $client->switchTo()->alert()->accept();
-        } catch (\Exception) {
+        } catch (Exception) {
         }
     }
 
     protected function getFromLocalStorage(Client $client, string $key): ?string
     {
-        return $client->executeScript(\sprintf('return localStorage.getItem(%s);', \json_encode($key)));
+        return $client->executeScript(sprintf('return localStorage.getItem(%s);', json_encode($key)));
     }
 
     protected function getPlaygroundCode(Client $client): string
@@ -60,7 +71,7 @@ abstract class EndToEndTestCase extends PantherTestCase
 
     protected function setPlaygroundCode(Client $client, string $code): void
     {
-        $client->executeScript(\sprintf('const textarea = document.getElementById("code-editor");
+        $client->executeScript(sprintf('const textarea = document.getElementById("code-editor");
              const controller = window.Stimulus.getControllerForElementAndIdentifier(textarea, "code-editor");
              controller.setCode(%s);
              // Manually save to localStorage for tests (bypass debounce)
@@ -68,14 +79,14 @@ abstract class EndToEndTestCase extends PantherTestCase
              const storage = window.Stimulus.getControllerForElementAndIdentifier(playground, "playground-storage");
              if (storage) {
                  localStorage.setItem(storage.storageKeyValue || "flow-playground-code", %s);
-             }', \json_encode($code), \json_encode($code)));
+             }', json_encode($code), json_encode($code)));
     }
 
     protected function waitForWasmReady(Client $client, int $timeout = 30): void
     {
-        $startTime = \time();
+        $startTime = time();
 
-        while ((\time() - $startTime) < $timeout) {
+        while ((time() - $startTime) < $timeout) {
             try {
                 $isReady = $client->executeScript(
                     'const playground = document.getElementById("playground");
@@ -96,13 +107,13 @@ abstract class EndToEndTestCase extends PantherTestCase
             $client->wait(0.5);
         }
 
-        throw new \Exception('WASM did not initialize within ' . $timeout . ' seconds');
+        throw new Exception('WASM did not initialize within ' . $timeout . ' seconds');
     }
 
     protected static function createE2EClient(array $options = []): Client
     {
         return static::createPantherClient(
-            \array_merge([
+            array_merge([
                 'env' => ['APP_ENV' => 'test'],
             ], $options),
             [],
@@ -135,11 +146,11 @@ abstract class EndToEndTestCase extends PantherTestCase
 
                 try {
                     $client->quit();
-                } catch (\Throwable) {
+                } catch (Throwable) {
                 }
 
                 if ($attempt < $maxRetries) {
-                    \usleep(500_000);
+                    usleep(500_000);
                 }
             }
         }

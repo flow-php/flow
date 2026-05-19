@@ -9,6 +9,9 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 
+use function array_values;
+use function count;
+
 final readonly class CaseExpression implements Expression
 {
     /**
@@ -39,7 +42,7 @@ final readonly class CaseExpression implements Expression
 
         $argsNodes = $caseExpr->getArgs();
 
-        if ($argsNodes === null || \count($argsNodes) === 0) {
+        if (count($argsNodes) === 0) {
             throw InvalidAstException::missingRequiredField('args', 'CaseExpr');
         }
 
@@ -115,7 +118,7 @@ final readonly class CaseExpression implements Expression
 
     public function withWhen(WhenClause ...$whenClauses): self
     {
-        $clauses = \array_values($whenClauses);
+        $clauses = array_values($whenClauses);
 
         if ($clauses === []) {
             throw InvalidExpressionException::emptyArray('WHEN clauses');

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Integration;
 
+use FilesystemIterator;
 use Flow\Bridge\Telemetry\OTLP\Transport\StreamTransport;
 use Flow\Bridge\Telemetry\OTLP\Transport\TransportException;
 use Flow\Telemetry\Logger\Severity;
@@ -14,9 +15,38 @@ use Flow\Telemetry\Tests\Mother\MetricMother;
 use Flow\Telemetry\Tests\Mother\SpanMother;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 
+use function array_filter;
+use function array_values;
+use function bin2hex;
+use function chmod;
+use function dirname;
+use function explode;
+use function file_get_contents;
+use function fileperms;
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_exporter;
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_stream_transport;
+use function is_dir;
+use function json_decode;
+use function mkdir;
+use function random_bytes;
+use function rewind;
+use function rmdir;
+use function rtrim;
+use function sprintf;
+use function str_repeat;
+use function stream_get_contents;
+use function strlen;
+use function strtolower;
+use function substr;
+use function substr_count;
+use function sys_get_temp_dir;
+use function touch;
+use function unlink;
+
+use const JSON_THROW_ON_ERROR;
 
 /**
  * End-to-end test for OTLP stream export through OTLPExporter + StreamTransport.
@@ -30,29 +60,29 @@ final class StreamExportIntegrationTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->tempDir = \sys_get_temp_dir() . '/flow-otlp-stream-integration-' . \bin2hex(\random_bytes(6));
-        \mkdir($this->tempDir, 0755, true);
+        $this->tempDir = sys_get_temp_dir() . '/flow-otlp-stream-integration-' . bin2hex(random_bytes(6));
+        mkdir($this->tempDir, 0755, true);
     }
 
     protected function tearDown(): void
     {
-        if (!\is_dir($this->tempDir)) {
+        if (!is_dir($this->tempDir)) {
             return;
         }
 
-        foreach (new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($this->tempDir, \FilesystemIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::CHILD_FIRST,
+        foreach (new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($this->tempDir, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST,
         ) as $entry) {
             /** @var \SplFileInfo $entry */
             if ($entry->isDir()) {
-                \rmdir($entry->getPathname());
+                rmdir($entry->getPathname());
             } else {
-                \unlink($entry->getPathname());
+                unlink($entry->getPathname());
             }
         }
 
-        \rmdir($this->tempDir);
+        rmdir($this->tempDir);
     }
 
     public function test_appends_multiple_batches_to_file_as_separate_lines(): void
@@ -63,8 +93,8 @@ final class StreamExportIntegrationTest extends TestCase
         static::assertTrue($exporter->export(Signals::logs([LogEntryMother::deterministic('first', Severity::INFO)])));
         static::assertTrue($exporter->export(Signals::logs([LogEntryMother::deterministic('second', Severity::WARN)])));
 
-        $lines = \array_values(\array_filter(
-            \explode("\n", (string) \file_get_contents($path)),
+        $lines = array_values(array_filter(
+            explode("\n", (string) file_get_contents($path)),
             static fn(string $l): bool => $l !== '',
         ));
 
@@ -73,7 +103,7 @@ final class StreamExportIntegrationTest extends TestCase
         foreach ($lines as $line) {
             static::assertJson($line);
             /** @var array<string, mixed> $decoded */
-            $decoded = \json_decode($line, true, flags: \JSON_THROW_ON_ERROR);
+            $decoded = json_decode($line, true, flags: JSON_THROW_ON_ERROR);
             static::assertArrayHasKey('resourceLogs', $decoded);
         }
     }
@@ -83,7 +113,7 @@ final class StreamExportIntegrationTest extends TestCase
         $path = $this->tempDir . '/perms.jsonl';
         new StreamTransport($path, filePermissions: 0600);
 
-        static::assertSame('0600', \substr(\sprintf('%o', \fileperms($path)), -4));
+        static::assertSame('0600', substr(sprintf('%o', fileperms($path)), -4));
     }
 
     public function test_concurrent_writes_to_shared_stream_interleave_at_line_boundaries(): void
@@ -109,9 +139,9 @@ final class StreamExportIntegrationTest extends TestCase
         static::assertInstanceOf(StreamTransport::class, $transportB);
 
         foreach ([$transportA, $transportB] as $transport) {
-            \rewind($transport->stream());
-            $lines = \array_values(\array_filter(
-                \explode("\n", (string) \stream_get_contents($transport->stream())),
+            rewind($transport->stream());
+            $lines = array_values(array_filter(
+                explode("\n", (string) stream_get_contents($transport->stream())),
                 static fn(string $l): bool => $l !== '',
             ));
 
@@ -128,18 +158,18 @@ final class StreamExportIntegrationTest extends TestCase
         $path = $this->tempDir . '/nested/deeply/logs.jsonl';
         new StreamTransport($path);
 
-        static::assertDirectoryExists(\dirname($path));
+        static::assertDirectoryExists(dirname($path));
     }
 
     public function test_does_not_chmod_existing_file(): void
     {
         $path = $this->tempDir . '/preexisting.jsonl';
-        \touch($path);
-        \chmod($path, 0640);
+        touch($path);
+        chmod($path, 0640);
 
         new StreamTransport($path, filePermissions: 0600);
 
-        static::assertSame('0640', \substr(\sprintf('%o', \fileperms($path)), -4));
+        static::assertSame('0640', substr(sprintf('%o', fileperms($path)), -4));
     }
 
     public function test_does_not_create_parent_directory_when_disabled(): void
@@ -157,22 +187,22 @@ final class StreamExportIntegrationTest extends TestCase
         $entries = [];
 
         for ($i = 0; $i < 200; $i++) {
-            $entries[] = LogEntryMother::deterministic(\str_repeat('x', 256) . ' #' . $i, Severity::INFO);
+            $entries[] = LogEntryMother::deterministic(str_repeat('x', 256) . ' #' . $i, Severity::INFO);
         }
 
         static::assertTrue($exporter->export(Signals::logs($entries)));
 
         static::assertInstanceOf(StreamTransport::class, $transport);
-        \rewind($transport->stream());
+        rewind($transport->stream());
 
-        $contents = (string) \stream_get_contents($transport->stream());
+        $contents = (string) stream_get_contents($transport->stream());
 
-        static::assertGreaterThan(50_000, \strlen($contents));
+        static::assertGreaterThan(50_000, strlen($contents));
         static::assertStringEndsWith("\n", $contents);
-        static::assertSame(1, \substr_count($contents, "\n"));
+        static::assertSame(1, substr_count($contents, "\n"));
 
         /** @var array{resourceLogs: list<array{scopeLogs: list<array{logRecords: list<mixed>}>}>} $decoded */
-        $decoded = \json_decode(\rtrim($contents, "\n"), true, flags: \JSON_THROW_ON_ERROR);
+        $decoded = json_decode(rtrim($contents, "\n"), true, flags: JSON_THROW_ON_ERROR);
         static::assertArrayHasKey('resourceLogs', $decoded);
         static::assertCount(200, $decoded['resourceLogs'][0]['scopeLogs'][0]['logRecords']);
     }
@@ -183,13 +213,13 @@ final class StreamExportIntegrationTest extends TestCase
     {
         $readLines = static function (StreamTransport $transport, string $destination) use ($kind): array {
             if ($kind === 'file') {
-                $contents = (string) \file_get_contents($destination);
+                $contents = (string) file_get_contents($destination);
             } else {
-                \rewind($transport->stream());
-                $contents = (string) \stream_get_contents($transport->stream());
+                rewind($transport->stream());
+                $contents = (string) stream_get_contents($transport->stream());
             }
 
-            return \array_values(\array_filter(\explode("\n", $contents), static fn(string $l): bool => $l !== ''));
+            return array_values(array_filter(explode("\n", $contents), static fn(string $l): bool => $l !== ''));
         };
 
         $logsDest = $kind === 'file' ? $this->tempDir . '/logs.jsonl' : 'php://temp';
@@ -235,7 +265,7 @@ final class StreamExportIntegrationTest extends TestCase
             foreach ($lines as $line) {
                 static::assertJson($line);
                 /** @var array<string, mixed> $decoded */
-                $decoded = \json_decode($line, true, flags: \JSON_THROW_ON_ERROR);
+                $decoded = json_decode($line, true, flags: JSON_THROW_ON_ERROR);
                 static::assertArrayHasKey($key, $decoded);
             }
         }
@@ -257,19 +287,19 @@ final class StreamExportIntegrationTest extends TestCase
         static::assertInstanceOf(StreamTransport::class, $transport);
 
         if ($kind === 'file') {
-            $contents = (string) \file_get_contents($destination);
+            $contents = (string) file_get_contents($destination);
         } else {
-            \rewind($transport->stream());
-            $contents = (string) \stream_get_contents($transport->stream());
+            rewind($transport->stream());
+            $contents = (string) stream_get_contents($transport->stream());
         }
 
-        $lines = \array_values(\array_filter(\explode("\n", $contents), static fn(string $l): bool => $l !== ''));
+        $lines = array_values(array_filter(explode("\n", $contents), static fn(string $l): bool => $l !== ''));
 
         static::assertCount(3, $lines);
 
         foreach ([0 => 'resourceLogs', 1 => 'resourceMetrics', 2 => 'resourceSpans'] as $index => $expectedKey) {
             /** @var array<string, mixed> $decoded */
-            $decoded = \json_decode($lines[$index], true, flags: \JSON_THROW_ON_ERROR);
+            $decoded = json_decode($lines[$index], true, flags: JSON_THROW_ON_ERROR);
             static::assertArrayHasKey($expectedKey, $decoded);
         }
     }
@@ -281,7 +311,7 @@ final class StreamExportIntegrationTest extends TestCase
         SignalType $type,
         string $expectedKey,
     ): void {
-        $path = $this->tempDir . '/' . \strtolower($type->name) . '.jsonl';
+        $path = $this->tempDir . '/' . strtolower($type->name) . '.jsonl';
         $exporter = otlp_exporter(otlp_stream_transport($path));
 
         static::assertTrue($exporter->export(match ($type) {
@@ -290,13 +320,13 @@ final class StreamExportIntegrationTest extends TestCase
             SignalType::TRACES => Signals::traces([SpanMother::withName('span')]),
         }));
 
-        $contents = (string) \file_get_contents($path);
+        $contents = (string) file_get_contents($path);
 
         static::assertStringEndsWith("\n", $contents);
-        static::assertSame(1, \substr_count($contents, "\n"));
+        static::assertSame(1, substr_count($contents, "\n"));
 
         /** @var array<string, mixed> $decoded */
-        $decoded = \json_decode(\rtrim($contents, "\n"), true, flags: \JSON_THROW_ON_ERROR);
+        $decoded = json_decode(rtrim($contents, "\n"), true, flags: JSON_THROW_ON_ERROR);
         static::assertArrayHasKey($expectedKey, $decoded);
     }
 }

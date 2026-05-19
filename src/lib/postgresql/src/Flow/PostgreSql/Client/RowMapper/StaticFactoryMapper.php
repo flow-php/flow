@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client\RowMapper;
 
+use Closure;
 use Flow\PostgreSql\Client\Exception\MappingException;
 use Flow\PostgreSql\Client\RowMapper;
+use ReflectionMethod;
+use Throwable;
+
+use function class_exists;
+use function method_exists;
 
 /**
  * Maps database rows to objects using a user-provided public static factory method.
@@ -26,6 +32,11 @@ use Flow\PostgreSql\Client\RowMapper;
 final readonly class StaticFactoryMapper implements RowMapper
 {
     /**
+     * @var \Closure(array<string, mixed>): T
+     */
+    private Closure $factory;
+
+    /**
      * @param class-string<T> $class
      * @param non-empty-string $method
      *
@@ -35,15 +46,15 @@ final readonly class StaticFactoryMapper implements RowMapper
         private string $class,
         private string $method,
     ) {
-        if (!\class_exists($this->class)) {
+        if (!class_exists($this->class)) {
             throw MappingException::mappingFailed($this->class, 'Class does not exist');
         }
 
-        if (!\method_exists($this->class, $this->method)) {
+        if (!method_exists($this->class, $this->method)) {
             throw MappingException::factoryMethodNotFound($this->class, $this->method);
         }
 
-        $reflection = new \ReflectionMethod($this->class, $this->method);
+        $reflection = new ReflectionMethod($this->class, $this->method);
 
         if (!$reflection->isStatic()) {
             throw MappingException::factoryMethodNotStatic($this->class, $this->method);
@@ -52,6 +63,10 @@ final readonly class StaticFactoryMapper implements RowMapper
         if (!$reflection->isPublic()) {
             throw MappingException::factoryMethodNotPublic($this->class, $this->method);
         }
+
+        /** @var \Closure(array<string, mixed>): T $factory */
+        $factory = $reflection->getClosure();
+        $this->factory = $factory;
     }
 
     /**
@@ -60,9 +75,8 @@ final readonly class StaticFactoryMapper implements RowMapper
     public function map(array $row, Context $context): object
     {
         try {
-            /** @var T */
-            return $this->class::{$this->method}($row);
-        } catch (\Throwable $e) {
+            return ($this->factory)($row);
+        } catch (Throwable $e) {
             throw MappingException::mappingFailed($this->class, $e->getMessage(), $e);
         }
     }

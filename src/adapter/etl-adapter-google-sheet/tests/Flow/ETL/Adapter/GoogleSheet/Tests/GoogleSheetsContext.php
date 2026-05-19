@@ -10,6 +10,7 @@ use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
+use RuntimeException;
 
 final readonly class GoogleSheetsContext
 {
@@ -32,13 +33,13 @@ final readonly class GoogleSheetsContext
                     200,
                     ['Content-Type' => 'application/json'],
                     file_get_contents(__DIR__ . '/Fixtures/spreadsheet.json')
-                    ?: throw new \RuntimeException('Failed to read the spreadsheet fixture'),
+                    ?: throw new RuntimeException('Failed to read the spreadsheet fixture'),
                 ),
                 new Response(
                     200,
                     ['Content-Type' => 'application/json'],
                     file_get_contents($fixtureFile)
-                    ?: throw new \RuntimeException('Failed to read file: ' . $fixtureFile),
+                    ?: throw new RuntimeException('Failed to read file: ' . $fixtureFile),
                 ),
             ])),
         ]);

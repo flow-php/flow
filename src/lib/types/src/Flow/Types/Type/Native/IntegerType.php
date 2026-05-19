@@ -4,9 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native;
 
+use DateInterval;
+use DateTimeImmutable;
+use DOMElement;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+use Throwable;
+
+use function is_array;
+use function is_int;
+use function is_object;
+use function is_scalar;
 
 /**
  * @implements Type<int>
@@ -29,38 +38,38 @@ final readonly class IntegerType implements Type
         }
 
         try {
-            if ($value instanceof \DOMElement) {
+            if ($value instanceof DOMElement) {
                 return (int) $value->nodeValue;
             }
 
-            if ($value instanceof \DateTimeImmutable) {
+            if ($value instanceof DateTimeImmutable) {
                 return (int) $value->format('Uu');
             }
 
-            if ($value instanceof \DateInterval) {
-                $reference = new \DateTimeImmutable();
+            if ($value instanceof DateInterval) {
+                $reference = new DateTimeImmutable();
                 $endTime = $reference->add($value);
 
                 return (int) $endTime->format('Uu') - (int) $reference->format('Uu');
             }
 
-            if (\is_object($value)) {
+            if (is_object($value)) {
                 throw new CastingException($value, $this);
             }
 
-            if (\is_scalar($value) || null === $value || \is_array($value)) {
+            if (is_scalar($value) || null === $value || is_array($value)) {
                 return (int) $value;
             }
 
             throw new CastingException($value, $this);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             throw new CastingException($value, $this);
         }
     }
 
     public function isValid(mixed $value): bool
     {
-        return \is_int($value);
+        return is_int($value);
     }
 
     public function normalize(): array

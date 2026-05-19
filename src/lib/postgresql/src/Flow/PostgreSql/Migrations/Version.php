@@ -5,8 +5,13 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Migrations;
 
 use Flow\PostgreSql\Migrations\Exception\MigrationException;
+use Stringable;
 
-final readonly class Version implements \Stringable
+use function preg_match;
+use function strcmp;
+use function strlen;
+
+final readonly class Version implements Stringable
 {
     private function __construct(
         private string $version,
@@ -14,7 +19,7 @@ final readonly class Version implements \Stringable
 
     public static function fromString(string $version): self
     {
-        if (\preg_match('/^[a-zA-Z0-9_]+$/', $version) !== 1 || \strlen($version) > 255) {
+        if (preg_match('/^[a-zA-Z0-9_]+$/', $version) !== 1 || strlen($version) > 255) {
             throw MigrationException::invalidVersionFormat($version);
         }
 
@@ -33,6 +38,6 @@ final readonly class Version implements \Stringable
 
     public function isAfter(self $other): bool
     {
-        return \strcmp($this->version, $other->version) > 0;
+        return strcmp($this->version, $other->version) > 0;
     }
 }

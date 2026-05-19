@@ -9,6 +9,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
+use Throwable;
 
 final readonly class HitsIntoRowsTransformer implements Transformer
 {
@@ -61,7 +62,7 @@ final readonly class HitsIntoRowsTransformer implements Transformer
             ]);
 
             return $result;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->transformationFailed($this, $e);
 
             throw $e;

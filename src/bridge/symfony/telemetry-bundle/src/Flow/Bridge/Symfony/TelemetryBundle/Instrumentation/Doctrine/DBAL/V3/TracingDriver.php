@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V3;
 
+use DateTimeImmutable;
 use Doctrine\DBAL\Driver as DriverInterface;
 use Doctrine\DBAL\Driver\Connection;
 use Doctrine\DBAL\Driver\Middleware\AbstractDriverMiddleware;
@@ -18,6 +19,9 @@ use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
+use Override;
+use SensitiveParameter;
+use Throwable;
 
 /**
  * @phpstan-import-type Params from DriverManager
@@ -37,8 +41,8 @@ final class TracingDriver extends AbstractDriverMiddleware
     /**
      * @param Params $params
      */
-    #[\Override]
-    public function connect(#[\SensitiveParameter] array $params): Connection
+    #[Override]
+    public function connect(#[SensitiveParameter] array $params): Connection
     {
         $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
@@ -54,8 +58,8 @@ final class TracingDriver extends AbstractDriverMiddleware
             $span->setStatus(SpanStatus::ok());
 
             return new TracingConnection($connection, $this->telemetry, $this->logSql, $this->maxSqlLength);
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;

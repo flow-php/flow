@@ -4,6 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Client;
 
+use SensitiveParameter;
+
+use function array_key_exists;
+use function in_array;
+use function is_string;
+use function ltrim;
+use function parse_str;
+use function parse_url;
+use function str_starts_with;
+use function urldecode;
+
 /**
  * Parses PostgreSQL DSN (Data Source Name) strings into ConnectionParameters.
  *
@@ -18,7 +29,7 @@ final readonly class DsnParser
      *
      * @throws DsnParserException If the DSN cannot be parsed
      */
-    public function parse(#[\SensitiveParameter] string $dsn): ConnectionParameters
+    public function parse(#[SensitiveParameter] string $dsn): ConnectionParameters
     {
         $params = $this->parseDsn($dsn);
 
@@ -37,8 +48,8 @@ final readonly class DsnParser
      */
     private function parseDatabase(array $parts): string
     {
-        $path = \array_key_exists('path', $parts) && \is_string($parts['path']) ? $parts['path'] : '';
-        $database = \ltrim($path, '/');
+        $path = array_key_exists('path', $parts) && is_string($parts['path']) ? $parts['path'] : '';
+        $database = ltrim($path, '/');
 
         if ($database === '') {
             throw DsnParserException::missingDatabase();
@@ -63,7 +74,7 @@ final readonly class DsnParser
     {
         $this->validateScheme($dsn);
 
-        $parts = \parse_url($dsn);
+        $parts = parse_url($dsn);
 
         if ($parts === false) {
             throw DsnParserException::invalidDsn($dsn);
@@ -73,8 +84,8 @@ final readonly class DsnParser
             'dbname' => $this->parseDatabase($parts),
             'host' => $parts['host'] ?? 'localhost',
             'port' => $parts['port'] ?? 5432,
-            'user' => \array_key_exists('user', $parts) ? \urldecode($parts['user']) : null,
-            'password' => \array_key_exists('pass', $parts) ? \urldecode($parts['pass']) : null,
+            'user' => array_key_exists('user', $parts) ? urldecode($parts['user']) : null,
+            'password' => array_key_exists('pass', $parts) ? urldecode($parts['pass']) : null,
             'options' => $this->parseOptions($parts),
         ];
     }
@@ -86,12 +97,12 @@ final readonly class DsnParser
      */
     private function parseOptions(array $parts): array
     {
-        if (!\array_key_exists('query', $parts) || !\is_string($parts['query'])) {
+        if (!array_key_exists('query', $parts) || !is_string($parts['query'])) {
             return [];
         }
 
         $parsed = [];
-        \parse_str($parts['query'], $parsed);
+        parse_str($parts['query'], $parsed);
 
         $validOptions = [
             'application_name',
@@ -130,7 +141,7 @@ final readonly class DsnParser
         $options = [];
 
         foreach ($parsed as $key => $value) {
-            if (\in_array($key, $validOptions, true) && \is_string($value)) {
+            if (in_array($key, $validOptions, true) && is_string($value)) {
                 $options[$key] = $value;
             }
         }
@@ -143,7 +154,7 @@ final readonly class DsnParser
         $validSchemes = ['postgres://', 'postgresql://', 'pgsql://'];
 
         foreach ($validSchemes as $scheme) {
-            if (\str_starts_with($dsn, $scheme)) {
+            if (str_starts_with($dsn, $scheme)) {
                 return;
             }
         }

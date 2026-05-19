@@ -7,6 +7,12 @@ namespace Flow\Calculator;
 use Flow\Calculator\Exception\InvalidScaleException;
 use Flow\Calculator\Exception\NonNumericValueException;
 
+use function is_int;
+use function is_numeric;
+use function is_string;
+use function rtrim;
+use function str_contains;
+
 final class NumberNormalizer
 {
     /**
@@ -18,15 +24,15 @@ final class NumberNormalizer
      */
     public static function toNumber(string $number): float|int
     {
-        if (!\is_numeric($number)) {
+        if (!is_numeric($number)) {
             throw new NonNumericValueException((string) $number);
         }
 
-        if (\str_contains($number, '.')) {
-            $number = \rtrim(\rtrim($number, '0'), '.');
+        if (str_contains($number, '.')) {
+            $number = rtrim(rtrim($number, '0'), '.');
         }
 
-        if (\str_contains($number, '.')) {
+        if (str_contains($number, '.')) {
             return (float) $number;
         }
 
@@ -44,33 +50,33 @@ final class NumberNormalizer
             throw new InvalidScaleException($scale);
         }
 
-        if (!\is_numeric($number)) {
+        if (!is_numeric($number)) {
             throw new NonNumericValueException((string) $number);
         }
 
-        if (\is_string($number)) {
+        if (is_string($number)) {
             // detect if scientific notation
 
-            if (\str_contains($number, 'E') || \str_contains($number, 'e')) {
+            if (str_contains($number, 'E') || str_contains($number, 'e')) {
                 $number = sprintf('%.' . $scale . 'F', $number);
             }
 
-            if (\str_contains($number, '.')) {
-                $number = \rtrim(\rtrim($number, '0'), '.');
+            if (str_contains($number, '.')) {
+                $number = rtrim(rtrim($number, '0'), '.');
             }
 
             /** @var numeric-string $number */
             return $number;
         }
 
-        if (\is_int($number)) {
+        if (is_int($number)) {
             return (string) $number;
         }
 
         $number = sprintf('%.' . $scale . 'F', $number);
 
-        if (\str_contains($number, '.')) {
-            $number = \rtrim(\rtrim($number, '0'), '.');
+        if (str_contains($number, '.')) {
+            $number = rtrim(rtrim($number, '0'), '.');
         }
 
         /** @var numeric-string $number */

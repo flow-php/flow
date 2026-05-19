@@ -13,6 +13,7 @@ use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Expression\AliasedExpression;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
+use InvalidArgumentException;
 
 final readonly class In implements Condition
 {
@@ -25,7 +26,7 @@ final readonly class In implements Condition
         public array $values,
     ) {
         if ($values === []) {
-            throw new \InvalidArgumentException('IN condition requires at least 1 value');
+            throw new InvalidArgumentException('IN condition requires at least 1 value');
         }
     }
 
@@ -60,10 +61,6 @@ final readonly class In implements Condition
         }
 
         $items = $list->getItems();
-
-        if ($items === null) {
-            throw InvalidAstException::missingRequiredField('items', 'List');
-        }
 
         $values = [];
 

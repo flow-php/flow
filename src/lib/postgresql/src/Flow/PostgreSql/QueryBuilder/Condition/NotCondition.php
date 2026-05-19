@@ -15,6 +15,8 @@ use Flow\PostgreSql\QueryBuilder\Expression\AliasedExpression;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 
+use function count;
+
 final readonly class NotCondition implements Condition
 {
     public function __construct(
@@ -36,17 +38,17 @@ final readonly class NotCondition implements Condition
         if ($boolExpr->getBoolop() !== BoolExprType::NOT_EXPR) {
             throw InvalidAstException::unexpectedNodeType(
                 'BoolExpr with NOT_EXPR',
-                'BoolExpr with ' . BoolExprType::name($boolExpr->getBoolop()),
+                'BoolExpr with ' . (string) BoolExprType::name($boolExpr->getBoolop()),
             );
         }
 
         $args = $boolExpr->getArgs();
 
-        if (\count($args) !== 1) {
+        if (count($args) !== 1) {
             throw InvalidAstException::invalidFieldValue(
                 'args',
                 'BoolExpr',
-                'NOT_EXPR must have exactly one argument, got ' . \count($args),
+                'NOT_EXPR must have exactly one argument, got ' . count($args),
             );
         }
 
@@ -101,7 +103,7 @@ final readonly class NotCondition implements Condition
                 BoolExprType::OR_EXPR => OrCondition::fromAst($node),
                 BoolExprType::NOT_EXPR => self::fromAst($node),
                 default => throw UnsupportedNodeException::forNodeType(
-                    'BoolExpr with ' . BoolExprType::name($boolExpr->getBoolop()),
+                    'BoolExpr with ' . (string) BoolExprType::name($boolExpr->getBoolop()),
                 ),
             };
         }
@@ -127,7 +129,7 @@ final readonly class NotCondition implements Condition
                 A_Expr_Kind::AEXPR_BETWEEN_SYM => Between::fromAst($node),
                 A_Expr_Kind::AEXPR_NOT_BETWEEN_SYM => Between::fromAst($node),
                 default => throw UnsupportedNodeException::forNodeType(
-                    'A_Expr with kind: ' . A_Expr_Kind::name($aExpr->getKind()),
+                    'A_Expr with kind: ' . (string) A_Expr_Kind::name($aExpr->getKind()),
                 ),
             };
         }
@@ -144,7 +146,7 @@ final readonly class NotCondition implements Condition
                 SubLinkType::ANY_SUBLINK => Any::fromAst($node),
                 SubLinkType::ALL_SUBLINK => All::fromAst($node),
                 default => throw UnsupportedNodeException::forNodeType(
-                    'SubLink with type: ' . SubLinkType::name($subLink->getSubLinkType()),
+                    'SubLink with type: ' . (string) SubLinkType::name($subLink->getSubLinkType()),
                 ),
             };
         }

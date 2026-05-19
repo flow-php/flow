@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
+use DateTime;
+use DateTimeImmutable;
+use DateTimeZone;
+use DOMElement;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -14,7 +19,7 @@ use function Flow\Types\DSL\type_non_empty_string;
 
 final class NonEmptyStringTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'valid non-empty string' => [
             'value' => 'string',
@@ -32,7 +37,7 @@ final class NonEmptyStringTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
         yield 'string stays as is' => [
             'value' => 'string',
@@ -59,31 +64,31 @@ final class NonEmptyStringTypeTest extends TestCase
         ];
 
         yield 'DateTimeImmutable to string' => [
-            'value' => new \DateTimeImmutable('2024-12-01'),
+            'value' => new DateTimeImmutable('2024-12-01'),
             'expected' => '2024-12-01T00:00:00+00:00',
             'exceptionClass' => null,
         ];
 
         yield 'DateTime to string' => [
-            'value' => new \DateTime('2024-12-01'),
+            'value' => new DateTime('2024-12-01'),
             'expected' => '2024-12-01T00:00:00+00:00',
             'exceptionClass' => null,
         ];
 
         yield 'DateTimeZone to string' => [
-            'value' => new \DateTimeZone('UTC'),
+            'value' => new DateTimeZone('UTC'),
             'expected' => 'UTC',
             'exceptionClass' => null,
         ];
 
         yield 'DOMElement to string' => [
-            'value' => new \DOMElement('element', '2024-12-01'),
+            'value' => new DOMElement('element', '2024-12-01'),
             'expected' => '<element>2024-12-01</element>',
             'exceptionClass' => null,
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'valid non-empty string' => [
             'value' => 'string',
@@ -106,6 +111,9 @@ final class NonEmptyStringTypeTest extends TestCase
         ];
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('assert_data_provider')]
     public function test_assert(mixed $value, ?string $exceptionClass = null): void
     {
@@ -119,6 +127,9 @@ final class NonEmptyStringTypeTest extends TestCase
         }
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('cast_data_provider')]
     public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass): void
     {

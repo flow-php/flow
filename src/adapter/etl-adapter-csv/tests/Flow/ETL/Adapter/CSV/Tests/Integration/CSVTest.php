@@ -7,18 +7,21 @@ namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function file_exists;
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\ref;
+use function mkdir;
+use function unlink;
 
 final class CSVTest extends FlowTestCase
 {
     protected function setUp(): void
     {
-        if (!\file_exists(__DIR__ . '/var')) {
-            \mkdir(__DIR__ . '/var');
+        if (!file_exists(__DIR__ . '/var')) {
+            mkdir(__DIR__ . '/var');
         }
     }
 
@@ -34,8 +37,8 @@ final class CSVTest extends FlowTestCase
 
         static::assertEquals(100, df()->read(from_csv($path))->count());
 
-        if (\file_exists($path)) {
-            \unlink($path);
+        if (file_exists($path)) {
+            unlink($path);
         }
     }
 }

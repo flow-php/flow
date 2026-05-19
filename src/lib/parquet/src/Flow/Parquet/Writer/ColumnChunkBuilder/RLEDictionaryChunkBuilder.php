@@ -33,6 +33,9 @@ use Flow\Parquet\Writer\PageContainer;
 use Flow\Parquet\Writer\PageContainers;
 use Flow\Parquet\Writer\StatisticsCounter;
 
+use function count;
+use function strlen;
+
 final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 {
     private readonly ByteOrder $byteOrder;
@@ -53,7 +56,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
     private StatisticsCounter $pageStatistics;
 
     /**
-     * @var array<null|bool|float|int|string>
+     * @var array<null|bool|float|int|object|string>
      */
     private array $pageValues = [];
 
@@ -111,7 +114,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 
         $codec = new Codec($this->options);
 
-        if (\count($this->pageValues) > 0) {
+        if (count($this->pageValues) > 0) {
             $flatColumnValues = new WriteFlatColumnValues(
                 $this->column,
                 $this->repetitionLevels,
@@ -156,6 +159,8 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
     {
         $this->closePage();
 
+        $dictionaryPageContainer = $this->pages->dictionaryPageContainer();
+
         $containers = [new ColumnChunkContainer(
             $this->pages->buffer(),
             new ColumnChunk(
@@ -167,9 +172,9 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
                 encodings: $this->pages->encodings(),
                 totalCompressedSize: $this->pages->compressedSize(),
                 totalUncompressedSize: $this->pages->uncompressedSize(),
-                dictionaryPageOffset: $this->pages->dictionaryPageContainer() ? $fileOffset : null,
-                dataPageOffset: $this->pages->dictionaryPageContainer()
-                    ? $fileOffset + $this->pages->dictionaryPageContainer()->totalCompressedSize()
+                dictionaryPageOffset: $dictionaryPageContainer !== null ? $fileOffset : null,
+                dataPageOffset: $dictionaryPageContainer !== null
+                    ? $fileOffset + $dictionaryPageContainer->totalCompressedSize()
                     : $fileOffset,
                 indexPageOffset: null,
                 statistics: $this->chunkStatistics->toStatistics(),
@@ -200,7 +205,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 
     public function isFull(): bool
     {
-        return (\count($this->pageValues) * 4) >= $this->options->get(Option::PAGE_SIZE_BYTES);
+        return (count($this->pageValues) * 4) >= $this->options->getInt(Option::PAGE_SIZE_BYTES);
     }
 
     public function uncompressedSize(): int
@@ -230,7 +235,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
             ));
         }
 
-        if ($this->dictionary && \count($this->dictionary->indices) > 0) {
+        if ($this->dictionary && count($this->dictionary->indices) > 0) {
             $bitWidth = BitWidth::fromArray($this->dictionary->indices);
             $pageWriter->append($packer->packWithBitWidth($bitWidth, $this->dictionary->indices));
         }
@@ -239,13 +244,13 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 
         $pageHeader = new PageHeader(
             Type::DATA_PAGE,
-            \strlen($compressedBuffer),
-            \strlen($pageBuffer),
+            strlen($compressedBuffer),
+            strlen($pageBuffer),
             dataPageHeader: new DataPageHeader(
                 encoding: Encodings::RLE_DICTIONARY,
                 repetitionLevelEncoding: Encodings::RLE,
                 definitionLevelEncoding: Encodings::RLE,
-                valuesCount: \count($this->definitionLevels),
+                valuesCount: count($this->definitionLevels),
             ),
             dataPageHeaderV2: null,
             dictionaryPageHeader: null,
@@ -266,7 +271,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
                 BitWidth::calculate($this->column->maxRepetitionsLevel()),
                 $this->repetitionLevels,
             );
-            $repetitionsLength = \strlen($repetitionsBuffer);
+            $repetitionsLength = strlen($repetitionsBuffer);
         } else {
             $repetitionsBuffer = '';
             $repetitionsLength = 0;
@@ -277,7 +282,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
                 BitWidth::calculate($this->column->maxDefinitionsLevel()),
                 $this->definitionLevels,
             );
-            $definitionsLength = \strlen($definitionsBuffer);
+            $definitionsLength = strlen($definitionsBuffer);
         } else {
             $definitionsBuffer = '';
             $definitionsLength = 0;
@@ -285,7 +290,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 
         $indicesBuffer = '';
 
-        if ($this->dictionary && \count($this->dictionary->indices) > 0) {
+        if ($this->dictionary && count($this->dictionary->indices) > 0) {
             $bitWidth = BitWidth::fromArray($this->dictionary->indices);
             $indicesBuffer = $packer->packWithBitWidth($bitWidth, $this->dictionary->indices);
         }
@@ -294,11 +299,11 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 
         $pageHeader = new PageHeader(
             Type::DATA_PAGE_V2,
-            \strlen($compressedBuffer) + $repetitionsLength + $definitionsLength,
-            \strlen($indicesBuffer) + $repetitionsLength + $definitionsLength,
+            strlen($compressedBuffer) + $repetitionsLength + $definitionsLength,
+            strlen($indicesBuffer) + $repetitionsLength + $definitionsLength,
             dataPageHeader: null,
             dataPageHeaderV2: new DataPageHeaderV2(
-                valuesCount: \count($this->definitionLevels),
+                valuesCount: count($this->definitionLevels),
                 nullsCount: $this->nullCount,
                 rowsCount: $this->rowsCount,
                 encoding: Encodings::RLE_DICTIONARY,
@@ -315,26 +320,25 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 
     private function buildDictionaryPage(Codec $codec, Compressions $compression): PageContainer
     {
-        if (!$this->dictionary) {
+        $dictionary = $this->dictionary;
+
+        if ($dictionary === null) {
             throw new RuntimeException('Cannot build dictionary page without dictionary');
         }
 
         $pageBuffer = '';
         $pageWriter = new BinaryBufferWriter($pageBuffer);
-        (new PlainValuesPacker($pageWriter, $this->byteOrder))->packValues(
-            $this->column,
-            $this->dictionary->dictionary,
-        );
+        (new PlainValuesPacker($pageWriter, $this->byteOrder))->packValues($this->column, $dictionary->dictionary);
 
         $compressedBuffer = $codec->compress($pageBuffer, $compression);
 
         $pageHeader = new PageHeader(
             Type::DICTIONARY_PAGE,
-            \strlen($compressedBuffer),
-            \strlen($pageBuffer),
+            strlen($compressedBuffer),
+            strlen($pageBuffer),
             dataPageHeader: null,
             dataPageHeaderV2: null,
-            dictionaryPageHeader: new DictionaryPageHeader(Encodings::PLAIN, \count($this->dictionary->dictionary)),
+            dictionaryPageHeader: new DictionaryPageHeader(Encodings::PLAIN, count($dictionary->dictionary)),
         );
 
         return new PageContainer($compressedBuffer, $pageHeader);

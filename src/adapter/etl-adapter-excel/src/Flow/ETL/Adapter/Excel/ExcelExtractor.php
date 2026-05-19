@@ -17,12 +17,21 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\SourceStream;
+use Generator;
 use OpenSpout\Common\Entity\Cell;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Reader\ODS\Reader as OdsReader;
 use OpenSpout\Reader\XLSX\Reader as XlsxReader;
+use Throwable;
+use ZipArchive;
 
+use function array_combine;
+use function array_map;
+use function count;
 use function Flow\ETL\DSL\array_to_rows;
+use function is_array;
+use function is_scalar;
+use function str_starts_with;
 
 final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -55,7 +64,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
         $this->resetLimit();
     }
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         $headers = [];
 
@@ -66,7 +75,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
             foreach ($this->extractRows($stream, $headers, $offset) as $row) {
                 // Ensure $row is an array before passing to array_to_rows
                 $signal = yield array_to_rows(
-                    \is_array($row) ? $row : [],
+                    is_array($row) ? $row : [],
                     $context->entryFactory(),
                     $stream->path()->partitions(),
                     schema: $this->schema,
@@ -146,14 +155,14 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
      */
     private function createRowsFromCells(Row $row, int $previousRowDataCount = 0): array
     {
-        $rowData = \array_map(
+        $rowData = array_map(
             // Convert empty values to nullables if allowed
             fn(Cell $cell) => $this->convertEmptyToNull && '' === $cell->getValue() ? null : $cell->getValue(),
             $row->cells,
         );
 
         // Expand columns to the size of the previous row
-        for ($i = \count($rowData); $i < $previousRowDataCount; $i++) {
+        for ($i = count($rowData); $i < $previousRowDataCount; $i++) {
             $rowData[$i] = null;
         }
 
@@ -163,7 +172,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
     /**
      * @param array<int, string> $headers
      */
-    private function extractRows(SourceStream $stream, array $headers, int $offset): \Generator
+    private function extractRows(SourceStream $stream, array $headers, int $offset): Generator
     {
         $reader = $this->reader($stream);
 
@@ -180,9 +189,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
                 if (1 === $rowIndex && $this->withHeader) {
                     $headersRaw = $this->createRowsFromCells($sheetRow);
                     // Convert headers to strings for array_combine compatibility
-                    $headers = \array_map(static fn($header) => \is_scalar($header)
-                        ? (string) $header
-                        : '', $headersRaw);
+                    $headers = array_map(static fn($header) => is_scalar($header) ? (string) $header : '', $headersRaw);
 
                     continue;
                 }
@@ -194,17 +201,17 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
 
                 // ODS format reader skips empty cells when reading rows
                 $row = $this->createRowsFromCells($sheetRow, $previousRowDataCount);
-                $previousRowDataCount = \count($row);
+                $previousRowDataCount = count($row);
 
                 if ($this->withHeader) {
-                    yield \array_combine($headers, $row);
+                    yield array_combine($headers, $row);
                 } else {
                     yield $row;
                 }
             }
 
             $reader->close();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             throw new InvalidArgumentException('Failed to open file: ' . $e->getMessage(), previous: $e);
         }
     }
@@ -222,13 +229,13 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
                 $line = $stream->read(8, 0);
 
                 // XLS signature: D0 CF 11 E0 A1 B1 1A E1
-                if (\str_starts_with($line, "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1")) {
+                if (str_starts_with($line, "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1")) {
                     return $this->reader = new XlsxReader();
                 }
 
                 // ZIP signature: 50 4B 03 04
-                if (\str_starts_with($line, "\x50\x4B\x03\x04")) {
-                    $zip = new \ZipArchive();
+                if (str_starts_with($line, "\x50\x4B\x03\x04")) {
+                    $zip = new ZipArchive();
 
                     if ($zip->open($stream->path()->path())) {
                         $mimetype = $zip->getFromName('mimetype');

@@ -7,9 +7,11 @@ namespace Flow\Bridge\OpenAPI\Specification\Tests\Unit;
 use Flow\Bridge\OpenAPI\Specification\OpenAPIConverter;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function array_keys;
 use function Flow\Bridge\OpenAPI\Specification\DSL\schema_to_openapi_specification;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\date_schema;
@@ -38,7 +40,7 @@ use function Flow\Types\DSL\type_structure;
 
 final class FlowToOpenAPIConverterTest extends TestCase
 {
-    public static function basic_types_provider(): \Generator
+    public static function basic_types_provider(): Generator
     {
         yield 'boolean non-nullable' => [
             bool_schema('active', false),
@@ -81,7 +83,7 @@ final class FlowToOpenAPIConverterTest extends TestCase
         ];
     }
 
-    public static function special_types_provider(): \Generator
+    public static function special_types_provider(): Generator
     {
         yield 'date non-nullable' => [
             date_schema('birth_date', false),
@@ -185,7 +187,7 @@ final class FlowToOpenAPIConverterTest extends TestCase
         $result = $converter->toOpenAPI($schema);
 
         $properties = type_array()->assert($result['properties']);
-        static::assertSame(['c', 'a', 'b'], \array_keys($properties));
+        static::assertSame(['c', 'a', 'b'], array_keys($properties));
     }
 
     public function test_to_open_api_with_array_type(): void

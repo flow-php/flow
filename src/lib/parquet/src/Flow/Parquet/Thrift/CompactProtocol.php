@@ -107,12 +107,18 @@ class CompactProtocol
 
     protected bool $boolValue;
 
+    /**
+     * @var array<int>
+     */
     protected array $containers = [];
 
     protected int $lastFid = 0;
 
     protected int $state = self::STATE_CLEAR;
 
+    /**
+     * @var array<array{int, int}>
+     */
     protected array $structs = [];
 
     public function __construct(
@@ -151,6 +157,9 @@ class CompactProtocol
         return $out;
     }
 
+    /**
+     * @param-out bool|int $bool
+     */
     public function readBool(&$bool): int
     {
         if ($this->state === self::STATE_BOOL_READ) {
@@ -166,6 +175,9 @@ class CompactProtocol
         throw new TProtocolException('Invalid state in compact protocol');
     }
 
+    /**
+     * @param-out int $byte
+     */
     public function readByte(&$byte): int
     {
         $data = $this->transport->read(1);
@@ -175,6 +187,10 @@ class CompactProtocol
         return 1;
     }
 
+    /**
+     * @param-out int $type
+     * @param-out int $size
+     */
     public function readCollectionBegin(&$type, &$size): int
     {
         $sizeType = 0;
@@ -193,11 +209,19 @@ class CompactProtocol
 
     public function readCollectionEnd(): int
     {
-        $this->state = array_pop($this->containers);
+        $popped = array_pop($this->containers);
+
+        if ($popped === null) {
+            throw new TProtocolException('Cannot end collection: container stack is empty');
+        }
+        $this->state = $popped;
 
         return 0;
     }
 
+    /**
+     * @param-out float $dub
+     */
     public function readDouble(&$dub): int
     {
         $data = $this->transport->read(8);
@@ -207,8 +231,14 @@ class CompactProtocol
         return 8;
     }
 
+    /**
+     * @param-out string|null $name
+     * @param-out int $fieldType
+     * @param-out int $fieldId
+     */
     public function readFieldBegin(&$name, &$fieldType, &$fieldId): int
     {
+        $compactTypeAndDelta = 0;
         $result = $this->readUByte($compactTypeAndDelta);
 
         $compactType = $compactTypeAndDelta & 0x0F;
@@ -249,11 +279,17 @@ class CompactProtocol
         return 0;
     }
 
+    /**
+     * @param-out int $i16
+     */
     public function readI16(&$i16): int
     {
         return $this->readZigZag($i16);
     }
 
+    /**
+     * @param-out int $i32
+     */
     public function readI32(&$i32): int
     {
         return $this->readZigZag($i32);
@@ -265,6 +301,8 @@ class CompactProtocol
      * as signed and any int over 2^31 - 1 as a float.
      *
      * Read and write I64 as two 32 bit numbers $hi and $lo
+     *
+     * @param-out int $i64
      *
      * @throws TTransportException
      */
@@ -347,6 +385,10 @@ class CompactProtocol
         return $idx;
     }
 
+    /**
+     * @param-out int $elemType
+     * @param-out int $size
+     */
     public function readListBegin(&$elemType, &$size): int
     {
         return $this->readCollectionBegin($elemType, $size);
@@ -357,8 +399,14 @@ class CompactProtocol
         return $this->readCollectionEnd();
     }
 
+    /**
+     * @param-out int $keyType
+     * @param-out int $valType
+     * @param-out int $size
+     */
     public function readMapBegin(&$keyType, &$valType, &$size): int
     {
+        $size = 0;
         $result = $this->readVarint($size);
         $types = 0;
 
@@ -378,6 +426,11 @@ class CompactProtocol
         return $this->readCollectionEnd();
     }
 
+    /**
+     * @param-out string|null $name
+     * @param-out int $type
+     * @param-out int $seqid
+     */
     public function readMessageBegin(&$name, &$type, &$seqid): int
     {
         $protoId = 0;
@@ -405,6 +458,10 @@ class CompactProtocol
         return 0;
     }
 
+    /**
+     * @param-out int $elemType
+     * @param-out int $size
+     */
     public function readSetBegin(&$elemType, &$size): int
     {
         return $this->readCollectionBegin($elemType, $size);
@@ -415,8 +472,12 @@ class CompactProtocol
         return $this->readCollectionEnd();
     }
 
+    /**
+     * @param-out string $str
+     */
     public function readString(&$str): int
     {
+        $len = 0;
         $result = $this->readVarint($len);
 
         if ($len) {
@@ -428,6 +489,9 @@ class CompactProtocol
         return $result + $len;
     }
 
+    /**
+     * @param-out string $name
+     */
     public function readStructBegin(&$name): int
     {
         $name = ''; // unused
@@ -441,12 +505,19 @@ class CompactProtocol
     public function readStructEnd(): int
     {
         $last = array_pop($this->structs);
+
+        if ($last === null) {
+            throw new TProtocolException('Cannot end struct: struct stack is empty');
+        }
         $this->state = $last[0];
         $this->lastFid = $last[1];
 
         return 0;
     }
 
+    /**
+     * @param-out int $value
+     */
     public function readUByte(&$value): int
     {
         $data = $this->transport->read(1);
@@ -455,6 +526,9 @@ class CompactProtocol
         return 1;
     }
 
+    /**
+     * @param-out int $result
+     */
     public function readVarint(&$result): int
     {
         $idx = 0;
@@ -474,6 +548,9 @@ class CompactProtocol
         }
     }
 
+    /**
+     * @param-out int $value
+     */
     public function readZigZag(&$value): int
     {
         $result = $this->readVarint($value);
@@ -482,30 +559,48 @@ class CompactProtocol
         return $result;
     }
 
-    public function skip($type)
+    public function skip(int $type): int
     {
         switch ($type) {
             case TType::BOOL:
+                $bool = false;
+
                 return $this->readBool($bool);
             case TType::BYTE:
+                $byte = 0;
+
                 return $this->readByte($byte);
             case TType::I16:
+                $i16 = 0;
+
                 return $this->readI16($i16);
             case TType::I32:
+                $i32 = 0;
+
                 return $this->readI32($i32);
             case TType::I64:
+                $i64 = 0;
+
                 return $this->readI64($i64);
             case TType::DOUBLE:
+                $dub = 0.0;
+
                 return $this->readDouble($dub);
             case TType::STRING:
+                $str = '';
+
                 return $this->readString($str);
             case TType::STRUCT:
-                $result = $this->readStructBegin($name);
+                $structName = '';
+                $result = $this->readStructBegin($structName);
 
                 while (true) {
-                    $result += $this->readFieldBegin($name, $ftype, $fid);
+                    $fieldName = null;
+                    $ftype = 0;
+                    $fid = 0;
+                    $result += $this->readFieldBegin($fieldName, $ftype, $fid);
 
-                    if ($ftype == TType::STOP) {
+                    if ($ftype === TType::STOP) {
                         break;
                     }
                     $result += $this->skip($ftype);
@@ -516,6 +611,9 @@ class CompactProtocol
                 return $result;
 
             case TType::MAP:
+                $keyType = 0;
+                $valType = 0;
+                $size = 0;
                 $result = $this->readMapBegin($keyType, $valType, $size);
 
                 for ($i = 0; $i < $size; $i++) {
@@ -527,6 +625,8 @@ class CompactProtocol
                 return $result;
 
             case TType::SET:
+                $elemType = 0;
+                $size = 0;
                 $result = $this->readSetBegin($elemType, $size);
 
                 for ($i = 0; $i < $size; $i++) {
@@ -537,6 +637,8 @@ class CompactProtocol
                 return $result;
 
             case TType::LST:
+                $elemType = 0;
+                $size = 0;
                 $result = $this->readListBegin($elemType, $size);
 
                 for ($i = 0; $i < $size; $i++) {
@@ -551,7 +653,7 @@ class CompactProtocol
         }
     }
 
-    public function toZigZag($n, $bits): int
+    public function toZigZag(int $n, int $bits): int
     {
         return ($n << 1) ^ ($n >> ($bits - 1));
     }
@@ -578,7 +680,7 @@ class CompactProtocol
     public function writeByte(int $byte): int
     {
         $data = pack('c', $byte);
-        $this->transport->write($data, 1);
+        $this->transport->write($data);
 
         return 1;
     }
@@ -598,7 +700,12 @@ class CompactProtocol
 
     public function writeCollectionEnd(): int
     {
-        $this->state = array_pop($this->containers);
+        $popped = array_pop($this->containers);
+
+        if ($popped === null) {
+            throw new TProtocolException('Cannot end collection: container stack is empty');
+        }
+        $this->state = $popped;
 
         return 0;
     }
@@ -606,7 +713,7 @@ class CompactProtocol
     public function writeDouble(float $dub): int
     {
         $data = pack('d', $dub);
-        $this->transport->write($data, 8);
+        $this->transport->write($data);
 
         return 8;
     }
@@ -728,7 +835,7 @@ class CompactProtocol
         return $this->writeVarint($this->toZigZag($value, 64));
     }
 
-    public function writeListBegin($elemType, $size): int
+    public function writeListBegin(int $elemType, int $size): int
     {
         return $this->writeCollectionBegin($elemType, $size);
     }
@@ -809,6 +916,10 @@ class CompactProtocol
     public function writeStructEnd(): int
     {
         $oldValues = array_pop($this->structs);
+
+        if ($oldValues === null) {
+            throw new TProtocolException('Cannot end struct: struct stack is empty');
+        }
         $this->state = $oldValues[0];
         $this->lastFid = $oldValues[1];
 
@@ -817,7 +928,7 @@ class CompactProtocol
 
     public function writeUByte(int $byte): int
     {
-        $this->transport->write(pack('C', $byte), 1);
+        $this->transport->write(pack('C', $byte));
 
         return 1;
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Website\Tests\Functional;
 
 use Flow\Website\Kernel;
+use Override;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class HomeControllerTest extends WebTestCase
@@ -48,7 +49,7 @@ final class HomeControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
     }
 
-    #[\Override]
+    #[Override]
     protected static function getKernelClass(): string
     {
         return Kernel::class;

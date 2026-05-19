@@ -6,6 +6,8 @@ namespace Flow\ETL;
 
 use Flow\ETL\Row\Reference;
 
+use function array_unshift;
+
 final class Window
 {
     /**
@@ -34,7 +36,7 @@ final class Window
 
     public function orderBy(Reference $ref, Reference ...$refs): self
     {
-        \array_unshift($refs, $ref);
+        array_unshift($refs, $ref);
 
         $this->orderBy = $refs;
 
@@ -43,7 +45,7 @@ final class Window
 
     public function partitionBy(Reference $ref, Reference ...$refs): self
     {
-        \array_unshift($refs, $ref);
+        array_unshift($refs, $ref);
 
         $this->partitions = $refs;
         $this->orderBy = $refs;

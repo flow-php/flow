@@ -6,6 +6,7 @@ namespace Flow\Bridge\Symfony\HttpFoundation\Tests\Unit\Response;
 
 use Flow\ETL\Extractor;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 
 use function Flow\Bridge\Symfony\HttpFoundation\http_json_output;
 use function Flow\Bridge\Symfony\HttpFoundation\http_stream_open;
@@ -32,7 +33,7 @@ final class FlowBufferedResponseTest extends FlowTestCase
             ->expects(self::once())
             ->method('extract')
             ->willReturn(
-                (static function (): \Generator {
+                (static function (): Generator {
                     yield rows(row(int_entry('id', 1)));
                 })(),
             );

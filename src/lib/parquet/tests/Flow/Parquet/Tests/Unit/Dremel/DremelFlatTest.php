@@ -16,8 +16,13 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
+use function iterator_to_array;
+
 final class DremelFlatTest extends TestCase
 {
+    /**
+     * @param array<string, mixed> $row
+     */
     #[TestWith([
         ['int32' => null],
         [
@@ -81,13 +86,16 @@ final class DremelFlatTest extends TestCase
             [
                 $row,
             ],
-            \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+            iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                 $schema->get('int32'),
                 new ReadColumnData($schema->get('int32'), $readFlatValues),
             )),
         );
     }
 
+    /**
+     * @param array<string, mixed> $row
+     */
     #[TestWith([
         ['int32' => 1],
         [
@@ -146,7 +154,7 @@ final class DremelFlatTest extends TestCase
                 [
                     $row,
                 ],
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('int32'),
                     new ReadColumnData($schema->get('int32'), $readFlatValues),
                 )),

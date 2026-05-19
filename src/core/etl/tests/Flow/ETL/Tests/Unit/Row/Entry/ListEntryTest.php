@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
@@ -17,6 +19,7 @@ use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
+use function implode;
 
 final class ListEntryTest extends FlowTestCase
 {
@@ -41,11 +44,7 @@ final class ListEntryTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list<object<DateTimeInterface>> got different types: array<mixed>');
 
-        list_entry(
-            'list',
-            ['string', new \DateTimeImmutable()],
-            type_list(type_instance_of(\DateTimeInterface::class)),
-        );
+        list_entry('list', ['string', new DateTimeImmutable()], type_list(type_instance_of(DateTimeInterface::class)));
     }
 
     public function test_creating_float_list_from_wrong_value_types(): void
@@ -125,7 +124,7 @@ final class ListEntryTest extends FlowTestCase
                 'strings',
                 ['one', 'two', 'three'],
                 type_list(type_string()),
-            )->map(static fn(array $value): array => [\implode(', ', $value)]),
+            )->map(static fn(array $value): array => [implode(', ', $value)]),
         );
     }
 
@@ -163,7 +162,7 @@ final class ListEntryTest extends FlowTestCase
             '[{"date":"2021-01-01 00:00:00.000000","timezone_type":3,"timezone":"UTC"}]',
             list_entry(
                 'strings',
-                [new \DateTimeImmutable('2021-01-01 00:00:00')],
+                [new DateTimeImmutable('2021-01-01 00:00:00')],
                 type_list(type_datetime()),
             )->toString(),
         );

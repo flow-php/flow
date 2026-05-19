@@ -8,6 +8,9 @@ use Flow\PostgreSql\Protobuf\AST\CoercionForm;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\RowExpr;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
+use InvalidArgumentException;
+
+use function count;
 
 /**
  * ROW(expr, expr, ...) or (expr, expr, ...) - PostgreSQL row constructor.
@@ -22,8 +25,8 @@ final readonly class RowExpression implements Expression
         private array $args,
         private bool $explicitRow = false,
     ) {
-        if (\count($this->args) === 0) {
-            throw new \InvalidArgumentException('RowExpression requires at least 1 expression');
+        if (count($this->args) === 0) {
+            throw new InvalidArgumentException('RowExpression requires at least 1 expression');
         }
     }
 
@@ -37,7 +40,7 @@ final readonly class RowExpression implements Expression
 
         $args = $rowExpr->getArgs();
 
-        if ($args === null || \count($args) === 0) {
+        if (count($args) === 0) {
             throw InvalidAstException::invalidFieldValue('args', 'RowExpr', 'must have at least 1 argument');
         }
 

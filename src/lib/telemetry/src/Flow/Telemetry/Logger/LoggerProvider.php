@@ -51,7 +51,7 @@ final readonly class LoggerProvider
      * Note: Instance caching is handled by the Telemetry class.
      * This method always creates a new Logger instance.
      *
-     * @param resource $resource The resource context for all logs from this logger
+     * @param \Flow\Telemetry\Resource $resource The resource context for all logs from this logger
      * @param string $name The name of the instrumentation scope (e.g., library name)
      * @param string $version The version of the instrumentation scope
      * @param null|string $schemaUrl Schema URL for semantic conventions

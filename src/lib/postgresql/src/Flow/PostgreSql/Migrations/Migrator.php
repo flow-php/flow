@@ -9,6 +9,9 @@ use Flow\PostgreSql\Migrations\Executor\ExecutionResult;
 use Flow\PostgreSql\Migrations\Executor\MigrationExecutor;
 use Flow\PostgreSql\Migrations\Repository\MigrationRepository;
 use Flow\PostgreSql\Migrations\Store\MigrationStore;
+use RuntimeException;
+
+use function array_reverse;
 
 final readonly class Migrator
 {
@@ -99,7 +102,7 @@ final readonly class Migrator
                 }
             }
 
-            $toRollback = \array_reverse($toRollback);
+            $toRollback = array_reverse($toRollback);
 
             foreach ($toRollback as $em) {
                 $migration = $this->repository->get($em->version);
@@ -181,7 +184,7 @@ final readonly class Migrator
                 $results[] = $result;
 
                 if (!$result->isSuccessful()) {
-                    throw $result->error ?? new \RuntimeException('Migration failed');
+                    throw $result->error ?? new RuntimeException('Migration failed');
                 }
 
                 match ($plan->direction) {

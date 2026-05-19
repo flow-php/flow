@@ -9,13 +9,14 @@ use Flow\Telemetry\Resource\Attribute\ServiceAttribute;
 use Flow\Telemetry\Resource\Detector\ComposerDetector;
 use PHPUnit\Framework\TestCase;
 
+use function class_exists;
 use function Flow\Types\DSL\type_string;
 
 final class ComposerDetectorTest extends TestCase
 {
     public function test_detect_extracts_package_name_from_vendor_prefix(): void
     {
-        if (!\class_exists(InstalledVersions::class)) {
+        if (!class_exists(InstalledVersions::class)) {
             static::markTestSkipped('Composer InstalledVersions not available');
         }
 
@@ -30,7 +31,7 @@ final class ComposerDetectorTest extends TestCase
 
     public function test_detect_returns_service_name_from_root_package(): void
     {
-        if (!\class_exists(InstalledVersions::class)) {
+        if (!class_exists(InstalledVersions::class)) {
             static::markTestSkipped('Composer InstalledVersions not available');
         }
 
@@ -47,7 +48,7 @@ final class ComposerDetectorTest extends TestCase
 
     public function test_detect_returns_service_version_from_root_package(): void
     {
-        if (!\class_exists(InstalledVersions::class)) {
+        if (!class_exists(InstalledVersions::class)) {
             static::markTestSkipped('Composer InstalledVersions not available');
         }
 

@@ -26,6 +26,8 @@ use Flow\Filesystem\Telemetry\TraceableFilesystem;
 use Flow\Telemetry\Telemetry;
 use Psr\Clock\ClockInterface;
 
+use function count;
+
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function mount(string $protocol): Mount
 {
@@ -107,7 +109,7 @@ function memory_filesystem(string $protocol = 'memory'): MemoryFilesystem
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function fstab(Filesystem ...$filesystems): FilesystemTable
 {
-    if (!\count($filesystems)) {
+    if (!count($filesystems)) {
         $filesystems[] = native_local_filesystem();
         $filesystems[] = stdout_filesystem();
         $filesystems[] = memory_filesystem();

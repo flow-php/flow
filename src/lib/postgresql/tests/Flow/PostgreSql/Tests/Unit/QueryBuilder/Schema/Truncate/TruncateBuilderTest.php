@@ -9,11 +9,13 @@ use Flow\PostgreSql\Protobuf\AST\TruncateStmt;
 use Flow\PostgreSql\QueryBuilder\Schema\Truncate\TruncateBuilder;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
+
 final class TruncateBuilderTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }
@@ -35,7 +37,9 @@ final class TruncateBuilderTest extends TestCase
 
         static::assertInstanceOf(TruncateStmt::class, $ast);
         static::assertCount(1, $ast->getRelations());
-        static::assertSame('users', $ast->getRelations()[0]->getRangeVar()->getRelname());
+        $rangeVar = $ast->getRelations()[0]->getRangeVar();
+        static::assertNotNull($rangeVar);
+        static::assertSame('users', $rangeVar->getRelname());
     }
 
     public function test_truncate_cascade(): void
@@ -66,9 +70,15 @@ final class TruncateBuilderTest extends TestCase
 
         static::assertInstanceOf(TruncateStmt::class, $ast);
         static::assertCount(3, $ast->getRelations());
-        static::assertSame('users', $ast->getRelations()[0]->getRangeVar()->getRelname());
-        static::assertSame('orders', $ast->getRelations()[1]->getRangeVar()->getRelname());
-        static::assertSame('products', $ast->getRelations()[2]->getRangeVar()->getRelname());
+        $rangeVar0 = $ast->getRelations()[0]->getRangeVar();
+        $rangeVar1 = $ast->getRelations()[1]->getRangeVar();
+        $rangeVar2 = $ast->getRelations()[2]->getRangeVar();
+        static::assertNotNull($rangeVar0);
+        static::assertNotNull($rangeVar1);
+        static::assertNotNull($rangeVar2);
+        static::assertSame('users', $rangeVar0->getRelname());
+        static::assertSame('orders', $rangeVar1->getRelname());
+        static::assertSame('products', $rangeVar2->getRelname());
     }
 
     public function test_truncate_restart_identity(): void
@@ -109,7 +119,9 @@ final class TruncateBuilderTest extends TestCase
         $ast = $builder->toAst();
 
         static::assertInstanceOf(TruncateStmt::class, $ast);
-        static::assertSame('public', $ast->getRelations()[0]->getRangeVar()->getSchemaname());
-        static::assertSame('users', $ast->getRelations()[0]->getRangeVar()->getRelname());
+        $rangeVar = $ast->getRelations()[0]->getRangeVar();
+        static::assertNotNull($rangeVar);
+        static::assertSame('public', $rangeVar->getSchemaname());
+        static::assertSame('users', $rangeVar->getRelname());
     }
 }

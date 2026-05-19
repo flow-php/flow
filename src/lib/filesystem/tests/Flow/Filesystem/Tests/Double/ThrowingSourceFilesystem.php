@@ -12,6 +12,7 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\SourceStream;
+use Generator;
 
 final class ThrowingSourceFilesystem implements Filesystem
 {
@@ -31,7 +32,7 @@ final class ThrowingSourceFilesystem implements Filesystem
         return $this->wrapped->getSystemTmpDir();
     }
 
-    public function list(Path $path, Filter $pathFilter = new KeepAll()): \Generator
+    public function list(Path $path, Filter $pathFilter = new KeepAll()): Generator
     {
         yield from $this->wrapped->list($path, $pathFilter);
     }

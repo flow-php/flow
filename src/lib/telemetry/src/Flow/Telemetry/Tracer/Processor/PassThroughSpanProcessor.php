@@ -10,6 +10,7 @@ use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanProcessor;
+use Throwable;
 
 /**
  * Exports each span immediately when it ends.
@@ -34,7 +35,7 @@ final readonly class PassThroughSpanProcessor implements SpanProcessor
     {
         try {
             $this->exporter->export(Signals::traces([$span]));
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
         }
     }
@@ -45,7 +46,7 @@ final readonly class PassThroughSpanProcessor implements SpanProcessor
     {
         try {
             $this->exporter->shutdown();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
         }
     }

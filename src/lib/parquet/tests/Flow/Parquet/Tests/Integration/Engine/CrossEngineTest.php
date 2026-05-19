@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\Engine;
 
+use Flow\Filesystem\Stream\NativeLocalDestinationStream;
+use Flow\Filesystem\Stream\NativeLocalSourceStream;
 use Flow\Parquet\Engine\ArrowParquetEngine;
 use Flow\Parquet\Engine\PhpParquetEngine;
 use Flow\Parquet\Options;
@@ -16,19 +18,26 @@ use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
+use function file_exists;
 use function Flow\ETL\DSL\generate_random_string;
+use function Flow\Filesystem\DSL\path;
+use function Flow\Filesystem\DSL\path_real;
+use function iterator_to_array;
+use function mkdir;
+use function unlink;
 
 #[Group('native-extension')]
 final class CrossEngineTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('arrow')) {
+        if (!extension_loaded('arrow')) {
             self::markTestSkipped('Arrow extension is not loaded');
         }
 
-        if (!\file_exists(__DIR__ . '/var')) {
-            \mkdir(__DIR__ . '/var');
+        if (!file_exists(__DIR__ . '/var')) {
+            mkdir(__DIR__ . '/var');
         }
     }
 
@@ -49,21 +58,19 @@ final class CrossEngineTest extends TestCase
 
         $engine = new ArrowParquetEngine();
 
-        $writeStream = \Flow\Filesystem\Stream\NativeLocalDestinationStream::openBlank(\Flow\Filesystem\DSL\path(
-            $path,
-        ));
+        $writeStream = NativeLocalDestinationStream::openBlank(path($path));
         $engine->writeRows($writeStream, $schema, Compressions::SNAPPY, new Options(), $inputData);
 
         $parquetFile = (new Reader())->read($path);
-        $readStream = \Flow\Filesystem\Stream\NativeLocalSourceStream::open(\Flow\Filesystem\DSL\path_real($path));
-        $result = \iterator_to_array($engine->readValues($readStream, $parquetFile->schema()));
+        $readStream = NativeLocalSourceStream::open(path_real($path));
+        $result = iterator_to_array($engine->readValues($readStream, $parquetFile->schema()));
 
         static::assertCount(2, $result);
         static::assertSame(1, $result[0]['id']);
         static::assertSame('first', $result[0]['label']);
         static::assertSame(1_000_000_000_000, $result[0]['big_number']);
 
-        \unlink($path);
+        unlink($path);
     }
 
     public function test_arrow_write_php_read(): void
@@ -82,10 +89,10 @@ final class CrossEngineTest extends TestCase
         ];
 
         $engine = new ArrowParquetEngine();
-        $stream = \Flow\Filesystem\Stream\NativeLocalDestinationStream::openBlank(\Flow\Filesystem\DSL\path($path));
+        $stream = NativeLocalDestinationStream::openBlank(path($path));
         $engine->writeRows($stream, $schema, Compressions::SNAPPY, new Options(), $inputData);
 
-        $result = \iterator_to_array(
+        $result = iterator_to_array(
             (new Reader(engine: new PhpParquetEngine()))
                 ->read($path)
                 ->values(),
@@ -98,7 +105,7 @@ final class CrossEngineTest extends TestCase
         static::assertSame(20, $result[1]['id']);
         static::assertFalse($result[1]['active']);
 
-        \unlink($path);
+        unlink($path);
     }
 
     public function test_explicit_php_engine(): void
@@ -115,7 +122,7 @@ final class CrossEngineTest extends TestCase
 
         (new Writer(engine: $phpEngine))->write($path, $schema, $inputData);
 
-        $result = \iterator_to_array(
+        $result = iterator_to_array(
             (new Reader(engine: $phpEngine))
                 ->read($path)
                 ->values(),
@@ -125,7 +132,7 @@ final class CrossEngineTest extends TestCase
         static::assertSame(1, $result[0]['id']);
         static::assertSame('forced-php', $result[0]['name']);
 
-        \unlink($path);
+        unlink($path);
     }
 
     public function test_php_write_arrow_read(): void
@@ -148,8 +155,8 @@ final class CrossEngineTest extends TestCase
 
         $engine = new ArrowParquetEngine();
         $parquetFile = (new Reader())->read($path);
-        $result = \iterator_to_array($engine->readValues(
-            \Flow\Filesystem\Stream\NativeLocalSourceStream::open(\Flow\Filesystem\DSL\path_real($path)),
+        $result = iterator_to_array($engine->readValues(
+            NativeLocalSourceStream::open(path_real($path)),
             $parquetFile->schema(),
         ));
 
@@ -158,6 +165,6 @@ final class CrossEngineTest extends TestCase
         static::assertSame('one', $result[0]['name']);
         static::assertEqualsWithDelta(1.1, $result[0]['value'], 0.001);
 
-        \unlink($path);
+        unlink($path);
     }
 }

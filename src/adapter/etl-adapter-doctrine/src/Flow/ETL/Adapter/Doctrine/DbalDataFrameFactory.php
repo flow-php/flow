@@ -11,6 +11,7 @@ use Flow\ETL\DataFrameFactory;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 
+use function count;
 use function Flow\ETL\DSL\df;
 
 final class DbalDataFrameFactory implements DataFrameFactory
@@ -67,11 +68,11 @@ final class DbalDataFrameFactory implements DataFrameFactory
             $extractor->withSchema($this->schema);
         }
 
-        if (\count($parameters)) {
+        if (count($parameters)) {
             $extractor->withParameters(new ParametersSet($parameters));
         }
 
-        if (\count($types)) {
+        if (count($types)) {
             /** @phpstan-ignore-next-line */
             $extractor->withTypes($types);
         }

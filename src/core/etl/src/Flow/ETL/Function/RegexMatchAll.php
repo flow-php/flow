@@ -8,6 +8,8 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function preg_match_all;
+
 final class RegexMatchAll extends ScalarFunctionChain
 {
     /**
@@ -54,6 +56,6 @@ final class RegexMatchAll extends ScalarFunctionChain
                 ->invalidResult(new InvalidArgumentException('RegexMatchAll requires non-null offset'));
         }
 
-        return \preg_match_all(pattern: $pattern, subject: $subject, flags: $flags, offset: $offset) !== false;
+        return preg_match_all(pattern: $pattern, subject: $subject, flags: $flags, offset: $offset) !== false;
     }
 }

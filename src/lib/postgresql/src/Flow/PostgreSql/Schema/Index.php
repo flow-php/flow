@@ -35,9 +35,9 @@ final readonly class Index
         return new self(
             name: $data['name'],
             columns: $data['columns'],
-            unique: $data['unique'] ?? false,
+            unique: $data['unique'],
             method: array_key_exists('method', $data) ? IndexMethod::from($data['method']) : IndexMethod::BTREE,
-            primary: $data['primary'] ?? false,
+            primary: $data['primary'],
             predicate: $data['predicate'] ?? null,
         );
     }

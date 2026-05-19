@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
+use DateTimeImmutable;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 use function Flow\ETL\Adapter\XML\from_xml;
@@ -92,56 +93,56 @@ final class XMLTest extends FlowIntegrationTestCase
                     'parent_attribute_02' => 2,
                     'item_attribute_01' => 1,
                     'value' => 1,
-                    'date' => new \DateTimeImmutable('2024-08-01'),
+                    'date' => new DateTimeImmutable('2024-08-01'),
                 ],
                 [
                     'parent_attribute_01' => 1,
                     'parent_attribute_02' => 2,
                     'item_attribute_01' => 2,
                     'value' => 2,
-                    'date' => new \DateTimeImmutable('2024-08-01'),
+                    'date' => new DateTimeImmutable('2024-08-01'),
                 ],
                 [
                     'parent_attribute_01' => 1,
                     'parent_attribute_02' => 2,
                     'item_attribute_01' => 3,
                     'value' => 3,
-                    'date' => new \DateTimeImmutable('2024-08-01'),
+                    'date' => new DateTimeImmutable('2024-08-01'),
                 ],
                 [
                     'parent_attribute_01' => 1,
                     'parent_attribute_02' => 2,
                     'item_attribute_01' => 4,
                     'value' => 4,
-                    'date' => new \DateTimeImmutable('2024-08-01'),
+                    'date' => new DateTimeImmutable('2024-08-01'),
                 ],
                 [
                     'parent_attribute_01' => 1,
                     'parent_attribute_02' => 2,
                     'item_attribute_01' => 5,
                     'value' => 5,
-                    'date' => new \DateTimeImmutable('2024-08-01'),
+                    'date' => new DateTimeImmutable('2024-08-01'),
                 ],
                 [
                     'parent_attribute_01' => 1,
                     'parent_attribute_02' => 2,
                     'item_attribute_01' => 6,
                     'value' => 6,
-                    'date' => new \DateTimeImmutable('2024-08-02'),
+                    'date' => new DateTimeImmutable('2024-08-02'),
                 ],
                 [
                     'parent_attribute_01' => 1,
                     'parent_attribute_02' => 2,
                     'item_attribute_01' => 7,
                     'value' => 7,
-                    'date' => new \DateTimeImmutable('2024-08-03'),
+                    'date' => new DateTimeImmutable('2024-08-03'),
                 ],
                 [
                     'parent_attribute_01' => 1,
                     'parent_attribute_02' => 2,
                     'item_attribute_01' => 8,
                     'value' => 8,
-                    'date' => new \DateTimeImmutable('2024-08-03'),
+                    'date' => new DateTimeImmutable('2024-08-03'),
                 ],
             ],
             $rows->toArray(),

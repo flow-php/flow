@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Nodes;
 
+use Countable;
 use Flow\PostgreSql\AST\Nodes\Exception\InvalidFromNodeException;
 use Flow\PostgreSql\Protobuf\AST\Node;
 
-final readonly class From implements \Countable
+use function count;
+
+final readonly class From implements Countable
 {
     /**
      * @var array<Node>
@@ -29,7 +32,7 @@ final readonly class From implements \Countable
 
     public function count(): int
     {
-        return \count($this->nodes);
+        return count($this->nodes);
     }
 
     public function hasFunction(): bool
@@ -60,7 +63,7 @@ final readonly class From implements \Countable
 
             $selectStmt = $subquery->getSelectStmt();
 
-            if ($selectStmt !== null && \count($selectStmt->getValuesLists()) > 0) {
+            if ($selectStmt !== null && count($selectStmt->getValuesLists()) > 0) {
                 return true;
             }
         }

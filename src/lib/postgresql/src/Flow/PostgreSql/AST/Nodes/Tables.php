@@ -4,10 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\AST\Nodes;
 
+use ArrayIterator;
+use Countable;
+use IteratorAggregate;
+use Traversable;
+
+use function count;
+
 /**
  * @implements \IteratorAggregate<int, Table>
  */
-final readonly class Tables implements \Countable, \IteratorAggregate
+final readonly class Tables implements Countable, IteratorAggregate
 {
     /**
      * @param array<int, Table> $tables
@@ -26,7 +33,7 @@ final readonly class Tables implements \Countable, \IteratorAggregate
 
     public function count(): int
     {
-        return \count($this->tables);
+        return count($this->tables);
     }
 
     public function first(): ?Table
@@ -42,9 +49,9 @@ final readonly class Tables implements \Countable, \IteratorAggregate
     /**
      * @return \Traversable<int, Table>
      */
-    public function getIterator(): \Traversable
+    public function getIterator(): Traversable
     {
-        return new \ArrayIterator($this->tables);
+        return new ArrayIterator($this->tables);
     }
 
     /**
@@ -53,7 +60,7 @@ final readonly class Tables implements \Countable, \IteratorAggregate
      */
     public function isEmpty(): bool
     {
-        return \count($this->tables) === 0;
+        return count($this->tables) === 0;
     }
 
     /**
@@ -62,15 +69,15 @@ final readonly class Tables implements \Countable, \IteratorAggregate
      */
     public function isSingle(): bool
     {
-        return \count($this->tables) === 1;
+        return count($this->tables) === 1;
     }
 
     public function last(): ?Table
     {
-        if (\count($this->tables) === 0) {
+        if (count($this->tables) === 0) {
             return null;
         }
 
-        return $this->tables[\count($this->tables) - 1];
+        return $this->tables[count($this->tables) - 1];
     }
 }

@@ -8,6 +8,8 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function preg_match;
+
 final class RegexMatch extends ScalarFunctionChain
 {
     /**
@@ -55,6 +57,6 @@ final class RegexMatch extends ScalarFunctionChain
         }
 
         /** @phpstan-ignore argument.type */
-        return \preg_match(pattern: $pattern, subject: $subject, flags: $flags, offset: $offset) === 1;
+        return preg_match(pattern: $pattern, subject: $subject, flags: $flags, offset: $offset) === 1;
     }
 }

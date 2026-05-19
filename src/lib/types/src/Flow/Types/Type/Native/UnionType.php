@@ -11,11 +11,15 @@ use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\TypeFactory;
 use Flow\Types\Type\Types;
 
+use function count;
 use function Flow\Types\DSL\type_literal;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\types;
+use function implode;
+use function in_array;
 
 /**
  * @template TLeft
@@ -56,7 +60,7 @@ final readonly class UnionType implements Type
             $types[] = $this->right;
         }
 
-        $this->flatTypes = \Flow\Types\DSL\types(...$types);
+        $this->flatTypes = types(...$types);
     }
 
     /**
@@ -114,7 +118,7 @@ final readonly class UnionType implements Type
 
     public function isOptionalType(): bool
     {
-        if (\count($this->types()) !== 2) {
+        if (count($this->types()) !== 2) {
             return false;
         }
 
@@ -154,11 +158,11 @@ final readonly class UnionType implements Type
 
         foreach ($this->flatTypes->deduplicate()->all() as $type) {
             if ($type instanceof OptionalType) {
-                if (!\in_array($type->base()->toString(), $stringTypes, true)) {
+                if (!in_array($type->base()->toString(), $stringTypes, true)) {
                     $stringTypes[] = $type->base()->toString();
                 }
 
-                if (!\in_array('null', $stringTypes, true)) {
+                if (!in_array('null', $stringTypes, true)) {
                     $stringTypes[] = 'null';
                 }
 
@@ -170,7 +174,7 @@ final readonly class UnionType implements Type
 
         asort($stringTypes);
 
-        return \implode('|', $stringTypes);
+        return implode('|', $stringTypes);
     }
 
     /**

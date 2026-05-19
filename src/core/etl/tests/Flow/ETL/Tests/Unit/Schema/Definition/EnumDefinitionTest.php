@@ -13,6 +13,7 @@ use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use Flow\ETL\Tests\FlowTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\ETL\DSL\enum_entry;
@@ -22,7 +23,7 @@ use function Flow\ETL\DSL\string_schema;
 
 final class EnumDefinitionTest extends FlowTestCase
 {
-    public static function provideIsCompatibleCases(): \Generator
+    public static function provideIsCompatibleCases(): Generator
     {
         yield 'same type and name' => [
             enum_schema('status', BackedStringEnum::class),
@@ -49,7 +50,7 @@ final class EnumDefinitionTest extends FlowTestCase
         ];
     }
 
-    public static function provideMergeCases(): \Generator
+    public static function provideMergeCases(): Generator
     {
         yield 'same type and enum class' => [
             enum_schema('status', BackedStringEnum::class),

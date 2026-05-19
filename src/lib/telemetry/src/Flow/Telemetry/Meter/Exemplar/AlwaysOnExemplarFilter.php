@@ -23,6 +23,10 @@ final readonly class AlwaysOnExemplarFilter implements ExemplarFilter
 
     public function shouldSample(?SpanContext $context, int|float $value, array $attributes): bool
     {
-        return $context !== null;
+        if ($context === null) {
+            return false;
+        }
+
+        return true;
     }
 }

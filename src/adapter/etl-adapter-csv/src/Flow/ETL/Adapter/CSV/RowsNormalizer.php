@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\CSV;
 
 use Flow\ETL\Adapter\CSV\RowsNormalizer\EntryNormalizer;
 use Flow\ETL\Rows;
+use Generator;
 
 final readonly class RowsNormalizer
 {
@@ -16,7 +17,7 @@ final readonly class RowsNormalizer
     /**
      * @return \Generator<array<null|bool|float|int|string>>
      */
-    public function normalize(Rows $rows): \Generator
+    public function normalize(Rows $rows): Generator
     {
         foreach ($rows as $row) {
             $normalizedRow = [];

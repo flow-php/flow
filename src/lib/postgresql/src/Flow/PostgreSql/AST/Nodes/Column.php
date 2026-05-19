@@ -6,6 +6,8 @@ namespace Flow\PostgreSql\AST\Nodes;
 
 use Flow\PostgreSql\Protobuf\AST\ColumnRef;
 
+use function count;
+
 final readonly class Column
 {
     public function __construct(
@@ -16,11 +18,11 @@ final readonly class Column
     {
         $fields = $this->columnRef->getFields();
 
-        if ($fields === null || \count($fields) === 0) {
+        if (count($fields) === 0) {
             return null;
         }
 
-        $fieldCount = \count($fields);
+        $fieldCount = count($fields);
         $columnField = $fields[$fieldCount - 1];
 
         $star = $columnField->getAStar();
@@ -47,7 +49,7 @@ final readonly class Column
     {
         $fields = $this->columnRef->getFields();
 
-        if ($fields === null || \count($fields) <= 1) {
+        if (count($fields) <= 1) {
             return null;
         }
 

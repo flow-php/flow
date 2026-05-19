@@ -7,6 +7,10 @@ namespace Flow\Types\Type\Logical;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+use Stringable;
+
+use function is_numeric;
+use function is_string;
 
 /**
  * @implements Type<numeric-string>
@@ -28,12 +32,12 @@ final class NumericStringType implements Type
             return $value;
         }
 
-        if (\is_numeric($value)) {
+        if (is_numeric($value)) {
             return (string) $value;
         }
 
-        if ($value instanceof \Stringable) {
-            if (\is_numeric((string) $value)) {
+        if ($value instanceof Stringable) {
+            if (is_numeric((string) $value)) {
                 return (string) $value;
             }
         }
@@ -43,7 +47,7 @@ final class NumericStringType implements Type
 
     public function isValid(mixed $value): bool
     {
-        return \is_string($value) && \is_numeric($value);
+        return is_string($value) && is_numeric($value);
     }
 
     public function normalize(): array

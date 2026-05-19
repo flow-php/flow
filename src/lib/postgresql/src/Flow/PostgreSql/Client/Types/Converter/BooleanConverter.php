@@ -8,6 +8,9 @@ use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\ValueConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
 
+use function is_bool;
+use function is_string;
+
 final class BooleanConverter implements ValueConverter
 {
     public function supportedTypes(): array
@@ -21,11 +24,11 @@ final class BooleanConverter implements ValueConverter
             return null;
         }
 
-        if (\is_bool($value)) {
+        if (is_bool($value)) {
             return $value ? 't' : 'f';
         }
 
-        if (\is_string($value)) {
+        if (is_string($value)) {
             return $value;
         }
 

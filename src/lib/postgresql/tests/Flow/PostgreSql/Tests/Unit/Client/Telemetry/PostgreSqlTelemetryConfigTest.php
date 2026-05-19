@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\Client\Telemetry;
 
 use Flow\Telemetry\Provider\Clock\SystemClock;
+use Flow\Telemetry\Telemetry;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\PostgreSql\DSL\postgresql_telemetry_config;
@@ -59,7 +60,7 @@ final class PostgreSqlTelemetryConfigTest extends TestCase
         static::assertFalse($config->options->logQueries);
     }
 
-    private function createTelemetry(SystemClock $clock): \Flow\Telemetry\Telemetry
+    private function createTelemetry(SystemClock $clock): Telemetry
     {
         $contextStorage = memory_context_storage();
 

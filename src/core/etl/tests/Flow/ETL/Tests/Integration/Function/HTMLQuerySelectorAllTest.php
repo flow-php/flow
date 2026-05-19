@@ -15,6 +15,9 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 
+use const LIBXML_HTML_NOIMPLIED;
+use const LIBXML_NOERROR;
+
 #[RequiresPhp('>= 8.4')]
 final class HTMLQuerySelectorAllTest extends TestCase
 {
@@ -45,8 +48,8 @@ final class HTMLQuerySelectorAllTest extends TestCase
             '<!DOCTYPE html><html lang="en"><head></head><body><div><span>foo</span><span>bar</span></div></body></html>',
         );
 
-        $elementFoo = HTMLDocument::createFromString('<span>foo</span>', \LIBXML_HTML_NOIMPLIED | \LIBXML_NOERROR);
-        $elementBar = HTMLDocument::createFromString('<span>bar</span>', \LIBXML_HTML_NOIMPLIED | \LIBXML_NOERROR);
+        $elementFoo = HTMLDocument::createFromString('<span>foo</span>', LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
+        $elementBar = HTMLDocument::createFromString('<span>bar</span>', LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
 
         static::assertEquals(
             [

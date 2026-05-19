@@ -9,6 +9,12 @@ use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 
+use function class_exists;
+use function is_string;
+use function preg_match;
+
+use const LIBXML_NOERROR;
+
 /**
  * @implements Type<HTMLDocument>
  */
@@ -40,11 +46,11 @@ final readonly class HTMLType implements Type
         }
 
         if (
-            \is_string($value)
-            && \class_exists('\Dom\HTMLDocument')
-            && \preg_match(self::HTML_ALIKE_REGEX, $value) === 1
+            is_string($value)
+            && class_exists('\Dom\HTMLDocument')
+            && preg_match(self::HTML_ALIKE_REGEX, $value) === 1
         ) {
-            return HTMLDocument::createFromString($value, \LIBXML_NOERROR);
+            return HTMLDocument::createFromString($value, LIBXML_NOERROR);
         }
 
         throw new CastingException($value, $this);
@@ -53,7 +59,7 @@ final readonly class HTMLType implements Type
     public function isValid(mixed $value): bool
     {
         // \Dom\HTMLDocument exist in PHP 8.4+
-        if (!\class_exists('\Dom\HTMLDocument')) {
+        if (!class_exists('\Dom\HTMLDocument')) {
             return false;
         }
 

@@ -17,15 +17,24 @@ use Flow\Parquet\Writer;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 
+use function array_map;
+use function array_merge;
+use function extension_loaded;
+use function file_exists;
 use function Flow\ETL\DSL\generate_random_int;
 use function Flow\ETL\DSL\generate_random_string;
+use function iterator_to_array;
+use function mkdir;
+use function range;
+use function sys_get_temp_dir;
+use function unlink;
 
 class CompressionTest extends ParquetIntegrationTestCase
 {
     protected function setUp(): void
     {
-        if (!\file_exists(__DIR__ . '/var')) {
-            \mkdir(__DIR__ . '/var');
+        if (!file_exists(__DIR__ . '/var')) {
+            mkdir(__DIR__ . '/var');
         }
     }
 
@@ -33,11 +42,11 @@ class CompressionTest extends ParquetIntegrationTestCase
     #[DataProvider('engine_provider')]
     public function test_writing_and_reading_file_with_brotli_compression(ParquetEngine $engine): void
     {
-        if (!\extension_loaded('brotli')) {
+        if (!extension_loaded('brotli')) {
             static::markTestSkipped('The Brotli extension is not available');
         }
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = sys_get_temp_dir() . '/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
         $writer = new Writer(compression: Compressions::BROTLI, engine: $engine);
 
@@ -51,7 +60,7 @@ class CompressionTest extends ParquetIntegrationTestCase
         ]));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'struct' => [
@@ -59,32 +68,32 @@ class CompressionTest extends ParquetIntegrationTestCase
                         'boolean' => $faker->boolean,
                         'string' => $faker->text(150),
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                        'list_of_int' => \array_map(
+                        'list_of_int' => array_map(
                             static fn($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         ),
-                        'list_of_string' => \array_map(
+                        'list_of_string' => array_map(
                             static fn($i) => $faker->text(10),
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         ),
                     ],
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
         static::assertFileExists($path);
-        \unlink($path);
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -104,7 +113,7 @@ class CompressionTest extends ParquetIntegrationTestCase
         ]));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'struct' => [
@@ -112,43 +121,43 @@ class CompressionTest extends ParquetIntegrationTestCase
                         'boolean' => $faker->boolean,
                         'string' => $faker->text(150),
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                        'list_of_int' => \array_map(
+                        'list_of_int' => array_map(
                             static fn($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         ),
-                        'list_of_string' => \array_map(
+                        'list_of_string' => array_map(
                             static fn($i) => $faker->text(10),
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         ),
                     ],
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
         static::assertFileExists($path);
-        \unlink($path);
+        unlink($path);
     }
 
     #[Group('lz4-extension')]
     #[DataProvider('engine_provider')]
     public function test_writing_and_reading_file_with_lz4_compression(ParquetEngine $engine): void
     {
-        if (!\extension_loaded('lz4')) {
+        if (!extension_loaded('lz4')) {
             static::markTestSkipped('The lz4 extension is not available');
         }
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = sys_get_temp_dir() . '/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
         $writer = new Writer(compression: Compressions::LZ4, engine: $engine);
 
@@ -162,7 +171,7 @@ class CompressionTest extends ParquetIntegrationTestCase
         ]));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'struct' => [
@@ -170,43 +179,43 @@ class CompressionTest extends ParquetIntegrationTestCase
                         'boolean' => $faker->boolean,
                         'string' => $faker->text(150),
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                        'list_of_int' => \array_map(
+                        'list_of_int' => array_map(
                             static fn($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         ),
-                        'list_of_string' => \array_map(
+                        'list_of_string' => array_map(
                             static fn($i) => $faker->text(10),
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         ),
                     ],
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
         static::assertFileExists($path);
-        \unlink($path);
+        unlink($path);
     }
 
     #[Group('lz4-extension')]
     #[DataProvider('engine_provider')]
     public function test_writing_and_reading_file_with_lz4_raw_compression(ParquetEngine $engine): void
     {
-        if (!\extension_loaded('lz4')) {
+        if (!extension_loaded('lz4')) {
             static::markTestSkipped('The lz4 extension is not available');
         }
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = sys_get_temp_dir() . '/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
         $writer = new Writer(compression: Compressions::LZ4_RAW, engine: $engine);
 
@@ -220,7 +229,7 @@ class CompressionTest extends ParquetIntegrationTestCase
         ]));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'struct' => [
@@ -228,39 +237,39 @@ class CompressionTest extends ParquetIntegrationTestCase
                         'boolean' => $faker->boolean,
                         'string' => $faker->text(150),
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                        'list_of_int' => \array_map(
+                        'list_of_int' => array_map(
                             static fn($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         ),
-                        'list_of_string' => \array_map(
+                        'list_of_string' => array_map(
                             static fn($i) => $faker->text(10),
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         ),
                     ],
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
         static::assertFileExists($path);
-        \unlink($path);
+        unlink($path);
     }
 
     #[Group('snappy-extension')]
     #[DataProvider('engine_provider')]
     public function test_writing_and_reading_file_with_snappy_compression(ParquetEngine $engine): void
     {
-        if (!\extension_loaded('snappy')) {
+        if (!extension_loaded('snappy')) {
             static::markTestSkipped('The snappy extension is not available');
         }
 
@@ -278,7 +287,7 @@ class CompressionTest extends ParquetIntegrationTestCase
         ]));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'struct' => [
@@ -286,38 +295,38 @@ class CompressionTest extends ParquetIntegrationTestCase
                         'boolean' => $faker->boolean,
                         'string' => $faker->text(150),
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                        'list_of_int' => \array_map(
+                        'list_of_int' => array_map(
                             static fn($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         ),
-                        'list_of_string' => \array_map(
+                        'list_of_string' => array_map(
                             static fn($i) => $faker->text(10),
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         ),
                     ],
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
         static::assertFileExists($path);
-        \unlink($path);
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
     public function test_writing_and_reading_file_with_snappy_polyfill(ParquetEngine $engine): void
     {
-        if (\extension_loaded('snappy')) {
+        if (extension_loaded('snappy')) {
             static::markTestSkipped('The snappy extension is available');
         }
 
@@ -335,7 +344,7 @@ class CompressionTest extends ParquetIntegrationTestCase
         ]));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'struct' => [
@@ -343,32 +352,32 @@ class CompressionTest extends ParquetIntegrationTestCase
                         'boolean' => $faker->boolean,
                         'string' => $faker->text(150),
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                        'list_of_int' => \array_map(
+                        'list_of_int' => array_map(
                             static fn($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         ),
-                        'list_of_string' => \array_map(
+                        'list_of_string' => array_map(
                             static fn($i) => $faker->text(10),
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         ),
                     ],
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
         static::assertFileExists($path);
-        \unlink($path);
+        unlink($path);
     }
 
     #[DataProvider('engine_provider')]
@@ -388,7 +397,7 @@ class CompressionTest extends ParquetIntegrationTestCase
         ]));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'struct' => [
@@ -396,43 +405,43 @@ class CompressionTest extends ParquetIntegrationTestCase
                         'boolean' => $faker->boolean,
                         'string' => $faker->text(150),
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                        'list_of_int' => \array_map(
+                        'list_of_int' => array_map(
                             static fn($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         ),
-                        'list_of_string' => \array_map(
+                        'list_of_string' => array_map(
                             static fn($i) => $faker->text(10),
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         ),
                     ],
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
         static::assertFileExists($path);
-        \unlink($path);
+        unlink($path);
     }
 
     #[Group('zstd-extension')]
     #[DataProvider('engine_provider')]
     public function test_writing_and_reading_file_with_zstd_compression(ParquetEngine $engine): void
     {
-        if (!\extension_loaded('zstd')) {
+        if (!extension_loaded('zstd')) {
             static::markTestSkipped('The Zstd extension is not available');
         }
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+        $path = sys_get_temp_dir() . '/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
         $writer = new Writer(compression: Compressions::ZSTD, engine: $engine);
 
@@ -446,7 +455,7 @@ class CompressionTest extends ParquetIntegrationTestCase
         ]));
 
         $faker = Factory::create();
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'struct' => [
@@ -454,31 +463,31 @@ class CompressionTest extends ParquetIntegrationTestCase
                         'boolean' => $faker->boolean,
                         'string' => $faker->text(150),
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                        'list_of_int' => \array_map(
+                        'list_of_int' => array_map(
                             static fn($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         ),
-                        'list_of_string' => \array_map(
+                        'list_of_string' => array_map(
                             static fn($i) => $faker->text(10),
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         ),
                     ],
                 ],
             ],
-            \range(1, 100),
+            range(1, 100),
         ));
 
         $writer->write($path, $schema, $inputData);
 
         static::assertSame(
             $inputData,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(),
             ),
         );
         static::assertFileExists($path);
-        \unlink($path);
+        unlink($path);
     }
 }

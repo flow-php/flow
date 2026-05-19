@@ -9,8 +9,12 @@ use Flow\ETL\Hash\Algorithm;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
+use Stringable;
 
+use function array_map;
 use function Flow\ETL\DSL\string_entry;
+use function implode;
+use function is_scalar;
 
 final class HashIdFactory implements IdFactory
 {
@@ -29,14 +33,13 @@ final class HashIdFactory implements IdFactory
 
     public function create(Row $row): Entry
     {
-        return string_entry(
-            'id',
-            $this->hashAlgorithm->hash(\implode(':', \array_map(static function (string $name) use ($row): string {
-                $value = $row->valueOf($name);
+        return string_entry('id', $this->hashAlgorithm->hash(implode(':', array_map(static function (string $name) use (
+            $row,
+        ): string {
+            $value = $row->valueOf($name);
 
-                return \is_scalar($value) || $value instanceof \Stringable ? (string) $value : '';
-            }, $this->entryNames))),
-        );
+            return is_scalar($value) || $value instanceof Stringable ? (string) $value : '';
+        }, $this->entryNames))));
     }
 
     public function withAlgorithm(Algorithm $algorithm): self

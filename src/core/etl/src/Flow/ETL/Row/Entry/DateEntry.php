@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
+use DateTime;
+use DateTimeImmutable;
+use DateTimeInterface;
+use Exception;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
@@ -13,6 +17,7 @@ use Flow\Types\Type;
 
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_optional;
+use function is_string;
 
 /**
  * @implements Entry<?\DateTimeInterface>
@@ -23,32 +28,32 @@ final class DateEntry implements Entry
 
     private DateDefinition $definition;
 
-    private readonly ?\DateTimeInterface $value;
+    private readonly ?DateTimeInterface $value;
 
     /**
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly string $name,
-        \DateTimeInterface|string|null $value,
+        DateTimeInterface|string|null $value,
         ?Metadata $metadata = null,
     ) {
         if ($name === '') {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        if (\is_string($value)) {
+        if (is_string($value)) {
             try {
-                $this->value = (new \DateTimeImmutable($value))->setTime(0, 0, 0, 0);
-            } catch (\Exception $e) {
+                $this->value = (new DateTimeImmutable($value))->setTime(0, 0, 0, 0);
+            } catch (Exception $e) {
                 throw new InvalidArgumentException(
                     "Invalid value given: '{$value}', reason: " . $e->getMessage(),
                     previous: $e,
                 );
             }
-        } elseif ($value instanceof \DateTime) {
-            $this->value = \DateTimeImmutable::createFromMutable($value)->setTime(0, 0, 0, 0);
-        } elseif ($value instanceof \DateTimeImmutable) {
+        } elseif ($value instanceof DateTime) {
+            $this->value = DateTimeImmutable::createFromMutable($value)->setTime(0, 0, 0, 0);
+        } elseif ($value instanceof DateTimeImmutable) {
             $this->value = $value->setTime(0, 0, 0, 0);
         } else {
             $this->value = $value;
@@ -122,7 +127,7 @@ final class DateEntry implements Entry
         return $this->definition->type();
     }
 
-    public function value(): ?\DateTimeInterface
+    public function value(): ?DateTimeInterface
     {
         return $this->value;
     }

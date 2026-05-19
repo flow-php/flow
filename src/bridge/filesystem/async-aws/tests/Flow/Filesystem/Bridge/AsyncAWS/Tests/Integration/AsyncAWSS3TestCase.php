@@ -7,13 +7,14 @@ namespace Flow\Filesystem\Bridge\AsyncAWS\Tests\Integration;
 use AsyncAws\S3\S3Client;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Path;
+use Override;
 
 use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_client;
 use function Flow\Types\DSL\type_string;
 
 abstract class AsyncAWSS3TestCase extends FlowIntegrationTestCase
 {
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -32,7 +33,7 @@ abstract class AsyncAWSS3TestCase extends FlowIntegrationTestCase
         $this->s3Client()->createBucket(['Bucket' => $this->bucket()]);
     }
 
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         parent::tearDown();

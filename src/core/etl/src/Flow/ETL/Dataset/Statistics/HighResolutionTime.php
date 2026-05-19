@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Dataset\Statistics;
 
-final readonly class HighResolutionTime implements \Stringable
+use Stringable;
+
+use function hrtime;
+
+final readonly class HighResolutionTime implements Stringable
 {
     /**
      * @param int $seconds
@@ -17,7 +21,7 @@ final readonly class HighResolutionTime implements \Stringable
 
     public static function now(): self
     {
-        $timeParts = \hrtime(as_number: false);
+        $timeParts = hrtime(as_number: false);
 
         return new self($timeParts[0], $timeParts[1]);
     }

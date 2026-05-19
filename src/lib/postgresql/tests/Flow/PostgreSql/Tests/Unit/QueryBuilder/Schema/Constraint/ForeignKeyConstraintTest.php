@@ -6,15 +6,19 @@ namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema\Constraint;
 
 use Flow\PostgreSql\Protobuf\AST\Constraint;
 use Flow\PostgreSql\Protobuf\AST\ConstrType;
+use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\QueryBuilder\Schema\Constraint\ForeignKeyConstraint;
 use Flow\PostgreSql\QueryBuilder\Schema\ReferentialAction;
 use PHPUnit\Framework\TestCase;
+
+use function extension_loaded;
+use function Flow\Types\DSL\type_instance_of;
 
 final class ForeignKeyConstraintTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }
@@ -66,7 +70,9 @@ final class ForeignKeyConstraintTest extends TestCase
 
         static::assertInstanceOf(Constraint::class, $ast);
         static::assertSame('fk_orders_user', $ast->getConname());
-        static::assertSame('public', $ast->getPktable()->getSchemaname());
+        $pktable = $ast->getPktable();
+        static::assertNotNull($pktable);
+        static::assertSame('public', $pktable->getSchemaname());
         static::assertSame('c', $ast->getFkUpdAction());
         static::assertSame('n', $ast->getFkDelAction());
         static::assertTrue($ast->getDeferrable());
@@ -90,8 +96,10 @@ final class ForeignKeyConstraintTest extends TestCase
         $ast = $constraint->toAst();
 
         static::assertInstanceOf(Constraint::class, $ast);
-        static::assertSame('public', $ast->getPktable()->getSchemaname());
-        static::assertSame('users', $ast->getPktable()->getRelname());
+        $pktable = $ast->getPktable();
+        static::assertNotNull($pktable);
+        static::assertSame('public', $pktable->getSchemaname());
+        static::assertSame('users', $pktable->getRelname());
     }
 
     public function test_immutability(): void
@@ -180,11 +188,19 @@ final class ForeignKeyConstraintTest extends TestCase
 
         static::assertInstanceOf(Constraint::class, $ast);
         static::assertSame(ConstrType::CONSTR_FOREIGN, $ast->getContype());
-        static::assertCount(1, $ast->getFkAttrs());
-        static::assertSame('user_id', $ast->getFkAttrs()[0]->getString()->getSval());
-        static::assertSame('users', $ast->getPktable()->getRelname());
-        static::assertCount(1, $ast->getPkAttrs());
-        static::assertSame('id', $ast->getPkAttrs()[0]->getString()->getSval());
+        $fkAttrs = $ast->getFkAttrs();
+        static::assertCount(1, $fkAttrs);
+        $fkString = type_instance_of(Node::class)->assert($fkAttrs[0])->getString();
+        static::assertNotNull($fkString);
+        static::assertSame('user_id', $fkString->getSval());
+        $pktable = $ast->getPktable();
+        static::assertNotNull($pktable);
+        static::assertSame('users', $pktable->getRelname());
+        $pkAttrs = $ast->getPkAttrs();
+        static::assertCount(1, $pkAttrs);
+        $pkString = type_instance_of(Node::class)->assert($pkAttrs[0])->getString();
+        static::assertNotNull($pkString);
+        static::assertSame('id', $pkString->getSval());
     }
 
     public function test_simple_foreign_key_without_reference_columns(): void
@@ -195,7 +211,9 @@ final class ForeignKeyConstraintTest extends TestCase
 
         static::assertInstanceOf(Constraint::class, $ast);
         static::assertSame(ConstrType::CONSTR_FOREIGN, $ast->getContype());
-        static::assertSame('users', $ast->getPktable()->getRelname());
+        $pktable = $ast->getPktable();
+        static::assertNotNull($pktable);
+        static::assertSame('users', $pktable->getRelname());
         static::assertCount(0, $ast->getPkAttrs());
     }
 }

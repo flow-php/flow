@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Logger;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Logger\LogRecord;
 use Flow\Telemetry\Logger\Severity;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class LogRecordTest extends TestCase
 {
@@ -42,8 +44,8 @@ final class LogRecordTest extends TestCase
 
     public function test_normalize_converts_datetime_immutable_in_attributes(): void
     {
-        $timestamp = new \DateTimeImmutable('2024-01-01 12:00:00');
-        $eventTime = new \DateTimeImmutable('2024-01-01 11:59:00');
+        $timestamp = new DateTimeImmutable('2024-01-01 12:00:00');
+        $eventTime = new DateTimeImmutable('2024-01-01 11:59:00');
 
         $record = new LogRecord(
             body: 'Event occurred',
@@ -59,8 +61,8 @@ final class LogRecordTest extends TestCase
 
     public function test_normalize_from_array_round_trip(): void
     {
-        $timestamp = new \DateTimeImmutable('2024-01-01 12:00:00');
-        $observedTimestamp = new \DateTimeImmutable('2024-01-01 12:00:01');
+        $timestamp = new DateTimeImmutable('2024-01-01 12:00:00');
+        $observedTimestamp = new DateTimeImmutable('2024-01-01 12:00:01');
 
         $original = new LogRecord(
             severity: Severity::ERROR,
@@ -82,8 +84,8 @@ final class LogRecordTest extends TestCase
 
     public function test_normalize_returns_array_representation(): void
     {
-        $timestamp = new \DateTimeImmutable('2024-01-01 12:00:00');
-        $observedTimestamp = new \DateTimeImmutable('2024-01-01 12:00:01');
+        $timestamp = new DateTimeImmutable('2024-01-01 12:00:00');
+        $observedTimestamp = new DateTimeImmutable('2024-01-01 12:00:01');
 
         $record = new LogRecord(
             severity: Severity::WARN,
@@ -109,8 +111,8 @@ final class LogRecordTest extends TestCase
 
     public function test_observed_timestamp_and_timestamp_are_independent(): void
     {
-        $timestamp = new \DateTimeImmutable('2024-01-01 10:00:00');
-        $observedTimestamp = new \DateTimeImmutable('2024-01-01 10:00:01');
+        $timestamp = new DateTimeImmutable('2024-01-01 10:00:00');
+        $observedTimestamp = new DateTimeImmutable('2024-01-01 10:00:01');
 
         $record = (new LogRecord())
             ->setTimestamp($timestamp)
@@ -129,7 +131,7 @@ final class LogRecordTest extends TestCase
 
     public function test_set_attribute_accepts_datetime_immutable(): void
     {
-        $datetime = new \DateTimeImmutable('2024-06-15 12:30:00');
+        $datetime = new DateTimeImmutable('2024-06-15 12:30:00');
         $record = (new LogRecord())->setAttribute('event.time', $datetime);
 
         static::assertSame($datetime, $record->attributes->get('event.time'));
@@ -178,19 +180,20 @@ final class LogRecordTest extends TestCase
 
     public function test_set_exception_adds_exception_attributes(): void
     {
-        $exception = new \RuntimeException('Something went wrong');
+        $exception = new RuntimeException('Something went wrong');
         $record = (new LogRecord())->setException($exception);
 
-        static::assertSame(\RuntimeException::class, $record->attributes->get('exception.type'));
+        static::assertSame(RuntimeException::class, $record->attributes->get('exception.type'));
         static::assertSame('Something went wrong', $record->attributes->get('exception.message'));
-        static::assertIsString($record->attributes->get('exception.stacktrace'));
-        static::assertStringContainsString('LogRecordTest', (string) $record->attributes->get('exception.stacktrace'));
+        $stacktrace = $record->attributes->get('exception.stacktrace');
+        static::assertIsString($stacktrace);
+        static::assertStringContainsString('LogRecordTest', $stacktrace);
     }
 
     public function test_set_observed_timestamp_returns_new_instance(): void
     {
         $record = new LogRecord();
-        $observedTimestamp = new \DateTimeImmutable('2024-06-15 14:30:00');
+        $observedTimestamp = new DateTimeImmutable('2024-06-15 14:30:00');
 
         $newRecord = $record->setObservedTimestamp($observedTimestamp);
 
@@ -213,7 +216,7 @@ final class LogRecordTest extends TestCase
     public function test_set_timestamp_returns_new_instance(): void
     {
         $record = new LogRecord();
-        $timestamp = new \DateTimeImmutable('2024-06-15 12:00:00');
+        $timestamp = new DateTimeImmutable('2024-06-15 12:00:00');
 
         $newRecord = $record->setTimestamp($timestamp);
 
@@ -224,7 +227,7 @@ final class LogRecordTest extends TestCase
 
     public function test_with_constructor_observed_timestamp(): void
     {
-        $observedTimestamp = new \DateTimeImmutable('2024-06-15 14:00:00');
+        $observedTimestamp = new DateTimeImmutable('2024-06-15 14:00:00');
 
         $record = new LogRecord(observedTimestamp: $observedTimestamp);
 
@@ -233,7 +236,7 @@ final class LogRecordTest extends TestCase
 
     public function test_with_constructor_values(): void
     {
-        $timestamp = new \DateTimeImmutable('2024-06-15 12:00:00');
+        $timestamp = new DateTimeImmutable('2024-06-15 12:00:00');
 
         $record = new LogRecord(
             severity: Severity::WARN,

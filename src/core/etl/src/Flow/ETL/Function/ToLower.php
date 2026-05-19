@@ -8,6 +8,8 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function strtolower;
+
 final class ToLower extends ScalarFunctionChain
 {
     public function __construct(
@@ -24,6 +26,6 @@ final class ToLower extends ScalarFunctionChain
                 ->invalidResult(new InvalidArgumentException('ToLower function requires non-null value'));
         }
 
-        return \strtolower($value);
+        return strtolower($value);
     }
 }

@@ -14,6 +14,9 @@ use Flow\ETL\Transformations;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\Response;
 
+use function array_key_exists;
+use function count;
+
 /**
  * FlowStreamedResponse builder.
  */
@@ -111,7 +114,7 @@ final class DataStream
         return new FlowBufferedResponse(
             $this->extractor,
             $output,
-            \count($this->transformations) ? new Transformations(...$this->transformations) : new Transformations(),
+            count($this->transformations) ? new Transformations(...$this->transformations) : new Transformations(),
             $this->status,
             $this->headers,
             $this->config,
@@ -138,7 +141,7 @@ final class DataStream
         return new FlowStreamedResponse(
             $this->extractor,
             $output,
-            \count($this->transformations) ? new Transformations(...$this->transformations) : new Transformations(),
+            count($this->transformations) ? new Transformations(...$this->transformations) : new Transformations(),
             $this->status,
             $this->headers,
             $this->config,
@@ -166,7 +169,7 @@ final class DataStream
      */
     public function withoutHeader(string $name): self
     {
-        if (\array_key_exists($name, $this->headers)) {
+        if (array_key_exists($name, $this->headers)) {
             unset($this->headers[$name]);
         }
 

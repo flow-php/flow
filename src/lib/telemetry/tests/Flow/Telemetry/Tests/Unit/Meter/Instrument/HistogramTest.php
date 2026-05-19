@@ -11,12 +11,19 @@ use Flow\Telemetry\Tests\Mother\ClockMother;
 use Flow\Telemetry\Tests\Mother\InstrumentationScopeMother;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use Flow\Telemetry\Tests\Mother\SpanContextMother;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function array_filter;
+use function array_map;
+use function array_sum;
+use function array_values;
+use function count;
+
 final class HistogramTest extends TestCase
 {
-    public static function bucketBoundaryTestCases(): \Generator
+    public static function bucketBoundaryTestCases(): Generator
     {
         yield 'value at exact boundary falls into that bucket' => [
             'value' => 50.0,
@@ -125,7 +132,7 @@ final class HistogramTest extends TestCase
 
         /** @var array<int, int> $bucketCounts */
         $bucketCounts = $metric->attributes->get('histogram.bucketCounts');
-        $totalFromBuckets = \array_sum($bucketCounts);
+        $totalFromBuckets = array_sum($bucketCounts);
         $totalCount = $metric->attributes->get('histogram.count');
 
         static::assertSame($totalCount, $totalFromBuckets);
@@ -240,7 +247,7 @@ final class HistogramTest extends TestCase
         static::assertCount(1, $metrics);
         static::assertCount(3, $metrics[0]->exemplars);
 
-        $values = \array_map(static fn($e) => $e->value, $metrics[0]->exemplars);
+        $values = array_map(static fn($e) => $e->value, $metrics[0]->exemplars);
         static::assertContains(5.0, $values);
         static::assertContains(75.0, $values);
         static::assertContains(150.0, $values);
@@ -345,11 +352,8 @@ final class HistogramTest extends TestCase
 
         static::assertCount(2, $metrics);
 
-        $getMetrics = \array_values(\array_filter($metrics, static fn($m) => $m->attributes->get('method') === 'GET'));
-        $postMetrics = \array_values(\array_filter(
-            $metrics,
-            static fn($m) => $m->attributes->get('method') === 'POST',
-        ));
+        $getMetrics = array_values(array_filter($metrics, static fn($m) => $m->attributes->get('method') === 'GET'));
+        $postMetrics = array_values(array_filter($metrics, static fn($m) => $m->attributes->get('method') === 'POST'));
 
         static::assertCount(1, $getMetrics);
         static::assertCount(1, $postMetrics);
@@ -409,7 +413,7 @@ final class HistogramTest extends TestCase
     }
 
     /**
-     * @param array<float> $boundaries
+     * @param list<float> $boundaries
      */
     #[DataProvider('bucketBoundaryTestCases')]
     public function test_values_are_placed_in_correct_buckets(
@@ -432,7 +436,7 @@ final class HistogramTest extends TestCase
         /** @var array<int, int> $bucketCounts */
         $bucketCounts = $metrics[0]->attributes->get('histogram.bucketCounts');
 
-        for ($i = 0; $i < \count($bucketCounts); $i++) {
+        for ($i = 0; $i < count($bucketCounts); $i++) {
             if ($i === $expectedBucketIndex) {
                 static::assertSame(1, $bucketCounts[$i], "Expected bucket {$i} to have count 1");
             } else {

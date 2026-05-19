@@ -24,6 +24,7 @@ use Flow\Parquet\Writer\ColumnChunkBuilder\RLEDictionaryChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkBuilders;
 use Flow\Parquet\Writer\ColumnChunkContainer;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
 final class ColumnChunkBuildersTest extends TestCase
 {
@@ -238,8 +239,9 @@ final class ColumnChunkBuildersTest extends TestCase
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
         // Extract builders through reflection
-        $reflection = new \ReflectionClass($builders);
+        $reflection = new ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
+        /** @var array<string, mixed> $buildersArray */
         $buildersArray = $buildersProperty->getValue($builders);
 
         // Verify custom encodings
@@ -264,9 +266,11 @@ final class ColumnChunkBuildersTest extends TestCase
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
         // Extract the builder through reflection to verify PLAIN is used instead of DELTA
-        $reflection = new \ReflectionClass($builders);
+        $reflection = new ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
+        /** @var array<string, mixed> $buildersArray */
         $buildersArray = $buildersProperty->getValue($builders);
+        static::assertIsArray($buildersArray);
 
         static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['user_id']);
     }
@@ -288,9 +292,11 @@ final class ColumnChunkBuildersTest extends TestCase
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
         // Extract builders through reflection
-        $reflection = new \ReflectionClass($builders);
+        $reflection = new ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
+        /** @var array<string, mixed> $buildersArray */
         $buildersArray = $buildersProperty->getValue($builders);
+        static::assertIsArray($buildersArray);
 
         static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['col1']);
         static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $buildersArray['col2']);
@@ -312,9 +318,11 @@ final class ColumnChunkBuildersTest extends TestCase
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
         // Extract the builder through reflection to verify the correct type
-        $reflection = new \ReflectionClass($builders);
+        $reflection = new ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
+        /** @var array<string, mixed> $buildersArray */
         $buildersArray = $buildersProperty->getValue($builders);
+        static::assertIsArray($buildersArray);
 
         static::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $buildersArray['user_id']);
     }
@@ -335,15 +343,21 @@ final class ColumnChunkBuildersTest extends TestCase
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
         // Extract the nested builder through reflection
-        $reflection = new \ReflectionClass($builders);
+        $reflection = new ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
+        /** @var array<string, mixed> $buildersArray */
         $buildersArray = $buildersProperty->getValue($builders);
+        static::assertIsArray($buildersArray);
 
         // Get the nested column builder
+        /** @var object $nestedBuilder */
         $nestedBuilder = $buildersArray['user'];
-        $nestedReflection = new \ReflectionClass($nestedBuilder);
+        static::assertIsObject($nestedBuilder);
+        $nestedReflection = new ReflectionClass($nestedBuilder);
         $childBuildersProperty = $nestedReflection->getProperty('childrenColumnChunkBuilders');
+        /** @var array<string, mixed> $childBuilders */
         $childBuilders = $childBuildersProperty->getValue($nestedBuilder);
+        static::assertIsArray($childBuilders);
 
         // Get the child builders as values array since they're keyed by flat path
         $childBuilderValues = array_values($childBuilders);
@@ -367,9 +381,11 @@ final class ColumnChunkBuildersTest extends TestCase
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
         // Extract the builder through reflection to verify the correct type
-        $reflection = new \ReflectionClass($builders);
+        $reflection = new ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
+        /** @var array<string, mixed> $buildersArray */
         $buildersArray = $buildersProperty->getValue($builders);
+        static::assertIsArray($buildersArray);
 
         static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['description']);
     }
@@ -387,9 +403,11 @@ final class ColumnChunkBuildersTest extends TestCase
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
         // Extract the builder through reflection to verify the correct type
-        $reflection = new \ReflectionClass($builders);
+        $reflection = new ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
+        /** @var array<string, mixed> $buildersArray */
         $buildersArray = $buildersProperty->getValue($builders);
+        static::assertIsArray($buildersArray);
 
         static::assertInstanceOf(RLEDictionaryChunkBuilder::class, $buildersArray['status']);
     }
@@ -490,9 +508,11 @@ final class ColumnChunkBuildersTest extends TestCase
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
         // Extract the builder through reflection to verify default behavior
-        $reflection = new \ReflectionClass($builders);
+        $reflection = new ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
+        /** @var array<string, mixed> $buildersArray */
         $buildersArray = $buildersProperty->getValue($builders);
+        static::assertIsArray($buildersArray);
 
         // Should use default PLAIN encoding since no custom encoding specified
         static::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['user_id']);

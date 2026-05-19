@@ -10,6 +10,8 @@ use Flow\PostgreSql\Protobuf\AST\SQLValueFunctionOp;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 use Flow\PostgreSql\QueryBuilder\Exception\UnsupportedNodeException;
 
+use function in_array;
+
 /**
  * Represents SQL standard value functions like CURRENT_TIMESTAMP, CURRENT_DATE, CURRENT_TIME.
  *
@@ -82,7 +84,7 @@ final readonly class SQLValueFunctionExpression implements Expression
             SQLValueFunctionOp::SVFOP_USER,
         ];
 
-        if (!\in_array($op, $supported, true)) {
+        if (!in_array($op, $supported, true)) {
             throw UnsupportedNodeException::forNodeType('SQLValueFunction op=' . $op);
         }
 

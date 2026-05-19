@@ -20,6 +20,7 @@ use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
 use PHPUnit\Framework\TestCase;
 
+use function array_values;
 use function Flow\Bridge\OpenAPI\Specification\DSL\schema_from_openapi_specification;
 use function Flow\Bridge\OpenAPI\Specification\DSL\schema_to_openapi_specification;
 use function Flow\ETL\DSL\bool_schema;
@@ -37,7 +38,7 @@ final class OpenAPIToFlowConverterTest extends TestCase
         $convertedSchema = schema_from_openapi_specification($openApiSpec);
 
         static::assertCount(3, $convertedSchema->definitions());
-        $definitions = \array_values($convertedSchema->definitions());
+        $definitions = array_values($convertedSchema->definitions());
         static::assertSame('id', $definitions[0]->entry()->name());
         static::assertSame(IntegerType::class, $definitions[0]->type()::class);
         static::assertFalse($definitions[0]->isNullable());
@@ -64,7 +65,7 @@ final class OpenAPIToFlowConverterTest extends TestCase
         $schema = schema_from_openapi_specification($openApiSpec);
 
         static::assertCount(2, $schema->definitions());
-        $definitions = \array_values($schema->definitions());
+        $definitions = array_values($schema->definitions());
         static::assertSame('id', $definitions[0]->entry()->name());
         static::assertSame('name', $definitions[1]->entry()->name());
     }
@@ -161,7 +162,7 @@ final class OpenAPIToFlowConverterTest extends TestCase
         $schema = $converter->fromOpenAPI($openApiSpec);
 
         static::assertCount(1, $schema->definitions());
-        $definitions = \array_values($schema->definitions());
+        $definitions = array_values($schema->definitions());
         $definition = $definitions[0];
         static::assertSame('tags', $definition->entry()->name());
         static::assertSame(ListType::class, $definition->type()::class);
@@ -184,7 +185,7 @@ final class OpenAPIToFlowConverterTest extends TestCase
         $schema = $converter->fromOpenAPI($openApiSpec);
 
         static::assertCount(4, $schema->definitions());
-        $definitions = \array_values($schema->definitions());
+        $definitions = array_values($schema->definitions());
         static::assertSame('id', $definitions[0]->entry()->name());
         static::assertSame(IntegerType::class, $definitions[0]->type()::class);
         static::assertFalse($definitions[0]->isNullable());
@@ -217,7 +218,7 @@ final class OpenAPIToFlowConverterTest extends TestCase
         $schema = schema_from_openapi_specification($openApiSpec);
 
         static::assertCount(5, $schema->definitions());
-        $definitions = \array_values($schema->definitions());
+        $definitions = array_values($schema->definitions());
 
         static::assertSame('id', $definitions[0]->entry()->name());
         static::assertSame(IntegerType::class, $definitions[0]->type()::class);
@@ -275,7 +276,7 @@ final class OpenAPIToFlowConverterTest extends TestCase
         $schema = $converter->fromOpenAPI($openApiSpec);
 
         static::assertCount(1, $schema->definitions());
-        $definitions = \array_values($schema->definitions());
+        $definitions = array_values($schema->definitions());
         $definition = $definitions[0];
         static::assertSame('name', $definition->entry()->name());
         static::assertTrue($definition->metadata()->has('description'));
@@ -304,7 +305,7 @@ final class OpenAPIToFlowConverterTest extends TestCase
         $schema = $converter->fromOpenAPI($openApiSpec);
 
         static::assertCount(1, $schema->definitions());
-        $definitions = \array_values($schema->definitions());
+        $definitions = array_values($schema->definitions());
         $definition = $definitions[0];
         static::assertSame('address', $definition->entry()->name());
         static::assertSame(StructureType::class, $definition->type()::class);
@@ -328,7 +329,7 @@ final class OpenAPIToFlowConverterTest extends TestCase
         $schema = $converter->fromOpenAPI($openApiSpec);
 
         static::assertCount(1, $schema->definitions());
-        $definitions = \array_values($schema->definitions());
+        $definitions = array_values($schema->definitions());
         $definition = $definitions[0];
         static::assertSame('metadata', $definition->entry()->name());
         static::assertSame(MapType::class, $definition->type()::class);
@@ -353,7 +354,7 @@ final class OpenAPIToFlowConverterTest extends TestCase
         $schema = $converter->fromOpenAPI($openApiSpec);
 
         static::assertCount(6, $schema->definitions());
-        $definitions = \array_values($schema->definitions());
+        $definitions = array_values($schema->definitions());
         static::assertSame(DateType::class, $definitions[0]->type()::class);
         static::assertSame(DateTimeType::class, $definitions[1]->type()::class);
         static::assertSame(TimeType::class, $definitions[2]->type()::class);

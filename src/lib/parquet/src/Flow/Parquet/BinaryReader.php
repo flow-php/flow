@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet;
 
+use Generator;
+
 interface BinaryReader
 {
     public function length(): DataSize;
@@ -13,7 +15,7 @@ interface BinaryReader
     /**
      * @return \Generator<int>
      */
-    public function readBits(int $total): \Generator;
+    public function readBits(int $total): Generator;
 
     public function readBytes(int $total): string;
 

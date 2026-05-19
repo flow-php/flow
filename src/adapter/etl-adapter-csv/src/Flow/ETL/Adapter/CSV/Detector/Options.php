@@ -6,6 +6,8 @@ namespace Flow\ETL\Adapter\CSV\Detector;
 
 use Flow\ETL\Adapter\CSV\Exception\CantDetectCSVOptions;
 
+use function array_filter;
+
 final readonly class Options
 {
     /**
@@ -84,7 +86,7 @@ final readonly class Options
 
     public function onlyValid(): self
     {
-        return new self(\array_filter($this->options, static fn(Option $option): bool => $option->isValid()));
+        return new self(array_filter($this->options, static fn(Option $option): bool => $option->isValid()));
     }
 
     public function parse(string $line): void

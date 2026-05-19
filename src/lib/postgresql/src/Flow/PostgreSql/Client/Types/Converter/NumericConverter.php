@@ -8,6 +8,10 @@ use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\ValueConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
 
+use function is_float;
+use function is_int;
+use function is_string;
+
 final class NumericConverter implements ValueConverter
 {
     public function supportedTypes(): array
@@ -21,11 +25,11 @@ final class NumericConverter implements ValueConverter
             return null;
         }
 
-        if (\is_string($value)) {
+        if (is_string($value)) {
             return $value;
         }
 
-        if (\is_int($value) || \is_float($value)) {
+        if (is_int($value) || is_float($value)) {
             return (string) $value;
         }
 

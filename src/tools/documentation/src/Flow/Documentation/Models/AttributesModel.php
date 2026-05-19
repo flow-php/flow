@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
+use ReflectionAttribute;
+use ReflectionFunction;
+use ReflectionMethod;
+
+use function count;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_list;
 
@@ -26,10 +31,10 @@ final readonly class AttributesModel
         return new self(array_map(static fn(array $attribute) => AttributeModel::fromArray($attribute), $data));
     }
 
-    public static function fromReflection(\ReflectionFunction|\ReflectionMethod $reflection): self
+    public static function fromReflection(ReflectionFunction|ReflectionMethod $reflection): self
     {
         return new self(array_map(
-            static fn(\ReflectionAttribute $reflectionAttribute): AttributeModel => AttributeModel::fromReflection(
+            static fn(ReflectionAttribute $reflectionAttribute): AttributeModel => AttributeModel::fromReflection(
                 $reflectionAttribute,
             ),
             $reflection->getAttributes(),
@@ -43,7 +48,7 @@ final readonly class AttributesModel
             static fn(AttributeModel $attribute) => $attribute->name === $name,
         );
 
-        if (\count($attributes)) {
+        if (count($attributes)) {
             return $attributes[0];
         }
 

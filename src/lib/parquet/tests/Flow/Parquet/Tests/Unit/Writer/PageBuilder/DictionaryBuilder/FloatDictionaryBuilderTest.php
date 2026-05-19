@@ -9,14 +9,18 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Writer\PageBuilder\Dictionary;
 use Flow\Parquet\Writer\PageBuilder\DictionaryBuilder\FloatDictionaryBuilder;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+
+use const INF;
+use const NAN;
 
 final class FloatDictionaryBuilderTest extends TestCase
 {
     private FloatDictionaryBuilder $builder;
 
-    public static function float_value_types_provider(): \Generator
+    public static function float_value_types_provider(): Generator
     {
         yield 'regular floats' => [
             [1.5, 2.5, 3.5, 2.5, 1.5],
@@ -63,7 +67,7 @@ final class FloatDictionaryBuilderTest extends TestCase
     public function test_all_special_float_values(): void
     {
         $column = new FlatColumn('test_column', PhysicalType::FLOAT);
-        $data = new WriteFlatColumnValues($column, values: [1.0, \INF, -\INF, \NAN, 1.0, \INF, null]);
+        $data = new WriteFlatColumnValues($column, values: [1.0, INF, -INF, NAN, 1.0, INF, null]);
 
         $result = $this->builder->build($data);
 
@@ -71,10 +75,9 @@ final class FloatDictionaryBuilderTest extends TestCase
         static::assertCount(4, $result->dictionary);
         static::assertSame([0, 1, 2, 3, 0, 1], $result->indices);
         static::assertSame(1.0, $result->dictionary[0]);
-        static::assertSame(\INF, $result->dictionary[1]);
-        static::assertSame(-\INF, $result->dictionary[2]);
-        /** @phpstan-ignore-next-line */
-        static::assertTrue(\is_nan($result->dictionary[3]));
+        static::assertSame(INF, $result->dictionary[1]);
+        static::assertSame(-INF, $result->dictionary[2]);
+        static::assertNan($result->dictionary[3]);
     }
 
     public function test_alternating_float_pattern(): void
@@ -316,7 +319,7 @@ final class FloatDictionaryBuilderTest extends TestCase
     public function test_special_float_values_infinity(): void
     {
         $column = new FlatColumn('test_column', PhysicalType::FLOAT);
-        $data = new WriteFlatColumnValues($column, values: [1.0, \INF, -\INF, 1.0, \INF]);
+        $data = new WriteFlatColumnValues($column, values: [1.0, INF, -INF, 1.0, INF]);
 
         $result = $this->builder->build($data);
 
@@ -324,14 +327,14 @@ final class FloatDictionaryBuilderTest extends TestCase
         static::assertCount(3, $result->dictionary);
         static::assertSame([0, 1, 2, 0, 1], $result->indices);
         static::assertSame(1.0, $result->dictionary[0]);
-        static::assertSame(\INF, $result->dictionary[1]);
-        static::assertSame(-\INF, $result->dictionary[2]);
+        static::assertSame(INF, $result->dictionary[1]);
+        static::assertSame(-INF, $result->dictionary[2]);
     }
 
     public function test_special_float_values_nan(): void
     {
         $column = new FlatColumn('test_column', PhysicalType::FLOAT);
-        $data = new WriteFlatColumnValues($column, values: [1.0, \NAN, 2.0, \NAN, 1.0]);
+        $data = new WriteFlatColumnValues($column, values: [1.0, NAN, 2.0, NAN, 1.0]);
 
         $result = $this->builder->build($data);
 
@@ -339,8 +342,7 @@ final class FloatDictionaryBuilderTest extends TestCase
         static::assertCount(3, $result->dictionary);
         static::assertSame([0, 1, 2, 1, 0], $result->indices);
         static::assertSame(1.0, $result->dictionary[0]);
-        /** @phpstan-ignore-next-line */
-        static::assertTrue(\is_nan($result->dictionary[1]));
+        static::assertNan($result->dictionary[1]);
         static::assertSame(2.0, $result->dictionary[2]);
     }
 

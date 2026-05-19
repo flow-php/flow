@@ -7,6 +7,10 @@ namespace Flow\Bridge\Symfony\PostgreSQLSession\Tests\Context;
 use Flow\Bridge\Symfony\PostgreSQLSession\FlowPostgreSqlSessionHandler;
 use Flow\Bridge\Symfony\PostgreSQLSession\Tests\Unit\Double\SpyClient;
 
+use function array_slice;
+use function count;
+use function str_starts_with;
+
 final class PostgreSqlSessionContext
 {
     public SpyClient $client;
@@ -36,13 +40,13 @@ final class PostgreSqlSessionContext
      */
     public function onlyQueries(string $keyword, callable $action): array
     {
-        $before = \count($this->client->executedQueries);
+        $before = count($this->client->executedQueries);
         $action();
 
         $matching = [];
 
-        foreach (\array_slice($this->client->executedQueries, $before) as $query) {
-            if (\str_starts_with($query['sql'], $keyword)) {
+        foreach (array_slice($this->client->executedQueries, $before) as $query) {
+            if (str_starts_with($query['sql'], $keyword)) {
                 $matching[] = $query;
             }
         }

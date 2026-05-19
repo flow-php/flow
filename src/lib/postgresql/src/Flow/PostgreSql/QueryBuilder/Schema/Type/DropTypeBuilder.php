@@ -13,6 +13,8 @@ use Flow\PostgreSql\Protobuf\AST\TypeName;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
+use function array_values;
+
 final readonly class DropTypeBuilder implements DropTypeFinalStep
 {
     use AstToSql;
@@ -28,7 +30,7 @@ final readonly class DropTypeBuilder implements DropTypeFinalStep
 
     public static function create(string ...$names): DropTypeFinalStep
     {
-        return new self(\array_values($names));
+        return new self(array_values($names));
     }
 
     public function cascade(): DropTypeFinalStep

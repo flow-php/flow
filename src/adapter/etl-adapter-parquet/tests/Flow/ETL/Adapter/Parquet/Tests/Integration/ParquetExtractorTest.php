@@ -13,6 +13,7 @@ use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
+use function iterator_to_array;
 
 final class ParquetExtractorTest extends FlowTestCase
 {
@@ -21,7 +22,7 @@ final class ParquetExtractorTest extends FlowTestCase
         $extractor = from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet'));
         $extractor->changeLimit(2);
 
-        static::assertCount(2, \iterator_to_array($extractor->extract(flow_context(config()))));
+        static::assertCount(2, iterator_to_array($extractor->extract(flow_context(config()))));
     }
 
     public function test_reading_file_from_given_offset(): void
@@ -33,7 +34,7 @@ final class ParquetExtractorTest extends FlowTestCase
 
         $extractor = from_parquet(path_real(__DIR__ . '/Fixtures/orders_1k.parquet'))->withOffset($totalRows - 100);
 
-        static::assertCount(100, \iterator_to_array($extractor->extract(flow_context(config()))));
+        static::assertCount(100, iterator_to_array($extractor->extract(flow_context(config()))));
     }
 
     public function test_signal_stop(): void

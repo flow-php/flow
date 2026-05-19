@@ -8,6 +8,9 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
 use Flow\Parquet\ParquetFile\Schema\Repetitions;
 
+use function array_key_exists;
+use function is_array;
+
 /**
  * Converts definition levels to actual values.
  * Initially this class was much simpler but in order to keep the performance and not to repeat the same operations
@@ -32,7 +35,7 @@ final class DefinitionConverter
 
     public function toValue(Repetitions $repetitions, int $definitionLevel, mixed $value): mixed
     {
-        if (!\array_key_exists($repetitions->id, $this->templates)) {
+        if (!array_key_exists($repetitions->id, $this->templates)) {
             $this->generateTemplates($repetitions, $repetitions->maxDefinitionLevel());
         }
 
@@ -57,7 +60,13 @@ final class DefinitionConverter
                 return $value;
             }
 
-            return $this->pushValueToLevel($this->templates[$repetitions->id]['templates'][$definitionLevel], $value);
+            $template = $this->templates[$repetitions->id]['templates'][$definitionLevel];
+
+            if (!is_array($template)) {
+                throw new InvalidArgumentException('Template for maxDefinitionLevel must be an array');
+            }
+
+            return $this->pushValueToLevel($template, $value);
         }
 
         return $this->templates[$repetitions->id]['templates'][$definitionLevel];
@@ -76,8 +85,9 @@ final class DefinitionConverter
         }
 
         $repetitionsBranch = $repetitions->left($level + 1);
+        $lastRepetition = $repetitionsBranch->last();
 
-        $partialValue = match ($repetitionsBranch->last()) {
+        $partialValue = match ($lastRepetition) {
             Repetition::REQUIRED => throw new InvalidArgumentException('Required field cannot be null'),
             Repetition::OPTIONAL => new NullLevel($level),
             Repetition::REPEATED => [],
@@ -89,11 +99,21 @@ final class DefinitionConverter
             }
         }
 
-        if ($repetitionsBranch->last()->isRepeated()) {
-            return $partialValue[0];
+        if (!$lastRepetition->isRepeated()) {
+            return $partialValue;
         }
 
-        return $partialValue;
+        if (!is_array($partialValue)) {
+            throw new InvalidArgumentException(
+                'Internal invariant: repeated last repetition must produce an array template',
+            );
+        }
+
+        if (!array_key_exists(0, $partialValue)) {
+            throw new InvalidArgumentException('Internal invariant: repeated template must contain index 0');
+        }
+
+        return $partialValue[0];
     }
 
     /**
@@ -107,7 +127,7 @@ final class DefinitionConverter
      */
     private function generateTemplates(Repetitions $repetitions, int $maxDefinitionLevel): void
     {
-        if (\array_key_exists($repetitions->id, $this->templates)) {
+        if (array_key_exists($repetitions->id, $this->templates)) {
             return;
         }
 
@@ -130,19 +150,15 @@ final class DefinitionConverter
 
     private function pushValueToLevel(array $template, mixed $value): array
     {
-        $nested = $template;
-        $current = &$nested;
-
-        while (\is_array($current)) {
-            if (empty($current)) {
-                $current[0] = $value;
-
-                break;
-            }
-            $current = &$current[0];
+        if (empty($template)) {
+            return [$value];
         }
 
-        return $nested;
+        if (array_key_exists(0, $template) && is_array($template[0])) {
+            $template[0] = $this->pushValueToLevel($template[0], $value);
+        }
+
+        return $template;
     }
 
     private function validate(mixed $value, int $definitionLevel, int $maxDefinitionLevel): void

@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native\String;
 
+use DateTimeZone;
+use DOMDocument;
+use Exception;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\TypeNarrower;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid;
 
+use function checkdate;
+use function date_parse;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_datetime;
@@ -22,6 +27,17 @@ use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_time_zone;
 use function Flow\Types\DSL\type_uuid;
 use function Flow\Types\DSL\type_xml;
+use function in_array;
+use function is_array;
+use function is_numeric;
+use function is_string;
+use function libxml_clear_errors;
+use function libxml_use_internal_errors;
+use function mb_strtolower;
+use function preg_match;
+use function str_contains;
+use function strtolower;
+use function trim;
 
 final class StringTypeNarrower implements TypeNarrower
 {
@@ -30,11 +46,11 @@ final class StringTypeNarrower implements TypeNarrower
      */
     public function narrow(mixed $value): Type
     {
-        if (!\is_string($value)) {
+        if (!is_string($value)) {
             return type_string();
         }
 
-        $value = \trim($value);
+        $value = trim($value);
 
         if ($value === '') {
             return type_string();
@@ -61,7 +77,7 @@ final class StringTypeNarrower implements TypeNarrower
      */
     private function isBoolean(string $value): bool
     {
-        return \in_array(\strtolower($value), ['true', 'false'], true);
+        return in_array(strtolower($value), ['true', 'false'], true);
     }
 
     /**
@@ -69,9 +85,9 @@ final class StringTypeNarrower implements TypeNarrower
      */
     private function isDate(string $value): bool
     {
-        $dateParts = \date_parse($value);
+        $dateParts = date_parse($value);
 
-        if ($dateParts['error_count'] > 0) {
+        if (type_integer()->assert($dateParts['error_count']) > 0) {
             return false;
         }
 
@@ -88,7 +104,7 @@ final class StringTypeNarrower implements TypeNarrower
         }
 
         /** @phpstan-ignore-next-line */
-        if (!\checkdate((int) $dateParts['month'], (int) $dateParts['day'], (int) $dateParts['year'])) {
+        if (!checkdate((int) $dateParts['month'], (int) $dateParts['day'], (int) $dateParts['year'])) {
             return false;
         }
 
@@ -116,9 +132,9 @@ final class StringTypeNarrower implements TypeNarrower
      */
     private function isDateTime(string $value): bool
     {
-        $dateParts = \date_parse($value);
+        $dateParts = date_parse($value);
 
-        if ($dateParts['error_count'] > 0) {
+        if (type_integer()->assert($dateParts['error_count']) > 0) {
             return false;
         }
 
@@ -135,7 +151,7 @@ final class StringTypeNarrower implements TypeNarrower
         }
 
         /** @phpstan-ignore-next-line */
-        if (!\checkdate((int) $dateParts['month'], (int) $dateParts['day'], (int) $dateParts['year'])) {
+        if (!checkdate((int) $dateParts['month'], (int) $dateParts['day'], (int) $dateParts['year'])) {
             return false;
         }
 
@@ -149,7 +165,8 @@ final class StringTypeNarrower implements TypeNarrower
             return true;
         }
 
-        if (\is_array($dateParts['relative'] ?? false)) {
+        if (is_array($dateParts['relative'] ?? false)) {
+            // @mago-ignore analysis:mixed-assignment
             $relative = $dateParts['relative'];
 
             return (
@@ -167,16 +184,16 @@ final class StringTypeNarrower implements TypeNarrower
      */
     private function isFloat(string $value): bool
     {
-        if (!\is_numeric($value)) {
+        if (!is_numeric($value)) {
             return false;
         }
 
         // scientific notation
-        if (\str_contains($value, 'e') || \str_contains($value, 'E')) {
+        if (str_contains($value, 'e') || str_contains($value, 'E')) {
             return true;
         }
 
-        return \str_contains($value, '.');
+        return str_contains($value, '.');
     }
 
     /**
@@ -188,7 +205,7 @@ final class StringTypeNarrower implements TypeNarrower
             return false;
         }
 
-        return \preg_match(HTMLType::HTML_ALIKE_REGEX, $value) === 1;
+        return preg_match(HTMLType::HTML_ALIKE_REGEX, $value) === 1;
     }
 
     /**
@@ -196,7 +213,7 @@ final class StringTypeNarrower implements TypeNarrower
      */
     private function isInteger(string $value): bool
     {
-        if (\is_numeric($value)) {
+        if (is_numeric($value)) {
             return (string) (int) $value === $value;
         }
 
@@ -216,7 +233,7 @@ final class StringTypeNarrower implements TypeNarrower
      */
     private function isNull(string $value): bool
     {
-        return \in_array(\mb_strtolower($value), ['null', 'nil'], true);
+        return in_array(mb_strtolower($value), ['null', 'nil'], true);
     }
 
     /**
@@ -224,16 +241,16 @@ final class StringTypeNarrower implements TypeNarrower
      */
     private function isTimeZone(string $value): bool
     {
-        if (\in_array($value, \DateTimeZone::listIdentifiers(), true)) {
+        if (in_array($value, DateTimeZone::listIdentifiers(), true)) {
             return true;
         }
 
-        if (\preg_match('/^[+-]\d{2}:\d{2}$/', $value) === 1) {
+        if (preg_match('/^[+-]\d{2}:\d{2}$/', $value) === 1) {
             try {
-                new \DateTimeZone($value);
+                new DateTimeZone($value);
 
                 return true;
-            } catch (\Exception) {
+            } catch (Exception) {
                 return false;
             }
         }
@@ -258,19 +275,18 @@ final class StringTypeNarrower implements TypeNarrower
             return false;
         }
 
-        if (\preg_match('/<(.+?)>(.+?)<\/(.+?)>/', $value) === 1) {
+        if (preg_match('/<(.+?)>(.+?)<\/(.+?)>/', $value) === 1) {
             try {
-                \libxml_use_internal_errors(true);
+                libxml_use_internal_errors(true);
 
-                $doc = new \DOMDocument();
-                $result = @$doc->loadXML($value);
+                $doc = new DOMDocument();
 
-                return (bool) $result;
-            } catch (\Exception) {
+                return @$doc->loadXML($value);
+            } catch (Exception) {
                 return false;
             } finally {
-                \libxml_clear_errors(); // Clear any errors if needed
-                \libxml_use_internal_errors(false); // Restore standard error handling
+                libxml_clear_errors(); // Clear any errors if needed
+                libxml_use_internal_errors(false); // Restore standard error handling
             }
         }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Dataset\Statistics;
 
+use DateTimeInterface;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Row\Entry\DateEntry;
@@ -18,19 +19,29 @@ use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Row\Reference;
 use Flow\Types\Value\Uuid;
 
+use function count;
 use function Flow\Types\DSL\type_instance_of;
+use function is_bool;
+use function is_countable;
+use function is_float;
+use function is_int;
+use function is_scalar;
+use function json_encode;
+use function max;
+use function mb_strlen;
+use function min;
 
 final class Column
 {
     private readonly DistinctCounter $distinctCounter;
 
-    private int|float|\DateTimeInterface|bool|null $max = null;
+    private int|float|DateTimeInterface|bool|null $max = null;
 
     private ?int $maxElementsCount = null;
 
     private ?int $maxLength = null;
 
-    private int|float|\DateTimeInterface|bool|null $min = null;
+    private int|float|DateTimeInterface|bool|null $min = null;
 
     private ?int $minElementsCount = null;
 
@@ -76,45 +87,45 @@ final class Column
         }
 
         if ($entry instanceof StructureEntry) {
-            $this->distinctCounter->add(\json_encode($value, JSON_THROW_ON_ERROR));
+            $this->distinctCounter->add(json_encode($value, JSON_THROW_ON_ERROR));
 
             return;
         }
 
         if ($entry instanceof ListEntry || $entry instanceof MapEntry) {
-            $this->distinctCounter->add(\json_encode($value, JSON_THROW_ON_ERROR));
-            $elementsCount = \is_countable($value) ? \count($value) : 0;
-            $this->maxElementsCount = \max($this->maxElementsCount ?? $elementsCount, $elementsCount);
-            $this->minElementsCount = \min($this->minElementsCount ?? $elementsCount, $elementsCount);
+            $this->distinctCounter->add(json_encode($value, JSON_THROW_ON_ERROR));
+            $elementsCount = is_countable($value) ? count($value) : 0;
+            $this->maxElementsCount = max($this->maxElementsCount ?? $elementsCount, $elementsCount);
+            $this->minElementsCount = min($this->minElementsCount ?? $elementsCount, $elementsCount);
 
             return;
         }
 
-        if (\is_scalar($value) || $value instanceof \DateTimeInterface) {
+        if (is_scalar($value) || $value instanceof DateTimeInterface) {
             $this->distinctCounter->add($value);
         }
 
         if ($entry instanceof StringEntry) {
-            $valueLength = \mb_strlen(\is_scalar($entry->value()) ? (string) $entry->value() : '');
-            $this->maxLength = \max($this->maxLength ?? $valueLength, $valueLength);
-            $this->minLength = \min($this->minLength ?? $valueLength, $valueLength);
+            $valueLength = mb_strlen(is_scalar($entry->value()) ? (string) $entry->value() : '');
+            $this->maxLength = max($this->maxLength ?? $valueLength, $valueLength);
+            $this->minLength = min($this->minLength ?? $valueLength, $valueLength);
 
             return;
         }
 
         if ($entry instanceof DateEntry || $entry instanceof DateTimeEntry) {
-            if ($value instanceof \DateTimeInterface) {
-                $this->max = \max($this->max ?? $value, $value);
-                $this->min = \min($this->min ?? $value, $value);
+            if ($value instanceof DateTimeInterface) {
+                $this->max = max($this->max ?? $value, $value);
+                $this->min = min($this->min ?? $value, $value);
             }
 
             return;
         }
 
         if ($entry instanceof IntegerEntry || $entry instanceof FloatEntry || $entry instanceof BooleanEntry) {
-            if (\is_int($value) || \is_float($value) || \is_bool($value)) {
-                $this->min = \min($this->min ?? $value, $value);
-                $this->max = \max($this->max ?? $value, $value);
+            if (is_int($value) || is_float($value) || is_bool($value)) {
+                $this->min = min($this->min ?? $value, $value);
+                $this->max = max($this->max ?? $value, $value);
             }
         }
     }
@@ -124,7 +135,7 @@ final class Column
         return $this->distinctCounter->count();
     }
 
-    public function max(): int|float|\DateTimeInterface|bool|null
+    public function max(): int|float|DateTimeInterface|bool|null
     {
         return $this->max;
     }
@@ -139,7 +150,7 @@ final class Column
         return $this->maxLength;
     }
 
-    public function min(): int|float|\DateTimeInterface|bool|null
+    public function min(): int|float|DateTimeInterface|bool|null
     {
         return $this->min;
     }

@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Schema;
 
+use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Schema\Exception\SchemaException;
 use Flow\PostgreSql\Schema\View;
 use Flow\PostgreSql\Schema\ViewDependencyOrder;
 use PHPUnit\Framework\TestCase;
+
+use function array_map;
 
 final class ViewDependencyOrderTest extends TestCase
 {
@@ -19,12 +22,12 @@ final class ViewDependencyOrderTest extends TestCase
         $this->expectException(SchemaException::class);
         $this->expectExceptionMessage('Circular view dependency');
 
-        (new ViewDependencyOrder(new \Flow\PostgreSql\Parser()))->order([$viewA, $viewB]);
+        (new ViewDependencyOrder(new Parser()))->order([$viewA, $viewB]);
     }
 
     public function test_empty_list(): void
     {
-        static::assertSame([], (new ViewDependencyOrder(new \Flow\PostgreSql\Parser()))->order([]));
+        static::assertSame([], (new ViewDependencyOrder(new Parser()))->order([]));
     }
 
     public function test_linear_chain(): void
@@ -33,9 +36,9 @@ final class ViewDependencyOrderTest extends TestCase
         $middle = new View('middle_view', 'SELECT id FROM base_view WHERE id > 0');
         $top = new View('top_view', 'SELECT * FROM middle_view');
 
-        $result = (new ViewDependencyOrder(new \Flow\PostgreSql\Parser()))->order([$top, $middle, $base]);
+        $result = (new ViewDependencyOrder(new Parser()))->order([$top, $middle, $base]);
 
-        $names = \array_map(static fn(View $v) => $v->name, $result);
+        $names = array_map(static fn(View $v) => $v->name, $result);
 
         static::assertSame(['base_view', 'middle_view', 'top_view'], $names);
     }
@@ -45,9 +48,9 @@ final class ViewDependencyOrderTest extends TestCase
         $recursive = new View('recursive_view', 'SELECT * FROM recursive_view');
         $other = new View('other_view', 'SELECT * FROM recursive_view');
 
-        $result = (new ViewDependencyOrder(new \Flow\PostgreSql\Parser()))->order([$other, $recursive]);
+        $result = (new ViewDependencyOrder(new Parser()))->order([$other, $recursive]);
 
-        $names = \array_map(static fn(View $v) => $v->name, $result);
+        $names = array_map(static fn(View $v) => $v->name, $result);
 
         static::assertSame(['recursive_view', 'other_view'], $names);
     }
@@ -56,7 +59,7 @@ final class ViewDependencyOrderTest extends TestCase
     {
         $view = new View('my_view', 'SELECT * FROM users');
 
-        $result = (new ViewDependencyOrder(new \Flow\PostgreSql\Parser()))->order([$view]);
+        $result = (new ViewDependencyOrder(new Parser()))->order([$view]);
 
         static::assertCount(1, $result);
         static::assertSame('my_view', $result[0]->name);
@@ -67,7 +70,7 @@ final class ViewDependencyOrderTest extends TestCase
         $viewA = new View('view_a', 'SELECT * FROM external_table');
         $viewB = new View('view_b', 'SELECT * FROM another_external');
 
-        $result = (new ViewDependencyOrder(new \Flow\PostgreSql\Parser()))->order([$viewA, $viewB]);
+        $result = (new ViewDependencyOrder(new Parser()))->order([$viewA, $viewB]);
 
         static::assertCount(2, $result);
         static::assertSame('view_a', $result[0]->name);
@@ -80,9 +83,9 @@ final class ViewDependencyOrderTest extends TestCase
         $viewB = new View('beta', 'SELECT 2 AS val');
         $viewC = new View('gamma', 'SELECT 3 AS val');
 
-        $result = (new ViewDependencyOrder(new \Flow\PostgreSql\Parser()))->order([$viewA, $viewB, $viewC]);
+        $result = (new ViewDependencyOrder(new Parser()))->order([$viewA, $viewB, $viewC]);
 
-        $names = \array_map(static fn(View $v) => $v->name, $result);
+        $names = array_map(static fn(View $v) => $v->name, $result);
 
         static::assertSame(['alpha', 'beta', 'gamma'], $names);
     }

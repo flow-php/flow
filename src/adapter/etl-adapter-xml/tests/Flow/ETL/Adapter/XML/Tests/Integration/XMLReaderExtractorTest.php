@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
+use DOMDocument;
 use Flow\ETL\Adapter\XML\XMLReaderExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
@@ -14,6 +15,7 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_string;
+use function iterator_to_array;
 
 final class XMLReaderExtractorTest extends FlowIntegrationTestCase
 {
@@ -22,7 +24,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
         $extractor = new XMLReaderExtractor(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row');
         $extractor->changeLimit(2);
 
-        static::assertCount(2, \iterator_to_array($extractor->extract(flow_context(config()))));
+        static::assertCount(2, iterator_to_array($extractor->extract(flow_context(config()))));
     }
 
     public function test_reading_deep_xml(): void
@@ -43,7 +45,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
 
     public function test_reading_xml(): void
     {
-        $xml = new \DOMDocument();
+        $xml = new DOMDocument();
         $xml->load(__DIR__ . '/../Fixtures/simple_items.xml');
 
         static::assertEquals(

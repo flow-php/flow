@@ -13,6 +13,10 @@ use Flow\Telemetry\Meter\MetricProcessor;
 use Flow\Telemetry\Tracer\SpanProcessor;
 use Flow\Telemetry\Tracer\Tracer;
 use Flow\Telemetry\Tracer\TracerProvider;
+use SplObjectStorage;
+
+use function array_key_exists;
+use function register_shutdown_function;
 
 /**
  * Main entry point to all telemetry operations.
@@ -93,7 +97,7 @@ final class Telemetry
     ): Logger {
         $key = $name . '@' . $version . '@' . ($schemaUrl ?? '') . '@' . ($attributes?->id() ?? '');
 
-        if (!\array_key_exists($key, $this->loggers)) {
+        if (!array_key_exists($key, $this->loggers)) {
             $this->loggers[$key] = $this->loggerProvider->logger(
                 $this->resource,
                 $name,
@@ -125,7 +129,7 @@ final class Telemetry
     ): Meter {
         $key = $name . '@' . $version . '@' . ($schemaUrl ?? '') . '@' . ($attributes?->id() ?? '');
 
-        if (!\array_key_exists($key, $this->meters)) {
+        if (!array_key_exists($key, $this->meters)) {
             $this->meters[$key] = $this->meterProvider->meter(
                 $this->resource,
                 $name,
@@ -149,7 +153,7 @@ final class Telemetry
      */
     public function registerShutdownFunction(): self
     {
-        \register_shutdown_function(fn() => $this->shutdown());
+        register_shutdown_function(fn() => $this->shutdown());
 
         return $this;
     }
@@ -166,18 +170,18 @@ final class Telemetry
         $flushed = $this->flush();
 
         /** @var \SplObjectStorage<LogProcessor|MetricProcessor|SpanProcessor, true> $processors */
-        $processors = new \SplObjectStorage();
+        $processors = new SplObjectStorage();
 
         foreach ($this->tracers as $tracer) {
-            $processors->attach($tracer->processor());
+            $processors[$tracer->processor()] = true;
         }
 
         foreach ($this->meters as $meter) {
-            $processors->attach($meter->processor());
+            $processors[$meter->processor()] = true;
         }
 
         foreach ($this->loggers as $logger) {
-            $processors->attach($logger->processor());
+            $processors[$logger->processor()] = true;
         }
 
         foreach ($processors as $processor) {
@@ -206,7 +210,7 @@ final class Telemetry
     ): Tracer {
         $key = $name . '@' . $version . '@' . ($schemaUrl ?? '') . '@' . ($attributes?->id() ?? '');
 
-        if (!\array_key_exists($key, $this->tracers)) {
+        if (!array_key_exists($key, $this->tracers)) {
             $this->tracers[$key] = $this->tracerProvider->tracer(
                 $this->resource,
                 $name,

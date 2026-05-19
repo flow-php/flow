@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Stream;
 
+use function in_array;
+use function stream_get_wrappers;
+use function stream_wrapper_register;
+
 final class VoidStreamWrapper implements StreamWrapper
 {
     public const PROTOCOL = 'void';
@@ -15,8 +19,8 @@ final class VoidStreamWrapper implements StreamWrapper
 
     public static function register(): void
     {
-        if (!\in_array(self::PROTOCOL, \stream_get_wrappers(), true)) {
-            \stream_wrapper_register(self::PROTOCOL, self::class);
+        if (!in_array(self::PROTOCOL, stream_get_wrappers(), true)) {
+            stream_wrapper_register(self::PROTOCOL, self::class);
         }
     }
 

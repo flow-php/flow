@@ -12,6 +12,8 @@ use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
 
+use const PHP_OS_FAMILY;
+
 final class UnicodeLengthTest extends FlowTestCase
 {
     public function test_unicode_length(): void
@@ -39,7 +41,7 @@ final class UnicodeLengthTest extends FlowTestCase
             ['text' => 'hello', 'unicode_length' => 5],
             ['text' => 'world🚀', 'unicode_length' => 6],
             ['text' => 'café', 'unicode_length' => 4],
-            ['text' => 'नमस्ते', 'unicode_length' => \PHP_OS_FAMILY === 'Windows' ? 4 : 3], // Unicode handling differs on Windows
+            ['text' => 'नमस्ते', 'unicode_length' => PHP_OS_FAMILY === 'Windows' ? 4 : 3], // Unicode handling differs on Windows
             ['text' => '', 'unicode_length' => 0],
             ['text' => null, 'unicode_length' => null],
             ['text' => 'a', 'unicode_length' => 1],

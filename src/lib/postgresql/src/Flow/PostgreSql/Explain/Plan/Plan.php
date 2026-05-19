@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Explain\Plan;
 
+use function array_filter;
+
 /**
  * @phpstan-import-type PlanNodeShape from PlanNode
  */
@@ -28,7 +30,6 @@ final readonly class Plan
      */
     public static function fromArray(array $data): self
     {
-        /** @var PlanNodeShape $rootNodeData */
         $rootNodeData = $data['root_node'];
 
         return new self(
@@ -68,7 +69,7 @@ final readonly class Plan
      */
     public function nodesByType(PlanNodeType $type): array
     {
-        return \array_filter($this->allNodes(), static fn(PlanNode $node): bool => $node->nodeType() === $type);
+        return array_filter($this->allNodes(), static fn(PlanNode $node): bool => $node->nodeType() === $type);
     }
 
     /**

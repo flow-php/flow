@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Dataset\Statistics;
 
+use DateTimeInterface;
+
+use function array_key_exists;
+use function count;
+use function hash;
+
 final class DistinctCounter
 {
     /**
@@ -16,22 +22,22 @@ final class DistinctCounter
         $this->hashSet = [];
     }
 
-    public function add(string|float|int|\DateTimeInterface|bool $value): void
+    public function add(string|float|int|DateTimeInterface|bool $value): void
     {
         // Normalize value to string for hashing
-        if ($value instanceof \DateTimeInterface) {
+        if ($value instanceof DateTimeInterface) {
             $value = $value->getTimestamp();
         }
 
-        $hash = \hash('xxh32', (string) $value);
+        $hash = hash('xxh32', (string) $value);
 
-        if (!\array_key_exists($hash, $this->hashSet)) {
+        if (!array_key_exists($hash, $this->hashSet)) {
             $this->hashSet[$hash] = true;
         }
     }
 
     public function count(): int
     {
-        return \count($this->hashSet);
+        return count($this->hashSet);
     }
 }

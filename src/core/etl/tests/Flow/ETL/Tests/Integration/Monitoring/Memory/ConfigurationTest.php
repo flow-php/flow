@@ -8,11 +8,13 @@ use Flow\ETL\Dataset\Memory\Configuration;
 use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
+use function ini_set;
+
 final class ConfigurationTest extends FlowIntegrationTestCase
 {
     public function test_less_than_for_infinite_memory(): void
     {
-        \ini_set('memory_limit', '-1');
+        ini_set('memory_limit', '-1');
 
         $config = new Configuration(0);
 
@@ -21,7 +23,7 @@ final class ConfigurationTest extends FlowIntegrationTestCase
 
     public function test_less_than_for_set_memory(): void
     {
-        \ini_set('memory_limit', '1G');
+        ini_set('memory_limit', '1G');
 
         $config = new Configuration(0);
 
@@ -32,7 +34,7 @@ final class ConfigurationTest extends FlowIntegrationTestCase
 
     public function test_memory_limit_fixed(): void
     {
-        \ini_set('memory_limit', '1G');
+        ini_set('memory_limit', '1G');
 
         $config = new Configuration(0);
 
@@ -41,7 +43,7 @@ final class ConfigurationTest extends FlowIntegrationTestCase
 
     public function test_memory_limit_fixed_with_safety_buffer(): void
     {
-        \ini_set('memory_limit', '1G');
+        ini_set('memory_limit', '1G');
 
         $config = new Configuration(10);
 
@@ -50,7 +52,7 @@ final class ConfigurationTest extends FlowIntegrationTestCase
 
     public function test_memory_limit_infinite(): void
     {
-        \ini_set('memory_limit', '-1');
+        ini_set('memory_limit', '-1');
 
         $config = new Configuration(0);
 
@@ -59,7 +61,7 @@ final class ConfigurationTest extends FlowIntegrationTestCase
 
     public function test_memory_limit_wift_safety_buffer(): void
     {
-        \ini_set('memory_limit', '1G');
+        ini_set('memory_limit', '1G');
 
         $config = new Configuration(10);
 
@@ -68,7 +70,7 @@ final class ConfigurationTest extends FlowIntegrationTestCase
 
     public function test_unit_below_limit_percentage_for_fixed_memory(): void
     {
-        \ini_set('memory_limit', '1G');
+        ini_set('memory_limit', '1G');
 
         $config = new Configuration(0);
 
@@ -78,7 +80,7 @@ final class ConfigurationTest extends FlowIntegrationTestCase
 
     public function test_unit_below_limit_percentage_for_infinite_memory(): void
     {
-        \ini_set('memory_limit', '-1');
+        ini_set('memory_limit', '-1');
 
         $config = new Configuration(0);
 

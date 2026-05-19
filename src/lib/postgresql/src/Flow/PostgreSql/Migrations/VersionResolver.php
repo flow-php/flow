@@ -8,6 +8,9 @@ use Flow\PostgreSql\Migrations\Exception\MigrationException;
 use Flow\PostgreSql\Migrations\Repository\MigrationRepository;
 use Flow\PostgreSql\Migrations\Store\MigrationStore;
 
+use function count;
+use function iterator_to_array;
+
 final readonly class VersionResolver
 {
     public function __construct(
@@ -17,13 +20,22 @@ final readonly class VersionResolver
 
     public function resolve(VersionAlias|string $alias): Version
     {
-        $versionAlias = $alias instanceof VersionAlias ? $alias : VersionAlias::tryFrom($alias);
+        if (!$alias instanceof VersionAlias) {
+            $tried = VersionAlias::tryFrom($alias);
 
-        if ($versionAlias === null) {
-            return Version::fromString($alias);
+            if ($tried === null) {
+                return Version::fromString($alias);
+            }
+
+            return $this->resolveAlias($tried);
         }
 
-        return match ($versionAlias) {
+        return $this->resolveAlias($alias);
+    }
+
+    private function resolveAlias(VersionAlias $alias): Version
+    {
+        return match ($alias) {
             VersionAlias::FIRST => $this->resolveFirst(),
             VersionAlias::LATEST => $this->resolveLatest(),
             VersionAlias::PREV => $this->resolvePrev(),
@@ -85,12 +97,12 @@ final readonly class VersionResolver
             throw MigrationException::versionNotFound(Version::fromString('prev'));
         }
 
-        $items = \iterator_to_array($this->repository->all()->upTo($latest->version));
+        $items = iterator_to_array($this->repository->all()->upTo($latest->version));
 
-        if (\count($items) < 2) {
+        if (count($items) < 2) {
             return Version::fromString('0');
         }
 
-        return $items[\count($items) - 2]->version;
+        return $items[count($items) - 2]->version;
     }
 }

@@ -6,6 +6,8 @@ namespace Flow\Telemetry\Tracer\Sampler;
 
 use Flow\Telemetry\Tracer\Span;
 
+use function sprintf;
+
 /**
  * Sampler that respects the parent span's sampling decision.
  *
@@ -44,7 +46,7 @@ final readonly class ParentBasedSampler implements Sampler
 
     public function __toString(): string
     {
-        return \sprintf('ParentBased{root=%s}', (string) $this->rootSampler);
+        return sprintf('ParentBased{root=%s}', (string) $this->rootSampler);
     }
 
     public function shouldSample(Span $span): SamplingResult

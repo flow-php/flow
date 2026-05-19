@@ -14,6 +14,9 @@ use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexColumn;
 use Flow\PostgreSql\QueryBuilder\Schema\Index\IndexMethod;
 
+use function array_values;
+use function is_string;
+
 final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, CreateIndexFinalStep, CreateIndexOnStep
 {
     use AstToSql;
@@ -48,7 +51,7 @@ final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, Creat
         $indexColumns = [];
 
         foreach ($columns as $column) {
-            if (\is_string($column)) {
+            if (is_string($column)) {
                 $indexColumns[] = IndexColumn::column($column);
             } else {
                 $indexColumns[] = $column;
@@ -122,7 +125,7 @@ final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, Creat
             $this->ifNotExists,
             $this->onlyTable,
             $this->method,
-            \array_values([...$this->includeColumns, ...$columns]),
+            array_values([...$this->includeColumns, ...$columns]),
             $this->whereCondition,
             $this->tablespace,
             $this->nullsNotDistinct,

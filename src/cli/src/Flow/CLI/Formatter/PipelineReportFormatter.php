@@ -10,6 +10,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 use function Flow\CLI\option_bool;
+use function number_format;
 
 final readonly class PipelineReportFormatter
 {
@@ -96,7 +97,7 @@ final readonly class PipelineReportFormatter
         $this->style->definitionList(
             'Statistics',
             new TableSeparator(),
-            ['Analyzed Rows' => \number_format($this->report->statistics()->totalRows())],
+            ['Analyzed Rows' => number_format($this->report->statistics()->totalRows())],
             ['Execution Time' => $this->report->statistics()->executionTime->highResolutionTime->toString()],
         );
     }

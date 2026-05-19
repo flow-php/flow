@@ -17,7 +17,12 @@ use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 
+use function array_filter;
+use function explode;
 use function Flow\Types\DSL\type_string;
+use function implode;
+use function preg_match;
+use function strlen;
 
 final class Partition
 {
@@ -40,18 +45,18 @@ final class Partition
 
         $regex = '/^([^\/\\\=:><|"?*]+)$/';
 
-        if (!\preg_match($regex, $this->name)) {
+        if (!preg_match($regex, $this->name)) {
             throw new InvalidArgumentException(
                 "Partition name contains one of forbidden characters: ['"
-                . \implode("', '", self::$forbiddenCharacters)
+                . implode("', '", self::$forbiddenCharacters)
                 . "']",
             );
         }
 
-        if (!\preg_match($regex, $this->value)) {
+        if (!preg_match($regex, $this->value)) {
             throw new InvalidArgumentException(
                 "Partition value contains one of forbidden characters: ['"
-                . \implode("', '", self::$forbiddenCharacters)
+                . implode("', '", self::$forbiddenCharacters)
                 . "']",
             );
         }
@@ -66,8 +71,8 @@ final class Partition
     {
         $partitions = [];
 
-        foreach ($data as $partition => $value) {
-            $partitions[] = new self($partition, type_string()->cast($value));
+        foreach (array_keys($data) as $partition) {
+            $partitions[] = new self($partition, type_string()->cast($data[$partition]));
         }
 
         return $partitions;
@@ -78,9 +83,10 @@ final class Partition
         $regex = '/^([^\/\\\=:><|"?*]+)=([^\/\\\=:><|"?*]+)$/';
 
         $partitions = [];
+        $matches = [];
 
-        foreach (\array_filter(\explode('/', $uri), static fn(string $s): bool => (bool) \strlen($s)) as $uriPart) {
-            if (\preg_match($regex, $uriPart, $matches)) {
+        foreach (array_filter(explode('/', $uri), static fn(string $s): bool => (bool) strlen($s)) as $uriPart) {
+            if (preg_match($regex, $uriPart, $matches)) {
                 $partitions[] = new self($matches[1], $matches[2]);
             }
         }

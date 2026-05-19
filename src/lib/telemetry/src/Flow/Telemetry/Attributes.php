@@ -4,6 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry;
 
+use DateTimeInterface;
+use Throwable;
+
+use function array_filter;
+use function array_key_exists;
+use function array_map;
+use function array_merge;
+use function count;
+use function implode;
+use function is_array;
+use function is_bool;
+use function ksort;
+
 /**
  * Immutable container for telemetry attributes.
  *
@@ -36,7 +49,7 @@ final readonly class Attributes
      */
     public function __construct(array $values = [])
     {
-        $this->values = \array_filter($values, static fn($v) => $v !== null);
+        $this->values = array_filter($values, static fn($v) => $v !== null);
     }
 
     /**
@@ -72,7 +85,7 @@ final readonly class Attributes
      */
     public function count(): int
     {
-        return \count($this->values);
+        return count($this->values);
     }
 
     /**
@@ -80,7 +93,7 @@ final readonly class Attributes
      *
      * @return null|TAttributeValue
      */
-    public function get(string $key): string|int|float|bool|\DateTimeInterface|\Throwable|array|null
+    public function get(string $key): string|int|float|bool|DateTimeInterface|Throwable|array|null
     {
         return $this->values[$key] ?? null;
     }
@@ -90,7 +103,7 @@ final readonly class Attributes
      */
     public function has(string $key): bool
     {
-        return \array_key_exists($key, $this->values);
+        return array_key_exists($key, $this->values);
     }
 
     /**
@@ -103,35 +116,35 @@ final readonly class Attributes
      */
     public function id(): string
     {
-        if (\count($this->values) === 0) {
+        if (count($this->values) === 0) {
             return '';
         }
 
         $parts = [];
 
         foreach ($this->values as $key => $value) {
-            if ($value === null || \is_array($value)) {
+            if (is_array($value)) {
                 continue;
             }
 
-            if ($value instanceof \DateTimeInterface) {
+            if ($value instanceof DateTimeInterface) {
                 $parts[$key] = $key . '=' . $value->format('c');
-            } elseif ($value instanceof \Throwable) {
+            } elseif ($value instanceof Throwable) {
                 $parts[$key] = $key . '=' . $value->getMessage();
-            } elseif (\is_bool($value)) {
+            } elseif (is_bool($value)) {
                 $parts[$key] = $key . '=' . ($value ? 'true' : 'false');
             } else {
                 $parts[$key] = $key . '=' . (string) $value;
             }
         }
 
-        if (\count($parts) === 0) {
+        if (count($parts) === 0) {
             return '';
         }
 
-        \ksort($parts);
+        ksort($parts);
 
-        return \implode('|', $parts);
+        return implode('|', $parts);
     }
 
     /**
@@ -139,7 +152,7 @@ final readonly class Attributes
      */
     public function isEmpty(): bool
     {
-        return \count($this->values) === 0;
+        return count($this->values) === 0;
     }
 
     /**
@@ -150,7 +163,7 @@ final readonly class Attributes
      */
     public function merge(self $other): self
     {
-        return new self(\array_merge($this->values, $other->values));
+        return new self(array_merge($this->values, $other->values));
     }
 
     /**
@@ -167,10 +180,6 @@ final readonly class Attributes
         $result = [];
 
         foreach ($this->values as $key => $value) {
-            if ($value === null) {
-                continue;
-            }
-
             $result[$key] = $this->normalizeValue($value);
         }
 
@@ -184,9 +193,9 @@ final readonly class Attributes
      *
      * @param TAttributeValue $value
      */
-    public function with(string $key, string|int|float|bool|\DateTimeInterface|\Throwable|array $value): self
+    public function with(string $key, string|int|float|bool|DateTimeInterface|Throwable|array $value): self
     {
-        return new self(\array_merge($this->values, [$key => $value]));
+        return new self(array_merge($this->values, [$key => $value]));
     }
 
     /**
@@ -196,13 +205,13 @@ final readonly class Attributes
      *
      * @return array<bool|float|int|string>|bool|float|int|string
      */
-    private function normalizeValue(string|int|float|bool|\DateTimeInterface|\Throwable|array $value): string|int|float|bool|array
+    private function normalizeValue(string|int|float|bool|DateTimeInterface|Throwable|array $value): string|int|float|bool|array
     {
-        if ($value instanceof \DateTimeInterface) {
+        if ($value instanceof DateTimeInterface) {
             return $value->format('c');
         }
 
-        if ($value instanceof \Throwable) {
+        if ($value instanceof Throwable) {
             return [
                 'type' => $value::class,
                 'message' => $value->getMessage(),
@@ -210,9 +219,21 @@ final readonly class Attributes
             ];
         }
 
-        if (\is_array($value)) {
-            /** @phpstan-ignore return.type */
-            return \array_map(fn($v) => $this->normalizeValue($v), $value);
+        if (is_array($value)) {
+            return array_map(fn($v) => $this->normalizeArrayElement($v), $value);
+        }
+
+        return $value;
+    }
+
+    private function normalizeArrayElement(bool|DateTimeInterface|float|int|string|Throwable $value): bool|float|int|string
+    {
+        if ($value instanceof DateTimeInterface) {
+            return $value->format('c');
+        }
+
+        if ($value instanceof Throwable) {
+            return $value->getMessage();
         }
 
         return $value;

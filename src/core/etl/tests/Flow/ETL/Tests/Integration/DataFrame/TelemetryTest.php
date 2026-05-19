@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use DateTimeImmutable;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
@@ -18,12 +19,15 @@ use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\TracerProvider;
 use Psr\Clock\ClockInterface;
 
+use function count;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\telemetry_options;
 use function Flow\ETL\DSL\to_array;
+use function str_contains;
+use function str_ends_with;
 
 final class TelemetryTest extends FlowTestCase
 {
@@ -91,7 +95,7 @@ final class TelemetryTest extends FlowTestCase
         foreach ($endedSpans as $span) {
             if ($span->name() === 'DataFrame flow_dataframe') {
                 $dataFrameSpan = $span;
-            } elseif (\str_ends_with($span->name(), 'Loader')) {
+            } elseif (str_ends_with($span->name(), 'Loader')) {
                 $loadingSpans[] = $span;
             }
         }
@@ -160,17 +164,17 @@ final class TelemetryTest extends FlowTestCase
         ]))->run();
 
         $debugLogs = $logProcessor->entriesWithSeverity(Severity::DEBUG);
-        static::assertGreaterThanOrEqual(2, \count($debugLogs));
+        static::assertGreaterThanOrEqual(2, count($debugLogs));
 
         $startLog = null;
         $completionLog = null;
 
         foreach ($debugLogs as $log) {
-            if (\str_contains($log->record->body, 'started')) {
+            if (str_contains($log->record->body, 'started')) {
                 $startLog = $log;
             }
 
-            if (\str_contains($log->record->body, 'completed')) {
+            if (str_contains($log->record->body, 'completed')) {
                 $completionLog = $log;
             }
         }
@@ -250,7 +254,7 @@ final class TelemetryTest extends FlowTestCase
         foreach ($endedSpans as $span) {
             if ($span->name() === 'DataFrame flow_dataframe') {
                 $dataFrameSpan = $span;
-            } elseif (\str_ends_with($span->name(), 'Transformer')) {
+            } elseif (str_ends_with($span->name(), 'Transformer')) {
                 $transformerSpans[] = $span;
             }
         }
@@ -284,14 +288,14 @@ final class TelemetryTest extends FlowTestCase
         static::assertSame(1, $output[0]['id']);
     }
 
-    private function createFrozenClock(\DateTimeImmutable $now = new \DateTimeImmutable()): ClockInterface
+    private function createFrozenClock(DateTimeImmutable $now = new DateTimeImmutable()): ClockInterface
     {
         return new readonly class($now) implements ClockInterface {
             public function __construct(
-                private \DateTimeImmutable $now,
+                private DateTimeImmutable $now,
             ) {}
 
-            public function now(): \DateTimeImmutable
+            public function now(): DateTimeImmutable
             {
                 return $this->now;
             }

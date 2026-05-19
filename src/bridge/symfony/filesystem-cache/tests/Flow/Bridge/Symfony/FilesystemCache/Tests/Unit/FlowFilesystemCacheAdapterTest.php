@@ -13,6 +13,12 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
 use Symfony\Component\Cache\Marshaller\DefaultMarshaller;
 
+use function explode;
+use function iterator_to_array;
+use function sprintf;
+use function strlen;
+use function time;
+
 final class FlowFilesystemCacheAdapterTest extends TestCase
 {
     private FilesystemCacheContext $context;
@@ -102,7 +108,7 @@ final class FlowFilesystemCacheAdapterTest extends TestCase
         $item->set('gone');
         $adapter->save($item);
 
-        $this->context->corruptOnlyFile(\sprintf('%010d', \time() - 60) . "\nexpired\nspy:s:4:\"gone\";");
+        $this->context->corruptOnlyFile(sprintf('%010d', time() - 60) . "\nexpired\nspy:s:4:\"gone\";");
 
         static::assertFalse($adapter->getItem('expired')->isHit());
         static::assertCount(0, $this->context->listFiles());
@@ -118,7 +124,7 @@ final class FlowFilesystemCacheAdapterTest extends TestCase
         $count->set(7);
         $adapter->save($count);
 
-        $items = \iterator_to_array($adapter->getItems(['hello', 'count']));
+        $items = iterator_to_array($adapter->getItems(['hello', 'count']));
 
         static::assertSame('world', $items['hello']->get());
         static::assertSame(7, $items['count']->get());
@@ -131,7 +137,7 @@ final class FlowFilesystemCacheAdapterTest extends TestCase
         $item->set('body');
         $adapter->save($item);
 
-        $this->context->corruptOnlyFile(\sprintf('%010d', \time() - 1) . "\nstale\nbody");
+        $this->context->corruptOnlyFile(sprintf('%010d', time() - 1) . "\nstale\nbody");
 
         static::assertFalse($adapter->hasItem('stale'));
     }
@@ -166,7 +172,7 @@ final class FlowFilesystemCacheAdapterTest extends TestCase
         $expired = $adapter->getItem('expired');
         $expired->set('gone');
         $adapter->save($expired);
-        $this->context->corruptOnlyFile(\sprintf('%010d', \time() - 60) . "\nexpired\nspy:s:4:\"gone\";");
+        $this->context->corruptOnlyFile(sprintf('%010d', time() - 60) . "\nexpired\nspy:s:4:\"gone\";");
 
         $alive = $adapter->getItem('alive');
         $alive->set('here');
@@ -238,7 +244,7 @@ final class FlowFilesystemCacheAdapterTest extends TestCase
         $item->set('v');
         $adapter->save($item);
 
-        $parts = \explode("\n", $this->context->readOnlyFile(), 3);
+        $parts = explode("\n", $this->context->readOnlyFile(), 3);
         static::assertCount(3, $parts);
         static::assertSame('0000000000', $parts[0]);
         static::assertSame('k', $parts[1]);
@@ -253,10 +259,10 @@ final class FlowFilesystemCacheAdapterTest extends TestCase
         $item->expiresAfter(600);
         $adapter->save($item);
 
-        $parts = \explode("\n", $this->context->readOnlyFile(), 3);
+        $parts = explode("\n", $this->context->readOnlyFile(), 3);
         static::assertCount(3, $parts);
-        static::assertSame(10, \strlen($parts[0]));
-        static::assertGreaterThanOrEqual(\time() + 599, (int) $parts[0]);
+        static::assertSame(10, strlen($parts[0]));
+        static::assertGreaterThanOrEqual(time() + 599, (int) $parts[0]);
         static::assertSame('key1', $parts[1]);
         static::assertSame('s:6:"value1";', $parts[2]);
     }

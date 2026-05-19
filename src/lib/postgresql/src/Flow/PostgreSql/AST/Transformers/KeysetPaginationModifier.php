@@ -25,6 +25,9 @@ use Flow\PostgreSql\Protobuf\AST\SortBy;
 use Flow\PostgreSql\Protobuf\AST\SortByDir;
 use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 
+use function count;
+use function sprintf;
+
 /**
  * Applies keyset (cursor-based) pagination to SELECT queries.
  *
@@ -58,7 +61,7 @@ final class KeysetPaginationModifier implements NodeModifier
             return null;
         }
 
-        if (\count($this->config->columns) === 0) {
+        if (count($this->config->columns) === 0) {
             throw new PaginationException('Keyset pagination requires at least one column');
         }
 
@@ -71,11 +74,11 @@ final class KeysetPaginationModifier implements NodeModifier
         $this->applyLimit($node);
 
         if ($this->config->cursor !== null) {
-            if (\count($this->config->cursor) !== \count($this->config->columns)) {
-                throw new PaginationException(\sprintf(
+            if (count($this->config->cursor) !== count($this->config->columns)) {
+                throw new PaginationException(sprintf(
                     'Cursor values count (%d) must match columns count (%d)',
-                    \count($this->config->cursor),
-                    \count($this->config->columns),
+                    count($this->config->cursor),
+                    count($this->config->columns),
                 ));
             }
 
@@ -162,7 +165,7 @@ final class KeysetPaginationModifier implements NodeModifier
         $columns = $this->config->columns;
         $orConditions = [];
 
-        for ($i = 0, $count = \count($columns); $i < $count; $i++) {
+        for ($i = 0, $count = count($columns); $i < $count; $i++) {
             $andConditions = [];
 
             for ($j = 0; $j < $i; $j++) {
@@ -174,7 +177,7 @@ final class KeysetPaginationModifier implements NodeModifier
             $operator = $columns[$i]->order === SortOrder::ASC ? '>' : '<';
             $andConditions[] = $this->buildComparisonExpr($colRef, $i + 1, $operator);
 
-            if (\count($andConditions) === 1) {
+            if (count($andConditions) === 1) {
                 $orConditions[] = $andConditions[0];
             } else {
                 $andExpr = new BoolExpr();
@@ -188,7 +191,7 @@ final class KeysetPaginationModifier implements NodeModifier
             }
         }
 
-        if (\count($orConditions) === 1) {
+        if (count($orConditions) === 1) {
             return $orConditions[0];
         }
 
@@ -228,9 +231,7 @@ final class KeysetPaginationModifier implements NodeModifier
         $integer = new Integer();
         $integer->setIval($value);
 
-        $aConst = new A_Const();
-        /** @phpstan-ignore argument.type (protobuf PHPDoc says int but actually expects Integer) */
-        $aConst->setIval($integer);
+        $aConst = new A_Const(['ival' => $integer]);
 
         $node = new Node();
         $node->setAConst($aConst);
@@ -249,6 +250,6 @@ final class KeysetPaginationModifier implements NodeModifier
 
     private function hasOrderBy(SelectStmt $stmt): bool
     {
-        return \count($stmt->getSortClause() ?? []) > 0;
+        return count($stmt->getSortClause()) > 0;
     }
 }

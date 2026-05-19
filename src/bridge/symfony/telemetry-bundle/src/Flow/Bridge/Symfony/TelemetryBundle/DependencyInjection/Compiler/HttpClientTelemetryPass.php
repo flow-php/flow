@@ -11,6 +11,8 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 
+use function preg_match;
+
 final class HttpClientTelemetryPass implements CompilerPassInterface
 {
     public function process(ContainerBuilder $container): void
@@ -64,7 +66,7 @@ final class HttpClientTelemetryPass implements CompilerPassInterface
 
     private function matchesPattern(string $serviceId, string $pattern): bool
     {
-        $result = @\preg_match($pattern, $serviceId);
+        $result = @preg_match($pattern, $serviceId);
 
         if ($result !== false) {
             return (bool) $result;

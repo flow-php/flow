@@ -9,8 +9,15 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ParseResult;
 use Flow\PostgreSql\Protobuf\AST\RawStmt;
 
+use function preg_replace;
+use function strrpos;
+use function strtolower;
+use function substr;
+
 trait AstToSql
 {
+    abstract public function toAst(): object;
+
     public function toSql(): string
     {
         return self::deparseAst($this->toAst());
@@ -31,9 +38,9 @@ trait AstToSql
     private static function getNodeKeyForAst(object $ast): string
     {
         $className = $ast::class;
-        $shortName = \substr($className, (int) \strrpos($className, '\\') + 1);
-        $result = \preg_replace('/([a-z])([A-Z])/', '$1_$2', $shortName);
+        $shortName = substr($className, (int) strrpos($className, '\\') + 1);
+        $result = preg_replace('/([a-z])([A-Z])/', '$1_$2', $shortName);
 
-        return \strtolower($result ?? $shortName);
+        return strtolower($result ?? $shortName);
     }
 }

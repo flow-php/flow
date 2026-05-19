@@ -10,6 +10,8 @@ use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 
+use function array_keys;
+
 final class RegisterFstabLocatorPass implements CompilerPassInterface
 {
     public const string DEFAULT_FSTAB_PARAMETER = 'flow.filesystem.default_fstab';
@@ -27,7 +29,7 @@ final class RegisterFstabLocatorPass implements CompilerPassInterface
 
         $references = [];
 
-        foreach (\array_keys($config['fstabs']) as $fstabName) {
+        foreach (array_keys($config['fstabs']) as $fstabName) {
             $references[$fstabName] = new Reference(BuildFstabsPass::FSTAB_SERVICE_PREFIX . $fstabName);
         }
 

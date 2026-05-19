@@ -6,6 +6,8 @@ namespace Flow\PostgreSql\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Types\ValueConverter;
 
+use function is_string;
+
 /**
  * Multirange type converter for PostgreSQL 14+.
  */
@@ -22,7 +24,7 @@ final class MultirangeConverter implements ValueConverter
             return null;
         }
 
-        if (\is_string($value)) {
+        if (is_string($value)) {
             return $value;
         }
 

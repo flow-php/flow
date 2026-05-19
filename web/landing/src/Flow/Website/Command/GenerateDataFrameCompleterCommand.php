@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Command;
 
+use DateTime;
 use Flow\Website\Service\FlowConfigFactory;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -12,12 +13,15 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Twig\Environment;
 
+use function array_column;
+use function count;
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\DSL\collect;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\Filesystem\DSL\path;
+use function sprintf;
 
 #[AsCommand(
     name: 'app:generate:data-frame-completer',
@@ -77,7 +81,7 @@ final class GenerateDataFrameCompleterCommand extends Command
             ->fetch()
             ->reduceToArray('name');
 
-        $io->info(\sprintf('Found %d DSL functions returning Flow', \count($flowReturningFunctions)));
+        $io->info(sprintf('Found %d DSL functions returning Flow', count($flowReturningFunctions)));
 
         $dataFrameReturningMethodsArray = df($this->configFactory->configBuilder('dataframe_completer'))
             ->read(from_json($apiJsonPath))
@@ -111,9 +115,9 @@ final class GenerateDataFrameCompleterCommand extends Command
             ->fetch()
             ->toArray();
 
-        $dataFrameReturningMethods = \array_column($dataFrameReturningMethodsArray, 'name_collection', 'class_slug');
+        $dataFrameReturningMethods = array_column($dataFrameReturningMethodsArray, 'name_collection', 'class_slug');
 
-        $io->info(\sprintf('Found %d methods returning DataFrame', \count($dataFrameReturningMethods)));
+        $io->info(sprintf('Found %d methods returning DataFrame', count($dataFrameReturningMethods)));
 
         // Pass raw data to template - Twig handles formatting
         $methodsData = df($this->configFactory->configBuilder('dataframe_completer'))
@@ -124,13 +128,13 @@ final class GenerateDataFrameCompleterCommand extends Command
             ->fetch()
             ->toArray();
 
-        $io->info(\sprintf('Found %d DataFrame methods', \count($methodsData)));
+        $io->info(sprintf('Found %d DataFrame methods', count($methodsData)));
 
         $content = $this->twig->render('completers/dataframe-codemirror.js.twig', [
             'dataframe_methods' => $methodsData,
             'dataframe_returning_methods' => $dataFrameReturningMethods,
-            'generated_at' => new \DateTime(),
-            'total_count' => \count($methodsData),
+            'generated_at' => new DateTime(),
+            'total_count' => count($methodsData),
         ]);
 
         $outputFile = $this->projectDir . '/assets/codemirror/completions/dataframe.js';
@@ -138,8 +142,8 @@ final class GenerateDataFrameCompleterCommand extends Command
         $fs->writeTo(path($outputFile))->append($content)->close();
 
         $io->success("Generated DataFrame completer: {$outputFile}");
-        $io->info('DataFrame methods: ' . \count($methodsData));
-        $io->info('DataFrame-returning methods: ' . \count($dataFrameReturningMethods));
+        $io->info('DataFrame methods: ' . count($methodsData));
+        $io->info('DataFrame-returning methods: ' . count($dataFrameReturningMethods));
 
         return Command::SUCCESS;
     }

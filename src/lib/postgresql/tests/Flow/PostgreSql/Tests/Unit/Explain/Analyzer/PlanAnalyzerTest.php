@@ -8,6 +8,7 @@ use Flow\PostgreSql\Explain\Analyzer\InsightSeverity;
 use Flow\PostgreSql\Explain\Analyzer\InsightType;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
 use function Flow\PostgreSql\DSL\sql_analyze;
 use function Flow\PostgreSql\DSL\sql_explain_parse;
 
@@ -45,7 +46,7 @@ final class PlanAnalyzerTest extends TestCase
         $insights = $analyzer->allInsights();
 
         static::assertNotEmpty($insights);
-        $types = \array_map(static fn($i) => $i->type, $insights);
+        $types = array_map(static fn($i) => $i->type, $insights);
         static::assertContains(InsightType::SLOW_NODE, $types);
         static::assertContains(InsightType::SEQUENTIAL_SCAN, $types);
         static::assertContains(InsightType::ESTIMATE_MISMATCH, $types);

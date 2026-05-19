@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Schema;
 
+use Flow\PostgreSql\Protobuf\AST\Integer;
+use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\Protobuf\AST\TypeName;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use PHPUnit\Framework\TestCase;
@@ -15,6 +17,7 @@ use function Flow\PostgreSql\DSL\column_type_custom;
 use function Flow\PostgreSql\DSL\column_type_integer;
 use function Flow\PostgreSql\DSL\column_type_text;
 use function Flow\PostgreSql\DSL\column_type_varchar;
+use function Flow\Types\DSL\type_instance_of;
 
 final class ColumnTypeTest extends TestCase
 {
@@ -37,8 +40,12 @@ final class ColumnTypeTest extends TestCase
 
         static::assertInstanceOf(TypeName::class, $ast);
         static::assertCount(2, $ast->getNames());
-        static::assertSame('pg_catalog', $ast->getNames()[0]->getString()->getSval());
-        static::assertSame('int8', $ast->getNames()[1]->getString()->getSval());
+        $catalog = $ast->getNames()[0]->getString();
+        static::assertInstanceOf(PBString::class, $catalog);
+        static::assertSame('pg_catalog', $catalog->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('int8', $name->getSval());
     }
 
     public function test_bigserial(): void
@@ -49,7 +56,9 @@ final class ColumnTypeTest extends TestCase
 
         static::assertInstanceOf(TypeName::class, $ast);
         static::assertCount(1, $ast->getNames());
-        static::assertSame('bigserial', $ast->getNames()[0]->getString()->getSval());
+        $name = $ast->getNames()[0]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('bigserial', $name->getSval());
     }
 
     public function test_boolean(): void
@@ -60,8 +69,12 @@ final class ColumnTypeTest extends TestCase
 
         static::assertInstanceOf(TypeName::class, $ast);
         static::assertCount(2, $ast->getNames());
-        static::assertSame('pg_catalog', $ast->getNames()[0]->getString()->getSval());
-        static::assertSame('bool', $ast->getNames()[1]->getString()->getSval());
+        $catalog = $ast->getNames()[0]->getString();
+        static::assertInstanceOf(PBString::class, $catalog);
+        static::assertSame('pg_catalog', $catalog->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('bool', $name->getSval());
     }
 
     public function test_bytea(): void
@@ -71,7 +84,9 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('bytea', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('bytea', $name->getSval());
     }
 
     public function test_char_with_length(): void
@@ -81,9 +96,13 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('bpchar', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('bpchar', $name->getSval());
         static::assertCount(1, $ast->getTypmods());
-        static::assertSame(10, $ast->getTypmods()[0]->getAConst()->getIval()->getIval());
+        $aConst = $ast->getTypmods()[0]->getAConst();
+        static::assertNotNull($aConst);
+        static::assertSame(10, type_instance_of(Integer::class)->assert($aConst->getIval())->getIval());
     }
 
     public function test_cidr(): void
@@ -93,7 +112,9 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('cidr', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('cidr', $name->getSval());
     }
 
     public function test_custom_type_with_schema(): void
@@ -104,8 +125,12 @@ final class ColumnTypeTest extends TestCase
 
         static::assertInstanceOf(TypeName::class, $ast);
         static::assertCount(2, $ast->getNames());
-        static::assertSame('my_schema', $ast->getNames()[0]->getString()->getSval());
-        static::assertSame('my_type', $ast->getNames()[1]->getString()->getSval());
+        $schema = $ast->getNames()[0]->getString();
+        static::assertInstanceOf(PBString::class, $schema);
+        static::assertSame('my_schema', $schema->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('my_type', $name->getSval());
     }
 
     public function test_custom_type_without_schema(): void
@@ -116,7 +141,9 @@ final class ColumnTypeTest extends TestCase
 
         static::assertInstanceOf(TypeName::class, $ast);
         static::assertCount(1, $ast->getNames());
-        static::assertSame('my_type', $ast->getNames()[0]->getString()->getSval());
+        $name = $ast->getNames()[0]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('my_type', $name->getSval());
     }
 
     public function test_date(): void
@@ -126,7 +153,9 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('date', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('date', $name->getSval());
     }
 
     public function test_double_precision(): void
@@ -136,7 +165,9 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('float8', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('float8', $name->getSval());
     }
 
     public function test_inet(): void
@@ -146,7 +177,9 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('inet', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('inet', $name->getSval());
     }
 
     public function test_integer(): void
@@ -157,8 +190,12 @@ final class ColumnTypeTest extends TestCase
 
         static::assertInstanceOf(TypeName::class, $ast);
         static::assertCount(2, $ast->getNames());
-        static::assertSame('pg_catalog', $ast->getNames()[0]->getString()->getSval());
-        static::assertSame('int4', $ast->getNames()[1]->getString()->getSval());
+        $catalog = $ast->getNames()[0]->getString();
+        static::assertInstanceOf(PBString::class, $catalog);
+        static::assertSame('pg_catalog', $catalog->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('int4', $name->getSval());
     }
 
     public function test_interval(): void
@@ -168,7 +205,9 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('interval', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('interval', $name->getSval());
     }
 
     public function test_is_equal_array_different_element_type(): void
@@ -239,7 +278,9 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('json', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('json', $name->getSval());
     }
 
     public function test_jsonb(): void
@@ -249,7 +290,9 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('jsonb', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('jsonb', $name->getSval());
     }
 
     public function test_macaddr(): void
@@ -259,7 +302,9 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('macaddr', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('macaddr', $name->getSval());
     }
 
     public function test_numeric_with_precision_and_scale(): void
@@ -269,10 +314,16 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('numeric', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('numeric', $name->getSval());
         static::assertCount(2, $ast->getTypmods());
-        static::assertSame(10, $ast->getTypmods()[0]->getAConst()->getIval()->getIval());
-        static::assertSame(2, $ast->getTypmods()[1]->getAConst()->getIval()->getIval());
+        $precision = $ast->getTypmods()[0]->getAConst();
+        static::assertNotNull($precision);
+        static::assertSame(10, type_instance_of(Integer::class)->assert($precision->getIval())->getIval());
+        $scale = $ast->getTypmods()[1]->getAConst();
+        static::assertNotNull($scale);
+        static::assertSame(2, type_instance_of(Integer::class)->assert($scale->getIval())->getIval());
     }
 
     public function test_numeric_with_precision_only(): void
@@ -282,9 +333,13 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('numeric', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('numeric', $name->getSval());
         static::assertCount(1, $ast->getTypmods());
-        static::assertSame(10, $ast->getTypmods()[0]->getAConst()->getIval()->getIval());
+        $precision = $ast->getTypmods()[0]->getAConst();
+        static::assertNotNull($precision);
+        static::assertSame(10, type_instance_of(Integer::class)->assert($precision->getIval())->getIval());
     }
 
     public function test_numeric_without_precision(): void
@@ -294,7 +349,9 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('numeric', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('numeric', $name->getSval());
         static::assertCount(0, $ast->getTypmods());
     }
 
@@ -305,7 +362,9 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('float4', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('float4', $name->getSval());
     }
 
     public function test_serial(): void
@@ -316,7 +375,9 @@ final class ColumnTypeTest extends TestCase
 
         static::assertInstanceOf(TypeName::class, $ast);
         static::assertCount(1, $ast->getNames());
-        static::assertSame('serial', $ast->getNames()[0]->getString()->getSval());
+        $name = $ast->getNames()[0]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('serial', $name->getSval());
     }
 
     public function test_smallint(): void
@@ -326,7 +387,9 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('int2', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('int2', $name->getSval());
     }
 
     public function test_text(): void
@@ -336,7 +399,9 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('text', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('text', $name->getSval());
     }
 
     public function test_time_with_precision(): void
@@ -346,9 +411,13 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('time', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('time', $name->getSval());
         static::assertCount(1, $ast->getTypmods());
-        static::assertSame(3, $ast->getTypmods()[0]->getAConst()->getIval()->getIval());
+        $precision = $ast->getTypmods()[0]->getAConst();
+        static::assertNotNull($precision);
+        static::assertSame(3, type_instance_of(Integer::class)->assert($precision->getIval())->getIval());
     }
 
     public function test_time_without_precision(): void
@@ -358,7 +427,9 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('time', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('time', $name->getSval());
         static::assertCount(0, $ast->getTypmods());
     }
 
@@ -369,9 +440,13 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('timestamp', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('timestamp', $name->getSval());
         static::assertCount(1, $ast->getTypmods());
-        static::assertSame(6, $ast->getTypmods()[0]->getAConst()->getIval()->getIval());
+        $precision = $ast->getTypmods()[0]->getAConst();
+        static::assertNotNull($precision);
+        static::assertSame(6, type_instance_of(Integer::class)->assert($precision->getIval())->getIval());
     }
 
     public function test_timestamp_without_precision(): void
@@ -381,7 +456,9 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('timestamp', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('timestamp', $name->getSval());
         static::assertCount(0, $ast->getTypmods());
     }
 
@@ -392,9 +469,13 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('timestamptz', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('timestamptz', $name->getSval());
         static::assertCount(1, $ast->getTypmods());
-        static::assertSame(3, $ast->getTypmods()[0]->getAConst()->getIval()->getIval());
+        $precision = $ast->getTypmods()[0]->getAConst();
+        static::assertNotNull($precision);
+        static::assertSame(3, type_instance_of(Integer::class)->assert($precision->getIval())->getIval());
     }
 
     public function test_uuid(): void
@@ -404,7 +485,9 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('uuid', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('uuid', $name->getSval());
     }
 
     public function test_varchar_with_length(): void
@@ -414,8 +497,12 @@ final class ColumnTypeTest extends TestCase
         $ast = $type->toAst();
 
         static::assertInstanceOf(TypeName::class, $ast);
-        static::assertSame('varchar', $ast->getNames()[1]->getString()->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('varchar', $name->getSval());
         static::assertCount(1, $ast->getTypmods());
-        static::assertSame(255, $ast->getTypmods()[0]->getAConst()->getIval()->getIval());
+        $length = $ast->getTypmods()[0]->getAConst();
+        static::assertNotNull($length);
+        static::assertSame(255, type_instance_of(Integer::class)->assert($length->getIval())->getIval());
     }
 }

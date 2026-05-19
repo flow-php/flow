@@ -9,6 +9,8 @@ use Flow\ParquetViewer\Parquet;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\ApplicationTester;
 
+use function realpath;
+
 final class ReadDDLCommandTest extends TestCase
 {
     use CommandOutputNormalizer;
@@ -19,7 +21,7 @@ final class ReadDDLCommandTest extends TestCase
         $application->setAutoExit(false);
         $application->setCatchExceptions(false);
 
-        $path = \realpath(__DIR__ . '/../../Fixtures/flow.parquet');
+        $path = realpath(__DIR__ . '/../../Fixtures/flow.parquet');
 
         $tester = new ApplicationTester($application);
         $tester->run([

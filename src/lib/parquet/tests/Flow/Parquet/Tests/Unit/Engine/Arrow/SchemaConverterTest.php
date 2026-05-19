@@ -140,8 +140,12 @@ final class SchemaConverterTest extends TestCase
 
         static::assertSame('tags', $result[0]['name']);
         static::assertSame('LIST', $result[0]['type']);
-        static::assertCount(1, $result[0]['children']);
-        static::assertSame('STRING', $result[0]['children'][0]['type']);
+        static::assertIsArray($result[0]['children']);
+        $children = $result[0]['children'];
+        static::assertCount(1, $children);
+        static::assertIsArray($children[0]);
+        $firstChild = $children[0];
+        static::assertSame('STRING', $firstChild['type']);
     }
 
     public function test_map_column_to_extension(): void
@@ -151,9 +155,15 @@ final class SchemaConverterTest extends TestCase
 
         static::assertSame('attributes', $result[0]['name']);
         static::assertSame('MAP', $result[0]['type']);
-        static::assertCount(2, $result[0]['children']);
-        static::assertSame('STRING', $result[0]['children'][0]['type']);
-        static::assertSame('INT32', $result[0]['children'][1]['type']);
+        static::assertIsArray($result[0]['children']);
+        $children = $result[0]['children'];
+        static::assertCount(2, $children);
+        static::assertIsArray($children[0]);
+        static::assertIsArray($children[1]);
+        $firstChild = $children[0];
+        $secondChild = $children[1];
+        static::assertSame('STRING', $firstChild['type']);
+        static::assertSame('INT32', $secondChild['type']);
     }
 
     public function test_optional_column_sets_optional_true(): void
@@ -190,10 +200,16 @@ final class SchemaConverterTest extends TestCase
 
         static::assertSame('address', $result[0]['name']);
         static::assertSame('STRUCT', $result[0]['type']);
-        static::assertCount(2, $result[0]['children']);
-        static::assertSame('street', $result[0]['children'][0]['name']);
-        static::assertSame('STRING', $result[0]['children'][0]['type']);
-        static::assertSame('city', $result[0]['children'][1]['name']);
+        static::assertIsArray($result[0]['children']);
+        $children = $result[0]['children'];
+        static::assertCount(2, $children);
+        static::assertIsArray($children[0]);
+        static::assertIsArray($children[1]);
+        $firstChild = $children[0];
+        $secondChild = $children[1];
+        static::assertSame('street', $firstChild['name']);
+        static::assertSame('STRING', $firstChild['type']);
+        static::assertSame('city', $secondChild['name']);
     }
 
     public function test_time_column_to_extension(): void

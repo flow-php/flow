@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Flow\Website\Twig;
 
 use Coduo\PHPHumanizer\StringHumanizer;
+use Override;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 
 final class HumanizerExtension extends AbstractExtension
 {
-    #[\Override]
+    #[Override]
     public function getFilters()
     {
         return [

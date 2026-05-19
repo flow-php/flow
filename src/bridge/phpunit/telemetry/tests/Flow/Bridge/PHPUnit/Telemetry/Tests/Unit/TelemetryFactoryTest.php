@@ -22,6 +22,10 @@ use Flow\Telemetry\ErrorHandler\SyslogSeverity;
 use Flow\Telemetry\Telemetry;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
+
+use const LOG_PID;
+
 final class TelemetryFactoryTest extends TestCase
 {
     public function test_create_returns_telemetry_with_default_curl_transport(): void
@@ -99,7 +103,7 @@ final class TelemetryFactoryTest extends TestCase
 
     public function test_create_with_grpc_transport(): void
     {
-        if (!\extension_loaded('grpc')) {
+        if (!extension_loaded('grpc')) {
             static::markTestSkipped('grpc extension is required');
         }
 
@@ -179,7 +183,7 @@ final class TelemetryFactoryTest extends TestCase
         $config = $this->configWithErrorHandler(new SyslogErrorHandlerConfig(
             ident: 'flow-test',
             facility: SyslogFacility::Local0,
-            logOpts: \LOG_PID,
+            logOpts: LOG_PID,
             severity: SyslogSeverity::Warning,
         ));
 

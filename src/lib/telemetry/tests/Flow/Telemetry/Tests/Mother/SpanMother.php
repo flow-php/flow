@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Mother;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\InstrumentationScope;
@@ -19,13 +20,13 @@ final class SpanMother
         ?SpanId $spanId = null,
         ?SpanId $parentSpanId = null,
         SpanKind $kind = SpanKind::INTERNAL,
-        ?\DateTimeImmutable $startTime = null,
+        ?DateTimeImmutable $startTime = null,
     ): Span {
         return new Span(
             $name,
             SpanContext::create($traceId ?? TraceId::generate(), $spanId ?? SpanId::generate(), $parentSpanId),
             $kind,
-            $startTime ?? new \DateTimeImmutable(),
+            $startTime ?? new DateTimeImmutable(),
             ResourceMother::default(),
             new InstrumentationScope('test', '1.0.0'),
         );
@@ -41,7 +42,7 @@ final class SpanMother
                 SpanId::fromHex('fedcba9876543210'),
             ),
             $kind,
-            new \DateTimeImmutable('2024-01-15T10:30:00.000000+00:00'),
+            new DateTimeImmutable('2024-01-15T10:30:00.000000+00:00'),
             ResourceMother::full(),
             InstrumentationScopeMother::default(),
         );

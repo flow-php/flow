@@ -4,20 +4,27 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
+use DateTime;
+use DateTimeImmutable;
+use DateTimeZone;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
+use function fclose;
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_resource;
+use function fopen;
 
 final class ResourceTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'valid resource' => [
-            'value' => \fopen('php://temp/max', 'r+b'),
+            'value' => fopen('php://temp/max', 'r+b'),
             'exceptionClass' => null,
         ];
 
@@ -47,29 +54,29 @@ final class ResourceTypeTest extends TestCase
         ];
 
         yield 'invalid object' => [
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid DateTimeImmutable' => [
-            'value' => new \DateTimeImmutable(),
+            'value' => new DateTimeImmutable(),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid DateTime' => [
-            'value' => new \DateTime(),
+            'value' => new DateTime(),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid DateTimeZone' => [
-            'value' => new \DateTimeZone('UTC'),
+            'value' => new DateTimeZone('UTC'),
             'exceptionClass' => InvalidTypeException::class,
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
-        $resource = \fopen('php://temp/max', 'r+b');
+        $resource = fopen('php://temp/max', 'r+b');
 
         yield 'resource stays as is' => [
             'value' => $resource,
@@ -90,10 +97,10 @@ final class ResourceTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'valid resource' => [
-            'value' => \fopen('php://temp/max', 'r+b'),
+            'value' => fopen('php://temp/max', 'r+b'),
             'expected' => true,
         ];
 
@@ -113,6 +120,9 @@ final class ResourceTypeTest extends TestCase
         ];
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('assert_data_provider')]
     public function test_assert(mixed $value, ?string $exceptionClass = null): void
     {
@@ -124,6 +134,9 @@ final class ResourceTypeTest extends TestCase
         }
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('cast_data_provider')]
     public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass): void
     {
@@ -142,7 +155,7 @@ final class ResourceTypeTest extends TestCase
             static::assertSame($expected, type_resource()->isValid($value));
         } finally {
             if (is_resource($value)) {
-                \fclose($value);
+                fclose($value);
             }
         }
     }

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Retry;
 
+use Throwable;
+
 interface RetryStrategy
 {
-    public function shouldRetry(\Throwable $exception, int $attemptNumber): bool;
+    public function shouldRetry(Throwable $exception, int $attemptNumber): bool;
 }

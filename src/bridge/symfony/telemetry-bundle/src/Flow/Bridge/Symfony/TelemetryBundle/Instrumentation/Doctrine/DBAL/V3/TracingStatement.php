@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V3;
 
+use DateTimeImmutable;
 use Doctrine\DBAL\Driver\Middleware\AbstractStatementMiddleware;
 use Doctrine\DBAL\Driver\Result;
 use Doctrine\DBAL\Driver\Statement as StatementInterface;
@@ -11,6 +12,8 @@ use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
+use Override;
+use Throwable;
 
 final class TracingStatement extends AbstractStatementMiddleware
 {
@@ -24,7 +27,7 @@ final class TracingStatement extends AbstractStatementMiddleware
     /**
      * @param null|array<mixed> $params
      */
-    #[\Override]
+    #[Override]
     public function execute($params = null): Result
     {
         $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
@@ -37,8 +40,8 @@ final class TracingStatement extends AbstractStatementMiddleware
             $span->setStatus(SpanStatus::ok());
 
             return $result;
-        } catch (\Throwable $exception) {
-            $span->recordException($exception, new \DateTimeImmutable());
+        } catch (Throwable $exception) {
+            $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;

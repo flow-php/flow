@@ -9,6 +9,8 @@ use Flow\ETL\Pipeline;
 use Flow\ETL\Pipeline\Optimizer\Optimization;
 use Flow\ETL\Transformer;
 
+use function count;
+
 final readonly class Optimizer
 {
     /**
@@ -36,7 +38,7 @@ final readonly class Optimizer
 
     public function optimize(Loader|Transformer $element, Pipeline $pipeline): Pipeline
     {
-        if (!\count($this->optimizations)) {
+        if (!count($this->optimizations)) {
             return $pipeline->add($element);
         }
 

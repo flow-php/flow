@@ -9,6 +9,7 @@ use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\TransactionIsolationLevel;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
+use Exception;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 
 use function Flow\ETL\Adapter\Doctrine\to_dbal_table_delete;
@@ -20,12 +21,13 @@ use function Flow\ETL\DSL\integer_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\string_entry;
+use function getenv;
 
 final class MySQLTransactionalDbalLoaderTest extends IntegrationTestCase
 {
     public function test_multiple_batches_in_separate_transactions(): void
     {
-        if (!\getenv('MYSQL_DATABASE_URL')) {
+        if (!getenv('MYSQL_DATABASE_URL')) {
             static::markTestSkipped('MySQL database is not available');
         }
 
@@ -60,7 +62,7 @@ final class MySQLTransactionalDbalLoaderTest extends IntegrationTestCase
 
     public function test_rollback_on_failure(): void
     {
-        if (!\getenv('MYSQL_DATABASE_URL')) {
+        if (!getenv('MYSQL_DATABASE_URL')) {
             static::markTestSkipped('MySQL database is not available');
         }
 
@@ -86,7 +88,7 @@ final class MySQLTransactionalDbalLoaderTest extends IntegrationTestCase
 
         try {
             $loader->load($rows, flow_context(config()));
-        } catch (\Exception) {
+        } catch (Exception) {
         }
 
         $result = $this->mysqlDatabaseContext->selectAll('test_table');
@@ -100,7 +102,7 @@ final class MySQLTransactionalDbalLoaderTest extends IntegrationTestCase
 
     public function test_transactional_delete_and_insert(): void
     {
-        if (!\getenv('MYSQL_DATABASE_URL')) {
+        if (!getenv('MYSQL_DATABASE_URL')) {
             static::markTestSkipped('MySQL database is not available');
         }
 
@@ -138,7 +140,7 @@ final class MySQLTransactionalDbalLoaderTest extends IntegrationTestCase
 
     public function test_with_isolation_level(): void
     {
-        if (!\getenv('MYSQL_DATABASE_URL')) {
+        if (!getenv('MYSQL_DATABASE_URL')) {
             static::markTestSkipped('MySQL database is not available');
         }
 

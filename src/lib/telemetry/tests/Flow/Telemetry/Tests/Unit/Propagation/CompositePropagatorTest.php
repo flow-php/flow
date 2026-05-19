@@ -227,11 +227,13 @@ final class CompositePropagatorTest extends TestCase
 
         $restored = $propagator->extract(new ArrayCarrier($carrier->unwrap()));
 
-        static::assertNotNull($restored->spanContext);
-        static::assertNotNull($restored->baggage);
-        static::assertSame($originalSpanContext->traceId->toHex(), $restored->spanContext->traceId->toHex());
-        static::assertSame($originalSpanContext->spanId->toHex(), $restored->spanContext->spanId->toHex());
-        static::assertSame($originalBaggage->get('user.id'), $restored->baggage->get('user.id'));
-        static::assertSame($originalBaggage->get('session.id'), $restored->baggage->get('session.id'));
+        $restoredSpanContext = $restored->spanContext;
+        $restoredBaggage = $restored->baggage;
+        static::assertNotNull($restoredSpanContext);
+        static::assertNotNull($restoredBaggage);
+        static::assertSame($originalSpanContext->traceId->toHex(), $restoredSpanContext->traceId->toHex());
+        static::assertSame($originalSpanContext->spanId->toHex(), $restoredSpanContext->spanId->toHex());
+        static::assertSame($originalBaggage->get('user.id'), $restoredBaggage->get('user.id'));
+        static::assertSame($originalBaggage->get('session.id'), $restoredBaggage->get('session.id'));
     }
 }

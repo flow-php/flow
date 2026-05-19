@@ -18,7 +18,7 @@ use function Flow\Types\DSL\type_string;
 final readonly class ArrayContentDetector
 {
     /**
-     * @var null|Type<array-key>
+     * @var null|Type<mixed>
      */
     private ?Type $firstKeyType;
 
@@ -32,7 +32,7 @@ final readonly class ArrayContentDetector
     private int $uniqueValuesTypeCount;
 
     /**
-     * @param Types<array-key> $uniqueKeysType
+     * @param Types<mixed> $uniqueKeysType
      * @param Types<mixed> $uniqueValuesType
      * @param bool $isList
      */

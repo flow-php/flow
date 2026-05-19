@@ -13,8 +13,11 @@ use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\TypeDetector;
 
+use function count;
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_optional;
+use function is_array;
+use function json_encode;
 
 /**
  * @template T
@@ -46,7 +49,7 @@ final class StructureEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        if ($value !== null && 0 === \count($value)) {
+        if ($value !== null && 0 === count($value)) {
             throw InvalidArgumentException::because('Structure must have at least one entry, ' . $name . ' got none.');
         }
 
@@ -114,7 +117,7 @@ final class StructureEntry implements Entry
             $this->is($entry->name())
             && $entry instanceof self
             && type_equals($this->type(), $entry->type())
-            && (new ArrayComparison())->equals($thisValue, \is_array($entryValue) ? $entryValue : null)
+            && (new ArrayComparison())->equals($thisValue, is_array($entryValue) ? $entryValue : null)
         );
     }
 
@@ -139,7 +142,7 @@ final class StructureEntry implements Entry
             return '';
         }
 
-        return \json_encode($this->value, JSON_THROW_ON_ERROR);
+        return json_encode($this->value, JSON_THROW_ON_ERROR);
     }
 
     /**

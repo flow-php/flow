@@ -16,8 +16,13 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\SourceStream;
+use Generator;
+use php_user_filter;
 
+use function array_key_exists;
 use function Flow\Types\DSL\type_string;
+use function mb_strtolower;
+use function sprintf;
 
 final class StdOutFilesystem implements Filesystem
 {
@@ -26,12 +31,14 @@ final class StdOutFilesystem implements Filesystem
 
     public function __construct(
         private readonly Mount $mount = new Mount('stdout'),
-        private readonly ?\php_user_filter $filter = null,
+        private readonly ?php_user_filter $filter = null,
     ) {}
 
     public function appendTo(Path $path): DestinationStream
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         $target = $this->resolveTarget($path);
         $this->acquireTarget($target);
@@ -46,7 +53,7 @@ final class StdOutFilesystem implements Filesystem
         throw new RuntimeException('StdOut does not have a system tmp directory');
     }
 
-    public function list(Path $path, Filter $pathFilter = new KeepAll()): \Generator
+    public function list(Path $path, Filter $pathFilter = new KeepAll()): Generator
     {
         yield from [];
     }
@@ -78,7 +85,9 @@ final class StdOutFilesystem implements Filesystem
 
     public function writeTo(Path $path): DestinationStream
     {
-        $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        if (!$this->mount->supports($path)) {
+            throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);
+        }
 
         $target = $this->resolveTarget($path);
         $this->acquireTarget($target);
@@ -90,8 +99,8 @@ final class StdOutFilesystem implements Filesystem
 
     private function acquireTarget(string $target): void
     {
-        if (\array_key_exists($target, $this->heldTargets)) {
-            throw new RuntimeException(\sprintf('Only one stream can be open at the same time for php://%s', $target));
+        if (array_key_exists($target, $this->heldTargets)) {
+            throw new RuntimeException(sprintf('Only one stream can be open at the same time for php://%s', $target));
         }
 
         $this->heldTargets[$target] = true;
@@ -107,7 +116,7 @@ final class StdOutFilesystem implements Filesystem
      */
     private function resolveTarget(Path $path): string
     {
-        $target = \mb_strtolower(type_string()->cast($path->getOption('stream', 'stdout')));
+        $target = mb_strtolower(type_string()->cast($path->getOption('stream', 'stdout')));
 
         return match ($target) {
             'stdout', 'stderr', 'output' => $target,

@@ -17,6 +17,7 @@ use Flow\PostgreSql\QueryBuilder\Schema\Role\CreateRoleBuilder;
 use Flow\PostgreSql\QueryBuilder\Schema\Role\DropRoleBuilder;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
 use function Flow\PostgreSql\DSL\alter;
 use function Flow\PostgreSql\DSL\create;
 use function Flow\PostgreSql\DSL\drop;
@@ -32,14 +33,14 @@ final class RoleBuilderTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
     }
 
     public function test_alter_role_ast_type(): void
     {
-        $builder = AlterRoleBuilder::create('admin')->superuser();
+        $builder = AlterRoleBuilder::create('admin')->set()->superuser();
 
         $ast = $builder->toAst();
 
@@ -76,12 +77,12 @@ final class RoleBuilderTest extends TestCase
 
     public function test_alter_role_set_options_to_sql(): void
     {
-        static::assertSame('ALTER ROLE admin WITH SUPERUSER', alter()->role('admin')->superuser()->toSql());
+        static::assertSame('ALTER ROLE admin WITH SUPERUSER', alter()->role('admin')->set()->superuser()->toSql());
     }
 
     public function test_alter_role_sets_role_spec(): void
     {
-        $builder = AlterRoleBuilder::create('admin')->noLogin();
+        $builder = AlterRoleBuilder::create('admin')->set()->noLogin();
 
         $ast = $builder->toAst();
         $roleSpec = $ast->getRole();
@@ -95,7 +96,7 @@ final class RoleBuilderTest extends TestCase
     {
         static::assertSame(
             'ALTER ROLE admin WITH NOSUPERUSER CREATEDB',
-            alter()->role('admin')->noSuperuser()->createDb()->toSql(),
+            alter()->role('admin')->set()->noSuperuser()->createDb()->toSql(),
         );
     }
 

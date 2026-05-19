@@ -9,6 +9,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Symfony\Component\String\AbstractString;
 
+use function array_map;
 use function Symfony\Component\String\s;
 
 final class Split extends ScalarFunctionChain
@@ -44,6 +45,6 @@ final class Split extends ScalarFunctionChain
                 );
         }
 
-        return \array_map(static fn(AbstractString $s) => $s->toString(), s($value)->split($separator, $limit));
+        return array_map(static fn(AbstractString $s) => $s->toString(), s($value)->split($separator, $limit));
     }
 }

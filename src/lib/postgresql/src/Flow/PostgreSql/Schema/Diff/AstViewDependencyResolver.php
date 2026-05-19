@@ -8,6 +8,14 @@ use Flow\PostgreSql\Extractors\Tables;
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Schema\Catalog;
 
+use function array_flip;
+use function array_key_exists;
+use function array_map;
+use function array_shift;
+use function in_array;
+use function max;
+use function usort;
+
 final readonly class AstViewDependencyResolver implements ViewDependencyResolver
 {
     public function __construct(
@@ -51,14 +59,14 @@ final readonly class AstViewDependencyResolver implements ViewDependencyResolver
         $depths = $this->computeDepths($affected, $viewDependsOn, $allViews);
 
         $dropOrder = $affected;
-        \usort($dropOrder, static fn(string $a, string $b): int => $depths[$b] <=> $depths[$a]);
+        usort($dropOrder, static fn(string $a, string $b): int => $depths[$b] <=> $depths[$a]);
 
         $createOrder = $affected;
-        \usort($createOrder, static fn(string $a, string $b): int => $depths[$a] <=> $depths[$b]);
+        usort($createOrder, static fn(string $a, string $b): int => $depths[$a] <=> $depths[$b]);
 
         return new DependentViews(
-            \array_map(static fn(string $name): DependentView => $allViews[$name], $dropOrder),
-            \array_map(static fn(string $name): DependentView => $allViews[$name], $createOrder),
+            array_map(static fn(string $name): DependentView => $allViews[$name], $dropOrder),
+            array_map(static fn(string $name): DependentView => $allViews[$name], $createOrder),
         );
     }
 
@@ -71,8 +79,9 @@ final readonly class AstViewDependencyResolver implements ViewDependencyResolver
      */
     private function computeDepths(array $affected, array $viewDependsOn, array $allViews): array
     {
+        /** @var array<string, int> $depths */
         $depths = [];
-        $affectedSet = \array_flip($affected);
+        $affectedSet = array_flip($affected);
 
         $getDepth = static function (string $viewName) use (
             &$getDepth,
@@ -81,7 +90,7 @@ final readonly class AstViewDependencyResolver implements ViewDependencyResolver
             $allViews,
             $affectedSet,
         ): int {
-            if (\array_key_exists($viewName, $depths)) {
+            if (array_key_exists($viewName, $depths)) {
                 return $depths[$viewName];
             }
 
@@ -89,8 +98,8 @@ final readonly class AstViewDependencyResolver implements ViewDependencyResolver
             $maxDep = -1;
 
             foreach ($viewDependsOn[$viewName] ?? [] as $dep) {
-                if (\array_key_exists($dep, $allViews) && \array_key_exists($dep, $affectedSet)) {
-                    $maxDep = \max($maxDep, $getDepth($dep));
+                if (array_key_exists($dep, $allViews) && array_key_exists($dep, $affectedSet)) {
+                    $maxDep = max($maxDep, $getDepth($dep));
                 }
             }
 
@@ -134,14 +143,14 @@ final readonly class AstViewDependencyResolver implements ViewDependencyResolver
         $queue = $modifiedTableQualifiedNames;
 
         while ($queue !== []) {
-            $current = \array_shift($queue);
+            $current = array_shift($queue);
 
             foreach ($viewDependsOn as $viewName => $deps) {
-                if (\in_array($viewName, $affected, true)) {
+                if (in_array($viewName, $affected, true)) {
                     continue;
                 }
 
-                if (\in_array($current, $deps, true)) {
+                if (in_array($current, $deps, true)) {
                     $affected[] = $viewName;
                     $queue[] = $viewName;
                 }

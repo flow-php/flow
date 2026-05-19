@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Integration\Logger;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Context\SpanId;
@@ -17,6 +18,8 @@ use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
+use RuntimeException;
+use Throwable;
 
 final class LoggingIntegrationTest extends TestCase
 {
@@ -27,7 +30,7 @@ final class LoggingIntegrationTest extends TestCase
     protected function setUp(): void
     {
         $this->clock = $this->createMock(ClockInterface::class);
-        $this->clock->method('now')->willReturn(new \DateTimeImmutable('2024-01-01 12:00:00.123456'));
+        $this->clock->method('now')->willReturn(new DateTimeImmutable('2024-01-01 12:00:00.123456'));
         $this->resource = ResourceMother::default();
     }
 
@@ -42,8 +45,8 @@ final class LoggingIntegrationTest extends TestCase
         $logger->warn('Deprecated feature used', ['feature' => 'legacy-api']);
 
         try {
-            throw new \RuntimeException('Database connection failed');
-        } catch (\Throwable $e) {
+            throw new RuntimeException('Database connection failed');
+        } catch (Throwable $e) {
             $logger->emit(
                 (new LogRecord())
                     ->setSeverity(Severity::ERROR)
@@ -60,7 +63,7 @@ final class LoggingIntegrationTest extends TestCase
         static::assertCount(1, $processor->entriesContaining('Database'));
 
         $errorEntry = $processor->entriesWithSeverity(Severity::ERROR)[0];
-        static::assertSame(\RuntimeException::class, $errorEntry->record->attributes->get('exception.type'));
+        static::assertSame(RuntimeException::class, $errorEntry->record->attributes->get('exception.type'));
         static::assertSame('Database connection failed', $errorEntry->record->attributes->get('exception.message'));
     }
 

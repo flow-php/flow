@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
+use DOMElement;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Value\Uuid;
+
+use function is_a;
+use function is_object;
+use function is_string;
 
 /**
  * @implements Type<Uuid>
@@ -29,19 +34,19 @@ final readonly class UuidType implements Type
             return $value;
         }
 
-        if ($value instanceof \DOMElement) {
+        if ($value instanceof DOMElement) {
             $value = $value->nodeValue;
         }
 
-        if (\is_string($value)) {
+        if (is_string($value)) {
             return new Uuid($value);
         }
 
-        if (\is_object($value) && \is_a($value, 'Ramsey\Uuid\UuidInterface')) {
+        if (is_object($value) && is_a($value, 'Ramsey\Uuid\UuidInterface')) {
             return new Uuid($value);
         }
 
-        if (\is_object($value) && \is_a($value, 'Symfony\Component\Uid\Uuid')) {
+        if (is_object($value) && is_a($value, 'Symfony\Component\Uid\Uuid')) {
             return new Uuid($value->toRfc4122());
         }
 

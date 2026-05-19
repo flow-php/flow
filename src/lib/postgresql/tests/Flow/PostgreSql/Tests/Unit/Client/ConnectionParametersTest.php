@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\Client;
 
 use Flow\PostgreSql\Client\ConnectionParameters;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 final class ConnectionParametersTest extends TestCase
@@ -110,7 +111,7 @@ final class ConnectionParametersTest extends TestCase
 
     public function test_from_string_throws_exception_when_dbname_missing(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Missing dbname in connection string');
 
         ConnectionParameters::fromString('host=localhost port=5432');

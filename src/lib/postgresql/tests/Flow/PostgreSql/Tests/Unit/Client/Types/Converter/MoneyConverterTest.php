@@ -7,22 +7,24 @@ namespace Flow\PostgreSql\Tests\Unit\Client\Types\Converter;
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
 use Flow\PostgreSql\Client\Types\Converter\MoneyConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 final class MoneyConverterTest extends TestCase
 {
-    public static function provide_invalid_values(): \Generator
+    public static function provide_invalid_values(): Generator
     {
         yield 'integer' => [100];
         yield 'float' => [123.45];
         yield 'array' => [['array']];
         yield 'boolean true' => [true];
         yield 'boolean false' => [false];
-        yield 'object' => [new \stdClass()];
+        yield 'object' => [new stdClass()];
     }
 
-    public static function provide_valid_values(): \Generator
+    public static function provide_valid_values(): Generator
     {
         yield 'money with symbol' => ['$99.99', '$99.99'];
         yield 'money with comma' => ['$1,234.56', '$1,234.56'];

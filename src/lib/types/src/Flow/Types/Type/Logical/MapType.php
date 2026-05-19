@@ -5,16 +5,28 @@ declare(strict_types=1);
 namespace Flow\Types\Type\Logical;
 
 use Flow\Types\Exception\CastingException;
+use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
+use Flow\Types\Type\Native\IntegerType;
+use Flow\Types\Type\Native\StringType;
 use Flow\Types\Value\Json;
+use Throwable;
 
+use function array_key_exists;
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_literal;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function is_array;
+use function is_string;
+use function json_decode;
+use function sprintf;
+use function str_starts_with;
+
+use const JSON_THROW_ON_ERROR;
 
 /**
  * @template TKey of array-key
@@ -37,6 +49,8 @@ final readonly class MapType implements Type
      * @param array<string, mixed> $data
      *
      * @return MapType<array-key, mixed>
+     *
+     * @throws InvalidArgumentException
      */
     public static function fromArray(array $data): self
     {
@@ -46,7 +60,16 @@ final readonly class MapType implements Type
             'value' => type_map(type_string(), type_mixed()),
         ])->assert($data);
 
-        return new self(type_from_array($data['key']), type_from_array($data['value']));
+        $keyType = type_from_array($data['key']);
+
+        if (!$keyType instanceof IntegerType && !$keyType instanceof StringType) {
+            throw new InvalidArgumentException(sprintf(
+                'Map key type must be IntegerType or StringType, got %s',
+                $keyType::class,
+            ));
+        }
+
+        return new self($keyType, type_from_array($data['value']));
     }
 
     public function assert(mixed $value): array
@@ -65,40 +88,40 @@ final readonly class MapType implements Type
                 $value = $value->toArray();
             }
 
-            if (\is_string($value) && (\str_starts_with($value, '{') || \str_starts_with($value, '['))) {
-                $decoded = \json_decode($value, true, 512, \JSON_THROW_ON_ERROR);
-
-                return $this->assert($decoded);
+            if (is_string($value) && (str_starts_with($value, '{') || str_starts_with($value, '['))) {
+                return $this->assert(json_decode($value, true, 512, JSON_THROW_ON_ERROR));
             }
 
-            if (!\is_iterable($value)) {
+            if (!is_array($value)) {
                 throw new CastingException($value, $this);
             }
 
             $castedMap = [];
 
+            // @mago-ignore analysis:mixed-assignment
             foreach ($value as $key => $item) {
                 $castedKey = $this->key->cast($key);
 
-                if (\array_key_exists($castedKey, $castedMap)) {
+                if (array_key_exists($castedKey, $castedMap)) {
                     throw new CastingException($value, $this);
                 }
 
-                $castedMap[$this->key->cast($key)] = $this->value->cast($item);
+                $castedMap[$castedKey] = $this->value->cast($item);
             }
 
             return $this->assert($castedMap);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             throw new CastingException($value, $this, $e);
         }
     }
 
     public function isValid(mixed $value): bool
     {
-        if (!\is_array($value)) {
+        if (!is_array($value)) {
             return false;
         }
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($value as $key => $item) {
             if (!$this->key->isValid($key)) {
                 return false;

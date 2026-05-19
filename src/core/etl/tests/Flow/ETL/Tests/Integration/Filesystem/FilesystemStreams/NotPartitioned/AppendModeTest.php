@@ -6,13 +6,15 @@ namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\NotPartitioned
 
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
+use Override;
 
 use function Flow\ETL\DSL\append;
 use function Flow\Filesystem\DSL\path;
+use function iterator_to_array;
 
 final class AppendModeTest extends FilesystemStreamsTestCase
 {
-    #[\Override]
+    #[Override]
     protected function tearDown(): void
     {
         parent::tearDown();
@@ -34,7 +36,7 @@ final class AppendModeTest extends FilesystemStreamsTestCase
         $appendFileStream->append('new content');
         $streams->closeStreams($file);
 
-        $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/*')));
+        $files = iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/*')));
 
         static::assertCount(2, $files);
 
@@ -57,7 +59,7 @@ final class AppendModeTest extends FilesystemStreamsTestCase
         $appendFileStream->append('new content');
         $streams->closeStreams($file);
 
-        $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/*')));
+        $files = iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/*')));
 
         static::assertCount(1, $files);
         static::assertSame('non-existing-file.txt', $files[0]->path->basename());

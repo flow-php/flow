@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests\Integration;
 
+use DateTime;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
@@ -14,11 +15,13 @@ use Flow\Doctrine\Bulk\Dialect\PostgreSQLInsertOptions;
 use Flow\Doctrine\Bulk\Tests\PostgreSqlIntegrationTestCase;
 
 use function Flow\ETL\DSL\generate_random_string;
+use function json_encode;
 
 final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
 {
     public function test_inserts_multiple_rows_at_once(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('age', Type::getType(Types::INTEGER), ['notnull' => true]),
@@ -29,7 +32,7 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
             new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'platformOptions' => ['jsonb' => true]]),
         ]))->setPrimaryKey(['id']));
 
-        $date1 = new \DateTime();
+        $date1 = new DateTime();
 
         Bulk::create()->insert($this->databaseContext->connection(), $table, new BulkData([
             [
@@ -39,7 +42,7 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
                 'description' => 'Description One',
                 'active' => false,
                 'updated_at' => $date1,
-                'tags' => \json_encode(['a', 'b', 'c']),
+                'tags' => json_encode(['a', 'b', 'c']),
             ],
             [
                 'id' => $id2 = generate_random_string(10),
@@ -47,8 +50,8 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
                 'name' => 'Name Two',
                 'description' => null,
                 'active' => true,
-                'updated_at' => $date2 = new \DateTime(),
-                'tags' => \json_encode(['a', 'b', 'c']),
+                'updated_at' => $date2 = new DateTime(),
+                'tags' => json_encode(['a', 'b', 'c']),
             ],
             [
                 'id' => $id3 = generate_random_string(10),
@@ -56,8 +59,8 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
                 'name' => 'Name Three',
                 'description' => 'Description Three',
                 'active' => false,
-                'updated_at' => $date3 = new \DateTime(),
-                'tags' => \json_encode(['a', 'b', 'c']),
+                'updated_at' => $date3 = new DateTime(),
+                'tags' => json_encode(['a', 'b', 'c']),
             ],
         ]));
 
@@ -103,6 +106,7 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
 
     public function test_inserts_new_rows_and_skip_already_existed(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
@@ -144,6 +148,7 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
 
     public function test_inserts_new_rows_or_updates_already_existed_based_on_columns(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
@@ -184,6 +189,7 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
 
     public function test_inserts_new_rows_or_updates_already_existed_based_on_columns_with_update_only_specific_columns(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
@@ -222,6 +228,7 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
 
     public function test_inserts_new_rows_or_updates_already_existed_based_on_columns_with_update_only_specific_columns_and_preserve_existing_values(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => false, 'length' => 255]),
@@ -262,6 +269,7 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
 
     public function test_inserts_new_rows_or_updates_already_existed_based_on_primary_key(): void
     {
+        // @mago-expect analysis:deprecated-method
         $this->databaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),

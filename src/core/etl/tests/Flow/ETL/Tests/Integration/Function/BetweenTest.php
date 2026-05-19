@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
+use DateTimeImmutable;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -19,15 +20,15 @@ final class BetweenTest extends FlowTestCase
     {
         df()
             ->read(from_array([
-                ['val' => new \DateTimeImmutable('2023-01-10 00:00:00')],
+                ['val' => new DateTimeImmutable('2023-01-10 00:00:00')],
             ]))
             ->withEntry('between', ref('val')->between(
-                lit(new \DateTimeImmutable('2023-01-01 00:00:00')),
-                lit(new \DateTimeImmutable('2023-01-20 00:00:00')),
+                lit(new DateTimeImmutable('2023-01-01 00:00:00')),
+                lit(new DateTimeImmutable('2023-01-20 00:00:00')),
             ))
             ->withEntry('not_between', ref('val')->between(
-                lit(new \DateTimeImmutable('2023-01-01 00:00:00')),
-                lit(new \DateTimeImmutable('2023-01-08 00:00:00')),
+                lit(new DateTimeImmutable('2023-01-01 00:00:00')),
+                lit(new DateTimeImmutable('2023-01-08 00:00:00')),
             ))
             ->select('between', 'not_between')
             ->write(to_memory($memory = new ArrayMemory()))

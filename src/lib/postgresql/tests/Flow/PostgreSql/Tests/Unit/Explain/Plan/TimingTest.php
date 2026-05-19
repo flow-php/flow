@@ -7,6 +7,8 @@ namespace Flow\PostgreSql\Tests\Unit\Explain\Plan;
 use Flow\PostgreSql\Explain\Plan\Timing;
 use PHPUnit\Framework\TestCase;
 
+use function array_keys;
+
 final class TimingTest extends TestCase
 {
     public function test_from_array_and_normalize_are_inverse(): void
@@ -57,6 +59,6 @@ final class TimingTest extends TestCase
             'loops',
         ];
 
-        static::assertSame($expectedKeys, \array_keys($normalized));
+        static::assertSame($expectedKeys, array_keys($normalized));
     }
 }

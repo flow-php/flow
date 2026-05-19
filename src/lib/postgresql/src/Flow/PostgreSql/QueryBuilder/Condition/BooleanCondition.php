@@ -12,6 +12,8 @@ use Flow\PostgreSql\QueryBuilder\Expression\Expression;
 use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 
+use function Flow\Types\DSL\type_instance_of;
+
 /**
  * Wraps an Expression as a Condition for use in WHERE/HAVING/JOIN ON clauses.
  *
@@ -33,11 +35,10 @@ final readonly class BooleanCondition implements Condition
         if ($node->hasAConst()) {
             $aConst = $node->getAConst();
 
-            if ($aConst !== null && $aConst->hasBoolval()) {
-                $boolval = $aConst->getBoolval();
-                \assert($boolval instanceof Boolean);
+            if ($aConst !== null && $aConst->getBoolval() !== null) {
+                $boolean = type_instance_of(Boolean::class)->assert($aConst->getBoolval());
 
-                return new self(Literal::bool($boolval->getBoolval()));
+                return new self(Literal::bool($boolean->getBoolval()));
             }
         }
 

@@ -12,6 +12,7 @@ use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\SourceStream;
+use Generator;
 
 final readonly class FailingMvFilesystem implements Filesystem
 {
@@ -29,7 +30,7 @@ final readonly class FailingMvFilesystem implements Filesystem
         return $this->inner->getSystemTmpDir();
     }
 
-    public function list(Path $path, Filter $pathFilter = new KeepAll()): \Generator
+    public function list(Path $path, Filter $pathFilter = new KeepAll()): Generator
     {
         yield from $this->inner->list($path, $pathFilter);
     }

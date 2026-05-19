@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests;
 
+use function array_map;
+use function explode;
+use function implode;
+use function preg_replace;
+use function str_replace;
+
 trait CommandOutputNormalizer
 {
     /**
@@ -51,13 +57,13 @@ trait CommandOutputNormalizer
      */
     protected static function normalizeCommandOutput(string $output): string
     {
-        $output = \str_replace("\r\n", "\n", $output);
+        $output = str_replace("\r\n", "\n", $output);
 
-        $output = \preg_replace('/\x1b\[[0-9;]*m/', '', $output);
+        $output = preg_replace('/\x1b\[[0-9;]*m/', '', $output);
 
-        $lines = \explode("\n", (string) $output);
-        $lines = \array_map('rtrim', $lines);
+        $lines = explode("\n", (string) $output);
+        $lines = array_map('rtrim', $lines);
 
-        return \implode("\n", $lines);
+        return implode("\n", $lines);
     }
 }

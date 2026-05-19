@@ -8,6 +8,10 @@ use Flow\Telemetry\Resource;
 use Flow\Telemetry\Resource\Attribute\OsAttribute;
 use Flow\Telemetry\Resource\ResourceDetector;
 
+use function php_uname;
+use function str_contains;
+use function strtolower;
+
 /**
  * Detects operating system information.
  *
@@ -39,19 +43,19 @@ final readonly class OsDetector implements ResourceDetector
             $attributes[OsAttribute::TYPE->value] = $osType;
         }
 
-        $sysname = \php_uname('s');
+        $sysname = php_uname('s');
 
         if ($sysname !== '') {
             $attributes[OsAttribute::NAME->value] = $sysname;
         }
 
-        $release = \php_uname('r');
+        $release = php_uname('r');
 
         if ($release !== '') {
             $attributes[OsAttribute::VERSION->value] = $release;
         }
 
-        $fullDescription = \php_uname('a');
+        $fullDescription = php_uname('a');
 
         if ($fullDescription !== '') {
             $attributes[OsAttribute::DESCRIPTION->value] = $fullDescription;
@@ -74,13 +78,13 @@ final readonly class OsDetector implements ResourceDetector
 
     private function determineBsdVariant(): string
     {
-        $os = \strtolower(\php_uname('s'));
+        $os = strtolower(php_uname('s'));
 
         return match (true) {
-            \str_contains($os, 'freebsd') => 'freebsd',
-            \str_contains($os, 'openbsd') => 'openbsd',
-            \str_contains($os, 'netbsd') => 'netbsd',
-            \str_contains($os, 'dragonfly') => 'dragonflybsd',
+            str_contains($os, 'freebsd') => 'freebsd',
+            str_contains($os, 'openbsd') => 'openbsd',
+            str_contains($os, 'netbsd') => 'netbsd',
+            str_contains($os, 'dragonfly') => 'dragonflybsd',
             default => 'freebsd',
         };
     }

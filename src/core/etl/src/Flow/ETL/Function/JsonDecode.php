@@ -8,6 +8,11 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\Types\Value\Json;
+use JsonException;
+
+use function is_array;
+use function is_string;
+use function json_decode;
 
 final class JsonDecode extends ScalarFunctionChain
 {
@@ -31,11 +36,11 @@ final class JsonDecode extends ScalarFunctionChain
             return $value->toArray();
         }
 
-        if (\is_array($value)) {
+        if (is_array($value)) {
             return $value;
         }
 
-        if (!\is_string($value)) {
+        if (!is_string($value)) {
             return $context
                 ->functions()
                 ->invalidResult(
@@ -44,8 +49,8 @@ final class JsonDecode extends ScalarFunctionChain
         }
 
         try {
-            return \json_decode($value, true, 512, $flags);
-        } catch (\JsonException $e) {
+            return json_decode($value, true, 512, $flags);
+        } catch (JsonException $e) {
             $context->functions()->invalidResult(new InvalidArgumentException('JsonDecode error: ' . $e->getMessage()));
 
             return null;

@@ -10,10 +10,14 @@ use Flow\Filesystem\Telemetry\FilesystemTelemetryAttributes;
 use Flow\Filesystem\Telemetry\TraceableDestinationStream;
 use Flow\Filesystem\Tests\Mother\FilesystemTelemetryConfigMother;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
+use function fclose;
 use function Flow\Filesystem\DSL\filesystem_telemetry_options;
 use function Flow\Telemetry\DSL\memory_span_processor;
 use function Flow\Telemetry\DSL\void_exporter;
+use function fopen;
+use function strlen;
 
 final class TraceableDestinationStreamTest extends TestCase
 {
@@ -41,11 +45,12 @@ final class TraceableDestinationStreamTest extends TestCase
         static::assertSame('destination', $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE]);
         static::assertSame($path->uri(), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_PATH_URI]);
         static::assertSame(
-            \strlen($data),
+            strlen($data),
             $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN],
         );
-        static::assertNotNull($spans[0]->status());
-        static::assertTrue($spans[0]->status()->isOk());
+        $status = $spans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
     }
 
     public function test_close_completes_lifecycle_span_with_final_attributes(): void
@@ -69,11 +74,12 @@ final class TraceableDestinationStreamTest extends TestCase
         static::assertSame('destination', $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE]);
         static::assertSame($path->uri(), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_PATH_URI]);
         static::assertSame(
-            \strlen($data),
+            strlen($data),
             $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN],
         );
-        static::assertNotNull($spans[0]->status());
-        static::assertTrue($spans[0]->status()->isOk());
+        $status = $spans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
     }
 
     public function test_close_records_exception_and_rethrows(): void
@@ -81,7 +87,7 @@ final class TraceableDestinationStreamTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
-        $exception = new \RuntimeException('Close failed');
+        $exception = new RuntimeException('Close failed');
 
         $mockStream = $this->createMock(DestinationStream::class);
         $mockStream->method('path')->willReturn($path);
@@ -91,7 +97,7 @@ final class TraceableDestinationStreamTest extends TestCase
         $stream = new TraceableDestinationStream($mockStream, $config);
         $stream->append('data');
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Close failed');
 
         try {
@@ -99,8 +105,9 @@ final class TraceableDestinationStreamTest extends TestCase
         } finally {
             $spans = $spanProcessor->endedSpans();
             static::assertCount(1, $spans);
-            static::assertNotNull($spans[0]->status());
-            static::assertTrue($spans[0]->status()->isError());
+            $status = $spans[0]->status();
+            static::assertNotNull($status);
+            static::assertTrue($status->isError());
             static::assertNotEmpty($spans[0]->events());
         }
     }
@@ -128,7 +135,7 @@ final class TraceableDestinationStreamTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor);
         $path = Path::realpath('/tmp/test.txt');
-        $resource = \fopen('php://memory', 'rb');
+        $resource = fopen('php://memory', 'rb');
         static::assertIsResource($resource);
 
         $mockStream = $this->createMock(DestinationStream::class);
@@ -147,10 +154,11 @@ final class TraceableDestinationStreamTest extends TestCase
         static::assertSame('Write test.txt', $spans[0]->name());
         static::assertSame('destination', $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE]);
         static::assertSame($path->uri(), $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_PATH_URI]);
-        static::assertNotNull($spans[0]->status());
-        static::assertTrue($spans[0]->status()->isOk());
+        $status = $spans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
 
-        \fclose($resource);
+        fclose($resource);
     }
 
     public function test_is_open_delegates_without_affecting_span(): void

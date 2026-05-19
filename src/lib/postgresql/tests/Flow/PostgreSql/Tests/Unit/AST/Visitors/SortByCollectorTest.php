@@ -10,11 +10,14 @@ use Flow\PostgreSql\Protobuf\AST\ParseResult;
 use Flow\PostgreSql\Protobuf\AST\SortBy;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
+use function pg_query_parse;
+
 final class SortByCollectorTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped(
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );
@@ -127,8 +130,7 @@ final class SortByCollectorTest extends TestCase
 
     private function parseQuery(string $sql): ParseResult
     {
-        /** @var string $json */
-        $json = \pg_query_parse($sql);
+        $json = pg_query_parse($sql);
         $result = new ParseResult();
         $result->mergeFromJsonString($json);
 

@@ -6,15 +6,17 @@ namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 use function Flow\Types\DSL\type_from_array;
 use function Flow\Types\DSL\type_literal;
 
 final class LiteralTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'valid string literal' => [
             'literal' => 'hello',
@@ -90,12 +92,12 @@ final class LiteralTypeTest extends TestCase
 
         yield 'invalid object value' => [
             'literal' => 'hello',
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'exceptionClass' => InvalidTypeException::class,
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
         yield 'valid string literal' => [
             'literal' => 'hello',
@@ -154,7 +156,7 @@ final class LiteralTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'valid string literal' => [
             'literal' => 'hello',
@@ -242,12 +244,12 @@ final class LiteralTypeTest extends TestCase
 
         yield 'invalid object value' => [
             'literal' => 'hello',
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'expected' => false,
         ];
     }
 
-    public static function to_string_data_provider(): \Generator
+    public static function to_string_data_provider(): Generator
     {
         yield 'string literal' => [
             'literal' => 'hello',
@@ -290,6 +292,9 @@ final class LiteralTypeTest extends TestCase
         ];
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('assert_data_provider')]
     public function test_assert(bool|float|int|string $literal, mixed $value, ?string $exceptionClass = null): void
     {
@@ -301,6 +306,9 @@ final class LiteralTypeTest extends TestCase
         }
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('cast_data_provider')]
     public function test_cast(
         bool|float|int|string $literal,

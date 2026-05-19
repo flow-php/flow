@@ -8,6 +8,7 @@ use Flow\Telemetry\ErrorHandler\ErrorHandler;
 use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Logger\LogProcessor;
+use Throwable;
 
 /**
  * Forwards log records to multiple processors.
@@ -36,7 +37,7 @@ final readonly class CompositeLogProcessor implements LogProcessor
                 if (!$processor->flush()) {
                     $success = false;
                 }
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->errorHandler->handle($e);
                 $success = false;
             }
@@ -50,7 +51,7 @@ final readonly class CompositeLogProcessor implements LogProcessor
         foreach ($this->processors as $processor) {
             try {
                 $processor->process($entry);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->errorHandler->handle($e);
             }
         }
@@ -71,7 +72,7 @@ final readonly class CompositeLogProcessor implements LogProcessor
         foreach ($this->processors as $processor) {
             try {
                 $processor->shutdown();
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->errorHandler->handle($e);
             }
         }

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Propagation;
 
+use function array_merge;
+use function array_unique;
+
 /**
  * Combines multiple Propagators into a single propagator.
  *
@@ -61,10 +64,10 @@ final readonly class CompositePropagator implements Propagator
         $fields = [];
 
         foreach ($this->propagators as $propagator) {
-            $fields = \array_merge($fields, $propagator->fields());
+            $fields = array_merge($fields, $propagator->fields());
         }
 
-        return \array_unique($fields);
+        return array_unique($fields);
     }
 
     /**

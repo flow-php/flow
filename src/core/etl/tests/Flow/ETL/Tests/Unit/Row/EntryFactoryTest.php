@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row;
 
+use ArrayIterator;
+use DateInterval;
+use DateTimeImmutable;
+use DateTimeZone;
 use Dom\HTMLDocument;
+use DOMDocument;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Row\Entry;
@@ -13,11 +18,13 @@ use Flow\ETL\Row\Entry\TimeEntry;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 
+use function class_exists;
 use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\config;
@@ -66,7 +73,7 @@ final class EntryFactoryTest extends TestCase
 {
     private EntryFactory $entryFactory;
 
-    public static function provide_recognized_data(): \Generator
+    public static function provide_recognized_data(): Generator
     {
         yield 'json' => [
             $json = '{"id":1}',
@@ -89,7 +96,7 @@ final class EntryFactoryTest extends TestCase
         ];
     }
 
-    public static function provide_unrecognized_data(): \Generator
+    public static function provide_unrecognized_data(): Generator
     {
         yield 'json alike' => [
             '{"id":1',
@@ -147,7 +154,7 @@ final class EntryFactoryTest extends TestCase
     {
         static::assertEquals(
             date_entry('e', '2022-01-01'),
-            $this->entryFactory->create('e', new \DateTimeImmutable('2022-01-01')),
+            $this->entryFactory->create('e', new DateTimeImmutable('2022-01-01')),
         );
     }
 
@@ -178,7 +185,7 @@ final class EntryFactoryTest extends TestCase
     public function test_datetime(): void
     {
         static::assertEquals(
-            datetime_entry('e', $now = new \DateTimeImmutable()),
+            datetime_entry('e', $now = new DateTimeImmutable()),
             $this->entryFactory->create('e', $now),
         );
     }
@@ -194,7 +201,7 @@ final class EntryFactoryTest extends TestCase
     public function test_datetime_with_schema(): void
     {
         static::assertEquals(
-            datetime_entry('e', $datetime = new \DateTimeImmutable('now')),
+            datetime_entry('e', $datetime = new DateTimeImmutable('now')),
             $this->entryFactory->create('e', $datetime, schema(datetime_schema('e'))),
         );
     }
@@ -376,7 +383,7 @@ final class EntryFactoryTest extends TestCase
         static::assertEquals(
             list_entry(
                 'e',
-                $list = [new \DateTimeImmutable('now'), new \DateTimeImmutable('tomorrow')],
+                $list = [new DateTimeImmutable('now'), new DateTimeImmutable('tomorrow')],
                 type_list(type_datetime()),
             ),
             $this->entryFactory->create('e', $list, schema(list_schema('e', type_list(type_datetime())))),
@@ -386,7 +393,7 @@ final class EntryFactoryTest extends TestCase
     public function test_list_of_datetimes(): void
     {
         static::assertEquals(
-            list_entry('e', $list = [new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_datetime())),
+            list_entry('e', $list = [new DateTimeImmutable(), new DateTimeImmutable()], type_list(type_datetime())),
             $this->entryFactory->create('e', $list),
         );
     }
@@ -443,7 +450,7 @@ final class EntryFactoryTest extends TestCase
             "e: object<ArrayIterator> can't be converted to any known Entry, please normalize that object first",
         );
 
-        $this->entryFactory->create('e', new \ArrayIterator([1, 2]));
+        $this->entryFactory->create('e', new ArrayIterator([1, 2]));
     }
 
     /**
@@ -492,7 +499,7 @@ final class EntryFactoryTest extends TestCase
 
     public function test_time(): void
     {
-        static::assertEquals(TimeEntry::fromDays('e', 1), $this->entryFactory->create('e', new \DateInterval('P1D')));
+        static::assertEquals(TimeEntry::fromDays('e', 1), $this->entryFactory->create('e', new DateInterval('P1D')));
     }
 
     public function test_time_from_null_with_definition(): void
@@ -506,7 +513,7 @@ final class EntryFactoryTest extends TestCase
     public function test_time_from_string_with_definition(): void
     {
         static::assertEquals(
-            time_entry('e', new \DateInterval('P10D')),
+            time_entry('e', new DateInterval('P10D')),
             $this->entryFactory->create('e', 'P10D', schema(time_schema('e'))),
         );
     }
@@ -515,7 +522,7 @@ final class EntryFactoryTest extends TestCase
     {
         static::assertEquals(
             str_entry('e', 'UTC'),
-            $this->entryFactory->createAs('e', new \DateTimeZone('UTC'), type_time_zone()),
+            $this->entryFactory->createAs('e', new DateTimeZone('UTC'), type_time_zone()),
         );
     }
 
@@ -535,7 +542,7 @@ final class EntryFactoryTest extends TestCase
 
     public function test_uuid_from_ramsey_uuid_library(): void
     {
-        if (!\class_exists(Uuid::class)) {
+        if (!class_exists(Uuid::class)) {
             static::markTestSkipped("Package 'ramsey/uuid' is required for this test.");
         }
 
@@ -583,7 +590,7 @@ final class EntryFactoryTest extends TestCase
 
     public function test_xml_from_dom_document(): void
     {
-        $doc = new \DOMDocument();
+        $doc = new DOMDocument();
         $doc->loadXML($xml = '<root><foo>1</foo><bar>2</bar><baz>3</baz></root>');
         static::assertEquals(xml_entry('e', $xml), $this->entryFactory->create('e', $doc));
     }

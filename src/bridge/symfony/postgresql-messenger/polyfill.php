@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Symfony\Component\Messenger\Transport\Receiver;
 
-if (\interface_exists(KeepaliveReceiverInterface::class)) {
+use Symfony\Component\Messenger\Envelope;
+
+use function interface_exists;
+
+if (interface_exists(KeepaliveReceiverInterface::class)) {
     return;
 }
 
 interface KeepaliveReceiverInterface extends ReceiverInterface
 {
-    public function keepalive(\Symfony\Component\Messenger\Envelope $envelope, ?int $seconds = null): void;
+    public function keepalive(Envelope $envelope, ?int $seconds = null): void;
 }

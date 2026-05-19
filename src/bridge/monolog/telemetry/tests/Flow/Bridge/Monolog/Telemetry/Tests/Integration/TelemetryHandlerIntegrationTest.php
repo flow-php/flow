@@ -4,18 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Telemetry\Tests\Integration;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use Flow\Bridge\Monolog\Telemetry\LogRecordConverter;
 use Flow\Bridge\Monolog\Telemetry\SeverityMapper;
 use Flow\Bridge\Monolog\Telemetry\TelemetryHandler;
 use Flow\Bridge\Monolog\Telemetry\ValueNormalizer;
 use Flow\Telemetry\Logger\Severity;
 use Flow\Telemetry\Resource;
+use InvalidArgumentException;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Level;
 use Monolog\Logger as MonologLogger;
 use Monolog\LogRecord;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 use function Flow\Bridge\Monolog\Telemetry\DSL\log_record_converter;
 use function Flow\Bridge\Monolog\Telemetry\DSL\severity_mapper;
@@ -124,7 +128,7 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         $monolog = new MonologLogger('application');
         $monolog->pushHandler(telemetry_handler($context->logger));
 
-        $eventTime = new \DateTimeImmutable('2024-06-15 14:30:00');
+        $eventTime = new DateTimeImmutable('2024-06-15 14:30:00');
 
         $monolog->info('Event occurred', [
             'event_time' => $eventTime,
@@ -134,7 +138,7 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         static::assertCount(1, $entries);
 
         $contextEventTime = $entries[0]->record->attributes->get('context.event_time');
-        static::assertInstanceOf(\DateTimeInterface::class, $contextEventTime);
+        static::assertInstanceOf(DateTimeInterface::class, $contextEventTime);
         static::assertSame('2024-06-15 14:30:00', $contextEventTime->format('Y-m-d H:i:s'));
     }
 
@@ -162,7 +166,7 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         $monolog = new MonologLogger('application');
         $monolog->pushHandler(telemetry_handler($context->logger));
 
-        $exception = new \RuntimeException('Database connection failed', 500);
+        $exception = new RuntimeException('Database connection failed', 500);
 
         $monolog->error('Failed to process request', [
             'exception' => $exception,
@@ -173,7 +177,7 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         static::assertCount(1, $entries);
 
         $attributes = $entries[0]->record->attributes;
-        static::assertSame(\RuntimeException::class, $attributes->get('exception.type'));
+        static::assertSame(RuntimeException::class, $attributes->get('exception.type'));
         static::assertSame('Database connection failed', $attributes->get('exception.message'));
         static::assertNotNull($attributes->get('exception.stacktrace'));
         static::assertSame('db_query', $attributes->get('context.operation'));
@@ -355,8 +359,8 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         $monolog = new MonologLogger('application');
         $monolog->pushHandler(telemetry_handler($context->logger));
 
-        $primaryException = new \RuntimeException('Primary error');
-        $secondaryException = new \InvalidArgumentException('Secondary error');
+        $primaryException = new RuntimeException('Primary error');
+        $secondaryException = new InvalidArgumentException('Secondary error');
 
         $monolog->error('Multiple errors', [
             'exception' => $primaryException,
@@ -367,7 +371,7 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         static::assertCount(1, $entries);
 
         $attributes = $entries[0]->record->attributes;
-        static::assertSame(\InvalidArgumentException::class, $attributes->get('exception.type'));
+        static::assertSame(InvalidArgumentException::class, $attributes->get('exception.type'));
         static::assertSame('Secondary error', $attributes->get('exception.message'));
         static::assertNull($attributes->get('context.exception'));
         static::assertNull($attributes->get('context.secondary_exception'));

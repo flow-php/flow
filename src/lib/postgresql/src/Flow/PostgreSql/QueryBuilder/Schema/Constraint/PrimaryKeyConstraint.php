@@ -9,6 +9,8 @@ use Flow\PostgreSql\Protobuf\AST\ConstrType;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 
+use function array_values;
+
 final readonly class PrimaryKeyConstraint implements TableConstraint
 {
     /**
@@ -21,7 +23,7 @@ final readonly class PrimaryKeyConstraint implements TableConstraint
 
     public static function create(string ...$columns): self
     {
-        return new self(\array_values($columns));
+        return new self(array_values($columns));
     }
 
     public function name(string $name): self

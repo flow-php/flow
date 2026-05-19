@@ -9,6 +9,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Sort\ExternalSort\Bucket;
 use Flow\ETL\Sort\ExternalSort\BucketsCache;
+use Generator;
 
 /**
  * @internal created and used by ExternalSort algorithm
@@ -27,7 +28,7 @@ final readonly class SortBucketsExtractor implements Extractor
     /**
      * @return \Generator<int, Rows, mixed, mixed>
      */
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         foreach ($this->sortBuckets as $bucket) {
             $rows = new Rows();

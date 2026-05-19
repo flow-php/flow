@@ -10,6 +10,10 @@ use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Telemetry;
 use PHPUnit\Event\TestSuite\Started;
 use PHPUnit\Event\TestSuite\StartedSubscriber;
+use Throwable;
+
+use function str_contains;
+use function str_ends_with;
 
 final readonly class TestSuiteStartedSubscriber implements StartedSubscriber
 {
@@ -29,10 +33,10 @@ final readonly class TestSuiteStartedSubscriber implements StartedSubscriber
                 $suiteName === ''
                 || $suiteName === 'PHPUnit Test Suite'
                 || $suiteName === 'CLI Arguments'
-                || \str_ends_with((string) $suiteName, '.xml')
-                || \str_ends_with((string) $suiteName, '.xml.dist');
+                || str_ends_with((string) $suiteName, '.xml')
+                || str_ends_with((string) $suiteName, '.xml.dist');
 
-            $isTestCase = \str_contains((string) $suiteName, '\\') || \str_contains((string) $suiteName, '::');
+            $isTestCase = str_contains((string) $suiteName, '\\') || str_contains((string) $suiteName, '::');
 
             if (!$isRoot && $isTestCase && !$this->config->emitTestCaseSpans) {
                 return;
@@ -48,7 +52,7 @@ final readonly class TestSuiteStartedSubscriber implements StartedSubscriber
 
             $this->spanStack->setSuiteSpan($suite->name(), $span);
             $this->spanStack->push($span);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             // Silent failure - telemetry must never break tests
         }
     }

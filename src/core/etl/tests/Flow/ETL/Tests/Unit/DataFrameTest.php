@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use DateTimeImmutable;
 use Flow\ETL\DataFrame;
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\Extractor;
@@ -17,8 +18,12 @@ use Flow\ETL\Tests\Double\AddStampToStringEntryTransformer;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformer;
+use Generator;
 use PHPUnit\Framework\Assert;
+use RuntimeException;
 
+use function array_keys;
+use function array_merge;
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\bool_schema;
@@ -45,6 +50,7 @@ use function Flow\ETL\DSL\string_entry;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\to_callable;
 use function Flow\Types\DSL\type_integer;
+use function iterator_to_array;
 
 final class DataFrameTest extends FlowTestCase
 {
@@ -214,7 +220,7 @@ final class DataFrameTest extends FlowTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract(FlowContext $context): \Generator
+                public function extract(FlowContext $context): Generator
                 {
                     for ($i = 1; $i <= 10; $i++) {
                         yield rows(row(integer_entry('id', $i)));
@@ -261,7 +267,7 @@ final class DataFrameTest extends FlowTestCase
             ),
         ))->get();
 
-        static::assertEquals([$extractedRows], \iterator_to_array($rows));
+        static::assertEquals([$extractedRows], iterator_to_array($rows));
     }
 
     public function test_get_as_array(): void
@@ -283,7 +289,7 @@ final class DataFrameTest extends FlowTestCase
             [
                 $extractedRows->toArray(),
             ],
-            \iterator_to_array($rows),
+            iterator_to_array($rows),
         );
     }
 
@@ -309,7 +315,7 @@ final class DataFrameTest extends FlowTestCase
                 row(int_entry('id', 5), str_entry('name', 'bar')),
                 row(int_entry('id', 6), str_entry('name', 'baz')),
             ],
-            \iterator_to_array($rows),
+            iterator_to_array($rows),
         );
     }
 
@@ -335,7 +341,7 @@ final class DataFrameTest extends FlowTestCase
                 ['id' => 5, 'name' => 'bar'],
                 ['id' => 6, 'name' => 'baz'],
             ],
-            \iterator_to_array($rows),
+            iterator_to_array($rows),
         );
     }
 
@@ -348,7 +354,7 @@ final class DataFrameTest extends FlowTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract(FlowContext $context): \Generator
+                public function extract(FlowContext $context): Generator
                 {
                     for ($i = 1; $i <= 10; $i++) {
                         yield rows(row(integer_entry('id', $i)));
@@ -390,7 +396,7 @@ final class DataFrameTest extends FlowTestCase
 
         $df = df()->read(from_array($dataset1))->autoCast()->reorderEntries(compare_entries_by_name_desc());
 
-        static::assertEquals(['name', 'id', 'active'], \array_keys($df->fetch()[0]->toArray()));
+        static::assertEquals(['name', 'id', 'active'], array_keys($df->fetch()[0]->toArray()));
     }
 
     public function test_pipeline(): void
@@ -401,19 +407,19 @@ final class DataFrameTest extends FlowTestCase
              *
              * @return \Generator<int, Rows, mixed, void>
              */
-            public function extract(FlowContext $context): \Generator
+            public function extract(FlowContext $context): Generator
             {
                 yield rows(row(
                     integer_entry('id', 101),
                     boolean_entry('deleted', false),
-                    new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
+                    new DateTimeEntry('expiration-date', new DateTimeImmutable('2020-08-24')),
                     string_entry('phase', null),
                 ));
 
                 yield rows(row(
                     integer_entry('id', 102),
                     boolean_entry('deleted', true),
-                    new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-25')),
+                    new DateTimeEntry('expiration-date', new DateTimeImmutable('2020-08-25')),
                     string_entry('phase', null),
                 ));
             }
@@ -432,7 +438,7 @@ final class DataFrameTest extends FlowTestCase
 
             public function load(Rows $rows, FlowContext $context): void
             {
-                $this->result = \array_merge($this->result, $rows->toArray());
+                $this->result = array_merge($this->result, $rows->toArray());
             }
         };
 
@@ -443,7 +449,7 @@ final class DataFrameTest extends FlowTestCase
             ->rows(new class implements Transformer {
                 public function transform(Rows $rows, FlowContext $context): Rows
                 {
-                    throw new \RuntimeException('Unexpected exception');
+                    throw new RuntimeException('Unexpected exception');
                 }
             })
             ->rows(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'one'))
@@ -458,14 +464,14 @@ final class DataFrameTest extends FlowTestCase
                     'id' => 101,
                     'stamp' => 'zero:one:two:three',
                     'deleted' => false,
-                    'expiration-date' => new \DateTimeImmutable('2020-08-24'),
+                    'expiration-date' => new DateTimeImmutable('2020-08-24'),
                     'phase' => null,
                 ],
                 [
                     'id' => 102,
                     'stamp' => 'zero:one:two:three',
                     'deleted' => true,
-                    'expiration-date' => new \DateTimeImmutable('2020-08-25'),
+                    'expiration-date' => new DateTimeImmutable('2020-08-25'),
                     'phase' => null,
                 ],
             ],
@@ -480,7 +486,7 @@ final class DataFrameTest extends FlowTestCase
                 $rows = rows(row(
                     integer_entry('id', 101),
                     boolean_entry('deleted', false),
-                    new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
+                    new DateTimeEntry('expiration-date', new DateTimeImmutable('2020-08-24')),
                     string_entry('phase', null),
                 )),
             )
@@ -616,7 +622,7 @@ final class DataFrameTest extends FlowTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract(FlowContext $context): \Generator
+                public function extract(FlowContext $context): Generator
                 {
                     yield rows(
                         row(integer_entry('id', 1)),
@@ -657,7 +663,7 @@ final class DataFrameTest extends FlowTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract(FlowContext $context): \Generator
+                public function extract(FlowContext $context): Generator
                 {
                     yield rows(row(integer_entry('id', 1)));
                     yield rows(row(integer_entry('id', 2)));

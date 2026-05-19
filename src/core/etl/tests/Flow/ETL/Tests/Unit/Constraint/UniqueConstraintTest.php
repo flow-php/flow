@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Constraint;
 
+use DateTimeImmutable;
 use Flow\ETL\Constraint\UniqueConstraint;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -55,7 +56,7 @@ final class UniqueConstraintTest extends FlowTestCase
 
         static::assertSame(
             'Values: [date<date> = 2025-01-01]',
-            $constraint->violation(row(date_entry('date', new \DateTimeImmutable('2025-01-01')))),
+            $constraint->violation(row(date_entry('date', new DateTimeImmutable('2025-01-01')))),
         );
     }
 }

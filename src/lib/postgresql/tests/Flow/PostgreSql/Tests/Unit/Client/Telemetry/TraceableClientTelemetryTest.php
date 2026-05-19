@@ -21,7 +21,10 @@ use Flow\Telemetry\Provider\Memory\MemoryMetricProcessor;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
+use function array_map;
+use function count;
 use function Flow\PostgreSql\DSL\pgsql_connection_params;
 use function Flow\PostgreSql\DSL\postgresql_telemetry_config;
 use function Flow\PostgreSql\DSL\postgresql_telemetry_options;
@@ -89,7 +92,7 @@ final class TraceableClientTelemetryTest extends TestCase
         static::assertGreaterThan(0, $metricProcessor->countMetrics(), 'Expected metrics to be recorded');
 
         $durationMetrics = $metricProcessor->metricsWithName('operation_duration');
-        static::assertGreaterThanOrEqual(3, \count($durationMetrics), 'Expected at least 3 duration metrics');
+        static::assertGreaterThanOrEqual(3, count($durationMetrics), 'Expected at least 3 duration metrics');
     }
 
     public function test_begin_transaction_creates_span_when_tracing_enabled(): void
@@ -154,8 +157,9 @@ final class TraceableClientTelemetryTest extends TestCase
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
-        static::assertNotNull($spans[0]->status());
-        static::assertFalse($spans[0]->status()->isError());
+        $status = $spans[0]->status();
+        static::assertNotNull($status);
+        static::assertFalse($status->isError());
     }
 
     public function test_duration_metric_is_recorded_when_metrics_enabled(): void
@@ -202,7 +206,7 @@ final class TraceableClientTelemetryTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(traceQueries: true));
 
-        $users = [new \stdClass(), new \stdClass()];
+        $users = [new stdClass(), new stdClass()];
         $mockClient = $this->createMockClient();
         $mockClient->method('fetchAllInto')->willReturn($users);
 
@@ -219,7 +223,7 @@ final class TraceableClientTelemetryTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(traceQueries: true));
 
-        $user = new \stdClass();
+        $user = new stdClass();
         $user->id = 1;
         $mockClient = $this->createMockClient();
         $mockClient->method('fetchInto')->willReturn($user);
@@ -237,7 +241,7 @@ final class TraceableClientTelemetryTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = $this->createConfig($spanProcessor, options: postgresql_telemetry_options(traceQueries: true));
 
-        $user = new \stdClass();
+        $user = new stdClass();
         $user->id = 1;
         $mockClient = $this->createMockClient();
         $mockClient->method('fetchOneInto')->willReturn($user);
@@ -508,7 +512,7 @@ final class TraceableClientTelemetryTest extends TestCase
         $spans = $spanProcessor->endedSpans();
         static::assertCount(2, $spans);
 
-        $spanNames = \array_map(static fn($s) => $s->name(), $spans);
+        $spanNames = array_map(static fn($s) => $s->name(), $spans);
         static::assertContains('BEGIN TRANSACTION', $spanNames);
         static::assertContains('INSERT users', $spanNames);
     }

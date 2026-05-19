@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
+use DateTimeZone;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Exception\InvalidTypeException;
+use Flow\Types\Type;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_from_array;
@@ -18,7 +22,7 @@ use function Flow\Types\DSL\type_string;
 
 final class MapTypeTest extends TestCase
 {
-    public static function assert_data_provider(): \Generator
+    public static function assert_data_provider(): Generator
     {
         yield 'valid map with integer keys' => [
             'value' => [1 => 'a', 2 => 'b'],
@@ -69,19 +73,19 @@ final class MapTypeTest extends TestCase
         ];
 
         yield 'invalid object' => [
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'mapType' => type_map(type_integer(), type_string()),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid DateTimeZone' => [
-            'value' => new \DateTimeZone('UTC'),
+            'value' => new DateTimeZone('UTC'),
             'mapType' => type_map(type_integer(), type_string()),
             'exceptionClass' => InvalidTypeException::class,
         ];
     }
 
-    public static function cast_data_provider(): \Generator
+    public static function cast_data_provider(): Generator
     {
         yield 'map of ints to map of floats' => [
             'value' => ['a' => 1, 'b' => 2, 'c' => 3],
@@ -98,7 +102,7 @@ final class MapTypeTest extends TestCase
         ];
     }
 
-    public static function is_valid_data_provider(): \Generator
+    public static function is_valid_data_provider(): Generator
     {
         yield 'valid map with string keys and string values' => [
             'value' => ['one' => 'two'],
@@ -137,8 +141,11 @@ final class MapTypeTest extends TestCase
         ];
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('assert_data_provider')]
-    public function test_assert(mixed $value, $mapType, ?string $exceptionClass = null): void
+    public function test_assert(mixed $value, Type $mapType, ?string $exceptionClass = null): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
@@ -148,8 +155,11 @@ final class MapTypeTest extends TestCase
         }
     }
 
+    /**
+     * @param null|class-string<\Throwable> $exceptionClass
+     */
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, $mapType, mixed $expected, ?string $exceptionClass): void
+    public function test_cast(mixed $value, Type $mapType, mixed $expected, ?string $exceptionClass): void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
@@ -160,7 +170,7 @@ final class MapTypeTest extends TestCase
     }
 
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(mixed $value, $mapType, bool $expected): void
+    public function test_is_valid(mixed $value, Type $mapType, bool $expected): void
     {
         static::assertSame($expected, $mapType->isValid($value));
     }

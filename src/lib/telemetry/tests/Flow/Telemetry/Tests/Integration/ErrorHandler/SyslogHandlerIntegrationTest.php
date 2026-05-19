@@ -6,6 +6,7 @@ namespace Flow\Telemetry\Tests\Integration\ErrorHandler;
 
 use Flow\Telemetry\ErrorHandler\SyslogHandler;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class SyslogHandlerIntegrationTest extends TestCase
 {
@@ -15,6 +16,6 @@ final class SyslogHandlerIntegrationTest extends TestCase
 
         $handler = new SyslogHandler(ident: 'flow-telemetry-test');
 
-        $handler->handle(new \RuntimeException('integration test'));
+        $handler->handle(new RuntimeException('integration test'));
     }
 }

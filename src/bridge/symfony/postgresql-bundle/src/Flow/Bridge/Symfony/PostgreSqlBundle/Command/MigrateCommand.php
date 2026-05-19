@@ -18,8 +18,10 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function count;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
+use function sprintf;
 
 #[AsCommand(name: 'flow:migrations:migrate', description: 'Execute migrations')]
 final class MigrateCommand extends Command
@@ -71,10 +73,10 @@ final class MigrateCommand extends Command
         );
 
         $statuses = $migrator->status();
-        $pendingCount = \count($statuses->pending());
-        \count($statuses->executed());
+        $pendingCount = count($statuses->pending());
+        count($statuses->executed());
 
-        if (\count($statuses) === 0) {
+        if (count($statuses) === 0) {
             $io->success('No migrations found.');
 
             return Command::SUCCESS;
@@ -101,7 +103,7 @@ final class MigrateCommand extends Command
 
         $version = $resolver->resolve($versionAlias);
 
-        if ($input->isInteractive() && !$io->confirm(\sprintf('Migrate to version <fg=cyan>%s</>?', $version), false)) {
+        if ($input->isInteractive() && !$io->confirm(sprintf('Migrate to version <fg=cyan>%s</>?', $version), false)) {
             $io->warning('Migration cancelled.');
 
             return Command::SUCCESS;
@@ -109,7 +111,7 @@ final class MigrateCommand extends Command
 
         $results = $migrator->migrate($version, $dryRun, $allOrNothing);
 
-        if (\count($results) === 0) {
+        if (count($results) === 0) {
             $io->success('Already up to date.');
 
             return Command::SUCCESS;
@@ -125,7 +127,7 @@ final class MigrateCommand extends Command
             if ($result->error !== null) {
                 $rows[] = [$direction, (string) $result->version, '<fg=red>FAILED</>', $result->executionTimeMs . 'ms'];
                 $io->table(['Direction', 'Version', 'Result', 'Time'], $rows);
-                $io->error(\sprintf('%s failed: %s', $result->version, $result->error->getMessage()));
+                $io->error(sprintf('%s failed: %s', $result->version, $result->error->getMessage()));
 
                 return Command::FAILURE;
             }
@@ -142,7 +144,7 @@ final class MigrateCommand extends Command
         if ($dryRun) {
             $io->note('Dry run completed. No changes were applied.');
         } else {
-            $io->success(\sprintf('%d migration(s) executed in %dms.', \count($results), $totalTime));
+            $io->success(sprintf('%d migration(s) executed in %dms.', count($results), $totalTime));
         }
 
         return Command::SUCCESS;

@@ -15,6 +15,10 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Rows;
+use Throwable;
+
+use function in_array;
+use function strtolower;
 
 final class DbalLoader implements Loader
 {
@@ -83,7 +87,7 @@ final class DbalLoader implements Loader
             );
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 
             throw $e;
@@ -95,7 +99,7 @@ final class DbalLoader implements Loader
      */
     public function withOperation(string $operation): self
     {
-        if (false === \in_array(\strtolower($operation), ['update', 'insert', 'delete'], true)) {
+        if (false === in_array(strtolower($operation), ['update', 'insert', 'delete'], true)) {
             throw new InvalidArgumentException("Operation can be insert, update, or delete, {$operation} given.");
         }
 

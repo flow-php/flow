@@ -12,7 +12,7 @@ interface EndpointOptions
     public function toHeaders(): array;
 
     /**
-     * @return array<string, string>
+     * @return array<string, mixed>
      */
     public function toURIParameters(): array;
 }

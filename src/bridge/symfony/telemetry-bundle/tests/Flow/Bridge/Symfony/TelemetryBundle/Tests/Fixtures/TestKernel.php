@@ -6,11 +6,18 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures;
 
 use Flow\Bridge\Symfony\TelemetryBundle\FlowTelemetryBundle;
 use Flow\Telemetry\Telemetry;
+use Override;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\Kernel;
+
+use function array_merge;
+use function bin2hex;
+use function random_bytes;
+use function str_ends_with;
+use function str_starts_with;
 
 final class TestKernel extends Kernel
 {
@@ -30,7 +37,7 @@ final class TestKernel extends Kernel
 
     public function __construct(string $environment = 'test', bool $debug = true)
     {
-        $this->testId = \bin2hex(\random_bytes(8));
+        $this->testId = bin2hex(random_bytes(8));
 
         parent::__construct($environment, $debug);
     }
@@ -61,10 +68,10 @@ final class TestKernel extends Kernel
      */
     public function addTestExtensionConfig(string $extension, array $config): void
     {
-        $this->testExtensionConfigs[$extension] = \array_merge($this->testExtensionConfigs[$extension] ?? [], $config);
+        $this->testExtensionConfigs[$extension] = array_merge($this->testExtensionConfigs[$extension] ?? [], $config);
     }
 
-    #[\Override]
+    #[Override]
     public function getCacheDir(): string
     {
         return (
@@ -77,7 +84,7 @@ final class TestKernel extends Kernel
         );
     }
 
-    #[\Override]
+    #[Override]
     public function getLogDir(): string
     {
         return (
@@ -90,7 +97,7 @@ final class TestKernel extends Kernel
         );
     }
 
-    #[\Override]
+    #[Override]
     public function getProjectDir(): string
     {
         return __DIR__ . '/..';
@@ -133,17 +140,17 @@ final class TestKernel extends Kernel
             {
                 foreach ($container->getDefinitions() as $id => $definition) {
                     if (
-                        \str_starts_with($id, 'flow.telemetry')
-                        || \str_ends_with($id, '.flow_telemetry')
-                        || \str_starts_with($id, 'test.')
-                        || \str_starts_with($id, 'cache.flow_telemetry')
+                        str_starts_with($id, 'flow.telemetry')
+                        || str_ends_with($id, '.flow_telemetry')
+                        || str_starts_with($id, 'test.')
+                        || str_starts_with($id, 'cache.flow_telemetry')
                     ) {
                         $definition->setPublic(true);
                     }
                 }
 
                 foreach ($container->getAliases() as $id => $alias) {
-                    if ($id === Telemetry::class || \str_starts_with($id, 'flow.telemetry')) {
+                    if ($id === Telemetry::class || str_starts_with($id, 'flow.telemetry')) {
                         $alias->setPublic(true);
                     }
                 }

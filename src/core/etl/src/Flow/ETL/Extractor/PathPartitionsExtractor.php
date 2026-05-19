@@ -8,7 +8,11 @@ use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path;
+use Generator;
 
+use function array_map;
+use function array_merge;
+use function array_values;
 use function Flow\ETL\DSL\map_entry;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -25,7 +29,7 @@ final class PathPartitionsExtractor implements Extractor, FileExtractor, Limitab
         private readonly Path $path,
     ) {}
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         foreach ($context->filesystem($this->path)->list($this->path, $this->filter()) as $fileStatus) {
             $partitions = $fileStatus->path->partitions();
@@ -34,7 +38,7 @@ final class PathPartitionsExtractor implements Extractor, FileExtractor, Limitab
                 string_entry('path', $fileStatus->path->uri()),
                 map_entry(
                     'partitions',
-                    \array_merge(...\array_values(\array_map(static fn(Partition $p) => [
+                    array_merge(...array_values(array_map(static fn(Partition $p) => [
                         $p->name => $p->value,
                     ], $partitions->toArray()))),
                     type_map(type_string(), type_string()),

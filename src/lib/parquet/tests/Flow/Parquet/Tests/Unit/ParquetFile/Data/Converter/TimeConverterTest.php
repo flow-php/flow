@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\ParquetFile\Data\Converter;
 
+use DateTimeImmutable;
 use Flow\Parquet\ParquetFile\Data\Converter\TimeConverter;
 use PHPUnit\Framework\TestCase;
 
@@ -11,8 +12,8 @@ final class TimeConverterTest extends TestCase
 {
     public function test_converting_diff_between_two_datetimes_to_time(): void
     {
-        $start = new \DateTimeImmutable('2023-01-01 00:00:00 UTC');
-        $end = (new \DateTimeImmutable('2023-01-01 00:00:0 UTC'))->setTime(15, 25, 30, 15040);
+        $start = new DateTimeImmutable('2023-01-01 00:00:00 UTC');
+        $end = (new DateTimeImmutable('2023-01-01 00:00:0 UTC'))->setTime(15, 25, 30, 15040);
 
         $diff = $start->diff($end);
 

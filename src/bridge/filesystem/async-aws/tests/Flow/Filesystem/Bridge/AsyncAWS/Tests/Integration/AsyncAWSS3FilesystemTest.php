@@ -6,8 +6,13 @@ namespace Flow\Filesystem\Bridge\AsyncAWS\Tests\Integration;
 
 use Flow\Filesystem\FileStatus;
 
+use function array_map;
+use function file_get_contents;
 use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function fopen;
+use function iterator_to_array;
+use function str_repeat;
 
 final class AsyncAWSS3FilesystemTest extends AsyncAWSS3TestCase
 {
@@ -17,7 +22,7 @@ final class AsyncAWSS3FilesystemTest extends AsyncAWSS3TestCase
 
         $fs
             ->writeTo(path('aws-s3://var/file.txt'))
-            ->append(\str_repeat('a', 1024 * 1024 * 5))
+            ->append(str_repeat('a', 1024 * 1024 * 5))
             ->close();
 
         $fs->appendTo(path('aws-s3://var/file.txt'))->append("This is second line\n")->close();
@@ -26,7 +31,7 @@ final class AsyncAWSS3FilesystemTest extends AsyncAWSS3TestCase
         static::assertFalse($fs->status(path('aws-s3://var/file.txt'))->isDirectory());
 
         static::assertStringStartsWith(
-            \str_repeat('a', 1024),
+            str_repeat('a', 1024),
             $fs->readFrom(path('aws-s3://var/file.txt'))->read(1024, 0),
         );
         static::assertStringEndsWith("This is second line\n", $fs->readFrom(path('aws-s3://var/file.txt'))->read(
@@ -60,7 +65,7 @@ final class AsyncAWSS3FilesystemTest extends AsyncAWSS3TestCase
     {
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
-        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertNotFalse($resource);
         $stream = $fs->writeTo(path('aws-s3://orders.csv'))->fromResource($resource);
         $stream->close();
@@ -72,7 +77,7 @@ final class AsyncAWSS3FilesystemTest extends AsyncAWSS3TestCase
     {
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
-        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertNotFalse($resource);
         $fs->writeTo(path('aws-s3://var/nested/orders.csv'))->fromResource($resource)->close();
 
@@ -105,7 +110,7 @@ final class AsyncAWSS3FilesystemTest extends AsyncAWSS3TestCase
     {
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
-        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertNotFalse($resource);
         $stream = $fs->writeTo(path('aws-s3://var/some_path_to/file.txt'))->fromResource($resource);
         $stream->close();
@@ -117,7 +122,7 @@ final class AsyncAWSS3FilesystemTest extends AsyncAWSS3TestCase
     {
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
-        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertNotFalse($resource);
         $stream = $fs->writeTo(path('aws-s3://var/some_path_to/file.txt'))->fromResource($resource);
         $stream->close();
@@ -152,15 +157,15 @@ final class AsyncAWSS3FilesystemTest extends AsyncAWSS3TestCase
     {
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
-        $resource1 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource1 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertNotFalse($resource1);
         $fs->writeTo(path('aws-s3://var/nested/orders/orders.txt'))->fromResource($resource1)->close();
 
-        $resource2 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource2 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertNotFalse($resource2);
         $fs->writeTo(path('aws-s3://var/nested/orders/orders.csv'))->fromResource($resource2)->close();
 
-        $resource3 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource3 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertNotFalse($resource3);
         $fs->writeTo(path('aws-s3://var/nested/orders/orders_01.csv'))->fromResource($resource3)->close();
 
@@ -211,15 +216,15 @@ final class AsyncAWSS3FilesystemTest extends AsyncAWSS3TestCase
     {
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
-        $resource1 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource1 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertNotFalse($resource1);
         $fs->writeTo(path('aws-s3://var/orders.csv'))->fromResource($resource1)->close();
 
-        $resource2 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource2 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertNotFalse($resource2);
         $fs->writeTo(path('aws-s3://var/nested/orders/orders.csv'))->fromResource($resource2)->close();
 
-        $resource3 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource3 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertNotFalse($resource3);
         $fs->writeTo(path('aws-s3://var/nested/orders/orders_01.csv'))->fromResource($resource3)->close();
 
@@ -237,15 +242,15 @@ final class AsyncAWSS3FilesystemTest extends AsyncAWSS3TestCase
     {
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
-        $resource1 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource1 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertNotFalse($resource1);
         $fs->writeTo(path('aws-s3://var/nested/orders/orders.txt'))->fromResource($resource1)->close();
 
-        $resource2 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource2 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertNotFalse($resource2);
         $fs->writeTo(path('aws-s3://var/nested/orders/orders.csv'))->fromResource($resource2)->close();
 
-        $resource3 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource3 = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertNotFalse($resource3);
         $fs->writeTo(path('aws-s3://var/nested/orders/orders_01.csv'))->fromResource($resource3)->close();
 
@@ -274,11 +279,11 @@ final class AsyncAWSS3FilesystemTest extends AsyncAWSS3TestCase
         $fs->writeTo(path('aws-s3://multi_partitions/date=2022-01-05/country=de/file.txt'))->append('test')->close();
         $fs->writeTo(path('aws-s3://multi_partitions/date=2022-01-05/country=pl/file.txt'))->append('test')->close();
 
-        $paths = \iterator_to_array($fs->list(path('aws-s3://multi_partitions/**/*.txt')));
+        $paths = iterator_to_array($fs->list(path('aws-s3://multi_partitions/**/*.txt')));
 
         static::assertTrue($fs->status(path('aws-s3://multi_partitions/**/*.txt'))?->isFile());
 
-        $uris = \array_map(static fn(FileStatus $s): string => $s->path->uri(), $paths);
+        $uris = array_map(static fn(FileStatus $s): string => $s->path->uri(), $paths);
         static::assertSame(
             [
                 path('aws-s3://multi_partitions/date=2022-01-01/country=de/file.txt')->uri(),
@@ -353,7 +358,7 @@ final class AsyncAWSS3FilesystemTest extends AsyncAWSS3TestCase
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
         $stream = $fs->writeTo(path('aws-s3://orders.csv'));
-        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        $resource = fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
         static::assertNotFalse($resource);
         $stream->fromResource($resource);
         $stream->close();
@@ -361,7 +366,7 @@ final class AsyncAWSS3FilesystemTest extends AsyncAWSS3TestCase
         static::assertTrue($fs->status(path('aws-s3://orders.csv'))?->isFile());
         static::assertFalse($fs->status(path('aws-s3://orders.csv'))->isDirectory());
         static::assertSame(
-            \file_get_contents(__DIR__ . '/Fixtures/orders.csv'),
+            file_get_contents(__DIR__ . '/Fixtures/orders.csv'),
             $fs->readFrom(path('aws-s3://orders.csv'))->content(),
         );
 
@@ -374,7 +379,7 @@ final class AsyncAWSS3FilesystemTest extends AsyncAWSS3TestCase
 
         $stream = $fs->writeTo(path('aws-s3://block_blob.csv'));
 
-        $string5Mb = \str_repeat('a', 1024 * 1024 * 5);
+        $string5Mb = str_repeat('a', 1024 * 1024 * 5);
 
         for ($i = 0; $i < 10; $i++) {
             $stream->append($string5Mb . "\n");

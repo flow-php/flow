@@ -6,9 +6,18 @@ namespace Flow\Types\Value;
 
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Exception\RuntimeException;
+use InvalidArgumentException as BaseInvalidArgumentException;
+use Ramsey\Uuid\Uuid as RamseyUuid;
 use Ramsey\Uuid\UuidInterface;
+use Stringable;
+use Symfony\Component\Uid\Uuid as SymfonyUuid;
 
-final readonly class Uuid implements \Stringable
+use function class_exists;
+use function is_string;
+use function preg_match;
+use function strlen;
+
+final readonly class Uuid implements Stringable
 {
     /**
      * This regexp is a port of the Uuid library,
@@ -21,23 +30,23 @@ final readonly class Uuid implements \Stringable
     /**
      * @throws InvalidArgumentException|RuntimeException
      */
-    public function __construct(string|UuidInterface|\Symfony\Component\Uid\Uuid $value)
+    public function __construct(string|UuidInterface|SymfonyUuid $value)
     {
-        if (\is_string($value)) {
+        if (is_string($value)) {
             try {
-                if (\class_exists(\Ramsey\Uuid\Uuid::class)) {
-                    $this->value = (string) \Ramsey\Uuid\Uuid::fromString($value);
-                } elseif (\class_exists(\Symfony\Component\Uid\Uuid::class)) {
-                    $this->value = \Symfony\Component\Uid\Uuid::fromString($value)->toRfc4122();
+                if (class_exists(RamseyUuid::class)) {
+                    $this->value = (string) RamseyUuid::fromString($value);
+                } elseif (class_exists(SymfonyUuid::class)) {
+                    $this->value = SymfonyUuid::fromString($value)->toRfc4122();
                 } elseif (self::isValid($value)) {
                     $this->value = $value;
                 } else {
                     throw new RuntimeException(
-                        "\Ramsey\Uuid\Uuid nor \Symfony\Component\Uid\Uuid class not found, please add 'ramsey/uuid' or 'symfony/uid' as a dependency to the project first.",
+                        "RamseyUuid nor SymfonyUuid class not found, please add 'ramsey/uuid' or 'symfony/uid' as a dependency to the project first.",
                     );
                 }
-            } catch (\InvalidArgumentException $e) {
-                throw new InvalidArgumentException("Invalid UUID: '{$value}'", $e->getCode(), $e);
+            } catch (BaseInvalidArgumentException $e) {
+                throw new InvalidArgumentException("Invalid UUID: '{$value}'", (int) $e->getCode(), $e);
             }
         } elseif ($value instanceof UuidInterface) {
             $this->value = $value->toString();
@@ -53,11 +62,11 @@ final readonly class Uuid implements \Stringable
 
     public static function isValid(string $value): bool
     {
-        if (\strlen($value) !== 36) {
+        if (strlen($value) !== 36) {
             return false;
         }
 
-        return 1 === \preg_match(self::UUID_REGEXP, $value);
+        return 1 === preg_match(self::UUID_REGEXP, $value);
     }
 
     public function __toString(): string

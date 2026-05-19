@@ -13,8 +13,11 @@ use Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\KernelTestCase;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Tracer\SpanKind;
 use PHPUnit\Framework\Attributes\CoversClass;
+use RuntimeException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+
+use function interface_exists;
 
 #[CoversClass(TracableHttpClient::class)]
 #[CoversClass(HttpClientTelemetryPass::class)]
@@ -22,7 +25,7 @@ final class TracableHttpClientTest extends KernelTestCase
 {
     protected function setUp(): void
     {
-        if (!\interface_exists(HttpClientInterface::class)) {
+        if (!interface_exists(HttpClientInterface::class)) {
             self::markTestSkipped('symfony/http-client-contracts is not installed');
         }
 
@@ -333,7 +336,7 @@ final class TracableHttpClientTest extends KernelTestCase
 
         try {
             $client->request('GET', 'https://unreachable.example.com/');
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             $exceptionThrown = true;
             static::assertSame('Connection refused', $e->getMessage());
         }

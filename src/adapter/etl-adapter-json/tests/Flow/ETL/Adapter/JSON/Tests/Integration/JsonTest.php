@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 
+use DOMDocument;
 use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function file_exists;
+use function file_get_contents;
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\Adapter\Json\to_json;
 use function Flow\ETL\DSL\average;
@@ -23,12 +26,13 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\Filesystem\DSL\path;
+use function unlink;
 
 final class JsonTest extends FlowTestCase
 {
     public function test_domdocument_json_file(): void
     {
-        $domDocument = new \DOMDocument();
+        $domDocument = new DOMDocument();
         $domDocument->loadXml('<b>red</b>');
 
         df()
@@ -39,7 +43,7 @@ final class JsonTest extends FlowTestCase
             ->write(to_json($path = __DIR__ . '/var/test_domdocument.json'))
             ->run();
 
-        $content = \file_get_contents($path);
+        $content = file_get_contents($path);
 
         if ($content === false) {
             static::fail('Failed to read file content');
@@ -54,16 +58,16 @@ final class JsonTest extends FlowTestCase
     {
         $path = __DIR__ . '/var/test_json_loader.json';
 
-        if (\file_exists($path)) {
-            \unlink($path);
+        if (file_exists($path)) {
+            unlink($path);
         }
 
         df()->read(new FakeExtractor(100))->write(to_json($path))->run();
 
         static::assertEquals(100, df()->read(from_json($path))->count());
 
-        if (\file_exists($path)) {
-            \unlink($path);
+        if (file_exists($path)) {
+            unlink($path);
         }
     }
 
@@ -75,7 +79,7 @@ final class JsonTest extends FlowTestCase
 
         $loader->closure($context);
 
-        $content = \file_get_contents($path);
+        $content = file_get_contents($path);
 
         if ($content === false) {
             static::fail('Failed to read file content');
@@ -86,8 +90,8 @@ final class JsonTest extends FlowTestCase
             ]
             JSON, $content);
 
-        if (\file_exists($path)) {
-            \unlink($path);
+        if (file_exists($path)) {
+            unlink($path);
         }
     }
 
@@ -95,15 +99,15 @@ final class JsonTest extends FlowTestCase
     {
         $path = __DIR__ . '/var/test_json_loader.json';
 
-        if (\file_exists($path)) {
-            \unlink($path);
+        if (file_exists($path)) {
+            unlink($path);
         }
 
         df()->read(new FakeExtractor(100))->write(to_json($path))->run();
 
         df()->read(new FakeExtractor(100))->mode(overwrite())->write(to_json($path))->run();
 
-        $content = \file_get_contents($path);
+        $content = file_get_contents($path);
 
         if ($content === false) {
             static::fail('Failed to read file content');
@@ -113,8 +117,8 @@ final class JsonTest extends FlowTestCase
 
         static::assertEquals(100, df()->read(from_json($path))->count());
 
-        if (\file_exists($path)) {
-            \unlink($path);
+        if (file_exists($path)) {
+            unlink($path);
         }
     }
 
@@ -127,7 +131,7 @@ final class JsonTest extends FlowTestCase
             ->write(to_json($path = __DIR__ . '/var/test_jsonentry.json'))
             ->run();
 
-        $content = \file_get_contents($path);
+        $content = file_get_contents($path);
 
         if ($content === false) {
             static::fail('Failed to read file content');
@@ -188,7 +192,7 @@ final class JsonTest extends FlowTestCase
             ))
             ->run();
 
-        $content = \file_get_contents($path);
+        $content = file_get_contents($path);
 
         if ($content === false) {
             static::fail('Failed to read file content');
@@ -223,7 +227,7 @@ final class JsonTest extends FlowTestCase
             ))
             ->run();
 
-        $content = \file_get_contents($path);
+        $content = file_get_contents($path);
 
         if ($content === false) {
             static::fail('Failed to read file content');

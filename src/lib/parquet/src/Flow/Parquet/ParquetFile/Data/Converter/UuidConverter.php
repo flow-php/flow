@@ -9,12 +9,19 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\Converter;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Stringable;
+
+use function get_debug_type;
+use function is_object;
+use function is_string;
+use function method_exists;
+use function sprintf;
 
 final class UuidConverter implements Converter
 {
     public function fromParquetType(mixed $data): string
     {
-        if (!\is_string($data)) {
+        if (!is_string($data)) {
             throw new RuntimeException('UUID must be read as a string from Parquet file');
         }
 
@@ -32,15 +39,20 @@ final class UuidConverter implements Converter
 
     public function toParquetType(mixed $data): string
     {
-        if (\is_string($data)) {
+        if (is_string($data)) {
             return $data;
         }
 
-        if (\is_object($data) && \method_exists($data, 'toString')) {
-            return $data->toString();
+        if (is_object($data) && method_exists($data, 'toString')) {
+            return is_string($data->toString())
+                ? (string) $data->toString()
+                : throw new RuntimeException(sprintf(
+                    'UUID toString() must return string, got %s',
+                    get_debug_type($data->toString()),
+                ));
         }
 
-        if ($data instanceof \Stringable) {
+        if ($data instanceof Stringable) {
             return (string) $data;
         }
 

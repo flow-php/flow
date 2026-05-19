@@ -8,6 +8,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+use function array_values;
+use function is_array;
+
 final class ArrayValues extends ScalarFunctionChain
 {
     /**
@@ -24,12 +27,12 @@ final class ArrayValues extends ScalarFunctionChain
     {
         $array = (new Parameter($this->array))->asArray($row, $context);
 
-        if (!\is_array($array)) {
+        if (!is_array($array)) {
             return $context
                 ->functions()
                 ->invalidResult(new InvalidArgumentException('ArrayValues function requires non-null array'));
         }
 
-        return \array_values($array);
+        return array_values($array);
     }
 }

@@ -10,6 +10,10 @@ use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\Logger\Logger;
 use Psr\Log\AbstractLogger;
 use Psr\Log\InvalidArgumentException as PsrInvalidArgumentException;
+use Stringable;
+use Throwable;
+
+use function is_string;
 
 final class TelemetryLogger extends AbstractLogger
 {
@@ -22,9 +26,9 @@ final class TelemetryLogger extends AbstractLogger
     /**
      * @param array<array-key, mixed> $context
      */
-    public function log($level, string|\Stringable $message, array $context = []): void
+    public function log($level, string|Stringable $message, array $context = []): void
     {
-        if (!\is_string($level) && !$level instanceof \Stringable) {
+        if (!is_string($level) && !$level instanceof Stringable) {
             throw new InvalidArgumentException('PSR-3 log level must be a string or Stringable.');
         }
 
@@ -32,7 +36,7 @@ final class TelemetryLogger extends AbstractLogger
             $this->logger->emit($this->converter->convert($level, $message, $context));
         } catch (PsrInvalidArgumentException $e) {
             throw $e;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
         }
     }

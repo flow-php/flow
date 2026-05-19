@@ -4,21 +4,31 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
+use DateTimeImmutable;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Json;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use stdClass;
 
+use function array_walk_recursive;
+use function assert;
 use function Flow\ETL\DSL\integer_entry;
 use function Flow\ETL\DSL\json_entry;
 use function Flow\Types\DSL\type_array;
+use function is_string;
+use function json_encode;
+use function serialize;
+use function trim;
+use function unserialize;
 
 final class JsonEntryTest extends FlowTestCase
 {
-    public static function is_equal_data_provider(): \Generator
+    public static function is_equal_data_provider(): Generator
     {
         yield 'equal names and equal simple integer arrays with the same order' => [
             true,
@@ -69,12 +79,12 @@ final class JsonEntryTest extends FlowTestCase
             true,
             json_entry('name', [
                 'foo' => 1,
-                'bar' => ['foo' => new \DateTimeImmutable('2020-01-01 00:00:00'), 'bar' => 'bar'],
+                'bar' => ['foo' => new DateTimeImmutable('2020-01-01 00:00:00'), 'bar' => 'bar'],
                 'baz',
             ]),
             json_entry('name', [
                 'foo' => 1,
-                'bar' => ['foo' => new \DateTimeImmutable('2020-01-01 00:00:00'), 'bar' => 'bar'],
+                'bar' => ['foo' => new DateTimeImmutable('2020-01-01 00:00:00'), 'bar' => 'bar'],
                 'baz',
             ]),
         ];
@@ -82,19 +92,19 @@ final class JsonEntryTest extends FlowTestCase
             false,
             json_entry('name', [
                 'foo' => 1,
-                'bar' => ['foo' => new \DateTimeImmutable('2020-01-01 00:00:00'), 'bar' => 'bar'],
+                'bar' => ['foo' => new DateTimeImmutable('2020-01-01 00:00:00'), 'bar' => 'bar'],
                 'baz',
             ]),
             json_entry('name', [
                 'foo' => 1,
-                'bar' => ['foo' => new \DateTimeImmutable('2020-01-05 00:00:00'), 'bar' => 'bar'],
+                'bar' => ['foo' => new DateTimeImmutable('2020-01-05 00:00:00'), 'bar' => 'bar'],
                 'baz',
             ]),
         ];
         yield 'equal names and equal multi dimensional array with equals different entries' => [
             true,
-            json_entry('name', ['foo' => 1, 'bar' => ['foo' => new \stdClass(), 'bar' => 'bar'], 'baz']),
-            json_entry('name', ['foo' => 1, 'bar' => ['foo' => new \stdClass(), 'bar' => 'bar'], 'baz']),
+            json_entry('name', ['foo' => 1, 'bar' => ['foo' => new stdClass(), 'bar' => 'bar'], 'baz']),
+            json_entry('name', ['foo' => 1, 'bar' => ['foo' => new stdClass(), 'bar' => 'bar'], 'baz']),
         ];
         yield 'equal names and equal multi dimensional array with equals different entries 1' => [
             true,
@@ -174,9 +184,9 @@ final class JsonEntryTest extends FlowTestCase
         $entry = json_entry('items', $items)->map(static function (?Json $json): array {
             $value = $json?->toArray();
             type_array()->assert($value);
-            \array_walk_recursive($value, static function (&$v): void {
-                if (\is_string($v)) {
-                    $v = \trim($v);
+            array_walk_recursive($value, static function (&$v): void {
+                if (is_string($v)) {
+                    $v = trim($v);
                 }
             });
 
@@ -245,17 +255,17 @@ final class JsonEntryTest extends FlowTestCase
         ];
         $entry = json_entry('items', $items);
 
-        static::assertEquals(\json_encode($items), $entry->toString());
+        static::assertEquals(json_encode($items), $entry->toString());
     }
 
     public function test_serialization(): void
     {
         $entry = json_entry('name', ['foo' => 1, 'bar' => ['foo' => 'foo', 'bar' => 'bar'], 'baz']);
 
-        $serialized = \serialize($entry);
-        $unserialized = \unserialize($serialized);
+        $serialized = serialize($entry);
+        $unserialized = unserialize($serialized);
 
-        \assert($unserialized instanceof Entry);
+        assert($unserialized instanceof Entry);
         static::assertTrue($entry->isEqual($unserialized));
     }
 
@@ -263,10 +273,10 @@ final class JsonEntryTest extends FlowTestCase
     {
         $entry = JsonEntry::object('entry-name', ['id' => 1, 'name' => 'one']);
 
-        $serialized = \serialize($entry);
-        $unserialized = \unserialize($serialized);
+        $serialized = serialize($entry);
+        $unserialized = unserialize($serialized);
 
-        \assert($unserialized instanceof Entry);
+        assert($unserialized instanceof Entry);
         static::assertTrue($entry->isEqual($unserialized));
     }
 

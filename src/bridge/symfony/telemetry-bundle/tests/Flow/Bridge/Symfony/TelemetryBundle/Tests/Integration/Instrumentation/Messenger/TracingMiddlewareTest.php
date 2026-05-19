@@ -19,6 +19,7 @@ use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
 use PHPUnit\Framework\Attributes\CoversClass;
+use RuntimeException;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Handler\HandlersLocator;
 use Symfony\Component\Messenger\MessageBus;
@@ -26,13 +27,16 @@ use Symfony\Component\Messenger\Middleware\HandleMessageMiddleware;
 use Symfony\Component\Messenger\Middleware\MiddlewareInterface;
 use Symfony\Component\Messenger\Stamp\BusNameStamp;
 use Symfony\Component\Messenger\Stamp\ReceivedStamp;
+use Throwable;
+
+use function interface_exists;
 
 #[CoversClass(TracingMiddleware::class)]
 final class TracingMiddlewareTest extends KernelTestCase
 {
     protected function setUp(): void
     {
-        if (!\interface_exists(MiddlewareInterface::class)) {
+        if (!interface_exists(MiddlewareInterface::class)) {
             self::markTestSkipped('symfony/messenger is not installed');
         }
 
@@ -529,7 +533,7 @@ final class TracingMiddlewareTest extends KernelTestCase
         $telemetry = $container->get(Telemetry::class);
 
         $failingHandler = static function (TestMessage $message): void {
-            throw new \RuntimeException('Handler failed');
+            throw new RuntimeException('Handler failed');
         };
 
         $bus = new MessageBus([
@@ -545,7 +549,7 @@ final class TracingMiddlewareTest extends KernelTestCase
 
         try {
             $bus->dispatch($message);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $exceptionThrown = true;
         }
 

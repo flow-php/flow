@@ -4,14 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Migrations\Store;
 
+use ArrayIterator;
+use Countable;
 use Flow\PostgreSql\Migrations\Exception\MigrationException;
 use Flow\PostgreSql\Migrations\ExecutedMigration;
 use Flow\PostgreSql\Migrations\Version;
+use IteratorAggregate;
+
+use function array_values;
+use function count;
+use function usort;
 
 /**
  * @implements \IteratorAggregate<int, ExecutedMigration>
  */
-final readonly class ExecutedMigrations implements \Countable, \IteratorAggregate
+final readonly class ExecutedMigrations implements Countable, IteratorAggregate
 {
     /**
      * @var list<ExecutedMigration>
@@ -20,9 +27,9 @@ final readonly class ExecutedMigrations implements \Countable, \IteratorAggregat
 
     public function __construct(ExecutedMigration ...$migrations)
     {
-        $sorted = \array_values($migrations);
+        $sorted = array_values($migrations);
 
-        \usort($sorted, static fn(ExecutedMigration $a, ExecutedMigration $b): int => (
+        usort($sorted, static fn(ExecutedMigration $a, ExecutedMigration $b): int => (
             $a->version->isAfter($b->version) ? 1 : ($b->version->isAfter($a->version) ? -1 : 0)
         ));
 
@@ -31,7 +38,7 @@ final readonly class ExecutedMigrations implements \Countable, \IteratorAggregat
 
     public function count(): int
     {
-        return \count($this->migrations);
+        return count($this->migrations);
     }
 
     public function get(Version $version): ExecutedMigration
@@ -48,9 +55,9 @@ final readonly class ExecutedMigrations implements \Countable, \IteratorAggregat
     /**
      * @return \ArrayIterator<int, ExecutedMigration>
      */
-    public function getIterator(): \ArrayIterator
+    public function getIterator(): ArrayIterator
     {
-        return new \ArrayIterator($this->migrations);
+        return new ArrayIterator($this->migrations);
     }
 
     public function has(Version $version): bool
@@ -75,6 +82,6 @@ final readonly class ExecutedMigrations implements \Countable, \IteratorAggregat
             return null;
         }
 
-        return $this->migrations[\count($this->migrations) - 1];
+        return $this->migrations[count($this->migrations) - 1];
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Logger\Processor;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Logger\LogEntry;
@@ -17,6 +18,7 @@ use Flow\Telemetry\Tests\Mother\ErrorHandlerSpy;
 use Flow\Telemetry\Tests\Mother\LogEntryMother;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class BatchingLogProcessorTest extends TestCase
 {
@@ -77,7 +79,7 @@ final class BatchingLogProcessorTest extends TestCase
         $exporter
             ->expects(self::once())
             ->method('export')
-            ->willThrowException(new \RuntimeException('exporter exploded'));
+            ->willThrowException(new RuntimeException('exporter exploded'));
         $spy = new ErrorHandlerSpy();
 
         $processor = new BatchingLogProcessor($exporter, 10, $spy);
@@ -103,7 +105,7 @@ final class BatchingLogProcessorTest extends TestCase
     public function test_flush_routes_exporter_throwable_to_error_handler(): void
     {
         $exporter = $this->createMock(Exporter::class);
-        $exporter->method('export')->willThrowException(new \RuntimeException('exporter exploded'));
+        $exporter->method('export')->willThrowException(new RuntimeException('exporter exploded'));
         $spy = new ErrorHandlerSpy();
 
         $processor = new BatchingLogProcessor($exporter, 10, $spy);
@@ -114,7 +116,7 @@ final class BatchingLogProcessorTest extends TestCase
         static::assertFalse($result);
         static::assertSame(1, $spy->count());
         $last = $spy->last();
-        static::assertInstanceOf(\RuntimeException::class, $last);
+        static::assertInstanceOf(RuntimeException::class, $last);
         static::assertSame('exporter exploded', $last->getMessage());
     }
 
@@ -125,15 +127,17 @@ final class BatchingLogProcessorTest extends TestCase
         $exporter
             ->expects(self::once())
             ->method('export')
-            ->with(static::callback(static function (mixed $signal) use (&$capturedSignal) {
-                $capturedSignal = $signal;
+            ->with(static::callback(static function (mixed $signal) use (&$capturedSignal): bool {
+                if ($signal instanceof Signals) {
+                    $capturedSignal = $signal;
+                }
 
                 return $signal instanceof Signals && $signal->type === SignalType::LOGS;
             }))
             ->willReturn(true);
 
         $scope = new InstrumentationScope('test-scope', '1.0.0');
-        $timestamp = new \DateTimeImmutable('2024-01-01 12:00:00');
+        $timestamp = new DateTimeImmutable('2024-01-01 12:00:00');
         $attributes = ['user.id' => 'test-user', 'request.id' => '12345'];
 
         $processor = new BatchingLogProcessor($exporter, 10);
@@ -169,7 +173,7 @@ final class BatchingLogProcessorTest extends TestCase
                 ->setBody($body),
             $this->resource,
             new InstrumentationScope('test'),
-            new \DateTimeImmutable(),
+            new DateTimeImmutable(),
         );
     }
 }

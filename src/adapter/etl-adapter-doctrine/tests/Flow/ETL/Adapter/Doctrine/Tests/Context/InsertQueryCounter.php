@@ -8,6 +8,11 @@ use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
+use Stringable;
+
+use function is_string;
+use function str_starts_with;
+use function trim;
 
 final class InsertQueryCounter extends AbstractLogger implements LoggerAwareInterface
 {
@@ -20,7 +25,7 @@ final class InsertQueryCounter extends AbstractLogger implements LoggerAwareInte
         $this->logger = new NullLogger();
     }
 
-    public function log(mixed $level, string|\Stringable $message, array $context = []): void
+    public function log(mixed $level, string|Stringable $message, array $context = []): void
     {
         if (!isset($context['sql'])) {
             return;
@@ -28,8 +33,8 @@ final class InsertQueryCounter extends AbstractLogger implements LoggerAwareInte
 
         $sql = $context['sql'];
 
-        if (\is_string($sql) || $sql instanceof \Stringable) {
-            if (\str_starts_with(\trim((string) $sql), 'INSERT')) {
+        if (is_string($sql) || $sql instanceof Stringable) {
+            if (str_starts_with(trim((string) $sql), 'INSERT')) {
                 $this->count++;
             }
         }

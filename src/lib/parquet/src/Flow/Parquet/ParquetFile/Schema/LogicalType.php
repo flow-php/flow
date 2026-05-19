@@ -15,6 +15,7 @@ use Flow\Parquet\ThriftModel\Float16Type;
 use Flow\Parquet\ThriftModel\IntType;
 use Flow\Parquet\ThriftModel\JsonType;
 use Flow\Parquet\ThriftModel\ListType;
+use Flow\Parquet\ThriftModel\LogicalType as ThriftLogicalType;
 use Flow\Parquet\ThriftModel\MapType;
 use Flow\Parquet\ThriftModel\MicroSeconds;
 use Flow\Parquet\ThriftModel\MilliSeconds;
@@ -83,74 +84,110 @@ final readonly class LogicalType
         return new self(self::ENUM);
     }
 
-    public static function fromThrift(\Flow\Parquet\ThriftModel\LogicalType $logicalType): ?self
+    public static function fromThrift(ThriftLogicalType $logicalType): ?self
     {
         $name = null;
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->STRING !== null) {
             $name = self::STRING;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->MAP !== null) {
             $name = self::MAP;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->LIST !== null) {
             $name = self::LIST;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->ENUM !== null) {
             $name = self::ENUM;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->DECIMAL !== null) {
             $name = self::DECIMAL;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->DATE !== null) {
             $name = self::DATE;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->TIME !== null) {
             $name = self::TIME;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->TIMESTAMP !== null) {
             $name = self::TIMESTAMP;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->INTEGER !== null) {
             $name = self::INTEGER;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->UNKNOWN !== null) {
             $name = self::UNKNOWN;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->JSON !== null) {
             $name = self::JSON;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->BSON !== null) {
             $name = self::BSON;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->UUID !== null) {
             $name = self::UUID;
         }
 
+        // @mago-ignore analysis:redundant-condition
+        // @mago-ignore analysis:redundant-comparison
         if ($logicalType->FLOAT16 !== null) {
             $name = self::FLOAT16;
         }
 
+        // @mago-ignore analysis:impossible-condition
+        // @mago-ignore analysis:redundant-comparison
         if (null === $name) {
             return null;
         }
 
         return new self(
             $name,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             timestamp: $logicalType->TIMESTAMP !== null ? Timestamp::fromThrift($logicalType->TIMESTAMP) : null,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             time: $logicalType->TIME !== null ? Time::fromThrift($logicalType->TIME) : null,
+            // @mago-ignore analysis:redundant-condition
+            // @mago-ignore analysis:redundant-comparison
             decimal: $logicalType->DECIMAL !== null ? Decimal::fromThrift($logicalType->DECIMAL) : null,
         );
     }
@@ -225,9 +262,9 @@ final readonly class LogicalType
         return $this->timestamp;
     }
 
-    public function toThrift(): \Flow\Parquet\ThriftModel\LogicalType
+    public function toThrift(): ThriftLogicalType
     {
-        return new \Flow\Parquet\ThriftModel\LogicalType([
+        return new ThriftLogicalType([
             self::BSON => $this->is(self::BSON) ? new BsonType() : null,
             self::DATE => $this->is(self::DATE) ? new DateType() : null,
             self::DECIMAL => $this->is(self::DECIMAL)

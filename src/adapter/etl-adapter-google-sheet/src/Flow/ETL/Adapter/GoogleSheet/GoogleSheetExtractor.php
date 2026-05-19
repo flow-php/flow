@@ -11,8 +11,12 @@ use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Schema;
+use Generator;
 use Google\Service\Sheets;
 
+use function array_combine;
+use function array_slice;
+use function count;
 use function Flow\ETL\DSL\array_to_rows;
 
 final class GoogleSheetExtractor implements Extractor, LimitableExtractor
@@ -40,7 +44,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         $this->resetLimit();
     }
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         $spreadsheet = $this->service->spreadsheets->get($this->spreadsheetId, [
             'ranges' => [],
@@ -78,7 +82,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
 
         foreach ($response->getValueRanges() as $valueRange) {
             foreach ($valueRange->getValues() ?: [] as $rowData) {
-                $rowDataCount = \count($rowData);
+                $rowDataCount = count($rowData);
 
                 if ($this->withHeader) {
                     if ([] === $headers) {
@@ -112,11 +116,11 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
                         );
                     }
 
-                    $rowData = \array_slice($rowData, 0, $headersCount);
+                    $rowData = array_slice($rowData, 0, $headersCount);
                 }
 
                 if ($this->withHeader) {
-                    $rowData = \array_combine($headers, $rowData);
+                    $rowData = array_combine($headers, $rowData);
                 }
 
                 if ($shouldPutInputIntoRows) {

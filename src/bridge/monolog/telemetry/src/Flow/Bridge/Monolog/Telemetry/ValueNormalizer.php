@@ -4,6 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Telemetry;
 
+use DateTimeInterface;
+use Throwable;
+
+use function array_map;
+use function get_debug_type;
+use function is_array;
+use function is_object;
+use function is_scalar;
+use function method_exists;
+
 /**
  * Normalize arbitrary PHP values to types acceptable by Telemetry attributes.
  *
@@ -17,37 +27,37 @@ final readonly class ValueNormalizer
      *
      * @return array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable
      */
-    public function normalize(mixed $value): string|int|float|bool|\DateTimeInterface|\Throwable|array
+    public function normalize(mixed $value): string|int|float|bool|DateTimeInterface|Throwable|array
     {
         if ($value === null) {
             return 'null';
         }
 
-        if (\is_scalar($value)) {
+        if (is_scalar($value)) {
             return $value;
         }
 
-        if ($value instanceof \DateTimeInterface) {
+        if ($value instanceof DateTimeInterface) {
             return $value;
         }
 
-        if ($value instanceof \Throwable) {
+        if ($value instanceof Throwable) {
             return $value;
         }
 
-        if (\is_array($value)) {
+        if (is_array($value)) {
             /** @phpstan-ignore return.type */
-            return \array_map(fn($v) => $this->normalize($v), $value);
+            return array_map(fn($v) => $this->normalize($v), $value);
         }
 
-        if (\is_object($value)) {
-            if (\method_exists($value, '__toString')) {
+        if (is_object($value)) {
+            if (method_exists($value, '__toString')) {
                 return (string) $value;
             }
 
             return $value::class;
         }
 
-        return \get_debug_type($value);
+        return get_debug_type($value);
     }
 }

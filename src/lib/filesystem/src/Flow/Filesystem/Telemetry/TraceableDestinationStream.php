@@ -13,6 +13,10 @@ use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanStatus;
 use Flow\Telemetry\Tracer\Tracer;
+use Throwable;
+
+use function ftell;
+use function strlen;
 
 final class TraceableDestinationStream implements DestinationStream
 {
@@ -65,7 +69,7 @@ final class TraceableDestinationStream implements DestinationStream
 
     public function append(string $data): DestinationStream
     {
-        $bytesWritten = \strlen($data);
+        $bytesWritten = strlen($data);
 
         $this->stream->append($data);
         $this->totalBytesWritten += $bytesWritten;
@@ -77,30 +81,26 @@ final class TraceableDestinationStream implements DestinationStream
 
     public function close(): void
     {
+        $span = $this->span;
+
         try {
             $this->stream->close();
 
-            if ($this->span !== null) {
-                $this->span->setAttribute(
-                    FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN,
-                    $this->totalBytesWritten,
-                );
-                $this->span->setStatus(SpanStatus::ok());
+            if ($span !== null) {
+                $span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN, $this->totalBytesWritten);
+                $span->setStatus(SpanStatus::ok());
             }
-        } catch (\Throwable $e) {
-            if ($this->span !== null) {
-                $this->span->setAttribute(
-                    FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN,
-                    $this->totalBytesWritten,
-                );
-                $this->span->recordException($e, $this->telemetryConfig->clock->now());
-                $this->span->setStatus(SpanStatus::error($e->getMessage()));
+        } catch (Throwable $e) {
+            if ($span !== null) {
+                $span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN, $this->totalBytesWritten);
+                $span->recordException($e, $this->telemetryConfig->clock->now());
+                $span->setStatus(SpanStatus::error($e->getMessage()));
             }
 
             throw $e;
         } finally {
-            if ($this->span !== null && $this->tracer !== null) {
-                $this->tracer->complete($this->span);
+            if ($span !== null && $this->tracer !== null) {
+                $this->tracer->complete($span);
                 $this->span = null;
             }
         }
@@ -111,11 +111,11 @@ final class TraceableDestinationStream implements DestinationStream
      */
     public function fromResource($resource): DestinationStream
     {
-        $startPos = \ftell($resource);
+        $startPos = ftell($resource);
 
         $this->stream->fromResource($resource);
 
-        $endPos = \ftell($resource);
+        $endPos = ftell($resource);
         $bytesWritten = $startPos !== false && $endPos !== false ? $endPos - $startPos : 0;
         $this->totalBytesWritten += $bytesWritten;
 

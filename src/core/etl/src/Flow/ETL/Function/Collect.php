@@ -11,6 +11,7 @@ use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
 
+use function current;
 use function Flow\ETL\DSL\to_entry;
 
 final class Collect implements AggregatingFunction
@@ -34,7 +35,7 @@ final class Collect implements AggregatingFunction
 
             $values[$this->ref->name()] = $row->valueOf($this->ref);
 
-            $this->collection[] = \current($values);
+            $this->collection[] = current($values);
         } catch (InvalidArgumentException $e) {
             $context->functions()->invalidResult(new InvalidArgumentException('Collect error: ' . $e->getMessage()));
         }

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use ArrayAccess;
+use ArrayIterator;
+use Countable;
 use Flow\ETL\Exception\DuplicatedEntriesException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
@@ -21,15 +24,32 @@ use Flow\ETL\Row\SortOrder;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Partitions;
 use Flow\Types\Exception\InvalidTypeException;
+use Generator;
+use Iterator;
+use IteratorAggregate;
 
+use function array_chunk;
+use function array_filter;
+use function array_map;
+use function array_merge;
+use function array_reduce;
+use function array_reverse;
+use function array_slice;
+use function array_unique;
+use function array_values;
+use function count;
 use function Flow\ETL\DSL\row;
 use function Flow\Types\DSL\type_integer;
+use function is_array;
+use function is_int;
+use function iterator_to_array;
+use function usort;
 
 /**
  * @implements \ArrayAccess<int, Row>
  * @implements \IteratorAggregate<int, Row>
  */
-final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
+final class Rows implements ArrayAccess, Countable, IteratorAggregate
 {
     private Partitions $partitions;
 
@@ -42,7 +62,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
 
     public function __construct(Row ...$rows)
     {
-        $this->rows = \array_values($rows);
+        $this->rows = array_values($rows);
         $this->partitions = new Partitions();
     }
 
@@ -52,18 +72,18 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
      */
     public static function partitioned(array $rows, array|Partitions $partitions): self
     {
-        if (!\count($rows)) {
+        if (!count($rows)) {
             return new self();
         }
 
-        if (\is_array($partitions)) {
+        if (is_array($partitions)) {
             $allArePartitions =
-                \count($partitions) > 0
-                && \array_reduce($partitions, static fn($carry, $item) => $carry && $item instanceof Partition, true);
+                count($partitions) > 0
+                && array_reduce($partitions, static fn($carry, $item) => $carry && $item instanceof Partition, true);
 
             if ($allArePartitions) {
                 // All elements are Partition objects, safe to spread
-                $partitions = new Partitions(...\array_filter(
+                $partitions = new Partitions(...array_filter(
                     $partitions,
                     static fn($item) => $item instanceof Partition,
                 ));
@@ -100,16 +120,16 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @return \Generator<Rows>
      */
-    public function chunks(int $size): \Generator
+    public function chunks(int $size): Generator
     {
-        foreach (\array_chunk($this->rows, $size) as $chunk) {
+        foreach (array_chunk($this->rows, $size) as $chunk) {
             yield self::partitioned($chunk, $this->partitions);
         }
     }
 
     public function count(): int
     {
-        return \count($this->rows);
+        return count($this->rows);
     }
 
     public function diffLeft(self $rows): self
@@ -164,7 +184,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             return $this;
         }
 
-        return self::partitioned(\array_slice($this->rows, $size), $this->partitions);
+        return self::partitioned(array_slice($this->rows, $size), $this->partitions);
     }
 
     public function dropPartitions(bool $dropPartitionColumns = false): self
@@ -172,7 +192,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
         $rows = new self(...$this->rows);
 
         if ($dropPartitionColumns) {
-            return $rows->map(fn(Row $row): Row => $row->remove(...\array_map(
+            return $rows->map(fn(Row $row): Row => $row->remove(...array_map(
                 static fn(Partition $partition): Reference => $partition->reference(),
                 $this->partitions->toArray(),
             )));
@@ -187,7 +207,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             return $this;
         }
 
-        return self::partitioned(\array_slice($this->rows, 0, -$size), $this->partitions);
+        return self::partitioned(array_slice($this->rows, 0, -$size), $this->partitions);
     }
 
     /**
@@ -279,15 +299,15 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             $rows[] = $callable($row);
         }
 
-        return new self(...\array_merge(...$rows));
+        return new self(...array_merge(...$rows));
     }
 
     /**
      * @return \Iterator<int, Row>
      */
-    public function getIterator(): \Iterator
+    public function getIterator(): Iterator
     {
-        return new \ArrayIterator($this->rows);
+        return new ArrayIterator($this->rows);
     }
 
     public function hash(Algorithm $algorithm = new NativePHPHash()): string
@@ -318,12 +338,12 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             return self::partitioned([], $this->partitions);
         }
 
-        return self::partitioned(\array_slice($this->rows, 0, $count), $this->partitions);
+        return self::partitioned(array_slice($this->rows, 0, $count), $this->partitions);
     }
 
     public function isPartitioned(): bool
     {
-        return \count($this->partitions) > 0;
+        return count($this->partitions) > 0;
     }
 
     public function joinCross(self $right, string $joinPrefix = 'joined_'): self
@@ -538,7 +558,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             return null;
         }
 
-        return $this->rows[\count($this->rows) - 1];
+        return $this->rows[count($this->rows) - 1];
     }
 
     /**
@@ -582,7 +602,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
      */
     public function offsetExists($offset): bool
     {
-        if (!\is_int($offset)) {
+        if (!is_int($offset)) {
             throw new InvalidArgumentException('Rows accepts only integer offsets');
         }
 
@@ -638,7 +658,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
                 $partitions[$ref->name()][] = Partition::valueFromRow($ref, $row);
             }
 
-            $partitions[$ref->name()] = \array_values(\array_unique($partitions[$ref->name()])); // @phpstan-ignore argument.type
+            $partitions[$ref->name()] = array_values(array_unique($partitions[$ref->name()])); // @phpstan-ignore argument.type
         }
 
         /** @var array<Rows> $partitionedRows */
@@ -682,7 +702,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
      */
     public function reduce(callable $callable, mixed $input = null)
     {
-        return \array_reduce($this->rows, $callable, $input);
+        return array_reduce($this->rows, $callable, $input);
     }
 
     /**
@@ -691,7 +711,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     public function reduceToArray(string|Reference $reference): array
     {
         $result = $this->reduce(static function (mixed $ids, Row $row) use ($reference): mixed {
-            if (!\is_array($ids)) {
+            if (!is_array($ids)) {
                 $ids = [];
             }
             $ids[] = $row->get($reference)->value();
@@ -699,7 +719,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             return $ids;
         }, []);
 
-        return \is_array($result) ? $result : [];
+        return is_array($result) ? $result : [];
     }
 
     public function remove(int $offset): self
@@ -708,7 +728,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             throw new InvalidArgumentException("Rows does not have {$offset} offset");
         }
 
-        $rows = \iterator_to_array($this->getIterator());
+        $rows = iterator_to_array($this->getIterator());
         unset($rows[$offset]);
 
         return self::partitioned($rows, $this->partitions);
@@ -716,7 +736,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
 
     public function reverse(): self
     {
-        return self::partitioned(\array_reverse($this->rows), $this->partitions);
+        return self::partitioned(array_reverse($this->rows), $this->partitions);
     }
 
     /**
@@ -755,7 +775,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     public function sort(callable $callback): self
     {
         $rows = $this->rows;
-        \usort($rows, $callback);
+        usort($rows, $callback);
 
         return self::partitioned($rows, $this->partitions);
     }
@@ -766,7 +786,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     public function sortAscending(string|Reference $reference): self
     {
         $rows = $this->rows;
-        \usort($rows, static fn(Row $a, Row $b): int => $a->valueOf($reference) <=> $b->valueOf($reference));
+        usort($rows, static fn(Row $a, Row $b): int => $a->valueOf($reference) <=> $b->valueOf($reference));
 
         return self::partitioned($rows, $this->partitions);
     }
@@ -778,7 +798,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     {
         $rows = $this;
 
-        foreach (\array_reverse($references) as $ref) {
+        foreach (array_reverse($references) as $ref) {
             $rows = $ref->sort() === SortOrder::ASC ? $rows->sortAscending($ref) : $rows->sortDescending($ref);
         }
 
@@ -791,7 +811,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     public function sortDescending(string|Reference $reference): self
     {
         $rows = $this->rows;
-        \usort($rows, static fn(Row $a, Row $b): int => -($a->valueOf($reference) <=> $b->valueOf($reference)));
+        usort($rows, static fn(Row $a, Row $b): int => -($a->valueOf($reference) <=> $b->valueOf($reference)));
 
         return self::partitioned($rows, $this->partitions);
     }
@@ -818,23 +838,23 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             return self::partitioned([], $this->partitions);
         }
 
-        $rowsCount = \count($this->rows);
+        $rowsCount = count($this->rows);
 
         if ($count >= $rowsCount) {
             return self::partitioned($this->rows, $this->partitions);
         }
 
-        return self::partitioned(\array_slice($this->rows, -$count), $this->partitions);
+        return self::partitioned(array_slice($this->rows, -$count), $this->partitions);
     }
 
     public function take(int $size): self
     {
-        return self::partitioned(\array_slice($this->rows, 0, $size), $this->partitions);
+        return self::partitioned(array_slice($this->rows, 0, $size), $this->partitions);
     }
 
     public function takeRight(int $size): self
     {
-        return self::partitioned(\array_reverse(\array_slice($this->rows, -$size, $size)), $this->partitions);
+        return self::partitioned(array_reverse(array_slice($this->rows, -$size, $size)), $this->partitions);
     }
 
     /**

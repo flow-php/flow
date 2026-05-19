@@ -11,9 +11,13 @@ use Flow\ETL\Schema\Definition\JsonDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 use Flow\Types\Value\Json;
+use Throwable;
 
+use function array_keys;
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_optional;
+use function is_array;
+use function is_string;
 
 /**
  * @implements Entry<?Json>
@@ -42,16 +46,16 @@ final class JsonEntry implements Entry
 
         if ($value instanceof Json) {
             $this->json = $value;
-        } elseif (\is_string($value)) {
+        } elseif (is_string($value)) {
             try {
                 $this->json = new Json($value);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 throw new InvalidArgumentException(
                     "Invalid value given: '{$value}', reason: " . $e->getMessage(),
                     previous: $e,
                 );
             }
-        } elseif (\is_array($value)) {
+        } elseif (is_array($value)) {
             $this->json = Json::fromArray($value);
         } else {
             $this->json = null;
@@ -69,9 +73,9 @@ final class JsonEntry implements Entry
      */
     public static function object(string $name, ?array $value, ?Metadata $metadata = null): Entry
     {
-        if (\is_array($value)) {
-            foreach (\array_keys($value) as $key) {
-                if (!\is_string($key)) {
+        if (is_array($value)) {
+            foreach (array_keys($value) as $key) {
+                if (!is_string($key)) {
                     throw InvalidArgumentException::because('All keys for JsonEntry object must be strings');
                 }
             }

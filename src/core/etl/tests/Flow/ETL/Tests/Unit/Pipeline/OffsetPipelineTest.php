@@ -11,8 +11,11 @@ use Flow\ETL\Pipeline;
 use Flow\ETL\Processor\OffsetProcessor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function array_map;
+use function array_sum;
 use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
@@ -22,10 +25,12 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function iterator_to_array;
+use function max;
 
 final class OffsetPipelineTest extends FlowTestCase
 {
-    public static function offset_values_data_provider(): \Generator
+    public static function offset_values_data_provider(): Generator
     {
         yield 'zero offset' => [0];
         yield 'small offset' => [1];
@@ -52,7 +57,7 @@ final class OffsetPipelineTest extends FlowTestCase
         )));
         $pipeline->add(new OffsetProcessor(1));
 
-        $result = \iterator_to_array($pipeline->process(flow_context(config())));
+        $result = iterator_to_array($pipeline->process(flow_context(config())));
 
         static::assertCount(1, $result);
         static::assertCount(3, $result[0]);
@@ -71,7 +76,7 @@ final class OffsetPipelineTest extends FlowTestCase
         $pipeline = new Pipeline(from_rows(rows()));
         $pipeline->add(new OffsetProcessor(5));
 
-        $result = \iterator_to_array($pipeline->process(flow_context(config())));
+        $result = iterator_to_array($pipeline->process(flow_context(config())));
 
         static::assertCount(0, $result);
     }
@@ -79,7 +84,7 @@ final class OffsetPipelineTest extends FlowTestCase
     public function test_process_with_multiple_batches_offset_skips_entire_batches(): void
     {
         $pipeline = new Pipeline(new class implements Extractor {
-            public function extract(FlowContext $context): \Generator
+            public function extract(FlowContext $context): Generator
             {
                 yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
                 yield rows(row(int_entry('id', 3)), row(int_entry('id', 4)));
@@ -88,7 +93,7 @@ final class OffsetPipelineTest extends FlowTestCase
         });
         $pipeline->add(new OffsetProcessor(4));
 
-        $result = \iterator_to_array($pipeline->process(flow_context(config())));
+        $result = iterator_to_array($pipeline->process(flow_context(config())));
 
         static::assertCount(1, $result);
         static::assertEquals(rows(row(int_entry('id', 5)), row(int_entry('id', 6))), $result[0]);
@@ -97,7 +102,7 @@ final class OffsetPipelineTest extends FlowTestCase
     public function test_process_with_multiple_batches_offset_spanning_batches(): void
     {
         $pipeline = new Pipeline(new class implements Extractor {
-            public function extract(FlowContext $context): \Generator
+            public function extract(FlowContext $context): Generator
             {
                 yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
                 yield rows(row(int_entry('id', 3)), row(int_entry('id', 4)), row(int_entry('id', 5)));
@@ -106,7 +111,7 @@ final class OffsetPipelineTest extends FlowTestCase
         });
         $pipeline->add(new OffsetProcessor(3));
 
-        $result = \iterator_to_array($pipeline->process(flow_context(config())));
+        $result = iterator_to_array($pipeline->process(flow_context(config())));
 
         static::assertCount(2, $result);
         static::assertEquals(rows(row(int_entry('id', 4)), row(int_entry('id', 5))), $result[0]);
@@ -116,7 +121,7 @@ final class OffsetPipelineTest extends FlowTestCase
     public function test_process_with_multiple_batches_offset_within_first_batch(): void
     {
         $pipeline = new Pipeline(new class implements Extractor {
-            public function extract(FlowContext $context): \Generator
+            public function extract(FlowContext $context): Generator
             {
                 yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
                 yield rows(row(int_entry('id', 4)), row(int_entry('id', 5)));
@@ -124,7 +129,7 @@ final class OffsetPipelineTest extends FlowTestCase
         });
         $pipeline->add(new OffsetProcessor(1));
 
-        $result = \iterator_to_array($pipeline->process(flow_context(config())));
+        $result = iterator_to_array($pipeline->process(flow_context(config())));
 
         static::assertCount(2, $result);
         static::assertEquals(rows(row(int_entry('id', 2)), row(int_entry('id', 3))), $result[0]);
@@ -140,7 +145,7 @@ final class OffsetPipelineTest extends FlowTestCase
         )));
         $pipeline->add(new OffsetProcessor(3));
 
-        $result = \iterator_to_array($pipeline->process(flow_context(config())));
+        $result = iterator_to_array($pipeline->process(flow_context(config())));
 
         static::assertCount(0, $result);
     }
@@ -150,7 +155,7 @@ final class OffsetPipelineTest extends FlowTestCase
         $pipeline = new Pipeline(from_rows(rows(row(int_entry('id', 1)), row(int_entry('id', 2)))));
         $pipeline->add(new OffsetProcessor(5));
 
-        $result = \iterator_to_array($pipeline->process(flow_context(config())));
+        $result = iterator_to_array($pipeline->process(flow_context(config())));
 
         static::assertCount(0, $result);
     }
@@ -158,7 +163,7 @@ final class OffsetPipelineTest extends FlowTestCase
     public function test_process_with_offset_resulting_in_empty_batch(): void
     {
         $pipeline = new Pipeline(new class implements Extractor {
-            public function extract(FlowContext $context): \Generator
+            public function extract(FlowContext $context): Generator
             {
                 yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
                 yield rows();
@@ -167,7 +172,7 @@ final class OffsetPipelineTest extends FlowTestCase
         });
         $pipeline->add(new OffsetProcessor(2));
 
-        $result = \iterator_to_array($pipeline->process(flow_context(config())));
+        $result = iterator_to_array($pipeline->process(flow_context(config())));
 
         static::assertCount(1, $result);
         static::assertEquals(rows(row(int_entry('id', 3))), $result[0]);
@@ -184,7 +189,7 @@ final class OffsetPipelineTest extends FlowTestCase
         )));
         $pipeline->add(new OffsetProcessor(2));
 
-        $result = \iterator_to_array($pipeline->process(flow_context(config())));
+        $result = iterator_to_array($pipeline->process(flow_context(config())));
 
         static::assertCount(1, $result);
         static::assertCount(3, $result[0]);
@@ -205,7 +210,7 @@ final class OffsetPipelineTest extends FlowTestCase
         $pipeline->add(new ScalarFunctionTransformer('doubled', ref('id')->multiply(lit(2))));
         $pipeline->add(new OffsetProcessor(1));
 
-        $result = \iterator_to_array($pipeline->process(flow_context(config())));
+        $result = iterator_to_array($pipeline->process(flow_context(config())));
 
         static::assertCount(1, $result);
         static::assertCount(3, $result[0]);
@@ -229,10 +234,10 @@ final class OffsetPipelineTest extends FlowTestCase
         $pipeline = new Pipeline(from_rows(rows(...$rowsData)));
         $pipeline->add(new OffsetProcessor($offset >= 0 ? $offset : 0));
 
-        $result = \iterator_to_array($pipeline->process(flow_context(config())));
+        $result = iterator_to_array($pipeline->process(flow_context(config())));
 
-        $expectedCount = \max(0, 20 - $offset);
-        $totalRows = \array_sum(\array_map(static fn($batch) => $batch->count(), $result));
+        $expectedCount = max(0, 20 - $offset);
+        $totalRows = array_sum(array_map(static fn($batch) => $batch->count(), $result));
 
         static::assertEquals($expectedCount, $totalRows);
 
@@ -251,7 +256,7 @@ final class OffsetPipelineTest extends FlowTestCase
         )));
         $pipeline->add(new OffsetProcessor(0));
 
-        $result = \iterator_to_array($pipeline->process(flow_context(config())));
+        $result = iterator_to_array($pipeline->process(flow_context(config())));
 
         static::assertCount(1, $result);
         static::assertCount(3, $result[0]);

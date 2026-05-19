@@ -10,6 +10,8 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidAstException;
 
+use function count;
+
 /**
  * Represents a star expression in SQL (e.g., "*" or "table.*").
  */
@@ -40,22 +42,22 @@ final readonly class Star implements Expression
         if ($columnRef !== null) {
             $fields = $columnRef->getFields();
 
-            if ($fields === null || \count($fields) === 0) {
+            if (count($fields) === 0) {
                 throw InvalidAstException::missingRequiredField('fields', 'ColumnRef');
             }
 
-            $lastField = $fields[\count($fields) - 1];
+            $lastField = $fields[count($fields) - 1];
             $aStar = $lastField->getAStar();
 
             if ($aStar === null) {
                 throw InvalidAstException::unexpectedNodeType('A_Star', 'unknown');
             }
 
-            if (\count($fields) === 1) {
+            if (count($fields) === 1) {
                 return new self();
             }
 
-            if (\count($fields) === 2) {
+            if (count($fields) === 2) {
                 $tableField = $fields[0];
                 $tableString = $tableField->getString();
 

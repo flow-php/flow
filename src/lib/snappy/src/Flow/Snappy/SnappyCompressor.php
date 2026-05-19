@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Snappy;
 
+use function array_fill;
+use function count;
+use function floor;
+use function max;
+use function min;
+
 /**
  * @internal This class is not meant to be used by library users. Please use Flow\Snappy\Snappy instead.
  */
@@ -28,7 +34,7 @@ final class SnappyCompressor
     public function __construct(
         private readonly array $array,
     ) {
-        $this->arrayLength = \count($this->array);
+        $this->arrayLength = count($this->array);
     }
 
     /**
@@ -42,7 +48,7 @@ final class SnappyCompressor
         $outPos = $this->putVarInt($this->arrayLength, $outBuffer, $outPos);
 
         while ($pos < $this->arrayLength) {
-            $fragmentSize = \min($this->arrayLength - $pos, self::BLOCK_SIZE);
+            $fragmentSize = min($this->arrayLength - $pos, self::BLOCK_SIZE);
             $outPos = $this->compressFragment($this->array, $pos, $fragmentSize, $outBuffer, $outPos);
             $pos += $fragmentSize;
         }
@@ -52,9 +58,9 @@ final class SnappyCompressor
 
     public function maxCompressedLength(): int
     {
-        $sourceLen = \count($this->array);
+        $sourceLen = count($this->array);
 
-        return 32 + $sourceLen + (int) \floor($sourceLen / 6);
+        return 32 + $sourceLen + (int) floor($sourceLen / 6);
     }
 
     /**
@@ -73,7 +79,7 @@ final class SnappyCompressor
         $hashFuncShift = 32 - $hashTableBits;
 
         if (!isset($this->globalHashTables[$hashTableBits])) {
-            $this->globalHashTables[$hashTableBits] = \array_fill(0, 1 << $hashTableBits, 0);
+            $this->globalHashTables[$hashTableBits] = array_fill(0, max(1, 1 << $hashTableBits), 0);
         }
 
         $hashTable = [];

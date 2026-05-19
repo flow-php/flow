@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
+use DateTimeImmutable;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
+use Generator;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\datetime_schema;
@@ -26,6 +28,7 @@ use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function random_int;
 
 final readonly class FakeStaticOrdersExtractor implements Extractor
 {
@@ -61,7 +64,7 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
         );
     }
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         foreach ($this->rawData() as $row) {
             yield array_to_rows($row, $context->entryFactory(), schema: self::schema());
@@ -71,7 +74,7 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
     /**
      * @return \Generator<array<string, mixed>>
      */
-    public function rawData(): \Generator
+    public function rawData(): Generator
     {
         $skus = [
             ['sku' => 'SKU_0001', 'name' => 'Product 1', 'price' => 0.14],
@@ -85,9 +88,9 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
             $signal = yield [
                 'index' => $i,
                 'order_id' => '254d61c5-22c8-4407-83a2-76f1cab53af2',
-                'created_at' => new \DateTimeImmutable('2025-01-01 12:00:00'),
-                'updated_at' => \random_int(0, 1) === 1 ? new \DateTimeImmutable('2025-01-01 12:10:00') : null,
-                'discount' => \random_int(0, 1) === 1 ? 24.4 : null,
+                'created_at' => new DateTimeImmutable('2025-01-01 12:00:00'),
+                'updated_at' => random_int(0, 1) === 1 ? new DateTimeImmutable('2025-01-01 12:10:00') : null,
+                'discount' => random_int(0, 1) === 1 ? 24.4 : null,
                 'email' => 'user-' . $i . '@example.com',
                 'customer' => 'John Doe ' . $i,
                 'address' => [

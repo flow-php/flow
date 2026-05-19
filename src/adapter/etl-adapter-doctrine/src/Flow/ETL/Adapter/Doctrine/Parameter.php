@@ -8,6 +8,9 @@ use Doctrine\DBAL\ArrayParameterType;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Rows;
 
+use function array_filter;
+use function is_scalar;
+
 final readonly class Parameter implements QueryParameter
 {
     public function __construct(
@@ -43,7 +46,7 @@ final readonly class Parameter implements QueryParameter
     {
         $values = $rows->reduceToArray($this->ref);
 
-        return \array_filter($values, static fn($value) => \is_scalar($value) || $value === null);
+        return array_filter($values, static fn($value) => is_scalar($value) || $value === null);
     }
 
     public function type(): int|ArrayParameterType

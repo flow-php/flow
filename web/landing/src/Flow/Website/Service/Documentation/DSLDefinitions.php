@@ -8,6 +8,14 @@ use Flow\Website\Model\Documentation\DSLDefinition;
 use Flow\Website\Model\Documentation\Module;
 use Flow\Website\Model\Documentation\Type;
 
+use function array_map;
+use function count;
+use function file_get_contents;
+use function in_array;
+use function json_decode;
+use function strnatcasecmp;
+use function usort;
+
 final readonly class DSLDefinitions
 {
     /**
@@ -19,7 +27,7 @@ final readonly class DSLDefinitions
 
     public static function fromJson(string $definitionsPath): self
     {
-        return new self(\json_decode(\file_get_contents($definitionsPath), true, 512, JSON_THROW_ON_ERROR));
+        return new self(json_decode(file_get_contents($definitionsPath), true, 512, JSON_THROW_ON_ERROR));
     }
 
     /**
@@ -27,16 +35,16 @@ final readonly class DSLDefinitions
      */
     public function all(): array
     {
-        $definitions = \array_map(static fn(array $data) => new DSLDefinition($data), $this->definitions);
+        $definitions = array_map(static fn(array $data) => new DSLDefinition($data), $this->definitions);
 
-        \usort($definitions, static fn(DSLDefinition $a, DSLDefinition $b) => \strnatcasecmp($a->name(), $b->name()));
+        usort($definitions, static fn(DSLDefinition $a, DSLDefinition $b) => strnatcasecmp($a->name(), $b->name()));
 
         return $definitions;
     }
 
     public function count(): int
     {
-        return \count($this->definitions);
+        return count($this->definitions);
     }
 
     public function fromModule(Module $module): self
@@ -77,7 +85,7 @@ final readonly class DSLDefinitions
         foreach ($this->all() as $definition) {
             $module = $definition->module();
 
-            if ($module !== null && !\in_array($module, $modules, true)) {
+            if ($module !== null && !in_array($module, $modules, true)) {
                 $modules[] = $module;
             }
         }
@@ -107,7 +115,7 @@ final readonly class DSLDefinitions
         foreach ($this->all() as $definition) {
             $type = $definition->type();
 
-            if ($type !== null && !\in_array($type, $types, true)) {
+            if ($type !== null && !in_array($type, $types, true)) {
                 $types[] = $type;
             }
         }

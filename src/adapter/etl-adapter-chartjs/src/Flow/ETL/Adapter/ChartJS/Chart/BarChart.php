@@ -9,6 +9,12 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
 
+use function array_key_exists;
+use function array_map;
+use function array_merge;
+use function array_values;
+use function is_scalar;
+
 final class BarChart implements Chart
 {
     /**
@@ -41,10 +47,10 @@ final class BarChart implements Chart
     {
         foreach ($rows as $row) {
             $labelValue = $row->valueOf($this->label);
-            $this->data['labels'][] = \is_scalar($labelValue) ? (string) $labelValue : '';
+            $this->data['labels'][] = is_scalar($labelValue) ? (string) $labelValue : '';
 
             foreach ($this->datasets as $dataset) {
-                if (!\array_key_exists($dataset->name(), $this->data['datasets'])) {
+                if (!array_key_exists($dataset->name(), $this->data['datasets'])) {
                     $this->data['datasets'][$dataset->name()] = [
                         'label' => $dataset->name(),
                         'data' => [$row->valueOf($dataset)],
@@ -65,12 +71,12 @@ final class BarChart implements Chart
             'type' => 'bar',
             'data' => [
                 'labels' => $this->data['labels'],
-                'datasets' => \array_values(\array_map(
+                'datasets' => array_values(array_map(
                     function (array $dataset): array {
                         /** @var array<array-key, mixed> $options */
                         $options = $this->datasetOptions[$dataset['label']] ?? [];
 
-                        return \array_merge($dataset, $options);
+                        return array_merge($dataset, $options);
                     },
                     $this->data['datasets'],
                 )),

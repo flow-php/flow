@@ -8,15 +8,17 @@ use Flow\ETL\Time\Duration;
 use Flow\ETL\Time\FakeSleep;
 use PHPUnit\Framework\TestCase;
 
+use function microtime;
+
 final class FakeSleepTest extends TestCase
 {
     public function test_no_actual_delay_occurs(): void
     {
         $sleep = new FakeSleep();
 
-        $startTime = \microtime(true);
+        $startTime = microtime(true);
         $sleep->for(Duration::fromSeconds(10));
-        $endTime = \microtime(true);
+        $endTime = microtime(true);
 
         $actualElapsed = $endTime - $startTime;
 

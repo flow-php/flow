@@ -15,6 +15,10 @@ use Flow\Types\Type;
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_optional;
+use function is_string;
+
+use const LIBXML_HTML_NOIMPLIED;
+use const LIBXML_NOERROR;
 
 /**
  * @implements Entry<?HTMLElement>
@@ -32,8 +36,8 @@ final class HTMLElementEntry implements Entry
         HTMLElement|string|null $value,
         ?Metadata $metadata = null,
     ) {
-        if (\is_string($value)) {
-            $document = HTMLDocument::createFromString($value, \LIBXML_HTML_NOIMPLIED | \LIBXML_NOERROR);
+        if (is_string($value)) {
+            $document = HTMLDocument::createFromString($value, LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
 
             $value = $document->documentElement;
         }

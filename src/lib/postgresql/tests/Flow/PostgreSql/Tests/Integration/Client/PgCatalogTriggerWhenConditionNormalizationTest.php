@@ -10,6 +10,7 @@ use Flow\PostgreSql\Schema\TriggerEvent;
 use Flow\PostgreSql\Schema\TriggerTiming;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
+use function extension_loaded;
 use function Flow\PostgreSql\DSL\client_catalog_provider;
 use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\column;
@@ -18,6 +19,9 @@ use function Flow\PostgreSql\DSL\column_type_varchar;
 use function Flow\PostgreSql\DSL\create;
 use function Flow\PostgreSql\DSL\ne;
 use function Flow\PostgreSql\DSL\schema_trigger;
+use function sprintf;
+
+use const PHP_EOL;
 
 final class PgCatalogTriggerWhenConditionNormalizationTest extends PostgreSqlTestCase
 {
@@ -27,7 +31,7 @@ final class PgCatalogTriggerWhenConditionNormalizationTest extends PostgreSqlTes
     {
         parent::setUp();
 
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded.');
         }
 
@@ -105,11 +109,11 @@ final class PgCatalogTriggerWhenConditionNormalizationTest extends PostgreSqlTes
         static::assertNotNull($dbTrigger->whenCondition, 'whenCondition must be populated from pg_trigger.tgqual');
         static::assertTrue(
             $expected->isEqualStructure($dbTrigger),
-            \sprintf(
+            sprintf(
                 'Expected trigger whenCondition to be structurally equal.%sExpected: %s%sActual:   %s',
-                \PHP_EOL,
+                PHP_EOL,
                 $expected->whenCondition ?? '<null>',
-                \PHP_EOL,
+                PHP_EOL,
                 $dbTrigger->whenCondition ?? '<null>',
             ),
         );

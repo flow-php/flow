@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use DateTimeImmutable;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
@@ -31,7 +32,7 @@ final class RenameEntryTransformerTest extends FlowTestCase
                 integer_entry('id', 1),
                 string_entry('status', 'PENDING'),
                 boolean_entry('enabled', true),
-                new DateTimeEntry('datetime', new \DateTimeImmutable('2020-01-01 00:00:00 UTC')),
+                new DateTimeEntry('datetime', new DateTimeImmutable('2020-01-01 00:00:00 UTC')),
                 json_entry('json', ['foo', 'bar']),
                 string_entry('null', null),
             )),
@@ -45,7 +46,7 @@ final class RenameEntryTransformerTest extends FlowTestCase
                 integer_entry('id', 1),
                 string_entry('status', 'PENDING'),
                 boolean_entry('enabled', true),
-                new DateTimeEntry('datetime', new \DateTimeImmutable('2020-01-01 00:00:00 UTC')),
+                new DateTimeEntry('datetime', new DateTimeImmutable('2020-01-01 00:00:00 UTC')),
                 json_entry('json', ['foo', 'bar']),
                 integer_entry('new_int', 1000),
                 string_entry('nothing', null),

@@ -5,14 +5,22 @@ declare(strict_types=1);
 namespace Flow\Documentation\Models;
 
 use Flow\ETL\Function\ScalarFunctionChain;
+use ReflectionIntersectionType;
+use ReflectionMethod;
+use ReflectionNamedType;
+use ReflectionType;
+use ReflectionUnionType;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 
+use function base64_encode;
+use function class_exists;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function is_a;
 
 final readonly class MethodModel
 {
@@ -71,7 +79,7 @@ final readonly class MethodModel
         );
     }
 
-    public static function fromReflection(string $relativePath, \ReflectionMethod $reflectionMethod): self
+    public static function fromReflection(string $relativePath, ReflectionMethod $reflectionMethod): self
     {
         $returnTypeReflection = $reflectionMethod->getReturnType();
         $declaringClass = $reflectionMethod->getDeclaringClass();
@@ -95,7 +103,7 @@ final readonly class MethodModel
             $returnTypeReflection !== null ? TypesModel::fromReflection($returnTypeReflection) : new TypesModel([]),
             AttributesModel::fromReflection($reflectionMethod),
             $returnTypeReflection !== null ? self::isScalarFunctionChain($returnTypeReflection) : false,
-            $reflectionMethod->getDocComment() ? \base64_encode($reflectionMethod->getDocComment()) : null,
+            $reflectionMethod->getDocComment() ? base64_encode($reflectionMethod->getDocComment()) : null,
         );
     }
 
@@ -119,19 +127,19 @@ final readonly class MethodModel
         ];
     }
 
-    private static function isScalarFunctionChain(\ReflectionType $reflectionType): bool
+    private static function isScalarFunctionChain(ReflectionType $reflectionType): bool
     {
-        if ($reflectionType instanceof \ReflectionNamedType) {
+        if ($reflectionType instanceof ReflectionNamedType) {
             $typeName = $reflectionType->getName();
 
-            if (!\class_exists($typeName)) {
+            if (!class_exists($typeName)) {
                 return false;
             }
 
-            return \is_a($typeName, ScalarFunctionChain::class, true);
+            return is_a($typeName, ScalarFunctionChain::class, true);
         }
 
-        if ($reflectionType instanceof \ReflectionUnionType || $reflectionType instanceof \ReflectionIntersectionType) {
+        if ($reflectionType instanceof ReflectionUnionType || $reflectionType instanceof ReflectionIntersectionType) {
             foreach ($reflectionType->getTypes() as $type) {
                 if (self::isScalarFunctionChain($type)) {
                     return true;

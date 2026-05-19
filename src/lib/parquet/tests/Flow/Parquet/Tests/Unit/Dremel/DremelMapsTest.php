@@ -17,11 +17,17 @@ use Flow\Parquet\ParquetFile\Schema\ListElement;
 use Flow\Parquet\ParquetFile\Schema\MapKey;
 use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Generator;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
+use function iterator_to_array;
+
 final class DremelMapsTest extends TestCase
 {
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['m' => null],
@@ -134,6 +140,7 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
+
             $shredder->shred($schema, $rows);
         } else {
             $result = $shredder->shred($schema, $rows);
@@ -155,7 +162,7 @@ final class DremelMapsTest extends TestCase
             foreach ($result as $columnValues) {
                 $readFlatValues[] = new ReadFlatColumnValues(
                     $columnValues->column,
-                    (static function (array $values): \Generator {
+                    (static function (array $values): Generator {
                         yield from $values;
                     })($columnValues->values()),
                     $columnValues->repetitionLevels(),
@@ -165,7 +172,7 @@ final class DremelMapsTest extends TestCase
 
             static::assertEquals(
                 $rows,
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('m'),
                     new ReadColumnData($schema->get('m'), $readFlatValues),
                 )),
@@ -173,6 +180,9 @@ final class DremelMapsTest extends TestCase
         }
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['m' => null],
@@ -339,6 +349,7 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
+
             $shredder->shred($schema, $rows);
         } else {
             $result = $shredder->shred($schema, $rows);
@@ -360,7 +371,7 @@ final class DremelMapsTest extends TestCase
             foreach ($result as $columnValues) {
                 $readFlatValues[] = new ReadFlatColumnValues(
                     $columnValues->column,
-                    (static function (array $values): \Generator {
+                    (static function (array $values): Generator {
                         yield from $values;
                     })($columnValues->values()),
                     $columnValues->repetitionLevels(),
@@ -370,7 +381,7 @@ final class DremelMapsTest extends TestCase
 
             static::assertEquals(
                 $rows,
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('m'),
                     new ReadColumnData($schema->get('m'), $readFlatValues),
                 )),
@@ -378,6 +389,9 @@ final class DremelMapsTest extends TestCase
         }
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             [
@@ -597,6 +611,7 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
+
             $shredder->shred($schema, $rows);
         } else {
             $result = $shredder->shred($schema, $rows);
@@ -618,7 +633,7 @@ final class DremelMapsTest extends TestCase
             foreach ($result as $columnValues) {
                 $readFlatValues[] = new ReadFlatColumnValues(
                     $columnValues->column,
-                    (static function (array $values): \Generator {
+                    (static function (array $values): Generator {
                         yield from $values;
                     })($columnValues->values()),
                     $columnValues->repetitionLevels(),
@@ -628,7 +643,7 @@ final class DremelMapsTest extends TestCase
 
             static::assertEquals(
                 $rows,
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('m'),
                     new ReadColumnData($schema->get('m'), $readFlatValues),
                 )),
@@ -636,6 +651,9 @@ final class DremelMapsTest extends TestCase
         }
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['m' => null],
@@ -822,6 +840,7 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
+
             $shredder->shred($schema, $rows);
         } else {
             $result = $shredder->shred($schema, $rows);
@@ -843,7 +862,7 @@ final class DremelMapsTest extends TestCase
             foreach ($result as $columnValues) {
                 $readFlatValues[] = new ReadFlatColumnValues(
                     $columnValues->column,
-                    (static function (array $values): \Generator {
+                    (static function (array $values): Generator {
                         yield from $values;
                     })($columnValues->values()),
                     $columnValues->repetitionLevels(),
@@ -853,7 +872,7 @@ final class DremelMapsTest extends TestCase
 
             static::assertEquals(
                 $rows,
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('m'),
                     new ReadColumnData($schema->get('m'), $readFlatValues),
                 )),
@@ -861,6 +880,9 @@ final class DremelMapsTest extends TestCase
         }
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             [
@@ -935,6 +957,7 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
+
             $shredder->shred($schema, $rows);
         } else {
             $result = $shredder->shred($schema, $rows);
@@ -956,7 +979,7 @@ final class DremelMapsTest extends TestCase
             foreach ($result as $columnValues) {
                 $readFlatValues[] = new ReadFlatColumnValues(
                     $columnValues->column,
-                    (static function (array $values): \Generator {
+                    (static function (array $values): Generator {
                         yield from $values;
                     })($columnValues->values()),
                     $columnValues->repetitionLevels(),
@@ -966,7 +989,7 @@ final class DremelMapsTest extends TestCase
 
             static::assertEquals(
                 $rows,
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('m'),
                     new ReadColumnData($schema->get('m'), $readFlatValues),
                 )),
@@ -974,6 +997,9 @@ final class DremelMapsTest extends TestCase
         }
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['m' => []],
@@ -1028,6 +1054,7 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
+
             $shredder->shred($schema, $rows);
         } else {
             $result = $shredder->shred($schema, $rows);
@@ -1049,7 +1076,7 @@ final class DremelMapsTest extends TestCase
             foreach ($result as $columnValues) {
                 $readFlatValues[] = new ReadFlatColumnValues(
                     $columnValues->column,
-                    (static function (array $values): \Generator {
+                    (static function (array $values): Generator {
                         yield from $values;
                     })($columnValues->values()),
                     $columnValues->repetitionLevels(),
@@ -1059,7 +1086,7 @@ final class DremelMapsTest extends TestCase
 
             static::assertEquals(
                 $rows,
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('m'),
                     new ReadColumnData($schema->get('m'), $readFlatValues),
                 )),
@@ -1067,6 +1094,9 @@ final class DremelMapsTest extends TestCase
         }
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['m' => null],
@@ -1118,6 +1148,7 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
+
             $shredder->shred($schema, $rows);
         } else {
             $result = $shredder->shred($schema, $rows);
@@ -1139,7 +1170,7 @@ final class DremelMapsTest extends TestCase
             foreach ($result as $columnValues) {
                 $readFlatValues[] = new ReadFlatColumnValues(
                     $columnValues->column,
-                    (static function (array $values): \Generator {
+                    (static function (array $values): Generator {
                         yield from $values;
                     })($columnValues->values()),
                     $columnValues->repetitionLevels(),
@@ -1149,7 +1180,7 @@ final class DremelMapsTest extends TestCase
 
             static::assertEquals(
                 $rows,
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('m'),
                     new ReadColumnData($schema->get('m'), $readFlatValues),
                 )),
@@ -1157,6 +1188,9 @@ final class DremelMapsTest extends TestCase
         }
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['m' => null],
@@ -1213,6 +1247,7 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
+
             $shredder->shred($schema, $rows);
         } else {
             $result = $shredder->shred($schema, $rows);
@@ -1234,7 +1269,7 @@ final class DremelMapsTest extends TestCase
             foreach ($result as $columnValues) {
                 $readFlatValues[] = new ReadFlatColumnValues(
                     $columnValues->column,
-                    (static function (array $values): \Generator {
+                    (static function (array $values): Generator {
                         yield from $values;
                     })($columnValues->values()),
                     $columnValues->repetitionLevels(),
@@ -1244,7 +1279,7 @@ final class DremelMapsTest extends TestCase
 
             static::assertEquals(
                 $rows,
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('m'),
                     new ReadColumnData($schema->get('m'), $readFlatValues),
                 )),
@@ -1252,6 +1287,9 @@ final class DremelMapsTest extends TestCase
         }
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             [
@@ -1338,6 +1376,7 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
+
             $shredder->shred($schema, $rows);
         } else {
             $result = $shredder->shred($schema, $rows);
@@ -1359,7 +1398,7 @@ final class DremelMapsTest extends TestCase
             foreach ($result as $columnValues) {
                 $readFlatValues[] = new ReadFlatColumnValues(
                     $columnValues->column,
-                    (static function (array $values): \Generator {
+                    (static function (array $values): Generator {
                         yield from $values;
                     })($columnValues->values()),
                     $columnValues->repetitionLevels(),
@@ -1369,7 +1408,7 @@ final class DremelMapsTest extends TestCase
 
             static::assertEquals(
                 $rows,
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('m'),
                     new ReadColumnData($schema->get('m'), $readFlatValues),
                 )),
@@ -1377,6 +1416,9 @@ final class DremelMapsTest extends TestCase
         }
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['m' => null],
@@ -1485,6 +1527,7 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
+
             $shredder->shred($schema, $rows);
         } else {
             $result = $shredder->shred($schema, $rows);
@@ -1506,7 +1549,7 @@ final class DremelMapsTest extends TestCase
             foreach ($result as $columnValues) {
                 $readFlatValues[] = new ReadFlatColumnValues(
                     $columnValues->column,
-                    (static function (array $values): \Generator {
+                    (static function (array $values): Generator {
                         yield from $values;
                     })($columnValues->values()),
                     $columnValues->repetitionLevels(),
@@ -1516,7 +1559,7 @@ final class DremelMapsTest extends TestCase
 
             static::assertEquals(
                 $rows,
-                \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
+                iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble(
                     $schema->get('m'),
                     new ReadColumnData($schema->get('m'), $readFlatValues),
                 )),

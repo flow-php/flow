@@ -17,6 +17,7 @@ final class Options
 
     private bool $fileFastPath = true;
 
+    /** @var int<1, max> */
     private int $partSize = 1024 * 1024 * 5;
 
     private readonly Path $tmpDir;
@@ -37,6 +38,9 @@ final class Options
         return $this->fileFastPath;
     }
 
+    /**
+     * @return int<1, max>
+     */
     public function partSize(): int
     {
         return $this->partSize;

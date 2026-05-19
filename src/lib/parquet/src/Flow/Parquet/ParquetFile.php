@@ -16,6 +16,11 @@ use Flow\Parquet\Reader\ColumnChunkViewer;
 use Flow\Parquet\Thrift\CompactProtocol;
 use Flow\Parquet\Thrift\MemoryBuffer;
 use Flow\Parquet\ThriftModel\FileMetaData;
+use Generator;
+
+use function array_map;
+use function count;
+use function unpack;
 
 final class ParquetFile
 {
@@ -43,14 +48,25 @@ final class ParquetFile
 
         $fileTotalSize = $this->stream->size();
 
+        if ($fileTotalSize === null) {
+            throw new InvalidArgumentException('Cannot determine Parquet file size');
+        }
+
         if ($this->stream->read(4, $fileTotalSize - 4) !== self::PARQUET_MAGIC_NUMBER) {
             throw new InvalidArgumentException('Given file is not valid Parquet file');
         }
 
-        /**
-         * @phpstan-ignore-next-line
-         */
-        $metadataLength = \unpack($this->byteOrder->value, $this->stream->read(4, $fileTotalSize - 8))[1];
+        $unpacked = unpack($this->byteOrder->value, $this->stream->read(4, $fileTotalSize - 8));
+
+        if ($unpacked === false) {
+            throw new InvalidArgumentException('Failed to read Parquet metadata length');
+        }
+
+        $metadataLength = $unpacked[1];
+
+        if ($metadataLength <= 0) {
+            throw new InvalidArgumentException('Parquet metadata length must be positive, got ' . $metadataLength);
+        }
 
         $metadata = $this->stream->read($metadataLength, $fileTotalSize - ($metadataLength + 8));
 
@@ -65,7 +81,7 @@ final class ParquetFile
     /**
      * @return \Generator<ColumnPageHeader>
      */
-    public function pageHeaders(): \Generator
+    public function pageHeaders(): Generator
     {
         foreach ($this->schema()->columnsFlat() as $column) {
             foreach ($this->viewChunksPages($column) as $pageHeader) {
@@ -84,18 +100,18 @@ final class ParquetFile
      *
      * @return \Generator<int, array<string, mixed>>
      */
-    public function values(array $columns = [], ?int $limit = null, ?int $offset = null): \Generator
+    public function values(array $columns = [], ?int $limit = null, ?int $offset = null): Generator
     {
         if ($limit !== null && $limit <= 0) {
             throw new InvalidArgumentException('Limit must be greater than 0');
         }
 
-        if ($limit !== null && $offset < 0) {
+        if ($limit !== null && $offset !== null && $offset < 0) {
             throw new InvalidArgumentException('Offset must be greater than or equal to 0');
         }
 
-        if (!\count($columns)) {
-            $columns = \array_map(static fn(Column $c) => $c->name(), $this->schema()->columns());
+        if (!count($columns)) {
+            $columns = array_map(static fn(Column $c) => $c->name(), $this->schema()->columns());
         }
 
         foreach ($columns as $columnName) {
@@ -110,7 +126,7 @@ final class ParquetFile
     /**
      * @return \Generator<ColumnPageHeader>
      */
-    private function viewChunksPages(FlatColumn $column): \Generator
+    private function viewChunksPages(FlatColumn $column): Generator
     {
         $viewer = new ColumnChunkViewer($this->options);
 

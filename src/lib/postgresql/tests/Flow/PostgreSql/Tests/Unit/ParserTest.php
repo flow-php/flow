@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit;
 
+use Flow\PostgreSql\Exception\ParserException;
 use Flow\PostgreSql\ParsedQuery;
 use PHPUnit\Framework\TestCase;
 
@@ -17,6 +18,9 @@ use function Flow\PostgreSql\DSL\sql_parse;
 use function Flow\PostgreSql\DSL\sql_parser;
 use function Flow\PostgreSql\DSL\sql_split;
 use function Flow\PostgreSql\DSL\sql_summary;
+use function function_exists;
+use function strlen;
+use function strtolower;
 
 final class ParserTest extends TestCase
 {
@@ -31,7 +35,7 @@ final class ParserTest extends TestCase
 
     public function test_deparse_complex_query(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -50,7 +54,7 @@ final class ParserTest extends TestCase
 
     public function test_deparse_round_trip(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -66,7 +70,7 @@ final class ParserTest extends TestCase
 
     public function test_deparse_select_with_columns(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -80,7 +84,7 @@ final class ParserTest extends TestCase
 
     public function test_deparse_select_with_where(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -94,7 +98,7 @@ final class ParserTest extends TestCase
 
     public function test_deparse_simple_select(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -108,7 +112,7 @@ final class ParserTest extends TestCase
 
     public function test_deparse_with_options_complex_query(): void
     {
-        if (!\function_exists('pg_query_deparse_opts')) {
+        if (!function_exists('pg_query_deparse_opts')) {
             static::markTestSkipped('pg_query_deparse_opts function not available. Rebuild the pg_query extension.');
         }
 
@@ -138,7 +142,7 @@ final class ParserTest extends TestCase
 
     public function test_deparse_with_options_create_table(): void
     {
-        if (!\function_exists('pg_query_deparse_opts')) {
+        if (!function_exists('pg_query_deparse_opts')) {
             static::markTestSkipped('pg_query_deparse_opts function not available. Rebuild the pg_query extension.');
         }
 
@@ -150,14 +154,14 @@ final class ParserTest extends TestCase
         $formatted = $parsed->deparse(sql_deparse_options());
 
         static::assertStringContainsString('CREATE TABLE users', $formatted);
-        static::assertStringContainsString('id serial', \strtolower($formatted));
+        static::assertStringContainsString('id serial', strtolower($formatted));
         static::assertStringContainsString('name', $formatted);
         static::assertStringContainsString('email', $formatted);
     }
 
     public function test_deparse_with_options_custom_indent_size(): void
     {
-        if (!\function_exists('pg_query_deparse_opts')) {
+        if (!function_exists('pg_query_deparse_opts')) {
             static::markTestSkipped('pg_query_deparse_opts function not available. Rebuild the pg_query extension.');
         }
 
@@ -178,7 +182,7 @@ final class ParserTest extends TestCase
 
     public function test_deparse_with_options_insert(): void
     {
-        if (!\function_exists('pg_query_deparse_opts')) {
+        if (!function_exists('pg_query_deparse_opts')) {
             static::markTestSkipped('pg_query_deparse_opts function not available. Rebuild the pg_query extension.');
         }
 
@@ -197,7 +201,7 @@ final class ParserTest extends TestCase
 
     public function test_deparse_with_options_pretty_print_disabled_equals_regular_deparse(): void
     {
-        if (!\function_exists('pg_query_deparse_opts')) {
+        if (!function_exists('pg_query_deparse_opts')) {
             static::markTestSkipped('pg_query_deparse_opts function not available. Rebuild the pg_query extension.');
         }
 
@@ -212,7 +216,7 @@ final class ParserTest extends TestCase
 
     public function test_deparse_with_options_pretty_prints_join(): void
     {
-        if (!\function_exists('pg_query_deparse_opts')) {
+        if (!function_exists('pg_query_deparse_opts')) {
             static::markTestSkipped('pg_query_deparse_opts function not available. Rebuild the pg_query extension.');
         }
 
@@ -236,7 +240,7 @@ final class ParserTest extends TestCase
 
     public function test_deparse_with_options_pretty_prints_simple_select(): void
     {
-        if (!\function_exists('pg_query_deparse_opts')) {
+        if (!function_exists('pg_query_deparse_opts')) {
             static::markTestSkipped('pg_query_deparse_opts function not available. Rebuild the pg_query extension.');
         }
 
@@ -256,7 +260,7 @@ final class ParserTest extends TestCase
 
     public function test_deparse_with_options_trailing_newline(): void
     {
-        if (!\function_exists('pg_query_deparse_opts')) {
+        if (!function_exists('pg_query_deparse_opts')) {
             static::markTestSkipped('pg_query_deparse_opts function not available. Rebuild the pg_query extension.');
         }
 
@@ -303,7 +307,7 @@ final class ParserTest extends TestCase
 
     public function test_normalize_utility(): void
     {
-        if (!\function_exists('pg_query_normalize_utility')) {
+        if (!function_exists('pg_query_normalize_utility')) {
             static::markTestSkipped(
                 'pg_query_normalize_utility function not available. Rebuild the pg_query extension.',
             );
@@ -318,7 +322,7 @@ final class ParserTest extends TestCase
 
     public function test_normalize_utility_preserves_ddl_structure(): void
     {
-        if (!\function_exists('pg_query_normalize_utility')) {
+        if (!function_exists('pg_query_normalize_utility')) {
             static::markTestSkipped(
                 'pg_query_normalize_utility function not available. Rebuild the pg_query extension.',
             );
@@ -345,7 +349,7 @@ final class ParserTest extends TestCase
     {
         $parser = sql_parser();
 
-        $this->expectException(\Flow\PostgreSql\Exception\ParserException::class);
+        $this->expectException(ParserException::class);
         $this->expectExceptionMessage('syntax error');
 
         $parser->parse('SELECT FROM WHERE');
@@ -389,7 +393,7 @@ final class ParserTest extends TestCase
 
     public function test_pg_deparse_with_options(): void
     {
-        if (!\function_exists('pg_query_deparse_opts')) {
+        if (!function_exists('pg_query_deparse_opts')) {
             static::markTestSkipped('pg_query_deparse_opts function not available. Rebuild the pg_query extension.');
         }
 
@@ -409,7 +413,7 @@ final class ParserTest extends TestCase
 
     public function test_pg_deparse_without_options(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -422,7 +426,7 @@ final class ParserTest extends TestCase
 
     public function test_pg_format_with_custom_options(): void
     {
-        if (!\function_exists('pg_query_deparse_opts')) {
+        if (!function_exists('pg_query_deparse_opts')) {
             static::markTestSkipped('pg_query_deparse_opts function not available. Rebuild the pg_query extension.');
         }
 
@@ -433,7 +437,7 @@ final class ParserTest extends TestCase
 
     public function test_pg_format_with_default_options(): void
     {
-        if (!\function_exists('pg_query_deparse_opts')) {
+        if (!function_exists('pg_query_deparse_opts')) {
             static::markTestSkipped('pg_query_deparse_opts function not available. Rebuild the pg_query extension.');
         }
 
@@ -467,7 +471,7 @@ final class ParserTest extends TestCase
 
     public function test_summary_different_queries_produce_different_results(): void
     {
-        if (!\function_exists('pg_query_summary')) {
+        if (!function_exists('pg_query_summary')) {
             static::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
         }
 
@@ -479,18 +483,18 @@ final class ParserTest extends TestCase
 
     public function test_summary_invalid_sql_throws_parser_exception(): void
     {
-        if (!\function_exists('pg_query_summary')) {
+        if (!function_exists('pg_query_summary')) {
             static::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
         }
 
-        $this->expectException(\Flow\PostgreSql\Exception\ParserException::class);
+        $this->expectException(ParserException::class);
 
         sql_summary('SELECT FROM WHERE');
     }
 
     public function test_summary_returns_protobuf_for_cte(): void
     {
-        if (!\function_exists('pg_query_summary')) {
+        if (!function_exists('pg_query_summary')) {
             static::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
         }
 
@@ -503,7 +507,7 @@ final class ParserTest extends TestCase
 
     public function test_summary_returns_protobuf_for_ddl(): void
     {
-        if (!\function_exists('pg_query_summary')) {
+        if (!function_exists('pg_query_summary')) {
             static::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
         }
 
@@ -514,7 +518,7 @@ final class ParserTest extends TestCase
 
     public function test_summary_returns_protobuf_for_delete(): void
     {
-        if (!\function_exists('pg_query_summary')) {
+        if (!function_exists('pg_query_summary')) {
             static::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
         }
 
@@ -525,7 +529,7 @@ final class ParserTest extends TestCase
 
     public function test_summary_returns_protobuf_for_insert(): void
     {
-        if (!\function_exists('pg_query_summary')) {
+        if (!function_exists('pg_query_summary')) {
             static::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
         }
 
@@ -536,7 +540,7 @@ final class ParserTest extends TestCase
 
     public function test_summary_returns_protobuf_for_join_query(): void
     {
-        if (!\function_exists('pg_query_summary')) {
+        if (!function_exists('pg_query_summary')) {
             static::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
         }
 
@@ -547,19 +551,19 @@ final class ParserTest extends TestCase
 
     public function test_summary_returns_protobuf_for_select(): void
     {
-        if (!\function_exists('pg_query_summary')) {
+        if (!function_exists('pg_query_summary')) {
             static::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
         }
 
         $summary = sql_summary('SELECT * FROM users WHERE id = 1');
 
         static::assertNotEmpty($summary);
-        static::assertGreaterThan(0, \strlen($summary));
+        static::assertGreaterThan(0, strlen($summary));
     }
 
     public function test_summary_returns_protobuf_for_subquery(): void
     {
-        if (!\function_exists('pg_query_summary')) {
+        if (!function_exists('pg_query_summary')) {
             static::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
         }
 
@@ -570,7 +574,7 @@ final class ParserTest extends TestCase
 
     public function test_summary_returns_protobuf_for_update(): void
     {
-        if (!\function_exists('pg_query_summary')) {
+        if (!function_exists('pg_query_summary')) {
             static::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
         }
 
@@ -581,18 +585,18 @@ final class ParserTest extends TestCase
 
     public function test_summary_with_parse_options(): void
     {
-        if (!\function_exists('pg_query_summary')) {
+        if (!function_exists('pg_query_summary')) {
             static::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
         }
 
-        $summary = sql_summary('SELECT 1', PG_QUERY_PARSE_DEFAULT);
+        $summary = sql_summary('SELECT 1', 0);
 
         static::assertNotEmpty($summary);
     }
 
     public function test_summary_with_truncation_returns_different_result(): void
     {
-        if (!\function_exists('pg_query_summary')) {
+        if (!function_exists('pg_query_summary')) {
             static::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
         }
 

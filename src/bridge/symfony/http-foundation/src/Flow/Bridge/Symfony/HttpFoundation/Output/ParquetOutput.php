@@ -10,11 +10,12 @@ use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
+use RuntimeException;
 
 use function Flow\ETL\Adapter\Parquet\to_parquet;
 
 if (!function_exists('Flow\ETL\Adapter\Parquet\to_parquet')) {
-    throw new \RuntimeException(
+    throw new RuntimeException(
         'Flow\ETL\Adapter\Parquet\to_parquet function is not available. Make sure that composer require flow-php/etl-adapter-parquet dependency is present in your composer.json.',
     );
 }

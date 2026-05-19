@@ -7,6 +7,7 @@ namespace Flow\ETL\Processor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Processor;
 use Flow\ETL\Rows;
+use Generator;
 
 /**
  * Collects all rows from the upstream generator into a single batch.
@@ -19,7 +20,7 @@ use Flow\ETL\Rows;
  */
 final readonly class CollectingProcessor implements Processor
 {
-    public function process(\Generator $rows, FlowContext $context): \Generator
+    public function process(Generator $rows, FlowContext $context): Generator
     {
         $collected = new Rows();
 

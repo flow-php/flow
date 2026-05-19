@@ -4,6 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\ErrorHandler;
 
+use DateTimeImmutable;
+use DateTimeInterface;
+use InvalidArgumentException;
+use Throwable;
+
+use function fclose;
+use function fwrite;
+use function gethostname;
+use function is_resource;
+use function sprintf;
+use function stream_socket_client;
+
 /**
  * Writes RFC 5424-style syslog frames over UDP to a remote collector.
  *
@@ -23,27 +35,27 @@ final class UdpSyslogHandler implements ErrorHandler
         private readonly SyslogSeverity $severity = SyslogSeverity::Error,
     ) {
         if ($host === '') {
-            throw new \InvalidArgumentException('UdpSyslogHandler host must be a non-empty string');
+            throw new InvalidArgumentException('UdpSyslogHandler host must be a non-empty string');
         }
 
         if ($port < 1 || $port > 65535) {
-            throw new \InvalidArgumentException('UdpSyslogHandler port must be between 1 and 65535');
+            throw new InvalidArgumentException('UdpSyslogHandler port must be between 1 and 65535');
         }
 
         if ($ident === '') {
-            throw new \InvalidArgumentException('UdpSyslogHandler ident must be a non-empty string');
+            throw new InvalidArgumentException('UdpSyslogHandler ident must be a non-empty string');
         }
     }
 
     public function __destruct()
     {
-        if (\is_resource($this->socket)) {
-            @\fclose($this->socket);
+        if (is_resource($this->socket)) {
+            @fclose($this->socket);
             $this->socket = null;
         }
     }
 
-    public function handle(\Throwable $error): void
+    public function handle(Throwable $error): void
     {
         try {
             $socket = $this->openSocket();
@@ -53,14 +65,14 @@ final class UdpSyslogHandler implements ErrorHandler
             }
 
             $priority = $this->facility->value | $this->severity->value;
-            $timestamp = (new \DateTimeImmutable())->format(\DateTimeInterface::RFC3339);
-            $hostname = \gethostname();
+            $timestamp = (new DateTimeImmutable())->format(DateTimeInterface::RFC3339);
+            $hostname = gethostname();
 
             if ($hostname === false) {
                 $hostname = '-';
             }
 
-            $message = \sprintf(
+            $message = sprintf(
                 '<%d>1 %s %s %s - - - %s: %s in %s:%d',
                 $priority,
                 $timestamp,
@@ -72,8 +84,8 @@ final class UdpSyslogHandler implements ErrorHandler
                 $error->getLine(),
             );
 
-            @\fwrite($socket, $message);
-        } catch (\Throwable) {
+            @fwrite($socket, $message);
+        } catch (Throwable) {
         }
     }
 
@@ -82,13 +94,15 @@ final class UdpSyslogHandler implements ErrorHandler
      */
     private function openSocket()
     {
-        if (\is_resource($this->socket)) {
+        if (is_resource($this->socket)) {
             return $this->socket;
         }
 
-        $handle = @\stream_socket_client(\sprintf('udp://%s:%d', $this->host, $this->port), $_errno, $_errstr, 1.0);
+        $_errno = null;
+        $_errstr = null;
+        $handle = @stream_socket_client(sprintf('udp://%s:%d', $this->host, $this->port), $_errno, $_errstr, 1.0);
 
-        if (!\is_resource($handle)) {
+        if (!is_resource($handle)) {
             return null;
         }
 

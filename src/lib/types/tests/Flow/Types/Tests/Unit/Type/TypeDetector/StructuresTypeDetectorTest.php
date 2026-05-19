@@ -7,12 +7,14 @@ namespace Flow\Types\Tests\Unit\Type\TypeDetector;
 use Flow\Types\Type\TypeDetector;
 use PHPUnit\Framework\TestCase;
 
+use function file_get_contents;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function json_decode;
 
 final class StructuresTypeDetectorTest extends TestCase
 {
@@ -20,12 +22,9 @@ final class StructuresTypeDetectorTest extends TestCase
     {
         $typeDetector = new TypeDetector();
 
-        $structure = \json_decode(
-            \file_get_contents(__DIR__ . '/Fixtures/github_user_event.json'),
-            true,
-            512,
-            JSON_THROW_ON_ERROR,
-        );
+        $json = type_string()->assert(file_get_contents(__DIR__ . '/Fixtures/github_user_event.json'));
+        // @mago-ignore analysis:mixed-assignment
+        $structure = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         $type = $typeDetector->detectType($structure);
 
         static::assertEquals(

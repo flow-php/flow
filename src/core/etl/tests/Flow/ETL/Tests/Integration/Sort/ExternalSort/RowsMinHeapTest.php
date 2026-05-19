@@ -8,10 +8,13 @@ use Flow\ETL\Sort\ExternalSort\BucketRow;
 use Flow\ETL\Sort\ExternalSort\RowsMinHeap;
 use Flow\ETL\Tests\FlowTestCase;
 
+use function array_map;
+use function count;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\str_entry;
+use function range;
 
 final class RowsMinHeapTest extends FlowTestCase
 {
@@ -35,7 +38,7 @@ final class RowsMinHeapTest extends FlowTestCase
                 ['id' => 5],
                 ['id' => 6],
             ],
-            \array_map(static fn() => $minHeap->extract()->row->toArray(), \range(1, \count($minHeap))),
+            array_map(static fn() => $minHeap->extract()->row->toArray(), range(1, count($minHeap))),
         );
     }
 
@@ -59,7 +62,7 @@ final class RowsMinHeapTest extends FlowTestCase
                 ['id' => 2],
                 ['id' => 1],
             ],
-            \array_map(static fn() => $minHeap->extract()->row->toArray(), \range(1, \count($minHeap))),
+            array_map(static fn() => $minHeap->extract()->row->toArray(), range(1, count($minHeap))),
         );
     }
 
@@ -83,7 +86,7 @@ final class RowsMinHeapTest extends FlowTestCase
                 ['id' => 'e'],
                 ['id' => 'f'],
             ],
-            \array_map(static fn() => $minHeap->extract()->row->toArray(), \range(1, \count($minHeap))),
+            array_map(static fn() => $minHeap->extract()->row->toArray(), range(1, count($minHeap))),
         );
     }
 
@@ -107,7 +110,7 @@ final class RowsMinHeapTest extends FlowTestCase
                 ['id' => 'b'],
                 ['id' => 'a'],
             ],
-            \array_map(static fn() => $minHeap->extract()->row->toArray(), \range(1, \count($minHeap))),
+            array_map(static fn() => $minHeap->extract()->row->toArray(), range(1, count($minHeap))),
         );
     }
 }

@@ -17,11 +17,14 @@ use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
+use function function_exists;
+
 final class CopyToBuilderTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (!\extension_loaded('pg_query')) {
+        if (!extension_loaded('pg_query')) {
             self::markTestSkipped(
                 'pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.',
             );
@@ -53,7 +56,7 @@ final class CopyToBuilderTest extends TestCase
 
     public function test_copy_to_deparsed_basic_table(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -65,7 +68,7 @@ final class CopyToBuilderTest extends TestCase
 
     public function test_copy_to_deparsed_binary_format(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -77,7 +80,7 @@ final class CopyToBuilderTest extends TestCase
 
     public function test_copy_to_deparsed_from_query(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -93,7 +96,7 @@ final class CopyToBuilderTest extends TestCase
 
     public function test_copy_to_deparsed_to_program(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -105,7 +108,7 @@ final class CopyToBuilderTest extends TestCase
 
     public function test_copy_to_deparsed_to_stdout(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -117,7 +120,7 @@ final class CopyToBuilderTest extends TestCase
 
     public function test_copy_to_deparsed_with_columns(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -129,7 +132,7 @@ final class CopyToBuilderTest extends TestCase
 
     public function test_copy_to_deparsed_with_csv_format(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -141,7 +144,7 @@ final class CopyToBuilderTest extends TestCase
 
     public function test_copy_to_deparsed_with_delimiter(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -157,7 +160,7 @@ final class CopyToBuilderTest extends TestCase
 
     public function test_copy_to_deparsed_with_encoding(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -169,7 +172,7 @@ final class CopyToBuilderTest extends TestCase
 
     public function test_copy_to_deparsed_with_escape(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -181,7 +184,7 @@ final class CopyToBuilderTest extends TestCase
 
     public function test_copy_to_deparsed_with_force_quote_all(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -197,7 +200,7 @@ final class CopyToBuilderTest extends TestCase
 
     public function test_copy_to_deparsed_with_force_quote_columns(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -213,7 +216,7 @@ final class CopyToBuilderTest extends TestCase
 
     public function test_copy_to_deparsed_with_header(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -225,7 +228,7 @@ final class CopyToBuilderTest extends TestCase
 
     public function test_copy_to_deparsed_with_null_string(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -237,7 +240,7 @@ final class CopyToBuilderTest extends TestCase
 
     public function test_copy_to_deparsed_with_quote(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -249,7 +252,7 @@ final class CopyToBuilderTest extends TestCase
 
     public function test_copy_to_deparsed_with_schema(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -309,16 +312,24 @@ final class CopyToBuilderTest extends TestCase
 
     public function test_to_ast_without_destination_throws_exception(): void
     {
+        $builder = CopyToBuilder::create()->table('users');
+        static::assertInstanceOf(CopyToBuilder::class, $builder);
+
         $this->expectException(InvalidExpressionException::class);
 
-        CopyToBuilder::create()->table('users')->toAst();
+        $builder->toAst();
     }
 
     public function test_to_ast_without_table_or_query_throws_exception(): void
     {
+        $builder = CopyToBuilder::create();
+        static::assertInstanceOf(CopyToBuilder::class, $builder);
+        $withFile = $builder->file('/tmp/users.csv');
+        static::assertInstanceOf(CopyToBuilder::class, $withFile);
+
         $this->expectException(InvalidExpressionException::class);
 
-        CopyToBuilder::create()->file('/tmp/users.csv')->toAst();
+        $withFile->toAst();
     }
 
     private function deparse(CopyStmt $copyStmt): string

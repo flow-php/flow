@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ArrayComparison;
 
+use function array_key_exists;
+use function count;
+use function is_array;
+use function is_object;
+
 final class ArrayComparison
 {
     /**
@@ -38,20 +43,20 @@ final class ArrayComparison
      */
     private function valueEquals($a, $b): bool
     {
-        if (!\is_array($b) || !\is_array($a)) {
-            if (\is_object($a) && \is_object($b)) {
+        if (!is_array($b) || !is_array($a)) {
+            if (is_object($a) && is_object($b)) {
                 return $a == $b;
             }
 
             return $a === $b;
         }
 
-        if (\count($a) !== \count($b)) {
+        if (count($a) !== count($b)) {
             return false;
         }
 
         foreach ($b as $key => $value) {
-            if (!\array_key_exists($key, $a)) {
+            if (!array_key_exists($key, $a)) {
                 return false;
             }
 

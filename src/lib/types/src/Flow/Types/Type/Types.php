@@ -4,19 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type;
 
+use Countable;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Native\UnionType;
+use Stringable;
 
+use function array_filter;
+use function array_values;
+use function count;
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_null;
+use function implode;
 
 /**
  * Unique collection of types.
  *
  * @template-covariant  T
  */
-final readonly class Types implements \Countable, \Stringable
+final readonly class Types implements Countable, Stringable
 {
     /**
      * @var ?Type<T>
@@ -45,7 +51,7 @@ final readonly class Types implements \Countable, \Stringable
             $types[] = $type->toString();
         }
 
-        return \implode(',', $types);
+        return implode(',', $types);
     }
 
     /**
@@ -58,7 +64,7 @@ final readonly class Types implements \Countable, \Stringable
 
     public function count(): int
     {
-        return \count($this->types);
+        return count($this->types);
     }
 
     /**
@@ -72,7 +78,7 @@ final readonly class Types implements \Countable, \Stringable
             $types[$type->toString()] = $type;
         }
 
-        return new self(...\array_values($types));
+        return new self(...array_values($types));
     }
 
     /**
@@ -134,7 +140,7 @@ final readonly class Types implements \Countable, \Stringable
      */
     public function only(Type ...$types): self
     {
-        $filteredTypes = \array_filter($this->types, static function (Type $type) use ($types): bool {
+        $filteredTypes = array_filter($this->types, static function (Type $type) use ($types): bool {
             foreach ($types as $keepType) {
                 if (type_equals($type, $keepType)) {
                     return true;
@@ -166,7 +172,7 @@ final readonly class Types implements \Countable, \Stringable
             }
         }
 
-        return new self(...\array_values(\array_filter($types)));
+        return new self(...array_values(array_filter($types)));
     }
 
     /**
@@ -176,7 +182,7 @@ final readonly class Types implements \Countable, \Stringable
      */
     public function without(Type ...$types): self
     {
-        $filteredTypes = \array_filter($this->types, static function (Type $type) use ($types): bool {
+        $filteredTypes = array_filter($this->types, static function (Type $type) use ($types): bool {
             foreach ($types as $withoutType) {
                 if (type_equals($type, $withoutType)) {
                     return false;

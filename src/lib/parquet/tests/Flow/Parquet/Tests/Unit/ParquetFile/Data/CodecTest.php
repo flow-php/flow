@@ -11,12 +11,15 @@ use Flow\Parquet\ParquetFile\Data\Codec;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
+use function strlen;
+
 final class CodecTest extends TestCase
 {
     #[Group('brotli-extension')]
     public function test_brotli(): void
     {
-        if (!\extension_loaded('brotli')) {
+        if (!extension_loaded('brotli')) {
             static::markTestSkipped('The Brotli extension is not available');
         }
 
@@ -42,7 +45,7 @@ final class CodecTest extends TestCase
     #[Group('lz4-extension')]
     public function test_lz4(): void
     {
-        if (!\extension_loaded('lz4')) {
+        if (!extension_loaded('lz4')) {
             static::markTestSkipped('The lz4 extension is not available');
         }
 
@@ -56,7 +59,7 @@ final class CodecTest extends TestCase
     #[Group('lz4-extension')]
     public function test_lz4_raw(): void
     {
-        if (!\extension_loaded('lz4')) {
+        if (!extension_loaded('lz4')) {
             static::markTestSkipped('The lz4 extension is not available');
         }
 
@@ -67,14 +70,14 @@ final class CodecTest extends TestCase
         static::assertSame($data, $codec->decompress(
             $codec->compress($data, Compressions::LZ4_RAW),
             Compressions::LZ4_RAW,
-            \strlen($data),
+            strlen($data),
         ));
     }
 
     #[Group('snappy-extension')]
     public function test_snappy(): void
     {
-        if (!\extension_loaded('snappy')) {
+        if (!extension_loaded('snappy')) {
             static::markTestSkipped('The snappy extension is not available');
         }
 
@@ -90,7 +93,7 @@ final class CodecTest extends TestCase
 
     public function test_snappy_polyfill(): void
     {
-        if (\extension_loaded('snappy')) {
+        if (extension_loaded('snappy')) {
             static::markTestSkipped('The snappy extension is available');
         }
 
@@ -119,7 +122,7 @@ final class CodecTest extends TestCase
     #[Group('zstd-extension')]
     public function test_zstd(): void
     {
-        if (!\extension_loaded('zstd')) {
+        if (!extension_loaded('zstd')) {
             static::markTestSkipped('The Zstd extension is not available');
         }
 

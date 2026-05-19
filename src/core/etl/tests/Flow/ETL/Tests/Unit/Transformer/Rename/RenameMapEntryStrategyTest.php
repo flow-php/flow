@@ -6,10 +6,12 @@ namespace Flow\ETL\Tests\Unit\Transformer\Rename;
 
 use Flow\ETL\Tests\FlowTestCase;
 
+use function array_keys;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\rename_map;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\str_entry;
+use function sort;
 
 final class RenameMapEntryStrategyTest extends FlowTestCase
 {
@@ -27,8 +29,8 @@ final class RenameMapEntryStrategyTest extends FlowTestCase
             str_entry('other_column', 'value_c'),
         ));
 
-        $entryNames = \array_keys($result->entries()->toArray());
-        \sort($entryNames);
+        $entryNames = array_keys($result->entries()->toArray());
+        sort($entryNames);
         static::assertSame(['new_a', 'new_b', 'other_column'], $entryNames);
     }
 

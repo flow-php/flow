@@ -7,6 +7,7 @@ namespace Flow\ETL\Extractor;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\Filesystem\Path;
+use Generator;
 
 use function Flow\ETL\DSL\array_to_rows;
 
@@ -19,7 +20,7 @@ final class FilesExtractor implements Extractor, FileExtractor, LimitableExtract
         private readonly Path $path,
     ) {}
 
-    public function extract(FlowContext $context): \Generator
+    public function extract(FlowContext $context): Generator
     {
         foreach ($context->filesystem($this->path)->list($this->path, $this->filter()) as $fileStatus) {
             $signal = yield array_to_rows([

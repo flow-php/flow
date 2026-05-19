@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Provider\Console;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Logger\Severity;
@@ -14,6 +16,26 @@ use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Signal\SignalType;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanStatusCode;
+
+use function abs;
+use function array_keys;
+use function array_map;
+use function array_merge;
+use function count;
+use function implode;
+use function is_array;
+use function is_float;
+use function is_scalar;
+use function is_string;
+use function json_encode;
+use function max;
+use function mb_strlen;
+use function mb_substr;
+use function min;
+use function number_format;
+use function sprintf;
+use function strtoupper;
+use function substr;
 
 /**
  * Unified console exporter for logs, metrics, and spans.
@@ -50,7 +72,6 @@ final readonly class ConsoleExporter implements Exporter
         private ConsoleMetricOptions $metricOptions = new ConsoleMetricOptions(),
         private ConsoleSpanOptions $spanOptions = new ConsoleSpanOptions(),
     ) {
-        /** @var null|resource $outputStream */
         $this->output = new ConsoleOutput($colors, $outputStream);
     }
 
@@ -67,20 +88,20 @@ final readonly class ConsoleExporter implements Exporter
 
     private function appendMetricExemplarInfo(string &$line, Metric $metric): void
     {
-        if (\count($metric->exemplars) === 0) {
+        if (count($metric->exemplars) === 0) {
             return;
         }
 
         if ($this->metricOptions->showAllExemplars) {
             foreach ($metric->exemplars as $exemplar) {
-                $traceIdShort = \substr($exemplar->traceId->toHex(), 0, 8);
-                $spanIdShort = \substr($exemplar->spanId->toHex(), 0, 8);
+                $traceIdShort = substr($exemplar->traceId->toHex(), 0, 8);
+                $spanIdShort = substr($exemplar->spanId->toHex(), 0, 8);
                 $line .= '  ' . $this->output->dim('[trace:' . $traceIdShort . '.. span:' . $spanIdShort . '..]');
             }
         } else {
             $exemplar = $metric->exemplars[0];
-            $traceIdShort = \substr($exemplar->traceId->toHex(), 0, 8);
-            $spanIdShort = \substr($exemplar->spanId->toHex(), 0, 8);
+            $traceIdShort = substr($exemplar->traceId->toHex(), 0, 8);
+            $spanIdShort = substr($exemplar->spanId->toHex(), 0, 8);
             $line .= '  ' . $this->output->dim('[trace:' . $traceIdShort . '.. span:' . $spanIdShort . '..]');
         }
     }
@@ -96,8 +117,8 @@ final readonly class ConsoleExporter implements Exporter
         $attributes = $resource->all();
         $maxKeyLength = 0;
 
-        foreach (\array_keys($attributes) as $key) {
-            $maxKeyLength = \max($maxKeyLength, \mb_strlen($key));
+        foreach (array_keys($attributes) as $key) {
+            $maxKeyLength = max($maxKeyLength, mb_strlen($key));
         }
 
         foreach ($attributes as $key => $value) {
@@ -191,8 +212,8 @@ final readonly class ConsoleExporter implements Exporter
         $maxValueLength = 0;
 
         foreach ($metrics as $metric) {
-            $maxNameLength = \max($maxNameLength, \mb_strlen($metric->name));
-            $maxValueLength = \max($maxValueLength, \mb_strlen($this->formatMetricValue($metric)));
+            $maxNameLength = max($maxNameLength, mb_strlen($metric->name));
+            $maxValueLength = max($maxValueLength, mb_strlen($this->formatMetricValue($metric)));
         }
 
         $lines = [];
@@ -217,9 +238,9 @@ final readonly class ConsoleExporter implements Exporter
 
                 foreach ($metric->attributes->normalize() as $key => $attrValue) {
                     $attrParts[] =
-                        $key . '=' . (\is_scalar($attrValue) ? (string) $attrValue : \json_encode($attrValue));
+                        $key . '=' . (is_scalar($attrValue) ? (string) $attrValue : (json_encode($attrValue) ?: ''));
                 }
-                $line .= '  ' . $this->output->dim('{' . \implode(', ', $attrParts) . '}');
+                $line .= '  ' . $this->output->dim('{' . implode(', ', $attrParts) . '}');
             }
 
             if ($this->metricOptions->showAggregationTemporality) {
@@ -272,21 +293,21 @@ final readonly class ConsoleExporter implements Exporter
         $parts = [];
         $serviceName = $resource->get('service.name');
 
-        if (\is_string($serviceName)) {
+        if (is_string($serviceName)) {
             $parts[] = $serviceName;
         }
 
         $serviceVersion = $resource->get('service.version');
 
-        if (\is_string($serviceVersion)) {
+        if (is_string($serviceVersion)) {
             $parts[] = 'v' . $serviceVersion;
         }
 
-        if (\count($parts) === 0) {
+        if (count($parts) === 0) {
             return [];
         }
 
-        return ['Resource: ' . $this->output->dim(\implode(' ', $parts))];
+        return ['Resource: ' . $this->output->dim(implode(' ', $parts))];
     }
 
     /**
@@ -296,7 +317,7 @@ final readonly class ConsoleExporter implements Exporter
     {
         $attributes = $span->attributes();
 
-        if (\count($attributes) === 0) {
+        if (count($attributes) === 0) {
             return [];
         }
 
@@ -305,8 +326,8 @@ final readonly class ConsoleExporter implements Exporter
 
         $maxKeyLength = 0;
 
-        foreach (\array_keys($attributes) as $key) {
-            $maxKeyLength = \max($maxKeyLength, \mb_strlen($key));
+        foreach (array_keys($attributes) as $key) {
+            $maxKeyLength = max($maxKeyLength, mb_strlen($key));
         }
 
         foreach ($attributes as $key => $value) {
@@ -360,17 +381,17 @@ final readonly class ConsoleExporter implements Exporter
     {
         $events = $span->events();
 
-        if (\count($events) === 0) {
+        if (count($events) === 0) {
             return [];
         }
 
         $lines = [];
-        $lines[] = $this->output->bold('Events (' . \count($events) . '):');
+        $lines[] = $this->output->bold('Events (' . count($events) . '):');
 
         foreach ($events as $event) {
             $timestamp = $event->timestamp()->format('H:i:s.u');
             $attrs = $event->attributes();
-            $attrStr = \count($attrs) > 0 ? ' ' . $this->output->dim($this->output->formatValue($attrs)) : '';
+            $attrStr = count($attrs) > 0 ? ' ' . $this->output->dim($this->output->formatValue($attrs)) : '';
             $lines[] = '  ' . $this->output->gray($timestamp) . ' ' . $event->name() . $attrStr;
         }
 
@@ -396,7 +417,7 @@ final readonly class ConsoleExporter implements Exporter
 
         $lines[] = $traceInfo;
 
-        $kindStr = $this->output->cyan(\strtoupper($span->kind()->value));
+        $kindStr = $this->output->cyan(strtoupper($span->kind()->value));
         $statusStr = $this->formatSpanStatusIcon($span);
         $durationStr = $this->output->formatDuration($span->duration());
 
@@ -421,12 +442,12 @@ final readonly class ConsoleExporter implements Exporter
 
         $links = $span->links();
 
-        if (\count($links) === 0) {
+        if (count($links) === 0) {
             return [];
         }
 
         $lines = [];
-        $lines[] = $this->output->bold('Links (' . \count($links) . '):');
+        $lines[] = $this->output->bold('Links (' . count($links) . '):');
 
         foreach ($links as $link) {
             $traceId = $link->context->traceId->toHex();
@@ -434,7 +455,7 @@ final readonly class ConsoleExporter implements Exporter
             $lines[] =
                 '  -> '
                 . $this->output->dim(
-                    'trace:' . \mb_substr($traceId, 0, 12) . '... span:' . \mb_substr($spanId, 0, 12) . '...',
+                    'trace:' . mb_substr($traceId, 0, 12) . '... span:' . mb_substr($spanId, 0, 12) . '...',
                 );
         }
 
@@ -479,11 +500,11 @@ final readonly class ConsoleExporter implements Exporter
         $maxLength = 0;
 
         foreach ($lines as $line) {
-            $visibleLength = \mb_strlen($this->output->stripColors($line));
-            $maxLength = \max($maxLength, $visibleLength);
+            $visibleLength = mb_strlen($this->output->stripColors($line));
+            $maxLength = max($maxLength, $visibleLength);
         }
 
-        return \max($minWidth, $maxLength + 4);
+        return max($minWidth, $maxLength + 4);
     }
 
     /**
@@ -494,11 +515,11 @@ final readonly class ConsoleExporter implements Exporter
         $maxLength = 0;
 
         foreach ($records as $record) {
-            $maxLength = \max($maxLength, \mb_strlen($record['body']));
+            $maxLength = max($maxLength, mb_strlen($record['body']));
         }
 
         if ($this->maxLogBodyLength !== null) {
-            return \min($maxLength, $this->maxLogBodyLength);
+            return min($maxLength, $this->maxLogBodyLength);
         }
 
         return $maxLength;
@@ -518,7 +539,7 @@ final readonly class ConsoleExporter implements Exporter
             $width += self::LOG_TRACE_WIDTH;
         }
 
-        return \max(self::LOG_MIN_WIDTH, $width);
+        return max(self::LOG_MIN_WIDTH, $width);
     }
 
     private function colorBySeverity(string $text, Severity $severity): string
@@ -538,7 +559,7 @@ final readonly class ConsoleExporter implements Exporter
      */
     private function exportLogs(array $entries): bool
     {
-        if (\count($entries) === 0) {
+        if (count($entries) === 0) {
             return true;
         }
 
@@ -550,14 +571,14 @@ final readonly class ConsoleExporter implements Exporter
         $width = $this->calculateLogTotalWidth($bodyWidth, $hasTrace);
 
         foreach ($resourceLines as $resourceLine) {
-            $resourceWidth = \mb_strlen($this->output->stripColors($resourceLine)) + 4;
-            $width = \max($width, $resourceWidth);
+            $resourceWidth = mb_strlen($this->output->stripColors($resourceLine)) + 4;
+            $width = max($width, $resourceWidth);
         }
 
         $buffer = $this->output->border($width) . PHP_EOL;
         $buffer .= $this->output->row($this->output->bold('LOGS'), $width) . PHP_EOL;
 
-        if (\count($resourceLines) > 0) {
+        if (count($resourceLines) > 0) {
             foreach ($resourceLines as $resourceLine) {
                 $buffer .= $this->output->row($resourceLine, $width) . PHP_EOL;
             }
@@ -587,7 +608,7 @@ final readonly class ConsoleExporter implements Exporter
      */
     private function exportMetrics(array $metrics): bool
     {
-        if (\count($metrics) === 0) {
+        if (count($metrics) === 0) {
             return true;
         }
 
@@ -595,14 +616,14 @@ final readonly class ConsoleExporter implements Exporter
         $resourceLines = $this->buildMetricResourceLines($metrics[0]->resource);
         $scopeLine = $this->buildMetricScopeLine($metrics[0]);
 
-        $allLines = \array_merge($resourceLines, $scopeLine !== null ? [$scopeLine] : [], $lines);
-        $maxLength = \mb_strlen('METRICS');
+        $allLines = array_merge($resourceLines, $scopeLine !== null ? [$scopeLine] : [], $lines);
+        $maxLength = mb_strlen('METRICS');
 
         foreach ($allLines as $line) {
-            $maxLength = \max($maxLength, \mb_strlen($this->output->stripColors($line)));
+            $maxLength = max($maxLength, mb_strlen($this->output->stripColors($line)));
         }
 
-        $width = \max(self::METRIC_MIN_WIDTH, $maxLength + 4);
+        $width = max(self::METRIC_MIN_WIDTH, $maxLength + 4);
 
         $buffer = $this->output->border($width) . PHP_EOL;
         $buffer .= $this->output->row($this->output->bold('METRICS'), $width) . PHP_EOL;
@@ -616,7 +637,7 @@ final readonly class ConsoleExporter implements Exporter
             $buffer .= $this->output->row($scopeLine, $width) . PHP_EOL;
         }
 
-        if (\count($resourceLines) > 0 || $scopeLine !== null) {
+        if (count($resourceLines) > 0 || $scopeLine !== null) {
             $buffer .= $this->output->border($width) . PHP_EOL;
         }
 
@@ -648,7 +669,7 @@ final readonly class ConsoleExporter implements Exporter
      */
     private function formatLogAttributes(array $attributes): string
     {
-        if (\count($attributes) === 0) {
+        if (count($attributes) === 0) {
             return '';
         }
 
@@ -658,7 +679,7 @@ final readonly class ConsoleExporter implements Exporter
             $parts[] = $key . ': ' . $this->output->formatValue($this->normalizeLogAttributeValue($value));
         }
 
-        return '{' . \implode(', ', $parts) . '}';
+        return '{' . implode(', ', $parts) . '}';
     }
 
     /**
@@ -682,9 +703,9 @@ final readonly class ConsoleExporter implements Exporter
 
             if ($entry->spanContext !== null) {
                 $trace =
-                    \mb_substr($entry->spanContext->traceId->toHex(), 0, 8)
+                    mb_substr($entry->spanContext->traceId->toHex(), 0, 8)
                     . '/'
-                    . \mb_substr($entry->spanContext->spanId->toHex(), 0, 8);
+                    . mb_substr($entry->spanContext->spanId->toHex(), 0, 8);
             }
 
             $timestamp = $entry->timestamp->format('Y-m-d H:i:s.u');
@@ -710,24 +731,24 @@ final readonly class ConsoleExporter implements Exporter
     {
         $value = $metric->value;
 
-        if (\is_float($value)) {
-            if (\abs($value) >= 1000000) {
-                return \sprintf('%.2fM', $value / 1000000);
+        if (is_float($value)) {
+            if (abs($value) >= 1000000) {
+                return sprintf('%.2fM', $value / 1000000);
             }
 
-            if (\abs($value) >= 1000) {
-                return \sprintf('%.2fK', $value / 1000);
+            if (abs($value) >= 1000) {
+                return sprintf('%.2fK', $value / 1000);
             }
 
-            return \sprintf('%.2f', $value);
+            return sprintf('%.2f', $value);
         }
 
         if ($value >= 1000000) {
-            return \sprintf('%.2fM', $value / 1000000);
+            return sprintf('%.2fM', $value / 1000000);
         }
 
         if ($value >= 1000) {
-            return \number_format($value);
+            return number_format($value);
         }
 
         return (string) $value;
@@ -789,13 +810,13 @@ final readonly class ConsoleExporter implements Exporter
      */
     private function normalizeLogAttributeValue(mixed $value): array|bool|float|int|string
     {
-        if ($value instanceof \DateTimeImmutable) {
-            return $value->format(\DateTimeInterface::RFC3339_EXTENDED);
+        if ($value instanceof DateTimeImmutable) {
+            return $value->format(DateTimeInterface::RFC3339_EXTENDED);
         }
 
-        if (\is_array($value)) {
-            return \array_map(static fn($item) => $item instanceof \DateTimeImmutable
-                ? $item->format(\DateTimeInterface::RFC3339_EXTENDED)
+        if (is_array($value)) {
+            return array_map(static fn($item) => $item instanceof DateTimeImmutable
+                ? $item->format(DateTimeInterface::RFC3339_EXTENDED)
                 : $item, $value);
         }
 
@@ -812,7 +833,7 @@ final readonly class ConsoleExporter implements Exporter
         $linkLines = $this->buildSpanLinkLines($span);
         $droppedLines = $this->buildSpanDroppedCountsLines($span);
 
-        $allLines = \array_merge(
+        $allLines = array_merge(
             $headerLines,
             $resourceLines,
             $scopeLines,
@@ -827,11 +848,11 @@ final readonly class ConsoleExporter implements Exporter
         $buffer .= $this->output->row($this->output->bold($headerLines[0]), $width) . PHP_EOL;
         $buffer .= $this->output->border($width) . PHP_EOL;
 
-        for ($i = 1; $i < \count($headerLines); $i++) {
+        for ($i = 1; $i < count($headerLines); $i++) {
             $buffer .= $this->output->row($headerLines[$i], $width) . PHP_EOL;
         }
 
-        if (\count($resourceLines) > 0) {
+        if (count($resourceLines) > 0) {
             $buffer .= $this->output->border($width) . PHP_EOL;
 
             foreach ($resourceLines as $line) {
@@ -839,13 +860,13 @@ final readonly class ConsoleExporter implements Exporter
             }
         }
 
-        if (\count($scopeLines) > 0) {
+        if (count($scopeLines) > 0) {
             foreach ($scopeLines as $line) {
                 $buffer .= $this->output->row($line, $width) . PHP_EOL;
             }
         }
 
-        if (\count($attributeLines) > 0) {
+        if (count($attributeLines) > 0) {
             $buffer .= $this->output->border($width) . PHP_EOL;
 
             foreach ($attributeLines as $line) {
@@ -853,7 +874,7 @@ final readonly class ConsoleExporter implements Exporter
             }
         }
 
-        if (\count($eventLines) > 0) {
+        if (count($eventLines) > 0) {
             $buffer .= $this->output->border($width) . PHP_EOL;
 
             foreach ($eventLines as $line) {
@@ -861,7 +882,7 @@ final readonly class ConsoleExporter implements Exporter
             }
         }
 
-        if (\count($linkLines) > 0) {
+        if (count($linkLines) > 0) {
             $buffer .= $this->output->border($width) . PHP_EOL;
 
             foreach ($linkLines as $line) {
@@ -869,7 +890,7 @@ final readonly class ConsoleExporter implements Exporter
             }
         }
 
-        if (\count($droppedLines) > 0) {
+        if (count($droppedLines) > 0) {
             $buffer .= $this->output->border($width) . PHP_EOL;
 
             foreach ($droppedLines as $line) {

@@ -6,11 +6,12 @@ namespace Flow\ETL\Row;
 
 use Flow\ETL\Schema\Definition;
 use Flow\Types\Type;
+use Stringable;
 
 /**
  * @template-covariant T
  */
-interface Entry extends \Stringable
+interface Entry extends Stringable
 {
     public function __toString(): string;
 

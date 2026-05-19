@@ -14,8 +14,10 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function count;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
+use function sprintf;
 
 #[AsCommand(name: 'flow:migrations:list', description: 'List all available migrations')]
 final class ListCommand extends Command
@@ -44,7 +46,7 @@ final class ListCommand extends Command
 
         $statuses = $migrator->status();
 
-        if (\count($statuses) === 0) {
+        if (count($statuses) === 0) {
             $io->note('No migrations found.');
 
             return Command::SUCCESS;
@@ -68,10 +70,10 @@ final class ListCommand extends Command
 
         $io->table(['Status', 'Version', 'Name', 'Executed at'], $rows);
 
-        $executed = \count($statuses->executed());
-        $pending = \count($statuses->pending());
+        $executed = count($statuses->executed());
+        $pending = count($statuses->pending());
 
-        $io->text(\sprintf(
+        $io->text(sprintf(
             '  <fg=green>%d</> executed, <fg=%s>%d</> pending',
             $executed,
             $pending > 0 ? 'yellow' : 'green',

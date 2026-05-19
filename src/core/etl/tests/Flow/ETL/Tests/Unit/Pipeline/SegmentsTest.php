@@ -11,6 +11,7 @@ use Flow\ETL\Processor;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer;
+use Generator;
 
 final class SegmentsTest extends FlowTestCase
 {
@@ -272,7 +273,7 @@ final class SegmentsTest extends FlowTestCase
     private function createStubProcessor(): Processor
     {
         return new class implements Processor {
-            public function process(\Generator $rows, FlowContext $context): \Generator
+            public function process(Generator $rows, FlowContext $context): Generator
             {
                 yield from $rows;
             }

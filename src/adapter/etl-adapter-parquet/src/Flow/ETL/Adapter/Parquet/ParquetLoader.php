@@ -17,6 +17,10 @@ use Flow\Filesystem\Path\Option\ContentType;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\Writer;
+use Throwable;
+
+use function array_key_exists;
+use function count;
 
 final class ParquetLoader implements Closure, FileLoader, Loader
 {
@@ -49,7 +53,7 @@ final class ParquetLoader implements Closure, FileLoader, Loader
 
     public function closure(FlowContext $context): void
     {
-        if (\count($this->writers)) {
+        if (count($this->writers)) {
             foreach ($this->writers as $writer) {
                 $writer->close();
             }
@@ -80,7 +84,7 @@ final class ParquetLoader implements Closure, FileLoader, Loader
             if ($rows->partitions()->count()) {
                 $stream = $streams->writeTo($this->path, $rows->partitions()->toArray());
 
-                if (!\array_key_exists($stream->path()->uri(), $this->writers)) {
+                if (!array_key_exists($stream->path()->uri(), $this->writers)) {
                     $this->writers[$stream->path()->uri()] = new Writer(
                         compression: $this->compressions,
                         options: $this->options,
@@ -99,7 +103,7 @@ final class ParquetLoader implements Closure, FileLoader, Loader
             } else {
                 $stream = $streams->writeTo($this->path);
 
-                if (!\array_key_exists($stream->path()->uri(), $this->writers)) {
+                if (!array_key_exists($stream->path()->uri(), $this->writers)) {
                     $this->writers[$stream->path()->uri()] = new Writer(
                         compression: $this->compressions,
                         options: $this->options,
@@ -118,7 +122,7 @@ final class ParquetLoader implements Closure, FileLoader, Loader
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 
             throw $e;

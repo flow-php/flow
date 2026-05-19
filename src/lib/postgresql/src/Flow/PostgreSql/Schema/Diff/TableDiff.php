@@ -29,11 +29,14 @@ use Flow\PostgreSql\Schema\Table;
 use Flow\PostgreSql\Schema\Trigger;
 use Flow\PostgreSql\Schema\TriggerEvent;
 use Flow\PostgreSql\Schema\TriggerTiming;
+use RuntimeException;
 
+use function array_map;
 use function Flow\PostgreSql\DSL\alter;
 use function Flow\PostgreSql\DSL\column;
 use function Flow\PostgreSql\DSL\create;
 use function Flow\PostgreSql\DSL\drop;
+use function sprintf;
 
 final readonly class TableDiff implements Diff
 {
@@ -94,7 +97,7 @@ final readonly class TableDiff implements Diff
         $qualifiedName = $this->target->qualifiedName();
 
         if ($this->partitionChanged) {
-            throw new \RuntimeException(\sprintf(
+            throw new RuntimeException(sprintf(
                 'Partition strategy change on table "%s" cannot be applied via ALTER TABLE. The table must be recreated.',
                 $qualifiedName,
             ));
@@ -112,7 +115,7 @@ final readonly class TableDiff implements Diff
 
         foreach ($this->removedForeignKeys as $fk) {
             if ($fk->name === null) {
-                throw new \RuntimeException(\sprintf(
+                throw new RuntimeException(sprintf(
                     'Cannot drop unnamed foreign key on table "%s". Constraint names are required for reversible migrations.',
                     $qualifiedName,
                 ));
@@ -126,7 +129,7 @@ final readonly class TableDiff implements Diff
 
         foreach ($this->removedUniqueConstraints as $uc) {
             if ($uc->name === null) {
-                throw new \RuntimeException(\sprintf(
+                throw new RuntimeException(sprintf(
                     'Cannot drop unnamed unique constraint on table "%s". Constraint names are required for reversible migrations.',
                     $qualifiedName,
                 ));
@@ -136,7 +139,7 @@ final readonly class TableDiff implements Diff
 
         foreach ($this->removedCheckConstraints as $cc) {
             if ($cc->name === null) {
-                throw new \RuntimeException(\sprintf(
+                throw new RuntimeException(sprintf(
                     'Cannot drop unnamed check constraint on table "%s". Constraint names are required for reversible migrations.',
                     $qualifiedName,
                 ));
@@ -146,7 +149,7 @@ final readonly class TableDiff implements Diff
 
         foreach ($this->removedExcludeConstraints as $ec) {
             if ($ec->name === null) {
-                throw new \RuntimeException(\sprintf(
+                throw new RuntimeException(sprintf(
                     'Cannot drop unnamed exclude constraint on table "%s". Constraint names are required for reversible migrations.',
                     $qualifiedName,
                 ));
@@ -156,7 +159,7 @@ final readonly class TableDiff implements Diff
 
         if ($this->removedPrimaryKey !== null) {
             if ($this->removedPrimaryKey->name === null) {
-                throw new \RuntimeException(\sprintf(
+                throw new RuntimeException(sprintf(
                     'Cannot drop unnamed primary key on table "%s". Constraint names are required for reversible migrations.',
                     $qualifiedName,
                 ));
@@ -254,8 +257,10 @@ final readonly class TableDiff implements Diff
         }
 
         foreach ($this->addedExcludeConstraints as $ec) {
-            if ($ec->name === null) {
-                throw new \RuntimeException(\sprintf(
+            $ecName = $ec->name;
+
+            if ($ecName === null) {
+                throw new RuntimeException(sprintf(
                     'Cannot add unnamed exclude constraint on table "%s". Constraint names are required for reversible migrations.',
                     $qualifiedName,
                 ));
@@ -263,7 +268,7 @@ final readonly class TableDiff implements Diff
 
             $expressionParser = new ExpressionParser();
             $parsed = (new ExcludeDefinitionParser($expressionParser))->parse($ec->definition);
-            $constraint = ExcludeConstraintBuilder::create($parsed->accessMethod)->name($ec->name);
+            $constraint = ExcludeConstraintBuilder::create($parsed->accessMethod)->name($ecName);
 
             foreach ($parsed->elements as $element) {
                 $constraint = $constraint->element(
@@ -301,7 +306,7 @@ final readonly class TableDiff implements Diff
         }
 
         foreach ($this->addedTriggers as $trigger) {
-            $qbEvents = \array_map(
+            $qbEvents = array_map(
                 static fn(TriggerEvent $e): QbTriggerEvent => QbTriggerEvent::{$e->name},
                 $trigger->events,
             );

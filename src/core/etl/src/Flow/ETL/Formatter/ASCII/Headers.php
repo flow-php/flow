@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Formatter\ASCII;
 
+use Countable;
 use Flow\ETL\Rows;
 
-final class Headers implements \Countable
+use function count;
+use function in_array;
+
+final class Headers implements Countable
 {
     /**
      * @var null|array<string>
@@ -19,7 +23,7 @@ final class Headers implements \Countable
 
     public function count(): int
     {
-        return \count($this->names());
+        return count($this->names());
     }
 
     /**
@@ -35,7 +39,7 @@ final class Headers implements \Countable
 
         foreach ($this->rows->entries() as $entries) {
             foreach ($entries->all() as $entry) {
-                if (!\in_array($entry->name(), $names, true)) {
+                if (!in_array($entry->name(), $names, true)) {
                     $names[] = $entry->name();
                 }
             }

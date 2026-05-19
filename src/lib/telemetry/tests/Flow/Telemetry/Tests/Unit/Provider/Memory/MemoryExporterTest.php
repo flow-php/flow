@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Provider\Memory;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Logger\Severity;
@@ -67,7 +68,7 @@ final class MemoryExporterTest extends TestCase
             type: MetricType::COUNTER,
             value: 1,
             attributes: Attributes::empty(),
-            timestamp: new \DateTimeImmutable(),
+            timestamp: new DateTimeImmutable(),
             resource: ResourceMother::default(),
             scope: InstrumentationScopeMother::default(),
         );

@@ -8,12 +8,14 @@ use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
+use function array_merge;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_cache;
+use function iterator_to_array;
 
 final class CacheExtractorTest extends FlowIntegrationTestCase
 {
@@ -34,7 +36,7 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
 
         $extractor = from_cache($cacheKey);
 
-        $rows = \iterator_to_array($extractor->extract(flow_context(config_builder()->cache($cache)->build())));
+        $rows = iterator_to_array($extractor->extract(flow_context(config_builder()->cache($cache)->build())));
 
         static::assertCount(3, $rows);
         static::assertTrue($cache->has('rows_01'));
@@ -60,7 +62,7 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
 
         $extractor = from_cache($cacheKey)->withClearOnFinish(true);
 
-        $rows = \iterator_to_array($extractor->extract(flow_context(config_builder()->cache($cache)->build())));
+        $rows = iterator_to_array($extractor->extract(flow_context(config_builder()->cache($cache)->build())));
 
         static::assertCount(3, $rows);
         static::assertFalse($cache->has('rows_01'));
@@ -81,7 +83,7 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
                 ['id' => 3],
             ]));
 
-        $rows = \iterator_to_array($extractor->extract(flow_context(config_builder()->cache($cache)->build())));
+        $rows = iterator_to_array($extractor->extract(flow_context(config_builder()->cache($cache)->build())));
 
         static::assertCount(3, $rows);
         static::assertEquals(
@@ -90,7 +92,7 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
                 ['id' => 2],
                 ['id' => 3],
             ],
-            \array_merge($rows[0]->toArray(), $rows[1]->toArray(), $rows[2]->toArray()),
+            array_merge($rows[0]->toArray(), $rows[1]->toArray(), $rows[2]->toArray()),
         );
     }
 }

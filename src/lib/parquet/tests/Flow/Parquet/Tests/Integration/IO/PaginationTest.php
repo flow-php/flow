@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
+use DateTimeImmutable;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
@@ -16,13 +17,20 @@ use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Writer;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function array_map;
+use function array_merge;
+use function file_exists;
 use function Flow\ETL\DSL\generate_random_int;
+use function iterator_to_array;
+use function range;
+use function unlink;
 
 class PaginationTest extends ParquetIntegrationTestCase
 {
-    public static function engine_with_offset_provider(): \Generator
+    public static function engine_with_offset_provider(): Generator
     {
         $cases = [
             [6000, 10, 0],
@@ -55,11 +63,11 @@ class PaginationTest extends ParquetIntegrationTestCase
             ->rowsNumber();
 
         static::assertEquals(
-            \array_merge(...\array_map(
+            array_merge(...array_map(
                 static fn(int $i): array => [['id' => $i]],
-                \range($totalRows - 100, $totalRows - 1),
+                range($totalRows - 100, $totalRows - 1),
             )),
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(['id'], offset: $totalRows - 100),
@@ -78,7 +86,7 @@ class PaginationTest extends ParquetIntegrationTestCase
 
         static::assertCount(
             $results,
-            \iterator_to_array(
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(['id'], offset: $offset, limit: $limit),
@@ -94,7 +102,7 @@ class PaginationTest extends ParquetIntegrationTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Limit must be greater than 0');
 
-        \iterator_to_array(
+        iterator_to_array(
             (new Reader(engine: $engine))
                 ->read($path)
                 ->values(['id'], limit: -2),
@@ -109,7 +117,7 @@ class PaginationTest extends ParquetIntegrationTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Offset must be greater than or equal to 0');
 
-        \iterator_to_array(
+        iterator_to_array(
             (new Reader(engine: $engine))
                 ->read($path)
                 ->values(['id'], offset: -2, limit: 2),
@@ -125,8 +133,8 @@ class PaginationTest extends ParquetIntegrationTestCase
         // $this->generateDataset($path);
 
         static::assertEquals(
-            \array_merge(...\array_map(static fn(int $i): array => [['id' => $i]], \range(1020, 1029))),
-            \iterator_to_array(
+            array_merge(...array_map(static fn(int $i): array => [['id' => $i]], range(1020, 1029))),
+            iterator_to_array(
                 (new Reader(engine: $engine))
                     ->read($path)
                     ->values(['id'], offset: 1020, limit: 10),
@@ -134,7 +142,7 @@ class PaginationTest extends ParquetIntegrationTestCase
         );
     }
 
-    private function generateDataset(string $path): void
+    private function _generateDataset(string $path): void
     {
         $writer = new Writer(options: Options::default()->set(Option::ROW_GROUP_SIZE_BYTES, 1024)->set(
             Option::ROW_GROUP_SIZE_CHECK_INTERVAL,
@@ -157,36 +165,36 @@ class PaginationTest extends ParquetIntegrationTestCase
             ]),
         );
 
-        $inputData = \array_merge(...\array_map(
+        $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
                     'id' => $i,
                     'name' => 'name-' . $i,
                     'active' => ($i % 2) === 0,
-                    'created_at' => new \DateTimeImmutable('2024-01-01 + ' . $i . ' days'),
-                    'list_of_int' => \array_map(static fn(int $i) => $i, \range(1, generate_random_int(2, 10))),
-                    'map_of_int_string' => \array_merge(...\array_map(
+                    'created_at' => new DateTimeImmutable('2024-01-01 + ' . $i . ' days'),
+                    'list_of_int' => array_map(static fn(int $i) => $i, range(1, generate_random_int(2, 10))),
+                    'map_of_int_string' => array_merge(...array_map(
                         static fn(int $i) => [$i => 'value-' . $i],
-                        \range(1, generate_random_int(2, 10)),
+                        range(1, generate_random_int(2, 10)),
                     )),
                     'struct' => [
                         'id' => $i,
                         'name' => 'name-' . $i,
                         'active' => ($i % 2) === 0,
-                        'created_at' => new \DateTimeImmutable('2024-01-01 + ' . $i . ' days'),
-                        'list_of_int' => \array_map(static fn(int $i) => $i, \range(1, generate_random_int(2, 10))),
-                        'map_of_int_string' => \array_merge(...\array_map(
+                        'created_at' => new DateTimeImmutable('2024-01-01 + ' . $i . ' days'),
+                        'list_of_int' => array_map(static fn(int $i) => $i, range(1, generate_random_int(2, 10))),
+                        'map_of_int_string' => array_merge(...array_map(
                             static fn(int $i) => [$i => 'value-' . $i],
-                            \range(1, generate_random_int(2, 10)),
+                            range(1, generate_random_int(2, 10)),
                         )),
                     ],
                 ],
             ],
-            \range(0, 4999),
+            range(0, 4999),
         ));
 
-        if (\file_exists($path)) {
-            \unlink($path);
+        if (file_exists($path)) {
+            unlink($path);
         }
 
         $writer->write($path, $schema, $inputData);

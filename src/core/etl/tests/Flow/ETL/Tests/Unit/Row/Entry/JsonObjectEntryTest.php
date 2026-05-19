@@ -4,17 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
+use DateTimeImmutable;
 use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Json;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use stdClass;
 
 use function Flow\ETL\DSL\integer_entry;
 use function Flow\ETL\DSL\json_object_entry;
+use function json_encode;
 
 final class JsonObjectEntryTest extends FlowTestCase
 {
-    public static function is_equal_data_provider(): \Generator
+    public static function is_equal_data_provider(): Generator
     {
         yield 'equal names and equal multi dimensional array with the same order' => [
             true,
@@ -40,12 +44,12 @@ final class JsonObjectEntryTest extends FlowTestCase
             true,
             JsonEntry::object('name', [
                 'foo' => 1,
-                'bar' => ['foo' => new \DateTimeImmutable('2020-01-01 00:00:00'), 'bar' => 'bar'],
+                'bar' => ['foo' => new DateTimeImmutable('2020-01-01 00:00:00'), 'bar' => 'bar'],
                 'baz' => 2,
             ]),
             JsonEntry::object('name', [
                 'foo' => 1,
-                'bar' => ['foo' => new \DateTimeImmutable('2020-01-01 00:00:00'), 'bar' => 'bar'],
+                'bar' => ['foo' => new DateTimeImmutable('2020-01-01 00:00:00'), 'bar' => 'bar'],
                 'baz' => 2,
             ]),
         ];
@@ -53,19 +57,19 @@ final class JsonObjectEntryTest extends FlowTestCase
             false,
             JsonEntry::object('name', [
                 'foo' => 1,
-                'bar' => ['foo' => new \DateTimeImmutable('2020-01-01 00:00:00'), 'bar' => 'bar'],
+                'bar' => ['foo' => new DateTimeImmutable('2020-01-01 00:00:00'), 'bar' => 'bar'],
                 'baz' => 2,
             ]),
             JsonEntry::object('name', [
                 'foo' => 1,
-                'bar' => ['foo' => new \DateTimeImmutable('2020-01-05 00:00:00'), 'bar' => 'bar'],
+                'bar' => ['foo' => new DateTimeImmutable('2020-01-05 00:00:00'), 'bar' => 'bar'],
                 'baz' => 2,
             ]),
         ];
         yield 'equal names and equal multi dimensional array with equals different entries' => [
             true,
-            JsonEntry::object('name', ['foo' => 1, 'bar' => ['foo' => new \stdClass(), 'bar' => 'bar'], 'baz' => 2]),
-            JsonEntry::object('name', ['foo' => 1, 'bar' => ['foo' => new \stdClass(), 'bar' => 'bar'], 'baz' => 2]),
+            JsonEntry::object('name', ['foo' => 1, 'bar' => ['foo' => new stdClass(), 'bar' => 'bar'], 'baz' => 2]),
+            JsonEntry::object('name', ['foo' => 1, 'bar' => ['foo' => new stdClass(), 'bar' => 'bar'], 'baz' => 2]),
         ];
         yield 'equal names and equal multi dimensional array with equals different entries 1' => [
             true,
@@ -120,6 +124,6 @@ final class JsonObjectEntryTest extends FlowTestCase
         $item = ['item-id' => 1, 'name' => 'one'];
         $entry = JsonEntry::object('item', $item);
 
-        static::assertEquals(\json_encode($item), $entry->toString());
+        static::assertEquals(json_encode($item), $entry->toString());
     }
 }

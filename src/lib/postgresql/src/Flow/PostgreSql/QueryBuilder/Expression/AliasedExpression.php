@@ -46,7 +46,7 @@ final readonly class AliasedExpression implements Expression
 
         $aliasName = $resTarget->getName();
 
-        if ($aliasName === null || $aliasName === '') {
+        if ($aliasName === '') {
             throw InvalidAstException::missingRequiredField('name', 'ResTarget');
         }
 

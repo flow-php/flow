@@ -6,6 +6,7 @@ namespace Flow\Parquet\Tests\Unit\Thrift;
 
 use Flow\Parquet\Thrift\CompactProtocol;
 use Flow\Parquet\Thrift\MemoryBuffer;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Thrift\Exception\TProtocolException;
@@ -14,7 +15,7 @@ use Thrift\Type\TType;
 
 final class CompactProtocolTest extends TestCase
 {
-    public static function byte_data(): \Generator
+    public static function byte_data(): Generator
     {
         yield 'zero' => [0];
         yield 'positive' => [42];
@@ -23,7 +24,7 @@ final class CompactProtocolTest extends TestCase
         yield 'max negative' => [-128];
     }
 
-    public static function double_data(): \Generator
+    public static function double_data(): Generator
     {
         yield 'zero' => [0.0];
         yield 'positive small' => [3.14159];
@@ -34,7 +35,7 @@ final class CompactProtocolTest extends TestCase
         yield 'very small negative' => [-0.000000001];
     }
 
-    public static function i16_data(): \Generator
+    public static function i16_data(): Generator
     {
         yield 'zero' => [0];
         yield 'positive small' => [42];
@@ -45,7 +46,7 @@ final class CompactProtocolTest extends TestCase
         yield 'max negative' => [-32768];
     }
 
-    public static function i32_data(): \Generator
+    public static function i32_data(): Generator
     {
         yield 'zero' => [0];
         yield 'positive small' => [42];
@@ -56,7 +57,7 @@ final class CompactProtocolTest extends TestCase
         yield 'max negative' => [-2147483648];
     }
 
-    public static function i64_data(): \Generator
+    public static function i64_data(): Generator
     {
         yield 'zero' => [0];
         yield 'positive small' => [42];
@@ -67,7 +68,7 @@ final class CompactProtocolTest extends TestCase
         yield 'negative 32bit boundary' => [-4294967296];
     }
 
-    public static function list_data(): \Generator
+    public static function list_data(): Generator
     {
         yield 'empty list' => [TType::STRING, []];
         yield 'string list' => [TType::STRING, ['item1', 'item2', 'item3']];
@@ -75,7 +76,7 @@ final class CompactProtocolTest extends TestCase
         yield 'large list' => [TType::I32, range(1, 20)];
     }
 
-    public static function map_data(): \Generator
+    public static function map_data(): Generator
     {
         yield 'empty map' => [TType::STRING, TType::STRING, []];
         yield 'string to string map' => [TType::STRING, TType::STRING, ['key1' => 'value1', 'key2' => 'value2']];
@@ -84,14 +85,14 @@ final class CompactProtocolTest extends TestCase
         yield 'int to int map' => [TType::I32, TType::I32, [1 => 100, 2 => 200]];
     }
 
-    public static function set_data(): \Generator
+    public static function set_data(): Generator
     {
         yield 'empty set' => [TType::STRING, []];
         yield 'string set' => [TType::STRING, ['item1', 'item2', 'item3']];
         yield 'int set' => [TType::I32, [1, 2, 3, 4, 5]];
     }
 
-    public static function skip_type_data(): \Generator
+    public static function skip_type_data(): Generator
     {
         yield 'skip bool' => [TType::BOOL];
         yield 'skip byte' => [TType::BYTE];
@@ -106,7 +107,7 @@ final class CompactProtocolTest extends TestCase
         yield 'skip list' => [TType::LST];
     }
 
-    public static function string_data(): \Generator
+    public static function string_data(): Generator
     {
         yield 'empty string' => [''];
         yield 'simple string' => ['hello'];
@@ -117,7 +118,7 @@ final class CompactProtocolTest extends TestCase
         yield 'string with null byte' => ["hello\0world"];
     }
 
-    public static function varint_data(): \Generator
+    public static function varint_data(): Generator
     {
         yield 'zero' => [0, "\x00"];
         yield 'small positive' => [127, "\x7F"];
@@ -126,7 +127,7 @@ final class CompactProtocolTest extends TestCase
         yield 'very large positive' => [2097152, "\x80\x80\x80\x01"];
     }
 
-    public static function zigzag_encode_decode_data(): \Generator
+    public static function zigzag_encode_decode_data(): Generator
     {
         yield 'positive number 16 bit' => [123, 16, 246];
         yield 'negative number 16 bit' => [-123, 16, 245];
@@ -141,6 +142,25 @@ final class CompactProtocolTest extends TestCase
 
     public function test_complex_nested_structure(): void
     {
+        $_name1 = '';
+        $_name2 = '';
+        $_name3 = '';
+        $_stopId = 0;
+        $_stopName = '';
+        $_structName = '';
+        $id1 = 0;
+        $id2 = 0;
+        $id3 = 0;
+        $keyType = 0;
+        $listSize = 0;
+        $listType = 0;
+        $mapSize = 0;
+        $nameValue = '';
+        $stopType = 0;
+        $type1 = 0;
+        $type2 = 0;
+        $type3 = 0;
+        $valueType = 0;
         $buffer = new MemoryBuffer();
         $protocol = new CompactProtocol($buffer);
 
@@ -185,6 +205,7 @@ final class CompactProtocolTest extends TestCase
         $numbers = [];
 
         for ($i = 0; $i < $listSize; $i++) {
+            $number = 0;
             $readProtocol->readI32($number);
             $numbers[] = $number;
         }
@@ -196,6 +217,8 @@ final class CompactProtocolTest extends TestCase
         $metadata = [];
 
         for ($i = 0; $i < $mapSize; $i++) {
+            $key = '';
+            $value = '';
             $readProtocol->readString($key);
             $readProtocol->readString($value);
             $metadata[$key] = $value;
@@ -277,6 +300,7 @@ final class CompactProtocolTest extends TestCase
 
     public function test_read_bool_throws_exception_in_invalid_state(): void
     {
+        $_bool = false;
         $buffer = new MemoryBuffer();
         $protocol = new CompactProtocol($buffer);
 
@@ -288,6 +312,9 @@ final class CompactProtocolTest extends TestCase
 
     public function test_read_message_with_bad_protocol_id_throws_exception(): void
     {
+        $_name = '';
+        $_seqid = 0;
+        $_type = 0;
         $buffer = new MemoryBuffer("\xFF\x01\x00\x04test");
         $protocol = new CompactProtocol($buffer);
 
@@ -299,6 +326,9 @@ final class CompactProtocolTest extends TestCase
 
     public function test_read_message_with_bad_version_throws_exception(): void
     {
+        $_name = '';
+        $_seqid = 0;
+        $_type = 0;
         $buffer = new MemoryBuffer("\x82\xFF\x00\x04test");
         $protocol = new CompactProtocol($buffer);
 
@@ -310,6 +340,7 @@ final class CompactProtocolTest extends TestCase
 
     public function test_read_string_empty(): void
     {
+        $value = '';
         $buffer = new MemoryBuffer("\x00");
         $protocol = new CompactProtocol($buffer);
 
@@ -321,6 +352,7 @@ final class CompactProtocolTest extends TestCase
 
     public function test_read_ubyte(): void
     {
+        $value = '';
         $buffer = new MemoryBuffer("\xFF");
         $protocol = new CompactProtocol($buffer);
 
@@ -332,6 +364,7 @@ final class CompactProtocolTest extends TestCase
 
     public function test_read_varint(): void
     {
+        $value = '';
         $buffer = new MemoryBuffer("\x80\x01");
         $protocol = new CompactProtocol($buffer);
 
@@ -343,6 +376,7 @@ final class CompactProtocolTest extends TestCase
 
     public function test_read_zigzag(): void
     {
+        $value = '';
         $buffer = new MemoryBuffer("\xF6\x01");
         $protocol = new CompactProtocol($buffer);
 
@@ -451,6 +485,7 @@ final class CompactProtocolTest extends TestCase
 
     public function test_transport_exception_on_insufficient_data(): void
     {
+        $_value = '';
         $buffer = new MemoryBuffer('');
         $protocol = new CompactProtocol($buffer);
 
@@ -472,6 +507,14 @@ final class CompactProtocolTest extends TestCase
 
     public function test_write_read_bool_field(): void
     {
+        $_fieldName = '';
+        $_name = '';
+        $_stopId = 0;
+        $_stopName = '';
+        $boolValue = false;
+        $fieldId = 0;
+        $fieldType = 0;
+        $stopType = 0;
         $buffer = new MemoryBuffer();
         $protocol = new CompactProtocol($buffer);
 
@@ -502,6 +545,10 @@ final class CompactProtocolTest extends TestCase
 
     public function test_write_read_bool_in_container(): void
     {
+        $_size = 0;
+        $_type = 0;
+        $bool1 = false;
+        $bool2 = false;
         $buffer = new MemoryBuffer();
         $protocol = new CompactProtocol($buffer);
 
@@ -540,6 +587,7 @@ final class CompactProtocolTest extends TestCase
     #[DataProvider('byte_data')]
     public function test_write_read_byte(int $value): void
     {
+        $readValue = '';
         $buffer = new MemoryBuffer();
         $protocol = new CompactProtocol($buffer);
 
@@ -557,6 +605,7 @@ final class CompactProtocolTest extends TestCase
     #[DataProvider('double_data')]
     public function test_write_read_double(float $value): void
     {
+        $readValue = '';
         $buffer = new MemoryBuffer();
         $protocol = new CompactProtocol($buffer);
 
@@ -573,6 +622,14 @@ final class CompactProtocolTest extends TestCase
 
     public function test_write_read_field(): void
     {
+        $_name = '';
+        $_readName = '';
+        $_stopId = 0;
+        $_stopName = '';
+        $readId = 0;
+        $readType = 0;
+        $readValue = '';
+        $stopType = 0;
         $buffer = new MemoryBuffer();
         $protocol = new CompactProtocol($buffer);
 
@@ -608,6 +665,18 @@ final class CompactProtocolTest extends TestCase
 
     public function test_write_read_field_with_delta_compression(): void
     {
+        $_name = '';
+        $_name1 = '';
+        $_name2 = '';
+        $_stopId = 0;
+        $_stopName = '';
+        $_type1 = 0;
+        $_type2 = 0;
+        $id1 = 0;
+        $id2 = 0;
+        $stopType = 0;
+        $value1 = '';
+        $value2 = '';
         $buffer = new MemoryBuffer();
         $protocol = new CompactProtocol($buffer);
 
@@ -650,6 +719,7 @@ final class CompactProtocolTest extends TestCase
     #[DataProvider('i16_data')]
     public function test_write_read_i16(int $value): void
     {
+        $readValue = '';
         $buffer = new MemoryBuffer();
         $protocol = new CompactProtocol($buffer);
 
@@ -667,6 +737,7 @@ final class CompactProtocolTest extends TestCase
     #[DataProvider('i32_data')]
     public function test_write_read_i32(int $value): void
     {
+        $readValue = '';
         $buffer = new MemoryBuffer();
         $protocol = new CompactProtocol($buffer);
 
@@ -684,6 +755,7 @@ final class CompactProtocolTest extends TestCase
     #[DataProvider('i64_data')]
     public function test_write_read_i64(int $value): void
     {
+        $readValue = '';
         $buffer = new MemoryBuffer();
         $protocol = new CompactProtocol($buffer);
 
@@ -700,6 +772,8 @@ final class CompactProtocolTest extends TestCase
 
     public function test_write_read_large_collection(): void
     {
+        $readElementType = 0;
+        $readSize = 0;
         $buffer = new MemoryBuffer();
         $protocol = new CompactProtocol($buffer);
 
@@ -722,6 +796,7 @@ final class CompactProtocolTest extends TestCase
         $readList = [];
 
         for ($i = 0; $i < $readSize; $i++) {
+            $element = 0;
             $readProtocol->readI32($element);
             $readList[] = $element;
         }
@@ -739,6 +814,8 @@ final class CompactProtocolTest extends TestCase
     #[DataProvider('list_data')]
     public function test_write_read_list(int $elementType, array $listData): void
     {
+        $readElementType = 0;
+        $readSize = 0;
         $buffer = new MemoryBuffer();
         $protocol = new CompactProtocol($buffer);
 
@@ -766,11 +843,14 @@ final class CompactProtocolTest extends TestCase
 
         for ($i = 0; $i < $readSize; $i++) {
             if ($readElementType === TType::STRING) {
-                $readProtocol->readString($element);
+                $readString = '';
+                $readProtocol->readString($readString);
+                $readList[] = $readString;
             } else {
-                $readProtocol->readI32($element);
+                $readInt = 0;
+                $readProtocol->readI32($readInt);
+                $readList[] = $readInt;
             }
-            $readList[] = $element;
         }
 
         $readProtocol->readListEnd();
@@ -786,6 +866,9 @@ final class CompactProtocolTest extends TestCase
     #[DataProvider('map_data')]
     public function test_write_read_map(int $keyType, int $valueType, array $mapData): void
     {
+        $readKeyType = 0;
+        $readSize = 0;
+        $readValueType = 0;
         $buffer = new MemoryBuffer();
         $protocol = new CompactProtocol($buffer);
 
@@ -819,15 +902,23 @@ final class CompactProtocolTest extends TestCase
 
         for ($i = 0; $i < $readSize; $i++) {
             if ($readKeyType === TType::STRING) {
-                $readProtocol->readString($key);
+                $keyString = '';
+                $readProtocol->readString($keyString);
+                $key = $keyString;
             } else {
-                $readProtocol->readI32($key);
+                $keyInt = 0;
+                $readProtocol->readI32($keyInt);
+                $key = $keyInt;
             }
 
             if ($readValueType === TType::STRING) {
-                $readProtocol->readString($value);
+                $valueString = '';
+                $readProtocol->readString($valueString);
+                $value = $valueString;
             } else {
-                $readProtocol->readI32($value);
+                $valueInt = 0;
+                $readProtocol->readI32($valueInt);
+                $value = $valueInt;
             }
 
             $readMap[$key] = $value;
@@ -849,6 +940,9 @@ final class CompactProtocolTest extends TestCase
 
     public function test_write_read_message(): void
     {
+        $readName = '';
+        $readSeqid = 0;
+        $readType = 0;
         $buffer = new MemoryBuffer();
         $protocol = new CompactProtocol($buffer);
 
@@ -879,6 +973,8 @@ final class CompactProtocolTest extends TestCase
     #[DataProvider('set_data')]
     public function test_write_read_set(int $elementType, array $setData): void
     {
+        $readElementType = 0;
+        $readSize = 0;
         $buffer = new MemoryBuffer();
         $protocol = new CompactProtocol($buffer);
 
@@ -906,11 +1002,14 @@ final class CompactProtocolTest extends TestCase
 
         for ($i = 0; $i < $readSize; $i++) {
             if ($readElementType === TType::STRING) {
-                $readProtocol->readString($element);
+                $readString = '';
+                $readProtocol->readString($readString);
+                $readSet[] = $readString;
             } else {
-                $readProtocol->readI32($element);
+                $readInt = 0;
+                $readProtocol->readI32($readInt);
+                $readSet[] = $readInt;
             }
-            $readSet[] = $element;
         }
 
         $readProtocol->readSetEnd();
@@ -923,6 +1022,7 @@ final class CompactProtocolTest extends TestCase
     #[DataProvider('string_data')]
     public function test_write_read_string(string $value): void
     {
+        $readValue = '';
         $buffer = new MemoryBuffer();
         $protocol = new CompactProtocol($buffer);
 
@@ -939,6 +1039,7 @@ final class CompactProtocolTest extends TestCase
 
     public function test_write_read_struct(): void
     {
+        $name = '';
         $buffer = new MemoryBuffer();
         $protocol = new CompactProtocol($buffer);
 

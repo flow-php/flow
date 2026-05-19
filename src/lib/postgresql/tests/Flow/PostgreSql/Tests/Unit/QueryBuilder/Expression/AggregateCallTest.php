@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\QueryBuilder\Expression;
 
+use Flow\PostgreSql\ParsedQuery;
 use Flow\PostgreSql\Parser;
 use Flow\PostgreSql\Protobuf\AST\FuncCall;
 use Flow\PostgreSql\Protobuf\AST\Node;
@@ -19,12 +20,15 @@ use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+
+use function function_exists;
 
 final class AggregateCallTest extends TestCase
 {
     public function test_aggregate_count_star_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -40,14 +44,14 @@ final class AggregateCallTest extends TestCase
         $parseResult = $parsed->raw();
         $parseResult->setStmts([$rawStmt]);
 
-        $deparsed = (new \Flow\PostgreSql\ParsedQuery($parseResult))->deparse();
+        $deparsed = (new ParsedQuery($parseResult))->deparse();
 
         static::assertSame('SELECT count(*) FROM users', $deparsed);
     }
 
     public function test_aggregate_sum_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -63,14 +67,14 @@ final class AggregateCallTest extends TestCase
         $parseResult = $parsed->raw();
         $parseResult->setStmts([$rawStmt]);
 
-        $deparsed = (new \Flow\PostgreSql\ParsedQuery($parseResult))->deparse();
+        $deparsed = (new ParsedQuery($parseResult))->deparse();
 
         static::assertSame('SELECT sum(amount) FROM orders', $deparsed);
     }
 
     public function test_aggregate_with_distinct_deparsed_output(): void
     {
-        if (!\function_exists('pg_query_deparse')) {
+        if (!function_exists('pg_query_deparse')) {
             static::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
         }
 
@@ -86,7 +90,7 @@ final class AggregateCallTest extends TestCase
         $parseResult = $parsed->raw();
         $parseResult->setStmts([$rawStmt]);
 
-        $deparsed = (new \Flow\PostgreSql\ParsedQuery($parseResult))->deparse();
+        $deparsed = (new ParsedQuery($parseResult))->deparse();
 
         static::assertSame('SELECT count(DISTINCT user_id) FROM sessions', $deparsed);
     }
@@ -260,8 +264,7 @@ final class AggregateCallTest extends TestCase
     {
         $this->expectException(InvalidExpressionException::class);
 
-        /** @phpstan-ignore argument.type (intentionally testing exception) */
-        new AggregateCall([], []);
+        (new ReflectionClass(AggregateCall::class))->newInstance([], []);
     }
 
     public function test_throws_exception_for_star_with_arguments(): void

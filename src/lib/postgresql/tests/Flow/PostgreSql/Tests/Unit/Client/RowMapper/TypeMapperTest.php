@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Client\RowMapper;
 
+use DateTimeImmutable;
 use Flow\PostgreSql\Client\Exception\MappingException;
 use Flow\PostgreSql\Tests\Mother\MapperContextMother;
 use Flow\PostgreSql\Tests\Unit\Client\RowMapper\Fake\RecordedResult;
 use Flow\PostgreSql\Tests\Unit\Client\RowMapper\Fake\SpyRowMapper;
 use Flow\Types\Type;
+use Flow\Types\Value\Uuid;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Uid\UuidV7;
@@ -16,6 +19,7 @@ use Symfony\Component\Uid\UuidV7;
 use function Flow\PostgreSql\DSL\type_mapper;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_optional;
@@ -25,7 +29,7 @@ use function Flow\Types\DSL\type_uuid;
 
 final class TypeMapperTest extends TestCase
 {
-    public static function provide_invalid_mappings(): \Generator
+    public static function provide_invalid_mappings(): Generator
     {
         yield 'map scalars' => [
             ['id' => UuidV7::generate(), 'name' => 'Alice', 'last_name' => null],
@@ -66,7 +70,7 @@ final class TypeMapperTest extends TestCase
         ];
     }
 
-    public static function provide_valid_mappings(): \Generator
+    public static function provide_valid_mappings(): Generator
     {
         yield 'map scalars' => [
             ['id' => '019d92a8-54e1-70a9-bc8f-85ef98592dd4', 'name' => 'Alice', 'last_name' => null],
@@ -92,7 +96,7 @@ final class TypeMapperTest extends TestCase
                 'last_name' => type_optional(type_string()),
             ]),
             [
-                'id' => new \Flow\Types\Value\Uuid('019d9293-793d-7036-918a-f19abffd545c'),
+                'id' => new Uuid('019d9293-793d-7036-918a-f19abffd545c'),
                 'name' => 'Alice',
                 'last_name' => null,
             ],
@@ -174,9 +178,9 @@ final class TypeMapperTest extends TestCase
                 'age' => type_integer(),
             ]),
             [
-                'id' => new \Flow\Types\Value\Uuid('019d9293-793d-7036-918a-f19abffd545c'),
+                'id' => new Uuid('019d9293-793d-7036-918a-f19abffd545c'),
                 'name' => 'Alice',
-                'created_at' => new \DateTimeImmutable('2024-03-15 14:30:00'),
+                'created_at' => new DateTimeImmutable('2024-03-15 14:30:00'),
                 'metadata' => ['theme' => 'dark', 'notifications' => true],
                 'age' => 42,
             ],
@@ -203,13 +207,12 @@ final class TypeMapperTest extends TestCase
     {
         $spy = new SpyRowMapper();
 
-        $result = type_mapper(type_structure([
+        $result = type_instance_of(RecordedResult::class)->assert(type_mapper(type_structure([
             'metadata' => type_structure([
                 'theme' => type_string(),
             ]),
-        ]), $spy)->map(['metadata' => '{"theme":"dark"}'], MapperContextMother::any());
+        ]), $spy)->map(['metadata' => '{"theme":"dark"}'], MapperContextMother::any()));
 
-        static::assertInstanceOf(RecordedResult::class, $result);
         static::assertSame(['metadata' => ['theme' => 'dark']], $result->row);
     }
 
@@ -268,24 +271,24 @@ final class TypeMapperTest extends TestCase
 
     public function test_when_next_is_null_returns_cast_result_directly(): void
     {
-        $result = type_mapper(type_structure([
-            'id' => type_string(),
-            'name' => type_string(),
-        ]))->map(['id' => 'abc', 'name' => 'Alice'], MapperContextMother::any());
-
-        static::assertSame(['id' => 'abc', 'name' => 'Alice'], $result);
+        static::assertSame(
+            ['id' => 'abc', 'name' => 'Alice'],
+            type_mapper(type_structure([
+                'id' => type_string(),
+                'name' => type_string(),
+            ]))->map(['id' => 'abc', 'name' => 'Alice'], MapperContextMother::any()),
+        );
     }
 
     public function test_when_next_is_provided_cast_result_is_forwarded_to_next(): void
     {
         $spy = new SpyRowMapper();
 
-        $result = type_mapper(type_structure([
+        $result = type_instance_of(RecordedResult::class)->assert(type_mapper(type_structure([
             'id' => type_string(),
             'name' => type_string(),
-        ]), $spy)->map(['id' => 'abc', 'name' => 'Alice'], MapperContextMother::any());
+        ]), $spy)->map(['id' => 'abc', 'name' => 'Alice'], MapperContextMother::any()));
 
-        static::assertInstanceOf(RecordedResult::class, $result);
         static::assertSame(['id' => 'abc', 'name' => 'Alice'], $result->row);
         static::assertSame([['id' => 'abc', 'name' => 'Alice']], $spy->receivedRows);
     }

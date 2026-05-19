@@ -18,6 +18,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
+use function sprintf;
 
 #[AsCommand(name: 'flow:migrations:execute', description: 'Execute a single migration')]
 final class ExecuteCommand extends Command
@@ -61,7 +62,7 @@ final class ExecuteCommand extends Command
         if (
             $input->isInteractive()
             && !$io->confirm(
-                \sprintf('Execute migration %s %s?', $direction === Direction::UP ? 'UP' : 'DOWN', $version),
+                sprintf('Execute migration %s %s?', $direction === Direction::UP ? 'UP' : 'DOWN', $version),
                 false,
             )
         ) {
@@ -73,7 +74,7 @@ final class ExecuteCommand extends Command
         $result = $migrator->executeVersion($version, $direction, $dryRun);
 
         if ($result->error !== null) {
-            $io->error(\sprintf(
+            $io->error(sprintf(
                 '%s %s failed: %s',
                 $direction === Direction::UP ? 'UP' : 'DOWN',
                 $version,
@@ -90,7 +91,7 @@ final class ExecuteCommand extends Command
         if ($dryRun) {
             $io->note('Dry run completed. No changes were applied.');
         } else {
-            $io->success(\sprintf('Migration %s executed successfully in %dms.', $version, $result->executionTimeMs));
+            $io->success(sprintf('Migration %s executed successfully in %dms.', $version, $result->executionTimeMs));
         }
 
         return Command::SUCCESS;

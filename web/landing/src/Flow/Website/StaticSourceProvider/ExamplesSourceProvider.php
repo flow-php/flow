@@ -8,6 +8,8 @@ use Flow\Website\Service\Examples;
 use NorbertTech\StaticContentGeneratorBundle\Content\Source;
 use NorbertTech\StaticContentGeneratorBundle\Content\SourceProvider;
 
+use function count;
+
 final readonly class ExamplesSourceProvider implements SourceProvider
 {
     public function __construct(
@@ -24,7 +26,7 @@ final readonly class ExamplesSourceProvider implements SourceProvider
             foreach ($examples as $example) {
                 $options = $this->examples->options($topic, $example);
 
-                if (\count($options) > 0) {
+                if (count($options) > 0) {
                     foreach ($options as $option) {
                         $sources[] = new Source('example_option', [
                             'topic' => $topic,

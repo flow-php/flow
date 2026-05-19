@@ -17,13 +17,16 @@ class ListsReadingTest extends ParquetIntegrationTestCase
         $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
 
         static::assertNull($file->metadata()->schema()->get('list')->type());
-        static::assertEquals('LIST', $file->metadata()->schema()->get('list')->logicalType()->name());
+        static::assertEquals('LIST', $file->metadata()->schema()->get('list')->logicalType()?->name());
 
         $count = 0;
 
         foreach ($file->values(['list']) as $row) {
-            static::assertContainsOnly('int', $row['list']);
-            static::assertCount(3, $row['list']);
+            /** @var array<array-key, mixed> $list */
+            $list = $row['list'];
+            static::assertIsArray($list);
+            static::assertContainsOnlyInt($list);
+            static::assertCount(3, $list);
             $count++;
         }
 
@@ -38,13 +41,16 @@ class ListsReadingTest extends ParquetIntegrationTestCase
         $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
 
         static::assertNull($file->metadata()->schema()->get('list')->type());
-        static::assertEquals('LIST', $file->metadata()->schema()->get('list')->logicalType()->name());
+        static::assertEquals('LIST', $file->metadata()->schema()->get('list')->logicalType()?->name());
 
         $count = 0;
 
         foreach ($file->values(['list'], $limit = 50) as $row) {
-            static::assertContainsOnly('int', $row['list']);
-            static::assertCount(3, $row['list']);
+            /** @var array<array-key, mixed> $list */
+            $list = $row['list'];
+            static::assertIsArray($list);
+            static::assertContainsOnlyInt($list);
+            static::assertCount(3, $list);
             $count++;
         }
 
@@ -58,16 +64,23 @@ class ListsReadingTest extends ParquetIntegrationTestCase
         $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
 
         static::assertNull($file->metadata()->schema()->get('list_nested')->type());
-        static::assertEquals('LIST', $file->metadata()->schema()->get('list_nested')->logicalType()->name());
+        static::assertEquals('LIST', $file->metadata()->schema()->get('list_nested')->logicalType()?->name());
 
         $count = 0;
 
         foreach ($file->values(['list_nested']) as $row) {
-            static::assertIsArray($row['list_nested']);
-            static::assertIsList($row['list_nested']);
-            static::assertIsArray($row['list_nested'][0]);
-            static::assertIsList($row['list_nested'][0]);
-            static::assertIsArray($row['list_nested'][0][0]);
+            /** @var array<array-key, mixed> $outer */
+            $outer = $row['list_nested'];
+            static::assertIsArray($outer);
+            static::assertIsList($outer);
+            /** @var array<array-key, mixed> $inner */
+            $inner = $outer[0];
+            static::assertIsArray($inner);
+            static::assertIsList($inner);
+            /** @var array<array-key, mixed> $innermost */
+            $innermost = $inner[0];
+            static::assertIsArray($innermost);
+            static::assertIsArray($innermost);
 
             $count++;
         }
@@ -82,14 +95,17 @@ class ListsReadingTest extends ParquetIntegrationTestCase
         $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
 
         static::assertNull($file->metadata()->schema()->get('list_nullable')->type());
-        static::assertEquals('LIST', $file->metadata()->schema()->get('list_nullable')->logicalType()->name());
+        static::assertEquals('LIST', $file->metadata()->schema()->get('list_nullable')->logicalType()?->name());
 
         $count = 0;
 
         foreach ($file->values(['list_nullable']) as $rowIndex => $row) {
             if (($rowIndex % 2) === 0) {
-                static::assertContainsOnly('int', $row['list_nullable']);
-                static::assertCount(3, $row['list_nullable']);
+                /** @var array<array-key, mixed> $list */
+                $list = $row['list_nullable'];
+                static::assertIsArray($list);
+                static::assertContainsOnlyInt($list);
+                static::assertCount(3, $list);
             } else {
                 static::assertNull($row['list_nullable']);
             }
@@ -107,25 +123,24 @@ class ListsReadingTest extends ParquetIntegrationTestCase
         $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
 
         static::assertNull($file->metadata()->schema()->get('list_mixed_types')->type());
-        static::assertEquals('LIST', $file->metadata()->schema()->get('list_mixed_types')->logicalType()->name());
+        static::assertEquals('LIST', $file->metadata()->schema()->get('list_mixed_types')->logicalType()?->name());
 
         $count = 0;
 
         foreach ($file->values(['list_mixed_types']) as $row) {
-            static::assertIsArray($row['list_mixed_types']);
-            static::assertCount(4, $row['list_mixed_types']);
-            static::assertArrayHasKey('int', $row['list_mixed_types'][0]);
-            static::assertArrayHasKey('string', $row['list_mixed_types'][0]);
-            static::assertArrayHasKey('bool', $row['list_mixed_types'][0]);
-            static::assertArrayHasKey('int', $row['list_mixed_types'][1]);
-            static::assertArrayHasKey('string', $row['list_mixed_types'][1]);
-            static::assertArrayHasKey('bool', $row['list_mixed_types'][1]);
-            static::assertArrayHasKey('int', $row['list_mixed_types'][2]);
-            static::assertArrayHasKey('string', $row['list_mixed_types'][2]);
-            static::assertArrayHasKey('bool', $row['list_mixed_types'][2]);
-            static::assertArrayHasKey('int', $row['list_mixed_types'][3]);
-            static::assertArrayHasKey('string', $row['list_mixed_types'][3]);
-            static::assertArrayHasKey('bool', $row['list_mixed_types'][3]);
+            /** @var array<array-key, mixed> $list */
+            $list = $row['list_mixed_types'];
+            static::assertIsArray($list);
+            static::assertCount(4, $list);
+
+            for ($i = 0; $i < 4; $i++) {
+                /** @var array<array-key, mixed> $entry */
+                $entry = $list[$i];
+                static::assertIsArray($entry);
+                static::assertArrayHasKey('int', $entry);
+                static::assertArrayHasKey('string', $entry);
+                static::assertArrayHasKey('bool', $entry);
+            }
             $count++;
         }
 
@@ -142,18 +157,24 @@ class ListsReadingTest extends ParquetIntegrationTestCase
         static::assertNull($file->metadata()->schema()->get('list_of_structs_nullable')->type());
         static::assertEquals(
             'LIST',
-            $file->metadata()->schema()->get('list_of_structs_nullable')->logicalType()->name(),
+            $file->metadata()->schema()->get('list_of_structs_nullable')->logicalType()?->name(),
         );
 
         $count = 0;
 
         foreach ($file->values(['list_of_structs_nullable']) as $rowIndex => $row) {
             if (($rowIndex % 2) === 0) {
-                static::assertIsArray($row['list_of_structs_nullable']);
+                // @mago-ignore analysis:mixed-assignment
+                /** @var array<array-key, mixed> $list */
+                $list = $row['list_of_structs_nullable'];
+                static::assertIsArray($list);
 
-                foreach ($row['list_of_structs_nullable'] as $rowList) {
-                    static::assertIsInt($rowList['id']);
-                    static::assertIsString($rowList['name']);
+                foreach ($list as $rowList) {
+                    /** @var array<array-key, mixed> $entry */
+                    $entry = $rowList;
+                    static::assertIsArray($entry);
+                    static::assertIsInt($entry['id']);
+                    static::assertIsString($entry['name']);
                 }
             } else {
                 static::assertNull($row['list_of_structs_nullable']);

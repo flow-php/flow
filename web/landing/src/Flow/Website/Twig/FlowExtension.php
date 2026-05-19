@@ -5,8 +5,22 @@ declare(strict_types=1);
 namespace Flow\Website\Twig;
 
 use Flow\Types\Value\Json;
+use Override;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
+
+use function array_filter;
+use function array_map;
+use function base64_decode;
+use function explode;
+use function implode;
+use function is_array;
+use function is_string;
+use function json_decode;
+use function preg_replace;
+use function str_pad;
+use function stristr;
+use function trim;
 
 final class FlowExtension extends AbstractExtension
 {
@@ -20,21 +34,18 @@ final class FlowExtension extends AbstractExtension
             return '';
         }
 
-        $decoded = \base64_decode($docComment, true);
+        $decoded = base64_decode($docComment, true);
 
         if ($decoded === false) {
             return '';
         }
 
-        $stripped = \preg_replace('/^\/\*\*|\*\/$/', '', $decoded);
-        $lines = \explode("\n", (string) $stripped);
-        $lines = \array_map(
-            static fn(string $line): string => (string) \preg_replace('/^\s*\*\s?/', '', $line),
-            $lines,
-        );
-        $lines = \array_filter($lines, static fn(string $line): bool => \trim($line) !== '');
+        $stripped = preg_replace('/^\/\*\*|\*\/$/', '', $decoded);
+        $lines = explode("\n", (string) $stripped);
+        $lines = array_map(static fn(string $line): string => (string) preg_replace('/^\s*\*\s?/', '', $line), $lines);
+        $lines = array_filter($lines, static fn(string $line): bool => trim($line) !== '');
 
-        return \implode('<br>', $lines);
+        return implode('<br>', $lines);
     }
 
     /**
@@ -46,10 +57,10 @@ final class FlowExtension extends AbstractExtension
     {
         $types = $this->toArray($types);
 
-        return \implode('|', \array_map(static fn(array $t): string => $t['name'], $types));
+        return implode('|', array_map(static fn(array $t): string => $t['name'], $types));
     }
 
-    #[\Override]
+    #[Override]
     public function getFilters(): array
     {
         return [
@@ -66,19 +77,19 @@ final class FlowExtension extends AbstractExtension
         string $padString = '',
         string|int $padType = 'left',
     ): string {
-        if (!\is_string($input)) {
+        if (!is_string($input)) {
             $input = (string) $input;
         }
 
-        if (\is_string($padType)) {
+        if (is_string($padType)) {
             $padType = match (true) {
-                \stristr($padType, 'left') !== false => STR_PAD_LEFT,
-                \stristr($padType, 'both') !== false => STR_PAD_BOTH,
+                stristr($padType, 'left') !== false => STR_PAD_LEFT,
+                stristr($padType, 'both') !== false => STR_PAD_BOTH,
                 default => STR_PAD_RIGHT,
             };
         }
 
-        return \str_pad($input, $length, $padString, $padType);
+        return str_pad($input, $length, $padString, $padType);
     }
 
     /**
@@ -94,10 +105,10 @@ final class FlowExtension extends AbstractExtension
             return $value->toArray();
         }
 
-        if (\is_string($value)) {
-            $decoded = \json_decode($value, true);
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
 
-            return \is_array($decoded) ? $decoded : [];
+            return is_array($decoded) ? $decoded : [];
         }
 
         return $value;

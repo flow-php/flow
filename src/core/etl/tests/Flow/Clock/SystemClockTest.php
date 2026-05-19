@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Clock;
 
+use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 
 final class SystemClockTest extends TestCase
@@ -12,7 +13,7 @@ final class SystemClockTest extends TestCase
     {
         $clock = SystemClock::system();
 
-        static::assertInstanceOf(\DateTimeImmutable::class, $clock->now());
+        static::assertInstanceOf(DateTimeImmutable::class, $clock->now());
     }
 
     public function test_system_clock(): void

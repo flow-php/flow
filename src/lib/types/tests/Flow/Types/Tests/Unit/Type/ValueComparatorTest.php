@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Flow\Types\Tests\Unit\Type;
 
 use Flow\Types\Exception\InvalidArgumentException;
+use Flow\Types\Type;
 use Flow\Types\Type\Comparison\Operator;
 use Flow\Types\Type\ValueComparator;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -14,10 +16,11 @@ use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
+use function sprintf;
 
 final class ValueComparatorTest extends TestCase
 {
-    public static function comparable_types_data_provider(): \Generator
+    public static function comparable_types_data_provider(): Generator
     {
         yield [type_integer(), type_integer(), Operator::EQUAL];
         yield [type_integer(), type_float(), Operator::GREATER_THAN];
@@ -29,7 +32,7 @@ final class ValueComparatorTest extends TestCase
         yield [type_string(), type_float(), Operator::LESS_THAN];
     }
 
-    public static function incomparable_types_data_provider(): \Generator
+    public static function incomparable_types_data_provider(): Generator
     {
         yield [type_boolean(), type_integer(), Operator::GREATER_THAN];
         yield [type_string(), type_boolean(), Operator::LESS_THAN];
@@ -37,7 +40,7 @@ final class ValueComparatorTest extends TestCase
         yield [type_boolean(), type_float(), Operator::NOT_EQUAL];
     }
 
-    public static function operator_string_data_provider(): \Generator
+    public static function operator_string_data_provider(): Generator
     {
         yield ['==', Operator::EQUAL];
         yield ['!=', Operator::NOT_EQUAL];
@@ -122,8 +125,8 @@ final class ValueComparatorTest extends TestCase
 
     #[DataProvider('comparable_types_data_provider')]
     public function test_assert_comparable_types_with_compatible_types(
-        mixed $left,
-        mixed $right,
+        Type $left,
+        Type $right,
         Operator $operator,
     ): void {
         $comparator = new ValueComparator();
@@ -134,14 +137,14 @@ final class ValueComparatorTest extends TestCase
 
     #[DataProvider('incomparable_types_data_provider')]
     public function test_assert_comparable_types_with_incompatible_types(
-        mixed $left,
-        mixed $right,
+        Type $left,
+        Type $right,
         Operator $operator,
     ): void {
         $comparator = new ValueComparator();
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(\sprintf(
+        $this->expectExceptionMessage(sprintf(
             "Can't compare '(%s %s %s)' due to data type mismatch.",
             $left->toString(),
             $operator->value,
@@ -170,7 +173,7 @@ final class ValueComparatorTest extends TestCase
         $operatorString = '==';
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(\sprintf(
+        $this->expectExceptionMessage(sprintf(
             "Can't compare '(%s %s %s)' due to data type mismatch.",
             $left->toString(),
             Operator::EQUAL->value,

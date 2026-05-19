@@ -8,13 +8,15 @@ use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Path\Options;
 use Flow\Filesystem\Path\WindowsPath;
 use Flow\Filesystem\Tests\Unit\PathTestCase;
+use Generator;
+use InvalidArgumentException as BaseInvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\Filesystem\DSL\partition;
 
 final class WindowsPathTest extends PathTestCase
 {
-    public static function partitionProvider(): \Generator
+    public static function partitionProvider(): Generator
     {
         yield 'single partition' => [
             '/file.txt',
@@ -38,7 +40,7 @@ final class WindowsPathTest extends PathTestCase
         ];
     }
 
-    public static function pathProvider(): \Generator
+    public static function pathProvider(): Generator
     {
         yield 'file scheme' => ['file://path/to/file.txt', '/path/to/file.txt', 'file'];
         yield 'custom scheme' => ['flow-file://path/to/file.txt', '/path/to/file.txt', 'flow-file'];
@@ -46,7 +48,7 @@ final class WindowsPathTest extends PathTestCase
         yield 'relative path' => ['path/to/file.txt', '/path/to/file.txt', 'file'];
     }
 
-    public static function patternProvider(): \Generator
+    public static function patternProvider(): Generator
     {
         yield 'exact match' => ['/file.csv', '/file.csv', true];
         yield 'wildcard match' => ['/nested/folder/*/file.csv', '/nested/folder/any/file.csv', true];
@@ -266,15 +268,17 @@ final class WindowsPathTest extends PathTestCase
     }
 
     /**
-     * @param array<int, array{name: string, value: string}> $partitionData
+     * @param non-empty-array<int, array{name: string, value: string}> $partitionData
      */
     #[DataProvider('partitionProvider')]
     public function test_partition_logic(string $input, array $partitionData, string $expected): void
     {
         $path = new WindowsPath($input);
-        $partitions = array_map(static fn($p) => partition($p['name'], $p['value']), $partitionData);
+        $partitions = array_values(array_map(static fn($p) => partition($p['name'], $p['value']), $partitionData));
+        $first = array_shift($partitions);
+        static::assertNotNull($first);
 
-        $result = $path->addPartitions(...$partitions);
+        $result = $path->addPartitions($first, ...$partitions);
 
         static::assertEquals($expected, $result->path());
     }
@@ -524,7 +528,7 @@ final class WindowsPathTest extends PathTestCase
     {
         $path = new WindowsPath('/path/to/file.txt');
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(BaseInvalidArgumentException::class);
         $this->expectExceptionMessage('The number of folders to skip must be non-negative.');
 
         $path->skipDirectories(-1);

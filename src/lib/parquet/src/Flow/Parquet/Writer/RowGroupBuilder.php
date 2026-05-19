@@ -12,6 +12,9 @@ use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\RowGroup;
 use Flow\Parquet\ParquetFile\Schema;
 
+use function array_chunk;
+use function count;
+
 final class RowGroupBuilder
 {
     private readonly ColumnChunkBuilders $columnChunkBuilders;
@@ -55,14 +58,14 @@ final class RowGroupBuilder
         /** @var int<1, max> $interval */
         $interval = $this->options->getInt(Option::PAGE_SIZE_CHECK_INTERVAL);
 
-        foreach (\array_chunk($rows, $interval) as $chunk) {
+        foreach (array_chunk($rows, $interval) as $chunk) {
             $flatColumnsData = $this->shredder->shred($this->schema, $chunk);
 
             foreach ($flatColumnsData as $flatPath => $columnValues) {
                 $this->columnChunkBuilders->addColumnByFlatPath($flatPath, $columnValues);
             }
 
-            $this->rowsCount += \count($chunk);
+            $this->rowsCount += count($chunk);
 
             if ($this->columnChunkBuilders->isAnyPageFull()) {
                 $this->columnChunkBuilders->closePages();
@@ -105,7 +108,7 @@ final class RowGroupBuilder
 
     private function flushBuffer(): void
     {
-        if (\count($this->rowBuffer) === 0) {
+        if (count($this->rowBuffer) === 0) {
             return;
         }
 

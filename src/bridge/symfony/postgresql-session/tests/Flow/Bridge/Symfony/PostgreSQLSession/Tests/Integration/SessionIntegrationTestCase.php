@@ -6,13 +6,15 @@ namespace Flow\Bridge\Symfony\PostgreSQLSession\Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
+
 abstract class SessionIntegrationTestCase extends TestCase
 {
     private ?SessionTestContext $context = null;
 
     protected function setUp(): void
     {
-        if (!\extension_loaded('pgsql')) {
+        if (!extension_loaded('pgsql')) {
             static::markTestSkipped('ext-pgsql is not available');
         }
 

@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Tests\Integration\Client\Types\Converter;
 
 use Flow\PostgreSql\Client\Types\ValueType;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
+use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\PostgreSql\DSL\cast;
@@ -20,7 +21,7 @@ final class CidrConverterTest extends PostgreSqlTestCase
     /**
      * @return \Generator<string, array{string, string}>
      */
-    public static function provide_cidr_values(): \Generator
+    public static function provide_cidr_values(): Generator
     {
         yield 'ipv4 /8' => ['10.0.0.0/8', '10.0.0.0/8'];
         yield 'ipv4 /16' => ['172.16.0.0/16', '172.16.0.0/16'];
@@ -34,7 +35,7 @@ final class CidrConverterTest extends PostgreSqlTestCase
         $result = $this
             ->pgsqlContext()
             ->client()
-            ->fetchScalar(select(cast(param(1), column_type_cidr())->as('val'))->toSql(), [typed(
+            ->fetchScalarString(select(cast(param(1), column_type_cidr())->as('val'))->toSql(), [typed(
                 $input,
                 ValueType::CIDR,
             )]);
@@ -44,11 +45,11 @@ final class CidrConverterTest extends PostgreSqlTestCase
 
     public function test_null_cidr(): void
     {
-        $result = $this
-            ->pgsqlContext()
-            ->client()
-            ->fetchScalar(select(cast(literal(null), column_type_cidr())->as('val'))->toSql());
-
-        static::assertNull($result);
+        static::assertNull(
+            $this
+                ->pgsqlContext()
+                ->client()
+                ->fetchScalar(select(cast(literal(null), column_type_cidr())->as('val'))->toSql()),
+        );
     }
 }

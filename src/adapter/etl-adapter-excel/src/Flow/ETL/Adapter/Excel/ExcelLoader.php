@@ -18,6 +18,9 @@ use Flow\Filesystem\Path;
 use OpenSpout\Common\Entity\Style\Style;
 use OpenSpout\Writer\ODS\Options as OdsOptions;
 use OpenSpout\Writer\XLSX\Options as XlsxOptions;
+use Throwable;
+
+use function is_string;
 
 final class ExcelLoader implements Closure, FileLoader, Loader
 {
@@ -111,7 +114,7 @@ final class ExcelLoader implements Closure, FileLoader, Loader
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $context->telemetry()->loadingFailed($this, $e);
 
             throw $e;
@@ -241,7 +244,7 @@ final class ExcelLoader implements Closure, FileLoader, Loader
         if ($this->sheetNameEntryName !== null && $row->has($this->sheetNameEntryName)) {
             $value = $row->get($this->sheetNameEntryName)->value();
 
-            if (\is_string($value) && $value !== '') {
+            if (is_string($value) && $value !== '') {
                 SheetNameAssertion::assert($value);
 
                 return $value;

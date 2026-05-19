@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Integration\Tracer;
 
+use DateTimeImmutable;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Provider\Void\VoidExporter;
@@ -14,6 +15,7 @@ use Flow\Telemetry\Tracer\SpanStatus;
 use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
+use RuntimeException;
 
 use function Flow\Telemetry\DSL\context;
 
@@ -51,8 +53,9 @@ final class TracingIntegrationTest extends TestCase
         $endedDbSpan = $processor->endedSpans()[0];
         static::assertSame('database-query', $endedDbSpan->name());
         static::assertSame(SpanKind::CLIENT, $endedDbSpan->kind());
-        static::assertNotNull($endedDbSpan->context()->parentSpanId);
-        static::assertTrue($endedDbSpan->context()->parentSpanId->equals($rootSpan->context()->spanId));
+        $endedDbSpanParentId = $endedDbSpan->context()->parentSpanId;
+        static::assertNotNull($endedDbSpanParentId);
+        static::assertTrue($endedDbSpanParentId->equals($rootSpan->context()->spanId));
 
         $endedRootSpan = $processor->endedSpans()[1];
         static::assertSame('handle-request', $endedRootSpan->name());
@@ -78,12 +81,15 @@ final class TracingIntegrationTest extends TestCase
 
         static::assertCount(4, $processor->endedSpans());
 
-        static::assertNotNull($level4->context()->parentSpanId);
-        static::assertNotNull($level3->context()->parentSpanId);
-        static::assertNotNull($level2->context()->parentSpanId);
-        static::assertTrue($level4->context()->parentSpanId->equals($level3->context()->spanId));
-        static::assertTrue($level3->context()->parentSpanId->equals($level2->context()->spanId));
-        static::assertTrue($level2->context()->parentSpanId->equals($level1->context()->spanId));
+        $level4ParentId = $level4->context()->parentSpanId;
+        $level3ParentId = $level3->context()->parentSpanId;
+        $level2ParentId = $level2->context()->parentSpanId;
+        static::assertNotNull($level4ParentId);
+        static::assertNotNull($level3ParentId);
+        static::assertNotNull($level2ParentId);
+        static::assertTrue($level4ParentId->equals($level3->context()->spanId));
+        static::assertTrue($level3ParentId->equals($level2->context()->spanId));
+        static::assertTrue($level2ParentId->equals($level1->context()->spanId));
         static::assertNull($level1->context()->parentSpanId);
     }
 
@@ -93,27 +99,28 @@ final class TracingIntegrationTest extends TestCase
         $provider = new TracerProvider($processor, $this->clock(), new MemoryContextStorage());
         $tracer = $provider->tracer($this->resource, 'test');
 
-        $exception = new \RuntimeException('Database connection failed');
+        $exception = new RuntimeException('Database connection failed');
 
         try {
             $tracer->trace('database-operation', static function () use ($exception): void {
                 throw $exception;
             });
-        } catch (\RuntimeException) {
+        } catch (RuntimeException) {
         }
 
         static::assertCount(1, $processor->endedSpans());
 
         $span = $processor->endedSpans()[0];
         static::assertTrue($span->isEnded());
-        static::assertNotNull($span->status());
-        static::assertTrue($span->status()->isError());
-        static::assertSame('Database connection failed', $span->status()->description);
+        $status = $span->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isError());
+        static::assertSame('Database connection failed', $status->description);
 
         static::assertCount(1, $span->events());
         $event = $span->events()[0];
         static::assertSame('exception', $event->name());
-        static::assertSame(\RuntimeException::class, $event->attributes()['exception.type']);
+        static::assertSame(RuntimeException::class, $event->attributes()['exception.type']);
     }
 
     public function test_multiple_tracers_completing_spans_independently_preserve_context(): void
@@ -127,16 +134,20 @@ final class TracingIntegrationTest extends TestCase
 
         $spanA = $tracerA->span('span-a');
 
-        static::assertNotNull($storage->current()->activeSpanId());
-        static::assertTrue($spanA->context()->spanId->equals($storage->current()->activeSpanId()));
+        $activeSpanId = $storage->current()->activeSpanId();
+        static::assertNotNull($activeSpanId);
+        static::assertTrue($spanA->context()->spanId->equals($activeSpanId));
 
         $spanB = $tracerB->span('span-b');
-        static::assertTrue($spanB->context()->spanId->equals($storage->current()->activeSpanId()));
+        $activeSpanIdAfterB = $storage->current()->activeSpanId();
+        static::assertNotNull($activeSpanIdAfterB);
+        static::assertTrue($spanB->context()->spanId->equals($activeSpanIdAfterB));
 
         $tracerB->complete($spanB);
 
-        static::assertNotNull($storage->current()->activeSpanId());
-        static::assertTrue($spanA->context()->spanId->equals($storage->current()->activeSpanId()));
+        $activeSpanIdAfterBComplete = $storage->current()->activeSpanId();
+        static::assertNotNull($activeSpanIdAfterBComplete);
+        static::assertTrue($spanA->context()->spanId->equals($activeSpanIdAfterBComplete));
 
         $tracerA->complete($spanA);
 
@@ -202,14 +213,15 @@ final class TracingIntegrationTest extends TestCase
         $span = $processor->endedSpans()[0];
         static::assertSame('calculate', $span->name());
         static::assertTrue($span->isEnded());
-        static::assertNotNull($span->status());
-        static::assertTrue($span->status()->isOk());
+        $status = $span->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
     }
 
     private function clock(): ClockInterface
     {
         $clock = $this->createMock(ClockInterface::class);
-        $clock->method('now')->willReturn(new \DateTimeImmutable());
+        $clock->method('now')->willReturn(new DateTimeImmutable());
 
         return $clock;
     }

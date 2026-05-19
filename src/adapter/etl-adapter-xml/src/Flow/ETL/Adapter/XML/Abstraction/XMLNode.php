@@ -6,6 +6,9 @@ namespace Flow\ETL\Adapter\XML\Abstraction;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
+use function count;
+use function mb_strlen;
+
 final readonly class XMLNode
 {
     /**
@@ -22,7 +25,7 @@ final readonly class XMLNode
         public array $attributes = [],
         public array $children = [],
     ) {
-        if (!\mb_strlen($name)) {
+        if (!mb_strlen($name)) {
             throw new InvalidArgumentException('XMLNode name can not be empty');
         }
     }
@@ -62,7 +65,7 @@ final readonly class XMLNode
 
     public function hasChildren(): bool
     {
-        return \count($this->children) > 0;
+        return count($this->children) > 0;
     }
 
     public function hasValue(): bool

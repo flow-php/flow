@@ -8,6 +8,11 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\Types\Value\Json;
+use JsonException;
+
+use function is_array;
+use function is_object;
+use function json_encode;
 
 final class JsonEncode extends ScalarFunctionChain
 {
@@ -26,7 +31,7 @@ final class JsonEncode extends ScalarFunctionChain
         }
 
         try {
-            $encoded = \json_encode($value, $flags);
+            $encoded = json_encode($value, $flags);
 
             if ($encoded === false) {
                 return $context
@@ -34,12 +39,12 @@ final class JsonEncode extends ScalarFunctionChain
                     ->invalidResult(new InvalidArgumentException('JsonEncode error: json_encode returned false'));
             }
 
-            if (\is_array($value) || \is_object($value)) {
+            if (is_array($value) || is_object($value)) {
                 return new Json($encoded);
             }
 
             return $encoded;
-        } catch (\JsonException $e) {
+        } catch (JsonException $e) {
             $context->functions()->invalidResult(new InvalidArgumentException('JsonEncode error: ' . $e->getMessage()));
 
             return null;

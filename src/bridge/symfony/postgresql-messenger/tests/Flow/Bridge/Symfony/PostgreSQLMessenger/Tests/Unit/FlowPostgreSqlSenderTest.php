@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit;
 
 use Flow\Bridge\Symfony\PostgreSQLMessenger\Connection;
+use Flow\Bridge\Symfony\PostgreSQLMessenger\Exception\TransportException as BridgeTransportException;
 use Flow\Bridge\Symfony\PostgreSQLMessenger\FlowPostgreSqlSender;
 use Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit\Double\FakeSerializer;
 use Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit\Double\SpyClient;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
@@ -55,7 +57,7 @@ final class FlowPostgreSqlSenderTest extends TestCase
         };
         $sender = new FlowPostgreSqlSender(new Connection(new SpyClient()), $serializer);
 
-        $this->expectException(\Flow\Bridge\Symfony\PostgreSQLMessenger\Exception\TransportException::class);
+        $this->expectException(BridgeTransportException::class);
 
         $sender->send(new Envelope((object) []));
     }
@@ -70,7 +72,7 @@ final class FlowPostgreSqlSenderTest extends TestCase
         };
         $sender = new FlowPostgreSqlSender(new Connection(new SpyClient()), $serializer);
 
-        $this->expectException(\Flow\Bridge\Symfony\PostgreSQLMessenger\Exception\TransportException::class);
+        $this->expectException(BridgeTransportException::class);
 
         $sender->send(new Envelope((object) []));
     }
@@ -104,7 +106,7 @@ final class FlowPostgreSqlSenderTest extends TestCase
         $client = new class() extends SpyClient {
             public function fetchSingle(Sql|string $sql, array $parameters = []): array
             {
-                throw new \RuntimeException('boom');
+                throw new RuntimeException('boom');
             }
         };
         $sender = new FlowPostgreSqlSender(new Connection($client), new FakeSerializer());

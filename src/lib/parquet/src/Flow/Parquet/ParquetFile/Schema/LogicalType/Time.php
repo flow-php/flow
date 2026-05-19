@@ -19,8 +19,11 @@ final readonly class Time
     {
         return new self(
             $timestamp->isAdjustedToUTC,
+            // @mago-ignore analysis:redundant-comparison
             $timestamp->unit->MILLIS !== null,
+            // @mago-ignore analysis:redundant-comparison
             $timestamp->unit->MICROS !== null,
+            // @mago-ignore analysis:redundant-comparison
             $timestamp->unit->NANOS !== null,
         );
     }

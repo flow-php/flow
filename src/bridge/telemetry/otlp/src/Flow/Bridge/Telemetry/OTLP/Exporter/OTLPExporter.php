@@ -9,6 +9,7 @@ use Flow\Telemetry\ErrorHandler\ErrorHandler;
 use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Signal\Signals;
+use Throwable;
 
 /**
  * Exports logs, metrics, and spans to an OTLP endpoint via the configured transport.
@@ -30,7 +31,7 @@ final readonly class OTLPExporter implements Exporter
             $this->transport->send($signal);
 
             return true;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
 
             return false;
@@ -41,7 +42,7 @@ final readonly class OTLPExporter implements Exporter
     {
         try {
             $this->transport->shutdown();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errorHandler->handle($e);
         }
     }

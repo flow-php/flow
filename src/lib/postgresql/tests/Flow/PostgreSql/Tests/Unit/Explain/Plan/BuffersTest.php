@@ -7,6 +7,8 @@ namespace Flow\PostgreSql\Tests\Unit\Explain\Plan;
 use Flow\PostgreSql\Explain\Plan\Buffers;
 use PHPUnit\Framework\TestCase;
 
+use function array_keys;
+
 final class BuffersTest extends TestCase
 {
     public function test_from_array_and_normalize_are_inverse(): void
@@ -118,6 +120,6 @@ final class BuffersTest extends TestCase
             'temp_written',
         ];
 
-        static::assertSame($expectedKeys, \array_keys($normalized));
+        static::assertSame($expectedKeys, array_keys($normalized));
     }
 }

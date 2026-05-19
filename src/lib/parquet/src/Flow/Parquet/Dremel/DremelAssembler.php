@@ -7,14 +7,21 @@ namespace Flow\Parquet\Dremel;
 use Flow\Parquet\Dremel\ColumnData\DefinitionConverter;
 use Flow\Parquet\Dremel\ColumnData\NullLevel;
 use Flow\Parquet\Dremel\ColumnData\Stack;
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Generator;
+use MultipleIterator;
 
 use function Flow\Parquet\array_iterate_at_level;
 use function Flow\Parquet\array_merge_recursive;
 use function Flow\Parquet\dremel_array_combine_recursive;
+use function get_debug_type;
+use function gettype;
+use function is_array;
+use function sprintf;
 
 final readonly class DremelAssembler
 {
@@ -26,11 +33,12 @@ final readonly class DremelAssembler
     /**
      * @return \Generator<array-key, mixed>
      */
-    public function assemble(Column $column, ReadColumnData $flatData): \Generator
+    public function assemble(Column $column, ReadColumnData $flatData): Generator
     {
         $depth = 0;
 
         if ($column instanceof FlatColumn) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($this->assemblyFlat($column, $flatData) as $value) {
                 yield $this->processRowNullLevels([$column->name() => $value]);
             }
@@ -42,6 +50,7 @@ final readonly class DremelAssembler
          * @var NestedColumn $column
          */
         if ($column->isList()) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($this->assemblyList($column, $flatData, $depth) as $value) {
                 yield $this->processRowNullLevels([$column->name() => $value]);
             }
@@ -50,6 +59,7 @@ final readonly class DremelAssembler
         }
 
         if ($column->isMap()) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($this->assemblyMap($column, $flatData, $depth) as $value) {
                 yield $this->processRowNullLevels([$column->name() => $value]);
             }
@@ -57,6 +67,7 @@ final readonly class DremelAssembler
             return;
         }
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($this->assemblyStructure($column, $flatData, $depth) as $value) {
             yield $this->processRowNullLevels([$column->name() => $value instanceof NullLevel ? null : $value]);
         }
@@ -65,7 +76,7 @@ final readonly class DremelAssembler
     /**
      * @return \Generator<array-key, mixed>
      */
-    private function assemblyFlat(FlatColumn $column, ReadColumnData $flatData): \Generator
+    private function assemblyFlat(FlatColumn $column, ReadColumnData $flatData): Generator
     {
         if ($column->repetitions()->maxRepetitionLevel() === 0) {
             yield from $flatData->flatValues[$column->flatPath()]->assembleFlat($this->dataConverter);
@@ -77,6 +88,7 @@ final readonly class DremelAssembler
 
         foreach ($flatData->iterator($column) as $value) {
             if ($value->repetitionLevel === 0) {
+                // @mago-ignore analysis:mixed-assignment
                 foreach ($stack->dump() as $row) {
                     yield $row;
                 }
@@ -93,6 +105,7 @@ final readonly class DremelAssembler
             );
         }
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($stack->dump() as $row) {
             yield $row;
         }
@@ -101,13 +114,14 @@ final readonly class DremelAssembler
     /**
      * @return \Generator<mixed>
      */
-    private function assemblyList(NestedColumn $column, ReadColumnData $flatData, int $depth): \Generator
+    private function assemblyList(NestedColumn $column, ReadColumnData $flatData, int $depth): Generator
     {
         $depth++;
 
         $listElementColumn = $column->getListElement();
 
         if ($listElementColumn instanceof FlatColumn) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($this->assemblyFlat($listElementColumn, $flatData) as $row) {
                 yield $row;
             }
@@ -119,6 +133,7 @@ final readonly class DremelAssembler
          * @var NestedColumn $listElementColumn
          */
         if ($listElementColumn->isList()) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($this->assemblyList($listElementColumn, $flatData, $depth) as $row) {
                 yield $row;
             }
@@ -127,6 +142,7 @@ final readonly class DremelAssembler
         }
 
         if ($listElementColumn->isMap()) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($this->assemblyMap($listElementColumn, $flatData, $depth) as $row) {
                 yield $row;
             }
@@ -134,6 +150,7 @@ final readonly class DremelAssembler
             return;
         }
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($this->assemblyStructure($listElementColumn, $flatData, $depth, repeated: true) as $row) {
             yield $row;
         }
@@ -142,13 +159,14 @@ final readonly class DremelAssembler
     /**
      * @return \Generator<mixed>
      */
-    private function assemblyMap(NestedColumn $column, ReadColumnData $flatData, int $depth): \Generator
+    private function assemblyMap(NestedColumn $column, ReadColumnData $flatData, int $depth): Generator
     {
         $depth++;
         $mapKeyColumn = $column->getMapKeyColumn();
         $mapValueColumn = $column->getMapValueColumn();
 
         if ($mapValueColumn === null) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($this->assemblyFlat($mapKeyColumn, $flatData) as $key) {
                 if ($key instanceof NullLevel) {
                     yield $key;
@@ -156,9 +174,10 @@ final readonly class DremelAssembler
                     continue;
                 }
 
-                if (\is_array($key)) {
+                if (is_array($key)) {
                     $result = [];
 
+                    // @mago-ignore analysis:mixed-assignment
                     foreach ($key as $k) {
                         /** @var int|string $k */
                         $result[$k] = null;
@@ -175,7 +194,7 @@ final readonly class DremelAssembler
         }
 
         if ($mapValueColumn instanceof FlatColumn) {
-            $iterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
+            $iterator = new MultipleIterator(MultipleIterator::MIT_KEYS_ASSOC);
             $iterator->attachIterator($this->assemblyFlat($mapKeyColumn, $flatData), 'key');
             $iterator->attachIterator($this->assemblyFlat($mapValueColumn, $flatData), 'value');
 
@@ -186,7 +205,20 @@ final readonly class DremelAssembler
                     continue;
                 }
 
-                yield dremel_array_combine_recursive($iteration['key'], $iteration['value']);
+                yield dremel_array_combine_recursive(
+                    is_array($iteration['key'])
+                        ? $iteration['key']
+                        : throw new InvalidArgumentException(sprintf(
+                            'Expected array key, got %s',
+                            get_debug_type($iteration['key']),
+                        )),
+                    is_array($iteration['value'])
+                        ? $iteration['value']
+                        : throw new InvalidArgumentException(sprintf(
+                            'Expected array value, got %s',
+                            get_debug_type($iteration['value']),
+                        )),
+                );
             }
 
             return;
@@ -196,7 +228,7 @@ final readonly class DremelAssembler
          * @var NestedColumn $mapValueColumn
          */
         if ($mapValueColumn->isList()) {
-            $iterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
+            $iterator = new MultipleIterator(MultipleIterator::MIT_KEYS_ASSOC);
 
             $iterator->attachIterator($this->assemblyFlat($mapKeyColumn, $flatData), 'key');
             $iterator->attachIterator($this->assemblyList($mapValueColumn, $flatData, $depth), 'value');
@@ -208,14 +240,27 @@ final readonly class DremelAssembler
                     continue;
                 }
 
-                yield dremel_array_combine_recursive($iteration['key'], $iteration['value']);
+                yield dremel_array_combine_recursive(
+                    is_array($iteration['key'])
+                        ? $iteration['key']
+                        : throw new InvalidArgumentException(sprintf(
+                            'Expected array key, got %s',
+                            get_debug_type($iteration['key']),
+                        )),
+                    is_array($iteration['value'])
+                        ? $iteration['value']
+                        : throw new InvalidArgumentException(sprintf(
+                            'Expected array value, got %s',
+                            get_debug_type($iteration['value']),
+                        )),
+                );
             }
 
             return;
         }
 
         if ($mapValueColumn->isMap()) {
-            $iterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
+            $iterator = new MultipleIterator(MultipleIterator::MIT_KEYS_ASSOC);
 
             $iterator->attachIterator($this->assemblyFlat($mapKeyColumn, $flatData), 'key');
             $iterator->attachIterator($this->assemblyMap($mapValueColumn, $flatData, $depth), 'value');
@@ -227,13 +272,26 @@ final readonly class DremelAssembler
                     continue;
                 }
 
-                yield dremel_array_combine_recursive($iteration['key'], $iteration['value']);
+                yield dremel_array_combine_recursive(
+                    is_array($iteration['key'])
+                        ? $iteration['key']
+                        : throw new InvalidArgumentException(sprintf(
+                            'Expected array key, got %s',
+                            get_debug_type($iteration['key']),
+                        )),
+                    is_array($iteration['value'])
+                        ? $iteration['value']
+                        : throw new InvalidArgumentException(sprintf(
+                            'Expected array value, got %s',
+                            get_debug_type($iteration['value']),
+                        )),
+                );
             }
 
             return;
         }
 
-        $iterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
+        $iterator = new MultipleIterator(MultipleIterator::MIT_KEYS_ASSOC);
         $iterator->attachIterator($this->assemblyFlat($mapKeyColumn, $flatData), 'key');
         $iterator->attachIterator(
             $this->assemblyStructure($mapValueColumn, $flatData, $depth, repeated: true),
@@ -247,7 +305,20 @@ final readonly class DremelAssembler
                 continue;
             }
 
-            yield dremel_array_combine_recursive($iteration['key'], $iteration['value']);
+            yield dremel_array_combine_recursive(
+                is_array($iteration['key'])
+                    ? $iteration['key']
+                    : throw new InvalidArgumentException(sprintf(
+                        'Expected array key, got %s',
+                        get_debug_type($iteration['key']),
+                    )),
+                is_array($iteration['value'])
+                    ? $iteration['value']
+                    : throw new InvalidArgumentException(sprintf(
+                        'Expected array value, got %s',
+                        get_debug_type($iteration['value']),
+                    )),
+            );
         }
     }
 
@@ -259,9 +330,9 @@ final readonly class DremelAssembler
         ReadColumnData $flatData,
         int $depth,
         bool $repeated = false,
-    ): \Generator {
+    ): Generator {
         $depth++;
-        $iterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
+        $iterator = new MultipleIterator(MultipleIterator::MIT_KEYS_ASSOC);
 
         foreach ($column->children() as $child) {
             if ($child instanceof FlatColumn) {
@@ -292,6 +363,7 @@ final readonly class DremelAssembler
             foreach ($iterator as $iteration) {
                 $structure = [];
 
+                // @mago-ignore analysis:mixed-assignment
                 foreach ($iteration as $propertyName => $propertyValue) {
                     if ($propertyValue instanceof NullLevel && $propertyValue->level < $depth) {
                         yield new NullLevel($propertyValue->level);
@@ -311,11 +383,18 @@ final readonly class DremelAssembler
         foreach ($iterator as $iteration) {
             $structures = [];
 
+            // @mago-ignore analysis:mixed-assignment
             foreach ($iteration as $propertyName => $propertyValues) {
                 if ($propertyValues instanceof NullLevel && $propertyValues->level <= $depth) {
                     yield new NullLevel($propertyValues->level);
 
                     continue 2;
+                }
+
+                if (!is_array($propertyValues)) {
+                    throw new InvalidArgumentException(
+                        'Expected property values to be an array, got ' . gettype($propertyValues),
+                    );
                 }
 
                 array_iterate_at_level(
@@ -347,6 +426,7 @@ final readonly class DremelAssembler
      */
     private function processRowNullLevels(array $row): array
     {
+        // @mago-ignore analysis:mixed-assignment
         foreach ($row as &$value) {
             if (is_array($value)) {
                 $value = $this->processRowNullLevels($value);

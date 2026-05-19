@@ -10,6 +10,8 @@ use Flow\ETL\Function\ScalarFunctionChain;
 use Flow\ETL\Function\StructureFunctions;
 use Flow\ETL\Row;
 
+use function is_string;
+
 final class EntryReference extends ScalarFunctionChain implements Reference
 {
     private ?string $alias = null;
@@ -22,7 +24,7 @@ final class EntryReference extends ScalarFunctionChain implements Reference
 
     public static function init(string|Reference $ref): Reference
     {
-        if (\is_string($ref)) {
+        if (is_string($ref)) {
             return new self($ref);
         }
 
