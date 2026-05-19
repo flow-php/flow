@@ -21,13 +21,13 @@ use Generator;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\Types\DSL\type_map;
-use function Flow\Types\DSL\type_mixed;
-use function Flow\Types\DSL\type_string;
 use function iterator_to_array;
 
 final class DremelMapsTest extends TestCase
 {
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['m' => null],
@@ -140,13 +140,10 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
-            $shredder->shred($schema, $narrowed);
+            $shredder->shred($schema, $rows);
         } else {
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-            $result = $shredder->shred($schema, $narrowed);
+            $result = $shredder->shred($schema, $rows);
 
             $normalized = [];
 
@@ -183,6 +180,9 @@ final class DremelMapsTest extends TestCase
         }
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['m' => null],
@@ -349,13 +349,10 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
-            $shredder->shred($schema, $narrowed);
+            $shredder->shred($schema, $rows);
         } else {
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-            $result = $shredder->shred($schema, $narrowed);
+            $result = $shredder->shred($schema, $rows);
 
             $normalized = [];
 
@@ -392,6 +389,9 @@ final class DremelMapsTest extends TestCase
         }
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             [
@@ -611,13 +611,10 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
-            $shredder->shred($schema, $narrowed);
+            $shredder->shred($schema, $rows);
         } else {
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-            $result = $shredder->shred($schema, $narrowed);
+            $result = $shredder->shred($schema, $rows);
 
             $normalized = [];
 
@@ -654,6 +651,9 @@ final class DremelMapsTest extends TestCase
         }
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['m' => null],
@@ -840,13 +840,10 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
-            $shredder->shred($schema, $narrowed);
+            $shredder->shred($schema, $rows);
         } else {
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-            $result = $shredder->shred($schema, $narrowed);
+            $result = $shredder->shred($schema, $rows);
 
             $normalized = [];
 
@@ -883,6 +880,9 @@ final class DremelMapsTest extends TestCase
         }
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             [
@@ -957,13 +957,10 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
-            $shredder->shred($schema, $narrowed);
+            $shredder->shred($schema, $rows);
         } else {
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-            $result = $shredder->shred($schema, $narrowed);
+            $result = $shredder->shred($schema, $rows);
 
             $normalized = [];
 
@@ -1000,6 +997,9 @@ final class DremelMapsTest extends TestCase
         }
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['m' => []],
@@ -1054,13 +1054,10 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
-            $shredder->shred($schema, $narrowed);
+            $shredder->shred($schema, $rows);
         } else {
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-            $result = $shredder->shred($schema, $narrowed);
+            $result = $shredder->shred($schema, $rows);
 
             $normalized = [];
 
@@ -1097,6 +1094,9 @@ final class DremelMapsTest extends TestCase
         }
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['m' => null],
@@ -1148,13 +1148,10 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
-            $shredder->shred($schema, $narrowed);
+            $shredder->shred($schema, $rows);
         } else {
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-            $result = $shredder->shred($schema, $narrowed);
+            $result = $shredder->shred($schema, $rows);
 
             $normalized = [];
 
@@ -1191,6 +1188,9 @@ final class DremelMapsTest extends TestCase
         }
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['m' => null],
@@ -1247,13 +1247,10 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
-            $shredder->shred($schema, $narrowed);
+            $shredder->shred($schema, $rows);
         } else {
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-            $result = $shredder->shred($schema, $narrowed);
+            $result = $shredder->shred($schema, $rows);
 
             $normalized = [];
 
@@ -1290,6 +1287,9 @@ final class DremelMapsTest extends TestCase
         }
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             [
@@ -1376,13 +1376,10 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
-            $shredder->shred($schema, $narrowed);
+            $shredder->shred($schema, $rows);
         } else {
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-            $result = $shredder->shred($schema, $narrowed);
+            $result = $shredder->shred($schema, $rows);
 
             $normalized = [];
 
@@ -1419,6 +1416,9 @@ final class DremelMapsTest extends TestCase
         }
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['m' => null],
@@ -1527,13 +1527,10 @@ final class DremelMapsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
-            $shredder->shred($schema, $narrowed);
+            $shredder->shred($schema, $rows);
         } else {
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-            $result = $shredder->shred($schema, $narrowed);
+            $result = $shredder->shred($schema, $rows);
 
             $normalized = [];
 

@@ -8,6 +8,7 @@ use Doctrine\DBAL\ArrayParameterType as DbalArrayType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType as DbalParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
+use Doctrine\DBAL\Schema\Table as DoctrineTable;
 use Doctrine\DBAL\Types\Type as DbalType;
 use Flow\Doctrine\Bulk\Dialect\MySQLInsertOptions;
 use Flow\Doctrine\Bulk\Dialect\PostgreSQLInsertOptions;
@@ -250,7 +251,7 @@ function to_dbal_schema_table(
     string $table_name,
     array $table_options = [],
     array $types_map = [],
-): \Doctrine\DBAL\Schema\Table {
+): DoctrineTable {
     return (new SchemaConverter($types_map))->toDbalTable($schema, $table_name, $table_options);
 }
 
@@ -262,7 +263,7 @@ function to_dbal_schema_table(
  * @return Schema
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
-function table_schema_to_flow_schema(\Doctrine\DBAL\Schema\Table $table, array $types_map = []): Schema
+function table_schema_to_flow_schema(DoctrineTable $table, array $types_map = []): Schema
 {
     return (new SchemaConverter($types_map))->toFlowSchema($table);
 }

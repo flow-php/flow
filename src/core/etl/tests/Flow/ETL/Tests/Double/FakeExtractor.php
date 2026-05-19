@@ -10,6 +10,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
+use Flow\Types\Value\Uuid as FlowUuid;
 use Generator;
 use Ramsey\Uuid\Uuid;
 
@@ -103,7 +104,7 @@ final readonly class FakeExtractor implements Extractor
                 bool_entry('bool', random_int(0, 1) === 1),
                 datetime_entry('datetime', new DateTimeImmutable('now')),
                 null_entry('null'),
-                uuid_entry('uuid', new \Flow\Types\Value\Uuid(Uuid::uuid4())),
+                uuid_entry('uuid', new FlowUuid(Uuid::uuid4())),
                 json_entry('json', ['id' => $id, 'status' => 'NEW']),
                 list_entry('list', [1, 2, 3], type_list(type_integer())),
                 list_entry(

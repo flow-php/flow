@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
 use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\Table as DoctrineTable;
+use Doctrine\DBAL\Types\IntegerType as DoctrineIntegerType;
 use Doctrine\DBAL\Types\TextType;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
@@ -30,17 +32,14 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
 {
     public function test_creating_limit_offset_extractor_for_table(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new \Doctrine\DBAL\Schema\Table(
-            $table = 'flow_doctrine_order_by_test',
-            [
-                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-                new Column('code', Type::getType(Types::INTEGER), ['notnull' => true]),
-            ],
-        ))->setPrimaryKey(['id']));
+        $this->pgsqlDatabaseContext->createTable((new DoctrineTable($table = 'flow_doctrine_order_by_test', [
+            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+            new Column('code', Type::getType(Types::INTEGER), ['notnull' => true]),
+        ]))->setPrimaryKey(['id']));
 
         $customTypesMap = new TypesMap([
             StringType::class => TextType::class,
-            IntegerType::class => \Doctrine\DBAL\Types\IntegerType::class,
+            IntegerType::class => DoctrineIntegerType::class,
         ]);
 
         $loader = (new DbalLoader($table, $this->postgresqlConnectionParams()))->withTypesMap($customTypesMap);

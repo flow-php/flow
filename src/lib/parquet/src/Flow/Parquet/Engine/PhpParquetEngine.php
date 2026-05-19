@@ -42,7 +42,6 @@ use function array_map;
 use function array_push;
 use function count;
 use function fclose;
-use function Flow\Types\DSL\type_integer;
 use function fopen;
 use function is_array;
 use function iterator_to_array;
@@ -234,7 +233,7 @@ final class PhpParquetEngine implements ParquetEngine
     public function writeRow(array $row): void
     {
         $this->activeRowGroupBuilder()->addRow($row);
-        $interval = type_integer()->assert($this->options->get(Option::ROW_GROUP_SIZE_CHECK_INTERVAL));
+        $interval = $this->options->getInt(Option::ROW_GROUP_SIZE_CHECK_INTERVAL);
 
         if (
             ($this->activeRowGroupBuilder()->rowsCount() % $interval) === 0
@@ -277,7 +276,7 @@ final class PhpParquetEngine implements ParquetEngine
 
         foreach ($rows as $row) {
             $rowGroupBuilder->addRow($row);
-            $interval = type_integer()->assert($options->get(Option::ROW_GROUP_SIZE_CHECK_INTERVAL));
+            $interval = $options->getInt(Option::ROW_GROUP_SIZE_CHECK_INTERVAL);
 
             if (($rowGroupBuilder->rowsCount() % $interval) === 0 && $rowGroupBuilder->isFull()) {
                 $rowGroupContainer = $rowGroupBuilder->flush($fileOffset);

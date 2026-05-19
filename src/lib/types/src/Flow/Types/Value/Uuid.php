@@ -6,8 +6,11 @@ namespace Flow\Types\Value;
 
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Exception\RuntimeException;
+use InvalidArgumentException as BaseInvalidArgumentException;
+use Ramsey\Uuid\Uuid as RamseyUuid;
 use Ramsey\Uuid\UuidInterface;
 use Stringable;
+use Symfony\Component\Uid\Uuid as SymfonyUuid;
 
 use function class_exists;
 use function is_string;
@@ -27,22 +30,22 @@ final readonly class Uuid implements Stringable
     /**
      * @throws InvalidArgumentException|RuntimeException
      */
-    public function __construct(string|UuidInterface|\Symfony\Component\Uid\Uuid $value)
+    public function __construct(string|UuidInterface|SymfonyUuid $value)
     {
         if (is_string($value)) {
             try {
-                if (class_exists(\Ramsey\Uuid\Uuid::class)) {
-                    $this->value = (string) \Ramsey\Uuid\Uuid::fromString($value);
-                } elseif (class_exists(\Symfony\Component\Uid\Uuid::class)) {
-                    $this->value = \Symfony\Component\Uid\Uuid::fromString($value)->toRfc4122();
+                if (class_exists(RamseyUuid::class)) {
+                    $this->value = (string) RamseyUuid::fromString($value);
+                } elseif (class_exists(SymfonyUuid::class)) {
+                    $this->value = SymfonyUuid::fromString($value)->toRfc4122();
                 } elseif (self::isValid($value)) {
                     $this->value = $value;
                 } else {
                     throw new RuntimeException(
-                        "\Ramsey\Uuid\Uuid nor \Symfony\Component\Uid\Uuid class not found, please add 'ramsey/uuid' or 'symfony/uid' as a dependency to the project first.",
+                        "RamseyUuid nor SymfonyUuid class not found, please add 'ramsey/uuid' or 'symfony/uid' as a dependency to the project first.",
                     );
                 }
-            } catch (\InvalidArgumentException $e) {
+            } catch (BaseInvalidArgumentException $e) {
                 throw new InvalidArgumentException("Invalid UUID: '{$value}'", (int) $e->getCode(), $e);
             }
         } elseif ($value instanceof UuidInterface) {

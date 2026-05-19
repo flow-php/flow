@@ -13,6 +13,7 @@ use Flow\PostgreSql\AST\Visitors\FuncCallCollector;
 use Flow\PostgreSql\AST\Visitors\RangeVarCollector;
 use Flow\PostgreSql\Protobuf\AST\A_Const;
 use Flow\PostgreSql\Protobuf\AST\ColumnRef;
+use Flow\PostgreSql\Protobuf\AST\Integer as PostgreSqlInteger;
 use Flow\PostgreSql\Protobuf\AST\LimitOption;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\ParseResult;
@@ -187,7 +188,7 @@ final class TraverserTest extends TestCase
                 }
 
                 if ($context->isTopLevel()) {
-                    $integer = new \Flow\PostgreSql\Protobuf\AST\Integer();
+                    $integer = new PostgreSqlInteger();
                     $integer->setIval(10);
 
                     $aConst = new A_Const(['ival' => $integer]);

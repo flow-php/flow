@@ -10,6 +10,8 @@ use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Uuid;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Ramsey\Uuid\Uuid as RamseyUuid;
+use Symfony\Component\Uid\Uuid as SymfonyUuid;
 
 use function class_exists;
 use function Flow\ETL\DSL\uuid_entry;
@@ -50,7 +52,7 @@ final class UuidEntryTest extends FlowTestCase
 
     protected function setUp(): void
     {
-        if (!class_exists(\Ramsey\Uuid\Uuid::class) && !class_exists(\Symfony\Component\Uid\Uuid::class)) {
+        if (!class_exists(RamseyUuid::class) && !class_exists(SymfonyUuid::class)) {
             self::markTestSkipped("Package 'ramsey/uuid' or 'symfony/uid' is required for this test.");
         }
     }

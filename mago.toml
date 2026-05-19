@@ -32,17 +32,9 @@ excludes = [
     "**/Flow/Types/PHPStan/**",
 ]
 ignore = [
-    # `type_mapper()` uses a `@var TypeMapper<TType, TType>` in the terminal branch
-    # so PHPStan can bind the second template. Mago infers it from the @return
-    # conditional and reports the annotation as redundant.
     { code = "redundant-docblock-type", in = [
         "src/lib/postgresql/src/Flow/PostgreSql/DSL/client.php",
     ] },
-    # `Dom\HTMLDocument::createFromString` and `::saveHtml` are PHP 8.4+ APIs.
-    # The codebase supports PHP 8.3 | 8.4 | 8.5 and gates these calls with
-    # `instanceof Dom\HTMLDocument` checks — on PHP 8.3 the class doesn't exist
-    # so the guarded branch is never entered. Mago 1.27 flags the symbol
-    # reference itself; suppress for these specific files.
     { code = "unavailable-method", in = [
         "src/lib/types/src/Flow/Types/Type/Logical/HTMLElementType.php",
         "src/lib/types/src/Flow/Types/Type/Logical/HTMLType.php",
@@ -119,7 +111,9 @@ no-sprintf-concat = { enabled = false }
 no-global = { enabled = false }
 no-redundant-method-override = { enabled = false }
 no-redundant-else = { enabled = true, level = "warning" }
-# Bug in Mago 1.26 - revisit when resolved
+# Bug in Mago 1.28.0 - false positives on $this when passed as a call/constructor argument.
+# Minimal repro: https://mago.carthage.software/1.27.1/en/playground/#019e3f91-7e6d-75d3-6c51-f9dae0ed72f8
+# Revisit when fixed upstream.
 no-redundant-variable = { enabled = true, level = "warning", exclude = [
     "**/Flow/ETL/Function/ScalarFunctionChain.php",
     "**/Flow/ETL/DataFrame.php",
@@ -135,17 +129,6 @@ no-redundant-variable = { enabled = true, level = "warning", exclude = [
     "**/TracableHttpClientTest.php",
 ] }
 strict-types = { enabled = true, level = "error" }
-no-fully-qualified-global-function = { enabled = true, level = "help", exclude = [
-    # File defines `function sprintf()` in Flow\ETL\DSL, so `\sprintf(...)` calls must stay fully-qualified.
-    "**/Flow/ETL/DSL/functions.php",
-] }
-no-fully-qualified-global-class-like = { enabled = true, level = "help", exclude = [
-    # These files declare `class Ulid` / `class Uuid` that intentionally shadow Symfony/Ramsey classes,
-    # so their fully-qualified references must stay as-is.
-    "**/Flow/ETL/Function/Ulid.php",
-    "**/Flow/ETL/Function/Uuid.php",
-    # Namespace has its own `Table` class (Flow\ETL\Adapter\Doctrine\Table) — importing
-    # `Doctrine\DBAL\Schema\Table` shadows it and breaks the public function signatures.
-    "**/Flow/ETL/Adapter/Doctrine/functions.php",
-] }
-no-fully-qualified-global-constant = { enabled = true, level = "help" }
+no-fully-qualified-global-function = { enabled = true, level = "error" }
+no-fully-qualified-global-class-like = { enabled = true, level = "error" }
+no-fully-qualified-global-constant = { enabled = true, level = "error" }

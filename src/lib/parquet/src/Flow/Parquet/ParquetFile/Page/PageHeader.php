@@ -11,6 +11,7 @@ use Flow\Parquet\ParquetFile\Page\Header\DataPageHeader;
 use Flow\Parquet\ParquetFile\Page\Header\DataPageHeaderV2;
 use Flow\Parquet\ParquetFile\Page\Header\DictionaryPageHeader;
 use Flow\Parquet\ParquetFile\Page\Header\Type;
+use Flow\Parquet\ThriftModel\PageHeader as ThriftPageHeader;
 
 final readonly class PageHeader
 {
@@ -23,7 +24,7 @@ final readonly class PageHeader
         private ?DictionaryPageHeader $dictionaryPageHeader,
     ) {}
 
-    public static function fromThrift(\Flow\Parquet\ThriftModel\PageHeader $thrift, Options $options): self
+    public static function fromThrift(ThriftPageHeader $thrift, Options $options): self
     {
         return new self(
             Type::from($thrift->type),
@@ -104,9 +105,9 @@ final readonly class PageHeader
         return $this->dataPageHeader->encoding();
     }
 
-    public function toThrift(): \Flow\Parquet\ThriftModel\PageHeader
+    public function toThrift(): ThriftPageHeader
     {
-        return new \Flow\Parquet\ThriftModel\PageHeader([
+        return new ThriftPageHeader([
             'type' => $this->type->value,
             'compressed_page_size' => $this->compressedPageSize,
             'uncompressed_page_size' => $this->uncompressedPageSize,

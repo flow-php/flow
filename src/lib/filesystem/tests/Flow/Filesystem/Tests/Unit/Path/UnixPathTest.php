@@ -9,6 +9,7 @@ use Flow\Filesystem\Path\Options;
 use Flow\Filesystem\Path\UnixPath;
 use Flow\Filesystem\Tests\Unit\PathTestCase;
 use Generator;
+use InvalidArgumentException as BaseInvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 use function Flow\Filesystem\DSL\partition;
@@ -512,7 +513,7 @@ final class UnixPathTest extends PathTestCase
     {
         $path = new UnixPath('/path/to/file.txt');
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(BaseInvalidArgumentException::class);
         $this->expectExceptionMessage('The number of folders to skip must be non-negative.');
 
         $path->skipDirectories(-1);

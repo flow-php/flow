@@ -14,7 +14,6 @@ use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\Types\DSL\type_instance_of;
 use function iterator_to_array;
 
 final class ReadColumnDataTest extends TestCase
@@ -23,8 +22,10 @@ final class ReadColumnDataTest extends TestCase
     {
         $schema = Schema::with(NestedColumn::map('m', MapKey::string(), MapValue::int32()));
 
-        $keyColumn = type_instance_of(FlatColumn::class)->assert($schema->get('m.key_value.key'));
-        $valueColumn = type_instance_of(FlatColumn::class)->assert($schema->get('m.key_value.value'));
+        $keyColumn = $schema->get('m.key_value.key');
+        $valueColumn = $schema->get('m.key_value.value');
+        static::assertInstanceOf(FlatColumn::class, $keyColumn);
+        static::assertInstanceOf(FlatColumn::class, $valueColumn);
 
         $keyValuesGenerator = static function () {
             yield 'a';
@@ -85,8 +86,10 @@ final class ReadColumnDataTest extends TestCase
     {
         $schema = Schema::with(NestedColumn::map('m', MapKey::string(), MapValue::int32()));
 
-        $keyColumn = type_instance_of(FlatColumn::class)->assert($schema->get('m.key_value.key'));
-        $valueColumn = type_instance_of(FlatColumn::class)->assert($schema->get('m.key_value.value'));
+        $keyColumn = $schema->get('m.key_value.key');
+        $valueColumn = $schema->get('m.key_value.value');
+        static::assertInstanceOf(FlatColumn::class, $keyColumn);
+        static::assertInstanceOf(FlatColumn::class, $valueColumn);
 
         $keyValuesGenerator = static function () {
             yield 'a';

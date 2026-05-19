@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Serializer;
 
 use Flow\ETL\Exception\RuntimeException;
+use RuntimeException as BaseRuntimeException;
 
 use function function_exists;
 use function gzcompress;
@@ -30,7 +31,7 @@ final readonly class CompressingSerializer implements Serializer
 
         if (false === $content) {
             // @codeCoverageIgnoreStart
-            throw new \RuntimeException('Unable to compress serialized data.');
+            throw new BaseRuntimeException('Unable to compress serialized data.');
 
             // @codeCoverageIgnoreEnd
         }
@@ -53,7 +54,7 @@ final readonly class CompressingSerializer implements Serializer
 
         if (false === $content) {
             // @codeCoverageIgnoreStart
-            throw new \RuntimeException('Unable to decompress unserialized data.');
+            throw new BaseRuntimeException('Unable to decompress unserialized data.');
 
             // @codeCoverageIgnoreEnd
         }

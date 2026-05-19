@@ -18,10 +18,6 @@ use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\ParquetFile\Schema\Repetition;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\Types\DSL\type_array;
-use function Flow\Types\DSL\type_map;
-use function Flow\Types\DSL\type_mixed;
-use function Flow\Types\DSL\type_string;
 use function iterator_to_array;
 
 final class SchemaTest extends TestCase
@@ -39,8 +35,9 @@ final class SchemaTest extends TestCase
 
         // @mago-ignore analysis:mixed-assignment
         foreach ($rows as $row) {
-            $narrowedRow = type_map(type_string(), type_mixed())->assert($row);
-            $shredResult = $shredder->shred($schema, [$narrowedRow]);
+            /** @var array<string, mixed> $row */
+            static::assertIsArray($row);
+            $shredResult = $shredder->shred($schema, [$row]);
 
             foreach ($schema->columns() as $column) {
                 $readFlatValues = [];
@@ -69,8 +66,10 @@ final class SchemaTest extends TestCase
 
                 $readData = new ReadColumnData($column, $readFlatValues);
                 $assembled = iterator_to_array($assembler->assemble($column, $readData));
-                $firstAssembled = type_array()->assert($assembled[0]);
-                static::assertEquals($narrowedRow[$column->name()], $firstAssembled[$column->name()]);
+                /** @var array<string, mixed> $firstAssembled */
+                $firstAssembled = $assembled[0];
+                static::assertIsArray($firstAssembled);
+                static::assertEquals($row[$column->name()], $firstAssembled[$column->name()]);
             }
         }
     }

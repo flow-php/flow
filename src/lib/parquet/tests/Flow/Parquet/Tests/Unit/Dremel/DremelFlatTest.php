@@ -16,13 +16,13 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\Types\DSL\type_map;
-use function Flow\Types\DSL\type_mixed;
-use function Flow\Types\DSL\type_string;
 use function iterator_to_array;
 
 final class DremelFlatTest extends TestCase
 {
+    /**
+     * @param array<string, mixed> $row
+     */
     #[TestWith([
         ['int32' => null],
         [
@@ -52,9 +52,7 @@ final class DremelFlatTest extends TestCase
         static::assertEquals(0, $schema->get('int32')->repetitions()->maxRepetitionLevel());
 
         $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
-        $narrowedRow = type_map(type_string(), type_mixed())->assert($row);
-
-        $shredResult = $shredder->shred($schema, [$narrowedRow]);
+        $shredResult = $shredder->shred($schema, [$row]);
 
         $normalized = [];
 
@@ -95,6 +93,9 @@ final class DremelFlatTest extends TestCase
         );
     }
 
+    /**
+     * @param array<string, mixed> $row
+     */
     #[TestWith([
         ['int32' => 1],
         [
@@ -117,13 +118,9 @@ final class DremelFlatTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowedRow = type_map(type_string(), type_mixed())->assert($row);
-
-            $shredder->shred($schema, [$narrowedRow]);
+            $shredder->shred($schema, [$row]);
         } else {
-            $narrowedRow = type_map(type_string(), type_mixed())->assert($row);
-
-            $shredResult = $shredder->shred($schema, [$narrowedRow]);
+            $shredResult = $shredder->shred($schema, [$row]);
 
             $normalized = [];
 

@@ -13,6 +13,7 @@ use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Thrift\CompactProtocol;
 use Flow\Parquet\Thrift\PhpFileStream;
+use Flow\Parquet\ThriftModel\PageHeader as ThriftPageHeader;
 use Generator;
 use Throwable;
 
@@ -114,7 +115,7 @@ final readonly class ColumnChunkReader
         $currentOffset = ftell($stream);
 
         try {
-            $thriftHeader = new \Flow\Parquet\ThriftModel\PageHeader();
+            $thriftHeader = new ThriftPageHeader();
             @$thriftHeader->read(new CompactProtocol(new PhpFileStream($stream)));
 
             return PageHeader::fromThrift($thriftHeader, $this->options);

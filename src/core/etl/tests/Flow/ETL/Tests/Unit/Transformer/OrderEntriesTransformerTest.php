@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\OrderEntriesTransformer;
+use Flow\Types\Value\Uuid as FlowUuid;
 use Ramsey\Uuid\Uuid;
 
 use function array_keys;
@@ -55,7 +56,7 @@ final class OrderEntriesTransformerTest extends FlowTestCase
             datetime_entry('datetime_z', new DateTimeImmutable('now')),
             str_entry('string_a', 'string'),
             str_entry('string_b', 'string'),
-            uuid_entry('uuid', new \Flow\Types\Value\Uuid(Uuid::uuid4())),
+            uuid_entry('uuid', new FlowUuid(Uuid::uuid4())),
             json_entry('json', ['id' => 1, 'status' => 'NEW']),
             list_entry('list', [1, 2, 3], type_list(type_integer())),
             map_entry('map', [0 => 'zero', 1 => 'one', 2 => 'two'], type_map(type_integer(), type_string())),
@@ -147,7 +148,7 @@ final class OrderEntriesTransformerTest extends FlowTestCase
             bool_entry('bool', false),
             datetime_entry('datetime', new DateTimeImmutable('now')),
             str_entry('null', null),
-            uuid_entry('uuid', new \Flow\Types\Value\Uuid(Uuid::uuid4())),
+            uuid_entry('uuid', new FlowUuid(Uuid::uuid4())),
             json_entry('json', ['id' => 1, 'status' => 'NEW']),
             list_entry('list', [1, 2, 3], type_list(type_integer())),
             map_entry('map', [0 => 'zero', 1 => 'one', 2 => 'two'], type_map(type_integer(), type_string())),

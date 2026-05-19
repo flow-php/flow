@@ -23,7 +23,6 @@ use function extension_loaded;
 use function file_exists;
 use function Flow\ETL\DSL\generate_random_string;
 use function Flow\Filesystem\DSL\path_real;
-use function Flow\Types\DSL\type_array;
 use function iterator_to_array;
 use function mkdir;
 use function range;
@@ -132,7 +131,9 @@ final class ArrowParquetEngineReadTest extends TestCase
         ));
 
         static::assertCount(2, $result);
-        $metadata = type_array()->assert($result[0]['metadata']);
+        /** @var array<string, mixed> $metadata */
+        $metadata = $result[0]['metadata'];
+        static::assertIsArray($metadata);
         static::assertSame(100, $metadata['score']);
         static::assertSame(5, $metadata['level']);
 
@@ -166,7 +167,9 @@ final class ArrowParquetEngineReadTest extends TestCase
         ));
 
         static::assertCount(2, $result);
-        $address = type_array()->assert($result[0]['address']);
+        /** @var array<string, mixed> $address */
+        $address = $result[0]['address'];
+        static::assertIsArray($address);
         static::assertSame('Berlin', $address['city']);
         static::assertSame(10115, $address['zip']);
 

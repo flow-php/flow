@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit;
 
 use Flow\Bridge\Symfony\PostgreSQLMessenger\Connection;
+use Flow\Bridge\Symfony\PostgreSQLMessenger\Exception\TransportException as BridgeTransportException;
 use Flow\Bridge\Symfony\PostgreSQLMessenger\FlowPostgreSqlReceiver;
 use Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit\Double\FakeSerializer;
 use Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit\Double\SpyClient;
@@ -115,7 +116,7 @@ final class FlowPostgreSqlReceiverTest extends TestCase
         $client->fetchReturn = ['id' => null, 'body' => 'x', 'headers' => '{}'];
         $receiver = new FlowPostgreSqlReceiver(new Connection($client), new FakeSerializer());
 
-        $this->expectException(\Flow\Bridge\Symfony\PostgreSQLMessenger\Exception\TransportException::class);
+        $this->expectException(BridgeTransportException::class);
 
         $receiver->find('1');
     }
@@ -212,7 +213,7 @@ final class FlowPostgreSqlReceiverTest extends TestCase
         $client->fetchReturn = ['id' => 1, 'body' => 123, 'headers' => '{}'];
         $receiver = new FlowPostgreSqlReceiver(new Connection($client), new FakeSerializer());
 
-        $this->expectException(\Flow\Bridge\Symfony\PostgreSQLMessenger\Exception\TransportException::class);
+        $this->expectException(BridgeTransportException::class);
 
         iterator_to_array($receiver->get(), false);
     }
@@ -223,7 +224,7 @@ final class FlowPostgreSqlReceiverTest extends TestCase
         $client->fetchReturn = ['id' => 1, 'body' => 'x', 'headers' => 123];
         $receiver = new FlowPostgreSqlReceiver(new Connection($client), new FakeSerializer());
 
-        $this->expectException(\Flow\Bridge\Symfony\PostgreSQLMessenger\Exception\TransportException::class);
+        $this->expectException(BridgeTransportException::class);
 
         iterator_to_array($receiver->get(), false);
     }

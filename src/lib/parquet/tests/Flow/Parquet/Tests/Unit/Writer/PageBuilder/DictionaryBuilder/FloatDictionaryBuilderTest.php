@@ -13,9 +13,6 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\Types\DSL\type_float;
-use function is_nan;
-
 use const INF;
 use const NAN;
 
@@ -80,7 +77,7 @@ final class FloatDictionaryBuilderTest extends TestCase
         static::assertSame(1.0, $result->dictionary[0]);
         static::assertSame(INF, $result->dictionary[1]);
         static::assertSame(-INF, $result->dictionary[2]);
-        static::assertTrue(is_nan(type_float()->assert($result->dictionary[3])));
+        static::assertNan($result->dictionary[3]);
     }
 
     public function test_alternating_float_pattern(): void
@@ -345,7 +342,7 @@ final class FloatDictionaryBuilderTest extends TestCase
         static::assertCount(3, $result->dictionary);
         static::assertSame([0, 1, 2, 1, 0], $result->indices);
         static::assertSame(1.0, $result->dictionary[0]);
-        static::assertTrue(is_nan(type_float()->assert($result->dictionary[1])));
+        static::assertNan($result->dictionary[1]);
         static::assertSame(2.0, $result->dictionary[2]);
     }
 

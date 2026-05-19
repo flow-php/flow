@@ -8,6 +8,7 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\RowGroup\StatisticsReader;
 use Flow\Parquet\ParquetFile\Statistics;
+use Flow\Parquet\ThriftModel\DataPageHeaderV2 as ThriftDataPageHeaderV2;
 
 final readonly class DataPageHeaderV2
 {
@@ -22,7 +23,7 @@ final readonly class DataPageHeaderV2
         private ?Statistics $statistics,
     ) {}
 
-    public static function fromThrift(\Flow\Parquet\ThriftModel\DataPageHeaderV2 $thrift, Options $options): self
+    public static function fromThrift(ThriftDataPageHeaderV2 $thrift, Options $options): self
     {
         return new self(
             (int) $thrift->num_values,
@@ -62,9 +63,9 @@ final readonly class DataPageHeaderV2
         return new StatisticsReader($this->statistics);
     }
 
-    public function toThrift(): \Flow\Parquet\ThriftModel\DataPageHeaderV2
+    public function toThrift(): ThriftDataPageHeaderV2
     {
-        return new \Flow\Parquet\ThriftModel\DataPageHeaderV2([
+        return new ThriftDataPageHeaderV2([
             'num_values' => $this->valuesCount,
             'num_nulls' => $this->nullsCount,
             'num_rows' => $this->rowsCount,

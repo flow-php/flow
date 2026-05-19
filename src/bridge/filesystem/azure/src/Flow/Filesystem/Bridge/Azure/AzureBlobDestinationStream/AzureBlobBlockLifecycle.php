@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\Azure\AzureBlobDestinationStream;
 
+use Flow\Azure\SDK\BlobService\BlockBlob\Block as AzureBlock;
 use Flow\Azure\SDK\BlobService\BlockBlob\BlockList;
 use Flow\Azure\SDK\BlobService\BlockBlob\BlockState;
 use Flow\Azure\SDK\BlobServiceInterface;
@@ -53,8 +54,6 @@ final class AzureBlobBlockLifecycle implements BlockLifecycle
 
         unlink($block->path()->path());
 
-        $this->blockList->append(
-            new \Flow\Azure\SDK\BlobService\BlockBlob\Block($block->id(), BlockState::UNCOMMITTED),
-        );
+        $this->blockList->append(new AzureBlock($block->id(), BlockState::UNCOMMITTED));
     }
 }

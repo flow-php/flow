@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile\Page\Header;
 
 use Flow\Parquet\ParquetFile\Encodings;
+use Flow\Parquet\ThriftModel\DataPageHeader as ThriftDataPageHeader;
 
 final readonly class DataPageHeader
 {
@@ -15,7 +16,7 @@ final readonly class DataPageHeader
         private int $valuesCount,
     ) {}
 
-    public static function fromThrift(\Flow\Parquet\ThriftModel\DataPageHeader $thrift): self
+    public static function fromThrift(ThriftDataPageHeader $thrift): self
     {
         return new self(
             Encodings::from($thrift->encoding),
@@ -40,9 +41,9 @@ final readonly class DataPageHeader
         return $this->repetitionLevelEncoding;
     }
 
-    public function toThrift(): \Flow\Parquet\ThriftModel\DataPageHeader
+    public function toThrift(): ThriftDataPageHeader
     {
-        return new \Flow\Parquet\ThriftModel\DataPageHeader([
+        return new ThriftDataPageHeader([
             'num_values' => $this->valuesCount,
             'encoding' => $this->encoding->value,
             'definition_level_encoding' => $this->definitionLevelEncoding->value,

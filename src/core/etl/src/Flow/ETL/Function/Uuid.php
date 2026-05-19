@@ -10,7 +10,9 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
 use Flow\Types\Value\Uuid as FlowUuid;
+use Ramsey\Uuid\Uuid as RamseyUuid;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Uid\Uuid as SymfonyUuid;
 use Symfony\Component\Uid\UuidV4;
 use Symfony\Component\Uid\UuidV7;
 
@@ -19,7 +21,7 @@ use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_uuid;
 
-if (!class_exists(\Ramsey\Uuid\Uuid::class) && !class_exists(\Symfony\Component\Uid\Uuid::class)) {
+if (!class_exists(RamseyUuid::class) && !class_exists(SymfonyUuid::class)) {
     throw new RuntimeException(
         "\Ramsey\Uuid\Uuid nor \Symfony\Component\Uid\Uuid class not found, please add 'ramsey/uuid' or 'symfony/uid' as a dependency to the project first.",
     );
@@ -62,8 +64,8 @@ final class Uuid extends ScalarFunctionChain
 
     private function generateV4(): UuidV4|UuidInterface
     {
-        if (class_exists(\Ramsey\Uuid\Uuid::class)) {
-            return \Ramsey\Uuid\Uuid::uuid4();
+        if (class_exists(RamseyUuid::class)) {
+            return RamseyUuid::uuid4();
         }
 
         return UuidV4::v4();
@@ -71,8 +73,8 @@ final class Uuid extends ScalarFunctionChain
 
     private function generateV7(DateTimeInterface $dateTime): UuidV7|UuidInterface
     {
-        if (class_exists(\Ramsey\Uuid\Uuid::class)) {
-            return \Ramsey\Uuid\Uuid::uuid7($dateTime);
+        if (class_exists(RamseyUuid::class)) {
+            return RamseyUuid::uuid7($dateTime);
         }
 
         return new UuidV7(UuidV7::generate($dateTime));

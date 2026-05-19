@@ -54,6 +54,7 @@ use Flow\ETL\Formatter;
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\All;
 use Flow\ETL\Function\Any;
+use Flow\ETL\Function\ArrayExpand as ArrayExpandFunction;
 use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ArrayGet;
 use Flow\ETL\Function\ArrayGetCollection;
@@ -261,6 +262,7 @@ use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\TypeFactory;
 use Flow\Types\Value\Json;
+use Flow\Types\Value\Uuid as FlowUuid;
 use Psr\Clock\ClockInterface;
 use UnitEnum;
 
@@ -740,7 +742,7 @@ function string_entry(string $name, ?string $value, ?Metadata $metadata = null):
  * @return Entry<?\Flow\Types\Value\Uuid>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function uuid_entry(string $name, \Flow\Types\Value\Uuid|string|null $value, ?Metadata $metadata = null): Entry
+function uuid_entry(string $name, FlowUuid|string|null $value, ?Metadata $metadata = null): Entry
 {
     return new UuidEntry($name, $value, $metadata);
 }
@@ -814,6 +816,7 @@ function struct_entry(string $name, ?array $value, StructureType $type, ?Metadat
 function structure_entry(string $name, ?array $value, Type $type, ?Metadata $metadata = null): Entry
 {
     if (!$type instanceof StructureType) {
+        // @mago-expect linter:no-fully-qualified-global-function
         throw new InvalidArgumentException(\sprintf(
             'Structure entry "%s" requires a StructureType, got %s',
             $name,
@@ -834,6 +837,7 @@ function structure_entry(string $name, ?array $value, Type $type, ?Metadata $met
 function list_entry(string $name, ?array $value, Type $type, ?Metadata $metadata = null): Entry
 {
     if (!$type instanceof ListType) {
+        // @mago-expect linter:no-fully-qualified-global-function
         throw new InvalidArgumentException(\sprintf(
             'List entry "%s" requires a ListType, got %s',
             $name,
@@ -854,6 +858,7 @@ function list_entry(string $name, ?array $value, Type $type, ?Metadata $metadata
 function map_entry(string $name, ?array $value, Type $mapType, ?Metadata $metadata = null): Entry
 {
     if (!$mapType instanceof MapType) {
+        // @mago-expect linter:no-fully-qualified-global-function
         throw new InvalidArgumentException(\sprintf(
             'Map entry "%s" requires a MapType, got %s',
             $name,
@@ -1259,11 +1264,9 @@ function array_unpack(
  *   +--+--------+
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function array_expand(
-    ScalarFunction $function,
-    ArrayExpand $expand = ArrayExpand::VALUES,
-): \Flow\ETL\Function\ArrayExpand {
-    return new \Flow\ETL\Function\ArrayExpand($function, $expand);
+function array_expand(ScalarFunction $function, ArrayExpand $expand = ArrayExpand::VALUES): ArrayExpandFunction
+{
+    return new ArrayExpandFunction($function, $expand);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
@@ -1954,6 +1957,7 @@ function definition_from_type(
         $type instanceof HTMLElementType => new HTMLElementDefinition($ref, $nullable, $metadata),
         $type instanceof XMLType => new XMLDefinition($ref, $nullable, $metadata),
         $type instanceof XMLElementType => new XMLElementDefinition($ref, $nullable, $metadata),
+        // @mago-expect linter:no-fully-qualified-global-function
         default => throw new RuntimeException(\sprintf('Cannot create Definition from type: %s', $type::class)),
     };
 }

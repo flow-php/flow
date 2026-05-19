@@ -8,6 +8,7 @@ use Error;
 use Exception;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Retry\RetryStrategy\OnExceptionTypes;
+use InvalidArgumentException as BaseInvalidArgumentException;
 use LogicException;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -54,7 +55,7 @@ final class OnExceptionTypesTest extends TestCase
 
         // Should match LogicException and its subclasses
         static::assertTrue($strategy->shouldRetry(new LogicException('test'), 1));
-        static::assertTrue($strategy->shouldRetry(new \InvalidArgumentException('test'), 1));
+        static::assertTrue($strategy->shouldRetry(new BaseInvalidArgumentException('test'), 1));
 
         // Should not match Exception or RuntimeException
         static::assertFalse($strategy->shouldRetry(new Exception('test'), 1));
@@ -118,7 +119,7 @@ final class OnExceptionTypesTest extends TestCase
         static::assertTrue($strategy->shouldRetry(new Exception('test'), 1));
         static::assertTrue($strategy->shouldRetry(new RuntimeException('test'), 1));
         static::assertTrue($strategy->shouldRetry(new LogicException('test'), 1));
-        static::assertTrue($strategy->shouldRetry(new \InvalidArgumentException('test'), 1));
+        static::assertTrue($strategy->shouldRetry(new BaseInvalidArgumentException('test'), 1));
     }
 
     public function test_throwable_interface_is_accepted(): void

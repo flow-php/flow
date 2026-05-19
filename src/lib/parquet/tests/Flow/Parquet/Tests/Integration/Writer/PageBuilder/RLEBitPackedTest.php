@@ -15,8 +15,6 @@ use PHPUnit\Framework\TestCase;
 
 use function count;
 use function Flow\Parquet\Binary\decode_i32;
-use function Flow\Types\DSL\type_integer;
-use function Flow\Types\DSL\type_list;
 
 final class RLEBitPackedTest extends TestCase
 {
@@ -41,7 +39,7 @@ final class RLEBitPackedTest extends TestCase
     #[DataProvider('values_provider')]
     public function test_packing_and_unpacking_with_length(array $values, int $length): void
     {
-        $values = type_list(type_integer())->assert($values);
+        static::assertContainsOnlyInt($values);
         $byteOrder = ByteOrder::LITTLE_ENDIAN;
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
         $packer = new RLEBitPackedPacker($rleBitPackedHybrid, $byteOrder);

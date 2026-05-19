@@ -7,6 +7,8 @@ namespace Flow\Parquet\ParquetFile;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ThriftModel\ColumnChunk as ThriftColumnChunk;
+use Flow\Parquet\ThriftModel\RowGroup as ThriftRowGroup;
 
 use function array_map;
 use function array_sum;
@@ -23,10 +25,10 @@ final class RowGroup
         private int $rowsCount,
     ) {}
 
-    public static function fromThrift(\Flow\Parquet\ThriftModel\RowGroup $thrift): self
+    public static function fromThrift(ThriftRowGroup $thrift): self
     {
         return new self(
-            array_map(static fn(\Flow\Parquet\ThriftModel\ColumnChunk $columnChunk) => ColumnChunk::fromThrift(
+            array_map(static fn(ThriftColumnChunk $columnChunk) => ColumnChunk::fromThrift(
                 $columnChunk,
             ), $thrift->columns),
             (int) $thrift->num_rows,
@@ -81,7 +83,7 @@ final class RowGroup
         ));
     }
 
-    public function toThrift(): \Flow\Parquet\ThriftModel\RowGroup
+    public function toThrift(): ThriftRowGroup
     {
         $firstChunk = current($this->columnChunks);
         $fileOffset = $firstChunk !== false ? $firstChunk->fileOffset() : 0;
@@ -94,7 +96,7 @@ final class RowGroup
             $this->columnChunks,
         );
 
-        return new \Flow\Parquet\ThriftModel\RowGroup([
+        return new ThriftRowGroup([
             'columns' => array_map(
                 static fn(ColumnChunk $columnChunk) => $columnChunk->toThrift(),
                 $this->columnChunks,

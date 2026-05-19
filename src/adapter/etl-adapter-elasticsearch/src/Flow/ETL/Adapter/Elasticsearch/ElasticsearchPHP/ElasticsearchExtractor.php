@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
+use Elastic\Elasticsearch\Client as ElasticClient;
+use Elastic\Elasticsearch\ClientBuilder as ElasticClientBuilder;
 use Elastic\Elasticsearch\Exception\ClientResponseException;
 use Elastic\Elasticsearch\Exception\ServerResponseException;
 use Elasticsearch\Client;
@@ -21,7 +23,7 @@ final class ElasticsearchExtractor implements Extractor
     /**
      * @phpstan-ignore-next-line
      */
-    private Client|\Elastic\Elasticsearch\Client|null $client;
+    private Client|ElasticClient|null $client;
 
     /**
      * @var null|array<array-key, mixed>
@@ -162,13 +164,13 @@ final class ElasticsearchExtractor implements Extractor
     /**
      * @phpstan-ignore-next-line
      */
-    private function client(): Client|\Elastic\Elasticsearch\Client
+    private function client(): Client|ElasticClient
     {
         if ($this->client === null) {
             if (class_exists("Elasticsearch\ClientBuilder")) {
                 $this->client = ClientBuilder::fromConfig($this->config);
             } else {
-                $this->client = \Elastic\Elasticsearch\ClientBuilder::fromConfig($this->config);
+                $this->client = ElasticClientBuilder::fromConfig($this->config);
             }
         }
 

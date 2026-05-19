@@ -8,8 +8,6 @@ use Flow\Parquet\ParquetEngine;
 use Flow\Parquet\Reader;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-use function Flow\Types\DSL\type_array;
-
 class ListsReadingTest extends ParquetIntegrationTestCase
 {
     #[DataProvider('engine_provider')]
@@ -24,7 +22,9 @@ class ListsReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['list']) as $row) {
-            $list = type_array()->assert($row['list']);
+            /** @var array<array-key, mixed> $list */
+            $list = $row['list'];
+            static::assertIsArray($list);
             static::assertContainsOnlyInt($list);
             static::assertCount(3, $list);
             $count++;
@@ -46,7 +46,9 @@ class ListsReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['list'], $limit = 50) as $row) {
-            $list = type_array()->assert($row['list']);
+            /** @var array<array-key, mixed> $list */
+            $list = $row['list'];
+            static::assertIsArray($list);
             static::assertContainsOnlyInt($list);
             static::assertCount(3, $list);
             $count++;
@@ -67,11 +69,17 @@ class ListsReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['list_nested']) as $row) {
-            $outer = type_array()->assert($row['list_nested']);
+            /** @var array<array-key, mixed> $outer */
+            $outer = $row['list_nested'];
+            static::assertIsArray($outer);
             static::assertIsList($outer);
-            $inner = type_array()->assert($outer[0]);
+            /** @var array<array-key, mixed> $inner */
+            $inner = $outer[0];
+            static::assertIsArray($inner);
             static::assertIsList($inner);
-            $innermost = type_array()->assert($inner[0]);
+            /** @var array<array-key, mixed> $innermost */
+            $innermost = $inner[0];
+            static::assertIsArray($innermost);
             static::assertIsArray($innermost);
 
             $count++;
@@ -93,7 +101,9 @@ class ListsReadingTest extends ParquetIntegrationTestCase
 
         foreach ($file->values(['list_nullable']) as $rowIndex => $row) {
             if (($rowIndex % 2) === 0) {
-                $list = type_array()->assert($row['list_nullable']);
+                /** @var array<array-key, mixed> $list */
+                $list = $row['list_nullable'];
+                static::assertIsArray($list);
                 static::assertContainsOnlyInt($list);
                 static::assertCount(3, $list);
             } else {
@@ -118,11 +128,15 @@ class ListsReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['list_mixed_types']) as $row) {
-            $list = type_array()->assert($row['list_mixed_types']);
+            /** @var array<array-key, mixed> $list */
+            $list = $row['list_mixed_types'];
+            static::assertIsArray($list);
             static::assertCount(4, $list);
 
             for ($i = 0; $i < 4; $i++) {
-                $entry = type_array()->assert($list[$i]);
+                /** @var array<array-key, mixed> $entry */
+                $entry = $list[$i];
+                static::assertIsArray($entry);
                 static::assertArrayHasKey('int', $entry);
                 static::assertArrayHasKey('string', $entry);
                 static::assertArrayHasKey('bool', $entry);
@@ -151,8 +165,14 @@ class ListsReadingTest extends ParquetIntegrationTestCase
         foreach ($file->values(['list_of_structs_nullable']) as $rowIndex => $row) {
             if (($rowIndex % 2) === 0) {
                 // @mago-ignore analysis:mixed-assignment
-                foreach (type_array()->assert($row['list_of_structs_nullable']) as $rowList) {
-                    $entry = type_array()->assert($rowList);
+                /** @var array<array-key, mixed> $list */
+                $list = $row['list_of_structs_nullable'];
+                static::assertIsArray($list);
+
+                foreach ($list as $rowList) {
+                    /** @var array<array-key, mixed> $entry */
+                    $entry = $rowList;
+                    static::assertIsArray($entry);
                     static::assertIsInt($entry['id']);
                     static::assertIsString($entry['name']);
                 }

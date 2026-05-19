@@ -11,10 +11,11 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Stringable;
 
-use function Flow\Types\DSL\type_string;
+use function get_debug_type;
 use function is_object;
 use function is_string;
 use function method_exists;
+use function sprintf;
 
 final class UuidConverter implements Converter
 {
@@ -43,7 +44,12 @@ final class UuidConverter implements Converter
         }
 
         if (is_object($data) && method_exists($data, 'toString')) {
-            return type_string()->assert($data->toString());
+            return is_string($data->toString())
+                ? (string) $data->toString()
+                : throw new RuntimeException(sprintf(
+                    'UUID toString() must return string, got %s',
+                    get_debug_type($data->toString()),
+                ));
         }
 
         if ($data instanceof Stringable) {

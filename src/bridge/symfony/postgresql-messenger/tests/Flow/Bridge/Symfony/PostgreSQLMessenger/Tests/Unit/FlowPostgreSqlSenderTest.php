@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit;
 
 use Flow\Bridge\Symfony\PostgreSQLMessenger\Connection;
+use Flow\Bridge\Symfony\PostgreSQLMessenger\Exception\TransportException as BridgeTransportException;
 use Flow\Bridge\Symfony\PostgreSQLMessenger\FlowPostgreSqlSender;
 use Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit\Double\FakeSerializer;
 use Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit\Double\SpyClient;
@@ -56,7 +57,7 @@ final class FlowPostgreSqlSenderTest extends TestCase
         };
         $sender = new FlowPostgreSqlSender(new Connection(new SpyClient()), $serializer);
 
-        $this->expectException(\Flow\Bridge\Symfony\PostgreSQLMessenger\Exception\TransportException::class);
+        $this->expectException(BridgeTransportException::class);
 
         $sender->send(new Envelope((object) []));
     }
@@ -71,7 +72,7 @@ final class FlowPostgreSqlSenderTest extends TestCase
         };
         $sender = new FlowPostgreSqlSender(new Connection(new SpyClient()), $serializer);
 
-        $this->expectException(\Flow\Bridge\Symfony\PostgreSQLMessenger\Exception\TransportException::class);
+        $this->expectException(BridgeTransportException::class);
 
         $sender->send(new Envelope((object) []));
     }

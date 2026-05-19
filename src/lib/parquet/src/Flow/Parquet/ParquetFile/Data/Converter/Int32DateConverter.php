@@ -16,15 +16,19 @@ use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use InvalidArgumentException;
 
 use function abs;
-use function Flow\Types\DSL\type_integer;
 use function get_debug_type;
+use function is_int;
 use function sprintf;
 
 final class Int32DateConverter implements Converter
 {
     public function fromParquetType(mixed $data): DateTimeImmutable
     {
-        return $this->numberOfDaysToDateTime(type_integer()->assert($data));
+        if (!is_int($data)) {
+            throw new InvalidArgumentException(sprintf('Expected int, got %s', get_debug_type($data)));
+        }
+
+        return $this->numberOfDaysToDateTime($data);
     }
 
     public function isFor(FlatColumn $column, Options $options): bool

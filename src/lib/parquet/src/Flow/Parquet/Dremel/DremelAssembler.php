@@ -18,9 +18,10 @@ use MultipleIterator;
 use function Flow\Parquet\array_iterate_at_level;
 use function Flow\Parquet\array_merge_recursive;
 use function Flow\Parquet\dremel_array_combine_recursive;
-use function Flow\Types\DSL\type_array;
+use function get_debug_type;
 use function gettype;
 use function is_array;
+use function sprintf;
 
 final readonly class DremelAssembler
 {
@@ -205,8 +206,18 @@ final readonly class DremelAssembler
                 }
 
                 yield dremel_array_combine_recursive(
-                    type_array()->assert($iteration['key']),
-                    type_array()->assert($iteration['value']),
+                    is_array($iteration['key'])
+                        ? $iteration['key']
+                        : throw new InvalidArgumentException(sprintf(
+                            'Expected array key, got %s',
+                            get_debug_type($iteration['key']),
+                        )),
+                    is_array($iteration['value'])
+                        ? $iteration['value']
+                        : throw new InvalidArgumentException(sprintf(
+                            'Expected array value, got %s',
+                            get_debug_type($iteration['value']),
+                        )),
                 );
             }
 
@@ -230,8 +241,18 @@ final readonly class DremelAssembler
                 }
 
                 yield dremel_array_combine_recursive(
-                    type_array()->assert($iteration['key']),
-                    type_array()->assert($iteration['value']),
+                    is_array($iteration['key'])
+                        ? $iteration['key']
+                        : throw new InvalidArgumentException(sprintf(
+                            'Expected array key, got %s',
+                            get_debug_type($iteration['key']),
+                        )),
+                    is_array($iteration['value'])
+                        ? $iteration['value']
+                        : throw new InvalidArgumentException(sprintf(
+                            'Expected array value, got %s',
+                            get_debug_type($iteration['value']),
+                        )),
                 );
             }
 
@@ -252,8 +273,18 @@ final readonly class DremelAssembler
                 }
 
                 yield dremel_array_combine_recursive(
-                    type_array()->assert($iteration['key']),
-                    type_array()->assert($iteration['value']),
+                    is_array($iteration['key'])
+                        ? $iteration['key']
+                        : throw new InvalidArgumentException(sprintf(
+                            'Expected array key, got %s',
+                            get_debug_type($iteration['key']),
+                        )),
+                    is_array($iteration['value'])
+                        ? $iteration['value']
+                        : throw new InvalidArgumentException(sprintf(
+                            'Expected array value, got %s',
+                            get_debug_type($iteration['value']),
+                        )),
                 );
             }
 
@@ -275,8 +306,18 @@ final readonly class DremelAssembler
             }
 
             yield dremel_array_combine_recursive(
-                type_array()->assert($iteration['key']),
-                type_array()->assert($iteration['value']),
+                is_array($iteration['key'])
+                    ? $iteration['key']
+                    : throw new InvalidArgumentException(sprintf(
+                        'Expected array key, got %s',
+                        get_debug_type($iteration['key']),
+                    )),
+                is_array($iteration['value'])
+                    ? $iteration['value']
+                    : throw new InvalidArgumentException(sprintf(
+                        'Expected array value, got %s',
+                        get_debug_type($iteration['value']),
+                    )),
             );
         }
     }

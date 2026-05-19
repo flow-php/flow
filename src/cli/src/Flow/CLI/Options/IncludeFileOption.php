@@ -6,6 +6,7 @@ namespace Flow\CLI\Options;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
+use Symfony\Component\Console\Exception\InvalidArgumentException as SymfonyInvalidArgumentException;
 use Symfony\Component\Console\Input\InputInterface;
 
 use function Flow\CLI\option_string;
@@ -25,9 +26,7 @@ final readonly class IncludeFileOption
         private string $expectedClass,
     ) {
         if (!class_exists($this->expectedClass)) {
-            throw new \Symfony\Component\Console\Exception\InvalidArgumentException(
-                "Class {$this->expectedClass} does not exist.",
-            );
+            throw new SymfonyInvalidArgumentException("Class {$this->expectedClass} does not exist.");
         }
     }
 
@@ -41,9 +40,7 @@ final readonly class IncludeFileOption
         $fs = new NativeLocalFilesystem();
 
         if ($fs->status($filePath) === null) {
-            throw new \Symfony\Component\Console\Exception\InvalidArgumentException(
-                "File '{$filePath->path()}' does not exist.",
-            );
+            throw new SymfonyInvalidArgumentException("File '{$filePath->path()}' does not exist.");
         }
 
         $object = require $filePath->path();

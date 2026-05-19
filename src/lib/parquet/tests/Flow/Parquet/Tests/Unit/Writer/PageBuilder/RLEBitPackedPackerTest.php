@@ -15,8 +15,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Parquet\Binary\decode_i32;
-use function Flow\Types\DSL\type_integer;
-use function Flow\Types\DSL\type_list;
 
 final class RLEBitPackedPackerTest extends TestCase
 {
@@ -87,7 +85,7 @@ final class RLEBitPackedPackerTest extends TestCase
     #[DataProvider('pack_basic_values_provider')]
     public function test_pack_basic_values(int $bitWidth, array $values, string $description): void
     {
-        $values = type_list(type_integer())->assert($values);
+        static::assertContainsOnlyInt($values);
 
         $result = $this->packer->pack($bitWidth, $values);
 
@@ -169,7 +167,7 @@ final class RLEBitPackedPackerTest extends TestCase
     #[DataProvider('pack_with_bit_width_provider')]
     public function test_pack_with_bit_width(int $bitWidth, array $values, string $description): void
     {
-        $values = type_list(type_integer())->assert($values);
+        static::assertContainsOnlyInt($values);
 
         $result = $this->packer->packWithBitWidth($bitWidth, $values);
 
@@ -285,7 +283,7 @@ final class RLEBitPackedPackerTest extends TestCase
     #[DataProvider('pack_with_length_provider')]
     public function test_pack_with_length(int $bitWidth, array $values, string $description): void
     {
-        $values = type_list(type_integer())->assert($values);
+        static::assertContainsOnlyInt($values);
 
         $result = $this->packer->packWithLength($bitWidth, $values);
 

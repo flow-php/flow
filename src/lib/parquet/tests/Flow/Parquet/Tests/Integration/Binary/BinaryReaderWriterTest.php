@@ -25,7 +25,6 @@ use function Flow\Parquet\Binary\encode_i16;
 use function Flow\Parquet\Binary\encode_i32;
 use function Flow\Parquet\Binary\encode_i64;
 use function Flow\Parquet\Binary\encode_u32;
-use function Flow\Types\DSL\type_float;
 use function log;
 use function strlen;
 use function unpack;
@@ -116,13 +115,8 @@ final class BinaryReaderWriterTest extends TestCase
 
         // @mago-ignore analysis:mixed-assignment
         foreach ($decimals as $decimal) {
-            $writer->append(encode_decimal(
-                $byteOrder,
-                type_float()->assert($decimal),
-                $byteLength,
-                $precision,
-                $scale,
-            ));
+            static::assertIsFloat($decimal);
+            $writer->append(encode_decimal($byteOrder, $decimal, $byteLength, $precision, $scale));
         }
 
         $reader = new BinaryBufferReader($buffer);

@@ -6,6 +6,7 @@ namespace Flow\Parquet\ParquetFile\Data\Converter;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\Converter;
@@ -15,8 +16,8 @@ use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 
 use function bcadd;
 use function bcmul;
-use function Flow\Types\DSL\type_instance_of;
-use function Flow\Types\DSL\type_integer;
+use function get_debug_type;
+use function is_int;
 use function json_encode;
 use function number_format;
 use function sprintf;
@@ -26,7 +27,11 @@ final class Int32DateTimeConverter implements Converter
 {
     public function fromParquetType(mixed $data): DateTimeImmutable
     {
-        return $this->millisecondsToDateTimeImmutable(type_integer()->assert($data));
+        if (!is_int($data)) {
+            throw new InvalidArgumentException(sprintf('Expected int, got %s', get_debug_type($data)));
+        }
+
+        return $this->millisecondsToDateTimeImmutable($data);
     }
 
     public function isFor(FlatColumn $column, Options $options): bool
@@ -40,7 +45,11 @@ final class Int32DateTimeConverter implements Converter
 
     public function toParquetType(mixed $data): int
     {
-        return $this->dateTimeToMicroseconds(type_instance_of(DateTimeInterface::class)->assert($data));
+        if (!$data instanceof DateTimeInterface) {
+            throw new InvalidArgumentException(sprintf('Expected DateTimeInterface, got %s', get_debug_type($data)));
+        }
+
+        return $this->dateTimeToMicroseconds($data);
     }
 
     private function dateTimeToMicroseconds(DateTimeInterface $dateTime): int

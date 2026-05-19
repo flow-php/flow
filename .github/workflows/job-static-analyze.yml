@@ -38,6 +38,9 @@ jobs:
           restore-keys: |
             php-${{ matrix.php-version }}-cache-phpstan-
 
+      - name: "Static Analyze (Mago)"
+        run: "just analyze-mago"
+
       - name: "Lint"
         run: "just lint"
 

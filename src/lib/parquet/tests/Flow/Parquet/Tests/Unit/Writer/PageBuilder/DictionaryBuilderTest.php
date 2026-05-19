@@ -16,8 +16,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
-use function Flow\Types\DSL\type_float;
-use function is_nan;
 use function str_repeat;
 
 use const INF;
@@ -241,7 +239,7 @@ final class DictionaryBuilderTest extends TestCase
         static::assertSame(1.0, $result->dictionary[0]);
         static::assertSame(INF, $result->dictionary[1]);
         static::assertSame(-INF, $result->dictionary[2]);
-        static::assertTrue(is_nan(type_float()->assert($result->dictionary[3])));
+        static::assertNan($result->dictionary[3]);
     }
 
     #[DataProvider('int64_int32_physical_types_provider')]

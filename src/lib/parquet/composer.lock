@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bae750c609628769d9b02e63aea19f49",
+    "content-hash": "8966d685eebd0d9bde7cc6e3f73685c6",
     "packages": [
         {
             "name": "flow-php/filesystem",
@@ -472,8 +472,7 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "flow-php/filesystem": 20,
-        "flow-php/snappy": 20,
-        "flow-php/types": 20
+        "flow-php/snappy": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

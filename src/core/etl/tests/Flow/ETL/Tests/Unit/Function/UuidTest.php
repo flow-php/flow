@@ -9,6 +9,7 @@ use DateTimeZone;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Uuid as FlowUuid;
 use Ramsey\Uuid\Uuid;
+use Symfony\Component\Uid\Uuid as SymfonyUuid;
 
 use function class_exists;
 use function Flow\ETL\DSL\flow_context;
@@ -21,7 +22,7 @@ final class UuidTest extends FlowTestCase
 {
     protected function setUp(): void
     {
-        if (!class_exists(Uuid::class) && !class_exists(\Symfony\Component\Uid\Uuid::class)) {
+        if (!class_exists(Uuid::class) && !class_exists(SymfonyUuid::class)) {
             self::markTestSkipped("Package 'ramsey/uuid' or 'symfony/uid' is required for this test.");
         }
     }

@@ -8,6 +8,7 @@ use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Partitions;
+use InvalidArgumentException as BaseInvalidArgumentException;
 
 use function array_key_exists;
 use function array_map;
@@ -373,7 +374,7 @@ final readonly class WindowsPath
     public function skipDirectories(int $count): ?self
     {
         if ($count < 0) {
-            throw new \InvalidArgumentException('The number of folders to skip must be non-negative.');
+            throw new BaseInvalidArgumentException('The number of folders to skip must be non-negative.');
         }
 
         $matches = [];

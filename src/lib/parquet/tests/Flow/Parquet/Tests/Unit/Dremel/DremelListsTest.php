@@ -22,13 +22,13 @@ use Generator;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
-use function Flow\Types\DSL\type_map;
-use function Flow\Types\DSL\type_mixed;
-use function Flow\Types\DSL\type_string;
 use function iterator_to_array;
 
 final class DremelListsTest extends TestCase
 {
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['l' => null],
@@ -102,9 +102,7 @@ final class DremelListsTest extends TestCase
         static::assertEquals(3, $schema->get('l.list.element')->repetitions()->maxDefinitionLevel());
         static::assertEquals(1, $schema->get('l.list.element')->repetitions()->maxRepetitionLevel());
 
-        $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-        $result = $shredder->shred($schema, $narrowed);
+        $result = $shredder->shred($schema, $rows);
 
         $normalized = [];
 
@@ -140,6 +138,9 @@ final class DremelListsTest extends TestCase
         );
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['l' => null],
@@ -266,9 +267,7 @@ final class DremelListsTest extends TestCase
         static::assertEquals(5, $schema->get('l.list.element.list.element')->repetitions()->maxDefinitionLevel());
         static::assertEquals(2, $schema->get('l.list.element.list.element')->repetitions()->maxRepetitionLevel());
 
-        $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-        $result = $shredder->shred($schema, $narrowed);
+        $result = $shredder->shred($schema, $rows);
 
         $normalized = [];
 
@@ -304,6 +303,9 @@ final class DremelListsTest extends TestCase
         );
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             [
@@ -385,9 +387,7 @@ final class DremelListsTest extends TestCase
             $schema->get('l.list.element.list.element.key_value.value')->repetitions()->maxRepetitionLevel(),
         );
 
-        $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-        $result = $shredder->shred($schema, $narrowed);
+        $result = $shredder->shred($schema, $rows);
 
         $normalized = [];
 
@@ -423,6 +423,9 @@ final class DremelListsTest extends TestCase
         );
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             [
@@ -583,9 +586,7 @@ final class DremelListsTest extends TestCase
                 ->maxRepetitionLevel(),
         );
 
-        $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-        $result = $shredder->shred($schema, $narrowed);
+        $result = $shredder->shred($schema, $rows);
 
         $normalized = [];
 
@@ -624,6 +625,9 @@ final class DremelListsTest extends TestCase
         );
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             [
@@ -697,9 +701,7 @@ final class DremelListsTest extends TestCase
             $schema->get('l.list.element.list.element.string')->repetitions()->maxRepetitionLevel(),
         );
 
-        $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-        $result = $shredder->shred($schema, $narrowed);
+        $result = $shredder->shred($schema, $rows);
 
         $normalized = [];
 
@@ -735,6 +737,9 @@ final class DremelListsTest extends TestCase
         );
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['l' => null],
@@ -919,13 +924,10 @@ final class DremelListsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
-            $shredder->shred($schema, $narrowed);
+            $shredder->shred($schema, $rows);
         } else {
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-            $result = $shredder->shred($schema, $narrowed);
+            $result = $shredder->shred($schema, $rows);
 
             $normalized = [];
 
@@ -962,6 +964,9 @@ final class DremelListsTest extends TestCase
         }
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             [
@@ -1092,9 +1097,7 @@ final class DremelListsTest extends TestCase
         static::assertEquals(6, $schema->get('l.list.element.l.list.element')->repetitions()->maxDefinitionLevel());
         static::assertEquals(2, $schema->get('l.list.element.l.list.element')->repetitions()->maxRepetitionLevel());
 
-        $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-        $result = $shredder->shred($schema, $narrowed);
+        $result = $shredder->shred($schema, $rows);
 
         $readFlatValues = [];
 
@@ -1119,6 +1122,9 @@ final class DremelListsTest extends TestCase
         );
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             [
@@ -1230,9 +1236,7 @@ final class DremelListsTest extends TestCase
         static::assertEquals(6, $schema->get('l.list.element.m.key_value.value')->repetitions()->maxDefinitionLevel());
         static::assertEquals(2, $schema->get('l.list.element.m.key_value.value')->repetitions()->maxRepetitionLevel());
 
-        $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-        $result = $shredder->shred($schema, $narrowed);
+        $result = $shredder->shred($schema, $rows);
 
         $normalized = [];
 
@@ -1268,6 +1272,9 @@ final class DremelListsTest extends TestCase
         );
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['l' => null],
@@ -1436,9 +1443,7 @@ final class DremelListsTest extends TestCase
         static::assertEquals(4, $schema->get('l.list.element.string')->repetitions()->maxDefinitionLevel());
         static::assertEquals(1, $schema->get('l.list.element.string')->repetitions()->maxRepetitionLevel());
 
-        $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-        $result = $shredder->shred($schema, $narrowed);
+        $result = $shredder->shred($schema, $rows);
 
         $normalized = [];
 
@@ -1474,6 +1479,9 @@ final class DremelListsTest extends TestCase
         );
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             [
@@ -1524,9 +1532,7 @@ final class DremelListsTest extends TestCase
         static::assertEquals(5, $schema->get('l.list.element.s.string')->repetitions()->maxDefinitionLevel());
         static::assertEquals(1, $schema->get('l.list.element.s.string')->repetitions()->maxRepetitionLevel());
 
-        $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-        $result = $shredder->shred($schema, $narrowed);
+        $result = $shredder->shred($schema, $rows);
 
         $normalized = [];
 
@@ -1562,6 +1568,9 @@ final class DremelListsTest extends TestCase
         );
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['l' => []],
@@ -1596,9 +1605,7 @@ final class DremelListsTest extends TestCase
         static::assertEquals(2, $schema->get('l.list.element')->repetitions()->maxDefinitionLevel());
         static::assertEquals(1, $schema->get('l.list.element')->repetitions()->maxRepetitionLevel());
 
-        $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-        $result = $shredder->shred($schema, $narrowed);
+        $result = $shredder->shred($schema, $rows);
 
         $normalized = [];
 
@@ -1634,6 +1641,9 @@ final class DremelListsTest extends TestCase
         );
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['l' => [1, 2, 3]],
@@ -1656,9 +1666,7 @@ final class DremelListsTest extends TestCase
         static::assertEquals(1, $schema->get('l.list.element')->repetitions()->maxDefinitionLevel());
         static::assertEquals(1, $schema->get('l.list.element')->repetitions()->maxRepetitionLevel());
 
-        $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-        $result = $shredder->shred($schema, $narrowed);
+        $result = $shredder->shred($schema, $rows);
 
         $normalized = [];
 
@@ -1694,6 +1702,9 @@ final class DremelListsTest extends TestCase
         );
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['l' => [[1, 2, 3, 4], [5, 6, 7, 8]]],
@@ -1723,9 +1734,7 @@ final class DremelListsTest extends TestCase
         static::assertEquals(2, $schema->get('l.list.element.list.element')->repetitions()->maxDefinitionLevel());
         static::assertEquals(2, $schema->get('l.list.element.list.element')->repetitions()->maxRepetitionLevel());
 
-        $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-        $result = $shredder->shred($schema, $narrowed);
+        $result = $shredder->shred($schema, $rows);
 
         $normalized = [];
 
@@ -1761,6 +1770,9 @@ final class DremelListsTest extends TestCase
         );
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['l' => null],
@@ -1827,13 +1839,10 @@ final class DremelListsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
-            $shredder->shred($schema, $narrowed);
+            $shredder->shred($schema, $rows);
         } else {
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-            $result = $shredder->shred($schema, $narrowed);
+            $result = $shredder->shred($schema, $rows);
 
             $normalized = [];
 
@@ -1870,6 +1879,9 @@ final class DremelListsTest extends TestCase
         }
     }
 
+    /**
+     * @param array<array<string, mixed>> $rows
+     */
     #[TestWith([
         [
             ['l' => null],
@@ -1965,13 +1977,10 @@ final class DremelListsTest extends TestCase
 
         if ($exceptMessage) {
             $this->expectExceptionMessage($exceptMessage);
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
 
-            $shredder->shred($schema, $narrowed);
+            $shredder->shred($schema, $rows);
         } else {
-            $narrowed = array_map(static fn($row) => type_map(type_string(), type_mixed())->assert($row), $rows);
-
-            $result = $shredder->shred($schema, $narrowed);
+            $result = $shredder->shred($schema, $rows);
 
             $normalized = [];
 

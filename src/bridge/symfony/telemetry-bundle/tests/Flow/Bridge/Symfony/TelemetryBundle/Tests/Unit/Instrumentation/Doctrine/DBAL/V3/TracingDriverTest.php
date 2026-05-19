@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Instrumentation\Doctrine\DBAL\V3;
 
+use Doctrine\DBAL\Connection as DoctrineConnection;
 use Doctrine\DBAL\Driver;
 use Doctrine\DBAL\Driver\API\ExceptionConverter;
 use Doctrine\DBAL\Driver\Connection;
@@ -312,7 +313,7 @@ final class TracingDriverTest extends TestCase
 
             /** @phpstan-ignore missingType.parameter */
             public function getSchemaManager(
-                \Doctrine\DBAL\Connection $conn,
+                DoctrineConnection $conn,
                 AbstractPlatform $platform,
             ): AbstractSchemaManager {
                 throw new RuntimeException('Not implemented');

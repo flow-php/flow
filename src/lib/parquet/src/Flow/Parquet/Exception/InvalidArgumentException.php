@@ -4,4 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Exception;
 
-final class InvalidArgumentException extends \InvalidArgumentException {}
+use InvalidArgumentException as BaseInvalidArgumentException;
+
+final class InvalidArgumentException extends BaseInvalidArgumentException {}

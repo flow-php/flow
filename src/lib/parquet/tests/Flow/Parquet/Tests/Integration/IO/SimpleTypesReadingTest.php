@@ -14,7 +14,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use function array_filter;
 use function array_merge_recursive;
 use function count;
-use function Flow\Types\DSL\type_array;
 use function iterator_to_array;
 
 class SimpleTypesReadingTest extends ParquetIntegrationTestCase
@@ -28,7 +27,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         static::assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('bool')->type());
         static::assertNull($file->metadata()->schema()->get('bool')->logicalType());
 
-        $results = type_array()->assert(array_merge_recursive(...iterator_to_array($file->values(['bool'])))['bool']);
+        /** @var array<string, mixed> $results */
+        $results = array_merge_recursive(...iterator_to_array($file->values(['bool'])))['bool'];
+        static::assertIsArray($results);
         static::assertCount(100, $results);
         static::assertContainsOnlyBool($results);
         static::assertSame($file->metadata()->rowsNumber(), count($results));
@@ -43,9 +44,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         static::assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('bool')->type());
         static::assertNull($file->metadata()->schema()->get('bool')->logicalType());
 
-        $results = type_array()->assert(
-            array_merge_recursive(...iterator_to_array($file->values(['bool'], limit: 50)))['bool'],
-        );
+        /** @var array<string, mixed> $results */
+        $results = array_merge_recursive(...iterator_to_array($file->values(['bool'], limit: 50)))['bool'];
+        static::assertIsArray($results);
         static::assertCount(50, $results);
         static::assertContainsOnlyBool($results);
     }
@@ -59,9 +60,9 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         static::assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('bool_nullable')->type());
         static::assertNull($file->metadata()->schema()->get('bool_nullable')->logicalType());
 
-        $results = type_array()->assert(
-            array_merge_recursive(...iterator_to_array($file->values(['bool_nullable'])))['bool_nullable'],
-        );
+        /** @var array<string, mixed> $results */
+        $results = array_merge_recursive(...iterator_to_array($file->values(['bool_nullable'])))['bool_nullable'];
+        static::assertIsArray($results);
         static::assertCount(100, $results);
         static::assertSame($file->metadata()->rowsNumber(), count($results));
         static::assertCount(50, array_filter($results, static fn($value) => $value === null));
@@ -77,9 +78,12 @@ class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         static::assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('bool_nullable')->type());
         static::assertNull($file->metadata()->schema()->get('bool_nullable')->logicalType());
 
-        $results = type_array()->assert(
-            array_merge_recursive(...iterator_to_array($file->values(['bool_nullable'], $limit = 50)))['bool_nullable'],
-        );
+        /** @var array<string, mixed> $results */
+        $results = array_merge_recursive(...iterator_to_array($file->values(
+            ['bool_nullable'],
+            $limit = 50,
+        )))['bool_nullable'];
+        static::assertIsArray($results);
         static::assertCount($limit, $results);
         static::assertCount($limit / 2, array_filter($results, static fn($value) => $value === null));
         static::assertCount($limit / 2, array_filter($results, static fn($value) => $value !== null));

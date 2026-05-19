@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Retry\RetryStrategy;
 
 use Error;
 use Exception;
+use Flow\ETL\Exception\InvalidArgumentException as ETLInvalidArgumentException;
 use Flow\ETL\Retry\RetryStrategy\AnyThrowable;
 use InvalidArgumentException;
 use LogicException;
@@ -41,7 +42,7 @@ final class AnyThrowableTest extends TestCase
 
     public function test_throws_exception_for_negative_limit(): void
     {
-        $this->expectException(\Flow\ETL\Exception\InvalidArgumentException::class);
+        $this->expectException(ETLInvalidArgumentException::class);
         $this->expectExceptionMessage('Retry limit must be greater than 0');
 
         new AnyThrowable(-1);
@@ -49,7 +50,7 @@ final class AnyThrowableTest extends TestCase
 
     public function test_throws_exception_for_zero_limit(): void
     {
-        $this->expectException(\Flow\ETL\Exception\InvalidArgumentException::class);
+        $this->expectException(ETLInvalidArgumentException::class);
         $this->expectExceptionMessage('Retry limit must be greater than 0');
 
         new AnyThrowable(0);

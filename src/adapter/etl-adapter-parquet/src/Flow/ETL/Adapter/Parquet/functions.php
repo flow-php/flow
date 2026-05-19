@@ -13,6 +13,7 @@ use Flow\Filesystem\Path;
 use Flow\Parquet\Binary\ByteOrder;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
 use Generator;
 
 use function count;
@@ -99,13 +100,13 @@ function empty_generator(): Generator
 }
 
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::HELPER)]
-function schema_to_parquet(Schema $schema): \Flow\Parquet\ParquetFile\Schema
+function schema_to_parquet(Schema $schema): ParquetSchema
 {
     return (new SchemaConverter())->toParquet($schema);
 }
 
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::HELPER)]
-function schema_from_parquet(\Flow\Parquet\ParquetFile\Schema $schema): Schema
+function schema_from_parquet(ParquetSchema $schema): Schema
 {
     return (new SchemaConverter())->toFlow($schema);
 }

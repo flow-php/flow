@@ -14,15 +14,19 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 
-use function Flow\Types\DSL\type_instance_of;
-use function Flow\Types\DSL\type_integer;
+use function get_debug_type;
+use function is_int;
 use function sprintf;
 
 final class TimeConverter implements Converter
 {
     public function fromParquetType(mixed $data): DateInterval
     {
-        return $this->toDateInterval(type_integer()->assert($data));
+        if (!is_int($data)) {
+            throw new InvalidArgumentException(sprintf('Expected int, got %s', get_debug_type($data)));
+        }
+
+        return $this->toDateInterval($data);
     }
 
     public function isFor(FlatColumn $column, Options $options): bool
@@ -36,7 +40,11 @@ final class TimeConverter implements Converter
 
     public function toParquetType(mixed $data): int
     {
-        return $this->toInt(type_instance_of(DateInterval::class)->assert($data));
+        if (!$data instanceof DateInterval) {
+            throw new InvalidArgumentException(sprintf('Expected DateInterval, got %s', get_debug_type($data)));
+        }
+
+        return $this->toInt($data);
     }
 
     private function toDateInterval(int $microseconds): DateInterval

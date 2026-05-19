@@ -15,6 +15,7 @@ use Flow\Parquet\ThriftModel\Float16Type;
 use Flow\Parquet\ThriftModel\IntType;
 use Flow\Parquet\ThriftModel\JsonType;
 use Flow\Parquet\ThriftModel\ListType;
+use Flow\Parquet\ThriftModel\LogicalType as ThriftLogicalType;
 use Flow\Parquet\ThriftModel\MapType;
 use Flow\Parquet\ThriftModel\MicroSeconds;
 use Flow\Parquet\ThriftModel\MilliSeconds;
@@ -83,7 +84,7 @@ final readonly class LogicalType
         return new self(self::ENUM);
     }
 
-    public static function fromThrift(\Flow\Parquet\ThriftModel\LogicalType $logicalType): ?self
+    public static function fromThrift(ThriftLogicalType $logicalType): ?self
     {
         $name = null;
 
@@ -261,9 +262,9 @@ final readonly class LogicalType
         return $this->timestamp;
     }
 
-    public function toThrift(): \Flow\Parquet\ThriftModel\LogicalType
+    public function toThrift(): ThriftLogicalType
     {
-        return new \Flow\Parquet\ThriftModel\LogicalType([
+        return new ThriftLogicalType([
             self::BSON => $this->is(self::BSON) ? new BsonType() : null,
             self::DATE => $this->is(self::DATE) ? new DateType() : null,
             self::DECIMAL => $this->is(self::DECIMAL)
