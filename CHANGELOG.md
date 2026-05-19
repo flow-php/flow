@@ -1,6 +1,7 @@
-## [Unreleased] - 2026-05-11
+## [Unreleased] - 2026-05-19
 
 ### Added
+- [#2368](https://github.com/flow-php/flow/pull/2368) - **Mago Analyzer - on libraries** - [@norberttech](https://github.com/norberttech)
 - [#2360](https://github.com/flow-php/flow/pull/2360) - **website light / dark / system theme** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
