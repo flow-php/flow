@@ -79,7 +79,13 @@ final class References implements ArrayAccess, Countable, IteratorAggregate
             throw new InvalidArgumentException('References are empty.');
         }
 
-        return current($this->refs);
+        $first = current($this->refs);
+
+        if ($first === false) {
+            throw new InvalidArgumentException('References are empty.');
+        }
+
+        return $first;
     }
 
     /**

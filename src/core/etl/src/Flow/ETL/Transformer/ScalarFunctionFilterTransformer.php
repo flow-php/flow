@@ -25,12 +25,15 @@ final readonly class ScalarFunctionFilterTransformer implements Transformer
 
         try {
             $result = $rows->filter(function (Row $r) use ($context): bool {
+                // @mago-ignore analysis:mixed-assignment
                 $value = $this->function->eval($r, $context);
 
                 if ($value instanceof ScalarResult) {
+                    // @mago-ignore analysis:mixed-assignment
                     $value = $value->value;
                 }
 
+                // @mago-ignore analysis:mixed-operand
                 return (bool) $value;
             });
 

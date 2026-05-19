@@ -92,6 +92,7 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
                 ['id' => 2],
                 ['id' => 3],
             ],
+            // @mago-ignore analysis:mixed-argument,mixed-method-access,mixed-argument,mixed-method-access,mixed-argument,mixed-method-access
             array_merge($rows[0]->toArray(), $rows[1]->toArray(), $rows[2]->toArray()),
         );
     }

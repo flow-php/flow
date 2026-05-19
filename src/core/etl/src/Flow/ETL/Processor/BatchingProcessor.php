@@ -29,6 +29,7 @@ final readonly class BatchingProcessor implements Processor
     public function __construct(
         private int $size,
     ) {
+        // @mago-ignore analysis:invalid-operand
         if ($this->size <= 0) {
             throw new InvalidArgumentException('Batch size must be greater than 0, given: ' . $this->size);
         }
@@ -45,6 +46,7 @@ final readonly class BatchingProcessor implements Processor
                 $buffer[] = $row;
 
                 if (count($buffer) >= $this->size) {
+                    // @mago-ignore analysis:mixed-argument
                     yield new Rows(...array_splice($buffer, 0, $this->size));
                 }
             }

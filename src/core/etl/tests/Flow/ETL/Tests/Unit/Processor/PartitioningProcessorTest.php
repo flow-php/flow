@@ -53,7 +53,10 @@ final class PartitioningProcessorTest extends FlowTestCase
         $result = iterator_to_array($processor->process($generator, $context));
         $allRows = [];
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($result as $batch) {
+            // @mago-ignore analysis:mixed-assignment
+            // @mago-ignore analysis:invalid-iterator,mixed-method-access
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;
             }
@@ -79,13 +82,18 @@ final class PartitioningProcessorTest extends FlowTestCase
         $result = iterator_to_array($processor->process($generator, $context));
         $allRows = [];
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($result as $batch) {
+            // @mago-ignore analysis:mixed-assignment
+            // @mago-ignore analysis:invalid-iterator,mixed-method-access
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;
             }
         }
 
+        // @mago-ignore analysis:mixed-array-access
         static::assertEquals(2, $allRows[0]['id']);
+        // @mago-ignore analysis:mixed-array-access
         static::assertEquals(1, $allRows[1]['id']);
     }
 

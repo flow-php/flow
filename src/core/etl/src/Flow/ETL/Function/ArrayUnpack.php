@@ -43,10 +43,7 @@ final class ArrayUnpack extends ScalarFunctionChain implements UnpackResults
 
         $values = [];
 
-        /**
-         * @var int|string $key
-         * @var mixed $value
-         */
+        // @mago-ignore analysis:mixed-assignment
         foreach ($array as $key => $value) {
             $entryName = (string) $key;
 

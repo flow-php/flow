@@ -15,6 +15,7 @@ use Flow\ETL\Schema\Definition\DateTimeDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 
+use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_optional;
 use function is_string;
@@ -86,17 +87,23 @@ final class DateTimeEntry implements Entry
 
     public function isEqual(Entry $entry): bool
     {
-        return (
-            $this->is($entry->name())
-            && $entry instanceof self
-            && type_equals($this->type(), $entry->type())
-            && $this->value() == $entry->value()
-        );
+        if (!$entry instanceof self || !$this->is($entry->name()) || !type_equals($this->type(), $entry->type())) {
+            return false;
+        }
+
+        $thisValue = $this->value();
+        $entryValue = $entry->value();
+
+        if ($thisValue === null || $entryValue === null) {
+            return $thisValue === $entryValue;
+        }
+
+        return $thisValue == $entryValue;
     }
 
     public function map(callable $mapper): static
     {
-        return new self($this->name, $mapper($this->value));
+        return new self($this->name, type_optional(type_datetime())->assert($mapper($this->value)));
     }
 
     public function name(): string
@@ -132,6 +139,6 @@ final class DateTimeEntry implements Entry
 
     public function withValue(mixed $value): static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
+        return new self($this->name, type_optional(type_datetime())->assert($value), $this->definition->metadata());
     }
 }

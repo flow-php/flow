@@ -13,5 +13,5 @@ interface FileExtractor
 
     public function source(): Path;
 
-    public function withPathFilter(Filter $filter): self;
+    public function withPathFilter(Filter $filter): static;
 }

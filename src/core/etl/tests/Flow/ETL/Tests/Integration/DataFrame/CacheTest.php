@@ -121,6 +121,7 @@ final class CacheTest extends FlowIntegrationTestCase
         $telemetry->flush();
 
         $spans = $spanProcessor->endedSpans();
+        // @mago-ignore analysis:redundant-cast
         $setSpans = array_filter($spans, static fn($span) => str_starts_with((string) $span->name(), 'Cache Set '));
 
         static::assertNotEmpty($setSpans, 'Expected Cache Set spans to be recorded');

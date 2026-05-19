@@ -33,6 +33,7 @@ final readonly class BatchingByProcessor implements Processor
         private Reference $column,
         private ?int $minSize = null,
     ) {
+        // @mago-ignore analysis:invalid-operand
         if ($this->minSize !== null && $this->minSize <= 0) {
             throw new InvalidArgumentException('Minimum batch size must be greater than 0, given: ' . $this->minSize);
         }
@@ -48,9 +49,11 @@ final readonly class BatchingByProcessor implements Processor
         foreach ($rows as $batch) {
             /** @var Rows $batch */
             foreach ($batch as $row) {
+                // @mago-ignore analysis:mixed-assignment
                 $value = $row->valueOf($this->column);
 
                 if (!$hasValue) {
+                    // @mago-ignore analysis:mixed-assignment
                     $currentValue = $value;
                     $hasValue = true;
                 }
@@ -62,6 +65,7 @@ final readonly class BatchingByProcessor implements Processor
                             $buffer = [];
                         }
                     }
+                    // @mago-ignore analysis:mixed-assignment
                     $currentValue = $value;
                 }
 

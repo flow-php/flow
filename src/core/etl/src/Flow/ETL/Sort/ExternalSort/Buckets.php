@@ -28,10 +28,13 @@ final class Buckets
     {
         foreach ($buckets as $bucket) {
             if (is_array($bucket->rows)) {
+                // @mago-ignore analysis:mixed-property-type-coercion
                 $this->buckets[$bucket->id] = new ArrayIterator($bucket->rows);
             } elseif ($bucket->rows instanceof Iterator) {
+                // @mago-ignore analysis:mixed-property-type-coercion
                 $this->buckets[$bucket->id] = $bucket->rows;
             } else {
+                // @mago-ignore analysis:mixed-property-type-coercion
                 $this->buckets[$bucket->id] = new IteratorIterator($bucket->rows);
             }
         }
@@ -56,6 +59,7 @@ final class Buckets
 
         foreach ($bucketsCopy as $bucketId => $bucket) {
             if ($bucket->valid()) {
+                // @mago-ignore analysis:possibly-null-argument
                 $row = new BucketRow($bucket->current(), $bucketId);
                 $heap->insert($row);
                 $bucket->next();
@@ -65,6 +69,7 @@ final class Buckets
         }
 
         while (!$heap->isEmpty()) {
+            // @mago-ignore analysis:redundant-docblock-type
             /** @var BucketRow $cachedRow */
             $cachedRow = $heap->extract();
 
@@ -74,6 +79,7 @@ final class Buckets
                 $bucket = $bucketsCopy[$cachedRow->bucketId];
 
                 if ($bucket->valid()) {
+                    // @mago-ignore analysis:possibly-null-argument
                     $row = new BucketRow($bucket->current(), $cachedRow->bucketId);
                     $heap->insert($row);
                     $bucket->next();

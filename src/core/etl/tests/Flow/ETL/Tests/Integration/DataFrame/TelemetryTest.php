@@ -105,6 +105,7 @@ final class TelemetryTest extends FlowTestCase
 
         foreach ($loadingSpans as $span) {
             static::assertNotNull($span->status());
+            // @mago-ignore analysis:possible-method-access-on-null
             static::assertTrue($span->status()->isOk());
             static::assertArrayHasKey('loader.class', $span->attributes());
         }
@@ -138,6 +139,7 @@ final class TelemetryTest extends FlowTestCase
         $dataFrameSpan = $endedSpans[0];
         static::assertSame('DataFrame flow_dataframe', $dataFrameSpan->name());
         static::assertNotNull($dataFrameSpan->status());
+        // @mago-ignore analysis:possible-method-access-on-null
         static::assertTrue($dataFrameSpan->status()->isOk());
     }
 
@@ -267,6 +269,7 @@ final class TelemetryTest extends FlowTestCase
 
         foreach ($transformerSpans as $span) {
             static::assertNotNull($span->status());
+            // @mago-ignore analysis:possible-method-access-on-null
             static::assertTrue($span->status()->isOk());
             static::assertArrayHasKey('transformer.class', $span->attributes());
         }

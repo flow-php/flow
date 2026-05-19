@@ -106,8 +106,10 @@ final class Segments
                 $steps[] = $step;
             }
 
-            if ($segment->processor() !== null) {
-                $steps[] = $segment->processor();
+            $processor = $segment->processor();
+
+            if ($processor !== null) {
+                $steps[] = $processor;
             }
         }
 

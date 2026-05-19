@@ -41,6 +41,7 @@ final class Contains extends ScalarFunctionChain
             return str_contains($haystack, $needle);
         }
 
+        // @mago-ignore analysis:redundant-condition,redundant-type-comparison
         if (is_array($haystack)) {
             return in_array($needle, $haystack, true);
         }

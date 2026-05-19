@@ -10,21 +10,20 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Metadata;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Value\Json;
 use UnitEnum;
 
 use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\get_type;
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_null;
-use function is_a;
-use function is_array;
-use function is_float;
-use function is_int;
-use function is_numeric;
-use function is_object;
-use function is_scalar;
-use function is_string;
+use function Flow\Types\DSL\type_object;
+use function Flow\Types\DSL\type_string;
 
 final readonly class Parameter
 {
@@ -44,6 +43,7 @@ final readonly class Parameter
      */
     public function as(Row $row, FlowContext $context, Type ...$types): mixed
     {
+        // @mago-ignore analysis:mixed-assignment
         $value = $this->eval($row, $context);
 
         foreach ($types as $nextType) {
@@ -60,20 +60,26 @@ final readonly class Parameter
      */
     public function asArray(Row $row, FlowContext $context): ?array
     {
+        // @mago-ignore analysis:mixed-assignment
         $result = $this->eval($row, $context);
 
         if ($result instanceof Json) {
             return $result->toArray();
         }
 
-        return is_array($result) ? $result : null;
+        try {
+            return type_array()->assert($result);
+        } catch (InvalidTypeException) {
+            return null;
+        }
     }
 
     public function asBoolean(Row $row, FlowContext $context): bool
     {
+        // @mago-ignore analysis:mixed-assignment
         $result = $this->eval($row, $context);
 
-        return is_scalar($result) ? (bool) $result : false;
+        return is_scalar($result) && (bool) $result;
     }
 
     /**
@@ -91,38 +97,42 @@ final readonly class Parameter
     /**
      * @template T of UnitEnum
      *
-     * @param Row $row
      * @param class-string<T> $enumClass
      *
      * @return null|T
      */
     public function asEnum(Row $row, FlowContext $context, string $enumClass): ?UnitEnum
     {
-        $result = $this->eval($row, $context);
-
-        return is_object($result) && is_a($result, $enumClass) ? $result : null;
+        try {
+            return type_instance_of($enumClass)->assert($this->eval($row, $context));
+        } catch (InvalidTypeException) {
+            return null;
+        }
     }
 
     public function asFloat(Row $row, FlowContext $context): ?float
     {
-        $result = $this->eval($row, $context);
-
-        return is_float($result) ? $result : null;
+        try {
+            return type_float()->assert($this->eval($row, $context));
+        } catch (InvalidTypeException) {
+            return null;
+        }
     }
 
     /**
      * @template T of object
      *
-     * @param Row $row
      * @param class-string<T> $class
      *
      * @return null|T
      */
     public function asInstanceOf(Row $row, FlowContext $context, string $class): ?object
     {
-        $result = $this->eval($row, $context);
-
-        return is_object($result) && is_a($result, $class) ? $result : null;
+        try {
+            return type_instance_of($class)->assert($this->eval($row, $context));
+        } catch (InvalidTypeException) {
+            return null;
+        }
     }
 
     /**
@@ -130,30 +140,39 @@ final readonly class Parameter
      */
     public function asInt(Row $row, FlowContext $context, ?int $default = null): ?int
     {
-        $result = $this->eval($row, $context);
-
-        return is_int($result) ? $result : $default;
+        try {
+            return type_integer()->assert($this->eval($row, $context));
+        } catch (InvalidTypeException) {
+            return $default;
+        }
     }
 
     /**
+     * @param class-string $class
+     *
      * @return null|array<object>
      */
     public function asListOfObjects(Row $row, FlowContext $context, string $class): ?array
     {
-        $result = $this->eval($row, $context);
+        $result = $this->asArray($row, $context);
 
-        if (!is_array($result)) {
+        if ($result === null) {
             return null;
         }
 
+        $objectType = type_instance_of($class);
+        $objects = [];
+
+        // @mago-ignore analysis:mixed-assignment
         foreach ($result as $item) {
-            if (!is_object($item) || !is_a($item, $class)) {
+            try {
+                $objects[] = $objectType->assert($item);
+            } catch (InvalidTypeException) {
                 return null;
             }
         }
 
-        /** @phpstan-ignore return.type */
-        return $result;
+        return $objects;
     }
 
     /**
@@ -161,25 +180,33 @@ final readonly class Parameter
      */
     public function asNumber(Row $row, FlowContext $context, int|float|null $default = null): int|float|null
     {
+        // @mago-ignore analysis:mixed-assignment
         $result = $this->eval($row, $context);
 
         if (!is_numeric($result)) {
             return $default;
         }
 
-        return match (true) {
-            is_int($result), is_float($result) => $result,
-            $result == (int) $result => (int) $result,
-            $result == (float) $result => (float) $result,
-            default => $default,
-        };
+        // @mago-ignore analysis:impossible-type-comparison
+        if (is_int($result) || is_float($result)) {
+            return $result;
+        }
+
+        // numeric-string: prefer int if the value is integral, otherwise float.
+        if ((string) (int) $result === (string) $result) {
+            return (int) $result;
+        }
+
+        return (float) $result;
     }
 
     public function asObject(Row $row, FlowContext $context): ?object
     {
-        $result = $this->eval($row, $context);
-
-        return is_object($result) ? $result : null;
+        try {
+            return type_object()->assert($this->eval($row, $context));
+        } catch (InvalidTypeException) {
+            return null;
+        }
     }
 
     /**
@@ -187,9 +214,11 @@ final readonly class Parameter
      */
     public function asString(Row $row, FlowContext $context, ?string $default = null): ?string
     {
-        $result = $this->eval($row, $context);
-
-        return is_string($result) ? $result : $default;
+        try {
+            return type_string()->assert($this->eval($row, $context));
+        } catch (InvalidTypeException) {
+            return $default;
+        }
     }
 
     /**
@@ -205,19 +234,14 @@ final readonly class Parameter
             return $row->get($this->function)->type();
         }
 
-        $result = $this->eval($row, $context);
-
-        return get_type($result);
+        return get_type($this->eval($row, $context));
     }
 
     public function eval(Row $row, FlowContext $context): mixed
     {
+        // @mago-ignore analysis:mixed-assignment
         $result = $this->function->eval($row, $context);
 
-        if ($result instanceof ScalarResult) {
-            return $result->value;
-        }
-
-        return $result;
+        return $result instanceof ScalarResult ? $result->value : $result;
     }
 }

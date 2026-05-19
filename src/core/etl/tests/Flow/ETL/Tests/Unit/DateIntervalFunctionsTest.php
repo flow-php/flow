@@ -59,11 +59,13 @@ final class DateIntervalFunctionsTest extends FlowTestCase
         // Edge cases
         // Fractional seconds are ignored in conversion to seconds
         $fractionalSeconds = new DateInterval('PT1S');
+        // @mago-ignore analysis:invalid-property-write
         $fractionalSeconds->f = 0.4;
         yield ['interval' => $fractionalSeconds, 'seconds' => 2, 'milliseconds' => 1400, 'microseconds' => 1400000];
 
         // Inverted interval
         $invertedInterval = new DateInterval('P1D');
+        // @mago-ignore analysis:invalid-property-write
         $invertedInterval->invert = 1;
         yield [
             'interval' => $invertedInterval,

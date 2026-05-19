@@ -51,6 +51,7 @@ final class DOMElementPreviousSibling extends ScalarFunctionChain
                     );
             }
 
+            // @mago-ignore analysis:impossible-condition
             if ($node instanceof CharacterData) {
                 return $context
                     ->functions()
@@ -64,6 +65,7 @@ final class DOMElementPreviousSibling extends ScalarFunctionChain
             return $node->previousElementSibling;
         }
 
+        // @mago-ignore analysis:less-specific-return-statement,possibly-null-property-access
         /* @phpstan-ignore-next-line */
         return $node->previousSibling;
     }

@@ -24,6 +24,7 @@ final class IsIn extends ScalarFunctionChain
     public function eval(Row $row, FlowContext $context): mixed
     {
         $haystack = (new Parameter($this->haystack))->asArray($row, $context);
+        // @mago-ignore analysis:mixed-assignment
         $needle = (new Parameter($this->needle))->eval($row, $context);
 
         if ($haystack === null) {

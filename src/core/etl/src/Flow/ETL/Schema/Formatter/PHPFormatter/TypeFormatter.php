@@ -39,6 +39,7 @@ final class TypeFormatter
      */
     public function format(Type $type, bool $nullable = false): string
     {
+        // @mago-ignore analysis:less-specific-nested-argument-type
         return match ($type::class) {
             MapType::class => $this->formatMapType($type, $nullable),
             ListType::class => $this->formatListType($type, $nullable),

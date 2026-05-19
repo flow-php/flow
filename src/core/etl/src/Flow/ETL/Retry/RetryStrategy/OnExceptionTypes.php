@@ -10,7 +10,6 @@ use Throwable;
 
 use function class_exists;
 use function interface_exists;
-use function is_string;
 use function is_subclass_of;
 
 final readonly class OnExceptionTypes implements RetryStrategy
@@ -38,10 +37,11 @@ final readonly class OnExceptionTypes implements RetryStrategy
         }
 
         foreach ($exceptionTypes as $exceptionType) {
-            if (!is_string($exceptionType) || !class_exists($exceptionType) && !interface_exists($exceptionType)) {
+            if (!class_exists($exceptionType) && !interface_exists($exceptionType)) {
                 throw new InvalidArgumentException("Class '{$exceptionType}' does not exist");
             }
 
+            // @mago-ignore analysis:redundant-comparison,redundant-logical-operation
             if (!is_subclass_of($exceptionType, Throwable::class) && $exceptionType !== Throwable::class) {
                 throw new InvalidArgumentException("Class '{$exceptionType}' is not a Throwable");
             }

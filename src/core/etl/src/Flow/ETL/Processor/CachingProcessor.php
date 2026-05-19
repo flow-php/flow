@@ -41,6 +41,7 @@ final readonly class CachingProcessor implements Processor
         $index = new CacheIndex($id);
 
         foreach ($rows as $batch) {
+            // @mago-ignore analysis:redundant-docblock-type
             /** @var Rows $batch */
             $cacheKey = bin2hex(random_bytes(16));
             $context->cache()->set($cacheKey, $batch);

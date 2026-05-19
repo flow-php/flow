@@ -56,6 +56,7 @@ final class Regex extends ScalarFunctionChain
         }
 
         // preg_match() returns 1 if the pattern matches given subject, 0 if it does not, or false on failure.
+        // @mago-ignore analysis:reference-to-undefined-variable
         /** @phpstan-ignore argument.type */
         if (preg_match($pattern, $subject, $matches, $flags, $offset) === 1) {
             return $matches;

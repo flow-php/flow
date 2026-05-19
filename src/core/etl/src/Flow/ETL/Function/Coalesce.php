@@ -24,6 +24,7 @@ final class Coalesce extends ScalarFunctionChain
     {
         foreach ($this->values as $value) {
             try {
+                // @mago-ignore analysis:mixed-assignment
                 $result = (new Parameter($value))->eval($row, $context);
             } catch (Exception) {
                 continue;

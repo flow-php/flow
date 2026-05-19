@@ -45,6 +45,7 @@ final class PathPartitionsExtractor implements Extractor, FileExtractor, Limitab
                 ),
             );
 
+            // @mago-ignore analysis:mixed-assignment
             $signal = yield rows($row);
 
             $this->incrementReturnedRows();

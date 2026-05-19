@@ -25,6 +25,7 @@ final class CacheExtractor implements Extractor
         if (!$context->cache()->has($this->id)) {
             if ($this->fallbackExtractor !== null) {
                 foreach ($this->fallbackExtractor->extract($context) as $rows) {
+                    // @mago-ignore analysis:mixed-assignment
                     $signal = yield $rows;
 
                     if ($signal === Signal::STOP) {
@@ -40,6 +41,7 @@ final class CacheExtractor implements Extractor
                 /** @var Rows $rows */
                 $rows = $context->cache()->get($cacheKey);
 
+                // @mago-ignore analysis:mixed-assignment
                 $signal = yield $rows;
 
                 if ($signal === Signal::STOP) {

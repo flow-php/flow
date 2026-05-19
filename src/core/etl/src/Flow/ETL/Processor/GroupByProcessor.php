@@ -24,6 +24,7 @@ final readonly class GroupByProcessor implements Processor
     public function process(Generator $rows, FlowContext $context): Generator
     {
         foreach ($rows as $batch) {
+            // @mago-ignore analysis:redundant-docblock-type
             /** @var Rows $batch */
             $this->groupBy->group($batch, $context);
         }

@@ -12,6 +12,7 @@ use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 
 use function Flow\Types\DSL\type_equals;
+use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_optional;
 
 /**
@@ -74,7 +75,7 @@ final class IntegerEntry implements Entry
 
     public function map(callable $mapper): static
     {
-        return new self($this->name, $mapper($this->value()));
+        return new self($this->name, type_optional(type_integer())->assert($mapper($this->value())));
     }
 
     public function name(): string
@@ -111,6 +112,6 @@ final class IntegerEntry implements Entry
 
     public function withValue(mixed $value): static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
+        return new self($this->name, type_optional(type_integer())->assert($value), $this->definition->metadata());
     }
 }

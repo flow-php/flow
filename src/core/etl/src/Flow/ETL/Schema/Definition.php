@@ -14,7 +14,7 @@ use Flow\Types\Type;
 interface Definition
 {
     /**
-     * @param array<array-key, mixed> $value
+     * @param array<array-key, mixed>|bool|float|int|string $value
      *
      * @return static
      */

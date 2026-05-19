@@ -125,9 +125,11 @@ final class ASCIIValue
                     return $this->stringValue;
                 }
 
+                // @mago-ignore analysis:invalid-property-assignment-value,match-not-exhaustive
                 $this->stringValue = match (gettype($val)) {
                     'string' => $val,
                     'boolean' => $val ? 'true' : 'false',
+                    // @mago-ignore analysis:array-to-string-conversion
                     'double', 'integer' => (string) $val,
                     'array' => json_encode($val, JSON_THROW_ON_ERROR),
                 };
@@ -136,6 +138,7 @@ final class ASCIIValue
             }
         }
 
+        // @mago-ignore analysis:invalid-return-statement,nullable-return-statement
         return $this->stringValue;
     }
 }

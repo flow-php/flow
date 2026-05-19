@@ -60,16 +60,14 @@ final readonly class ScalarFunctionTransformer implements Transformer
                     $val,
                     $this->entry instanceof Definition ? $this->entry : null,
                 ))),
+                // @mago-ignore analysis:mixed-argument
                 $this->function->eval($r, $context),
             ));
         }
 
         if ($this->function instanceof UnpackResults) {
             return $rows->map(function (Row $r) use ($context): Row {
-                /**
-                 * @var array-key $key
-                 * @var mixed $val
-                 */
+                // @mago-ignore analysis:mixed-assignment
                 foreach (type_array()->assert($this->function->eval($r, $context)) as $key => $val) {
                     $r = $r->set($context->entryFactory()->create($this->entryName() . '.' . $key, $val));
                 }
@@ -79,11 +77,13 @@ final readonly class ScalarFunctionTransformer implements Transformer
         }
 
         return $rows->map(function (Row $r) use ($context): Row {
+            // @mago-ignore analysis:mixed-assignment
             $value = $this->function->eval($r, $context);
             $type = $this->entry instanceof Definition ? $this->entry->type() : null;
 
             if ($value instanceof ScalarResult) {
                 $type = $value->type;
+                // @mago-ignore analysis:mixed-assignment
                 $value = $value->value;
             }
 

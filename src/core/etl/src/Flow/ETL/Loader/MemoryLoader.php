@@ -22,6 +22,7 @@ final readonly class MemoryLoader implements Loader
         $context->telemetry()->loadingStarted($this);
 
         try {
+            // @mago-ignore analysis:less-specific-argument
             $this->memory->save($rows->toArray());
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);

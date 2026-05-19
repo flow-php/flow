@@ -15,6 +15,7 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 
+// @mago-ignore analysis:unavailable-method
 #[RequiresPhp('>= 8.4')]
 final class HTMLQuerySelectorTest extends TestCase
 {

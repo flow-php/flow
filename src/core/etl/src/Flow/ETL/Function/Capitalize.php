@@ -23,6 +23,7 @@ final class Capitalize extends ScalarFunctionChain
 
     public function eval(Row $row, FlowContext $context): ?string
     {
+        // @mago-ignore analysis:mixed-assignment
         $string = (new Parameter($this->string))->eval($row, $context);
 
         if ($string === null) {

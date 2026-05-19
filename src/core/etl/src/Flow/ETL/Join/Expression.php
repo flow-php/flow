@@ -10,6 +10,7 @@ use Flow\ETL\Join\Comparison\Equal;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 
+use function array_slice;
 use function gettype;
 use function is_array;
 use function is_string;
@@ -43,7 +44,9 @@ final readonly class Expression
                     );
                 }
 
+                // @mago-ignore analysis:impossible-condition,redundant-type-comparison
                 if (!is_string($right)) {
+                    // @mago-ignore analysis:no-value
                     throw new RuntimeException(
                         'Expected right entry name to be string, got ' . gettype($right) . ". Example: ['id' => 'id']",
                     );
@@ -52,7 +55,14 @@ final readonly class Expression
                 $comparisons[] = new Equal($left, $right);
             }
 
-            return new self(new All(...$comparisons), $joinPrefix);
+            if ($comparisons === []) {
+                throw new RuntimeException('Expected at least one comparison in the join expression.');
+            }
+
+            $first = $comparisons[0];
+            $rest = array_slice($comparisons, 1);
+
+            return new self(new All($first, ...$rest), $joinPrefix);
         }
 
         return new self($comparison, $joinPrefix);

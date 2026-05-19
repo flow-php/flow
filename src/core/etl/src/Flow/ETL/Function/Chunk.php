@@ -41,6 +41,7 @@ final class Chunk extends ScalarFunctionChain
 
         $chunks = s($value)->chunk($size);
 
+        // @mago-ignore analysis:less-specific-return-statement
         return array_map(static fn($chunk) => $chunk->toString(), iterator_to_array($chunks));
     }
 }

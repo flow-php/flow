@@ -18,6 +18,7 @@ final readonly class DatePeriodSequenceGenerator implements SequenceGenerator
 
     public function generate(): Generator
     {
+        // @mago-ignore analysis:mixed-assignment
         foreach ($this->period->getIterator() as $item) {
             yield $item;
         }

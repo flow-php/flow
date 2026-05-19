@@ -21,13 +21,10 @@ final class ConstrainedProcessorTest extends FlowTestCase
     public function test_handles_empty_constraints(): void
     {
         $processor = new ConstrainedProcessor([]);
-
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)));
         })();
-
         $result = iterator_to_array($processor->process($generator, flow_context()));
-
         static::assertCount(1, $result);
     }
 
@@ -49,15 +46,11 @@ final class ConstrainedProcessorTest extends FlowTestCase
                 return '';
             }
         };
-
         $processor = new ConstrainedProcessor([$constraint]);
-
         $generator = (static function () {
             yield from [];
         })();
-
         $result = iterator_to_array($processor->process($generator, flow_context()));
-
         static::assertCount(0, $result);
     }
 
@@ -66,6 +59,7 @@ final class ConstrainedProcessorTest extends FlowTestCase
         $constraint = new class implements Constraint {
             public function isSatisfiedBy(Row $row): bool
             {
+                // @mago-ignore analysis:mixed-operand
                 return $row->valueOf('id') > 0;
             }
 
@@ -79,16 +73,13 @@ final class ConstrainedProcessorTest extends FlowTestCase
                 return 'id must be greater than 0';
             }
         };
-
         $processor = new ConstrainedProcessor([$constraint]);
-
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
         })();
-
         $result = iterator_to_array($processor->process($generator, flow_context()));
-
         static::assertCount(1, $result);
+        // @mago-ignore analysis:mixed-argument
         static::assertCount(2, $result[0]);
     }
 
@@ -96,7 +87,7 @@ final class ConstrainedProcessorTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Pipeline constraints must be of type Flow\ETL\Constraint');
-
+        // @mago-ignore analysis:invalid-argument
         /** @phpstan-ignore-next-line */
         new ConstrainedProcessor(['not a constraint']);
     }
@@ -106,6 +97,7 @@ final class ConstrainedProcessorTest extends FlowTestCase
         $constraint = new class implements Constraint {
             public function isSatisfiedBy(Row $row): bool
             {
+                // @mago-ignore analysis:mixed-operand
                 return $row->valueOf('id') > 0;
             }
 
@@ -119,15 +111,11 @@ final class ConstrainedProcessorTest extends FlowTestCase
                 return 'id must be greater than 0';
             }
         };
-
         $processor = new ConstrainedProcessor([$constraint]);
-
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)), row(int_entry('id', -1)));
         })();
-
         $this->expectException(ConstraintViolationException::class);
-
         iterator_to_array($processor->process($generator, flow_context()));
     }
 }

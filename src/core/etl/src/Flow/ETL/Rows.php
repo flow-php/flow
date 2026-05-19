@@ -7,6 +7,8 @@ namespace Flow\ETL;
 use ArrayAccess;
 use ArrayIterator;
 use Countable;
+use DateInterval;
+use DateTimeInterface;
 use Flow\ETL\Exception\DuplicatedEntriesException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
@@ -42,6 +44,8 @@ use function Flow\ETL\DSL\row;
 use function Flow\Types\DSL\type_integer;
 use function is_array;
 use function is_int;
+use function is_numeric;
+use function is_string;
 use function iterator_to_array;
 use function usort;
 
@@ -96,6 +100,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         }
 
         $rows = new self(...$rows);
+        // @mago-ignore analysis:redundant-docblock-type
         /** @var Partitions $partitions */
         $rows->partitions = $partitions;
 
@@ -602,6 +607,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function offsetExists($offset): bool
     {
+        // @mago-ignore analysis:impossible-condition,redundant-type-comparison
         if (!is_int($offset)) {
             throw new InvalidArgumentException('Rows accepts only integer offsets');
         }
@@ -710,6 +716,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
      */
     public function reduceToArray(string|Reference $reference): array
     {
+        // @mago-ignore analysis:mixed-assignment
         $result = $this->reduce(static function (mixed $ids, Row $row) use ($reference): mixed {
             if (!is_array($ids)) {
                 $ids = [];
@@ -786,7 +793,34 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     public function sortAscending(string|Reference $reference): self
     {
         $rows = $this->rows;
-        usort($rows, static fn(Row $a, Row $b): int => $a->valueOf($reference) <=> $b->valueOf($reference));
+        usort($rows, static function (Row $a, Row $b) use ($reference): int {
+            // @mago-ignore analysis:mixed-assignment
+            $valueA = $a->valueOf($reference);
+            // @mago-ignore analysis:mixed-assignment
+            $valueB = $b->valueOf($reference);
+
+            if (is_numeric($valueA) && is_numeric($valueB)) {
+                return (float) $valueA <=> (float) $valueB;
+            }
+
+            if (is_string($valueA) && is_string($valueB)) {
+                return $valueA <=> $valueB;
+            }
+
+            if ($valueA instanceof DateTimeInterface && $valueB instanceof DateTimeInterface) {
+                return $valueA <=> $valueB;
+            }
+
+            if ($valueA instanceof DateInterval && $valueB instanceof DateInterval) {
+                return $valueA <=> $valueB;
+            }
+
+            if (is_array($valueA) && is_array($valueB)) {
+                return $valueA <=> $valueB;
+            }
+
+            return 0;
+        });
 
         return self::partitioned($rows, $this->partitions);
     }
@@ -811,7 +845,34 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     public function sortDescending(string|Reference $reference): self
     {
         $rows = $this->rows;
-        usort($rows, static fn(Row $a, Row $b): int => -($a->valueOf($reference) <=> $b->valueOf($reference)));
+        usort($rows, static function (Row $a, Row $b) use ($reference): int {
+            // @mago-ignore analysis:mixed-assignment
+            $valueA = $a->valueOf($reference);
+            // @mago-ignore analysis:mixed-assignment
+            $valueB = $b->valueOf($reference);
+
+            if (is_numeric($valueA) && is_numeric($valueB)) {
+                return -((float) $valueA <=> (float) $valueB);
+            }
+
+            if (is_string($valueA) && is_string($valueB)) {
+                return -($valueA <=> $valueB);
+            }
+
+            if ($valueA instanceof DateTimeInterface && $valueB instanceof DateTimeInterface) {
+                return -($valueA <=> $valueB);
+            }
+
+            if ($valueA instanceof DateInterval && $valueB instanceof DateInterval) {
+                return -($valueA <=> $valueB);
+            }
+
+            if (is_array($valueA) && is_array($valueB)) {
+                return -($valueA <=> $valueB);
+            }
+
+            return 0;
+        });
 
         return self::partitioned($rows, $this->partitions);
     }

@@ -31,7 +31,6 @@ final class EnumEntry implements Entry
         private readonly ?UnitEnum $value,
         ?Metadata $metadata = null,
     ) {
-        /** @var class-string<\UnitEnum>&literal-string $enumClass */
         $enumClass = $this->value === null ? UnitEnum::class : $this->value::class;
         $this->definition = new EnumDefinition(
             $this->name,
@@ -79,7 +78,7 @@ final class EnumEntry implements Entry
 
     public function map(callable $mapper): static
     {
-        return new self($this->name, $mapper($this->value()));
+        return new self($this->name, type_optional($this->type())->assert($mapper($this->value())));
     }
 
     public function name(): string

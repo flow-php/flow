@@ -12,12 +12,13 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition\TimeDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
+use ReflectionProperty;
 use Throwable;
 
 use function Flow\ETL\DSL\date_interval_to_microseconds;
 use function Flow\Types\DSL\type_equals;
-use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_time;
 use function is_string;
 use function json_encode;
 
@@ -78,11 +79,11 @@ final class TimeEntry implements Entry
                     $hours = (int) $dateTime->format('H');
                     $minutes = (int) $dateTime->format('i');
                     $seconds = (int) $dateTime->format('s');
-                    $fraction = (float) ('0.' . $dateTime->format('u')); // Microseconds as fractional part
+                    $fraction = (int) $dateTime->format('u') / 1_000_000; // Microseconds as fractional part
 
-                    // Construct the DateInterval
+                    // Construct the DateInterval (DateInterval::$f is public-writable at runtime; bypass Mago readonly stub via reflection)
                     $interval = new DateInterval('PT' . $hours . 'H' . $minutes . 'M' . $seconds . 'S');
-                    $interval->f = $fraction; // Set the fractional seconds
+                    (new ReflectionProperty($interval, 'f'))->setValue($interval, $fraction);
 
                     if ($interval->y !== 0 || $interval->m !== 0) {
                         throw new InvalidArgumentException(
@@ -119,7 +120,7 @@ final class TimeEntry implements Entry
         $fraction = ($microseconds % 1_000_000) / 1_000_000;
 
         $interval = new DateInterval('PT' . $seconds . 'S');
-        $interval->f = $fraction;
+        (new ReflectionProperty($interval, 'f'))->setValue($interval, $fraction);
 
         return new self($name, $interval);
     }
@@ -130,7 +131,7 @@ final class TimeEntry implements Entry
         $fraction = ($milliseconds % 1000) / 1000;
 
         $interval = new DateInterval('PT' . $seconds . 'S');
-        $interval->f = $fraction;
+        (new ReflectionProperty($interval, 'f'))->setValue($interval, $fraction);
 
         return new self($name, $interval);
     }
@@ -176,6 +177,10 @@ final class TimeEntry implements Entry
 
     public function isEqual(Entry $entry): bool
     {
+        if (!$entry instanceof self || !$this->is($entry->name()) || !type_equals($this->type(), $entry->type())) {
+            return false;
+        }
+
         $entryValue = $entry->value();
         $thisValue = $this->value();
 
@@ -187,20 +192,12 @@ final class TimeEntry implements Entry
             return false;
         }
 
-        type_instance_of(DateInterval::class)->assert($entryValue);
-        type_instance_of(DateInterval::class)->assert($thisValue);
-
-        return (
-            $this->is($entry->name())
-            && $entry instanceof self
-            && type_equals($this->type(), $entry->type())
-            && date_interval_to_microseconds($thisValue) == date_interval_to_microseconds($entryValue)
-        );
+        return date_interval_to_microseconds($thisValue) == date_interval_to_microseconds($entryValue);
     }
 
     public function map(callable $mapper): static
     {
-        return new self($this->name, $mapper($this->value));
+        return new self($this->name, type_optional(type_time())->assert($mapper($this->value)));
     }
 
     public function name(): string
@@ -242,6 +239,6 @@ final class TimeEntry implements Entry
 
     public function withValue(mixed $value): static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
+        return new self($this->name, type_optional(type_time())->assert($value), $this->definition->metadata());
     }
 }

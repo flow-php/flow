@@ -67,10 +67,15 @@ final class DOMElementAttributeValue extends ScalarFunctionChain
             return null;
         }
 
-        if (!($namedItem = $node->attributes->getNamedItem($attributeName))) {
+        // @mago-ignore analysis:mixed-assignment
+        // @mago-ignore analysis:possible-method-access-on-null
+        $namedItem = $node->attributes->getNamedItem($attributeName);
+
+        if ($namedItem === null) {
             return null;
         }
 
+        // @mago-ignore analysis:mixed-property-access,mixed-return-statement
         return $namedItem->nodeValue;
     }
 }

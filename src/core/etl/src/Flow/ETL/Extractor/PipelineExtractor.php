@@ -24,6 +24,7 @@ final readonly class PipelineExtractor implements Extractor
     public function extract(FlowContext $context): Generator
     {
         foreach ($this->pipeline->process($context) as $rows) {
+            // @mago-ignore analysis:mixed-assignment
             $signal = yield $rows;
 
             if ($signal === Signal::STOP) {

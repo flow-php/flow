@@ -47,6 +47,7 @@ final class Schema implements Countable
     {
         $schema = [];
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($definitions as $definition) {
             if (!is_array($definition)) {
                 throw new InvalidArgumentException('Schema definition must be an array');
@@ -123,7 +124,7 @@ final class Schema implements Countable
     /**
      * Adds metadata to a given definition.
      *
-     * @param array<array-key, mixed> $value
+     * @param array<array-key, mixed>|bool|float|int|string $value
      *
      * @throws SchemaDefinitionNotFoundException
      *

@@ -111,6 +111,7 @@ final class ArrayMemory implements Countable, Memory
      */
     private function assertMemoryStructure(array $memory): void
     {
+        // @mago-ignore analysis:mixed-assignment
         foreach ($memory as $entry) {
             if (!is_array($entry)) {
                 throw new InvalidArgumentException('Memory expects nested array data structure: array<array<mixed>>');

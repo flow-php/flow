@@ -34,10 +34,13 @@ final readonly class TransformerLoader implements Closure, Loader, OverridingLoa
         $context->telemetry()->loadingStarted($this);
 
         try {
-            if ($this->transformer instanceof Transformer) {
-                $this->loader->load($this->transformer->transform($rows, $context), $context);
+            $transformer = $this->transformer;
+
+            if ($transformer instanceof Transformer) {
+                // @mago-ignore analysis:invalid-argument,too-many-arguments,possibly-invalid-argument
+                $this->loader->load($transformer->transform($rows, $context), $context);
             } else {
-                df($context->config)->from(from_rows($rows))->with($this->transformer)->load($this->loader)->run();
+                df($context->config)->from(from_rows($rows))->with($transformer)->load($this->loader)->run();
             }
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);

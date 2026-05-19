@@ -33,6 +33,7 @@ final class StringAggregate implements AggregatingFunction
 
     public function aggregate(Row $row, FlowContext $context): void
     {
+        // @mago-ignore analysis:mixed-assignment
         $stringValue = $row->valueOf($this->ref->to());
 
         if (is_string($stringValue)) {

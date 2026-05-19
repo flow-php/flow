@@ -37,7 +37,9 @@ final class StatisticsCollectorTest extends FlowTestCase
 
         static::assertNotNull($report);
         static::assertInstanceOf(Columns::class, $report->statistics()->columns);
+        // @mago-ignore analysis:mixed-method-access,possible-method-access-on-null
         static::assertSame(1, $report->statistics()->columns->get('id')->min());
+        // @mago-ignore analysis:mixed-method-access,possible-method-access-on-null
         static::assertSame(2, $report->statistics()->columns->get('id')->max());
     }
 
@@ -53,8 +55,11 @@ final class StatisticsCollectorTest extends FlowTestCase
 
         static::assertNotNull($report);
         static::assertNotNull($report->schema());
+        // @mago-ignore analysis:possible-method-access-on-null
         static::assertSame(2, $report->schema()->count());
+        // @mago-ignore analysis:possible-method-access-on-null
         static::assertNotNull($report->schema()->findDefinition('id'));
+        // @mago-ignore analysis:possible-method-access-on-null
         static::assertNotNull($report->schema()->findDefinition('name'));
     }
 

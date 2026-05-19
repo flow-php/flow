@@ -35,6 +35,7 @@ final class BatchByTest extends FlowIntegrationTestCase
                 $batchSizes[] = $rows->count();
             });
 
+        // @mago-ignore analysis:impossible-type-comparison
         static::assertSame(2, $batchCount);
         static::assertSame([3, 2], $batchSizes);
     }
@@ -58,6 +59,7 @@ final class BatchByTest extends FlowIntegrationTestCase
                 $results = array_merge($results, $rows->toArray());
             });
 
+        // @mago-ignore analysis:impossible-type-comparison
         static::assertSame(3, $batchCount);
         static::assertCount(5, $results);
     }
@@ -99,6 +101,7 @@ final class BatchByTest extends FlowIntegrationTestCase
                 $batchCount++;
             });
 
+        // @mago-ignore analysis:impossible-type-comparison
         static::assertSame(2, $batchCount);
     }
 
@@ -122,6 +125,7 @@ final class BatchByTest extends FlowIntegrationTestCase
                 $batchSizes[] = $rows->count();
             });
 
+        // @mago-ignore analysis:impossible-type-comparison
         static::assertSame(2, $batchCount);
         static::assertSame([5, 1], $batchSizes);
     }

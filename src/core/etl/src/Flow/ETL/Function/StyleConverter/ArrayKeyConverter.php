@@ -31,6 +31,7 @@ final class ArrayKeyConverter
     {
         $newArray = [];
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($array as $key => $value) {
             $newKey = is_string($key) ? ($this->transformer)($key) : $key;
 

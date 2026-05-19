@@ -259,7 +259,9 @@ final class TraceableCacheTest extends FlowTestCase
 
             $span = $spans[0];
             static::assertNotNull($span->status());
+            // @mago-ignore analysis:possible-method-access-on-null
             static::assertTrue($span->status()->isError());
+            // @mago-ignore analysis:possibly-null-property-access
             static::assertSame('Test error', $span->status()->description);
             static::assertCount(1, $span->events());
         }

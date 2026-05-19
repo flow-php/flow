@@ -30,6 +30,7 @@ final readonly class FilesystemBucketsCache implements BucketsCache
         private int $chunkSize = 100,
         ?Path $cacheDir = null,
     ) {
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
         if ($this->chunkSize < 1) {
             throw new InvalidArgumentException('Chunk size must be greater than 0');
         }

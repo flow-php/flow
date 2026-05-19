@@ -57,8 +57,10 @@ final readonly class PartitioningProcessor implements Processor
         /** @var array<string, CacheIndex> $partitionIndexes */
         $partitionIndexes = [];
 
+        // @mago-ignore analysis:redundant-docblock-type
         /** @var Rows $batch */
         foreach ($rows as $batch) {
+            // @mago-ignore analysis:too-few-arguments
             foreach ($batch->partitionBy(...$this->partitionBy) as $partitionedRows) {
                 $sortedRows = $partitionedRows->sortBy(...$this->orderBy);
 

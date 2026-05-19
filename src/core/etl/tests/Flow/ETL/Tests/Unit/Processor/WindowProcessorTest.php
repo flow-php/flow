@@ -35,13 +35,17 @@ final class WindowProcessorTest extends FlowTestCase
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $allRows = [];
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($result as $batch) {
+            // @mago-ignore analysis:mixed-assignment
+            // @mago-ignore analysis:invalid-iterator,mixed-method-access
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;
             }
         }
 
         static::assertCount(3, $allRows);
+        // @mago-ignore analysis:mixed-argument
         static::assertArrayHasKey('rank', $allRows[0]);
     }
 
@@ -73,13 +77,18 @@ final class WindowProcessorTest extends FlowTestCase
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $allRows = [];
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($result as $batch) {
+            // @mago-ignore analysis:mixed-assignment
+            // @mago-ignore analysis:invalid-iterator,mixed-method-access
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;
             }
         }
 
         static::assertCount(3, $allRows);
+        // @mago-ignore analysis:deprecated-method
+        // @mago-ignore analysis:less-specific-nested-argument-type
         static::assertContainsOnly('int', array_column($allRows, 'rank'));
     }
 
@@ -101,7 +110,10 @@ final class WindowProcessorTest extends FlowTestCase
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $allRows = [];
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($result as $batch) {
+            // @mago-ignore analysis:mixed-assignment
+            // @mago-ignore analysis:invalid-iterator,mixed-method-access
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;
             }
@@ -109,7 +121,9 @@ final class WindowProcessorTest extends FlowTestCase
 
         static::assertCount(4, $allRows);
 
+        // @mago-ignore analysis:mixed-array-access
         $groupA = array_filter($allRows, static fn($r) => $r['group'] === 'a');
+        // @mago-ignore analysis:mixed-array-access
         $groupB = array_filter($allRows, static fn($r) => $r['group'] === 'b');
 
         static::assertCount(2, $groupA);

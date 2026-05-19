@@ -48,6 +48,7 @@ final class ConcatWithSeparator extends ScalarFunctionChain
         $concatValues = [];
 
         foreach ($this->refs as $value) {
+            // @mago-ignore analysis:mixed-assignment
             $value = (new Parameter($value))->eval($row, $context);
 
             if (is_type(type_list(type_string()), $value)) {
@@ -56,6 +57,7 @@ final class ConcatWithSeparator extends ScalarFunctionChain
             } else {
                 $value = is_string($value) ? $value : type_optional(type_string())->cast($value);
 
+                // @mago-ignore analysis:redundant-condition,redundant-type-comparison
                 if (is_string($value)) {
                     $concatValues[] = $value;
                 }

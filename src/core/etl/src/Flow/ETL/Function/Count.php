@@ -43,18 +43,22 @@ final class Count implements AggregatingFunction, WindowFunction
 
     public function apply(Row $row, Rows $partition, FlowContext $context): mixed
     {
-        if ($this->ref === null) {
+        $ref = $this->ref;
+
+        if ($ref === null) {
             throw new RuntimeException('Count WindowFunction function requires a reference.');
         }
 
         $count = 0;
 
         try {
-            $value = $row->valueOf($this->ref);
+            // @mago-ignore analysis:mixed-assignment
+            $value = $row->valueOf($ref);
 
             foreach ($partition->sortBy(...$this->window()->order()) as $partitionRow) {
                 try {
-                    $partitionValue = $partitionRow->valueOf($this->ref);
+                    // @mago-ignore analysis:mixed-assignment
+                    $partitionValue = $partitionRow->valueOf($ref);
 
                     if ($partitionValue === $value) {
                         $count++;

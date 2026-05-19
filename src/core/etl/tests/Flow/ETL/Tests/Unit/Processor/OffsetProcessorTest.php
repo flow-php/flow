@@ -18,38 +18,37 @@ final class OffsetProcessorTest extends FlowTestCase
     public function test_offset_greater_than_total_rows_yields_nothing(): void
     {
         $processor = new OffsetProcessor(10);
-
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
         })();
-
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $totalRows = 0;
-
+        // @mago-ignore analysis:mixed-assignment
         foreach ($result as $batch) {
+            // @mago-ignore analysis:mixed-assignment
+            // @mago-ignore analysis:mixed-method-access,mixed-operand
+            // @mago-ignore analysis:mixed-operand
             $totalRows += $batch->count();
         }
-
         static::assertSame(0, $totalRows);
     }
 
     public function test_offset_within_single_batch(): void
     {
         $processor = new OffsetProcessor(1);
-
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
         })();
-
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $allRows = [];
-
+        // @mago-ignore analysis:mixed-assignment
         foreach ($result as $batch) {
+            // @mago-ignore analysis:mixed-assignment
+            // @mago-ignore analysis:invalid-iterator,mixed-method-access
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;
             }
         }
-
         static::assertEquals(
             [
                 ['id' => 2],
@@ -62,39 +61,38 @@ final class OffsetProcessorTest extends FlowTestCase
     public function test_offset_zero_yields_all_rows(): void
     {
         $processor = new OffsetProcessor(0);
-
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
         })();
-
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $totalRows = 0;
-
+        // @mago-ignore analysis:mixed-assignment
         foreach ($result as $batch) {
+            // @mago-ignore analysis:mixed-assignment
+            // @mago-ignore analysis:mixed-method-access,mixed-operand
+            // @mago-ignore analysis:mixed-operand
             $totalRows += $batch->count();
         }
-
         static::assertSame(2, $totalRows);
     }
 
     public function test_skips_first_n_rows(): void
     {
         $processor = new OffsetProcessor(2);
-
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
             yield rows(row(int_entry('id', 3)), row(int_entry('id', 4)));
         })();
-
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $allRows = [];
-
+        // @mago-ignore analysis:mixed-assignment
         foreach ($result as $batch) {
+            // @mago-ignore analysis:mixed-assignment
+            // @mago-ignore analysis:invalid-iterator,mixed-method-access
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;
             }
         }
-
         static::assertEquals(
             [
                 ['id' => 3],
@@ -108,7 +106,7 @@ final class OffsetProcessorTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Offset must be greater than or equal to 0');
-
+        // @mago-ignore analysis:invalid-argument
         /** @phpstan-ignore-next-line */
         new OffsetProcessor(-1);
     }

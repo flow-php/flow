@@ -13,6 +13,7 @@ use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 
 use function Flow\Types\DSL\type_equals;
+use function Flow\Types\DSL\type_html_element;
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_optional;
 use function is_string;
@@ -39,7 +40,13 @@ final class HTMLElementEntry implements Entry
         if (is_string($value)) {
             $document = HTMLDocument::createFromString($value, LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
 
-            $value = $document->documentElement;
+            $documentElement = $document->documentElement;
+
+            if (!$documentElement instanceof HTMLElement) {
+                $value = null;
+            } else {
+                $value = $documentElement;
+            }
         }
 
         $this->value = $value;
@@ -98,10 +105,10 @@ final class HTMLElementEntry implements Entry
 
     public function map(callable $mapper): static
     {
-        $mappedValue = $mapper($this->value());
-        $mappedValue = type_optional(type_instance_of(HTMLElement::class))->assert($mappedValue);
-
-        return new self($this->name, $mappedValue);
+        return new self(
+            $this->name,
+            type_optional(type_instance_of(HTMLElement::class))->assert($mapper($this->value())),
+        );
     }
 
     public function name(): string
@@ -135,6 +142,6 @@ final class HTMLElementEntry implements Entry
 
     public function withValue(mixed $value): static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
+        return new self($this->name, type_optional(type_html_element())->assert($value), $this->definition->metadata());
     }
 }

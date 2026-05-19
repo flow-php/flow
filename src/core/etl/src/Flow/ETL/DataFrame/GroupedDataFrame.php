@@ -22,12 +22,12 @@ final readonly class GroupedDataFrame
         $this->groupBy->aggregate(...$aggregations);
 
         $pipelineAdder = function (GroupBy $groupBy): void {
-            /**
-             * @phpstan-ignore-next-line
-             */
+            // @mago-ignore analysis:non-existent-property,method-access-on-null
+            /** @phpstan-ignore-next-line */
             $this->pipeline->add(new GroupByProcessor($groupBy));
         };
 
+        // @mago-ignore analysis:invalid-method-access
         $pipelineAdder->bindTo($this->df, $this->df)($this->groupBy);
 
         return $this->df;

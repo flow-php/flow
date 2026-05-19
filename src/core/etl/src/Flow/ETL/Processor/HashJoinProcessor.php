@@ -134,7 +134,7 @@ final readonly class HashJoinProcessor implements Processor
         } catch (DuplicatedEntriesException $e) {
             throw new JoinException(
                 $e->getMessage() . ' try to use a different join prefix than: "' . $this->expression->prefix() . '"',
-                $e->getCode(),
+                (int) $e->getCode(),
                 $e,
             );
         }

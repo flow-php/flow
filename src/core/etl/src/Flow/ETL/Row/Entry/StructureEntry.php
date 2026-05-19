@@ -14,6 +14,7 @@ use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\TypeDetector;
 
 use function count;
+use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_equals;
 use function Flow\Types\DSL\type_optional;
 use function is_array;
@@ -29,19 +30,23 @@ final class StructureEntry implements Entry
     use EntryRef;
 
     /**
+     * @var ?array<string, T>
+     */
+    private readonly ?array $value;
+
+    /**
      * @var StructureDefinition<T>
      */
     private StructureDefinition $definition;
 
     /**
-     * @param ?array<array-key, mixed> $value
      * @param StructureType<T> $type
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly string $name,
-        private readonly ?array $value,
+        mixed $value,
         StructureType $type,
         ?Metadata $metadata = null,
     ) {
@@ -49,17 +54,19 @@ final class StructureEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        if ($value !== null && 0 === count($value)) {
+        if (is_array($value) && 0 === count($value)) {
             throw InvalidArgumentException::because('Structure must have at least one entry, ' . $name . ' got none.');
         }
 
         if ($value !== null && !$type->isValid($value)) {
             throw InvalidArgumentException::because(
                 'Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())
-                    ->detectType($this->value)
+                    ->detectType($value)
                     ->toString(),
             );
         }
+
+        $this->value = $value;
 
         $this->definition = new StructureDefinition(
             $this->name,
@@ -98,32 +105,27 @@ final class StructureEntry implements Entry
 
     public function isEqual(Entry $entry): bool
     {
+        if (!$entry instanceof self) {
+            return false;
+        }
+
+        if (!$this->is($entry->name()) || !type_equals($this->type(), $entry->type())) {
+            return false;
+        }
+
         $entryValue = $entry->value();
         $thisValue = $this->value();
 
-        if ($entryValue === null && $thisValue !== null) {
-            return false;
+        if ($entryValue === null || $thisValue === null) {
+            return $entryValue === $thisValue;
         }
 
-        if ($entryValue !== null && $thisValue === null) {
-            return false;
-        }
-
-        if ($entryValue === null && $thisValue === null) {
-            return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type(), $entry->type());
-        }
-
-        return (
-            $this->is($entry->name())
-            && $entry instanceof self
-            && type_equals($this->type(), $entry->type())
-            && (new ArrayComparison())->equals($thisValue, is_array($entryValue) ? $entryValue : null)
-        );
+        return (new ArrayComparison())->equals($thisValue, $entryValue);
     }
 
     public function map(callable $mapper): static
     {
-        return new self($this->name, $mapper($this->value), $this->type());
+        return new self($this->name, type_optional(type_array())->assert($mapper($this->value)), $this->type());
     }
 
     public function name(): string
@@ -160,6 +162,6 @@ final class StructureEntry implements Entry
 
     public function withValue(mixed $value): static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->type());
+        return new self($this->name, type_optional(type_array())->assert($value), $this->type());
     }
 }

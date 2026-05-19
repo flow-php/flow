@@ -25,6 +25,8 @@ final readonly class OffsetProcessor implements Processor
     public function __construct(
         private int $offset,
     ) {
+        // @mago-ignore analysis:invalid-operand
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
         if ($this->offset < 0) {
             throw new InvalidArgumentException('Offset must be greater than or equal to 0, given: ' . $this->offset);
         }
@@ -41,6 +43,7 @@ final readonly class OffsetProcessor implements Processor
         $skippedRows = 0;
 
         foreach ($rows as $batch) {
+            // @mago-ignore analysis:redundant-docblock-type
             /** @var Rows $batch */
             $currentBatchSize = $batch->count();
             $remainingToSkip = $this->offset - $skippedRows;

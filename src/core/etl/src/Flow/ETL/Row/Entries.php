@@ -145,6 +145,7 @@ final class Entries implements ArrayAccess, Countable, IteratorAggregate
      */
     public function getIterator(): Iterator
     {
+        // @mago-ignore analysis:less-specific-return-statement
         return new ArrayIterator($this->all());
     }
 
@@ -412,6 +413,7 @@ final class Entries implements ArrayAccess, Countable, IteratorAggregate
         $data = [];
 
         foreach ($this->entries as $entry) {
+            // @mago-ignore analysis:mixed-assignment
             $value = $entry->value();
 
             if ($value instanceof Json) {

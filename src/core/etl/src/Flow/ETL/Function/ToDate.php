@@ -27,6 +27,7 @@ final class ToDate extends ScalarFunctionChain
 
     public function eval(Row $row, FlowContext $context): ?DateTimeInterface
     {
+        // @mago-ignore analysis:mixed-assignment
         $value = (new Parameter($this->value))->eval($row, $context);
         $format = (new Parameter($this->format))->asString($row, $context);
         $timeZone = (new Parameter($this->timeZone))->asInstanceOf($row, $context, DateTimeZone::class);
@@ -48,11 +49,13 @@ final class ToDate extends ScalarFunctionChain
         }
 
         if (is_int($value)) {
+            // @mago-ignore analysis:invalid-method-access,mixed-return-statement
             /** @phpstan-ignore-next-line */
             return DateTimeImmutable::createFromFormat('U', (string) $value, $timeZone)->setTime(0, 0, 0, 0);
         }
 
         if (is_string($value)) {
+            // @mago-ignore analysis:invalid-method-access,mixed-return-statement
             /** @phpstan-ignore-next-line */
             return DateTimeImmutable::createFromFormat($format, $value, $timeZone)->setTime(0, 0, 0, 0);
         }

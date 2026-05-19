@@ -16,10 +16,10 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use stdClass;
 
 use function array_walk_recursive;
-use function assert;
 use function Flow\ETL\DSL\integer_entry;
 use function Flow\ETL\DSL\json_entry;
 use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_instance_of;
 use function is_string;
 use function json_encode;
 use function serialize;
@@ -118,6 +118,7 @@ final class JsonEntryTest extends FlowTestCase
         $entry = json_entry('name', '{"key":"value"}');
 
         static::assertInstanceOf(Json::class, $entry->value());
+        // @mago-ignore analysis:possible-method-access-on-null
         static::assertSame(['key' => 'value'], $entry->value()->toArray());
     }
 
@@ -127,7 +128,9 @@ final class JsonEntryTest extends FlowTestCase
         $entry = json_entry('name', $json);
 
         static::assertInstanceOf(Json::class, $entry->value());
+        // @mago-ignore analysis:possible-method-access-on-null
         static::assertSame(['key' => 'value'], $entry->value()->toArray());
+        // @mago-ignore analysis:possibly-null-argument
         static::assertTrue($json->isEqual($entry->value()));
     }
 
@@ -190,6 +193,7 @@ final class JsonEntryTest extends FlowTestCase
                 }
             });
 
+            // @mago-ignore analysis:invalid-return-statement
             return $value;
         });
 
@@ -205,6 +209,7 @@ final class JsonEntryTest extends FlowTestCase
                 ['item-id' => 2, 'name' => 'two'],
                 ['item-id' => 3, 'name' => 'three'],
             ],
+            // @mago-ignore analysis:mixed-method-access
             $entry->value()?->toArray(),
         );
     }
@@ -233,6 +238,7 @@ final class JsonEntryTest extends FlowTestCase
         $renamedEntry = $entry->rename('new_name');
 
         static::assertSame('new_name', $renamedEntry->name());
+        // @mago-ignore analysis:mixed-method-access
         static::assertEquals($entry->value()?->toArray(), $renamedEntry->value()?->toArray());
         static::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
@@ -263,9 +269,8 @@ final class JsonEntryTest extends FlowTestCase
         $entry = json_entry('name', ['foo' => 1, 'bar' => ['foo' => 'foo', 'bar' => 'bar'], 'baz']);
 
         $serialized = serialize($entry);
-        $unserialized = unserialize($serialized);
+        $unserialized = type_instance_of(Entry::class)->assert(unserialize($serialized));
 
-        assert($unserialized instanceof Entry);
         static::assertTrue($entry->isEqual($unserialized));
     }
 
@@ -274,9 +279,8 @@ final class JsonEntryTest extends FlowTestCase
         $entry = JsonEntry::object('entry-name', ['id' => 1, 'name' => 'one']);
 
         $serialized = serialize($entry);
-        $unserialized = unserialize($serialized);
+        $unserialized = type_instance_of(Entry::class)->assert(unserialize($serialized));
 
-        assert($unserialized instanceof Entry);
         static::assertTrue($entry->isEqual($unserialized));
     }
 

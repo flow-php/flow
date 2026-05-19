@@ -26,6 +26,7 @@ final class VoidProcessorTest extends FlowTestCase
         $result = iterator_to_array($processor->process($generator, flow_context()));
 
         static::assertCount(1, $result);
+        // @mago-ignore analysis:mixed-argument
         static::assertCount(0, $result[0]);
     }
 
@@ -40,6 +41,7 @@ final class VoidProcessorTest extends FlowTestCase
         $result = iterator_to_array($processor->process($generator, flow_context()));
 
         static::assertCount(1, $result);
+        // @mago-ignore analysis:mixed-argument
         static::assertCount(0, $result[0]);
     }
 }

@@ -26,6 +26,7 @@ final class Least extends ScalarFunctionChain
         $extractedValues = [];
         $extractedTypes = [];
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($this->values as $value) {
             $extractedValues[] = (new Parameter($value))->eval($row, $context);
             $extractedTypes[] = (new Parameter($value))->asType($row, $context);

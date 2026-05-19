@@ -24,6 +24,7 @@ final class DOMElementAttributeValueTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function test_html_extracting_attribute_from_dom_element_entry(): void
     {
+        // @mago-ignore analysis:unavailable-method
         $element = HTMLDocument::createFromString(
             '<span id="foobar">foobar</span>',
             LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR,
@@ -41,6 +42,7 @@ final class DOMElementAttributeValueTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function test_html_extracting_non_existing_attribute_from_dom_element_entry(): void
     {
+        // @mago-ignore analysis:unavailable-method
         $element = HTMLDocument::createFromString('<span">foobar</span>', LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
 
         static::assertInstanceOf(HTMLElement::class, $element->documentElement);

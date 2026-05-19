@@ -100,7 +100,6 @@ final class FloatEntryTest extends FlowTestCase
         $float = float_entry('name', 1.0);
 
         $serialized = serialize($float);
-        /** @var FloatEntry $unserialized */
         $unserialized = type_instance_of(FloatEntry::class)->assert(unserialize($serialized));
 
         static::assertTrue($float->isEqual($unserialized));

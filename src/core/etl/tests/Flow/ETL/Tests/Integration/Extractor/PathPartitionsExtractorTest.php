@@ -27,13 +27,18 @@ final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
 
         $rows = rows();
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($extractedData as $nextRows) {
+            // @mago-ignore analysis:mixed-argument
+            // @mago-ignore analysis:mixed-argument
             $rows = $rows->merge($nextRows);
         }
 
         static::assertSame(7, $rows->count());
 
         $actualData = $rows->toArray();
+        // @mago-ignore analysis:mixed-operand
+        // @mago-ignore analysis:mixed-operand
         usort($actualData, static fn(array $a, array $b): int => $a['path'] <=> $b['path']);
 
         static::assertEquals(

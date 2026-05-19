@@ -24,6 +24,7 @@ final class DOMElementValueTest extends FlowTestCase
     #[RequiresPhp('>= 8.4')]
     public function test_html_getting_element_value_with_children(): void
     {
+        // @mago-ignore analysis:unavailable-method
         $element = HTMLDocument::createFromString('<p><span>foobar</span></p>', LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
 
         static::assertInstanceOf(HTMLElement::class, $element->documentElement);
@@ -38,6 +39,7 @@ final class DOMElementValueTest extends FlowTestCase
     #[RequiresPhp('>= 8.4')]
     public function test_html_getting_simple_element_value(): void
     {
+        // @mago-ignore analysis:unavailable-method
         $element = HTMLDocument::createFromString('<span>bar</span>', LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
 
         static::assertInstanceOf(HTMLElement::class, $element->documentElement);

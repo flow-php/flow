@@ -287,12 +287,14 @@ final class RowsTest extends FlowTestCase
         );
 
         $evenRows = static function (Row $row): bool {
+            // @mago-ignore analysis:mixed-assignment
             $value = $row->get('number')->value();
             assert(is_int($value));
 
             return ($value % 2) === 0;
         };
         $oddRows = static function (Row $row): bool {
+            // @mago-ignore analysis:mixed-assignment
             $value = $row->get('number')->value();
             assert(is_int($value));
 
@@ -368,6 +370,7 @@ final class RowsTest extends FlowTestCase
         $rows = rows(row(int_entry('id', 1234)), row(int_entry('id', 4567)));
 
         $rows = $rows->flatMap(static function (Row $row): array {
+            // @mago-ignore analysis:mixed-assignment
             $id = $row->valueOf('id');
             assert(is_int($id));
 
@@ -627,6 +630,7 @@ final class RowsTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
+        // @mago-ignore analysis:invalid-argument
         /** @phpstan-ignore-next-line */
         rows()->offsetExists('a');
     }
@@ -895,7 +899,9 @@ final class RowsTest extends FlowTestCase
             assert($row instanceof Row);
             assert($nextRow instanceof Row);
 
+            // @mago-ignore analysis:mixed-assignment
             $rowValue = $row->valueOf('number');
+            // @mago-ignore analysis:mixed-assignment
             $nextRowValue = $nextRow->valueOf('number');
             assert(is_numeric($rowValue));
             assert(is_numeric($nextRowValue));

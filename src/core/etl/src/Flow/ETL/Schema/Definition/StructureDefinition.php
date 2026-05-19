@@ -44,7 +44,7 @@ final class StructureDefinition implements Definition
     }
 
     /**
-     * @param array<array-key, mixed> $value
+     * @param array<array-key, mixed>|bool|float|int|string $value
      */
     public function addMetadata(string $key, int|string|bool|float|array $value): static
     {

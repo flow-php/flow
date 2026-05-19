@@ -28,6 +28,7 @@ final readonly class ChainExtractor implements Extractor, OverridingExtractor
     {
         foreach ($this->extractors as $extractor) {
             foreach ($extractor->extract($context) as $rows) {
+                // @mago-ignore analysis:mixed-assignment
                 $signal = yield $rows;
 
                 if ($signal === Signal::STOP) {

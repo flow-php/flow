@@ -56,18 +56,29 @@ final class Calculator
             $useNewNaming = defined('Brick\Math\RoundingMode::Up');
 
             $brickMode = match ($rounding) {
+                // @mago-ignore analysis:non-existent-class-constant
                 Rounding::UP => $useNewNaming ? RoundingMode::Up : RoundingMode::UP,
+                // @mago-ignore analysis:non-existent-class-constant
                 Rounding::DOWN => $useNewNaming ? RoundingMode::Down : RoundingMode::DOWN,
+                // @mago-ignore analysis:non-existent-class-constant
                 Rounding::CEILING => $useNewNaming ? RoundingMode::Ceiling : RoundingMode::CEILING,
+                // @mago-ignore analysis:non-existent-class-constant
                 Rounding::FLOOR => $useNewNaming ? RoundingMode::Floor : RoundingMode::FLOOR,
+                // @mago-ignore analysis:non-existent-class-constant
                 Rounding::HALF_UP => $useNewNaming ? RoundingMode::HalfUp : RoundingMode::HALF_UP,
+                // @mago-ignore analysis:non-existent-class-constant
                 Rounding::HALF_DOWN => $useNewNaming ? RoundingMode::HalfDown : RoundingMode::HALF_DOWN,
+                // @mago-ignore analysis:non-existent-class-constant
                 Rounding::HALF_CEILING => $useNewNaming ? RoundingMode::HalfCeiling : RoundingMode::HALF_CEILING,
+                // @mago-ignore analysis:non-existent-class-constant
                 Rounding::HALF_FLOOR => $useNewNaming ? RoundingMode::HalfFloor : RoundingMode::HALF_FLOOR,
+                // @mago-ignore analysis:non-existent-class-constant
                 Rounding::HALF_EVEN => $useNewNaming ? RoundingMode::HalfEven : RoundingMode::HALF_EVEN,
+                // @mago-ignore analysis:non-existent-class-constant
                 default => $useNewNaming ? RoundingMode::Unnecessary : RoundingMode::UNNECESSARY,
             };
 
+            // @mago-ignore analysis:possibly-invalid-argument
             $result = $aDecimal->dividedBy(BigDecimal::of((string) $b), $effectiveScale, $brickMode);
 
             if (!self::hasNonZeroFractionalPart($result)) {
@@ -76,9 +87,9 @@ final class Calculator
 
             return $result->toFloat();
         } catch (DivisionByZeroException $e) {
-            throw new DivisionByZeroError('Division by zero.', $e->getCode(), $e);
+            throw new DivisionByZeroError('Division by zero.', (int) $e->getCode(), $e);
         } catch (RoundingNecessaryException $e) {
-            throw new Exception\RoundingNecessaryException($e->getMessage(), $e->getCode(), $e);
+            throw new Exception\RoundingNecessaryException($e->getMessage(), (int) $e->getCode(), $e);
         }
     }
 
@@ -112,6 +123,7 @@ final class Calculator
      */
     public function power(int|float|string $a, int|string $b): int|float
     {
+        // @mago-ignore analysis:possibly-invalid-argument
         $result = BigDecimal::of((string) $a)->power(BigInteger::of((string) $b)->toInt());
 
         if (!self::hasNonZeroFractionalPart($result)) {
@@ -139,6 +151,7 @@ final class Calculator
     private static function hasNonZeroFractionalPart(BigDecimal $result): bool
     {
         if (method_exists($result, 'hasNonZeroFractionalPart')) {
+            // @mago-ignore analysis:mixed-return-statement
             return $result->hasNonZeroFractionalPart();
         }
 

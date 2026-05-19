@@ -29,6 +29,7 @@ final class CallbackLoader implements Loader
         $context->telemetry()->loadingStarted($this);
 
         try {
+            // @mago-ignore analysis:invalid-callable
             ($this->callback)($rows, $context);
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);

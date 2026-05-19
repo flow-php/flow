@@ -409,6 +409,7 @@ function filesystem_cache(
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
 function batched_by(Extractor $extractor, string|Reference $column, ?int $min_size = null): BatchByExtractor
 {
+    // @mago-ignore analysis:invalid-operand
     if ($min_size !== null && $min_size <= 0) {
         throw new InvalidArgumentException('Minimum batch size must be greater than 0, given: ' . $min_size);
     }
@@ -498,6 +499,7 @@ function to_memory(Memory $memory): MemoryLoader
 #[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'array')]
 function to_array(array &$array): ArrayLoader
 {
+    // @mago-ignore analysis:redundant-docblock-type
     /** @phpstan-var array<array<mixed>> $array */
     return new ArrayLoader($array);
 }
@@ -1462,6 +1464,7 @@ function array_to_row(
 ): Row {
     $entries = [];
 
+    // @mago-ignore analysis:mixed-assignment
     foreach ($data as $key => $value) {
         $name = is_int($key) ? 'e' . str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key;
 
@@ -1513,6 +1516,7 @@ function array_to_rows(
 
     $isRows = true;
 
+    // @mago-ignore analysis:mixed-assignment
     foreach ($data as $v) {
         if (!is_array($v)) {
             $isRows = false;
@@ -1527,6 +1531,7 @@ function array_to_rows(
 
     $rows = [];
 
+    // @mago-ignore analysis:mixed-assignment
     foreach ($data as $row) {
         $row = type_array()->assert($row);
         $rows[] = array_to_row($row, $entryFactory, $partitions, $schema);
@@ -1706,6 +1711,7 @@ function schema_selective_validator(): SelectiveValidator
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
 function schema_from_json(string $schema): Schema
 {
+    // @mago-ignore analysis:mixed-assignment
     $decodedSchema = json_decode($schema, true, 512, JSON_THROW_ON_ERROR);
     $decodedSchema = type_array()->assert($decodedSchema);
 
@@ -2084,15 +2090,15 @@ function equal(Reference|string $left, Reference|string $right): Equal
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::COMPARISON)]
-function compare_all(Comparison ...$comparisons): Comparison\All
+function compare_all(Comparison $comparison, Comparison ...$comparisons): Comparison\All
 {
-    return new Comparison\All(...$comparisons);
+    return new Comparison\All($comparison, ...$comparisons);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::COMPARISON)]
-function compare_any(Comparison ...$comparisons): Comparison\Any
+function compare_any(Comparison $comparison, Comparison ...$comparisons): Comparison\Any
 {
-    return new Comparison\Any(...$comparisons);
+    return new Comparison\Any($comparison, ...$comparisons);
 }
 
 /**

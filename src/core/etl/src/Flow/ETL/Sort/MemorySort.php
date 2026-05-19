@@ -25,9 +25,8 @@ final class MemorySort implements SortingAlgorithm
         $this->configuration = new Configuration(10);
 
         if ($this->configuration->isLessThan($maximumMemory) && !$this->configuration->isInfinite()) {
-            /**
-             * @phpstan-ignore-next-line
-             */
+            // @mago-ignore analysis:possible-method-access-on-null,mixed-property-type-coercion
+            /** @phpstan-ignore-next-line */
             $this->maximumMemory = $this->configuration->limit()->percentage(90);
         }
     }

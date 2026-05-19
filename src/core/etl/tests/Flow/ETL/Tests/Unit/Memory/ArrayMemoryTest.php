@@ -17,14 +17,12 @@ final class ArrayMemoryTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Chunk size must be greater than 0');
-
         (new ArrayMemory())->chunks(0);
     }
 
     public function test_chunks(): void
     {
         $memory = new ArrayMemory([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]]);
-
         static::assertCount(4, $memory->chunks(1));
         static::assertCount(1, $memory->chunks(4));
         static::assertCount(1, $memory->chunks(5));
@@ -35,7 +33,7 @@ final class ArrayMemoryTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Memory expects nested array data structure: array<array<mixed>>');
-
+        // @mago-ignore analysis:invalid-argument
         /** @phpstan-ignore-next-line */
         new ArrayMemory([1, 2, 3]);
     }
@@ -43,14 +41,12 @@ final class ArrayMemoryTest extends FlowTestCase
     public function test_flat_values(): void
     {
         $memory = new ArrayMemory([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]]);
-
         static::assertSame([1, 2, 3, 4], $memory->flatValues());
     }
 
     public function test_map(): void
     {
         $memory = new ArrayMemory([['id' => 1], ['id' => 2]]);
-
         static::assertSame([1, 2], $memory->map(static fn(?array $data): int => type_optional(type_integer())
             ->assert($data['id'] ?? null)));
     }
@@ -59,8 +55,8 @@ final class ArrayMemoryTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Memory expects nested array data structure: array<array<mixed>>');
-
         $memory = new ArrayMemory();
+        // @mago-ignore analysis:invalid-argument
         /** @phpstan-ignore-next-line */
         $memory->save([1, 2, 3]);
     }
@@ -70,7 +66,6 @@ final class ArrayMemoryTest extends FlowTestCase
         $memory = new ArrayMemory();
         $memory->save([['id' => 1], ['id' => 2]]);
         $memory->save([['id' => 3], ['id' => 4]]);
-
         static::assertSame([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]], $memory->dump());
         static::assertcount(4, $memory);
     }

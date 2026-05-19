@@ -36,9 +36,11 @@ final class Sum implements AggregatingFunction, WindowFunction
     {
         try {
             $entry = $row->get($this->ref);
+            // @mago-ignore analysis:mixed-assignment
             $value = $entry->value();
 
             if (is_numeric($value)) {
+                // @mago-ignore analysis:possibly-invalid-argument
                 $this->sum = (new Calculator())->add($this->sum, $value);
             }
         } catch (InvalidArgumentException $e) {
@@ -53,9 +55,11 @@ final class Sum implements AggregatingFunction, WindowFunction
         foreach ($partition->sortBy(...$this->window()->order()) as $partitionRow) {
             try {
                 $entry = $partitionRow->get($this->ref);
+                // @mago-ignore analysis:mixed-assignment
                 $value = $entry->value();
 
                 if (is_numeric($value)) {
+                    // @mago-ignore analysis:possibly-invalid-argument
                     $sum = (new Calculator())->add($sum, $value);
                 }
             } catch (InvalidArgumentException $e) {

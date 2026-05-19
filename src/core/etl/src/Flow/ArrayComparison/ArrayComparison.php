@@ -55,6 +55,7 @@ final class ArrayComparison
             return false;
         }
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($b as $key => $value) {
             if (!array_key_exists($key, $a)) {
                 return false;

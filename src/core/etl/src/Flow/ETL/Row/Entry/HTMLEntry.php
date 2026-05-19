@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Entry;
 
 use Dom\HTMLDocument;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition\HTMLDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 
+use function class_exists;
 use function Flow\Types\DSL\type_equals;
+use function Flow\Types\DSL\type_html;
 use function Flow\Types\DSL\type_optional;
 use function is_string;
 
@@ -33,8 +36,10 @@ final class HTMLEntry implements Entry
         HTMLDocument|string|null $value,
         ?Metadata $metadata = null,
     ) {
-        if (is_string($value)) {
+        if (class_exists('\Dom\HTMLDocument') && is_string($value)) {
             $this->value = HTMLDocument::createFromString($value, LIBXML_NOERROR);
+        } elseif (is_string($value)) {
+            throw new RuntimeException('HTMLEntry requires PHP 8.4+ (\Dom\HTMLDocument is not available).');
         } else {
             $this->value = $value;
         }
@@ -81,7 +86,7 @@ final class HTMLEntry implements Entry
 
     public function map(callable $mapper): static
     {
-        return new self($this->name, $mapper($this->value));
+        return new self($this->name, type_optional(type_html())->assert($mapper($this->value)));
     }
 
     public function name(): string
@@ -115,6 +120,6 @@ final class HTMLEntry implements Entry
 
     public function withValue(mixed $value): static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
+        return new self($this->name, type_optional(type_html())->assert($value), $this->definition->metadata());
     }
 }

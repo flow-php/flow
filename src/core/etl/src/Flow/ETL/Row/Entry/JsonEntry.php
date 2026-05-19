@@ -15,6 +15,7 @@ use Throwable;
 
 use function array_keys;
 use function Flow\Types\DSL\type_equals;
+use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_optional;
 use function is_array;
 use function is_string;
@@ -142,7 +143,11 @@ final class JsonEntry implements Entry
 
     public function map(callable $mapper): static
     {
-        return new self($this->name, $mapper($this->json), $this->definition->metadata());
+        return new self(
+            $this->name,
+            type_optional(type_json())->cast($mapper($this->json)),
+            $this->definition->metadata(),
+        );
     }
 
     public function name(): string
@@ -179,6 +184,6 @@ final class JsonEntry implements Entry
 
     public function withValue(mixed $value): static
     {
-        return new self($this->name, type_optional($this->type())->cast($value), $this->definition->metadata());
+        return new self($this->name, type_optional(type_json())->cast($value), $this->definition->metadata());
     }
 }

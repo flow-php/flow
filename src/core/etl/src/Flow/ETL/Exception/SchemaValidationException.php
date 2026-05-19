@@ -34,6 +34,7 @@ final class SchemaValidationException extends RuntimeException
 
             if ($givenDefinition === null) {
                 $missingDefinitions[] =
+                    // @mago-ignore analysis:implicit-to-string-cast
                     $expectedDefinition->entry()
                     . '<'
                     . ($expectedDefinition->isNullable() ? '?' : '')
@@ -62,6 +63,7 @@ final class SchemaValidationException extends RuntimeException
         foreach ($this->given->definitions() as $givenDefinition) {
             if ($this->expected->findDefinition($givenDefinition->entry()) === null) {
                 $unexpectedDefinitions[] =
+                    // @mago-ignore analysis:implicit-to-string-cast
                     $givenDefinition->entry()
                     . '<'
                     . ($givenDefinition->isNullable() ? '?' : '')

@@ -17,8 +17,10 @@ final class NotSame extends ScalarFunctionChain
 
     public function eval(Row $row, FlowContext $context): bool
     {
+        // @mago-ignore analysis:mixed-assignment
         $left = (new Parameter($this->left))->eval($row, $context);
         $leftType = (new Parameter($this->left))->asType($row, $context);
+        // @mago-ignore analysis:mixed-assignment
         $right = (new Parameter($this->right))->eval($row, $context);
         $rightType = (new Parameter($this->right))->asType($row, $context);
 

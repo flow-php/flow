@@ -40,8 +40,8 @@ use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\Native\UnionType;
 use Flow\Types\Type\TypeDetector;
 use TypeError;
-use UnitEnum;
 
+use function array_values;
 use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\date_entry;
 use function Flow\ETL\DSL\datetime_entry;
@@ -60,9 +60,9 @@ use function Flow\ETL\DSL\time_entry;
 use function Flow\ETL\DSL\uuid_entry;
 use function Flow\ETL\DSL\xml_element_entry;
 use function Flow\ETL\DSL\xml_entry;
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
-use function is_object;
 
 final readonly class EntryFactory
 {
@@ -77,13 +77,23 @@ final readonly class EntryFactory
     public function create(string $entryName, mixed $value, Schema|Definition|null $schema = null): Entry
     {
         if ($schema instanceof Definition) {
-            return $this->createAs($schema->entry()->name(), $value, $schema, $schema->metadata());
+            return $this->createAs(
+                $schema->entry()->name(),
+                $value,
+                $schema->isNullable() ? type_optional($schema->type()) : $schema->type(),
+                $schema->metadata(),
+            );
         }
 
         if ($schema instanceof Schema) {
             $definition = $schema->get($entryName);
 
-            return $this->createAs($definition->entry()->name(), $value, $definition, $definition->metadata());
+            return $this->createAs(
+                $definition->entry()->name(),
+                $value,
+                $definition->isNullable() ? type_optional($definition->type()) : $definition->type(),
+                $definition->metadata(),
+            );
         }
 
         if (null === $value) {
@@ -96,26 +106,12 @@ final readonly class EntryFactory
     }
 
     /**
-     * @param Definition<mixed>|Type<mixed> $definition
+     * @param Type<mixed> $type
      *
      * @return Entry<mixed>
      */
-    public function createAs(
-        string $entryName,
-        mixed $value,
-        Definition|Type $definition,
-        ?Metadata $metadata = null,
-    ): Entry {
-        if ($definition instanceof Definition) {
-            if ($definition->isNullable()) {
-                $type = type_optional($definition->type());
-            } else {
-                $type = $definition->type();
-            }
-        } else {
-            $type = $definition;
-        }
-
+    public function createAs(string $entryName, mixed $value, Type $type, ?Metadata $metadata = null): Entry
+    {
         if (null === $value && $type instanceof OptionalType) {
             return match ($type->base()::class) {
                 StringType::class => string_entry($entryName, null, $metadata),
@@ -123,7 +119,12 @@ final readonly class EntryFactory
                 FloatType::class => float_entry($entryName, null, $metadata),
                 BooleanType::class => bool_entry($entryName, null, $metadata),
                 MapType::class => map_entry($entryName, null, $type->base(), $metadata),
-                StructureType::class => struct_entry($entryName, null, $type->base(), $metadata),
+                StructureType::class => struct_entry(
+                    $entryName,
+                    null,
+                    type_instance_of(StructureType::class)->assert($type->base()),
+                    $metadata,
+                ),
                 ListType::class => list_entry($entryName, null, $type->base(), $metadata),
                 UuidType::class => uuid_entry($entryName, null, $metadata),
                 DateTimeType::class => datetime_entry($entryName, null, $metadata),
@@ -146,7 +147,15 @@ final readonly class EntryFactory
             }
 
             if ($type instanceof UnionType && $type->isOptionalType()) {
-                $type = $type->types()->reduceOptionals()->first();
+                $reduced = $type->types()->reduceOptionals()->first();
+
+                if ($reduced === null) {
+                    throw new InvalidArgumentException(
+                        "Entry \"{$entryName}\": cannot reduce optional union type \"{$type->toString()}\".",
+                    );
+                }
+
+                $type = $reduced;
             }
 
             if ($type instanceof StringType) {
@@ -192,11 +201,7 @@ final readonly class EntryFactory
             if ($type instanceof EnumType) {
                 $castValue = type_optional($type)->cast($value);
 
-                return enum_entry(
-                    $entryName,
-                    is_object($castValue) && $castValue instanceof UnitEnum ? $castValue : null,
-                    $metadata,
-                );
+                return enum_entry($entryName, $castValue, $metadata);
             }
 
             if ($type instanceof JsonType) {
@@ -246,10 +251,12 @@ final readonly class EntryFactory
             }
 
             if ($type instanceof ListType) {
-                $processedValue = $value === null ? null : $type->cast($value);
+                $processedValue = $value === null ? null : array_values($type->cast($value));
 
                 return new ListEntry($entryName, $processedValue, $type, $metadata);
             }
+
+            // @mago-ignore analysis:avoid-catching-error
         } catch (InvalidArgumentException|CastingException|TypeError $e) {
             throw new InvalidArgumentException(
                 "Entry \"{$entryName}\" conversion exception. {$e->getMessage()}",
@@ -257,7 +264,6 @@ final readonly class EntryFactory
             );
         }
 
-        /** @var Type<mixed> $type */
         throw new InvalidArgumentException(
             "Can't convert " . get_debug_type($value) . " value into type \"{$type->toString()}\"",
         );

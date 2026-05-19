@@ -65,6 +65,7 @@ final class DisplayTest extends FlowIntegrationTestCase
                         ]),
                         list_entry('list', [1, 2, 3], type_list(type_integer())),
                         map_entry('map', ['NEW', 'PENDING'], type_map(type_integer(), type_string())),
+                        // @mago-ignore analysis:less-specific-argument
                         struct_entry('items', ['item-id' => '1', 'name' => 'one'], type_structure([
                             'item-id' => type_string(),
                             'name' => type_string(),

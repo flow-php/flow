@@ -23,6 +23,7 @@ final class Hash extends ScalarFunctionChain
 
     public function eval(Row $row, FlowContext $context): ?string
     {
+        // @mago-ignore analysis:mixed-assignment
         $value = (new Parameter($this->value))->eval($row, $context);
 
         if ($value instanceof Json) {

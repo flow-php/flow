@@ -79,17 +79,14 @@ final class EntryFactoryTest extends TestCase
             $json = '{"id":1}',
             string_entry('e', $json),
         ];
-
         yield 'xml' => [
             $xml = '<root><foo>1</foo><bar>2</bar><baz>3</baz></root>',
             string_entry('e', $xml),
         ];
-
         yield 'html' => [
             $html = '<!DOCTYPE html><html lang="en"><head></head><body><div id="id">2</div><p>3</p></body></html>',
             string_entry('e', $html),
         ];
-
         yield 'uuid' => [
             $uuid = '00000000-0000-0000-0000-000000000000',
             string_entry('e', $uuid),
@@ -101,27 +98,21 @@ final class EntryFactoryTest extends TestCase
         yield 'json alike' => [
             '{"id":1',
         ];
-
         yield 'uuid alike' => [
             '00000000-0000-0000-0000-00000',
         ];
-
         yield 'xml alike' => [
             '<root',
         ];
-
         yield 'html alike' => [
             '<html',
         ];
-
         yield 'space' => [
             ' ',
         ];
-
         yield 'new line' => [
             "\n",
         ];
-
         yield 'invisible' => [
             '‎ ',
         ];
@@ -225,7 +216,6 @@ final class EntryFactoryTest extends TestCase
         $this->expectExceptionMessage(
             'Entry "e" conversion exception. Can\'t cast "string" into "enum<Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum>" type',
         );
-
         $this->entryFactory->create('e', 'invalid', schema(enum_schema('e', BackedIntEnum::class)));
     }
 
@@ -272,11 +262,11 @@ final class EntryFactoryTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function test_html_from_dom_html_document(): void
     {
+        // @mago-ignore analysis:unavailable-method
         /* @phpstan-ignore-next-line */
         $doc = HTMLDocument::createFromString(
             $html = '<!DOCTYPE html><html lang="en"><head></head><body><div>2</div><p>3</p></body></html>',
         );
-
         static::assertEquals(html_entry('e', $html), $this->entryFactory->create('e', $doc));
     }
 
@@ -294,11 +284,11 @@ final class EntryFactoryTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function test_html_string_with_html_definition_provided(): void
     {
+        // @mago-ignore analysis:unavailable-method
         /* @phpstan-ignore-next-line */
         $document = HTMLDocument::createFromString(
             $html = '<!DOCTYPE html><html lang="en"><head></head><body><div>2</div><p>bar</p></body></html>',
         );
-
         static::assertEquals(
             html_entry('e', $html),
             $this->entryFactory->create('e', $document, schema(html_schema('e'))),
@@ -449,7 +439,6 @@ final class EntryFactoryTest extends TestCase
         $this->expectExceptionMessage(
             "e: object<ArrayIterator> can't be converted to any known Entry, please normalize that object first",
         );
-
         $this->entryFactory->create('e', new ArrayIterator([1, 2]));
     }
 
@@ -545,7 +534,6 @@ final class EntryFactoryTest extends TestCase
         if (!class_exists(Uuid::class)) {
             static::markTestSkipped("Package 'ramsey/uuid' is required for this test.");
         }
-
         $uuidObject = Uuid::uuid4();
         static::assertEquals(uuid_entry('e', $uuidObject->toString()), $this->entryFactory->create('e', $uuidObject));
     }
@@ -577,14 +565,12 @@ final class EntryFactoryTest extends TestCase
     public function test_with_empty_schema(): void
     {
         $this->expectException(SchemaDefinitionNotFoundException::class);
-
         $this->entryFactory->create('e', '1', schema());
     }
 
     public function test_with_schema_for_different_entry(): void
     {
         $this->expectException(SchemaDefinitionNotFoundException::class);
-
         $this->entryFactory->create('diff', '1', schema(string_schema('e')));
     }
 

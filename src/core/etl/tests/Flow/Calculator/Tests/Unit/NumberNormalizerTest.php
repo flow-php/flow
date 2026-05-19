@@ -16,7 +16,7 @@ final class NumberNormalizerTest extends FlowTestCase
     {
         $this->expectException(NonNumericValueException::class);
         $this->expectExceptionMessage('foo');
-
+        // @mago-ignore analysis:possibly-invalid-argument
         /** @phpstan-ignore-next-line */
         NumberNormalizer::toString('foo', scale: 0);
     }
@@ -45,7 +45,6 @@ final class NumberNormalizerTest extends FlowTestCase
         if (is_string($input)) {
             assert(is_numeric($input), 'String parameter $input must be numeric');
         }
-
         static::assertSame($output, NumberNormalizer::toString($input, scale: $scale));
     }
 
@@ -53,7 +52,6 @@ final class NumberNormalizerTest extends FlowTestCase
     {
         $this->expectException(InvalidScaleException::class);
         $this->expectExceptionMessage('Scale "17" is invalid. It must be between 0 and 16.');
-
         NumberNormalizer::toString(1, scale: 17);
     }
 }

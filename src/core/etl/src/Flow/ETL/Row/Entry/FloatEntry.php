@@ -15,8 +15,11 @@ use Flow\Types\Type;
 use function bccomp;
 use function Flow\ETL\DSL\is_type;
 use function Flow\Types\DSL\type_equals;
+use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\type_numeric_string;
 use function Flow\Types\DSL\type_optional;
 use function number_format;
+use function sprintf;
 
 /**
  * @implements Entry<?float>
@@ -68,32 +71,33 @@ final class FloatEntry implements Entry
 
     public function isEqual(Entry $entry): bool
     {
+        if (!$entry instanceof self || !$this->is($entry->name())) {
+            return false;
+        }
+
         $entryValue = $entry->value();
         $thisValue = $this->value();
 
-        if ($entryValue === null && $thisValue !== null) {
-            return false;
-        }
-
-        if ($entryValue !== null && $thisValue === null) {
-            return false;
-        }
-
         if ($entryValue === null && $thisValue === null) {
-            return $this->is($entry->name()) && $entry instanceof self && is_type($this->type(), $entry->type());
+            return is_type($this->type(), $entry->type());
+        }
+
+        if ($entryValue === null || $thisValue === null) {
+            return false;
         }
 
         return (
-            $this->is($entry->name())
-            && $entry instanceof self
-            && type_equals($this->type(), $entry->type()) /** @phpstan-ignore-next-line */
-            && bccomp((string) $thisValue, (string) $entryValue) === 0
+            type_equals($this->type(), $entry->type())
+            && bccomp(
+                type_numeric_string()->assert(sprintf('%.20F', $thisValue)),
+                type_numeric_string()->assert(sprintf('%.20F', $entryValue)),
+            ) === 0
         );
     }
 
     public function map(callable $mapper): static
     {
-        return new self($this->name, $mapper($this->value()));
+        return new self($this->name, type_optional(type_float())->assert($mapper($this->value())));
     }
 
     public function name(): string
@@ -130,6 +134,6 @@ final class FloatEntry implements Entry
 
     public function withValue(mixed $value): static
     {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
+        return new self($this->name, type_optional(type_float())->assert($value), $this->definition->metadata());
     }
 }

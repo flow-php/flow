@@ -474,10 +474,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
                 $providerDef = new Definition(ArrayCatalogProvider::class, [$providerConfig['catalog']]);
                 $providerDef->addTag('flow.postgresql.catalog_provider');
                 $container->setDefinition("flow.postgresql.catalog_provider.{$i}", $providerDef);
-            } elseif (
-                array_key_exists('catalog_provider_id', $providerConfig)
-                && $providerConfig['catalog_provider_id'] !== null
-            ) {
+            } elseif ($providerConfig['catalog_provider_id'] !== null) {
                 $configProviderServiceIds[] = type_string()->assert($providerConfig['catalog_provider_id']);
             }
         }

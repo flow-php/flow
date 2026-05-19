@@ -119,7 +119,10 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         $document->loadXML($xml);
         $xpath = new DOMXPath($document);
 
+        // @mago-ignore analysis:mixed-assignment
         $nodes = $xpath->query('/root/foo');
+        // @mago-ignore analysis:mixed-method-access
+        // @mago-ignore analysis:mixed-method-access
         $expected = $nodes ? [$nodes->item(0), $nodes->item(1)] : null;
 
         static::assertEquals(

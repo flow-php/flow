@@ -46,6 +46,7 @@ final class Average implements AggregatingFunction, WindowFunction
             $value = $row->valueOf($this->ref);
 
             if (is_numeric($value)) {
+                // @mago-ignore analysis:possibly-invalid-argument
                 $this->sum = (new Calculator())->add($this->sum, $value);
                 $this->count++;
             }
@@ -65,6 +66,7 @@ final class Average implements AggregatingFunction, WindowFunction
                 $value = $partitionRow->valueOf($this->ref);
 
                 if (is_numeric($value)) {
+                    // @mago-ignore analysis:possibly-invalid-argument
                     $sum = (new Calculator())->add($sum, $value);
                     $count++;
                 }

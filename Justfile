@@ -60,7 +60,8 @@ analyze-mago *args:
         src/lib/azure-sdk \
         src/lib/doctrine-dbal-bulk \
         src/lib/snappy \
-        src/lib/parquet
+        src/lib/parquet \
+        src/core/etl
 
 # Auto-fix code style with Mago (format + lint --fix).
 fix:

@@ -65,7 +65,7 @@ class CompressionTest extends ParquetIntegrationTestCase
                 [
                     'struct' => [
                         'int64' => $faker->numberBetween(0, Consts::PHP_INT64_MAX),
-                        'boolean' => $faker->boolean,
+                        'boolean' => $faker->boolean(),
                         'string' => $faker->text(150),
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                         'list_of_int' => array_map(
@@ -118,7 +118,7 @@ class CompressionTest extends ParquetIntegrationTestCase
                 [
                     'struct' => [
                         'int64' => $faker->numberBetween(0, Consts::PHP_INT64_MAX),
-                        'boolean' => $faker->boolean,
+                        'boolean' => $faker->boolean(),
                         'string' => $faker->text(150),
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                         'list_of_int' => array_map(
@@ -176,7 +176,7 @@ class CompressionTest extends ParquetIntegrationTestCase
                 [
                     'struct' => [
                         'int64' => $faker->numberBetween(0, Consts::PHP_INT64_MAX),
-                        'boolean' => $faker->boolean,
+                        'boolean' => $faker->boolean(),
                         'string' => $faker->text(150),
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                         'list_of_int' => array_map(
@@ -234,7 +234,7 @@ class CompressionTest extends ParquetIntegrationTestCase
                 [
                     'struct' => [
                         'int64' => $faker->numberBetween(0, Consts::PHP_INT64_MAX),
-                        'boolean' => $faker->boolean,
+                        'boolean' => $faker->boolean(),
                         'string' => $faker->text(150),
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                         'list_of_int' => array_map(
@@ -292,7 +292,7 @@ class CompressionTest extends ParquetIntegrationTestCase
                 [
                     'struct' => [
                         'int64' => $faker->numberBetween(0, Consts::PHP_INT64_MAX),
-                        'boolean' => $faker->boolean,
+                        'boolean' => $faker->boolean(),
                         'string' => $faker->text(150),
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                         'list_of_int' => array_map(
@@ -349,7 +349,7 @@ class CompressionTest extends ParquetIntegrationTestCase
                 [
                     'struct' => [
                         'int64' => $faker->numberBetween(0, Consts::PHP_INT64_MAX),
-                        'boolean' => $faker->boolean,
+                        'boolean' => $faker->boolean(),
                         'string' => $faker->text(150),
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                         'list_of_int' => array_map(
@@ -402,7 +402,7 @@ class CompressionTest extends ParquetIntegrationTestCase
                 [
                     'struct' => [
                         'int64' => $faker->numberBetween(0, Consts::PHP_INT64_MAX),
-                        'boolean' => $faker->boolean,
+                        'boolean' => $faker->boolean(),
                         'string' => $faker->text(150),
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                         'list_of_int' => array_map(
@@ -460,7 +460,7 @@ class CompressionTest extends ParquetIntegrationTestCase
                 [
                     'struct' => [
                         'int64' => $faker->numberBetween(0, Consts::PHP_INT64_MAX),
-                        'boolean' => $faker->boolean,
+                        'boolean' => $faker->boolean(),
                         'string' => $faker->text(150),
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                         'list_of_int' => array_map(

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use DateInterval;
+use DateTimeInterface;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -12,6 +14,9 @@ use Flow\ETL\Window;
 use RuntimeException as BaseRuntimeException;
 
 use function count;
+use function is_array;
+use function is_numeric;
+use function is_string;
 
 final class Rank implements WindowFunction
 {
@@ -36,12 +41,28 @@ final class Rank implements WindowFunction
             throw new BaseRuntimeException('Rank window function requires to be ordered by one column');
         }
 
+        // @mago-ignore analysis:mixed-assignment
         $value = $row->valueOf($orderBy[0]->name());
 
         foreach ($partition->sortBy(...$orderBy) as $partitionRow) {
+            // @mago-ignore analysis:mixed-assignment
             $partitionValue = $partitionRow->valueOf($orderBy[0]->name());
 
-            if ($value < $partitionValue) {
+            $isLess = false;
+
+            if (is_numeric($value) && is_numeric($partitionValue)) {
+                $isLess = (float) $value < (float) $partitionValue;
+            } elseif (is_string($value) && is_string($partitionValue)) {
+                $isLess = $value < $partitionValue;
+            } elseif ($value instanceof DateTimeInterface && $partitionValue instanceof DateTimeInterface) {
+                $isLess = $value < $partitionValue;
+            } elseif ($value instanceof DateInterval && $partitionValue instanceof DateInterval) {
+                $isLess = $value < $partitionValue;
+            } elseif (is_array($value) && is_array($partitionValue)) {
+                $isLess = $value < $partitionValue;
+            }
+
+            if ($isLess) {
                 $rank++;
             }
         }

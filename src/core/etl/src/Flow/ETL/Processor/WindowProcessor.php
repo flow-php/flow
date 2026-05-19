@@ -106,6 +106,7 @@ final readonly class WindowProcessor implements Processor
         $processedRows = [];
 
         foreach ($partitionRows as $row) {
+            // @mago-ignore analysis:mixed-assignment
             $value = $this->function->apply($row, $partitionRows, $context);
 
             $entryName = $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry;

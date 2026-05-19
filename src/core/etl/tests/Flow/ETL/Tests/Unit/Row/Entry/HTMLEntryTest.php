@@ -18,6 +18,7 @@ use function Flow\ETL\DSL\html_schema;
 use function Flow\ETL\DSL\str_entry;
 use function preg_replace;
 
+// @mago-ignore analysis:unavailable-method
 #[RequiresPhp('>= 8.4')]
 final class HTMLEntryTest extends TestCase
 {

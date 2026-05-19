@@ -55,7 +55,10 @@ final class SortingProcessorTest extends FlowTestCase
         $result = iterator_to_array($processor->process($generator, $context));
         $allRows = [];
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($result as $batch) {
+            // @mago-ignore analysis:mixed-assignment
+            // @mago-ignore analysis:invalid-iterator,mixed-method-access
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;
             }
@@ -87,7 +90,10 @@ final class SortingProcessorTest extends FlowTestCase
         $result = iterator_to_array($processor->process($generator, $context));
         $allRows = [];
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($result as $batch) {
+            // @mago-ignore analysis:mixed-assignment
+            // @mago-ignore analysis:invalid-iterator,mixed-method-access
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;
             }
@@ -119,7 +125,10 @@ final class SortingProcessorTest extends FlowTestCase
         $result = iterator_to_array($processor->process($generator, $context));
         $allRows = [];
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($result as $batch) {
+            // @mago-ignore analysis:mixed-assignment
+            // @mago-ignore analysis:invalid-iterator,mixed-method-access
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;
             }

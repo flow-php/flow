@@ -18,6 +18,7 @@ final readonly class DataFrameExtractor implements Extractor
     public function extract(FlowContext $context): Generator
     {
         foreach ($this->dataFrame->get() as $rows) {
+            // @mago-ignore analysis:mixed-assignment
             $signal = yield $rows;
 
             if ($signal === Signal::STOP) {

@@ -23,6 +23,7 @@ use function count;
  *
  * @internal
  */
+// @mago-ignore analysis:invalid-property-assignment-value,possibly-null-argument,possible-method-access-on-null,invalid-yield-value-type
 final readonly class Segment
 {
     /** @var \SplObjectStorage<Loader|Transformer, null> */

@@ -140,7 +140,13 @@ final class DataFrame
      */
     public function batchSize(int $size): self
     {
-        if ($size === -1 || $size === 0) {
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
+        if ($size === -1) {
+            return $this->collect();
+        }
+
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
+        if ($size === 0) {
             return $this->collect();
         }
 

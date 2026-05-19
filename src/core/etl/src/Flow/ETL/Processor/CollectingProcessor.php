@@ -25,6 +25,7 @@ final readonly class CollectingProcessor implements Processor
         $collected = new Rows();
 
         foreach ($rows as $batch) {
+            // @mago-ignore analysis:redundant-docblock-type
             /** @var Rows $batch */
             $collected = $collected->merge($batch);
         }

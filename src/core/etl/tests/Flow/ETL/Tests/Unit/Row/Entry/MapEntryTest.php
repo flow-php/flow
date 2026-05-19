@@ -121,6 +121,7 @@ final class MapEntryTest extends FlowTestCase
                 'strings',
                 ['one', 'two', 'three'],
                 type_map(type_integer(), type_string()),
+                // @mago-ignore analysis:less-specific-nested-argument-type
             )->map(static fn(array $value): array => [implode(', ', $value)]),
         );
     }

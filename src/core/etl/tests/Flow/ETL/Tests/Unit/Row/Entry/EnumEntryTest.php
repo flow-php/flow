@@ -20,6 +20,7 @@ final class EnumEntryTest extends FlowTestCase
         $enum = enum_entry('enum', BackedIntEnum::one);
 
         static::assertSame(BackedIntEnum::one, $enum->value());
+        // @mago-ignore analysis:non-existent-property,possibly-null-property-access
         static::assertSame(1, $enum->value()->value);
     }
 
@@ -28,6 +29,7 @@ final class EnumEntryTest extends FlowTestCase
         $enum = enum_entry('enum', BackedStringEnum::one);
 
         static::assertSame(BackedStringEnum::one, $enum->value());
+        // @mago-ignore analysis:non-existent-property,possibly-null-property-access
         static::assertSame('one', $enum->value()->value);
     }
 

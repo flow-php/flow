@@ -109,6 +109,7 @@ final class UuidEntryTest extends FlowTestCase
         $renamedEntry = $entry->rename('new_name');
 
         static::assertSame('new_name', $renamedEntry->name());
+        // @mago-ignore analysis:mixed-method-access
         static::assertEquals($entry->value()?->toString(), $renamedEntry->value()?->toString());
         static::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }

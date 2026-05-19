@@ -25,6 +25,7 @@ final class ArrayExtractor implements Extractor
     public function extract(FlowContext $context): Generator
     {
         foreach ($this->dataset as $row) {
+            // @mago-ignore analysis:mixed-assignment
             $signal = yield array_to_rows([$row], $context->entryFactory(), [], $this->schema);
 
             if ($signal === Signal::STOP) {

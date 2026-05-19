@@ -35,6 +35,7 @@ final class CallUserFunc extends ScalarFunctionChain
 
     public function eval(Row $row, FlowContext $context): mixed
     {
+        // @mago-ignore analysis:mixed-assignment
         $callable = (new Parameter($this->callable))->eval($row, $context);
 
         if (!is_callable($callable)) {
@@ -45,6 +46,7 @@ final class CallUserFunc extends ScalarFunctionChain
 
         $parameters = [];
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($this->parameters as $key => $parameter) {
             $parameters[$key] = (new Parameter($parameter))->eval($row, $context);
         }

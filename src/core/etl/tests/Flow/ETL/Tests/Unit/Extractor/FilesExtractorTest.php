@@ -26,8 +26,13 @@ final class FilesExtractorTest extends FlowTestCase
         $generator = $extractor->extract(flow_context());
         $totalRows = 0;
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($generator as $rows) {
+            // @mago-ignore analysis:mixed-argument
             static::assertCount(1, $rows);
+            // @mago-ignore analysis:mixed-assignment
+            // @mago-ignore analysis:mixed-method-access,mixed-operand
+            // @mago-ignore analysis:mixed-operand
             $totalRows += $rows->count();
             $generator->send(Signal::STOP);
         }

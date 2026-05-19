@@ -368,6 +368,7 @@ final class AnalyzeTest extends FlowIntegrationTestCase
         $report = df($config)->read(from_array([['id' => 1]]))->run();
 
         static::assertNotNull($report);
+        // @mago-ignore analysis:mixed-method-access
         static::assertSame(1, $report->statistics()->totalRows());
     }
 }

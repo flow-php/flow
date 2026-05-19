@@ -40,7 +40,7 @@ final class SortConfigBuilder
             } else {
                 $memoryLimit = ini_get('memory_limit');
 
-                if ($memoryLimit === '-1') {
+                if ($memoryLimit === false || $memoryLimit === '-1') {
                     $this->sortMemoryLimit = Unit::fromBytes(PHP_INT_MAX);
                 } else {
                     $this->sortMemoryLimit = Unit::fromString(

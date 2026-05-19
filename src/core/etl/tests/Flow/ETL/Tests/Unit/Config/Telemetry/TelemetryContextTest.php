@@ -116,6 +116,7 @@ final class TelemetryContextTest extends FlowTestCase
         $span = $spans[0];
         static::assertSame('DataFrame flow_dataframe', $span->name());
         static::assertNotNull($span->status());
+        // @mago-ignore analysis:possible-method-access-on-null
         static::assertTrue($span->status()->isOk());
 
         $attributes = $span->attributes();
@@ -169,7 +170,9 @@ final class TelemetryContextTest extends FlowTestCase
         $endedSpans = $spanProcessor->endedSpans();
         static::assertCount(1, $endedSpans);
         static::assertNotNull($endedSpans[0]->status());
+        // @mago-ignore analysis:possible-method-access-on-null
         static::assertTrue($endedSpans[0]->status()->isError());
+        // @mago-ignore analysis:possibly-null-property-access
         static::assertSame('Processing failed due to invalid data', $endedSpans[0]->status()->description);
 
         $attributes = $endedSpans[0]->attributes();
@@ -253,6 +256,7 @@ final class TelemetryContextTest extends FlowTestCase
         static::assertSame('StreamLoader', $endedSpans[0]->name());
         static::assertSame(StreamLoader::class, $endedSpans[0]->attributes()['loader.class']);
         static::assertNotNull($endedSpans[0]->status());
+        // @mago-ignore analysis:possible-method-access-on-null
         static::assertTrue($endedSpans[0]->status()->isOk());
     }
 
@@ -297,7 +301,9 @@ final class TelemetryContextTest extends FlowTestCase
         $endedSpans = $spanProcessor->endedSpans();
         static::assertCount(1, $endedSpans);
         static::assertNotNull($endedSpans[0]->status());
+        // @mago-ignore analysis:possible-method-access-on-null
         static::assertTrue($endedSpans[0]->status()->isError());
+        // @mago-ignore analysis:possibly-null-property-access
         static::assertSame('Loading failed due to disk error', $endedSpans[0]->status()->description);
     }
 
@@ -536,6 +542,7 @@ final class TelemetryContextTest extends FlowTestCase
         static::assertSame('LimitTransformer', $endedSpans[0]->name());
         static::assertSame(LimitTransformer::class, $endedSpans[0]->attributes()['transformer.class']);
         static::assertNotNull($endedSpans[0]->status());
+        // @mago-ignore analysis:possible-method-access-on-null
         static::assertTrue($endedSpans[0]->status()->isOk());
     }
 
@@ -580,7 +587,9 @@ final class TelemetryContextTest extends FlowTestCase
         $endedSpans = $spanProcessor->endedSpans();
         static::assertCount(1, $endedSpans);
         static::assertNotNull($endedSpans[0]->status());
+        // @mago-ignore analysis:possible-method-access-on-null
         static::assertTrue($endedSpans[0]->status()->isError());
+        // @mago-ignore analysis:possibly-null-property-access
         static::assertSame('Transformation failed', $endedSpans[0]->status()->description);
     }
 

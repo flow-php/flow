@@ -21,7 +21,6 @@ final class HTMLQuerySelectorTest extends TestCase
     public function test_getting_element_for_older_versions(): void
     {
         $this->expectException(RequiredPHPVersionException::class);
-
         ref('value')
             ->htmlQuerySelector('body div p')
             ->eval(row(flow_context(config())->entryFactory()->create('value', '')), flow_context());
@@ -30,15 +29,14 @@ final class HTMLQuerySelectorTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function test_getting_elements_for_given_path(): void
     {
+        // @mago-ignore analysis:unavailable-method
         /* @phpstan-ignore-next-line */
         $html = HTMLDocument::createFromString(
             '<!DOCTYPE html><html><head></head><body><div><span>foobar</span></div></body></html>',
         );
-
         $result = ref('value')
             ->htmlQuerySelector('body div span')
             ->eval(row(flow_context(config())->entryFactory()->create('value', $html)), flow_context());
-
         /* @phpstan-ignore-next-line */
         static::assertInstanceOf(Element::class, $result);
     }
@@ -46,15 +44,14 @@ final class HTMLQuerySelectorTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function test_getting_null_when_nothing_found(): void
     {
+        // @mago-ignore analysis:unavailable-method
         /* @phpstan-ignore-next-line */
         $html = HTMLDocument::createFromString(
             '<!DOCTYPE html><html><head></head><body><div><span>foobar</span></div></body></html>',
         );
-
         $result = ref('value')
             ->htmlQuerySelector('body div p')
             ->eval(row(flow_context(config())->entryFactory()->create('value', $html)), flow_context());
-
         static::assertNull($result);
     }
 
@@ -64,7 +61,6 @@ final class HTMLQuerySelectorTest extends TestCase
         $result = ref('value')
             ->htmlQuerySelector('body div span')
             ->eval(row(flow_context(config())->entryFactory()->create('value', '')), flow_context());
-
         static::assertNull($result);
     }
 }

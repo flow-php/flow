@@ -27,6 +27,7 @@ final readonly class RowsExtractor implements Extractor
     public function extract(FlowContext $context): Generator
     {
         foreach ($this->rows as $rows) {
+            // @mago-ignore analysis:mixed-assignment
             $signal = yield $rows;
 
             if ($signal === Signal::STOP) {

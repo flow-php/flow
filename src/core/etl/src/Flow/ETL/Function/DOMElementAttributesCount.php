@@ -42,6 +42,7 @@ final class DOMElementAttributesCount extends ScalarFunctionChain
             return 0;
         }
 
+        // @mago-ignore analysis:possibly-null-property-access
         return $domElement->attributes->length;
     }
 }

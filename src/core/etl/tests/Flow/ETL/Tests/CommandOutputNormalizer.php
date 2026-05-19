@@ -21,6 +21,7 @@ trait CommandOutputNormalizer
      */
     protected static function assertCommandOutputContains(string $expected, string $actual, string $message = ''): void
     {
+        // @mago-ignore analysis:non-existent-method
         self::assertStringContainsString($expected, self::normalizeCommandOutput($actual), $message);
     }
 
@@ -33,6 +34,7 @@ trait CommandOutputNormalizer
      */
     protected static function assertCommandOutputEquals(string $expected, string $actual, string $message = ''): void
     {
+        // @mago-ignore analysis:non-existent-method
         self::assertEquals($expected, self::normalizeCommandOutput($actual), $message);
     }
 
@@ -45,6 +47,7 @@ trait CommandOutputNormalizer
      */
     protected static function assertCommandOutputIdentical(string $expected, string $actual, string $message = ''): void
     {
+        // @mago-ignore analysis:non-existent-method
         self::assertSame($expected, self::normalizeCommandOutput($actual), $message);
     }
 

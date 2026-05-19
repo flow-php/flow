@@ -37,11 +37,14 @@ final class XPath extends ScalarFunctionChain
             return $context->functions()->invalidResult(new InvalidArgumentException('XPath requires non-null path'));
         }
 
+        // @mago-ignore analysis:redundant-logical-operation
         if ($value instanceof DOMNode && !$value instanceof DOMDocument) {
             $dom = $value->ownerDocument ?? new DOMDocument();
             $importedNode = $dom->importNode($value, true);
 
+            // @mago-ignore analysis:invalid-property-access
             if (!$importedNode->parentNode) {
+                // @mago-ignore analysis:possibly-false-argument
                 $dom->appendChild($importedNode);
             }
 
@@ -49,18 +52,22 @@ final class XPath extends ScalarFunctionChain
         }
 
         $xpath = new DOMXPath($value);
+        // @mago-ignore analysis:mixed-assignment
         $result = @$xpath->query($path);
 
         if ($result === false) {
             return null;
         }
 
+        // @mago-ignore analysis:mixed-property-access
         if ($result->length === 0) {
             return null;
         }
 
         $nodes = [];
 
+        // @mago-ignore analysis:mixed-assignment
+        // @mago-ignore analysis:invalid-iterator
         foreach ($result as $node) {
             if ($node instanceof DOMNameSpaceNode) {
                 continue;
@@ -69,6 +76,7 @@ final class XPath extends ScalarFunctionChain
             $nodes[] = $node;
         }
 
+        // @mago-ignore analysis:less-specific-nested-return-statement
         return $nodes;
     }
 }

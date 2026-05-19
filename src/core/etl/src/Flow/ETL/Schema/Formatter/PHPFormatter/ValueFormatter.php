@@ -50,10 +50,12 @@ final class ValueFormatter
         $formattedArray = [];
 
         if (array_is_list($array)) {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($array as $value) {
                 $formattedArray[] = sprintf('%s', $this->format($value));
             }
         } else {
+            // @mago-ignore analysis:mixed-assignment
             foreach ($array as $key => $value) {
                 $formattedArray[] = sprintf('%s => %s', $this->format($key), $this->format($value));
             }

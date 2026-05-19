@@ -83,6 +83,8 @@ final class PartitioningTest extends FlowIntegrationTestCase
         $partitions = df()->read(from_path_partitions(__DIR__ . '/Fixtures/Partitioning/overwrite/**/*.txt'))->fetch();
 
         $actualData = $partitions->toArray();
+        // @mago-ignore analysis:mixed-operand
+        // @mago-ignore analysis:mixed-operand
         usort($actualData, static fn(array $a, array $b): int => $a['path'] <=> $b['path']);
 
         static::assertSame(
@@ -122,6 +124,8 @@ final class PartitioningTest extends FlowIntegrationTestCase
             ->read(from_text(__DIR__ . '/Fixtures/Partitioning/overwrite/**/*.txt'))
             ->fetch()
             ->toArray();
+        // @mago-ignore analysis:mixed-operand
+        // @mago-ignore analysis:mixed-operand
         usort($textRows, static fn(array $a, array $b): int => $a['text'] <=> $b['text']);
         static::assertSame(
             [

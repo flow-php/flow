@@ -28,6 +28,7 @@ final class StructureSelectTest extends FlowTestCase
                 'id' => 1,
                 'name' => 'test',
             ],
+            // @mago-ignore analysis:less-specific-argument
             type_structure([
                 'id' => type_integer(),
                 'name' => type_string(),
@@ -48,6 +49,7 @@ final class StructureSelectTest extends FlowTestCase
                 'id' => 1,
                 'name' => 'test',
             ],
+            // @mago-ignore analysis:less-specific-argument
             type_structure([
                 'id' => type_integer(),
                 'name' => type_string(),
@@ -68,6 +70,7 @@ final class StructureSelectTest extends FlowTestCase
                 'id' => 1,
                 'name' => 'test',
             ],
+            // @mago-ignore analysis:less-specific-argument
             type_structure([
                 'id' => type_integer(),
                 'name' => type_string(),
@@ -89,6 +92,7 @@ final class StructureSelectTest extends FlowTestCase
                 'email' => 'email@email.com',
                 'name' => null,
             ],
+            // @mago-ignore analysis:less-specific-argument
             type_structure([
                 'id' => type_optional(type_integer()),
                 'email' => type_string(),

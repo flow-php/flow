@@ -41,6 +41,7 @@ final readonly class UnserializeTransformer implements Transformer
                     return $row;
                 }
 
+                // @mago-ignore analysis:mixed-assignment
                 $serialized = $row->valueOf($source->name());
 
                 if (!is_string($serialized)) {

@@ -44,6 +44,7 @@ final readonly class StructureSelect implements ScalarFunction
 
         foreach ($this->refs as $ref) {
             if (array_key_exists($ref->to(), $structure->value() ?: [])) {
+                // @mago-ignore analysis:possibly-null-array-access
                 $output[$ref->name()] = $structure->value() ? $structure->value()[$ref->to()] : null;
             } else {
                 $output[$ref->name()] = null;

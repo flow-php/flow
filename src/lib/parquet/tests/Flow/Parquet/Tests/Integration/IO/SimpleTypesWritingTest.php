@@ -151,7 +151,7 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
-                    'date' => DateTimeImmutable::createFromMutable($faker->dateTimeThisYear)->setTime(0, 0, 0, 0),
+                    'date' => DateTimeImmutable::createFromMutable($faker->dateTimeThisYear())->setTime(0, 0, 0, 0),
                 ],
             ],
             range(1, 100),
@@ -223,7 +223,7 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
             static fn(int $i): array => [
                 [
                     'date' => ($i % 2) === 0
-                        ? DateTimeImmutable::createFromMutable($faker->dateTimeThisYear)->setTime(0, 0, 0, 0)
+                        ? DateTimeImmutable::createFromMutable($faker->dateTimeThisYear())->setTime(0, 0, 0, 0)
                         : null,
                 ],
             ],
@@ -669,10 +669,10 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
             static fn(int $i): array => [
                 [
                     'json' => json_encode([
-                        'street' => $faker->streetName,
-                        'city' => $faker->city,
-                        'country' => $faker->country,
-                        'zip' => $faker->postcode,
+                        'street' => $faker->streetName(),
+                        'city' => $faker->city(),
+                        'country' => $faker->country(),
+                        'zip' => $faker->postcode(),
                     ], JSON_THROW_ON_ERROR),
                 ],
             ],
@@ -708,10 +708,10 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
                 [
                     'json' => ($i % 2) === 0
                         ? json_encode([
-                            'street' => $faker->streetName,
-                            'city' => $faker->city,
-                            'country' => $faker->country,
-                            'zip' => $faker->postcode,
+                            'street' => $faker->streetName(),
+                            'city' => $faker->city(),
+                            'country' => $faker->country(),
+                            'zip' => $faker->postcode(),
                         ], JSON_THROW_ON_ERROR)
                         : null,
                 ],
@@ -880,7 +880,7 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
-                    'dateTime' => $faker->dateTimeThisYear,
+                    'dateTime' => $faker->dateTimeThisYear(),
                 ],
             ],
             range(1, 100),
@@ -946,7 +946,7 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
-                    'dateTime' => ($i % 2) === 0 ? $faker->dateTimeThisYear : null,
+                    'dateTime' => ($i % 2) === 0 ? $faker->dateTimeThisYear() : null,
                 ],
             ],
             range(1, 100),
@@ -979,7 +979,7 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
-                    'uuid' => $faker->uuid,
+                    'uuid' => $faker->uuid(),
                 ],
             ],
             range(1, 100),
@@ -1012,7 +1012,7 @@ class SimpleTypesWritingTest extends ParquetIntegrationTestCase
         $inputData = array_merge(...array_map(
             static fn(int $i): array => [
                 [
-                    'uuid' => ($i % 2) === 0 ? $faker->uuid : null,
+                    'uuid' => ($i % 2) === 0 ? $faker->uuid() : null,
                 ],
             ],
             range(1, 100),

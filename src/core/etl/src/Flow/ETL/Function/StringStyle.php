@@ -40,6 +40,7 @@ final class StringStyle extends ScalarFunctionChain
             $style = StringStyles::fromString($style);
         }
 
+        // @mago-ignore analysis:impossible-condition
         if (!$style instanceof StringStyles) {
             return $context
                 ->functions()

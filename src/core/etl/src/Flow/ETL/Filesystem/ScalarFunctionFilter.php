@@ -26,6 +26,7 @@ final readonly class ScalarFunctionFilter implements Filter
 
     public function accept(FileStatus $status): bool
     {
+        // @mago-ignore analysis:mixed-operand
         return (bool) $this->function->eval(
             row(...array_map(fn(Partition $partition) => $this->entryFactory->create(
                 $partition->name,

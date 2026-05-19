@@ -25,6 +25,7 @@ final readonly class BatchByExtractor implements Extractor, OverridingExtractor
         private Reference $column,
         private ?int $minSize = null,
     ) {
+        // @mago-ignore analysis:invalid-operand
         if ($this->minSize !== null && $this->minSize <= 0) {
             throw new InvalidArgumentException('Minimum batch size must be greater than 0, given: ' . $this->minSize);
         }
@@ -40,12 +41,15 @@ final readonly class BatchByExtractor implements Extractor, OverridingExtractor
 
         foreach ($this->extractor->extract($context) as $rows) {
             foreach ($rows->all() as $row) {
+                // @mago-ignore analysis:mixed-assignment
                 $groupValue = $row->valueOf($this->column);
 
                 if ($currentGroupValue === null) {
+                    // @mago-ignore analysis:mixed-assignment
                     $currentGroupValue = $groupValue;
                 } elseif ($currentGroupValue !== $groupValue) {
                     if ($this->minSize === null || count($buffer) >= $this->minSize) {
+                        // @mago-ignore analysis:mixed-assignment
                         $signal = yield new Rows(...$buffer);
 
                         if ($signal === Signal::STOP) {
@@ -55,6 +59,7 @@ final readonly class BatchByExtractor implements Extractor, OverridingExtractor
                         $buffer = [];
                     }
 
+                    // @mago-ignore analysis:mixed-assignment
                     $currentGroupValue = $groupValue;
                 }
 

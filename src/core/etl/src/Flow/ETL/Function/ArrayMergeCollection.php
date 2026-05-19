@@ -34,6 +34,7 @@ final class ArrayMergeCollection extends ScalarFunctionChain
                 ->invalidResult(new InvalidArgumentException('ArrayMergeCollection function requires non-null array'));
         }
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($array as $element) {
             if (!is_array($element)) {
                 return $context

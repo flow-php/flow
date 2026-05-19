@@ -27,7 +27,6 @@ final class ListEntryTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Entry name cannot be empty');
-
         list_entry('', ['one', 'two', 'three'], type_list(type_string()));
     }
 
@@ -35,7 +34,6 @@ final class ListEntryTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list<boolean> got different types: array<mixed>');
-
         list_entry('list', ['string', false], type_list(type_boolean()));
     }
 
@@ -43,7 +41,6 @@ final class ListEntryTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list<object<DateTimeInterface>> got different types: array<mixed>');
-
         list_entry('list', ['string', new DateTimeImmutable()], type_list(type_instance_of(DateTimeInterface::class)));
     }
 
@@ -51,7 +48,6 @@ final class ListEntryTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list<float> got different types: array<mixed>');
-
         list_entry('list', ['string', 1.3], type_list(type_float()));
     }
 
@@ -59,7 +55,6 @@ final class ListEntryTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list<integer> got different types: array<mixed>');
-
         list_entry('list', ['string', 1], type_list(type_integer()));
     }
 
@@ -67,7 +62,7 @@ final class ListEntryTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list<integer> got different types: map<string, integer>');
-
+        // @mago-ignore analysis:invalid-argument
         /** @phpstan-ignore-next-line */
         list_entry('list', ['a' => 1, 'b' => 2], type_list(type_integer()));
     }
@@ -76,7 +71,6 @@ final class ListEntryTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list<string> got different types: array<mixed>');
-
         list_entry('list', ['string', 1], type_list(type_string()));
     }
 
@@ -92,7 +86,6 @@ final class ListEntryTest extends FlowTestCase
     {
         $entry = list_entry('strings', ['one', 'two', 'three'], type_list(type_string()));
         $duplicated = $entry->duplicate();
-
         static::assertNotSame($entry, $duplicated);
         static::assertEquals($entry, $duplicated);
     }
@@ -124,6 +117,7 @@ final class ListEntryTest extends FlowTestCase
                 'strings',
                 ['one', 'two', 'three'],
                 type_list(type_string()),
+                // @mago-ignore analysis:less-specific-nested-argument-type
             )->map(static fn(array $value): array => [implode(', ', $value)]),
         );
     }
@@ -140,9 +134,7 @@ final class ListEntryTest extends FlowTestCase
     {
         $metadata = Metadata::fromArray(['description' => 'test metadata', 'priority' => 1]);
         $entry = list_entry('old_name', ['one', 'two', 'three'], type_list(type_string()), $metadata);
-
         $renamedEntry = $entry->rename('new_name');
-
         static::assertSame('new_name', $renamedEntry->name());
         static::assertEquals(['one', 'two', 'three'], $renamedEntry->value());
         static::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));

@@ -35,11 +35,17 @@ final class GroupByProcessorTest extends FlowTestCase
 
         static::assertCount(1, $result);
 
+        // @mago-ignore analysis:mixed-assignment
+        // @mago-ignore analysis:mixed-method-access
         $resultArray = $result[0]->toArray();
+        // @mago-ignore analysis:mixed-argument
         static::assertCount(2, $resultArray);
 
+        // @mago-ignore analysis:mixed-assignment
+        // @mago-ignore analysis:mixed-argument,mixed-array-access
         $categoryA = array_values(array_filter($resultArray, static fn($r) => $r['category'] === 'a'))[0];
 
+        // @mago-ignore analysis:mixed-array-access
         static::assertEquals(30, $categoryA['amount_sum']);
     }
 
@@ -62,13 +68,22 @@ final class GroupByProcessorTest extends FlowTestCase
 
         static::assertCount(1, $result);
 
+        // @mago-ignore analysis:mixed-assignment
+        // @mago-ignore analysis:mixed-method-access
         $resultArray = $result[0]->toArray();
+        // @mago-ignore analysis:mixed-argument
         static::assertCount(2, $resultArray);
 
+        // @mago-ignore analysis:mixed-assignment
+        // @mago-ignore analysis:mixed-argument,mixed-array-access
         $categoryA = array_values(array_filter($resultArray, static fn($r) => $r['category'] === 'a'))[0];
+        // @mago-ignore analysis:mixed-assignment
+        // @mago-ignore analysis:mixed-argument,mixed-array-access
         $categoryB = array_values(array_filter($resultArray, static fn($r) => $r['category'] === 'b'))[0];
 
+        // @mago-ignore analysis:mixed-array-access
         static::assertEquals(30, $categoryA['amount_sum']);
+        // @mago-ignore analysis:mixed-array-access
         static::assertEquals(15, $categoryB['amount_sum']);
     }
 
@@ -86,6 +101,7 @@ final class GroupByProcessorTest extends FlowTestCase
         $result = iterator_to_array($processor->process($generator, flow_context()));
 
         static::assertCount(1, $result);
+        // @mago-ignore analysis:mixed-argument
         static::assertCount(0, $result[0]);
     }
 }

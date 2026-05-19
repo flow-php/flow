@@ -102,6 +102,8 @@ final class GroupBy
 
                 $indexValue = $this->hash($values);
 
+                // @mago-ignore analysis:possibly-null-argument
+                // @mago-ignore analysis:mixed-assignment
                 $pivotValue = $row->valueOf($this->pivot);
 
                 if (!array_key_exists($indexValue, $this->pivotedTable)) {
@@ -119,10 +121,12 @@ final class GroupBy
                 $pivotValue = type_union(type_string(), type_integer())->assert($pivotValue);
 
                 if (!array_key_exists($pivotValue, $this->pivotedTable[$indexValue])) {
-                    /** @phpstan-ignore-next-line */
+                    // @mago-ignore analysis:invalid-property-assignment-value,possibly-invalid-clone
+                    /** @phpstan-ignore-next-line clone.nonObject, assign.propertyType */
                     $this->pivotedTable[$indexValue][$pivotValue] = clone current($this->aggregations);
                 }
 
+                // @mago-ignore analysis:mixed-assignment
                 $aggregator = $this->pivotedTable[$indexValue][$pivotValue];
 
                 if ($aggregator instanceof AggregatingFunction) {
@@ -177,12 +181,14 @@ final class GroupBy
             foreach ($this->pivotedTable as $index => $columns) {
                 $row = [$this->refs->first()->name() => $index];
 
+                // @mago-ignore analysis:mixed-assignment
                 foreach ($columns as $rowIndex => $values) {
                     $row[$rowIndex] = $values instanceof AggregatingFunction
                         ? $values->result($context->entryFactory())->value()
                         : $values;
                 }
 
+                // @mago-ignore analysis:mixed-assignment
                 foreach ($this->pivotColumns as $column) {
                     $column = type_union(type_string(), type_integer())->assert($column);
 

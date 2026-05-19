@@ -44,10 +44,12 @@ final class ArrayToRowTest extends FlowTestCase
         ], flow_context(config())->entryFactory());
 
         static::assertEquals(
+            // @mago-ignore analysis:less-specific-argument
             row(struct_entry('e00', ['id' => 1234, 'deleted' => false, 'phase' => null], type_structure([
                 'id' => type_integer(),
                 'deleted' => type_boolean(),
                 'phase' => type_null(),
+                // @mago-ignore analysis:less-specific-argument
             ])), struct_entry('e01', ['id' => 4321, 'deleted' => true, 'phase' => 'launch'], type_structure([
                 'id' => type_integer(),
                 'deleted' => type_boolean(),
