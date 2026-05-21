@@ -370,7 +370,6 @@ final class RowsTest extends FlowTestCase
         $rows = rows(row(int_entry('id', 1234)), row(int_entry('id', 4567)));
 
         $rows = $rows->flatMap(static function (Row $row): array {
-            // @mago-ignore analysis:mixed-assignment
             $id = $row->valueOf('id');
             assert(is_int($id));
 
@@ -899,9 +898,7 @@ final class RowsTest extends FlowTestCase
             assert($row instanceof Row);
             assert($nextRow instanceof Row);
 
-            // @mago-ignore analysis:mixed-assignment
             $rowValue = $row->valueOf('number');
-            // @mago-ignore analysis:mixed-assignment
             $nextRowValue = $nextRow->valueOf('number');
             assert(is_numeric($rowValue));
             assert(is_numeric($nextRowValue));

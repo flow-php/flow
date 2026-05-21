@@ -66,9 +66,7 @@ final class RowsMinHeap extends SplMinHeap
         $rightValues = [];
 
         foreach ($this->ref as $entry) {
-            // @mago-ignore analysis:mixed-assignment
             $row1Value = $value1->row->valueOf($entry->name());
-            // @mago-ignore analysis:mixed-assignment
             $row2Value = $value2->row->valueOf($entry->name());
 
             if ($entry->sort() === SortOrder::DESC) {

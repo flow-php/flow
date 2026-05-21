@@ -47,7 +47,6 @@ final class Cast extends ScalarFunctionChain
      */
     public function eval(Row $row, FlowContext $context): ?ScalarResult
     {
-        // @mago-ignore analysis:mixed-assignment
         $value = (new Parameter($this->value))->eval($row, $context);
 
         $type = $this->type;
@@ -62,8 +61,6 @@ final class Cast extends ScalarFunctionChain
             return new ScalarResult($type->cast($value), $type);
         }
 
-        // @mago-ignore analysis:redundant-docblock-type
-        /** @var string $type */
         try {
             $result = match (mb_strtolower($type)) {
                 'datetime' => new ScalarResult(type_datetime()->cast($value), type_datetime()),

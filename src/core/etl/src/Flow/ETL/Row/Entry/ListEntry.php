@@ -14,20 +14,20 @@ use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\TypeDetector;
 
 use function Flow\Types\DSL\type_equals;
-use function Flow\Types\DSL\type_optional;
 use function json_encode;
 
 /**
  * @template T
+ * @template-covariant TList of list<T>|null
  *
- * @implements Entry<?list<T>>
+ * @implements Entry<TList>
  */
 final class ListEntry implements Entry
 {
     use EntryRef;
 
     /**
-     * @var ?list<T>
+     * @var TList
      */
     private readonly ?array $value;
 
@@ -37,6 +37,7 @@ final class ListEntry implements Entry
     private ListDefinition $definition;
 
     /**
+     * @param TList $value
      * @param ListType<T> $type
      *
      * @throws InvalidArgumentException
@@ -51,15 +52,16 @@ final class ListEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        if ($value !== null && !$type->isValid($value)) {
+        $this->value = $value;
+
+        // @mago-ignore analysis:redundant-type-comparison
+        if ($this->value !== null && !$type->isValid($this->value)) {
             throw InvalidArgumentException::because(
                 'Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())
-                    ->detectType($value)
+                    ->detectType($this->value)
                     ->toString(),
             );
         }
-
-        $this->value = $value;
 
         $this->definition = new ListDefinition(
             $this->name,
@@ -80,11 +82,6 @@ final class ListEntry implements Entry
     public function definition(): ListDefinition
     {
         return $this->definition;
-    }
-
-    public function duplicate(): static
-    {
-        return new self($this->name, $this->value, $this->type(), $this->definition->metadata());
     }
 
     public function is(string|Reference $name): bool
@@ -116,11 +113,6 @@ final class ListEntry implements Entry
         return (new ArrayComparison())->equals($thisValue, $entryValue);
     }
 
-    public function map(callable $mapper): static
-    {
-        return new self($this->name, type_optional($this->type())->assert($mapper($this->value)), $this->type());
-    }
-
     public function name(): string
     {
         return $this->name;
@@ -148,13 +140,11 @@ final class ListEntry implements Entry
         return $this->definition->type();
     }
 
+    /**
+     * @return TList
+     */
     public function value(): ?array
     {
         return $this->value;
-    }
-
-    public function withValue(mixed $value): static
-    {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->type());
     }
 }

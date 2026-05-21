@@ -23,7 +23,7 @@ final readonly class GeneratorExtractor implements Extractor
     ) {}
 
     /**
-     * @return \Generator<int, Rows, mixed, mixed>
+     * @return Generator<int, Rows, Signal|null, void>
      */
     public function extract(FlowContext $context): Generator
     {
@@ -35,7 +35,6 @@ final readonly class GeneratorExtractor implements Extractor
                 . $row::class);
             }
 
-            // @mago-ignore analysis:mixed-assignment
             $signal = yield $row;
 
             if ($signal === Signal::STOP) {

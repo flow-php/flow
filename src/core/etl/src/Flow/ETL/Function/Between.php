@@ -20,12 +20,6 @@ final class Between extends ScalarFunctionChain
 
     public function eval(Row $row, FlowContext $context): mixed
     {
-        // @mago-ignore analysis:mixed-assignment
-        $value = (new Parameter($this->value))->eval($row, $context);
-        // @mago-ignore analysis:mixed-assignment
-        $lowerBound = (new Parameter($this->lowerBoundRef))->eval($row, $context);
-        // @mago-ignore analysis:mixed-assignment
-        $upperBound = (new Parameter($this->upperBoundRef))->eval($row, $context);
         $boundary = (new Parameter($this->boundary))->asEnum($row, $context, Boundary::class);
 
         if (!$boundary instanceof Boundary) {
@@ -34,6 +28,10 @@ final class Between extends ScalarFunctionChain
                 ->invalidResult(new InvalidArgumentException('Between function requires valid boundary'));
         }
 
-        return $boundary->compare($value, $lowerBound, $upperBound);
+        return $boundary->compare(
+            (new Parameter($this->value))->eval($row, $context),
+            (new Parameter($this->lowerBoundRef))->eval($row, $context),
+            (new Parameter($this->upperBoundRef))->eval($row, $context),
+        );
     }
 }

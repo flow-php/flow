@@ -32,7 +32,7 @@ final readonly class BatchByExtractor implements Extractor, OverridingExtractor
     }
 
     /**
-     * @return \Generator<int, Rows, mixed, mixed>
+     * @return Generator<int, Rows, Signal|null, void>
      */
     public function extract(FlowContext $context): Generator
     {
@@ -41,15 +41,12 @@ final readonly class BatchByExtractor implements Extractor, OverridingExtractor
 
         foreach ($this->extractor->extract($context) as $rows) {
             foreach ($rows->all() as $row) {
-                // @mago-ignore analysis:mixed-assignment
                 $groupValue = $row->valueOf($this->column);
 
                 if ($currentGroupValue === null) {
-                    // @mago-ignore analysis:mixed-assignment
                     $currentGroupValue = $groupValue;
                 } elseif ($currentGroupValue !== $groupValue) {
                     if ($this->minSize === null || count($buffer) >= $this->minSize) {
-                        // @mago-ignore analysis:mixed-assignment
                         $signal = yield new Rows(...$buffer);
 
                         if ($signal === Signal::STOP) {
@@ -59,7 +56,6 @@ final readonly class BatchByExtractor implements Extractor, OverridingExtractor
                         $buffer = [];
                     }
 
-                    // @mago-ignore analysis:mixed-assignment
                     $currentGroupValue = $groupValue;
                 }
 

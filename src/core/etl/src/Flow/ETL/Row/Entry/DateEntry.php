@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use DateTime;
-use DateTimeImmutable;
 use DateTimeInterface;
-use Exception;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
@@ -15,13 +12,12 @@ use Flow\ETL\Schema\Definition\DateDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 
-use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_equals;
-use function Flow\Types\DSL\type_optional;
-use function is_string;
 
 /**
- * @implements Entry<?\DateTimeInterface>
+ * @template-covariant T of \DateTimeInterface|null
+ *
+ * @implements Entry<T>
  */
 final class DateEntry implements Entry
 {
@@ -29,35 +25,18 @@ final class DateEntry implements Entry
 
     private DateDefinition $definition;
 
-    private readonly ?DateTimeInterface $value;
-
     /**
+     * @param T $value
+     *
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly string $name,
-        DateTimeInterface|string|null $value,
+        private readonly ?DateTimeInterface $value,
         ?Metadata $metadata = null,
     ) {
         if ($name === '') {
             throw InvalidArgumentException::because('Entry name cannot be empty');
-        }
-
-        if (is_string($value)) {
-            try {
-                $this->value = (new DateTimeImmutable($value))->setTime(0, 0, 0, 0);
-            } catch (Exception $e) {
-                throw new InvalidArgumentException(
-                    "Invalid value given: '{$value}', reason: " . $e->getMessage(),
-                    previous: $e,
-                );
-            }
-        } elseif ($value instanceof DateTime) {
-            $this->value = DateTimeImmutable::createFromMutable($value)->setTime(0, 0, 0, 0);
-        } elseif ($value instanceof DateTimeImmutable) {
-            $this->value = $value->setTime(0, 0, 0, 0);
-        } else {
-            $this->value = $value;
         }
 
         $this->definition = new DateDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
@@ -71,11 +50,6 @@ final class DateEntry implements Entry
     public function definition(): DateDefinition
     {
         return $this->definition;
-    }
-
-    public function duplicate(): static
-    {
-        return new self($this->name, $this->value ? clone $this->value : null, $this->definition->metadata());
     }
 
     public function is(string|Reference $name): bool
@@ -103,11 +77,6 @@ final class DateEntry implements Entry
         return $thisValue == $entryValue;
     }
 
-    public function map(callable $mapper): static
-    {
-        return new self($this->name, type_optional(type_date())->assert($mapper($this->value)));
-    }
-
     public function name(): string
     {
         return $this->name;
@@ -129,18 +98,19 @@ final class DateEntry implements Entry
         return $value->format('Y-m-d');
     }
 
+    /**
+     * @return Type<DateTimeInterface>
+     */
     public function type(): Type
     {
         return $this->definition->type();
     }
 
+    /**
+     * @return T
+     */
     public function value(): ?DateTimeInterface
     {
         return $this->value;
-    }
-
-    public function withValue(mixed $value): static
-    {
-        return new self($this->name, type_optional(type_date())->assert($value), $this->definition->metadata());
     }
 }

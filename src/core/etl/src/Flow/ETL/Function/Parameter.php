@@ -43,7 +43,6 @@ final readonly class Parameter
      */
     public function as(Row $row, FlowContext $context, Type ...$types): mixed
     {
-        // @mago-ignore analysis:mixed-assignment
         $value = $this->eval($row, $context);
 
         foreach ($types as $nextType) {
@@ -60,7 +59,6 @@ final readonly class Parameter
      */
     public function asArray(Row $row, FlowContext $context): ?array
     {
-        // @mago-ignore analysis:mixed-assignment
         $result = $this->eval($row, $context);
 
         if ($result instanceof Json) {
@@ -76,7 +74,6 @@ final readonly class Parameter
 
     public function asBoolean(Row $row, FlowContext $context): bool
     {
-        // @mago-ignore analysis:mixed-assignment
         $result = $this->eval($row, $context);
 
         return is_scalar($result) && (bool) $result;
@@ -180,20 +177,18 @@ final readonly class Parameter
      */
     public function asNumber(Row $row, FlowContext $context, int|float|null $default = null): int|float|null
     {
-        // @mago-ignore analysis:mixed-assignment
         $result = $this->eval($row, $context);
 
         if (!is_numeric($result)) {
             return $default;
         }
 
-        // @mago-ignore analysis:impossible-type-comparison
         if (is_int($result) || is_float($result)) {
             return $result;
         }
 
         // numeric-string: prefer int if the value is integral, otherwise float.
-        if ((string) (int) $result === (string) $result) {
+        if ((string) (int) $result === $result) {
             return (int) $result;
         }
 
@@ -237,11 +232,16 @@ final readonly class Parameter
         return get_type($this->eval($row, $context));
     }
 
+    /**
+     * @return null|array<array-key, mixed>|bool|float|int|object|string
+     */
     public function eval(Row $row, FlowContext $context): mixed
     {
         // @mago-ignore analysis:mixed-assignment
         $result = $this->function->eval($row, $context);
 
+        // @mago-ignore analysis:mixed-return-statement
+        /** @phpstan-ignore return.type */
         return $result instanceof ScalarResult ? $result->value : $result;
     }
 }

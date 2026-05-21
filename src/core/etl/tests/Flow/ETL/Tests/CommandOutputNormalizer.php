@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests;
 
+use PHPUnit\Framework\Assert;
+
 use function array_map;
 use function explode;
 use function implode;
@@ -21,8 +23,7 @@ trait CommandOutputNormalizer
      */
     protected static function assertCommandOutputContains(string $expected, string $actual, string $message = ''): void
     {
-        // @mago-ignore analysis:non-existent-method
-        self::assertStringContainsString($expected, self::normalizeCommandOutput($actual), $message);
+        Assert::assertStringContainsString($expected, self::normalizeCommandOutput($actual), $message);
     }
 
     /**
@@ -34,8 +35,7 @@ trait CommandOutputNormalizer
      */
     protected static function assertCommandOutputEquals(string $expected, string $actual, string $message = ''): void
     {
-        // @mago-ignore analysis:non-existent-method
-        self::assertEquals($expected, self::normalizeCommandOutput($actual), $message);
+        Assert::assertEquals($expected, self::normalizeCommandOutput($actual), $message);
     }
 
     /**
@@ -47,8 +47,7 @@ trait CommandOutputNormalizer
      */
     protected static function assertCommandOutputIdentical(string $expected, string $actual, string $message = ''): void
     {
-        // @mago-ignore analysis:non-existent-method
-        self::assertSame($expected, self::normalizeCommandOutput($actual), $message);
+        Assert::assertSame($expected, self::normalizeCommandOutput($actual), $message);
     }
 
     /**

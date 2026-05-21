@@ -19,7 +19,6 @@ use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
-use function implode;
 
 final class ListEntryTest extends FlowTestCase
 {
@@ -82,14 +81,6 @@ final class ListEntryTest extends FlowTestCase
         );
     }
 
-    public function test_duplicating_entry(): void
-    {
-        $entry = list_entry('strings', ['one', 'two', 'three'], type_list(type_string()));
-        $duplicated = $entry->duplicate();
-        static::assertNotSame($entry, $duplicated);
-        static::assertEquals($entry, $duplicated);
-    }
-
     public function test_is_equal(): void
     {
         static::assertTrue(list_entry('strings', ['one', 'two', 'three'], type_list(type_string()))->isEqual(list_entry(
@@ -107,19 +98,6 @@ final class ListEntryTest extends FlowTestCase
             ['one', 'two', 'three'],
             type_list(type_string()),
         )));
-    }
-
-    public function test_map(): void
-    {
-        static::assertEquals(
-            list_entry('strings', ['one, two, three'], type_list(type_string())),
-            list_entry(
-                'strings',
-                ['one', 'two', 'three'],
-                type_list(type_string()),
-                // @mago-ignore analysis:less-specific-nested-argument-type
-            )->map(static fn(array $value): array => [implode(', ', $value)]),
-        );
     }
 
     public function test_rename(): void

@@ -20,7 +20,6 @@ final class Size extends ScalarFunctionChain
 
     public function eval(Row $row, FlowContext $context): ?int
     {
-        // @mago-ignore analysis:mixed-assignment
         $value = (new Parameter($this->value))->eval($row, $context);
 
         if (is_string($value)) {

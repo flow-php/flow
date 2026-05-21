@@ -40,13 +40,6 @@ final class StringStyle extends ScalarFunctionChain
             $style = StringStyles::fromString($style);
         }
 
-        // @mago-ignore analysis:impossible-condition
-        if (!$style instanceof StringStyles) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('StringStyle function requires valid StringStyles enum'));
-        }
-
         return $style->convert($string);
     }
 }

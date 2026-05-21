@@ -39,6 +39,9 @@ final readonly class BatchingByProcessor implements Processor
         }
     }
 
+    /**
+     * @return \Generator<Rows>
+     */
     public function process(Generator $rows, FlowContext $context): Generator
     {
         /** @var array<Row> $buffer */
@@ -49,11 +52,9 @@ final readonly class BatchingByProcessor implements Processor
         foreach ($rows as $batch) {
             /** @var Rows $batch */
             foreach ($batch as $row) {
-                // @mago-ignore analysis:mixed-assignment
                 $value = $row->valueOf($this->column);
 
                 if (!$hasValue) {
-                    // @mago-ignore analysis:mixed-assignment
                     $currentValue = $value;
                     $hasValue = true;
                 }
@@ -65,7 +66,6 @@ final readonly class BatchingByProcessor implements Processor
                             $buffer = [];
                         }
                     }
-                    // @mago-ignore analysis:mixed-assignment
                     $currentValue = $value;
                 }
 

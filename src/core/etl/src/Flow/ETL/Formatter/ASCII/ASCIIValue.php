@@ -10,8 +10,10 @@ use Flow\ETL\Row\Entry\XMLEntry;
 use JsonException;
 
 use function floor;
-use function gettype;
+use function is_bool;
+use function is_float;
 use function is_int;
+use function is_string;
 use function json_encode;
 use function mb_strlen;
 use function mb_substr;
@@ -125,20 +127,17 @@ final class ASCIIValue
                     return $this->stringValue;
                 }
 
-                // @mago-ignore analysis:invalid-property-assignment-value,match-not-exhaustive
-                $this->stringValue = match (gettype($val)) {
-                    'string' => $val,
-                    'boolean' => $val ? 'true' : 'false',
-                    // @mago-ignore analysis:array-to-string-conversion
-                    'double', 'integer' => (string) $val,
-                    'array' => json_encode($val, JSON_THROW_ON_ERROR),
+                $this->stringValue = match (true) {
+                    is_string($val) => $val,
+                    is_bool($val) => $val ? 'true' : 'false',
+                    is_int($val), is_float($val) => (string) $val,
+                    default => json_encode($val, JSON_THROW_ON_ERROR),
                 };
             } catch (JsonException) {
                 $this->stringValue = '{...}';
             }
         }
 
-        // @mago-ignore analysis:invalid-return-statement,nullable-return-statement
         return $this->stringValue;
     }
 }

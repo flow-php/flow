@@ -15,15 +15,11 @@ use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use stdClass;
 
-use function array_walk_recursive;
 use function Flow\ETL\DSL\integer_entry;
 use function Flow\ETL\DSL\json_entry;
-use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_instance_of;
-use function is_string;
 use function json_encode;
 use function serialize;
-use function trim;
 use function unserialize;
 
 final class JsonEntryTest extends FlowTestCase
@@ -118,7 +114,6 @@ final class JsonEntryTest extends FlowTestCase
         $entry = json_entry('name', '{"key":"value"}');
 
         static::assertInstanceOf(Json::class, $entry->value());
-        // @mago-ignore analysis:possible-method-access-on-null
         static::assertSame(['key' => 'value'], $entry->value()->toArray());
     }
 
@@ -128,19 +123,8 @@ final class JsonEntryTest extends FlowTestCase
         $entry = json_entry('name', $json);
 
         static::assertInstanceOf(Json::class, $entry->value());
-        // @mago-ignore analysis:possible-method-access-on-null
         static::assertSame(['key' => 'value'], $entry->value()->toArray());
-        // @mago-ignore analysis:possibly-null-argument
         static::assertTrue($json->isEqual($entry->value()));
-    }
-
-    public function test_duplicating_entry(): void
-    {
-        $entry = json_entry('name', ['foo' => 1, 'bar' => ['foo' => 'foo', 'bar' => 'bar'], 'baz']);
-        $duplicated = $entry->duplicate();
-
-        static::assertNotSame($entry, $duplicated);
-        static::assertEquals($entry, $duplicated);
     }
 
     public function test_empty_entry(): void
@@ -148,8 +132,8 @@ final class JsonEntryTest extends FlowTestCase
         $jsonEntry = json_entry('empty', []);
         $jsonObjectEntry = JsonEntry::object('empty', []);
 
-        static::assertEquals([], $jsonEntry->value()?->toArray());
-        static::assertEquals([], $jsonObjectEntry->value()?->toArray());
+        static::assertEquals([], $jsonEntry->value()->toArray());
+        static::assertEquals([], $jsonObjectEntry->value()->toArray());
     }
 
     public function test_entry_name_can_be_zero(): void
@@ -165,53 +149,14 @@ final class JsonEntryTest extends FlowTestCase
         json_entry('a', 'random string');
     }
 
+    /**
+     * @param JsonEntry<\Flow\Types\Value\Json|null> $entry
+     * @param JsonEntry<\Flow\Types\Value\Json|null> $nextEntry
+     */
     #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, JsonEntry $entry, JsonEntry $nextEntry): void
     {
         static::assertSame($equals, $entry->isEqual($nextEntry));
-    }
-
-    public function test_map(): void
-    {
-        $items = [
-            [
-                'item-id' => 1,
-                'name' => 'one',
-                'address' => [
-                    'line1' => "NO. 47 HENGSHAN ROAD, ECONOMIC TECHNOLOGICAL DEVELOPMENT ZONE, WUHU, ANHUI, 241000, CHINA\t\t\t\t\t\t\t\t\t\t \t\t\t\t\t\t\t\t\t\t",
-                ],
-            ],
-            ['item-id' => 2, 'name' => 'two'],
-            ['item-id' => 3, 'name' => 'three'],
-        ];
-        $entry = json_entry('items', $items)->map(static function (?Json $json): array {
-            $value = $json?->toArray();
-            type_array()->assert($value);
-            array_walk_recursive($value, static function (&$v): void {
-                if (is_string($v)) {
-                    $v = trim($v);
-                }
-            });
-
-            // @mago-ignore analysis:invalid-return-statement
-            return $value;
-        });
-
-        static::assertEquals(
-            [
-                [
-                    'item-id' => 1,
-                    'name' => 'one',
-                    'address' => [
-                        'line1' => 'NO. 47 HENGSHAN ROAD, ECONOMIC TECHNOLOGICAL DEVELOPMENT ZONE, WUHU, ANHUI, 241000, CHINA',
-                    ],
-                ],
-                ['item-id' => 2, 'name' => 'two'],
-                ['item-id' => 3, 'name' => 'three'],
-            ],
-            // @mago-ignore analysis:mixed-method-access
-            $entry->value()?->toArray(),
-        );
     }
 
     public function test_prevent_from_creating_object_with_integers_as_keys_in_entry(): void
@@ -238,8 +183,7 @@ final class JsonEntryTest extends FlowTestCase
         $renamedEntry = $entry->rename('new_name');
 
         static::assertSame('new_name', $renamedEntry->name());
-        // @mago-ignore analysis:mixed-method-access
-        static::assertEquals($entry->value()?->toArray(), $renamedEntry->value()?->toArray());
+        static::assertEquals($entry->value()->toArray(), $renamedEntry->value()->toArray());
         static::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
 

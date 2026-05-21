@@ -134,18 +134,16 @@ final class DataFrame
      *
      * In order to merge all Rows into a single batch use DataFrame::collect() method or set size to -1 or 0.
      *
-     * @param int<1, max> $size
+     * @param int<-1, max> $size
      *
      * @lazy
      */
     public function batchSize(int $size): self
     {
-        // @mago-ignore analysis:impossible-condition,redundant-comparison
         if ($size === -1) {
             return $this->collect();
         }
 
-        // @mago-ignore analysis:impossible-condition,redundant-comparison
         if ($size === 0) {
             return $this->collect();
         }

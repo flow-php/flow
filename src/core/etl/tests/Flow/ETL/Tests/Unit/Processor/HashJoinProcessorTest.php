@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Processor;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Processor\HashJoinProcessor;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\df;
@@ -44,13 +45,11 @@ final class HashJoinProcessorTest extends FlowTestCase
             yield rows(row(int_entry('id', 1), int_entry('amount', 100)));
         })();
 
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $allRows = [];
 
-        // @mago-ignore analysis:mixed-assignment
         foreach ($result as $batch) {
-            // @mago-ignore analysis:mixed-assignment
-            // @mago-ignore analysis:invalid-iterator,mixed-method-access
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;
             }
@@ -76,26 +75,21 @@ final class HashJoinProcessorTest extends FlowTestCase
             );
         })();
 
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
+        /** @var list<array<array-key, mixed>> $allRows */
         $allRows = [];
 
-        // @mago-ignore analysis:mixed-assignment
         foreach ($result as $batch) {
-            // @mago-ignore analysis:mixed-assignment
-            // @mago-ignore analysis:invalid-iterator,mixed-method-access
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;
             }
         }
 
         static::assertCount(2, $allRows);
-        // @mago-ignore analysis:mixed-array-access
         static::assertEquals(1, $allRows[0]['id']);
-        // @mago-ignore analysis:mixed-array-access
         static::assertEquals('Alice', $allRows[0]['name']);
-        // @mago-ignore analysis:mixed-array-access
         static::assertEquals(2, $allRows[1]['id']);
-        // @mago-ignore analysis:mixed-array-access
         static::assertEquals('Bob', $allRows[1]['name']);
     }
 
@@ -112,22 +106,19 @@ final class HashJoinProcessorTest extends FlowTestCase
             );
         })();
 
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
+        /** @var list<array<array-key, mixed>> $allRows */
         $allRows = [];
 
-        // @mago-ignore analysis:mixed-assignment
         foreach ($result as $batch) {
-            // @mago-ignore analysis:mixed-assignment
-            // @mago-ignore analysis:invalid-iterator,mixed-method-access
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;
             }
         }
 
         static::assertCount(2, $allRows);
-        // @mago-ignore analysis:mixed-array-access
         static::assertEquals('Alice', $allRows[0]['name']);
-        // @mago-ignore analysis:mixed-array-access
         static::assertNull($allRows[1]['name']);
     }
 }

@@ -9,7 +9,6 @@ use Flow\ETL\Exception\ConstraintViolationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Processor;
-use Flow\ETL\Rows;
 use Generator;
 
 /**
@@ -39,8 +38,6 @@ final class ConstrainedProcessor implements Processor
 
     public function process(Generator $rows, FlowContext $context): Generator
     {
-        // @mago-ignore analysis:redundant-docblock-type
-        /** @var Rows $batch */
         foreach ($rows as $batch) {
             foreach ($batch->all() as $row) {
                 foreach ($this->constraints as $constraint) {

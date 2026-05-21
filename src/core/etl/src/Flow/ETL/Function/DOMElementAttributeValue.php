@@ -63,19 +63,22 @@ final class DOMElementAttributeValue extends ScalarFunctionChain
                 );
         }
 
-        if (!$node instanceof DOMNode && !$node instanceof HTMLElement || !$node->hasAttributes()) {
+        if (!$node instanceof DOMNode && !$node instanceof HTMLElement) {
             return null;
         }
 
-        // @mago-ignore analysis:mixed-assignment
-        // @mago-ignore analysis:possible-method-access-on-null
-        $namedItem = $node->attributes->getNamedItem($attributeName);
+        $attributes = $node->attributes;
+
+        if ($attributes === null) {
+            return null;
+        }
+
+        $namedItem = $attributes->getNamedItem($attributeName);
 
         if ($namedItem === null) {
             return null;
         }
 
-        // @mago-ignore analysis:mixed-property-access,mixed-return-statement
         return $namedItem->nodeValue;
     }
 }

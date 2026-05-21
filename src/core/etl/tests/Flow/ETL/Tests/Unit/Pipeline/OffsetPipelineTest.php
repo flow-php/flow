@@ -215,7 +215,6 @@ final class OffsetPipelineTest extends FlowTestCase
         $totalRows = array_sum(array_map(static fn($batch) => $batch->count(), $result));
         static::assertEquals($expectedCount, $totalRows);
         if ($expectedCount > 0) {
-            // @mago-ignore analysis:mixed-assignment
             $firstRowId = $result[0]->first()->valueOf('id');
             static::assertEquals($offset + 1, $firstRowId);
         }

@@ -26,7 +26,6 @@ final class ToDateTime extends ScalarFunctionChain
 
     public function eval(Row $row, FlowContext $context): DateTimeImmutable|false|null
     {
-        // @mago-ignore analysis:mixed-assignment
         $value = (new Parameter($this->value))->eval($row, $context);
         $format = (new Parameter($this->format))->asString($row, $context);
         $timeZone = (new Parameter($this->timeZone))->asInstanceOf($row, $context, DateTimeZone::class);

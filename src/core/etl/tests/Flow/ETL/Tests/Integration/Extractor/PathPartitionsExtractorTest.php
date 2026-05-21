@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Extractor;
 
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Tests\OperatingSystem;
 
@@ -27,19 +28,15 @@ final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
 
         $rows = rows();
 
-        // @mago-ignore analysis:mixed-assignment
         foreach ($extractedData as $nextRows) {
-            // @mago-ignore analysis:mixed-argument
-            // @mago-ignore analysis:mixed-argument
+            static::assertInstanceOf(Rows::class, $nextRows);
             $rows = $rows->merge($nextRows);
         }
 
         static::assertSame(7, $rows->count());
 
         $actualData = $rows->toArray();
-        // @mago-ignore analysis:mixed-operand
-        // @mago-ignore analysis:mixed-operand
-        usort($actualData, static fn(array $a, array $b): int => $a['path'] <=> $b['path']);
+        usort($actualData, static fn(array $a, array $b): int => (string) $a['path'] <=> (string) $b['path']);
 
         static::assertEquals(
             [

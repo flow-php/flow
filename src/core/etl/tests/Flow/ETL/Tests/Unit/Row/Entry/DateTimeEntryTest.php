@@ -63,15 +63,6 @@ final class DateTimeEntryTest extends FlowTestCase
         ];
     }
 
-    public function test_duplicating_entry(): void
-    {
-        $entry = datetime_entry('name', new DateTimeImmutable('2020-07-13 12:00'));
-        $duplicated = $entry->duplicate();
-
-        static::assertNotSame($entry, $duplicated);
-        static::assertEquals($entry, $duplicated);
-    }
-
     public function test_entry_name_can_be_zero(): void
     {
         static::assertSame('0', datetime_entry('0', new DateTimeImmutable('2020-07-13 12:00'))->name());
@@ -87,20 +78,14 @@ final class DateTimeEntryTest extends FlowTestCase
         datetime_entry('a', 'random string');
     }
 
+    /**
+     * @param DateTimeEntry<\DateTimeInterface|null> $entry
+     * @param DateTimeEntry<\DateTimeInterface|null> $nextEntry
+     */
     #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, DateTimeEntry $entry, DateTimeEntry $nextEntry): void
     {
         static::assertEquals($equals, $entry->isEqual($nextEntry));
-    }
-
-    public function test_map(): void
-    {
-        $entry = datetime_entry('entry-name', new DateTimeImmutable());
-
-        static::assertEquals(
-            $entry,
-            $entry->map(static fn(?DateTimeInterface $dateTimeImmutable): ?DateTimeInterface => $dateTimeImmutable),
-        );
     }
 
     public function test_prevents_from_creating_entry_with_empty_entry_name(): void
@@ -137,7 +122,7 @@ final class DateTimeEntryTest extends FlowTestCase
         $string = datetime_entry('name', new DateTimeImmutable('2020-01-01 00:00:00+00'));
 
         $serialized = serialize($string);
-        /** @var DateTimeEntry $unserialized */
+        /** @var DateTimeEntry<\DateTimeInterface|null> $unserialized */
         $unserialized = unserialize($serialized);
 
         static::assertTrue($string->isEqual($unserialized));

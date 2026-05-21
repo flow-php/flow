@@ -37,20 +37,7 @@ final class ToTimeZone extends ScalarFunctionChain
                 ->invalidResult(new InvalidArgumentException('ToTimeZone function requires non-null values'));
         }
 
-        $tz = match (true) {
-            is_string($tz) => new DateTimeZone($tz),
-            // @mago-ignore analysis:match-arm-always-true
-            $tz instanceof DateTimeZone => $tz,
-            // @mago-ignore analysis:unreachable-match-default-arm
-            default => null,
-        };
-
-        // @mago-ignore analysis:impossible-condition,redundant-comparison
-        if ($tz === null) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('ToTimeZone function requires valid DateTimeZone'));
-        }
+        $tz = is_string($tz) ? new DateTimeZone($tz) : $tz;
 
         /** @var \DateTime|\DateTimeImmutable $dateTime */
         return $dateTime->setTimezone($tz);

@@ -25,9 +25,7 @@ final readonly class Equal implements Comparison
 
     public function compare(Row $left, Row $right): bool
     {
-        // @mago-ignore analysis:mixed-assignment
         $leftValue = $left->valueOf($this->entryLeft);
-        // @mago-ignore analysis:mixed-assignment
         $rightValue = $right->valueOf($this->entryRight);
 
         if ($leftValue === null || $rightValue === null) {

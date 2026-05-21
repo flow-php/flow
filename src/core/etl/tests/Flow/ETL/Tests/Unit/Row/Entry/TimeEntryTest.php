@@ -79,31 +79,19 @@ final class TimeEntryTest extends FlowTestCase
         static::assertEquals(time_entry('name', new DateInterval('PT1M23S')), $timeEntry);
     }
 
-    public function test_duplicating_entry(): void
-    {
-        $entry = time_entry('name', new DateInterval('P1D'));
-        $duplicated = $entry->duplicate();
-
-        static::assertNotSame($entry, $duplicated);
-        static::assertEquals($entry, $duplicated);
-    }
-
     public function test_entry_name_can_be_zero(): void
     {
         static::assertSame('0', time_entry('0', new DateInterval('PT10S'))->name());
     }
 
+    /**
+     * @param TimeEntry<\DateInterval|null> $entry
+     * @param TimeEntry<\DateInterval|null> $nextEntry
+     */
     #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, TimeEntry $entry, TimeEntry $nextEntry): void
     {
         static::assertEquals($equals, $entry->isEqual($nextEntry));
-    }
-
-    public function test_map(): void
-    {
-        $entry = time_entry('entry-name', new DateInterval('PT10S'));
-
-        static::assertEquals($entry, $entry->map(static fn(?DateInterval $time): ?DateInterval => $time));
     }
 
     public function test_prevents_from_creating_entry_with_empty_entry_name(): void
@@ -140,7 +128,7 @@ final class TimeEntryTest extends FlowTestCase
         $string = time_entry('name', new DateInterval('P1D'));
 
         $serialized = serialize($string);
-        /** @var TimeEntry $unserialized */
+        /** @var TimeEntry<\DateInterval|null> $unserialized */
         $unserialized = unserialize($serialized);
 
         static::assertTrue($string->isEqual($unserialized));

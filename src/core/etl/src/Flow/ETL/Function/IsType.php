@@ -30,12 +30,12 @@ final class IsType extends ScalarFunctionChain
 
     public function eval(Row $row, FlowContext $context): bool
     {
-        // @mago-ignore analysis:mixed-assignment
         $value = (new Parameter($this->value))->eval($row, $context);
 
         foreach ($this->types as $type) {
             $type = is_string($type) ? TypeFactory::fromString($type) : $type;
 
+            // @mago-ignore analysis:redundant-type-comparison
             if ($type->isValid($value)) {
                 return true;
             }

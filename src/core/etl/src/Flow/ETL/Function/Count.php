@@ -52,12 +52,10 @@ final class Count implements AggregatingFunction, WindowFunction
         $count = 0;
 
         try {
-            // @mago-ignore analysis:mixed-assignment
             $value = $row->valueOf($ref);
 
             foreach ($partition->sortBy(...$this->window()->order()) as $partitionRow) {
                 try {
-                    // @mago-ignore analysis:mixed-assignment
                     $partitionValue = $partitionRow->valueOf($ref);
 
                     if ($partitionValue === $value) {

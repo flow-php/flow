@@ -9,6 +9,7 @@ use Flow\ETL\Exception\ConstraintViolationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Processor\ConstrainedProcessor;
 use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -59,7 +60,7 @@ final class ConstrainedProcessorTest extends FlowTestCase
         $constraint = new class implements Constraint {
             public function isSatisfiedBy(Row $row): bool
             {
-                // @mago-ignore analysis:mixed-operand
+                // @mago-ignore analysis:possibly-null-operand,possibly-invalid-operand
                 return $row->valueOf('id') > 0;
             }
 
@@ -77,9 +78,9 @@ final class ConstrainedProcessorTest extends FlowTestCase
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
         })();
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
         static::assertCount(1, $result);
-        // @mago-ignore analysis:mixed-argument
         static::assertCount(2, $result[0]);
     }
 
@@ -97,7 +98,7 @@ final class ConstrainedProcessorTest extends FlowTestCase
         $constraint = new class implements Constraint {
             public function isSatisfiedBy(Row $row): bool
             {
-                // @mago-ignore analysis:mixed-operand
+                // @mago-ignore analysis:possibly-null-operand,possibly-invalid-operand
                 return $row->valueOf('id') > 0;
             }
 

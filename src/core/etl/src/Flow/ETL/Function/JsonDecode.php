@@ -23,7 +23,6 @@ final class JsonDecode extends ScalarFunctionChain
 
     public function eval(Row $row, FlowContext $context): mixed
     {
-        // @mago-ignore analysis:mixed-assignment
         $value = (new Parameter($this->value))->eval($row, $context);
         $flags = (int) (new Parameter($this->flags))->asInt($row, $context);
 

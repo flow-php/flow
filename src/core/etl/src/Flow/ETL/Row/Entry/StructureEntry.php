@@ -14,23 +14,22 @@ use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\TypeDetector;
 
 use function count;
-use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_equals;
-use function Flow\Types\DSL\type_optional;
 use function is_array;
 use function json_encode;
 
 /**
  * @template T
+ * @template-covariant TStruct of array<string, T>|null
  *
- * @implements Entry<?array<string, T>>
+ * @implements Entry<TStruct>
  */
 final class StructureEntry implements Entry
 {
     use EntryRef;
 
     /**
-     * @var ?array<string, T>
+     * @var TStruct
      */
     private readonly ?array $value;
 
@@ -40,6 +39,7 @@ final class StructureEntry implements Entry
     private StructureDefinition $definition;
 
     /**
+     * @param TStruct $value
      * @param StructureType<T> $type
      *
      * @throws InvalidArgumentException
@@ -58,15 +58,18 @@ final class StructureEntry implements Entry
             throw InvalidArgumentException::because('Structure must have at least one entry, ' . $name . ' got none.');
         }
 
-        if ($value !== null && !$type->isValid($value)) {
+        $this->value = $value;
+
+        // @mago-ignore analysis:redundant-type-comparison
+        if ($this->value !== null && !$type->isValid($this->value)) {
             throw InvalidArgumentException::because(
-                'Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())
-                    ->detectType($value)
-                    ->toString(),
+                'Expected ' . $type->toString() . ' got different types: '
+                    . (new TypeDetector())
+                        // @mago-ignore analysis:no-value
+                        ->detectType($this->value)
+                        ->toString(),
             );
         }
-
-        $this->value = $value;
 
         $this->definition = new StructureDefinition(
             $this->name,
@@ -87,11 +90,6 @@ final class StructureEntry implements Entry
     public function definition(): StructureDefinition
     {
         return $this->definition;
-    }
-
-    public function duplicate(): static
-    {
-        return new self($this->name, $this->value, $this->type(), $this->definition->metadata());
     }
 
     public function is(string|Reference $name): bool
@@ -123,11 +121,6 @@ final class StructureEntry implements Entry
         return (new ArrayComparison())->equals($thisValue, $entryValue);
     }
 
-    public function map(callable $mapper): static
-    {
-        return new self($this->name, type_optional(type_array())->assert($mapper($this->value)), $this->type());
-    }
-
     public function name(): string
     {
         return $this->name;
@@ -155,13 +148,11 @@ final class StructureEntry implements Entry
         return $this->definition->type();
     }
 
+    /**
+     * @return TStruct
+     */
     public function value(): ?array
     {
         return $this->value;
-    }
-
-    public function withValue(mixed $value): static
-    {
-        return new self($this->name, type_optional(type_array())->assert($value), $this->type());
     }
 }

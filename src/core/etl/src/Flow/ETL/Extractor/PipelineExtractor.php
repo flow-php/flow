@@ -17,14 +17,11 @@ final readonly class PipelineExtractor implements Extractor
     ) {}
 
     /**
-     * @param FlowContext $context
-     *
-     * @return \Generator<Rows>
+     * @return Generator<int, Rows, Signal|null, void>
      */
     public function extract(FlowContext $context): Generator
     {
         foreach ($this->pipeline->process($context) as $rows) {
-            // @mago-ignore analysis:mixed-assignment
             $signal = yield $rows;
 
             if ($signal === Signal::STOP) {

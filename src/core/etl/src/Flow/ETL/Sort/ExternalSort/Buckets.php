@@ -27,16 +27,19 @@ final class Buckets
     public function __construct(array $buckets)
     {
         foreach ($buckets as $bucket) {
-            if (is_array($bucket->rows)) {
-                // @mago-ignore analysis:mixed-property-type-coercion
-                $this->buckets[$bucket->id] = new ArrayIterator($bucket->rows);
-            } elseif ($bucket->rows instanceof Iterator) {
-                // @mago-ignore analysis:mixed-property-type-coercion
-                $this->buckets[$bucket->id] = $bucket->rows;
+            $rows = $bucket->rows;
+
+            if (is_array($rows)) {
+                /** @var Iterator<Row> $iterator */
+                $iterator = new ArrayIterator($rows);
+            } elseif ($rows instanceof Iterator) {
+                $iterator = $rows;
             } else {
-                // @mago-ignore analysis:mixed-property-type-coercion
-                $this->buckets[$bucket->id] = new IteratorIterator($bucket->rows);
+                /** @var Iterator<Row> $iterator */
+                $iterator = new IteratorIterator($rows);
             }
+
+            $this->buckets[$bucket->id] = $iterator;
         }
     }
 
@@ -69,8 +72,6 @@ final class Buckets
         }
 
         while (!$heap->isEmpty()) {
-            // @mago-ignore analysis:redundant-docblock-type
-            /** @var BucketRow $cachedRow */
             $cachedRow = $heap->extract();
 
             yield $cachedRow->row;

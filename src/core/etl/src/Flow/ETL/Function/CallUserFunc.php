@@ -35,7 +35,6 @@ final class CallUserFunc extends ScalarFunctionChain
 
     public function eval(Row $row, FlowContext $context): mixed
     {
-        // @mago-ignore analysis:mixed-assignment
         $callable = (new Parameter($this->callable))->eval($row, $context);
 
         if (!is_callable($callable)) {

@@ -15,6 +15,7 @@ use Flow\ETL\Loader;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Rows;
+use Flow\Types\Value\Json;
 use Throwable;
 
 use function class_exists;
@@ -82,7 +83,7 @@ final class ElasticsearchLoader implements Loader
              */
             $dataCollection = $rows->map(static fn(Row $row): Row => Row::create(
                 $factory->create($row),
-                new JsonEntry('body', $row->toArray()),
+                new JsonEntry('body', Json::fromArray($row->toArray())),
             ))->toArray();
 
             foreach ($dataCollection as $data) {

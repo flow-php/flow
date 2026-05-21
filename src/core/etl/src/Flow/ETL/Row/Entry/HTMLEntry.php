@@ -14,14 +14,14 @@ use Flow\Types\Type;
 
 use function class_exists;
 use function Flow\Types\DSL\type_equals;
-use function Flow\Types\DSL\type_html;
-use function Flow\Types\DSL\type_optional;
-use function is_string;
+use function sprintf;
 
 use const LIBXML_NOERROR;
 
 /**
- * @implements Entry<?HTMLDocument>
+ * @template-covariant T of HTMLDocument|null
+ *
+ * @implements Entry<T>
  */
 final class HTMLEntry implements Entry
 {
@@ -29,22 +29,34 @@ final class HTMLEntry implements Entry
 
     private HTMLDefinition $definition;
 
-    private ?HTMLDocument $value;
-
+    /**
+     * @param T $value
+     */
     public function __construct(
         private readonly string $name,
-        HTMLDocument|string|null $value,
+        private readonly ?HTMLDocument $value,
         ?Metadata $metadata = null,
     ) {
-        if (class_exists('\Dom\HTMLDocument') && is_string($value)) {
-            $this->value = HTMLDocument::createFromString($value, LIBXML_NOERROR);
-        } elseif (is_string($value)) {
+        $this->definition = new HTMLDefinition($this->name, null === $this->value, $metadata ?: Metadata::empty());
+    }
+
+    /**
+     * @return self<HTMLDocument>
+     */
+    public static function fromString(string $name, string $value, ?Metadata $metadata = null): self
+    {
+        if (!class_exists('\Dom\HTMLDocument')) {
             throw new RuntimeException('HTMLEntry requires PHP 8.4+ (\Dom\HTMLDocument is not available).');
-        } else {
-            $this->value = $value;
         }
 
-        $this->definition = new HTMLDefinition($this->name, null === $this->value, $metadata ?: Metadata::empty());
+        $document = HTMLDocument::createFromString($value, LIBXML_NOERROR);
+
+        // @mago-ignore analysis:impossible-condition
+        if (!$document instanceof HTMLDocument) {
+            throw new RuntimeException(sprintf('Given string "%s" could not be parsed as HTML', $value));
+        }
+
+        return new self($name, $document, $metadata);
     }
 
     public function __toString(): string
@@ -55,11 +67,6 @@ final class HTMLEntry implements Entry
     public function definition(): HTMLDefinition
     {
         return $this->definition;
-    }
-
-    public function duplicate(): static
-    {
-        return new self($this->name, $this->value ? clone $this->value : null, $this->definition->metadata());
     }
 
     public function is(Reference|string $name): bool
@@ -84,16 +91,14 @@ final class HTMLEntry implements Entry
         return $entry->value()?->saveHtml() === $this->value?->saveHtml();
     }
 
-    public function map(callable $mapper): static
-    {
-        return new self($this->name, type_optional(type_html())->assert($mapper($this->value)));
-    }
-
     public function name(): string
     {
         return $this->name;
     }
 
+    /**
+     * @return self<T>
+     */
     public function rename(string $name): static
     {
         return new self($name, $this->value, $this->definition->metadata());
@@ -108,18 +113,19 @@ final class HTMLEntry implements Entry
         return $this->value->saveHtml();
     }
 
+    /**
+     * @return Type<HTMLDocument>
+     */
     public function type(): Type
     {
         return $this->definition->type();
     }
 
+    /**
+     * @return T
+     */
     public function value(): ?HTMLDocument
     {
         return $this->value;
-    }
-
-    public function withValue(mixed $value): static
-    {
-        return new self($this->name, type_optional(type_html())->assert($value), $this->definition->metadata());
     }
 }

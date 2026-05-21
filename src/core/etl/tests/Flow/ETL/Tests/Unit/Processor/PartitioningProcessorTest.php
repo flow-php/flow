@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Processor;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Processor\PartitioningProcessor;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config_builder;
@@ -50,13 +51,11 @@ final class PartitioningProcessorTest extends FlowTestCase
             );
         })();
 
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, $context));
         $allRows = [];
 
-        // @mago-ignore analysis:mixed-assignment
         foreach ($result as $batch) {
-            // @mago-ignore analysis:mixed-assignment
-            // @mago-ignore analysis:invalid-iterator,mixed-method-access
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;
             }
@@ -79,21 +78,18 @@ final class PartitioningProcessorTest extends FlowTestCase
             );
         })();
 
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, $context));
+        /** @var list<array<array-key, mixed>> $allRows */
         $allRows = [];
 
-        // @mago-ignore analysis:mixed-assignment
         foreach ($result as $batch) {
-            // @mago-ignore analysis:mixed-assignment
-            // @mago-ignore analysis:invalid-iterator,mixed-method-access
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;
             }
         }
 
-        // @mago-ignore analysis:mixed-array-access
         static::assertEquals(2, $allRows[0]['id']);
-        // @mago-ignore analysis:mixed-array-access
         static::assertEquals(1, $allRows[1]['id']);
     }
 

@@ -88,6 +88,9 @@ final readonly class ExcelRowsNormalizer
         };
     }
 
+    /**
+     * @param EnumEntry<\UnitEnum|null> $entry
+     */
     private function normalizeEnumEntry(EnumEntry $entry): ?string
     {
         $value = $entry->value();

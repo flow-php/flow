@@ -41,11 +41,9 @@ final class Rank implements WindowFunction
             throw new BaseRuntimeException('Rank window function requires to be ordered by one column');
         }
 
-        // @mago-ignore analysis:mixed-assignment
         $value = $row->valueOf($orderBy[0]->name());
 
         foreach ($partition->sortBy(...$orderBy) as $partitionRow) {
-            // @mago-ignore analysis:mixed-assignment
             $partitionValue = $partitionRow->valueOf($orderBy[0]->name());
 
             $isLess = false;

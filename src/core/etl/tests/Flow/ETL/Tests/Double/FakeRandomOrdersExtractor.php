@@ -88,15 +88,15 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
         ];
 
         $sellers = [
-            $faker->uuid(),
-            $faker->uuid(),
-            $faker->uuid(),
-            $faker->uuid(),
-            $faker->uuid(),
+            $faker->uuid,
+            $faker->uuid,
+            $faker->uuid,
+            $faker->uuid,
+            $faker->uuid,
         ];
 
         for ($i = 0; $i < $this->count; $i++) {
-            $createdAt = DateTimeImmutable::createFromMutable($faker->dateTimeThisYear());
+            $createdAt = DateTimeImmutable::createFromMutable($faker->dateTimeThisYear);
             $cancelledAt = random_int(1, 10) === 1
                 ? $createdAt->modify('+' . $faker->numberBetween(1, 5) . ' hours')
                 : null;
@@ -111,21 +111,21 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
 
             // @mago-ignore analysis:mixed-assignment
             $signal = yield [
-                'order_id' => $faker->uuid(),
+                'order_id' => $faker->uuid,
                 'seller_id' => $sellers[random_int(0, count($sellers) - 1)],
                 'created_at' => $createdAt,
                 'updated_at' => $updatedAt,
                 'cancelled_at' => $cancelledAt,
                 'discount' => random_int(0, 1) === 1 ? $faker->randomFloat(2, 0, 50) : null,
-                'email' => $faker->email(),
-                'customer' => $faker->firstName() . ' ' . $faker->lastName(),
+                'email' => $faker->email,
+                'customer' => $faker->firstName . ' ' . $faker->lastName,
                 'address' => [
-                    'street' => $faker->streetAddress(),
-                    'city' => $faker->city(),
-                    'zip' => $faker->postcode(),
-                    'country' => $faker->country(),
+                    'street' => $faker->streetAddress,
+                    'city' => $faker->city,
+                    'zip' => $faker->postcode,
+                    'country' => $faker->country,
                 ],
-                'notes' => array_map(static fn($i) => $faker->sentence(), range(1, $faker->numberBetween(1, 5))),
+                'notes' => array_map(static fn($i) => $faker->sentence, range(1, $faker->numberBetween(1, 5))),
                 'items' => array_map(
                     static fn(int $index) => [
                         'sku' => $skus[$skuIndex = $faker->numberBetween(1, 4)]['sku'],

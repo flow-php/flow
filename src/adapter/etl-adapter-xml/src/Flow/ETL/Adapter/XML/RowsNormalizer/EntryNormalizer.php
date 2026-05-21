@@ -86,7 +86,7 @@ final readonly class EntryNormalizer
      * It might be possible to use a schema here, if provided we might be able to take a metadata from entry definition and use it to define a node name.
      * However this might be a bit problematic in case of deeply nested lists.
      *
-     * @param ListEntry<mixed> $entry
+     * @param ListEntry<mixed, list<mixed>|null> $entry
      */
     private function listToNode(ListEntry $entry): XMLNode
     {
@@ -143,7 +143,7 @@ final readonly class EntryNormalizer
      *
      * Because of that and because Map Values can be other nested structures, the only valid solution is solution from Example 1.
      *
-     * @param MapEntry<array-key, mixed> $entry
+     * @param MapEntry<array-key, mixed, array<array-key, mixed>|null> $entry
      */
     private function mapToNode(MapEntry $entry): XMLNode
     {
@@ -174,7 +174,7 @@ final readonly class EntryNormalizer
     }
 
     /**
-     * @param StructureEntry<array<string, mixed>> $entry
+     * @param StructureEntry<mixed, array<string, mixed>|null> $entry
      */
     private function structureToNode(StructureEntry $entry): XMLNode
     {

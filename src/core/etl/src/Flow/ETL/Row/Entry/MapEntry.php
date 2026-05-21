@@ -13,23 +13,22 @@ use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\TypeDetector;
 
-use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_equals;
-use function Flow\Types\DSL\type_optional;
 use function json_encode;
 
 /**
  * @template TKey of array-key
  * @template TValue
+ * @template-covariant TMap of array<TKey, TValue>|null
  *
- * @implements Entry<?array<TKey, TValue>>
+ * @implements Entry<TMap>
  */
 final class MapEntry implements Entry
 {
     use EntryRef;
 
     /**
-     * @var ?array<TKey, TValue>
+     * @var TMap
      */
     private readonly ?array $value;
 
@@ -39,6 +38,7 @@ final class MapEntry implements Entry
     private MapDefinition $definition;
 
     /**
+     * @param TMap $value
      * @param MapType<TKey, TValue> $type
      *
      * @throws InvalidArgumentException
@@ -53,15 +53,18 @@ final class MapEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        if ($value !== null && !$type->isValid($value)) {
+        $this->value = $value;
+
+        // @mago-ignore analysis:redundant-type-comparison
+        if ($this->value !== null && !$type->isValid($this->value)) {
             throw InvalidArgumentException::because(
-                'Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())
-                    ->detectType($value)
-                    ->toString(),
+                'Expected ' . $type->toString() . ' got different types: '
+                    . (new TypeDetector())
+                        // @mago-ignore analysis:no-value
+                        ->detectType($this->value)
+                        ->toString(),
             );
         }
-
-        $this->value = $value;
 
         $this->definition = new MapDefinition(
             $this->name,
@@ -82,11 +85,6 @@ final class MapEntry implements Entry
     public function definition(): MapDefinition
     {
         return $this->definition;
-    }
-
-    public function duplicate(): static
-    {
-        return new self($this->name, $this->value, $this->type(), $this->definition->metadata());
     }
 
     public function is(string|Reference $name): bool
@@ -118,11 +116,6 @@ final class MapEntry implements Entry
         return (new ArrayComparison())->equals($thisValue, $entryValue);
     }
 
-    public function map(callable $mapper): static
-    {
-        return new self($this->name, type_optional(type_array())->assert($mapper($this->value)), $this->type());
-    }
-
     public function name(): string
     {
         return $this->name;
@@ -150,13 +143,11 @@ final class MapEntry implements Entry
         return $this->definition->type();
     }
 
+    /**
+     * @return TMap
+     */
     public function value(): ?array
     {
         return $this->value;
-    }
-
-    public function withValue(mixed $value): static
-    {
-        return new self($this->name, type_optional(type_array())->assert($value), $this->type());
     }
 }

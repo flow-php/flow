@@ -107,6 +107,8 @@ final class MathTest extends FlowTestCase
     }
 
     /**
+     * @param IntegerEntry<int|null>|FloatEntry<float|null> $a
+     * @param IntegerEntry<int|null>|FloatEntry<float|null> $b
      * @param array<string, mixed> $result
      */
     #[DataProvider('divide_data_provider')]
@@ -129,6 +131,8 @@ final class MathTest extends FlowTestCase
     }
 
     /**
+     * @param IntegerEntry<int|null>|FloatEntry<float|null> $a
+     * @param IntegerEntry<int|null>|FloatEntry<float|null> $b
      * @param array<string, mixed> $result
      */
     #[DataProvider('minus_data_provider')]
@@ -148,6 +152,8 @@ final class MathTest extends FlowTestCase
     }
 
     /**
+     * @param IntegerEntry<int|null>|FloatEntry<float|null> $a
+     * @param IntegerEntry<int|null>|FloatEntry<float|null> $b
      * @param array<string, mixed> $result
      */
     #[DataProvider('multiply_data_provider')]
@@ -167,6 +173,8 @@ final class MathTest extends FlowTestCase
     }
 
     /**
+     * @param IntegerEntry<int|null>|FloatEntry<float|null> $a
+     * @param IntegerEntry<int|null>|FloatEntry<float|null> $b
      * @param array<string, mixed> $result
      */
     #[DataProvider('plus_data_provider')]
@@ -186,6 +194,8 @@ final class MathTest extends FlowTestCase
     }
 
     /**
+     * @param IntegerEntry<int|null>|FloatEntry<float|null> $a
+     * @param IntegerEntry<int|null>|FloatEntry<float|null> $b
      * @param array<string, mixed> $result
      */
     #[DataProvider('power_data_provider')]

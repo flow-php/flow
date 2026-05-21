@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Processor;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Processor\OffsetProcessor;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -23,13 +24,12 @@ final class OffsetProcessorTest extends FlowTestCase
         })();
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $totalRows = 0;
-        // @mago-ignore analysis:mixed-assignment
+
+        /** @var Rows $batch */
         foreach ($result as $batch) {
-            // @mago-ignore analysis:mixed-assignment
-            // @mago-ignore analysis:mixed-method-access,mixed-operand
-            // @mago-ignore analysis:mixed-operand
             $totalRows += $batch->count();
         }
+
         static::assertSame(0, $totalRows);
     }
 
@@ -41,14 +41,14 @@ final class OffsetProcessorTest extends FlowTestCase
         })();
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $allRows = [];
-        // @mago-ignore analysis:mixed-assignment
+
+        /** @var Rows $batch */
         foreach ($result as $batch) {
-            // @mago-ignore analysis:mixed-assignment
-            // @mago-ignore analysis:invalid-iterator,mixed-method-access
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;
             }
         }
+
         static::assertEquals(
             [
                 ['id' => 2],
@@ -66,13 +66,12 @@ final class OffsetProcessorTest extends FlowTestCase
         })();
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $totalRows = 0;
-        // @mago-ignore analysis:mixed-assignment
+
+        /** @var Rows $batch */
         foreach ($result as $batch) {
-            // @mago-ignore analysis:mixed-assignment
-            // @mago-ignore analysis:mixed-method-access,mixed-operand
-            // @mago-ignore analysis:mixed-operand
             $totalRows += $batch->count();
         }
+
         static::assertSame(2, $totalRows);
     }
 
@@ -85,14 +84,14 @@ final class OffsetProcessorTest extends FlowTestCase
         })();
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $allRows = [];
-        // @mago-ignore analysis:mixed-assignment
+
+        /** @var Rows $batch */
         foreach ($result as $batch) {
-            // @mago-ignore analysis:mixed-assignment
-            // @mago-ignore analysis:invalid-iterator,mixed-method-access
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;
             }
         }
+
         static::assertEquals(
             [
                 ['id' => 3],

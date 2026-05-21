@@ -30,7 +30,6 @@ final class ArrayKeep extends ScalarFunctionChain
                 ->invalidResult(new InvalidArgumentException('ArrayKeep function requires non-null array'));
         }
 
-        // @mago-ignore analysis:mixed-assignment
         $value = (new Parameter($this->value))->eval($row, $context);
 
         return array_filter($array, static fn($item) => $item === $value);

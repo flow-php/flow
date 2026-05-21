@@ -7,7 +7,6 @@ namespace Flow\ETL\Processor;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Processor;
-use Flow\ETL\Rows;
 use Generator;
 
 /**
@@ -43,8 +42,6 @@ final readonly class OffsetProcessor implements Processor
         $skippedRows = 0;
 
         foreach ($rows as $batch) {
-            // @mago-ignore analysis:redundant-docblock-type
-            /** @var Rows $batch */
             $currentBatchSize = $batch->count();
             $remainingToSkip = $this->offset - $skippedRows;
 

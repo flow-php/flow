@@ -18,11 +18,13 @@ final readonly class SequenceExtractor implements Extractor
         private string $entryName = 'entry',
     ) {}
 
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         /** @var mixed $item */
         foreach ($this->generator->generate() as $item) {
-            // @mago-ignore analysis:mixed-assignment
             $signal = yield new Rows(Row::create($context->entryFactory()->create($this->entryName, $item)));
 
             if ($signal === Signal::STOP) {

@@ -20,7 +20,7 @@ final readonly class BatchExtractor implements Extractor, OverridingExtractor
     ) {}
 
     /**
-     * @return \Generator<int, Rows, mixed, mixed>
+     * @return Generator<int, Rows, Signal|null, void>
      */
     public function extract(FlowContext $context): Generator
     {
@@ -33,7 +33,6 @@ final readonly class BatchExtractor implements Extractor, OverridingExtractor
                 $chunkSize++;
 
                 if ($chunkSize === $this->chunkSize) {
-                    // @mago-ignore analysis:mixed-assignment
                     $signal = yield $chunk;
 
                     if ($signal === Signal::STOP) {
@@ -44,7 +43,6 @@ final readonly class BatchExtractor implements Extractor, OverridingExtractor
                 }
 
                 if ($chunkSize > $this->chunkSize) {
-                    // @mago-ignore analysis:mixed-assignment
                     $signal = yield $chunk->dropRight($chunk->count() - $this->chunkSize);
 
                     if ($signal === Signal::STOP) {

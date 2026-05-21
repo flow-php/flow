@@ -17,17 +17,15 @@ use RuntimeException;
 use function base64_decode;
 use function base64_encode;
 use function Flow\Types\DSL\type_equals;
-use function Flow\Types\DSL\type_instance_of;
-use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
-use function Flow\Types\DSL\type_xml;
 use function gzcompress;
 use function gzuncompress;
-use function is_string;
 use function sprintf;
 
 /**
- * @implements Entry<?\DOMDocument>
+ * @template-covariant T of \DOMDocument|null
+ *
+ * @implements Entry<T>
  */
 final class XMLEntry implements Entry
 {
@@ -35,25 +33,14 @@ final class XMLEntry implements Entry
 
     private XMLDefinition $definition;
 
-    private readonly ?DOMDocument $value;
-
+    /**
+     * @param T $value
+     */
     public function __construct(
         private readonly string $name,
-        DOMDocument|string|null $value,
+        private readonly ?DOMDocument $value,
         ?Metadata $metadata = null,
     ) {
-        if (is_string($value)) {
-            $doc = new DOMDocument();
-
-            if (!@$doc->loadXML($value)) {
-                throw new InvalidArgumentException(sprintf('Given string "%s" is not valid XML', $value));
-            }
-
-            $this->value = $doc;
-        } else {
-            $this->value = $value;
-        }
-
         $this->definition = new XMLDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
@@ -124,11 +111,6 @@ final class XMLEntry implements Entry
         return $this->definition;
     }
 
-    public function duplicate(): static
-    {
-        return new self($this->name, $this->value ? clone $this->value : null, $this->definition->metadata());
-    }
-
     public function is(Reference|string $name): bool
     {
         if ($name instanceof Reference) {
@@ -153,14 +135,6 @@ final class XMLEntry implements Entry
         }
 
         return $entry->value()?->C14N() === $this->value?->C14N();
-    }
-
-    public function map(callable $mapper): static
-    {
-        return new self(
-            $this->name,
-            type_optional(type_instance_of(DOMDocument::class))->assert($mapper($this->value())),
-        );
     }
 
     public function name(): string
@@ -188,18 +162,19 @@ final class XMLEntry implements Entry
         return $serialized;
     }
 
+    /**
+     * @return Type<DOMDocument>
+     */
     public function type(): Type
     {
         return $this->definition->type();
     }
 
+    /**
+     * @return T
+     */
     public function value(): ?DOMDocument
     {
         return $this->value;
-    }
-
-    public function withValue(mixed $value): static
-    {
-        return new self($this->name, type_optional(type_xml())->assert($value), $this->definition->metadata());
     }
 }

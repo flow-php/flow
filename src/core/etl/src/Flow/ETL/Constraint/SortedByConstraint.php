@@ -23,7 +23,7 @@ final class SortedByConstraint implements Constraint
     private bool $firstRow = true;
 
     /**
-     * @var array<string, mixed>
+     * @var array<string, null|array<array-key, mixed>|bool|float|int|object|string>
      */
     private array $previousValues = [];
 
@@ -46,9 +46,7 @@ final class SortedByConstraint implements Constraint
         }
 
         foreach ($this->references->all() as $reference) {
-            // @mago-ignore analysis:mixed-assignment
             $currentValue = $row->valueOf($reference);
-            // @mago-ignore analysis:mixed-assignment
             $previousValue = $this->previousValues[$reference->name()];
 
             $direction = $reference->sort();
@@ -120,7 +118,6 @@ final class SortedByConstraint implements Constraint
 
         foreach ($this->references->all() as $reference) {
             $entry = $row->get($reference);
-            // @mago-ignore analysis:mixed-assignment
             $previousValue = $this->previousValues[$reference->name()] ?? null;
 
             $violations[] = sprintf(

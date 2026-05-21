@@ -100,8 +100,6 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
         }
 
         $rows = new self(...$rows);
-        // @mago-ignore analysis:redundant-docblock-type
-        /** @var Partitions $partitions */
         $rows->partitions = $partitions;
 
         return $rows;
@@ -717,11 +715,11 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     public function reduceToArray(string|Reference $reference): array
     {
         // @mago-ignore analysis:mixed-assignment
-        $result = $this->reduce(static function (mixed $ids, Row $row) use ($reference): mixed {
+        $result = $this->reduce(static function (mixed $ids, Row $row) use ($reference): array {
             if (!is_array($ids)) {
                 $ids = [];
             }
-            $ids[] = $row->get($reference)->value();
+            $ids[] = $row->valueOf($reference);
 
             return $ids;
         }, []);
@@ -794,9 +792,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     {
         $rows = $this->rows;
         usort($rows, static function (Row $a, Row $b) use ($reference): int {
-            // @mago-ignore analysis:mixed-assignment
             $valueA = $a->valueOf($reference);
-            // @mago-ignore analysis:mixed-assignment
             $valueB = $b->valueOf($reference);
 
             if (is_numeric($valueA) && is_numeric($valueB)) {
@@ -846,9 +842,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
     {
         $rows = $this->rows;
         usort($rows, static function (Row $a, Row $b) use ($reference): int {
-            // @mago-ignore analysis:mixed-assignment
             $valueA = $a->valueOf($reference);
-            // @mago-ignore analysis:mixed-assignment
             $valueB = $b->valueOf($reference);
 
             if (is_numeric($valueA) && is_numeric($valueB)) {

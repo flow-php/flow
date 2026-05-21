@@ -7,7 +7,6 @@ namespace Flow\ETL\Processor;
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Processor;
-use Flow\ETL\Rows;
 use Generator;
 
 use function bin2hex;
@@ -41,8 +40,6 @@ final readonly class CachingProcessor implements Processor
         $index = new CacheIndex($id);
 
         foreach ($rows as $batch) {
-            // @mago-ignore analysis:redundant-docblock-type
-            /** @var Rows $batch */
             $cacheKey = bin2hex(random_bytes(16));
             $context->cache()->set($cacheKey, $batch);
             $index->add($cacheKey);

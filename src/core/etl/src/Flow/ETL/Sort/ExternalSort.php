@@ -46,6 +46,9 @@ final class ExternalSort implements SortingAlgorithm
         }
     }
 
+    /**
+     * @return \Generator<Rows>
+     */
     public function sortGenerator(Generator $rows, FlowContext $context, References $refs): Generator
     {
         $sortedBuckets = [];

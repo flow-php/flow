@@ -13,12 +13,11 @@ use Flow\Types\Type;
 use Flow\Types\Value\Uuid;
 
 use function Flow\Types\DSL\type_equals;
-use function Flow\Types\DSL\type_optional;
-use function Flow\Types\DSL\type_uuid;
-use function is_string;
 
 /**
- * @implements Entry<?Uuid>
+ * @template-covariant T of Uuid|null
+ *
+ * @implements Entry<T>
  */
 final class UuidEntry implements Entry
 {
@@ -26,29 +25,26 @@ final class UuidEntry implements Entry
 
     private UuidDefinition $definition;
 
-    private ?Uuid $value;
-
     /**
+     * @param T $value
+     *
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly string $name,
-        Uuid|string|null $value,
+        private readonly ?Uuid $value,
         ?Metadata $metadata = null,
     ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        if (is_string($value)) {
-            $this->value = Uuid::fromString($value);
-        } else {
-            $this->value = $value;
-        }
-
         $this->definition = new UuidDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
+    /**
+     * @return self<Uuid>
+     */
     public static function from(string $name, string $value): self
     {
         return new self($name, Uuid::fromString($value));
@@ -62,15 +58,6 @@ final class UuidEntry implements Entry
     public function definition(): UuidDefinition
     {
         return $this->definition;
-    }
-
-    public function duplicate(): static
-    {
-        return new self(
-            $this->name,
-            $this->value ? new Uuid($this->value->toString()) : null,
-            $this->definition->metadata(),
-        );
     }
 
     public function is(string|Reference $name): bool
@@ -98,17 +85,14 @@ final class UuidEntry implements Entry
         return $thisValue->isEqual($entryValue);
     }
 
-    public function map(callable $mapper): static
-    {
-        return new self($this->name, type_optional(type_uuid())->assert($mapper($this->value)));
-    }
-
     public function name(): string
     {
         return $this->name;
     }
 
     /**
+     * @return self<T>
+     *
      * @throws InvalidArgumentException
      */
     public function rename(string $name): static
@@ -125,18 +109,19 @@ final class UuidEntry implements Entry
         return $this->value->toString();
     }
 
+    /**
+     * @return Type<Uuid>
+     */
     public function type(): Type
     {
         return $this->definition->type();
     }
 
+    /**
+     * @return T
+     */
     public function value(): ?Uuid
     {
         return $this->value;
-    }
-
-    public function withValue(mixed $value): static
-    {
-        return new self($this->name, type_optional(type_uuid())->assert($value), $this->definition->metadata());
     }
 }

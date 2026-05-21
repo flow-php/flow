@@ -411,7 +411,6 @@ final class ParameterTest extends FlowTestCase
     public function test_eval_with_reference(): void
     {
         $parameter = new Parameter(ref('column'));
-        // @mago-ignore analysis:mixed-assignment
         $result = $parameter->eval(row(str_entry('column', 'ref_value')), flow_context());
 
         static::assertSame('ref_value', $result);

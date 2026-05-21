@@ -43,7 +43,6 @@ final readonly class ListSelect implements ScalarFunction
 
         $output = [];
 
-        // @mago-ignore analysis:mixed-assignment
         foreach ($list->value() ?: [] as $index => $element) {
             $output[$index] = [];
 
@@ -56,7 +55,6 @@ final readonly class ListSelect implements ScalarFunction
             }
         }
 
-        // @mago-ignore analysis:less-specific-return-statement
         return $output;
     }
 }

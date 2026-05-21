@@ -20,10 +20,12 @@ final readonly class MemoryExtractor implements Extractor
         private Memory $memory,
     ) {}
 
+    /**
+     * @return Generator<int, \Flow\ETL\Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         foreach ($this->memory->dump() as $row) {
-            // @mago-ignore analysis:mixed-assignment
             $signal = yield array_to_rows([$row], $context->entryFactory());
 
             if ($signal === Signal::STOP) {

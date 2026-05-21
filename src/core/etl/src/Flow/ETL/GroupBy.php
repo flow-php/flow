@@ -44,12 +44,12 @@ final class GroupBy
     private ?Reference $pivot;
 
     /**
-     * @var array<int, mixed>
+     * @var array<int, null|array<array-key, mixed>|bool|float|int|object|string>
      */
     private array $pivotColumns;
 
     /**
-     * @var array<string, array<string, mixed>>
+     * @var array<string, array<string, AggregatingFunction|null|array<array-key, mixed>|bool|float|int|object|string>>
      */
     private array $pivotedTable;
 
@@ -82,10 +82,12 @@ final class GroupBy
 
     public function group(Rows $rows, FlowContext $context): void
     {
-        if ($this->pivot) {
+        $pivot = $this->pivot;
+
+        if ($pivot !== null) {
             foreach ($rows as $row) {
                 try {
-                    $this->pivotColumns[] = $row->get($this->pivot)->value();
+                    $this->pivotColumns[] = $row->valueOf($pivot);
                 } catch (InvalidArgumentException) {
                     $this->pivotColumns[] = null;
                 }
@@ -102,9 +104,7 @@ final class GroupBy
 
                 $indexValue = $this->hash($values);
 
-                // @mago-ignore analysis:possibly-null-argument
-                // @mago-ignore analysis:mixed-assignment
-                $pivotValue = $row->valueOf($this->pivot);
+                $pivotValue = $row->valueOf($pivot);
 
                 if (!array_key_exists($indexValue, $this->pivotedTable)) {
                     $this->pivotedTable[$indexValue] = [];
@@ -126,7 +126,6 @@ final class GroupBy
                     $this->pivotedTable[$indexValue][$pivotValue] = clone current($this->aggregations);
                 }
 
-                // @mago-ignore analysis:mixed-assignment
                 $aggregator = $this->pivotedTable[$indexValue][$pivotValue];
 
                 if ($aggregator instanceof AggregatingFunction) {
@@ -140,7 +139,7 @@ final class GroupBy
 
                 foreach ($this->refs as $ref) {
                     try {
-                        $values[$ref->name()] = $row->get($ref)->value();
+                        $values[$ref->name()] = $row->valueOf($ref);
                     } catch (InvalidArgumentException) {
                         $values[$ref->name()] = null;
                     }
@@ -181,14 +180,12 @@ final class GroupBy
             foreach ($this->pivotedTable as $index => $columns) {
                 $row = [$this->refs->first()->name() => $index];
 
-                // @mago-ignore analysis:mixed-assignment
                 foreach ($columns as $rowIndex => $values) {
                     $row[$rowIndex] = $values instanceof AggregatingFunction
                         ? $values->result($context->entryFactory())->value()
                         : $values;
                 }
 
-                // @mago-ignore analysis:mixed-assignment
                 foreach ($this->pivotColumns as $column) {
                     $column = type_union(type_string(), type_integer())->assert($column);
 

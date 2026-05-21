@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Processor;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Processor\BatchingByProcessor;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -14,6 +15,7 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
+use function iterator_to_array;
 
 final class BatchingByProcessorTest extends FlowTestCase
 {
@@ -30,15 +32,11 @@ final class BatchingByProcessorTest extends FlowTestCase
         })();
         $result = iterator_to_array($processor->process($generator, flow_context()));
         static::assertCount(2, $result);
-        // @mago-ignore analysis:mixed-argument
+        static::assertInstanceOf(Rows::class, $result[0]);
+        static::assertInstanceOf(Rows::class, $result[1]);
         static::assertCount(2, $result[0]);
-        // @mago-ignore analysis:mixed-argument
         static::assertCount(2, $result[1]);
-        // @mago-ignore analysis:mixed-method-access
-        // @mago-ignore analysis:mixed-method-access
         static::assertEquals('a', $result[0]->first()->valueOf('group'));
-        // @mago-ignore analysis:mixed-method-access
-        // @mago-ignore analysis:mixed-method-access
         static::assertEquals('b', $result[1]->first()->valueOf('group'));
     }
 
@@ -63,7 +61,6 @@ final class BatchingByProcessorTest extends FlowTestCase
         })();
         $result = iterator_to_array($processor->process($generator, flow_context()));
         static::assertCount(1, $result);
-        // @mago-ignore analysis:mixed-argument
         static::assertCount(2, $result[0]);
     }
 
@@ -80,7 +77,6 @@ final class BatchingByProcessorTest extends FlowTestCase
         })();
         $result = iterator_to_array($processor->process($generator, flow_context()));
         static::assertCount(1, $result);
-        // @mago-ignore analysis:mixed-argument
         static::assertCount(4, $result[0]);
     }
 

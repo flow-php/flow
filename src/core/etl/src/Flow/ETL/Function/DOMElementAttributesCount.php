@@ -38,11 +38,6 @@ final class DOMElementAttributesCount extends ScalarFunctionChain
                 ->invalidResult(new InvalidArgumentException('DOMElementAttributesCount requires non-null DOMElement'));
         }
 
-        if (!$domElement->hasAttributes()) {
-            return 0;
-        }
-
-        // @mago-ignore analysis:possibly-null-property-access
-        return $domElement->attributes->length;
+        return $domElement->attributes->length ?? 0;
     }
 }

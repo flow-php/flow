@@ -16,14 +16,9 @@ interface Entry extends Stringable
     public function __toString(): string;
 
     /**
-     * @return Definition<T>
+     * @return Definition<mixed>
      */
     public function definition(): Definition;
-
-    /**
-     * @return static
-     */
-    public function duplicate(): static;
 
     public function is(string|Reference $name): bool;
 
@@ -32,24 +27,19 @@ interface Entry extends Stringable
      */
     public function isEqual(self $entry): bool;
 
-    /**
-     * @return static
-     */
-    public function map(callable $mapper): static;
-
     public function name(): string;
 
     public function ref(): Reference;
 
     /**
-     * @return static
+     * @return static<T>
      */
     public function rename(string $name): static;
 
     public function toString(): string;
 
     /**
-     * @return Type<T>
+     * @return Type<mixed>
      */
     public function type(): Type;
 
@@ -57,9 +47,4 @@ interface Entry extends Stringable
      * @return T
      */
     public function value();
-
-    /**
-     * @return static
-     */
-    public function withValue(mixed $value): static;
 }

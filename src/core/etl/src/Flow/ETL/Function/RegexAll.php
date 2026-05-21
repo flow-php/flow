@@ -59,8 +59,9 @@ final class RegexAll extends ScalarFunctionChain
                 ->invalidResult(new InvalidArgumentException('RegexAll requires non-null offset'));
         }
 
+        $matches = [];
+
         // Returns the number of full pattern matches (which might be zero), or false on failure.
-        // @mago-ignore analysis:reference-to-undefined-variable
         if (preg_match_all($pattern, $subject, $matches, $flags, $offset) !== false) {
             if ($matches === [[]]) {
                 return null;
