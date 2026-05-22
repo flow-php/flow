@@ -24,6 +24,7 @@ final class NumberNormalizer
      */
     public static function toNumber(string $number): float|int
     {
+        // @mago-ignore analysis:impossible-condition,redundant-type-comparison
         if (!is_numeric($number)) {
             throw new NonNumericValueException((string) $number);
         }
@@ -33,6 +34,7 @@ final class NumberNormalizer
         }
 
         if (str_contains($number, '.')) {
+            // @mago-ignore analysis:invalid-type-cast
             return (float) $number;
         }
 
@@ -50,6 +52,7 @@ final class NumberNormalizer
             throw new InvalidScaleException($scale);
         }
 
+        // @mago-ignore analysis:impossible-condition,redundant-type-comparison
         if (!is_numeric($number)) {
             throw new NonNumericValueException((string) $number);
         }

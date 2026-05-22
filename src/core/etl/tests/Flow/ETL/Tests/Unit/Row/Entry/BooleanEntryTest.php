@@ -30,31 +30,19 @@ final class BooleanEntryTest extends FlowTestCase
         ];
     }
 
-    public function test_duplicating_entry(): void
-    {
-        $entry = boolean_entry('entry-name', true);
-        $duplicated = $entry->duplicate();
-
-        static::assertNotSame($entry, $duplicated);
-        static::assertEquals($entry, $duplicated);
-    }
-
     public function test_entry_name_can_be_zero(): void
     {
         static::assertSame('0', boolean_entry('0', true)->name());
     }
 
+    /**
+     * @param BooleanEntry<bool|null> $entry
+     * @param BooleanEntry<bool|null> $nextEntry
+     */
     #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, BooleanEntry $entry, BooleanEntry $nextEntry): void
     {
         static::assertSame($equals, $entry->isEqual($nextEntry));
-    }
-
-    public function test_map(): void
-    {
-        $entry = boolean_entry('entry-name', true);
-
-        static::assertEquals($entry, $entry->map(static fn(?bool $value): ?bool => $value));
     }
 
     public function test_prevents_from_creating_entry_with_empty_entry_name(): void

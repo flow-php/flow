@@ -2,9 +2,6 @@ name: PG Query Extension
 
 on:
   workflow_call:
-    secrets:
-      CODECOV_TOKEN:
-        required: false
 
 jobs:
   build:
@@ -17,7 +14,9 @@ jobs:
         php: ['8.3', '8.4', '8.5']
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          persist-credentials: false
 
       - name: Setup PHP Environment
         uses: ./.github/actions/setup-php-env
@@ -66,7 +65,9 @@ jobs:
         os: ['ubuntu-latest', 'macos-latest']
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          persist-credentials: false
 
       - name: Setup PHP Environment
         uses: ./.github/actions/setup-php-env

@@ -115,8 +115,9 @@ final class TelemetryContextTest extends FlowTestCase
 
         $span = $spans[0];
         static::assertSame('DataFrame flow_dataframe', $span->name());
-        static::assertNotNull($span->status());
-        static::assertTrue($span->status()->isOk());
+        $status = $span->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
 
         $attributes = $span->attributes();
         static::assertArrayHasKey('rows.total', $attributes);
@@ -168,9 +169,10 @@ final class TelemetryContextTest extends FlowTestCase
 
         $endedSpans = $spanProcessor->endedSpans();
         static::assertCount(1, $endedSpans);
-        static::assertNotNull($endedSpans[0]->status());
-        static::assertTrue($endedSpans[0]->status()->isError());
-        static::assertSame('Processing failed due to invalid data', $endedSpans[0]->status()->description);
+        $status = $endedSpans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isError());
+        static::assertSame('Processing failed due to invalid data', $status->description);
 
         $attributes = $endedSpans[0]->attributes();
         static::assertArrayHasKey('rows.total', $attributes);
@@ -252,8 +254,9 @@ final class TelemetryContextTest extends FlowTestCase
         static::assertCount(1, $endedSpans);
         static::assertSame('StreamLoader', $endedSpans[0]->name());
         static::assertSame(StreamLoader::class, $endedSpans[0]->attributes()['loader.class']);
-        static::assertNotNull($endedSpans[0]->status());
-        static::assertTrue($endedSpans[0]->status()->isOk());
+        $status = $endedSpans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
     }
 
     public function test_loading_failed_logs_error_and_sets_span_status(): void
@@ -296,9 +299,10 @@ final class TelemetryContextTest extends FlowTestCase
 
         $endedSpans = $spanProcessor->endedSpans();
         static::assertCount(1, $endedSpans);
-        static::assertNotNull($endedSpans[0]->status());
-        static::assertTrue($endedSpans[0]->status()->isError());
-        static::assertSame('Loading failed due to disk error', $endedSpans[0]->status()->description);
+        $status = $endedSpans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isError());
+        static::assertSame('Loading failed due to disk error', $status->description);
     }
 
     public function test_loading_started_creates_span_when_trace_loading_enabled(): void
@@ -535,8 +539,9 @@ final class TelemetryContextTest extends FlowTestCase
         static::assertCount(1, $endedSpans);
         static::assertSame('LimitTransformer', $endedSpans[0]->name());
         static::assertSame(LimitTransformer::class, $endedSpans[0]->attributes()['transformer.class']);
-        static::assertNotNull($endedSpans[0]->status());
-        static::assertTrue($endedSpans[0]->status()->isOk());
+        $status = $endedSpans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
     }
 
     public function test_transformation_failed_logs_error_and_sets_span_status(): void
@@ -579,9 +584,10 @@ final class TelemetryContextTest extends FlowTestCase
 
         $endedSpans = $spanProcessor->endedSpans();
         static::assertCount(1, $endedSpans);
-        static::assertNotNull($endedSpans[0]->status());
-        static::assertTrue($endedSpans[0]->status()->isError());
-        static::assertSame('Transformation failed', $endedSpans[0]->status()->description);
+        $status = $endedSpans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isError());
+        static::assertSame('Transformation failed', $status->description);
     }
 
     public function test_transformation_started_creates_span_when_trace_transformations_enabled(): void

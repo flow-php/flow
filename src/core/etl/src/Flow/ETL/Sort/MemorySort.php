@@ -23,12 +23,10 @@ final class MemorySort implements SortingAlgorithm
         private Unit $maximumMemory,
     ) {
         $this->configuration = new Configuration(10);
+        $limit = $this->configuration->limit();
 
-        if ($this->configuration->isLessThan($maximumMemory) && !$this->configuration->isInfinite()) {
-            /**
-             * @phpstan-ignore-next-line
-             */
-            $this->maximumMemory = $this->configuration->limit()->percentage(90);
+        if ($limit !== null && $this->configuration->isLessThan($maximumMemory)) {
+            $this->maximumMemory = $limit->percentage(90);
         }
     }
 

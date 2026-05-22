@@ -11,7 +11,6 @@ use Flow\ETL\Row;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_string;
 use function in_array;
-use function is_array;
 use function is_string;
 use function str_contains;
 
@@ -41,14 +40,6 @@ final class Contains extends ScalarFunctionChain
             return str_contains($haystack, $needle);
         }
 
-        if (is_array($haystack)) {
-            return in_array($needle, $haystack, true);
-        }
-
-        $context
-            ->functions()
-            ->invalidResult(new InvalidArgumentException('Contains function requires haystack to be string or array'));
-
-        return false;
+        return in_array($needle, $haystack, true);
     }
 }

@@ -14,7 +14,5 @@ interface CreateViewOptionsStep extends CreateViewFinalStep
 
     public function orReplace(): self;
 
-    public function recursive(): self;
-
     public function temporary(): self;
 }

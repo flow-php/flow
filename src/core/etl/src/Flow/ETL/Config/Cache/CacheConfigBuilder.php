@@ -66,6 +66,7 @@ final class CacheConfigBuilder
      */
     public function externalSortBucketsCount(int $externalSortBucketsCount): self
     {
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
         if ($externalSortBucketsCount < 1) {
             throw new InvalidArgumentException('External sort buckets count must be greater than 0');
         }

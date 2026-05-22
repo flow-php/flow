@@ -15,6 +15,9 @@ final readonly class DataFrameExtractor implements Extractor
         private DataFrame $dataFrame,
     ) {}
 
+    /**
+     * @return Generator<int, \Flow\ETL\Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         foreach ($this->dataFrame->get() as $rows) {

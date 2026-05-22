@@ -29,6 +29,9 @@ final class PathPartitionsExtractor implements Extractor, FileExtractor, Limitab
         private readonly Path $path,
     ) {}
 
+    /**
+     * @return Generator<int, \Flow\ETL\Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         foreach ($context->filesystem($this->path)->list($this->path, $this->filter()) as $fileStatus) {

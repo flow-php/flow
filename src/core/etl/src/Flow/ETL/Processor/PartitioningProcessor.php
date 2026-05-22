@@ -8,12 +8,12 @@ use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\CollectingExtractor;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Hash\Algorithm;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Processor;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\Rows;
 use Flow\Filesystem\Partition;
 use Generator;
 
@@ -52,13 +52,16 @@ final readonly class PartitioningProcessor implements Processor
         $this->hashAlgorithm = new NativePHPHash();
     }
 
+    /**
+     * @return Generator<int, \Flow\ETL\Rows, Signal|null, void>
+     */
     public function process(Generator $rows, FlowContext $context): Generator
     {
         /** @var array<string, CacheIndex> $partitionIndexes */
         $partitionIndexes = [];
 
-        /** @var Rows $batch */
         foreach ($rows as $batch) {
+            // @mago-ignore analysis:too-few-arguments
             foreach ($batch->partitionBy(...$this->partitionBy) as $partitionedRows) {
                 $sortedRows = $partitionedRows->sortBy(...$this->orderBy);
 

@@ -63,6 +63,7 @@ final class FilesystemStreams implements Countable, IteratorAggregate
 
                             $partitionFilesPattern = path(
                                 $fileStream->path()->parentDirectory()->uri() . '/' . $filename . '*.'
+                                    // @mago-ignore analysis:possibly-false-operand
                                     . $fileStream->path()->extension(),
                                 $fileStream->path()->options(),
                             );

@@ -287,12 +287,14 @@ final class RowsTest extends FlowTestCase
         );
 
         $evenRows = static function (Row $row): bool {
+            // @mago-ignore analysis:mixed-assignment
             $value = $row->get('number')->value();
             assert(is_int($value));
 
             return ($value % 2) === 0;
         };
         $oddRows = static function (Row $row): bool {
+            // @mago-ignore analysis:mixed-assignment
             $value = $row->get('number')->value();
             assert(is_int($value));
 
@@ -627,6 +629,7 @@ final class RowsTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
+        // @mago-ignore analysis:invalid-argument
         /** @phpstan-ignore-next-line */
         rows()->offsetExists('a');
     }

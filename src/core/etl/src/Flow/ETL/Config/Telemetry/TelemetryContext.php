@@ -77,7 +77,9 @@ final class TelemetryContext
      */
     public function dataFrameCompleted(FlowContext $context, array $attributes = []): void
     {
-        if ($this->dataFrameSpan === null) {
+        $dataFrameSpan = $this->dataFrameSpan;
+
+        if ($dataFrameSpan === null) {
             return;
         }
 
@@ -90,7 +92,7 @@ final class TelemetryContext
                 'memory_min_mb' => $this->memory->min()->inMb(),
                 'memory_max_mb' => $this->memory->max()->inMb(),
             ],
-            spanContext: $this->dataFrameSpan->context(),
+            spanContext: $dataFrameSpan->context(),
         );
 
         $throughput = 0.0;
@@ -101,7 +103,7 @@ final class TelemetryContext
         }
 
         $this->tracer->complete(
-            $this->dataFrameSpan
+            $dataFrameSpan
                 ->setAttributes(array_merge($attributes, [
                     'dataframe.id' => $context->config->id(),
                     'dataframe.name' => $context->config->name(),
@@ -135,7 +137,9 @@ final class TelemetryContext
      */
     public function dataFrameFailed(FlowContext $context, Throwable $exception, array $attributes = []): void
     {
-        if ($this->dataFrameSpan === null) {
+        $dataFrameSpan = $this->dataFrameSpan;
+
+        if ($dataFrameSpan === null) {
             return;
         }
 
@@ -153,7 +157,7 @@ final class TelemetryContext
         }
 
         $this->tracer->complete(
-            $this->dataFrameSpan
+            $dataFrameSpan
                 ->setAttributes(array_merge($attributes, [
                     'dataframe.id' => $context->config->id(),
                     'dataframe.name' => $context->config->name(),
@@ -185,7 +189,7 @@ final class TelemetryContext
     public function dataFrameStarted(FlowContext $context): void
     {
         $this->context = $context;
-        $this->dataFrameSpan = $this->tracer->span(
+        $dataFrameSpan = $this->tracer->span(
             'DataFrame ' . $context->config->name(),
             SpanKind::INTERNAL,
             Attributes::create([
@@ -193,6 +197,7 @@ final class TelemetryContext
                 'dataframe.name' => $context->config->name(),
             ]),
         );
+        $this->dataFrameSpan = $dataFrameSpan;
 
         $this->logger()->debug(
             'Data frame processing started',
@@ -215,7 +220,7 @@ final class TelemetryContext
                     $context->config->fstab()->filesystems(),
                 ),
             ],
-            spanContext: $this->dataFrameSpan->context(),
+            spanContext: $dataFrameSpan->context(),
         );
 
         if ($this->options->collectMetrics) {

@@ -12,10 +12,11 @@ use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 
 use function Flow\Types\DSL\type_equals;
-use function Flow\Types\DSL\type_optional;
 
 /**
- * @implements Entry<?bool>
+ * @template-covariant T of bool|null
+ *
+ * @implements Entry<T>
  */
 final class BooleanEntry implements Entry
 {
@@ -24,6 +25,8 @@ final class BooleanEntry implements Entry
     private BooleanDefinition $definition;
 
     /**
+     * @param T $value
+     *
      * @throws InvalidArgumentException
      */
     public function __construct(
@@ -48,11 +51,6 @@ final class BooleanEntry implements Entry
         return $this->definition;
     }
 
-    public function duplicate(): static
-    {
-        return new self($this->name, $this->value, $this->definition->metadata());
-    }
-
     public function is(string|Reference $name): bool
     {
         if ($name instanceof Reference) {
@@ -70,11 +68,6 @@ final class BooleanEntry implements Entry
             && type_equals($this->type(), $entry->type())
             && $this->value() === $entry->value()
         );
-    }
-
-    public function map(callable $mapper): static
-    {
-        return new self($this->name, $mapper($this->value()));
     }
 
     public function name(): string
@@ -99,18 +92,19 @@ final class BooleanEntry implements Entry
         return $this->value() ? 'true' : 'false';
     }
 
+    /**
+     * @return Type<bool>
+     */
     public function type(): Type
     {
         return $this->definition->type();
     }
 
+    /**
+     * @return T
+     */
     public function value(): ?bool
     {
         return $this->value;
-    }
-
-    public function withValue(mixed $value): static
-    {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

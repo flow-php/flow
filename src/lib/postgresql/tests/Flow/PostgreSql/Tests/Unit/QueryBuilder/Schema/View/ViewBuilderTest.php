@@ -355,19 +355,6 @@ final class ViewBuilderTest extends TestCase
         );
     }
 
-    public function test_create_recursive_view_outputs_as_regular_view_to_sql(): void
-    {
-        static::assertSame(
-            'CREATE VIEW subordinates (id, name, manager_id) AS SELECT id, name, manager_id FROM employees',
-            create()
-                ->view('subordinates')
-                ->recursive()
-                ->columns('id', 'name', 'manager_id')
-                ->as(select(col('id'), col('name'), col('manager_id'))->from(table('employees')))
-                ->toSql(),
-        );
-    }
-
     public function test_create_temporary_view_to_sql(): void
     {
         static::assertSame(

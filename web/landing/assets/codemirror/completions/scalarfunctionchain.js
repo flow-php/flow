@@ -104,7 +104,7 @@ const scalarFunctionChainMethods = [
                     <span class=\"fn-name\">arrayGetCollection</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|array</span> <span class=\"fn-param\">$keys</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayGetCollection</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param array<array-key, mixed> $keys
+                    @param ScalarFunction|array<array-key, mixed> $keys
                 </div>
                             `
             return div
@@ -173,7 +173,7 @@ const scalarFunctionChainMethods = [
                     <span class=\"fn-name\">arrayMerge</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|array</span> <span class=\"fn-param\">$ref</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayMerge</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param array<array-key, mixed> $ref
+                    @param ScalarFunction|array<array-key, mixed> $ref
                 </div>
                             `
             return div
@@ -857,7 +857,7 @@ const scalarFunctionChainMethods = [
                     <span class=\"fn-name\">isIn</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|array</span> <span class=\"fn-param\">$haystack</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">IsIn</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param array<array-key, mixed> $haystack
+                    @param ScalarFunction|array<array-key, mixed> $haystack
                 </div>
                             `
             return div
@@ -1454,7 +1454,7 @@ const scalarFunctionChainMethods = [
                     <span class=\"fn-name\">slug</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|string</span> <span class=\"fn-param\">$separator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">&#039;-&#039;</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ScalarFunction|string|null</span> <span class=\"fn-param\">$locale</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ScalarFunction|array|null</span> <span class=\"fn-param\">$symbolsMap</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Slug</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param null|array<array-key, mixed> $symbolsMap
+                    @param ScalarFunction|null|array<array-key, mixed> $symbolsMap
                 </div>
                             `
             return div
@@ -1895,7 +1895,7 @@ const scalarFunctionChainMethods = [
                     <span class=\"fn-name\">unpack</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|array</span> <span class=\"fn-param\">$skipKeys</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ScalarFunction|string|null</span> <span class=\"fn-param\">$entryPrefix</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ArrayUnpack</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param array<array-key, mixed> $skipKeys
+                    @param ScalarFunction|array<array-key, mixed> $skipKeys
                 </div>
                             `
             return div

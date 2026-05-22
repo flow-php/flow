@@ -39,32 +39,20 @@ final class FloatEntryTest extends FlowTestCase
         ];
     }
 
-    public function test_duplicating_entry(): void
-    {
-        $entry = float_entry('float', 1.0);
-        $duplicated = $entry->duplicate();
-
-        static::assertNotSame($entry, $duplicated);
-        static::assertEquals($entry, $duplicated);
-    }
-
     public function test_entry_name_can_be_zero(): void
     {
         static::assertSame('0', float_entry('0', 0)->name());
         static::assertSame(0.0, float_entry('0', 0)->value());
     }
 
+    /**
+     * @param FloatEntry<float|null> $entry
+     * @param FloatEntry<float|null> $nextEntry
+     */
     #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, FloatEntry $entry, FloatEntry $nextEntry): void
     {
         static::assertSame($equals, $entry->isEqual($nextEntry));
-    }
-
-    public function test_map(): void
-    {
-        $float = float_entry('entry-name', 1);
-
-        static::assertEquals($float, $float->map(static fn(?float $float): ?float => $float));
     }
 
     public function test_prevents_from_creating_entry_with_empty_entry_name(): void
@@ -100,7 +88,6 @@ final class FloatEntryTest extends FlowTestCase
         $float = float_entry('name', 1.0);
 
         $serialized = serialize($float);
-        /** @var FloatEntry $unserialized */
         $unserialized = type_instance_of(FloatEntry::class)->assert(unserialize($serialized));
 
         static::assertTrue($float->isEqual($unserialized));

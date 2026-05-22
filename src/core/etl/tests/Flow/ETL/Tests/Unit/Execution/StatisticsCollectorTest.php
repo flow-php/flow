@@ -36,9 +36,10 @@ final class StatisticsCollectorTest extends FlowTestCase
         $report = $collector->report();
 
         static::assertNotNull($report);
-        static::assertInstanceOf(Columns::class, $report->statistics()->columns);
-        static::assertSame(1, $report->statistics()->columns->get('id')->min());
-        static::assertSame(2, $report->statistics()->columns->get('id')->max());
+        $columns = $report->statistics()->columns;
+        static::assertInstanceOf(Columns::class, $columns);
+        static::assertSame(1, $columns->get('id')->min());
+        static::assertSame(2, $columns->get('id')->max());
     }
 
     public function test_capture_collects_schema_when_enabled(): void
@@ -52,10 +53,11 @@ final class StatisticsCollectorTest extends FlowTestCase
         $report = $collector->report();
 
         static::assertNotNull($report);
-        static::assertNotNull($report->schema());
-        static::assertSame(2, $report->schema()->count());
-        static::assertNotNull($report->schema()->findDefinition('id'));
-        static::assertNotNull($report->schema()->findDefinition('name'));
+        $schema = $report->schema();
+        static::assertNotNull($schema);
+        static::assertSame(2, $schema->count());
+        static::assertNotNull($schema->findDefinition('id'));
+        static::assertNotNull($schema->findDefinition('name'));
     }
 
     public function test_capture_increments_row_count_correctly(): void

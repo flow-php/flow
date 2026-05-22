@@ -43,6 +43,8 @@ ignore = [
         "src/lib/types/tests/Flow/Types/Tests/Unit/Type/Logical/HTMLTypeTest.php",
         "src/lib/types/tests/Flow/Types/Tests/Unit/Type/Native/StringTypeTest.php",
         "src/lib/types/tests/Flow/Types/Tests/Unit/Type/TypeDetectorTest.php",
+        "src/core/etl/src/Flow/ETL/Row/Entry/HTMLEntry.php",
+        "src/core/etl/src/Flow/ETL/Row/Entry/HTMLElementEntry.php",
     ] },
 ]
 

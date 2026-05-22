@@ -40,11 +40,12 @@ final readonly class StructureSelect implements ScalarFunction
             return null;
         }
 
+        $value = $structure->value();
         $output = [];
 
         foreach ($this->refs as $ref) {
-            if (array_key_exists($ref->to(), $structure->value() ?: [])) {
-                $output[$ref->name()] = $structure->value() ? $structure->value()[$ref->to()] : null;
+            if ($value !== null && array_key_exists($ref->to(), $value)) {
+                $output[$ref->name()] = $value[$ref->to()];
             } else {
                 $output[$ref->name()] = null;
             }

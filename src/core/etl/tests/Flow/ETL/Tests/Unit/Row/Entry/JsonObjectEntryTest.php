@@ -13,7 +13,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use stdClass;
 
 use function Flow\ETL\DSL\integer_entry;
-use function Flow\ETL\DSL\json_object_entry;
 use function json_encode;
 
 final class JsonObjectEntryTest extends FlowTestCase
@@ -86,28 +85,14 @@ final class JsonObjectEntryTest extends FlowTestCase
         ];
     }
 
-    public function test_duplicating_entry(): void
-    {
-        $entry = json_object_entry('entry-name', ['id' => 1, 'name' => 'one']);
-        $duplicated = $entry->duplicate();
-
-        static::assertNotSame($entry, $duplicated);
-        static::assertEquals($entry, $duplicated);
-    }
-
+    /**
+     * @param JsonEntry<\Flow\Types\Value\Json|null> $entry
+     * @param JsonEntry<\Flow\Types\Value\Json|null> $nextEntry
+     */
     #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, JsonEntry $entry, JsonEntry $nextEntry): void
     {
         static::assertSame($equals, $entry->isEqual($nextEntry));
-    }
-
-    public function test_map(): void
-    {
-        $item = ['item-id' => 1, 'name' => 'one'];
-        $entry = JsonEntry::object('item', $item);
-        $mappedEntry = $entry->map(static fn(?Json $json): array => ['item-id' => 1, 'name' => 'ONE']);
-
-        static::assertEquals(JsonEntry::object('item', ['item-id' => 1, 'name' => 'ONE']), $mappedEntry);
     }
 
     public function test_renames_entry(): void

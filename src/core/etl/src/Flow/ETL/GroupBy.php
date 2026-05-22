@@ -44,12 +44,12 @@ final class GroupBy
     private ?Reference $pivot;
 
     /**
-     * @var array<int, mixed>
+     * @var array<int, null|array<array-key, mixed>|bool|float|int|object|string>
      */
     private array $pivotColumns;
 
     /**
-     * @var array<string, array<string, mixed>>
+     * @var array<string, array<string, AggregatingFunction|null|array<array-key, mixed>|bool|float|int|object|string>>
      */
     private array $pivotedTable;
 
@@ -82,10 +82,12 @@ final class GroupBy
 
     public function group(Rows $rows, FlowContext $context): void
     {
-        if ($this->pivot) {
+        $pivot = $this->pivot;
+
+        if ($pivot !== null) {
             foreach ($rows as $row) {
                 try {
-                    $this->pivotColumns[] = $row->get($this->pivot)->value();
+                    $this->pivotColumns[] = $row->valueOf($pivot);
                 } catch (InvalidArgumentException) {
                     $this->pivotColumns[] = null;
                 }
@@ -102,7 +104,7 @@ final class GroupBy
 
                 $indexValue = $this->hash($values);
 
-                $pivotValue = $row->valueOf($this->pivot);
+                $pivotValue = $row->valueOf($pivot);
 
                 if (!array_key_exists($indexValue, $this->pivotedTable)) {
                     $this->pivotedTable[$indexValue] = [];
@@ -119,7 +121,8 @@ final class GroupBy
                 $pivotValue = type_union(type_string(), type_integer())->assert($pivotValue);
 
                 if (!array_key_exists($pivotValue, $this->pivotedTable[$indexValue])) {
-                    /** @phpstan-ignore-next-line */
+                    // @mago-ignore analysis:invalid-property-assignment-value,possibly-invalid-clone
+                    /** @phpstan-ignore-next-line clone.nonObject, assign.propertyType */
                     $this->pivotedTable[$indexValue][$pivotValue] = clone current($this->aggregations);
                 }
 
@@ -136,7 +139,7 @@ final class GroupBy
 
                 foreach ($this->refs as $ref) {
                     try {
-                        $values[$ref->name()] = $row->get($ref)->value();
+                        $values[$ref->name()] = $row->valueOf($ref);
                     } catch (InvalidArgumentException) {
                         $values[$ref->name()] = null;
                     }

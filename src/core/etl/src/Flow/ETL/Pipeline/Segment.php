@@ -31,7 +31,9 @@ final readonly class Segment
     public function __construct(
         private ?Processor $processor = null,
     ) {
-        $this->steps = new SplObjectStorage();
+        /** @var \SplObjectStorage<Loader|Transformer, null> $steps */
+        $steps = new SplObjectStorage();
+        $this->steps = $steps;
     }
 
     public function add(Transformer|Loader $step): void
@@ -68,6 +70,10 @@ final readonly class Segment
         while ($input->valid()) {
             $rows = $input->current();
             $input->next();
+
+            if ($rows === null) {
+                continue;
+            }
 
             foreach ($this->steps as $step) {
                 try {

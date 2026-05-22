@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Processor;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Processor\OffsetProcessor;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -18,14 +19,13 @@ final class OffsetProcessorTest extends FlowTestCase
     public function test_offset_greater_than_total_rows_yields_nothing(): void
     {
         $processor = new OffsetProcessor(10);
-
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
         })();
-
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $totalRows = 0;
 
+        /** @var Rows $batch */
         foreach ($result as $batch) {
             $totalRows += $batch->count();
         }
@@ -36,14 +36,13 @@ final class OffsetProcessorTest extends FlowTestCase
     public function test_offset_within_single_batch(): void
     {
         $processor = new OffsetProcessor(1);
-
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)), row(int_entry('id', 3)));
         })();
-
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $allRows = [];
 
+        /** @var Rows $batch */
         foreach ($result as $batch) {
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;
@@ -62,14 +61,13 @@ final class OffsetProcessorTest extends FlowTestCase
     public function test_offset_zero_yields_all_rows(): void
     {
         $processor = new OffsetProcessor(0);
-
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
         })();
-
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $totalRows = 0;
 
+        /** @var Rows $batch */
         foreach ($result as $batch) {
             $totalRows += $batch->count();
         }
@@ -80,15 +78,14 @@ final class OffsetProcessorTest extends FlowTestCase
     public function test_skips_first_n_rows(): void
     {
         $processor = new OffsetProcessor(2);
-
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
             yield rows(row(int_entry('id', 3)), row(int_entry('id', 4)));
         })();
-
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $allRows = [];
 
+        /** @var Rows $batch */
         foreach ($result as $batch) {
             foreach ($batch->toArray() as $rowData) {
                 $allRows[] = $rowData;
@@ -108,7 +105,7 @@ final class OffsetProcessorTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Offset must be greater than or equal to 0');
-
+        // @mago-ignore analysis:invalid-argument
         /** @phpstan-ignore-next-line */
         new OffsetProcessor(-1);
     }

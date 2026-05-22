@@ -17,7 +17,6 @@ use function Flow\Types\DSL\type_float;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
-use function implode;
 
 final class MapEntryTest extends FlowTestCase
 {
@@ -85,15 +84,6 @@ final class MapEntryTest extends FlowTestCase
         );
     }
 
-    public function test_duplicating_entry(): void
-    {
-        $entry = map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string()));
-        $duplicated = $entry->duplicate();
-
-        static::assertNotSame($entry, $duplicated);
-        static::assertEquals($entry, $duplicated);
-    }
-
     public function test_is_equal(): void
     {
         static::assertTrue(map_entry(
@@ -111,18 +101,6 @@ final class MapEntryTest extends FlowTestCase
             ['one', 'two', 'three'],
             type_map(type_integer(), type_string()),
         )->isEqual(map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string()))));
-    }
-
-    public function test_map(): void
-    {
-        static::assertEquals(
-            map_entry('strings', ['one, two, three'], type_map(type_integer(), type_string())),
-            map_entry(
-                'strings',
-                ['one', 'two', 'three'],
-                type_map(type_integer(), type_string()),
-            )->map(static fn(array $value): array => [implode(', ', $value)]),
-        );
     }
 
     public function test_rename(): void

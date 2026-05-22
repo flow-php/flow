@@ -104,8 +104,9 @@ final class TelemetryTest extends FlowTestCase
         static::assertNotEmpty($loadingSpans, 'Loading spans should be created when trace_loading is enabled');
 
         foreach ($loadingSpans as $span) {
-            static::assertNotNull($span->status());
-            static::assertTrue($span->status()->isOk());
+            $status = $span->status();
+            static::assertNotNull($status);
+            static::assertTrue($status->isOk());
             static::assertArrayHasKey('loader.class', $span->attributes());
         }
     }
@@ -137,8 +138,9 @@ final class TelemetryTest extends FlowTestCase
 
         $dataFrameSpan = $endedSpans[0];
         static::assertSame('DataFrame flow_dataframe', $dataFrameSpan->name());
-        static::assertNotNull($dataFrameSpan->status());
-        static::assertTrue($dataFrameSpan->status()->isOk());
+        $status = $dataFrameSpan->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
     }
 
     public function test_dataframe_run_logs_start_and_completion(): void
@@ -266,8 +268,9 @@ final class TelemetryTest extends FlowTestCase
         );
 
         foreach ($transformerSpans as $span) {
-            static::assertNotNull($span->status());
-            static::assertTrue($span->status()->isOk());
+            $status = $span->status();
+            static::assertNotNull($status);
+            static::assertTrue($status->isOk());
             static::assertArrayHasKey('transformer.class', $span->attributes());
         }
     }

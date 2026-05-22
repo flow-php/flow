@@ -19,8 +19,8 @@ assert (!(with-c && with-pg-query-ext)) || builtins.throw "Cannot use --arg with
 
 let
     nixpkgs = fetchTarball {
-        url = "https://github.com/NixOS/nixpkgs/archive/03158cb739fc4a09babe7949900bfc221871d642.tar.gz";
-        sha256 = "0vl4iwqcpbczhzb3xbckjb86brcsxkcz4wcbqzidia2fyhm9llmx";
+        url = "https://github.com/NixOS/nixpkgs/archive/0c4e77908e1204498184d81cda8716e1ba4c47af.tar.gz";
+        sha256 = "0mbr776gj2qk9klvara4zlww3g0da4nfbnrmi114nnmmayx3pyj4";
     };
 
     pkgs = import nixpkgs {
@@ -79,6 +79,7 @@ pkgs.mkShell {
         pkgs.act
         pkgs.hyperfine
         pkgs.actionlint
+        pkgs.zizmor
         pkgs.just
     ]
         ++ pkgs.lib.optional with-blackfire pkgs.blackfire

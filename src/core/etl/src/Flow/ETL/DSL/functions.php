@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
+use Brick\Math\BigDecimal;
 use DateInterval;
 use DatePeriod;
+use DateTime;
+use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use Dom\HTMLDocument;
 use Dom\HTMLElement;
 use DOMDocument;
 use DOMElement;
+use Exception;
 use Flow\Calculator\Rounding;
 use Flow\Clock\SystemClock;
 use Flow\ETL\Analyze;
@@ -264,6 +268,8 @@ use Flow\Types\Type\TypeFactory;
 use Flow\Types\Value\Json;
 use Flow\Types\Value\Uuid as FlowUuid;
 use Psr\Clock\ClockInterface;
+use ReflectionProperty;
+use Throwable;
 use UnitEnum;
 
 use function array_is_list;
@@ -409,6 +415,7 @@ function filesystem_cache(
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
 function batched_by(Extractor $extractor, string|Reference $column, ?int $min_size = null): BatchByExtractor
 {
+    // @mago-ignore analysis:invalid-operand
     if ($min_size !== null && $min_size <= 0) {
         throw new InvalidArgumentException('Minimum batch size must be greater than 0, given: ' . $min_size);
     }
@@ -498,6 +505,7 @@ function to_memory(Memory $memory): MemoryLoader
 #[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'array')]
 function to_array(array &$array): ArrayLoader
 {
+    // @mago-ignore analysis:redundant-docblock-type
     /** @phpstan-var array<array<mixed>> $array */
     return new ArrayLoader($array);
 }
@@ -590,16 +598,20 @@ function rename_map(array $renames): RenameMapEntryStrategy
 }
 
 /**
- * @return Entry<?bool>
+ * @return ($value is null ? Entry<null> : Entry<bool>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function bool_entry(string $name, ?bool $value, ?Metadata $metadata = null): Entry
 {
+    if ($value === null) {
+        return new BooleanEntry($name, null, $metadata);
+    }
+
     return new BooleanEntry($name, $value, $metadata);
 }
 
 /**
- * @return Entry<?bool>
+ * @return ($value is null ? Entry<null> : Entry<bool>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function boolean_entry(string $name, ?bool $value, ?Metadata $metadata = null): Entry
@@ -608,43 +620,119 @@ function boolean_entry(string $name, ?bool $value, ?Metadata $metadata = null): 
 }
 
 /**
- * @return Entry<?\DateTimeInterface>
+ * @throws InvalidArgumentException
+ *
+ * @return ($value is null ? Entry<null> : Entry<\DateTimeInterface>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function datetime_entry(string $name, DateTimeInterface|string|null $value, ?Metadata $metadata = null): Entry
 {
-    return new DateTimeEntry($name, $value, $metadata);
+    if ($value === null) {
+        return new DateTimeEntry($name, null, $metadata);
+    }
+
+    if ($value instanceof DateTime) {
+        return new DateTimeEntry($name, DateTimeImmutable::createFromMutable($value), $metadata);
+    }
+
+    if ($value instanceof DateTimeInterface) {
+        return new DateTimeEntry($name, $value, $metadata);
+    }
+
+    try {
+        return new DateTimeEntry($name, new DateTimeImmutable($value), $metadata);
+    } catch (Exception $e) {
+        throw new InvalidArgumentException(
+            "Invalid value given: '{$value}', reason: " . $e->getMessage(),
+            previous: $e,
+        );
+    }
 }
 
 /**
- * @return Entry<?\DateInterval>
+ * @throws InvalidArgumentException
+ *
+ * @return ($value is null ? Entry<null> : Entry<\DateInterval>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function time_entry(string $name, DateInterval|string|null $value, ?Metadata $metadata = null): Entry
 {
-    return new TimeEntry($name, $value, $metadata);
+    if ($value === null) {
+        return new TimeEntry($name, null, $metadata);
+    }
+
+    if ($value instanceof DateInterval) {
+        return new TimeEntry($name, $value, $metadata);
+    }
+
+    try {
+        return new TimeEntry($name, new DateInterval($value), $metadata);
+    } catch (Throwable $dateIntervalException) {
+        try {
+            $dateTime = new DateTimeImmutable($value);
+            $hours = (int) $dateTime->format('H');
+            $minutes = (int) $dateTime->format('i');
+            $seconds = (int) $dateTime->format('s');
+            $fraction = (int) $dateTime->format('u') / 1_000_000;
+
+            $interval = new DateInterval('PT' . $hours . 'H' . $minutes . 'M' . $seconds . 'S');
+            (new ReflectionProperty($interval, 'f'))->setValue($interval, $fraction);
+
+            return new TimeEntry($name, $interval, $metadata);
+        } catch (Throwable) {
+            throw new InvalidArgumentException(
+                "Invalid value given: '{$value}', reason: " . $dateIntervalException->getMessage(),
+                previous: $dateIntervalException,
+            );
+        }
+    }
 }
 
 /**
- * @return Entry<?\DateTimeInterface>
+ * @throws InvalidArgumentException
+ *
+ * @return ($value is null ? Entry<null> : Entry<\DateTimeInterface>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function date_entry(string $name, DateTimeInterface|string|null $value, ?Metadata $metadata = null): Entry
 {
-    return new DateEntry($name, $value, $metadata);
+    if ($value === null) {
+        return new DateEntry($name, null, $metadata);
+    }
+
+    if ($value instanceof DateTimeImmutable) {
+        return new DateEntry($name, $value->setTime(0, 0, 0, 0), $metadata);
+    }
+
+    if ($value instanceof DateTimeInterface) {
+        return new DateEntry($name, DateTimeImmutable::createFromInterface($value)->setTime(0, 0, 0, 0), $metadata);
+    }
+
+    try {
+        return new DateEntry($name, (new DateTimeImmutable($value))->setTime(0, 0, 0, 0), $metadata);
+    } catch (Exception $e) {
+        throw new InvalidArgumentException(
+            "Invalid value given: '{$value}', reason: " . $e->getMessage(),
+            previous: $e,
+        );
+    }
 }
 
 /**
- * @return Entry<?int>
+ * @return ($value is null ? Entry<null> : Entry<int>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function int_entry(string $name, ?int $value, ?Metadata $metadata = null): Entry
 {
+    if ($value === null) {
+        return new IntegerEntry($name, null, $metadata);
+    }
+
     return new IntegerEntry($name, $value, $metadata);
 }
 
 /**
- * @return Entry<?int>
+ * @return ($value is null ? Entry<null> : Entry<int>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function integer_entry(string $name, ?int $value, ?Metadata $metadata = null): Entry
@@ -653,32 +741,29 @@ function integer_entry(string $name, ?int $value, ?Metadata $metadata = null): E
 }
 
 /**
- * @return Entry<?\UnitEnum>
+ * @return ($enum is null ? Entry<null> : Entry<\UnitEnum>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function enum_entry(string $name, ?UnitEnum $enum, ?Metadata $metadata = null): Entry
 {
+    if ($enum === null) {
+        return new EnumEntry($name, null, $metadata);
+    }
+
     return new EnumEntry($name, $enum, $metadata);
 }
 
 /**
- * @return Entry<?float>
+ * @return ($value is null ? Entry<null> : Entry<float>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function float_entry(string $name, float|int|string|null $value, ?Metadata $metadata = null): Entry
 {
-    return new FloatEntry($name, $value, $metadata);
-}
+    if ($value === null) {
+        return new FloatEntry($name, null, $metadata);
+    }
 
-/**
- * @param null|array<array-key, mixed>|Json|string $data
- *
- * @return Entry<?Json>
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function json_entry(string $name, array|string|Json|null $data, ?Metadata $metadata = null): Entry
-{
-    return new JsonEntry($name, $data, $metadata);
+    return new FloatEntry($name, BigDecimal::of((string) $value)->toFloat(), $metadata);
 }
 
 /**
@@ -686,7 +771,36 @@ function json_entry(string $name, array|string|Json|null $data, ?Metadata $metad
  *
  * @throws InvalidArgumentException
  *
- * @return Entry<?Json>
+ * @return ($data is null ? Entry<null> : Entry<Json>)
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
+function json_entry(string $name, array|string|Json|null $data, ?Metadata $metadata = null): Entry
+{
+    if ($data === null) {
+        return new JsonEntry($name, null, $metadata);
+    }
+
+    if ($data instanceof Json) {
+        return new JsonEntry($name, $data, $metadata);
+    }
+
+    if (is_array($data)) {
+        return new JsonEntry($name, Json::fromArray($data), $metadata);
+    }
+
+    try {
+        return new JsonEntry($name, new Json($data), $metadata);
+    } catch (Throwable $e) {
+        throw new InvalidArgumentException("Invalid value given: '{$data}', reason: " . $e->getMessage(), previous: $e);
+    }
+}
+
+/**
+ * @param null|array<array-key, mixed>|Json|string $data
+ *
+ * @throws InvalidArgumentException
+ *
+ * @return ($data is null ? Entry<null> : Entry<Json>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function json_object_entry(string $name, array|string|Json|null $data, ?Metadata $metadata = null): Entry
@@ -696,18 +810,29 @@ function json_object_entry(string $name, array|string|Json|null $data, ?Metadata
     }
 
     if (is_string($data)) {
-        return new JsonEntry($name, $data, $metadata);
+        try {
+            return new JsonEntry($name, new Json($data), $metadata);
+        } catch (Throwable $e) {
+            throw new InvalidArgumentException(
+                "Invalid value given: '{$data}', reason: " . $e->getMessage(),
+                previous: $e,
+            );
+        }
     }
 
     return JsonEntry::object($name, $data, $metadata);
 }
 
 /**
- * @return Entry<?string>
+ * @return ($value is null ? Entry<null> : Entry<string>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function str_entry(string $name, ?string $value, ?Metadata $metadata = null): Entry
 {
+    if ($value === null) {
+        return new StringEntry($name, null, $metadata);
+    }
+
     return new StringEntry($name, $value, $metadata);
 }
 
@@ -730,7 +855,7 @@ function null_entry(string $name, ?Metadata $metadata = null): Entry
 }
 
 /**
- * @return Entry<?string>
+ * @return ($value is null ? Entry<null> : Entry<string>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function string_entry(string $name, ?string $value, ?Metadata $metadata = null): Entry
@@ -739,48 +864,110 @@ function string_entry(string $name, ?string $value, ?Metadata $metadata = null):
 }
 
 /**
- * @return Entry<?\Flow\Types\Value\Uuid>
+ * @return ($value is null ? Entry<null> : Entry<\Flow\Types\Value\Uuid>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function uuid_entry(string $name, FlowUuid|string|null $value, ?Metadata $metadata = null): Entry
 {
-    return new UuidEntry($name, $value, $metadata);
+    if ($value === null) {
+        return new UuidEntry($name, null, $metadata);
+    }
+
+    if ($value instanceof FlowUuid) {
+        return new UuidEntry($name, $value, $metadata);
+    }
+
+    return new UuidEntry($name, FlowUuid::fromString($value), $metadata);
 }
 
 /**
- * @return Entry<?\DOMDocument>
+ * @throws InvalidArgumentException
+ *
+ * @return ($value is null ? Entry<null> : Entry<\DOMDocument>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function xml_entry(string $name, DOMDocument|string|null $value, ?Metadata $metadata = null): Entry
 {
-    return new XMLEntry($name, $value, $metadata);
+    if ($value === null) {
+        return new XMLEntry($name, null, $metadata);
+    }
+
+    if ($value instanceof DOMDocument) {
+        return new XMLEntry($name, $value, $metadata);
+    }
+
+    $doc = new DOMDocument();
+
+    if (!@$doc->loadXML($value)) {
+        throw new InvalidArgumentException("Given string \"{$value}\" is not valid XML");
+    }
+
+    return new XMLEntry($name, $doc, $metadata);
 }
 
 /**
- * @return Entry<?\DOMElement>
+ * @throws InvalidArgumentException
+ *
+ * @return ($value is null ? Entry<null> : Entry<\DOMElement>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function xml_element_entry(string $name, DOMElement|string|null $value, ?Metadata $metadata = null): Entry
 {
-    return new XMLElementEntry($name, $value, $metadata);
+    if ($value === null) {
+        return new XMLElementEntry($name, null, $metadata);
+    }
+
+    if ($value instanceof DOMElement) {
+        return new XMLElementEntry($name, $value, $metadata);
+    }
+
+    $doc = new DOMDocument();
+
+    if (!@$doc->loadXML($value)) {
+        throw new InvalidArgumentException("Given string \"{$value}\" is not valid XML");
+    }
+
+    $element = $doc->documentElement;
+
+    if (!$element instanceof DOMElement) {
+        throw new InvalidArgumentException("Given string \"{$value}\" does not contain a root XML element");
+    }
+
+    return new XMLElementEntry($name, $element, $metadata);
 }
 
 /**
- * @return Entry<?HTMLDocument>
+ * @return ($value is null ? Entry<null> : Entry<HTMLDocument>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function html_entry(string $name, HTMLDocument|string|null $value, ?Metadata $metadata = null): Entry
 {
-    return new HTMLEntry($name, $value, $metadata);
+    if ($value === null) {
+        return new HTMLEntry($name, null, $metadata);
+    }
+
+    if ($value instanceof HTMLDocument) {
+        return new HTMLEntry($name, $value, $metadata);
+    }
+
+    return HTMLEntry::fromString($name, $value, $metadata);
 }
 
 /**
- * @return Entry<?HTMLElement>
+ * @return ($value is null ? Entry<null> : Entry<HTMLElement>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function html_element_entry(string $name, HTMLElement|string|null $value, ?Metadata $metadata = null): Entry
 {
-    return new HTMLElementEntry($name, $value, $metadata);
+    if ($value === null) {
+        return new HTMLElementEntry($name, null, $metadata);
+    }
+
+    if ($value instanceof HTMLElement) {
+        return new HTMLElementEntry($name, $value, $metadata);
+    }
+
+    return HTMLElementEntry::fromString($name, $value, $metadata);
 }
 
 /**
@@ -793,16 +980,18 @@ function entries(Entry ...$entries): Entries
 }
 
 /**
- * @template T
- *
  * @param ?array<string, mixed> $value
- * @param StructureType<T> $type
+ * @param StructureType<mixed> $type
  *
- * @return Entry<?array<string, T>>
+ * @return ($value is null ? Entry<null> : Entry<array<string, mixed>>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function struct_entry(string $name, ?array $value, StructureType $type, ?Metadata $metadata = null): Entry
 {
+    if ($value === null) {
+        return new StructureEntry($name, null, $type, $metadata);
+    }
+
     return new StructureEntry($name, $value, $type, $metadata);
 }
 
@@ -810,7 +999,7 @@ function struct_entry(string $name, ?array $value, StructureType $type, ?Metadat
  * @param ?array<string, mixed> $value
  * @param Type<mixed> $type
  *
- * @return Entry<?array<string, mixed>>
+ * @return ($value is null ? Entry<null> : Entry<array<string, mixed>>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function structure_entry(string $name, ?array $value, Type $type, ?Metadata $metadata = null): Entry
@@ -824,6 +1013,10 @@ function structure_entry(string $name, ?array $value, Type $type, ?Metadata $met
         ));
     }
 
+    if ($value === null) {
+        return new StructureEntry($name, null, $type, $metadata);
+    }
+
     return new StructureEntry($name, $value, $type, $metadata);
 }
 
@@ -831,7 +1024,7 @@ function structure_entry(string $name, ?array $value, Type $type, ?Metadata $met
  * @param null|list<mixed> $value
  * @param Type<mixed> $type
  *
- * @return Entry<mixed>
+ * @return ($value is null ? Entry<null> : Entry<list<mixed>>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function list_entry(string $name, ?array $value, Type $type, ?Metadata $metadata = null): Entry
@@ -845,6 +1038,10 @@ function list_entry(string $name, ?array $value, Type $type, ?Metadata $metadata
         ));
     }
 
+    if ($value === null) {
+        return new ListEntry($name, null, $type, $metadata);
+    }
+
     return new ListEntry($name, $value, $type, $metadata);
 }
 
@@ -852,7 +1049,7 @@ function list_entry(string $name, ?array $value, Type $type, ?Metadata $metadata
  * @param ?array<array-key, mixed> $value
  * @param Type<mixed> $mapType
  *
- * @return Entry<?array<array-key, mixed>>
+ * @return ($value is null ? Entry<null> : Entry<array<array-key, mixed>>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function map_entry(string $name, ?array $value, Type $mapType, ?Metadata $metadata = null): Entry
@@ -864,6 +1061,10 @@ function map_entry(string $name, ?array $value, Type $mapType, ?Metadata $metada
             $name,
             $mapType::class,
         ));
+    }
+
+    if ($value === null) {
+        return new MapEntry($name, null, $mapType, $metadata);
     }
 
     return new MapEntry($name, $value, $mapType, $metadata);
@@ -1462,6 +1663,7 @@ function array_to_row(
 ): Row {
     $entries = [];
 
+    // @mago-ignore analysis:mixed-assignment
     foreach ($data as $key => $value) {
         $name = is_int($key) ? 'e' . str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key;
 
@@ -1513,6 +1715,7 @@ function array_to_rows(
 
     $isRows = true;
 
+    // @mago-ignore analysis:mixed-assignment
     foreach ($data as $v) {
         if (!is_array($v)) {
             $isRows = false;
@@ -1527,6 +1730,7 @@ function array_to_rows(
 
     $rows = [];
 
+    // @mago-ignore analysis:mixed-assignment
     foreach ($data as $row) {
         $row = type_array()->assert($row);
         $rows[] = array_to_row($row, $entryFactory, $partitions, $schema);
@@ -1706,6 +1910,7 @@ function schema_selective_validator(): SelectiveValidator
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
 function schema_from_json(string $schema): Schema
 {
+    // @mago-ignore analysis:mixed-assignment
     $decodedSchema = json_decode($schema, true, 512, JSON_THROW_ON_ERROR);
     $decodedSchema = type_array()->assert($decodedSchema);
 
@@ -2084,15 +2289,15 @@ function equal(Reference|string $left, Reference|string $right): Equal
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::COMPARISON)]
-function compare_all(Comparison ...$comparisons): Comparison\All
+function compare_all(Comparison $comparison, Comparison ...$comparisons): Comparison\All
 {
-    return new Comparison\All(...$comparisons);
+    return new Comparison\All($comparison, ...$comparisons);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::COMPARISON)]
-function compare_any(Comparison ...$comparisons): Comparison\Any
+function compare_any(Comparison $comparison, Comparison ...$comparisons): Comparison\Any
 {
-    return new Comparison\Any(...$comparisons);
+    return new Comparison\Any($comparison, ...$comparisons);
 }
 
 /**

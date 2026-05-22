@@ -62,29 +62,17 @@ final class UuidEntryTest extends FlowTestCase
     {
         $entry = UuidEntry::from('entry-name', $value);
 
-        static::assertEquals($value, $entry->value()?->toString());
+        static::assertEquals($value, $entry->value()->toString());
     }
 
-    public function test_duplicating_entry(): void
-    {
-        $entry = uuid_entry('entry-name', Uuid::fromString('00000000-0000-0000-0000-000000000000'));
-        $duplicated = $entry->duplicate();
-
-        static::assertNotSame($entry, $duplicated);
-        static::assertEquals($entry, $duplicated);
-    }
-
+    /**
+     * @param UuidEntry<\Flow\Types\Value\Uuid|null> $entry
+     * @param UuidEntry<\Flow\Types\Value\Uuid|null> $nextEntry
+     */
     #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, UuidEntry $entry, UuidEntry $nextEntry): void
     {
         static::assertSame($equals, $entry->isEqual($nextEntry));
-    }
-
-    public function test_map(): void
-    {
-        $entry = uuid_entry('entry-name', Uuid::fromString('00000000-0000-0000-0000-000000000000'));
-
-        static::assertEquals($entry, $entry->map(static fn($value) => $value));
     }
 
     public function test_prevents_from_creating_entry_from_random_value(): void
@@ -109,14 +97,14 @@ final class UuidEntryTest extends FlowTestCase
         $renamedEntry = $entry->rename('new_name');
 
         static::assertSame('new_name', $renamedEntry->name());
-        static::assertEquals($entry->value()?->toString(), $renamedEntry->value()?->toString());
+        static::assertEquals($entry->value()->toString(), $renamedEntry->value()->toString());
         static::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
 
     public function test_renames_entry(): void
     {
         $entry = uuid_entry('entry-name', $uuid = Uuid::fromString('00000000-0000-0000-0000-000000000000'));
-        /** @var UuidEntry $newEntry */
+        /** @var UuidEntry<\Flow\Types\Value\Uuid|null> $newEntry */
         $newEntry = $entry->rename('new-entry-name');
 
         static::assertEquals('new-entry-name', $newEntry->name());

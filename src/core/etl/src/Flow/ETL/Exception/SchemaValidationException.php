@@ -34,7 +34,7 @@ final class SchemaValidationException extends RuntimeException
 
             if ($givenDefinition === null) {
                 $missingDefinitions[] =
-                    $expectedDefinition->entry()
+                    $expectedDefinition->entry()->name()
                     . '<'
                     . ($expectedDefinition->isNullable() ? '?' : '')
                     . $expectedDefinition->type()->toString()
@@ -62,7 +62,7 @@ final class SchemaValidationException extends RuntimeException
         foreach ($this->given->definitions() as $givenDefinition) {
             if ($this->expected->findDefinition($givenDefinition->entry()) === null) {
                 $unexpectedDefinitions[] =
-                    $givenDefinition->entry()
+                    $givenDefinition->entry()->name()
                     . '<'
                     . ($givenDefinition->isNullable() ? '?' : '')
                     . $givenDefinition->type()->toString()

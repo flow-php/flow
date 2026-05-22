@@ -17,13 +17,15 @@ final class Same extends ScalarFunctionChain
 
     public function eval(Row $row, FlowContext $context): bool
     {
-        $left = (new Parameter($this->left))->eval($row, $context);
-        $leftType = (new Parameter($this->left))->asType($row, $context);
-        $right = (new Parameter($this->right))->eval($row, $context);
-        $rightType = (new Parameter($this->right))->asType($row, $context);
+        $left = new Parameter($this->left);
+        $right = new Parameter($this->right);
 
-        (new ValueComparator())->assertComparableTypes($leftType, $rightType, '===');
+        (new ValueComparator())->assertComparableTypes(
+            $left->asType($row, $context),
+            $right->asType($row, $context),
+            '===',
+        );
 
-        return $left === $right;
+        return $left->eval($row, $context) === $right->eval($row, $context);
     }
 }

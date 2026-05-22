@@ -17,6 +17,7 @@ final class UlidTest extends FlowTestCase
     public function test_ulid(): void
     {
         $expression = ulid();
+        // @mago-ignore analysis:mixed-assignment
         $result = $expression->eval(row(), flow_context());
         static::assertInstanceOf(Ulid::class, $result);
         static::assertTrue(Ulid::isValid($result->toBase32()));

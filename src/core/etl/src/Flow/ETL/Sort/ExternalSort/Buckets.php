@@ -27,13 +27,19 @@ final class Buckets
     public function __construct(array $buckets)
     {
         foreach ($buckets as $bucket) {
-            if (is_array($bucket->rows)) {
-                $this->buckets[$bucket->id] = new ArrayIterator($bucket->rows);
-            } elseif ($bucket->rows instanceof Iterator) {
-                $this->buckets[$bucket->id] = $bucket->rows;
+            $rows = $bucket->rows;
+
+            if (is_array($rows)) {
+                /** @var Iterator<Row> $iterator */
+                $iterator = new ArrayIterator($rows);
+            } elseif ($rows instanceof Iterator) {
+                $iterator = $rows;
             } else {
-                $this->buckets[$bucket->id] = new IteratorIterator($bucket->rows);
+                /** @var Iterator<Row> $iterator */
+                $iterator = new IteratorIterator($rows);
             }
+
+            $this->buckets[$bucket->id] = $iterator;
         }
     }
 
@@ -56,6 +62,7 @@ final class Buckets
 
         foreach ($bucketsCopy as $bucketId => $bucket) {
             if ($bucket->valid()) {
+                // @mago-ignore analysis:possibly-null-argument
                 $row = new BucketRow($bucket->current(), $bucketId);
                 $heap->insert($row);
                 $bucket->next();
@@ -65,7 +72,6 @@ final class Buckets
         }
 
         while (!$heap->isEmpty()) {
-            /** @var BucketRow $cachedRow */
             $cachedRow = $heap->extract();
 
             yield $cachedRow->row;
@@ -74,6 +80,7 @@ final class Buckets
                 $bucket = $bucketsCopy[$cachedRow->bucketId];
 
                 if ($bucket->valid()) {
+                    // @mago-ignore analysis:possibly-null-argument
                     $row = new BucketRow($bucket->current(), $cachedRow->bucketId);
                     $heap->insert($row);
                     $bucket->next();

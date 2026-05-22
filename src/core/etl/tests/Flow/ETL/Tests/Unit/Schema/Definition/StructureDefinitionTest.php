@@ -214,7 +214,7 @@ final class StructureDefinitionTest extends FlowTestCase
     /**
      * @param Definition<mixed> $definition
      * @param Definition<mixed> $other
-     * @param class-string<object> $expectedClass
+     * @param class-string $expectedClass
      */
     #[DataProvider('provideMergeWithExpectedTypeCases')]
     public function test_merge_produces_expected_type(

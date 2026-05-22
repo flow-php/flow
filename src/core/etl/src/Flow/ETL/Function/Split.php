@@ -45,6 +45,7 @@ final class Split extends ScalarFunctionChain
                 );
         }
 
-        return array_map(static fn(AbstractString $s) => $s->toString(), s($value)->split($separator, $limit));
+        // @mago-ignore analysis:less-specific-return-statement
+        return array_map(static fn(AbstractString $s): string => $s->toString(), s($value)->split($separator, $limit));
     }
 }

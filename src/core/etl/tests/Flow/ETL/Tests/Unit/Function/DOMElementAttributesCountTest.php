@@ -24,6 +24,7 @@ final class DOMElementAttributesCountTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function test_html_attributes_count_on_element_with_multiple_attributes(): void
     {
+        // @mago-ignore analysis:unavailable-method
         $element = HTMLDocument::createFromString(
             '<span data-attr="1" data-foo="2" data-bar="3">foobar</span>',
             LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR,
@@ -41,6 +42,7 @@ final class DOMElementAttributesCountTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function test_html_attributes_count_on_element_with_one_attribute(): void
     {
+        // @mago-ignore analysis:unavailable-method
         $element = HTMLDocument::createFromString(
             '<span data-attr="1">foobar</span>',
             LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR,
@@ -58,6 +60,7 @@ final class DOMElementAttributesCountTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function test_html_attributes_count_on_element_with_zero_attributes(): void
     {
+        // @mago-ignore analysis:unavailable-method
         $element = HTMLDocument::createFromString('<span>foobar</span>', LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
 
         static::assertInstanceOf(HTMLElement::class, $element->documentElement);

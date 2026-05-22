@@ -72,6 +72,7 @@ final class Column
             return;
         }
 
+        // @mago-ignore analysis:mixed-assignment
         $value = $entry->value();
 
         if ($value === null) {

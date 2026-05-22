@@ -85,6 +85,7 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
         ];
 
         for ($i = 0; $i < $this->count; $i++) {
+            // @mago-ignore analysis:mixed-assignment
             $signal = yield [
                 'index' => $i,
                 'order_id' => '254d61c5-22c8-4407-83a2-76f1cab53af2',

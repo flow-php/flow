@@ -22,7 +22,7 @@ final readonly class ChainExtractor implements Extractor, OverridingExtractor
     }
 
     /**
-     * @return \Generator<int, Rows, mixed, mixed>
+     * @return Generator<int, Rows, Signal|null, void>
      */
     public function extract(FlowContext $context): Generator
     {

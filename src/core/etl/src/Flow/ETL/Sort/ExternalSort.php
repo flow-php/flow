@@ -39,11 +39,16 @@ final class ExternalSort implements SortingAlgorithm
         private readonly BucketsCache $bucketsCache,
         private readonly int $bucketsCount = 10,
     ) {
+        // @mago-ignore analysis:invalid-operand
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
         if ($this->bucketsCount < 1) {
             throw new InvalidArgumentException('Buckets count must be greater than 0, given: ' . $this->bucketsCount);
         }
     }
 
+    /**
+     * @return \Generator<Rows>
+     */
     public function sortGenerator(Generator $rows, FlowContext $context, References $refs): Generator
     {
         $sortedBuckets = [];

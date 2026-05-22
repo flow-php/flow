@@ -145,6 +145,7 @@ final readonly class Metadata
      */
     private function assertArray(array $array): void
     {
+        // @mago-ignore analysis:mixed-assignment
         foreach ($array as $value) {
             if (is_array($value)) {
                 $this->assertArray($value);

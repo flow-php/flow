@@ -23,12 +23,14 @@ final readonly class GeneratorExtractor implements Extractor
     ) {}
 
     /**
-     * @return \Generator<int, Rows, mixed, mixed>
+     * @return Generator<int, Rows, Signal|null, void>
      */
     public function extract(FlowContext $context): Generator
     {
         foreach ($this->rows as $row) {
+            // @mago-ignore analysis:impossible-condition
             if (!$row instanceof Rows) {
+                // @mago-ignore analysis:invalid-class-string-expression,invalid-operand
                 throw new InvalidArgumentException('Passed generator can contain only Rows class instances, given: '
                 . $row::class);
             }

@@ -12,7 +12,7 @@ use Flow\ETL\Row;
 
 use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
-use function gettype;
+use function is_string;
 
 final class ToTimeZone extends ScalarFunctionChain
 {
@@ -37,17 +37,7 @@ final class ToTimeZone extends ScalarFunctionChain
                 ->invalidResult(new InvalidArgumentException('ToTimeZone function requires non-null values'));
         }
 
-        $tz = match (gettype($tz)) {
-            'string' => new DateTimeZone($tz),
-            'object' => $tz instanceof DateTimeZone ? $tz : null,
-            default => null,
-        };
-
-        if ($tz === null) {
-            return $context
-                ->functions()
-                ->invalidResult(new InvalidArgumentException('ToTimeZone function requires valid DateTimeZone'));
-        }
+        $tz = is_string($tz) ? new DateTimeZone($tz) : $tz;
 
         /** @var \DateTime|\DateTimeImmutable $dateTime */
         return $dateTime->setTimezone($tz);

@@ -5,24 +5,22 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Entry;
 
 use DateInterval;
-use DateTimeImmutable;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition\TimeDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
-use Throwable;
+use ReflectionProperty;
 
 use function Flow\ETL\DSL\date_interval_to_microseconds;
 use function Flow\Types\DSL\type_equals;
-use function Flow\Types\DSL\type_instance_of;
-use function Flow\Types\DSL\type_optional;
-use function is_string;
 use function json_encode;
 
 /**
- * @implements Entry<?\DateInterval>
+ * @template-covariant T of \DateInterval|null
+ *
+ * @implements Entry<T>
  */
 final class TimeEntry implements Entry
 {
@@ -31,123 +29,95 @@ final class TimeEntry implements Entry
     private TimeDefinition $definition;
 
     /**
-     * Time represented php \DateInterval.
+     * @param T $value
      *
-     * @var null|\DateInterval
-     */
-    private readonly ?DateInterval $value;
-
-    /**
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly string $name,
-        DateInterval|string|null $value,
+        private readonly ?DateInterval $value,
         ?Metadata $metadata = null,
     ) {
         if ($name === '') {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        if ($value instanceof DateInterval) {
-            if ($value->y !== 0 || $value->m !== 0) {
-                throw new InvalidArgumentException(
-                    "Relative DateInterval (with months/years) can't be converted to TimeEntry. Given"
-                        . json_encode($value, JSON_THROW_ON_ERROR),
-                );
-            }
-
-            $this->value = $value;
-        } elseif (is_string($value)) {
-            try {
-                $interval = new DateInterval($value);
-
-                if ($interval->y !== 0 || $interval->m !== 0) {
-                    throw new InvalidArgumentException(
-                        "Relative DateInterval (with months/years) can't be converted to microseconds. Given"
-                            . json_encode($interval, JSON_THROW_ON_ERROR),
-                    );
-                }
-
-                $this->value = $interval;
-            } catch (Throwable $dateIntervalException) {
-                try {
-                    $dateTime = new DateTimeImmutable($value);
-
-                    // Get hours, minutes, seconds, and fractional seconds
-                    $hours = (int) $dateTime->format('H');
-                    $minutes = (int) $dateTime->format('i');
-                    $seconds = (int) $dateTime->format('s');
-                    $fraction = (float) ('0.' . $dateTime->format('u')); // Microseconds as fractional part
-
-                    // Construct the DateInterval
-                    $interval = new DateInterval('PT' . $hours . 'H' . $minutes . 'M' . $seconds . 'S');
-                    $interval->f = $fraction; // Set the fractional seconds
-
-                    if ($interval->y !== 0 || $interval->m !== 0) {
-                        throw new InvalidArgumentException(
-                            "Relative DateInterval (with months/years) can't be converted to microseconds. Given"
-                                . json_encode($interval, JSON_THROW_ON_ERROR),
-                        );
-                    }
-
-                    $this->value = $interval;
-                } catch (Throwable) {
-                    throw $dateIntervalException;
-                }
-            }
-        } else {
-            $this->value = null;
+        if ($value !== null && ($value->y !== 0 || $value->m !== 0)) {
+            throw new InvalidArgumentException(
+                "Relative DateInterval (with months/years) can't be converted to TimeEntry. Given"
+                    . json_encode($value, JSON_THROW_ON_ERROR),
+            );
         }
 
         $this->definition = new TimeDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
+    /**
+     * @return self<DateInterval>
+     */
     public static function fromDays(string $name, int $days): self
     {
-        return new self($name, 'P' . $days . 'D');
+        return new self($name, new DateInterval('P' . $days . 'D'));
     }
 
+    /**
+     * @return self<DateInterval>
+     */
     public static function fromHours(string $name, int $hours): self
     {
-        return new self($name, 'PT' . $hours . 'H');
+        return new self($name, new DateInterval('PT' . $hours . 'H'));
     }
 
+    /**
+     * @return self<DateInterval>
+     */
     public static function fromMicroseconds(string $name, int $microseconds): self
     {
         $seconds = intdiv($microseconds, 1_000_000);
         $fraction = ($microseconds % 1_000_000) / 1_000_000;
 
         $interval = new DateInterval('PT' . $seconds . 'S');
-        $interval->f = $fraction;
+        (new ReflectionProperty($interval, 'f'))->setValue($interval, $fraction);
 
         return new self($name, $interval);
     }
 
+    /**
+     * @return self<DateInterval>
+     */
     public static function fromMilliseconds(string $name, int $milliseconds): self
     {
         $seconds = intdiv($milliseconds, 1000);
         $fraction = ($milliseconds % 1000) / 1000;
 
         $interval = new DateInterval('PT' . $seconds . 'S');
-        $interval->f = $fraction;
+        (new ReflectionProperty($interval, 'f'))->setValue($interval, $fraction);
 
         return new self($name, $interval);
     }
 
+    /**
+     * @return self<DateInterval>
+     */
     public static function fromMinutes(string $name, int $minutes): self
     {
-        return new self($name, 'PT' . $minutes . 'M');
+        return new self($name, new DateInterval('PT' . $minutes . 'M'));
     }
 
+    /**
+     * @return self<DateInterval>
+     */
     public static function fromSeconds(string $name, int $seconds): self
     {
-        return new self($name, 'PT' . $seconds . 'S');
+        return new self($name, new DateInterval('PT' . $seconds . 'S'));
     }
 
+    /**
+     * @return self<DateInterval>
+     */
     public static function fromString(string $name, string $time): self
     {
-        return new self($name, $time);
+        return new self($name, new DateInterval($time));
     }
 
     public function __toString(): string
@@ -158,11 +128,6 @@ final class TimeEntry implements Entry
     public function definition(): TimeDefinition
     {
         return $this->definition;
-    }
-
-    public function duplicate(): static
-    {
-        return new self($this->name, $this->value ? clone $this->value : null, $this->definition->metadata());
     }
 
     public function is(string|Reference $name): bool
@@ -176,6 +141,10 @@ final class TimeEntry implements Entry
 
     public function isEqual(Entry $entry): bool
     {
+        if (!$entry instanceof self || !$this->is($entry->name()) || !type_equals($this->type(), $entry->type())) {
+            return false;
+        }
+
         $entryValue = $entry->value();
         $thisValue = $this->value();
 
@@ -187,20 +156,7 @@ final class TimeEntry implements Entry
             return false;
         }
 
-        type_instance_of(DateInterval::class)->assert($entryValue);
-        type_instance_of(DateInterval::class)->assert($thisValue);
-
-        return (
-            $this->is($entry->name())
-            && $entry instanceof self
-            && type_equals($this->type(), $entry->type())
-            && date_interval_to_microseconds($thisValue) == date_interval_to_microseconds($entryValue)
-        );
-    }
-
-    public function map(callable $mapper): static
-    {
-        return new self($this->name, $mapper($this->value));
+        return date_interval_to_microseconds($thisValue) == date_interval_to_microseconds($entryValue);
     }
 
     public function name(): string
@@ -230,18 +186,19 @@ final class TimeEntry implements Entry
         return sprintf('%02d:%02d:%02d', $totalHours, $value->i, $value->s);
     }
 
+    /**
+     * @return Type<DateInterval>
+     */
     public function type(): Type
     {
         return $this->definition->type();
     }
 
+    /**
+     * @return T
+     */
     public function value(): ?DateInterval
     {
         return $this->value;
-    }
-
-    public function withValue(mixed $value): static
-    {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

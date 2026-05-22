@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Processor;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Processor\BatchingProcessor;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -18,20 +19,16 @@ final class BatchingProcessorTest extends FlowTestCase
     public function test_handles_empty_input(): void
     {
         $processor = new BatchingProcessor(2);
-
         $generator = (static function () {
             yield from [];
         })();
-
         $result = iterator_to_array($processor->process($generator, flow_context()));
-
         static::assertCount(0, $result);
     }
 
     public function test_handles_exact_batch_size_multiple(): void
     {
         $processor = new BatchingProcessor(2);
-
         $generator = (static function () {
             yield rows(
                 row(int_entry('id', 1)),
@@ -40,9 +37,8 @@ final class BatchingProcessorTest extends FlowTestCase
                 row(int_entry('id', 4)),
             );
         })();
-
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
-
         static::assertCount(2, $result);
         static::assertCount(2, $result[0]);
         static::assertCount(2, $result[1]);
@@ -51,7 +47,6 @@ final class BatchingProcessorTest extends FlowTestCase
     public function test_handles_single_large_batch(): void
     {
         $processor = new BatchingProcessor(3);
-
         $generator = (static function () {
             yield rows(
                 row(int_entry('id', 1)),
@@ -61,9 +56,8 @@ final class BatchingProcessorTest extends FlowTestCase
                 row(int_entry('id', 5)),
             );
         })();
-
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
-
         static::assertCount(2, $result);
         static::assertCount(3, $result[0]);
         static::assertCount(2, $result[1]);
@@ -72,7 +66,6 @@ final class BatchingProcessorTest extends FlowTestCase
     public function test_rebatches_rows_into_fixed_size(): void
     {
         $processor = new BatchingProcessor(2);
-
         $generator = (static function () {
             yield rows(row(int_entry('id', 1)));
             yield rows(row(int_entry('id', 2)));
@@ -80,9 +73,8 @@ final class BatchingProcessorTest extends FlowTestCase
             yield rows(row(int_entry('id', 4)));
             yield rows(row(int_entry('id', 5)));
         })();
-
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
-
         static::assertCount(3, $result);
         static::assertCount(2, $result[0]);
         static::assertCount(2, $result[1]);
@@ -93,7 +85,7 @@ final class BatchingProcessorTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Batch size must be greater than 0');
-
+        // @mago-ignore analysis:invalid-argument
         /** @phpstan-ignore-next-line */
         new BatchingProcessor(-1);
     }
@@ -102,7 +94,7 @@ final class BatchingProcessorTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Batch size must be greater than 0');
-
+        // @mago-ignore analysis:invalid-argument
         /** @phpstan-ignore-next-line */
         new BatchingProcessor(0);
     }

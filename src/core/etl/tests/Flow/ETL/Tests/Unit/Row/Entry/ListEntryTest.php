@@ -19,7 +19,6 @@ use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
-use function implode;
 
 final class ListEntryTest extends FlowTestCase
 {
@@ -27,7 +26,6 @@ final class ListEntryTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Entry name cannot be empty');
-
         list_entry('', ['one', 'two', 'three'], type_list(type_string()));
     }
 
@@ -35,7 +33,6 @@ final class ListEntryTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list<boolean> got different types: array<mixed>');
-
         list_entry('list', ['string', false], type_list(type_boolean()));
     }
 
@@ -43,7 +40,6 @@ final class ListEntryTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list<object<DateTimeInterface>> got different types: array<mixed>');
-
         list_entry('list', ['string', new DateTimeImmutable()], type_list(type_instance_of(DateTimeInterface::class)));
     }
 
@@ -51,7 +47,6 @@ final class ListEntryTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list<float> got different types: array<mixed>');
-
         list_entry('list', ['string', 1.3], type_list(type_float()));
     }
 
@@ -59,7 +54,6 @@ final class ListEntryTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list<integer> got different types: array<mixed>');
-
         list_entry('list', ['string', 1], type_list(type_integer()));
     }
 
@@ -67,7 +61,7 @@ final class ListEntryTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list<integer> got different types: map<string, integer>');
-
+        // @mago-ignore analysis:invalid-argument
         /** @phpstan-ignore-next-line */
         list_entry('list', ['a' => 1, 'b' => 2], type_list(type_integer()));
     }
@@ -76,7 +70,6 @@ final class ListEntryTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list<string> got different types: array<mixed>');
-
         list_entry('list', ['string', 1], type_list(type_string()));
     }
 
@@ -86,15 +79,6 @@ final class ListEntryTest extends FlowTestCase
             list_schema('strings', type_list(type_string())),
             list_entry('strings', ['one', 'two', 'three'], type_list(type_string()))->definition(),
         );
-    }
-
-    public function test_duplicating_entry(): void
-    {
-        $entry = list_entry('strings', ['one', 'two', 'three'], type_list(type_string()));
-        $duplicated = $entry->duplicate();
-
-        static::assertNotSame($entry, $duplicated);
-        static::assertEquals($entry, $duplicated);
     }
 
     public function test_is_equal(): void
@@ -116,18 +100,6 @@ final class ListEntryTest extends FlowTestCase
         )));
     }
 
-    public function test_map(): void
-    {
-        static::assertEquals(
-            list_entry('strings', ['one, two, three'], type_list(type_string())),
-            list_entry(
-                'strings',
-                ['one', 'two', 'three'],
-                type_list(type_string()),
-            )->map(static fn(array $value): array => [implode(', ', $value)]),
-        );
-    }
-
     public function test_rename(): void
     {
         static::assertEquals(
@@ -140,9 +112,7 @@ final class ListEntryTest extends FlowTestCase
     {
         $metadata = Metadata::fromArray(['description' => 'test metadata', 'priority' => 1]);
         $entry = list_entry('old_name', ['one', 'two', 'three'], type_list(type_string()), $metadata);
-
         $renamedEntry = $entry->rename('new_name');
-
         static::assertSame('new_name', $renamedEntry->name());
         static::assertEquals(['one', 'two', 'three'], $renamedEntry->value());
         static::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Constraint;
 
+use DateInterval;
+use DateTimeInterface;
 use Flow\ETL\Constraint;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
@@ -11,6 +13,9 @@ use Flow\ETL\Row\References;
 use Flow\ETL\Row\SortOrder;
 
 use function implode;
+use function is_array;
+use function is_numeric;
+use function is_string;
 use function var_export;
 
 final class SortedByConstraint implements Constraint
@@ -18,7 +23,7 @@ final class SortedByConstraint implements Constraint
     private bool $firstRow = true;
 
     /**
-     * @var array<string, mixed>
+     * @var array<string, null|array<array-key, mixed>|bool|float|int|object|string>
      */
     private array $previousValues = [];
 
@@ -44,10 +49,37 @@ final class SortedByConstraint implements Constraint
             $currentValue = $row->valueOf($reference);
             $previousValue = $this->previousValues[$reference->name()];
 
-            $comparison = match ($reference->sort()) {
-                SortOrder::ASC => $previousValue <=> $currentValue,
-                SortOrder::DESC => $currentValue <=> $previousValue,
-            };
+            $direction = $reference->sort();
+
+            if ($previousValue === null && $currentValue === null) {
+                $comparison = 0;
+            } elseif ($previousValue === null) {
+                $comparison = $direction === SortOrder::ASC ? -1 : 1;
+            } elseif ($currentValue === null) {
+                $comparison = $direction === SortOrder::ASC ? 1 : -1;
+            } elseif (is_numeric($previousValue) && is_numeric($currentValue)) {
+                $prev = (float) $previousValue;
+                $curr = (float) $currentValue;
+                $comparison = $direction === SortOrder::ASC ? $prev <=> $curr : $curr <=> $prev;
+            } elseif (is_string($previousValue) && is_string($currentValue)) {
+                $comparison = $direction === SortOrder::ASC
+                    ? $previousValue <=> $currentValue
+                    : $currentValue <=> $previousValue;
+            } elseif ($previousValue instanceof DateTimeInterface && $currentValue instanceof DateTimeInterface) {
+                $comparison = $direction === SortOrder::ASC
+                    ? $previousValue <=> $currentValue
+                    : $currentValue <=> $previousValue;
+            } elseif ($previousValue instanceof DateInterval && $currentValue instanceof DateInterval) {
+                $comparison = $direction === SortOrder::ASC
+                    ? $previousValue <=> $currentValue
+                    : $currentValue <=> $previousValue;
+            } elseif (is_array($previousValue) && is_array($currentValue)) {
+                $comparison = $direction === SortOrder::ASC
+                    ? $previousValue <=> $currentValue
+                    : $currentValue <=> $previousValue;
+            } else {
+                $comparison = 0;
+            }
 
             if ($comparison < 0) {
                 foreach ($this->references->all() as $ref) {

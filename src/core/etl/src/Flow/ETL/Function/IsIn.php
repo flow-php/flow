@@ -24,7 +24,6 @@ final class IsIn extends ScalarFunctionChain
     public function eval(Row $row, FlowContext $context): mixed
     {
         $haystack = (new Parameter($this->haystack))->asArray($row, $context);
-        $needle = (new Parameter($this->needle))->eval($row, $context);
 
         if ($haystack === null) {
             return $context
@@ -32,6 +31,6 @@ final class IsIn extends ScalarFunctionChain
                 ->invalidResult(new InvalidArgumentException('IsIn function requires non-null array'));
         }
 
-        return in_array($needle, $haystack, true);
+        return in_array((new Parameter($this->needle))->eval($row, $context), $haystack, true);
     }
 }

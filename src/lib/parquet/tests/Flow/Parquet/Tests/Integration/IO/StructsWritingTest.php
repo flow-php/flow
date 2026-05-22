@@ -55,7 +55,7 @@ class StructsWritingTest extends ParquetIntegrationTestCase
                     'struct' => ($i % 2) === 0
                         ? [
                             'int64' => $faker->numberBetween(0, Consts::PHP_INT64_MAX),
-                            'boolean' => $faker->boolean,
+                            'boolean' => $faker->boolean(),
                             'string' => $faker->text(150),
                             'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                             'list_of_int' => array_map(
@@ -106,7 +106,7 @@ class StructsWritingTest extends ParquetIntegrationTestCase
                 [
                     'struct' => [
                         'int64' => $faker->numberBetween(0, Consts::PHP_INT64_MAX),
-                        'boolean' => $faker->boolean,
+                        'boolean' => $faker->boolean(),
                         'string' => $faker->text(150),
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                         'list_of_int' => array_map(
@@ -156,7 +156,7 @@ class StructsWritingTest extends ParquetIntegrationTestCase
                 [
                     'struct' => [
                         'int64' => $faker->numberBetween(0, Consts::PHP_INT64_MAX),
-                        'boolean' => ($i % 5) === 0 ? $faker->boolean : null,
+                        'boolean' => ($i % 5) === 0 ? $faker->boolean() : null,
                         'string' => ($i % 10) === 0 ? $faker->text(150) : null,
                         'int32' => ($i % 4) === 0 ? $faker->numberBetween(0, Consts::PHP_INT32_MAX) : null,
                         'list_of_int' => ($i % 2) === 0

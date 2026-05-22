@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Processor;
 
 use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Processor\SortingProcessor;
+use Flow\ETL\Rows;
 use Flow\ETL\Sort\SortAlgorithms;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -52,6 +53,7 @@ final class SortingProcessorTest extends FlowTestCase
             yield rows(row(int_entry('id', 2)));
         })();
 
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, $context));
         $allRows = [];
 
@@ -84,6 +86,7 @@ final class SortingProcessorTest extends FlowTestCase
             yield rows(row(int_entry('id', 3)), row(int_entry('id', 1)), row(int_entry('id', 2)));
         })();
 
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, $context));
         $allRows = [];
 
@@ -116,6 +119,7 @@ final class SortingProcessorTest extends FlowTestCase
             yield rows(row(int_entry('id', 1)), row(int_entry('id', 3)), row(int_entry('id', 2)));
         })();
 
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, $context));
         $allRows = [];
 

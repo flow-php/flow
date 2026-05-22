@@ -92,20 +92,22 @@ final class ConfigBuilder
         $this->serializer ??= new Base64Serializer(new NativePHPSerializer());
         $this->optimizer ??= new Optimizer(new LimitOptimization(), new BatchSizeOptimization(batchSize: 1000));
 
+        $serializer = $this->serializer;
+        $optimizer = $this->optimizer;
         $dataframeName = $this->name ?? 'flow_dataframe';
 
         return new Config(
             $this->id,
             $dataframeName,
             $this->version,
-            $this->serializer,
+            $serializer,
             $this->getClock(),
             $this->fstab(),
             new FilesystemStreams($this->fstab()),
-            $this->optimizer,
+            $optimizer,
             $this->putInputIntoRows,
             $entryFactory,
-            $this->cache->build($this->fstab(), $this->serializer, $this->telemetryConfig, $dataframeName),
+            $this->cache->build($this->fstab(), $serializer, $this->telemetryConfig, $dataframeName),
             $this->sort->build(),
             $this->analyze,
             $this->telemetryConfig ?? TelemetryConfig::default($this->getClock()),

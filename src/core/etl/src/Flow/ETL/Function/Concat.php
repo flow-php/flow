@@ -34,6 +34,7 @@ final class Concat extends ScalarFunctionChain
                 ? $value
                 : type_optional(type_string())->cast((new Parameter($value))->eval($row, $context));
 
+            // @mago-ignore analysis:redundant-condition,redundant-type-comparison
             if (is_string($value)) {
                 $concatValues[] = $value;
             }

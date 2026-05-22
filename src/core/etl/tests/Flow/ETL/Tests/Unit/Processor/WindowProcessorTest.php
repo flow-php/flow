@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Processor;
 
 use Flow\ETL\Processor\WindowProcessor;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -32,7 +33,9 @@ final class WindowProcessorTest extends FlowTestCase
             );
         })();
 
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
+        /** @var list<array<array-key, mixed>> $allRows */
         $allRows = [];
 
         foreach ($result as $batch) {
@@ -70,6 +73,7 @@ final class WindowProcessorTest extends FlowTestCase
             yield rows(row(int_entry('amount', 300)), row(int_entry('amount', 100)), row(int_entry('amount', 200)));
         })();
 
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $allRows = [];
 
@@ -80,6 +84,7 @@ final class WindowProcessorTest extends FlowTestCase
         }
 
         static::assertCount(3, $allRows);
+        // @mago-ignore analysis:deprecated-method
         static::assertContainsOnly('int', array_column($allRows, 'rank'));
     }
 
@@ -98,6 +103,7 @@ final class WindowProcessorTest extends FlowTestCase
             );
         })();
 
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $allRows = [];
 
@@ -109,8 +115,8 @@ final class WindowProcessorTest extends FlowTestCase
 
         static::assertCount(4, $allRows);
 
-        $groupA = array_filter($allRows, static fn($r) => $r['group'] === 'a');
-        $groupB = array_filter($allRows, static fn($r) => $r['group'] === 'b');
+        $groupA = array_filter($allRows, static fn(array $r): bool => $r['group'] === 'a');
+        $groupB = array_filter($allRows, static fn(array $r): bool => $r['group'] === 'b');
 
         static::assertCount(2, $groupA);
         static::assertCount(2, $groupB);

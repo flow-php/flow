@@ -18,6 +18,7 @@ use function Flow\ETL\DSL\html_schema;
 use function Flow\ETL\DSL\str_entry;
 use function preg_replace;
 
+// @mago-ignore analysis:unavailable-method
 #[RequiresPhp('>= 8.4')]
 final class HTMLEntryTest extends TestCase
 {
@@ -151,25 +152,8 @@ final class HTMLEntryTest extends TestCase
         );
     }
 
-    public function test_duplicating_entry(): void
-    {
-        $entry = html_entry('html', <<<'HTML'
-            <!DOCTYPE html>
-            <html lang="en">
-            <head></head>
-            <body>
-                <div id="foo">2</div>
-                <p>3</p>
-            </body>
-            </html>
-            HTML);
-        $duplicated = $entry->duplicate();
-
-        static::assertNotSame($entry, $duplicated);
-        static::assertEquals($entry, $duplicated);
-    }
-
     /**
+     * @param HTMLEntry<\Dom\HTMLDocument|null> $entry
      * @param Entry<mixed> $nextEntry
      */
     #[DataProvider('is_equal_data_provider')]
@@ -178,20 +162,10 @@ final class HTMLEntryTest extends TestCase
         static::assertSame($equals, $entry->isEqual($nextEntry));
     }
 
-    public function test_map(): void
-    {
-        $entry = html_entry(
-            'entry-name',
-            '<!DOCTYPE html><html lang="en"><head></head><body><div>baz</div></body></html>',
-        );
-
-        static::assertEquals($entry, $entry->map(static fn($value) => $value));
-    }
-
     public function test_rename_preserves_metadata(): void
     {
         $metadata = Metadata::fromArray(['description' => 'test metadata', 'priority' => 1]);
-        $entry = new HTMLEntry(
+        $entry = HTMLEntry::fromString(
             'old_name',
             '<!DOCTYPE html><html lang="en"><head></head><body><div>test</div></body></html>',
             $metadata,
@@ -200,7 +174,7 @@ final class HTMLEntryTest extends TestCase
         $renamedEntry = $entry->rename('new_name');
 
         static::assertSame('new_name', $renamedEntry->name());
-        static::assertEquals($entry->value()?->saveHtml(), $renamedEntry->value()?->saveHtml());
+        static::assertEquals($entry->value()->saveHtml(), $renamedEntry->value()->saveHtml());
         static::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
     }
 
@@ -245,24 +219,6 @@ final class HTMLEntryTest extends TestCase
 
         self::assertHtml($invalidHtml, $entry->toString(), false);
         self::assertHtml($validHtml, $entry->toString(), true);
-    }
-
-    public function test_with_value(): void
-    {
-        $entry = html_entry(
-            'html',
-            '<!DOCTYPE html><html lang="en"><head></head><body><div>foobar</div></body></html>',
-        );
-
-        /* @phpstan-ignore-next-line */
-        $html = HTMLDocument::createFromString(
-            '<!DOCTYPE html><html lang="en"><head></head><body><div>different</div></body></html>',
-        );
-
-        $newEntry = $entry->withValue($html);
-
-        static::assertNotEquals($entry->toString(), $newEntry->toString());
-        static::assertEquals($html, $newEntry->value());
     }
 
     private function assertHtml(string $expected, string $html, bool $equals): void

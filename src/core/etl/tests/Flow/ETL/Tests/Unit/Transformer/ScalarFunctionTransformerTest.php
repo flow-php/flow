@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Transformer;
 
 use DOMDocument;
+use DOMNodeList;
 use DOMXPath;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ArrayExpand;
@@ -22,6 +23,7 @@ use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\xml_entry;
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_xml_element;
 
@@ -119,8 +121,8 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
         $document->loadXML($xml);
         $xpath = new DOMXPath($document);
 
-        $nodes = $xpath->query('/root/foo');
-        $expected = $nodes ? [$nodes->item(0), $nodes->item(1)] : null;
+        $nodes = type_instance_of(DOMNodeList::class)->assert($xpath->query('/root/foo'));
+        $expected = [$nodes->item(0), $nodes->item(1)];
 
         static::assertEquals(
             list_entry('xpath', $expected, type_list(type_xml_element())),

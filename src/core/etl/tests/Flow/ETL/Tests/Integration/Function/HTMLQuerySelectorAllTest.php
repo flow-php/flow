@@ -18,6 +18,7 @@ use function Flow\ETL\DSL\rows;
 use const LIBXML_HTML_NOIMPLIED;
 use const LIBXML_NOERROR;
 
+// @mago-ignore analysis:unavailable-method
 #[RequiresPhp('>= 8.4')]
 final class HTMLQuerySelectorAllTest extends TestCase
 {

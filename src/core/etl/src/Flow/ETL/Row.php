@@ -47,11 +47,6 @@ final class Row
         return new self($this->entries->add(...$entries));
     }
 
-    public function duplicate(): self
-    {
-        return new self($this->entries()->duplicate());
-    }
-
     public function entries(): Entries
     {
         return $this->entries;
@@ -194,9 +189,13 @@ final class Row
 
     /**
      * @throws InvalidArgumentException
+     *
+     * @return null|array<array-key, mixed>|bool|float|int|object|string
      */
     public function valueOf(string|Reference $references): mixed
     {
+        // @mago-ignore analysis:mixed-return-statement
+        /** @phpstan-ignore return.type */
         return $this->get($references)->value();
     }
 }

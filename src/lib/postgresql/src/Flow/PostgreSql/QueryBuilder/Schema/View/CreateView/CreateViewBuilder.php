@@ -34,7 +34,6 @@ final readonly class CreateViewBuilder implements
         private ?SelectFinalStep $query = null,
         private bool $replace = false,
         private bool $temporary = false,
-        private bool $recursive = false,
         private ?int $checkOption = null,
     ) {}
 
@@ -58,7 +57,6 @@ final readonly class CreateViewBuilder implements
             $query,
             $this->replace,
             $this->temporary,
-            $this->recursive,
             $this->checkOption,
         );
     }
@@ -72,7 +70,6 @@ final readonly class CreateViewBuilder implements
             $this->query,
             $this->replace,
             $this->temporary,
-            $this->recursive,
             $this->checkOption,
         );
     }
@@ -86,21 +83,6 @@ final readonly class CreateViewBuilder implements
             $this->query,
             true,
             $this->temporary,
-            $this->recursive,
-            $this->checkOption,
-        );
-    }
-
-    public function recursive(): CreateViewOptionsStep
-    {
-        return new self(
-            $this->name,
-            $this->schema,
-            $this->columns,
-            $this->query,
-            $this->replace,
-            $this->temporary,
-            true,
             $this->checkOption,
         );
     }
@@ -114,7 +96,6 @@ final readonly class CreateViewBuilder implements
             $this->query,
             $this->replace,
             true,
-            $this->recursive,
             $this->checkOption,
         );
     }
@@ -186,7 +167,6 @@ final readonly class CreateViewBuilder implements
             $this->query,
             $this->replace,
             $this->temporary,
-            $this->recursive,
             ViewCheckOption::CASCADED_CHECK_OPTION,
         );
     }
@@ -200,7 +180,6 @@ final readonly class CreateViewBuilder implements
             $this->query,
             $this->replace,
             $this->temporary,
-            $this->recursive,
             ViewCheckOption::CASCADED_CHECK_OPTION,
         );
     }
@@ -214,7 +193,6 @@ final readonly class CreateViewBuilder implements
             $this->query,
             $this->replace,
             $this->temporary,
-            $this->recursive,
             ViewCheckOption::LOCAL_CHECK_OPTION,
         );
     }

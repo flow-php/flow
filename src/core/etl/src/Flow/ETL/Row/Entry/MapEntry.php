@@ -14,19 +14,23 @@ use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\TypeDetector;
 
 use function Flow\Types\DSL\type_equals;
-use function Flow\Types\DSL\type_optional;
-use function is_array;
 use function json_encode;
 
 /**
  * @template TKey of array-key
  * @template TValue
+ * @template-covariant TMap of array<TKey, TValue>|null
  *
- * @implements Entry<?array<TKey, TValue>>
+ * @implements Entry<TMap>
  */
 final class MapEntry implements Entry
 {
     use EntryRef;
+
+    /**
+     * @var TMap
+     */
+    private readonly ?array $value;
 
     /**
      * @var MapDefinition<TKey, TValue>
@@ -34,14 +38,14 @@ final class MapEntry implements Entry
     private MapDefinition $definition;
 
     /**
-     * @param ?array<array-key, mixed> $value
+     * @param TMap $value
      * @param MapType<TKey, TValue> $type
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly string $name,
-        private readonly ?array $value,
+        mixed $value,
         MapType $type,
         ?Metadata $metadata = null,
     ) {
@@ -49,11 +53,16 @@ final class MapEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        if ($value !== null && !$type->isValid($value)) {
+        $this->value = $value;
+
+        // @mago-ignore analysis:redundant-type-comparison
+        if ($this->value !== null && !$type->isValid($this->value)) {
             throw InvalidArgumentException::because(
-                'Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())
-                    ->detectType($this->value)
-                    ->toString(),
+                'Expected ' . $type->toString() . ' got different types: '
+                    . (new TypeDetector())
+                        // @mago-ignore analysis:no-value
+                        ->detectType($this->value)
+                        ->toString(),
             );
         }
 
@@ -78,11 +87,6 @@ final class MapEntry implements Entry
         return $this->definition;
     }
 
-    public function duplicate(): static
-    {
-        return new self($this->name, $this->value, $this->type(), $this->definition->metadata());
-    }
-
     public function is(string|Reference $name): bool
     {
         if ($name instanceof Reference) {
@@ -94,32 +98,22 @@ final class MapEntry implements Entry
 
     public function isEqual(Entry $entry): bool
     {
+        if (!$entry instanceof self) {
+            return false;
+        }
+
+        if (!$this->is($entry->name()) || !type_equals($this->type(), $entry->type())) {
+            return false;
+        }
+
         $entryValue = $entry->value();
         $thisValue = $this->value();
 
-        if ($entryValue === null && $thisValue !== null) {
-            return false;
+        if ($entryValue === null || $thisValue === null) {
+            return $entryValue === $thisValue;
         }
 
-        if ($entryValue !== null && $thisValue === null) {
-            return false;
-        }
-
-        if ($entryValue === null && $thisValue === null) {
-            return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type(), $entry->type());
-        }
-
-        return (
-            $this->is($entry->name())
-            && $entry instanceof self
-            && type_equals($this->type(), $entry->type())
-            && (new ArrayComparison())->equals($thisValue, is_array($entryValue) ? $entryValue : null)
-        );
-    }
-
-    public function map(callable $mapper): static
-    {
-        return new self($this->name, $mapper($this->value), $this->type());
+        return (new ArrayComparison())->equals($thisValue, $entryValue);
     }
 
     public function name(): string
@@ -149,13 +143,11 @@ final class MapEntry implements Entry
         return $this->definition->type();
     }
 
+    /**
+     * @return TMap
+     */
     public function value(): ?array
     {
         return $this->value;
-    }
-
-    public function withValue(mixed $value): static
-    {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->type());
     }
 }

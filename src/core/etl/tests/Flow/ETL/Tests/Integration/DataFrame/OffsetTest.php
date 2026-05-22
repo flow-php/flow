@@ -34,7 +34,6 @@ final class OffsetTest extends FlowIntegrationTestCase
             ->limit(10)
             ->offset(5)
             ->fetch();
-
         static::assertCount(5, $rows);
         static::assertSame(
             [
@@ -52,7 +51,7 @@ final class OffsetTest extends FlowIntegrationTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Offset must be greater than or equal to 0, given: -1');
-
+        // @mago-ignore analysis:invalid-argument
         /** @phpstan-ignore-next-line */
         df()->read(from_rows(rows()))->offset(-1);
     }
@@ -63,7 +62,6 @@ final class OffsetTest extends FlowIntegrationTestCase
             ->read(from_array(array_map(static fn(int $id): array => ['id' => $id], range(1, 10))))
             ->offset(null)
             ->fetch();
-
         static::assertCount(10, $rows);
     }
 
@@ -77,7 +75,6 @@ final class OffsetTest extends FlowIntegrationTestCase
             ]))
             ->offset(3)
             ->fetch();
-
         static::assertCount(0, $rows);
     }
 
@@ -90,7 +87,6 @@ final class OffsetTest extends FlowIntegrationTestCase
             ]))
             ->offset(5)
             ->fetch();
-
         static::assertCount(0, $rows);
     }
 
@@ -106,7 +102,6 @@ final class OffsetTest extends FlowIntegrationTestCase
             ]))
             ->offset(2)
             ->fetch();
-
         static::assertCount(3, $rows);
         static::assertSame(
             [
@@ -137,7 +132,6 @@ final class OffsetTest extends FlowIntegrationTestCase
             ->batchSize(3)
             ->offset(4)
             ->fetch();
-
         static::assertCount(6, $rows);
         static::assertSame(
             [
@@ -171,7 +165,6 @@ final class OffsetTest extends FlowIntegrationTestCase
             ->offset(2)
             ->collect()
             ->fetch();
-
         static::assertCount(3, $rows);
         static::assertSame(
             [
@@ -218,7 +211,6 @@ final class OffsetTest extends FlowIntegrationTestCase
             ->offset(5)
             ->limit(3)
             ->fetch();
-
         static::assertCount(3, $rows);
     }
 
@@ -229,7 +221,6 @@ final class OffsetTest extends FlowIntegrationTestCase
             ->offset(5)
             ->limit(10)
             ->fetch();
-
         static::assertCount(10, $rows);
         static::assertSame(
             [
@@ -266,7 +257,6 @@ final class OffsetTest extends FlowIntegrationTestCase
             })
             ->offset(4)
             ->fetch();
-
         static::assertCount(6, $rows);
         static::assertSame(
             [
@@ -288,7 +278,6 @@ final class OffsetTest extends FlowIntegrationTestCase
             ->withEntry('sum', ref('id')->plus(ref('value')))
             ->offset(3)
             ->fetch();
-
         static::assertCount(7, $rows);
         static::assertSame(
             [
@@ -314,7 +303,6 @@ final class OffsetTest extends FlowIntegrationTestCase
             ]))
             ->offset(0)
             ->fetch();
-
         static::assertCount(3, $rows);
         static::assertSame(
             [
@@ -329,15 +317,11 @@ final class OffsetTest extends FlowIntegrationTestCase
     public function test_pagination_scenario(): void
     {
         $data = array_map(static fn(int $id): array => ['id' => $id, 'name' => 'Item ' . $id], range(1, 100));
-
         $page1 = df()->read(from_array($data))->offset(0)->limit(10)->fetch();
-
         static::assertCount(10, $page1);
         static::assertSame(1, $page1->first()->valueOf('id'));
         static::assertSame(10, $page1->all()[9]->valueOf('id'));
-
         $page3 = df()->read(from_array($data))->offset(20)->limit(10)->fetch();
-
         static::assertCount(10, $page3);
         static::assertSame(21, $page3->first()->valueOf('id'));
         static::assertSame(30, $page3->all()[9]->valueOf('id'));

@@ -45,6 +45,7 @@ final class DOMElementParent extends ScalarFunctionChain
         }
 
         if ($node instanceof HTMLElement) {
+            // @mago-ignore analysis:less-specific-return-statement
             return $node->parentElement;
         }
 

@@ -109,6 +109,7 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
                     : null;
             }
 
+            // @mago-ignore analysis:mixed-assignment
             $signal = yield [
                 'order_id' => $faker->uuid,
                 'seller_id' => $sellers[random_int(0, count($sellers) - 1)],

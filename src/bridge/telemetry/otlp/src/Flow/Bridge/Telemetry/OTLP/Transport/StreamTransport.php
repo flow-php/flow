@@ -16,6 +16,7 @@ use function fclose;
 use function flock;
 use function fopen;
 use function fwrite;
+use function in_array;
 use function is_dir;
 use function is_file;
 use function is_int;
@@ -25,9 +26,10 @@ use function preg_replace;
 use function restore_error_handler;
 use function set_error_handler;
 use function sprintf;
-use function str_starts_with;
+use function stream_get_wrappers;
 use function stream_set_chunk_size;
 use function strlen;
+use function strstr;
 
 use const LOCK_EX;
 use const LOCK_UN;
@@ -74,7 +76,8 @@ final class StreamTransport implements Transport
             throw new InvalidArgumentException('File permissions must be between 0 and 0777');
         }
 
-        $isStreamWrapper = str_starts_with($destination, 'php://');
+        $scheme = strstr($destination, '://', true);
+        $isStreamWrapper = $scheme !== false && in_array($scheme, stream_get_wrappers(), true);
         $existedBefore = !$isStreamWrapper && is_file($destination);
 
         if (!$isStreamWrapper && $createDirectories) {

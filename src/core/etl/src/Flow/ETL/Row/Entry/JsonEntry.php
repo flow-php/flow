@@ -11,16 +11,15 @@ use Flow\ETL\Schema\Definition\JsonDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 use Flow\Types\Value\Json;
-use Throwable;
 
 use function array_keys;
 use function Flow\Types\DSL\type_equals;
-use function Flow\Types\DSL\type_optional;
-use function is_array;
 use function is_string;
 
 /**
- * @implements Entry<?Json>
+ * @template-covariant T of Json|null
+ *
+ * @implements Entry<T>
  */
 final class JsonEntry implements Entry
 {
@@ -28,40 +27,21 @@ final class JsonEntry implements Entry
 
     private JsonDefinition $definition;
 
-    private readonly ?Json $json;
-
     /**
-     * @param null|array<array-key, mixed>|Json|string $value
+     * @param T $value
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly string $name,
-        array|string|Json|null $value,
+        private readonly ?Json $value,
         ?Metadata $metadata = null,
     ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        if ($value instanceof Json) {
-            $this->json = $value;
-        } elseif (is_string($value)) {
-            try {
-                $this->json = new Json($value);
-            } catch (Throwable $e) {
-                throw new InvalidArgumentException(
-                    "Invalid value given: '{$value}', reason: " . $e->getMessage(),
-                    previous: $e,
-                );
-            }
-        } elseif (is_array($value)) {
-            $this->json = Json::fromArray($value);
-        } else {
-            $this->json = null;
-        }
-
-        $this->definition = new JsonDefinition($this->name, $this->json === null, $metadata ?: Metadata::empty());
+        $this->definition = new JsonDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     /**
@@ -69,7 +49,7 @@ final class JsonEntry implements Entry
      *
      * @throws InvalidArgumentException
      *
-     * @return Entry<?Json>
+     * @return ($value is null ? Entry<null> : Entry<Json>)
      */
     public static function object(string $name, ?array $value, ?Metadata $metadata = null): Entry
     {
@@ -98,11 +78,6 @@ final class JsonEntry implements Entry
         return $this->definition;
     }
 
-    public function duplicate(): static
-    {
-        return new self($this->name, $this->json, $this->definition->metadata());
-    }
-
     public function is(string|Reference $name): bool
     {
         if ($name instanceof Reference) {
@@ -126,8 +101,8 @@ final class JsonEntry implements Entry
             return false;
         }
 
-        $thisJson = $this->json;
-        $entryJson = $entry->json;
+        $thisJson = $this->value;
+        $entryJson = $entry->value;
 
         if ($thisJson === null && $entryJson === null) {
             return true;
@@ -140,28 +115,26 @@ final class JsonEntry implements Entry
         return $thisJson->isEqual($entryJson);
     }
 
-    public function map(callable $mapper): static
-    {
-        return new self($this->name, $mapper($this->json), $this->definition->metadata());
-    }
-
     public function name(): string
     {
         return $this->name;
     }
 
+    /**
+     * @return self<T>
+     */
     public function rename(string $name): static
     {
-        return new self($name, $this->json, $this->definition->metadata());
+        return new self($name, $this->value, $this->definition->metadata());
     }
 
     public function toString(): string
     {
-        if ($this->json === null) {
+        if ($this->value === null) {
             return '';
         }
 
-        return $this->json->toString();
+        return $this->value->toString();
     }
 
     /**
@@ -172,13 +145,11 @@ final class JsonEntry implements Entry
         return $this->definition->type();
     }
 
+    /**
+     * @return T
+     */
     public function value(): ?Json
     {
-        return $this->json;
-    }
-
-    public function withValue(mixed $value): static
-    {
-        return new self($this->name, type_optional($this->type())->cast($value), $this->definition->metadata());
+        return $this->value;
     }
 }

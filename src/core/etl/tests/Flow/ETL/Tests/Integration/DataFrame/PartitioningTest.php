@@ -83,7 +83,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
         $partitions = df()->read(from_path_partitions(__DIR__ . '/Fixtures/Partitioning/overwrite/**/*.txt'))->fetch();
 
         $actualData = $partitions->toArray();
-        usort($actualData, static fn(array $a, array $b): int => $a['path'] <=> $b['path']);
+        usort($actualData, static fn(array $a, array $b): int => (string) $a['path'] <=> (string) $b['path']);
 
         static::assertSame(
             [
@@ -122,7 +122,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
             ->read(from_text(__DIR__ . '/Fixtures/Partitioning/overwrite/**/*.txt'))
             ->fetch()
             ->toArray();
-        usort($textRows, static fn(array $a, array $b): int => $a['text'] <=> $b['text']);
+        usort($textRows, static fn(array $a, array $b): int => (string) $a['text'] <=> (string) $b['text']);
         static::assertSame(
             [
                 ['text' => '2024-04-01', 'date' => '2024-04-01'],

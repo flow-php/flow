@@ -17,7 +17,7 @@ trait PathFiltering
         return $this->filter ?? new OnlyFiles();
     }
 
-    public function withPathFilter(Filter $filter): self
+    public function withPathFilter(Filter $filter): static
     {
         if ($this->filter === null) {
             $this->filter = $filter;

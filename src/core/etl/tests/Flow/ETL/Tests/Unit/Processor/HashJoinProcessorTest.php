@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Processor;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Processor\HashJoinProcessor;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\df;
@@ -44,6 +45,7 @@ final class HashJoinProcessorTest extends FlowTestCase
             yield rows(row(int_entry('id', 1), int_entry('amount', 100)));
         })();
 
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
         $allRows = [];
 
@@ -73,7 +75,9 @@ final class HashJoinProcessorTest extends FlowTestCase
             );
         })();
 
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
+        /** @var list<array<array-key, mixed>> $allRows */
         $allRows = [];
 
         foreach ($result as $batch) {
@@ -102,7 +106,9 @@ final class HashJoinProcessorTest extends FlowTestCase
             );
         })();
 
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
+        /** @var list<array<array-key, mixed>> $allRows */
         $allRows = [];
 
         foreach ($result as $batch) {

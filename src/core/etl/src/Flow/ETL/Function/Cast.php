@@ -25,7 +25,8 @@ use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_time_zone;
 use function Flow\Types\DSL\type_xml;
-use function gettype;
+use function is_int;
+use function is_string;
 use function json_encode;
 use function mb_strtolower;
 
@@ -60,17 +61,13 @@ final class Cast extends ScalarFunctionChain
             return new ScalarResult($type->cast($value), $type);
         }
 
-        /** @var string $type */
         try {
             $result = match (mb_strtolower($type)) {
                 'datetime' => new ScalarResult(type_datetime()->cast($value), type_datetime()),
-                'date' => new ScalarResult(match (gettype($value)) {
-                    'string' => (new DateTimeImmutable($value))->setTime(0, 0, 0, 0),
-                    'integer' => DateTimeImmutable::createFromFormat('U', (string) $value),
-                    'object' => match ($value::class) {
-                        DateTime::class, DateTimeImmutable::class => $value->setTime(0, 0, 0, 0),
-                        default => null,
-                    },
+                'date' => new ScalarResult(match (true) {
+                    is_string($value) => (new DateTimeImmutable($value))->setTime(0, 0, 0, 0),
+                    is_int($value) => DateTimeImmutable::createFromFormat('U', (string) $value),
+                    $value instanceof DateTime, $value instanceof DateTimeImmutable => $value->setTime(0, 0, 0, 0),
                     default => null,
                 }, type_date()),
                 'timezone' => new ScalarResult(type_time_zone()->cast($value), type_time_zone()),

@@ -47,6 +47,7 @@ final class MemorySortTest extends FlowTestCase
             refs(ref('id')->desc()),
         ));
 
+        // @mago-ignore analysis:mixed-argument,mixed-method-access
         static::assertEquals($input, array_merge(...array_map(static fn($row) => $row->toArray(), $sortedOutput)));
     }
 }

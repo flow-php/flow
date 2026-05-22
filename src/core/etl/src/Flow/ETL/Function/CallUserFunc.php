@@ -45,6 +45,7 @@ final class CallUserFunc extends ScalarFunctionChain
 
         $parameters = [];
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($this->parameters as $key => $parameter) {
             $parameters[$key] = (new Parameter($parameter))->eval($row, $context);
         }

@@ -18,6 +18,9 @@ final readonly class SequenceExtractor implements Extractor
         private string $entryName = 'entry',
     ) {}
 
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         /** @var mixed $item */

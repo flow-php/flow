@@ -2,8 +2,11 @@ on:
   release:
     types: [ created ]
 
+permissions:
+  contents: read
+
 jobs:
   automation:
-    uses: aeon-php/actions/.github/workflows/automation-release-description-update.yml@main
+    uses: aeon-php/actions/.github/workflows/automation-release-description-update.yml@ed056e3e36c7011d5c0f633471e7d888737e628a # main
     secrets:
       automation_github_token: "${{ secrets.ACCESS_TOKEN }}"

@@ -21,7 +21,9 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v5"
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          persist-credentials: false
 
       - name: "Install dependencies"
         run: |
@@ -51,7 +53,7 @@ jobs:
 
       - name: Upload to Codecov
         if: ${{ !cancelled() && matrix.php-version == '8.3' }}
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: ./var/phpunit/coverage/clover

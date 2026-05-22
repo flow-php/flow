@@ -7,6 +7,7 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Symfony\Component\String\AbstractString;
 
 use function Symfony\Component\String\s;
 
@@ -41,6 +42,9 @@ final class Chunk extends ScalarFunctionChain
 
         $chunks = s($value)->chunk($size);
 
-        return array_map(static fn($chunk) => $chunk->toString(), iterator_to_array($chunks));
+        return array_map(
+            static fn(AbstractString $chunk): string => $chunk->toString(),
+            iterator_to_array($chunks, false),
+        );
     }
 }

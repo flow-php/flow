@@ -13,7 +13,7 @@ use function array_filter;
 final class ArrayFilter extends ScalarFunctionChain
 {
     /**
-     * @param array<array-key, mixed> $array
+     * @param ScalarFunction|array<array-key, mixed> $array
      */
     public function __construct(
         private readonly ScalarFunction|array $array,

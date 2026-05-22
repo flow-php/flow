@@ -17,18 +17,20 @@ final class EnumEntryTest extends FlowTestCase
 {
     public function test_creating_backed_int_enum_entry(): void
     {
-        $enum = enum_entry('enum', BackedIntEnum::one);
+        $value = enum_entry('enum', BackedIntEnum::one)->value();
 
-        static::assertSame(BackedIntEnum::one, $enum->value());
-        static::assertSame(1, $enum->value()->value);
+        static::assertInstanceOf(BackedIntEnum::class, $value);
+        static::assertSame(BackedIntEnum::one, $value);
+        static::assertSame(1, $value->value);
     }
 
     public function test_creating_backed_string_enum_entry(): void
     {
-        $enum = enum_entry('enum', BackedStringEnum::one);
+        $value = enum_entry('enum', BackedStringEnum::one)->value();
 
-        static::assertSame(BackedStringEnum::one, $enum->value());
-        static::assertSame('one', $enum->value()->value);
+        static::assertInstanceOf(BackedStringEnum::class, $value);
+        static::assertSame(BackedStringEnum::one, $value);
+        static::assertSame('one', $value->value);
     }
 
     public function test_creating_basic_enum_entry(): void
@@ -45,15 +47,6 @@ final class EnumEntryTest extends FlowTestCase
             enum_schema('enum', BackedStringEnum::class),
             enum_entry('enum', BackedStringEnum::one)->definition(),
         );
-    }
-
-    public function test_duplicating_entry(): void
-    {
-        $entry = enum_entry('enum', BackedIntEnum::one);
-        $duplicated = $entry->duplicate();
-
-        static::assertNotSame($entry, $duplicated);
-        static::assertEquals($entry, $duplicated);
     }
 
     public function test_is_equal(): void

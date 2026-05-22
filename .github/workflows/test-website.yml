@@ -11,6 +11,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   website-tests:
     runs-on: ${{ matrix.operating-system }}
@@ -24,13 +27,14 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v5"
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: "Get Flow Version"
         id: flow_version
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+        uses: WyriHaximus/github-action-get-previous-tag@04e8485ecb6487243907e330d522ff60f02283ce # v1
         with:
           fallback: 1.x-dev
 
@@ -45,14 +49,15 @@ jobs:
           composer-file: "web/landing/composer.lock"
 
       - name: "Setup Node.js"
-        uses: "actions/setup-node@v4"
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
 
       - name: "Setup Chrome"
-        uses: "browser-actions/setup-chrome@v2"
+        id: chrome
+        uses: browser-actions/setup-chrome@2e1d749697dd1612b833dba4a722266286fbefcd # v2
         with:
-          chrome-version: "146"
+          chrome-version: "stable"
           install-chromedriver: true
 
       - name: "Create Wrangler dev.vars"
@@ -79,12 +84,14 @@ jobs:
         env:
           PLAYGROUND_API_URL: "http://localhost:8787/api/playground/snippets"
           PLAYGROUND_SNIPPETS_URL: "http://localhost:8787"
+          PANTHER_CHROME_BINARY: ${{ steps.chrome.outputs.chrome-path }}
+          PANTHER_CHROME_DRIVER_BINARY: ${{ steps.chrome.outputs.chromedriver-path }}
 
       - name: "Stop Wrangler"
         if: always()
         run: |
           if [ -f wrangler.pid ]; then
-            kill $(cat wrangler.pid) || true
+            kill "$(cat wrangler.pid)" || true
           fi
           if [ -f wrangler.log ]; then
             echo "=== Wrangler Logs ==="

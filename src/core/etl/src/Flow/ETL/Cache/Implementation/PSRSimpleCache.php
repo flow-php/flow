@@ -37,6 +37,7 @@ final readonly class PSRSimpleCache implements Cache
 
     public function get(string $key): Row|Rows|CacheIndex
     {
+        // @mago-ignore analysis:mixed-assignment
         $serializedValue = $this->cache->get($key);
 
         if (!$serializedValue) {

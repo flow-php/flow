@@ -7,6 +7,7 @@ namespace Flow\ETL\Function;
 use DOMDocument;
 use DOMNameSpaceNode;
 use DOMNode;
+use DOMNodeList;
 use DOMXPath;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
@@ -37,11 +38,11 @@ final class XPath extends ScalarFunctionChain
             return $context->functions()->invalidResult(new InvalidArgumentException('XPath requires non-null path'));
         }
 
-        if ($value instanceof DOMNode && !$value instanceof DOMDocument) {
+        if (!$value instanceof DOMDocument) {
             $dom = $value->ownerDocument ?? new DOMDocument();
             $importedNode = $dom->importNode($value, true);
 
-            if (!$importedNode->parentNode) {
+            if ($importedNode !== false && $importedNode->parentNode === null) {
                 $dom->appendChild($importedNode);
             }
 
@@ -49,13 +50,10 @@ final class XPath extends ScalarFunctionChain
         }
 
         $xpath = new DOMXPath($value);
-        $result = @$xpath->query($path);
+        /** @var DOMNodeList<DOMNameSpaceNode|DOMNode>|false $result */
+        $result = $xpath->query($path);
 
-        if ($result === false) {
-            return null;
-        }
-
-        if ($result->length === 0) {
+        if ($result === false || $result->length === 0) {
             return null;
         }
 

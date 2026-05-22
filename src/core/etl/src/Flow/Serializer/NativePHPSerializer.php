@@ -24,6 +24,7 @@ final class NativePHPSerializer implements Serializer
 
     public function unserialize(string $serialized, array $classes): object
     {
+        // @mago-ignore analysis:mixed-assignment
         $value = unserialize($serialized, ['allowed_classes' => true]);
 
         foreach ($classes as $class) {

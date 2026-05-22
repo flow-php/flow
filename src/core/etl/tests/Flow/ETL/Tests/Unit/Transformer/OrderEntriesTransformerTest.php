@@ -69,6 +69,7 @@ final class OrderEntriesTransformerTest extends FlowTestCase
                     'country' => 'country',
                     'location' => ['lat' => 1.5, 'lon' => 1.5],
                 ],
+                // @mago-ignore analysis:less-specific-argument
                 type_structure([
                     'street' => type_string(),
                     'city' => type_string(),
@@ -161,6 +162,7 @@ final class OrderEntriesTransformerTest extends FlowTestCase
                     'country' => 'country',
                     'location' => ['lat' => 1.5, 'lon' => 1.5],
                 ],
+                // @mago-ignore analysis:less-specific-argument
                 type_structure([
                     'street' => type_string(),
                     'city' => type_string(),

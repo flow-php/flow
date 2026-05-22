@@ -56,6 +56,7 @@ final class ConcatWithSeparator extends ScalarFunctionChain
             } else {
                 $value = is_string($value) ? $value : type_optional(type_string())->cast($value);
 
+                // @mago-ignore analysis:redundant-condition,redundant-type-comparison
                 if (is_string($value)) {
                     $concatValues[] = $value;
                 }

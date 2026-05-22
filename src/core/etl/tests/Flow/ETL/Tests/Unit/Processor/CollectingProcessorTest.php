@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Processor;
 
 use Flow\ETL\Processor\CollectingProcessor;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\flow_context;
@@ -24,6 +25,7 @@ final class CollectingProcessorTest extends FlowTestCase
             yield rows(row(int_entry('id', 4)), row(int_entry('id', 5)));
         })();
 
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
 
         static::assertCount(1, $result);
@@ -48,6 +50,7 @@ final class CollectingProcessorTest extends FlowTestCase
             yield from [];
         })();
 
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
 
         static::assertCount(1, $result);
@@ -62,6 +65,7 @@ final class CollectingProcessorTest extends FlowTestCase
             yield rows(row(int_entry('id', 1)), row(int_entry('id', 2)));
         })();
 
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, flow_context()));
 
         static::assertCount(1, $result);

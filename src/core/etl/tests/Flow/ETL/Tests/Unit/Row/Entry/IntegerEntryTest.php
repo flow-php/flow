@@ -28,31 +28,19 @@ final class IntegerEntryTest extends FlowTestCase
         ];
     }
 
-    public function test_duplicating_entry(): void
-    {
-        $entry = integer_entry('int', 1);
-        $duplicated = $entry->duplicate();
-
-        static::assertNotSame($entry, $duplicated);
-        static::assertEquals($entry, $duplicated);
-    }
-
     public function test_entry_name_can_be_zero(): void
     {
         static::assertSame('0', integer_entry('0', 0)->name());
     }
 
+    /**
+     * @param IntegerEntry<int|null> $entry
+     * @param IntegerEntry<int|null> $nextEntry
+     */
     #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, IntegerEntry $entry, IntegerEntry $nextEntry): void
     {
         static::assertSame($equals, $entry->isEqual($nextEntry));
-    }
-
-    public function test_map(): void
-    {
-        $entry = integer_entry('entry-name', 1);
-
-        static::assertEquals($entry, $entry->map(static fn(?int $int): ?int => $int));
     }
 
     public function test_prevents_from_creating_entry_with_empty_entry_name(): void
@@ -88,7 +76,7 @@ final class IntegerEntryTest extends FlowTestCase
         $string = integer_entry('name', 1);
 
         $serialized = serialize($string);
-        /** @var IntegerEntry $unserialized */
+        /** @var IntegerEntry<int|null> $unserialized */
         $unserialized = unserialize($serialized);
 
         static::assertTrue($string->isEqual($unserialized));

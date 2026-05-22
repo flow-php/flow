@@ -98,17 +98,6 @@ final class Entries implements ArrayAccess, Countable, IteratorAggregate
         return count($this->entries);
     }
 
-    public function duplicate(): self
-    {
-        $entries = [];
-
-        foreach ($this->all() as $entry) {
-            $entries[$entry->name()] = $entry->duplicate();
-        }
-
-        return self::recreate($entries);
-    }
-
     /**
      * @throws InvalidArgumentException
      *
@@ -145,6 +134,7 @@ final class Entries implements ArrayAccess, Countable, IteratorAggregate
      */
     public function getIterator(): Iterator
     {
+        // @mago-ignore analysis:less-specific-return-statement
         return new ArrayIterator($this->all());
     }
 
@@ -412,6 +402,7 @@ final class Entries implements ArrayAccess, Countable, IteratorAggregate
         $data = [];
 
         foreach ($this->entries as $entry) {
+            // @mago-ignore analysis:mixed-assignment
             $value = $entry->value();
 
             if ($value instanceof Json) {

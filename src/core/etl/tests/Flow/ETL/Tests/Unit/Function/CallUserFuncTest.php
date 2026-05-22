@@ -22,6 +22,7 @@ final class CallUserFuncTest extends FlowTestCase
 {
     public function test_call_user_func_as_dsl(): void
     {
+        // @mago-ignore analysis:possibly-invalid-argument
         static::assertIsInt(call('time')->eval(row(), flow_context()));
     }
 

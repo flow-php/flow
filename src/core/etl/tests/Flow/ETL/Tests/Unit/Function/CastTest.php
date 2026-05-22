@@ -85,10 +85,12 @@ final class CastTest extends FlowTestCase
     {
         $entryFactory = flow_context(config())->entryFactory();
 
+        // @mago-ignore analysis:mixed-assignment
         $resultRefCast = ref('value')
             ->cast($to)
             ->eval(row($entryFactory->create('value', $from)), flow_context())
             ?->value;
+        // @mago-ignore analysis:mixed-assignment
         $resultCastRef = cast(ref('value'), $to)->eval(
             row($entryFactory->create('value', $from)),
             flow_context(),

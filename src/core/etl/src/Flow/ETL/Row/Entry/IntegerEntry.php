@@ -12,10 +12,11 @@ use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 
 use function Flow\Types\DSL\type_equals;
-use function Flow\Types\DSL\type_optional;
 
 /**
- * @implements Entry<?int>
+ * @template-covariant T of int|null
+ *
+ * @implements Entry<T>
  */
 final class IntegerEntry implements Entry
 {
@@ -24,6 +25,8 @@ final class IntegerEntry implements Entry
     private IntegerDefinition $definition;
 
     /**
+     * @param T $value
+     *
      * @throws InvalidArgumentException
      */
     public function __construct(
@@ -48,11 +51,6 @@ final class IntegerEntry implements Entry
         return $this->definition;
     }
 
-    public function duplicate(): static
-    {
-        return new self($this->name, $this->value, $this->definition->metadata());
-    }
-
     public function is(string|Reference $name): bool
     {
         if ($name instanceof Reference) {
@@ -70,11 +68,6 @@ final class IntegerEntry implements Entry
             && type_equals($this->type(), $entry->type())
             && $this->value() === $entry->value()
         );
-    }
-
-    public function map(callable $mapper): static
-    {
-        return new self($this->name, $mapper($this->value()));
     }
 
     public function name(): string
@@ -99,18 +92,19 @@ final class IntegerEntry implements Entry
         return (string) $this->value();
     }
 
+    /**
+     * @return Type<int>
+     */
     public function type(): Type
     {
         return $this->definition->type();
     }
 
+    /**
+     * @return T
+     */
     public function value(): ?int
     {
         return $this->value;
-    }
-
-    public function withValue(mixed $value): static
-    {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

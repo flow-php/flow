@@ -25,7 +25,6 @@ final readonly class CollectingProcessor implements Processor
         $collected = new Rows();
 
         foreach ($rows as $batch) {
-            /** @var Rows $batch */
             $collected = $collected->merge($batch);
         }
 

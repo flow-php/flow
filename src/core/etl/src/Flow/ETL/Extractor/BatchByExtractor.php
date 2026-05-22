@@ -25,13 +25,14 @@ final readonly class BatchByExtractor implements Extractor, OverridingExtractor
         private Reference $column,
         private ?int $minSize = null,
     ) {
+        // @mago-ignore analysis:invalid-operand
         if ($this->minSize !== null && $this->minSize <= 0) {
             throw new InvalidArgumentException('Minimum batch size must be greater than 0, given: ' . $this->minSize);
         }
     }
 
     /**
-     * @return \Generator<int, Rows, mixed, mixed>
+     * @return Generator<int, Rows, Signal|null, void>
      */
     public function extract(FlowContext $context): Generator
     {

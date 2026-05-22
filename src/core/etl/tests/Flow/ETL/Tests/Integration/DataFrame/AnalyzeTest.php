@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use DateTimeImmutable;
 use Flow\Clock\FakeClock;
+use Flow\ETL\Dataset\Report;
 use Flow\ETL\Dataset\Statistics\Columns;
 use Flow\ETL\Dataset\Statistics\HighResolutionTime;
 use Flow\ETL\FlowContext;
@@ -367,7 +368,9 @@ final class AnalyzeTest extends FlowIntegrationTestCase
 
         $report = df($config)->read(from_array([['id' => 1]]))->run();
 
-        static::assertNotNull($report);
+        // @mago-ignore analysis:impossible-type-comparison
+        static::assertInstanceOf(Report::class, $report);
+        // @mago-ignore analysis:mixed-method-access
         static::assertSame(1, $report->statistics()->totalRows());
     }
 }

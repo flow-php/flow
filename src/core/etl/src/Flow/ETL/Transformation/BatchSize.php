@@ -24,6 +24,7 @@ final readonly class BatchSize implements Transformation
     public function __construct(
         private int $size,
     ) {
+        // @mago-ignore analysis:impossible-condition,redundant-comparison
         if ($size < 1) {
             throw new InvalidArgumentException('Batch size must be greater than 0');
         }

@@ -61,7 +61,7 @@ final class StructureEntryTest extends FlowTestCase
         $this->expectExceptionMessage(
             'Expected structure{id: integer, name: string} got different types: list<integer>',
         );
-
+        // @mago-ignore analysis:invalid-argument
         /**
          * @phpstan-ignore argument.type
          */
@@ -83,6 +83,7 @@ final class StructureEntryTest extends FlowTestCase
                     'city' => 'bar',
                 ],
             ],
+            // @mago-ignore analysis:less-specific-argument
             type_structure([
                 'id' => type_integer(),
                 'name' => type_string(),
@@ -92,7 +93,6 @@ final class StructureEntryTest extends FlowTestCase
                 ]),
             ]),
         );
-
         static::assertEquals(
             structure_schema('items', type_structure([
                 'id' => type_integer(),
@@ -106,19 +106,6 @@ final class StructureEntryTest extends FlowTestCase
         );
     }
 
-    public function test_duplicating_entry(): void
-    {
-        $entry = structure_entry('name', ['a1' => 1, 'a2' => 2, 'a3' => 3], type_structure([
-            'a1' => type_integer(),
-            'a2' => type_integer(),
-            'a3' => type_integer(),
-        ]));
-        $duplicated = $entry->duplicate();
-
-        static::assertNotSame($entry, $duplicated);
-        static::assertEquals($entry, $duplicated);
-    }
-
     public function test_entry_name_can_be_zero(): void
     {
         static::assertSame('0', structure_entry('0', ['id' => 1, 'name' => 'one'], type_structure([
@@ -128,8 +115,8 @@ final class StructureEntryTest extends FlowTestCase
     }
 
     /**
-     * @param StructureEntry<array<mixed>> $entry
-     * @param StructureEntry<array<mixed>> $nextEntry
+     * @param StructureEntry<mixed, array<string, mixed>|null> $entry
+     * @param StructureEntry<mixed, array<string, mixed>|null> $nextEntry
      */
     #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, StructureEntry $entry, StructureEntry $nextEntry): void
@@ -137,18 +124,10 @@ final class StructureEntryTest extends FlowTestCase
         static::assertSame($equals, $entry->isEqual($nextEntry));
     }
 
-    public function test_map(): void
-    {
-        $entry = structure_entry('entry-name', ['id' => 1234], type_structure(['id' => type_integer()]));
-
-        static::assertEquals($entry, $entry->map(static fn(?array $entries): ?array => $entries));
-    }
-
     public function test_prevents_from_creating_entry_with_empty_entry_name(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Entry name cannot be empty');
-
         structure_entry('', ['id' => 1, 'name' => 'one'], type_structure([
             'id' => type_integer(),
             'name' => type_string(),
@@ -159,9 +138,7 @@ final class StructureEntryTest extends FlowTestCase
     {
         $metadata = Metadata::fromArray(['description' => 'test metadata', 'priority' => 1]);
         $entry = structure_entry('old_name', ['id' => 1234], type_structure(['id' => type_integer()]), $metadata);
-
         $renamedEntry = $entry->rename('new_name');
-
         static::assertSame('new_name', $renamedEntry->name());
         static::assertEquals(['id' => 1234], $renamedEntry->value());
         static::assertTrue($renamedEntry->definition()->metadata()->isEqual($metadata));
@@ -171,7 +148,6 @@ final class StructureEntryTest extends FlowTestCase
     {
         $entry = structure_entry('entry-name', ['id' => 1234], type_structure(['id' => type_integer()]));
         $newEntry = $entry->rename('new-entry-name');
-
         static::assertEquals('new-entry-name', $newEntry->name());
         static::assertEquals($entry->value(), $newEntry->value());
     }
@@ -182,7 +158,6 @@ final class StructureEntryTest extends FlowTestCase
             'item-id' => type_integer(),
             'name' => type_string(),
         ]));
-
         static::assertEquals(
             [
                 'item-id' => 1,
@@ -197,11 +172,9 @@ final class StructureEntryTest extends FlowTestCase
         $string = structure_entry('name', ['json' => ['5' => 5, '2' => 2, '3' => 3]], type_structure([
             'json' => type_array(),
         ]));
-
         $serialized = serialize($string);
-        /** @var StructureEntry<array<array-key, mixed>> $unserialized */
+        /** @var StructureEntry<mixed, array<string, mixed>|null> $unserialized */
         $unserialized = unserialize($serialized);
-
         static::assertTrue($string->isEqual($unserialized));
     }
 
@@ -210,8 +183,10 @@ final class StructureEntryTest extends FlowTestCase
         static::assertNotEquals(
             structure_entry(
                 'name',
+                // @mago-ignore analysis:possibly-invalid-argument
                 /** @phpstan-ignore-next-line */
                 ['1' => 1, '2' => '2'],
+                // @mago-ignore analysis:possibly-invalid-argument
                 /** @phpstan-ignore-next-line */
                 type_structure([
                     '1' => type_integer(),
@@ -220,8 +195,10 @@ final class StructureEntryTest extends FlowTestCase
             ),
             structure_entry(
                 'name',
+                // @mago-ignore analysis:possibly-invalid-argument
                 /** @phpstan-ignore-next-line */
                 ['1' => 1, '2' => '2', '3' => '3'],
+                // @mago-ignore analysis:possibly-invalid-argument
                 /** @phpstan-ignore-next-line */
                 type_structure([
                     '1' => type_integer(),
@@ -233,8 +210,10 @@ final class StructureEntryTest extends FlowTestCase
         static::assertEquals(
             structure_entry(
                 'name',
+                // @mago-ignore analysis:possibly-invalid-argument
                 /** @phpstan-ignore-next-line */
                 ['1' => 1, '2' => 2, '3' => 3],
+                // @mago-ignore analysis:possibly-invalid-argument
                 /** @phpstan-ignore-next-line */
                 type_structure([
                     '1' => type_integer(),
@@ -244,8 +223,10 @@ final class StructureEntryTest extends FlowTestCase
             ),
             structure_entry(
                 'name',
+                // @mago-ignore analysis:possibly-invalid-argument
                 /** @phpstan-ignore-next-line */
                 ['1' => 1, '2' => 2, '3' => 3],
+                // @mago-ignore analysis:possibly-invalid-argument
                 /** @phpstan-ignore-next-line */
                 type_structure([
                     '1' => type_integer(),

@@ -20,6 +20,9 @@ final class CacheExtractor implements Extractor
         private readonly string $id,
     ) {}
 
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         if (!$context->cache()->has($this->id)) {

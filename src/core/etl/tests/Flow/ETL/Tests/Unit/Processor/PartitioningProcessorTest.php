@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Processor;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Processor\PartitioningProcessor;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config_builder;
@@ -50,6 +51,7 @@ final class PartitioningProcessorTest extends FlowTestCase
             );
         })();
 
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, $context));
         $allRows = [];
 
@@ -76,7 +78,9 @@ final class PartitioningProcessorTest extends FlowTestCase
             );
         })();
 
+        /** @var list<Rows> $result */
         $result = iterator_to_array($processor->process($generator, $context));
+        /** @var list<array<array-key, mixed>> $allRows */
         $allRows = [];
 
         foreach ($result as $batch) {

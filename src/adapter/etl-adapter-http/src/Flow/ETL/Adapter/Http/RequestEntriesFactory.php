@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\JsonEntry;
+use Flow\Types\Value\Json;
 use Psr\Http\Message\RequestInterface;
 
 use function class_exists;
@@ -70,7 +71,7 @@ final class RequestEntriesFactory
                                 );
                             }
 
-                            $requestBodyEntry = new JsonEntry('request_body', $decodedJson);
+                            $requestBodyEntry = new JsonEntry('request_body', Json::fromArray($decodedJson));
                         } else {
                             $requestBodyEntry = string_entry('request_body', $requestBodyContent);
                         }
@@ -88,7 +89,7 @@ final class RequestEntriesFactory
         return new Entries(
             $requestBodyEntry,
             string_entry('request_uri', (string) $request->getUri()),
-            new JsonEntry('request_headers', $request->getHeaders()),
+            new JsonEntry('request_headers', Json::fromArray($request->getHeaders())),
             string_entry('request_protocol_version', $request->getProtocolVersion()),
             string_entry('request_method', $request->getMethod()),
         );

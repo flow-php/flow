@@ -11,8 +11,10 @@ use Flow\ETL\Tests\FlowIntegrationTestCase;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\int_schema;
+use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\string_entry;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_string;
 
@@ -27,7 +29,7 @@ final class MapTest extends FlowIntegrationTestCase
                 ['id' => 3, 'tags' => ['D']],
             ])->withSchema(schema(int_schema('id'), list_schema('tags', type_list(type_string()), true))))
             ->map(static fn(Row $row): Row => $row->map(static fn(Entry $e) => (
-                $e->value() === null && $e->is('tags') ? $e->withValue([]) : $e
+                $e->value() === null && $e->is('tags') ? list_entry('tags', [], type_list(type_string())) : $e
             )))
             ->fetch();
 
@@ -50,7 +52,7 @@ final class MapTest extends FlowIntegrationTestCase
                 ['id' => 3, 'name' => 'Doe'],
             ]))
             ->map(static fn(Row $row): Row => $row->map(static fn(Entry $e) => $e->value() === null && $e->is('name')
-                ? $e->withValue('N/A')
+                ? string_entry('name', 'N/A')
                 : $e))
             ->fetch();
 

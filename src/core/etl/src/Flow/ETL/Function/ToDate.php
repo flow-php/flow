@@ -48,13 +48,15 @@ final class ToDate extends ScalarFunctionChain
         }
 
         if (is_int($value)) {
-            /** @phpstan-ignore-next-line */
-            return DateTimeImmutable::createFromFormat('U', (string) $value, $timeZone)->setTime(0, 0, 0, 0);
+            $date = DateTimeImmutable::createFromFormat('U', (string) $value, $timeZone);
+
+            return $date === false ? null : $date->setTime(0, 0, 0, 0);
         }
 
         if (is_string($value)) {
-            /** @phpstan-ignore-next-line */
-            return DateTimeImmutable::createFromFormat($format, $value, $timeZone)->setTime(0, 0, 0, 0);
+            $date = DateTimeImmutable::createFromFormat($format, $value, $timeZone);
+
+            return $date === false ? null : $date->setTime(0, 0, 0, 0);
         }
 
         return $context

@@ -22,6 +22,9 @@ final class ArrayExtractor implements Extractor
         private readonly iterable $dataset,
     ) {}
 
+    /**
+     * @return Generator<int, \Flow\ETL\Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         foreach ($this->dataset as $row) {

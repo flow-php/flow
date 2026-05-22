@@ -24,6 +24,9 @@ final readonly class RowsExtractor implements Extractor
         $this->rows = $rows;
     }
 
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         foreach ($this->rows as $rows) {

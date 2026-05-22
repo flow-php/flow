@@ -11,20 +11,21 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema\Definition\XMLDefinition;
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
+use ReflectionProperty;
+use RuntimeException;
 
 use function base64_decode;
 use function base64_encode;
 use function Flow\Types\DSL\type_equals;
-use function Flow\Types\DSL\type_instance_of;
-use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_string;
 use function gzcompress;
 use function gzuncompress;
-use function is_string;
 use function sprintf;
 
 /**
- * @implements Entry<?\DOMDocument>
+ * @template-covariant T of \DOMDocument|null
+ *
+ * @implements Entry<T>
  */
 final class XMLEntry implements Entry
 {
@@ -32,35 +33,30 @@ final class XMLEntry implements Entry
 
     private XMLDefinition $definition;
 
-    private readonly ?DOMDocument $value;
-
+    /**
+     * @param T $value
+     */
     public function __construct(
         private readonly string $name,
-        DOMDocument|string|null $value,
+        private readonly ?DOMDocument $value,
         ?Metadata $metadata = null,
     ) {
-        if (is_string($value)) {
-            $doc = new DOMDocument();
-
-            if (!@$doc->loadXML($value)) {
-                throw new InvalidArgumentException(sprintf('Given string "%s" is not valid XML', $value));
-            }
-
-            $this->value = $doc;
-        } else {
-            $this->value = $value;
-        }
-
         $this->definition = new XMLDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
     public function __serialize(): array
     {
-        return [
-            'name' => $this->name,
-            /** @phpstan-ignore-next-line  */
-            'value' => $this->value === null ? null : base64_encode(gzcompress($this->toString())),
-        ];
+        if ($this->value === null) {
+            return ['name' => $this->name, 'value' => null];
+        }
+
+        $compressed = gzcompress($this->toString());
+
+        if ($compressed === false) {
+            throw new RuntimeException('Failed to gzcompress XML entry value.');
+        }
+
+        return ['name' => $this->name, 'value' => base64_encode($compressed)];
     }
 
     public function __toString(): string
@@ -77,38 +73,42 @@ final class XMLEntry implements Entry
      */
     public function __unserialize(array $data): void
     {
-        type_string()->assert($data['name']);
-
-        $this->name = $data['name'];
+        $name = type_string()->assert($data['name']);
+        (new ReflectionProperty($this, 'name'))->setValue($this, $name);
 
         if ($data['value'] === null) {
-            $this->value = null;
-            $this->definition = new XMLDefinition($this->name, true, Metadata::empty());
+            (new ReflectionProperty($this, 'value'))->setValue($this, null);
+            $this->definition = new XMLDefinition($name, true, Metadata::empty());
 
             return;
         }
 
-        /** @phpstan-ignore-next-line  */
-        $xmlString = gzuncompress(base64_decode((string) $data['value'], true));
+        $encoded = type_string()->assert($data['value']);
+        $decoded = base64_decode($encoded, true);
+
+        if ($decoded === false) {
+            throw new InvalidArgumentException(sprintf('Given value "%s" is not valid base64', $encoded));
+        }
+
+        $xmlString = gzuncompress($decoded);
+
+        if ($xmlString === false) {
+            throw new InvalidArgumentException('Given value is not valid gzcompressed XML');
+        }
+
         $doc = new DOMDocument();
 
-        /** @phpstan-ignore-next-line  */
         if (!@$doc->loadXML($xmlString)) {
             throw new InvalidArgumentException(sprintf('Given string "%s" is not valid XML', $xmlString));
         }
 
-        $this->value = $doc;
-        $this->definition = new XMLDefinition($this->name, false, Metadata::empty());
+        (new ReflectionProperty($this, 'value'))->setValue($this, $doc);
+        $this->definition = new XMLDefinition($name, false, Metadata::empty());
     }
 
     public function definition(): XMLDefinition
     {
         return $this->definition;
-    }
-
-    public function duplicate(): static
-    {
-        return new self($this->name, $this->value ? clone $this->value : null, $this->definition->metadata());
     }
 
     public function is(Reference|string $name): bool
@@ -137,14 +137,6 @@ final class XMLEntry implements Entry
         return $entry->value()?->C14N() === $this->value?->C14N();
     }
 
-    public function map(callable $mapper): static
-    {
-        $mappedValue = $mapper($this->value());
-        $mappedValue = type_optional(type_instance_of(DOMDocument::class))->assert($mappedValue);
-
-        return new self($this->name, $mappedValue);
-    }
-
     public function name(): string
     {
         return $this->name;
@@ -161,22 +153,28 @@ final class XMLEntry implements Entry
             return '';
         }
 
-        /** @phpstan-ignore-next-line */
-        return $this->value->saveXML($this->value->documentElement);
+        $serialized = $this->value->saveXML($this->value->documentElement);
+
+        if ($serialized === false) {
+            throw new RuntimeException('Failed to serialize XML document.');
+        }
+
+        return $serialized;
     }
 
+    /**
+     * @return Type<DOMDocument>
+     */
     public function type(): Type
     {
         return $this->definition->type();
     }
 
+    /**
+     * @return T
+     */
     public function value(): ?DOMDocument
     {
         return $this->value;
-    }
-
-    public function withValue(mixed $value): static
-    {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

@@ -39,13 +39,23 @@ final class TypeFormatter
      */
     public function format(Type $type, bool $nullable = false): string
     {
-        return match ($type::class) {
-            MapType::class => $this->formatMapType($type, $nullable),
-            ListType::class => $this->formatListType($type, $nullable),
-            StructureType::class => $this->formatStructureType($type, $nullable),
-            OptionalType::class => $this->format($type->base(), true),
-            default => $this->formatSimpleType($type, $nullable),
-        };
+        if ($type instanceof MapType) {
+            return $this->formatMapType($type, $nullable);
+        }
+
+        if ($type instanceof ListType) {
+            return $this->formatListType($type, $nullable);
+        }
+
+        if ($type instanceof StructureType) {
+            return $this->formatStructureType($type, $nullable);
+        }
+
+        if ($type instanceof OptionalType) {
+            return $this->format($type->base(), true);
+        }
+
+        return $this->formatSimpleType($type, $nullable);
     }
 
     /**
@@ -113,7 +123,7 @@ final class TypeFormatter
     }
 
     /**
-     * @param StructureType<array<string, Type<mixed>>> $type
+     * @param StructureType<mixed> $type
      */
     private function formatStructureType(StructureType $type, bool $nullable): string
     {

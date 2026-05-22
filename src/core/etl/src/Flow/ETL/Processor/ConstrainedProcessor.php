@@ -9,7 +9,6 @@ use Flow\ETL\Exception\ConstraintViolationException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Processor;
-use Flow\ETL\Rows;
 use Generator;
 
 /**
@@ -30,6 +29,7 @@ final class ConstrainedProcessor implements Processor
         private readonly array $constraints = [],
     ) {
         foreach ($constraints as $constraint) {
+            // @mago-ignore analysis:impossible-condition
             if (!$constraint instanceof Constraint) {
                 throw new InvalidArgumentException('Pipeline constraints must be of type Flow\ETL\Constraint');
             }
@@ -38,7 +38,6 @@ final class ConstrainedProcessor implements Processor
 
     public function process(Generator $rows, FlowContext $context): Generator
     {
-        /** @var Rows $batch */
         foreach ($rows as $batch) {
             foreach ($batch->all() as $row) {
                 foreach ($this->constraints as $constraint) {

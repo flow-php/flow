@@ -383,6 +383,14 @@ final class UnixPathTest extends PathTestCase
         static::assertEquals('/a/e/file.txt', $path->path());
     }
 
+    public function test_realpath_throws_on_empty_path(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/Empty path passed to UnixPath::realpath/');
+
+        UnixPath::realpath('');
+    }
+
     public function test_realpath_too_many_parent_navigations(): void
     {
         $path = UnixPath::realpath('/a/../../../file.txt');

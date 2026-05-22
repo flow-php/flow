@@ -12,12 +12,13 @@ use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 
 use function Flow\Types\DSL\type_equals;
-use function Flow\Types\DSL\type_optional;
 use function mb_strtolower;
 use function mb_strtoupper;
 
 /**
- * @implements Entry<?string>
+ * @template-covariant T of string|null
+ *
+ * @implements Entry<T>
  */
 final class StringEntry implements Entry
 {
@@ -26,6 +27,8 @@ final class StringEntry implements Entry
     private StringDefinition $definition;
 
     /**
+     * @param T $value
+     *
      * @throws InvalidArgumentException
      */
     public function __construct(
@@ -46,12 +49,17 @@ final class StringEntry implements Entry
         );
     }
 
+    /**
+     * @return self<null>
+     */
     public static function fromNull(string $name, ?Metadata $metadata = null): self
     {
         return new self($name, null, $metadata, fromNull: true);
     }
 
     /**
+     * @return self<string>
+     *
      * @throws InvalidArgumentException
      */
     public static function lowercase(string $name, string $value): self
@@ -60,6 +68,8 @@ final class StringEntry implements Entry
     }
 
     /**
+     * @return self<string>
+     *
      * @throws InvalidArgumentException
      */
     public static function uppercase(string $name, string $value): self
@@ -75,11 +85,6 @@ final class StringEntry implements Entry
     public function definition(): StringDefinition
     {
         return $this->definition;
-    }
-
-    public function duplicate(): static
-    {
-        return new self($this->name, $this->value, $this->definition->metadata());
     }
 
     public function is(string|Reference $name): bool
@@ -101,17 +106,14 @@ final class StringEntry implements Entry
         );
     }
 
-    public function map(callable $mapper): static
-    {
-        return new self($this->name, $mapper($this->value()));
-    }
-
     public function name(): string
     {
         return $this->name;
     }
 
     /**
+     * @return self<T>
+     *
      * @throws InvalidArgumentException
      */
     public function rename(string $name): static
@@ -119,6 +121,9 @@ final class StringEntry implements Entry
         return new self($name, $this->value, $this->definition->metadata());
     }
 
+    /**
+     * @return self<string|null>
+     */
     public function toLowercase(): self
     {
         return new self($this->name, $this->value ? mb_strtolower($this->value) : null);
@@ -135,18 +140,19 @@ final class StringEntry implements Entry
         return $value;
     }
 
+    /**
+     * @return Type<string>
+     */
     public function type(): Type
     {
         return $this->definition->type();
     }
 
+    /**
+     * @return T
+     */
     public function value(): ?string
     {
         return $this->value;
-    }
-
-    public function withValue(mixed $value): static
-    {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

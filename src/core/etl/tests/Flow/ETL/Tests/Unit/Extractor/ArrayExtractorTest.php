@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function Flow\ETL\DSL\config;
@@ -24,6 +25,8 @@ final class ArrayExtractorTest extends FlowTestCase
         $rows = iterator_to_array($extractor->extract(execution_context(config_builder()->build())));
 
         static::assertCount(2, $rows);
+        static::assertInstanceOf(Rows::class, $rows[0]);
+        static::assertInstanceOf(Rows::class, $rows[1]);
         static::assertSame(['id' => 1, 'name' => 'Norbert'], $rows[0]->first()->toArray());
         static::assertSame(['id' => 2, 'name' => 'Michal'], $rows[1]->first()->toArray());
     }
@@ -40,6 +43,8 @@ final class ArrayExtractorTest extends FlowTestCase
         $rows = iterator_to_array($extractor->extract(execution_context(config())));
 
         static::assertCount(2, $rows);
+        static::assertInstanceOf(Rows::class, $rows[0]);
+        static::assertInstanceOf(Rows::class, $rows[1]);
         static::assertSame(['id' => 1, 'name' => 'Norbert'], $rows[0]->first()->toArray());
         static::assertSame(['id' => 2, 'name' => 'Michal'], $rows[1]->first()->toArray());
     }

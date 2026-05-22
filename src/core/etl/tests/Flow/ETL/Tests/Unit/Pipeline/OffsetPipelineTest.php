@@ -42,7 +42,7 @@ final class OffsetPipelineTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Offset must be greater than or equal to 0, given: -1');
-
+        // @mago-ignore analysis:invalid-argument
         // @phpstan-ignore-next-line
         new OffsetProcessor(-1);
     }
@@ -56,9 +56,7 @@ final class OffsetPipelineTest extends FlowTestCase
             row(int_entry('id', 4), bool_entry('active', false)),
         )));
         $pipeline->add(new OffsetProcessor(1));
-
         $result = iterator_to_array($pipeline->process(flow_context(config())));
-
         static::assertCount(1, $result);
         static::assertCount(3, $result[0]);
         static::assertEquals(
@@ -75,9 +73,7 @@ final class OffsetPipelineTest extends FlowTestCase
     {
         $pipeline = new Pipeline(from_rows(rows()));
         $pipeline->add(new OffsetProcessor(5));
-
         $result = iterator_to_array($pipeline->process(flow_context(config())));
-
         static::assertCount(0, $result);
     }
 
@@ -92,9 +88,7 @@ final class OffsetPipelineTest extends FlowTestCase
             }
         });
         $pipeline->add(new OffsetProcessor(4));
-
         $result = iterator_to_array($pipeline->process(flow_context(config())));
-
         static::assertCount(1, $result);
         static::assertEquals(rows(row(int_entry('id', 5)), row(int_entry('id', 6))), $result[0]);
     }
@@ -110,9 +104,7 @@ final class OffsetPipelineTest extends FlowTestCase
             }
         });
         $pipeline->add(new OffsetProcessor(3));
-
         $result = iterator_to_array($pipeline->process(flow_context(config())));
-
         static::assertCount(2, $result);
         static::assertEquals(rows(row(int_entry('id', 4)), row(int_entry('id', 5))), $result[0]);
         static::assertEquals(rows(row(int_entry('id', 6))), $result[1]);
@@ -128,9 +120,7 @@ final class OffsetPipelineTest extends FlowTestCase
             }
         });
         $pipeline->add(new OffsetProcessor(1));
-
         $result = iterator_to_array($pipeline->process(flow_context(config())));
-
         static::assertCount(2, $result);
         static::assertEquals(rows(row(int_entry('id', 2)), row(int_entry('id', 3))), $result[0]);
         static::assertEquals(rows(row(int_entry('id', 4)), row(int_entry('id', 5))), $result[1]);
@@ -144,9 +134,7 @@ final class OffsetPipelineTest extends FlowTestCase
             row(int_entry('id', 3)),
         )));
         $pipeline->add(new OffsetProcessor(3));
-
         $result = iterator_to_array($pipeline->process(flow_context(config())));
-
         static::assertCount(0, $result);
     }
 
@@ -154,9 +142,7 @@ final class OffsetPipelineTest extends FlowTestCase
     {
         $pipeline = new Pipeline(from_rows(rows(row(int_entry('id', 1)), row(int_entry('id', 2)))));
         $pipeline->add(new OffsetProcessor(5));
-
         $result = iterator_to_array($pipeline->process(flow_context(config())));
-
         static::assertCount(0, $result);
     }
 
@@ -171,9 +157,7 @@ final class OffsetPipelineTest extends FlowTestCase
             }
         });
         $pipeline->add(new OffsetProcessor(2));
-
         $result = iterator_to_array($pipeline->process(flow_context(config())));
-
         static::assertCount(1, $result);
         static::assertEquals(rows(row(int_entry('id', 3))), $result[0]);
     }
@@ -188,9 +172,7 @@ final class OffsetPipelineTest extends FlowTestCase
             row(int_entry('id', 5)),
         )));
         $pipeline->add(new OffsetProcessor(2));
-
         $result = iterator_to_array($pipeline->process(flow_context(config())));
-
         static::assertCount(1, $result);
         static::assertCount(3, $result[0]);
         static::assertEquals(
@@ -209,12 +191,9 @@ final class OffsetPipelineTest extends FlowTestCase
         )));
         $pipeline->add(new ScalarFunctionTransformer('doubled', ref('id')->multiply(lit(2))));
         $pipeline->add(new OffsetProcessor(1));
-
         $result = iterator_to_array($pipeline->process(flow_context(config())));
-
         static::assertCount(1, $result);
         static::assertCount(3, $result[0]);
-
         $rows = $result[0];
         static::assertEquals(2, $rows->all()[0]->valueOf('id'));
         static::assertEquals(4, $rows->all()[0]->valueOf('doubled'));
@@ -226,21 +205,15 @@ final class OffsetPipelineTest extends FlowTestCase
     public function test_process_with_various_offset_values(int $offset): void
     {
         $rowsData = [];
-
         for ($i = 1; $i <= 20; $i++) {
             $rowsData[] = row(int_entry('id', $i));
         }
-
         $pipeline = new Pipeline(from_rows(rows(...$rowsData)));
         $pipeline->add(new OffsetProcessor($offset >= 0 ? $offset : 0));
-
         $result = iterator_to_array($pipeline->process(flow_context(config())));
-
         $expectedCount = max(0, 20 - $offset);
         $totalRows = array_sum(array_map(static fn($batch) => $batch->count(), $result));
-
         static::assertEquals($expectedCount, $totalRows);
-
         if ($expectedCount > 0) {
             $firstRowId = $result[0]->first()->valueOf('id');
             static::assertEquals($offset + 1, $firstRowId);
@@ -255,9 +228,7 @@ final class OffsetPipelineTest extends FlowTestCase
             row(int_entry('id', 3)),
         )));
         $pipeline->add(new OffsetProcessor(0));
-
         $result = iterator_to_array($pipeline->process(flow_context(config())));
-
         static::assertCount(1, $result);
         static::assertCount(3, $result[0]);
         static::assertEquals(

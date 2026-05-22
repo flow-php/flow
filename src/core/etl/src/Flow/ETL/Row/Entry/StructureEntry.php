@@ -15,18 +15,23 @@ use Flow\Types\Type\TypeDetector;
 
 use function count;
 use function Flow\Types\DSL\type_equals;
-use function Flow\Types\DSL\type_optional;
 use function is_array;
 use function json_encode;
 
 /**
  * @template T
+ * @template-covariant TStruct of array<string, T>|null
  *
- * @implements Entry<?array<string, T>>
+ * @implements Entry<TStruct>
  */
 final class StructureEntry implements Entry
 {
     use EntryRef;
+
+    /**
+     * @var TStruct
+     */
+    private readonly ?array $value;
 
     /**
      * @var StructureDefinition<T>
@@ -34,14 +39,14 @@ final class StructureEntry implements Entry
     private StructureDefinition $definition;
 
     /**
-     * @param ?array<array-key, mixed> $value
+     * @param TStruct $value
      * @param StructureType<T> $type
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly string $name,
-        private readonly ?array $value,
+        mixed $value,
         StructureType $type,
         ?Metadata $metadata = null,
     ) {
@@ -49,15 +54,20 @@ final class StructureEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        if ($value !== null && 0 === count($value)) {
+        if (is_array($value) && 0 === count($value)) {
             throw InvalidArgumentException::because('Structure must have at least one entry, ' . $name . ' got none.');
         }
 
-        if ($value !== null && !$type->isValid($value)) {
+        $this->value = $value;
+
+        // @mago-ignore analysis:redundant-type-comparison
+        if ($this->value !== null && !$type->isValid($this->value)) {
             throw InvalidArgumentException::because(
-                'Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())
-                    ->detectType($this->value)
-                    ->toString(),
+                'Expected ' . $type->toString() . ' got different types: '
+                    . (new TypeDetector())
+                        // @mago-ignore analysis:no-value
+                        ->detectType($this->value)
+                        ->toString(),
             );
         }
 
@@ -82,11 +92,6 @@ final class StructureEntry implements Entry
         return $this->definition;
     }
 
-    public function duplicate(): static
-    {
-        return new self($this->name, $this->value, $this->type(), $this->definition->metadata());
-    }
-
     public function is(string|Reference $name): bool
     {
         if ($name instanceof Reference) {
@@ -98,32 +103,22 @@ final class StructureEntry implements Entry
 
     public function isEqual(Entry $entry): bool
     {
+        if (!$entry instanceof self) {
+            return false;
+        }
+
+        if (!$this->is($entry->name()) || !type_equals($this->type(), $entry->type())) {
+            return false;
+        }
+
         $entryValue = $entry->value();
         $thisValue = $this->value();
 
-        if ($entryValue === null && $thisValue !== null) {
-            return false;
+        if ($entryValue === null || $thisValue === null) {
+            return $entryValue === $thisValue;
         }
 
-        if ($entryValue !== null && $thisValue === null) {
-            return false;
-        }
-
-        if ($entryValue === null && $thisValue === null) {
-            return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type(), $entry->type());
-        }
-
-        return (
-            $this->is($entry->name())
-            && $entry instanceof self
-            && type_equals($this->type(), $entry->type())
-            && (new ArrayComparison())->equals($thisValue, is_array($entryValue) ? $entryValue : null)
-        );
-    }
-
-    public function map(callable $mapper): static
-    {
-        return new self($this->name, $mapper($this->value), $this->type());
+        return (new ArrayComparison())->equals($thisValue, $entryValue);
     }
 
     public function name(): string
@@ -153,13 +148,11 @@ final class StructureEntry implements Entry
         return $this->definition->type();
     }
 
+    /**
+     * @return TStruct
+     */
     public function value(): ?array
     {
         return $this->value;
-    }
-
-    public function withValue(mixed $value): static
-    {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->type());
     }
 }

@@ -57,8 +57,10 @@ final readonly class Pipeline
         foreach ($this->segments->all() as $segment) {
             $generator = $segment->execute($generator, $context);
 
-            if ($segment->processor() !== null) {
-                $generator = $segment->processor()->process($generator, $context);
+            $processor = $segment->processor();
+
+            if ($processor !== null) {
+                $generator = $processor->process($generator, $context);
             }
         }
 

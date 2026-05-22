@@ -17,9 +17,7 @@ final readonly class PipelineExtractor implements Extractor
     ) {}
 
     /**
-     * @param FlowContext $context
-     *
-     * @return \Generator<Rows>
+     * @return Generator<int, Rows, Signal|null, void>
      */
     public function extract(FlowContext $context): Generator
     {

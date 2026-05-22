@@ -20,6 +20,7 @@ final class CartesianProduct
     {
         $result = [[]];
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($input as $key => $values) {
             if (!is_iterable($values)) {
                 continue;
@@ -28,6 +29,7 @@ final class CartesianProduct
             $append = [];
 
             foreach ($result as $product) {
+                // @mago-ignore analysis:mixed-assignment
                 foreach ($values as $item) {
                     $product[$key] = $item;
                     $append[] = $product;

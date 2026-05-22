@@ -56,7 +56,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
     }
 
     /**
-     * @param array<array-key, mixed> $keys
+     * @param ScalarFunction|array<array-key, mixed> $keys
      */
     public function arrayGetCollection(ScalarFunction|array $keys): ArrayGetCollection
     {
@@ -95,7 +95,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
     }
 
     /**
-     * @param array<array-key, mixed> $ref
+     * @param ScalarFunction|array<array-key, mixed> $ref
      */
     public function arrayMerge(ScalarFunction|array $ref): ArrayMerge
     {
@@ -385,7 +385,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
     }
 
     /**
-     * @param array<array-key, mixed> $haystack
+     * @param ScalarFunction|array<array-key, mixed> $haystack
      */
     public function isIn(ScalarFunction|array $haystack): IsIn
     {
@@ -619,7 +619,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
     }
 
     /**
-     * @param null|array<array-key, mixed> $symbolsMap
+     * @param ScalarFunction|null|array<array-key, mixed> $symbolsMap
      */
     public function slug(
         ScalarFunction|string $separator = '-',
@@ -825,7 +825,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
      *   +--+-----+-----+-----+-----+-----+
      */
     /**
-     * @param array<array-key, mixed> $skipKeys
+     * @param ScalarFunction|array<array-key, mixed> $skipKeys
      */
     public function unpack(
         ScalarFunction|array $skipKeys = [],

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use Brick\Math\BigDecimal;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
@@ -15,11 +14,14 @@ use Flow\Types\Type;
 use function bccomp;
 use function Flow\ETL\DSL\is_type;
 use function Flow\Types\DSL\type_equals;
-use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_numeric_string;
 use function number_format;
+use function sprintf;
 
 /**
- * @implements Entry<?float>
+ * @template-covariant T of float|null
+ *
+ * @implements Entry<T>
  */
 final class FloatEntry implements Entry
 {
@@ -27,18 +29,18 @@ final class FloatEntry implements Entry
 
     private FloatDefinition $definition;
 
-    private readonly ?float $value;
-
+    /**
+     * @param T $value
+     */
     public function __construct(
         private readonly string $name,
-        float|int|string|null $value,
+        private readonly ?float $value,
         ?Metadata $metadata = null,
     ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->value = $value !== null ? BigDecimal::of((string) $value)->toFloat() : null;
         $this->definition = new FloatDefinition($this->name, $this->value === null, $metadata ?: Metadata::empty());
     }
 
@@ -52,11 +54,6 @@ final class FloatEntry implements Entry
         return $this->definition;
     }
 
-    public function duplicate(): static
-    {
-        return new self($this->name, $this->value, $this->definition->metadata());
-    }
-
     public function is(string|Reference $name): bool
     {
         if ($name instanceof Reference) {
@@ -68,32 +65,28 @@ final class FloatEntry implements Entry
 
     public function isEqual(Entry $entry): bool
     {
+        if (!$entry instanceof self || !$this->is($entry->name())) {
+            return false;
+        }
+
         $entryValue = $entry->value();
         $thisValue = $this->value();
 
-        if ($entryValue === null && $thisValue !== null) {
-            return false;
-        }
-
-        if ($entryValue !== null && $thisValue === null) {
-            return false;
-        }
-
         if ($entryValue === null && $thisValue === null) {
-            return $this->is($entry->name()) && $entry instanceof self && is_type($this->type(), $entry->type());
+            return is_type($this->type(), $entry->type());
+        }
+
+        if ($entryValue === null || $thisValue === null) {
+            return false;
         }
 
         return (
-            $this->is($entry->name())
-            && $entry instanceof self
-            && type_equals($this->type(), $entry->type()) /** @phpstan-ignore-next-line */
-            && bccomp((string) $thisValue, (string) $entryValue) === 0
+            type_equals($this->type(), $entry->type())
+            && bccomp(
+                type_numeric_string()->assert(sprintf('%.20F', $thisValue)),
+                type_numeric_string()->assert(sprintf('%.20F', $entryValue)),
+            ) === 0
         );
-    }
-
-    public function map(callable $mapper): static
-    {
-        return new self($this->name, $mapper($this->value()));
     }
 
     public function name(): string
@@ -118,18 +111,19 @@ final class FloatEntry implements Entry
         return number_format($this->value, 6, '.', '');
     }
 
+    /**
+     * @return Type<float>
+     */
     public function type(): Type
     {
         return $this->definition->type();
     }
 
+    /**
+     * @return T
+     */
     public function value(): ?float
     {
         return $this->value;
-    }
-
-    public function withValue(mixed $value): static
-    {
-        return new self($this->name, type_optional($this->type())->assert($value), $this->definition->metadata());
     }
 }

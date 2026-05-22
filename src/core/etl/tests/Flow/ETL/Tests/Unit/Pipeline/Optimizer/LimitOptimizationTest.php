@@ -53,8 +53,9 @@ final class LimitOptimizationTest extends FlowTestCase
 
         $optimizedPipeline = (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $pipeline);
 
-        static::assertInstanceOf(CSVExtractor::class, $pipeline->extractor());
-        static::assertFalse($pipeline->extractor()->isLimited());
+        $extractor = $pipeline->extractor();
+        static::assertInstanceOf(CSVExtractor::class, $extractor);
+        static::assertFalse($extractor->isLimited());
         static::assertCount(2, $optimizedPipeline->segments()->steps());
     }
 
@@ -65,8 +66,9 @@ final class LimitOptimizationTest extends FlowTestCase
 
         $optimizedPipeline = (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $pipeline);
 
-        static::assertInstanceOf(CSVExtractor::class, $pipeline->extractor());
-        static::assertFalse($pipeline->extractor()->isLimited());
+        $extractor = $pipeline->extractor();
+        static::assertInstanceOf(CSVExtractor::class, $extractor);
+        static::assertFalse($extractor->isLimited());
         static::assertCount(2, $optimizedPipeline->segments()->steps());
     }
 
@@ -79,8 +81,9 @@ final class LimitOptimizationTest extends FlowTestCase
 
         $optimizedPipeline = (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $pipeline);
 
-        static::assertInstanceOf(CSVExtractor::class, $pipeline->extractor());
-        static::assertTrue($pipeline->extractor()->isLimited());
+        $extractor = $pipeline->extractor();
+        static::assertInstanceOf(CSVExtractor::class, $extractor);
+        static::assertTrue($extractor->isLimited());
         static::assertCount(2, $optimizedPipeline->segments()->steps());
         static::assertInstanceOf(LimitTransformer::class, $optimizedPipeline->segments()->steps()[1]);
     }
@@ -92,8 +95,9 @@ final class LimitOptimizationTest extends FlowTestCase
 
         $optimizedPipeline = (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $pipeline);
 
-        static::assertInstanceOf(CSVExtractor::class, $pipeline->extractor());
-        static::assertTrue($pipeline->extractor()->isLimited());
+        $extractor = $pipeline->extractor();
+        static::assertInstanceOf(CSVExtractor::class, $extractor);
+        static::assertTrue($extractor->isLimited());
         static::assertCount(1, $optimizedPipeline->segments()->steps());
     }
 
@@ -103,8 +107,9 @@ final class LimitOptimizationTest extends FlowTestCase
 
         $optimizedPipeline = (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $pipeline);
 
-        static::assertInstanceOf(CSVExtractor::class, $pipeline->extractor());
-        static::assertTrue($pipeline->extractor()->isLimited());
+        $extractor = $pipeline->extractor();
+        static::assertInstanceOf(CSVExtractor::class, $extractor);
+        static::assertTrue($extractor->isLimited());
         static::assertCount(0, $optimizedPipeline->segments()->steps());
     }
 }

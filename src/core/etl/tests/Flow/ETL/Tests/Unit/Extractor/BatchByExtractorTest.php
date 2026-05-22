@@ -32,9 +32,7 @@ final class BatchByExtractorTest extends TestCase
             ref('order_id'),
             3,
         );
-
         $batches = iterator_to_array($extractor->extract(flow_context(config())));
-
         static::assertCount(2, $batches);
         static::assertCount(3, $batches[0]);
         static::assertCount(2, $batches[1]);
@@ -53,9 +51,7 @@ final class BatchByExtractorTest extends TestCase
             ref('order_id'),
             null,
         );
-
         $batches = iterator_to_array($extractor->extract(flow_context(config())));
-
         static::assertCount(3, $batches);
         static::assertCount(2, $batches[0]);
         static::assertCount(2, $batches[1]);
@@ -73,9 +69,7 @@ final class BatchByExtractorTest extends TestCase
             ref('order_id'),
             null,
         );
-
         $batches = iterator_to_array($extractor->extract(flow_context(config())));
-
         static::assertCount(3, $batches);
         static::assertCount(1, $batches[0]);
         static::assertCount(1, $batches[1]);
@@ -85,9 +79,7 @@ final class BatchByExtractorTest extends TestCase
     public function test_grouping_with_empty_data(): void
     {
         $extractor = batched_by(from_rows(rows()), ref('order_id'), null);
-
         $batches = iterator_to_array($extractor->extract(flow_context(config())));
-
         static::assertCount(0, $batches);
     }
 
@@ -105,9 +97,7 @@ final class BatchByExtractorTest extends TestCase
             ref('order_id'),
             2,
         );
-
         $batches = iterator_to_array($extractor->extract(flow_context(config())));
-
         static::assertCount(2, $batches);
         static::assertCount(5, $batches[0]);
         static::assertCount(1, $batches[1]);
@@ -124,9 +114,7 @@ final class BatchByExtractorTest extends TestCase
             ref('order_id'),
             null,
         );
-
         $batches = iterator_to_array($extractor->extract(flow_context(config())));
-
         static::assertCount(1, $batches);
         static::assertCount(3, $batches[0]);
     }
@@ -135,7 +123,7 @@ final class BatchByExtractorTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Minimum batch size must be greater than 0');
-
+        // @mago-ignore analysis:invalid-argument
         /** @phpstan-ignore-next-line */
         batched_by(from_rows(rows()), ref('order_id'), 0);
     }

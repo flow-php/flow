@@ -36,6 +36,7 @@ final class OnEach extends ScalarFunctionChain
 
         $entryFactory = $context->entryFactory();
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($value as $key => $item) {
             if ($preserveKeys) {
                 try {

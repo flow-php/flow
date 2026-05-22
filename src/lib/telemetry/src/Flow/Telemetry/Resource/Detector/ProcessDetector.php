@@ -76,7 +76,8 @@ final readonly class ProcessDetector implements ResourceDetector
 
     private function detectCommand(): string
     {
-        $scriptFilename = self::asString($_SERVER['SCRIPT_FILENAME']);
+        // @mago-ignore analysis:redundant-null-coalesce
+        $scriptFilename = self::asString($_SERVER['SCRIPT_FILENAME'] ?? null);
 
         if ($scriptFilename !== null) {
             return $scriptFilename;
@@ -84,7 +85,14 @@ final readonly class ProcessDetector implements ResourceDetector
 
         global $argv;
 
-        return $argv[0];
+        // @phpstan-ignore identical.alwaysFalse
+        if ($argv === null) {
+            return 'unknown';
+        }
+
+        // @mago-ignore analysis:redundant-null-coalesce
+        // @phpstan-ignore nullCoalesce.offset
+        return self::asString($argv[0] ?? null) ?? 'unknown';
     }
 
     private static function asString(mixed $value): ?string
@@ -98,6 +106,11 @@ final readonly class ProcessDetector implements ResourceDetector
     private function detectCommandArgs(): ?array
     {
         global $argv;
+
+        // @phpstan-ignore identical.alwaysFalse
+        if ($argv === null) {
+            return null;
+        }
 
         $result = array_values(array_filter($argv, 'is_string'));
 

@@ -21,7 +21,7 @@ use function sprintf;
 final class ArrayGetCollection extends ScalarFunctionChain
 {
     /**
-     * @param array<array-key, mixed> $keys
+     * @param ScalarFunction|array<array-key, mixed> $keys
      */
     public function __construct(
         private readonly ScalarFunction $ref,
@@ -30,7 +30,7 @@ final class ArrayGetCollection extends ScalarFunctionChain
     ) {}
 
     /**
-     * @param array<string> $keys
+     * @param ScalarFunction|array<string> $keys
      */
     public static function fromFirst(ScalarFunction $ref, ScalarFunction|array $keys): self
     {
@@ -67,6 +67,7 @@ final class ArrayGetCollection extends ScalarFunctionChain
             try {
                 $array = $index === '0' ? array_values($value) : $value;
 
+                // @mago-ignore analysis:mixed-assignment
                 $extractedValues = array_dot_get($array, $path);
             } catch (InvalidPathException $e) {
                 return $context
