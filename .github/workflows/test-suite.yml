@@ -28,6 +28,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   static-analyze:
     uses: ./.github/workflows/job-static-analyze.yml
@@ -36,19 +39,21 @@ jobs:
     uses: ./.github/workflows/job-tests.yml
     with:
       dependencies: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && '["locked","lowest","highest"]' || '["locked"]' }}
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   extension-tests:
     uses: ./.github/workflows/job-extension-tests.yml
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   pg-query-extension:
     uses: ./.github/workflows/job-pg-query-extension.yml
-    secrets: inherit
 
   arrow-extension:
     uses: ./.github/workflows/job-arrow-extension.yml
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   mutation-tests:
     uses: ./.github/workflows/job-mutation-tests.yml

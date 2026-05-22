@@ -3,10 +3,16 @@ on:
     types:
       - published
 
+permissions:
+  contents: read
+
 jobs:
   build-archives:
     name: "Release"
     runs-on: ${{ matrix.operating-system }}
+    permissions:
+      contents: write
+      packages: write
     strategy:
       matrix:
         php-version:
@@ -16,9 +22,10 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v5"
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: "Setup PHP Environment"
         uses: "./.github/actions/setup-php-env"
@@ -57,20 +64,20 @@ jobs:
           ./build/flow.phar
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v4
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker Image
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
         with:
           context: .
           file: ./Dockerfile
@@ -83,10 +90,12 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: "Upload binaries to release"
-        uses: softprops/action-gh-release@v3
-        if: ${{startsWith(github.ref, 'refs/tags/') }}
-        with:
-          files: |
-            build/flow.phar
-            build/flow.phar.asc
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "$GITHUB_REF_NAME" \
+            build/flow.phar \
+            build/flow.phar.asc \
+            --clobber
 

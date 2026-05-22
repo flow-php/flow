@@ -5,6 +5,9 @@ on:
         type: string
         required: false
         default: '["locked"]'
+    secrets:
+      CODECOV_TOKEN:
+        required: false
 
 jobs:
   tests:
@@ -53,7 +56,9 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v5"
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          persist-credentials: false
 
       - name: "Start OpenTelemetry Collector"
         run: |
@@ -95,7 +100,7 @@ jobs:
           pie-extensions: "flow-php/pg-query-ext:1.x-dev"
 
       - name: Set up Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: '20'
 
@@ -122,8 +127,8 @@ jobs:
         timeout-minutes: 10
         run: "just test --coverage-clover=./var/phpunit/coverage/clover/coverage.xml --log-junit ./var/phpunit/logs/junit.xml"
         env:
-          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
-          MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql
+          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres?serverVersion=11&charset=utf8
+          MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/mysql
           SQLITE_DATABASE_URL: "sqlite:///:memory:"
           AZURITE_HOST: "localhost"
           AZURITE_BLOB_PORT: "10000"

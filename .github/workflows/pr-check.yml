@@ -1,18 +1,24 @@
 on:
+  # zizmor: ignore[dangerous-triggers]
   pull_request_target:
     types: ["opened", "edited", "reopened", "ready_for_review", "synchronize"]
 
+permissions:
+  contents: read
+
 jobs:
   pull-request-description:
-    uses: "aeon-php/actions/.github/workflows/automation-pr-description-validate.yml@main"
+    uses: "aeon-php/actions/.github/workflows/automation-pr-description-validate.yml@ed056e3e36c7011d5c0f633471e7d888737e628a" # main
     secrets:
       automation_github_token: "${{ secrets.GITHUB_TOKEN }}"
 
   pull-request-size:
     runs-on: ubuntu-latest
     continue-on-error: true
+    permissions:
+      pull-requests: write
     steps:
-      - uses: codelytv/pr-size-labeler@v1
+      - uses: codelytv/pr-size-labeler@095a41fca88b8764fd9e008ad269bcdb82bb38b9 # v1
         with:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           xs_label: 'size: XS'

@@ -29,8 +29,8 @@ test-mutation *args:
 test-website:
     composer test --working-dir=./web/landing
 
-# Run all linters: Mago format-check + Mago lint + monorepo validation.
-lint: lint-mago lint-monorepo
+# Run all linters: Mago format-check + Mago lint + monorepo validation + GitHub Actions audit.
+lint: lint-mago lint-monorepo lint-actions
 
 # Run Mago format check and lint.
 lint-mago:
@@ -44,6 +44,15 @@ lint-monorepo:
 # Lint markdown links across the repository.
 lint-links:
     docker run -t --rm -v $PWD:/app norberttech/md-link-linter --exclude=vendor --exclude=.scratchpad --exclude=documentation .
+
+# Audit GitHub Actions workflows (actionlint static checks + zizmor security audit).
+lint-actions:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    rc=0
+    actionlint || rc=$?
+    zizmor .github/workflows || rc=$?
+    exit $rc
 
 # Run static analysis (PHPStan).
 analyze *args:
@@ -63,10 +72,11 @@ analyze-mago *args:
         src/lib/parquet \
         src/core/etl
 
-# Auto-fix code style with Mago (format + lint --fix).
+# Auto-fix code style (Mago format + lint --fix) and GitHub Actions findings (zizmor --fix).
 fix:
     tools/mago/vendor/bin/mago format
     tools/mago/vendor/bin/mago lint --fix --potentially-unsafe --format-after-fix
+    zizmor --fix .github/workflows
 
 # Build the Flow PHAR archive and copy it into the landing site assets.
 phar:

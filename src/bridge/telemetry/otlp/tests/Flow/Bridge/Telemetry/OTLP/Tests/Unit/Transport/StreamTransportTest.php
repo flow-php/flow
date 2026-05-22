@@ -20,8 +20,11 @@ use function array_filter;
 use function array_values;
 use function explode;
 use function floor;
+use function getcwd;
+use function is_dir;
 use function json_decode;
 use function rewind;
+use function rmdir;
 use function rtrim;
 use function stream_get_contents;
 use function stream_set_chunk_size;
@@ -67,6 +70,24 @@ final class StreamTransportTest extends TestCase
         $previous = stream_set_chunk_size($transport->stream(), 8192);
 
         static::assertSame(StreamTransport::STREAM_CHUNK_SIZE, $previous);
+    }
+
+    public function test_does_not_create_directory_for_custom_stream_wrapper_schemes(): void
+    {
+        stream_wrapper_register('flow-no-mkdir', PartialWriteStreamWrapper::class);
+        $leakedDirectory = getcwd() . '/flow-no-mkdir:';
+
+        try {
+            new StreamTransport('flow-no-mkdir://buf');
+
+            static::assertDirectoryDoesNotExist($leakedDirectory);
+        } finally {
+            stream_wrapper_unregister('flow-no-mkdir');
+
+            if (is_dir($leakedDirectory)) {
+                rmdir($leakedDirectory);
+            }
+        }
     }
 
     public function test_empty_destination_throws(): void
