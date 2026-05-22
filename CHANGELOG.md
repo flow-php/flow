@@ -1,10 +1,11 @@
-## [Unreleased] - 2026-05-19
+## [Unreleased] - 2026-05-22
 
 ### Added
 - [#2368](https://github.com/flow-php/flow/pull/2368) - **Mago Analyzer - on libraries** - [@norberttech](https://github.com/norberttech)
 - [#2360](https://github.com/flow-php/flow/pull/2360) - **website light / dark / system theme** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2378](https://github.com/flow-php/flow/pull/2378) - **Hardening GHA for closing subtree PRs** - [@stloyd](https://github.com/stloyd)
 - [#2361](https://github.com/flow-php/flow/pull/2361) - **composer scripts are now moved to just** - [@norberttech](https://github.com/norberttech)
 - [#2361](https://github.com/flow-php/flow/pull/2361) - **php cs fixer and rector are now replaced by mago** - [@norberttech](https://github.com/norberttech)
 - [#2356](https://github.com/flow-php/flow/pull/2356) - **Symfony PostgreSql Bundle - bundle skeleton** - [@norberttech](https://github.com/norberttech)
