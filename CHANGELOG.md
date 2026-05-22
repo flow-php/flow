@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-05-22
+## [0.38.0] - 2026-05-22
 
 ### Added
 - [#2368](https://github.com/flow-php/flow/pull/2368) - **Mago Analyzer - on libraries** - [@norberttech](https://github.com/norberttech)
