@@ -29,6 +29,53 @@ final class ProcessDetectorTest extends TestCase
         static::assertSame($argv, $commandArgs);
     }
 
+    public function test_detect_handles_null_argv_without_crashing(): void
+    {
+        global $argv;
+
+        $original = $argv;
+        $argv = null;
+
+        try {
+            $detector = new ProcessDetector();
+            $resource = $detector->detect();
+
+            static::assertFalse(
+                $resource->has(ProcessAttribute::COMMAND_ARGS->value),
+                'COMMAND_ARGS must not be set when $argv is null',
+            );
+        } finally {
+            $argv = $original;
+        }
+    }
+
+    public function test_detect_command_falls_back_when_argv_is_null_and_script_filename_missing(): void
+    {
+        global $argv;
+
+        $originalArgv = $argv;
+        // @mago-ignore analysis:redundant-null-coalesce
+        $originalScriptFilename = $_SERVER['SCRIPT_FILENAME'] ?? null;
+
+        $argv = null;
+        unset($_SERVER['SCRIPT_FILENAME']);
+
+        try {
+            $detector = new ProcessDetector();
+            $resource = $detector->detect();
+
+            static::assertTrue($resource->has(ProcessAttribute::COMMAND->value));
+            static::assertSame('unknown', $resource->get(ProcessAttribute::COMMAND->value));
+        } finally {
+            $argv = $originalArgv;
+
+            // @mago-ignore analysis:redundant-condition,redundant-comparison
+            if ($originalScriptFilename !== null) {
+                $_SERVER['SCRIPT_FILENAME'] = $originalScriptFilename;
+            }
+        }
+    }
+
     public function test_detect_returns_executable_name(): void
     {
         $detector = new ProcessDetector();

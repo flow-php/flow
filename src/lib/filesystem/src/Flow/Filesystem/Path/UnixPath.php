@@ -79,7 +79,10 @@ final readonly class UnixPath
     public static function realpath(string $path, array|Options $options = []): self
     {
         if ($path === '') {
-            return new self(getcwd() ?: '', $options);
+            throw new InvalidArgumentException(
+                'Empty path passed to UnixPath::realpath() — refusing to silently fall back to getcwd(). '
+                . 'Pass an explicit non-empty path.',
+            );
         }
 
         if (($urlParts = parse_url($path)) && array_key_exists('scheme', $urlParts)) {

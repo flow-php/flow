@@ -36,6 +36,7 @@ use function Flow\Types\DSL\type_string;
 use function in_array;
 use function is_dir;
 use function is_file;
+use function is_link;
 use function mkdir;
 use function preg_replace;
 use function rename;
@@ -284,6 +285,12 @@ final readonly class NativeLocalFilesystem implements Filesystem
 
     private function rmdir(string $dirPath): void
     {
+        if (is_link($dirPath)) {
+            unlink($dirPath);
+
+            return;
+        }
+
         if (!is_dir($dirPath)) {
             throw new InvalidArgumentException("{$dirPath} must be a directory");
         }
@@ -304,6 +311,12 @@ final readonly class NativeLocalFilesystem implements Filesystem
             }
 
             $filePath = $dirPath . $file;
+
+            if (is_link($filePath)) {
+                unlink($filePath);
+
+                continue;
+            }
 
             if (is_dir($filePath)) {
                 $this->rmdir($filePath);

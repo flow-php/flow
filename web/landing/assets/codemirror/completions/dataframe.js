@@ -76,7 +76,7 @@ const dataframeMethods = [
                     <span class=\"fn-name\">batchSize</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$size</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Merge/Split Rows yielded by Extractor into batches of given size.<br>For example, when Extractor is yielding one row at time, this method will merge them into batches of given size<br>before passing them to the next pipeline element.<br>Similarly when Extractor is yielding batches of rows, this method will split them into smaller batches of given<br>size.<br>In order to merge all Rows into a single batch use DataFrame::collect() method or set size to -1 or 0.<br>@param int<1, max> $size<br>@lazy
+                    Merge/Split Rows yielded by Extractor into batches of given size.<br>For example, when Extractor is yielding one row at time, this method will merge them into batches of given size<br>before passing them to the next pipeline element.<br>Similarly when Extractor is yielding batches of rows, this method will split them into smaller batches of given<br>size.<br>In order to merge all Rows into a single batch use DataFrame::collect() method or set size to -1 or 0.<br>@param int<-1, max> $size<br>@lazy
                 </div>
                             `
             return div

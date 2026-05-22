@@ -19,6 +19,7 @@ use function count;
 use function file_put_contents;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
+use function getcwd;
 use function getenv;
 use function in_array;
 use function ini_get;
@@ -26,6 +27,7 @@ use function ini_set;
 use function is_string;
 use function mkdir;
 use function scandir;
+use function sprintf;
 
 /**
  * Test case for integration tests.
@@ -47,7 +49,18 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
         $this->baseMemoryLimit = ini_get('memory_limit') ?: '-1';
 
         $cacheDirEnv = getenv(CacheConfig::CACHE_DIR_ENV);
-        $this->cacheDir = path_real($cacheDirEnv ?: '');
+
+        if ($cacheDirEnv === false || $cacheDirEnv === '') {
+            throw new RuntimeException(sprintf(
+                'Integration tests require the %s env var to be set to a writable temp directory. ',
+                CacheConfig::CACHE_DIR_ENV,
+            ));
+        }
+
+        $this->cacheDir = path_real($cacheDirEnv);
+
+        $this->assertCacheDirIsSafe($this->cacheDir);
+
         $this->fs = new NativeLocalFilesystem();
         $this->fstab = new FilesystemTable($this->fs, new StdOutFilesystem());
         $this->serializer = new Base64Serializer(new NativePHPSerializer());
@@ -141,5 +154,26 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
     private function cleanupCacheDir(Path $path): void
     {
         $this->fs()->rm($path);
+    }
+
+    private function assertCacheDirIsSafe(Path $cacheDir): void
+    {
+        $resolved = $cacheDir->path();
+
+        if ($resolved === '' || $resolved === '/' || $resolved === '\\') {
+            throw new RuntimeException(sprintf(
+                'Refusing to run integration tests with cache dir resolved to "%s" — would delete root.',
+                $resolved,
+            ));
+        }
+
+        if ($resolved === getcwd()) {
+            throw new RuntimeException(sprintf(
+                'Refusing to run integration tests with cache dir equal to the current working directory ("%s"). '
+                . 'Set %s to a dedicated temp directory.',
+                $resolved,
+                CacheConfig::CACHE_DIR_ENV,
+            ));
+        }
     }
 }
