@@ -4,14 +4,25 @@ on:
   pull_request_target:
     types: [opened]
 
+permissions: {}
+
 jobs:
   run:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write # Required to comment on and close the PR.
     steps:
-      - uses: superbrothers/close-pull-request@v3
-        with:
-          comment: |
-            Hi, thank you for your contribution.
-            Unfortunately, this repository is read-only. It's a split from our main monorepo repository.
-            In order to proceed with this PR please open it against https://github.com/flow-php/flow repository.
-            Thank you.
+      - name: Close pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          COMMENT: |
+            Thanks for your contribution! We love it & really appreciate your effort!
+            
+            However, you should instead open your PR on the main monorepo repository:
+            https://github.com/flow-php/flow
+            
+            This repository is what we call a "subtree split": a read-only subset of that main monorepo repository.
+            We're looking forward to your PR there!
+        run: gh pr close "$PR_NUMBER" --comment "$COMMENT"
