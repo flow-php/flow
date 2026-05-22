@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use DateInterval;
+use DateTimeImmutable;
 use DateTimeInterface;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
@@ -58,7 +59,8 @@ final class DenseRank implements WindowFunction
             } elseif ($value instanceof DateTimeInterface && $partitionValue instanceof DateTimeInterface) {
                 $isLess = $value < $partitionValue;
             } elseif ($value instanceof DateInterval && $partitionValue instanceof DateInterval) {
-                $isLess = $value < $partitionValue;
+                $reference = new DateTimeImmutable('@0');
+                $isLess = $reference->add($value) < $reference->add($partitionValue);
             } elseif (is_array($value) && is_array($partitionValue)) {
                 $isLess = $value < $partitionValue;
             }

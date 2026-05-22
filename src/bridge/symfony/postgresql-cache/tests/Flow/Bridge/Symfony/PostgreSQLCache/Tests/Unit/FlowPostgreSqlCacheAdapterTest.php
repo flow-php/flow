@@ -33,12 +33,12 @@ final class FlowPostgreSqlCacheAdapterTest extends TestCase
     {
         $adapter = $this->context->adapter();
 
-        static::assertTrue($adapter->clear('user_'));
+        static::assertTrue($adapter->clear('user-'));
         static::assertSame(
             'DELETE FROM public.cache_items WHERE item_id LIKE $1',
             $this->context->client->executedQueries[0]['sql'],
         );
-        static::assertSame(['user_%'], $this->context->client->executedQueries[0]['parameters']);
+        static::assertSame(['user-%'], $this->context->client->executedQueries[0]['parameters']);
     }
 
     public function test_custom_marshaller_is_used_when_supplied(): void

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use DateInterval;
+use DateTimeImmutable;
 use DateTimeInterface;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
@@ -89,7 +90,9 @@ final class LessThanEqual extends ScalarFunctionChain
                     ->invalidResult(new InvalidArgumentException('LessThanEqual function requires non-null values'));
             }
 
-            return $left <= $right;
+            $reference = new DateTimeImmutable('@0');
+
+            return $reference->add($left) <= $reference->add($right);
         }
 
         $left = $leftParam->asArray($row, $context);

@@ -53,17 +53,17 @@ final class FlowFilesystemCacheAdapterTest extends TestCase
     public function test_clear_with_prefix_only_removes_items_whose_id_starts_with_prefix(): void
     {
         $adapter = $this->context->adapter();
-        $kept = $adapter->getItem('keep_one');
+        $kept = $adapter->getItem('keep-one');
         $kept->set('keep');
         $adapter->save($kept);
-        $dropped = $adapter->getItem('drop_one');
+        $dropped = $adapter->getItem('drop-one');
         $dropped->set('drop');
         $adapter->save($dropped);
 
-        static::assertTrue($adapter->clear('drop_'));
+        static::assertTrue($adapter->clear('drop-'));
 
-        static::assertTrue($adapter->getItem('keep_one')->isHit());
-        static::assertFalse($adapter->getItem('drop_one')->isHit());
+        static::assertTrue($adapter->getItem('keep-one')->isHit());
+        static::assertFalse($adapter->getItem('drop-one')->isHit());
     }
 
     public function test_delete_removes_existing_item(): void
