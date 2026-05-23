@@ -71,7 +71,8 @@ analyze-mago *args:
         src/lib/snappy \
         src/lib/parquet \
         src/core/etl \
-        src/lib/parquet-viewer
+        src/lib/parquet-viewer \
+        src/bridge/openapi/specification
 
 # Auto-fix code style (Mago format + lint --fix) and GitHub Actions findings (zizmor --fix).
 fix:
