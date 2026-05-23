@@ -11,9 +11,11 @@ use Flow\ParquetViewer\Parquet;
     \ini_set('display_errors', 'stderr');
     \ini_set('memory_limit', -1);
 
-    if (\is_file($autoload = \getcwd() . '/../../../vendor/autoload.php')) {
+    if (\is_file($autoload = __DIR__ . '/../../../autoload.php')) {
         require $autoload;
-    } elseif (\is_file($autoload = \getcwd() . '/../vendor/autoload.php')) {
+    } elseif (\is_file($autoload = __DIR__ . '/../../../../vendor/autoload.php')) {
+        require $autoload;
+    } elseif (\is_file($autoload = __DIR__ . '/../vendor/autoload.php')) {
         require $autoload;
     } else {
         \fwrite(

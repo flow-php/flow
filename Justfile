@@ -70,7 +70,8 @@ analyze-mago *args:
         src/lib/doctrine-dbal-bulk \
         src/lib/snappy \
         src/lib/parquet \
-        src/core/etl
+        src/core/etl \
+        src/lib/parquet-viewer
 
 # Auto-fix code style (Mago format + lint --fix) and GitHub Actions findings (zizmor --fix).
 fix:
