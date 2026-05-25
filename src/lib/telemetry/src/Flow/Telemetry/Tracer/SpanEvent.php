@@ -18,14 +18,14 @@ interface SpanEvent
     /**
      * Create a SpanEvent from a normalized array representation.
      *
-     * @param array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount?: int} $data Normalized event data
+     * @param array{name: string, timestamp: string, attributes: array<string, mixed>, droppedAttributeCount?: int} $data Normalized event data
      */
     public static function fromArray(array $data): self;
 
     /**
      * Get the event attributes.
      *
-     * @return array<string, array<bool|float|int|string>|bool|float|int|string>
+     * @return array<string, mixed>
      */
     public function attributes(): array;
 
@@ -47,7 +47,7 @@ interface SpanEvent
     /**
      * Normalize the event to an array representation for serialization.
      *
-     * @return array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount: int}
+     * @return array{name: string, timestamp: string, attributes: array<string, mixed>, droppedAttributeCount: int}
      */
     public function normalize(): array;
 

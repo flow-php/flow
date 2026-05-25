@@ -87,7 +87,7 @@ final class Throughput implements Instrument
      * Add to the accumulated count.
      *
      * @param int $count Number of items to add
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Categorization attributes
+     * @param array<string, mixed>|Attributes $attributes Categorization attributes
      * @param null|SpanContext $context Optional span context for exemplar capture
      */
     public function add(int $count, array|Attributes $attributes = [], ?SpanContext $context = null): void

@@ -72,7 +72,8 @@ analyze-mago *args:
         src/lib/parquet \
         src/core/etl \
         src/lib/parquet-viewer \
-        src/bridge/openapi/specification
+        src/bridge/openapi/specification \
+        src/bridge/psr3/telemetry
 
 # Auto-fix code style (Mago format + lint --fix) and GitHub Actions findings (zizmor --fix).
 fix:

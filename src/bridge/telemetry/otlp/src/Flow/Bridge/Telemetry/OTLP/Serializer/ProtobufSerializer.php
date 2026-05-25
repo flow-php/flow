@@ -24,6 +24,7 @@ use Opentelemetry\Proto\Common\V1\AnyValue;
 use Opentelemetry\Proto\Common\V1\ArrayValue;
 use Opentelemetry\Proto\Common\V1\InstrumentationScope as ProtoInstrumentationScope;
 use Opentelemetry\Proto\Common\V1\KeyValue;
+use Opentelemetry\Proto\Common\V1\KeyValueList;
 use Opentelemetry\Proto\Logs\V1\LogRecord;
 use Opentelemetry\Proto\Logs\V1\ResourceLogs;
 use Opentelemetry\Proto\Logs\V1\ScopeLogs;
@@ -50,9 +51,11 @@ use Opentelemetry\Proto\Trace\V1\Status\StatusCode;
 use RuntimeException;
 
 use function array_filter;
+use function array_is_list;
 use function array_map;
 use function class_exists;
 use function count;
+use function get_debug_type;
 use function hex2bin;
 use function is_array;
 use function is_bool;
@@ -223,10 +226,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         return $this->createSpansRequest($spans)->serializeToString();
     }
 
-    /**
-     * @param array<bool|float|int|string>|bool|float|int|string $value
-     */
-    private function createAnyValue(string|int|float|bool|array $value): AnyValue
+    private function createAnyValue(mixed $value): AnyValue
     {
         $anyValue = new AnyValue();
 
@@ -239,15 +239,32 @@ final class ProtobufSerializer implements GrpcRequestFactory
         } elseif (is_bool($value)) {
             $anyValue->setBoolValue($value);
         } elseif (is_array($value)) {
-            $arrayValue = new ArrayValue();
-            $values = [];
+            if (array_is_list($value)) {
+                $arrayValue = new ArrayValue();
+                $values = [];
 
-            foreach ($value as $v) {
-                $values[] = $this->createAnyValue($v);
+                foreach ($value as $v) {
+                    $values[] = $this->createAnyValue($v);
+                }
+
+                $arrayValue->setValues($values);
+                $anyValue->setArrayValue($arrayValue);
+            } else {
+                $kvList = new KeyValueList();
+                $kvValues = [];
+
+                foreach ($value as $k => $v) {
+                    $kv = new KeyValue();
+                    $kv->setKey((string) $k);
+                    $kv->setValue($this->createAnyValue($v));
+                    $kvValues[] = $kv;
+                }
+
+                $kvList->setValues($kvValues);
+                $anyValue->setKvlistValue($kvList);
             }
-
-            $arrayValue->setValues($values);
-            $anyValue->setArrayValue($arrayValue);
+        } else {
+            $anyValue->setStringValue(get_debug_type($value));
         }
 
         return $anyValue;
@@ -315,7 +332,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
     }
 
     /**
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes
+     * @param array<string, mixed> $attributes
      *
      * @return array<KeyValue>
      */

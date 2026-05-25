@@ -19,6 +19,7 @@ use Flow\Telemetry\Attributes;
  * echo $event->name(); // "user.login"
  * ```
  *
+ * @phpstan-import-type TAttributeValue from Attributes
  * @phpstan-import-type TAttributeValueMap from Attributes
  */
 final readonly class GenericEvent implements SpanEvent
@@ -55,7 +56,7 @@ final readonly class GenericEvent implements SpanEvent
     /**
      * Create a GenericEvent from a normalized array representation.
      *
-     * @param array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount?: int} $data Normalized event data
+     * @param array{name: string, timestamp: string, attributes: array<string, mixed>, droppedAttributeCount?: int} $data Normalized event data
      */
     public static function fromArray(array $data): self
     {
@@ -68,7 +69,7 @@ final readonly class GenericEvent implements SpanEvent
     }
 
     /**
-     * @return array<string, array<bool|float|int|string>|bool|float|int|string>
+     * @return array<string, mixed>
      */
     public function attributes(): array
     {
@@ -93,7 +94,7 @@ final readonly class GenericEvent implements SpanEvent
     /**
      * Normalize the GenericEvent to an array representation for serialization.
      *
-     * @return array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount: int}
+     * @return array{name: string, timestamp: string, attributes: array<string, mixed>, droppedAttributeCount: int}
      */
     public function normalize(): array
     {

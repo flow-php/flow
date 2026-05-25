@@ -18,9 +18,12 @@ use Flow\Telemetry\Tracer\SpanLink;
 use Flow\Telemetry\Tracer\SpanStatusCode;
 
 use function array_filter;
+use function array_is_list;
 use function array_map;
 use function array_merge;
 use function count;
+use function get_debug_type;
+use function is_array;
 use function is_bool;
 use function is_float;
 use function is_int;
@@ -421,9 +424,7 @@ final class JsonSerializer
     }
 
     /**
-     * Serialize attributes array to OTLP format.
-     *
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes
+     * @param array<string, mixed> $attributes
      *
      * @return array<array{key: string, value: array<string, mixed>}>
      */
@@ -442,13 +443,9 @@ final class JsonSerializer
     }
 
     /**
-     * Serialize a single attribute value to OTLP format.
-     *
-     * @param array<bool|float|int|string>|bool|float|int|string $value
-     *
      * @return array<string, mixed>
      */
-    private function serializeAttributeValue(string|int|float|bool|array $value): array
+    private function serializeAttributeValue(mixed $value): array
     {
         if (is_string($value)) {
             return ['stringValue' => $value];
@@ -466,17 +463,30 @@ final class JsonSerializer
             return ['boolValue' => $value];
         }
 
-        $serialized = [];
+        if (is_array($value)) {
+            if (array_is_list($value)) {
+                $serialized = [];
 
-        foreach ($value as $v) {
-            $serialized[] = $this->serializeAttributeValue($v);
+                foreach ($value as $v) {
+                    $serialized[] = $this->serializeAttributeValue($v);
+                }
+
+                return ['arrayValue' => ['values' => $serialized]];
+            }
+
+            $serialized = [];
+
+            foreach ($value as $k => $v) {
+                $serialized[] = [
+                    'key' => (string) $k,
+                    'value' => $this->serializeAttributeValue($v),
+                ];
+            }
+
+            return ['kvlistValue' => ['values' => $serialized]];
         }
 
-        return [
-            'arrayValue' => [
-                'values' => $serialized,
-            ],
-        ];
+        return ['stringValue' => get_debug_type($value)];
     }
 
     /**

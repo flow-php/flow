@@ -12,29 +12,34 @@ use function array_key_exists;
 use function array_map;
 use function array_merge;
 use function count;
+use function get_debug_type;
 use function implode;
 use function is_array;
 use function is_bool;
+use function is_object;
+use function is_scalar;
 use function ksort;
+use function method_exists;
 
 /**
  * Immutable container for telemetry attributes.
  *
  * Attributes are key-value pairs attached to spans, logs, metrics, resources,
  * and events. Values can be strings, integers, floats, booleans, DateTimeInterface,
- * Throwable, or arrays of primitive types.
+ * Throwable, or arbitrarily nested arrays per the OTel AnyValue specification.
  *
  * Example usage:
  * ```php
  * $attributes = Attributes::create([
  *     'user.id' => '12345',
  *     'user.roles' => ['admin', 'user'],
+ *     'user.address' => ['city' => 'Berlin', 'country' => 'DE'],
  *     'timestamp' => new \DateTimeImmutable(),
  *     'error' => $exception,
  * ]);
  * ```
  *
- * @phpstan-type TAttributeValue = array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable
+ * @phpstan-type TAttributeValue = array<array-key, mixed>|bool|\DateTimeInterface|float|int|string|\Throwable
  * @phpstan-type TAttributeValueMap = array<string, TAttributeValue>
  */
 final readonly class Attributes
@@ -53,8 +58,6 @@ final readonly class Attributes
     }
 
     /**
-     * Create Attributes from key-value pairs.
-     *
      * @param array<string, null|TAttributeValue> $values
      */
     public static function create(array $values = []): self
@@ -62,21 +65,17 @@ final readonly class Attributes
         return new self($values);
     }
 
-    /**
-     * Create empty Attributes.
-     */
     public static function empty(): self
     {
         return new self();
     }
 
     /**
-     * Create Attributes from normalized array.
-     *
-     * @param array<string, null|TAttributeValue> $data
+     * @param array<string, mixed> $data
      */
     public static function fromArray(array $data): self
     {
+        /** @var array<string, null|TAttributeValue> $data */
         return new self($data);
     }
 
@@ -173,7 +172,7 @@ final readonly class Attributes
      * Throwable values are converted to structured arrays with type, message, and stacktrace.
      * Null values are excluded from the result.
      *
-     * @return array<string, array<bool|float|int|string>|bool|float|int|string>
+     * @return array<string, array<array-key, mixed>|bool|float|int|string>
      */
     public function normalize(): array
     {
@@ -199,13 +198,9 @@ final readonly class Attributes
     }
 
     /**
-     * Normalize a single value.
-     *
-     * @param TAttributeValue $value
-     *
-     * @return array<bool|float|int|string>|bool|float|int|string
+     * @return array<array-key, mixed>|bool|float|int|string
      */
-    private function normalizeValue(string|int|float|bool|DateTimeInterface|Throwable|array $value): string|int|float|bool|array
+    private function normalizeValue(mixed $value): string|int|float|bool|array
     {
         if ($value instanceof DateTimeInterface) {
             return $value->format('c');
@@ -220,22 +215,17 @@ final readonly class Attributes
         }
 
         if (is_array($value)) {
-            return array_map(fn($v) => $this->normalizeArrayElement($v), $value);
+            return array_map(fn(mixed $v): string|int|float|bool|array => $this->normalizeValue($v), $value);
         }
 
-        return $value;
-    }
-
-    private function normalizeArrayElement(bool|DateTimeInterface|float|int|string|Throwable $value): bool|float|int|string
-    {
-        if ($value instanceof DateTimeInterface) {
-            return $value->format('c');
+        if (is_scalar($value)) {
+            return $value;
         }
 
-        if ($value instanceof Throwable) {
-            return $value->getMessage();
+        if (is_object($value) && method_exists($value, '__toString')) {
+            return (string) $value;
         }
 
-        return $value;
+        return get_debug_type($value);
     }
 }

@@ -80,7 +80,7 @@ final class UpDownCounter implements Instrument
      * Add a value to the counter (can be negative).
      *
      * @param float|int $amount Amount to add (positive or negative)
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Categorization attributes
+     * @param array<string, mixed>|Attributes $attributes Categorization attributes
      * @param null|SpanContext $context Optional span context for exemplar capture
      */
     public function add(int|float $amount, array|Attributes $attributes = [], ?SpanContext $context = null): void

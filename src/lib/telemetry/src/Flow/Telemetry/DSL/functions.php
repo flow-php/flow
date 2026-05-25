@@ -177,7 +177,7 @@ function memory_context_storage(?Context $context = null): MemoryContextStorage
 /**
  * Create a Resource.
  *
- * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Resource attributes
+ * @param array<string, array<array-key, mixed>|bool|\DateTimeInterface|float|int|string|\Throwable>|Attributes $attributes Resource attributes
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::TYPE)]
 function resource(array|Attributes $attributes = []): Resource
@@ -203,7 +203,7 @@ function span_context(TraceId $traceId, SpanId $spanId, ?SpanId $parentSpanId = 
  *
  * @param string $name Event name
  * @param \DateTimeImmutable $timestamp Event timestamp
- * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Event attributes
+ * @param array<string, array<array-key, mixed>|bool|\DateTimeInterface|float|int|string|\Throwable>|Attributes $attributes Event attributes
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::TYPE)]
 function span_event(string $name, DateTimeImmutable $timestamp, array|Attributes $attributes = []): GenericEvent
@@ -215,7 +215,7 @@ function span_event(string $name, DateTimeImmutable $timestamp, array|Attributes
  * Create a SpanLink.
  *
  * @param SpanContext $context The linked span context
- * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Link attributes
+ * @param array<string, array<array-key, mixed>|bool|\DateTimeInterface|float|int|string|\Throwable>|Attributes $attributes Link attributes
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::TYPE)]
 function span_link(SpanContext $context, array|Attributes $attributes = []): SpanLink
@@ -821,7 +821,7 @@ function composer_detector(): ComposerDetector
 /**
  * Create a ManualDetector.
  *
- * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Resource attributes
+ * @param array<string, array<array-key, mixed>|bool|\DateTimeInterface|float|int|string|\Throwable> $attributes Resource attributes
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
 function manual_detector(array $attributes): ManualDetector

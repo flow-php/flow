@@ -6,6 +6,9 @@ namespace Flow\Bridge\Telemetry\OTLP\Serializer;
 
 use Flow\Telemetry\Attributes;
 
+use function array_is_list;
+use function get_debug_type;
+use function is_array;
 use function is_bool;
 use function is_float;
 use function is_int;
@@ -41,13 +44,9 @@ final class AttributeSerializer
     }
 
     /**
-     * Serialize a single attribute value to OTLP format.
-     *
-     * @param array<bool|float|int|string>|bool|float|int|string $value
-     *
      * @return array<string, mixed>
      */
-    public function serializeValue(string|int|float|bool|array $value): array
+    public function serializeValue(mixed $value): array
     {
         if (is_string($value)) {
             return ['stringValue' => $value];
@@ -65,17 +64,23 @@ final class AttributeSerializer
             return ['boolValue' => $value];
         }
 
-        return $this->serializeArray($value);
+        if (is_array($value)) {
+            if (array_is_list($value)) {
+                return $this->serializeArrayValue($value);
+            }
+
+            return $this->serializeKvlistValue($value);
+        }
+
+        return ['stringValue' => get_debug_type($value)];
     }
 
     /**
-     * Serialize an array attribute value to OTLP format.
+     * @param list<mixed> $values
      *
-     * @param array<bool|float|int|string> $values
-     *
-     * @return array{arrayValue: array{values: array<array<string, mixed>>}}
+     * @return array{arrayValue: array{values: list<array<string, mixed>>}}
      */
-    private function serializeArray(array $values): array
+    private function serializeArrayValue(array $values): array
     {
         $serialized = [];
 
@@ -85,6 +90,29 @@ final class AttributeSerializer
 
         return [
             'arrayValue' => [
+                'values' => $serialized,
+            ],
+        ];
+    }
+
+    /**
+     * @param array<array-key, mixed> $values
+     *
+     * @return array{kvlistValue: array{values: list<array{key: string, value: array<string, mixed>}>}}
+     */
+    private function serializeKvlistValue(array $values): array
+    {
+        $serialized = [];
+
+        foreach ($values as $key => $value) {
+            $serialized[] = [
+                'key' => (string) $key,
+                'value' => $this->serializeValue($value),
+            ];
+        }
+
+        return [
+            'kvlistValue' => [
                 'values' => $serialized,
             ],
         ];

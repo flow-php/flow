@@ -26,6 +26,8 @@ use Flow\Telemetry\Resource;
  *     scope: $instrumentationScope,
  * );
  * ```
+ *
+ * @phpstan-import-type TAttributeValue from Attributes
  */
 final readonly class Metric
 {
@@ -65,10 +67,10 @@ final readonly class Metric
      *     name: string,
      *     type: string,
      *     value: float|int,
-     *     attributes: array<string, array<bool|float|int|string>|bool|float|int|string>,
+     *     attributes: array<string, mixed>,
      *     timestamp: string,
-     *     resource: array{attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
-     *     scope: array{name: string, version: string, schemaUrl: null|string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
+     *     resource: array{attributes: array<string, mixed>},
+     *     scope: array{name: string, version: string, schemaUrl: null|string, attributes: array<string, mixed>},
      *     unit: null|string,
      *     description: null|string,
      *     temporality?: int
@@ -99,10 +101,10 @@ final readonly class Metric
      *     name: string,
      *     type: string,
      *     value: float|int,
-     *     attributes: array<string, array<bool|float|int|string>|bool|float|int|string>,
+     *     attributes: array<string, mixed>,
      *     timestamp: string,
-     *     resource: array{attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
-     *     scope: array{name: string, version: string, schemaUrl: null|string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
+     *     resource: array{attributes: array<string, mixed>},
+     *     scope: array{name: string, version: string, schemaUrl: null|string, attributes: array<string, mixed>},
      *     unit: null|string,
      *     description: null|string,
      *     temporality: int

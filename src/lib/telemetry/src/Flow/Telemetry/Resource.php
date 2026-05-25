@@ -27,6 +27,9 @@ use Throwable;
  *     'service.version' => '1.0.0',
  * ]);
  * ```
+ *
+ * @phpstan-import-type TAttributeValue from Attributes
+ * @phpstan-import-type TAttributeValueMap from Attributes
  */
 final readonly class Resource
 {
@@ -35,9 +38,7 @@ final readonly class Resource
     ) {}
 
     /**
-     * Create a new Resource with the given attributes.
-     *
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes
+     * @param TAttributeValueMap|Attributes $attributes
      */
     public static function create(Attributes|array $attributes = []): self
     {
@@ -55,7 +56,7 @@ final readonly class Resource
     /**
      * Create a Resource from a normalized array representation.
      *
-     * @param array{attributes: array<string, array<bool|float|int|string>|bool|float|int|string>} $data Normalized Resource data
+     * @param array{attributes: array<string, mixed>} $data Normalized Resource data
      */
     public static function fromArray(array $data): self
     {
@@ -65,7 +66,7 @@ final readonly class Resource
     /**
      * Get all attributes.
      *
-     * @return array<string, array<bool|float|int|string>|bool|float|int|string>
+     * @return array<string, array<array-key, mixed>|bool|float|int|string>
      */
     public function all(): array
     {
@@ -85,7 +86,7 @@ final readonly class Resource
      *
      * @param string $key Attribute key
      *
-     * @return null|array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable The attribute value, or null if not found
+     * @return null|TAttributeValue The attribute value, or null if not found
      */
     public function get(string $key): string|int|float|bool|DateTimeInterface|Throwable|array|null
     {
@@ -125,7 +126,7 @@ final readonly class Resource
     /**
      * Normalize the Resource to an array representation for serialization.
      *
-     * @return array{attributes: array<string, array<bool|float|int|string>|bool|float|int|string>}
+     * @return array{attributes: array<string, mixed>}
      */
     public function normalize(): array
     {
@@ -140,11 +141,11 @@ final readonly class Resource
      * If the key already exists, its value will be replaced.
      *
      * @param string $key Attribute key
-     * @param array<bool|float|int|string>|bool|float|int|string $value Attribute value
+     * @param TAttributeValue $value Attribute value
      *
      * @return self New Resource with the added attribute
      */
-    public function with(string $key, string|int|float|bool|array $value): self
+    public function with(string $key, string|int|float|bool|DateTimeInterface|Throwable|array $value): self
     {
         return new self($this->attributes->with($key, $value));
     }
