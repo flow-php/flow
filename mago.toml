@@ -113,23 +113,7 @@ no-sprintf-concat = { enabled = false }
 no-global = { enabled = false }
 no-redundant-method-override = { enabled = false }
 no-redundant-else = { enabled = true, level = "warning" }
-# Bug in Mago 1.28.0 - false positives on $this when passed as a call/constructor argument.
-# Minimal repro: https://mago.carthage.software/1.27.1/en/playground/#019e3f91-7e6d-75d3-6c51-f9dae0ed72f8
-# Revisit when fixed upstream.
-no-redundant-variable = { enabled = true, level = "warning", exclude = [
-    "**/Flow/ETL/Function/ScalarFunctionChain.php",
-    "**/Flow/ETL/DataFrame.php",
-    "**/Flow/ETL/Row/EntryReference.php",
-    "**/Flow/ETL/Sort/SortAlgorithms.php",
-    "**/Flow/PostgreSql/QueryBuilder/**",
-    "**/Flow/PostgreSql/Tests/Unit/QueryBuilder/Expression/MockExpression.php",
-    "**/Flow/PostgreSql/Explain/Plan/PlanNodeType.php",
-    "**/Flow/Filesystem/Path.php",
-    "**/CacheSpyClient.php",
-    "**/Tests/Unit/ObjectExtractorTest.php",
-    "**/array-dot/src/Flow/ArrayDot/array_dot.php",
-    "**/TracableHttpClientTest.php",
-] }
+no-redundant-variable = { enabled = true, level = "warning" }
 strict-types = { enabled = true, level = "error" }
 no-fully-qualified-global-function = { enabled = true, level = "error" }
 no-fully-qualified-global-class-like = { enabled = true, level = "error" }

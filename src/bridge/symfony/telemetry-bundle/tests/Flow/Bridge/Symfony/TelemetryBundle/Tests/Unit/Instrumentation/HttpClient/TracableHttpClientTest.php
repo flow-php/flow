@@ -344,9 +344,9 @@ final class TracableHttpClientTest extends TestCase
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $mockResponse = $this->createMock(ResponseInterface::class);
-        $mockChunk = $this->createMock(ChunkInterface::class);
 
-        $streamResponse = new readonly class($mockResponse, $mockChunk) implements ResponseStreamInterface {
+        $streamResponse = new readonly class($mockResponse, $this->createMock(ChunkInterface::class)) implements
+            ResponseStreamInterface {
             public function __construct(
                 private ResponseInterface $response,
                 private ChunkInterface $chunk,
@@ -428,9 +428,7 @@ final class TracableHttpClientTest extends TestCase
             /** @param array<string, mixed> $options */
             public function request(string $method, string $url, array $options = []): ResponseInterface
             {
-                $statusCode = $this->statusCode;
-
-                return new readonly class($statusCode) implements ResponseInterface {
+                return new readonly class($this->statusCode) implements ResponseInterface {
                     public function __construct(
                         private int $statusCode,
                     ) {}
