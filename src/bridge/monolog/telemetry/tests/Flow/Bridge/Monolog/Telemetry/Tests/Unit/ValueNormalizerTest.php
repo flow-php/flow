@@ -151,13 +151,17 @@ final class ValueNormalizerTest extends TestCase
             ],
         ];
 
-        $result = $normalizer->normalize($input);
-
-        static::assertIsArray($result);
-        static::assertIsArray($result['user']);
-        static::assertSame('John', $result['user']['name']);
-        static::assertIsArray($result['user']['metadata']);
-        static::assertSame('admin', $result['user']['metadata']['role']);
+        static::assertSame(
+            [
+                'user' => [
+                    'name' => 'John',
+                    'metadata' => [
+                        'role' => 'admin',
+                    ],
+                ],
+            ],
+            $normalizer->normalize($input),
+        );
     }
 
     public function test_normalizes_null_to_string(): void

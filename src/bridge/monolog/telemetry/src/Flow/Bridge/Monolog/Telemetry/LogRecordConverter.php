@@ -39,23 +39,27 @@ final readonly class LogRecordConverter
             $record->level->name,
         );
 
-        foreach ($record->context as $key => $value) {
-            if ($value instanceof Throwable) {
-                $telemetryRecord = $telemetryRecord->setException($value);
+        $context = $record->context;
+
+        foreach (array_keys($context) as $key) {
+            if ($context[$key] instanceof Throwable) {
+                $telemetryRecord = $telemetryRecord->setException($context[$key]);
 
                 continue;
             }
 
             $telemetryRecord = $telemetryRecord->setAttribute(
                 "context.{$key}",
-                $this->valueNormalizer->normalize($value),
+                $this->valueNormalizer->normalize($context[$key]),
             );
         }
 
-        foreach ($record->extra as $key => $value) {
+        $extra = $record->extra;
+
+        foreach (array_keys($extra) as $key) {
             $telemetryRecord = $telemetryRecord->setAttribute(
                 "extra.{$key}",
-                $this->valueNormalizer->normalize($value),
+                $this->valueNormalizer->normalize($extra[$key]),
             );
         }
 

@@ -78,7 +78,8 @@ analyze-mago *args:
         src/bridge/telemetry/otlp \
         src/bridge/filesystem/async-aws \
         src/bridge/filesystem/azure \
-        src/bridge/monolog/http
+        src/bridge/monolog/http \
+        src/bridge/monolog/telemetry
 
 # Auto-fix code style (Mago format + lint --fix) and GitHub Actions findings (zizmor --fix).
 fix:
