@@ -37,21 +37,24 @@ final readonly class TestPreparationStartedSubscriber implements PreparationStar
 
         $reflectionClass = new ReflectionClass($test->className());
 
-        if ($reflectionClass->getAttributes(SkipTransactionRollback::class)) {
+        if ($reflectionClass->getAttributes(SkipTransactionRollback::class) !== []) {
             return true;
         }
 
         if (
             $reflectionClass->hasMethod($test->methodName())
-            && $reflectionClass->getMethod($test->methodName())->getAttributes(SkipTransactionRollback::class)
+            && $reflectionClass->getMethod($test->methodName())->getAttributes(SkipTransactionRollback::class) !== []
         ) {
             return true;
         }
 
-        while (($reflectionClass = $reflectionClass->getParentClass()) && $reflectionClass->name !== TestCase::class) {
-            if ($reflectionClass->getAttributes(SkipTransactionRollback::class)) {
+        $parent = $reflectionClass->getParentClass();
+
+        while ($parent !== false && $parent->name !== TestCase::class) {
+            if ($parent->getAttributes(SkipTransactionRollback::class) !== []) {
                 return true;
             }
+            $parent = $parent->getParentClass();
         }
 
         return false;
