@@ -44,10 +44,6 @@ final class AzureBlobDestinationStream implements DestinationStream
         BlockFactory $blockFactory = new NativeLocalFileBlocksFactory(),
         int $blockSize = 1024 * 1024 * 4,
     ): self {
-        if ($blockSize < 1) {
-            throw new InvalidArgumentException('Block size must be greater than 0');
-        }
-
         $blocks = new Blocks(
             $blockSize,
             $blockFactory,
@@ -74,10 +70,6 @@ final class AzureBlobDestinationStream implements DestinationStream
         BlockFactory $blockFactory = new NativeLocalFileBlocksFactory(),
         int $blockSize = 1024 * 1024 * 4,
     ): self {
-        if ($blockSize < 1) {
-            throw new InvalidArgumentException('Block size must be greater than 0');
-        }
-
         return new self(
             $blobService,
             $path,
@@ -118,9 +110,7 @@ final class AzureBlobDestinationStream implements DestinationStream
 
             $this->blobService->putBlockBlob($this->path->path(), $handle, $this->blocks->block()->size());
 
-            if (is_resource($handle)) {
-                fclose($handle);
-            }
+            fclose($handle);
 
             unlink($this->blocks->block()->path()->path());
         }

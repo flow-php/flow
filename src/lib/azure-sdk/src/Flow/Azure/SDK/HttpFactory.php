@@ -12,6 +12,7 @@ use Psr\Http\Message\StreamInterface;
 
 use function is_resource;
 use function is_string;
+use function stream_get_contents;
 
 final readonly class HttpFactory
 {
@@ -53,6 +54,12 @@ final readonly class HttpFactory
             return $this->streamFactory->createStream($content);
         }
 
-        return $this->streamFactory->createStreamFromResource($content);
+        $string = stream_get_contents($content);
+
+        if ($string === false) {
+            throw new InvalidArgumentException('Failed to read content from resource');
+        }
+
+        return $this->streamFactory->createStream($string);
     }
 }

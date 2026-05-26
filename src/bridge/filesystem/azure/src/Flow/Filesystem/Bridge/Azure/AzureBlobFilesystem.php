@@ -52,6 +52,9 @@ final readonly class AzureBlobFilesystem implements Filesystem
         return $this->options->tmpDir();
     }
 
+    /**
+     * @return \Generator<FileStatus>
+     */
     public function list(Path $path, Filter $pathFilter = new KeepAll()): Generator
     {
         $this->mount->supports($path) || throw new InvalidSchemeException($path->protocol(), $this->mount->protocol);

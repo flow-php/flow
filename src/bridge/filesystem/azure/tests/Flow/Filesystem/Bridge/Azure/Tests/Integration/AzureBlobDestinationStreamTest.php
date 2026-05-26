@@ -31,8 +31,10 @@ final class AzureBlobDestinationStreamTest extends AzureBlobServiceTestCase
         $stream->append($content = str_repeat('a', 200));
         $stream->close();
 
-        static::assertTrue($fs->status(path('azure-blob://file.txt'))?->isFile());
-        static::assertFalse($fs->status(path('azure-blob://file.txt'))->isDirectory());
+        $status = $fs->status(path('azure-blob://file.txt'));
+        static::assertNotNull($status);
+        static::assertTrue($status->isFile());
+        static::assertFalse($status->isDirectory());
         static::assertSame($content, $fs->readFrom(path('azure-blob://file.txt'))->content());
 
         $fs->rm(path('azure-blob://file.txt'));
@@ -48,8 +50,10 @@ final class AzureBlobDestinationStreamTest extends AzureBlobServiceTestCase
         $stream->fromResource($resource);
         $stream->close();
 
-        static::assertTrue($fs->status(path('azure-blob://orders.csv'))?->isFile());
-        static::assertFalse($fs->status(path('azure-blob://orders.csv'))->isDirectory());
+        $status = $fs->status(path('azure-blob://orders.csv'));
+        static::assertNotNull($status);
+        static::assertTrue($status->isFile());
+        static::assertFalse($status->isDirectory());
         static::assertSame(
             file_get_contents(__DIR__ . '/Fixtures/orders.csv'),
             $fs->readFrom(path('azure-blob://orders.csv'))->content(),
@@ -66,8 +70,10 @@ final class AzureBlobDestinationStreamTest extends AzureBlobServiceTestCase
         $stream->append('Hello, World!');
         $stream->close();
 
-        static::assertTrue($fs->status(path('azure-blob://file.txt'))?->isFile());
-        static::assertFalse($fs->status(path('azure-blob://file.txt'))->isDirectory());
+        $status = $fs->status(path('azure-blob://file.txt'));
+        static::assertNotNull($status);
+        static::assertTrue($status->isFile());
+        static::assertFalse($status->isDirectory());
         static::assertSame('Hello, World!', $fs->readFrom(path('azure-blob://file.txt'))->content());
 
         $fs->rm(path('azure-blob://file.txt'));

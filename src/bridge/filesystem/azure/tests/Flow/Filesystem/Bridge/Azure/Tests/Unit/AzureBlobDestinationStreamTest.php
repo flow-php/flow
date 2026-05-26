@@ -53,9 +53,9 @@ final class AzureBlobDestinationStreamTest extends FlowTestCase
             ->method('putBlockBlobBlock')
             ->with(
                 '/file.txt',
-                static::isType('string'),
-                static::isType('resource'),
-                static::isType('int'),
+                static::isString(),
+                static::isResource(),
+                static::isInt(),
                 static::isInstanceOf(PutBlockBlobBlockOptions::class),
             );
 
@@ -98,7 +98,7 @@ final class AzureBlobDestinationStreamTest extends FlowTestCase
             ->method('putBlockBlob')
             ->with(
                 '/file.txt',
-                static::isType('resource'),
+                static::isResource(),
                 strlen('Hello, World!'),
                 static::isInstanceOf(PutBlockBlobOptions::class),
             );

@@ -16,7 +16,6 @@ use Flow\Filesystem\Stream\BlockLifecycle;
 use function count;
 use function fclose;
 use function fopen;
-use function is_resource;
 use function unlink;
 
 final class AzureBlobBlockLifecycle implements BlockLifecycle
@@ -48,9 +47,7 @@ final class AzureBlobBlockLifecycle implements BlockLifecycle
 
         $this->blobService->putBlockBlobBlock($this->path->path(), $block->id(), $handle, $block->size());
 
-        if (is_resource($handle)) {
-            fclose($handle);
-        }
+        fclose($handle);
 
         unlink($block->path()->path());
 

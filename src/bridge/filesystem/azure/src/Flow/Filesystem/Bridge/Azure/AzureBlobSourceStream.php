@@ -47,8 +47,9 @@ final class AzureBlobSourceStream implements SourceStream
     public function iterate(int $length = 1): Generator
     {
         $offset = 0;
+        $size = $this->size() ?? 0;
 
-        while ($offset < $this->size()) {
+        while ($offset < $size) {
             yield $this->read($length, $offset);
             $offset += $length;
         }
@@ -61,7 +62,7 @@ final class AzureBlobSourceStream implements SourceStream
 
     public function read(int $length, int $offset): string
     {
-        $offset = $offset < 0 ? $this->size() + $offset : $offset;
+        $offset = $offset < 0 ? ($this->size() ?? 0) + $offset : $offset;
 
         return $this->blobService
             ->getBlob($this->path->path(), (new GetBlobOptions())->withRange(new Range($offset, $offset + $length - 1)))
@@ -72,8 +73,9 @@ final class AzureBlobSourceStream implements SourceStream
     {
         $offset = 0;
         $content = '';
+        $size = $this->size() ?? 0;
 
-        while ($offset < $this->size()) {
+        while ($offset < $size) {
             // Read a chunk of the file
             $chunk = $this->read($length ?? (1024 * 1024 * 9), $offset);
             $offset += strlen($chunk);
@@ -96,12 +98,12 @@ final class AzureBlobSourceStream implements SourceStream
 
                 $content = $lines[$lastIndex];
             } elseif (substr_count($content, $separator) === 1) {
-                // Split the content by the separator
-                /**
-                 * @phpstan-ignore-next-line
-                 */
-                yield substr($content, 0, strpos($content, $separator));
-                $content = substr($content, strpos($content, $separator) + 1);
+                $pos = strpos($content, $separator);
+
+                if ($pos !== false) {
+                    yield substr($content, 0, $pos);
+                    $content = substr($content, $pos + 1);
+                }
             }
         }
 
