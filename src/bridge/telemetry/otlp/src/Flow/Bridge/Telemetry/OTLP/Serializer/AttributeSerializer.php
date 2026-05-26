@@ -7,6 +7,8 @@ namespace Flow\Bridge\Telemetry\OTLP\Serializer;
 use Flow\Telemetry\Attributes;
 
 use function array_is_list;
+use function array_keys;
+use function array_map;
 use function get_debug_type;
 use function is_array;
 use function is_bool;
@@ -82,15 +84,9 @@ final class AttributeSerializer
      */
     private function serializeArrayValue(array $values): array
     {
-        $serialized = [];
-
-        foreach ($values as $value) {
-            $serialized[] = $this->serializeValue($value);
-        }
-
         return [
             'arrayValue' => [
-                'values' => $serialized,
+                'values' => array_map($this->serializeValue(...), $values),
             ],
         ];
     }
@@ -102,18 +98,16 @@ final class AttributeSerializer
      */
     private function serializeKvlistValue(array $values): array
     {
-        $serialized = [];
-
-        foreach ($values as $key => $value) {
-            $serialized[] = [
-                'key' => (string) $key,
-                'value' => $this->serializeValue($value),
-            ];
-        }
-
         return [
             'kvlistValue' => [
-                'values' => $serialized,
+                'values' => array_map(
+                    fn(int|string $key, mixed $value): array => [
+                        'key' => (string) $key,
+                        'value' => $this->serializeValue($value),
+                    ],
+                    array_keys($values),
+                    $values,
+                ),
             ],
         ];
     }

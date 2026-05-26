@@ -8,6 +8,7 @@ use Flow\ETL\Dataset\Statistics\HighResolutionTime;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 
+use function max;
 use function preg_match_all;
 use function preg_quote;
 use function usleep;
@@ -91,6 +92,7 @@ final readonly class CollectorMetrics
         $body = (string) $response->getBody();
 
         $total = 0;
+        $matches = [];
 
         if (preg_match_all('/' . preg_quote($metricName, '/') . '\{[^}]*\}\s+(\d+)/', $body, $matches)) {
             foreach ($matches[1] as $value) {
@@ -119,7 +121,7 @@ final readonly class CollectorMetrics
                 return $value;
             }
 
-            usleep($pollIntervalMs * 1000);
+            usleep(max(0, $pollIntervalMs * 1000));
         }
     }
 }

@@ -68,7 +68,7 @@ final class GrpcTransport implements Transport
 
     private ?MetricsServiceClient $metricsClient = null;
 
-    /** @var list<array{call: UnaryCall<covariant Message>, signals: ?Signals}> */
+    /** @var list<array{call: UnaryCall<Message>, signals: ?Signals}> */
     private array $pending = [];
 
     private readonly GrpcRequestFactory $requestFactory;
@@ -113,7 +113,9 @@ final class GrpcTransport implements Transport
             throw new TransportException('Cannot send after shutdown');
         }
 
-        if ($this->failover !== null) {
+        $failover = $this->failover;
+
+        if ($failover !== null) {
             $this->drainPending();
         }
 
@@ -137,9 +139,11 @@ final class GrpcTransport implements Transport
             ),
         };
 
-        $this->pending[] = ['call' => $call, 'signals' => $this->failover !== null ? $signal : null];
+        // @mago-expect analysis:property-type-coercion -- gRPC Export() returns UnaryCall<SpecificResponse>, covariant to UnaryCall<Message> but generics are invariant in static analysis
+        /** @phpstan-ignore assign.propertyType (gRPC Export() returns UnaryCall<SpecificResponse> covariant to UnaryCall<Message>) */
+        $this->pending[] = ['call' => $call, 'signals' => $failover !== null ? $signal : null];
 
-        if ($this->failover !== null && $this->deferredFailures !== []) {
+        if ($failover !== null && $this->deferredFailures !== []) {
             $snapshot = $this->deferredFailures;
             $this->deferredFailures = [];
 
@@ -156,8 +160,9 @@ final class GrpcTransport implements Transport
         $this->isShutdown = true;
 
         $shutdownDeadlineMicrotime = microtime(true) + ($this->shutdownTimeoutMs / 1000);
+        $failover = $this->failover;
 
-        if ($this->failover === null) {
+        if ($failover === null) {
             $this->shutdownWithoutFailover($shutdownDeadlineMicrotime);
 
             return;
@@ -170,7 +175,7 @@ final class GrpcTransport implements Transport
         $cascadeException = null;
 
         try {
-            $this->failover->shutdown();
+            $failover->shutdown();
         } catch (Throwable $e) {
             $cascadeException = $e;
         }
@@ -242,6 +247,8 @@ final class GrpcTransport implements Transport
 
     private function drainPending(?float $deadlineMicrotime = null): void
     {
+        $failover = $this->failover;
+
         foreach ($this->iteratePending($deadlineMicrotime) as $item) {
             if ($item['primaryError'] === null) {
                 continue;
@@ -249,9 +256,9 @@ final class GrpcTransport implements Transport
 
             $failoverError = null;
 
-            if ($item['entry']['signals'] !== null && $this->failover !== null) {
+            if ($item['entry']['signals'] !== null && $failover !== null) {
                 try {
-                    $this->failover->send($item['entry']['signals']);
+                    $failover->send($item['entry']['signals']);
                 } catch (Throwable $e) {
                     $failoverError = $e;
                 }
@@ -289,7 +296,7 @@ final class GrpcTransport implements Transport
     }
 
     /**
-     * @return \Generator<int, array{primaryError: ?\Throwable, entry: array{call: UnaryCall<covariant Message>, signals: ?Signals}}>
+     * @return \Generator<int, array{primaryError: ?\Throwable, entry: array{call: UnaryCall<Message>, signals: ?Signals}}>
      */
     private function iteratePending(?float $deadlineMicrotime = null): Generator
     {
@@ -308,13 +315,15 @@ final class GrpcTransport implements Transport
 
             try {
                 [, $status] = $entry['call']->wait();
+                $code = (int) $status->code;
+                $details = (string) ($status->details ?? '');
 
-                if ($status->code !== STATUS_OK) {
+                if ($code !== STATUS_OK) {
                     $primaryError = new TransportException(sprintf(
                         'gRPC status %d (%s): %s',
-                        $status->code,
-                        self::grpcStatusName($status->code),
-                        $status->details ?? '',
+                        $code,
+                        self::grpcStatusName($code),
+                        $details,
                     ));
                 }
             } catch (Throwable $e) {

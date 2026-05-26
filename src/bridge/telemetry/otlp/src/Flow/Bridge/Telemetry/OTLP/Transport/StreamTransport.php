@@ -178,6 +178,11 @@ final class StreamTransport implements Transport
         return $this->stream;
     }
 
+    /**
+     * @template T
+     * @param Closure(): T $operation
+     * @return T
+     */
     private function captureError(Closure $operation): mixed
     {
         $this->errorMessage = null;

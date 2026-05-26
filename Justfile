@@ -74,7 +74,8 @@ analyze-mago *args:
         src/lib/parquet-viewer \
         src/bridge/openapi/specification \
         src/bridge/psr3/telemetry \
-        src/bridge/symfony/http-foundation-telemetry
+        src/bridge/symfony/http-foundation-telemetry \
+        src/bridge/telemetry/otlp
 
 # Auto-fix code style (Mago format + lint --fix) and GitHub Actions findings (zizmor --fix).
 fix:

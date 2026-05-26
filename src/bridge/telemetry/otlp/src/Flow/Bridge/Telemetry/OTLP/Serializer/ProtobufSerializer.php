@@ -52,6 +52,7 @@ use RuntimeException;
 
 use function array_filter;
 use function array_is_list;
+use function array_keys;
 use function array_map;
 use function class_exists;
 use function count;
@@ -241,26 +242,21 @@ final class ProtobufSerializer implements GrpcRequestFactory
         } elseif (is_array($value)) {
             if (array_is_list($value)) {
                 $arrayValue = new ArrayValue();
-                $values = [];
-
-                foreach ($value as $v) {
-                    $values[] = $this->createAnyValue($v);
-                }
-
-                $arrayValue->setValues($values);
+                $arrayValue->setValues(array_map($this->createAnyValue(...), $value));
                 $anyValue->setArrayValue($arrayValue);
             } else {
                 $kvList = new KeyValueList();
-                $kvValues = [];
+                $kvList->setValues(array_map(
+                    function (int|string $k, mixed $v): KeyValue {
+                        $kv = new KeyValue();
+                        $kv->setKey((string) $k);
+                        $kv->setValue($this->createAnyValue($v));
 
-                foreach ($value as $k => $v) {
-                    $kv = new KeyValue();
-                    $kv->setKey((string) $k);
-                    $kv->setValue($this->createAnyValue($v));
-                    $kvValues[] = $kv;
-                }
-
-                $kvList->setValues($kvValues);
+                        return $kv;
+                    },
+                    array_keys($value),
+                    $value,
+                ));
                 $anyValue->setKvlistValue($kvList);
             }
         } else {
@@ -311,11 +307,11 @@ final class ProtobufSerializer implements GrpcRequestFactory
         $dataPoint->setExplicitBounds(array_map(static fn(int|float $b): float => (float) $b, $explicitBounds));
 
         if ($min !== null) {
-            $dataPoint->setMin(is_int($min) ? (float) $min : $min);
+            $dataPoint->setMin($min);
         }
 
         if ($max !== null) {
-            $dataPoint->setMax(is_int($max) ? (float) $max : $max);
+            $dataPoint->setMax($max);
         }
 
         if (count($metric->exemplars) > 0) {
@@ -338,16 +334,17 @@ final class ProtobufSerializer implements GrpcRequestFactory
      */
     private function createKeyValues(array $attributes): array
     {
-        $result = [];
+        return array_map(
+            function (string $key, mixed $value): KeyValue {
+                $keyValue = new KeyValue();
+                $keyValue->setKey($key);
+                $keyValue->setValue($this->createAnyValue($value));
 
-        foreach ($attributes as $key => $value) {
-            $keyValue = new KeyValue();
-            $keyValue->setKey($key);
-            $keyValue->setValue($this->createAnyValue($value));
-            $result[] = $keyValue;
-        }
-
-        return $result;
+                return $keyValue;
+            },
+            array_keys($attributes),
+            $attributes,
+        );
     }
 
     private function createLogRecord(LogEntry $entry): LogRecord
@@ -577,7 +574,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
      *
      * @param array<LogEntry> $entries
      *
-     * @return array<string, array{resource: resource, entries: array<LogEntry>}>
+     * @return array<string, array{resource: \Flow\Telemetry\Resource, entries: array<LogEntry>}>
      */
     private function groupLogsByResource(array $entries): array
     {
@@ -624,7 +621,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
      *
      * @param array<Metric> $metrics
      *
-     * @return array<string, array{resource: resource, metrics: array<Metric>}>
+     * @return array<string, array{resource: \Flow\Telemetry\Resource, metrics: array<Metric>}>
      */
     private function groupMetricsByResource(array $metrics): array
     {
@@ -671,7 +668,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
      *
      * @param array<Span> $spans
      *
-     * @return array<string, array{resource: resource, spans: array<Span>}>
+     * @return array<string, array{resource: \Flow\Telemetry\Resource, spans: array<Span>}>
      */
     private function groupSpansByResource(array $spans): array
     {
@@ -741,7 +738,6 @@ final class ProtobufSerializer implements GrpcRequestFactory
         return match ($metric->temporality->value) {
             1 => AggregationTemporality::AGGREGATION_TEMPORALITY_DELTA,
             2 => AggregationTemporality::AGGREGATION_TEMPORALITY_CUMULATIVE,
-            default => AggregationTemporality::AGGREGATION_TEMPORALITY_UNSPECIFIED,
         };
     }
 

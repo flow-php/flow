@@ -19,8 +19,10 @@ use Flow\Telemetry\Tracer\SpanStatusCode;
 
 use function array_filter;
 use function array_is_list;
+use function array_keys;
 use function array_map;
 use function array_merge;
+use function array_values;
 use function count;
 use function get_debug_type;
 use function is_array;
@@ -200,11 +202,11 @@ final class JsonSerializer
         ];
 
         if ($min !== null) {
-            $dataPoint['min'] = is_int($min) ? (float) $min : $min;
+            $dataPoint['min'] = $min;
         }
 
         if ($max !== null) {
-            $dataPoint['max'] = is_int($max) ? (float) $max : $max;
+            $dataPoint['max'] = $max;
         }
 
         if (count($metric->exemplars) > 0) {
@@ -252,7 +254,7 @@ final class JsonSerializer
      *
      * @param array<LogEntry> $entries
      *
-     * @return array<string, array{resource: resource, entries: array<LogEntry>}>
+     * @return array<string, array{resource: \Flow\Telemetry\Resource, entries: array<LogEntry>}>
      */
     private function groupLogsByResource(array $entries): array
     {
@@ -307,7 +309,7 @@ final class JsonSerializer
      *
      * @param array<Metric> $metrics
      *
-     * @return array<string, array{resource: resource, metrics: array<Metric>}>
+     * @return array<string, array{resource: \Flow\Telemetry\Resource, metrics: array<Metric>}>
      */
     private function groupMetricsByResource(array $metrics): array
     {
@@ -362,7 +364,7 @@ final class JsonSerializer
      *
      * @param array<Span> $spans
      *
-     * @return array<string, array{resource: resource, spans: array<Span>}>
+     * @return array<string, array{resource: \Flow\Telemetry\Resource, spans: array<Span>}>
      */
     private function groupSpansByResource(array $spans): array
     {
@@ -430,16 +432,14 @@ final class JsonSerializer
      */
     private function serializeAttributes(array $attributes): array
     {
-        $result = [];
-
-        foreach ($attributes as $key => $value) {
-            $result[] = [
+        return array_map(
+            fn(string $key, mixed $value): array => [
                 'key' => $key,
                 'value' => $this->serializeAttributeValue($value),
-            ];
-        }
-
-        return $result;
+            ],
+            array_keys($attributes),
+            array_values($attributes),
+        );
     }
 
     /**
@@ -465,25 +465,17 @@ final class JsonSerializer
 
         if (is_array($value)) {
             if (array_is_list($value)) {
-                $serialized = [];
-
-                foreach ($value as $v) {
-                    $serialized[] = $this->serializeAttributeValue($v);
-                }
-
-                return ['arrayValue' => ['values' => $serialized]];
+                return ['arrayValue' => ['values' => array_map($this->serializeAttributeValue(...), $value)]];
             }
 
-            $serialized = [];
-
-            foreach ($value as $k => $v) {
-                $serialized[] = [
+            return ['kvlistValue' => ['values' => array_map(
+                fn(int|string $k, mixed $v): array => [
                     'key' => (string) $k,
                     'value' => $this->serializeAttributeValue($v),
-                ];
-            }
-
-            return ['kvlistValue' => ['values' => $serialized]];
+                ],
+                array_keys($value),
+                array_values($value),
+            )]];
         }
 
         return ['stringValue' => get_debug_type($value)];
