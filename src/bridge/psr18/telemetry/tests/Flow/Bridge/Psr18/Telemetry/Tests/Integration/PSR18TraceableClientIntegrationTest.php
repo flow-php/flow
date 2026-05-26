@@ -54,8 +54,13 @@ final class PSR18TraceableClientIntegrationTest extends TestCase
         static::assertSame(8080, $attributes['server.port']);
         static::assertSame(200, $attributes['http.response.status_code']);
 
-        static::assertNotNull($span->status());
-        static::assertTrue($span->status()->isOk());
+        $status = $span->status();
+
+        if ($status === null) {
+            static::fail('Expected span to have status');
+        }
+
+        static::assertTrue($status->isOk());
     }
 
     private function createTelemetry(MemorySpanProcessor $spanProcessor): Telemetry
