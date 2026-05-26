@@ -51,7 +51,7 @@ lint-actions:
     set -uo pipefail
     rc=0
     actionlint || rc=$?
-    zizmor .github/workflows || rc=$?
+    zizmor --offline .github/workflows || rc=$?
     exit $rc
 
 # Run static analysis (PHPStan).
@@ -75,7 +75,8 @@ analyze-mago *args:
         src/bridge/openapi/specification \
         src/bridge/psr3/telemetry \
         src/bridge/symfony/http-foundation-telemetry \
-        src/bridge/telemetry/otlp
+        src/bridge/telemetry/otlp \
+        src/bridge/filesystem/async-aws
 
 # Auto-fix code style (Mago format + lint --fix) and GitHub Actions findings (zizmor --fix).
 fix:

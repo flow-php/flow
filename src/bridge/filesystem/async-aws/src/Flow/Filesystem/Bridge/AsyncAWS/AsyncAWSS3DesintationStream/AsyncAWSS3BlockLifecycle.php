@@ -13,7 +13,6 @@ use Flow\Filesystem\Stream\BlockLifecycle;
 
 use function fclose;
 use function fopen;
-use function is_resource;
 use function unlink;
 
 final readonly class AsyncAWSS3BlockLifecycle implements BlockLifecycle
@@ -47,9 +46,7 @@ final readonly class AsyncAWSS3BlockLifecycle implements BlockLifecycle
          */
         $etag = $uploadPartResponse->getETag();
 
-        if (is_resource($handle)) {
-            fclose($handle);
-        }
+        fclose($handle);
 
         unlink($block->path()->path());
 

@@ -21,6 +21,7 @@ use function get_debug_type;
 use function implode;
 use function is_array;
 use function is_int;
+use function is_scalar;
 use function is_string;
 use function sprintf;
 
@@ -148,15 +149,14 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
         $asyncConfig = [];
 
         foreach ($keyMap as $from => $to) {
-            if (array_key_exists($from, $clientConfig) && $clientConfig[$from] !== null) {
-                $asyncConfig[$to] = $clientConfig[$from];
+            if (array_key_exists($from, $clientConfig) && is_scalar($clientConfig[$from])) {
+                $asyncConfig[$to] = (string) $clientConfig[$from];
             }
         }
 
         $client = aws_s3_client($asyncConfig);
 
         if ($httpClient !== null || $logger !== null) {
-            /** @phpstan-ignore-next-line */
             return new S3Client($asyncConfig, null, $httpClient, $logger);
         }
 

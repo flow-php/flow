@@ -49,7 +49,9 @@ final class AsyncAWSS3SourceStream implements SourceStream
 
     public function iterate(int $length = 1): Generator
     {
-        for ($offset = 0; $offset < $this->size(); $offset += $length) {
+        $size = $this->size() ?? 0;
+
+        for ($offset = 0; $offset < $size; $offset += $length) {
             yield $this->read($length, $offset);
         }
     }
@@ -74,8 +76,9 @@ final class AsyncAWSS3SourceStream implements SourceStream
     {
         $offset = 0;
         $content = '';
+        $size = $this->size() ?? 0;
 
-        while ($offset < $this->size()) {
+        while ($offset < $size) {
             // Read a chunk of the file
             $chunk = $this->read($length ?? (1024 * 1024 * 9), $offset);
             $offset += strlen($chunk);
@@ -98,12 +101,12 @@ final class AsyncAWSS3SourceStream implements SourceStream
 
                 $content = $lines[$lastIndex];
             } elseif (substr_count($content, $separator) === 1) {
-                // Split the content by the separator
-                /**
-                 * @phpstan-ignore-next-line
-                 */
-                yield substr($content, 0, strpos($content, $separator));
-                $content = substr($content, strpos($content, $separator) + 1);
+                $pos = strpos($content, $separator);
+
+                if ($pos !== false) {
+                    yield substr($content, 0, $pos);
+                    $content = substr($content, $pos + 1);
+                }
             }
         }
 

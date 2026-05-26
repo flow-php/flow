@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\AsyncAWS\DSL;
 
+use AsyncAws\Core\Configuration;
 use AsyncAws\S3\S3Client;
 use Flow\ETL\Attribute\DocumentationDSL;
 use Flow\ETL\Attribute\Module;
@@ -13,12 +14,11 @@ use Flow\Filesystem\Bridge\AsyncAWS\Options;
 use Flow\Filesystem\Mount;
 
 /**
- * @param array<string, mixed> $configuration - for details please see https://async-aws.com/clients/s3.html
+ * @param array<Configuration::OPTION_*, null|string> $configuration - for details please see https://async-aws.com/clients/s3.html
  */
 #[DocumentationDSL(module: Module::S3_FILESYSTEM, type: Type::HELPER)]
 function aws_s3_client(array $configuration): S3Client
 {
-    /** @phpstan-ignore-next-line */
     return new S3Client($configuration);
 }
 

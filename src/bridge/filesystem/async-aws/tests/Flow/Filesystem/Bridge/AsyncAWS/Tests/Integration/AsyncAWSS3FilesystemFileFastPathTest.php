@@ -6,11 +6,13 @@ namespace Flow\Filesystem\Bridge\AsyncAWS\Tests\Integration;
 
 use Flow\Filesystem\Bridge\AsyncAWS\Options;
 use Flow\Filesystem\Bridge\AsyncAWS\Tests\Double\RecordingS3Client;
+use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Filesystem\Tests\Double\RejectingFilter;
 
 use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_filesystem;
 use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\type_string;
 use function iterator_to_array;
 
 final class AsyncAWSS3FilesystemFileFastPathTest extends AsyncAWSS3TestCase
@@ -123,6 +125,8 @@ final class AsyncAWSS3FilesystemFileFastPathTest extends AsyncAWSS3TestCase
         $statuses = iterator_to_array($fs->list(path('aws-s3://var/orders/file.txt')));
 
         static::assertCount(1, $statuses);
+        static::assertArrayHasKey(0, $statuses);
+        static::assertInstanceOf(FileStatus::class, $statuses[0]);
         static::assertSame('aws-s3://var/orders/file.txt', $statuses[0]->path->uri());
         static::assertSame(1, $client->headObjectCount);
         static::assertSame(0, $client->listObjectsV2Count);
@@ -140,6 +144,8 @@ final class AsyncAWSS3FilesystemFileFastPathTest extends AsyncAWSS3TestCase
         $statuses = iterator_to_array($fs->list(path('aws-s3://var/orders/orders.csv'), new OnlyFiles()));
 
         static::assertCount(1, $statuses);
+        static::assertArrayHasKey(0, $statuses);
+        static::assertInstanceOf(FileStatus::class, $statuses[0]);
         static::assertSame('aws-s3://var/orders/orders.csv', $statuses[0]->path->uri());
         static::assertTrue($statuses[0]->isFile());
         static::assertSame(1, $client->headObjectCount, 'exactly one HEAD must be issued');
@@ -153,14 +159,13 @@ final class AsyncAWSS3FilesystemFileFastPathTest extends AsyncAWSS3TestCase
     private function recordingClient(): RecordingS3Client
     {
         $configuration = [
-            'pathStyleEndpoint' => true,
-            'endpoint' => $_ENV['S3_ENDPOINT'],
-            'region' => $_ENV['S3_REGION'],
-            'accessKeyId' => $_ENV['S3_ACCESS_KEY_ID'],
-            'accessKeySecret' => $_ENV['S3_SECRET_ACCESS_KEY'],
+            'pathStyleEndpoint' => 'true',
+            'endpoint' => type_string()->assert($_ENV['S3_ENDPOINT']),
+            'region' => type_string()->assert($_ENV['S3_REGION']),
+            'accessKeyId' => type_string()->assert($_ENV['S3_ACCESS_KEY_ID']),
+            'accessKeySecret' => type_string()->assert($_ENV['S3_SECRET_ACCESS_KEY']),
         ];
 
-        /** @phpstan-ignore-next-line */
         return new RecordingS3Client($configuration);
     }
 }

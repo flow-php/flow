@@ -58,11 +58,11 @@ abstract class AsyncAWSS3TestCase extends FlowIntegrationTestCase
     public function s3Client(): S3Client
     {
         return aws_s3_client([
-            'pathStyleEndpoint' => true,
-            'endpoint' => $_ENV['S3_ENDPOINT'],
-            'region' => $_ENV['S3_REGION'],
-            'accessKeyId' => $_ENV['S3_ACCESS_KEY_ID'],
-            'accessKeySecret' => $_ENV['S3_SECRET_ACCESS_KEY'],
+            'pathStyleEndpoint' => 'true',
+            'endpoint' => type_string()->assert($_ENV['S3_ENDPOINT']),
+            'region' => type_string()->assert($_ENV['S3_REGION']),
+            'accessKeyId' => type_string()->assert($_ENV['S3_ACCESS_KEY_ID']),
+            'accessKeySecret' => type_string()->assert($_ENV['S3_SECRET_ACCESS_KEY']),
         ]);
     }
 
