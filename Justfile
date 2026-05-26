@@ -77,7 +77,8 @@ analyze-mago *args:
         src/bridge/symfony/http-foundation-telemetry \
         src/bridge/telemetry/otlp \
         src/bridge/filesystem/async-aws \
-        src/bridge/filesystem/azure
+        src/bridge/filesystem/azure \
+        src/bridge/monolog/http
 
 # Auto-fix code style (Mago format + lint --fix) and GitHub Actions findings (zizmor --fix).
 fix:

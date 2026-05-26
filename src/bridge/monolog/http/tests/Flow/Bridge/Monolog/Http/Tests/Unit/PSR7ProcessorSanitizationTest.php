@@ -14,9 +14,9 @@ use Monolog\Level;
 use Monolog\LogRecord;
 use Nyholm\Psr7\Factory\Psr17Factory;
 
-use function assert;
 use function Flow\Bridge\Monolog\Http\DSL\mask;
-use function is_array;
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_string;
 
 final class PSR7ProcessorSanitizationTest extends FlowTestCase
 {
@@ -56,17 +56,16 @@ final class PSR7ProcessorSanitizationTest extends FlowTestCase
             context: ['request' => $request],
         ));
 
-        /** @phpstan-ignore-next-line */
-        $requestData = json_decode((string) $record->context['request']['body'], true);
-        assert(is_array($requestData));
+        $request = type_array()->assert($record->context['request']);
+        $requestData = type_array()->assert(json_decode(type_string()->assert($request['body']), true));
 
         static::assertEquals('john_doe', $requestData['username']);
         static::assertEquals('***************', $requestData['password']);
         static::assertEquals('john@example.com', $requestData['email']);
         static::assertEquals('###############', $requestData['access_token']);
-        assert(is_array($requestData['data']));
-        static::assertEquals('se***********', $requestData['data']['key']);
-        static::assertEquals('public_value', $requestData['data']['value']);
+        $nestedData = type_array()->assert($requestData['data']);
+        static::assertEquals('se***********', $nestedData['key']);
+        static::assertEquals('public_value', $nestedData['value']);
     }
 
     public function test_sanitizing_response_fields(): void
@@ -106,16 +105,15 @@ final class PSR7ProcessorSanitizationTest extends FlowTestCase
             context: ['response' => $response],
         ));
 
-        /** @phpstan-ignore-next-line */
-        $responseData = json_decode((string) $record->context['response']['body'], true);
-        assert(is_array($responseData));
+        $response = type_array()->assert($record->context['response']);
+        $responseData = type_array()->assert(json_decode(type_string()->assert($response['body']), true));
 
         static::assertEquals('success', $responseData['status']);
-        assert(is_array($responseData['data']));
-        assert(is_array($responseData['data']['user']));
-        static::assertEquals(123, $responseData['data']['user']['id']);
-        static::assertEquals('john_doe', $responseData['data']['user']['username']);
-        static::assertEquals('*********************', $responseData['data']['user']['credentials']);
-        static::assertEquals('sen############', $responseData['data']['user']['access_token']);
+        $data = type_array()->assert($responseData['data']);
+        $user = type_array()->assert($data['user']);
+        static::assertEquals(123, $user['id']);
+        static::assertEquals('john_doe', $user['username']);
+        static::assertEquals('*********************', $user['credentials']);
+        static::assertEquals('sen############', $user['access_token']);
     }
 }
