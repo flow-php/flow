@@ -30,13 +30,12 @@ final readonly class TestSuiteStartedSubscriber implements StartedSubscriber
             $suiteName = $suite->name();
 
             $isRoot =
-                $suiteName === ''
-                || $suiteName === 'PHPUnit Test Suite'
+                $suiteName === 'PHPUnit Test Suite'
                 || $suiteName === 'CLI Arguments'
-                || str_ends_with((string) $suiteName, '.xml')
-                || str_ends_with((string) $suiteName, '.xml.dist');
+                || str_ends_with($suiteName, '.xml')
+                || str_ends_with($suiteName, '.xml.dist');
 
-            $isTestCase = str_contains((string) $suiteName, '\\') || str_contains((string) $suiteName, '::');
+            $isTestCase = str_contains($suiteName, '\\') || str_contains($suiteName, '::');
 
             if (!$isRoot && $isTestCase && !$this->config->emitTestCaseSpans) {
                 return;

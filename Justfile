@@ -80,7 +80,8 @@ analyze-mago *args:
         src/bridge/filesystem/azure \
         src/bridge/monolog/http \
         src/bridge/monolog/telemetry \
-        src/bridge/phpunit/postgresql
+        src/bridge/phpunit/postgresql \
+        src/bridge/phpunit/telemetry
 
 # Auto-fix code style (Mago format + lint --fix) and GitHub Actions findings (zizmor --fix).
 fix:
