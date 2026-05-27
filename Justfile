@@ -100,7 +100,13 @@ analyze-mago *args:
         src/adapter/etl-adapter-http \
         src/adapter/etl-adapter-json \
         src/adapter/etl-adapter-parquet \
-        src/adapter/etl-adapter-text
+        src/adapter/etl-adapter-text \
+        src/adapter/etl-adapter-xml \
+        src/adapter/etl-adapter-avro \
+        src/adapter/etl-adapter-elasticsearch \
+        src/adapter/etl-adapter-google-sheet \
+        src/adapter/etl-adapter-logger \
+        src/adapter/etl-adapter-postgresql
 
 # Auto-fix code style (Mago format + lint --fix) and GitHub Actions findings (zizmor --fix).
 fix:

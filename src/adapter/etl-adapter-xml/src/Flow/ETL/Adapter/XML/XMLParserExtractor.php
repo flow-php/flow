@@ -14,6 +14,7 @@ use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
 use Generator;
@@ -22,8 +23,6 @@ use XMLWriter;
 
 use function count;
 use function Flow\ETL\DSL\array_to_rows;
-use function Flow\Types\DSL\type_string;
-use function is_scalar;
 
 final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
@@ -106,6 +105,9 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         array_pop($this->namespaceStack);
     }
 
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
@@ -190,7 +192,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
     }
 
     /**
-     * @param array<string, mixed> $attrs
+     * @param array<string, string> $attrs
      */
     public function startElementHandler(XMLParser $parser, string $name, array $attrs): void
     {
@@ -201,7 +203,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
 
         foreach ($attrs as $key => $value) {
             if ($key === 'xmlns' || str_starts_with($key, 'xmlns:')) {
-                $namespaceDeclarations[$key] = is_scalar($value) ? type_string()->cast($value) : '';
+                $namespaceDeclarations[$key] = $value;
             } else {
                 $otherAttributes[$key] = $value;
             }
@@ -229,7 +231,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         }
 
         foreach ($otherAttributes as $key => $value) {
-            $this->writer()->writeAttribute($key, is_scalar($value) ? type_string()->cast($value) : '');
+            $this->writer()->writeAttribute($key, $value);
         }
     }
 
@@ -275,7 +277,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
     private function parser(): XMLParser
     {
         if ($this->parser === null) {
-            $this->parser = xml_parser_create();
+            $this->parser = xml_parser_create('UTF-8');
             xml_parser_set_option($this->parser, XML_OPTION_CASE_FOLDING, 0);
             xml_set_element_handler($this->parser, $this->startElementHandler(...), $this->endElementHandler(...));
             xml_set_character_data_handler($this->parser, $this->characterDataHandler(...));

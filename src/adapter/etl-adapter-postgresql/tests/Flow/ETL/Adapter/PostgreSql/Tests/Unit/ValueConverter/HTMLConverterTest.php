@@ -29,6 +29,7 @@ final class HTMLConverterTest extends TestCase
 
         $converter = new HTMLConverter();
 
+        // @mago-ignore analysis:unavailable-method
         $doc = HTMLDocument::createFromString('<!DOCTYPE html><html><body><p>Hello</p></body></html>');
         $result = $converter->toDatabase($doc);
 
@@ -44,6 +45,7 @@ final class HTMLConverterTest extends TestCase
 
         $converter = new HTMLConverter();
 
+        // @mago-ignore analysis:unavailable-method
         $doc = HTMLDocument::createFromString('<!DOCTYPE html><html><body><p id="test">Hello</p></body></html>');
         $element = $doc->getElementById('test');
 

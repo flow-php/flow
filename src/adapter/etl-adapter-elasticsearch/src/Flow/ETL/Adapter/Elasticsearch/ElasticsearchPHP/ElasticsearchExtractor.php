@@ -13,6 +13,7 @@ use Elasticsearch\ClientBuilder;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 use Generator;
 
 use function class_exists;
@@ -20,9 +21,8 @@ use function is_array;
 
 final class ElasticsearchExtractor implements Extractor
 {
-    /**
-     * @phpstan-ignore-next-line
-     */
+    // @mago-ignore analysis:non-existent-class-like
+    /** @phpstan-ignore-next-line */
     private Client|ElasticClient|null $client;
 
     /**
@@ -51,12 +51,16 @@ final class ElasticsearchExtractor implements Extractor
         $this->client = null;
     }
 
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         $pit = is_array($this->pointInTimeParams)
-            /**
-             * @phpstan-ignore-next-line
-             */
+            // @mago-ignore analysis:invalid-method-access
+            // @mago-ignore analysis:possibly-invalid-argument
+            // @mago-ignore analysis:mixed-argument
+            /** @phpstan-ignore-next-line */
             ? new PointInTime($this->client()->openPointInTime($this->pointInTimeParams))
             : null;
 
@@ -66,9 +70,10 @@ final class ElasticsearchExtractor implements Extractor
                 ->remove('index')
             : new SearchParams($this->parameters);
 
-        /**
-         * @phpstan-ignore-next-line
-         */
+        // @mago-ignore analysis:invalid-method-access
+        // @mago-ignore analysis:possibly-invalid-argument
+        // @mago-ignore analysis:mixed-argument
+        /** @phpstan-ignore-next-line */
         $results = new SearchResults($this->client()->search($params->asArray()));
 
         if ($results->size() === 0) {
@@ -94,9 +99,10 @@ final class ElasticsearchExtractor implements Extractor
             while (true) {
                 $nextPageParams = $params->setBody('search_after', $lastHitSort);
 
-                /**
-                 * @phpstan-ignore-next-line
-                 */
+                // @mago-ignore analysis:invalid-method-access
+                // @mago-ignore analysis:possibly-invalid-argument
+                // @mago-ignore analysis:mixed-argument
+                /** @phpstan-ignore-next-line */
                 $nextResults = new SearchResults($this->client()->search($nextPageParams->asArray()));
                 $lastHitSort = $nextResults->lastHitSort();
 
@@ -121,17 +127,24 @@ final class ElasticsearchExtractor implements Extractor
             for ($page = 1; $page <= $results->pages(); $page++) {
                 $nextPageParams = $params->set('from', $page * $results->size())->set('size', $results->size());
 
-                if ($nextPageParams->asArray()['from'] >= $results->total()) {
+                /** @var int $from */
+                $from = $nextPageParams->asArray()['from'];
+
+                if ($from >= $results->total()) {
                     break;
                 }
 
-                if (($nextPageParams->asArray()['from'] + $nextPageParams->asArray()['size']) > $results->total()) { // @phpstan-ignore binaryOp.invalid
+                /** @var int $size */
+                $size = $nextPageParams->asArray()['size'];
+
+                if (($from + $size) > $results->total()) {
                     $nextPageParams = $nextPageParams->set('size', $results->total() - $fetched);
                 }
 
-                /**
-                 * @phpstan-ignore-next-line
-                 */
+                // @mago-ignore analysis:invalid-method-access
+                // @mago-ignore analysis:possibly-invalid-argument
+                // @mago-ignore analysis:mixed-argument
+                /** @phpstan-ignore-next-line */
                 $nextResults = new SearchResults($this->client()->search($nextPageParams->asArray()));
 
                 $fetched += $nextResults->size();
@@ -161,22 +174,23 @@ final class ElasticsearchExtractor implements Extractor
         return $this;
     }
 
-    /**
-     * @phpstan-ignore-next-line
-     */
+    // @mago-ignore analysis:non-existent-class-like
+    /** @phpstan-ignore-next-line */
     private function client(): Client|ElasticClient
     {
         if ($this->client === null) {
             if (class_exists("Elasticsearch\ClientBuilder")) {
+                // @mago-ignore analysis:non-existent-method
+                // @mago-ignore analysis:mixed-property-type-coercion
                 $this->client = ClientBuilder::fromConfig($this->config);
             } else {
                 $this->client = ElasticClientBuilder::fromConfig($this->config);
             }
         }
 
-        /**
-         * @phpstan-ignore-next-line
-         */
+        // @mago-ignore analysis:nullable-return-statement
+        // @mago-ignore analysis:invalid-return-statement
+        /** @phpstan-ignore-next-line */
         return $this->client;
     }
 
@@ -187,9 +201,8 @@ final class ElasticsearchExtractor implements Extractor
     private function closePointInTime(?PointInTime $pit): void
     {
         if ($pit) {
-            /**
-             * @phpstan-ignore-next-line
-             */
+            // @mago-ignore analysis:invalid-method-access
+            /** @phpstan-ignore-next-line */
             $this->client()->closePointInTime(['body' => ['id' => $pit->id()]]);
         }
     }

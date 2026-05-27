@@ -150,11 +150,13 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
             '2024-01-15',
             $row['col_date'] instanceof DateTimeInterface ? $row['col_date']->format('Y-m-d') : $row['col_date'],
         );
+        // @mago-expect analysis:mixed-assignment
+        $colDatetime = $row['col_datetime'];
         static::assertStringStartsWith(
             '2024-01-15',
-            $row['col_datetime'] instanceof DateTimeInterface // @phpstan-ignore argument.type
-                ? $row['col_datetime']->format('Y-m-d H:i:s')
-                : $row['col_datetime'],
+            $colDatetime instanceof DateTimeInterface
+                ? $colDatetime->format('Y-m-d H:i:s')
+                : (is_scalar($colDatetime) ? (string) $colDatetime : ''),
         );
         static::assertSame(
             '10:30:15',
@@ -167,8 +169,14 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
             ['key' => 'value', 'number' => 123],
             is_string($row['col_json']) ? json_decode($row['col_json'], true) : $row['col_json'],
         );
-        static::assertStringContainsString('<root><item>test</item></root>', $row['col_xml']); // @phpstan-ignore argument.type
-        static::assertStringContainsString('<item id="elem">element</item>', $row['col_xml_element']); // @phpstan-ignore argument.type
+        // @mago-expect analysis:mixed-assignment
+        $colXml = $row['col_xml'];
+        static::assertIsString($colXml);
+        static::assertStringContainsString('<root><item>test</item></root>', $colXml);
+        // @mago-expect analysis:mixed-assignment
+        $colXmlElement = $row['col_xml_element'];
+        static::assertIsString($colXmlElement);
+        static::assertStringContainsString('<item id="elem">element</item>', $colXmlElement);
         static::assertSame('<p>HTML content</p>', $row['col_html']);
         static::assertSame('<span>element</span>', $row['col_html_element']);
         static::assertSame('one', $row['col_enum']);

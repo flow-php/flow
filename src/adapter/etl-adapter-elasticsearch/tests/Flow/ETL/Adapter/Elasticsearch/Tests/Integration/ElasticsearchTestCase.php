@@ -18,8 +18,11 @@ abstract class ElasticsearchTestCase extends FlowTestCase
 
     protected function setUp(): void
     {
+        /** @var string $url */
+        $url = getenv('ELASTICSEARCH_URL');
+
         $this->elasticsearchContext = class_exists("Elasticsearch\Client")
-            ? new Elasticsearch7Context([getenv('ELASTICSEARCH_URL')])
-            : new Elasticsearch8Context([getenv('ELASTICSEARCH_URL')]);
+            ? new Elasticsearch7Context([$url])
+            : new Elasticsearch8Context([$url]);
     }
 }

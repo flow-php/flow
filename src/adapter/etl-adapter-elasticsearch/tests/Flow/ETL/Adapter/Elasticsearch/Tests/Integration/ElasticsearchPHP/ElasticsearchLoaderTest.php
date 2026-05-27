@@ -60,8 +60,12 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
             ],
         ];
 
+        // @mago-ignore analysis:non-existent-method
+        // @mago-ignore analysis:mixed-method-access
+        // @mago-ignore analysis:mixed-assignment
         $response = $this->elasticsearchContext->client()->search($params);
 
+        /** @var array{hits: array{total: array{value: int}, hits: array<int, array{_source: array<string, mixed>}>}} $response */
         static::assertSame(0, $response['hits']['total']['value']);
     }
 
@@ -93,11 +97,17 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
             ],
         ];
 
+        // @mago-ignore analysis:non-existent-method
+        // @mago-ignore analysis:mixed-method-access
+        // @mago-ignore analysis:mixed-assignment
         $response = $this->elasticsearchContext->client()->search($params);
 
+        /** @var array{hits: array{total: array{value: int}, hits: array<int, array{_source: array<string, mixed>}>}} $response */
         static::assertSame(4, $response['hits']['total']['value']);
 
-        $names = array_map(static fn(array $hit): string => $hit['_source']['name'], $response['hits']['hits']);
+        /** @var array<int, array{_source: array{name: string}}> $hits */
+        $hits = $response['hits']['hits'];
+        $names = array_map(static fn(array $hit): string => $hit['_source']['name'], $hits);
         sort($names);
 
         static::assertSame(['Dawid', 'Norbert', 'Tomek', 'Łukasz'], $names);
@@ -126,11 +136,17 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
             ],
         ];
 
+        // @mago-ignore analysis:non-existent-method
+        // @mago-ignore analysis:mixed-method-access
+        // @mago-ignore analysis:mixed-assignment
         $response = $this->elasticsearchContext->client()->search($params);
 
+        /** @var array{hits: array{total: array{value: int}, hits: array<int, array{_source: array<string, mixed>}>}} $response */
         static::assertSame(1, $response['hits']['total']['value']);
 
-        $json = array_map(static fn(array $hit): array => $hit['_source']['json'], $response['hits']['hits']);
+        /** @var array<int, array{_source: array{json: array<string, mixed>}}> $hits */
+        $hits = $response['hits']['hits'];
+        $json = array_map(static fn(array $hit): array => $hit['_source']['json'], $hits);
 
         static::assertSame([['foo' => 'bar']], $json);
     }
@@ -175,11 +191,16 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
             ],
         ];
 
+        // @mago-ignore analysis:non-existent-method
+        // @mago-ignore analysis:mixed-method-access
+        // @mago-ignore analysis:mixed-assignment
         $response = $this->elasticsearchContext->client()->search($params);
 
+        /** @var array{hits: array{total: array{value: int}, hits: array<int, array{_source: array<string, mixed>}>}} $response */
         static::assertSame(1, $response['hits']['total']['value']);
 
-        $data = array_map(static fn(array $hit): array => $hit['_source'], $response['hits']['hits']);
+        $hits = $response['hits']['hits'];
+        $data = array_map(static fn(array $hit): array => $hit['_source'], $hits);
 
         static::assertSame(
             [
@@ -226,11 +247,17 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
             ],
         ];
 
+        // @mago-ignore analysis:non-existent-method
+        // @mago-ignore analysis:mixed-method-access
+        // @mago-ignore analysis:mixed-assignment
         $response = $this->elasticsearchContext->client()->search($params);
 
+        /** @var array{hits: array{total: array{value: int}, hits: array<int, array{_source: array<string, mixed>}>}} $response */
         static::assertSame(4, $response['hits']['total']['value']);
 
-        $names = array_map(static fn(array $hit): string => $hit['_source']['name'], $response['hits']['hits']);
+        /** @var array<int, array{_source: array{name: string}}> $hits */
+        $hits = $response['hits']['hits'];
+        $names = array_map(static fn(array $hit): string => $hit['_source']['name'], $hits);
         sort($names);
 
         static::assertSame(['Dawid', 'Norbert', 'Tomek', 'Łukasz'], $names);

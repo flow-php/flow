@@ -25,12 +25,15 @@ final class InsertQueryBuilderTest extends TestCase
         [$_query, $params] = $builder->build(rows(row(int_entry('id', 1), str_entry('name', 'Alice'))));
 
         static::assertCount(2, $params);
-        static::assertInstanceOf(TypedValue::class, $params[0]);
-        static::assertInstanceOf(TypedValue::class, $params[1]);
-        static::assertSame(1, $params[0]->value);
-        static::assertSame(ValueType::INT8, $params[0]->targetType);
-        static::assertSame('Alice', $params[1]->value);
-        static::assertSame(ValueType::TEXT, $params[1]->targetType);
+
+        $first = $params[0];
+        $second = $params[1];
+        static::assertInstanceOf(TypedValue::class, $first);
+        static::assertInstanceOf(TypedValue::class, $second);
+        static::assertSame(1, $first->value);
+        static::assertSame(ValueType::INT8, $first->targetType);
+        static::assertSame('Alice', $second->value);
+        static::assertSame(ValueType::TEXT, $second->targetType);
     }
 
     public function test_build_simple_insert(): void

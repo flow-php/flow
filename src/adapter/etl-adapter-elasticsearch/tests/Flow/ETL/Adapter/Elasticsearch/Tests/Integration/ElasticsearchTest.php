@@ -29,6 +29,7 @@ final class ElasticsearchTest extends ElasticsearchTestCase
                 ['id' => 5, 'text' => 'lorem ipsum'],
                 ['id' => 6, 'text' => 'lorem ipsum'],
             ]))
+            // @mago-ignore analysis:possibly-invalid-argument
             ->write(to_es_bulk_index(array_merge($this->elasticsearchContext->clientConfig(), [
                 'httpClient' => $httpClient = new HttpClientSpy(),
             ]), 'test', new EntryIdFactory('id')))

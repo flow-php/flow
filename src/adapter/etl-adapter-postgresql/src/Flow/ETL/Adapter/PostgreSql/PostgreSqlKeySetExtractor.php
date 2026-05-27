@@ -11,6 +11,7 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\Sql;
@@ -47,6 +48,9 @@ final class PostgreSqlKeySetExtractor implements Extractor
         private readonly array $parameters = [],
     ) {}
 
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         $sql = $this->query instanceof Sql ? $this->query->toSql() : $this->query;
@@ -85,7 +89,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
 
             $cursor->free();
 
-            if (!$hasRows) {
+            if (!$hasRows || $lastRow === null) {
                 break;
             }
 
@@ -149,6 +153,7 @@ final class PostgreSqlKeySetExtractor implements Extractor
                 ));
             }
 
+            // @mago-expect analysis:mixed-assignment
             $value = $row[$columnName];
 
             if ($value === null) {

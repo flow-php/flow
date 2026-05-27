@@ -13,6 +13,7 @@ use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 use Flow\Filesystem\Path;
 use Generator;
 use XMLReader;
@@ -21,14 +22,15 @@ use function array_pop;
 use function Flow\ETL\DSL\array_to_rows;
 use function implode;
 
+/**
+ * @deprecated Use XMLParserExtractor instead, XMLReaderExtractor can't properly handle reading remote files since it requires a local file.
+ */
 final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
     use Limitable;
     use PathFiltering;
 
     /**
-     * @deprecated Use XMLParserExtractor instead, XMLReaderExtractor can't properly handle reading remote files since it requires a local file.
-     *
      * In order to iterate only over <element> nodes us root/elements/element.
      *
      * <root>
@@ -55,6 +57,9 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
         $this->resetLimit();
     }
 
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
@@ -82,7 +87,7 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
                         $previousDepth--;
                     }
 
-                    $currentPath = implode('/', $currentPathBreadCrumbs);
+                    $currentPath = implode('/', array_map(strval(...), $currentPathBreadCrumbs));
 
                     if ($currentPath === $this->xmlNodePath || $this->xmlNodePath === '' && $xmlReader->depth === 0) {
                         $dom = new DOMDocument('1.0', '');

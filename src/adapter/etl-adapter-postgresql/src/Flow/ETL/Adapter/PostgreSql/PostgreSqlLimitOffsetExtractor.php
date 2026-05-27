@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\Sql;
@@ -37,6 +38,9 @@ final class PostgreSqlLimitOffsetExtractor implements Extractor
         private readonly array $parameters = [],
     ) {}
 
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         $sql = $this->query instanceof Sql ? $this->query->toSql() : $this->query;
