@@ -12,10 +12,6 @@ use Symfony\Component\Messenger\Transport\Sender\SenderInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 use Throwable;
 
-use function get_debug_type;
-use function is_array;
-use function is_string;
-
 final readonly class FlowPostgreSqlSender implements SenderInterface
 {
     public function __construct(
@@ -27,16 +23,8 @@ final readonly class FlowPostgreSqlSender implements SenderInterface
     {
         $encodedMessage = $this->serializer->encode($envelope);
 
-        $body = $encodedMessage['body'] ?? null;
+        $body = $encodedMessage['body'];
         $headers = $encodedMessage['headers'] ?? [];
-
-        if (!is_string($body)) {
-            throw TransportException::unexpectedRowShape('body', get_debug_type($body));
-        }
-
-        if (!is_array($headers)) {
-            throw TransportException::unexpectedRowShape('headers', get_debug_type($headers));
-        }
 
         $delay = $envelope->last(DelayStamp::class)?->getDelay() ?? 0;
 

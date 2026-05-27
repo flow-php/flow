@@ -47,6 +47,8 @@ use Throwable;
  *     return $result;
  * });
  * ```
+ *
+ * @phpstan-import-type TAttributeValueMap from Attributes
  */
 final class Tracer
 {
@@ -167,7 +169,7 @@ final class Tracer
      *
      * @param string $name The span name
      * @param SpanKind $kind The span kind
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Initial attributes
+     * @param TAttributeValueMap|Attributes $attributes Initial attributes
      * @param array<SpanLink> $links Links to other spans
      * @param null|false|SpanContext $parentContext Explicit parent control:
      *                                              - null (default): automatic detection from stack/context

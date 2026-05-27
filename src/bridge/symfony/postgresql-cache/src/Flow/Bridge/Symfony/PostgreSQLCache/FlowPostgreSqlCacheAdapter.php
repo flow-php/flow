@@ -85,6 +85,8 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
         ?MarshallerInterface $marshaller = null,
         ?Closure $clientFactory = null,
     ) {
+        $match = [];
+
         if (isset($namespace[0]) && preg_match('#[^-+.A-Za-z0-9]#', $namespace, $match)) {
             throw new InvalidArgumentException(sprintf(
                 'Namespace contains "%s" but only characters in [-+.A-Za-z0-9] are allowed.',
@@ -153,7 +155,7 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
     }
 
     /**
-     * @param array<int, string> $ids
+     * @param array<array-key, mixed> $ids
      */
     protected function doDelete(array $ids): bool
     {
@@ -178,7 +180,7 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
     }
 
     /**
-     * @param array<int, string> $ids
+     * @param array<array-key, mixed> $ids
      *
      * @return iterable<string, mixed>
      */
@@ -218,22 +220,22 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
         $expired = [];
 
         foreach ($rows as $row) {
-            $rowId = $row[$this->idCol];
-            $rowData = $row[$this->dataCol];
+            $rowId = is_string($row[$this->idCol] ?? null)
+                ? $row[$this->idCol]
+                : throw CacheException::unexpectedRowShape($this->idCol, get_debug_type($row[$this->idCol] ?? null));
 
-            if (!is_string($rowId)) {
-                throw CacheException::unexpectedRowShape($this->idCol, get_debug_type($rowId));
-            }
-
-            if ($rowData === null) {
+            if ($row[$this->dataCol] === null) {
                 $expired[] = $rowId;
 
                 continue;
             }
 
-            if (!is_string($rowData)) {
-                throw CacheException::unexpectedRowShape($this->dataCol, get_debug_type($rowData));
-            }
+            $rowData = is_string($row[$this->dataCol] ?? null)
+                ? $row[$this->dataCol]
+                : throw CacheException::unexpectedRowShape(
+                    $this->dataCol,
+                    get_debug_type($row[$this->dataCol] ?? null),
+                );
 
             yield $rowId => $this->marshaller->unmarshall($rowData);
         }
@@ -263,7 +265,7 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
     }
 
     /**
-     * @param array<string, mixed> $values
+     * @param array<array-key, mixed> $values
      *
      * @return array<int, string>
      */
@@ -271,15 +273,17 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
     {
         $failed = [];
         $marshalled = $this->marshaller->marshall($values, $failed);
+        $failedKeys = $this->collectFailedKeys($failed);
 
         if ($marshalled === []) {
-            return $failed ?? [];
+            return $failedKeys;
         }
 
         $this->client()->transaction(function (Client $client) use ($marshalled, $lifetime): void {
             $now = time();
             $expiry = $lifetime > 0 ? $lifetime : null;
 
+            // @mago-expect analysis:mixed-assignment
             foreach ($marshalled as $id => $data) {
                 $client->execute(
                     insert()
@@ -301,7 +305,26 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
             }
         });
 
-        return $failed ?? [];
+        return $failedKeys;
+    }
+
+    /**
+     * @param array<array-key, mixed>|null $failed
+     *
+     * @return list<string>
+     */
+    private function collectFailedKeys(?array $failed): array
+    {
+        $result = [];
+
+        // @mago-expect analysis:mixed-assignment
+        foreach ($failed ?? [] as $key) {
+            if (is_string($key)) {
+                $result[] = $key;
+            }
+        }
+
+        return $result;
     }
 
     private function client(): Client
@@ -314,6 +337,15 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
             throw new LogicException('FlowPostgreSqlCacheAdapter has no client and no connection parameters.');
         }
 
-        return $this->client = ($this->clientFactory)($this->connectionParameters);
+        // @mago-expect analysis:mixed-assignment
+        $client = ($this->clientFactory)($this->connectionParameters);
+
+        if (!$client instanceof Client) {
+            throw new LogicException('FlowPostgreSqlCacheAdapter client factory did not return a Client instance.');
+        }
+
+        $this->client = $client;
+
+        return $client;
     }
 }

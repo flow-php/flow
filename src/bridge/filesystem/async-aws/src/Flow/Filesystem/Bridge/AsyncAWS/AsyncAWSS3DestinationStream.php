@@ -50,10 +50,6 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
         BlockFactory $blockFactory = new NativeLocalFileBlocksFactory(),
         int $blockSize = 1024 * 1024 * 4,
     ): self {
-        if ($blockSize < 1) {
-            throw new InvalidArgumentException('Block size must be greater than 0');
-        }
-
         try {
             $objectHead = $s3Client->headObject([
                 'Bucket' => $bucket,
@@ -79,7 +75,9 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
              * and append to it. We need to read the file to memory and append it to the new file.
              * S3 allows only the last part to be smaller than 5Mb, all other parts needs to be 5Mb+.
              */
-            if ($objectHead->getContentLength() < SizeUnits::mbToBytes(5)) {
+            $contentLength = $objectHead->getContentLength() ?? 0;
+
+            if ($contentLength < SizeUnits::mbToBytes(5)) {
                 $blocks = new Blocks(
                     $blockSize,
                     $blockFactory,
@@ -140,10 +138,6 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
         BlockFactory $blockFactory = new NativeLocalFileBlocksFactory(),
         int $blockSize = 1024 * 1024 * 4,
     ): self {
-        if ($blockSize < 1) {
-            throw new InvalidArgumentException('Block size must be greater than 0');
-        }
-
         $response = $s3Client->createMultipartUpload(new CreateMultipartUploadRequest([
             'Bucket' => $bucket,
             'Key' => ltrim($path->path(), '/'),

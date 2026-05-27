@@ -11,8 +11,7 @@ final class DiffCommandTest extends CommandTestCase
 {
     public function test_generates_schema_migration(): void
     {
-        /** @var Command $command */
-        $command = $this->context->container()->get('flow.postgresql.command.diff');
+        $command = $this->context->command('flow.postgresql.command.diff');
         $tester = new CommandTester($command);
         $tester->execute(['name' => 'create_test_users']);
 
@@ -22,7 +21,7 @@ final class DiffCommandTest extends CommandTestCase
         $dirs = $this->context->migrationDirs('*_create_test_users');
         static::assertCount(1, $dirs);
 
-        $migrationDir = $dirs[0];
+        $migrationDir = (string) $dirs[0];
         static::assertTrue($this->context->fileExists($migrationDir . '/migration.php'));
         static::assertTrue($this->context->fileExists($migrationDir . '/rollback.php'));
 

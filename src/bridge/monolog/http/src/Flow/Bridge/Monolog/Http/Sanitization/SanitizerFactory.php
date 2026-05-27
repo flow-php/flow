@@ -24,8 +24,7 @@ final class SanitizerFactory
             throw new InvalidArgumentException('Sanitizer type is required');
         }
 
-        $type = $data['type'];
-        $type = type_string()->assert($type);
+        $type = type_string()->assert($data['type']);
 
         return match ($type) {
             'mask' => Mask::fromArray($data),

@@ -81,7 +81,7 @@ final class Counter implements Instrument
      * Add a non-negative value to the counter.
      *
      * @param float|int $amount Amount to add (must be >= 0)
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Categorization attributes
+     * @param array<string, mixed>|Attributes $attributes Categorization attributes
      * @param null|SpanContext $context Optional span context for exemplar capture
      *
      * @throws \InvalidArgumentException If amount is negative

@@ -34,6 +34,7 @@ use UnitEnum;
 use function array_map;
 use function enum_exists;
 use function Flow\ETL\DSL\definition_from_type;
+use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_date;
 use function Flow\Types\DSL\type_datetime;
@@ -99,17 +100,10 @@ final class OpenAPIConverter
             throw new InvalidArgumentException('OpenAPI specification must have properties array');
         }
 
+        $properties = type_map(type_string(), type_array())->assert($openApiSpec['properties']);
         $definitions = [];
 
-        foreach ($openApiSpec['properties'] as $propertyName => $propertySpec) {
-            if (!is_string($propertyName)) {
-                throw new InvalidArgumentException('Property name must be a string');
-            }
-
-            if (!is_array($propertySpec)) {
-                throw new InvalidArgumentException("Property '{$propertyName}' specification must be an array");
-            }
-
+        foreach ($properties as $propertyName => $propertySpec) {
             /** @var array<string, mixed> $propertySpec */
             $definitions[] = $this->convertOpenAPIPropertyToDefinition($propertyName, $propertySpec);
         }
@@ -223,13 +217,15 @@ final class OpenAPIConverter
             return ['type' => 'string'];
         }
 
-        $enumClass = $type->class;
         $values = [];
 
-        if (enum_exists($enumClass)) {
+        if (enum_exists($type->class)) {
+            $cases = [$type->class, 'cases'];
+            /** @var array<UnitEnum> $allCases */
+            $allCases = $cases();
             $values = array_map(static fn(UnitEnum $case) => $case instanceof BackedEnum
                 ? $case->value
-                : $case->name, $enumClass::cases());
+                : $case->name, $allCases);
         }
 
         return [
@@ -321,15 +317,14 @@ final class OpenAPIConverter
         if (isset($typeSpec['properties']) && is_array($typeSpec['properties'])) {
             $elements = [];
             $optionalElements = [];
+            $properties = type_map(type_string(), type_array())->assert($typeSpec['properties']);
 
-            foreach ($typeSpec['properties'] as $propName => $propSpec) {
-                if (!is_array($propSpec)) {
-                    throw new InvalidArgumentException("Property '{$propName}' specification must be an array");
-                }
-
+            foreach ($properties as $propName => $propSpec) {
                 /** @var array<string, mixed> $propSpec */
                 $propType = $this->convertOpenAPITypeToFlowType($propSpec);
-                $isNullable = is_bool($propSpec['nullable'] ?? false) ? $propSpec['nullable'] : false;
+                $isNullable = isset($propSpec['nullable']) && is_bool($propSpec['nullable'])
+                    ? $propSpec['nullable']
+                    : false;
 
                 if ($isNullable) {
                     $optionalElements[$propName] = $propType;
@@ -357,7 +352,9 @@ final class OpenAPIConverter
             throw new InvalidArgumentException("Property '{$propertyName}' must have a type");
         }
 
-        $nullable = is_bool($propertySpec['nullable'] ?? false) ? $propertySpec['nullable'] ?? false : false;
+        $nullable = isset($propertySpec['nullable']) && is_bool($propertySpec['nullable'])
+            ? $propertySpec['nullable']
+            : false;
         $metadata = Metadata::empty();
 
         if (isset($propertySpec['description']) && is_string($propertySpec['description'])) {
@@ -391,9 +388,7 @@ final class OpenAPIConverter
      */
     private function convertOpenAPIStringToFlowType(array $typeSpec): Type
     {
-        $format = $typeSpec['format'] ?? null;
-
-        return match ($format) {
+        return match ($typeSpec['format'] ?? null) {
             'date' => type_date(),
             'date-time' => type_datetime(),
             'time' => type_time(),

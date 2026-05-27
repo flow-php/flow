@@ -23,9 +23,7 @@ use function method_exists;
 final readonly class ValueNormalizer
 {
     /**
-     * Normalize a value to a type acceptable by Telemetry attributes.
-     *
-     * @return array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable
+     * @return string|int|float|bool|DateTimeInterface|Throwable|array<array-key, mixed>
      */
     public function normalize(mixed $value): string|int|float|bool|DateTimeInterface|Throwable|array
     {
@@ -46,7 +44,6 @@ final readonly class ValueNormalizer
         }
 
         if (is_array($value)) {
-            /** @phpstan-ignore return.type */
             return array_map(fn($v) => $this->normalize($v), $value);
         }
 

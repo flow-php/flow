@@ -13,8 +13,12 @@ use Psr\Http\Message\ResponseInterface;
 
 use function array_filter;
 use function array_is_list;
+use function array_keys;
 use function count;
 use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_string;
 use function in_array;
 use function is_array;
 use function is_string;
@@ -31,19 +35,21 @@ final readonly class PSR7Processor implements ProcessorInterface
 
     public function __invoke(LogRecord $record): LogRecord
     {
-        $context = type_array()->assert($record->context);
+        $context = $record->context;
 
-        foreach ($context as $key => $val) {
-            if ($val instanceof RequestInterface) {
-                $context[$key] = $this->normalizeRequest($val);
+        foreach (array_keys($context) as $key) {
+            if ($context[$key] instanceof RequestInterface) {
+                $context[$key] = $this->normalizeRequest($context[$key]);
 
                 if (empty($context[$key])) {
                     unset($context[$key]);
                 }
+
+                continue;
             }
 
-            if ($val instanceof ResponseInterface) {
-                $context[$key] = $this->normalizeResponse($val);
+            if ($context[$key] instanceof ResponseInterface) {
+                $context[$key] = $this->normalizeResponse($context[$key]);
 
                 if (empty($context[$key])) {
                     unset($context[$key]);
@@ -85,14 +91,19 @@ final readonly class PSR7Processor implements ProcessorInterface
             $request->getBody()->rewind();
 
             if ($this->isJson($body)) {
-                $decodedBody = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
-                $decodedBody = type_array()->assert($decodedBody);
-                /** @var array<string, mixed> $sanitizedBody */
-                $sanitizedBody = array_is_list($decodedBody) ? [] : $decodedBody;
-                $body = $this->recursiveSanitize($sanitizedBody, $this->config->request->sanitizers());
+                $decodedBody = type_array()->assert(json_decode($body, true, 512, JSON_THROW_ON_ERROR));
+
+                if (!array_is_list($decodedBody)) {
+                    $sanitizedBody = $this->recursiveSanitize(
+                        type_map(type_string(), type_mixed())->assert($decodedBody),
+                        $this->config->request->sanitizers(),
+                    );
+                } else {
+                    $sanitizedBody = [];
+                }
 
                 $requestData['body'] = substr(
-                    json_encode($body, JSON_THROW_ON_ERROR),
+                    json_encode($sanitizedBody, JSON_THROW_ON_ERROR),
                     0,
                     $this->config->request->bodySizeLimit(),
                 );
@@ -112,7 +123,11 @@ final readonly class PSR7Processor implements ProcessorInterface
         if ($this->config->request->includeHeaders()) {
             $requestData['headers'] = array_filter(
                 $request->getHeaders(),
-                fn(string $header) => in_array(strtolower($header), $this->config->request->includeHeaders(), true),
+                fn(int|string $header) => in_array(
+                    strtolower((string) $header),
+                    $this->config->request->includeHeaders(),
+                    true,
+                ),
                 ARRAY_FILTER_USE_KEY,
             );
         }
@@ -144,14 +159,19 @@ final readonly class PSR7Processor implements ProcessorInterface
             $response->getBody()->rewind();
 
             if ($this->isJson($body)) {
-                $decodedBody = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
-                $decodedBody = type_array()->assert($decodedBody);
-                /** @var array<string, mixed> $sanitizedBody */
-                $sanitizedBody = array_is_list($decodedBody) ? [] : $decodedBody;
-                $body = $this->recursiveSanitize($sanitizedBody, $this->config->response->sanitizers());
+                $decodedBody = type_array()->assert(json_decode($body, true, 512, JSON_THROW_ON_ERROR));
+
+                if (!array_is_list($decodedBody)) {
+                    $sanitizedBody = $this->recursiveSanitize(
+                        type_map(type_string(), type_mixed())->assert($decodedBody),
+                        $this->config->response->sanitizers(),
+                    );
+                } else {
+                    $sanitizedBody = [];
+                }
 
                 $responseData['body'] = substr(
-                    json_encode($body, JSON_THROW_ON_ERROR),
+                    json_encode($sanitizedBody, JSON_THROW_ON_ERROR),
                     0,
                     $this->config->response->bodySizeLimit(),
                 );
@@ -171,7 +191,11 @@ final readonly class PSR7Processor implements ProcessorInterface
         if ($this->config->response->includeHeaders()) {
             $responseData['headers'] = array_filter(
                 $response->getHeaders(),
-                fn(string $header) => in_array(strtolower($header), $this->config->response->includeHeaders(), true),
+                fn(int|string $header) => in_array(
+                    strtolower((string) $header),
+                    $this->config->response->includeHeaders(),
+                    true,
+                ),
                 ARRAY_FILTER_USE_KEY,
             );
         }
@@ -193,16 +217,18 @@ final readonly class PSR7Processor implements ProcessorInterface
             return $data;
         }
 
-        foreach ($data as $key => $value) {
-            if (is_array($value)) {
-                /** @phpstan-var array<string, mixed> $value */
-                $data[$key] = $this->recursiveSanitize($value, $sanitizers);
+        foreach (array_keys($data) as $key) {
+            if (is_array($data[$key]) && !array_is_list($data[$key])) {
+                $data[$key] = $this->recursiveSanitize(
+                    type_map(type_string(), type_mixed())->assert($data[$key]),
+                    $sanitizers,
+                );
 
                 continue;
             }
 
-            if (is_string($value) && isset($sanitizers[$key])) {
-                $data[$key] = $sanitizers[$key]->sanitize($value);
+            if (is_string($data[$key]) && isset($sanitizers[$key])) {
+                $data[$key] = $sanitizers[$key]->sanitize($data[$key]);
             }
         }
 

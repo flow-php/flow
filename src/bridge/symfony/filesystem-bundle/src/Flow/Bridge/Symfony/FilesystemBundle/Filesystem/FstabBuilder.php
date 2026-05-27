@@ -10,12 +10,13 @@ use Flow\ETL\Exception\InvalidArgumentException as ETLInvalidArgumentException;
 use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Telemetry\FilesystemTelemetryConfig;
 
+use function is_string;
 use function sprintf;
 
 final class FstabBuilder
 {
     /**
-     * @param array<string, array<string, mixed>&array{type: string}> $filesystems each entry is keyed by mount protocol and must contain `type`
+     * @param array<string, array<string, mixed>> $filesystems each entry is keyed by mount protocol and must contain `type`
      */
     public static function build(
         FilesystemFactoryRegistry $registry,
@@ -30,7 +31,7 @@ final class FstabBuilder
         }
 
         foreach ($filesystems as $protocol => $entry) {
-            $type = $entry['type'];
+            $type = is_string($entry['type'] ?? null) ? $entry['type'] : '';
             $options = $entry;
             unset($options['type']);
 

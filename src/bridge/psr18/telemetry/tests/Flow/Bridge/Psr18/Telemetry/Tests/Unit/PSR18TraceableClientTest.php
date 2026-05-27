@@ -57,9 +57,14 @@ final class PSR18TraceableClientTest extends TestCase
             static::assertSame(RuntimeException::class, $eventAttributes['exception.type']);
             static::assertSame('Connection failed', $eventAttributes['exception.message']);
 
-            static::assertNotNull($span->status());
-            static::assertTrue($span->status()->isError());
-            static::assertSame('Connection failed', $span->status()->description);
+            $status = $span->status();
+
+            if ($status === null) {
+                static::fail('Expected span to have status');
+            }
+
+            static::assertTrue($status->isError());
+            static::assertSame('Connection failed', $status->description);
         }
     }
 
@@ -80,9 +85,14 @@ final class PSR18TraceableClientTest extends TestCase
         static::assertCount(1, $spans);
         $span = $spans[0];
 
-        static::assertNotNull($span->status());
-        static::assertTrue($span->status()->isError());
-        static::assertSame('HTTP 404', $span->status()->description);
+        $status = $span->status();
+
+        if ($status === null) {
+            static::fail('Expected span to have status');
+        }
+
+        static::assertTrue($status->isError());
+        static::assertSame('HTTP 404', $status->description);
         static::assertSame(404, $span->attributes()['http.response.status_code']);
     }
 
@@ -103,9 +113,14 @@ final class PSR18TraceableClientTest extends TestCase
         static::assertCount(1, $spans);
         $span = $spans[0];
 
-        static::assertNotNull($span->status());
-        static::assertTrue($span->status()->isError());
-        static::assertSame('HTTP 500', $span->status()->description);
+        $status = $span->status();
+
+        if ($status === null) {
+            static::fail('Expected span to have status');
+        }
+
+        static::assertTrue($status->isError());
+        static::assertSame('HTTP 500', $status->description);
         static::assertSame(500, $span->attributes()['http.response.status_code']);
     }
 
@@ -173,8 +188,13 @@ final class PSR18TraceableClientTest extends TestCase
         $span = $spans[0];
 
         static::assertSame('GET api.example.com', $span->name());
-        static::assertNotNull($span->status());
-        static::assertTrue($span->status()->isOk());
+        $status = $span->status();
+
+        if ($status === null) {
+            static::fail('Expected span to have status');
+        }
+
+        static::assertTrue($status->isOk());
     }
 
     private function createTelemetry(MemorySpanProcessor $spanProcessor): Telemetry

@@ -138,4 +138,86 @@ final class AttributeSerializerTest extends TestCase
             $result,
         );
     }
+
+    public function test_serialize_nested_list_array_values(): void
+    {
+        $result = $this->serializer->serialize(Attributes::create([
+            'matrix' => [[1, 2], [3, 4]],
+        ]));
+
+        static::assertEquals(
+            [
+                [
+                    'key' => 'matrix',
+                    'value' => [
+                        'arrayValue' => [
+                            'values' => [
+                                ['arrayValue' => ['values' => [['intValue' => '1'], ['intValue' => '2']]]],
+                                ['arrayValue' => ['values' => [['intValue' => '3'], ['intValue' => '4']]]],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            $result,
+        );
+    }
+
+    public function test_serialize_associative_array_as_kvlist(): void
+    {
+        $result = $this->serializer->serialize(Attributes::create([
+            'user' => ['name' => 'Alice', 'age' => 30],
+        ]));
+
+        static::assertEquals(
+            [
+                [
+                    'key' => 'user',
+                    'value' => [
+                        'kvlistValue' => [
+                            'values' => [
+                                ['key' => 'name', 'value' => ['stringValue' => 'Alice']],
+                                ['key' => 'age', 'value' => ['intValue' => '30']],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            $result,
+        );
+    }
+
+    public function test_serialize_mixed_nested_structures(): void
+    {
+        $result = $this->serializer->serialize(Attributes::create([
+            'context' => ['tags' => ['web', 'api'], 'version' => 2],
+        ]));
+
+        static::assertEquals(
+            [
+                [
+                    'key' => 'context',
+                    'value' => [
+                        'kvlistValue' => [
+                            'values' => [
+                                [
+                                    'key' => 'tags',
+                                    'value' => [
+                                        'arrayValue' => [
+                                            'values' => [
+                                                ['stringValue' => 'web'],
+                                                ['stringValue' => 'api'],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                                ['key' => 'version', 'value' => ['intValue' => '2']],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            $result,
+        );
+    }
 }

@@ -27,8 +27,10 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
         $stream->append("This is second line\n");
         $stream->close();
 
-        static::assertTrue($fs->status(path('azure-blob://file.txt'))?->isFile());
-        static::assertFalse($fs->status(path('azure-blob://file.txt'))->isDirectory());
+        $status = $fs->status(path('azure-blob://file.txt'));
+        static::assertNotNull($status);
+        static::assertTrue($status->isFile());
+        static::assertFalse($status->isDirectory());
         static::assertSame(<<<'TXT'
             This is first line
             This is second line
@@ -59,8 +61,10 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
         }
         $stream->close();
 
-        static::assertTrue($fs->status(path('azure-blob://file.txt'))?->isFile());
-        static::assertFalse($fs->status(path('azure-blob://file.txt'))->isDirectory());
+        $status = $fs->status(path('azure-blob://file.txt'));
+        static::assertNotNull($status);
+        static::assertTrue($status->isFile());
+        static::assertFalse($status->isDirectory());
         static::assertSame($output, $fs->readFrom(path('azure-blob://file.txt'))->content());
 
         $fs->rm(path('azure-blob://file.txt'));
@@ -83,8 +87,10 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
         }
         $stream->close();
 
-        static::assertTrue($fs->status(path('azure-blob://file.txt'))?->isFile());
-        static::assertFalse($fs->status(path('azure-blob://file.txt'))->isDirectory());
+        $status = $fs->status(path('azure-blob://file.txt'));
+        static::assertNotNull($status);
+        static::assertTrue($status->isFile());
+        static::assertFalse($status->isDirectory());
         static::assertSame($output, $fs->readFrom(path('azure-blob://file.txt'))->content());
 
         $fs->rm(path('azure-blob://file.txt'));
@@ -153,11 +159,10 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
         static::assertIsResource($resource);
         $fs->writeTo(path('azure-blob://some_path_to/file.txt'))->fromResource($resource)->close();
 
-        static::assertTrue($fs->status(path('azure-blob://some_path_to/*.txt'))?->isFile());
-        static::assertSame(
-            'azure-blob://some_path_to/file.txt',
-            $fs->status(path('azure-blob://some_path_to/*.txt'))->path->uri(),
-        );
+        $status = $fs->status(path('azure-blob://some_path_to/*.txt'));
+        static::assertNotNull($status);
+        static::assertTrue($status->isFile());
+        static::assertSame('azure-blob://some_path_to/file.txt', $status->path->uri());
     }
 
     public function test_file_status_on_root_folder(): void
@@ -316,8 +321,10 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
         $stream->append('Hello, World!');
         $stream->close();
 
-        static::assertTrue($fs->status(path('azure-blob://file.txt'))?->isFile());
-        static::assertFalse($fs->status(path('azure-blob://file.txt'))->isDirectory());
+        $status = $fs->status(path('azure-blob://file.txt'));
+        static::assertNotNull($status);
+        static::assertTrue($status->isFile());
+        static::assertFalse($status->isDirectory());
         static::assertSame('Hello, World!', $fs->readFrom(path('azure-blob://file.txt'))->content());
 
         $fs->rm(path('azure-blob://file.txt'));
@@ -333,8 +340,10 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
         $stream->fromResource($resource);
         $stream->close();
 
-        static::assertTrue($fs->status(path('azure-blob://orders.csv'))?->isFile());
-        static::assertFalse($fs->status(path('azure-blob://orders.csv'))->isDirectory());
+        $status = $fs->status(path('azure-blob://orders.csv'));
+        static::assertNotNull($status);
+        static::assertTrue($status->isFile());
+        static::assertFalse($status->isDirectory());
         static::assertSame(
             file_get_contents(__DIR__ . '/Fixtures/orders.csv'),
             $fs->readFrom(path('azure-blob://orders.csv'))->content(),
@@ -355,8 +364,10 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
 
         $stream->close();
 
-        static::assertTrue($fs->status(path('azure-blob://block_blob.csv'))?->isFile());
-        static::assertFalse($fs->status(path('azure-blob://block_blob.csv'))->isDirectory());
+        $status = $fs->status(path('azure-blob://block_blob.csv'));
+        static::assertNotNull($status);
+        static::assertTrue($status->isFile());
+        static::assertFalse($status->isDirectory());
 
         $fs->rm(path('azure-blob://block_blob.csv'));
     }

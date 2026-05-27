@@ -31,8 +31,7 @@ final class ReadDDLCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $style = new SymfonyStyle($input, $output);
-        $filePath = $input->getArgument('file');
-        $filePath = type_string()->assert($filePath);
+        $filePath = type_string()->assert($input->getArgument('file'));
 
         if (!file_exists($filePath)) {
             $style->error(sprintf('File "%s" does not exist', $filePath));

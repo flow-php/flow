@@ -226,14 +226,15 @@ final class TelemetryHandlerIntegrationTest extends TestCase
     public function test_logs_after_span_completion_have_no_trace_context(): void
     {
         $context = TelemetryTestContext::createWithTracing();
-        static::assertNotNull($context->tracer);
+        $tracer = $context->tracer;
+        static::assertNotNull($tracer);
 
         $monolog = new MonologLogger('application');
         $monolog->pushHandler(telemetry_handler($context->logger));
 
-        $span = $context->tracer->span('short-operation');
+        $span = $tracer->span('short-operation');
         $monolog->info('Inside span');
-        $context->tracer->complete($span);
+        $tracer->complete($span);
 
         $monolog->info('After span completed');
 
@@ -247,34 +248,37 @@ final class TelemetryHandlerIntegrationTest extends TestCase
     public function test_logs_within_active_span_include_trace_and_span_ids(): void
     {
         $context = TelemetryTestContext::createWithTracing();
-        static::assertNotNull($context->tracer);
+        $tracer = $context->tracer;
+        static::assertNotNull($tracer);
 
         $monolog = new MonologLogger('application');
         $monolog->pushHandler(telemetry_handler($context->logger));
 
-        $span = $context->tracer->span('process-order');
+        $span = $tracer->span('process-order');
 
         $monolog->info('Processing order', ['order_id' => 123]);
         $monolog->warning('Low inventory', ['product_id' => 456]);
 
-        $context->tracer->complete($span);
+        $tracer->complete($span);
 
         $entries = $context->processor->entries();
         static::assertCount(2, $entries);
 
-        static::assertNotNull($entries[0]->spanContext);
-        static::assertNotNull($entries[0]->spanContext->traceId);
-        static::assertNotNull($entries[0]->spanContext->spanId);
+        $spanContext0 = $entries[0]->spanContext;
+        $spanContext1 = $entries[1]->spanContext;
+        static::assertNotNull($spanContext0);
+        static::assertNotNull($spanContext0->traceId);
+        static::assertNotNull($spanContext0->spanId);
 
-        static::assertNotNull($entries[1]->spanContext);
+        static::assertNotNull($spanContext1);
         static::assertSame(
-            $entries[0]->spanContext->traceId->toHex(),
-            $entries[1]->spanContext->traceId->toHex(),
+            $spanContext0->traceId->toHex(),
+            $spanContext1->traceId->toHex(),
             'Both logs should share the same trace_id',
         );
         static::assertSame(
-            $entries[0]->spanContext->spanId->toHex(),
-            $entries[1]->spanContext->spanId->toHex(),
+            $spanContext0->spanId->toHex(),
+            $spanContext1->spanId->toHex(),
             'Both logs should share the same span_id',
         );
     }
@@ -425,32 +429,36 @@ final class TelemetryHandlerIntegrationTest extends TestCase
     public function test_nested_spans_propagate_child_span_id_to_logs(): void
     {
         $context = TelemetryTestContext::createWithTracing();
-        static::assertNotNull($context->tracer);
+        $tracer = $context->tracer;
+        static::assertNotNull($tracer);
 
         $monolog = new MonologLogger('application');
         $monolog->pushHandler(telemetry_handler($context->logger));
 
-        $parentSpan = $context->tracer->span('parent-operation');
+        $parentSpan = $tracer->span('parent-operation');
         $monolog->info('In parent span');
 
-        $childSpan = $context->tracer->span('child-operation');
+        $childSpan = $tracer->span('child-operation');
         $monolog->info('In child span');
 
-        $context->tracer->complete($childSpan);
+        $tracer->complete($childSpan);
         $monolog->info('Back in parent span');
 
-        $context->tracer->complete($parentSpan);
+        $tracer->complete($parentSpan);
 
         $entries = $context->processor->entries();
         static::assertCount(3, $entries);
 
-        $parentSpanId = $entries[0]->spanContext?->spanId->toHex();
-        $childSpanId = $entries[1]->spanContext?->spanId->toHex();
-        $backInParentSpanId = $entries[2]->spanContext?->spanId->toHex();
+        $spanContext0 = $entries[0]->spanContext;
+        $spanContext1 = $entries[1]->spanContext;
+        $spanContext2 = $entries[2]->spanContext;
+        static::assertNotNull($spanContext0);
+        static::assertNotNull($spanContext1);
+        static::assertNotNull($spanContext2);
 
-        static::assertNotNull($parentSpanId);
-        static::assertNotNull($childSpanId);
-        static::assertNotNull($backInParentSpanId);
+        $parentSpanId = $spanContext0->spanId->toHex();
+        $childSpanId = $spanContext1->spanId->toHex();
+        $backInParentSpanId = $spanContext2->spanId->toHex();
 
         static::assertNotSame($parentSpanId, $childSpanId, 'Child span should have different span_id');
         static::assertSame(
@@ -460,13 +468,13 @@ final class TelemetryHandlerIntegrationTest extends TestCase
         );
 
         static::assertSame(
-            $entries[0]->spanContext->traceId->toHex(),
-            $entries[1]->spanContext->traceId->toHex(),
+            $spanContext0->traceId->toHex(),
+            $spanContext1->traceId->toHex(),
             'All logs should share the same trace_id',
         );
         static::assertSame(
-            $entries[1]->spanContext->traceId->toHex(),
-            $entries[2]->spanContext->traceId->toHex(),
+            $spanContext1->traceId->toHex(),
+            $spanContext2->traceId->toHex(),
             'All logs should share the same trace_id',
         );
     }

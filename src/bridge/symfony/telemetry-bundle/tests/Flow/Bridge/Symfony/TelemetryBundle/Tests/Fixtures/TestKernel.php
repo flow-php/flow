@@ -108,6 +108,7 @@ final class TestKernel extends Kernel
         yield new FlowTelemetryBundle();
 
         foreach ($this->testBundles as $bundleClass) {
+            // @mago-expect analysis:unsafe-instantiation
             yield new $bundleClass();
         }
     }

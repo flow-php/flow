@@ -113,7 +113,7 @@ final class Gauge implements Instrument
      * Record a gauge value.
      *
      * @param float|int $value Current value to record
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Categorization attributes
+     * @param array<string, mixed>|Attributes $attributes Categorization attributes
      * @param null|SpanContext $context Optional span context for exemplar capture
      */
     public function record(int|float $value, array|Attributes $attributes = [], ?SpanContext $context = null): void

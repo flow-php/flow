@@ -8,21 +8,16 @@ use Flow\Bridge\Monolog\Http\Exception\InvalidArgumentException;
 use Flow\Bridge\Monolog\Http\Sanitization\Sanitizer;
 use Flow\Bridge\Monolog\Http\Sanitization\SanitizerFactory;
 
-use function is_array;
 use function sprintf;
 
 final readonly class ResponseConfig
 {
     /**
-     * @var array<string, array<string, mixed>|Sanitizer>
+     * @var array<string, Sanitizer>
      */
     private array $sanitizers;
 
     /**
-     * @param bool $withReasonPhrase
-     * @param bool $withStatus
-     * @param bool $withBody
-     * @param int $bodySizeLimit
      * @param array<int> $withoutStatusCodes
      * @param array<string> $headers
      * @param array<string, array<string, mixed>|Sanitizer> $sanitizers
@@ -53,21 +48,18 @@ final readonly class ResponseConfig
         foreach ($sanitizers as $key => $sanitizer) {
             if ($sanitizer instanceof Sanitizer) {
                 $initializedSanitizers[$key] = $sanitizer;
-            } elseif (is_array($sanitizer)) {
-                try {
-                    $initializedSanitizers[$key] = SanitizerFactory::fromArray($sanitizer);
-                } catch (InvalidArgumentException $e) {
-                    throw new InvalidArgumentException(
-                        sprintf('Sanitizer for key "%s" could not be created from array: %s', $key, $e->getMessage()),
-                        0,
-                        $e,
-                    );
-                }
-            } else {
-                throw new InvalidArgumentException(sprintf(
-                    'Sanitizer for key "%s" must be an instance of Sanitizer or an array that can be converted to a Sanitizer',
-                    $key,
-                ));
+
+                continue;
+            }
+
+            try {
+                $initializedSanitizers[$key] = SanitizerFactory::fromArray($sanitizer);
+            } catch (InvalidArgumentException $e) {
+                throw new InvalidArgumentException(
+                    sprintf('Sanitizer for key "%s" could not be created from array: %s', $key, $e->getMessage()),
+                    0,
+                    $e,
+                );
             }
         }
 

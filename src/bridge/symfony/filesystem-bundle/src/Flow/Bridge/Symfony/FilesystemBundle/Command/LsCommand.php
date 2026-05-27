@@ -100,6 +100,7 @@ final class LsCommand extends Command
             $fstabName = type_union(type_string(), type_null())->assert($input->getOption('fstab'));
             $recursive = type_boolean()->assert($input->getOption('recursive'));
             $long = !type_boolean()->assert($input->getOption('short'));
+            // @mago-expect analysis:mixed-assignment
             $limitOpt = $input->getOption('limit');
             $limit = $limitOpt === null ? null : type_integer()->cast($limitOpt);
             $offset = type_integer()->cast($input->getOption('offset'));
@@ -183,7 +184,7 @@ final class LsCommand extends Command
                 break;
             }
 
-            $output->writeln((string) json_encode([
+            $output->writeln(json_encode([
                 'uri' => $status->path->uri(),
                 'type' => $status->isFile() ? 'file' : 'directory',
                 'size' => $status->size,

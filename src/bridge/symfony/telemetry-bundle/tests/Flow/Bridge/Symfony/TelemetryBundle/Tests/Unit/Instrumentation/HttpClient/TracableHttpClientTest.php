@@ -79,7 +79,7 @@ final class TracableHttpClientTest extends TestCase
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $innerClient = new class implements HttpClientInterface {
-            /** @param array<string, mixed> $options */
+            /** @param array<array-key, mixed> $options */
             public function request(string $method, string $url, array $options = []): ResponseInterface
             {
                 return new class implements ResponseInterface {
@@ -90,7 +90,7 @@ final class TracableHttpClientTest extends TestCase
                         return '';
                     }
 
-                    /** @return array<string, list<null|string>> */
+                    /** @return array<string, list<string>> */
                     public function getHeaders(bool $throw = true): array
                     {
                         return [];
@@ -121,7 +121,7 @@ final class TracableHttpClientTest extends TestCase
                 throw new RuntimeException('Not implemented');
             }
 
-            /** @param array<string, mixed> $options */
+            /** @param array<array-key, mixed> $options */
             public function withOptions(array $options): static
             {
                 return $this;
@@ -189,7 +189,7 @@ final class TracableHttpClientTest extends TestCase
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $innerClient = new class implements HttpClientInterface {
-            /** @param array<string, mixed> $options */
+            /** @param array<array-key, mixed> $options */
             public function request(string $method, string $url, array $options = []): ResponseInterface
             {
                 throw new RuntimeException('Connection timeout');
@@ -202,7 +202,7 @@ final class TracableHttpClientTest extends TestCase
                 throw new RuntimeException('Not implemented');
             }
 
-            /** @param array<string, mixed> $options */
+            /** @param array<array-key, mixed> $options */
             public function withOptions(array $options): static
             {
                 return $this;
@@ -344,9 +344,9 @@ final class TracableHttpClientTest extends TestCase
         $telemetry = $this->createTelemetry($spanProcessor);
 
         $mockResponse = $this->createMock(ResponseInterface::class);
-        $mockChunk = $this->createMock(ChunkInterface::class);
 
-        $streamResponse = new readonly class($mockResponse, $mockChunk) implements ResponseStreamInterface {
+        $streamResponse = new readonly class($mockResponse, $this->createMock(ChunkInterface::class)) implements
+            ResponseStreamInterface {
             public function __construct(
                 private ResponseInterface $response,
                 private ChunkInterface $chunk,
@@ -377,7 +377,7 @@ final class TracableHttpClientTest extends TestCase
                 private ResponseStreamInterface $stream,
             ) {}
 
-            /** @param array<string, mixed> $options */
+            /** @param array<array-key, mixed> $options */
             public function request(string $method, string $url, array $options = []): ResponseInterface
             {
                 throw new RuntimeException('Not implemented');
@@ -390,7 +390,7 @@ final class TracableHttpClientTest extends TestCase
                 return $this->stream;
             }
 
-            /** @param array<string, mixed> $options */
+            /** @param array<array-key, mixed> $options */
             public function withOptions(array $options): static
             {
                 return $this;
@@ -425,12 +425,10 @@ final class TracableHttpClientTest extends TestCase
                 private int $statusCode,
             ) {}
 
-            /** @param array<string, mixed> $options */
+            /** @param array<array-key, mixed> $options */
             public function request(string $method, string $url, array $options = []): ResponseInterface
             {
-                $statusCode = $this->statusCode;
-
-                return new readonly class($statusCode) implements ResponseInterface {
+                return new readonly class($this->statusCode) implements ResponseInterface {
                     public function __construct(
                         private int $statusCode,
                     ) {}
@@ -442,7 +440,7 @@ final class TracableHttpClientTest extends TestCase
                         return '';
                     }
 
-                    /** @return array<string, list<null|string>> */
+                    /** @return array<string, list<string>> */
                     public function getHeaders(bool $throw = true): array
                     {
                         return [];
@@ -473,7 +471,7 @@ final class TracableHttpClientTest extends TestCase
                 throw new RuntimeException('Not implemented');
             }
 
-            /** @param array<string, mixed> $options */
+            /** @param array<array-key, mixed> $options */
             public function withOptions(array $options): static
             {
                 return new self($this->statusCode);

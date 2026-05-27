@@ -37,6 +37,7 @@ final readonly class HTMLElementType implements Type
         }
 
         if (is_string($value)) {
+            // @mago-expect analysis:unavailable-method
             $document = HTMLDocument::createFromString($value, LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
 
             return type_instance_of(HTMLElement::class)->assert($document->documentElement);

@@ -11,8 +11,7 @@ final class GenerateCommandTest extends CommandTestCase
 {
     public function test_generates_blank_migration(): void
     {
-        /** @var Command $command */
-        $command = $this->context->container()->get('flow.postgresql.command.generate');
+        $command = $this->context->command('flow.postgresql.command.generate');
         $tester = new CommandTester($command);
         $tester->execute(['name' => 'add_email_index']);
 
@@ -21,15 +20,16 @@ final class GenerateCommandTest extends CommandTestCase
 
         $dirs = $this->context->migrationDirs('*_add_email_index');
         static::assertCount(1, $dirs);
-        static::assertTrue($this->context->fileExists($dirs[0] . '/migration.php'));
-        static::assertTrue($this->context->fileExists($dirs[0] . '/rollback.php'));
+        $migrationDir = (string) $dirs[0];
+        static::assertTrue($this->context->fileExists($migrationDir . '/migration.php'));
+        static::assertTrue($this->context->fileExists($migrationDir . '/rollback.php'));
         static::assertStringContainsString(
             'implements Migration',
-            $this->context->fileContent($dirs[0] . '/migration.php'),
+            $this->context->fileContent($migrationDir . '/migration.php'),
         );
         static::assertStringContainsString(
             'implements Rollback',
-            $this->context->fileContent($dirs[0] . '/rollback.php'),
+            $this->context->fileContent($migrationDir . '/rollback.php'),
         );
     }
 }

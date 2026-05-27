@@ -50,6 +50,7 @@ final readonly class HTMLType implements Type
             && class_exists('\Dom\HTMLDocument')
             && preg_match(self::HTML_ALIKE_REGEX, $value) === 1
         ) {
+            // @mago-expect analysis:unavailable-method
             return HTMLDocument::createFromString($value, LIBXML_NOERROR);
         }
 

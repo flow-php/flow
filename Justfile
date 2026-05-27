@@ -51,7 +51,7 @@ lint-actions:
     set -uo pipefail
     rc=0
     actionlint || rc=$?
-    zizmor .github/workflows || rc=$?
+    zizmor --offline .github/workflows || rc=$?
     exit $rc
 
 # Run static analysis (PHPStan).
@@ -70,7 +70,29 @@ analyze-mago *args:
         src/lib/doctrine-dbal-bulk \
         src/lib/snappy \
         src/lib/parquet \
-        src/core/etl
+        src/core/etl \
+        src/lib/parquet-viewer \
+        src/bridge/openapi/specification \
+        src/bridge/psr3/telemetry \
+        src/bridge/symfony/http-foundation-telemetry \
+        src/bridge/telemetry/otlp \
+        src/bridge/filesystem/async-aws \
+        src/bridge/filesystem/azure \
+        src/bridge/monolog/http \
+        src/bridge/monolog/telemetry \
+        src/bridge/phpunit/postgresql \
+        src/bridge/phpunit/telemetry \
+        src/bridge/postgresql/valinor \
+        src/bridge/psr18/telemetry \
+        src/bridge/psr7/telemetry \
+        src/bridge/symfony/filesystem-bundle \
+        src/bridge/symfony/filesystem-cache \
+        src/bridge/symfony/http-foundation \
+        src/bridge/symfony/postgresql-bundle \
+        src/bridge/symfony/postgresql-cache \
+        src/bridge/symfony/postgresql-messenger \
+        src/bridge/symfony/postgresql-session \
+        src/bridge/symfony/telemetry-bundle
 
 # Auto-fix code style (Mago format + lint --fix) and GitHub Actions findings (zizmor --fix).
 fix:

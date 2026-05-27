@@ -27,6 +27,7 @@ final class HTMLElementTypeTest extends TestCase
     public static function assert_data_provider(): Generator
     {
         yield 'valid HTMLElement' => [
+            // @mago-expect analysis:unavailable-method
             'value' => HTMLDocument::createFromString(
                 '<!DOCTYPE html><html><head></head><body></body></html>',
             )->querySelector('body'),
@@ -87,6 +88,7 @@ final class HTMLElementTypeTest extends TestCase
     public static function cast_data_provider(): Generator
     {
         yield 'valid HTMLElement' => [
+            // @mago-expect analysis:unavailable-method
             'value' => HTMLDocument::createFromString(
                 '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
             )->querySelector('body'),
@@ -143,6 +145,7 @@ final class HTMLElementTypeTest extends TestCase
     public static function is_valid_data_provider(): Generator
     {
         yield 'valid HTMLDocument' => [
+            // @mago-expect analysis:unavailable-method
             'value' => HTMLDocument::createFromString(
                 '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
             )->querySelector('body'),

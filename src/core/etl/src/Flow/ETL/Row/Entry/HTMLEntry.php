@@ -49,6 +49,7 @@ final class HTMLEntry implements Entry
             throw new RuntimeException('HTMLEntry requires PHP 8.4+ (\Dom\HTMLDocument is not available).');
         }
 
+        // @mago-expect analysis:unavailable-method
         $document = HTMLDocument::createFromString($value, LIBXML_NOERROR);
 
         // @mago-ignore analysis:impossible-condition
@@ -88,6 +89,8 @@ final class HTMLEntry implements Entry
             return false;
         }
 
+        // @mago-expect analysis:unavailable-method
+        // @mago-expect analysis:unavailable-method
         return $entry->value()?->saveHtml() === $this->value?->saveHtml();
     }
 
@@ -110,6 +113,7 @@ final class HTMLEntry implements Entry
             return '';
         }
 
+        // @mago-expect analysis:unavailable-method
         return $this->value->saveHtml();
     }
 

@@ -19,9 +19,10 @@ use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\to_output;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_optional;
+use function Flow\Types\DSL\type_scalar;
 use function Flow\Types\DSL\type_string;
 use function is_numeric;
-use function is_string;
 use function ob_get_clean;
 use function ob_start;
 use function sprintf;
@@ -48,26 +49,25 @@ final class ReadDataCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $style = new SymfonyStyle($input, $output);
-        $filePath = $input->getArgument('file');
-        $filePathString = is_string($filePath) ? $filePath : '';
+        $filePath = type_string()->assert($input->getArgument('file'));
 
-        if (!file_exists($filePathString)) {
-            $style->error(sprintf('File "%s" does not exist', $filePathString));
+        if (!file_exists($filePath)) {
+            $style->error(sprintf('File "%s" does not exist', $filePath));
 
             return Command::FAILURE;
         }
         $reader = new Reader();
-        $parquetFile = $reader->read($filePathString);
+        $parquetFile = $reader->read($filePath);
 
         try {
             $parquetFile->metadata();
         } catch (InvalidArgumentException) {
-            $style->error(sprintf('File "%s" is not a valid parquet file', $filePathString));
+            $style->error(sprintf('File "%s" is not a valid parquet file', $filePath));
 
             return Command::FAILURE;
         }
 
-        $batchSizeOption = $input->getOption('batch-size');
+        $batchSizeOption = type_optional(type_scalar())->assert($input->getOption('batch-size'));
         $batchSize = is_numeric($batchSizeOption) ? (int) $batchSizeOption : 1000;
 
         if ($batchSize < 1) {
@@ -76,16 +76,16 @@ final class ReadDataCommand extends Command
             return Command::FAILURE;
         }
 
-        $limitOption = $input->getOption('limit');
+        $limitOption = type_optional(type_scalar())->assert($input->getOption('limit'));
         $limit = is_numeric($limitOption) ? (int) $limitOption : 0;
         $columns = type_list(type_string())->assert($input->getOption('columns'));
-        $truncateOption = $input->getOption('truncate');
-        $truncate = $truncateOption && is_numeric($truncateOption) ? (int) $truncateOption : false;
+        $truncateOption = type_optional(type_scalar())->assert($input->getOption('truncate'));
+        $truncate = is_numeric($truncateOption) && $truncateOption ? (int) $truncateOption : false;
 
         ob_start();
 
         df()
-            ->read(from_parquet($filePathString, $columns))
+            ->read(from_parquet($filePath, $columns))
             ->limit($limit)
             ->batchSize($batchSize)
             ->write(to_output($truncate))

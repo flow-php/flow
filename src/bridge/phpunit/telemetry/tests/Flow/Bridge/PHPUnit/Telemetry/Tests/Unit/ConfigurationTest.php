@@ -274,10 +274,15 @@ final class ConfigurationTest extends TestCase
     {
         $config = Configuration::fromParameters(ParameterCollection::fromArray([]));
 
-        static::assertInstanceOf(ErrorLogHandlerConfig::class, $config->errorHandler);
-        static::assertSame(ErrorLogMessageType::OperatingSystem, $config->errorHandler->messageType);
-        static::assertFalse($config->errorHandler->expandNewlines);
-        static::assertSame(Configuration::DEFAULT_MESSAGE_PREFIX, $config->errorHandler->messagePrefix);
+        $errorHandler = $config->errorHandler;
+
+        if (!$errorHandler instanceof ErrorLogHandlerConfig) {
+            static::fail('Expected ErrorLogHandlerConfig, got ' . $errorHandler::class);
+        }
+
+        static::assertSame(ErrorLogMessageType::OperatingSystem, $errorHandler->messageType);
+        static::assertFalse($errorHandler->expandNewlines);
+        static::assertSame(Configuration::DEFAULT_MESSAGE_PREFIX, $errorHandler->messagePrefix);
     }
 
     public function test_emit_flags_can_be_disabled(): void
@@ -503,10 +508,15 @@ final class ConfigurationTest extends TestCase
             'error_handler_message_prefix' => '[custom]',
         ]));
 
-        static::assertInstanceOf(ErrorLogHandlerConfig::class, $config->errorHandler);
-        static::assertSame(ErrorLogMessageType::Sapi, $config->errorHandler->messageType);
-        static::assertTrue($config->errorHandler->expandNewlines);
-        static::assertSame('[custom]', $config->errorHandler->messagePrefix);
+        $errorHandler = $config->errorHandler;
+
+        if (!$errorHandler instanceof ErrorLogHandlerConfig) {
+            static::fail('Expected ErrorLogHandlerConfig, got ' . $errorHandler::class);
+        }
+
+        static::assertSame(ErrorLogMessageType::Sapi, $errorHandler->messageType);
+        static::assertTrue($errorHandler->expandNewlines);
+        static::assertSame('[custom]', $errorHandler->messagePrefix);
     }
 
     public function test_grpc_headers_parsed(): void
@@ -725,11 +735,16 @@ final class ConfigurationTest extends TestCase
             'error_handler_message_prefix' => '[telemetry]',
         ]));
 
-        static::assertInstanceOf(StreamErrorHandlerConfig::class, $config->errorHandler);
-        static::assertSame('/tmp/flow-telemetry.log', $config->errorHandler->destination);
-        static::assertSame(0o640, $config->errorHandler->filePermissions);
-        static::assertFalse($config->errorHandler->createDirectories);
-        static::assertSame('[telemetry]', $config->errorHandler->messagePrefix);
+        $errorHandler = $config->errorHandler;
+
+        if (!$errorHandler instanceof StreamErrorHandlerConfig) {
+            static::fail('Expected StreamErrorHandlerConfig, got ' . $errorHandler::class);
+        }
+
+        static::assertSame('/tmp/flow-telemetry.log', $errorHandler->destination);
+        static::assertSame(0o640, $errorHandler->filePermissions);
+        static::assertFalse($errorHandler->createDirectories);
+        static::assertSame('[telemetry]', $errorHandler->messagePrefix);
     }
 
     public function test_stream_error_handler_rejects_syslog_params(): void
@@ -837,11 +852,16 @@ final class ConfigurationTest extends TestCase
             'error_handler_severity' => 'warning',
         ]));
 
-        static::assertInstanceOf(SyslogErrorHandlerConfig::class, $config->errorHandler);
-        static::assertSame('flow-test', $config->errorHandler->ident);
-        static::assertSame(SyslogFacility::Local3, $config->errorHandler->facility);
-        static::assertSame(5, $config->errorHandler->logOpts);
-        static::assertSame(SyslogSeverity::Warning, $config->errorHandler->severity);
+        $errorHandler = $config->errorHandler;
+
+        if (!$errorHandler instanceof SyslogErrorHandlerConfig) {
+            static::fail('Expected SyslogErrorHandlerConfig, got ' . $errorHandler::class);
+        }
+
+        static::assertSame('flow-test', $errorHandler->ident);
+        static::assertSame(SyslogFacility::Local3, $errorHandler->facility);
+        static::assertSame(5, $errorHandler->logOpts);
+        static::assertSame(SyslogSeverity::Warning, $errorHandler->severity);
     }
 
     public function test_udp_syslog_error_handler_parsed(): void
@@ -855,12 +875,17 @@ final class ConfigurationTest extends TestCase
             'error_handler_severity' => 'info',
         ]));
 
-        static::assertInstanceOf(UdpSyslogErrorHandlerConfig::class, $config->errorHandler);
-        static::assertSame('192.0.2.1', $config->errorHandler->host);
-        static::assertSame(5140, $config->errorHandler->port);
-        static::assertSame('flow-remote', $config->errorHandler->ident);
-        static::assertSame(SyslogFacility::Mail, $config->errorHandler->facility);
-        static::assertSame(SyslogSeverity::Info, $config->errorHandler->severity);
+        $errorHandler = $config->errorHandler;
+
+        if (!$errorHandler instanceof UdpSyslogErrorHandlerConfig) {
+            static::fail('Expected UdpSyslogErrorHandlerConfig, got ' . $errorHandler::class);
+        }
+
+        static::assertSame('192.0.2.1', $errorHandler->host);
+        static::assertSame(5140, $errorHandler->port);
+        static::assertSame('flow-remote', $errorHandler->ident);
+        static::assertSame(SyslogFacility::Mail, $errorHandler->facility);
+        static::assertSame(SyslogSeverity::Info, $errorHandler->severity);
     }
 
     public function test_udp_syslog_error_handler_requires_host(): void

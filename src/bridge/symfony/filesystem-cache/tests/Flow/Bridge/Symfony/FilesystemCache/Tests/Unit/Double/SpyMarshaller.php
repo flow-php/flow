@@ -31,10 +31,8 @@ final class SpyMarshaller implements MarshallerInterface
     ) {}
 
     /**
-     * @param array<string, mixed> $values
-     * @param null|list<string> $failed
-     *
-     * @param-out list<string> $failed
+     * @param array<array-key, mixed> $values
+     * @param array<array-key, mixed>|null $failed
      *
      * @return array<string, string>
      */
@@ -44,6 +42,7 @@ final class SpyMarshaller implements MarshallerInterface
         $failed = [];
         $out = [];
 
+        // @mago-expect analysis:mixed-assignment
         foreach ($values as $key => $value) {
             if (in_array((string) $key, $this->failKeys, true)) {
                 $failed[] = (string) $key;
@@ -53,7 +52,7 @@ final class SpyMarshaller implements MarshallerInterface
 
             $encoded = 'spy:' . serialize($value);
             $this->marshalled[(string) $key] = $encoded;
-            $out[$key] = $encoded;
+            $out[(string) $key] = $encoded;
         }
 
         return $out;

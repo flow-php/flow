@@ -188,17 +188,11 @@ final class TracingConnectionTest extends TestCase
     private function createMockConnection(): ConnectionInterface
     {
         return new class implements ConnectionInterface {
-            public function beginTransaction(): bool
-            {
-                return true;
-            }
+            public function beginTransaction(): void {}
 
-            public function commit(): bool
-            {
-                return true;
-            }
+            public function commit(): void {}
 
-            public function exec(string $sql): int
+            public function exec(string $sql): int|string
             {
                 return 0;
             }
@@ -213,8 +207,7 @@ final class TracingConnectionTest extends TestCase
                 return '8.0.0';
             }
 
-            /** @phpstan-ignore missingType.parameter */
-            public function lastInsertId($name = null): string|int|false
+            public function lastInsertId(): int|string
             {
                 return 0;
             }
@@ -222,20 +215,13 @@ final class TracingConnectionTest extends TestCase
             public function prepare(string $sql): DriverStatement
             {
                 return new class implements DriverStatement {
-                    /** @phpstan-ignore missingType.parameter */
-                    public function bindValue($param, $value, $type = ParameterType::STRING): bool
-                    {
-                        return true;
-                    }
+                    public function bindValue(
+                        int|string $param,
+                        mixed $value,
+                        ParameterType $type = ParameterType::STRING,
+                    ): void {}
 
-                    /** @phpstan-ignore missingType.parameter */
-                    public function bindParam($param, &$variable, $type = ParameterType::STRING, $length = null): bool
-                    {
-                        return true;
-                    }
-
-                    /** @phpstan-ignore missingType.parameter */
-                    public function execute($params = null): Result
+                    public function execute(): Result
                     {
                         return new class implements Result {
                             public function columnCount(): int
@@ -249,7 +235,7 @@ final class TracingConnectionTest extends TestCase
                                 return [];
                             }
 
-                            /** @return array<mixed, mixed> */
+                            /** @return array<array-key, mixed> */
                             public function fetchAllKeyValue(): array
                             {
                                 return [];
@@ -286,7 +272,7 @@ final class TracingConnectionTest extends TestCase
 
                             public function free(): void {}
 
-                            public function rowCount(): int
+                            public function rowCount(): int|string
                             {
                                 return 0;
                             }
@@ -309,7 +295,7 @@ final class TracingConnectionTest extends TestCase
                         return [];
                     }
 
-                    /** @return array<mixed, mixed> */
+                    /** @return array<array-key, mixed> */
                     public function fetchAllKeyValue(): array
                     {
                         return [];
@@ -346,23 +332,19 @@ final class TracingConnectionTest extends TestCase
 
                     public function free(): void {}
 
-                    public function rowCount(): int
+                    public function rowCount(): int|string
                     {
                         return 0;
                     }
                 };
             }
 
-            /** @phpstan-ignore missingType.parameter, missingType.parameter */
-            public function quote($value, $type = ParameterType::STRING): mixed
+            public function quote(string $value): string
             {
                 return "'{$value}'";
             }
 
-            public function rollBack(): bool
-            {
-                return true;
-            }
+            public function rollBack(): void {}
         };
     }
 

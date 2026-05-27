@@ -30,13 +30,13 @@ final class FullLifecycleTest extends TestCase
 
             $context->bootWithMigrationsForDatabase($testDbName);
 
-            $diffCommand = $context->container()->get('flow.postgresql.command.diff');
+            $diffCommand = $context->command('flow.postgresql.command.diff');
             $tester = new CommandTester($diffCommand);
             $tester->execute(['name' => 'initial_schema', '--from-empty-schema' => true]);
             static::assertSame(Command::SUCCESS, $tester->getStatusCode());
             static::assertStringContainsString('Generated migration', $tester->getDisplay());
 
-            $migrateCommand = $context->container()->get('flow.postgresql.command.migrate');
+            $migrateCommand = $context->command('flow.postgresql.command.migrate');
             $tester = new CommandTester($migrateCommand);
             $tester->setInputs(['yes']);
             $tester->execute([]);
@@ -77,7 +77,7 @@ final class FullLifecycleTest extends TestCase
             $context->createDatabase($testDbName);
             $context->bootWithMigrationsForDatabase($testDbName);
 
-            $migrateCommand = $context->container()->get('flow.postgresql.command.migrate');
+            $migrateCommand = $context->command('flow.postgresql.command.migrate');
             $tester = new CommandTester($migrateCommand);
             $tester->execute([]);
 

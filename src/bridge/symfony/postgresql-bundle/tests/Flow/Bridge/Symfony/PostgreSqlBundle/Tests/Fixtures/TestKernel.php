@@ -93,6 +93,7 @@ final class TestKernel extends Kernel
         yield new FlowPostgreSqlBundle();
 
         foreach ($this->testBundles as $bundleClass) {
+            // @mago-expect analysis:unsafe-instantiation
             yield new $bundleClass();
         }
     }

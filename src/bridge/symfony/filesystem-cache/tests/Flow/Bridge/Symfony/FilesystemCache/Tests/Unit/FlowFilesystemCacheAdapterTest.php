@@ -12,6 +12,7 @@ use Flow\Bridge\Symfony\FilesystemCache\Tests\Unit\Double\SpyMarshaller;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
 use Symfony\Component\Cache\Marshaller\DefaultMarshaller;
+use Symfony\Contracts\Cache\ItemInterface as CacheItemInterface;
 
 use function explode;
 use function iterator_to_array;
@@ -126,8 +127,14 @@ final class FlowFilesystemCacheAdapterTest extends TestCase
 
         $items = iterator_to_array($adapter->getItems(['hello', 'count']));
 
-        static::assertSame('world', $items['hello']->get());
-        static::assertSame(7, $items['count']->get());
+        // @mago-expect analysis:mixed-assignment
+        $helloItem = $items['hello'];
+        // @mago-expect analysis:mixed-assignment
+        $countItem = $items['count'];
+        static::assertInstanceOf(CacheItemInterface::class, $helloItem);
+        static::assertInstanceOf(CacheItemInterface::class, $countItem);
+        static::assertSame('world', $helloItem->get());
+        static::assertSame(7, $countItem->get());
     }
 
     public function test_has_item_returns_false_for_expired_entry(): void

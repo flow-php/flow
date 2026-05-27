@@ -79,19 +79,4 @@ final class ResponseConfigTest extends FlowTestCase
             'invalid' => [],
         ]);
     }
-
-    public function test_constructor_throws_exception_when_sanitizer_is_not_an_instance_of_sanitizer_or_array(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'Sanitizer for key "invalid" must be an instance of Sanitizer or an array that can be converted to a Sanitizer',
-        );
-
-        new ResponseConfig(
-            /** @phpstan-ignore-next-line */
-            sanitizers: [
-                'invalid' => 'not a sanitizer',
-            ],
-        );
-    }
 }

@@ -18,9 +18,14 @@ use Flow\Telemetry\Tracer\SpanLink;
 use Flow\Telemetry\Tracer\SpanStatusCode;
 
 use function array_filter;
+use function array_is_list;
+use function array_keys;
 use function array_map;
 use function array_merge;
+use function array_values;
 use function count;
+use function get_debug_type;
+use function is_array;
 use function is_bool;
 use function is_float;
 use function is_int;
@@ -197,11 +202,11 @@ final class JsonSerializer
         ];
 
         if ($min !== null) {
-            $dataPoint['min'] = is_int($min) ? (float) $min : $min;
+            $dataPoint['min'] = $min;
         }
 
         if ($max !== null) {
-            $dataPoint['max'] = is_int($max) ? (float) $max : $max;
+            $dataPoint['max'] = $max;
         }
 
         if (count($metric->exemplars) > 0) {
@@ -249,7 +254,7 @@ final class JsonSerializer
      *
      * @param array<LogEntry> $entries
      *
-     * @return array<string, array{resource: resource, entries: array<LogEntry>}>
+     * @return array<string, array{resource: \Flow\Telemetry\Resource, entries: array<LogEntry>}>
      */
     private function groupLogsByResource(array $entries): array
     {
@@ -304,7 +309,7 @@ final class JsonSerializer
      *
      * @param array<Metric> $metrics
      *
-     * @return array<string, array{resource: resource, metrics: array<Metric>}>
+     * @return array<string, array{resource: \Flow\Telemetry\Resource, metrics: array<Metric>}>
      */
     private function groupMetricsByResource(array $metrics): array
     {
@@ -359,7 +364,7 @@ final class JsonSerializer
      *
      * @param array<Span> $spans
      *
-     * @return array<string, array{resource: resource, spans: array<Span>}>
+     * @return array<string, array{resource: \Flow\Telemetry\Resource, spans: array<Span>}>
      */
     private function groupSpansByResource(array $spans): array
     {
@@ -421,34 +426,26 @@ final class JsonSerializer
     }
 
     /**
-     * Serialize attributes array to OTLP format.
-     *
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes
+     * @param array<string, mixed> $attributes
      *
      * @return array<array{key: string, value: array<string, mixed>}>
      */
     private function serializeAttributes(array $attributes): array
     {
-        $result = [];
-
-        foreach ($attributes as $key => $value) {
-            $result[] = [
+        return array_map(
+            fn(string $key, mixed $value): array => [
                 'key' => $key,
                 'value' => $this->serializeAttributeValue($value),
-            ];
-        }
-
-        return $result;
+            ],
+            array_keys($attributes),
+            array_values($attributes),
+        );
     }
 
     /**
-     * Serialize a single attribute value to OTLP format.
-     *
-     * @param array<bool|float|int|string>|bool|float|int|string $value
-     *
      * @return array<string, mixed>
      */
-    private function serializeAttributeValue(string|int|float|bool|array $value): array
+    private function serializeAttributeValue(mixed $value): array
     {
         if (is_string($value)) {
             return ['stringValue' => $value];
@@ -466,17 +463,22 @@ final class JsonSerializer
             return ['boolValue' => $value];
         }
 
-        $serialized = [];
+        if (is_array($value)) {
+            if (array_is_list($value)) {
+                return ['arrayValue' => ['values' => array_map($this->serializeAttributeValue(...), $value)]];
+            }
 
-        foreach ($value as $v) {
-            $serialized[] = $this->serializeAttributeValue($v);
+            return ['kvlistValue' => ['values' => array_map(
+                fn(int|string $k, mixed $v): array => [
+                    'key' => (string) $k,
+                    'value' => $this->serializeAttributeValue($v),
+                ],
+                array_keys($value),
+                array_values($value),
+            )]];
         }
 
-        return [
-            'arrayValue' => [
-                'values' => $serialized,
-            ],
-        ];
+        return ['stringValue' => get_debug_type($value)];
     }
 
     /**

@@ -466,6 +466,7 @@ final class TypeDetectorTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function test_logical_html_element_type(): void
     {
+        // @mago-expect analysis:unavailable-method
         $document = HTMLDocument::createFromString(
             '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
         );
@@ -479,6 +480,7 @@ final class TypeDetectorTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function test_logical_html_type(): void
     {
+        // @mago-expect analysis:unavailable-method
         $type = (new TypeDetector())->detectType(HTMLDocument::createFromString(
             '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
         ));

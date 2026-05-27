@@ -31,18 +31,16 @@ final class TracingConnection extends AbstractConnectionMiddleware
     }
 
     #[Override]
-    public function beginTransaction(): bool
+    public function beginTransaction(): void
     {
         $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
         $span = $tracer->span('doctrine.dbal.transaction.begin', SpanKind::CLIENT);
 
         try {
-            $result = parent::beginTransaction();
+            parent::beginTransaction();
 
             $span->setStatus(SpanStatus::ok());
-
-            return $result;
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
@@ -54,18 +52,16 @@ final class TracingConnection extends AbstractConnectionMiddleware
     }
 
     #[Override]
-    public function commit(): bool
+    public function commit(): void
     {
         $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
         $span = $tracer->span('doctrine.dbal.transaction.commit', SpanKind::CLIENT);
 
         try {
-            $result = parent::commit();
+            parent::commit();
 
             $span->setStatus(SpanStatus::ok());
-
-            return $result;
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
@@ -77,7 +73,7 @@ final class TracingConnection extends AbstractConnectionMiddleware
     }
 
     #[Override]
-    public function exec(string $sql): int
+    public function exec(string $sql): int|string
     {
         $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
@@ -164,18 +160,16 @@ final class TracingConnection extends AbstractConnectionMiddleware
     }
 
     #[Override]
-    public function rollBack(): bool
+    public function rollBack(): void
     {
         $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
         $span = $tracer->span('doctrine.dbal.transaction.rollback', SpanKind::CLIENT);
 
         try {
-            $result = parent::rollBack();
+            parent::rollBack();
 
             $span->setStatus(SpanStatus::ok());
-
-            return $result;
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));

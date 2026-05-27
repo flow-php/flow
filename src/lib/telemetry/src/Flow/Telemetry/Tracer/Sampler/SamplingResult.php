@@ -24,17 +24,19 @@ use Flow\Telemetry\Context\TraceState;
  *     // Create and export the span
  * }
  * ```
+ *
+ * @phpstan-import-type TAttributeValueMap from Attributes
  */
 final readonly class SamplingResult
 {
     /**
-     * @var array<string, array<bool|float|int|string>|bool|float|int|string>
+     * @var TAttributeValueMap
      */
     public array $attributes;
 
     /**
      * @param SamplingDecision $decision The sampling decision
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Additional span attributes from the sampler
+     * @param TAttributeValueMap|Attributes $attributes Additional span attributes from the sampler
      * @param null|TraceState $traceState Updated trace state, or null to keep existing
      */
     public function __construct(
@@ -56,7 +58,7 @@ final readonly class SamplingResult
     /**
      * Create a result indicating the span should be recorded and exported.
      *
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes
+     * @param TAttributeValueMap|Attributes $attributes
      */
     public static function recordAndSample(array|Attributes $attributes = [], ?TraceState $traceState = null): self
     {
@@ -66,7 +68,7 @@ final readonly class SamplingResult
     /**
      * Create a result indicating the span should be recorded but not exported.
      *
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes
+     * @param TAttributeValueMap|Attributes $attributes
      */
     public static function recordOnly(array|Attributes $attributes = [], ?TraceState $traceState = null): self
     {

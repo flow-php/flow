@@ -367,7 +367,7 @@ final readonly class BlobService implements BlobServiceInterface
     /**
      * @throws AzureException
      *
-     * @return \Generator<Blob>
+     * @return \Generator<int, Blob>
      */
     public function listBlobs(ListBlobOptions $options = new ListBlobOptions()): Generator
     {

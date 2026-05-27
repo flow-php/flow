@@ -95,7 +95,7 @@ final class SimpleFixedSizeExemplarReservoir implements ExemplarReservoir
     /**
      * Filter attributes to only include simple scalar values.
      *
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes
+     * @param array<string, array<array-key, mixed>|bool|float|int|string> $attributes
      *
      * @return array<string, bool|float|int|string>
      */

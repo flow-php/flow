@@ -92,13 +92,13 @@ final class Span
      *     kind: string,
      *     startTime: string,
      *     endTime: null|string,
-     *     resource: array{attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
-     *     scope: array{name: string, version: string, schemaUrl: null|string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
-     *     attributes: array<string, array<bool|float|int|string>|bool|float|int|string>,
+     *     resource: array{attributes: array<string, mixed>},
+     *     scope: array{name: string, version: string, schemaUrl: null|string, attributes: array<string, mixed>},
+     *     attributes: array<string, mixed>,
      *     droppedAttributeCount?: int,
-     *     events: array<array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount?: int}>,
+     *     events: array<array{name: string, timestamp: string, attributes: array<string, mixed>, droppedAttributeCount?: int}>,
      *     droppedEventsCount?: int,
-     *     links: array<array{context: array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags?: array{byte: int}, traceState?: array{entries: array<string, string>}}, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount?: int}>,
+     *     links: array<array{context: array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags?: array{byte: int}, traceState?: array{entries: array<string, string>}}, attributes: array<string, mixed>, droppedAttributeCount?: int}>,
      *     droppedLinksCount?: int,
      *     status: null|array{code: int, description: null|string},
      *     isRecording: bool
@@ -178,7 +178,7 @@ final class Span
     /**
      * Get all span attributes as array.
      *
-     * @return array<string, array<bool|float|int|string>|bool|float|int|string>
+     * @return array<string, array<array-key, mixed>|bool|float|int|string>
      */
     public function attributes(): array
     {
@@ -339,13 +339,13 @@ final class Span
      *     kind: string,
      *     startTime: string,
      *     endTime: null|string,
-     *     resource: array{attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
-     *     scope: array{name: string, version: string, schemaUrl: null|string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
-     *     attributes: array<string, array<bool|float|int|string>|bool|float|int|string>,
+     *     resource: array{attributes: array<string, mixed>},
+     *     scope: array{name: string, version: string, schemaUrl: null|string, attributes: array<string, mixed>},
+     *     attributes: array<string, mixed>,
      *     droppedAttributeCount: int,
-     *     events: array<array{name: string, timestamp: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount: int}>,
+     *     events: array<array{name: string, timestamp: string, attributes: array<string, mixed>, droppedAttributeCount: int}>,
      *     droppedEventsCount: int,
-     *     links: array<array{context: array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags: array{byte: int}, traceState: array{entries: array<string, string>}}, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount: int}>,
+     *     links: array<array{context: array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags: array{byte: int}, traceState: array{entries: array<string, string>}}, attributes: array<string, mixed>, droppedAttributeCount: int}>,
      *     droppedLinksCount: int,
      *     status: null|array{code: int, description: null|string},
      *     isRecording: bool
@@ -591,9 +591,13 @@ final class Span
         }
 
         if (is_array($value)) {
-            return array_map(static function ($item) use ($limit) {
+            return array_map(function (mixed $item) use ($limit): mixed {
                 if (is_string($item) && mb_strlen($item) > $limit) {
                     return mb_substr($item, 0, $limit);
+                }
+
+                if (is_array($item)) {
+                    return $this->truncateValue($item);
                 }
 
                 return $item;

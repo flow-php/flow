@@ -14,7 +14,6 @@ use RuntimeException;
 use Throwable;
 
 use function count;
-use function curl_close;
 use function curl_getinfo;
 use function curl_init;
 use function curl_multi_add_handle;
@@ -91,13 +90,15 @@ final class CurlTransport implements Transport
             SignalType::TRACES => ['/v1/traces', $this->serializer->serializeSpans($signal->allSpans()), 'traces'],
         };
 
-        if ($this->failover !== null) {
+        $failover = $this->failover;
+
+        if ($failover !== null) {
             $this->drainCompleted();
         }
 
-        $this->dispatch($path, $body, $signalName, $this->failover !== null ? $signal : null);
+        $this->dispatch($path, $body, $signalName, $failover !== null ? $signal : null);
 
-        if ($this->failover !== null && $this->deferredFailures !== []) {
+        if ($failover !== null && $this->deferredFailures !== []) {
             $snapshot = $this->deferredFailures;
             $this->deferredFailures = [];
 
@@ -124,7 +125,9 @@ final class CurlTransport implements Transport
 
         $this->waitForCompletion($shutdownDeadlineMicrotime);
 
-        if ($this->failover === null) {
+        $failover = $this->failover;
+
+        if ($failover === null) {
             $this->processCompleted();
             $this->markStillPendingAsShutdownTimedOut();
         } else {
@@ -136,9 +139,9 @@ final class CurlTransport implements Transport
 
         $cascadeException = null;
 
-        if ($this->failover !== null) {
+        if ($failover !== null) {
             try {
-                $this->failover->shutdown();
+                $failover->shutdown();
             } catch (Throwable $e) {
                 $cascadeException = $e;
             }
@@ -218,8 +221,6 @@ final class CurlTransport implements Transport
         $result = curl_multi_add_handle($this->multiHandle, $ch);
 
         if ($result !== CURLM_OK) {
-            curl_close($ch);
-
             throw new TransportException(sprintf(
                 'Failed to add curl handle for %s: %s',
                 $signalName,
@@ -236,6 +237,8 @@ final class CurlTransport implements Transport
 
     private function drainCompleted(): void
     {
+        $failover = $this->failover;
+
         foreach ($this->iterateCompleted() as $item) {
             if ($item['primaryError'] === null) {
                 continue;
@@ -243,9 +246,9 @@ final class CurlTransport implements Transport
 
             $failoverError = null;
 
-            if ($item['entry'] !== null && $item['entry']['signals'] !== null && $this->failover !== null) {
+            if ($item['entry'] !== null && $item['entry']['signals'] !== null && $failover !== null) {
                 try {
-                    $this->failover->send($item['entry']['signals']);
+                    $failover->send($item['entry']['signals']);
                 } catch (Throwable $e) {
                     $failoverError = $e;
                 }
@@ -257,7 +260,9 @@ final class CurlTransport implements Transport
 
     private function forwardStillPendingAsShutdownTimedOut(): void
     {
-        if ($this->failover === null) {
+        $failover = $this->failover;
+
+        if ($failover === null) {
             return;
         }
 
@@ -266,7 +271,7 @@ final class CurlTransport implements Transport
 
             if ($item['entry']['signals'] !== null) {
                 try {
-                    $this->failover->send($item['entry']['signals']);
+                    $failover->send($item['entry']['signals']);
                 } catch (Throwable $e) {
                     $failoverError = $e;
                 }
@@ -284,7 +289,11 @@ final class CurlTransport implements Transport
         $running = 0;
         curl_multi_exec($this->multiHandle, $running);
 
-        while ($info = curl_multi_info_read($this->multiHandle)) {
+        $queued = 0;
+
+        // @mago-expect analysis:mixed-assignment -- curl_multi_info_read stubs return mixed but PHP 8.3 returns array{msg: int, result: int, handle: CurlHandle}
+        while (($info = curl_multi_info_read($this->multiHandle, $queued)) !== false) {
+            // @mago-expect analysis:docblock-type-mismatch -- Mago stubs declare resource but PHP 8.0+ returns CurlHandle
             /** @var \CurlHandle $ch */
             $ch = $info['handle'];
             $id = (int) $ch;
@@ -293,6 +302,7 @@ final class CurlTransport implements Transport
             $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $effectiveUrl = (string) curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
             $urlForMessage = $effectiveUrl !== '' ? $effectiveUrl : 'unknown url';
+            // @mago-expect analysis:invalid-type-cast(2) -- curl_getinfo stubs return mixed but specific options return float
             $totalTimeMs = (int) round((float) curl_getinfo($ch, CURLINFO_TOTAL_TIME) * 1000);
             $connectTimeMs = (int) round((float) curl_getinfo($ch, CURLINFO_CONNECT_TIME) * 1000);
 

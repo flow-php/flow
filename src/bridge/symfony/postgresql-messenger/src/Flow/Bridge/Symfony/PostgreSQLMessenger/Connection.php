@@ -115,11 +115,13 @@ final readonly class Connection
                 return null;
             }
 
-            $rowId = $row['id'];
-
-            if (!is_int($rowId) && !is_string($rowId)) {
-                throw TransportException::unexpectedRowShape('id', get_debug_type($rowId));
-            }
+            $rowId = is_int($row['id'] ?? null)
+                ? (int) $row['id']
+                : (
+                    is_string($row['id'] ?? null)
+                        ? $row['id']
+                        : throw TransportException::unexpectedRowShape('id', get_debug_type($row['id'] ?? null))
+                );
 
             $client->execute(
                 update()
@@ -205,11 +207,13 @@ final readonly class Connection
             ],
         );
 
-        $rowId = $row['id'];
-
-        if (!is_int($rowId) && !is_string($rowId)) {
-            throw TransportException::unexpectedRowShape('id', get_debug_type($rowId));
-        }
+        $rowId = is_int($row['id'] ?? null)
+            ? $row['id']
+            : (
+                is_string($row['id'] ?? null)
+                    ? $row['id']
+                    : throw TransportException::unexpectedRowShape('id', get_debug_type($row['id'] ?? null))
+            );
 
         return (string) $rowId;
     }

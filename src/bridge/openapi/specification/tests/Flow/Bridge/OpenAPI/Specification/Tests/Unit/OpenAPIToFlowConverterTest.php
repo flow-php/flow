@@ -6,6 +6,7 @@ namespace Flow\Bridge\OpenAPI\Specification\Tests\Unit;
 
 use Flow\Bridge\OpenAPI\Specification\Exception\InvalidArgumentException;
 use Flow\Bridge\OpenAPI\Specification\OpenAPIConverter;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\DateType;
 use Flow\Types\Type\Logical\JsonType;
@@ -80,8 +81,8 @@ final class OpenAPIToFlowConverterTest extends TestCase
             ],
         ];
 
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Property 'invalid_prop' specification must be an array");
+        $this->expectException(InvalidTypeException::class);
+        $this->expectExceptionMessage('Expected type "map<string, array<mixed>>", got "map<string, string>".');
 
         $converter->fromOpenAPI($openApiSpec);
     }

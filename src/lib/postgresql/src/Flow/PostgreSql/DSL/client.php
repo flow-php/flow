@@ -315,6 +315,7 @@ function type_mapper(FlowType $type, ?RowMapper $next = null): TypeMapper
     if ($next === null) {
         // Mago 1.26+ already infers TypeMapper<TType, TType> from the conditional
         // @return tag, but PHPStan needs this @var to bind the second template.
+        // @mago-expect analysis:redundant-docblock-type
         /** @var TypeMapper<TType, TType> */
         return new TypeMapper($type);
     }

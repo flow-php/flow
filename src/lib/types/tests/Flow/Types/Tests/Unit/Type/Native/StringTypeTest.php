@@ -242,6 +242,7 @@ final class StringTypeTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function test_cast_html_document(): void
     {
+        // @mago-expect analysis:unavailable-method
         $element = HTMLDocument::createFromString('<p><span>foobar</span></p>', LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
 
         static::assertSame('<p><span>foobar</span></p>', type_string()->cast($element));
@@ -250,6 +251,7 @@ final class StringTypeTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function test_cast_html_element(): void
     {
+        // @mago-expect analysis:unavailable-method
         $element = HTMLDocument::createFromString('<p><span>foobar</span></p>', LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
 
         static::assertSame('<span>foobar</span>', type_string()->cast($element->documentElement));

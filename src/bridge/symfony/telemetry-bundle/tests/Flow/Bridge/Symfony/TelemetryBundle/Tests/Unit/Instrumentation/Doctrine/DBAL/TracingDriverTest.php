@@ -120,6 +120,7 @@ final class TracingDriverTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
+        // @mago-expect analysis:deprecated-class
         $platform = new MySQL80Platform();
         $driver = $this->createMockDriverWithPlatform($platform);
 

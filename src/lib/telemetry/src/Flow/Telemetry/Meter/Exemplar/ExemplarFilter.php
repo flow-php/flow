@@ -29,7 +29,7 @@ interface ExemplarFilter extends Stringable
      *
      * @param null|SpanContext $context The current span context, or null if none
      * @param float|int $value The measurement value
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes The measurement attributes
+     * @param array<string, mixed> $attributes The measurement attributes
      */
     public function shouldSample(?SpanContext $context, int|float $value, array $attributes): bool;
 }

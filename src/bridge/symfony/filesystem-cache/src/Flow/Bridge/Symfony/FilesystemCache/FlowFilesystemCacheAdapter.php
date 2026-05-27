@@ -18,6 +18,7 @@ use function base64_encode;
 use function count;
 use function explode;
 use function hash;
+use function is_string;
 use function preg_match;
 use function rtrim;
 use function sprintf;
@@ -39,6 +40,8 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
         int $defaultLifetime = 0,
         ?MarshallerInterface $marshaller = null,
     ) {
+        $match = [];
+
         if (isset($namespace[0]) && preg_match('#[^-+.A-Za-z0-9]#', $namespace, $match)) {
             throw new InvalidArgumentException(sprintf(
                 'Namespace contains "%s" but only characters in [-+.A-Za-z0-9] are allowed.',
@@ -84,14 +87,15 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
     }
 
     /**
-     * @param array<string> $ids
+     * @param array<array-key, mixed> $ids
      */
     protected function doDelete(array $ids): bool
     {
         $ok = true;
 
+        // @mago-expect analysis:mixed-assignment
         foreach ($ids as $id) {
-            $path = $this->fileFor($id);
+            $path = $this->fileFor((string) $id);
 
             if ($this->filesystem->status($path) === null) {
                 continue;
@@ -104,7 +108,7 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
     }
 
     /**
-     * @param array<string> $ids
+     * @param array<array-key, mixed> $ids
      *
      * @return iterable<string, mixed>
      */
@@ -113,8 +117,9 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
         $now = time();
         $expired = [];
 
+        // @mago-expect analysis:mixed-assignment
         foreach ($ids as $id) {
-            $path = $this->fileFor($id);
+            $path = $this->fileFor((string) $id);
 
             if ($this->filesystem->status($path) === null) {
                 continue;
@@ -165,7 +170,7 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
     }
 
     /**
-     * @param array<string, mixed> $values
+     * @param array<array-key, mixed> $values
      *
      * @return array<int, string>
      */
@@ -173,17 +178,19 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
     {
         $failed = [];
         $marshalled = $this->marshaller->marshall($values, $failed);
+        $failedKeys = $this->collectFailedKeys($failed);
 
         if ($marshalled === []) {
-            return $failed ?? [];
+            return $failedKeys;
         }
 
         $expiry = $lifetime > 0 ? time() + $lifetime : 0;
 
+        // @mago-expect analysis:mixed-assignment
         foreach ($marshalled as $id => $value) {
             $path = $this->fileFor((string) $id);
             $tmp = $path->randomize();
-            $content = sprintf('%010d', $expiry) . "\n" . (string) $id . "\n" . $value;
+            $content = sprintf('%010d', $expiry) . "\n" . (string) $id . "\n" . (string) $value;
 
             $stream = $this->filesystem->writeTo($tmp);
 
@@ -200,7 +207,26 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
             }
         }
 
-        return $failed ?? [];
+        return $failedKeys;
+    }
+
+    /**
+     * @param array<array-key, mixed>|null $failed
+     *
+     * @return list<string>
+     */
+    private function collectFailedKeys(?array $failed): array
+    {
+        $result = [];
+
+        // @mago-expect analysis:mixed-assignment
+        foreach ($failed ?? [] as $key) {
+            if (is_string($key)) {
+                $result[] = $key;
+            }
+        }
+
+        return $result;
     }
 
     private function fileFor(string $id): Path

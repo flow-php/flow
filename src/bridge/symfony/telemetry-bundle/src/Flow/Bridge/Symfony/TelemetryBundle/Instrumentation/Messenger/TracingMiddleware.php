@@ -109,9 +109,11 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         $carrier = new TelemetryStampCarrier($stamp);
         $propagationContext = $this->propagator->extract($carrier);
 
-        if ($propagationContext->spanContext !== null) {
-            $context = Context::withTraceId($propagationContext->spanContext->traceId);
-            $context = $context->withActiveSpan($propagationContext->spanContext->spanId);
+        $spanContext = $propagationContext->spanContext;
+
+        if ($spanContext !== null) {
+            $context = Context::withTraceId($spanContext->traceId);
+            $context = $context->withActiveSpan($spanContext->spanId);
 
             if ($propagationContext->baggage !== null) {
                 $context = $context->withBaggage($propagationContext->baggage);

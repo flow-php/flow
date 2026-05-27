@@ -15,6 +15,7 @@ use Flow\PostgreSql\Tests\Mother\MapperContextMother;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\PostgreSql\DSL\type_mapper;
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
@@ -36,13 +37,11 @@ final class ValinorBuilderMapperTest extends TestCase
             new ValinorBuilderMapper(new MapperBuilder(), UserWithAddress::class),
         );
 
-        $result = $mapper->map([
+        $result = type_instance_of(UserWithAddress::class)->assert($mapper->map([
             'id' => 1,
             'name' => 'Jane',
             'address' => '{"street":"Main 1","city":"Warsaw"}',
-        ], MapperContextMother::any());
-
-        static::assertInstanceOf(UserWithAddress::class, $result);
+        ], MapperContextMother::any()));
         static::assertInstanceOf(Address::class, $result->address);
         static::assertSame('Main 1', $result->address->street);
         static::assertSame('Warsaw', $result->address->city);

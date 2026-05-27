@@ -22,6 +22,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use function array_map;
 use function count;
 use function file_exists;
+use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_optional;
 use function Flow\Types\DSL\type_scalar;
 use function Flow\Types\DSL\type_string;
@@ -47,8 +48,7 @@ final class ReadMetadataCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $style = new SymfonyStyle($input, $output);
-        $filePath = $input->getArgument('file');
-        $filePath = type_string()->assert($filePath);
+        $filePath = type_string()->assert($input->getArgument('file'));
 
         if (!file_exists($filePath)) {
             $style->error(sprintf('File "%s" does not exist', $filePath));
@@ -56,11 +56,11 @@ final class ReadMetadataCommand extends Command
             return Command::FAILURE;
         }
 
-        $displayColumns = (bool) $input->getOption('columns');
-        $displayRowGroups = (bool) $input->getOption('row-groups');
-        $displayStatistics = (bool) $input->getOption('statistics');
-        $displayColumnChunks = (bool) $input->getOption('column-chunks');
-        $displayPageHeaders = (bool) $input->getOption('page-headers');
+        $displayColumns = type_boolean()->cast($input->getOption('columns'));
+        $displayRowGroups = type_boolean()->cast($input->getOption('row-groups'));
+        $displayStatistics = type_boolean()->cast($input->getOption('statistics'));
+        $displayColumnChunks = type_boolean()->cast($input->getOption('column-chunks'));
+        $displayPageHeaders = type_boolean()->cast($input->getOption('page-headers'));
 
         $reader = new Reader();
         $parquetFile = $reader->read($filePath);
@@ -105,11 +105,12 @@ final class ReadMetadataCommand extends Command
             ]);
 
             foreach ($parquetFile->schema()->columnsFlat() as $column) {
+                $logicalType = $column->logicalType();
+                $typeLength = $column->typeLength();
                 $columnsTable->addRow([
                     $column->flatPath(),
-                    ($column->type() ? $column->type()->name : 'group')
-                        . ($column->typeLength() ? '(' . $column->typeLength() . ')' : ''),
-                    $column->logicalType() ? $column->logicalType()->name() : '-',
+                    $column->type()->name . ($typeLength ? '(' . $typeLength . ')' : ''),
+                    $logicalType ? $logicalType->name() : '-',
                     $column->repetition()?->name ?: 'N/A',
                     $column->maxRepetitionsLevel(),
                     $column->maxDefinitionsLevel(),
@@ -160,16 +161,16 @@ final class ReadMetadataCommand extends Command
             foreach ($metadata->rowGroups()->all() as $rowGroup) {
                 foreach ($rowGroup->columnChunks() as $columnChunk) {
                     $totalChunks++;
+                    $dictionaryPageOffset = $columnChunk->dictionaryPageOffset();
+                    $dataPageOffset = $columnChunk->dataPageOffset();
                     $chunksTable->addRow([
                         $columnChunk->flatPath(),
                         '[' . implode(',', array_map(static fn($e) => $e->name, $columnChunk->encodings())) . ']',
                         $columnChunk->codec()->name,
                         number_format($columnChunk->fileOffset()),
                         number_format($columnChunk->valuesCount()),
-                        $columnChunk->dictionaryPageOffset()
-                            ? number_format($columnChunk->dictionaryPageOffset())
-                            : '-',
-                        $columnChunk->dataPageOffset() ? number_format($columnChunk->dataPageOffset()) : '-',
+                        $dictionaryPageOffset ? number_format($dictionaryPageOffset) : '-',
+                        $dataPageOffset ? number_format($dataPageOffset) : '-',
                     ]);
                 }
             }
@@ -208,33 +209,29 @@ final class ReadMetadataCommand extends Command
 
                     if ($statistics) {
                         if (ColumnPrimitiveType::isString($column)) {
-                            $minVal = $statistics->min($column);
-                            $minVal = type_optional(type_scalar())->assert($minVal);
+                            $minVal = type_optional(type_scalar())->assert($statistics->min($column));
                             $min = $minVal ? StringHumanizer::truncate((string) $minVal, 20, '...') : '-';
-                            $maxVal = $statistics->max($column);
-                            $maxVal = type_optional(type_scalar())->assert($maxVal);
+                            $maxVal = type_optional(type_scalar())->assert($statistics->max($column));
                             $max = $maxVal ? StringHumanizer::truncate((string) $maxVal, 20, '...') : '-';
-                            $minValueVal = $statistics->minValue($column);
-                            $minValueVal = type_optional(type_scalar())->assert($minValueVal);
+                            $minValueVal = type_optional(type_scalar())->assert($statistics->minValue($column));
                             $minValue = $minValueVal
                                 ? StringHumanizer::truncate((string) $minValueVal, 20, '...')
                                 : '-';
-                            $maxValueVal = $statistics->maxValue($column);
-                            $maxValueVal = type_optional(type_scalar())->assert($maxValueVal);
+                            $maxValueVal = type_optional(type_scalar())->assert($statistics->maxValue($column));
                             $maxValue = $maxValueVal
                                 ? StringHumanizer::truncate((string) $maxValueVal, 20, '...')
                                 : '-';
                         } else {
-                            $min = $statistics->min($column) ?? '-';
-                            $max = $statistics->max($column) ?? '-';
-                            $minValue = $statistics->minValue($column) ?? '-';
-                            $maxValue = $statistics->maxValue($column) ?? '-';
+                            $min = type_scalar()->assert($statistics->min($column) ?? '-');
+                            $max = type_scalar()->assert($statistics->max($column) ?? '-');
+                            $minValue = type_scalar()->assert($statistics->minValue($column) ?? '-');
+                            $maxValue = type_scalar()->assert($statistics->maxValue($column) ?? '-');
                         }
 
-                        $nullCount = $statistics->nullCount() ? number_format($statistics->nullCount()) : '-';
-                        $distinctCount = $statistics->distinctCount()
-                            ? number_format($statistics->distinctCount())
-                            : '-';
+                        $nullCountVal = $statistics->nullCount();
+                        $nullCount = $nullCountVal ? number_format($nullCountVal) : '-';
+                        $distinctCountVal = $statistics->distinctCount();
+                        $distinctCount = $distinctCountVal ? number_format($distinctCountVal) : '-';
 
                         $statisticsTable->addRow([
                             $columnChunk->flatPath(),
@@ -280,18 +277,16 @@ final class ReadMetadataCommand extends Command
 
             foreach ($parquetFile->pageHeaders() as $columnPageHeader) {
                 $totalPageHeaders++;
+                $dictionaryValuesCount = $columnPageHeader->pageHeader->dictionaryValuesCount();
+                $dataValuesCount = $columnPageHeader->pageHeader->dataValuesCount();
                 $pageHeadersTable->addRow([
                     $columnPageHeader->column->flatPath(),
                     $columnPageHeader->pageHeader->type()->name,
                     $columnPageHeader->pageHeader->encoding()->name,
                     number_format($columnPageHeader->pageHeader->compressedPageSize()),
                     number_format($columnPageHeader->pageHeader->uncompressedPageSize()),
-                    $columnPageHeader->pageHeader->dictionaryValuesCount()
-                        ? number_format($columnPageHeader->pageHeader->dictionaryValuesCount())
-                        : '-',
-                    $columnPageHeader->pageHeader->dataValuesCount()
-                        ? number_format($columnPageHeader->pageHeader->dataValuesCount())
-                        : '-',
+                    $dictionaryValuesCount ? number_format($dictionaryValuesCount) : '-',
+                    $dataValuesCount ? number_format($dataValuesCount) : '-',
                 ]);
             }
 

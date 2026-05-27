@@ -6,8 +6,8 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration;
 
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\FrameworkLoggerPass;
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\OTLPAvailabilityPass;
-use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\FlowTelemetryExtension;
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
+use Flow\Bridge\Symfony\TelemetryBundle\FlowTelemetryBundle;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
 use Flow\Bridge\Telemetry\OTLP\Transport\CurlTransport;
@@ -49,7 +49,7 @@ use function sys_get_temp_dir;
 use function uniqid;
 use function unlink;
 
-#[CoversClass(FlowTelemetryExtension::class)]
+#[CoversClass(FlowTelemetryBundle::class)]
 #[CoversClass(OTLPAvailabilityPass::class)]
 #[CoversClass(FrameworkLoggerPass::class)]
 final class FlowTelemetryExtensionTest extends KernelTestCase
@@ -450,7 +450,12 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
     public function test_otlp_exporter_uses_named_error_handler(): void
     {
         $container = new ContainerBuilder();
-        (new FlowTelemetryExtension())->load([[
+        $container->setParameter('kernel.environment', 'test');
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
+        $extension = (new FlowTelemetryBundle())->getContainerExtension();
+        assert($extension !== null);
+        $extension->load([[
             'resource' => [],
             'error_handlers' => [
                 'default' => ['type' => 'error_log'],
@@ -467,9 +472,8 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         ]], $container);
 
         $definition = $container->getDefinition('flow.telemetry.exporter.otlp');
-        $errorHandlerArg = $definition->getArgument(1);
-        static::assertInstanceOf(Reference::class, $errorHandlerArg);
-        static::assertSame('flow.telemetry.error_handler.silent', (string) $errorHandlerArg);
+        static::assertInstanceOf(Reference::class, $definition->getArgument(1));
+        static::assertSame('flow.telemetry.error_handler.silent', (string) $definition->getArgument(1));
     }
 
     public function test_otlp_transport_failover_inline_curl_with_stream_failover(): void
@@ -560,7 +564,12 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
     public function test_processor_uses_named_error_handler(): void
     {
         $container = new ContainerBuilder();
-        (new FlowTelemetryExtension())->load([[
+        $container->setParameter('kernel.environment', 'test');
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
+        $extension = (new FlowTelemetryBundle())->getContainerExtension();
+        assert($extension !== null);
+        $extension->load([[
             'resource' => [],
             'error_handlers' => [
                 'default' => ['type' => 'error_log'],
@@ -579,15 +588,19 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         ]], $container);
 
         $definition = $container->getDefinition('flow.telemetry.logger_provider.processor');
-        $errorHandlerArg = $definition->getArgument(2);
-        static::assertInstanceOf(Reference::class, $errorHandlerArg);
-        static::assertSame('flow.telemetry.error_handler.silent', (string) $errorHandlerArg);
+        static::assertInstanceOf(Reference::class, $definition->getArgument(2));
+        static::assertSame('flow.telemetry.error_handler.silent', (string) $definition->getArgument(2));
     }
 
     public function test_provider_uses_named_error_handler(): void
     {
         $container = new ContainerBuilder();
-        (new FlowTelemetryExtension())->load([[
+        $container->setParameter('kernel.environment', 'test');
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
+        $extension = (new FlowTelemetryBundle())->getContainerExtension();
+        assert($extension !== null);
+        $extension->load([[
             'resource' => [],
             'error_handlers' => [
                 'default' => ['type' => 'error_log'],
@@ -597,9 +610,8 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         ]], $container);
 
         $definition = $container->getDefinition('flow.telemetry.logger_provider');
-        $errorHandlerArg = $definition->getArgument('$errorHandler');
-        static::assertInstanceOf(Reference::class, $errorHandlerArg);
-        static::assertSame('flow.telemetry.error_handler.silent', (string) $errorHandlerArg);
+        static::assertInstanceOf(Reference::class, $definition->getArgument('$errorHandler'));
+        static::assertSame('flow.telemetry.error_handler.silent', (string) $definition->getArgument('$errorHandler'));
     }
 
     public function test_service_error_handler_creates_alias_to_user_service_id(): void

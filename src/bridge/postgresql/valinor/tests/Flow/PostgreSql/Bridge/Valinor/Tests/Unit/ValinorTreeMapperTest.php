@@ -19,6 +19,7 @@ use PHPUnit\Framework\TestCase;
 
 use function Flow\PostgreSql\DSL\type_mapper;
 use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
@@ -52,12 +53,11 @@ final class ValinorTreeMapperTest extends TestCase
             new ValinorTreeMapper((new MapperBuilder())->mapper(), WithDateTime::class),
         );
 
-        $result = $mapper->map([
+        $result = type_instance_of(WithDateTime::class)->assert($mapper->map([
             'id' => 7,
             'createdAt' => '2024-03-15 14:30:00',
-        ], MapperContextMother::any());
+        ], MapperContextMother::any()));
 
-        static::assertInstanceOf(WithDateTime::class, $result);
         static::assertSame(7, $result->id);
         static::assertSame('2024-03-15 14:30:00', $result->createdAt->format('Y-m-d H:i:s'));
     }
@@ -76,13 +76,11 @@ final class ValinorTreeMapperTest extends TestCase
             new ValinorTreeMapper((new MapperBuilder())->mapper(), UserWithAddress::class),
         );
 
-        $result = $mapper->map([
+        $result = type_instance_of(UserWithAddress::class)->assert($mapper->map([
             'id' => 1,
             'name' => 'Jane',
             'address' => '{"street":"Main 1","city":"Warsaw"}',
-        ], MapperContextMother::any());
-
-        static::assertInstanceOf(UserWithAddress::class, $result);
+        ], MapperContextMother::any()));
         static::assertInstanceOf(Address::class, $result->address);
         static::assertSame('Main 1', $result->address->street);
         static::assertSame('Warsaw', $result->address->city);

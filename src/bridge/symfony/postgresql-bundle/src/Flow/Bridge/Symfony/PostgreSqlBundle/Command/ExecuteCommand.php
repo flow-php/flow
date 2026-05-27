@@ -49,7 +49,7 @@ final class ExecuteCommand extends Command
         ));
         $versionString = type_string()->assert($input->getArgument('version'));
         $version = Version::fromString($versionString);
-        $dryRun = (bool) $input->getOption('dry-run');
+        $dryRun = $input->getOption('dry-run') === true;
         $direction = $input->getOption('down') ? Direction::DOWN : Direction::UP;
         $directionLabel = $direction === Direction::UP ? '<fg=green>UP</>' : '<fg=yellow>DOWN</>';
 

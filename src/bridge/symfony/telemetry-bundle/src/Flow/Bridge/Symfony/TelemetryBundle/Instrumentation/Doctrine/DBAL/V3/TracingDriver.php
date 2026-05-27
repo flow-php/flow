@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V3;
 
 use DateTimeImmutable;
+use Doctrine\DBAL\Connection\StaticServerVersionProvider;
 use Doctrine\DBAL\Driver as DriverInterface;
 use Doctrine\DBAL\Driver\Connection;
 use Doctrine\DBAL\Driver\Middleware\AbstractDriverMiddleware;
@@ -47,7 +48,6 @@ final class TracingDriver extends AbstractDriverMiddleware
         $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
         $span = $tracer->span('doctrine.dbal.connection', SpanKind::CLIENT, [
-            'db.system.name' => $this->getSemanticDbSystem(),
             'db.namespace' => $params['dbname'] ?? 'default',
             'db.connection.name' => $this->connectionName,
         ]);
@@ -55,6 +55,7 @@ final class TracingDriver extends AbstractDriverMiddleware
         try {
             $connection = parent::connect($params);
 
+            $span->setAttribute('db.system.name', $this->getSemanticDbSystem($connection->getServerVersion()));
             $span->setStatus(SpanStatus::ok());
 
             return new TracingConnection($connection, $this->telemetry, $this->logSql, $this->maxSqlLength);
@@ -68,9 +69,9 @@ final class TracingDriver extends AbstractDriverMiddleware
         }
     }
 
-    private function getSemanticDbSystem(): string
+    private function getSemanticDbSystem(string $serverVersion): string
     {
-        $platform = $this->getDatabasePlatform();
+        $platform = $this->getDatabasePlatform(new StaticServerVersionProvider($serverVersion));
 
         if ($platform instanceof AbstractMySQLPlatform) {
             return 'mysql';

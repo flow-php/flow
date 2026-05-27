@@ -44,7 +44,8 @@ function http_parquet_output(): ParquetOutput
 function http_on_complete(callable $callback): StreamClosure
 {
     return new readonly class($callback) implements StreamClosure {
-        public function __construct(/** @var callable(?Report): void */
+        public function __construct(
+            /** @var callable(?Report): void */
             private mixed $callback,
         ) {}
 

@@ -20,7 +20,7 @@ final readonly class MockResponse implements ResponseInterface
     }
 
     /**
-     * @return array<string, array<string>>
+     * @return array<string, list<string>>
      */
     public function getHeaders(bool $throw = true): array
     {

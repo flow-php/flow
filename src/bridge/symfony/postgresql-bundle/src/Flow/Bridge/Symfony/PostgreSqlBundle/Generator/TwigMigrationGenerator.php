@@ -78,9 +78,9 @@ final readonly class TwigMigrationGenerator implements MigrationGenerator
     private function migrationDirectory(Version $version, ?string $name): string
     {
         if ($name === null) {
-            return $this->configuration->migrationsDirectory . '/' . $version;
+            return $this->configuration->migrationsDirectory . '/' . (string) $version;
         }
 
-        return $this->configuration->migrationsDirectory . '/' . $version . '_' . $name;
+        return $this->configuration->migrationsDirectory . '/' . (string) $version . '_' . $name;
     }
 }

@@ -7,6 +7,7 @@ namespace Flow\Bridge\Symfony\PostgreSQLCache\Tests\Unit;
 use Flow\Bridge\Symfony\PostgreSQLCache\Tests\Context\PostgreSqlCacheContext;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
+use Symfony\Contracts\Cache\ItemInterface as CacheItemInterface;
 
 use function iterator_to_array;
 
@@ -103,8 +104,14 @@ final class FlowPostgreSqlCacheAdapterTest extends TestCase
 
         $items = iterator_to_array($adapter->getItems(['a', 'b']));
 
-        static::assertSame('hello', $items['a']->get());
-        static::assertSame(42, $items['b']->get());
+        // @mago-expect analysis:mixed-assignment
+        $itemA = $items['a'];
+        // @mago-expect analysis:mixed-assignment
+        $itemB = $items['b'];
+        static::assertInstanceOf(CacheItemInterface::class, $itemA);
+        static::assertInstanceOf(CacheItemInterface::class, $itemB);
+        static::assertSame('hello', $itemA->get());
+        static::assertSame(42, $itemB->get());
         static::assertSame(2, $marshaller->unmarshallCalls);
 
         $sql = $this->context->client->executedQueries[0]['sql'];

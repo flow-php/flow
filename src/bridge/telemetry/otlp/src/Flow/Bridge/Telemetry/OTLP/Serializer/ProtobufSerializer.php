@@ -24,6 +24,7 @@ use Opentelemetry\Proto\Common\V1\AnyValue;
 use Opentelemetry\Proto\Common\V1\ArrayValue;
 use Opentelemetry\Proto\Common\V1\InstrumentationScope as ProtoInstrumentationScope;
 use Opentelemetry\Proto\Common\V1\KeyValue;
+use Opentelemetry\Proto\Common\V1\KeyValueList;
 use Opentelemetry\Proto\Logs\V1\LogRecord;
 use Opentelemetry\Proto\Logs\V1\ResourceLogs;
 use Opentelemetry\Proto\Logs\V1\ScopeLogs;
@@ -50,9 +51,12 @@ use Opentelemetry\Proto\Trace\V1\Status\StatusCode;
 use RuntimeException;
 
 use function array_filter;
+use function array_is_list;
+use function array_keys;
 use function array_map;
 use function class_exists;
 use function count;
+use function get_debug_type;
 use function hex2bin;
 use function is_array;
 use function is_bool;
@@ -223,10 +227,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
         return $this->createSpansRequest($spans)->serializeToString();
     }
 
-    /**
-     * @param array<bool|float|int|string>|bool|float|int|string $value
-     */
-    private function createAnyValue(string|int|float|bool|array $value): AnyValue
+    private function createAnyValue(mixed $value): AnyValue
     {
         $anyValue = new AnyValue();
 
@@ -239,15 +240,27 @@ final class ProtobufSerializer implements GrpcRequestFactory
         } elseif (is_bool($value)) {
             $anyValue->setBoolValue($value);
         } elseif (is_array($value)) {
-            $arrayValue = new ArrayValue();
-            $values = [];
+            if (array_is_list($value)) {
+                $arrayValue = new ArrayValue();
+                $arrayValue->setValues(array_map($this->createAnyValue(...), $value));
+                $anyValue->setArrayValue($arrayValue);
+            } else {
+                $kvList = new KeyValueList();
+                $kvList->setValues(array_map(
+                    function (int|string $k, mixed $v): KeyValue {
+                        $kv = new KeyValue();
+                        $kv->setKey((string) $k);
+                        $kv->setValue($this->createAnyValue($v));
 
-            foreach ($value as $v) {
-                $values[] = $this->createAnyValue($v);
+                        return $kv;
+                    },
+                    array_keys($value),
+                    $value,
+                ));
+                $anyValue->setKvlistValue($kvList);
             }
-
-            $arrayValue->setValues($values);
-            $anyValue->setArrayValue($arrayValue);
+        } else {
+            $anyValue->setStringValue(get_debug_type($value));
         }
 
         return $anyValue;
@@ -294,11 +307,11 @@ final class ProtobufSerializer implements GrpcRequestFactory
         $dataPoint->setExplicitBounds(array_map(static fn(int|float $b): float => (float) $b, $explicitBounds));
 
         if ($min !== null) {
-            $dataPoint->setMin(is_int($min) ? (float) $min : $min);
+            $dataPoint->setMin($min);
         }
 
         if ($max !== null) {
-            $dataPoint->setMax(is_int($max) ? (float) $max : $max);
+            $dataPoint->setMax($max);
         }
 
         if (count($metric->exemplars) > 0) {
@@ -315,22 +328,23 @@ final class ProtobufSerializer implements GrpcRequestFactory
     }
 
     /**
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes
+     * @param array<string, mixed> $attributes
      *
      * @return array<KeyValue>
      */
     private function createKeyValues(array $attributes): array
     {
-        $result = [];
+        return array_map(
+            function (string $key, mixed $value): KeyValue {
+                $keyValue = new KeyValue();
+                $keyValue->setKey($key);
+                $keyValue->setValue($this->createAnyValue($value));
 
-        foreach ($attributes as $key => $value) {
-            $keyValue = new KeyValue();
-            $keyValue->setKey($key);
-            $keyValue->setValue($this->createAnyValue($value));
-            $result[] = $keyValue;
-        }
-
-        return $result;
+                return $keyValue;
+            },
+            array_keys($attributes),
+            $attributes,
+        );
     }
 
     private function createLogRecord(LogEntry $entry): LogRecord
@@ -560,7 +574,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
      *
      * @param array<LogEntry> $entries
      *
-     * @return array<string, array{resource: resource, entries: array<LogEntry>}>
+     * @return array<string, array{resource: \Flow\Telemetry\Resource, entries: array<LogEntry>}>
      */
     private function groupLogsByResource(array $entries): array
     {
@@ -607,7 +621,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
      *
      * @param array<Metric> $metrics
      *
-     * @return array<string, array{resource: resource, metrics: array<Metric>}>
+     * @return array<string, array{resource: \Flow\Telemetry\Resource, metrics: array<Metric>}>
      */
     private function groupMetricsByResource(array $metrics): array
     {
@@ -654,7 +668,7 @@ final class ProtobufSerializer implements GrpcRequestFactory
      *
      * @param array<Span> $spans
      *
-     * @return array<string, array{resource: resource, spans: array<Span>}>
+     * @return array<string, array{resource: \Flow\Telemetry\Resource, spans: array<Span>}>
      */
     private function groupSpansByResource(array $spans): array
     {
@@ -724,7 +738,6 @@ final class ProtobufSerializer implements GrpcRequestFactory
         return match ($metric->temporality->value) {
             1 => AggregationTemporality::AGGREGATION_TEMPORALITY_DELTA,
             2 => AggregationTemporality::AGGREGATION_TEMPORALITY_CUMULATIVE,
-            default => AggregationTemporality::AGGREGATION_TEMPORALITY_UNSPECIFIED,
         };
     }
 

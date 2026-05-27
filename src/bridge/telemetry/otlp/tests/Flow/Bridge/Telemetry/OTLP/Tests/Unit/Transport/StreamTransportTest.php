@@ -75,7 +75,7 @@ final class StreamTransportTest extends TestCase
     public function test_does_not_create_directory_for_custom_stream_wrapper_schemes(): void
     {
         stream_wrapper_register('flow-no-mkdir', PartialWriteStreamWrapper::class);
-        $leakedDirectory = getcwd() . '/flow-no-mkdir:';
+        $leakedDirectory = (getcwd() ?: '.') . '/flow-no-mkdir:';
 
         try {
             new StreamTransport('flow-no-mkdir://buf');

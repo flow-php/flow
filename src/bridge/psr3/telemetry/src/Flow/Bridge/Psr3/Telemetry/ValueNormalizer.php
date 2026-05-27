@@ -17,7 +17,7 @@ use function method_exists;
 final readonly class ValueNormalizer
 {
     /**
-     * @return array<bool|\DateTimeInterface|float|int|string|\Throwable>|bool|\DateTimeInterface|float|int|string|\Throwable
+     * @return array<array-key, mixed>|bool|\DateTimeInterface|float|int|string|\Throwable
      */
     public function normalize(mixed $value): string|int|float|bool|DateTimeInterface|Throwable|array
     {
@@ -38,8 +38,9 @@ final readonly class ValueNormalizer
         }
 
         if (is_array($value)) {
-            /** @phpstan-ignore return.type */
-            return array_map(fn($v) => $this->normalize($v), $value);
+            return array_map(fn(mixed $v): string|int|float|bool|DateTimeInterface|Throwable|array => $this->normalize(
+                $v,
+            ), $value);
         }
 
         if (is_object($value)) {

@@ -19,6 +19,9 @@ use Flow\Telemetry\Tracer\SpanContext;
  * - Resolved timestamp
  *
  * This is the internal type passed to LogProcessor and Exporter implementations.
+ *
+ * @phpstan-import-type TAttributeValue from \Flow\Telemetry\Attributes
+ * @phpstan-import-type TAttributeValueMap from \Flow\Telemetry\Attributes
  */
 final readonly class LogEntry
 {
@@ -35,9 +38,9 @@ final readonly class LogEntry
      * Create a LogEntry from a normalized array representation.
      *
      * @param array{
-     *     record: array{severity: int, body: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, timestamp: null|string, observedTimestamp: null|string},
-     *     resource: array{attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
-     *     scope: array{name: string, version: string, schemaUrl: null|string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
+     *     record: array{severity: int, body: string, attributes: TAttributeValueMap, timestamp: null|string, observedTimestamp: null|string},
+     *     resource: array{attributes: array<string, mixed>},
+     *     scope: array{name: string, version: string, schemaUrl: null|string, attributes: array<string, mixed>},
      *     timestamp: string,
      *     spanContext: null|array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags: array{byte: int}, traceState: array{entries: array<string, string>}},
      *     droppedAttributeCount?: int
@@ -59,9 +62,9 @@ final readonly class LogEntry
      * Normalize the LogEntry to an array representation for serialization.
      *
      * @return array{
-     *     record: array{severity: int, body: string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, timestamp: null|string, observedTimestamp: null|string},
-     *     resource: array{attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
-     *     scope: array{name: string, version: string, schemaUrl: null|string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>},
+     *     record: array{severity: int, body: string, attributes: array<string, mixed>, timestamp: null|string, observedTimestamp: null|string},
+     *     resource: array{attributes: array<string, mixed>},
+     *     scope: array{name: string, version: string, schemaUrl: null|string, attributes: array<string, mixed>},
      *     timestamp: string,
      *     spanContext: null|array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags: array{byte: int}, traceState: array{entries: array<string, string>}},
      *     droppedAttributeCount: int

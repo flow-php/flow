@@ -143,4 +143,27 @@ final class LogExportIntegrationTest extends IntegrationTestCase
             'Collector should have received the log',
         );
     }
+
+    #[DataProvider('transportProvider')]
+    public function test_exports_log_with_nested_array_attributes(TransportConfiguration $config): void
+    {
+        $logsBefore = $this->otelContext->collectorMetrics()->getAcceptedLogRecords();
+
+        $telemetry = $this->otelContext->createTelemetry($config);
+        $logger = $telemetry->logger('test-logger');
+
+        $logger->info('Log with nested attributes', [
+            'user' => ['name' => 'Alice', 'roles' => ['admin', 'user']],
+            'tags' => ['web', 'api'],
+            'request.headers' => ['Accept' => 'application/json', 'X-Request-Id' => 'abc-123'],
+        ]);
+
+        $telemetry->shutdown();
+
+        static::assertGreaterThan(
+            $logsBefore,
+            $this->otelContext->collectorMetrics()->waitForLogRecords($logsBefore),
+            'Collector should have received log with nested array attributes',
+        );
+    }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Resource\Detector;
 
+use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Resource\ResourceDetector;
 
@@ -31,11 +32,13 @@ use Flow\Telemetry\Resource\ResourceDetector;
  *     new ManualDetector(['service.name' => 'my-app']),
  * );
  * ```
+ *
+ * @phpstan-import-type TAttributeValueMap from Attributes
  */
 final readonly class ManualDetector implements ResourceDetector
 {
     /**
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes
+     * @param TAttributeValueMap $attributes
      */
     public function __construct(
         private array $attributes = [],

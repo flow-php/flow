@@ -144,26 +144,29 @@ parameters:
             message: '#Dom\\(CharacterData|HTMLDocument|HTMLElement|Element)#i'
             identifier: class.notFound
         -
-            path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/DependencyInjection/FlowTelemetryExtension.php
-            identifier: argument.type
-        -
-            path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/DependencyInjection/FlowTelemetryExtension.php
+            path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/FlowTelemetryBundle.php
             identifier: offsetAccess.nonOffsetAccessible
         -
-            path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/DependencyInjection/FlowTelemetryExtension.php
+            path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/FlowTelemetryBundle.php
             identifier: cast.string
         -
-            path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/DependencyInjection/FlowTelemetryExtension.php
-            identifier: foreach.nonIterable
+            path: src/bridge/symfony/filesystem-cache/src/Flow/Bridge/Symfony/FilesystemCache/FlowFilesystemCacheAdapter.php
+            identifier: cast.string
         -
-            path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/DependencyInjection/FlowTelemetryExtension.php
-            identifier: binaryOp.invalid
+            path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/Instrumentation/HttpKernel/HttpKernelSpanSubscriber.php
+            identifier: encapsedStringPart.nonString
+        -
+            path: src/bridge/symfony/postgresql-messenger/tests/Flow/Bridge/Symfony/PostgreSQLMessenger/Tests/Integration/FlowPostgreSqlTransportTest.php
+            identifier: cast.string
         -
             path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/DependencyInjection/Compiler/DBALTelemetryPass.php
             identifier: cast.int
         -
-            path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/Instrumentation/Doctrine/DBAL/TracingMiddleware.php
-            identifier: return.type
+            path: src/bridge/symfony/filesystem-cache/tests/Flow/Bridge/Symfony/FilesystemCache/Tests/Unit/Double/SpyMarshaller.php
+            identifier: parameterByRef.unusedType
+        -
+            path: src/bridge/symfony/postgresql-cache/tests/Flow/Bridge/Symfony/PostgreSQLCache/Tests/Unit/Double/SpyMarshaller.php
+            identifier: parameterByRef.unusedType
         # brick/math 0.12-0.14 vs 0.15+ compatibility shim — branches differ per installed version
         -
             path: src/core/etl/src/Flow/Calculator/Calculator.php

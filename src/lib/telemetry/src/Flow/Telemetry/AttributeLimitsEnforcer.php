@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry;
 
+use function array_map;
 use function array_slice;
 use function count;
 use function is_array;
@@ -47,25 +48,29 @@ final readonly class AttributeLimitsEnforcer
     }
 
     /**
-     * @param array<bool|float|int|string> $values
+     * @param array<array-key, mixed> $values
      *
-     * @return array<bool|float|int|string>
+     * @return array<array-key, mixed>
      */
     private function truncateArrayValues(array $values, int $maxLength): array
     {
-        foreach ($values as $index => $value) {
+        return array_map(function (mixed $value) use ($maxLength): mixed {
             if (is_string($value) && mb_strlen($value) > $maxLength) {
-                $values[$index] = mb_substr($value, 0, $maxLength);
+                return mb_substr($value, 0, $maxLength);
             }
-        }
 
-        return $values;
+            if (is_array($value)) {
+                return $this->truncateArrayValues($value, $maxLength);
+            }
+
+            return $value;
+        }, $values);
     }
 
     /**
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $values
+     * @param array<string, array<array-key, mixed>|bool|float|int|string> $values
      *
-     * @return array<string, array<bool|float|int|string>|bool|float|int|string>
+     * @return array<string, array<array-key, mixed>|bool|float|int|string>
      */
     private function truncateStringValues(array $values, int $maxLength): array
     {

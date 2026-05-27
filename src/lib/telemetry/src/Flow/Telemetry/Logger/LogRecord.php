@@ -59,7 +59,7 @@ final readonly class LogRecord
      * @param array{
      *     severity: int,
      *     body: string,
-     *     attributes: TAttributeValueMap,
+     *     attributes: array<string, mixed>,
      *     timestamp: null|string,
      *     observedTimestamp: null|string
      * } $data Normalized LogRecord data
@@ -81,7 +81,7 @@ final readonly class LogRecord
      * @return array{
      *     severity: int,
      *     body: string,
-     *     attributes: array<string, array<bool|float|int|string>|bool|float|int|string>,
+     *     attributes: array<string, mixed>,
      *     timestamp: null|string,
      *     observedTimestamp: null|string
      * }

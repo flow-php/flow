@@ -309,7 +309,7 @@ final class AttributesTest extends TestCase
         static::assertSame(42, $attributes->get('count'));
     }
 
-    public function test_supports_nested_arrays(): void
+    public function test_supports_flat_mixed_type_arrays(): void
     {
         $attributes = Attributes::create([
             'nested' => ['a', 'b', 'c'],
@@ -318,6 +318,61 @@ final class AttributesTest extends TestCase
 
         static::assertSame(['a', 'b', 'c'], $attributes->get('nested'));
         static::assertSame([1, 'two', 3.0, true], $attributes->get('mixed'));
+    }
+
+    public function test_supports_deeply_nested_arrays(): void
+    {
+        $attributes = Attributes::create([
+            'user' => ['name' => 'Alice', 'roles' => ['admin', 'user']],
+        ]);
+
+        static::assertSame(['name' => 'Alice', 'roles' => ['admin', 'user']], $attributes->get('user'));
+    }
+
+    public function test_normalize_deeply_nested_arrays(): void
+    {
+        $attributes = Attributes::create([
+            'l1' => ['l2' => ['l3' => 'deep']],
+        ]);
+
+        $normalized = $attributes->normalize();
+
+        static::assertSame(['l2' => ['l3' => 'deep']], $normalized['l1']);
+    }
+
+    public function test_normalize_nested_arrays_with_datetime(): void
+    {
+        $now = new DateTimeImmutable('2024-01-15T10:30:00+00:00');
+
+        $attributes = Attributes::create([
+            'context' => ['timestamp' => $now, 'tags' => ['a', 'b']],
+        ]);
+
+        $normalized = $attributes->normalize();
+
+        static::assertSame(['timestamp' => '2024-01-15T10:30:00+00:00', 'tags' => ['a', 'b']], $normalized['context']);
+    }
+
+    public function test_normalize_nested_arrays_with_throwable(): void
+    {
+        $exception = new RuntimeException('nested error');
+
+        $attributes = Attributes::create([
+            'errors' => [$exception],
+        ]);
+
+        $normalized = $attributes->normalize();
+
+        static::assertSame(
+            [
+                [
+                    'type' => RuntimeException::class,
+                    'message' => 'nested error',
+                    'stacktrace' => $exception->getTraceAsString(),
+                ],
+            ],
+            $normalized['errors'],
+        );
     }
 
     public function test_supports_string_values(): void

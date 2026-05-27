@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Instrumentation\Doctrine\DBAL\V3;
 
-use Doctrine\DBAL\Connection as DoctrineConnection;
 use Doctrine\DBAL\Driver;
 use Doctrine\DBAL\Driver\API\ExceptionConverter;
 use Doctrine\DBAL\Driver\Connection;
 use Doctrine\DBAL\Driver\Result;
 use Doctrine\DBAL\Driver\Statement;
-use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Platforms\DB2Platform;
 use Doctrine\DBAL\Platforms\MariaDBPlatform;
@@ -19,8 +17,7 @@ use Doctrine\DBAL\Platforms\OraclePlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Platforms\SqlitePlatform;
 use Doctrine\DBAL\Platforms\SQLServerPlatform;
-use Doctrine\DBAL\Schema\AbstractSchemaManager;
-use Doctrine\DBAL\VersionAwarePlatformDriver;
+use Doctrine\DBAL\ServerVersionProvider;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V3\TracingDriver;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
@@ -123,6 +120,7 @@ final class TracingDriverTest extends TestCase
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
         $telemetry = $this->createTelemetry($spanProcessor);
 
+        // @mago-expect analysis:deprecated-class
         $platform = new MySQL80Platform();
         $driver = $this->createMockDriverWithPlatform($platform);
 
@@ -239,7 +237,7 @@ final class TracingDriverTest extends TestCase
 
     private function createMockDriverWithPlatform(AbstractPlatform $platform): Driver
     {
-        return new readonly class($platform) implements VersionAwarePlatformDriver {
+        return new readonly class($platform) implements Driver {
             public function __construct(
                 private AbstractPlatform $platform,
             ) {}
@@ -247,17 +245,11 @@ final class TracingDriverTest extends TestCase
             public function connect(array $params): Connection
             {
                 return new class implements Connection {
-                    public function beginTransaction(): bool
-                    {
-                        return true;
-                    }
+                    public function beginTransaction(): void {}
 
-                    public function commit(): bool
-                    {
-                        return true;
-                    }
+                    public function commit(): void {}
 
-                    public function exec(string $sql): int
+                    public function exec(string $sql): int|string
                     {
                         return 0;
                     }
@@ -272,8 +264,7 @@ final class TracingDriverTest extends TestCase
                         return '1.0.0';
                     }
 
-                    /** @phpstan-ignore missingType.parameter */
-                    public function lastInsertId($name = null): string|int|false
+                    public function lastInsertId(): int|string
                     {
                         return 0;
                     }
@@ -288,35 +279,18 @@ final class TracingDriverTest extends TestCase
                         throw new RuntimeException('Not implemented');
                     }
 
-                    /** @phpstan-ignore missingType.parameter, missingType.parameter */
-                    public function quote($value, $type = ParameterType::STRING): mixed
+                    public function quote(string $value): string
                     {
                         return "'{$value}'";
                     }
 
-                    public function rollBack(): bool
-                    {
-                        return true;
-                    }
+                    public function rollBack(): void {}
                 };
             }
 
-            public function createDatabasePlatformForVersion($version): AbstractPlatform
+            public function getDatabasePlatform(ServerVersionProvider $versionProvider): AbstractPlatform
             {
                 return $this->platform;
-            }
-
-            public function getDatabasePlatform(): AbstractPlatform
-            {
-                return $this->platform;
-            }
-
-            /** @phpstan-ignore missingType.parameter */
-            public function getSchemaManager(
-                DoctrineConnection $conn,
-                AbstractPlatform $platform,
-            ): AbstractSchemaManager {
-                throw new RuntimeException('Not implemented');
             }
 
             public function getExceptionConverter(): ExceptionConverter

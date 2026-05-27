@@ -8,10 +8,13 @@ use Flow\Telemetry\Logger\LogRecord;
 use Stringable;
 use Throwable;
 
+use function array_walk;
 use function is_bool;
 use function is_object;
 use function is_scalar;
 use function method_exists;
+use function str_contains;
+use function strtr;
 
 /**
  * Convert a PSR-3 log call (level + message + context) into a Telemetry LogRecord.
@@ -51,17 +54,17 @@ final readonly class LogRecordConverter
      */
     private function applyContext(LogRecord $record, array $context): LogRecord
     {
-        foreach ($context as $key => $value) {
-            $key = (string) $key;
+        array_walk($context, function (mixed $value, int|string $key) use (&$record): void {
+            $stringKey = (string) $key;
 
-            if ($key === 'exception' && $value instanceof Throwable) {
+            if ($stringKey === 'exception' && $value instanceof Throwable) {
                 $record = $record->setException($value);
 
-                continue;
+                return;
             }
 
-            $record = $record->setAttribute($key, $this->valueNormalizer->normalize($value));
-        }
+            $record = $record->setAttribute($stringKey, $this->valueNormalizer->normalize($value));
+        });
 
         return $record;
     }
@@ -77,15 +80,15 @@ final readonly class LogRecordConverter
 
         $replacements = [];
 
-        foreach ($context as $key => $value) {
+        array_walk($context, function (mixed $value, int|string $key) use (&$replacements): void {
             $rendered = $this->renderForInterpolation($value);
 
             if ($rendered === null) {
-                continue;
+                return;
             }
 
             $replacements['{' . $key . '}'] = $rendered;
-        }
+        });
 
         if ($replacements === []) {
             return $message;

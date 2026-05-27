@@ -11,7 +11,7 @@ use Flow\Telemetry\Telemetry;
 final readonly class TracingMiddleware implements MiddlewareInterface
 {
     /**
-     * @param class-string $driverClass
+     * @param class-string<DriverInterface> $driverClass
      */
     public function __construct(
         private Telemetry $telemetry,
@@ -23,6 +23,7 @@ final readonly class TracingMiddleware implements MiddlewareInterface
 
     public function wrap(DriverInterface $driver): DriverInterface
     {
+        // @mago-expect analysis:unsafe-instantiation,too-many-arguments
         return new $this->driverClass(
             $this->telemetry,
             $driver,

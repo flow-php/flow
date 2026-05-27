@@ -20,6 +20,7 @@ use Flow\Telemetry\Attributes;
  * $link = SpanLink::create($otherSpanContext, ['reason' => 'batch']);
  * ```
  *
+ * @phpstan-import-type TAttributeValue from Attributes
  * @phpstan-import-type TAttributeValueMap from Attributes
  */
 final readonly class SpanLink
@@ -52,7 +53,7 @@ final readonly class SpanLink
     /**
      * Create a SpanLink from a normalized array representation.
      *
-     * @param array{context: array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags?: array{byte: int}, traceState?: array{entries: array<string, string>}}, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount?: int} $data Normalized SpanLink data
+     * @param array{context: array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags?: array{byte: int}, traceState?: array{entries: array<string, string>}}, attributes: array<string, mixed>, droppedAttributeCount?: int} $data Normalized SpanLink data
      */
     public static function fromArray(array $data): self
     {
@@ -66,7 +67,7 @@ final readonly class SpanLink
     /**
      * Normalize the SpanLink to an array representation for serialization.
      *
-     * @return array{context: array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags: array{byte: int}, traceState: array{entries: array<string, string>}}, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>, droppedAttributeCount: int}
+     * @return array{context: array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags: array{byte: int}, traceState: array{entries: array<string, string>}}, attributes: array<string, mixed>, droppedAttributeCount: int}
      */
     public function normalize(): array
     {

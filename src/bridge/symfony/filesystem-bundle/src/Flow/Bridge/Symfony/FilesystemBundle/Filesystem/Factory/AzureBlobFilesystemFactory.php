@@ -62,18 +62,15 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
             );
         }
 
-        $client = $config['client'];
-
-        if ($client instanceof BlobServiceInterface) {
-            $blobService = $client;
-        } elseif (is_array($client)) {
-            /** @var array<string, mixed> $client */
-            $blobService = $this->buildBlobService($containerName, $client);
+        if ($config['client'] instanceof BlobServiceInterface) {
+            $blobService = $config['client'];
+        } elseif (is_array($config['client'])) {
+            $blobService = $this->buildBlobService($containerName, $config['client']);
         } else {
             throw new InvalidArgumentException(sprintf(
                 'Filesystem factory for backend "azure_blob" `client` must be an array or %s instance, got %s.',
                 BlobServiceInterface::class,
-                get_debug_type($client),
+                get_debug_type($config['client']),
             ));
         }
 
@@ -88,7 +85,7 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
     }
 
     /**
-     * @param array<string, mixed> $clientConfig
+     * @param array<array-key, mixed> $clientConfig
      */
     private function buildBlobService(string $containerName, array $clientConfig): BlobServiceInterface
     {
@@ -166,6 +163,7 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
 
         $httpFactory = azure_http_factory($requestFactory, $streamFactory);
 
+        // @mago-expect analysis:mixed-assignment
         $urlFactoryConfig = $clientConfig['url_factory'] ?? null;
 
         if (
@@ -174,9 +172,10 @@ final readonly class AzureBlobFilesystemFactory implements FilesystemFactory
             && $urlFactoryConfig['host'] !== ''
         ) {
             $host = $urlFactoryConfig['host'];
+            // @mago-expect analysis:mixed-assignment
             $portRaw = $urlFactoryConfig['port'] ?? '10000';
             $port = is_string($portRaw) ? $portRaw : (string) (is_int($portRaw) ? $portRaw : '10000');
-            $https = (bool) ($urlFactoryConfig['https'] ?? false);
+            $https = ($urlFactoryConfig['https'] ?? false) === true;
             $urlFactory = azurite_url_factory($host, $port, $https);
         } else {
             $urlFactory = azure_url_factory();

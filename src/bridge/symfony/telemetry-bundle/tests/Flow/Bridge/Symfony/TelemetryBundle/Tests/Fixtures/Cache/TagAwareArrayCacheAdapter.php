@@ -181,7 +181,9 @@ final class TagAwareArrayCacheAdapter implements
 
     public function saveDeferred(CacheItemInterface $item): bool
     {
-        $this->deferred[$item->getKey()] = $item;
+        if ($item instanceof CacheItem) {
+            $this->deferred[$item->getKey()] = $item;
+        }
 
         return true;
     }

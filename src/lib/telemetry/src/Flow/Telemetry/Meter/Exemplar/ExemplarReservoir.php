@@ -41,7 +41,7 @@ interface ExemplarReservoir
      * its sampling strategy. Not all offered measurements will be stored.
      *
      * @param float|int $value The measurement value
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes The measurement attributes
+     * @param array<string, array<array-key, mixed>|bool|float|int|string> $attributes The measurement attributes
      * @param SpanContext $context The span context for trace correlation
      * @param \DateTimeImmutable $timestamp When the measurement was recorded
      * @param int $bucketIndex For histogram buckets, the bucket index; ignored by other reservoirs

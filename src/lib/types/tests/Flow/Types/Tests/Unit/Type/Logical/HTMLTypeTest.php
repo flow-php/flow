@@ -26,6 +26,7 @@ final class HTMLTypeTest extends TestCase
     public static function assert_data_provider(): Generator
     {
         yield 'valid HTMLDocument' => [
+            // @mago-expect analysis:unavailable-method
             'value' => HTMLDocument::createFromString('<!DOCTYPE html><html><head></head><body></body></html>'),
             'exceptionClass' => null,
         ];
@@ -84,6 +85,7 @@ final class HTMLTypeTest extends TestCase
     public static function cast_data_provider(): Generator
     {
         yield 'valid HTMLDocument' => [
+            // @mago-expect analysis:unavailable-method
             'value' => HTMLDocument::createFromString(
                 $html = '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
             ),
@@ -142,6 +144,7 @@ final class HTMLTypeTest extends TestCase
     public static function is_valid_data_provider(): Generator
     {
         yield 'valid HTMLDocument' => [
+            // @mago-expect analysis:unavailable-method
             'value' => HTMLDocument::createFromString(
                 '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
             ),
@@ -189,6 +192,7 @@ final class HTMLTypeTest extends TestCase
         static::assertNotNull($expected);
 
         $result = type_html()->assert(type_html()->cast($value));
+        // @mago-expect analysis:unavailable-method
         $html = type_string()->assert($result->saveHtml());
         self::assertHtmlEquals($expected, $html);
     }

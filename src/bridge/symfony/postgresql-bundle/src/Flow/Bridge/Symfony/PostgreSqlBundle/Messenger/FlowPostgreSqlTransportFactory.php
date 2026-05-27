@@ -35,7 +35,7 @@ final readonly class FlowPostgreSqlTransportFactory implements TransportFactoryI
     ) {}
 
     /**
-     * @param array<string, mixed> $options
+     * @param array<array-key, mixed> $options
      */
     public function createTransport(
         #[SensitiveParameter]
@@ -45,7 +45,7 @@ final readonly class FlowPostgreSqlTransportFactory implements TransportFactoryI
     ): TransportInterface {
         $parsed = parse_url($dsn);
 
-        if ($parsed === false || !array_key_exists('host', $parsed) || $parsed['host'] === '') {
+        if ($parsed === false || !array_key_exists('host', $parsed)) {
             throw new TransportException(sprintf(
                 'Invalid Flow PostgreSQL Messenger DSN "%s": expected "flow-pgsql://<connection_name>".',
                 $dsn,
@@ -56,14 +56,15 @@ final readonly class FlowPostgreSqlTransportFactory implements TransportFactoryI
 
         $dsnOptions = [];
 
-        if (array_key_exists('query', $parsed) && $parsed['query'] !== '') {
+        if (array_key_exists('query', $parsed)) {
             parse_str($parsed['query'], $dsnOptions);
         }
 
         $merged = array_replace($dsnOptions, $options);
 
         try {
-            $client = $this->clients->get($connectionName);
+            // @mago-expect analysis:mixed-assignment
+            $resolved = $this->clients->get($connectionName);
         } catch (NotFoundExceptionInterface $e) {
             throw new TransportException(
                 sprintf(
@@ -75,14 +76,14 @@ final readonly class FlowPostgreSqlTransportFactory implements TransportFactoryI
             );
         }
 
-        if (!$client instanceof Client) {
-            throw new TransportException(sprintf(
+        $client = $resolved instanceof Client
+            ? $resolved
+            : throw new TransportException(sprintf(
                 'Flow PostgreSQL Messenger connection "%s" must be an instance of %s, got %s.',
                 $connectionName,
                 Client::class,
-                get_debug_type($client),
+                get_debug_type($resolved),
             ));
-        }
 
         $connection = new Connection(
             client: $client,
@@ -102,7 +103,7 @@ final readonly class FlowPostgreSqlTransportFactory implements TransportFactoryI
     }
 
     /**
-     * @param array<string, mixed> $options
+     * @param array<array-key, mixed> $options
      */
     public function supports(#[SensitiveParameter] string $dsn, array $options): bool
     {

@@ -21,6 +21,9 @@ namespace Flow\Telemetry;
  * ```
  *
  * @see https://opentelemetry.io/docs/specs/otel/glossary/#instrumentation-scope
+ *
+ * @phpstan-import-type TAttributeValue from Attributes
+ * @phpstan-import-type TAttributeValueMap from Attributes
  */
 final readonly class InstrumentationScope
 {
@@ -40,7 +43,7 @@ final readonly class InstrumentationScope
     /**
      * Create an InstrumentationScope from a normalized array representation.
      *
-     * @param array{name: string, version?: string, schemaUrl?: null|string, attributes?: array<string, array<bool|float|int|string>|bool|float|int|string>} $data
+     * @param array{name: string, version?: string, schemaUrl?: null|string, attributes?: array<string, mixed>} $data
      */
     public static function fromArray(array $data): self
     {
@@ -55,7 +58,7 @@ final readonly class InstrumentationScope
     /**
      * Normalize the scope to an array representation for serialization.
      *
-     * @return array{name: string, version: string, schemaUrl: null|string, attributes: array<string, array<bool|float|int|string>|bool|float|int|string>}
+     * @return array{name: string, version: string, schemaUrl: null|string, attributes: array<string, mixed>}
      */
     public function normalize(): array
     {
@@ -70,7 +73,7 @@ final readonly class InstrumentationScope
     /**
      * Create a new scope with additional attributes merged with existing ones.
      *
-     * @param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes
+     * @param TAttributeValueMap|Attributes $attributes
      */
     public function withAttributes(Attributes|array $attributes): self
     {

@@ -15,14 +15,12 @@ use Twig\Extension\AbstractExtension;
 use Twig\Profiler\NodeVisitor\ProfilerNodeVisitor;
 use Twig\Profiler\Profile;
 
+use function is_array;
 use function preg_match;
 use function sprintf;
 
 final class TracingTwigExtension extends AbstractExtension
 {
-    /**
-     * @var \SplObjectStorage<Profile, array{span: Span, tracer: Tracer}>
-     */
     private SplObjectStorage $activeSpans;
 
     private int $excludedDepth = 0;
@@ -91,9 +89,13 @@ final class TracingTwigExtension extends AbstractExtension
             return;
         }
 
-        /** @var array{span: Span, tracer: Tracer} $spanData */
+        // @mago-expect analysis:impossible-assignment
         $spanData = $this->activeSpans[$profile];
-        $spanData['tracer']->complete($spanData['span']);
+
+        // @mago-expect analysis:no-value(2),redundant-type-comparison(2),redundant-logical-operation(2)
+        if (is_array($spanData) && $spanData['tracer'] instanceof Tracer && $spanData['span'] instanceof Span) {
+            $spanData['tracer']->complete($spanData['span']);
+        }
 
         unset($this->activeSpans[$profile]);
     }

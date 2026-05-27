@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Provider\Console;
 
-use DateTimeImmutable;
-use DateTimeInterface;
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Logger\Severity;
@@ -19,11 +17,9 @@ use Flow\Telemetry\Tracer\SpanStatusCode;
 
 use function abs;
 use function array_keys;
-use function array_map;
 use function array_merge;
 use function count;
 use function implode;
-use function is_array;
 use function is_float;
 use function is_scalar;
 use function is_string;
@@ -665,7 +661,7 @@ final readonly class ConsoleExporter implements Exporter
     }
 
     /**
-     * @param array<string, array<bool|\DateTimeImmutable|float|int|string>|bool|\DateTimeImmutable|float|int|string> $attributes
+     * @param array<string, array<array-key, mixed>|bool|float|int|string> $attributes
      */
     private function formatLogAttributes(array $attributes): string
     {
@@ -676,7 +672,7 @@ final readonly class ConsoleExporter implements Exporter
         $parts = [];
 
         foreach ($attributes as $key => $value) {
-            $parts[] = $key . ': ' . $this->output->formatValue($this->normalizeLogAttributeValue($value));
+            $parts[] = $key . ': ' . $this->output->formatValue($value);
         }
 
         return '{' . implode(', ', $parts) . '}';
@@ -801,26 +797,6 @@ final readonly class ConsoleExporter implements Exporter
             MetricType::GAUGE => 'o',
             MetricType::HISTOGRAM => '#',
         };
-    }
-
-    /**
-     * @param array<bool|\DateTimeImmutable|float|int|string>|bool|\DateTimeImmutable|float|int|string $value
-     *
-     * @return array<bool|float|int|string>|bool|float|int|string
-     */
-    private function normalizeLogAttributeValue(mixed $value): array|bool|float|int|string
-    {
-        if ($value instanceof DateTimeImmutable) {
-            return $value->format(DateTimeInterface::RFC3339_EXTENDED);
-        }
-
-        if (is_array($value)) {
-            return array_map(static fn($item) => $item instanceof DateTimeImmutable
-                ? $item->format(DateTimeInterface::RFC3339_EXTENDED)
-                : $item, $value);
-        }
-
-        return $value;
     }
 
     private function printSpan(Span $span): void

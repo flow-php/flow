@@ -40,6 +40,6 @@ final class RegisterFstabLocatorPass implements CompilerPassInterface
 
         $container->setDefinition(self::LOCATOR_SERVICE_ID, $locator);
 
-        $container->setParameter(self::DEFAULT_FSTAB_PARAMETER, (string) ($config['default_fstab'] ?? ''));
+        $container->setParameter(self::DEFAULT_FSTAB_PARAMETER, $config['default_fstab'] ?? '');
     }
 }
