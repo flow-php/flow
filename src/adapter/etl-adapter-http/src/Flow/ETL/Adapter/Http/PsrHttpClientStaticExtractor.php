@@ -38,6 +38,9 @@ final class PsrHttpClientStaticExtractor implements Extractor
         private readonly iterable $requests,
     ) {}
 
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         $responseFactory = new ResponseEntriesFactory();

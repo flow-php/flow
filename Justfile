@@ -96,7 +96,11 @@ analyze-mago *args:
         src/adapter/etl-adapter-chartjs \
         src/adapter/etl-adapter-csv \
         src/adapter/etl-adapter-doctrine \
-        src/adapter/etl-adapter-excel
+        src/adapter/etl-adapter-excel \
+        src/adapter/etl-adapter-http \
+        src/adapter/etl-adapter-json \
+        src/adapter/etl-adapter-parquet \
+        src/adapter/etl-adapter-text
 
 # Auto-fix code style (Mago format + lint --fix) and GitHub Actions findings (zizmor --fix).
 fix:

@@ -14,6 +14,7 @@ use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\string_entry;
 use function Flow\ETL\DSL\xml_entry;
+use function Flow\Types\DSL\type_array;
 use function json_decode;
 
 final class ResponseEntriesFactory
@@ -46,7 +47,7 @@ final class ResponseEntriesFactory
             $responseBodyEntry = match ($responseType) {
                 ResponseType::JSON => json_entry(
                     'response_body',
-                    (array) json_decode($responseBodyContent, true, 512, JSON_THROW_ON_ERROR),
+                    type_array()->assert(json_decode($responseBodyContent, true, 512, JSON_THROW_ON_ERROR)),
                 ),
                 ResponseType::XML => xml_entry('response_body', $responseBodyContent),
                 ResponseType::HTML => class_exists('\Dom\HTMLDocument')

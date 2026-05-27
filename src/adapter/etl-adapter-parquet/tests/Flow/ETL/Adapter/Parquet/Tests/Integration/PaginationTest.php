@@ -21,8 +21,8 @@ final class PaginationTest extends FlowTestCase
 
         $extractedRows = 0;
 
-        foreach ($extractor->extract(flow_context(config())) as $rows) {
-            $extractedRows += $rows->count();
+        foreach ($extractor->extract(flow_context(config())) as $batch) {
+            $extractedRows += $batch->count();
         }
 
         static::assertSame(1000 + 500 + 350 + 2000 + 15, $extractedRows);
@@ -34,8 +34,8 @@ final class PaginationTest extends FlowTestCase
 
         $extractedRows = 0;
 
-        foreach ($extractor->extract(flow_context(config())) as $rows) {
-            $extractedRows += $rows->count();
+        foreach ($extractor->extract(flow_context(config())) as $batch) {
+            $extractedRows += $batch->count();
         }
 
         static::assertSame(1000 + 500 + 350 + 2000 + 15 - 2500, $extractedRows);
@@ -48,8 +48,8 @@ final class PaginationTest extends FlowTestCase
 
         $extractedRows = 0;
 
-        foreach ($extractor->extract(flow_context(config())) as $rows) {
-            $extractedRows += $rows->count();
+        foreach ($extractor->extract(flow_context(config())) as $batch) {
+            $extractedRows += $batch->count();
         }
 
         static::assertSame(1000 + 500 + 350 + 2000 + 15 - 2500, $extractedRows);
@@ -61,8 +61,8 @@ final class PaginationTest extends FlowTestCase
 
         $extractedRows = 0;
 
-        foreach ($extractor->extract(flow_context(config())) as $rows) {
-            $extractedRows += $rows->count();
+        foreach ($extractor->extract(flow_context(config())) as $batch) {
+            $extractedRows += $batch->count();
         }
 
         static::assertSame(0, $extractedRows);

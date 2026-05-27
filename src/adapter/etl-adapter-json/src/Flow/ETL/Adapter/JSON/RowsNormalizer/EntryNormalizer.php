@@ -18,6 +18,10 @@ use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Row\Entry\XMLElementEntry;
 use Flow\ETL\Row\Entry\XMLEntry;
 
+use function array_combine;
+use function array_keys;
+use function array_map;
+use function array_values;
 use function Flow\ETL\DSL\date_interval_to_microseconds;
 use function is_array;
 use function is_bool;
@@ -43,7 +47,9 @@ final readonly class EntryNormalizer
             UuidEntry::class => $entry->toString(),
             DateTimeEntry::class => $entry->value()?->format($this->dateTimeFormat),
             DateEntry::class => $entry->value()?->format($this->dateFormat),
-            TimeEntry::class => $entry->value() ? date_interval_to_microseconds($entry->value()) : null,
+            TimeEntry::class => ($timeValue = $entry->value()) !== null
+                ? date_interval_to_microseconds($timeValue)
+                : null,
             EnumEntry::class => $entry->value()?->name,
             JsonEntry::class => $this->normalizeJsonValue($entry->value()?->toArray()),
             ListEntry::class, MapEntry::class, StructureEntry::class, XMLElementEntry::class => $entry->toString(),
@@ -58,14 +64,10 @@ final readonly class EntryNormalizer
     private function normalizeJsonValue(mixed $value): string|float|int|bool|array|null
     {
         if (is_array($value)) {
-            /** @var array<string, mixed> $normalizedArray */
-            $normalizedArray = [];
-
-            foreach ($value as $key => $val) {
-                $normalizedArray[is_string($key) ? $key : (string) $key] = $val;
-            }
-
-            return $normalizedArray;
+            return array_combine(
+                array_map(static fn(int|string $key): string => (string) $key, array_keys($value)),
+                array_values($value),
+            );
         }
 
         return $this->normalizeValue($value);
@@ -81,17 +83,12 @@ final readonly class EntryNormalizer
         }
 
         if (is_array($value)) {
-            /** @var array<string, mixed> $normalizedArray */
-            $normalizedArray = [];
-
-            foreach ($value as $key => $val) {
-                $normalizedArray[is_string($key) ? $key : (string) $key] = $val;
-            }
-
-            return $normalizedArray;
+            return array_combine(
+                array_map(static fn(int|string $key): string => (string) $key, array_keys($value)),
+                array_values($value),
+            );
         }
 
-        // Fallback for unexpected types - convert to string
         return '';
     }
 }

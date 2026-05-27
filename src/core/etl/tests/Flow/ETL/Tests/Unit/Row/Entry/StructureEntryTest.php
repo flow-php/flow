@@ -83,7 +83,6 @@ final class StructureEntryTest extends FlowTestCase
                     'city' => 'bar',
                 ],
             ],
-            // @mago-ignore analysis:less-specific-argument
             type_structure([
                 'id' => type_integer(),
                 'name' => type_string(),

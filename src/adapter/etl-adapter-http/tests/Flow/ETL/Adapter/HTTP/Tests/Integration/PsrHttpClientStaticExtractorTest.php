@@ -6,19 +6,17 @@ namespace Flow\ETL\Adapter\HTTP\Tests\Integration;
 
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
-use Generator;
 use Http\Mock\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Response;
 use RuntimeException;
 use Stringable;
 
-use function assert;
 use function file_get_contents;
 use function Flow\ETL\Adapter\Http\from_static_http_requests;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
-use function is_array;
+use function Flow\Types\DSL\type_array;
 use function is_scalar;
 use function json_decode;
 
@@ -43,43 +41,46 @@ final class PsrHttpClientStaticExtractorTest extends FlowTestCase
         $psr18Client->addResponse(new Response(200, [], $norbertFixture));
         $psr18Client->addResponse(new Response(200, [], $tomaszFixture));
 
-        $requests = static function () use ($psr17Factory): Generator {
-            yield $psr17Factory
+        $requests = [
+            $psr17Factory
                 ->createRequest('GET', 'https://api.github.com/users/norberttech')
                 ->withHeader('Accept', 'application/vnd.github.v3+json')
-                ->withHeader('User-Agent', 'flow-php/etl');
-
-            yield $psr17Factory
+                ->withHeader('User-Agent', 'flow-php/etl'),
+            $psr17Factory
                 ->createRequest('GET', 'https://api.github.com/users/tomaszhanc')
                 ->withHeader('Accept', 'application/vnd.github.v3+json')
-                ->withHeader('User-Agent', 'flow-php/etl');
-        };
+                ->withHeader('User-Agent', 'flow-php/etl'),
+        ];
 
-        $extractor = from_static_http_requests($psr18Client, $requests());
+        $extractor = from_static_http_requests($psr18Client, $requests);
 
         $rowsGenerator = $extractor->extract(flow_context(config()));
 
-        /** @var Rows $norbertRows */
         $norbertRows = $rowsGenerator->current();
+
+        if (!$norbertRows instanceof Rows) {
+            static::fail('Expected Rows instance for norberttech');
+        }
 
         $rowsGenerator->next();
 
-        /** @var Rows $tomekRows */
         $tomekRows = $rowsGenerator->current();
+
+        if (!$tomekRows instanceof Rows) {
+            static::fail('Expected Rows instance for tomaszhanc');
+        }
 
         $norbertResponseBodyValue = $norbertRows->first()->valueOf('response_body');
         $norbertBodyJson = is_scalar($norbertResponseBodyValue) || $norbertResponseBodyValue instanceof Stringable
             ? (string) $norbertResponseBodyValue
             : '';
-        $norbertResponseBody = json_decode($norbertBodyJson, true, 512, JSON_THROW_ON_ERROR);
-        assert(is_array($norbertResponseBody));
+        $norbertResponseBody = type_array()->assert(json_decode($norbertBodyJson, true, 512, JSON_THROW_ON_ERROR));
 
         $tomekResponseBodyValue = $tomekRows->first()->valueOf('response_body');
         $tomekBodyJson = is_scalar($tomekResponseBodyValue) || $tomekResponseBodyValue instanceof Stringable
             ? (string) $tomekResponseBodyValue
             : '';
-        $tomekResponseBody = json_decode($tomekBodyJson, true, 512, JSON_THROW_ON_ERROR);
-        assert(is_array($tomekResponseBody));
+        $tomekResponseBody = type_array()->assert(json_decode($tomekBodyJson, true, 512, JSON_THROW_ON_ERROR));
 
         static::assertSame('norberttech', $norbertResponseBody['login']);
         static::assertSame('tomaszhanc', $tomekResponseBody['login']);

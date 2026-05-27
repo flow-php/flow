@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\HTTP\Tests\Integration;
 
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Json;
 use Http\Mock\Client;
@@ -15,12 +16,11 @@ use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use Stringable;
 
-use function assert;
 use function file_get_contents;
 use function Flow\ETL\Adapter\Http\from_dynamic_http_requests;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\flow_context;
-use function is_array;
+use function Flow\Types\DSL\type_array;
 use function is_scalar;
 use function json_decode;
 use function json_encode;
@@ -64,25 +64,30 @@ final class PsrHttpClientDynamicExtractorTest extends FlowTestCase
             }
         });
 
-        $rows = $extractor->extract(flow_context(config()));
+        $generator = $extractor->extract(flow_context(config()));
 
-        $responseBody = $rows->current()->first()->valueOf('response_body');
+        $currentRows = $generator->current();
+
+        if (!$currentRows instanceof Rows) {
+            static::fail('Expected Rows instance from extractor');
+        }
+
+        $responseBody = $currentRows->first()->valueOf('response_body');
         $bodyJson = is_scalar($responseBody) || $responseBody instanceof Stringable ? (string) $responseBody : '';
-        $body = json_decode($bodyJson, true, 512, JSON_THROW_ON_ERROR);
-        assert(is_array($body));
+        $body = type_array()->assert(json_decode($bodyJson, true, 512, JSON_THROW_ON_ERROR));
 
-        static::assertSame(1, $rows->current()->count());
+        static::assertSame(1, $currentRows->count());
         static::assertSame('flow-php', $body['login'], json_encode($body, JSON_THROW_ON_ERROR));
         static::assertSame(73_495_297, $body['id'], json_encode($body, JSON_THROW_ON_ERROR));
 
-        $responseHeadersValue = $rows->current()->first()->valueOf('response_headers');
+        $responseHeadersValue = $currentRows->first()->valueOf('response_headers');
         static::assertInstanceOf(Json::class, $responseHeadersValue);
         $responseHeaders = $responseHeadersValue->toArray();
         static::assertSame(['GitHub.com'], $responseHeaders['Server']);
-        static::assertSame(200, $rows->current()->first()->valueOf('response_status_code'));
-        static::assertSame('1.1', $rows->current()->first()->valueOf('response_protocol_version'));
-        static::assertSame('OK', $rows->current()->first()->valueOf('response_reason_phrase'));
-        static::assertSame('https://api.github.com/orgs/flow-php', $rows->current()->first()->valueOf('request_uri'));
-        static::assertSame('GET', $rows->current()->first()->valueOf('request_method'));
+        static::assertSame(200, $currentRows->first()->valueOf('response_status_code'));
+        static::assertSame('1.1', $currentRows->first()->valueOf('response_protocol_version'));
+        static::assertSame('OK', $currentRows->first()->valueOf('response_reason_phrase'));
+        static::assertSame('https://api.github.com/orgs/flow-php', $currentRows->first()->valueOf('request_uri'));
+        static::assertSame('GET', $currentRows->first()->valueOf('request_method'));
     }
 }

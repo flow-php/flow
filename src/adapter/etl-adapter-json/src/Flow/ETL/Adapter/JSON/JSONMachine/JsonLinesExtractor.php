@@ -11,6 +11,7 @@ use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
 use Generator;
@@ -38,6 +39,9 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
         $this->resetLimit();
     }
 
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
@@ -60,10 +64,10 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
 
             foreach ($stream->readLines() as $jsonLine) {
                 /**
-                 * @var array<string, mixed>|object $rowData
+                 * @var array<string, mixed> $rowData
                  */
                 foreach ($lineIterator($jsonLine) as $rowData) {
-                    $row = (array) $rowData;
+                    $row = $rowData;
 
                     if ($shouldPutInputIntoRows) {
                         $row['_input_file_uri'] = $uri;

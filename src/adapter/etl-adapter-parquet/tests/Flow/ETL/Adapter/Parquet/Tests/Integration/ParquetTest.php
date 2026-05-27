@@ -116,7 +116,13 @@ final class ParquetTest extends FlowTestCase
     private function cleanDirectory(string $path): void
     {
         if (file_exists($path) && is_dir($path)) {
-            $files = array_diff(scandir($path), ['..', '.']);
+            $scanResult = scandir($path);
+
+            if ($scanResult === false) {
+                return;
+            }
+
+            $files = array_diff($scanResult, ['..', '.']);
 
             foreach ($files as $file) {
                 if (is_file($path . DIRECTORY_SEPARATOR . $file)) {

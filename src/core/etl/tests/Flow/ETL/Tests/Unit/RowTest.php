@@ -96,7 +96,6 @@ final class RowTest extends FlowTestCase
                 ['id' => 1, 'status' => 'NEW'],
                 ['id' => 2, 'status' => 'PENDING'],
             ]),
-            // @mago-ignore analysis:less-specific-argument
             struct_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure([
                 'item-id' => type_integer(),
                 'name' => type_string(),
