@@ -3,6 +3,9 @@
 ### Changed
 - [#2391](https://github.com/flow-php/flow/pull/2391) - **Covered all bridges with Mago Analyzer** - [@norberttech](https://github.com/norberttech)
 
+### Removed
+- [#2393](https://github.com/flow-php/flow/pull/2393) - **support for docrtine 3.6** - [@norberttech](https://github.com/norberttech)
+
 ## [0.38.0] - 2026-05-22
 
 ### Added
