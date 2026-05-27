@@ -109,7 +109,7 @@ function from_dbal_key_set_qb(Connection $connection, QueryBuilder $queryBuilder
 
 /**
  * @param null|ParametersSet $parameters_set - each one parameters array will be evaluated as new query
- * @param array<int|string, DbalArrayType|DbalParameterType|DbalType|int|string> $types
+ * @param array<int<0, max>|string, DbalArrayType|DbalParameterType|DbalType|string> $types
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::EXTRACTOR)]
 function from_dbal_queries(
@@ -125,7 +125,6 @@ function from_dbal_queries(
     }
 
     if ($types !== []) {
-        /** @phpstan-ignore-next-line */
         $extractor->withTypes($types);
     }
 
@@ -136,7 +135,7 @@ function from_dbal_queries(
  * @deprecated use from_dbal_queries() instead
  *
  * @param null|ParametersSet $parameters_set - each one parameters array will be evaluated as new query
- * @param array<int|string, DbalArrayType|DbalParameterType|DbalType|int|string> $types
+ * @param array<int<0, max>|string, DbalArrayType|DbalParameterType|DbalType|string> $types
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::EXTRACTOR)]
 function dbal_from_queries(
@@ -242,7 +241,7 @@ function to_dbal_table_delete(array|Connection $connection, string $table): Dbal
  * Converts a Flow\ETL\Schema to a Doctrine\DBAL\Schema\Table.
  *
  * @param Schema $schema
- * @param array<array-key, mixed> $table_options
+ * @param array<string, mixed> $table_options
  * @param array<class-string<\Flow\Types\Type<mixed>>, class-string<\Doctrine\DBAL\Types\Type>> $types_map
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
@@ -337,18 +336,14 @@ function to_dbal_transaction(array|Connection $connection, Loader ...$loaders): 
 }
 
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
-function pagination_key_asc(
-    string $column,
-    string|int|DbalParameterType|DbalType $type = DbalParameterType::STRING,
-): Key {
+function pagination_key_asc(string $column, string|DbalParameterType|DbalType $type = DbalParameterType::STRING): Key
+{
     return new Key($column, Order::ASC, $type);
 }
 
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
-function pagination_key_desc(
-    string $column,
-    string|int|DbalParameterType|DbalType $type = DbalParameterType::STRING,
-): Key {
+function pagination_key_desc(string $column, string|DbalParameterType|DbalType $type = DbalParameterType::STRING): Key
+{
     return new Key($column, Order::DESC, $type);
 }
 

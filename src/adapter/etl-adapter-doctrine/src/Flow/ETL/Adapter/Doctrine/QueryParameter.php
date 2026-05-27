@@ -16,5 +16,5 @@ interface QueryParameter
      */
     public function toQueryParam(Rows $rows): mixed;
 
-    public function type(): int|ArrayParameterType|null;
+    public function type(): ?ArrayParameterType;
 }

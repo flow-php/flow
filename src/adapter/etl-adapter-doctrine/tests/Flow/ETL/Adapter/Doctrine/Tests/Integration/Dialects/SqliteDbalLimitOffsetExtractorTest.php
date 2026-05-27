@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration\Dialects;
 
 use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
@@ -33,7 +34,7 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         for ($i = 1; $i <= 8; $i++) {
             $this->sqliteDatabaseContext->insert($table, [
@@ -73,7 +74,7 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         for ($i = 1; $i <= 8; $i++) {
             $this->sqliteDatabaseContext->insert($table, [
@@ -117,7 +118,7 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         for ($i = 1; $i <= 25; $i++) {
             $this->sqliteDatabaseContext->insert($table, [
@@ -163,7 +164,7 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         for ($i = 1; $i <= 25; $i++) {
             $this->sqliteDatabaseContext->insert($table, [
@@ -202,7 +203,7 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         for ($i = 1; $i <= 25; $i++) {
             $this->sqliteDatabaseContext->insert($table, [
@@ -243,7 +244,7 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         for ($i = 1; $i <= 8; $i++) {
             $this->sqliteDatabaseContext->insert($table, [
@@ -314,7 +315,7 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('type', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         for ($i = 1; $i <= 10; $i++) {
             $this->sqliteDatabaseContext->insert($table, [
@@ -362,7 +363,7 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         for ($i = 1; $i <= 8; $i++) {
             $this->sqliteDatabaseContext->insert($table, [
@@ -402,7 +403,7 @@ final class SqliteDbalLimitOffsetExtractorTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         for ($i = 1; $i <= 8; $i++) {
             $this->sqliteDatabaseContext->insert($table, [

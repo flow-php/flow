@@ -13,13 +13,13 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
 use function array_key_exists;
 use function count;
 use function Flow\ETL\DSL\array_to_rows;
-use function method_exists;
 use function sha1;
 
 /**
@@ -45,11 +45,7 @@ final class DbalKeySetExtractor implements Extractor
         private readonly QueryBuilder $queryBuilder,
         private readonly KeySet $keySet,
     ) {
-        $qb = clone $this->queryBuilder;
-
-        $cleanQuery = method_exists($qb, 'resetOrderBy')
-            ? (clone $this->queryBuilder)->resetOrderBy()
-            : (clone $qb)->resetQueryPart('orderBy');
+        $cleanQuery = (clone $this->queryBuilder)->resetOrderBy();
 
         if ($cleanQuery->getSQL() !== $this->queryBuilder->getSQL()) {
             throw new InvalidArgumentException(
@@ -62,6 +58,9 @@ final class DbalKeySetExtractor implements Extractor
         }
     }
 
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         $totalFetched = 0;
@@ -91,6 +90,7 @@ final class DbalKeySetExtractor implements Extractor
                         ));
                     }
 
+                    // @mago-expect analysis:mixed-assignment
                     $lastValue = $lastRow[$keyAlias];
 
                     if ($lastValue === null) {
@@ -119,8 +119,8 @@ final class DbalKeySetExtractor implements Extractor
                 if (count($conditions) > 0) {
                     $qb->andWhere($qb->expr()->or(...$conditions));
 
+                    // @mago-expect analysis:mixed-assignment
                     foreach ($parameters as $param => $value) {
-                        /** @phpstan-ignore-next-line */
                         $qb->setParameter($param, $value, $parameterTypes[$param]);
                     }
                 }

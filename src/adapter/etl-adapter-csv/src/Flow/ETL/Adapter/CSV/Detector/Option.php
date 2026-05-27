@@ -8,7 +8,6 @@ use Flow\ETL\Exception\InvalidArgumentException;
 
 use function array_reduce;
 use function count;
-use function is_array;
 use function is_string;
 use function mb_strlen;
 use function round;
@@ -46,10 +45,6 @@ final class Option
         $columnsCount = null;
 
         foreach ($this->rows as $row) {
-            if (!is_array($row)) {
-                return false;
-            }
-
             if ($columnsCount === null) {
                 $columnsCount = count($row);
 
@@ -89,10 +84,6 @@ final class Option
         }
 
         $firstRow = $this->rows[0];
-
-        if (!is_array($firstRow)) {
-            return 0;
-        }
 
         $columnScore = count($firstRow) * self::COLUMN_SCORE_WEIGHT;
         $totalLength = array_reduce(

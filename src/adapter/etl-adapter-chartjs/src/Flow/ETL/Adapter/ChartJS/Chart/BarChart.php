@@ -71,14 +71,11 @@ final class BarChart implements Chart
             'type' => 'bar',
             'data' => [
                 'labels' => $this->data['labels'],
-                'datasets' => array_values(array_map(
-                    function (array $dataset): array {
-                        $options = $this->datasetOptions[$dataset['label']] ?? [];
+                'datasets' => array_values(array_map(function (array $dataset): array {
+                    $options = $this->datasetOptions[$dataset['label']] ?? [];
 
-                        return array_merge($dataset, $options);
-                    },
-                    $this->data['datasets'],
-                )),
+                    return array_merge($dataset, $options);
+                }, $this->data['datasets'])),
             ],
         ];
 

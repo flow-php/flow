@@ -14,6 +14,9 @@ use Flow\ETL\Schema;
 use function count;
 use function Flow\ETL\DSL\df;
 
+/**
+ * @phpstan-import-type Params from DriverManager
+ */
 final class DbalDataFrameFactory implements DataFrameFactory
 {
     private ?Connection $connection = null;
@@ -23,9 +26,6 @@ final class DbalDataFrameFactory implements DataFrameFactory
      */
     private readonly array $parameters;
 
-    /**
-     * @var null|Schema
-     */
     private ?Schema $schema = null;
 
     /**
@@ -57,8 +57,10 @@ final class DbalDataFrameFactory implements DataFrameFactory
         foreach ($this->parameters as $parameter) {
             $parameters[$parameter->queryParamName()] = $parameter->toQueryParam($rows);
 
-            if ($parameter->type()) {
-                $types[$parameter->queryParamName()] = $parameter->type();
+            $type = $parameter->type();
+
+            if ($type !== null) {
+                $types[$parameter->queryParamName()] = $type;
             }
         }
 
@@ -73,7 +75,6 @@ final class DbalDataFrameFactory implements DataFrameFactory
         }
 
         if (count($types)) {
-            /** @phpstan-ignore-next-line */
             $extractor->withTypes($types);
         }
 
@@ -93,8 +94,9 @@ final class DbalDataFrameFactory implements DataFrameFactory
     private function connection(): Connection
     {
         if ($this->connection === null) {
-            /** @phpstan-ignore-next-line */
-            $this->connection = DriverManager::getConnection($this->connectionParams);
+            /** @var Params $connectionParams */
+            $connectionParams = $this->connectionParams;
+            $this->connection = DriverManager::getConnection($connectionParams);
         }
 
         return $this->connection;

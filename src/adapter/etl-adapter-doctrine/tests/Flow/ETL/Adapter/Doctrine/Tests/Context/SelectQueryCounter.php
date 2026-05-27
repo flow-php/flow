@@ -36,6 +36,7 @@ final class SelectQueryCounter extends AbstractLogger implements LoggerAwareInte
             return;
         }
 
+        // @mago-expect analysis:mixed-assignment
         $sql = $context['sql'];
 
         if (is_string($sql) || $sql instanceof Stringable) {

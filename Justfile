@@ -93,7 +93,10 @@ analyze-mago *args:
         src/bridge/symfony/postgresql-messenger \
         src/bridge/symfony/postgresql-session \
         src/bridge/symfony/telemetry-bundle \
-        src/adapter/etl-adapter-chartjs
+        src/adapter/etl-adapter-chartjs \
+        src/adapter/etl-adapter-csv \
+        src/adapter/etl-adapter-doctrine \
+        src/adapter/etl-adapter-excel
 
 # Auto-fix code style (Mago format + lint --fix) and GitHub Actions findings (zizmor --fix).
 fix:

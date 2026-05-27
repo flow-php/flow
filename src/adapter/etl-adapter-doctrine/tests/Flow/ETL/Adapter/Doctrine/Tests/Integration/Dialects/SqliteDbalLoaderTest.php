@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration\Dialects;
 
 use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
@@ -26,7 +27,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
         $this->sqliteDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         data_frame()
             ->read(from_array([
@@ -61,7 +62,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
         $this->sqliteDatabaseContext->createTable((new Table($table = 'flow_doctrine_bulk_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         data_frame()
             ->read(from_array([
@@ -97,7 +98,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('group_id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id', 'group_id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id', 'group_id')->create()));
 
         data_frame()
             ->read(from_array([
@@ -135,7 +136,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         data_frame()
             ->read(from_array([
@@ -173,7 +174,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         $loader = to_dbal_table_insert($this->sqliteConnectionParams(), $table);
 
@@ -197,7 +198,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         $loader = to_dbal_table_insert($this->sqliteConnectionParams(), $table);
 
@@ -219,7 +220,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         $loader = to_dbal_table_insert($this->sqliteDatabaseContext->connection(), $table);
 
@@ -242,7 +243,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         data_frame()
             ->read(from_array([
@@ -262,7 +263,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
         data_frame()
             ->read(from_array([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
@@ -303,7 +304,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         data_frame()
             ->read(from_array([
@@ -341,7 +342,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         $loader = to_dbal_table_insert($this->sqliteConnectionParams(), $table);
 
@@ -380,7 +381,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         $loader = to_dbal_table_insert($this->sqliteConnectionParams(), $table);
 
@@ -419,7 +420,7 @@ final class SqliteDbalLoaderTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         $insertLoader = to_dbal_table_insert($this->sqliteConnectionParams(), $table);
         $updateLoader = to_dbal_table_update($this->sqliteConnectionParams(), $table);

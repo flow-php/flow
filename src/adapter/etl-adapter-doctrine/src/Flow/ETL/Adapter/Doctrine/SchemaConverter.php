@@ -6,6 +6,10 @@ namespace Flow\ETL\Adapter\Doctrine;
 
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Index;
+use Doctrine\DBAL\Schema\Index\IndexedColumn;
+use Doctrine\DBAL\Schema\Index\IndexType;
+use Doctrine\DBAL\Schema\Name\UnqualifiedName;
+use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type as DbalType;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -16,6 +20,8 @@ use Flow\Types\Type;
 
 use function array_key_exists;
 use function array_keys;
+use function array_map;
+use function array_slice;
 use function count;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\Types\DSL\type_string;
@@ -37,7 +43,7 @@ final readonly class SchemaConverter
     }
 
     /**
-     * @param array<array-key, mixed> $tableOptions
+     * @param array<string, mixed> $tableOptions
      */
     public function toDbalTable(Schema $schema, string $tableName, array $tableOptions = []): Table
     {
@@ -50,7 +56,7 @@ final readonly class SchemaConverter
                 $definition->isNullable(),
                 $definition->metadata(),
             );
-            $columns[$column->getName()] = $column;
+            $columns[$column->getObjectName()->toString()] = $column;
         }
 
         $table = new Table($tableName, $columns, options: $tableOptions);
@@ -81,32 +87,39 @@ final readonly class SchemaConverter
 
         $metadata = Metadata::empty();
 
-        if ($column->getLength() !== null) {
-            $metadata = $metadata->merge(DbalMetadata::length($column->getLength()));
+        $length = $column->getLength();
+
+        if ($length !== null) {
+            $metadata = $metadata->merge(DbalMetadata::length($length));
         }
 
-        if ($column->getDefault() !== null) {
-            $defaultValue = $column->getDefault();
+        // @mago-expect analysis:mixed-assignment
+        $defaultValue = $column->getDefault();
 
-            if (is_scalar($defaultValue)) {
-                $metadata = $metadata->merge(DbalMetadata::default($defaultValue));
-            }
+        if ($defaultValue !== null && is_scalar($defaultValue)) {
+            $metadata = $metadata->merge(DbalMetadata::default($defaultValue));
         }
 
-        if ($column->getPrecision() !== null) {
-            $metadata = $metadata->merge(DbalMetadata::precision($column->getPrecision()));
+        $precision = $column->getPrecision();
+
+        if ($precision !== null) {
+            $metadata = $metadata->merge(DbalMetadata::precision($precision));
         }
 
         if ($column->getScale() !== 0) {
             $metadata = $metadata->merge(DbalMetadata::scale($column->getScale()));
         }
 
+        // @mago-expect analysis:deprecated-method
         if ($column->getPlatformOptions() !== []) {
+            // @mago-expect analysis:deprecated-method
             $metadata = $metadata->merge(DbalMetadata::platformOptions($column->getPlatformOptions()));
         }
 
-        if ($column->getColumnDefinition() !== null) {
-            $metadata = $metadata->merge(DbalMetadata::columnDefinition($column->getColumnDefinition()));
+        $columnDefinition = $column->getColumnDefinition();
+
+        if ($columnDefinition !== null) {
+            $metadata = $metadata->merge(DbalMetadata::columnDefinition($columnDefinition));
         }
 
         if ($column->getUnsigned() !== false) {
@@ -117,37 +130,52 @@ final readonly class SchemaConverter
             $metadata = $metadata->merge(DbalMetadata::fixed($column->getFixed()));
         }
 
-        /** @phpstan-ignore-next-line */
-        if ($column->getComment() && $column->getComment() !== '') {
-            $metadata = $metadata->merge(DbalMetadata::comment($column->getComment()));
+        $comment = $column->getComment();
+
+        if ($comment !== '') {
+            $metadata = $metadata->merge(DbalMetadata::comment($comment));
         }
 
-        foreach ($table->getPrimaryKey()?->getColumns() ?? [] as $primaryKeyColumn) {
-            if ($primaryKeyColumn === $column->getName()) {
-                $metadata = $metadata->merge(DbalMetadata::primaryKey($table->getPrimaryKey()?->getName() ?? ''));
+        $primaryKeyConstraint = $table->getPrimaryKeyConstraint();
+        $pkColumnNames = array_map(
+            static fn(UnqualifiedName $n): string => $n->toString(),
+            $primaryKeyConstraint?->getColumnNames() ?? [],
+        );
+        $columnName = $column->getObjectName()->toString();
+
+        foreach ($pkColumnNames as $primaryKeyColumn) {
+            if ($primaryKeyColumn === $columnName) {
+                $metadata = $metadata->merge(DbalMetadata::primaryKey(
+                    $primaryKeyConstraint?->getObjectName()?->toString() ?? '',
+                ));
                 $nullable = false;
             }
         }
 
         foreach ($table->getIndexes() as $index) {
+            $indexColumnNames = array_map(
+                static fn(IndexedColumn $c): string => $c->getColumnName()->toString(),
+                $index->getIndexedColumns(),
+            );
+
             if (
-                $index->isUnique()
-                && !$index->isPrimary()
-                && in_array($column->getName(), $index->getColumns(), true)
+                $index->getType() === IndexType::UNIQUE
+                && !in_array($columnName, $pkColumnNames, true)
+                && in_array($columnName, $indexColumnNames, true)
             ) {
-                $metadata = $metadata->merge(DbalMetadata::indexUnique($index->getName()));
+                $metadata = $metadata->merge(DbalMetadata::indexUnique($index->getObjectName()->toString()));
             }
 
             if (
-                !$index->isUnique()
-                && !$index->isPrimary()
-                && in_array($column->getName(), $index->getColumns(), true)
+                $index->getType() === IndexType::REGULAR
+                && !in_array($columnName, $pkColumnNames, true)
+                && in_array($columnName, $indexColumnNames, true)
             ) {
-                $metadata = $metadata->merge(DbalMetadata::index($index->getName()));
+                $metadata = $metadata->merge(DbalMetadata::index($index->getObjectName()->toString()));
             }
         }
 
-        return definition_from_type($column->getName(), $type, $nullable, $metadata);
+        return definition_from_type($columnName, $type, $nullable, $metadata);
     }
 
     /**
@@ -282,7 +310,14 @@ final readonly class SchemaConverter
         }
 
         foreach ($primaryKey as $name => $columns) {
-            $table->setPrimaryKey($columns, $name);
+            /** @var non-empty-list<non-empty-string> $columns */
+            $editor = PrimaryKeyConstraint::editor()->setUnquotedColumnNames($columns[0], ...array_slice($columns, 1));
+
+            if ($name !== '') {
+                $editor = $editor->setUnquotedName($name);
+            }
+
+            $table->addPrimaryKeyConstraint($editor->create());
         }
 
         return $indexes;

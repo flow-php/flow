@@ -8,7 +8,6 @@ use Doctrine\DBAL\ArrayParameterType;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Rows;
 
-use function array_filter;
 use function is_scalar;
 
 final readonly class Parameter implements QueryParameter
@@ -16,7 +15,7 @@ final readonly class Parameter implements QueryParameter
     public function __construct(
         private string $queryParamName,
         private EntryReference $ref,
-        private int|ArrayParameterType $type = ArrayParameterType::STRING,
+        private ArrayParameterType $type = ArrayParameterType::STRING,
     ) {}
 
     public static function asciis(string $queryParamName, EntryReference $ref): self
@@ -44,12 +43,19 @@ final readonly class Parameter implements QueryParameter
      */
     public function toQueryParam(Rows $rows): array
     {
-        $values = $rows->reduceToArray($this->ref);
+        $result = [];
 
-        return array_filter($values, static fn($value) => is_scalar($value) || $value === null);
+        // @mago-expect analysis:mixed-assignment
+        foreach ($rows->reduceToArray($this->ref) as $key => $value) {
+            if (is_scalar($value) || $value === null) {
+                $result[$key] = $value;
+            }
+        }
+
+        return $result;
     }
 
-    public function type(): int|ArrayParameterType
+    public function type(): ArrayParameterType
     {
         return $this->type;
     }

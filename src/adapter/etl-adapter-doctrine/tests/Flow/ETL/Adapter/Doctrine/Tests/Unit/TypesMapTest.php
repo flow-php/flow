@@ -78,7 +78,6 @@ final class TypesMapTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('"InvalidClass" is not a valid Doctrine DBAL type.');
 
-        /** @phpstan-ignore-next-line */
         new TypesMap([
             StringType::class => 'InvalidClass',
         ]);
@@ -89,7 +88,6 @@ final class TypesMapTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('"stdClass" is not a valid Doctrine DBAL type.');
 
-        /** @phpstan-ignore-next-line */
         new TypesMap([
             StringType::class => stdClass::class,
         ]);
@@ -100,7 +98,6 @@ final class TypesMapTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('"InvalidClass" is not a valid type.');
 
-        /** @phpstan-ignore-next-line */
         new TypesMap([
             'InvalidClass' => DoctrineStringType::class,
         ]);
@@ -111,7 +108,6 @@ final class TypesMapTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('"stdClass" is not a valid type.');
 
-        /** @phpstan-ignore-next-line */
         new TypesMap([
             stdClass::class => DoctrineStringType::class,
         ]);
@@ -147,7 +143,6 @@ final class TypesMapTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('"InvalidFlowType" is not a valid type.');
 
-        /** @phpstan-ignore-next-line */
         new TypesMap([
             StringType::class => TextType::class,
             'InvalidFlowType' => DoctrineStringType::class,
@@ -275,7 +270,6 @@ final class TypesMapTest extends TestCase
         $this->expectException(BaseInvalidArgumentException::class);
         $this->expectExceptionMessage('"UnknownType" is not a valid Doctrine DBAL type.');
 
-        /** @phpstan-ignore-next-line */
         $typesMap->toFlowType('UnknownType');
     }
 

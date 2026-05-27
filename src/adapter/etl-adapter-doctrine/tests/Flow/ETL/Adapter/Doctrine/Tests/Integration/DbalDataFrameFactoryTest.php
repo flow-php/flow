@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
 use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
@@ -29,11 +30,13 @@ final class DbalDataFrameFactoryTest extends IntegrationTestCase
 {
     public function test_dataframe_factory(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table('flow_doctrine_data_factory_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table('flow_doctrine_data_factory_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()),
+        );
 
         $this->pgsqlDatabaseContext->insert('flow_doctrine_data_factory_test', [
             'id' => 1,
@@ -86,11 +89,13 @@ final class DbalDataFrameFactoryTest extends IntegrationTestCase
 
     public function test_dataframe_factory_with_schema(): void
     {
-        $this->pgsqlDatabaseContext->createTable((new Table('flow_doctrine_data_factory_test', [
-            new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-            new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        $this->pgsqlDatabaseContext->createTable(
+            (new Table('flow_doctrine_data_factory_test', [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'length' => 255]),
+            ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()),
+        );
 
         $this->pgsqlDatabaseContext->insert('flow_doctrine_data_factory_test', [
             'id' => 1,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
 use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\IntegerType as DoctrineIntegerType;
 use Doctrine\DBAL\Types\TextType;
@@ -29,7 +30,7 @@ final class DbalLoaderTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Operation can be insert, update, or delete, invalid given.');
@@ -43,7 +44,7 @@ final class DbalLoaderTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Operation can be insert, update, or delete, invalid given.');
@@ -62,7 +63,7 @@ final class DbalLoaderTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::TEXT), ['notnull' => false]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         $customTypesMap = new TypesMap([
             StringType::class => TextType::class,

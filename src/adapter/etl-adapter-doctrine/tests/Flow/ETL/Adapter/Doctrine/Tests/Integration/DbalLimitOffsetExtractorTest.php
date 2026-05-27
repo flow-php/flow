@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
 use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table as DoctrineTable;
 use Doctrine\DBAL\Types\IntegerType as DoctrineIntegerType;
 use Doctrine\DBAL\Types\TextType;
@@ -35,7 +36,7 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
         $this->pgsqlDatabaseContext->createTable((new DoctrineTable($table = 'flow_doctrine_order_by_test', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('code', Type::getType(Types::INTEGER), ['notnull' => true]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create()));
 
         $customTypesMap = new TypesMap([
             StringType::class => TextType::class,

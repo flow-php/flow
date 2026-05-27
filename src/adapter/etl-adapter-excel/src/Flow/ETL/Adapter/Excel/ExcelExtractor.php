@@ -29,7 +29,6 @@ use function array_combine;
 use function array_map;
 use function count;
 use function Flow\ETL\DSL\array_to_rows;
-use function is_array;
 use function is_scalar;
 use function str_starts_with;
 
@@ -64,6 +63,9 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
         $this->resetLimit();
     }
 
+    /**
+     * @return Generator<int, \Flow\ETL\Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         $headers = [];
@@ -73,9 +75,8 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
 
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
             foreach ($this->extractRows($stream, $headers, $offset) as $row) {
-                // Ensure $row is an array before passing to array_to_rows
                 $signal = yield array_to_rows(
-                    is_array($row) ? $row : [],
+                    $row,
                     $context->entryFactory(),
                     $stream->path()->partitions(),
                     schema: $this->schema,
@@ -171,6 +172,8 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
 
     /**
      * @param array<int, string> $headers
+     *
+     * @return Generator<int, array<array-key, mixed>>
      */
     private function extractRows(SourceStream $stream, array $headers, int $offset): Generator
     {
@@ -185,7 +188,11 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
 
             $sheet = $this->sheetName ? $manager->get($this->sheetName) : $manager->first();
 
-            foreach ($sheet->getRowIterator() as $rowIndex => $sheetRow) {
+            $rowIndex = 0;
+
+            foreach ($sheet->getRowIterator() as $sheetRow) {
+                $rowIndex++;
+
                 if (1 === $rowIndex && $this->withHeader) {
                     $headersRaw = $this->createRowsFromCells($sheetRow);
                     // Convert headers to strings for array_combine compatibility

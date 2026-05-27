@@ -16,11 +16,14 @@ use Throwable;
 
 use function count;
 
+/**
+ * @phpstan-import-type Params from DriverManager
+ */
 final class TransactionalDbalLoader implements Loader
 {
     private ?Connection $connection = null;
 
-    private TransactionIsolationLevel|int|null $isolationLevel = null;
+    private ?TransactionIsolationLevel $isolationLevel = null;
 
     /**
      * @var array<Loader>
@@ -73,7 +76,7 @@ final class TransactionalDbalLoader implements Loader
         }
     }
 
-    public function withIsolationLevel(TransactionIsolationLevel|int $level): self
+    public function withIsolationLevel(TransactionIsolationLevel $level): self
     {
         $this->isolationLevel = $level;
 
@@ -83,8 +86,9 @@ final class TransactionalDbalLoader implements Loader
     private function connection(): Connection
     {
         if ($this->connection === null) {
-            /** @phpstan-ignore-next-line */
-            $this->connection = DriverManager::getConnection($this->connectionParams);
+            /** @var Params $connectionParams */
+            $connectionParams = $this->connectionParams;
+            $this->connection = DriverManager::getConnection($connectionParams);
         }
 
         return $this->connection;
@@ -96,7 +100,6 @@ final class TransactionalDbalLoader implements Loader
 
         if ($this->isolationLevel !== null) {
             $previousIsolationLevel = $connection->getTransactionIsolation();
-            /** @phpstan-ignore-next-line */
             $connection->setTransactionIsolation($this->isolationLevel);
         }
 

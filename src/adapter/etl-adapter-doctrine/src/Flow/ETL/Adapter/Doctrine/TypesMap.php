@@ -110,7 +110,7 @@ final class TypesMap
     private array $map;
 
     /**
-     * @param array<class-string<FlowType<mixed>>, class-string<DbalType>> $map
+     * @param array<string, string> $map
      */
     public function __construct(array $map)
     {
@@ -127,6 +127,7 @@ final class TypesMap
         if (!count($map)) {
             $this->map = self::FLOW_TYPES;
         } else {
+            /** @var array<class-string<FlowType<mixed>>, class-string<DbalType>> $map */
             $this->map = $map;
         }
     }
@@ -169,7 +170,7 @@ final class TypesMap
     }
 
     /**
-     * @param class-string<DbalType> $dbalType
+     * @param string $dbalType
      *
      * @return FlowType<mixed>
      */
@@ -181,6 +182,7 @@ final class TypesMap
 
         $type = self::DBAL_TYPES[$dbalType];
 
+        // @mago-expect analysis:unsafe-instantiation
         return new $type();
     }
 }
