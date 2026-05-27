@@ -118,7 +118,6 @@ final readonly class DeltaBinaryPackedDecoder
 
                     // Handle float overflow precisely using BCMath
                     // @mago-ignore analysis:impossible-condition
-                    // @phpstan-ignore-next-line
                     if (is_float($result)) {
                         // Use BCMath for precise integer arithmetic
                         $preciseResult = bcadd((string) $delta, (string) $minDelta, 0);
