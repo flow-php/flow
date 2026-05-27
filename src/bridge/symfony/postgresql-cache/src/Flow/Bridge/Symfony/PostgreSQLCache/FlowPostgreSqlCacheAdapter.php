@@ -232,7 +232,10 @@ final class FlowPostgreSqlCacheAdapter extends AbstractAdapter implements Prunea
 
             $rowData = is_string($row[$this->dataCol] ?? null)
                 ? $row[$this->dataCol]
-                : throw CacheException::unexpectedRowShape($this->dataCol, get_debug_type($row[$this->dataCol] ?? null));
+                : throw CacheException::unexpectedRowShape(
+                    $this->dataCol,
+                    get_debug_type($row[$this->dataCol] ?? null),
+                );
 
             yield $rowId => $this->marshaller->unmarshall($rowData);
         }

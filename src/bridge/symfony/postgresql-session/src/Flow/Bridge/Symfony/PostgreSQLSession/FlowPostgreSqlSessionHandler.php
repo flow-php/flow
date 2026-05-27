@@ -119,7 +119,11 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
 
         $lockMode = $options['lock_mode'] ?? self::LOCK_TRANSACTIONAL;
 
-        if ($lockMode !== self::LOCK_NONE && $lockMode !== self::LOCK_ADVISORY && $lockMode !== self::LOCK_TRANSACTIONAL) {
+        if (
+            $lockMode !== self::LOCK_NONE
+            && $lockMode !== self::LOCK_ADVISORY
+            && $lockMode !== self::LOCK_TRANSACTIONAL
+        ) {
             throw new InvalidArgumentException(sprintf(
                 'Invalid lock_mode "%s". Use one of FlowPostgreSqlSessionHandler::LOCK_NONE, LOCK_ADVISORY, LOCK_TRANSACTIONAL.',
                 (string) $lockMode,
@@ -242,7 +246,10 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
 
         $lifetime = is_int($row[$this->lifetimeCol] ?? null)
             ? (int) $row[$this->lifetimeCol]
-            : throw SessionException::unexpectedRowShape($this->lifetimeCol, get_debug_type($row[$this->lifetimeCol] ?? null));
+            : throw SessionException::unexpectedRowShape(
+                $this->lifetimeCol,
+                get_debug_type($row[$this->lifetimeCol] ?? null),
+            );
 
         if ($lifetime < time()) {
             return '';

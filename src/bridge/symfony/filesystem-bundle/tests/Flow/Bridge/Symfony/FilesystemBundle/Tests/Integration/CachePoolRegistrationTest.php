@@ -74,7 +74,9 @@ final class CachePoolRegistrationTest extends KernelTestCase
 
         static::assertSame(
             $container->get('test.marshaller'),
-            (new ReflectionObject($adapter))->getProperty('marshaller')->getValue($adapter),
+            (new ReflectionObject($adapter))
+                ->getProperty('marshaller')
+                ->getValue($adapter),
         );
     }
 

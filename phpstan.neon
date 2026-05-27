@@ -144,10 +144,10 @@ parameters:
             message: '#Dom\\(CharacterData|HTMLDocument|HTMLElement|Element)#i'
             identifier: class.notFound
         -
-            path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/DependencyInjection/FlowTelemetryExtension.php
+            path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/FlowTelemetryBundle.php
             identifier: offsetAccess.nonOffsetAccessible
         -
-            path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/DependencyInjection/FlowTelemetryExtension.php
+            path: src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/FlowTelemetryBundle.php
             identifier: cast.string
         -
             path: src/bridge/symfony/filesystem-cache/src/Flow/Bridge/Symfony/FilesystemCache/FlowFilesystemCacheAdapter.php

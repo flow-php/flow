@@ -21,7 +21,7 @@ includes = [
     # Symfony
     "src/bridge/symfony/filesystem-bundle/src/Flow/Bridge/Symfony/FilesystemBundle/FlowFilesystemBundle.php",
     "src/bridge/symfony/postgresql-bundle/src/Flow/Bridge/Symfony/PostgreSqlBundle/FlowPostgreSqlBundle.php",
-    "src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/DependencyInjection/Configuration.php",
+    "src/bridge/symfony/telemetry-bundle/src/Flow/Bridge/Symfony/TelemetryBundle/FlowTelemetryBundle.php",
 ]
 excludes = [
     "src/**/vendor/**",

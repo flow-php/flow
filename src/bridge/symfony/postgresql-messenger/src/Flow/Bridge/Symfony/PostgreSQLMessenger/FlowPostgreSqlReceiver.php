@@ -149,9 +149,11 @@ final readonly class FlowPostgreSqlReceiver implements
 
         $id = is_int($row['id'] ?? null)
             ? $row['id']
-            : (is_string($row['id'] ?? null)
-                ? $row['id']
-                : throw TransportException::unexpectedRowShape('id', get_debug_type($row['id'] ?? null)));
+            : (
+                is_string($row['id'] ?? null)
+                    ? $row['id']
+                    : throw TransportException::unexpectedRowShape('id', get_debug_type($row['id'] ?? null))
+            );
 
         try {
             // @mago-expect analysis:mixed-assignment

@@ -96,6 +96,8 @@ final readonly class FstabResolver
             $normalized[] = $part;
         }
 
-        return ($isAbsolute ? '/' : '') . implode('/', array_map(static fn (mixed $s): string => (string) $s, $normalized));
+        return (
+            ($isAbsolute ? '/' : '') . implode('/', array_map(static fn(mixed $s): string => (string) $s, $normalized))
+        );
     }
 }

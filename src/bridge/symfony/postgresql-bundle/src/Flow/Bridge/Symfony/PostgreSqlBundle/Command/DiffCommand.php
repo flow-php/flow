@@ -67,7 +67,8 @@ final class DiffCommand extends Command
             return Command::FAILURE;
         }
 
-        $directory = $configuration->migrationsDirectory . '/' . (string) $version . ($name !== null ? '_' . $name : '');
+        $directory =
+            $configuration->migrationsDirectory . '/' . (string) $version . ($name !== null ? '_' . $name : '');
         $realDirectory = realpath($directory) ?: $directory;
         $migrationPath = $realDirectory . '/' . $configuration->migrationFileName;
         $rollbackPath = $realDirectory . '/' . $configuration->rollbackFileName;

@@ -32,7 +32,12 @@ final class RegisterFilesystemFactoriesPass implements CompilerPassInterface
         foreach ($container->findTaggedServiceIds(self::TAG) as $serviceId => $tags) {
             // @mago-expect analysis:mixed-assignment
             foreach ($tags as $tag) {
-                if (!is_array($tag) || !array_key_exists('type', $tag) || !is_string($tag['type']) || $tag['type'] === '') {
+                if (
+                    !is_array($tag)
+                    || !array_key_exists('type', $tag)
+                    || !is_string($tag['type'])
+                    || $tag['type'] === ''
+                ) {
                     throw new LogicException(sprintf(
                         'Service "%s" is tagged with "%s" but is missing a non-empty "type" attribute.',
                         $serviceId,

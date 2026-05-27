@@ -94,11 +94,7 @@ final class BuildFstabsPass implements CompilerPassInterface
             $telemetryRaw = $fstabConfig['telemetry'] ?? [];
             $telemetryArray = is_array($telemetryRaw) ? $telemetryRaw : [];
 
-            $telemetryReference = $this->buildTelemetryConfigReference(
-                $container,
-                $fstabNameStr,
-                $telemetryArray,
-            );
+            $telemetryReference = $this->buildTelemetryConfigReference($container, $fstabNameStr, $telemetryArray);
 
             $definition = new Definition(FilesystemTable::class);
             $definition->setFactory([FstabBuilder::class, 'build']);
@@ -192,7 +188,12 @@ final class BuildFstabsPass implements CompilerPassInterface
         foreach ($container->findTaggedServiceIds(RegisterFilesystemFactoriesPass::TAG) as $serviceId => $tags) {
             // @mago-expect analysis:mixed-assignment
             foreach ($tags as $tag) {
-                if (is_array($tag) && array_key_exists('type', $tag) && is_string($tag['type']) && $tag['type'] !== '') {
+                if (
+                    is_array($tag)
+                    && array_key_exists('type', $tag)
+                    && is_string($tag['type'])
+                    && $tag['type'] !== ''
+                ) {
                     $types[$tag['type']] = $serviceId;
                 }
             }
