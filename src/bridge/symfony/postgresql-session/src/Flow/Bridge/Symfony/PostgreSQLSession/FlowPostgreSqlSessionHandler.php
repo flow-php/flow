@@ -32,11 +32,9 @@ use function Flow\PostgreSql\DSL\truncate_table;
 use function Flow\PostgreSql\DSL\typed;
 use function Flow\PostgreSql\DSL\update;
 use function get_debug_type;
-use function in_array;
 use function ini_get;
 use function is_int;
 use function is_resource;
-use function is_scalar;
 use function is_string;
 use function ord;
 use function sprintf;
@@ -121,10 +119,10 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
 
         $lockMode = $options['lock_mode'] ?? self::LOCK_TRANSACTIONAL;
 
-        if (!in_array($lockMode, [self::LOCK_NONE, self::LOCK_ADVISORY, self::LOCK_TRANSACTIONAL], true)) {
+        if ($lockMode !== self::LOCK_NONE && $lockMode !== self::LOCK_ADVISORY && $lockMode !== self::LOCK_TRANSACTIONAL) {
             throw new InvalidArgumentException(sprintf(
                 'Invalid lock_mode "%s". Use one of FlowPostgreSqlSessionHandler::LOCK_NONE, LOCK_ADVISORY, LOCK_TRANSACTIONAL.',
-                is_scalar($lockMode) ? (string) $lockMode : get_debug_type($lockMode),
+                (string) $lockMode,
             ));
         }
 
@@ -189,6 +187,7 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
      * Otherwise long-lived sessions whose payload never changes would be
      * garbage-collected even if still in active use.
      */
+    // @mago-expect analysis:incompatible-parameter-name
     #[Override]
     public function updateTimestamp(#[SensitiveParameter] string $sessionId, string $data): bool
     {
@@ -241,16 +240,15 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
             return '';
         }
 
-        $lifetime = $row[$this->lifetimeCol];
-
-        if (!is_int($lifetime)) {
-            throw SessionException::unexpectedRowShape($this->lifetimeCol, get_debug_type($lifetime));
-        }
+        $lifetime = is_int($row[$this->lifetimeCol] ?? null)
+            ? (int) $row[$this->lifetimeCol]
+            : throw SessionException::unexpectedRowShape($this->lifetimeCol, get_debug_type($row[$this->lifetimeCol] ?? null));
 
         if ($lifetime < time()) {
             return '';
         }
 
+        // @mago-expect analysis:mixed-assignment
         $data = $row[$this->dataCol];
 
         if (is_resource($data)) {
@@ -327,7 +325,16 @@ final class FlowPostgreSqlSessionHandler extends AbstractSessionHandler
             throw new LogicException('FlowPostgreSqlSessionHandler has no client and no connection parameters.');
         }
 
-        return $this->client = ($this->clientFactory)($this->connectionParameters);
+        // @mago-expect analysis:mixed-assignment
+        $client = ($this->clientFactory)($this->connectionParameters);
+
+        if (!$client instanceof Client) {
+            throw new LogicException('FlowPostgreSqlSessionHandler client factory did not return a Client instance.');
+        }
+
+        $this->client = $client;
+
+        return $client;
     }
 
     private function commitTransactionalLock(): void

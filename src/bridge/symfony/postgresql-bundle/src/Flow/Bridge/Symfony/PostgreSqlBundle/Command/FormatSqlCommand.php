@@ -22,7 +22,9 @@ use function Flow\PostgreSql\DSL\sql_deparse_options;
 use function Flow\PostgreSql\DSL\sql_format;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
 use function sprintf;
 use function trim;
 
@@ -86,8 +88,8 @@ final class FormatSqlCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $pathOption = $input->getOption('path');
-        $sqlArgument = $input->getArgument('sql');
+        $pathOption = type_union(type_string(), type_null())->assert($input->getOption('path'));
+        $sqlArgument = type_union(type_string(), type_null())->assert($input->getArgument('sql'));
         $write = type_boolean()->cast($input->getOption('write'));
         $check = type_boolean()->cast($input->getOption('check'));
 

@@ -46,8 +46,9 @@ final class ArrayCatalogProviderTest extends TestCase
 
         static::assertSame(['public'], $restored->names());
         static::assertTrue($restored->get('public')->hasTable('users'));
-        static::assertNotNull($restored->get('public')->table('users')->primaryKey);
-        static::assertSame('users_pkey', $restored->get('public')->table('users')->primaryKey->name);
+        $primaryKey = $restored->get('public')->table('users')->primaryKey;
+        static::assertNotNull($primaryKey);
+        static::assertSame('users_pkey', $primaryKey->name);
         static::assertCount(2, $restored->get('public')->table('users')->columns);
     }
 

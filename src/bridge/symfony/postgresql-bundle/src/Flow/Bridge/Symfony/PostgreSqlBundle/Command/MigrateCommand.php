@@ -61,7 +61,7 @@ final class MigrateCommand extends Command
             "flow.postgresql.{$connection}.migrations.configuration",
         ));
         $versionAlias = type_string()->assert($input->getArgument('version'));
-        $dryRun = (bool) $input->getOption('dry-run');
+        $dryRun = $input->getOption('dry-run') === true;
         $allOrNothing = $input->getOption('all-or-nothing') ? true : null;
 
         $io->title('Migrate' . ($dryRun ? ' (dry run)' : ''));
@@ -74,7 +74,6 @@ final class MigrateCommand extends Command
 
         $statuses = $migrator->status();
         $pendingCount = count($statuses->pending());
-        count($statuses->executed());
 
         if (count($statuses) === 0) {
             $io->success('No migrations found.');

@@ -411,8 +411,13 @@ final class FilesystemCommandsIntegrationTest extends KernelTestCase
             },
         ]);
 
-        /** @phpstan-ignore return.type */
-        return $this->getContainer()->get('.flow.filesystem.command.fstab_resolver');
+        $resolver = $this->getContainer()->get('.flow.filesystem.command.fstab_resolver');
+
+        if (!$resolver instanceof FstabResolver) {
+            static::fail('Expected FstabResolver service to be available in the container.');
+        }
+
+        return $resolver;
     }
 
     private function makeTempDir(): string

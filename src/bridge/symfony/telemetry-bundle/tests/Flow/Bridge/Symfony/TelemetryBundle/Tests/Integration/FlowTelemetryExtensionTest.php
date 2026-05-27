@@ -467,9 +467,8 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         ]], $container);
 
         $definition = $container->getDefinition('flow.telemetry.exporter.otlp');
-        $errorHandlerArg = $definition->getArgument(1);
-        static::assertInstanceOf(Reference::class, $errorHandlerArg);
-        static::assertSame('flow.telemetry.error_handler.silent', (string) $errorHandlerArg);
+        static::assertInstanceOf(Reference::class, $definition->getArgument(1));
+        static::assertSame('flow.telemetry.error_handler.silent', (string) $definition->getArgument(1));
     }
 
     public function test_otlp_transport_failover_inline_curl_with_stream_failover(): void
@@ -579,9 +578,8 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         ]], $container);
 
         $definition = $container->getDefinition('flow.telemetry.logger_provider.processor');
-        $errorHandlerArg = $definition->getArgument(2);
-        static::assertInstanceOf(Reference::class, $errorHandlerArg);
-        static::assertSame('flow.telemetry.error_handler.silent', (string) $errorHandlerArg);
+        static::assertInstanceOf(Reference::class, $definition->getArgument(2));
+        static::assertSame('flow.telemetry.error_handler.silent', (string) $definition->getArgument(2));
     }
 
     public function test_provider_uses_named_error_handler(): void
@@ -597,9 +595,8 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         ]], $container);
 
         $definition = $container->getDefinition('flow.telemetry.logger_provider');
-        $errorHandlerArg = $definition->getArgument('$errorHandler');
-        static::assertInstanceOf(Reference::class, $errorHandlerArg);
-        static::assertSame('flow.telemetry.error_handler.silent', (string) $errorHandlerArg);
+        static::assertInstanceOf(Reference::class, $definition->getArgument('$errorHandler'));
+        static::assertSame('flow.telemetry.error_handler.silent', (string) $definition->getArgument('$errorHandler'));
     }
 
     public function test_service_error_handler_creates_alias_to_user_service_id(): void

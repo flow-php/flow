@@ -38,11 +38,14 @@ final class BuildFstabsPass implements CompilerPassInterface
             return;
         }
 
-        /** @var array{default_fstab: null|string, fstabs: array<string, array{filesystems: array<string, array<string, mixed>&array{type: string}>, telemetry?: array<string, mixed>}>} $config */
         $config = $container->getParameter(self::CONFIG_PARAMETER);
 
-        $fstabs = $config['fstabs'];
-        $defaultFstab = $config['default_fstab'];
+        if (!is_array($config)) {
+            return;
+        }
+
+        $fstabs = is_array($config['fstabs'] ?? null) ? $config['fstabs'] : [];
+        $defaultFstab = is_string($config['default_fstab'] ?? null) ? $config['default_fstab'] : null;
 
         if ($defaultFstab !== null && !array_key_exists($defaultFstab, $fstabs)) {
             throw new LogicException(sprintf(
@@ -54,43 +57,63 @@ final class BuildFstabsPass implements CompilerPassInterface
 
         $availableTypes = $this->collectAvailableTypes($container);
 
+        // @mago-expect analysis:mixed-assignment
         foreach ($fstabs as $fstabName => $fstabConfig) {
+            $fstabNameStr = (string) $fstabName;
             $resolvedFilesystems = [];
 
-            foreach ($fstabConfig['filesystems'] as $mountName => $entry) {
-                if (!array_key_exists($entry['type'], $availableTypes)) {
+            if (!is_array($fstabConfig)) {
+                continue;
+            }
+
+            $filesystems = is_array($fstabConfig['filesystems'] ?? null) ? $fstabConfig['filesystems'] : [];
+
+            // @mago-expect analysis:mixed-assignment
+            foreach ($filesystems as $mountName => $entry) {
+                if (!is_array($entry)) {
+                    continue;
+                }
+
+                $entryType = is_string($entry['type'] ?? null) ? $entry['type'] : '';
+
+                if (!array_key_exists($entryType, $availableTypes)) {
                     throw new LogicException(sprintf(
                         'Fstab "%s" mount "%s": no filesystem factory registered for type "%s". Available types: [%s].',
-                        $fstabName,
-                        $mountName,
-                        $entry['type'],
+                        $fstabNameStr,
+                        (string) $mountName,
+                        $entryType,
                         implode(', ', array_keys($availableTypes)),
                     ));
                 }
 
-                $resolvedFilesystems[$mountName] = $this->resolveServiceReferences($entry);
+                $entry['type'] = $entryType;
+                $resolvedFilesystems[(string) $mountName] = $this->resolveServiceReferences($entry);
             }
+
+            // @mago-expect analysis:mixed-assignment
+            $telemetryRaw = $fstabConfig['telemetry'] ?? [];
+            $telemetryArray = is_array($telemetryRaw) ? $telemetryRaw : [];
 
             $telemetryReference = $this->buildTelemetryConfigReference(
                 $container,
-                $fstabName,
-                $fstabConfig['telemetry'] ?? [],
+                $fstabNameStr,
+                $telemetryArray,
             );
 
             $definition = new Definition(FilesystemTable::class);
             $definition->setFactory([FstabBuilder::class, 'build']);
             $definition->setArguments([
                 new Reference(RegisterFilesystemFactoriesPass::REGISTRY_SERVICE_ID),
-                $fstabName,
+                $fstabNameStr,
                 $resolvedFilesystems,
                 $telemetryReference,
             ]);
             $definition->setPublic(false);
 
-            $serviceId = self::FSTAB_SERVICE_PREFIX . $fstabName;
+            $serviceId = self::FSTAB_SERVICE_PREFIX . $fstabNameStr;
             $container->setDefinition($serviceId, $definition);
 
-            $aliasId = FilesystemTable::class . ' $' . $this->camelCase($fstabName) . 'Fstab';
+            $aliasId = FilesystemTable::class . ' $' . $this->camelCase($fstabNameStr) . 'Fstab';
             $container->setAlias($aliasId, $serviceId)->setPublic(true);
         }
 
@@ -100,7 +123,7 @@ final class BuildFstabsPass implements CompilerPassInterface
     }
 
     /**
-     * @param array<string, mixed> $telemetry
+     * @param array<array-key, mixed> $telemetry
      */
     private function buildTelemetryConfigReference(
         ContainerBuilder $container,
@@ -111,7 +134,9 @@ final class BuildFstabsPass implements CompilerPassInterface
             return null;
         }
 
+        // @mago-expect analysis:mixed-assignment
         $telemetryServiceId = $telemetry['telemetry_service_id'] ?? null;
+        // @mago-expect analysis:mixed-assignment
         $clockServiceId = $telemetry['clock_service_id'] ?? null;
 
         if (!is_string($telemetryServiceId) || $telemetryServiceId === '') {
@@ -128,10 +153,11 @@ final class BuildFstabsPass implements CompilerPassInterface
             ));
         }
 
-        /** @var array<string, mixed> $optionsConfig */
-        $optionsConfig = $telemetry['options'] ?? [];
-        $traceStreams = (bool) ($optionsConfig['trace_streams'] ?? true);
-        $collectMetrics = (bool) ($optionsConfig['collect_metrics'] ?? true);
+        // @mago-expect analysis:mixed-assignment
+        $optionsRaw = $telemetry['options'] ?? [];
+        $optionsConfig = is_array($optionsRaw) ? $optionsRaw : [];
+        $traceStreams = ($optionsConfig['trace_streams'] ?? true) === true;
+        $collectMetrics = ($optionsConfig['collect_metrics'] ?? true) === true;
 
         $optionsDefinition = new Definition(FilesystemTelemetryOptions::class);
         $optionsDefinition->setArguments([$traceStreams, $collectMetrics]);
@@ -164,8 +190,9 @@ final class BuildFstabsPass implements CompilerPassInterface
         $types = [];
 
         foreach ($container->findTaggedServiceIds(RegisterFilesystemFactoriesPass::TAG) as $serviceId => $tags) {
+            // @mago-expect analysis:mixed-assignment
             foreach ($tags as $tag) {
-                if (array_key_exists('type', $tag) && is_string($tag['type']) && $tag['type'] !== '') {
+                if (is_array($tag) && array_key_exists('type', $tag) && is_string($tag['type']) && $tag['type'] !== '') {
                     $types[$tag['type']] = $serviceId;
                 }
             }
@@ -175,9 +202,9 @@ final class BuildFstabsPass implements CompilerPassInterface
     }
 
     /**
-     * @param array<string, mixed>&array{type: string} $entry
+     * @param array<array-key, mixed> $entry
      *
-     * @return array<string, mixed>&array{type: string}
+     * @return array<array-key, mixed>
      */
     private function resolveAwsS3References(array $entry): array
     {
@@ -218,9 +245,9 @@ final class BuildFstabsPass implements CompilerPassInterface
     }
 
     /**
-     * @param array<string, mixed>&array{type: string} $entry
+     * @param array<array-key, mixed> $entry
      *
-     * @return array<string, mixed>&array{type: string}
+     * @return array<array-key, mixed>
      */
     private function resolveAzureBlobReferences(array $entry): array
     {
@@ -261,9 +288,9 @@ final class BuildFstabsPass implements CompilerPassInterface
     }
 
     /**
-     * @param array<string, mixed>&array{type: string} $entry
+     * @param array<array-key, mixed> $entry
      *
-     * @return array<string, mixed>&array{type: string}
+     * @return array<array-key, mixed>
      */
     private function resolveServiceReferences(array $entry): array
     {

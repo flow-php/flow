@@ -7,10 +7,12 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Integration\Command;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Context\SymfonyContext;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\SimpleTestCatalogProvider;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\TestKernel;
+use Flow\Filesystem\FileStatus;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\PostgreSql\Client\DsnParser;
 use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
+use LogicException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -21,10 +23,12 @@ use function dirname;
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use function Flow\Filesystem\DSL\path;
 use function getenv;
+use function is_string;
 use function mkdir;
 use function preg_match;
 use function preg_replace;
 use function random_bytes;
+use function sprintf;
 
 final class CommandTestContext
 {
@@ -124,8 +128,13 @@ final class CommandTestContext
 
     public function command(string $serviceId): Command
     {
-        /** @var Command $command */
-        return $this->container()->get($serviceId);
+        $command = $this->container()->get($serviceId);
+
+        if (!$command instanceof Command) {
+            throw new LogicException(sprintf('Service "%s" is not a Command instance.', $serviceId));
+        }
+
+        return $command;
     }
 
     public function container(): ContainerInterface
@@ -183,11 +192,11 @@ final class CommandTestContext
 
     public function generateDiffMigration(): string
     {
-        /** @var Command $command */
-        $command = $this->container()->get('flow.postgresql.command.diff');
+        $command = $this->command('flow.postgresql.command.diff');
         $tester = new CommandTester($command);
         $tester->execute(['name' => 'create_test_users']);
 
+        $matches = [];
         preg_match('/Generated migration: (\S+)/', $tester->getDisplay(), $matches);
 
         return $matches[1];
@@ -197,9 +206,14 @@ final class CommandTestContext
     {
         $dirs = [];
 
-        foreach ($this->filesystem->list(path($this->migrationsDir . '/' . $pattern), new KeepAll()) as $status) {
-            if ($status->isDirectory()) {
-                $dirs[] = $status->path->path();
+        // @mago-expect analysis:mixed-assignment
+        foreach ($this->filesystem->list(path($this->migrationsDir . '/' . $pattern), new KeepAll()) as $fileStatus) {
+            if (!$fileStatus instanceof FileStatus) {
+                continue;
+            }
+
+            if ($fileStatus->isDirectory()) {
+                $dirs[] = $fileStatus->path->path();
             }
         }
 
@@ -208,8 +222,7 @@ final class CommandTestContext
 
     public function runMigrate(): void
     {
-        /** @var Command $command */
-        $command = $this->container()->get('flow.postgresql.command.migrate');
+        $command = $this->command('flow.postgresql.command.migrate');
         $tester = new CommandTester($command);
         $tester->setInputs(['yes']);
         $tester->execute([]);
@@ -241,6 +254,10 @@ final class CommandTestContext
     public function tableExistsInDatabase(string $database, string $table, string $schema = 'public'): bool
     {
         $targetDsn = preg_replace('#/[^/?]+(\?|$)#', '/' . $database . '$1', $this->testDsn);
+
+        if (!is_string($targetDsn)) {
+            throw new LogicException('Failed to build target DSN.');
+        }
         $client = PgSqlClient::connect((new DsnParser())->parse($targetDsn));
         $result = $client->fetch('SELECT 1 FROM information_schema.tables WHERE table_schema = $1 AND table_name = $2', [
             $schema,

@@ -39,7 +39,7 @@ final class FlowPostgreSqlTransportTest extends MessengerIntegrationTestCase
         $sent = $transport->send(new Envelope(new IntegrationTestMessage('by-id')));
         $sentStamp = $sent->last(TransportMessageIdStamp::class);
         static::assertNotNull($sentStamp);
-        $id = $sentStamp->getId();
+        $id = (string) $sentStamp->getId();
 
         $found = $transport->find($id);
 
@@ -47,8 +47,9 @@ final class FlowPostgreSqlTransportTest extends MessengerIntegrationTestCase
         $foundStamp = $found->last(TransportMessageIdStamp::class);
         static::assertNotNull($foundStamp);
         static::assertSame($id, $foundStamp->getId());
-        static::assertInstanceOf(IntegrationTestMessage::class, $found->getMessage());
-        static::assertSame('by-id', $found->getMessage()->payload);
+        $message = $found->getMessage();
+        static::assertInstanceOf(IntegrationTestMessage::class, $message);
+        static::assertSame('by-id', $message->payload);
     }
 
     public function test_find_by_id_returns_null_when_not_found(): void
@@ -146,8 +147,9 @@ final class FlowPostgreSqlTransportTest extends MessengerIntegrationTestCase
         $received = iterator_to_array($transport->get(), false);
 
         static::assertCount(1, $received);
-        static::assertInstanceOf(IntegrationTestMessage::class, $received[0]->getMessage());
-        static::assertSame('hello', $received[0]->getMessage()->payload);
+        $message = $received[0]->getMessage();
+        static::assertInstanceOf(IntegrationTestMessage::class, $message);
+        static::assertSame('hello', $message->payload);
     }
 
     public function test_send_get_and_ack(): void

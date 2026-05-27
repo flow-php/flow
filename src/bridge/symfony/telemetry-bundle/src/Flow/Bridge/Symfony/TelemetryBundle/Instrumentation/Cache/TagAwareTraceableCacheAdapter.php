@@ -23,6 +23,7 @@ use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Throwable;
 
 use function count;
+use function is_string;
 use function sprintf;
 
 final readonly class TagAwareTraceableCacheAdapter implements
@@ -131,14 +132,16 @@ final readonly class TagAwareTraceableCacheAdapter implements
 
     public function deleteItem(mixed $key): bool
     {
-        $span = $this->tracer->span("Cache DeleteItem {$key} {$this->poolName}", SpanKind::CLIENT, [
+        $keyString = is_string($key) ? $key : (string) $key;
+
+        $span = $this->tracer->span("Cache DeleteItem {$keyString} {$this->poolName}", SpanKind::CLIENT, [
             'cache.operation' => 'deleteItem',
             'cache.pool' => $this->poolName,
-            'cache.key' => $key,
+            'cache.key' => $keyString,
         ]);
 
         try {
-            $result = $this->adapter->deleteItem($key);
+            $result = $this->adapter->deleteItem($keyString);
             $span->setStatus(SpanStatus::ok());
 
             return $result;
@@ -253,7 +256,8 @@ final readonly class TagAwareTraceableCacheAdapter implements
 
     public function hasItem(mixed $key): bool
     {
-        $exists = $this->adapter->hasItem($key);
+        $keyString = is_string($key) ? $key : (string) $key;
+        $exists = $this->adapter->hasItem($keyString);
 
         if ($exists) {
             $this->hitCounter->add(1, ['cache.pool' => $this->poolName]);

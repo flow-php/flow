@@ -70,15 +70,14 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
     public function onController(ControllerEvent $event): void
     {
         $request = $event->getRequest();
-        $span = $request->attributes->get(self::SPAN_ATTRIBUTE);
 
-        if (!$span instanceof Span) {
+        // @mago-expect analysis:mixed-assignment
+        if (!($span = $request->attributes->get(self::SPAN_ATTRIBUTE)) instanceof Span) {
             return;
         }
 
-        $route = $request->attributes->get('_route');
-
-        if (is_string($route)) {
+        // @mago-expect analysis:mixed-assignment
+        if (is_string($route = $request->attributes->get('_route'))) {
             $span->setAttribute('http.route', $route);
         }
 
@@ -93,9 +92,9 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
     public function onException(ExceptionEvent $event): void
     {
         $request = $event->getRequest();
-        $span = $request->attributes->get(self::SPAN_ATTRIBUTE);
 
-        if (!$span instanceof Span) {
+        // @mago-expect analysis:mixed-assignment
+        if (!($span = $request->attributes->get(self::SPAN_ATTRIBUTE)) instanceof Span) {
             return;
         }
 
@@ -134,9 +133,9 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
     public function onResponse(ResponseEvent $event): void
     {
         $request = $event->getRequest();
-        $span = $request->attributes->get(self::SPAN_ATTRIBUTE);
 
-        if (!$span instanceof Span) {
+        // @mago-expect analysis:mixed-assignment
+        if (!($span = $request->attributes->get(self::SPAN_ATTRIBUTE)) instanceof Span) {
             return;
         }
 
@@ -155,10 +154,14 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
     public function onTerminate(TerminateEvent $event): void
     {
         $request = $event->getRequest();
-        $span = $request->attributes->get(self::SPAN_ATTRIBUTE);
-        $tracer = $request->attributes->get(self::TRACER_ATTRIBUTE);
 
-        if (!$span instanceof Span || !$tracer instanceof Tracer) {
+        // @mago-expect analysis:mixed-assignment
+        if (!($span = $request->attributes->get(self::SPAN_ATTRIBUTE)) instanceof Span) {
+            return;
+        }
+
+        // @mago-expect analysis:mixed-assignment
+        if (!($tracer = $request->attributes->get(self::TRACER_ATTRIBUTE)) instanceof Tracer) {
             return;
         }
 
@@ -173,7 +176,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         $headers = [];
 
         foreach ($request->headers->all() as $key => $values) {
-            if (is_array($values) && count($values) > 0 && is_string($values[0])) {
+            if (count($values) > 0 && is_string($values[0])) {
                 $headers[$key] = $values[0];
             }
         }
@@ -181,9 +184,11 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         $carrier = new ArrayCarrier($headers);
         $propagationContext = $this->propagator->extract($carrier);
 
-        if ($propagationContext->spanContext !== null) {
-            $context = Context::withTraceId($propagationContext->spanContext->traceId);
-            $context = $context->withActiveSpan($propagationContext->spanContext->spanId);
+        $spanContext = $propagationContext->spanContext;
+
+        if ($spanContext !== null) {
+            $context = Context::withTraceId($spanContext->traceId);
+            $context = $context->withActiveSpan($spanContext->spanId);
 
             if ($propagationContext->baggage !== null) {
                 $context = $context->withBaggage($propagationContext->baggage);
@@ -198,13 +203,17 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
      */
     private function resolveControllerName(callable|object|array $controller): ?string
     {
-        if (is_array($controller) && count($controller) === 2) {
-            $firstElement = $controller[0];
-            $secondElement = $controller[1];
-            $class = is_object($firstElement) ? $firstElement::class : (is_string($firstElement) ? $firstElement : '');
-            $method = is_string($secondElement) ? $secondElement : '';
+        if (is_array($controller)) {
+            if (count($controller) === 2) {
+                $firstElement = $controller[0];
+                $secondElement = $controller[1];
+                $class = is_object($firstElement) ? $firstElement::class : $firstElement;
+                $method = is_string($secondElement) ? $secondElement : '';
 
-            return "{$class}::{$method}";
+                return "{$class}::{$method}";
+            }
+
+            return null;
         }
 
         if (is_object($controller)) {
@@ -216,6 +225,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         }
 
         if (is_string($controller)) {
+            // @mago-expect analysis:never-return
             return $controller;
         }
 

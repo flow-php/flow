@@ -24,18 +24,15 @@ final class TracingStatement extends AbstractStatementMiddleware
         parent::__construct($statement);
     }
 
-    /**
-     * @param null|array<mixed> $params
-     */
     #[Override]
-    public function execute($params = null): Result
+    public function execute(): Result
     {
         $tracer = $this->telemetry->tracer('flow.symfony.dbal', PackageVersion::get('doctrine/dbal'));
 
         $span = $tracer->span('doctrine.dbal.statement.execute', SpanKind::CLIENT);
 
         try {
-            $result = parent::execute($params);
+            $result = parent::execute();
 
             $span->setStatus(SpanStatus::ok());
 

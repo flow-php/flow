@@ -99,7 +99,7 @@ final class StatCommand extends Command
         }
 
         if ($format === 'json') {
-            $output->writeln((string) json_encode([
+            $output->writeln(json_encode([
                 'uri' => $uri,
                 'protocol' => $protocolName,
                 'path' => $cleanPath,

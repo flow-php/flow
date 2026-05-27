@@ -72,10 +72,10 @@ final class CachePoolRegistrationTest extends KernelTestCase
         $adapter = $container->get('flow.filesystem.cache.pool.app');
         static::assertInstanceOf(FlowFilesystemCacheAdapter::class, $adapter);
 
-        $marshaller = (new ReflectionObject($adapter))
-            ->getProperty('marshaller')
-            ->getValue($adapter);
-        static::assertSame($container->get('test.marshaller'), $marshaller);
+        static::assertSame(
+            $container->get('test.marshaller'),
+            (new ReflectionObject($adapter))->getProperty('marshaller')->getValue($adapter),
+        );
     }
 
     public function test_cache_pool_with_named_fstab_resolves_through_that_fstab(): void

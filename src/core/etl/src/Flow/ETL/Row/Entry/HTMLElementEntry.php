@@ -55,6 +55,7 @@ final class HTMLElementEntry implements Entry
             throw new RuntimeException('HTMLElementEntry requires PHP 8.4+ (\Dom\HTMLDocument is not available).');
         }
 
+        // @mago-expect analysis:unavailable-method
         $document = HTMLDocument::createFromString($value, LIBXML_HTML_NOIMPLIED | LIBXML_NOERROR);
         $documentElement = $document->documentElement;
 

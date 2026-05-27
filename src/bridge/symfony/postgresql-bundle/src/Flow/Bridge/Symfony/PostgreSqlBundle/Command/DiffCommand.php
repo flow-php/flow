@@ -56,8 +56,8 @@ final class DiffCommand extends Command
         ));
         /** @var ?string $name */
         $name = $input->getArgument('name');
-        $allowEmpty = (bool) $input->getOption('allow-empty-diff');
-        $fromEmpty = (bool) $input->getOption('from-empty-schema');
+        $allowEmpty = $input->getOption('allow-empty-diff') === true;
+        $fromEmpty = $input->getOption('from-empty-schema') === true;
 
         try {
             $version = $diffGenerator->generate($name, $allowEmpty, $fromEmpty);
@@ -67,7 +67,7 @@ final class DiffCommand extends Command
             return Command::FAILURE;
         }
 
-        $directory = $configuration->migrationsDirectory . '/' . $version . ($name !== null ? '_' . $name : '');
+        $directory = $configuration->migrationsDirectory . '/' . (string) $version . ($name !== null ? '_' . $name : '');
         $realDirectory = realpath($directory) ?: $directory;
         $migrationPath = $realDirectory . '/' . $configuration->migrationFileName;
         $rollbackPath = $realDirectory . '/' . $configuration->rollbackFileName;

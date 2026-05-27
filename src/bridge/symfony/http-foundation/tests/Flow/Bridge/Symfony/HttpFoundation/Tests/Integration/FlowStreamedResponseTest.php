@@ -83,8 +83,9 @@ final class FlowStreamedResponseTest extends FlowTestCase
 
         static::assertNotNull($receivedReport);
         static::assertSame(2, $receivedReport->statistics()->totalRows());
-        static::assertNotNull($receivedReport->schema());
-        static::assertCount(2, $receivedReport->schema()->references()->all());
+        $schema = $receivedReport->schema();
+        static::assertNotNull($schema);
+        static::assertCount(2, $schema->references()->all());
     }
 
     public function test_streaming_array_response_to_csv(): void

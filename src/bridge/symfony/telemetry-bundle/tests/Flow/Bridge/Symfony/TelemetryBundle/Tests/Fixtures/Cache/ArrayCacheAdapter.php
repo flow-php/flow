@@ -151,7 +151,9 @@ final class ArrayCacheAdapter implements AdapterInterface, CacheInterface, Prune
 
     public function saveDeferred(CacheItemInterface $item): bool
     {
-        $this->deferred[$item->getKey()] = $item;
+        if ($item instanceof CacheItem) {
+            $this->deferred[$item->getKey()] = $item;
+        }
 
         return true;
     }

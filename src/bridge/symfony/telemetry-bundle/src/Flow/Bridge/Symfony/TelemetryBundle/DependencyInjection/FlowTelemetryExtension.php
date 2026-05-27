@@ -105,7 +105,7 @@ final class FlowTelemetryExtension extends Extension
     {
         $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $configuration = new Configuration();
-        /** @var array{resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, framework_logger?: null|string, context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, exporters?: array<string, array<string, mixed>>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
+        /** @var array{resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, framework_logger?: null|string, context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, exporters?: array<string, array<string, mixed>>, error_handlers?: array<string, array<string, mixed>>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config */
         $config = $this->processConfiguration($configuration, $configs);
 
         $container->setParameter('flow.telemetry.framework_logger', $config['framework_logger'] ?? null);
@@ -115,19 +115,24 @@ final class FlowTelemetryExtension extends Extension
         $loggers = ($config['loggers'] ?? []) + ['default' => []];
 
         $this->registerGlobalServices($config, $container);
-        $this->registerErrorHandlers($config['error_handlers'] ?? [], $container);
-        $this->registerPropagator($config['propagator'] ?? [], $container);
-        $this->registerResource($config['resource'], $container);
-        $this->registerNamedExporters($config['exporters'] ?? [], $container);
+        $errorHandlers = $config['error_handlers'] ?? [];
+        $this->registerErrorHandlers($errorHandlers, $container);
+        $propagator = is_array($config['propagator'] ?? null) ? $config['propagator'] : [];
+        $this->registerPropagator($propagator, $container);
+        $resource = $config['resource'];
+        $this->registerResource($resource, $container);
+        $exporters = is_array($config['exporters'] ?? null) ? $config['exporters'] : [];
+        $this->registerNamedExporters($exporters, $container);
         $this->registerTelemetry($config, $container);
-        $this->registerInstrumentation($config['instrumentation'] ?? [], $container, $loader);
+        $instrumentation = is_array($config['instrumentation'] ?? null) ? $config['instrumentation'] : [];
+        $this->registerInstrumentation($instrumentation, $container, $loader);
         $this->registerTracers($tracers, $container);
         $this->registerMeters($meters, $container);
         $this->registerLoggers($loggers, $container);
     }
 
     /**
-     * @param array<string, mixed> $transportConfig
+     * @param array<array-key, mixed> $transportConfig
      */
     private function buildEmbeddedOtlpTransport(
         string $exporterName,
@@ -136,12 +141,14 @@ final class FlowTelemetryExtension extends Extension
         bool $allowFailover = true,
     ): string {
         $transportServiceId = 'flow.telemetry.exporter.' . $exporterName . '.transport';
+        // @mago-expect analysis:mixed-assignment
         $type = $transportConfig['type'] ?? 'curl';
 
         if ($type === 'service') {
+            // @mago-expect analysis:mixed-assignment
             $customServiceId = $transportConfig['service_id'] ?? null;
 
-            if ($customServiceId === null) {
+            if (!is_string($customServiceId) || $customServiceId === '') {
                 throw new RuntimeException(sprintf(
                     'service_id is required when exporter "%s" transport type is "service"',
                     $exporterName,
@@ -152,6 +159,7 @@ final class FlowTelemetryExtension extends Extension
             return $transportServiceId;
         }
 
+        // @mago-expect analysis:mixed-assignment
         $endpoint = $transportConfig['endpoint'] ?? null;
 
         if (!is_string($endpoint) || $endpoint === '') {
@@ -182,9 +190,11 @@ final class FlowTelemetryExtension extends Extension
                     $transportConfig['shutdown_timeout_ms'] ?? CurlTransportOptions::DEFAULT_SHUTDOWN_TIMEOUT_MS,
                 ]);
 
+                // @mago-expect analysis:mixed-assignment
                 $headers = $transportConfig['headers'] ?? [];
 
-                foreach ($headers as $headerName => $headerValue) {
+                // @mago-expect analysis:mixed-assignment
+                foreach (is_array($headers) ? $headers : [] as $headerName => $headerValue) {
                     $optionsDefinition->addMethodCall('withHeader', [(string) $headerName, (string) $headerValue]);
                 }
 
@@ -282,19 +292,22 @@ final class FlowTelemetryExtension extends Extension
     }
 
     /**
-     * @param array<string, mixed> $handlerConfig
+     * @param array<array-key, mixed> $handlerConfig
      */
     private function buildErrorHandlerDefinition(string $name, array $handlerConfig, ContainerBuilder $container): void
     {
         $serviceId = 'flow.telemetry.error_handler.' . $name;
+        // @mago-expect analysis:mixed-assignment
         $type = $handlerConfig['type'] ?? 'error_log';
 
         switch ($type) {
             case 'error_log':
                 $definition = new Definition(ErrorLogHandler::class);
+                // @mago-expect analysis:mixed-assignment
+                $messageType = $handlerConfig['message_type'] ?? 'operating_system';
                 $definition->setArgument(
                     0,
-                    $this->mapErrorLogMessageType($handlerConfig['message_type'] ?? 'operating_system'),
+                    $this->mapErrorLogMessageType(is_string($messageType) ? $messageType : 'operating_system'),
                 );
                 $definition->setArgument(1, $handlerConfig['expand_newlines'] ?? false);
                 $definition->setArgument(2, $handlerConfig['message_prefix'] ?? '[flow-telemetry]');
@@ -303,6 +316,7 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'stream':
+                // @mago-expect analysis:mixed-assignment
                 $destination = $handlerConfig['destination'] ?? null;
 
                 if (!is_string($destination) || $destination === '') {
@@ -321,16 +335,21 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'syslog':
+                // @mago-expect analysis:mixed-assignment
+                $syslogFacility = $handlerConfig['facility'] ?? 'user';
+                // @mago-expect analysis:mixed-assignment
+                $syslogSeverity = $handlerConfig['severity'] ?? 'error';
                 $definition = new Definition(SyslogHandler::class);
                 $definition->setArgument(0, $handlerConfig['ident'] ?? 'flow-telemetry');
-                $definition->setArgument(1, $this->mapSyslogFacility($handlerConfig['facility'] ?? 'user'));
+                $definition->setArgument(1, $this->mapSyslogFacility(is_string($syslogFacility) ? $syslogFacility : 'user'));
                 $definition->setArgument(2, $handlerConfig['log_opts'] ?? LOG_PID);
-                $definition->setArgument(3, $this->mapSyslogSeverity($handlerConfig['severity'] ?? 'error'));
+                $definition->setArgument(3, $this->mapSyslogSeverity(is_string($syslogSeverity) ? $syslogSeverity : 'error'));
                 $container->setDefinition($serviceId, $definition);
 
                 break;
 
             case 'udp_syslog':
+                // @mago-expect analysis:mixed-assignment
                 $host = $handlerConfig['host'] ?? null;
 
                 if (!is_string($host) || $host === '') {
@@ -343,13 +362,18 @@ final class FlowTelemetryExtension extends Extension
                 $definition->setArgument(0, $host);
                 $definition->setArgument(1, $handlerConfig['port'] ?? 514);
                 $definition->setArgument(2, $handlerConfig['ident'] ?? 'flow-telemetry');
-                $definition->setArgument(3, $this->mapSyslogFacility($handlerConfig['facility'] ?? 'user'));
-                $definition->setArgument(4, $this->mapSyslogSeverity($handlerConfig['severity'] ?? 'error'));
+                // @mago-expect analysis:mixed-assignment
+                $udpFacility = $handlerConfig['facility'] ?? 'user';
+                // @mago-expect analysis:mixed-assignment
+                $udpSeverity = $handlerConfig['severity'] ?? 'error';
+                $definition->setArgument(3, $this->mapSyslogFacility(is_string($udpFacility) ? $udpFacility : 'user'));
+                $definition->setArgument(4, $this->mapSyslogSeverity(is_string($udpSeverity) ? $udpSeverity : 'error'));
                 $container->setDefinition($serviceId, $definition);
 
                 break;
 
             case 'composite':
+                // @mago-expect analysis:mixed-assignment
                 $children = $handlerConfig['handlers'] ?? [];
 
                 if (!is_array($children) || count($children) === 0) {
@@ -360,6 +384,7 @@ final class FlowTelemetryExtension extends Extension
                 }
                 $childRefs = [];
 
+                // @mago-expect analysis:mixed-assignment
                 foreach ($children as $childName) {
                     $childRefs[] = $this->resolveErrorHandlerReference($childName, $container);
                 }
@@ -373,6 +398,7 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'service':
+                // @mago-expect analysis:mixed-assignment
                 $customServiceId = $handlerConfig['service_id'] ?? null;
 
                 if (!is_string($customServiceId) || $customServiceId === '') {
@@ -395,7 +421,7 @@ final class FlowTelemetryExtension extends Extension
     }
 
     /**
-     * @param array<string, mixed> $transportConfig
+     * @param array<array-key, mixed> $transportConfig
      */
     private function buildFailoverTransport(
         string $exporterName,
@@ -407,6 +433,7 @@ final class FlowTelemetryExtension extends Extension
             return null;
         }
 
+        // @mago-expect analysis:mixed-assignment
         $failoverConfig = $transportConfig['failover'] ?? null;
 
         if (!is_array($failoverConfig) || $failoverConfig === []) {
@@ -424,13 +451,14 @@ final class FlowTelemetryExtension extends Extension
     }
 
     /**
-     * @param array<string, mixed> $config
+     * @param array<array-key, mixed> $config
      */
     private function buildLoggerProvider(array $config, ContainerBuilder $container): string
     {
         $providerServiceId = 'flow.telemetry.logger_provider';
 
-        $processorServiceId = $this->buildLogProcessor($config['processor'] ?? [], $providerServiceId, $container);
+        $processorConfig = is_array($config['processor'] ?? null) ? $config['processor'] : [];
+        $processorServiceId = $this->buildLogProcessor($processorConfig, $providerServiceId, $container);
         $errorHandlerRef = $this->resolveErrorHandlerReference($config['error_handler'] ?? 'default', $container);
 
         $definition = new Definition(LoggerProvider::class);
@@ -444,19 +472,21 @@ final class FlowTelemetryExtension extends Extension
     }
 
     /**
-     * @param array<string, mixed> $config
+     * @param array<array-key, mixed> $config
      */
     private function buildLogProcessor(array $config, string $serviceIdPrefix, ContainerBuilder $container): string
     {
         $processorServiceId = $serviceIdPrefix . '.processor';
+        // @mago-expect analysis:mixed-assignment
         $type = $config['type'] ?? 'void';
         $errorHandlerRef = $this->resolveErrorHandlerReference($config['error_handler'] ?? 'default', $container);
 
         switch ($type) {
             case 'service':
+                // @mago-expect analysis:mixed-assignment
                 $customServiceId = $config['service_id'] ?? null;
 
-                if ($customServiceId === null) {
+                if (!is_string($customServiceId) || $customServiceId === '') {
                     throw new RuntimeException('service_id is required when processor type is "service"');
                 }
                 $container->setAlias($processorServiceId, $customServiceId);
@@ -497,13 +527,14 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'composite':
-                $processors = $config['processors'] ?? [];
+                $processors = is_array($config['processors'] ?? null) ? $config['processors'] : [];
                 $processorRefs = [];
 
+                // @mago-expect analysis:mixed-assignment
                 foreach ($processors as $idx => $processorConfig) {
-                    /** @var array<string, mixed> $processorConfig */
+                    $subProcessorConfig = is_array($processorConfig) ? $processorConfig : [];
                     $subProcessorId = $this->buildLogProcessor(
-                        $processorConfig,
+                        $subProcessorConfig,
                         $processorServiceId . '.' . $idx,
                         $container,
                     );
@@ -517,13 +548,15 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'severity_filtering':
-                $innerProcessorConfig = $config['inner_processor'] ?? [];
+                $innerProcessorConfig = is_array($config['inner_processor'] ?? null) ? $config['inner_processor'] : [];
                 $innerProcessorServiceId = $this->buildLogProcessor(
                     $innerProcessorConfig,
                     $processorServiceId . '.inner',
                     $container,
                 );
-                $minimumSeverity = $this->mapSeverity($config['minimum_severity'] ?? 'info');
+                // @mago-expect analysis:mixed-assignment
+                $minSeverity = $config['minimum_severity'] ?? 'info';
+                $minimumSeverity = $this->mapSeverity(is_string($minSeverity) ? $minSeverity : 'info');
                 $definition = new Definition(SeverityFilteringLogProcessor::class);
                 $definition->setArgument(0, new Reference($innerProcessorServiceId));
                 $definition->setArgument(1, $minimumSeverity);
@@ -539,13 +572,14 @@ final class FlowTelemetryExtension extends Extension
     }
 
     /**
-     * @param array<string, mixed> $config
+     * @param array<array-key, mixed> $config
      */
     private function buildMeterProvider(array $config, ContainerBuilder $container): string
     {
         $providerServiceId = 'flow.telemetry.meter_provider';
 
-        $processorServiceId = $this->buildMetricProcessor($config['processor'] ?? [], $providerServiceId, $container);
+        $processorConfig = is_array($config['processor'] ?? null) ? $config['processor'] : [];
+        $processorServiceId = $this->buildMetricProcessor($processorConfig, $providerServiceId, $container);
         $errorHandlerRef = $this->resolveErrorHandlerReference($config['error_handler'] ?? 'default', $container);
 
         $temporality = ($config['temporality'] ?? 'cumulative') === 'delta'
@@ -563,19 +597,21 @@ final class FlowTelemetryExtension extends Extension
     }
 
     /**
-     * @param array<string, mixed> $config
+     * @param array<array-key, mixed> $config
      */
     private function buildMetricProcessor(array $config, string $serviceIdPrefix, ContainerBuilder $container): string
     {
         $processorServiceId = $serviceIdPrefix . '.processor';
+        // @mago-expect analysis:mixed-assignment
         $type = $config['type'] ?? 'void';
         $errorHandlerRef = $this->resolveErrorHandlerReference($config['error_handler'] ?? 'default', $container);
 
         switch ($type) {
             case 'service':
+                // @mago-expect analysis:mixed-assignment
                 $customServiceId = $config['service_id'] ?? null;
 
-                if ($customServiceId === null) {
+                if (!is_string($customServiceId) || $customServiceId === '') {
                     throw new RuntimeException('service_id is required when processor type is "service"');
                 }
                 $container->setAlias($processorServiceId, $customServiceId);
@@ -616,13 +652,14 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'composite':
-                $processors = $config['processors'] ?? [];
+                $processors = is_array($config['processors'] ?? null) ? $config['processors'] : [];
                 $processorRefs = [];
 
+                // @mago-expect analysis:mixed-assignment
                 foreach ($processors as $idx => $processorConfig) {
-                    /** @var array<string, mixed> $processorConfig */
+                    $subProcessorConfig = is_array($processorConfig) ? $processorConfig : [];
                     $subProcessorId = $this->buildMetricProcessor(
-                        $processorConfig,
+                        $subProcessorConfig,
                         $processorServiceId . '.' . $idx,
                         $container,
                     );
@@ -643,18 +680,20 @@ final class FlowTelemetryExtension extends Extension
     }
 
     /**
-     * @param array<string, mixed> $config
+     * @param array<array-key, mixed> $config
      */
     private function buildSampler(array $config, ContainerBuilder $container): string
     {
         $samplerServiceId = 'flow.telemetry.tracer_provider.sampler';
+        // @mago-expect analysis:mixed-assignment
         $type = $config['type'] ?? 'always_on';
 
         switch ($type) {
             case 'service':
+                // @mago-expect analysis:mixed-assignment
                 $customServiceId = $config['service_id'] ?? null;
 
-                if ($customServiceId === null) {
+                if (!is_string($customServiceId) || $customServiceId === '') {
                     throw new RuntimeException('service_id is required when sampler type is "service"');
                 }
                 $container->setAlias($samplerServiceId, $customServiceId);
@@ -697,19 +736,21 @@ final class FlowTelemetryExtension extends Extension
     }
 
     /**
-     * @param array<string, mixed> $config
+     * @param array<array-key, mixed> $config
      */
     private function buildSpanProcessor(array $config, string $serviceIdPrefix, ContainerBuilder $container): string
     {
         $processorServiceId = $serviceIdPrefix . '.processor';
+        // @mago-expect analysis:mixed-assignment
         $type = $config['type'] ?? 'void';
         $errorHandlerRef = $this->resolveErrorHandlerReference($config['error_handler'] ?? 'default', $container);
 
         switch ($type) {
             case 'service':
+                // @mago-expect analysis:mixed-assignment
                 $customServiceId = $config['service_id'] ?? null;
 
-                if ($customServiceId === null) {
+                if (!is_string($customServiceId) || $customServiceId === '') {
                     throw new RuntimeException('service_id is required when processor type is "service"');
                 }
                 $container->setAlias($processorServiceId, $customServiceId);
@@ -750,13 +791,14 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             case 'composite':
-                $processors = $config['processors'] ?? [];
+                $processors = is_array($config['processors'] ?? null) ? $config['processors'] : [];
                 $processorRefs = [];
 
+                // @mago-expect analysis:mixed-assignment
                 foreach ($processors as $idx => $processorConfig) {
-                    /** @var array<string, mixed> $processorConfig */
+                    $subProcessorConfig = is_array($processorConfig) ? $processorConfig : [];
                     $subProcessorId = $this->buildSpanProcessor(
-                        $processorConfig,
+                        $subProcessorConfig,
                         $processorServiceId . '.' . $idx,
                         $container,
                     );
@@ -777,14 +819,16 @@ final class FlowTelemetryExtension extends Extension
     }
 
     /**
-     * @param array<string, mixed> $config
+     * @param array<array-key, mixed> $config
      */
     private function buildTracerProvider(array $config, ContainerBuilder $container): string
     {
         $providerServiceId = 'flow.telemetry.tracer_provider';
 
-        $processorServiceId = $this->buildSpanProcessor($config['processor'] ?? [], $providerServiceId, $container);
-        $samplerServiceId = $this->buildSampler($config['sampler'] ?? [], $container);
+        $processorConfig = is_array($config['processor'] ?? null) ? $config['processor'] : [];
+        $samplerConfig = is_array($config['sampler'] ?? null) ? $config['sampler'] : [];
+        $processorServiceId = $this->buildSpanProcessor($processorConfig, $providerServiceId, $container);
+        $samplerServiceId = $this->buildSampler($samplerConfig, $container);
         $errorHandlerRef = $this->resolveErrorHandlerReference($config['error_handler'] ?? 'default', $container);
 
         $definition = new Definition(TracerProvider::class);
@@ -863,7 +907,7 @@ final class FlowTelemetryExtension extends Extension
     }
 
     /**
-     * @param array<string, mixed> $config
+     * @param array<array-key, mixed> $config
      */
     private function readConfigEnabled(string $path, ContainerBuilder $container, array $config): bool
     {
@@ -882,6 +926,7 @@ final class FlowTelemetryExtension extends Extension
         $compositeNames = [];
 
         foreach ($config as $name => $handlerConfig) {
+            // @mago-expect analysis:mixed-assignment
             $type = $handlerConfig['type'] ?? 'error_log';
 
             if ($type === 'composite') {
@@ -890,22 +935,23 @@ final class FlowTelemetryExtension extends Extension
                 continue;
             }
 
-            $this->buildErrorHandlerDefinition((string) $name, $handlerConfig, $container);
+            $this->buildErrorHandlerDefinition($name, $handlerConfig, $container);
         }
 
         foreach ($compositeNames as $name) {
-            $this->buildErrorHandlerDefinition((string) $name, $config[$name], $container);
+            $this->buildErrorHandlerDefinition($name, $config[$name], $container);
         }
     }
 
     /**
-     * @param array<string, mixed> $config
+     * @param array<array-key, mixed> $config
      */
     private function registerGlobalServices(array $config, ContainerBuilder $container): void
     {
+        // @mago-expect analysis:mixed-assignment
         $clockServiceId = $config['clock_service_id'] ?? null;
 
-        if ($clockServiceId !== null) {
+        if (is_string($clockServiceId)) {
             $container->setAlias('flow.telemetry.clock', $clockServiceId);
         } elseif ($container->has(ClockInterface::class)) {
             $container->setAlias('flow.telemetry.clock', ClockInterface::class);
@@ -913,13 +959,14 @@ final class FlowTelemetryExtension extends Extension
             $container->setDefinition('flow.telemetry.clock', new Definition(SystemClock::class));
         }
 
-        $contextStorageConfig = $config['context_storage'];
-        $contextStorageType = $contextStorageConfig['type'];
+        $contextStorageConfig = is_array($config['context_storage'] ?? null) ? $config['context_storage'] : [];
+        $contextStorageType = is_string($contextStorageConfig['type'] ?? null) ? $contextStorageConfig['type'] : 'memory';
 
         if ($contextStorageType === 'service') {
+            // @mago-expect analysis:mixed-assignment
             $customServiceId = $contextStorageConfig['service_id'] ?? null;
 
-            if ($customServiceId === null) {
+            if (!is_string($customServiceId) || $customServiceId === '') {
                 throw new RuntimeException('service_id is required when context_storage type is "service"');
             }
             $container->setAlias('flow.telemetry.context_storage', $customServiceId);
@@ -1089,6 +1136,7 @@ final class FlowTelemetryExtension extends Extension
             }
 
             if (array_key_exists('service', $exporterConfig)) {
+                // @mago-expect analysis:mixed-assignment
                 $customServiceId = $exporterConfig['service']['id'] ?? null;
 
                 if (!is_string($customServiceId) || $customServiceId === '') {
@@ -1101,6 +1149,7 @@ final class FlowTelemetryExtension extends Extension
 
             if (array_key_exists('otlp', $exporterConfig)) {
                 $container->setParameter('flow.telemetry.otlp_configured', true);
+                // @mago-expect analysis:mixed-assignment
                 $transportConfig = $exporterConfig['otlp']['transport'] ?? null;
 
                 if (!is_array($transportConfig) || count($transportConfig) === 0) {
@@ -1204,7 +1253,7 @@ final class FlowTelemetryExtension extends Extension
                 break;
 
             default:
-                throw new RuntimeException(sprintf('Unknown propagator type: %s', (string) $type));
+                throw new RuntimeException(sprintf('Unknown propagator type: %s', $type));
         }
     }
 
@@ -1321,13 +1370,17 @@ final class FlowTelemetryExtension extends Extension
     }
 
     /**
-     * @param array<string, mixed> $config
+     * @param array<array-key, mixed> $config
      */
     private function registerTelemetry(array $config, ContainerBuilder $container): void
     {
-        $tracerProviderServiceId = $this->buildTracerProvider($config['tracer_provider'] ?? [], $container);
-        $meterProviderServiceId = $this->buildMeterProvider($config['meter_provider'] ?? [], $container);
-        $loggerProviderServiceId = $this->buildLoggerProvider($config['logger_provider'] ?? [], $container);
+        $tracerProviderConfig = is_array($config['tracer_provider'] ?? null) ? $config['tracer_provider'] : [];
+        $meterProviderConfig = is_array($config['meter_provider'] ?? null) ? $config['meter_provider'] : [];
+        $loggerProviderConfig = is_array($config['logger_provider'] ?? null) ? $config['logger_provider'] : [];
+
+        $tracerProviderServiceId = $this->buildTracerProvider($tracerProviderConfig, $container);
+        $meterProviderServiceId = $this->buildMeterProvider($meterProviderConfig, $container);
+        $loggerProviderServiceId = $this->buildLoggerProvider($loggerProviderConfig, $container);
 
         $telemetryServiceId = 'flow.telemetry';
         $definition = new Definition(Telemetry::class);

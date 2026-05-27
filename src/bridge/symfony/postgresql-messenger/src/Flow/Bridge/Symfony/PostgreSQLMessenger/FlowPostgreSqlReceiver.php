@@ -139,23 +139,22 @@ final readonly class FlowPostgreSqlReceiver implements
      */
     private function toEnvelope(array $row): Envelope
     {
-        $body = $row['body'] ?? null;
-        $headersRaw = $row['headers'] ?? null;
-        $id = $row['id'] ?? null;
+        $body = is_string($row['body'] ?? null)
+            ? $row['body']
+            : throw TransportException::unexpectedRowShape('body', get_debug_type($row['body'] ?? null));
 
-        if (!is_string($body)) {
-            throw TransportException::unexpectedRowShape('body', get_debug_type($body));
-        }
+        $headersRaw = is_string($row['headers'] ?? null)
+            ? $row['headers']
+            : throw TransportException::unexpectedRowShape('headers', get_debug_type($row['headers'] ?? null));
 
-        if (!is_string($headersRaw)) {
-            throw TransportException::unexpectedRowShape('headers', get_debug_type($headersRaw));
-        }
-
-        if (!is_int($id) && !is_string($id)) {
-            throw TransportException::unexpectedRowShape('id', get_debug_type($id));
-        }
+        $id = is_int($row['id'] ?? null)
+            ? $row['id']
+            : (is_string($row['id'] ?? null)
+                ? $row['id']
+                : throw TransportException::unexpectedRowShape('id', get_debug_type($row['id'] ?? null)));
 
         try {
+            // @mago-expect analysis:mixed-assignment
             $headers = json_decode($headersRaw, true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException $e) {
             throw new MessageDecodingFailedException(
@@ -169,10 +168,18 @@ final readonly class FlowPostgreSqlReceiver implements
             throw new MessageDecodingFailedException('Decoded message headers are not an array.');
         }
 
-        /** @var array<string, string> $headers */
+        $stringHeaders = [];
+
+        // @mago-expect analysis:mixed-assignment
+        foreach ($headers as $key => $value) {
+            if (is_string($key) && is_string($value)) {
+                $stringHeaders[$key] = $value;
+            }
+        }
+
         $envelope = $this->serializer->decode([
             'body' => $body,
-            'headers' => $headers,
+            'headers' => $stringHeaders,
         ]);
 
         return $envelope->with(new TransportMessageIdStamp((string) $id));

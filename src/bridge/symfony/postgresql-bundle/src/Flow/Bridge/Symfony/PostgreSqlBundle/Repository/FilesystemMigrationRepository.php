@@ -37,6 +37,7 @@ final readonly class FilesystemMigrationRepository implements MigrationRepositor
             }
 
             $dirName = $entry->path->basename();
+            $matches = [];
 
             if (preg_match('/^(\w+?)_(.+)$/', $dirName, $matches) === 1) {
                 $version = Version::fromString($matches[1]);
@@ -72,6 +73,7 @@ final readonly class FilesystemMigrationRepository implements MigrationRepositor
             throw MigrationException::missingMigrationFile($directoryPath->path());
         }
 
+        // @mago-expect analysis:mixed-assignment
         $migration = require $migrationPath->path();
 
         if (!$migration instanceof Migration) {
@@ -82,6 +84,7 @@ final readonly class FilesystemMigrationRepository implements MigrationRepositor
         $rollbackPath = Path::from($directoryPath->path() . '/' . $this->configuration->rollbackFileName);
 
         if ($this->filesystem->status($rollbackPath) !== null) {
+            // @mago-expect analysis:mixed-assignment
             $rollback = require $rollbackPath->path();
 
             if (!$rollback instanceof Rollback) {

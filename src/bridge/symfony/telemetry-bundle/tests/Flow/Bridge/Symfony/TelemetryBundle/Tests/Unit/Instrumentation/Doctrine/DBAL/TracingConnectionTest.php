@@ -235,7 +235,7 @@ final class TracingConnectionTest extends TestCase
                                 return [];
                             }
 
-                            /** @return array<mixed, mixed> */
+                            /** @return array<array-key, mixed> */
                             public function fetchAllKeyValue(): array
                             {
                                 return [];
@@ -295,7 +295,7 @@ final class TracingConnectionTest extends TestCase
                         return [];
                     }
 
-                    /** @return array<mixed, mixed> */
+                    /** @return array<array-key, mixed> */
                     public function fetchAllKeyValue(): array
                     {
                         return [];

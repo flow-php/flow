@@ -43,6 +43,7 @@ final class RegisterFilesystemFactoriesPassTest extends TestCase
 
         (new RegisterFilesystemFactoriesPass())->process($container);
 
+        // @mago-expect analysis:mixed-assignment
         $argument = $container->getDefinition('.flow.filesystem.factory_registry')->getArgument(0);
         static::assertIsArray($argument);
         static::assertCount(2, $argument);

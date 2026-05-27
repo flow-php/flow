@@ -54,18 +54,15 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
             );
         }
 
-        $client = $config['client'];
-
-        if ($client instanceof S3Client) {
-            $resolvedClient = $client;
-        } elseif (is_array($client)) {
-            /** @var array<string, mixed> $client */
-            $resolvedClient = $this->buildClient($client);
+        if ($config['client'] instanceof S3Client) {
+            $resolvedClient = $config['client'];
+        } elseif (is_array($config['client'])) {
+            $resolvedClient = $this->buildClient($config['client']);
         } else {
             throw new InvalidArgumentException(sprintf(
                 'Filesystem factory for backend "aws_s3" `client` must be an array or %s instance, got %s.',
                 S3Client::class,
-                get_debug_type($client),
+                get_debug_type($config['client']),
             ));
         }
 
@@ -80,7 +77,7 @@ final readonly class AsyncAwsS3FilesystemFactory implements FilesystemFactory
     }
 
     /**
-     * @param array<string, mixed> $clientConfig
+     * @param array<array-key, mixed> $clientConfig
      */
     private function buildClient(array $clientConfig): S3Client
     {

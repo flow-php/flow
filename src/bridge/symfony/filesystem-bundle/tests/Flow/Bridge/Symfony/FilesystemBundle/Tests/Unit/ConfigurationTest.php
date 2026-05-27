@@ -15,6 +15,8 @@ use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 
+use function is_array;
+
 final class ConfigurationTest extends TestCase
 {
     private ConfigurationContext $context;
@@ -46,7 +48,11 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        static::assertSame(0, $config['cache']['pools']['app']['default_lifetime']);
+        $cache = is_array($config['cache'] ?? null) ? $config['cache'] : [];
+        $pools = is_array($cache['pools'] ?? null) ? $cache['pools'] : [];
+        $app = is_array($pools['app'] ?? null) ? $pools['app'] : [];
+
+        static::assertSame(0, $app['default_lifetime']);
     }
 
     public function test_cache_pool_fstab_default_is_null(): void
@@ -66,7 +72,11 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        static::assertNull($config['cache']['pools']['app']['fstab']);
+        $cache = is_array($config['cache'] ?? null) ? $config['cache'] : [];
+        $pools = is_array($cache['pools'] ?? null) ? $cache['pools'] : [];
+        $app = is_array($pools['app'] ?? null) ? $pools['app'] : [];
+
+        static::assertNull($app['fstab']);
     }
 
     public function test_cache_pool_marshaller_service_id_default_is_null(): void
@@ -86,7 +96,11 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        static::assertNull($config['cache']['pools']['app']['marshaller_service_id']);
+        $cache = is_array($config['cache'] ?? null) ? $config['cache'] : [];
+        $pools = is_array($cache['pools'] ?? null) ? $cache['pools'] : [];
+        $app = is_array($pools['app'] ?? null) ? $pools['app'] : [];
+
+        static::assertNull($app['marshaller_service_id']);
     }
 
     public function test_cache_pool_namespace_default_is_empty_string(): void
@@ -106,7 +120,11 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        static::assertSame('', $config['cache']['pools']['app']['namespace']);
+        $cache = is_array($config['cache'] ?? null) ? $config['cache'] : [];
+        $pools = is_array($cache['pools'] ?? null) ? $cache['pools'] : [];
+        $app = is_array($pools['app'] ?? null) ? $pools['app'] : [];
+
+        static::assertSame('', $app['namespace']);
     }
 
     public function test_cache_pool_requires_filesystem(): void
@@ -209,8 +227,12 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        static::assertSame('file', $config['cache']['pools']['app']['filesystem']);
-        static::assertSame('/cache', $config['cache']['pools']['app']['path']);
+        $cache = is_array($config['cache'] ?? null) ? $config['cache'] : [];
+        $pools = is_array($cache['pools'] ?? null) ? $cache['pools'] : [];
+        $app = is_array($pools['app'] ?? null) ? $pools['app'] : [];
+
+        static::assertSame('file', $app['filesystem']);
+        static::assertSame('/cache', $app['path']);
     }
 
     public function test_default_fstab_implicitly_resolves_to_fstab_named_default(): void
@@ -423,10 +445,14 @@ final class ConfigurationTest extends TestCase
             $container->set('y', self::createStub(BlobServiceInterface::class));
         });
 
-        static::assertArrayHasKey('aws-s3', $config['fstabs']['default']['filesystems']);
-        static::assertArrayHasKey('azure-blob', $config['fstabs']['default']['filesystems']);
-        static::assertArrayNotHasKey('aws_s3', $config['fstabs']['default']['filesystems']);
-        static::assertArrayNotHasKey('azure_blob', $config['fstabs']['default']['filesystems']);
+        $fstabs = is_array($config['fstabs'] ?? null) ? $config['fstabs'] : [];
+        $default = is_array($fstabs['default'] ?? null) ? $fstabs['default'] : [];
+        $filesystems = is_array($default['filesystems'] ?? null) ? $default['filesystems'] : [];
+
+        static::assertArrayHasKey('aws-s3', $filesystems);
+        static::assertArrayHasKey('azure-blob', $filesystems);
+        static::assertArrayNotHasKey('aws_s3', $filesystems);
+        static::assertArrayNotHasKey('azure_blob', $filesystems);
     }
 
     public function test_valid_minimal_single_fstab(): void
@@ -442,7 +468,12 @@ final class ConfigurationTest extends TestCase
         ]);
 
         static::assertSame('default', $config['default_fstab']);
-        static::assertArrayHasKey('file', $config['fstabs']['default']['filesystems']);
+
+        $fstabs = is_array($config['fstabs'] ?? null) ? $config['fstabs'] : [];
+        $default = is_array($fstabs['default'] ?? null) ? $fstabs['default'] : [];
+        $filesystems = is_array($default['filesystems'] ?? null) ? $default['filesystems'] : [];
+
+        static::assertArrayHasKey('file', $filesystems);
     }
 
     public function test_valid_multi_fstab_with_explicit_default(): void
@@ -464,8 +495,11 @@ final class ConfigurationTest extends TestCase
         ]);
 
         static::assertSame('secondary', $config['default_fstab']);
-        static::assertArrayHasKey('primary', $config['fstabs']);
-        static::assertArrayHasKey('secondary', $config['fstabs']);
+
+        $fstabs = is_array($config['fstabs'] ?? null) ? $config['fstabs'] : [];
+
+        static::assertArrayHasKey('primary', $fstabs);
+        static::assertArrayHasKey('secondary', $fstabs);
     }
 
     public function test_valid_telemetry_disabled_by_default(): void
@@ -480,7 +514,11 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        static::assertFalse($config['fstabs']['default']['telemetry']['enabled']);
+        $fstabs = is_array($config['fstabs'] ?? null) ? $config['fstabs'] : [];
+        $default = is_array($fstabs['default'] ?? null) ? $fstabs['default'] : [];
+        $telemetry = is_array($default['telemetry'] ?? null) ? $default['telemetry'] : [];
+
+        static::assertFalse($telemetry['enabled']);
     }
 
     public function test_valid_telemetry_fully_configured(): void
@@ -509,8 +547,13 @@ final class ConfigurationTest extends TestCase
             $container->setDefinition('app.clock', (new Definition(SystemClock::class))->setPublic(true));
         });
 
-        static::assertTrue($config['fstabs']['default']['telemetry']['enabled']);
-        static::assertSame('app.telemetry', $config['fstabs']['default']['telemetry']['telemetry_service_id']);
-        static::assertFalse($config['fstabs']['default']['telemetry']['options']['trace_streams']);
+        $fstabs = is_array($config['fstabs'] ?? null) ? $config['fstabs'] : [];
+        $default = is_array($fstabs['default'] ?? null) ? $fstabs['default'] : [];
+        $telemetry = is_array($default['telemetry'] ?? null) ? $default['telemetry'] : [];
+        $options = is_array($telemetry['options'] ?? null) ? $telemetry['options'] : [];
+
+        static::assertTrue($telemetry['enabled']);
+        static::assertSame('app.telemetry', $telemetry['telemetry_service_id']);
+        static::assertFalse($options['trace_streams']);
     }
 }

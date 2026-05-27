@@ -74,6 +74,7 @@ final readonly class StringType implements Type
             }
 
             if ($value instanceof HTMLDocument) {
+                // @mago-expect analysis:unavailable-method
                 return $value->saveHtml();
             }
 

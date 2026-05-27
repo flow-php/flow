@@ -25,7 +25,7 @@ final readonly class TracableHttpClient implements HttpClientInterface
     ) {}
 
     /**
-     * @param array<string, mixed> $options
+     * @param array<array-key, mixed> $options
      */
     public function request(string $method, string $url, array $options = []): ResponseInterface
     {
@@ -79,7 +79,7 @@ final readonly class TracableHttpClient implements HttpClientInterface
     }
 
     /**
-     * @param array<string, mixed> $options
+     * @param array<array-key, mixed> $options
      */
     public function withOptions(array $options): static
     {

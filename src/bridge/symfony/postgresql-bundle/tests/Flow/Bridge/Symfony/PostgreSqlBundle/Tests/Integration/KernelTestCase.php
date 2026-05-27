@@ -33,6 +33,7 @@ abstract class KernelTestCase extends TestCase
         if (method_exists($application, 'addCommand')) {
             $application->addCommand($command);
         } else {
+            // @mago-expect analysis:deprecated-method
             $application->add($command);
         }
     }

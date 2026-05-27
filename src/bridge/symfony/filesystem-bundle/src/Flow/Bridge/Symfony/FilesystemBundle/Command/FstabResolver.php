@@ -10,8 +10,10 @@ use Flow\Filesystem\Path;
 use Psr\Container\ContainerInterface;
 
 use function array_keys;
+use function array_map;
 use function array_pop;
 use function explode;
+use function Flow\Types\DSL\type_instance_of;
 use function getcwd;
 use function implode;
 use function method_exists;
@@ -53,7 +55,7 @@ final readonly class FstabResolver
             return Path::from($raw);
         }
 
-        $absolute = str_starts_with($raw, '/') ? $raw : getcwd() . '/' . $raw;
+        $absolute = str_starts_with($raw, '/') ? $raw : (getcwd() ?: '') . '/' . $raw;
         $real = realpath($absolute);
 
         return Path::from('file://' . ($real !== false ? $real : self::normalizePath($absolute)));
@@ -71,29 +73,29 @@ final readonly class FstabResolver
             ));
         }
 
-        /** @phpstan-ignore return.type */
-        return $this->locator->get($name);
+        return type_instance_of(FilesystemTable::class)->assert($this->locator->get($name));
     }
 
     private static function normalizePath(string $path): string
     {
         $isAbsolute = str_starts_with($path, '/');
-        $segments = [];
+        $parts = explode('/', $path);
+        $normalized = [];
 
-        foreach (explode('/', $path) as $segment) {
-            if ($segment === '' || $segment === '.') {
+        foreach ($parts as $part) {
+            if ($part === '' || $part === '.') {
                 continue;
             }
 
-            if ($segment === '..') {
-                array_pop($segments);
+            if ($part === '..') {
+                array_pop($normalized);
 
                 continue;
             }
 
-            $segments[] = $segment;
+            $normalized[] = $part;
         }
 
-        return ($isAbsolute ? '/' : '') . implode('/', $segments);
+        return ($isAbsolute ? '/' : '') . implode('/', array_map(static fn (mixed $s): string => (string) $s, $normalized));
     }
 }

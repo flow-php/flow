@@ -37,8 +37,8 @@ final class SessionPurgeCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        $all = (bool) $input->getOption('all');
-        $expired = (bool) $input->getOption('expired');
+        $all = $input->getOption('all') === true;
+        $expired = $input->getOption('expired') === true;
 
         if ($all && $expired) {
             $io->error('Options --expired and --all are mutually exclusive.');

@@ -54,7 +54,7 @@ final class GenerateCommand extends Command
 
         $version = $generator->generateDataMigration($name);
 
-        $directory = $configuration->migrationsDirectory . '/' . $version . ($name !== null ? '_' . $name : '');
+        $directory = $configuration->migrationsDirectory . '/' . (string) $version . ($name !== null ? '_' . $name : '');
         $realDirectory = realpath($directory) ?: $directory;
 
         $io->success(sprintf('Generated migration: %s', $version));
