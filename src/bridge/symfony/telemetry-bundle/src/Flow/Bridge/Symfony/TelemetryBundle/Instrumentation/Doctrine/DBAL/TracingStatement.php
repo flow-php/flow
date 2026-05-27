@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V3;
+namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL;
 
 use DateTimeImmutable;
 use Doctrine\DBAL\Driver\Middleware\AbstractStatementMiddleware;

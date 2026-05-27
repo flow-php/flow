@@ -15,7 +15,6 @@ use Flow\Doctrine\Bulk\Dialect\PostgreSQLDialect;
 use Flow\Doctrine\Bulk\Dialect\SqliteDialect;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
-use function in_array;
 use function sprintf;
 
 /**
@@ -61,10 +60,6 @@ final readonly class DbalPlatform
 
     private function isSqlite(): bool
     {
-        return in_array(
-            $this->platform::class,
-            ['Doctrine\DBAL\Platforms\SqlitePlatform', SQLitePlatform::class],
-            true,
-        );
+        return $this->platform instanceof SQLitePlatform;
     }
 }
