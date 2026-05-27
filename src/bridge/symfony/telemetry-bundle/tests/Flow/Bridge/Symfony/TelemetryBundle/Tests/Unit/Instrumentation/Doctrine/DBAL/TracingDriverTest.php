@@ -18,7 +18,7 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Doctrine\DBAL\Platforms\SQLServerPlatform;
 use Doctrine\DBAL\ServerVersionProvider;
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V4\TracingDriver;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\TracingDriver;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
@@ -35,18 +35,9 @@ use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use stdClass;
 
-use function interface_exists;
-
 #[CoversClass(TracingDriver::class)]
 final class TracingDriverTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        if (interface_exists('Doctrine\DBAL\VersionAwarePlatformDriver')) {
-            self::markTestSkipped('Test requires Doctrine DBAL 4.x');
-        }
-    }
-
     public function test_get_semantic_db_system_defaults_to_other_sql(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());

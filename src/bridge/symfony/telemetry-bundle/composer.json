@@ -28,7 +28,7 @@
         "symfony/polyfill-mbstring": "^1.33"
     },
     "require-dev": {
-        "doctrine/dbal": "^3.6 || ^4.0",
+        "doctrine/dbal": "^4.0",
         "flow-php/psr18-telemetry-bridge": "self.version",
         "flow-php/telemetry-otlp-bridge": "self.version",
         "nyholm/psr7": "^1.8",
@@ -38,7 +38,7 @@
         "twig/twig": "^3.0"
     },
     "suggest": {
-        "doctrine/dbal": "Required for Doctrine DBAL tracing (^3.6 or ^4.0)",
+        "doctrine/dbal": "Required for Doctrine DBAL tracing (^4.0)",
         "flow-php/psr18-telemetry-bridge": "Required for PSR-18 HTTP client tracing",
         "flow-php/telemetry-otlp-bridge": "Required for OTLP exporter support",
         "symfony/messenger": "Required for Messenger tracing middleware",

@@ -8,7 +8,7 @@ use Doctrine\DBAL\Driver\Connection as ConnectionInterface;
 use Doctrine\DBAL\Driver\Result;
 use Doctrine\DBAL\Driver\Statement as DriverStatement;
 use Doctrine\DBAL\ParameterType;
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\V4\TracingConnection;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Doctrine\DBAL\TracingConnection;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\LoggerProvider;
 use Flow\Telemetry\Meter\MeterProvider;
@@ -24,20 +24,12 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-use function interface_exists;
 use function mb_strlen;
 use function str_repeat;
 
 #[CoversClass(TracingConnection::class)]
 final class TracingConnectionTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        if (interface_exists('Doctrine\DBAL\VersionAwarePlatformDriver')) {
-            self::markTestSkipped('Test requires Doctrine DBAL 4.x');
-        }
-    }
-
     public function test_prepare_uses_truncation(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
