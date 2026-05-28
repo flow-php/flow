@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 use function file_get_contents;
+use function Flow\Types\DSL\type_string;
 
 final class FlowController extends AbstractController
 {
@@ -18,7 +19,9 @@ final class FlowController extends AbstractController
     public function main(): Response
     {
         return $this->render('main/changelog.html.twig', [
-            'changelog_markdown' => file_get_contents($this->getParameter('flow_root_dir') . '/CHANGELOG.md'),
+            'changelog_markdown' => file_get_contents(
+                type_string()->assert($this->getParameter('flow_root_dir')) . '/CHANGELOG.md',
+            ),
         ]);
     }
 }

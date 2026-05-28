@@ -43,11 +43,11 @@ final class TableOfContentsRenderer implements NodeRendererInterface
         $header = new HtmlElement(
             'div',
             ['class' => 'toc-header', 'data-action' => 'click->toc#toggle'],
-            new HtmlElement('span', [], 'Table of Contents') . $arrow,
+            [new HtmlElement('span', [], 'Table of Contents'), $arrow],
         );
 
         $content = new HtmlElement('div', ['class' => 'toc-content'], $tocList);
 
-        return new HtmlElement('div', ['class' => 'toc-wrapper', 'data-controller' => 'toc'], $header . $content);
+        return new HtmlElement('div', ['class' => 'toc-wrapper', 'data-controller' => 'toc'], [$header, $content]);
     }
 }

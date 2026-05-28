@@ -16,6 +16,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 use function file_exists;
 use function file_get_contents;
+use function Flow\Types\DSL\type_string;
 use function is_file;
 use function str_ends_with;
 use function str_replace;
@@ -32,7 +33,7 @@ final class DocumentationController extends AbstractController
     #[Route('/documentation/api/{page}', name: 'documentation_api', requirements: ['page' => '.*'])]
     public function apiPage(string $page): Response
     {
-        $projectDir = $this->getParameter('kernel.project_dir');
+        $projectDir = type_string()->assert($this->getParameter('kernel.project_dir'));
         $docsDir = $projectDir . '/build/documentation/api';
 
         if (!file_exists($docsDir . '/' . $page) || !is_file($docsDir . '/' . $page)) {
@@ -50,9 +51,9 @@ final class DocumentationController extends AbstractController
                 default => 'text/html',
             };
 
-            $body = file_get_contents($docsDir . '/' . $page);
+            $body = type_string()->assert(file_get_contents($docsDir . '/' . $page));
 
-            if ($extension === 'html' && $body !== false) {
+            if ($extension === 'html') {
                 $body = str_replace(
                     '</head>',
                     '<link rel="stylesheet" href="/styles/api-overrides.css"></head>',
@@ -74,6 +75,11 @@ final class DocumentationController extends AbstractController
         $modules = $this->dslDefinitions->modules();
 
         $definition = $this->dslDefinitions->fromModule(Module::fromName($module))->get($function);
+
+        if ($definition === null) {
+            throw $this->createNotFoundException();
+        }
+
         $examples = [];
 
         foreach ($definition->examples() as $example) {

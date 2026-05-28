@@ -8,6 +8,8 @@ use Flow\Website\Kernel;
 use Override;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
+use function Flow\Types\DSL\type_string;
+
 final class DocumentationTest extends WebTestCase
 {
     public function test_documentation_dsl_function_page(): void
@@ -21,7 +23,7 @@ final class DocumentationTest extends WebTestCase
         self::assertSelectorExists('[data-dsl-source-link]');
         static::assertStringContainsString(
             'https://github.com',
-            $client->getCrawler()->filter('[data-dsl-source-link]')->attr('href'),
+            type_string()->assert($client->getCrawler()->filter('[data-dsl-source-link]')->attr('href')),
         );
         self::assertSelectorExists('pre');
         self::assertSelectorExists('code.language-php');

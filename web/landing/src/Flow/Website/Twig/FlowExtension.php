@@ -13,6 +13,11 @@ use function array_filter;
 use function array_map;
 use function base64_decode;
 use function explode;
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_scalar;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
 use function implode;
 use function is_array;
 use function is_string;
@@ -57,7 +62,7 @@ final class FlowExtension extends AbstractExtension
     {
         $types = $this->toArray($types);
 
-        return implode('|', array_map(static fn(array $t): string => $t['name'], $types));
+        return implode('|', array_map(static fn(array $t): string => type_string()->assert($t['name']), $types));
     }
 
     #[Override]
@@ -106,7 +111,7 @@ final class FlowExtension extends AbstractExtension
         }
 
         if (is_string($value)) {
-            $decoded = json_decode($value, true);
+            $decoded = type_union(type_array(), type_scalar(), type_null())->assert(json_decode($value, true));
 
             return is_array($decoded) ? $decoded : [];
         }

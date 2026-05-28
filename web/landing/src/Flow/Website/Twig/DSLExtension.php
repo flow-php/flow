@@ -8,6 +8,8 @@ use Override;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
+use function Flow\Types\DSL\type_string;
+
 final class DSLExtension extends AbstractExtension
 {
     public function __construct(
@@ -16,7 +18,7 @@ final class DSLExtension extends AbstractExtension
 
     public function dsl(): string
     {
-        return file_get_contents($this->dslPath);
+        return type_string()->assert(file_get_contents($this->dslPath));
     }
 
     #[Override]

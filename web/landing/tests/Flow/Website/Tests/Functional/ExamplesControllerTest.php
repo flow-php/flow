@@ -8,6 +8,8 @@ use Flow\Website\Kernel;
 use Override;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
+use function Flow\Types\DSL\type_string;
+
 final class ExamplesControllerTest extends WebTestCase
 {
     public function test_back_to_example_link_exists_on_playground_page(): void
@@ -96,7 +98,7 @@ final class ExamplesControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $link = $crawler->filter('a[title="Try in Playground"]');
         static::assertCount(1, $link);
-        static::assertStringContainsString('/playground/', $link->attr('href'));
+        static::assertStringContainsString('/playground/', type_string()->assert($link->attr('href')));
     }
 
     #[Override]

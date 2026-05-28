@@ -9,6 +9,8 @@ use League\CommonMark\Extension\CommonMark\Node\Block\HtmlBlock;
 use League\CommonMark\Node\Block\Paragraph;
 use League\CommonMark\Node\Inline\Text;
 
+use function Flow\Types\DSL\type_string;
+
 final class FlowDocLinkRenderer
 {
     public function __invoke(DocumentParsedEvent $event): void
@@ -26,6 +28,8 @@ final class FlowDocLinkRenderer
             if (!$node instanceof Text) {
                 continue;
             }
+
+            $m = [];
 
             if (!preg_match('/^\[DOC_LINK:(.+)\]$/', $node->getLiteral(), $m)) {
                 continue;
@@ -58,7 +62,7 @@ final class FlowDocLinkRenderer
         $parts = parse_url($href);
 
         if (!isset($parts['scheme']) && !isset($parts['host'])) {
-            $href = preg_replace('/\.md(?=$|[?#])/', '', $href);
+            $href = type_string()->assert(preg_replace('/\.md(?=$|[?#])/', '', $href));
         }
 
         return $href;

@@ -10,6 +10,11 @@ use League\CommonMark\Extension\CommonMark\Node\Block\HtmlBlock;
 use League\CommonMark\Node\Block\Paragraph;
 use League\CommonMark\Node\Inline\Text;
 
+use function array_key_exists;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_string;
+
 final readonly class FlowPackageNavRenderer
 {
     private const string PLACEHOLDER_COMPONENT = '[PACKAGE_NAV]';
@@ -51,8 +56,8 @@ final readonly class FlowPackageNavRenderer
     public function __invoke(DocumentParsedEvent $event): void
     {
         $document = $event->getDocument();
-        $frontMatter = $document->data->get('front_matter');
-        $packageName = is_array($frontMatter) && isset($frontMatter['package']) && is_string($frontMatter['package'])
+        $frontMatter = type_map(type_string(), type_mixed())->assert($document->data->get('front_matter', []));
+        $packageName = array_key_exists('package', $frontMatter) && is_string($frontMatter['package'])
             ? $frontMatter['package']
             : null;
 

@@ -52,7 +52,10 @@ final class PlaygroundStorageTest extends EndToEndTestCase
 
         $this->setPlaygroundCode($client, "<?php\necho 'Reset Test';");
 
-        static::assertStringContainsString('Reset Test', $this->getFromLocalStorage($client, 'flow-playground-code'));
+        $storedCode = $this->getFromLocalStorage($client, 'flow-playground-code');
+
+        static::assertNotNull($storedCode);
+        static::assertStringContainsString('Reset Test', $storedCode);
 
         $this->clearLocalStorage($client);
 

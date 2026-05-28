@@ -24,14 +24,16 @@ final readonly class DSLProvider implements SourceProvider
         }
 
         foreach ($this->dslDefinitions->all() as $definition) {
-            if ($definition->module() === null) {
+            $module = $definition->module();
+
+            if ($module === null) {
                 throw new RuntimeException(
                     'Module is required for DSL definition, non given for: ' . $definition->path(),
                 );
             }
 
             $sources[] = new Source('documentation_dsl_function', [
-                'module' => mb_strtolower($definition->module()->name),
+                'module' => mb_strtolower($module->name),
                 'function' => $definition->slug(),
             ]);
         }

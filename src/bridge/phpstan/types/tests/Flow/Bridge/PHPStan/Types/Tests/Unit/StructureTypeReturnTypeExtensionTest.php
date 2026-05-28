@@ -7,6 +7,9 @@ namespace Flow\Bridge\PHPStan\Types\Tests\Unit;
 use PHPStan\Testing\TypeInferenceTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function dirname;
+use function is_file;
+
 final class StructureTypeReturnTypeExtensionTest extends TypeInferenceTestCase
 {
     /**
@@ -22,7 +25,13 @@ final class StructureTypeReturnTypeExtensionTest extends TypeInferenceTestCase
      */
     public static function getAdditionalConfigFiles(): array
     {
-        return [__DIR__ . '/../../../../../../../extension.neon'];
+        $dir = __DIR__;
+
+        while (!is_file($dir . '/extension.neon') && $dir !== dirname($dir)) {
+            $dir = dirname($dir);
+        }
+
+        return [$dir . '/extension.neon'];
     }
 
     #[DataProvider('dataFileAsserts')]

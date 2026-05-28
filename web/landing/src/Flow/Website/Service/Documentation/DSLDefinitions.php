@@ -11,6 +11,10 @@ use Flow\Website\Model\Documentation\Type;
 use function array_map;
 use function count;
 use function file_get_contents;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_string;
 use function in_array;
 use function json_decode;
 use function strnatcasecmp;
@@ -19,7 +23,7 @@ use function usort;
 final readonly class DSLDefinitions
 {
     /**
-     * @param array<DSLDefinition> $definitions
+     * @param array<array<string, mixed>> $definitions
      */
     private function __construct(
         private array $definitions,
@@ -27,7 +31,15 @@ final readonly class DSLDefinitions
 
     public static function fromJson(string $definitionsPath): self
     {
-        return new self(json_decode(file_get_contents($definitionsPath), true, 512, JSON_THROW_ON_ERROR));
+        return new self(
+            type_list(type_map(type_string(), type_mixed()))
+                ->assert(json_decode(
+                    type_string()->assert(file_get_contents($definitionsPath)),
+                    true,
+                    512,
+                    JSON_THROW_ON_ERROR,
+                )),
+        );
     }
 
     /**

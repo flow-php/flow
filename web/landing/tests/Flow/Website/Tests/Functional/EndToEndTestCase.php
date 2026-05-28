@@ -7,12 +7,17 @@ namespace Flow\Website\Tests\Functional;
 use Exception;
 use Facebook\WebDriver\Exception\WebDriverException;
 use Flow\Website\Kernel;
+use RuntimeException;
 use Symfony\Component\Panther\Client;
 use Symfony\Component\Panther\PantherTestCase;
 use Throwable;
 
 use function array_merge;
 use function file_put_contents;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
 use function json_encode;
 use function sprintf;
 use function sys_get_temp_dir;
@@ -26,7 +31,7 @@ abstract class EndToEndTestCase extends PantherTestCase
 
     protected function tearDown(): void
     {
-        foreach ($this->tempFiles as $file) {
+        foreach (type_list(type_string())->assert($this->tempFiles) as $file) {
             @unlink($file);
         }
 
@@ -59,14 +64,17 @@ abstract class EndToEndTestCase extends PantherTestCase
 
     protected function getFromLocalStorage(Client $client, string $key): ?string
     {
-        return $client->executeScript(sprintf('return localStorage.getItem(%s);', json_encode($key)));
+        return type_union(type_string(), type_null())->assert($client->executeScript(sprintf(
+            'return localStorage.getItem(%s);',
+            json_encode($key),
+        )));
     }
 
     protected function getPlaygroundCode(Client $client): string
     {
-        return $client->executeScript('const textarea = document.getElementById("code-editor");
+        return type_string()->assert($client->executeScript('const textarea = document.getElementById("code-editor");
              const controller = window.Stimulus.getControllerForElementAndIdentifier(textarea, "code-editor");
-             return controller.getCode();');
+             return controller.getCode();'));
     }
 
     protected function setPlaygroundCode(Client $client, string $code): void
@@ -88,15 +96,15 @@ abstract class EndToEndTestCase extends PantherTestCase
 
         while ((time() - $startTime) < $timeout) {
             try {
-                $isReady = $client->executeScript(
-                    'const playground = document.getElementById("playground");
+                if (
+                    $client->executeScript(
+                        'const playground = document.getElementById("playground");
                     if (!playground) return false;
                     const wasm = window.Stimulus.getControllerForElementAndIdentifier(playground, "wasm");
                     return wasm && wasm.isLoaded() && wasm.areResourcesLoaded();',
-                );
-
-                if ($isReady === true) {
-                    $client->wait(0.5);
+                    ) === true
+                ) {
+                    $client->wait(1);
 
                     return;
                 }
@@ -104,7 +112,7 @@ abstract class EndToEndTestCase extends PantherTestCase
                 // Page may not be fully attached yet, retry
             }
 
-            $client->wait(0.5);
+            $client->wait(1);
         }
 
         throw new Exception('WASM did not initialize within ' . $timeout . ' seconds');
@@ -153,6 +161,10 @@ abstract class EndToEndTestCase extends PantherTestCase
                     usleep(500_000);
                 }
             }
+        }
+
+        if ($lastException === null) {
+            throw new RuntimeException(sprintf('Failed to navigate to "%s".', $url));
         }
 
         throw $lastException;

@@ -11,6 +11,7 @@ use function file_exists;
 use function file_get_contents;
 use function Flow\Filesystem\DSL\fstab;
 use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\type_string;
 use function realpath;
 use function rtrim;
 use function str_ends_with;
@@ -33,7 +34,11 @@ final readonly class Pages
         $pages = [];
 
         foreach ($files as $file) {
-            $relativePath = str_replace(realpath($this->basePath) . '/', '', $file->path->path());
+            $relativePath = str_replace(
+                type_string()->assert(realpath($this->basePath)) . '/',
+                '',
+                $file->path->path(),
+            );
 
             if (str_starts_with($relativePath, '_')) {
                 continue;
@@ -41,7 +46,7 @@ final readonly class Pages
 
             $relativePath = str_replace('.md', '', $relativePath);
 
-            $pages[] = new Page($relativePath, file_get_contents($file->path->path()));
+            $pages[] = new Page($relativePath, type_string()->assert(file_get_contents($file->path->path())));
         }
 
         return $pages;
@@ -56,7 +61,7 @@ final readonly class Pages
         }
 
         if (file_exists($this->basePath . '/' . $path)) {
-            return new Page($path, file_get_contents($this->basePath . '/' . $path));
+            return new Page($path, type_string()->assert(file_get_contents($this->basePath . '/' . $path)));
         }
 
         throw new RuntimeException('Page not found: ' . $path);

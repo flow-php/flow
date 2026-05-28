@@ -7,6 +7,7 @@ namespace Flow\Website\Tests\Integration\Command;
 use Symfony\Component\Console\Command\Command;
 
 use function file_get_contents;
+use function Flow\Types\DSL\type_string;
 
 final class GenerateFlowCompleterCommandTest extends CompleterCommandTestCase
 {
@@ -22,7 +23,7 @@ final class GenerateFlowCompleterCommandTest extends CompleterCommandTestCase
     {
         $this->executeCommand('app:generate:flow-completer');
 
-        $content = file_get_contents($this->getOutputPath('flow.js'));
+        $content = type_string()->assert(file_get_contents($this->getOutputPath('flow.js')));
 
         $coreMethods = ['setUp', 'extract', 'from', 'process', 'read'];
 
@@ -39,7 +40,7 @@ final class GenerateFlowCompleterCommandTest extends CompleterCommandTestCase
     {
         $this->executeCommand('app:generate:flow-completer');
 
-        $content = file_get_contents($this->getOutputPath('flow.js'));
+        $content = type_string()->assert(file_get_contents($this->getOutputPath('flow.js')));
 
         static::assertStringContainsString('CodeMirror Completer', $content);
         static::assertStringContainsString('flowMethods', $content);
@@ -51,7 +52,7 @@ final class GenerateFlowCompleterCommandTest extends CompleterCommandTestCase
     {
         $this->executeCommand('app:generate:flow-completer');
 
-        $content = file_get_contents($this->getOutputPath('flow.js'));
+        $content = type_string()->assert(file_get_contents($this->getOutputPath('flow.js')));
 
         static::assertMatchesRegularExpression(
             '/label:\s*"[a-zA-Z]+"/i',

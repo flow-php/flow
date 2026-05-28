@@ -9,6 +9,9 @@ use Override;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\HttpKernel\KernelInterface;
+
+use function Flow\Types\DSL\type_instance_of;
 
 abstract class CompleterCommandTestCase extends KernelTestCase
 {
@@ -18,8 +21,7 @@ abstract class CompleterCommandTestCase extends KernelTestCase
     {
         parent::setUp();
 
-        self::bootKernel();
-        $this->application = new Application(self::$kernel);
+        $this->application = new Application(self::bootKernel());
     }
 
     protected function executeCommand(string $commandName): CommandTester
@@ -33,7 +35,11 @@ abstract class CompleterCommandTestCase extends KernelTestCase
 
     protected function getOutputPath(string $filename): string
     {
-        return self::$kernel->getProjectDir() . '/assets/codemirror/completions/' . $filename;
+        return (
+            type_instance_of(KernelInterface::class)->assert(self::$kernel)->getProjectDir()
+            . '/assets/codemirror/completions/'
+            . $filename
+        );
     }
 
     #[Override]

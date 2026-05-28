@@ -17,6 +17,7 @@ final class ExamplesTest extends TestCase
 
         $result = $service->description('merged_topic', 'example_with_both', 'option_a');
 
+        static::assertNotNull($result);
         static::assertStringContainsString('Example level intro.', $result);
         static::assertStringContainsString('---', $result);
         static::assertStringContainsString('Option specific details.', $result);

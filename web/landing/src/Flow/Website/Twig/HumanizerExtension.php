@@ -19,6 +19,9 @@ final class HumanizerExtension extends AbstractExtension
         ];
     }
 
+    /**
+     * @param array<array-key, string> $forbiddenWords
+     */
     public function humanize(
         string $fileName,
         bool $capitalize = true,
