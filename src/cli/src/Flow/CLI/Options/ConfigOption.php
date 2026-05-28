@@ -13,6 +13,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use function Flow\CLI\option_string_nullable;
 use function Flow\ETL\DSL\config;
 use function Flow\Filesystem\DSL\path_real;
+use function Flow\Types\DSL\type_instance_of;
 
 final readonly class ConfigOption
 {
@@ -36,22 +37,13 @@ final readonly class ConfigOption
             throw new InvalidArgumentException("File '{$path->path()}' does not exist.");
         }
 
-        $config = require $path->path();
+        // @mago-expect analysis:mixed-assignment
+        $result = require $path->path();
 
-        if ($config instanceof ConfigBuilder) {
-            $config = $config->build();
+        if ($result instanceof ConfigBuilder) {
+            return $result->build();
         }
 
-        if (!$config instanceof Config) {
-            throw new InvalidArgumentException(
-                'File "{$path->path()}" does not return instance of "'
-                . Config::class
-                . '" or "'
-                . ConfigBuilder::class
-                . '".',
-            );
-        }
-
-        return $config;
+        return type_instance_of(Config::class)->assert($result);
     }
 }

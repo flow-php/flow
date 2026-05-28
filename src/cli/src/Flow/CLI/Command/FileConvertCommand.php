@@ -18,6 +18,7 @@ use Flow\CLI\Options\FileFormat;
 use Flow\CLI\Options\FileFormatOption;
 use Flow\ETL\Config;
 use Flow\Filesystem\Path;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -133,6 +134,16 @@ final class FileConvertCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        if (
+            $this->flowConfig === null
+            || $this->inputFile === null
+            || $this->inputFileFormat === null
+            || $this->outputFile === null
+            || $this->outputFileFormat === null
+        ) {
+            throw new RuntimeException('Command not properly initialized.');
+        }
+
         $style = new SymfonyStyle($input, $output);
 
         $df = df($this->flowConfig)

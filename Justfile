@@ -106,7 +106,10 @@ analyze-mago *args:
         src/adapter/etl-adapter-elasticsearch \
         src/adapter/etl-adapter-google-sheet \
         src/adapter/etl-adapter-logger \
-        src/adapter/etl-adapter-postgresql
+        src/adapter/etl-adapter-postgresql \
+        src/cli \
+        src/extension/arrow-ext \
+        src/extension/pg-query-ext
 
 # Auto-fix code style (Mago format + lint --fix) and GitHub Actions findings (zizmor --fix).
 fix:

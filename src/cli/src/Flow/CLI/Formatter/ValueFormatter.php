@@ -39,6 +39,6 @@ final readonly class ValueFormatter
             return number_format((float) $value, 2);
         }
 
-        return (string) $value;
+        return $value;
     }
 }

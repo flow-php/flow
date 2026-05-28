@@ -56,7 +56,7 @@ final readonly class SchemaConverter
                 $definition->isNullable(),
                 $definition->metadata(),
             );
-            $columns[$column->getObjectName()->toString()] = $column;
+            $columns[$column->getObjectName()->getIdentifier()->getValue()] = $column;
         }
 
         $table = new Table($tableName, $columns, options: $tableOptions);
@@ -138,32 +138,33 @@ final readonly class SchemaConverter
 
         $primaryKeyConstraint = $table->getPrimaryKeyConstraint();
         $pkColumnNames = array_map(
-            static fn(UnqualifiedName $n): string => $n->toString(),
+            static fn(UnqualifiedName $n): string => $n->getIdentifier()->getValue(),
             $primaryKeyConstraint?->getColumnNames() ?? [],
         );
-        $columnName = $column->getObjectName()->toString();
+        $columnName = $column->getObjectName()->getIdentifier()->getValue();
 
         foreach ($pkColumnNames as $primaryKeyColumn) {
             if ($primaryKeyColumn === $columnName) {
                 $metadata = $metadata->merge(DbalMetadata::primaryKey(
-                    $primaryKeyConstraint?->getObjectName()?->toString() ?? '',
+                    $primaryKeyConstraint?->getObjectName()?->getIdentifier()->getValue() ?? '',
                 ));
                 $nullable = false;
             }
         }
 
         foreach ($table->getIndexes() as $index) {
-            $indexColumnNames = array_map(
-                static fn(IndexedColumn $c): string => $c->getColumnName()->toString(),
-                $index->getIndexedColumns(),
-            );
+            $indexColumnNames = array_map(static fn(IndexedColumn $c): string => $c
+                ->getColumnName()
+                ->getIdentifier()
+                ->getValue(), $index->getIndexedColumns());
 
             if (
                 $index->getType() === IndexType::UNIQUE
                 && !in_array($columnName, $pkColumnNames, true)
                 && in_array($columnName, $indexColumnNames, true)
             ) {
-                $metadata = $metadata->merge(DbalMetadata::indexUnique($index->getObjectName()->toString()));
+                $indexName = $index->getObjectName();
+                $metadata = $metadata->merge(DbalMetadata::indexUnique($indexName->getIdentifier()->getValue()));
             }
 
             if (
@@ -171,7 +172,8 @@ final readonly class SchemaConverter
                 && !in_array($columnName, $pkColumnNames, true)
                 && in_array($columnName, $indexColumnNames, true)
             ) {
-                $metadata = $metadata->merge(DbalMetadata::index($index->getObjectName()->toString()));
+                $indexName = $index->getObjectName();
+                $metadata = $metadata->merge(DbalMetadata::index($indexName->getIdentifier()->getValue()));
             }
         }
 

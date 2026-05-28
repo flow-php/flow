@@ -7,8 +7,8 @@ namespace Flow\CLI\Arguments;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputInterface;
 
-use function is_int;
-use function is_string;
+use function Flow\Types\DSL\type_string;
+use function is_numeric;
 
 final readonly class TypedArgument
 {
@@ -29,17 +29,15 @@ final readonly class TypedArgument
 
     public function asIntNullable(InputInterface $input): ?int
     {
-        $option = $input->getArgument($this->name);
-
-        if ($option === null) {
+        if ($input->getArgument($this->name) === null) {
             return null;
         }
 
-        if (!is_int($option)) {
+        if (!is_numeric($input->getArgument($this->name))) {
             throw new InvalidArgumentException("Argument '{$this->name}' must be an integer.");
         }
 
-        return $option;
+        return (int) $input->getArgument($this->name);
     }
 
     public function asString(InputInterface $input): string
@@ -55,16 +53,10 @@ final readonly class TypedArgument
 
     public function asStringNullable(InputInterface $input): ?string
     {
-        $option = $input->getArgument($this->name);
-
-        if ($option === null) {
+        if ($input->getArgument($this->name) === null) {
             return null;
         }
 
-        if (!is_string($option)) {
-            throw new InvalidArgumentException("Argument '{$this->name}' must be a string.");
-        }
-
-        return $option;
+        return type_string()->assert($input->getArgument($this->name));
     }
 }

@@ -26,8 +26,10 @@ final readonly class DatabaseContext
     {
         $schemaManager = $this->connection->createSchemaManager();
 
-        if ($schemaManager->tablesExist([$table->getName()])) {
-            $schemaManager->dropTable($table->getName());
+        $tableName = $table->getObjectName()->getUnqualifiedName()->getValue();
+
+        if ($schemaManager->tablesExist([$tableName])) {
+            $schemaManager->dropTable($tableName);
         }
 
         $schemaManager->createTable($table);
@@ -37,8 +39,8 @@ final readonly class DatabaseContext
     {
         $schemaManager = $this->connection->createSchemaManager();
 
-        foreach ($schemaManager->listTables() as $table) {
-            $schemaManager->dropTable($table->getName());
+        foreach ($schemaManager->introspectTables() as $table) {
+            $schemaManager->dropTable($table->getObjectName()->getUnqualifiedName()->getValue());
         }
     }
 }

@@ -12,7 +12,9 @@ use Flow\CLI\Options\ConfigOption;
 use Flow\CLI\PipelineFactory;
 use Flow\ETL\Config;
 use Flow\ETL\Exception\Exception;
+use Flow\ETL\Exception\InvalidFileFormatException;
 use Flow\Filesystem\Path;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -22,6 +24,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 use function Flow\CLI\option_bool;
 use function Flow\ETL\DSL\analyze;
+use function is_string;
 
 final class PipelineRunCommand extends Command
 {
@@ -67,6 +70,10 @@ final class PipelineRunCommand extends Command
 
     public function execute(InputInterface $input, OutputInterface $output): int
     {
+        if ($this->pipelinePath === null) {
+            throw new RuntimeException('Command not properly initialized.');
+        }
+
         $style = new SymfonyStyle($input, $output);
 
         $analyze = option_bool('analyze', $input) ? analyze() : false;
@@ -81,12 +88,16 @@ final class PipelineRunCommand extends Command
 
         try {
             ob_start();
-            $df = match ($this->pipelinePath->extension()) {
+            $extension = $this->pipelinePath->extension();
+
+            $df = match ($extension) {
                 'php' => (new PipelineFactory($this->pipelinePath))->fromPHP(),
+                default => throw new InvalidFileFormatException('php', is_string($extension) ? $extension : 'unknown'),
             };
             $report = $df->run(analyze: $analyze);
 
-            $style->writeln(ob_get_clean());
+            $buffered = ob_get_clean();
+            $style->writeln($buffered !== false ? $buffered : '');
 
             if ($report !== null) {
                 (new PipelineReportFormatter($report, $style, $input))->format();

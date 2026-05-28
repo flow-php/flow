@@ -17,13 +17,13 @@ final readonly class PipelineFactory
 
     public function fromPHP(): DataFrame
     {
-        if ($this->path->extension() !== 'php') {
-            throw new InvalidFileFormatException(
-                'php',
-                $this->path->extension() === false ? 'unknown' : $this->path->extension(),
-            );
+        $extension = $this->path->extension();
+
+        if ($extension !== 'php') {
+            throw new InvalidFileFormatException('php', $extension === false ? 'unknown' : $extension);
         }
 
+        // @mago-expect analysis:mixed-assignment
         $pipeline = include $this->path->path();
 
         if (!$pipeline instanceof DataFrame) {

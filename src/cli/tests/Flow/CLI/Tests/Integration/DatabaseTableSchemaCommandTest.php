@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Flow\CLI\Tests\Integration;
 
 use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\Name\Identifier;
+use Doctrine\DBAL\Schema\Name\UnqualifiedName;
+use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
@@ -40,13 +43,17 @@ final class DatabaseTableSchemaCommandTest extends FlowTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(
+            new PrimaryKeyConstraint(null, [new UnqualifiedName(Identifier::unquoted('id'))], true),
+        ));
 
         $this->dbContext()->createTable((new Table('table_02', [
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('created_at', Type::getType(Types::DATETIME_IMMUTABLE), ['notnull' => true]),
             new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'platformOptions' => ['jsonb' => true]]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(
+            new PrimaryKeyConstraint(null, [new UnqualifiedName(Identifier::unquoted('id'))], true),
+        ));
 
         $tester = new CommandTester(new DatabaseTableSchemaCommand('db:table:schema'));
 
@@ -66,7 +73,7 @@ final class DatabaseTableSchemaCommandTest extends FlowTestCase
         if (!method_exists(Table::class, 'changeColumn')) {
             static::assertSame(<<<'PHP'
                 \Flow\ETL\DSL\schema(
-                    \Flow\ETL\DSL\integer_schema("id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["dbal_column_primary" => "table_01_pkey"])),
+                    \Flow\ETL\DSL\integer_schema("id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["dbal_column_primary" => ""])),
                     \Flow\ETL\DSL\string_schema("name", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["dbal_column_length" => 255])),
                     \Flow\ETL\DSL\string_schema("description", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["dbal_column_length" => 255])),
                 );
@@ -75,7 +82,7 @@ final class DatabaseTableSchemaCommandTest extends FlowTestCase
         } else {
             static::assertSame(<<<'PHP'
                 \Flow\ETL\DSL\schema(
-                    \Flow\ETL\DSL\integer_schema("id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["dbal_column_precision" => 10, "dbal_column_primary" => "table_01_pkey"])),
+                    \Flow\ETL\DSL\integer_schema("id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["dbal_column_precision" => 10, "dbal_column_primary" => ""])),
                     \Flow\ETL\DSL\string_schema("name", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["dbal_column_length" => 255, "dbal_column_precision" => 10])),
                     \Flow\ETL\DSL\string_schema("description", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["dbal_column_length" => 255, "dbal_column_precision" => 10])),
                 );
@@ -96,7 +103,9 @@ final class DatabaseTableSchemaCommandTest extends FlowTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(
+            new PrimaryKeyConstraint(null, [new UnqualifiedName(Identifier::unquoted('id'))], true),
+        ));
 
         $tester = new CommandTester(new DatabaseTableSchemaCommand('db:table:schema'));
 
@@ -111,7 +120,7 @@ final class DatabaseTableSchemaCommandTest extends FlowTestCase
 
         static::assertSame(<<<'PHP'
             \Flow\ETL\DSL\schema(
-                \Flow\ETL\DSL\integer_schema("id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["dbal_column_primary" => "table_01_pkey"])),
+                \Flow\ETL\DSL\integer_schema("id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["dbal_column_primary" => ""])),
                 \Flow\ETL\DSL\string_schema("name", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["dbal_column_length" => 255])),
             );
 
@@ -130,7 +139,9 @@ final class DatabaseTableSchemaCommandTest extends FlowTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-        ]))->setPrimaryKey(['id']));
+        ]))->addPrimaryKeyConstraint(
+            new PrimaryKeyConstraint(null, [new UnqualifiedName(Identifier::unquoted('id'))], true),
+        ));
 
         $tester = new CommandTester(new DatabaseTableSchemaCommand('db:table:schema'));
 
