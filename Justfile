@@ -54,9 +54,11 @@ lint-actions:
     zizmor --offline .github/workflows || rc=$?
     exit $rc
 
-# Run static analysis (Mago). Paths come from `[source]` in mago.toml; `bin` and `web/landing` are analyzer-excluded.
+# Run static analysis (Mago). The monorepo and web/landing are analyzed in separate runs because
+# web/landing is a standalone Composer sub-project with its own vendor (see web/landing/mago.toml).
 analyze *args:
     tools/mago/vendor/bin/mago analyze {{args}}
+    tools/mago/vendor/bin/mago --workspace web/landing analyze {{args}}
 
 # Auto-fix code style (Mago format + lint --fix) and GitHub Actions findings (zizmor --fix).
 fix:

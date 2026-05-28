@@ -1,0 +1,21 @@
+php-version = "8.3"
+
+[source]
+paths = [
+    "bin",
+    "src",
+    "tests",
+]
+includes = [
+    "vendor",
+    "tools/phpunit/vendor",
+]
+excludes = [
+    "**/var/**",
+]
+
+[parser]
+enable-short-tags = false
+
+[analyzer]
+plugins = ["flow-php"]

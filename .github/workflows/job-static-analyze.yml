@@ -28,6 +28,10 @@ jobs:
           dependencies: "${{ matrix.dependencies }}"
           coverage: "none"
 
+      - name: "Install web/landing dependencies"
+        run: "composer install --no-interaction --no-progress"
+        working-directory: "web/landing"
+
       - name: "Static Analyze (Mago)"
         run: "just analyze"
 
