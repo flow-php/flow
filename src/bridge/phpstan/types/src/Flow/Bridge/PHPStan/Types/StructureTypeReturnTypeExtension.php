@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Types\PHPStan;
+namespace Flow\Bridge\PHPStan\Types;
 
 use Flow\Types\Type as FlowType;
 use Flow\Types\Type\Logical\OptionalType;

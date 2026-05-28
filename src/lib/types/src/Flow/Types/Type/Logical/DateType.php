@@ -43,7 +43,6 @@ final readonly class DateType implements Type
         }
 
         try {
-            /** @phpstan-ignore-next-line */
             if ($value instanceof DateTimeImmutable || $value instanceof DateTime) {
                 return $value->setTime(0, 0, 0, 0);
             }

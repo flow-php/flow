@@ -15,7 +15,6 @@ final class CallbackLoader implements Loader
     /**
      * @param callable(Rows $row, FlowContext $context) : void $callback
      *
-     * @phpstan-ignore-next-line
      */
     private $callback;
 

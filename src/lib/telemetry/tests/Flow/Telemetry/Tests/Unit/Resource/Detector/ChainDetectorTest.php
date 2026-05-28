@@ -35,7 +35,6 @@ final class ChainDetectorTest extends TestCase
              * @param array<int> $executionOrder
              */
             public function __construct(
-                /** @phpstan-ignore-next-line property.onlyWritten */
                 private array &$executionOrder,
             ) {}
 
@@ -52,7 +51,6 @@ final class ChainDetectorTest extends TestCase
              * @param array<int> $executionOrder
              */
             public function __construct(
-                /** @phpstan-ignore-next-line property.onlyWritten */
                 private array &$executionOrder,
             ) {}
 

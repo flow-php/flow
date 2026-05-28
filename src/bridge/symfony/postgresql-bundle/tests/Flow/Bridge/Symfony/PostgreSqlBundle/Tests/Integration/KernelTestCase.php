@@ -29,7 +29,6 @@ abstract class KernelTestCase extends TestCase
 
     protected function addCommand(Application $application, Command $command): void
     {
-        /** @phpstan-ignore function.alreadyNarrowedType */
         if (method_exists($application, 'addCommand')) {
             $application->addCommand($command);
         } else {

@@ -44,7 +44,7 @@ final readonly class FunctionsExtractor
 
             $realpath = realpath($path);
 
-            if (!in_array($realpath, $includedFiles, true)) {
+            if ($realpath !== false && !in_array($realpath, $includedFiles, true)) {
                 require_once $realpath;
             }
 

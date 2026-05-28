@@ -26,9 +26,11 @@
   "tmpDir": "var/infection/cache",
   "minMsi": 30,
   "minCoveredMsi": 70,
-  "staticAnalysisTool" : "phpstan",
+  "staticAnalysisTool": "mago",
+  "mago": {
+    "customPath": "tools/mago/vendor/bin/mago"
+  },
   "phpStan": {
-    "configDir": "tools/infection",
-    "customPath": "tools/phpstan/vendor/bin/phpstan"
+    "configDir": "."
   }
 }

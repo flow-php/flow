@@ -281,7 +281,6 @@ final class EnumDefinitionTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
 
         // @mago-ignore analysis:possibly-invalid-argument
-        /** @phpstan-ignore argument.type, argument.templateType */
         enum_schema('status', 'NonExistingEnum');
     }
 

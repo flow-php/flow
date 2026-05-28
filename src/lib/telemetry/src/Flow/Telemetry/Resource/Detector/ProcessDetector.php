@@ -85,13 +85,11 @@ final readonly class ProcessDetector implements ResourceDetector
 
         global $argv;
 
-        // @phpstan-ignore identical.alwaysFalse
         if ($argv === null) {
             return 'unknown';
         }
 
         // @mago-ignore analysis:redundant-null-coalesce
-        // @phpstan-ignore nullCoalesce.offset
         return self::asString($argv[0] ?? null) ?? 'unknown';
     }
 
@@ -107,7 +105,6 @@ final readonly class ProcessDetector implements ResourceDetector
     {
         global $argv;
 
-        // @phpstan-ignore identical.alwaysFalse
         if ($argv === null) {
             return null;
         }

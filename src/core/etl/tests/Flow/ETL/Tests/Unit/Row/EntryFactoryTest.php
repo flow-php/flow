@@ -263,7 +263,6 @@ final class EntryFactoryTest extends TestCase
     public function test_html_from_dom_html_document(): void
     {
         // @mago-ignore analysis:unavailable-method
-        /* @phpstan-ignore-next-line */
         $doc = HTMLDocument::createFromString(
             $html = '<!DOCTYPE html><html lang="en"><head></head><body><div>2</div><p>3</p></body></html>',
         );
@@ -285,7 +284,6 @@ final class EntryFactoryTest extends TestCase
     public function test_html_string_with_html_definition_provided(): void
     {
         // @mago-ignore analysis:unavailable-method
-        /* @phpstan-ignore-next-line */
         $document = HTMLDocument::createFromString(
             $html = '<!DOCTYPE html><html lang="en"><head></head><body><div>2</div><p>bar</p></body></html>',
         );

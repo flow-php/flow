@@ -107,7 +107,6 @@ final class SchemaConverterTest extends FlowTestCase
         // We are using it to perform a different assertion since prior to 4.0 all
         // columns were also getting precision set to 10 due to a bug that was executing precision set
         // even when precision value was null.
-        /** @phpstan-ignore-next-line */
         if (!method_exists(Table::class, 'changeColumn')) {
             static::markTestSkipped('Doctrine DBAL >= 3.6+ < 4.0');
         }
@@ -208,7 +207,6 @@ final class SchemaConverterTest extends FlowTestCase
         // We are using it to perform a different assertion since prior to 4.0 all
         // columns were also getting precision set to 10 due to a bug that was executing precision set
         // even when precision value was null.
-        /** @phpstan-ignore-next-line */
         if (method_exists(Table::class, 'changeColumn')) {
             static::markTestSkipped('Doctrine DBAL >= 4.0+');
         }

@@ -16,7 +16,6 @@ final readonly class DeltaCalculator
         $result = $current - $previous;
 
         // @mago-ignore analysis:impossible-condition
-        // @phpstan-ignore-next-line
         if (is_float($result)) {
             // Use BCMath for precise calculation without overflow
             $deltaString = bcsub((string) $current, (string) $previous, 0);
@@ -72,7 +71,6 @@ final readonly class DeltaCalculator
         $result = $delta - $minDelta;
 
         // @mago-ignore analysis:impossible-condition
-        // @phpstan-ignore-next-line
         if (is_float($result)) {
             // Use BCMath for precise calculation without overflow
             $deltaString = bcsub((string) $delta, (string) $minDelta, 0);

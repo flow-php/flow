@@ -44,7 +44,7 @@ just analyze
 ```
 
 `just lint` runs Mago (format check + lint) and validates the monorepo configuration.
-`just analyze` runs PHPStan.
+`just analyze` runs Mago static analysis.
 
 **Important** static analyze **MUST** be executed at the lowest supported PHP version
 and with dependencies locked by `composer.lock`.

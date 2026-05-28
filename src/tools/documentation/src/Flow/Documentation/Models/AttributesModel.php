@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Flow\Documentation\Models;
 
 use ReflectionAttribute;
-use ReflectionFunction;
-use ReflectionMethod;
+use ReflectionFunctionAbstract;
 
 use function count;
-use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_string;
 
 final readonly class AttributesModel
 {
@@ -26,19 +28,22 @@ final readonly class AttributesModel
      */
     public static function fromArray(array $data): self
     {
-        type_list(type_array())->assert($data);
+        $data = type_list(type_map(type_string(), type_mixed()))->assert($data);
 
-        return new self(array_map(static fn(array $attribute) => AttributeModel::fromArray($attribute), $data));
+        return new self(array_map(AttributeModel::fromArray(...), $data));
     }
 
-    public static function fromReflection(ReflectionFunction|ReflectionMethod $reflection): self
+    public static function fromReflection(ReflectionFunctionAbstract $reflection): self
     {
-        return new self(array_map(
-            static fn(ReflectionAttribute $reflectionAttribute): AttributeModel => AttributeModel::fromReflection(
-                $reflectionAttribute,
-            ),
-            $reflection->getAttributes(),
-        ));
+        $attributes = [];
+
+        foreach ($reflection->getAttributes() as $attribute) {
+            $attributes[] = AttributeModel::fromReflection(type_instance_of(ReflectionAttribute::class)->assert(
+                $attribute,
+            ));
+        }
+
+        return new self($attributes);
     }
 
     public function findByName(string $name): ?AttributeModel

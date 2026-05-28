@@ -43,7 +43,6 @@ final readonly class IncludeFileOption
             throw new SymfonyInvalidArgumentException("File '{$filePath->path()}' does not exist.");
         }
 
-        /** @phpstan-ignore return.type, argument.type, argument.templateType */
         return type_instance_of($this->expectedClass)->assert(require $filePath->path());
     }
 }

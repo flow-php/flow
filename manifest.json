@@ -477,6 +477,14 @@
                 "documentation": "/documentation/components/bridges/postgresql-valinor-bridge",
                 "api": "/documentation/api/bridge/postgresql/valinor"
             }
+        },
+        {
+            "name": "flow-php/phpstan-types-bridge",
+            "path": "src/bridge/phpstan/types",
+            "type": "bridge",
+            "links": {
+                "documentation": "/documentation/components/bridges/phpstan-types-bridge"
+            }
         }
     ]
 }

@@ -13,8 +13,11 @@ final class ManifestTest extends FlowTestCase
 {
     public function test_manifest(): void
     {
-        $manifest = Manifest::fromJson(file_get_contents($this->repositoryRoot() . '/manifest.json'));
-        static::assertCount(28, $manifest->packages);
+        $json = file_get_contents($this->repositoryRoot() . '/manifest.json');
+        static::assertNotFalse($json);
+
+        $manifest = Manifest::fromJson($json);
+        static::assertCount(51, $manifest->packages);
 
         foreach ($manifest->packages as $package) {
             static::assertFileExists($this->repositoryRoot() . '/' . $package->path);

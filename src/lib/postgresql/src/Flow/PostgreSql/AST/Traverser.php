@@ -80,7 +80,6 @@ final class Traverser
                     $rawStmt->setStmt($replacement);
                 }
 
-                /** @phpstan-ignore if.alwaysFalse (stopTraversal can be modified by traverseNode) */
                 if ($this->stopTraversal) {
                     return;
                 }

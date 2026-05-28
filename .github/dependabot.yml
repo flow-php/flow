@@ -38,11 +38,6 @@ updates:
       interval: "daily"
 
   - package-ecosystem: "composer"
-    directory: "/tools/phpstan"
-    schedule:
-      interval: "daily"
-
-  - package-ecosystem: "composer"
     directory: "/tools/phpunit"
     schedule:
       interval: "daily"

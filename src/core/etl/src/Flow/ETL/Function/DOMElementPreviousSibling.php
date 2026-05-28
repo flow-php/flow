@@ -66,7 +66,6 @@ final class DOMElementPreviousSibling extends ScalarFunctionChain
         }
 
         // @mago-ignore analysis:less-specific-return-statement,possibly-null-property-access
-        /* @phpstan-ignore-next-line */
         return $node->previousSibling;
     }
 }

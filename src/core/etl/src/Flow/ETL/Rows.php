@@ -662,7 +662,7 @@ final class Rows implements ArrayAccess, Countable, IteratorAggregate
                 $partitions[$ref->name()][] = Partition::valueFromRow($ref, $row);
             }
 
-            $partitions[$ref->name()] = array_values(array_unique($partitions[$ref->name()])); // @phpstan-ignore argument.type
+            $partitions[$ref->name()] = array_values(array_unique($partitions[$ref->name()]));
         }
 
         /** @var array<Rows> $partitionedRows */

@@ -61,7 +61,6 @@ final readonly class MemorySourceStream implements SourceStream
 
     public function readLines(string $separator = "\n", ?int $length = null): Generator
     {
-        /** @phpstan-ignore-next-line */
         foreach (explode($separator, $this->content) as $line) {
             if (strlen($line)) {
                 yield $line;

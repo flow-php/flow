@@ -37,7 +37,6 @@ final class ArrayMemoryTest extends FlowTestCase
         $this->expectExceptionMessage('Memory expects nested array data structure: array<array<mixed>>');
 
         // @mago-ignore analysis:invalid-argument
-        /** @phpstan-ignore-next-line */
         new ArrayMemory([1, 2, 3]);
     }
 
@@ -63,7 +62,6 @@ final class ArrayMemoryTest extends FlowTestCase
 
         $memory = new ArrayMemory();
         // @mago-ignore analysis:invalid-argument
-        /** @phpstan-ignore-next-line */
         $memory->save([1, 2, 3]);
     }
 

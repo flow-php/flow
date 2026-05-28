@@ -60,6 +60,7 @@
         "nyholm/psr7": "^1.8",
         "php-http/curl-client": "^2.2",
         "php-http/mock-client": "^1.5",
+        "phpstan/phpstan": "^2.1",
         "ramsey/uuid": "^4.5",
         "symfony/cache": "^6.4 || ^7.4 || ^8.0",
         "symfony/dotenv": "^6.4 || ^7.4 || ^8.0",
@@ -103,6 +104,7 @@
         "flow-php/openapi-specification-bridge": "self.version",
         "flow-php/parquet": "self.version",
         "flow-php/parquet-viewer": "self.version",
+        "flow-php/phpstan-types-bridge": "self.version",
         "flow-php/postgresql": "self.version",
         "flow-php/postgresql-valinor-bridge": "self.version",
         "flow-php/psr3-telemetry-bridge": "self.version",
@@ -149,6 +151,7 @@
                 "src/bridge/monolog/http/src/Flow",
                 "src/bridge/monolog/telemetry/src/Flow",
                 "src/bridge/openapi/specification/src/Flow",
+                "src/bridge/phpstan/types/src/Flow",
                 "src/bridge/postgresql/valinor/src/Flow",
                 "src/bridge/psr3/telemetry/src/Flow",
                 "src/bridge/psr7/telemetry/src/Flow",
@@ -266,6 +269,7 @@
                 "src/bridge/monolog/http/tests/Flow",
                 "src/bridge/monolog/telemetry/tests/Flow",
                 "src/bridge/openapi/specification/tests/Flow",
+                "src/bridge/phpstan/types/tests/Flow",
                 "src/bridge/postgresql/valinor/tests/Flow",
                 "src/bridge/psr3/telemetry/tests/Flow",
                 "src/bridge/psr7/telemetry/tests/Flow",
@@ -331,7 +335,6 @@
             "composer install --working-dir=./tools/infection",
             "composer install --working-dir=./tools/mago",
             "composer install --working-dir=./tools/monorepo",
-            "composer install --working-dir=./tools/phpstan",
             "composer install --working-dir=./tools/phpunit",
             "composer install --working-dir=./tools/phpdocumentor"
         ],
@@ -341,7 +344,6 @@
             "composer update --working-dir=./tools/infection",
             "composer update --working-dir=./tools/mago",
             "composer update --working-dir=./tools/monorepo",
-            "composer update --working-dir=./tools/phpstan",
             "composer update --working-dir=./tools/phpunit",
             "composer update --working-dir=./tools/phpdocumentor"
         ]

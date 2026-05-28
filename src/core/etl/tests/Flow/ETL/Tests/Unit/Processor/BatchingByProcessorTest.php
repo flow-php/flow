@@ -85,7 +85,6 @@ final class BatchingByProcessorTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Minimum batch size must be greater than 0');
         // @mago-ignore analysis:invalid-argument
-        /** @phpstan-ignore-next-line */
         new BatchingByProcessor(ref('group'), minSize: 0);
     }
 }

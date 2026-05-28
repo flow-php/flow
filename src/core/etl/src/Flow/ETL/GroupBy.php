@@ -93,7 +93,7 @@ final class GroupBy
                 }
             }
 
-            $this->pivotColumns = array_values(array_filter(array_unique($this->pivotColumns))); // @phpstan-ignore argument.type
+            $this->pivotColumns = array_values(array_filter(array_unique($this->pivotColumns)));
 
             foreach ($rows as $row) {
                 $values = [];
@@ -122,7 +122,6 @@ final class GroupBy
 
                 if (!array_key_exists($pivotValue, $this->pivotedTable[$indexValue])) {
                     // @mago-ignore analysis:invalid-property-assignment-value,possibly-invalid-clone
-                    /** @phpstan-ignore-next-line clone.nonObject, assign.propertyType */
                     $this->pivotedTable[$indexValue][$pivotValue] = clone current($this->aggregations);
                 }
 

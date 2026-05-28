@@ -140,7 +140,6 @@ final class GrpcTransport implements Transport
         };
 
         // @mago-expect analysis:property-type-coercion -- gRPC Export() returns UnaryCall<SpecificResponse>, covariant to UnaryCall<Message> but generics are invariant in static analysis
-        /** @phpstan-ignore assign.propertyType (gRPC Export() returns UnaryCall<SpecificResponse> covariant to UnaryCall<Message>) */
         $this->pending[] = ['call' => $call, 'signals' => $failover !== null ? $signal : null];
 
         if ($failover !== null && $this->deferredFailures !== []) {

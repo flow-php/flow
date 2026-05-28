@@ -241,7 +241,6 @@ final readonly class Parameter
         $result = $this->function->eval($row, $context);
 
         // @mago-ignore analysis:mixed-return-statement
-        /** @phpstan-ignore return.type */
         return $result instanceof ScalarResult ? $result->value : $result;
     }
 }

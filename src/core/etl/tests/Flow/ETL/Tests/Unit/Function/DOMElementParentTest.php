@@ -93,7 +93,6 @@ final class DOMElementParentTest extends TestCase
                 ->domElementParent()
                 ->eval(
                     // @mago-ignore analysis:possibly-null-property-access
-                    /** @phpstan-ignore-next-line */
                     row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild)),
                     flow_context(),
                 ),

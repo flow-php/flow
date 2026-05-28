@@ -46,7 +46,6 @@ return static function (MBConfig $config): void {
                 "composer install --working-dir=./tools/cs-fixer",
                 "composer install --working-dir=./tools/infection",
                 "composer install --working-dir=./tools/monorepo",
-                "composer install --working-dir=./tools/phpstan",
                 "composer install --working-dir=./tools/psalm",
                 "composer install --working-dir=./tools/phpunit"
             ]
@@ -58,7 +57,6 @@ return static function (MBConfig $config): void {
             "phpunit/phpunit" => "*",
             "infection/infection" => "*",
             "friendsofphp/php-cs-fixer" => "*",
-            "phpstan/phpstan" => "*",
             "vimeo/psalm" => "*",
         ]
     ]);

@@ -62,7 +62,6 @@ final class ListEntryTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list<integer> got different types: map<string, integer>');
         // @mago-ignore analysis:invalid-argument
-        /** @phpstan-ignore-next-line */
         list_entry('list', ['a' => 1, 'b' => 2], type_list(type_integer()));
     }
 

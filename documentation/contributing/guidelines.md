@@ -53,7 +53,7 @@ The project is structured as follows:
     - `lib` contains standalone libraries that can be used independently of the project, like `doctrine-dbal-bulk` and
       `parquet`.
     - `tools` contains tools used during development.
-- `tools` contains tools used during development, like the `phpstan`, `phpunit` and others, to not pollute project
+- `tools` contains tools used during development, like the `mago`, `phpunit` and others, to not pollute project
   autoloader and
   to keep tools outside of project dependencies.
 - `var` contains temporary files, like cache and logs.
@@ -119,7 +119,7 @@ There are several tools used in this project to help with development, testing, 
 They are exposed as `just` recipes — run `just --list` to see every available task.
 
 - `just lint` runs all linters (Mago format check, Mago lint, monorepo validation).
-- `just analyze` runs static analysis (PHPStan).
+- `just analyze` runs static analysis (Mago).
 - `just fix` runs Mago to automatically fix coding standards and lint issues in the code.
 - `just test` runs all tests in the project. Forward arguments to phpunit to scope the run, e.g.
   `just test --testsuite=lib-parquet-unit` or `just test --filter=my_test_method`. Use

@@ -54,62 +54,9 @@ lint-actions:
     zizmor --offline .github/workflows || rc=$?
     exit $rc
 
-# Run static analysis (PHPStan).
+# Run static analysis (Mago). Paths come from `[source]` in mago.toml; `bin` and `web/landing` are analyzer-excluded.
 analyze *args:
-    tools/phpstan/vendor/bin/phpstan analyze -c phpstan.neon --memory-limit=-1 {{args}}
-
-# Run Mago static analyzer, scoped to packages we've finished migrating (add package paths below).
-analyze-mago *args:
-    tools/mago/vendor/bin/mago analyze {{args}} \
-        src/lib/types \
-        src/lib/telemetry \
-        src/lib/postgresql \
-        src/lib/filesystem \
-        src/lib/array-dot \
-        src/lib/azure-sdk \
-        src/lib/doctrine-dbal-bulk \
-        src/lib/snappy \
-        src/lib/parquet \
-        src/core/etl \
-        src/lib/parquet-viewer \
-        src/bridge/openapi/specification \
-        src/bridge/psr3/telemetry \
-        src/bridge/symfony/http-foundation-telemetry \
-        src/bridge/telemetry/otlp \
-        src/bridge/filesystem/async-aws \
-        src/bridge/filesystem/azure \
-        src/bridge/monolog/http \
-        src/bridge/monolog/telemetry \
-        src/bridge/phpunit/postgresql \
-        src/bridge/phpunit/telemetry \
-        src/bridge/postgresql/valinor \
-        src/bridge/psr18/telemetry \
-        src/bridge/psr7/telemetry \
-        src/bridge/symfony/filesystem-bundle \
-        src/bridge/symfony/filesystem-cache \
-        src/bridge/symfony/http-foundation \
-        src/bridge/symfony/postgresql-bundle \
-        src/bridge/symfony/postgresql-cache \
-        src/bridge/symfony/postgresql-messenger \
-        src/bridge/symfony/postgresql-session \
-        src/bridge/symfony/telemetry-bundle \
-        src/adapter/etl-adapter-chartjs \
-        src/adapter/etl-adapter-csv \
-        src/adapter/etl-adapter-doctrine \
-        src/adapter/etl-adapter-excel \
-        src/adapter/etl-adapter-http \
-        src/adapter/etl-adapter-json \
-        src/adapter/etl-adapter-parquet \
-        src/adapter/etl-adapter-text \
-        src/adapter/etl-adapter-xml \
-        src/adapter/etl-adapter-avro \
-        src/adapter/etl-adapter-elasticsearch \
-        src/adapter/etl-adapter-google-sheet \
-        src/adapter/etl-adapter-logger \
-        src/adapter/etl-adapter-postgresql \
-        src/cli \
-        src/extension/arrow-ext \
-        src/extension/pg-query-ext
+    tools/mago/vendor/bin/mago analyze {{args}}
 
 # Auto-fix code style (Mago format + lint --fix) and GitHub Actions findings (zizmor --fix).
 fix:

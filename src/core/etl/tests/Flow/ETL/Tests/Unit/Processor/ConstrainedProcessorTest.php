@@ -89,7 +89,6 @@ final class ConstrainedProcessorTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Pipeline constraints must be of type Flow\ETL\Constraint');
         // @mago-ignore analysis:invalid-argument
-        /** @phpstan-ignore-next-line */
         new ConstrainedProcessor(['not a constraint']);
     }
 

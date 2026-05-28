@@ -33,12 +33,9 @@ final class StdOutDestinationStream implements DestinationStream
     ) {
         if ($filter !== null) {
             stream_filter_register($filter::class, $filter::class);
-            /** @phpstan-ignore-next-line */
             $this->handle = fopen('php://' . $target, 'wb');
-            /** @phpstan-ignore-next-line */
             stream_filter_append($this->handle, $filter::class);
         } else {
-            /** @phpstan-ignore-next-line */
             $this->handle = fopen('php://' . $target, 'wb');
         }
     }

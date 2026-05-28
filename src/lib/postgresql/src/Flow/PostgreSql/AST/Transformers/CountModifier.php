@@ -30,7 +30,6 @@ final readonly class CountModifier implements NodeModifier
         return [SelectStmt::class];
     }
 
-    /** @phpstan-ignore return.unusedType (interface requires full signature) */
     public function modify(object $node, ModificationContext $context): int|object|null
     {
         /** @var SelectStmt $node */

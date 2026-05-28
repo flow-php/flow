@@ -23,7 +23,6 @@ use function class_exists;
 final class ElasticsearchLoader implements Loader
 {
     // @mago-ignore analysis:non-existent-class-like
-    /** @phpstan-ignore-next-line */
     private Client|ElasticClient|null $client;
 
     private string $method;
@@ -104,7 +103,6 @@ final class ElasticsearchLoader implements Loader
 
             // @mago-ignore analysis:invalid-method-access
             // @mago-ignore analysis:possibly-invalid-argument
-            /** @phpstan-ignore-next-line */
             $this->client()->bulk($parameters);
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
@@ -126,7 +124,6 @@ final class ElasticsearchLoader implements Loader
     }
 
     // @mago-ignore analysis:non-existent-class-like
-    /** @phpstan-ignore-next-line */
     private function client(): Client|ElasticClient
     {
         if ($this->client === null) {
@@ -141,7 +138,6 @@ final class ElasticsearchLoader implements Loader
 
         // @mago-ignore analysis:nullable-return-statement
         // @mago-ignore analysis:invalid-return-statement
-        /** @phpstan-ignore-next-line */
         return $this->client;
     }
 }

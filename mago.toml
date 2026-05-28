@@ -38,7 +38,9 @@ enable-short-tags = false
 [analyzer]
 plugins = ["flow-php"]
 excludes = [
-    "**/Flow/Types/PHPStan/**",
+    # PHPStan extension bridge: implements PHPStan's type API + tests via TypeInferenceTestCase; not analyzable by Mago.
+    "src/bridge/phpstan/types/**",
+    "web/landing/**",
     # Symfony bundle/config tests accessing deeply-nested processConfiguration() arrays (all mixed-array-access)
     "src/bridge/symfony/filesystem-bundle/tests/Flow/Bridge/Symfony/FilesystemBundle/Tests/Unit/FlowFilesystemBundleTest.php",
     "src/bridge/symfony/filesystem-bundle/tests/Flow/Bridge/Symfony/FilesystemBundle/Tests/Unit/ConfigurationTest.php",
@@ -118,3 +120,4 @@ strict-types = { enabled = true, level = "error" }
 no-fully-qualified-global-function = { enabled = true, level = "error" }
 no-fully-qualified-global-class-like = { enabled = true, level = "error" }
 no-fully-qualified-global-constant = { enabled = true, level = "error" }
+disallowed-functions = { enabled = true, level = "error", functions = [{ name = "var_dump", help = "Debugging only — remove before commit." }, { name = "print_r", help = "Debugging only — remove before commit." }, { name = "dd", help = "Debugging only — remove before commit." }, { name = "dj", help = "Debugging only — remove before commit." }, { name = "ddj", help = "Debugging only — remove before commit." }] }

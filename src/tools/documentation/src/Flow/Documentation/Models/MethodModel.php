@@ -88,6 +88,7 @@ final readonly class MethodModel
             ->slug($declaringClass->getShortName())
             ->lower()
             ->toString();
+        $docComment = $reflectionMethod->getDocComment();
 
         return new self(
             $relativePath,
@@ -103,7 +104,7 @@ final readonly class MethodModel
             $returnTypeReflection !== null ? TypesModel::fromReflection($returnTypeReflection) : new TypesModel([]),
             AttributesModel::fromReflection($reflectionMethod),
             $returnTypeReflection !== null ? self::isScalarFunctionChain($returnTypeReflection) : false,
-            $reflectionMethod->getDocComment() ? base64_encode($reflectionMethod->getDocComment()) : null,
+            $docComment !== false ? base64_encode($docComment) : null,
         );
     }
 

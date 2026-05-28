@@ -195,7 +195,6 @@ final class Row
     public function valueOf(string|Reference $references): mixed
     {
         // @mago-ignore analysis:mixed-return-statement
-        /** @phpstan-ignore return.type */
         return $this->get($references)->value();
     }
 }

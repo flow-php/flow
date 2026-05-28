@@ -68,7 +68,6 @@ final readonly class ClassStringType implements Type
         if (is_string($value)) {
             if (class_exists($value) || interface_exists($value)) {
                 if ($this->class === null || is_a($value, $this->class, true)) {
-                    /** @phpstan-ignore-next-line */
                     return $value;
                 }
             }
@@ -78,7 +77,6 @@ final readonly class ClassStringType implements Type
             $className = $value::class;
 
             if ($this->class === null || is_a($className, $this->class, true)) {
-                /** @phpstan-ignore-next-line */
                 return $className;
             }
         }

@@ -85,6 +85,8 @@ final readonly class FunctionModel
             throw new InvalidArgumentException('ReflectionType must be instance of ReflectionNamedType');
         }
 
+        $docComment = $reflectionFunction->getDocComment();
+
         return new self(
             $relativePath,
             $reflectionFunction->getStartLine(),
@@ -98,7 +100,7 @@ final readonly class FunctionModel
             TypesModel::fromReflection($returnTypeReflection),
             AttributesModel::fromReflection($reflectionFunction),
             self::isScalarFunctionChain($returnTypeReflection),
-            $reflectionFunction->getDocComment() ? base64_encode($reflectionFunction->getDocComment()) : null,
+            $docComment !== false ? base64_encode($docComment) : null,
         );
     }
 

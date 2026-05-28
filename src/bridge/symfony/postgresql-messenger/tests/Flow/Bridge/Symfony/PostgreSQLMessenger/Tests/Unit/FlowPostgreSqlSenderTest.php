@@ -53,7 +53,7 @@ final class FlowPostgreSqlSenderTest extends TestCase
             public function encode(Envelope $envelope): array
             {
                 // @mago-expect analysis:invalid-return-statement
-                return ['body' => 'x', 'headers' => 'not-an-array']; // @phpstan-ignore return.type
+                return ['body' => 'x', 'headers' => 'not-an-array'];
             }
         };
         $sender = new FlowPostgreSqlSender(new Connection(new SpyClient()), $serializer);
@@ -69,7 +69,7 @@ final class FlowPostgreSqlSenderTest extends TestCase
             public function encode(Envelope $envelope): array
             {
                 // @mago-expect analysis:invalid-return-statement
-                return ['body' => 123, 'headers' => []]; // @phpstan-ignore return.type
+                return ['body' => 123, 'headers' => []];
             }
         };
         $sender = new FlowPostgreSqlSender(new Connection(new SpyClient()), $serializer);

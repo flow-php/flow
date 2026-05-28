@@ -80,7 +80,6 @@ enum StringStyles: string
 
     private function kebab(string $value): string
     {
-        // @phpstan-ignore-next-line Available from Symfony 7.2+
         if (!method_exists(UnicodeString::class, 'kebab')) {
             return u($value)->snake()->replace('_', '-')->toString();
         }

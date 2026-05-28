@@ -7,6 +7,47 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
+## Upgrading from 0.37.x to 0.38.x
+
+### 1) `flow-php/types` - PHPStan extension extracted to `flow-php/phpstan-types-bridge`
+
+The `StructureTypeReturnTypeExtension` — which narrows the return type of `type_structure()` for PHPStan —
+has been moved out of `flow-php/types` into a dedicated package, `flow-php/phpstan-types-bridge`.
+`flow-php/types` no longer ships any PHPStan code. 
+
+| Before                                                | After                                                        |
+|-------------------------------------------------------|--------------------------------------------------------------|
+| `Flow\Types\PHPStan\StructureTypeReturnTypeExtension` | `Flow\Bridge\PHPStan\Types\StructureTypeReturnTypeExtension` |
+| shipped inside `flow-php/types`                       | shipped inside `flow-php/phpstan-types-bridge`               |
+
+If you used `type_structure()` together with PHPStan, install the new package:
+
+```
+composer require --dev flow-php/phpstan-types-bridge
+```
+
+With [phpstan/extension-installer](https://github.com/phpstan/extension-installer) the extension is
+registered automatically. If you registered it manually, update your `phpstan.neon`:
+
+Before:
+
+```neon
+services:
+    -
+        class: Flow\Types\PHPStan\StructureTypeReturnTypeExtension
+        tags:
+            - phpstan.broker.dynamicFunctionReturnTypeExtension
+```
+
+After:
+
+```neon
+includes:
+    - vendor/flow-php/phpstan-types-bridge/extension.neon
+```
+
+---
+
 ## Upgrading from 0.36.x to 0.37.x
 
 ### 1) `flow-php/telemetry` - Per-signal exporter contracts merged into `Exporter`

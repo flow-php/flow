@@ -28,8 +28,7 @@ final readonly class Manifest
 
     public static function fromJson(string $json): self
     {
-        $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
-        $data = type_array()->assert($data);
+        $data = type_array()->assert(json_decode($json, true, 512, JSON_THROW_ON_ERROR));
         $data['packages'] = type_array()->assert($data['packages']);
 
         return new self(...array_map(static function (mixed $package): Package {
