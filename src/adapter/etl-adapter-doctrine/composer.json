@@ -14,7 +14,7 @@
     ],
     "require": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
-        "doctrine/dbal": "^4.0",
+        "doctrine/dbal": "^4.4",
         "flow-php/doctrine-dbal-bulk": "self.version",
         "flow-php/etl": "self.version"
     },
