@@ -1,6 +1,7 @@
-## [Unreleased] - 2026-05-27
+## [Unreleased] - 2026-05-29
 
 ### Changed
+- [#2397](https://github.com/flow-php/flow/pull/2397) - **Replaced PHPStan with Mago across entire project codebase** - [@norberttech](https://github.com/norberttech)
 - [#2391](https://github.com/flow-php/flow/pull/2391) - **Covered all bridges with Mago Analyzer** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
