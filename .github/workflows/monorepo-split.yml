@@ -134,6 +134,33 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: "Ensure target repository has a 1.x branch"
+        env:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          SPLIT_REPOSITORY: ${{ matrix.package.split_repository }}
+        run: |
+          set -euo pipefail
+          remote="https://x-access-token:${ACCESS_TOKEN}@github.com/flow-php/${SPLIT_REPOSITORY}.git"
+
+          if [ -n "$(git ls-remote --heads "$remote" 1.x)" ]; then
+            echo "flow-php/${SPLIT_REPOSITORY} already has a 1.x branch — nothing to do."
+            exit 0
+          fi
+
+          echo "flow-php/${SPLIT_REPOSITORY} has no 1.x branch — creating an empty one to bootstrap the split."
+          tmp="$(mktemp -d)"
+          git clone "$remote" "$tmp"
+          git -C "$tmp" \
+            -c user.name="norberttech" \
+            -c user.email="norbert@orzechowicz.pl" \
+            checkout --orphan 1.x
+          git -C "$tmp" \
+            -c user.name="norberttech" \
+            -c user.email="norbert@orzechowicz.pl" \
+            commit --allow-empty -m "Initialize repository"
+          git -C "$tmp" push origin 1.x
+          rm -rf "$tmp"
+
       # no tag
       -
         if: "!startsWith(github.ref, 'refs/tags/')"

@@ -1,0 +1,58 @@
+name: 'Composer Install'
+description: 'Restore the Composer download cache and install dependencies for a given working directory'
+inputs:
+  php-version:
+    description: 'PHP version (used in the cache key)'
+    required: true
+  dependencies:
+    description: 'Dependency resolution strategy (locked/lowest/highest)'
+    required: false
+    default: 'locked'
+  working-directory:
+    description: 'Working directory for composer operations'
+    required: false
+    default: '.'
+  cache-key-suffix:
+    description: 'Additional suffix for cache key'
+    required: false
+    default: ''
+  composer-file:
+    description: 'Path to composer.lock file for cache key'
+    required: false
+    default: '**/composer.lock'
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Get Composer Cache Directory"
+      id: composer-cache
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+    - name: "Cache Composer dependencies"
+      uses: "actions/cache@v4"
+      with:
+        path: "${{ steps.composer-cache.outputs.dir }}"
+        key: "php-${{ inputs.php-version }}-${{ inputs.dependencies }}-composer${{ inputs.cache-key-suffix }}-${{ hashFiles(inputs.composer-file) }}"
+        restore-keys: |
+          php-${{ inputs.php-version }}-${{ inputs.dependencies }}-composer${{ inputs.cache-key-suffix }}-
+
+    - name: "Install lowest dependencies"
+      if: ${{ inputs.dependencies == 'lowest' }}
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: "composer update --prefer-lowest --no-interaction --no-progress"
+
+    - name: "Install highest dependencies"
+      if: ${{ inputs.dependencies == 'highest' }}
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: "composer update --no-interaction --no-progress"
+
+    - name: "Install locked dependencies"
+      if: ${{ inputs.dependencies == 'locked' }}
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: "composer install --no-interaction --no-progress"

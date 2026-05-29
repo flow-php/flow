@@ -51,6 +51,18 @@ inputs:
     description: 'Space-separated list of PHP extensions to install via PIE (e.g., "flow-php/pg-query-ext:1.x-dev")'
     required: false
     default: ''
+  extra-working-directory:
+    description: 'Optional additional Composer project to install (e.g. "web/landing"). Left empty to skip.'
+    required: false
+    default: ''
+  extra-cache-key-suffix:
+    description: 'Cache key suffix for the extra working directory'
+    required: false
+    default: ''
+  extra-composer-file:
+    description: 'composer.lock path (for the cache key) of the extra working directory'
+    required: false
+    default: '**/composer.lock'
 
 runs:
   using: "composite"
@@ -90,35 +102,22 @@ runs:
           sudo pie install "$ext"
         done
 
-    - name: "Get Composer Cache Directory"
-      id: composer-cache
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
-      run: |
-        echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-    - name: "Cache Composer dependencies"
-      uses: "actions/cache@v4"
+    - name: "Install Composer dependencies"
+      if: ${{ inputs.install-dependencies == 'true' }}
+      uses: "./.github/actions/composer-install"
       with:
-        path: "${{ steps.composer-cache.outputs.dir }}"
-        key: "php-${{ inputs.php-version }}-${{ inputs.dependencies }}-composer${{ inputs.cache-key-suffix }}-${{ hashFiles(inputs.composer-file) }}"
-        restore-keys: |
-          php-${{ inputs.php-version }}-${{ inputs.dependencies }}-composer${{ inputs.cache-key-suffix }}-
+        php-version: "${{ inputs.php-version }}"
+        dependencies: "${{ inputs.dependencies }}"
+        working-directory: "${{ inputs.working-directory }}"
+        cache-key-suffix: "${{ inputs.cache-key-suffix }}"
+        composer-file: "${{ inputs.composer-file }}"
 
-    - name: "Install lowest dependencies"
-      if: ${{ inputs.dependencies == 'lowest' && inputs.install-dependencies == 'true' }}
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
-      run: "composer update --prefer-lowest --no-interaction --no-progress"
-
-    - name: "Install highest dependencies"
-      if: ${{ inputs.dependencies == 'highest' && inputs.install-dependencies == 'true' }}
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
-      run: "composer update --no-interaction --no-progress"
-
-    - name: "Install locked dependencies"
-      if: ${{ inputs.dependencies == 'locked' && inputs.install-dependencies == 'true' }}
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
-      run: "composer install --no-interaction --no-progress"
+    - name: "Install extra Composer dependencies"
+      if: ${{ inputs.install-dependencies == 'true' && inputs.extra-working-directory != '' }}
+      uses: "./.github/actions/composer-install"
+      with:
+        php-version: "${{ inputs.php-version }}"
+        dependencies: "${{ inputs.dependencies }}"
+        working-directory: "${{ inputs.extra-working-directory }}"
+        cache-key-suffix: "${{ inputs.extra-cache-key-suffix }}"
+        composer-file: "${{ inputs.extra-composer-file }}"

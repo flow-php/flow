@@ -92,7 +92,10 @@ jobs:
           php -m | grep arrow
 
       - name: Install Composer Dependencies
-        run: composer install --no-interaction --no-progress
+        uses: ./.github/actions/composer-install
+        with:
+          php-version: ${{ matrix.php }}
+          dependencies: locked
 
       - name: Run Parquet Integration Tests with Arrow
         run: just test --testsuite=lib-parquet-integration

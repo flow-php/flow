@@ -127,16 +127,15 @@ jobs:
           cache-key-suffix: "-website-phar"
           apt-packages: "build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev"
           pie-extensions: "flow-php/pg-query-ext:1.x-dev"
+          extra-working-directory: "web/landing"
+          extra-cache-key-suffix: "-website"
+          extra-composer-file: "web/landing/composer.lock"
 
       - name: "Generate documentation"
         run: "just docs"
 
       - name: "Build latest version Flow Phar for playground"
         run: "just phar"
-
-      - name: "Install Landing dependencies"
-        run: "composer install --no-interaction --no-progress "
-        working-directory: "web/landing"
 
       - name: "Build"
         run: "composer build"

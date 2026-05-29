@@ -27,12 +27,11 @@ jobs:
           php-version: "${{ matrix.php-version }}"
           dependencies: "${{ matrix.dependencies }}"
           coverage: "none"
+          extra-working-directory: "web/landing"
+          extra-cache-key-suffix: "-website"
+          extra-composer-file: "web/landing/composer.lock"
 
-      - name: "Install web/landing dependencies"
-        run: "composer install --no-interaction --no-progress"
-        working-directory: "web/landing"
-
-      - name: "Static Analyze (Mago)"
+      - name: "Static Analyze"
         run: "just analyze"
 
       - name: "Install actionlint + zizmor"
