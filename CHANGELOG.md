@@ -5,6 +5,9 @@
 - [#2397](https://github.com/flow-php/flow/pull/2397) - **Replaced PHPStan with Mago across entire project codebase** - [@norberttech](https://github.com/norberttech)
 - [#2391](https://github.com/flow-php/flow/pull/2391) - **Covered all bridges with Mago Analyzer** - [@norberttech](https://github.com/norberttech)
 
+### Fixed
+- [400244](https://github.com/flow-php/flow/commit/4002444c062c2029d1713b8e8d0f82ab28d835fb) - **failing tests on lowest versions of dependencies** - [@norberttech](https://github.com/norberttech)
+
 ### Removed
 - [#2393](https://github.com/flow-php/flow/pull/2393) - **support for docrtine 3.6** - [@norberttech](https://github.com/norberttech)
 
