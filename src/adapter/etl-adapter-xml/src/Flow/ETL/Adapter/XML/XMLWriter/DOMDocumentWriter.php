@@ -31,6 +31,10 @@ final class DOMDocumentWriter implements XMLWriter
     {
         $element = $dom->createElement($node->name);
 
+        if ($element === false) {
+            throw new RuntimeException('Failed to create DOM element: ' . $node->name);
+        }
+
         if ($node->hasValue()) {
             $element->appendChild($dom->createTextNode((string) $node->value));
         }

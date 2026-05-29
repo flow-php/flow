@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Model\Documentation;
 
+use function Flow\Types\DSL\type_instance_of;
 use function mb_strtoupper;
 use function str_replace;
 
@@ -26,7 +27,7 @@ enum Type: string
     {
         $name = mb_strtoupper(str_replace([' ', '-'], '_', $name));
 
-        return constant("self::{$name}");
+        return type_instance_of(self::class)->assert(constant("self::{$name}"));
     }
 
     public function priority(): int
@@ -44,7 +45,6 @@ enum Type: string
             self::COMPARISON => 10,
             self::HELPER => 11,
             self::LOADER => 12,
-            default => 99,
         };
     }
 }

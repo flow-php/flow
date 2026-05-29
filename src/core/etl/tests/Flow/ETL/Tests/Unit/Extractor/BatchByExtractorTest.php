@@ -124,7 +124,6 @@ final class BatchByExtractorTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Minimum batch size must be greater than 0');
         // @mago-ignore analysis:invalid-argument
-        /** @phpstan-ignore-next-line */
         batched_by(from_rows(rows()), ref('order_id'), 0);
     }
 }

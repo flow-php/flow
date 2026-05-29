@@ -19,6 +19,7 @@ use function array_filter;
 use function array_map;
 use function count;
 use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\type_string;
 use function sprintf;
 use function str_replace;
 use function strtolower;
@@ -50,7 +51,7 @@ final class GenerateDSLCompleterCommand extends Command
 
         $functionsData = array_map(fn(DSLDefinition $definition): array => [
             'name' => $definition->name(),
-            'fullName' => '\\' . $definition->data()['namespace'] . '\\' . $definition->name(),
+            'fullName' => '\\' . type_string()->assert($definition->data()['namespace']) . '\\' . $definition->name(),
             'doc_comment' => $definition->data()['doc_comment'],
             'meta' => 'flow-dsl-' . $this->getTypeName($definition),
             'parameters' => $definition->data()['parameters'],

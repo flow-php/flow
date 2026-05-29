@@ -61,7 +61,6 @@ final class OnExceptionTypesTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Class 'NonExistentClass' does not exist");
         // @mago-ignore analysis:possibly-invalid-argument
-        /** @phpstan-ignore-next-line */
         new OnExceptionTypes(['NonExistentClass'], 3);
     }
 
@@ -70,7 +69,6 @@ final class OnExceptionTypesTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Class 'stdClass' is not a Throwable");
         // @mago-ignore analysis:invalid-argument
-        /** @phpstan-ignore-next-line */
         new OnExceptionTypes([stdClass::class], 3);
     }
 

@@ -12,6 +12,7 @@ use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
 use Generator;
@@ -58,6 +59,9 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         $this->resetLimit();
     }
 
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
@@ -79,12 +83,14 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
             $rowNormalizer = new CSVRowNormalizer($this->emptyToNull);
 
             foreach ($csvLineReader->readLines($stream) as $csvLine) {
-                $rowData = str_getcsv($csvLine, $separator, $enclosure, $escape);
+                $rowData = array_values(array_map(
+                    static fn(mixed $field): ?string => is_string($field) ? $field : null,
+                    str_getcsv($csvLine, $separator, $enclosure, $escape),
+                ));
                 $rowDataCount = count($rowData);
 
                 if ([] === $headers) {
                     if ($this->withHeader) {
-                        /** @var array<string> $headers */
                         $headers = $this->mapHeaders($rowData);
                         $headersCount = $rowDataCount;
 
@@ -130,9 +136,6 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         return $this;
     }
 
-    /**
-     * @param int<1, max> $charactersReadInLine
-     */
     public function withCharactersReadInLine(int $charactersReadInLine): self
     {
         if ($charactersReadInLine < 1) {
@@ -217,12 +220,12 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
             default => is_scalar($header) ? (string) $header : '',
         }), $headers);
 
-        return array_map(
-            static fn(string $header, int $index): string => $header !== ''
+        return array_values(array_map(
+            static fn(string $header, int|string $index): string => $header !== ''
                 ? $header
                 : 'e' . str_pad((string) $index, 2, '0', STR_PAD_LEFT),
             $headers,
             array_keys($headers),
-        );
+        ));
     }
 }

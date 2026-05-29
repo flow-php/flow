@@ -24,11 +24,9 @@ final class HTMLEntryTest extends TestCase
 {
     public static function is_equal_data_provider(): Generator
     {
-        /* @phpstan-ignore-next-line */
         $doc1 = HTMLDocument::createFromString(
             '<!DOCTYPE html><html lang="en"><head></head><body><div>2</div><p>3</p></body></html>',
         );
-        /* @phpstan-ignore-next-line */
         $doc2 = HTMLDocument::createFromString(
             '<!DOCTYPE html><html lang="en"><head></head><body><div>2</div><p>3</p></body></html>',
         );
@@ -39,11 +37,9 @@ final class HTMLEntryTest extends TestCase
             html_entry('name', $doc2),
         ];
 
-        /* @phpstan-ignore-next-line */
         $doc1 = HTMLDocument::createFromString(
             '<!DOCTYPE html><html lang="en"><head></head><body><div id="id">2</div><p>3</p></body></html>',
         );
-        /* @phpstan-ignore-next-line */
         $doc2 = HTMLDocument::createFromString(
             '<!DOCTYPE html><html lang="en"><head></head><body><div>2</div><p id="id">3</p></body></html>',
         );
@@ -54,11 +50,9 @@ final class HTMLEntryTest extends TestCase
             html_entry('name', $doc2),
         ];
 
-        /* @phpstan-ignore-next-line */
         $doc1 = HTMLDocument::createFromString(
             '<!DOCTYPE html><html lang="en"><head></head><body><div id="foo">2</div><p>3</p></body></html>',
         );
-        /* @phpstan-ignore-next-line */
         $doc2 = HTMLDocument::createFromString(
             '<!DOCTYPE html><html lang="en"><head></head><body><div id="bar">2</div><p>3</p></body></html>',
         );
@@ -69,11 +63,9 @@ final class HTMLEntryTest extends TestCase
             html_entry('name', $doc2),
         ];
 
-        /* @phpstan-ignore-next-line */
         $doc1 = HTMLDocument::createFromString(
             '<!DOCTYPE html><html lang="en"><head></head><body><div id="id">2</div><p>3</p></body></html>',
         );
-        /* @phpstan-ignore-next-line */
         $doc2 = HTMLDocument::createFromString(
             '<!DOCTYPE html><html lang="en"><head></head><body><p>3</p></body></html>',
         );
@@ -84,11 +76,9 @@ final class HTMLEntryTest extends TestCase
             html_entry('name', $doc2),
         ];
 
-        /* @phpstan-ignore-next-line */
         $doc1 = HTMLDocument::createFromString(
             '<!DOCTYPE html><html lang="en"><head></head><body><div>2</div><p>3</p></body></html>',
         );
-        /* @phpstan-ignore-next-line */
         $doc2 = HTMLDocument::createFromString(
             '<!DOCTYPE html><html lang="en"><head></head><body><div>2</div><p>3</p></body></html>',
         );
@@ -99,7 +89,6 @@ final class HTMLEntryTest extends TestCase
             html_entry('other-name', $doc2),
         ];
 
-        /* @phpstan-ignore-next-line */
         $doc1 = HTMLDocument::createFromString(
             '<!DOCTYPE html><html lang="en"><head></head><body><div>2</div><p>3</p></body></html>',
         );

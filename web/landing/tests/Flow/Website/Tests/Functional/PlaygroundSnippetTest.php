@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Website\Tests\Functional;
 
+use function Flow\Types\DSL\type_string;
+use function getenv;
 use function parse_str;
 use function parse_url;
 
@@ -11,7 +13,9 @@ final class PlaygroundSnippetTest extends EndToEndTestCase
 {
     public function test_create_and_load_snippet(): void
     {
-        static::markTestSkipped('This test is flaky and fails randomly on GitHub Actions, need to debug it more');
+        if (getenv('FLOW_RUN_FLAKY_TESTS') !== '1') {
+            static::markTestSkipped('This test is flaky and fails randomly on GitHub Actions, need to debug it more');
+        }
 
         $client = self::navigateWithRetry('/playground');
 
@@ -37,12 +41,13 @@ final class PlaygroundSnippetTest extends EndToEndTestCase
         static::assertStringContainsString('/playground?snippet=', $currentUrl, 'URL should contain snippet parameter');
 
         $parsedUrl = parse_url($currentUrl);
+        $queryParams = [];
         parse_str($parsedUrl['query'] ?? '', $queryParams);
         $snippetId = $queryParams['snippet'] ?? null;
 
         static::assertNotNull($snippetId, 'Snippet ID should be extracted from URL');
 
-        $client->request('GET', '/playground?snippet=' . $snippetId);
+        $client->request('GET', '/playground?snippet=' . type_string()->assert($snippetId));
 
         $this->waitForWasmReady($client);
 

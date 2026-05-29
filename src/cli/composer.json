@@ -26,7 +26,8 @@
         "flow-php/openapi-specification-bridge": "self.version",
         "flow-php/parquet-viewer": "self.version",
         "flow-php/postgresql": "self.version",
-        "flow-php/telemetry": "self.version"
+        "flow-php/telemetry": "self.version",
+        "flow-php/types": "self.version"
     },
     "config": {
         "optimize-autoloader": true,

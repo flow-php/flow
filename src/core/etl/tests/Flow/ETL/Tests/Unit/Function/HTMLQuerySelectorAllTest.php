@@ -30,7 +30,6 @@ final class HTMLQuerySelectorAllTest extends TestCase
     public function test_getting_elements_for_given_path(): void
     {
         // @mago-ignore analysis:unavailable-method
-        /* @phpstan-ignore-next-line */
         $html = HTMLDocument::createFromString(
             '<!DOCTYPE html><html><head></head><body><div><span>foobar</span></div></body></html>',
         );
@@ -39,7 +38,6 @@ final class HTMLQuerySelectorAllTest extends TestCase
             ->htmlQuerySelectorAll('body div span')
             ->eval(row(flow_context(config())->entryFactory()->create('value', $html)), flow_context());
         static::assertCount(1, $result);
-        /* @phpstan-ignore-next-line */
         static::assertInstanceOf(Element::class, $result[0]);
     }
 
@@ -47,7 +45,6 @@ final class HTMLQuerySelectorAllTest extends TestCase
     public function test_getting_null_when_nothing_found(): void
     {
         // @mago-ignore analysis:unavailable-method
-        /* @phpstan-ignore-next-line */
         $html = HTMLDocument::createFromString(
             '<!DOCTYPE html><html><head></head><body><div><span>foobar</span></div></body></html>',
         );

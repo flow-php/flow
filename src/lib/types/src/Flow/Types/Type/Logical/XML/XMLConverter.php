@@ -60,7 +60,6 @@ final class XMLConverter
 
             if ($childNode instanceof DOMElement) {
                 if ($this->isElementCollection($element)) {
-                    /** @phpstan-ignore-next-line */
                     $xmlArray[$childNode->nodeName][] = $this->convertDOMElement($childNode);
                 } else {
                     $xmlArray[$childNode->nodeName] = $this->convertDOMElement($childNode);

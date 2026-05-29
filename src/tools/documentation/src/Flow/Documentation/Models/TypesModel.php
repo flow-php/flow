@@ -9,8 +9,10 @@ use ReflectionNamedType;
 use ReflectionType;
 use ReflectionUnionType;
 
-use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_string;
 use function implode;
 
 final readonly class TypesModel
@@ -27,9 +29,9 @@ final readonly class TypesModel
      */
     public static function fromArray(array $data): self
     {
-        type_list(type_array())->assert($data);
+        $data = type_list(type_map(type_string(), type_mixed()))->assert($data);
 
-        return new self(array_map(static fn(array $type) => TypeModel::fromArray($type), $data));
+        return new self(array_map(TypeModel::fromArray(...), $data));
     }
 
     public static function fromReflection(ReflectionType $reflectionType): self

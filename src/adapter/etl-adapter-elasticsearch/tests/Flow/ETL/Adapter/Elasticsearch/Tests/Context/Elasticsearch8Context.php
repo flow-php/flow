@@ -18,6 +18,9 @@ final class Elasticsearch8Context implements ElasticsearchContext
 {
     private ?Client $client = null;
 
+    /**
+     * @param array<string> $hosts
+     */
     public function __construct(
         private readonly array $hosts,
     ) {}
@@ -31,6 +34,9 @@ final class Elasticsearch8Context implements ElasticsearchContext
         return $this->client;
     }
 
+    /**
+     * @return array{hosts?: array<string>, connectionParams?: array<mixed>, retries?: int, sniffOnStart?: bool, sslCert?: array<string>, sslKey?: array<string>, sslVerification?: bool|string, elasticMetaHeader?: bool, includePortInHostHeader?: bool}
+     */
     public function clientConfig(): array
     {
         return [

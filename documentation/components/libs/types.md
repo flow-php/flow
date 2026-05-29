@@ -19,15 +19,19 @@ For detailed installation instructions, see the [installation page](/documentati
 
 ### Usage
 
-**Heads Up** - in order to use full potential of `type_structure()` with PHPStan you need
-to enable a dedicated extension in your `phpstan.neon` configuration file:
+**Heads Up** - in order to use full potential of `type_structure()` with PHPStan, install the
+[PHPStan Types Bridge](/documentation/components/bridges/phpstan-types-bridge.md):
+
+```
+composer require --dev flow-php/phpstan-types-bridge
+```
+
+With [phpstan/extension-installer](https://github.com/phpstan/extension-installer) it is registered
+automatically, otherwise include it in your `phpstan.neon`:
 
 ```neon
-services:
-    -
-        class: Flow\Types\PHPStan\StructureTypeReturnTypeExtension
-        tags:
-            - phpstan.broker.dynamicFunctionReturnTypeExtension
+includes:
+    - vendor/flow-php/phpstan-types-bridge/extension.neon
 ```
 
 #### Type Narrowing 

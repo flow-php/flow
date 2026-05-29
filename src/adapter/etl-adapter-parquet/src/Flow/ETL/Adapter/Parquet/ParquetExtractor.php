@@ -12,6 +12,7 @@ use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\PathFiltering;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Binary\ByteOrder;
@@ -52,6 +53,9 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
         $this->options = Options::default();
     }
 
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();

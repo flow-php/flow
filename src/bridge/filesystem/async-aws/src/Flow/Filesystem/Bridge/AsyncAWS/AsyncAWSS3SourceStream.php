@@ -90,7 +90,6 @@ final class AsyncAWSS3SourceStream implements SourceStream
             }
 
             if (substr_count($content, $separator) > 1) {
-                /** @phpstan-ignore argument.type */
                 $lines = explode($separator, $content);
 
                 $lastIndex = count($lines) - 1;

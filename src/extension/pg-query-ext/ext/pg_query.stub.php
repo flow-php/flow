@@ -13,7 +13,7 @@ declare(strict_types=1);
  *
  * @throws RuntimeException on parse error
  */
-function pg_query_parse(string $sql): string {}
+function pg_query_parse(string $sql): string { return ''; }
 
 /**
  * Parse PostgreSQL SQL and return protobuf-serialized AST.
@@ -25,21 +25,21 @@ function pg_query_parse(string $sql): string {}
  *
  * @return string Protobuf-serialized parse tree
  */
-function pg_query_parse_protobuf(string $sql): string {}
+function pg_query_parse_protobuf(string $sql): string { return ''; }
 
 /**
  * Generate fingerprint for SQL query.
  *
  * @return false|string Returns fingerprint string or FALSE on error
  */
-function pg_query_fingerprint(string $sql): string|false {}
+function pg_query_fingerprint(string $sql): string|false { return ''; }
 
 /**
  * Normalize SQL query (replace literal values with $N placeholders).
  *
  * @return false|string Returns normalized query or FALSE on error
  */
-function pg_query_normalize(string $sql): string|false {}
+function pg_query_normalize(string $sql): string|false { return ''; }
 
 /**
  * Normalize utility SQL statements (DDL like CREATE, ALTER, DROP).
@@ -49,14 +49,14 @@ function pg_query_normalize(string $sql): string|false {}
  *
  * @return false|string Returns normalized query or FALSE on error
  */
-function pg_query_normalize_utility(string $sql): string|false {}
+function pg_query_normalize_utility(string $sql): string|false { return ''; }
 
 /**
  * Parse PL/pgSQL function.
  *
  * @throws RuntimeException on parse error
  */
-function pg_query_parse_plpgsql(string $sql): string {}
+function pg_query_parse_plpgsql(string $sql): string { return ''; }
 
 /**
  * Split multiple SQL statements into an array.
@@ -65,7 +65,7 @@ function pg_query_parse_plpgsql(string $sql): string {}
  *
  * @return array<string> Array of individual SQL statements
  */
-function pg_query_split(string $sql): array {}
+function pg_query_split(string $sql): array { return []; }
 
 /**
  * Scan SQL into tokens (returns protobuf-encoded data).
@@ -74,7 +74,7 @@ function pg_query_split(string $sql): array {}
  *
  * @return string Protobuf-encoded scan result
  */
-function pg_query_scan(string $sql): string {}
+function pg_query_scan(string $sql): string { return ''; }
 
 /**
  * Deparse a protobuf-serialized parse tree back to SQL.
@@ -85,7 +85,7 @@ function pg_query_scan(string $sql): string {}
  *
  * @return string The SQL query string
  */
-function pg_query_deparse(string $protobuf): string {}
+function pg_query_deparse(string $protobuf): string { return ''; }
 
 /**
  * Deparse a protobuf-serialized parse tree back to SQL with formatting options.
@@ -108,7 +108,7 @@ function pg_query_deparse_opts(
     int $max_line_length = 80,
     bool $trailing_newline = false,
     bool $commas_start_of_line = false,
-): string {}
+): string { return ''; }
 
 /**
  * Generate a summary of parsed queries in protobuf format.
@@ -123,7 +123,7 @@ function pg_query_deparse_opts(
  *
  * @return string Protobuf-encoded summary
  */
-function pg_query_summary(string $sql, int $options = 0, int $truncate_limit = 0): string {}
+function pg_query_summary(string $sql, int $options = 0, int $truncate_limit = 0): string { return ''; }
 
 /**
  * Check if query contains utility statements (DDL like CREATE, ALTER, DROP)
@@ -133,4 +133,4 @@ function pg_query_summary(string $sql, int $options = 0, int $truncate_limit = 0
  *
  * @return bool True if the query contains utility statements, false otherwise
  */
-function pg_query_is_utility_stmt(string $sql): bool {}
+function pg_query_is_utility_stmt(string $sql): bool { return false; }

@@ -55,6 +55,9 @@ final class RequestEntriesFactoryTest extends FlowTestCase
         ];
     }
 
+    /**
+     * @param class-string $expectedRequestBodyEntryClass
+     */
     #[DataProvider('requests')]
     public function test_uses_expected_entry_for_request_body(
         string $expectedRequestBodyEntryClass,
@@ -62,7 +65,6 @@ final class RequestEntriesFactoryTest extends FlowTestCase
     ): void {
         $entryFactory = new RequestEntriesFactory();
 
-        /** @var class-string $expectedRequestBodyEntryClass */
         static::assertInstanceOf($expectedRequestBodyEntryClass, $entryFactory->create($request)->get('request_body'));
     }
 }

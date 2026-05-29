@@ -86,7 +86,6 @@ final class BatchingProcessorTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Batch size must be greater than 0');
         // @mago-ignore analysis:invalid-argument
-        /** @phpstan-ignore-next-line */
         new BatchingProcessor(-1);
     }
 
@@ -95,7 +94,6 @@ final class BatchingProcessorTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Batch size must be greater than 0');
         // @mago-ignore analysis:invalid-argument
-        /** @phpstan-ignore-next-line */
         new BatchingProcessor(0);
     }
 }

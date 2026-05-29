@@ -19,6 +19,8 @@ use League\CommonMark\Extension\TableOfContents\TableOfContentsExtension;
 use Symfony\Component\Asset\Packages;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 
+use function Flow\Types\DSL\type_string;
+
 final readonly class LeagueCommonMarkConverterFactory
 {
     public function __construct(
@@ -81,7 +83,7 @@ final readonly class LeagueCommonMarkConverterFactory
             ->addRenderer(TableOfContents::class, new TableOfContentsRenderer(), 10)
             ->addEventListener(
                 DocumentParsedEvent::class,
-                new FlowVersionReplacer($this->parameters->get('flow_version')),
+                new FlowVersionReplacer(type_string()->assert($this->parameters->get('flow_version'))),
             )
             ->addEventListener(DocumentParsedEvent::class, new FlowManifestRenderer($this->manifest))
             ->addEventListener(DocumentParsedEvent::class, new FlowPackageNavRenderer($this->manifest))

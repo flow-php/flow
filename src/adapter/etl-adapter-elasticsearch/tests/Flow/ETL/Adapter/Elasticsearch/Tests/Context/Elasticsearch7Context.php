@@ -17,21 +17,34 @@ use function Flow\ETL\DSL\flow_context;
 
 final class Elasticsearch7Context implements ElasticsearchContext
 {
+    // @mago-ignore analysis:non-existent-class-like
     private ?Client $client = null;
 
+    /**
+     * @param array<string> $hosts
+     */
     public function __construct(
         private readonly array $hosts,
     ) {}
 
+    // @mago-ignore analysis:non-existent-class-like
     public function client(): Client
     {
         if ($this->client === null) {
+            // @mago-ignore analysis:non-existent-method
+            // @mago-ignore analysis:mixed-property-type-coercion
             $this->client = ClientBuilder::fromConfig($this->clientConfig());
         }
 
+        /**
+         * @var Client $this->client
+         */
         return $this->client;
     }
 
+    /**
+     * @return array{hosts?: array<string>, connectionParams?: array<mixed>, retries?: int, sniffOnStart?: bool, sslCert?: array<string>, sslKey?: array<string>, sslVerification?: bool|string, elasticMetaHeader?: bool, includePortInHostHeader?: bool}
+     */
     public function clientConfig(): array
     {
         return [
@@ -52,7 +65,12 @@ final class Elasticsearch7Context implements ElasticsearchContext
                 ],
             ];
 
+            // @mago-ignore analysis:invalid-method-access
+            // @mago-ignore analysis:mixed-method-access
             $this->client()->indices()->create($params);
+
+            // @mago-ignore analysis:non-existent-catch-type
+            // @mago-ignore analysis:no-valid-catch-type-found
         } catch (BadRequest400Exception) {
         }
     }
@@ -63,7 +81,12 @@ final class Elasticsearch7Context implements ElasticsearchContext
             $deleteParams = [
                 'index' => $name,
             ];
+            // @mago-ignore analysis:invalid-method-access
+            // @mago-ignore analysis:mixed-method-access
             $this->client()->indices()->delete($deleteParams);
+
+            // @mago-ignore analysis:non-existent-catch-type
+            // @mago-ignore analysis:no-valid-catch-type-found
         } catch (Missing404Exception) {
         }
     }

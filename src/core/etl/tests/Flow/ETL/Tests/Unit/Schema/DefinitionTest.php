@@ -285,7 +285,6 @@ final class DefinitionTest extends FlowTestCase
                 'city' => 'city',
                 'location' => ['lat' => 1.0, 'lng' => 1.0],
             ],
-            // @mago-ignore analysis:less-specific-argument
             type_structure([
                 'street' => type_string(),
                 'city' => type_string(),

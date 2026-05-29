@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel;
 
+use LogicException;
 use OpenSpout\Common\Entity\Row as OpenSpoutRow;
 use OpenSpout\Common\Entity\Style\Style;
 use OpenSpout\Writer\AbstractWriterMultiSheets;
@@ -82,7 +83,8 @@ final class WorkbookManager
      */
     public function writeHeader(string $sheetName, array $headers, ?Style $style = null): void
     {
-        $writer = $this->writers[$this->currentFilePath];
+        $filePath = $this->currentFilePath ?? throw new LogicException('No file is currently open');
+        $writer = $this->writers[$filePath];
 
         if ($sheetName !== $writer->getCurrentSheet()->getName()) {
             $sheet = $this->getOrCreateSheet($sheetName);
@@ -103,7 +105,8 @@ final class WorkbookManager
      */
     public function writeRow(string $sheetName, array $values, ?array $styles = null): void
     {
-        $writer = $this->writers[$this->currentFilePath];
+        $filePath = $this->currentFilePath ?? throw new LogicException('No file is currently open');
+        $writer = $this->writers[$filePath];
 
         if ($sheetName !== $writer->getCurrentSheet()->getName()) {
             $sheet = $this->getOrCreateSheet($sheetName);
@@ -118,7 +121,8 @@ final class WorkbookManager
 
     private function countSheetsForCurrentFile(): int
     {
-        $prefix = $this->currentFilePath . ':';
+        $filePath = $this->currentFilePath ?? throw new LogicException('No file is currently open');
+        $prefix = $filePath . ':';
         $count = 0;
 
         foreach ($this->sheets as $key => $_sheet) {
@@ -152,7 +156,8 @@ final class WorkbookManager
             return $this->sheets[$key];
         }
 
-        $writer = $this->writers[$this->currentFilePath];
+        $filePath = $this->currentFilePath ?? throw new LogicException('No file is currently open');
+        $writer = $this->writers[$filePath];
         $currentSheet = $writer->getCurrentSheet();
 
         if ($currentSheet->getName() === 'Sheet1' && $this->countSheetsForCurrentFile() === 0) {
@@ -179,6 +184,8 @@ final class WorkbookManager
 
     private function sheetKey(string $sheetName): string
     {
-        return $this->currentFilePath . ':' . $sheetName;
+        $filePath = $this->currentFilePath ?? throw new LogicException('No file is currently open');
+
+        return $filePath . ':' . $sheetName;
     }
 }

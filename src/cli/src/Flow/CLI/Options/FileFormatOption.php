@@ -18,10 +18,12 @@ final readonly class FileFormatOption
 
     public function get(InputInterface $input): FileFormat
     {
+        $extension = $this->filePath->extension();
+
         return FileFormat::from(option_string(
             $this->inputFormatOption,
             $input,
-            $this->filePath->extension() === false ? null : $this->filePath->extension(),
+            $extension === false ? null : $extension,
         ));
     }
 }

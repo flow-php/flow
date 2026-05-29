@@ -45,14 +45,15 @@ final class PieChart implements Chart
     {
         foreach ($rows as $row) {
             foreach ($this->datasets as $dataset) {
+                $labelValue = $row->valueOf($this->label);
+
                 if (!array_key_exists('pie', $this->data['datasets'])) {
                     $this->data['datasets']['pie'] = [
                         'data' => [$row->valueOf($dataset)],
-                        'label' => is_scalar($row->valueOf($this->label)) ? (string) $row->valueOf($this->label) : '',
+                        'label' => is_scalar($labelValue) ? (string) $labelValue : '',
                     ];
                 } else {
                     $this->data['datasets']['pie']['data'][] = $row->valueOf($dataset);
-                    $labelValue = $row->valueOf($this->label);
                     $this->data['datasets']['pie']['label'] = is_scalar($labelValue) ? (string) $labelValue : '';
                 }
             }

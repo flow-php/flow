@@ -11,6 +11,12 @@ use League\CommonMark\Renderer\ChildNodeRendererInterface;
 use League\CommonMark\Renderer\NodeRendererInterface;
 use League\CommonMark\Util\HtmlElement;
 
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
+
 class FlowLinkRenderer implements NodeRendererInterface
 {
     public function __construct() {}
@@ -21,7 +27,11 @@ class FlowLinkRenderer implements NodeRendererInterface
             throw new InvalidArgumentException('Incompatible node type: ' . $node::class);
         }
 
-        $attrs = $node->data->get('attributes');
+        $attrs = type_map(type_string(), type_union(
+            type_string(),
+            type_list(type_string()),
+            type_boolean(),
+        ))->assert($node->data->get('attributes'));
 
         $urlParts = parse_url($node->getUrl());
 
@@ -36,8 +46,10 @@ class FlowLinkRenderer implements NodeRendererInterface
 
         $attrs['href'] = $node->getUrl();
 
-        if ($node->getTitle()) {
-            $attrs['title'] = $node->getTitle();
+        $title = $node->getTitle();
+
+        if ($title !== null && $title !== '') {
+            $attrs['title'] = $title;
         }
 
         return new HtmlElement('a', $attrs, $childRenderer->renderNodes($node->children()));

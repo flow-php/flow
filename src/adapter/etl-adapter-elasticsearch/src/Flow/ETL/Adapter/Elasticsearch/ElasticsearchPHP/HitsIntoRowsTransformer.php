@@ -43,7 +43,6 @@ final readonly class HitsIntoRowsTransformer implements Transformer
                     };
 
                     /**
-                     * @var string $key
                      * @var mixed $value
                      */
                     foreach ($hit[$source] as $key => $value) {

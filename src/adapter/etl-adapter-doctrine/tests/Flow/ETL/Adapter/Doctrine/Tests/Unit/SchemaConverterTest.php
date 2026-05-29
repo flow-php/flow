@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Doctrine\Tests\Unit;
 
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Index;
+use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Flow\ETL\Adapter\Doctrine\DbalMetadata;
@@ -51,34 +52,35 @@ final class SchemaConverterTest extends FlowTestCase
             ),
         );
 
-        static::assertEquals(
-            new Table(
-                'test',
-                [
-                    new Column('int', Type::getType('integer'), ['notnull' => true]),
-                    new Column('str', Type::getType('string'), ['notnull' => true]), // pk changes nullable true into false
-                    new Column('bigint', Type::getType('bigint'), ['notnull' => true]),
-                    new Column('str_with_length', Type::getType('string'), ['notnull' => false, 'length' => 255]),
-                    new Column('str_unique', Type::getType('string'), ['notnull' => false]),
-                    new Column('float', Type::getType('float'), ['notnull' => false, 'precision' => 10, 'scale' => 2]),
-                    new Column('float_default', Type::getType('float'), ['notnull' => true]),
-                    new Column('bool', Type::getType('boolean'), ['notnull' => false, 'default' => true]),
-                    new Column('json', Type::getType('json'), [
-                        'notnull' => false,
-                        'platformOptions' => ['jsonb' => true],
-                    ]),
-                    new Column('list', Type::getType('json'), ['notnull' => true, 'columnDefinition' => 'integer[]']),
-                    new Column('map', Type::getType('json'), ['notnull' => true, 'comment' => 'test comment!']),
-                    new Column('date', Type::getType('date_immutable'), ['notnull' => false]),
-                ],
-                [
-                    new Index('pk_test', ['int', 'str'], true, true),
-                    new Index('idx_date', ['date'], false, false),
-                    new Index('idx_str_unique', ['str_unique'], true, false),
-                ],
-            ),
-            to_dbal_schema_table($flowSchema, 'test'),
+        $expectedTable = new Table(
+            'test',
+            [
+                new Column('int', Type::getType('integer'), ['notnull' => true]),
+                new Column('str', Type::getType('string'), ['notnull' => true]),
+                new Column('bigint', Type::getType('bigint'), ['notnull' => true]),
+                new Column('str_with_length', Type::getType('string'), ['notnull' => false, 'length' => 255]),
+                new Column('str_unique', Type::getType('string'), ['notnull' => false]),
+                new Column('float', Type::getType('float'), ['notnull' => false, 'precision' => 10, 'scale' => 2]),
+                new Column('float_default', Type::getType('float'), ['notnull' => true]),
+                new Column('bool', Type::getType('boolean'), ['notnull' => false, 'default' => true]),
+                new Column('json', Type::getType('json'), [
+                    'notnull' => false,
+                    'platformOptions' => ['jsonb' => true],
+                ]),
+                new Column('list', Type::getType('json'), ['notnull' => true, 'columnDefinition' => 'integer[]']),
+                new Column('map', Type::getType('json'), ['notnull' => true, 'comment' => 'test comment!']),
+                new Column('date', Type::getType('date_immutable'), ['notnull' => false]),
+            ],
+            [
+                new Index('idx_date', ['date'], false, false),
+                new Index('idx_str_unique', ['str_unique'], true, false),
+            ],
         );
+        $expectedTable->addPrimaryKeyConstraint(
+            PrimaryKeyConstraint::editor()->setUnquotedName('pk_test')->setUnquotedColumnNames('int', 'str')->create(),
+        );
+
+        static::assertEquals($expectedTable, to_dbal_schema_table($flowSchema, 'test'));
     }
 
     public function test_converting_flow_to_dbal_schema_without_providing_pk_name(): void
@@ -88,19 +90,15 @@ final class SchemaConverterTest extends FlowTestCase
             str_schema('str', nullable: true, metadata: DbalMetadata::primaryKey()),
         );
 
-        static::assertEquals(
-            new Table(
-                'test',
-                [
-                    new Column('int', Type::getType('integer'), ['notnull' => true]),
-                    new Column('str', Type::getType('string'), ['notnull' => true]), // pk changes nullable true into false
-                ],
-                [
-                    new Index('', ['int', 'str'], true, true),
-                ],
-            ),
-            to_dbal_schema_table($flowSchema, 'test'),
+        $expectedTable = new Table('test', [
+            new Column('int', Type::getType('integer'), ['notnull' => true]),
+            new Column('str', Type::getType('string'), ['notnull' => true]),
+        ]);
+        $expectedTable->addPrimaryKeyConstraint(
+            PrimaryKeyConstraint::editor()->setUnquotedColumnNames('int', 'str')->create(),
         );
+
+        static::assertEquals($expectedTable, to_dbal_schema_table($flowSchema, 'test'));
     }
 
     public function test_dbal_schema_to_flow_schema_dbal_36(): void
@@ -109,10 +107,44 @@ final class SchemaConverterTest extends FlowTestCase
         // We are using it to perform a different assertion since prior to 4.0 all
         // columns were also getting precision set to 10 due to a bug that was executing precision set
         // even when precision value was null.
-        /** @phpstan-ignore-next-line */
         if (!method_exists(Table::class, 'changeColumn')) {
             static::markTestSkipped('Doctrine DBAL >= 3.6+ < 4.0');
         }
+
+        $inputTable = new Table(
+            'test',
+            [
+                new Column('int', Type::getType('integer'), ['notnull' => true]),
+                new Column('str', Type::getType('string'), ['notnull' => true]),
+                new Column('bigint', Type::getType('bigint'), ['notnull' => true]),
+                new Column('str_with_length', Type::getType('string'), ['notnull' => false, 'length' => 255]),
+                new Column('str_unique', Type::getType('string'), ['notnull' => false]),
+                new Column('float', Type::getType('float'), [
+                    'notnull' => false,
+                    'precision' => 10,
+                    'scale' => 2,
+                ]),
+                new Column('float_default', Type::getType('float'), ['notnull' => true, 'scale' => 6]),
+                new Column('bool', Type::getType('boolean'), ['notnull' => false, 'default' => true]),
+                new Column('json', Type::getType('json'), [
+                    'notnull' => false,
+                    'platformOptions' => ['jsonb' => true],
+                ]),
+                new Column('list', Type::getType('json'), [
+                    'notnull' => true,
+                    'columnDefinition' => 'integer[]',
+                ]),
+                new Column('map', Type::getType('json'), ['notnull' => true, 'comment' => 'test comment!']),
+                new Column('date', Type::getType('date_immutable'), ['notnull' => false]),
+            ],
+            [
+                new Index('idx_date', ['date'], false, false),
+                new Index('idx_str_unique', ['str_unique'], true, false),
+            ],
+        );
+        $inputTable->addPrimaryKeyConstraint(
+            PrimaryKeyConstraint::editor()->setUnquotedName('pk_test')->setUnquotedColumnNames('int', 'str')->create(),
+        );
 
         static::assertEquals(
             schema(
@@ -165,40 +197,7 @@ final class SchemaConverterTest extends FlowTestCase
                     metadata: DbalMetadata::comment('test comment!')->merge(DbalMetadata::precision(10)),
                 ),
             ),
-            table_schema_to_flow_schema(
-                new Table(
-                    'test',
-                    [
-                        new Column('int', Type::getType('integer'), ['notnull' => true]),
-                        new Column('str', Type::getType('string'), ['notnull' => true]), // pk changes nullable true into false
-                        new Column('bigint', Type::getType('bigint'), ['notnull' => true]),
-                        new Column('str_with_length', Type::getType('string'), ['notnull' => false, 'length' => 255]),
-                        new Column('str_unique', Type::getType('string'), ['notnull' => false]),
-                        new Column('float', Type::getType('float'), [
-                            'notnull' => false,
-                            'precision' => 10,
-                            'scale' => 2,
-                        ]),
-                        new Column('float_default', Type::getType('float'), ['notnull' => true, 'scale' => 6]),
-                        new Column('bool', Type::getType('boolean'), ['notnull' => false, 'default' => true]),
-                        new Column('json', Type::getType('json'), [
-                            'notnull' => false,
-                            'platformOptions' => ['jsonb' => true],
-                        ]),
-                        new Column('list', Type::getType('json'), [
-                            'notnull' => true,
-                            'columnDefinition' => 'integer[]',
-                        ]),
-                        new Column('map', Type::getType('json'), ['notnull' => true, 'comment' => 'test comment!']),
-                        new Column('date', Type::getType('date_immutable'), ['notnull' => false]),
-                    ],
-                    [
-                        new Index('pk_test', ['int', 'str'], true, true),
-                        new Index('idx_date', ['date'], false, false),
-                        new Index('idx_str_unique', ['str_unique'], true, false),
-                    ],
-                ),
-            ),
+            table_schema_to_flow_schema($inputTable),
         );
     }
 
@@ -208,10 +207,44 @@ final class SchemaConverterTest extends FlowTestCase
         // We are using it to perform a different assertion since prior to 4.0 all
         // columns were also getting precision set to 10 due to a bug that was executing precision set
         // even when precision value was null.
-        /** @phpstan-ignore-next-line */
         if (method_exists(Table::class, 'changeColumn')) {
             static::markTestSkipped('Doctrine DBAL >= 4.0+');
         }
+
+        $inputTable = new Table(
+            'test',
+            [
+                new Column('int', Type::getType('integer'), ['notnull' => true]),
+                new Column('str', Type::getType('string'), ['notnull' => true]),
+                new Column('bigint', Type::getType('bigint'), ['notnull' => true]),
+                new Column('str_with_length', Type::getType('string'), ['notnull' => false, 'length' => 255]),
+                new Column('str_unique', Type::getType('string'), ['notnull' => false]),
+                new Column('float', Type::getType('float'), [
+                    'notnull' => false,
+                    'precision' => 10,
+                    'scale' => 2,
+                ]),
+                new Column('float_default', Type::getType('float'), ['notnull' => true, 'scale' => 6]),
+                new Column('bool', Type::getType('boolean'), ['notnull' => false, 'default' => true]),
+                new Column('json', Type::getType('json'), [
+                    'notnull' => false,
+                    'platformOptions' => ['jsonb' => true],
+                ]),
+                new Column('list', Type::getType('json'), [
+                    'notnull' => true,
+                    'columnDefinition' => 'integer[]',
+                ]),
+                new Column('map', Type::getType('json'), ['notnull' => true, 'comment' => 'test comment!']),
+                new Column('date', Type::getType('date_immutable'), ['notnull' => false]),
+            ],
+            [
+                new Index('idx_date', ['date'], false, false),
+                new Index('idx_str_unique', ['str_unique'], true, false),
+            ],
+        );
+        $inputTable->addPrimaryKeyConstraint(
+            PrimaryKeyConstraint::editor()->setUnquotedName('pk_test')->setUnquotedColumnNames('int', 'str')->create(),
+        );
 
         static::assertEquals(
             schema(
@@ -232,40 +265,7 @@ final class SchemaConverterTest extends FlowTestCase
                 json_schema('list', metadata: DbalMetadata::columnDefinition('integer[]')),
                 json_schema('map', metadata: DbalMetadata::comment('test comment!')),
             ),
-            table_schema_to_flow_schema(
-                new Table(
-                    'test',
-                    [
-                        new Column('int', Type::getType('integer'), ['notnull' => true]),
-                        new Column('str', Type::getType('string'), ['notnull' => true]), // pk changes nullable true into false
-                        new Column('bigint', Type::getType('bigint'), ['notnull' => true]),
-                        new Column('str_with_length', Type::getType('string'), ['notnull' => false, 'length' => 255]),
-                        new Column('str_unique', Type::getType('string'), ['notnull' => false]),
-                        new Column('float', Type::getType('float'), [
-                            'notnull' => false,
-                            'precision' => 10,
-                            'scale' => 2,
-                        ]),
-                        new Column('float_default', Type::getType('float'), ['notnull' => true, 'scale' => 6]),
-                        new Column('bool', Type::getType('boolean'), ['notnull' => false, 'default' => true]),
-                        new Column('json', Type::getType('json'), [
-                            'notnull' => false,
-                            'platformOptions' => ['jsonb' => true],
-                        ]),
-                        new Column('list', Type::getType('json'), [
-                            'notnull' => true,
-                            'columnDefinition' => 'integer[]',
-                        ]),
-                        new Column('map', Type::getType('json'), ['notnull' => true, 'comment' => 'test comment!']),
-                        new Column('date', Type::getType('date_immutable'), ['notnull' => false]),
-                    ],
-                    [
-                        new Index('pk_test', ['int', 'str'], true, true),
-                        new Index('idx_date', ['date'], false, false),
-                        new Index('idx_str_unique', ['str_unique'], true, false),
-                    ],
-                ),
-            ),
+            table_schema_to_flow_schema($inputTable),
         );
     }
 }

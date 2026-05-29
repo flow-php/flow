@@ -56,7 +56,6 @@ final class RegexMatch extends ScalarFunctionChain
                 ->invalidResult(new InvalidArgumentException('RegexMatch requires non-null offset'));
         }
 
-        /** @phpstan-ignore argument.type */
         return preg_match(pattern: $pattern, subject: $subject, flags: $flags, offset: $offset) === 1;
     }
 }

@@ -33,12 +33,12 @@ final class DatabaseContext
     {
         $schemaManager = $this->connection->createSchemaManager();
 
-        if ($schemaManager->tablesExist([$table->getName()])) {
-            $schemaManager->dropTable($table->getName());
+        if ($schemaManager->tablesExist([$table->getObjectName()->toString()])) {
+            $schemaManager->dropTable($table->getObjectName()->toString());
         }
 
         $schemaManager->createTable($table);
-        $this->createdTables[] = $table->getName();
+        $this->createdTables[] = $table->getObjectName()->toString();
     }
 
     public function dropAllTables(): void

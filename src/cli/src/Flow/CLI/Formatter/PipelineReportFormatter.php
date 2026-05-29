@@ -35,9 +35,7 @@ final readonly class PipelineReportFormatter
                     'name' => $definition->entry()->name(),
                     'type' => $definition->type()->toString(),
                     'nullable' => $definition->isNullable() ? 'true' : 'false',
-                    'metadata' => $definition->metadata() !== null
-                        ? json_encode($definition->metadata(), JSON_PRETTY_PRINT)
-                        : null,
+                    'metadata' => json_encode($definition->metadata(), JSON_PRETTY_PRINT),
                 ];
             }
 

@@ -11,6 +11,7 @@ use Doctrine\DBAL\Types\Type;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
@@ -57,6 +58,9 @@ final class DbalQueryExtractor implements Extractor
         return $extractor;
     }
 
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         foreach ($this->parametersSet->all() as $parameters) {

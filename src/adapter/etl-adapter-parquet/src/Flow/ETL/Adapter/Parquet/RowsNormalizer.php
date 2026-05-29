@@ -9,7 +9,8 @@ use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\ETL\Rows;
 use Flow\ETL\Schema;
-use Flow\Types\Value\Json;
+use Flow\Types\Type\Logical\JsonType;
+use Flow\Types\Type\Logical\OptionalType;
 
 use function Flow\Types\DSL\type_string;
 
@@ -20,7 +21,7 @@ final readonly class RowsNormalizer
     /**
      * @param Schema $schema
      *
-     * @return array<mixed, array<string, mixed>>
+     * @return array<array-key, array<string, mixed>>
      */
     public function normalize(Rows $rows, Schema $schema): array
     {
@@ -38,18 +39,19 @@ final readonly class RowsNormalizer
                     continue;
                 }
 
-                $value = match ($entry::class) {
-                    JsonEntry::class => $entry->toString(),
-                    UuidEntry::class => type_string()->cast($entry->value()),
-                    XMLEntry::class => type_string()->cast($entry->value()),
-                    default => $schema->get($entry->ref())->type()->cast($entry->value()),
-                };
+                if ($entry instanceof JsonEntry) {
+                    $columns[$entry->name()] = $entry->toString();
+                } elseif ($entry instanceof UuidEntry || $entry instanceof XMLEntry) {
+                    $columns[$entry->name()] = type_string()->cast($entry->value());
+                } else {
+                    $type = $definition->type();
+                    $isJsonType =
+                        $type instanceof JsonType || $type instanceof OptionalType && $type->base() instanceof JsonType;
 
-                if ($value instanceof Json) {
-                    $value = $value->toString();
+                    $columns[$entry->name()] = $isJsonType
+                        ? type_string()->cast($type->cast($entry->value()))
+                        : $type->cast($entry->value());
                 }
-
-                $columns[$entry->name()] = $value;
             }
 
             $normalizedRows[] = $columns;

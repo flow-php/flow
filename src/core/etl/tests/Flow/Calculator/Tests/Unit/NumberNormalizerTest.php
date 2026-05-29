@@ -17,7 +17,6 @@ final class NumberNormalizerTest extends FlowTestCase
         $this->expectException(NonNumericValueException::class);
         $this->expectExceptionMessage('foo');
         // @mago-ignore analysis:possibly-invalid-argument
-        /** @phpstan-ignore-next-line */
         NumberNormalizer::toString('foo', scale: 0);
     }
 

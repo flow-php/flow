@@ -59,10 +59,7 @@ final readonly class PHPValueNormalizer
     public function normalize(string $name, Type $type, mixed $value): XMLNode|XMLAttribute
     {
         if (str_starts_with($name, $this->attributePrefix)) {
-            return new XMLAttribute(
-                substr($name, strlen($this->attributePrefix)),
-                (string) type_string()->cast($value),
-            );
+            return new XMLAttribute(substr($name, strlen($this->attributePrefix)), type_string()->cast($value));
         }
 
         if ($value === null) {
@@ -84,6 +81,7 @@ final readonly class PHPValueNormalizer
                 return $listNode;
             }
 
+            // @mago-ignore analysis:mixed-assignment
             foreach ($value as $elementValue) {
                 $listNode = $listNode->append($this->normalize(
                     $this->listElementName,
@@ -110,6 +108,7 @@ final readonly class PHPValueNormalizer
                 return $mapNode;
             }
 
+            // @mago-ignore analysis:mixed-assignment
             foreach ($value as $key => $elementValue) {
                 $mapNode = $mapNode->append(
                     XMLNode::nestedNode($this->mapElementName)
@@ -135,10 +134,11 @@ final readonly class PHPValueNormalizer
             foreach ($structureIterator as $keys => $element) {
                 /** @var Type<mixed> $structureElementType */
                 $structureElementType = $element['structure_element'];
+                // @mago-ignore analysis:mixed-assignment
                 $structureValue = $element['value_element'];
 
                 $structureNode = $structureNode->append($this->normalize(
-                    $keys['structure_element'],
+                    type_string()->assert($keys['structure_element']),
                     $structureElementType,
                     $structureValue,
                 ));

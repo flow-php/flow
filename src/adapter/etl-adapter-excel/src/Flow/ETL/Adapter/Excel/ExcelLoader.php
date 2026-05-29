@@ -242,6 +242,7 @@ final class ExcelLoader implements Closure, FileLoader, Loader
     private function resolveSheetName(Row $row): string
     {
         if ($this->sheetNameEntryName !== null && $row->has($this->sheetNameEntryName)) {
+            // @mago-expect analysis:mixed-assignment
             $value = $row->get($this->sheetNameEntryName)->value();
 
             if (is_string($value) && $value !== '') {

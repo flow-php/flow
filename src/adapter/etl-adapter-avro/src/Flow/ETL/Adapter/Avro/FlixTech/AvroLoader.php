@@ -21,12 +21,14 @@ final readonly class AvroLoader implements Closure, FileLoader, Loader
 
     public function __construct(
         Path $path,
+        // @mago-ignore analysis:unused-property
         private ?Schema $schema = null,
     ) {
+        $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE->value, ContentType::AVRO);
+
         throw new RuntimeException(
             'Avro integration was abandoned due to lack of availability of good Avro libraries.',
         );
-        $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE->value, ContentType::AVRO);
     }
 
     public function closure(FlowContext $context): void {}

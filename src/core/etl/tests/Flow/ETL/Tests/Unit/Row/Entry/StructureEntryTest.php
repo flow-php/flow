@@ -62,9 +62,6 @@ final class StructureEntryTest extends FlowTestCase
             'Expected structure{id: integer, name: string} got different types: list<integer>',
         );
         // @mago-ignore analysis:invalid-argument
-        /**
-         * @phpstan-ignore argument.type
-         */
         structure_entry('test', [1, 2, 3], type_structure([
             'id' => type_integer(),
             'name' => type_string(),
@@ -83,7 +80,6 @@ final class StructureEntryTest extends FlowTestCase
                     'city' => 'bar',
                 ],
             ],
-            // @mago-ignore analysis:less-specific-argument
             type_structure([
                 'id' => type_integer(),
                 'name' => type_string(),
@@ -184,10 +180,8 @@ final class StructureEntryTest extends FlowTestCase
             structure_entry(
                 'name',
                 // @mago-ignore analysis:possibly-invalid-argument
-                /** @phpstan-ignore-next-line */
                 ['1' => 1, '2' => '2'],
                 // @mago-ignore analysis:possibly-invalid-argument
-                /** @phpstan-ignore-next-line */
                 type_structure([
                     '1' => type_integer(),
                     '2' => type_string(),
@@ -196,10 +190,8 @@ final class StructureEntryTest extends FlowTestCase
             structure_entry(
                 'name',
                 // @mago-ignore analysis:possibly-invalid-argument
-                /** @phpstan-ignore-next-line */
                 ['1' => 1, '2' => '2', '3' => '3'],
                 // @mago-ignore analysis:possibly-invalid-argument
-                /** @phpstan-ignore-next-line */
                 type_structure([
                     '1' => type_integer(),
                     '2' => type_string(),
@@ -211,10 +203,8 @@ final class StructureEntryTest extends FlowTestCase
             structure_entry(
                 'name',
                 // @mago-ignore analysis:possibly-invalid-argument
-                /** @phpstan-ignore-next-line */
                 ['1' => 1, '2' => 2, '3' => 3],
                 // @mago-ignore analysis:possibly-invalid-argument
-                /** @phpstan-ignore-next-line */
                 type_structure([
                     '1' => type_integer(),
                     '2' => type_integer(),
@@ -224,10 +214,8 @@ final class StructureEntryTest extends FlowTestCase
             structure_entry(
                 'name',
                 // @mago-ignore analysis:possibly-invalid-argument
-                /** @phpstan-ignore-next-line */
                 ['1' => 1, '2' => 2, '3' => 3],
                 // @mago-ignore analysis:possibly-invalid-argument
-                /** @phpstan-ignore-next-line */
                 type_structure([
                     '1' => type_integer(),
                     '2' => type_integer(),

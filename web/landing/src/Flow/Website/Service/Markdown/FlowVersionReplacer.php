@@ -36,20 +36,20 @@ final readonly class FlowVersionReplacer
         }
     }
 
-    private function replaceInHtml($node): void
+    private function replaceInHtml(HtmlInline|HtmlBlock $node): void
     {
         $html = $node->getLiteral();
 
-        if (str_contains((string) $html, self::VERSION_PLACEHOLDER)) {
+        if (str_contains($html, self::VERSION_PLACEHOLDER)) {
             $node->setLiteral(str_replace(self::VERSION_PLACEHOLDER, $this->flowVersion, $html));
         }
     }
 
-    private function replaceInLiteral($node): void
+    private function replaceInLiteral(Code|Text|FencedCode $node): void
     {
         $literal = $node->getLiteral();
 
-        if (str_contains((string) $literal, self::VERSION_PLACEHOLDER)) {
+        if (str_contains($literal, self::VERSION_PLACEHOLDER)) {
             $node->setLiteral(str_replace(self::VERSION_PLACEHOLDER, $this->flowVersion, $literal));
         }
     }

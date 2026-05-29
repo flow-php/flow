@@ -28,11 +28,14 @@ final readonly class HTMLConverter implements ValueConverter
         }
 
         if ($value instanceof HTMLDocument) {
+            // @mago-ignore analysis:unavailable-method
             return $value->saveHTML() ?: null;
         }
 
         if ($value instanceof HTMLElement) {
-            return $value->ownerDocument->saveHTML($value) ?: null;
+            // @mago-ignore analysis:non-existent-method
+            // @mago-ignore analysis:mixed-return-statement
+            return $value->ownerDocument?->saveHTML($value) ?: null;
         }
 
         return $this->next->toDatabase($value);

@@ -17,6 +17,7 @@ use Flow\CLI\Options\FileFormat;
 use Flow\CLI\Options\FileFormatOption;
 use Flow\ETL\Config;
 use Flow\Filesystem\Path;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -84,6 +85,10 @@ final class FileRowsCountCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        if ($this->flowConfig === null || $this->sourcePath === null || $this->fileFormat === null) {
+            throw new RuntimeException('Command not properly initialized.');
+        }
+
         $style = new SymfonyStyle($input, $output);
 
         $df = df($this->flowConfig)->read((new ExtractorFactory($this->sourcePath, $this->fileFormat))->get($input));

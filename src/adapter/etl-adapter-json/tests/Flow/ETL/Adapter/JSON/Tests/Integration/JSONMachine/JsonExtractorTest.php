@@ -7,7 +7,6 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 use Flow\ETL\Config;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Row;
-use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowTestCase;
 
 use function array_keys;
@@ -19,7 +18,7 @@ use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\schema_to_ascii;
 use function Flow\Filesystem\DSL\path;
 use function Flow\Filesystem\DSL\path_real;
-use function is_array;
+use function Flow\Types\DSL\type_array;
 use function iterator_to_array;
 
 final class JsonExtractorTest extends FlowTestCase
@@ -54,7 +53,6 @@ final class JsonExtractorTest extends FlowTestCase
             ->fetch();
 
         foreach ($rows as $row) {
-            $value = $row->get('/timezones')->value();
             static::assertSame(
                 [
                     'timezones',
@@ -63,7 +61,7 @@ final class JsonExtractorTest extends FlowTestCase
                     'country_code',
                     'capital',
                 ],
-                is_array($value) ? array_keys($value) : [],
+                array_keys(type_array()->assert($row->get('/timezones')->value())),
             );
         }
 
@@ -114,7 +112,6 @@ final class JsonExtractorTest extends FlowTestCase
 
         $total = 0;
 
-        /** @var Rows $rows */
         foreach ($extractor->extract(flow_context(config())) as $rows) {
             $rows->each(function (Row $row): void {
                 $this->assertSame(

@@ -36,6 +36,9 @@ final class PsrHttpClientDynamicExtractor implements Extractor
         private readonly NextRequestFactory $requestFactory,
     ) {}
 
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         $responseFactory = new ResponseEntriesFactory();

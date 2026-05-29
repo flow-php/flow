@@ -10,13 +10,13 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 
 use function count;
 use function Flow\ETL\DSL\array_to_rows;
 use function is_numeric;
-use function method_exists;
 
 final class DbalLimitOffsetExtractor implements Extractor
 {
@@ -54,6 +54,9 @@ final class DbalLimitOffsetExtractor implements Extractor
         return new self($connection, $queryBuilder);
     }
 
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
         if ($this->maximum === null && $this->queryBuilder->getMaxResults()) {
@@ -69,22 +72,10 @@ final class DbalLimitOffsetExtractor implements Extractor
         } else {
             $countQuery = (clone $this->queryBuilder)->select('COUNT(*)');
 
-            $nonGroupByQuery = method_exists($countQuery, 'resetGroupBy')
-                ? (clone $this->queryBuilder)->select('COUNT(*)')->resetGroupBy()
-                : $countQuery->resetQueryPart('groupBy');
+            $nonGroupByQuery = (clone $this->queryBuilder)->select('COUNT(*)')->resetGroupBy();
 
             if ($countQuery->getSQL() === $nonGroupByQuery->getSQL()) {
-                /**
-                 * @phpstan-ignore-next-line
-                 */
-                if (method_exists($countQuery, 'resetOrderBy')) {
-                    $countQuery->resetOrderBy();
-                } else {
-                    /**
-                     * @phpstan-ignore-next-line
-                     */
-                    $countQuery->resetQueryPart('orderBy');
-                }
+                $countQuery->resetOrderBy();
 
                 $totalValue = $this->connection->fetchOne(
                     $countQuery->getSQL(),
@@ -93,7 +84,7 @@ final class DbalLimitOffsetExtractor implements Extractor
                 );
                 $total = is_numeric($totalValue) ? (int) $totalValue : 0;
             } else {
-                // For grouped queries, wrap in a subquery to get accurate count
+                // @mago-expect analysis:mixed-assignment
                 $totalValue = $this->connection
                     ->executeQuery(
                         'SELECT COUNT(*) FROM (' . $countQuery->getSQL() . ') as count_query',

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Options;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Symfony\Component\Console\Exception\InvalidArgumentException as SymfonyInvalidArgumentException;
 use Symfony\Component\Console\Input\InputInterface;
 
 use function Flow\CLI\option_string;
 use function Flow\Filesystem\DSL\path_real;
+use function Flow\Types\DSL\type_instance_of;
 
 /**
  * @template ExpectedClass
@@ -43,14 +43,6 @@ final readonly class IncludeFileOption
             throw new SymfonyInvalidArgumentException("File '{$filePath->path()}' does not exist.");
         }
 
-        $object = require $filePath->path();
-
-        if (!$object instanceof $this->expectedClass) {
-            throw new InvalidArgumentException(
-                "File '{$filePath->path()}' does not return instance of '{$this->expectedClass}'.",
-            );
-        }
-
-        return $object;
+        return type_instance_of($this->expectedClass)->assert(require $filePath->path());
     }
 }

@@ -21,6 +21,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
 {
     public function test_limit(): void
     {
+        // @mago-ignore analysis:deprecated-class
         $extractor = new XMLReaderExtractor(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row');
         $extractor->changeLimit(2);
 
@@ -33,6 +34,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
             5,
             data_frame()
                 ->read(
+                    // @mago-ignore analysis:deprecated-class
                     new XMLReaderExtractor(
                         path(__DIR__ . '/../Fixtures/deepest_items_flat.xml'),
                         'root/items/item/deep',
@@ -51,6 +53,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
         static::assertEquals(
             1,
             data_frame()
+                // @mago-ignore analysis:deprecated-class
                 ->read(new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/simple_items.xml')))
                 ->fetch()
                 ->count(),
@@ -59,50 +62,55 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
 
     public function test_reading_xml_each_collection_item(): void
     {
+        // @mago-ignore analysis:deprecated-class
+        $extractor1 = new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/simple_items_flat.xml'), 'root/items/item');
         static::assertXmlStringEqualsXmlString(<<<'XML'
             <item item_attribute_01="1">
               <id id_attribute_01="1">1</id>
             </item>
-            XML, type_string()->cast(data_frame()
-            ->read(new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/simple_items_flat.xml'), 'root/items/item'))
-            ->fetch()[0]->valueOf('node')));
+            XML, type_string()->cast(data_frame()->read($extractor1)->fetch()[0]->valueOf('node')));
 
+        // @mago-ignore analysis:deprecated-class
+        $extractor2 = new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/simple_items_flat.xml'), 'root/items/item');
         static::assertXmlStringEqualsXmlString(<<<'XML'
             <item item_attribute_01="5">
               <id id_attribute_01="5">5</id>
             </item>
-            XML, type_string()->cast(data_frame()
-            ->read(new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/simple_items_flat.xml'), 'root/items/item'))
-            ->fetch()[4]->valueOf('node')));
+            XML, type_string()->cast(data_frame()->read($extractor2)->fetch()[4]->valueOf('node')));
     }
 
     public function test_reading_xml_from_path(): void
     {
-        static::assertXmlStringEqualsXmlString(<<<'XML'
-            <items items_attribute_01="1" items_attribute_02="2">
-                <item item_attribute_01="1">
-                    <id id_attribute_01="1">1</id>
-                </item>
-                <item item_attribute_01="2">
-                    <id id_attribute_01="2">2</id>
-                </item>
-                <item item_attribute_01="3">
-                    <id id_attribute_01="3">3</id>
-                </item>
-                <item item_attribute_01="4">
-                    <id id_attribute_01="4">4</id>
-                </item>
-                <item item_attribute_01="5">
-                    <id id_attribute_01="5">5</id>
-                </item>
-            </items>
-            XML, type_string()->cast(data_frame()
-            ->read(new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/simple_items.xml'), 'root/items'))
-            ->fetch()[0]->valueOf('node')));
+        static::assertXmlStringEqualsXmlString(
+            <<<'XML'
+                <items items_attribute_01="1" items_attribute_02="2">
+                    <item item_attribute_01="1">
+                        <id id_attribute_01="1">1</id>
+                    </item>
+                    <item item_attribute_01="2">
+                        <id id_attribute_01="2">2</id>
+                    </item>
+                    <item item_attribute_01="3">
+                        <id id_attribute_01="3">3</id>
+                    </item>
+                    <item item_attribute_01="4">
+                        <id id_attribute_01="4">4</id>
+                    </item>
+                    <item item_attribute_01="5">
+                        <id id_attribute_01="5">5</id>
+                    </item>
+                </items>
+                XML,
+            type_string()->cast(data_frame()
+                // @mago-ignore analysis:deprecated-class
+                ->read(new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/simple_items.xml'), 'root/items'))
+                ->fetch()[0]->valueOf('node')),
+        );
     }
 
     public function test_signal_stop(): void
     {
+        // @mago-ignore analysis:deprecated-class
         $extractor = new XMLReaderExtractor(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row');
 
         $generator = $extractor->extract(flow_context(config()));

@@ -285,7 +285,6 @@ final class TraverserTest extends TestCase
             /**
              * @param array<bool> $results
              *
-             * @phpstan-ignore property.onlyWritten (accessed via reference)
              */
             public function __construct(
                 private array &$results,
@@ -320,7 +319,6 @@ final class TraverserTest extends TestCase
             /**
              * @param array<int> $depths
              *
-             * @phpstan-ignore property.onlyWritten (accessed via reference)
              */
             public function __construct(
                 private array &$depths,
@@ -356,7 +354,6 @@ final class TraverserTest extends TestCase
             /**
              * @param array<int> $depths
              *
-             * @phpstan-ignore property.onlyWritten (accessed via reference)
              */
             public function __construct(
                 private array &$depths,

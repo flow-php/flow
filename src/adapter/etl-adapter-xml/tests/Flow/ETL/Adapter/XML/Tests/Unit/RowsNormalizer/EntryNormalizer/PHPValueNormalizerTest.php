@@ -10,13 +10,11 @@ use Flow\ETL\Adapter\XML\Abstraction\XMLNode;
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Json;
-use stdClass;
 
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
 use function Flow\Types\DSL\type_datetime;
 use function Flow\Types\DSL\type_float;
-use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_optional;
@@ -94,14 +92,6 @@ final class PHPValueNormalizerTest extends FlowTestCase
     public function test_normalizing_object_type(): void
     {
         static::markTestSkipped('We need to figure out what to do with object types');
-
-        /** @phpstan-ignore-next-line */
-        $normalizer = new PHPValueNormalizer();
-
-        static::assertEquals(
-            XMLNode::flatNode('object', '{"a":"1","b":22}'),
-            $normalizer->normalize('object', type_instance_of(stdClass::class), (object) ['a' => '1', 'b' => 22]),
-        );
     }
 
     public function test_normalizing_string_type(): void

@@ -8,6 +8,7 @@ use FilesystemIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RuntimeException;
+use SplFileInfo;
 use Symfony\Component\Yaml\Yaml;
 
 use function array_diff;
@@ -18,6 +19,12 @@ use function count;
 use function current;
 use function file_exists;
 use function file_get_contents;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_string;
 use function is_dir;
 use function is_file;
@@ -66,7 +73,7 @@ final readonly class Examples
             ));
         }
 
-        return file_get_contents($path);
+        return type_string()->assert(file_get_contents($path));
     }
 
     /**
@@ -105,6 +112,8 @@ final readonly class Examples
         );
 
         foreach ($iterator as $file) {
+            $file = type_instance_of(SplFileInfo::class)->assert($file);
+
             if ($file->isFile()) {
                 $virtualPath = str_replace($basePath . '/', '', $file->getPathname());
                 $files[$virtualPath] = $virtualPath;
@@ -120,12 +129,14 @@ final readonly class Examples
         if (!$this->hasOptions($topic, $example)) {
             $path = sprintf('%s/topics/%s/%s/description.md', realpath($this->examplesPath), $topic, $example);
 
-            return file_exists($path) ? file_get_contents($path) : null;
+            return file_exists($path) ? type_string()->assert(file_get_contents($path)) : null;
         }
 
         // For 3-level examples, check for example-level description
         $exampleLevelPath = sprintf('%s/topics/%s/%s/description.md', realpath($this->examplesPath), $topic, $example);
-        $exampleDescription = file_exists($exampleLevelPath) ? file_get_contents($exampleLevelPath) : null;
+        $exampleDescription = file_exists($exampleLevelPath)
+            ? type_string()->assert(file_get_contents($exampleLevelPath))
+            : null;
 
         // Get option-level description
         if (null === $option) {
@@ -139,7 +150,7 @@ final readonly class Examples
             $example,
             $option,
         );
-        $optionDescription = file_exists($optionPath) ? file_get_contents($optionPath) : null;
+        $optionDescription = file_exists($optionPath) ? type_string()->assert(file_get_contents($optionPath)) : null;
 
         // Merge descriptions with horizontal rule separator
         if (null !== $exampleDescription && null !== $optionDescription) {
@@ -181,7 +192,7 @@ final readonly class Examples
             return null;
         }
 
-        return file_get_contents($path);
+        return type_string()->assert(file_get_contents($path));
     }
 
     /**
@@ -199,7 +210,12 @@ final readonly class Examples
             ));
         }
 
-        $examples = array_values(array_diff(scandir($path), ['..', '.', '.gitignore', '_meta.yaml']));
+        $examples = array_values(array_diff(type_list(type_string())->assert(scandir($path)), [
+            '..',
+            '.',
+            '.gitignore',
+            '_meta.yaml',
+        ]));
 
         if (0 === count($examples)) {
             throw new RuntimeException(sprintf(
@@ -301,7 +317,12 @@ final readonly class Examples
             return [];
         }
 
-        $items = array_values(array_diff(scandir($path), ['..', '.', '.gitignore', '_meta.yaml']));
+        $items = array_values(array_diff(type_list(type_string())->assert(scandir($path)), [
+            '..',
+            '.',
+            '.gitignore',
+            '_meta.yaml',
+        ]));
         $options = [];
 
         foreach ($items as $item) {
@@ -408,7 +429,7 @@ final readonly class Examples
             ));
         }
 
-        $topics = array_values(array_diff(scandir($path), ['..', '.']));
+        $topics = array_values(array_diff(type_list(type_string())->assert(scandir($path)), ['..', '.']));
 
         if (0 === count($topics)) {
             throw new RuntimeException(sprintf(
@@ -504,7 +525,7 @@ final readonly class Examples
             return false;
         }
 
-        $items = scandir($path);
+        $items = type_list(type_string())->assert(scandir($path));
 
         if (count($items)) {
             foreach ($items as $item) {
@@ -536,12 +557,13 @@ final readonly class Examples
             return ['priority' => 99, 'hidden' => false];
         }
 
-        $content = file_get_contents($metaPath);
-        $meta = Yaml::parse($content);
+        $meta = type_map(type_string(), type_mixed())->assert(Yaml::parse(type_string()->assert(file_get_contents(
+            $metaPath,
+        ))));
 
         return [
-            'priority' => $meta['priority'] ?? 99,
-            'hidden' => $meta['hidden'] ?? false,
+            'priority' => type_integer()->assert($meta['priority'] ?? 99),
+            'hidden' => type_boolean()->assert($meta['hidden'] ?? false),
         ];
     }
 }

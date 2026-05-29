@@ -10,5 +10,6 @@ enum Type: string
     case BRIDGE = 'bridge';
     case CLI = 'cli';
     case CORE = 'core';
+    case EXTENSION = 'extension';
     case LIB = 'lib';
 }

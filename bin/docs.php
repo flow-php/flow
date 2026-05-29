@@ -36,7 +36,7 @@ ini_set('memory_limit', -1);
 
 $application = new Application('Flow-PHP - Documentation');
 
-$application->add(new class extends Command {
+$application->addCommand(new class extends Command {
     public function configure(): void
     {
         $this
@@ -90,7 +90,10 @@ $application->add(new class extends Command {
             __DIR__ . '/../src/bridge/telemetry/otlp/src/Flow/Bridge/Telemetry/OTLP/DSL/functions.php',
         ];
 
-        $extractor = new FunctionsExtractor($input->getOption('repository-root-path'), new FunctionCollector());
+        $extractor = new FunctionsExtractor(
+            (string) $input->getOption('repository-root-path'),
+            new FunctionCollector(),
+        );
 
         $normalizedFunctions = [];
 
@@ -113,7 +116,7 @@ $application->add(new class extends Command {
     }
 });
 
-$application->add(new class extends Command {
+$application->addCommand(new class extends Command {
     public function configure(): void
     {
         $this

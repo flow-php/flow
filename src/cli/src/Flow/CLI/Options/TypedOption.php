@@ -10,8 +10,10 @@ use Symfony\Component\Console\Input\InputInterface;
 
 use function count;
 use function filter_var;
-use function is_array;
-use function is_bool;
+use function Flow\Types\DSL\type_array;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_string;
 use function is_int;
 use function is_numeric;
 use function is_scalar;
@@ -30,27 +32,19 @@ final readonly class TypedOption
 
     public function asBoolNullable(InputInterface $input): ?bool
     {
-        $option = $input->getOption($this->name);
-
-        if ($option === null) {
+        if ($input->getOption($this->name) === null) {
             return null;
         }
 
-        if (is_string($option)) {
-            $option = filter_var($option, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-
-            return $option ?? null;
+        if (is_string($input->getOption($this->name))) {
+            return filter_var($input->getOption($this->name), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         }
 
-        if (is_int($option)) {
-            return (bool) $option;
+        if (is_int($input->getOption($this->name))) {
+            return type_integer()->assert($input->getOption($this->name)) !== 0;
         }
 
-        if (!is_bool($option)) {
-            throw new InvalidArgumentException("Option '{$this->name}' must be a boolean.");
-        }
-
-        return $option;
+        return type_boolean()->assert($input->getOption($this->name));
     }
 
     public function asInt(InputInterface $input, ?int $default = null): int
@@ -66,17 +60,15 @@ final readonly class TypedOption
 
     public function asIntNullable(InputInterface $input): ?int
     {
-        $option = $input->getOption($this->name);
-
-        if ($option === null) {
+        if ($input->getOption($this->name) === null) {
             return null;
         }
 
-        if (!is_numeric($option)) {
+        if (!is_numeric($input->getOption($this->name))) {
             throw new InvalidArgumentException("Option '{$this->name}' must be an integer.");
         }
 
-        return (int) $option;
+        return (int) $input->getOption($this->name);
     }
 
     /**
@@ -94,30 +86,19 @@ final readonly class TypedOption
      */
     public function asListOfStringsNullable(InputInterface $input): ?array
     {
-        $option = $input->getOption($this->name);
-
-        if ($option === null) {
+        if ($input->getOption($this->name) === null) {
             return null;
         }
 
-        if (!is_array($option)) {
-            throw new InvalidArgumentException("Option '{$this->name}' must be an array.");
-        }
+        $option = type_array()->assert($input->getOption($this->name));
 
         if (!count($option)) {
             return null;
         }
 
-        /**
-         * @var array<string> $options
-         */
-        $options = [];
-
-        foreach ($option as $value) {
-            $options[] = is_scalar($value) || $value instanceof Stringable ? (string) $value : '';
-        }
-
-        return $options;
+        return array_map(static fn(mixed $value): string => is_scalar($value) || $value instanceof Stringable
+            ? (string) $value
+            : '', $option);
     }
 
     public function asString(InputInterface $input, ?string $default = null): string
@@ -133,16 +114,10 @@ final readonly class TypedOption
 
     public function asStringNullable(InputInterface $input): ?string
     {
-        $option = $input->getOption($this->name);
-
-        if ($option === null) {
+        if ($input->getOption($this->name) === null) {
             return null;
         }
 
-        if (!is_string($option)) {
-            throw new InvalidArgumentException("Option '{$this->name}' must be a string.");
-        }
-
-        return $option;
+        return type_string()->assert($input->getOption($this->name));
     }
 }

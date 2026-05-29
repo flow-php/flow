@@ -981,13 +981,22 @@ function entries(Entry ...$entries): Entries
 
 /**
  * @param ?array<string, mixed> $value
- * @param StructureType<mixed> $type
+ * @param Type<mixed> $type
  *
  * @return ($value is null ? Entry<null> : Entry<array<string, mixed>>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function struct_entry(string $name, ?array $value, StructureType $type, ?Metadata $metadata = null): Entry
+function struct_entry(string $name, ?array $value, Type $type, ?Metadata $metadata = null): Entry
 {
+    if (!$type instanceof StructureType) {
+        // @mago-expect linter:no-fully-qualified-global-function
+        throw new InvalidArgumentException(\sprintf(
+            'Structure entry "%s" requires a StructureType, got %s',
+            $name,
+            $type::class,
+        ));
+    }
+
     if ($value === null) {
         return new StructureEntry($name, null, $type, $metadata);
     }

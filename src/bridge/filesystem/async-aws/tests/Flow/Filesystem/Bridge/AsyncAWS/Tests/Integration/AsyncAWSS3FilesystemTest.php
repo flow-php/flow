@@ -207,7 +207,6 @@ final class AsyncAWSS3FilesystemTest extends AsyncAWSS3TestCase
             $fs->status(path('aws-s3://var/flow-fs-test-directory/remove_file_when_exists.txt'))?->isFile(),
         );
         $fs->rm(path('aws-s3://var/flow-fs-test-directory/*.txt'));
-        /** @phpstan-ignore nullsafe.neverNull */
         static::assertTrue($fs->status(path('aws-s3://var/flow-fs-test-directory/'))?->isDirectory());
         static::assertNull($fs->status(path('aws-s3://var/flow-fs-test-directory/remove_file_when_exists.txt')));
         $fs->rm(path('aws-s3://var/flow-fs-test-directory/'));

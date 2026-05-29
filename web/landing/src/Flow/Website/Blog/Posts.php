@@ -8,6 +8,9 @@ use InvalidArgumentException;
 
 use function array_map;
 use function array_reverse;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
 
 final class Posts
 {
@@ -48,7 +51,7 @@ final class Posts
 
     public function findByDateAndSlug(string $date, string $slug): Post
     {
-        foreach ($this->posts as $post) {
+        foreach (type_list(type_map(type_string(), type_string()))->assert($this->posts) as $post) {
             if ($post['date'] === $date && $post['slug'] === $slug) {
                 return Post::fromArray($post);
             }

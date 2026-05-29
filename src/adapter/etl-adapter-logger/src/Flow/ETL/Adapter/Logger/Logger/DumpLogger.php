@@ -27,7 +27,7 @@ final class DumpLogger extends AbstractLogger
         if (class_exists('\\Symfony\\Component\\VarDumper\\VarDumper')) {
             VarDumper::dump([$message => $context]);
         } else {
-            /** @phpstan-ignore-next-line */
+            // @mago-expect lint:disallowed-functions
             var_dump([$message => $context]);
         }
     }

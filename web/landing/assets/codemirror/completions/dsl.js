@@ -733,7 +733,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">aws_s3_client</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$configuration</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">S3Client</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param array<string, mixed> $configuration - for details please see https://async-aws.com/clients/s3.html
+                    @param array<Configuration::OPTION_*, null|string> $configuration - for details please see https://async-aws.com/clients/s3.html
                 </div>
                             `
             return div
@@ -2971,7 +2971,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">dbal_from_queries</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Connection</span> <span class=\"fn-param\">$connection</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ParametersSet</span> <span class=\"fn-param\">$parameters_set</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$types</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DbalQueryExtractor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @deprecated use from_dbal_queries() instead<br>@param null|ParametersSet $parameters_set - each one parameters array will be evaluated as new query<br>@param array<int|string, DbalArrayType|DbalParameterType|DbalType|int|string> $types
+                    @deprecated use from_dbal_queries() instead<br>@param null|ParametersSet $parameters_set - each one parameters array will be evaluated as new query<br>@param array<int<0, max>|string, DbalArrayType|DbalParameterType|DbalType|string> $types
                 </div>
                             `
             return div
@@ -4207,7 +4207,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">from_dbal_queries</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Connection</span> <span class=\"fn-param\">$connection</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ParametersSet</span> <span class=\"fn-param\">$parameters_set</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$types</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DbalQueryExtractor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param null|ParametersSet $parameters_set - each one parameters array will be evaluated as new query<br>@param array<int|string, DbalArrayType|DbalParameterType|DbalType|int|string> $types
+                    @param null|ParametersSet $parameters_set - each one parameters array will be evaluated as new query<br>@param array<int<0, max>|string, DbalArrayType|DbalParameterType|DbalType|string> $types
                 </div>
                             `
             return div
@@ -5848,7 +5848,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">manual_detector</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$attributes</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ManualDetector</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a ManualDetector.<br>@param array<string, array<bool|float|int|string>|bool|float|int|string> $attributes Resource attributes
+                    Create a ManualDetector.<br>@param array<string, array<array-key, mixed>|bool|\\DateTimeInterface|float|int|string|\\Throwable> $attributes Resource attributes
                 </div>
                             `
             return div
@@ -6781,7 +6781,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pagination_key_asc</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ParameterType|Type|string|int</span> <span class=\"fn-param\">$type</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Doctrine\\DBAL\\ParameterType::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Key</span>
+                    <span class=\"fn-name\">pagination_key_asc</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ParameterType|Type|string</span> <span class=\"fn-param\">$type</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Doctrine\\DBAL\\ParameterType::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Key</span>
                 </div>
                             `
             return div
@@ -6796,7 +6796,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">pagination_key_desc</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ParameterType|Type|string|int</span> <span class=\"fn-param\">$type</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Doctrine\\DBAL\\ParameterType::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Key</span>
+                    <span class=\"fn-name\">pagination_key_desc</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ParameterType|Type|string</span> <span class=\"fn-param\">$type</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Doctrine\\DBAL\\ParameterType::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Key</span>
                 </div>
                             `
             return div
@@ -7768,7 +7768,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">resource</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Attributes|array</span> <span class=\"fn-param\">$attributes</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Resource</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a Resource.<br>@param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Resource attributes
+                    Create a Resource.<br>@param array<string, array<array-key, mixed>|bool|\\DateTimeInterface|float|int|string|\\Throwable>|Attributes $attributes Resource attributes
                 </div>
                             `
             return div
@@ -9190,7 +9190,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">span_event</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DateTimeImmutable</span> <span class=\"fn-param\">$timestamp</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Attributes|array</span> <span class=\"fn-param\">$attributes</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">GenericEvent</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a SpanEvent (GenericEvent) with an explicit timestamp.<br>@param string $name Event name<br>@param \\DateTimeImmutable $timestamp Event timestamp<br>@param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Event attributes
+                    Create a SpanEvent (GenericEvent) with an explicit timestamp.<br>@param string $name Event name<br>@param \\DateTimeImmutable $timestamp Event timestamp<br>@param array<string, array<array-key, mixed>|bool|\\DateTimeInterface|float|int|string|\\Throwable>|Attributes $attributes Event attributes
                 </div>
                             `
             return div
@@ -9244,7 +9244,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">span_link</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SpanContext</span> <span class=\"fn-param\">$context</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Attributes|array</span> <span class=\"fn-param\">$attributes</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SpanLink</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a SpanLink.<br>@param SpanContext $context The linked span context<br>@param array<string, array<bool|float|int|string>|bool|float|int|string>|Attributes $attributes Link attributes
+                    Create a SpanLink.<br>@param SpanContext $context The linked span context<br>@param array<string, array<array-key, mixed>|bool|\\DateTimeInterface|float|int|string|\\Throwable>|Attributes $attributes Link attributes
                 </div>
                             `
             return div
@@ -9922,10 +9922,10 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">struct_entry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">StructureType</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Entry</span>
+                    <span class=\"fn-name\">struct_entry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Type</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Entry</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param ?array<string, mixed> $value<br>@param StructureType<mixed> $type<br>@return ($value is null ? Entry<null> : Entry<array<string, mixed>>)
+                    @param ?array<string, mixed> $value<br>@param Type<mixed> $type<br>@return ($value is null ? Entry<null> : Entry<array<string, mixed>>)
                 </div>
                             `
             return div
@@ -10411,7 +10411,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">to_dbal_schema_table</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$table_name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$table_options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$types_map</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Table</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Converts a Flow\\ETL\\Schema to a Doctrine\\DBAL\\Schema\\Table.<br>@param Schema $schema<br>@param array<array-key, mixed> $table_options<br>@param array<class-string<\\Flow\\Types\\Type<mixed>>, class-string<\\Doctrine\\DBAL\\Types\\Type>> $types_map
+                    Converts a Flow\\ETL\\Schema to a Doctrine\\DBAL\\Schema\\Table.<br>@param Schema $schema<br>@param array<string, mixed> $table_options<br>@param array<class-string<\\Flow\\Types\\Type<mixed>>, class-string<\\Doctrine\\DBAL\\Types\\Type>> $types_map
                 </div>
                             `
             return div

@@ -37,7 +37,6 @@ final class Base64SerializerTest extends TestCase
                 datetime_entry('datetime', new DateTimeImmutable('2022-01-01 00:00:00')),
                 str_entry('null', null),
                 float_entry('float', 0.12),
-                // @mago-ignore analysis:less-specific-argument
                 struct_entry('struct', ['integer' => 1, 'string' => 'string'], type_structure([
                     'integer' => type_integer(),
                     'string' => type_string(),

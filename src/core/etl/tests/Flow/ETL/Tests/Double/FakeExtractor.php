@@ -51,7 +51,6 @@ use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
 use function random_int;
 
-// @mago-ignore analysis:less-specific-argument
 final readonly class FakeExtractor implements Extractor
 {
     public function __construct(

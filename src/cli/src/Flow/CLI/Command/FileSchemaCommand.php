@@ -19,6 +19,7 @@ use Flow\ETL\Config;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Schema\Formatter\PHPSchemaFormatter;
 use Flow\Filesystem\Path;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -99,6 +100,10 @@ final class FileSchemaCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        if ($this->flowConfig === null || $this->sourcePath === null || $this->fileFormat === null) {
+            throw new RuntimeException('Command not properly initialized.');
+        }
+
         $style = new SymfonyStyle($input, $output);
 
         $df = df($this->flowConfig)->read((new ExtractorFactory($this->sourcePath, $this->fileFormat))->get($input));

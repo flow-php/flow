@@ -20,7 +20,13 @@ final class PointInTime
      */
     public function __construct(array|Elasticsearch $pit)
     {
-        $this->pit = is_array($pit) ? $pit : $pit->asArray();
+        if (is_array($pit)) {
+            $this->pit = $pit;
+        } else {
+            /** @var array{id: string} $data */
+            $data = $pit->asArray();
+            $this->pit = $data;
+        }
     }
 
     public function id(): string

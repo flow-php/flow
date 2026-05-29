@@ -23,7 +23,6 @@ final readonly class GroupedDataFrame
 
         $pipelineAdder = function (GroupBy $groupBy): void {
             // @mago-ignore analysis:non-existent-property,method-access-on-null
-            /** @phpstan-ignore-next-line */
             $this->pipeline->add(new GroupByProcessor($groupBy));
         };
 

@@ -134,7 +134,6 @@ final class StreamLoader implements Closure, Loader
         }
 
         try {
-            /** @phpstan-ignore-next-line */
             $this->stream = @fopen($this->url, $this->mode->value);
         } catch (Throwable $e) {
             throw new RuntimeException(

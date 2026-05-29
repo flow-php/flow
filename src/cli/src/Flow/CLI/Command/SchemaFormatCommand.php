@@ -11,6 +11,7 @@ use Flow\ETL\Config;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Schema\Formatter\PHPSchemaFormatter;
 use Flow\Filesystem\Path;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -45,6 +46,10 @@ final class SchemaFormatCommand extends Command
 
     public function execute(InputInterface $input, OutputInterface $output): int
     {
+        if ($this->flowConfig === null || $this->schemaPath === null) {
+            throw new RuntimeException('Command not properly initialized.');
+        }
+
         $style = new SymfonyStyle($input, $output);
 
         $schema = schema_from_json(

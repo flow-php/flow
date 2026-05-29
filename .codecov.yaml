@@ -207,6 +207,10 @@ component_management:
       name: bridge-phpunit-telemetry
       paths:
         - src/bridge/phpunit/telemetry/**
+    - component_id: bridge-phpstan-types
+      name: bridge-phpstan-types
+      paths:
+        - src/bridge/phpstan/types/**
     - component_id: bridge-postgresql-valinor
       name: bridge-postgresql-valinor
       paths:

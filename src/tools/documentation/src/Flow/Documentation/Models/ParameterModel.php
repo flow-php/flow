@@ -73,9 +73,8 @@ final readonly class ParameterModel
         $hasDefaultValue = false;
 
         try {
-            $default = $reflectionParameter->getDefaultValue();
+            $defaultValue = self::exportDefaultValue($reflectionParameter->getDefaultValue());
             $hasDefaultValue = true;
-            $defaultValue = self::exportDefaultValue($default);
         } catch (Throwable) {
             $hasDefaultValue = false;
         }

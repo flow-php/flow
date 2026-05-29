@@ -7,8 +7,10 @@ namespace Flow\Documentation\Models;
 use ReflectionFunction;
 use ReflectionMethod;
 
-use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_string;
 
 final readonly class ParametersModel
 {
@@ -24,9 +26,9 @@ final readonly class ParametersModel
      */
     public static function fromArray(array $data): self
     {
-        type_list(type_array())->assert($data);
+        $data = type_list(type_map(type_string(), type_mixed()))->assert($data);
 
-        return new self(array_map(static fn(array $argument) => ParameterModel::fromArray($argument), $data));
+        return new self(array_map(ParameterModel::fromArray(...), $data));
     }
 
     public static function fromFunctionReflection(ReflectionFunction $reflectionFunction): self

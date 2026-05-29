@@ -307,7 +307,6 @@ final class CSVExtractorTest extends FlowTestCase
 
         $total = 0;
 
-        /** @var Rows $rows */
         foreach ($extractor->extract(flow_context(config())) as $rows) {
             $rows->each(function (Row $row): void {
                 $this->assertSame(
@@ -334,7 +333,6 @@ final class CSVExtractorTest extends FlowTestCase
 
         $total = 0;
 
-        /** @var Rows $rows */
         foreach ($extractor->extract(flow_context(config())) as $rows) {
             $rows->each(function (Row $row): void {
                 $this->assertSame(['id', 'name'], array_keys($row->toArray()));
@@ -351,7 +349,6 @@ final class CSVExtractorTest extends FlowTestCase
 
         $total = 0;
 
-        /** @var Rows $rows */
         foreach ($extractor->extract(flow_context(config())) as $rows) {
             $rows->each(function (Row $row): void {
                 $this->assertSame(['id', 'name', 'active'], array_keys($row->toArray()));

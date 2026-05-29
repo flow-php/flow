@@ -1,0 +1,45 @@
+{
+    "name": "flow-php/phpstan-types-bridge",
+    "type": "phpstan-extension",
+    "description": "Flow PHP - PHPStan Types Bridge",
+    "keywords": [
+        "flow-php",
+        "phpstan",
+        "types",
+        "bridge"
+    ],
+    "homepage": "https://github.com/flow-php/flow",
+    "license": "MIT",
+    "require": {
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "flow-php/types": "self.version"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "extra": {
+        "phpstan": {
+            "includes": [
+                "extension.neon"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}

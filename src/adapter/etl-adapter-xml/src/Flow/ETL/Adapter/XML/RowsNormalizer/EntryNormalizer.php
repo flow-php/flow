@@ -23,11 +23,11 @@ use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\Logical\StructureType;
 use MultipleIterator;
 
 use function count;
+use function Flow\Types\DSL\type_string;
 use function is_array;
 use function str_starts_with;
 use function strlen;
@@ -100,6 +100,7 @@ final readonly class EntryNormalizer
             return $node;
         }
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($listValue as $value) {
             $node = $node->append($this->valueNormalizer->normalize(
                 $this->valueNormalizer->listElementName,
@@ -154,9 +155,9 @@ final readonly class EntryNormalizer
             return $node;
         }
 
-        /** @var MapType<array-key, mixed> $type */
         $type = $entry->type();
 
+        // @mago-ignore analysis:mixed-assignment
         foreach ($mapValue as $key => $value) {
             $node = $node->append($this->valueNormalizer->normalize(
                 $this->valueNormalizer->mapElementKeyName,
@@ -196,10 +197,11 @@ final readonly class EntryNormalizer
         foreach ($structureIterator as $keys => $element) {
             /** @var Type<mixed> $structureElementType */
             $structureElementType = $element['structure_element'];
+            // @mago-ignore analysis:mixed-assignment
             $structureValue = $element['value_element'];
 
             $node = $node->append($this->valueNormalizer->normalize(
-                $keys['structure_element'],
+                type_string()->assert($keys['structure_element']),
                 $structureElementType,
                 $structureValue,
             ));

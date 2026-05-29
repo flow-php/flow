@@ -16,6 +16,9 @@ use Flow\ETL\Tests\FlowTestCase;
 use function Flow\Types\DSL\type_string;
 use function getenv;
 
+/**
+ * @phpstan-import-type Params from DriverManager
+ */
 abstract class IntegrationTestCase extends FlowTestCase
 {
     protected DatabaseContext $mysqlDatabaseContext;
@@ -29,41 +32,32 @@ abstract class IntegrationTestCase extends FlowTestCase
         $insertQueryCounter = new InsertQueryCounter();
         $selectQueryCounter = new SelectQueryCounter();
 
+        $pgsqlParams = $this->postgresqlConnectionParams();
         $this->pgsqlDatabaseContext = new DatabaseContext(
-            DriverManager::getConnection(
-                /** @phpstan-ignore-next-line */
-                $this->postgresqlConnectionParams(),
-                (new Configuration())->setMiddlewares([
-                    new Middleware($insertQueryCounter),
-                    new Middleware($selectQueryCounter),
-                ]),
-            ),
+            DriverManager::getConnection($pgsqlParams, (new Configuration())->setMiddlewares([
+                new Middleware($insertQueryCounter),
+                new Middleware($selectQueryCounter),
+            ])),
             $insertQueryCounter,
             $selectQueryCounter,
         );
 
+        $mysqlParams = $this->mysqlConnectionParams();
         $this->mysqlDatabaseContext = new DatabaseContext(
-            DriverManager::getConnection(
-                /** @phpstan-ignore-next-line */
-                $this->mysqlConnectionParams(),
-                (new Configuration())->setMiddlewares([
-                    new Middleware($insertQueryCounter),
-                    new Middleware($selectQueryCounter),
-                ]),
-            ),
+            DriverManager::getConnection($mysqlParams, (new Configuration())->setMiddlewares([
+                new Middleware($insertQueryCounter),
+                new Middleware($selectQueryCounter),
+            ])),
             $insertQueryCounter,
             $selectQueryCounter,
         );
 
+        $sqliteParams = $this->sqliteConnectionParams();
         $this->sqliteDatabaseContext = new DatabaseContext(
-            DriverManager::getConnection(
-                /** @phpstan-ignore-next-line */
-                $this->sqliteConnectionParams(),
-                (new Configuration())->setMiddlewares([
-                    new Middleware($insertQueryCounter),
-                    new Middleware($selectQueryCounter),
-                ]),
-            ),
+            DriverManager::getConnection($sqliteParams, (new Configuration())->setMiddlewares([
+                new Middleware($insertQueryCounter),
+                new Middleware($selectQueryCounter),
+            ])),
             $insertQueryCounter,
             $selectQueryCounter,
         );
@@ -81,7 +75,7 @@ abstract class IntegrationTestCase extends FlowTestCase
     }
 
     /**
-     * @return array<string, mixed>
+     * @return Params
      */
     protected function mysqlConnectionParams(): array
     {
@@ -89,7 +83,7 @@ abstract class IntegrationTestCase extends FlowTestCase
     }
 
     /**
-     * @return array<string, mixed>
+     * @return Params
      */
     protected function postgresqlConnectionParams(): array
     {
@@ -97,7 +91,7 @@ abstract class IntegrationTestCase extends FlowTestCase
     }
 
     /**
-     * @return array<string, mixed>
+     * @return Params
      */
     protected function sqliteConnectionParams(): array
     {

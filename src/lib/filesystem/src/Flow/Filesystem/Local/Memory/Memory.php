@@ -67,12 +67,9 @@ final class Memory
 
         if ($this->filter !== null) {
             stream_filter_register($outputStream, $this->filter::class);
-            /** @phpstan-ignore-next-line */
             stream_filter_append($handle, $this->filter::class);
-            /** @phpstan-ignore-next-line */
             $this->streams[$path->uri()] = new MemoryStream($handle, $path);
         } else {
-            /** @phpstan-ignore-next-line */
             $this->streams[$path->uri()] = new MemoryStream($handle, $path);
         }
 

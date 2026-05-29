@@ -10,6 +10,7 @@ use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 use Flow\ETL\Schema;
 use Generator;
 use Google\Service\Sheets;
@@ -44,9 +45,15 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         $this->resetLimit();
     }
 
+    /**
+     * @return Generator<int, Rows, Signal|null, void>
+     */
     public function extract(FlowContext $context): Generator
     {
-        $spreadsheet = $this->service->spreadsheets->get($this->spreadsheetId, [
+        /** @var Sheets\Resource\Spreadsheets $spreadsheetsResource */
+        $spreadsheetsResource = $this->service->spreadsheets;
+
+        $spreadsheet = $spreadsheetsResource->get($this->spreadsheetId, [
             'ranges' => [],
             'includeGridData' => false,
         ]);
@@ -54,8 +61,10 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         $maxRows = 0;
 
         foreach ($spreadsheet->getSheets() as $sheet) {
-            if ($sheet->getProperties()->title === $this->columnRange->sheetName) {
-                $maxRows = $sheet->getProperties()->getGridProperties()->getRowCount();
+            $properties = $sheet->getProperties();
+
+            if ($properties->title === $this->columnRange->sheetName) {
+                $maxRows = $properties->getGridProperties()->getRowCount();
 
                 break;
             }
@@ -73,20 +82,24 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
 
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
+        /** @var array<string> $headers */
         $headers = [];
         $headersCount = 0;
 
-        $response = $this->service->spreadsheets_values->batchGet($this->spreadsheetId, array_merge($this->options, [
+        /** @var Sheets\Resource\SpreadsheetsValues $valuesResource */
+        $valuesResource = $this->service->spreadsheets_values;
+
+        $response = $valuesResource->batchGet($this->spreadsheetId, array_merge($this->options, [
             'ranges' => $ranges,
         ]));
 
         foreach ($response->getValueRanges() as $valueRange) {
-            foreach ($valueRange->getValues() ?: [] as $rowData) {
+            // @mago-ignore analysis:redundant-null-coalesce
+            foreach ($valueRange->getValues() ?? [] as $rowData) {
                 $rowDataCount = count($rowData);
 
                 if ($this->withHeader) {
                     if ([] === $headers) {
-                        // Skip empty rows at the beginning of a sheet
                         if ([] === $rowData) {
                             continue;
                         }
@@ -102,7 +115,6 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
                     $headersCount = $rowDataCount;
                 }
 
-                // Expand columns to the size of the previous row
                 for ($i = $rowDataCount; $i < $headersCount; $i++) {
                     $rowData[$i] = null;
                 }

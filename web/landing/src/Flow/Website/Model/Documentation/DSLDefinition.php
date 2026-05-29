@@ -5,6 +5,12 @@ declare(strict_types=1);
 namespace Flow\Website\Model\Documentation;
 
 use function base64_decode;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_string;
 use function implode;
 use function ltrim;
 use function rtrim;
@@ -12,22 +18,15 @@ use function rtrim;
 final readonly class DSLDefinition
 {
     /**
-     * @param array{
-     *      repository_path: string,
-     *      start_line_in_file: false|int,
-     *      slug: string,
-     *      name: string,
-     *      namespace: string,
-     *      parameters: array<mixed>,
-     *      return_type: array<mixed>,
-     *      attributes: array<mixed>,
-     *      doc_comment: null|string,
-     *  } $data
+     * @param array<string, mixed> $data
      */
     public function __construct(
         private array $data,
     ) {}
 
+    /**
+     * @return array<string, mixed>
+     */
     public function data(): array
     {
         return $this->data;
@@ -35,7 +34,11 @@ final readonly class DSLDefinition
 
     public function docComment(): string
     {
-        return base64_decode((string) $this->data['doc_comment'], true);
+        if ($this->data['doc_comment'] === null) {
+            return '';
+        }
+
+        return type_string()->assert(base64_decode(type_string()->assert($this->data['doc_comment']), true));
     }
 
     /**
@@ -45,13 +48,11 @@ final readonly class DSLDefinition
     {
         $examples = [];
 
-        foreach ($this->data['attributes'] as $attribute) {
+        foreach (type_list(type_map(type_string(), type_mixed()))->assert($this->data['attributes']) as $attribute) {
             if ($attribute['name'] === 'DocumentationExample') {
-                $examples[] = new Example(
-                    $attribute['arguments']['topic'],
-                    $attribute['arguments']['example'],
-                    $attribute['arguments']['option'] ?? null,
-                );
+                $arguments = type_map(type_string(), type_string())->assert($attribute['arguments']);
+
+                $examples[] = new Example($arguments['topic'], $arguments['example'], $arguments['option'] ?? null);
             }
         }
 
@@ -60,13 +61,14 @@ final readonly class DSLDefinition
 
     public function githubUrl(string $version = '1.x'): string
     {
-        $startLine = $this->data['start_line_in_file'] ? '#L' . $this->data['start_line_in_file'] : '';
+        $startLineInFile = type_integer()->assert($this->data['start_line_in_file']);
+        $startLine = $startLineInFile > 0 ? '#L' . $startLineInFile : '';
 
         return (
             'https://github.com/flow-php/flow/blob/'
             . $version
             . '/'
-            . ltrim($this->data['repository_path'], '/')
+            . ltrim(type_string()->assert($this->data['repository_path']), '/')
             . $startLine
         );
     }
@@ -78,9 +80,11 @@ final readonly class DSLDefinition
 
     public function module(): ?Module
     {
-        foreach ($this->data['attributes'] as $attribute) {
+        foreach (type_list(type_map(type_string(), type_mixed()))->assert($this->data['attributes']) as $attribute) {
             if ($attribute['name'] === 'DocumentationDSL') {
-                foreach ($attribute['arguments'] as $name => $argument) {
+                foreach (type_map(type_string(), type_string())->assert(
+                    $attribute['arguments'],
+                ) as $name => $argument) {
                     if ($name === 'module') {
                         return Module::fromName($argument);
                     }
@@ -93,17 +97,17 @@ final readonly class DSLDefinition
 
     public function name(): string
     {
-        return $this->data['name'];
+        return type_string()->assert($this->data['name']);
     }
 
     public function path(): string
     {
-        return $this->data['repository_path'] . '/' . $this->data['name'];
+        return type_string()->assert($this->data['repository_path']) . '/' . type_string()->assert($this->data['name']);
     }
 
     public function slug(): string
     {
-        return $this->data['slug'];
+        return type_string()->assert($this->data['slug']);
     }
 
     public function toString(): string
@@ -114,13 +118,13 @@ final readonly class DSLDefinition
             $output = '';
         }
 
-        $output .= $this->data['name'];
+        $output .= type_string()->assert($this->data['name']);
 
         $output .= '(';
 
         $parameters = [];
 
-        foreach ($this->data['parameters'] as $parameter) {
+        foreach (type_list(type_map(type_string(), type_mixed()))->assert($this->data['parameters']) as $parameter) {
             $parameters[] = $this->parameterToString($parameter);
         }
 
@@ -128,16 +132,20 @@ final readonly class DSLDefinition
 
         $output .= ') : ';
 
-        $output .= $this->typeToString($this->data['return_type']);
+        $output .= $this->typeToString(
+            type_list(type_map(type_string(), type_mixed()))->assert($this->data['return_type']),
+        );
 
         return $output;
     }
 
     public function type(): ?Type
     {
-        foreach ($this->data['attributes'] as $attribute) {
+        foreach (type_list(type_map(type_string(), type_mixed()))->assert($this->data['attributes']) as $attribute) {
             if ($attribute['name'] === 'DocumentationDSL') {
-                foreach ($attribute['arguments'] as $name => $argument) {
+                foreach (type_map(type_string(), type_string())->assert(
+                    $attribute['arguments'],
+                ) as $name => $argument) {
                     if ($name === 'type') {
                         return Type::fromName($argument);
                     }
@@ -148,26 +156,35 @@ final readonly class DSLDefinition
         return null;
     }
 
+    /**
+     * @param array<string, mixed> $parameter
+     */
     private function parameterToString(array $parameter): string
     {
-        $output = $this->typeToString($parameter['type']);
-        $output .= ' $' . $parameter['name'];
-
-        return $output;
+        return (
+            $this->typeToString(type_list(type_map(type_string(), type_mixed()))->assert($parameter['type']))
+            . ' $'
+            . type_string()->assert($parameter['name'])
+        );
     }
 
+    /**
+     * @param array<array<string, mixed>> $type
+     */
     private function typeToString(array $type): string
     {
         $output = '';
 
         foreach ($type as $item) {
-            if ($item['is_nullable'] && $item['name'] !== 'null') {
+            $name = type_string()->assert($item['name']);
+
+            if (type_boolean()->assert($item['is_nullable']) && $name !== 'null') {
                 $output .= '?';
             }
 
-            $output .= $item['name'] . '|';
+            $output .= $name . '|';
 
-            if ($item['is_variadic']) {
+            if (type_boolean()->assert($item['is_variadic'])) {
                 $output .= '...';
             }
         }

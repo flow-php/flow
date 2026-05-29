@@ -16,6 +16,8 @@ final readonly class DocumentationProvider implements SourceProvider
 
     public function all(): array
     {
+        $sources = [];
+
         foreach ($this->pages->all() as $page) {
             $sources[] = new Source('documentation_page', ['path' => $page->path]);
         }

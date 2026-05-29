@@ -7,6 +7,12 @@ namespace Flow\Website\Model\Documentation;
 use League\CommonMark\Extension\FrontMatter\Data\SymfonyYamlFrontMatterParser;
 use League\CommonMark\Extension\FrontMatter\FrontMatterParser;
 
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_mixed;
+use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
+
 final readonly class Page
 {
     public function __construct(
@@ -16,10 +22,11 @@ final readonly class Page
 
     public function description(): ?string
     {
-        $frontMatterParser = new FrontMatterParser(new SymfonyYamlFrontMatterParser());
-        $result = $frontMatterParser->parse($this->content);
+        $frontMatter = $this->frontMatter();
 
-        return $result->getFrontMatter()['seo_description'] ?? 'Documentation';
+        return (
+            type_union(type_string(), type_null())->assert($frontMatter['seo_description'] ?? null) ?? 'Documentation'
+        );
     }
 
     public function editOnGitHubUrl(): string
@@ -29,18 +36,29 @@ final readonly class Page
 
     public function package(): ?string
     {
-        $frontMatterParser = new FrontMatterParser(new SymfonyYamlFrontMatterParser());
-        $result = $frontMatterParser->parse($this->content);
-        $package = $result->getFrontMatter()['package'] ?? null;
+        $frontMatter = $this->frontMatter();
 
-        return is_string($package) ? $package : null;
+        return type_union(type_string(), type_null())->assert($frontMatter['package'] ?? null);
     }
 
     public function title(): ?string
     {
-        $frontMatterParser = new FrontMatterParser(new SymfonyYamlFrontMatterParser());
-        $result = $frontMatterParser->parse($this->content);
+        $frontMatter = $this->frontMatter();
 
-        return $result->getFrontMatter()['seo_title'] ?? 'Documentation';
+        return type_union(type_string(), type_null())->assert($frontMatter['seo_title'] ?? null) ?? 'Documentation';
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function frontMatter(): array
+    {
+        $frontMatter = type_union(type_map(type_string(), type_mixed()), type_null())->assert(
+            (new FrontMatterParser(new SymfonyYamlFrontMatterParser()))
+                ->parse($this->content)
+                ->getFrontMatter(),
+        );
+
+        return $frontMatter ?? [];
     }
 }

@@ -1,0 +1,5 @@
+services:
+    -
+        class: Flow\Bridge\PHPStan\Types\StructureTypeReturnTypeExtension
+        tags:
+            - phpstan.broker.dynamicFunctionReturnTypeExtension

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet;
 
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
@@ -161,7 +162,10 @@ final class ParquetLoader implements Closure, FileLoader, Loader
 
     private function schema(): Schema
     {
-        /** @phpstan-ignore-next-line  */
-        return $this->schema ?? $this->inferredSchema;
+        return (
+            $this->schema ?? $this->inferredSchema ?? throw new RuntimeException(
+                'Schema has not been inferred yet. Load at least one batch of rows first.',
+            )
+        );
     }
 }

@@ -106,7 +106,6 @@ final class OffsetProcessorTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Offset must be greater than or equal to 0');
         // @mago-ignore analysis:invalid-argument
-        /** @phpstan-ignore-next-line */
         new OffsetProcessor(-1);
     }
 }

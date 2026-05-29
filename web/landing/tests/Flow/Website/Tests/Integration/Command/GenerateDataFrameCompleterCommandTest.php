@@ -7,6 +7,7 @@ namespace Flow\Website\Tests\Integration\Command;
 use Symfony\Component\Console\Command\Command;
 
 use function file_get_contents;
+use function Flow\Types\DSL\type_string;
 
 final class GenerateDataFrameCompleterCommandTest extends CompleterCommandTestCase
 {
@@ -22,7 +23,7 @@ final class GenerateDataFrameCompleterCommandTest extends CompleterCommandTestCa
     {
         $this->executeCommand('app:generate:data-frame-completer');
 
-        $content = file_get_contents($this->getOutputPath('dataframe.js'));
+        $content = type_string()->assert(file_get_contents($this->getOutputPath('dataframe.js')));
 
         $coreMethods = ['write', 'collect', 'fetch', 'run', 'withEntry', 'select', 'drop', 'filter', 'limit'];
 
@@ -39,7 +40,7 @@ final class GenerateDataFrameCompleterCommandTest extends CompleterCommandTestCa
     {
         $this->executeCommand('app:generate:data-frame-completer');
 
-        $content = file_get_contents($this->getOutputPath('dataframe.js'));
+        $content = type_string()->assert(file_get_contents($this->getOutputPath('dataframe.js')));
 
         static::assertStringContainsString('CodeMirror Completer', $content);
         static::assertStringContainsString('dataframeMethods', $content);
@@ -51,7 +52,7 @@ final class GenerateDataFrameCompleterCommandTest extends CompleterCommandTestCa
     {
         $this->executeCommand('app:generate:data-frame-completer');
 
-        $content = file_get_contents($this->getOutputPath('dataframe.js'));
+        $content = type_string()->assert(file_get_contents($this->getOutputPath('dataframe.js')));
 
         static::assertMatchesRegularExpression(
             '/label:\s*"[a-zA-Z]+"/i',

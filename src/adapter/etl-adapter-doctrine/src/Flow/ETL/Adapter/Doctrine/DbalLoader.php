@@ -20,6 +20,9 @@ use Throwable;
 use function in_array;
 use function strtolower;
 
+/**
+ * @phpstan-import-type Params from DriverManager
+ */
 final class DbalLoader implements Loader
 {
     private ?Bulk $bulk = null;
@@ -79,6 +82,7 @@ final class DbalLoader implements Loader
             $sortedRows = $rows->sortEntries();
             $normalizedData = (new RowsNormalizer())->normalize($sortedRows);
 
+            // @mago-expect analysis:string-member-selector
             $this->bulk()->{$this->operation}(
                 $this->connection(),
                 $this->tableName,
@@ -137,8 +141,9 @@ final class DbalLoader implements Loader
     private function connection(): Connection
     {
         if ($this->connection === null) {
-            /** @phpstan-ignore-next-line */
-            $this->connection = DriverManager::getConnection($this->connectionParams);
+            /** @var Params $connectionParams */
+            $connectionParams = $this->connectionParams;
+            $this->connection = DriverManager::getConnection($connectionParams);
         }
 
         return $this->connection;

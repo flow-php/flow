@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service\Manifest;
 
+use function Flow\Types\DSL\type_string;
+
 final readonly class PackageMeta
 {
     private const array ACRONYMS = [
@@ -79,7 +81,7 @@ final readonly class PackageMeta
         }
 
         return [
-            'type' => self::TYPE_LABEL[$type],
+            'type' => type_string()->assert(self::TYPE_LABEL[$type]),
             'component' => $this->componentLabel($packageName),
         ];
     }
@@ -87,7 +89,7 @@ final readonly class PackageMeta
     private function componentLabel(string $packageName): string
     {
         if (isset(self::NAME_OVERRIDE[$packageName])) {
-            return self::NAME_OVERRIDE[$packageName];
+            return type_string()->assert(self::NAME_OVERRIDE[$packageName]);
         }
 
         $slash = strrpos($packageName, '/');

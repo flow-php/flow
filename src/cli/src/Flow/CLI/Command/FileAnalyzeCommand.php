@@ -21,6 +21,7 @@ use Flow\CLI\Style\FlowStyle;
 use Flow\ETL\Config;
 use Flow\ETL\Rows;
 use Flow\Filesystem\Path;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -108,6 +109,10 @@ final class FileAnalyzeCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        if ($this->flowConfig === null || $this->sourcePath === null || $this->fileFormat === null) {
+            throw new RuntimeException('Command not properly initialized.');
+        }
+
         $style = new FlowStyle($input, $output);
 
         $style->title('Analyzing File');
@@ -157,12 +162,6 @@ final class FileAnalyzeCommand extends Command
         $report = $df->run(static function (Rows $rows) use ($progress): void {
             $progress->advance($rows->count());
         }, analyze: $analyze);
-
-        if ($report === null) {
-            $style->error("Couldn't analyze given file.");
-
-            return Command::FAILURE;
-        }
 
         $progress->finish();
 

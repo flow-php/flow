@@ -11,15 +11,12 @@ final class Example
     public int $foo = 1;
 
     // @mago-ignore analysis:write-only-property
-    /** @phpstan-ignore-next-line */
     private readonly DateTimeImmutable $bad;
 
     // @mago-ignore analysis:write-only-property
-    /** @phpstan-ignore-next-line */
     private int $bar = 2;
 
     // @mago-ignore analysis:write-only-property
-    /** @phpstan-ignore-next-line */
     private int $baz = 3;
 
     public function __construct()

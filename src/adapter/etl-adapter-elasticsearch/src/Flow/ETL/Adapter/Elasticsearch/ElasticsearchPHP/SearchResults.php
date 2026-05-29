@@ -10,7 +10,6 @@ use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Rows;
 
 use function array_key_exists;
-use function array_keys;
 use function ceil;
 use function count;
 use function end;
@@ -19,18 +18,23 @@ use function is_array;
 final readonly class SearchResults
 {
     /**
-     * @var array<mixed>
+     * @var array{hits: array{hits: array<int, array<string, mixed>>, total: array{value: int, ...}, ...}, ...}
      */
     private array $results;
 
     /**
-     * @param array<mixed>|Elasticsearch $results
+     * @param array{hits: array{hits: array<int, array<string, mixed>>, total: array{value: int, ...}, ...}, ...}|Elasticsearch $results
      */
     public function __construct(array|Elasticsearch $results)
     {
-        $this->results = is_array($results) ? $results : $results->asArray();
+        /** @var array{hits: array{hits: array<int, array<string, mixed>>, total: array{value: int, ...}, ...}, ...} $data */
+        $data = is_array($results) ? $results : $results->asArray();
+        $this->results = $data;
     }
 
+    /**
+     * @return array<mixed>|null
+     */
     public function lastHitSort(): ?array
     {
         if (!$this->size()) {
@@ -41,7 +45,12 @@ final readonly class SearchResults
 
         $lastHit = end($hits);
 
-        return array_key_exists('sort', $lastHit) ? $lastHit['sort'] : null;
+        if (!is_array($lastHit) || !array_key_exists('sort', $lastHit)) {
+            return null;
+        }
+
+        /** @var array<mixed> */
+        return $lastHit['sort'];
     }
 
     public function pages(): int
@@ -60,11 +69,12 @@ final readonly class SearchResults
 
     public function toRows(EntryFactory $entryFactory): Rows
     {
-        /** @var array<Row\Entry> $entries */
+        /** @var array<string, Row\Entry> $entries */
         $entries = [];
 
-        foreach (array_keys($this->results) as $key) {
-            $entries[$key] = $entryFactory->create($key, $this->results[$key]);
+        // @mago-ignore analysis:mixed-assignment
+        foreach ($this->results as $key => $value) {
+            $entries[(string) $key] = $entryFactory->create((string) $key, $value);
         }
 
         return new Rows(Row::create(...$entries));
@@ -72,6 +82,6 @@ final readonly class SearchResults
 
     public function total(): int
     {
-        return (int) $this->results['hits']['total']['value'];
+        return $this->results['hits']['total']['value'];
     }
 }

@@ -11,6 +11,13 @@ use League\CommonMark\Renderer\ChildNodeRendererInterface;
 use League\CommonMark\Renderer\NodeRendererInterface;
 use League\CommonMark\Util\HtmlElement;
 
+use function array_key_exists;
+use function Flow\Types\DSL\type_boolean;
+use function Flow\Types\DSL\type_list;
+use function Flow\Types\DSL\type_map;
+use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\type_union;
+
 class FlowCodeRenderer implements NodeRendererInterface
 {
     public function render(Node $node, ChildNodeRendererInterface $childRenderer)
@@ -23,8 +30,14 @@ class FlowCodeRenderer implements NodeRendererInterface
         $language = $infoWords[0] ?? '';
         $class = $language ? 'language-' . $language : 'language-plain';
 
-        $attrs = $node->data->get('attributes', []);
-        $attrs['class'] = isset($attrs['class']) ? $attrs['class'] . ' ' . $class : $class;
+        $attrs = type_map(type_string(), type_union(
+            type_string(),
+            type_list(type_string()),
+            type_boolean(),
+        ))->assert($node->data->get('attributes', []));
+        $attrs['class'] = array_key_exists('class', $attrs)
+            ? type_string()->assert($attrs['class']) . ' ' . $class
+            : $class;
 
         // Escape the code content
         $escapedContent = htmlspecialchars($node->getLiteral(), ENT_NOQUOTES, 'UTF-8');

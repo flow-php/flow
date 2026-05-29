@@ -7,6 +7,7 @@ namespace Flow\Documentation\Models;
 use ReflectionAttribute;
 use ReflectionClass;
 
+use function Flow\Types\DSL\type_class_string;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_mixed;
 use function Flow\Types\DSL\type_string;
@@ -15,7 +16,7 @@ use function Flow\Types\DSL\type_structure;
 final readonly class AttributeModel
 {
     /**
-     * @param array<string, mixed> $arguments
+     * @param array<array-key, mixed> $arguments
      */
     public function __construct(
         public string $name,
@@ -37,12 +38,9 @@ final readonly class AttributeModel
         return new self($data['name'], $data['namespace'], $data['arguments']);
     }
 
-    /**
-     * @param \ReflectionAttribute<object> $reflectionAttribute
-     */
     public static function fromReflection(ReflectionAttribute $reflectionAttribute): self
     {
-        $attributeReflectionClass = new ReflectionClass($reflectionAttribute->getName());
+        $attributeReflectionClass = new ReflectionClass(type_class_string()->assert($reflectionAttribute->getName()));
 
         return new self(
             $attributeReflectionClass->getShortName(),

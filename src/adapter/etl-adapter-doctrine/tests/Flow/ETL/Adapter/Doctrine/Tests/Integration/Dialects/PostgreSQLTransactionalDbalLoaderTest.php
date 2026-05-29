@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration\Dialects;
 
 use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\TransactionIsolationLevel;
 use Doctrine\DBAL\Types\Type;
@@ -35,7 +36,7 @@ final class PostgreSQLTransactionalDbalLoaderTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('value', Type::getType(Types::INTEGER), ['notnull' => true]),
         ]);
-        $table->setPrimaryKey(['id']);
+        $table->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create());
 
         $this->pgsqlDatabaseContext->createTable($table);
 
@@ -70,7 +71,7 @@ final class PostgreSQLTransactionalDbalLoaderTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
         ]);
-        $table->setPrimaryKey(['id']);
+        $table->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create());
 
         $this->pgsqlDatabaseContext->createTable($table);
         $this->pgsqlDatabaseContext->insert('test_table', ['id' => 1, 'name' => 'Initial']);
@@ -110,7 +111,7 @@ final class PostgreSQLTransactionalDbalLoaderTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
         ]);
-        $table->setPrimaryKey(['id']);
+        $table->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create());
 
         $this->pgsqlDatabaseContext->createTable($table);
 
@@ -148,7 +149,7 @@ final class PostgreSQLTransactionalDbalLoaderTest extends IntegrationTestCase
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
         ]);
-        $table->setPrimaryKey(['id']);
+        $table->addPrimaryKeyConstraint(PrimaryKeyConstraint::editor()->setUnquotedColumnNames('id')->create());
 
         $this->pgsqlDatabaseContext->createTable($table);
 

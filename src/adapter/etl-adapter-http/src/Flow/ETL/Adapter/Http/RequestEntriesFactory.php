@@ -13,7 +13,7 @@ use Psr\Http\Message\RequestInterface;
 
 use function class_exists;
 use function Flow\ETL\DSL\string_entry;
-use function is_array;
+use function Flow\Types\DSL\type_array;
 use function json_decode;
 use function str_contains;
 
@@ -63,13 +63,12 @@ final class RequestEntriesFactory
                 switch ($requestType) {
                     case 'json':
                         if (class_exists(JsonEntry::class)) {
-                            $decodedJson = json_decode($requestBodyContent, true, 512, JSON_THROW_ON_ERROR);
-
-                            if (!is_array($decodedJson)) {
-                                throw new InvalidArgumentException(
-                                    'Invalid JSON request body, expected array or object',
-                                );
-                            }
+                            $decodedJson = type_array()->assert(json_decode(
+                                $requestBodyContent,
+                                true,
+                                512,
+                                JSON_THROW_ON_ERROR,
+                            ));
 
                             $requestBodyEntry = new JsonEntry('request_body', Json::fromArray($decodedJson));
                         } else {
