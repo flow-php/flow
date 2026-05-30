@@ -1,11 +1,15 @@
-## [Unreleased] - 2026-05-29
+## [Unreleased] - 2026-05-30
 
 ### Changed
+- [a05c09](https://github.com/flow-php/flow/commit/a05c0961ccb26d86957939b6c3ba1b3350c33583) - **Merge pull request #2401 from flow-php/2394-bug-csv-extractor---too-small-default-for-characters_read_in_line** - [@norberttech](https://github.com/norberttech)
 - [8a460b](https://github.com/flow-php/flow/commit/8a460b9b164c4e14afdf1ed1ef22644c5961fca5) - **refactor: cleanup github actions workflows** - [@norberttech](https://github.com/norberttech)
 - [#2397](https://github.com/flow-php/flow/pull/2397) - **Replaced PHPStan with Mago across entire project codebase** - [@norberttech](https://github.com/norberttech)
 - [#2391](https://github.com/flow-php/flow/pull/2391) - **Covered all bridges with Mago Analyzer** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2401](https://github.com/flow-php/flow/pull/2401) - **performance when processing remote CSV files** - [@norberttech](https://github.com/norberttech)
+- [#2402](https://github.com/flow-php/flow/pull/2402) - **default values in ForeingKey and UniqueConstraint postgersql** - [@norberttech](https://github.com/norberttech)
+- [b973a7](https://github.com/flow-php/flow/commit/b973a745a4a63da388f9bdb2b59d2f98afb4b6ba) - **regenerated dsl definitions** - [@norberttech](https://github.com/norberttech)
 - [400244](https://github.com/flow-php/flow/commit/4002444c062c2029d1713b8e8d0f82ab28d835fb) - **failing tests on lowest versions of dependencies** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
