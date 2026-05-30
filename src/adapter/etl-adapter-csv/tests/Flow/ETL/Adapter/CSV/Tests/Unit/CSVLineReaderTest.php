@@ -7,7 +7,6 @@ namespace Flow\ETL\Adapter\CSV\Tests\Unit;
 use Flow\ETL\Adapter\CSV\CSVLineReader;
 use Flow\ETL\Adapter\CSV\Tests\Double\LengthCapturingSourceStream;
 use Flow\Filesystem\Stream\MemorySourceStream;
-use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\Filesystem\DSL\path;

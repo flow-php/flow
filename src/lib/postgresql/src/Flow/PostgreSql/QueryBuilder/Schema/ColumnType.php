@@ -249,6 +249,11 @@ final readonly class ColumnType
         return new self('varchar', 'pg_catalog', $length);
     }
 
+    public static function xml(): self
+    {
+        return new self('xml', 'pg_catalog');
+    }
+
     public function isEqual(self $other): bool
     {
         return (
