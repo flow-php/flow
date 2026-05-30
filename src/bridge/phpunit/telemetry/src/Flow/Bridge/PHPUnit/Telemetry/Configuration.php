@@ -136,6 +136,7 @@ final readonly class Configuration
         public bool $emitTestCaseSpans,
         public int $batchSize,
         public ErrorLogHandlerConfig|NullErrorHandlerConfig|StreamErrorHandlerConfig|SyslogErrorHandlerConfig|UdpSyslogErrorHandlerConfig $errorHandler,
+        public bool $memoryRealUsage = false,
     ) {}
 
     public static function fromParameters(ParameterCollection $parameters): self
@@ -165,6 +166,7 @@ final readonly class Configuration
             emitTestCaseSpans: self::resolveBool($parameters, 'emit_test_case_spans', true),
             batchSize: self::resolveInt($parameters, 'batch_size', self::DEFAULT_BATCH_SIZE),
             errorHandler: self::resolveErrorHandler($parameters),
+            memoryRealUsage: self::resolveBool($parameters, 'memory_real_usage', false),
         );
     }
 

@@ -30,6 +30,7 @@ Add the extension to your `phpunit.xml.dist`:
         <parameter name="emit_metrics" value="true"/>
         <parameter name="emit_test_spans" value="true"/>
         <parameter name="emit_test_case_spans" value="true"/>
+        <parameter name="memory_real_usage" value="false"/>
     </bootstrap>
 </extensions>
 ```
@@ -48,6 +49,7 @@ Add the extension to your `phpunit.xml.dist`:
 | `emit_metrics`         | `FLOW_PHPUNIT_OTEL_EMIT_METRICS`         | `true`                  | Enable/disable metric emission                                 |
 | `emit_test_spans`      | `FLOW_PHPUNIT_OTEL_EMIT_TEST_SPANS`      | `true`                  | Create individual spans for each test                          |
 | `emit_test_case_spans` | `FLOW_PHPUNIT_OTEL_EMIT_TEST_CASE_SPANS` | `true`                  | Create spans for test case classes                             |
+| `memory_real_usage`    | `FLOW_PHPUNIT_OTEL_MEMORY_REAL_USAGE`    | `false`                 | Report total system-allocated memory (`real_usage=true`) instead of emalloc usage for memory metrics/attributes |
 | `batch_size`           | `FLOW_PHPUNIT_OTEL_BATCH_SIZE`           | `512`                   | Items per batch for span/metric/log batching processors        |
 | `shutdown_timeout_ms`  | `FLOW_PHPUNIT_OTEL_SHUTDOWN_TIMEOUT_MS`  | `5000`                  | Wall-clock budget in ms for draining pending requests at shutdown (curl/grpc) |
 | `error_handler`        | `FLOW_PHPUNIT_OTEL_ERROR_HANDLER`        | `error_log`             | How telemetry errors are surfaced (see [Error Handlers](#error-handlers)) |
