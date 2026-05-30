@@ -252,6 +252,7 @@ final class ConfigurationTest extends TestCase
         static::assertTrue($config->emitMetrics);
         static::assertTrue($config->emitTestSpans);
         static::assertTrue($config->emitTestCaseSpans);
+        static::assertFalse($config->memoryRealUsage);
 
         static::assertInstanceOf(CurlTransportConfig::class, $config->transport);
         static::assertSame('http://localhost:4318', $config->transport->endpoint);
@@ -298,6 +299,15 @@ final class ConfigurationTest extends TestCase
         static::assertFalse($config->emitMetrics);
         static::assertFalse($config->emitTestSpans);
         static::assertFalse($config->emitTestCaseSpans);
+    }
+
+    public function test_memory_real_usage_can_be_enabled(): void
+    {
+        $config = Configuration::fromParameters(ParameterCollection::fromArray([
+            'memory_real_usage' => 'true',
+        ]));
+
+        static::assertTrue($config->memoryRealUsage);
     }
 
     public function test_empty_env_superglobal_treated_as_unset(): void

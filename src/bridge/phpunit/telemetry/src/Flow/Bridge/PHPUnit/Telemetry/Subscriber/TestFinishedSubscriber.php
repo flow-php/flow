@@ -6,6 +6,7 @@ namespace Flow\Bridge\PHPUnit\Telemetry\Subscriber;
 
 use Flow\Bridge\PHPUnit\Telemetry\Configuration;
 use Flow\Bridge\PHPUnit\Telemetry\SpanStack;
+use Flow\Bridge\PHPUnit\Telemetry\TestMemoryRegistry;
 use Flow\Bridge\PHPUnit\Telemetry\TestStatusRegistry;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Telemetry;
@@ -14,6 +15,9 @@ use PHPUnit\Event\Test\Finished;
 use PHPUnit\Event\Test\FinishedSubscriber;
 use Throwable;
 
+use function memory_get_peak_usage;
+use function memory_get_usage;
+
 final readonly class TestFinishedSubscriber implements FinishedSubscriber
 {
     public function __construct(
@@ -21,6 +25,7 @@ final readonly class TestFinishedSubscriber implements FinishedSubscriber
         private SpanStack $spanStack,
         private Configuration $config,
         private TestStatusRegistry $statusRegistry,
+        private TestMemoryRegistry $memoryRegistry,
     ) {}
 
     public function notify(Finished $event): void
@@ -29,11 +34,25 @@ final readonly class TestFinishedSubscriber implements FinishedSubscriber
             $testId = $event->test()->id();
             $status = $this->statusRegistry->getStatus($testId);
 
+            $startBytes = $this->memoryRegistry->getStart($testId);
+            $peakBytes = memory_get_peak_usage($this->config->memoryRealUsage);
+            $deltaBytes = $startBytes !== null ? memory_get_usage($this->config->memoryRealUsage) - $startBytes : null;
+            $this->memoryRegistry->clear($testId);
+
             if (!$this->config->emitTestSpans) {
                 if ($this->config->emitMetrics) {
                     $meter = $this->telemetry->meter('phpunit', PackageVersion::get('phpunit/phpunit'));
 
                     $meter->createCounter('phpunit.test.count')->add(1, ['test.status' => $status]);
+                    $meter->createHistogram('phpunit.test.memory.peak', 'bytes')->record($peakBytes, [
+                        'test.status' => $status,
+                    ]);
+
+                    if ($deltaBytes !== null) {
+                        $meter->createHistogram('phpunit.test.memory.delta', 'bytes')->record($deltaBytes, [
+                            'test.status' => $status,
+                        ]);
+                    }
                 }
 
                 $this->statusRegistry->clear($testId);
@@ -63,18 +82,38 @@ final readonly class TestFinishedSubscriber implements FinishedSubscriber
                 $span->setAttribute('exception.message', $errorMessage);
             }
 
+            $span->setAttribute('test.memory.peak_bytes', $peakBytes);
+
+            if ($deltaBytes !== null) {
+                $span->setAttribute('test.memory.delta_bytes', $deltaBytes);
+            }
+
             if ($status === 'passed') {
                 $span->setStatus(SpanStatus::ok());
             } else {
                 $span->setStatus(SpanStatus::error($errorMessage ?? $status));
             }
 
-            if ($this->config->emitMetrics && $duration !== null) {
+            if ($this->config->emitMetrics) {
                 $meter = $this->telemetry->meter('phpunit', PackageVersion::get('phpunit/phpunit'));
 
-                $meter->createHistogram('phpunit.test.duration', 'ms')->record($duration, ['test.status' => $status]);
+                if ($duration !== null) {
+                    $meter->createHistogram('phpunit.test.duration', 'ms')->record($duration, [
+                        'test.status' => $status,
+                    ]);
 
-                $meter->createCounter('phpunit.test.count')->add(1, ['test.status' => $status]);
+                    $meter->createCounter('phpunit.test.count')->add(1, ['test.status' => $status]);
+                }
+
+                $meter->createHistogram('phpunit.test.memory.peak', 'bytes')->record($peakBytes, [
+                    'test.status' => $status,
+                ]);
+
+                if ($deltaBytes !== null) {
+                    $meter->createHistogram('phpunit.test.memory.delta', 'bytes')->record($deltaBytes, [
+                        'test.status' => $status,
+                    ]);
+                }
             }
 
             $tracer->complete($span);

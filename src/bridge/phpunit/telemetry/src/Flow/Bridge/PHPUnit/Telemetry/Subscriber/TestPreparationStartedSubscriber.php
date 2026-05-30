@@ -6,11 +6,15 @@ namespace Flow\Bridge\PHPUnit\Telemetry\Subscriber;
 
 use Flow\Bridge\PHPUnit\Telemetry\Configuration;
 use Flow\Bridge\PHPUnit\Telemetry\SpanStack;
+use Flow\Bridge\PHPUnit\Telemetry\TestMemoryRegistry;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Telemetry;
 use PHPUnit\Event\Test\PreparationStarted;
 use PHPUnit\Event\Test\PreparationStartedSubscriber;
 use Throwable;
+
+use function memory_get_usage;
+use function memory_reset_peak_usage;
 
 final readonly class TestPreparationStartedSubscriber implements PreparationStartedSubscriber
 {
@@ -18,11 +22,17 @@ final readonly class TestPreparationStartedSubscriber implements PreparationStar
         private Telemetry $telemetry,
         private SpanStack $spanStack,
         private Configuration $config,
+        private TestMemoryRegistry $memoryRegistry,
     ) {}
 
     public function notify(PreparationStarted $event): void
     {
         try {
+            if ($this->config->emitTestSpans || $this->config->emitMetrics) {
+                memory_reset_peak_usage();
+                $this->memoryRegistry->setStart($event->test()->id(), memory_get_usage($this->config->memoryRealUsage));
+            }
+
             if (!$this->config->emitTestSpans) {
                 return;
             }

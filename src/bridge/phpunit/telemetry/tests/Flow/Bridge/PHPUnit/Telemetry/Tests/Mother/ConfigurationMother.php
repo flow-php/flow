@@ -139,4 +139,19 @@ final class ConfigurationMother
             errorHandler: self::defaultErrorHandler(),
         );
     }
+
+    public static function withRealMemoryUsage(): Configuration
+    {
+        return new Configuration(
+            serviceName: 'phpunit',
+            transport: self::defaultTransport(),
+            emitTraces: true,
+            emitMetrics: true,
+            emitTestSpans: true,
+            emitTestCaseSpans: true,
+            batchSize: Configuration::DEFAULT_BATCH_SIZE,
+            errorHandler: self::defaultErrorHandler(),
+            memoryRealUsage: true,
+        );
+    }
 }
