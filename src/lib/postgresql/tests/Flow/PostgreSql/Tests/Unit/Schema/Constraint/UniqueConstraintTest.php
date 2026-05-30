@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Unit\Schema\Constraint;
 
+use Flow\PostgreSql\Schema\Constraint\UniqueConstraint;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\PostgreSql\DSL\schema_unique;
@@ -16,6 +17,48 @@ final class UniqueConstraintTest extends TestCase
         $b = schema_unique(['email'], 'uq_email', nullsNotDistinct: true);
 
         static::assertTrue($a->isEqual($b));
+    }
+
+    public function test_from_array_defaults_nulls_not_distinct_when_absent(): void
+    {
+        $unique = UniqueConstraint::fromArray([
+            'columns' => ['email'],
+            'name' => 'uq_email',
+        ]);
+
+        static::assertSame(['email'], $unique->columns);
+        static::assertSame('uq_email', $unique->name);
+        static::assertFalse($unique->nullsNotDistinct);
+    }
+
+    public function test_from_array_defaults_name_when_absent(): void
+    {
+        $unique = UniqueConstraint::fromArray([
+            'columns' => ['email'],
+        ]);
+
+        static::assertNull($unique->name);
+        static::assertFalse($unique->nullsNotDistinct);
+    }
+
+    public function test_from_array_with_all_keys(): void
+    {
+        $unique = UniqueConstraint::fromArray([
+            'columns' => ['email', 'tenant_id'],
+            'name' => 'uq_email_tenant',
+            'nulls_not_distinct' => true,
+        ]);
+
+        static::assertSame(['email', 'tenant_id'], $unique->columns);
+        static::assertSame('uq_email_tenant', $unique->name);
+        static::assertTrue($unique->nullsNotDistinct);
+    }
+
+    public function test_normalize_and_from_array_round_trip(): void
+    {
+        $unique = schema_unique(['email', 'tenant_id'], 'uq_email_tenant', nullsNotDistinct: true);
+
+        static::assertTrue($unique->isEqual(UniqueConstraint::fromArray($unique->normalize())));
     }
 
     public function test_is_equal_returns_false_when_columns_differ(): void

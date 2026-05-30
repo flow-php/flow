@@ -7,7 +7,7 @@ namespace Flow\PostgreSql\Schema\Constraint;
 use function sort;
 
 /**
- * @phpstan-type UniqueConstraintShape = array{columns: non-empty-list<string>, name: ?string, nulls_not_distinct: bool}
+ * @phpstan-type UniqueConstraintShape = array{columns: non-empty-list<string>, name?: ?string, nulls_not_distinct?: bool}
  */
 final readonly class UniqueConstraint
 {
@@ -28,7 +28,7 @@ final readonly class UniqueConstraint
         return new self(
             columns: $data['columns'],
             name: $data['name'] ?? null,
-            nullsNotDistinct: $data['nulls_not_distinct'],
+            nullsNotDistinct: $data['nulls_not_distinct'] ?? false,
         );
     }
 

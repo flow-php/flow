@@ -7,7 +7,7 @@ namespace Flow\PostgreSql\Schema\Constraint;
 use Flow\PostgreSql\QueryBuilder\Schema\ReferentialAction;
 
 /**
- * @phpstan-type ForeignKeyShape = array{name: ?string, columns: non-empty-list<string>, reference_schema: string, reference_table: string, reference_columns: non-empty-list<string>, on_update: string, on_delete: string, deferrable: bool, initially_deferred: bool}
+ * @phpstan-type ForeignKeyShape = array{name: ?string, columns: non-empty-list<string>, reference_schema: string, reference_table: string, reference_columns: non-empty-list<string>, on_update?: string, on_delete?: string, deferrable?: bool, initially_deferred?: bool}
  */
 final readonly class ForeignKey
 {
@@ -44,8 +44,8 @@ final readonly class ForeignKey
             onDelete: array_key_exists('on_delete', $data)
                 ? ReferentialAction::from($data['on_delete'])
                 : ReferentialAction::NO_ACTION,
-            deferrable: $data['deferrable'],
-            initiallyDeferred: $data['initially_deferred'],
+            deferrable: $data['deferrable'] ?? false,
+            initiallyDeferred: $data['initially_deferred'] ?? false,
         );
     }
 
