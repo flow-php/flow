@@ -400,3 +400,131 @@ df()
 | `pgsql_insert_options(...)`          | Configure insert behavior (conflicts, upsert)   |
 | `pgsql_update_options($primaryKeys)` | Configure update behavior (primary key columns) |
 | `pgsql_delete_options($primaryKeys)` | Configure delete behavior (primary key columns) |
+
+## Schema Conversion
+
+Two helpers convert between a Flow `Schema` and a PostgreSQL table definition:
+
+- `to_pgsql_schema_table()` turns a Flow `Schema` into a `Flow\PostgreSql\Schema\Table`, which can emit `CREATE TABLE`
+  (and related index/constraint) SQL via `toSql()`.
+- `pgsql_table_to_flow_schema()` turns a `Flow\PostgreSql\Schema\Table` back into a Flow `Schema`.
+
+Column types are resolved through the shared `EntryTypesMap` (Flow type → PostgreSQL column type), and per-column
+details — primary keys, unique constraints, indexes, length, precision/scale, defaults, identity, generated columns,
+and explicit type overrides — are driven by `PostgreSqlMetadata` entries attached to each schema definition.
+
+### Creating a Table from a Flow Schema
+
+`to_pgsql_schema_table()` returns a table definition; call `toSql()` on it and execute each statement to create the
+table:
+
+```php
+use Flow\ETL\Adapter\PostgreSql\PostgreSqlMetadata;
+
+use function Flow\ETL\Adapter\PostgreSql\to_pgsql_schema_table;
+use function Flow\ETL\DSL\{bool_schema, int_schema, json_schema, schema, str_schema};
+
+$table = to_pgsql_schema_table(
+    schema(
+        int_schema('id', metadata: PostgreSqlMetadata::primaryKey('pk_users')),
+        str_schema('name', metadata: PostgreSqlMetadata::length(120)),
+        str_schema('email', metadata: PostgreSqlMetadata::indexUnique('uq_users_email')),
+        bool_schema('active', metadata: PostgreSqlMetadata::default(true)),
+        json_schema('payload'),
+    ),
+    'users',
+);
+
+foreach ($table->toSql() as $sql) {
+    $client->execute($sql);
+}
+```
+
+By default the table is created in the `public` schema; pass a third argument to target another one:
+
+```php
+$table = to_pgsql_schema_table($schema, 'users', 'analytics');
+```
+
+### Steering the Conversion with Metadata
+
+`PostgreSqlMetadata` factories return `Metadata` objects you attach to a definition via the `metadata:` argument of the
+schema DSL helpers. Combine multiple entries with `merge()`:
+
+```php
+use Flow\ETL\Adapter\PostgreSql\PostgreSqlMetadata;
+use Flow\PostgreSql\Schema\IdentityGeneration;
+
+use function Flow\ETL\DSL\{float_schema, int_schema, schema, str_schema};
+
+$schema = schema(
+    int_schema('id', metadata: PostgreSqlMetadata::identity(IdentityGeneration::BY_DEFAULT)),
+    str_schema('sku', metadata: PostgreSqlMetadata::type('citext')),                    // explicit type override
+    float_schema('amount', metadata: PostgreSqlMetadata::precision(10)->merge(PostgreSqlMetadata::scale(2))),
+    int_schema('total', metadata: PostgreSqlMetadata::generated('price * quantity')),
+);
+```
+
+| Metadata                          | Effect on the generated column                             |
+|-----------------------------------|------------------------------------------------------------|
+| `PostgreSqlMetadata::type($name)` | Force a specific PostgreSQL type, bypassing the type map   |
+| `PostgreSqlMetadata::length($n)`  | Emit `varchar($n)`                                         |
+| `PostgreSqlMetadata::precision($p)` / `::scale($s)` | Emit `numeric($p, $s)`                   |
+| `PostgreSqlMetadata::default($v)` | Set a column `DEFAULT`                                      |
+| `PostgreSqlMetadata::primaryKey($name)` | Include the column in the table primary key          |
+| `PostgreSqlMetadata::indexUnique($name)` | Include the column in a named `UNIQUE` constraint   |
+| `PostgreSqlMetadata::index($name)` | Include the column in a named index                       |
+| `PostgreSqlMetadata::identity($generation)` | Make the column an identity column               |
+| `PostgreSqlMetadata::generated($expr)` | Make the column a generated column                    |
+
+Columns sharing the same primary key, unique constraint, or index name are grouped together, so composite keys are
+expressed by attaching the same name to several definitions.
+
+### Reading a Flow Schema back from a Table
+
+`pgsql_table_to_flow_schema()` takes a `Flow\PostgreSql\Schema\Table` and returns a Flow `Schema`. Combine it with the
+PostgreSQL library's catalog provider to derive a Flow schema from a live table:
+
+```php
+use function Flow\ETL\Adapter\PostgreSql\pgsql_table_to_flow_schema;
+use function Flow\PostgreSql\DSL\client_catalog_provider;
+
+$table = client_catalog_provider($client, ['public'])
+    ->get()
+    ->get('public')
+    ->table('users');
+
+$schema = pgsql_table_to_flow_schema($table);
+```
+
+> **Note:** The reverse conversion is intentionally lossy. Several Flow types collapse onto the same PostgreSQL type
+> (for example `json`, `list`, `map`, and `structure` all map to `jsonb`), so a column is mapped back to a single
+> canonical Flow type rather than its original one.
+
+### Customizing the Type Mapping
+
+Both helpers accept an optional `EntryTypesMap`. Its second constructor argument overrides the Flow type → PostgreSQL
+column type mapping (the first argument keeps overriding the value-binding types used by the loader):
+
+```php
+use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
+use Flow\Types\Type\Native\StringType;
+
+use function Flow\ETL\Adapter\PostgreSql\to_pgsql_schema_table;
+
+$table = to_pgsql_schema_table(
+    $schema,
+    'users',
+    typesMap: new EntryTypesMap([], [
+        StringType::class => ColumnType::varchar(255),  // default strings to varchar(255) instead of text
+    ]),
+);
+```
+
+### Schema Conversion DSL Functions Reference
+
+| Function                                                              | Description                                            |
+|-----------------------------------------------------------------------|--------------------------------------------------------|
+| `to_pgsql_schema_table($schema, $tableName, $databaseSchema, $typesMap)` | Convert a Flow `Schema` into a PostgreSQL `Table`   |
+| `pgsql_table_to_flow_schema($table, $typesMap)`                       | Convert a PostgreSQL `Table` into a Flow `Schema`      |

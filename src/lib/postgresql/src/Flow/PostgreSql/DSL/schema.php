@@ -980,6 +980,15 @@ function column_type_bytea(): ColumnType
 }
 
 /**
+ * Create an XML data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function column_type_xml(): ColumnType
+{
+    return ColumnType::xml();
+}
+
+/**
  * Create an inet data type.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]

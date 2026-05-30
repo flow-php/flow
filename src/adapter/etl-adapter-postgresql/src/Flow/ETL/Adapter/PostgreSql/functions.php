@@ -13,8 +13,10 @@ use Flow\ETL\Adapter\PostgreSql\Pagination\Order;
 use Flow\ETL\Attribute\DocumentationDSL;
 use Flow\ETL\Attribute\Module;
 use Flow\ETL\Attribute\Type as DSLType;
+use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\Sql;
+use Flow\PostgreSql\Schema\Table;
 
 /**
  * Create a PostgreSQL cursor extractor using server-side cursors for memory-efficient extraction.
@@ -136,4 +138,28 @@ function pgsql_update_options(array $primaryKeys): UpdateOptions
 function pgsql_delete_options(array $primaryKeys): DeleteOptions
 {
     return new DeleteOptions($primaryKeys);
+}
+
+/**
+ * Convert a Flow Schema into a PostgreSQL table definition.
+ *
+ * @param string $databaseSchema PostgreSQL schema (namespace) the table belongs to
+ */
+#[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::HELPER)]
+function to_pgsql_schema_table(
+    Schema $schema,
+    string $tableName,
+    string $databaseSchema = 'public',
+    ?EntryTypesMap $typesMap = null,
+): Table {
+    return (new SchemaConverter($typesMap))->toPostgreSqlTable($schema, $tableName, $databaseSchema);
+}
+
+/**
+ * Convert a PostgreSQL table definition into a Flow Schema.
+ */
+#[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::HELPER)]
+function pgsql_table_to_flow_schema(Table $table, ?EntryTypesMap $typesMap = null): Schema
+{
+    return (new SchemaConverter($typesMap))->toFlowSchema($table);
 }

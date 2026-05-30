@@ -505,4 +505,20 @@ final class ColumnTypeTest extends TestCase
         static::assertNotNull($length);
         static::assertSame(255, type_instance_of(Integer::class)->assert($length->getIval())->getIval());
     }
+
+    public function test_xml(): void
+    {
+        $type = ColumnType::xml();
+
+        $ast = $type->toAst();
+
+        static::assertInstanceOf(TypeName::class, $ast);
+        static::assertCount(2, $ast->getNames());
+        $catalog = $ast->getNames()[0]->getString();
+        static::assertInstanceOf(PBString::class, $catalog);
+        static::assertSame('pg_catalog', $catalog->getSval());
+        $name = $ast->getNames()[1]->getString();
+        static::assertInstanceOf(PBString::class, $name);
+        static::assertSame('xml', $name->getSval());
+    }
 }

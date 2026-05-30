@@ -6,9 +6,14 @@ namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit;
 
 use DateTimeImmutable;
 use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
+use Flow\ETL\Adapter\PostgreSql\Exception\TypeMappingException;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\PostgreSql\Client\TypedValue;
 use Flow\PostgreSql\Client\Types\ValueType;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
+use Flow\Types\Type\Logical\JsonType;
+use Flow\Types\Type\Native\IntegerType;
+use Flow\Types\Type\Native\StringType;
 use PHPUnit\Framework\TestCase;
 
 use function Flow\ETL\DSL\bool_entry;
@@ -22,10 +27,12 @@ use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\structure_entry;
 use function Flow\ETL\DSL\uuid_entry;
 use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\type_json;
 use function Flow\Types\DSL\type_list;
 use function Flow\Types\DSL\type_map;
 use function Flow\Types\DSL\type_string;
 use function Flow\Types\DSL\type_structure;
+use function Flow\Types\DSL\type_xml;
 
 final class EntryTypesMapTest extends TestCase
 {
@@ -149,5 +156,63 @@ final class EntryTypesMapTest extends TestCase
 
         static::assertInstanceOf(TypedValue::class, $result);
         static::assertSame(ValueType::UUID, $result->targetType);
+    }
+
+    public function test_to_column_type_allows_override(): void
+    {
+        $map = new EntryTypesMap([], [
+            StringType::class => ColumnType::varchar(255),
+        ]);
+
+        static::assertTrue($map->toColumnType(type_string())->isEqual(ColumnType::varchar(255)));
+    }
+
+    public function test_to_column_type_maps_integer_to_bigint(): void
+    {
+        $map = new EntryTypesMap();
+
+        static::assertTrue($map->toColumnType(type_integer())->isEqual(ColumnType::bigint()));
+    }
+
+    public function test_to_column_type_maps_json_to_jsonb(): void
+    {
+        $map = new EntryTypesMap();
+
+        static::assertTrue($map->toColumnType(type_json())->isEqual(ColumnType::jsonb()));
+    }
+
+    public function test_to_column_type_maps_xml_to_xml(): void
+    {
+        $map = new EntryTypesMap();
+
+        static::assertTrue($map->toColumnType(type_xml())->isEqual(ColumnType::xml()));
+    }
+
+    public function test_to_flow_type_maps_bigint_to_integer(): void
+    {
+        $map = new EntryTypesMap();
+
+        static::assertInstanceOf(IntegerType::class, $map->toFlowType(ColumnType::bigint()));
+    }
+
+    public function test_to_flow_type_maps_jsonb_to_json(): void
+    {
+        $map = new EntryTypesMap();
+
+        static::assertInstanceOf(JsonType::class, $map->toFlowType(ColumnType::jsonb()));
+    }
+
+    public function test_to_flow_type_maps_varchar_to_string(): void
+    {
+        $map = new EntryTypesMap();
+
+        static::assertInstanceOf(StringType::class, $map->toFlowType(ColumnType::varchar(100)));
+    }
+
+    public function test_to_flow_type_throws_on_unsupported_type(): void
+    {
+        $this->expectException(TypeMappingException::class);
+
+        (new EntryTypesMap())->toFlowType(ColumnType::custom('hstore'));
     }
 }
