@@ -5,6 +5,7 @@
 - [#2403](https://github.com/flow-php/flow/pull/2403) - **Add memory usage consumption in PHPUnit OpenTelemetry bridge** - [@jdecool](https://github.com/jdecool)
 
 ### Changed
+- [545cee](https://github.com/flow-php/flow/commit/545ceeee04682bfc4a450480925e76584232a2f4) - **Merge pull request #2380 from flow-php/dependabot/github_actions/actions/checkout-6.0.2** - [@norberttech](https://github.com/norberttech)
 - [8a460b](https://github.com/flow-php/flow/commit/8a460b9b164c4e14afdf1ed1ef22644c5961fca5) - **refactor: cleanup github actions workflows** - [@norberttech](https://github.com/norberttech)
 - [#2397](https://github.com/flow-php/flow/pull/2397) - **Replaced PHPStan with Mago across entire project codebase** - [@norberttech](https://github.com/norberttech)
 - [#2391](https://github.com/flow-php/flow/pull/2391) - **Covered all bridges with Mago Analyzer** - [@norberttech](https://github.com/norberttech)
