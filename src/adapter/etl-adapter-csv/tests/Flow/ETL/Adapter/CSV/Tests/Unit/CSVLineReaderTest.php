@@ -5,11 +5,33 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\Tests\Unit;
 
 use Flow\ETL\Adapter\CSV\CSVLineReader;
+use Flow\ETL\Adapter\CSV\Tests\Double\LengthCapturingSourceStream;
 use Flow\Filesystem\Stream\MemorySourceStream;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
+
+use function Flow\Filesystem\DSL\path;
 
 final class CSVLineReaderTest extends TestCase
 {
+    public function test_characters_read_in_line_is_passed_through_to_the_stream(): void
+    {
+        $stream = new LengthCapturingSourceStream("id,name\n1,foo", path('s3://bucket/users.csv'));
+
+        iterator_to_array((new CSVLineReader('"', 4096))->readLines($stream));
+
+        static::assertSame([4096], $stream->capturedLengths);
+    }
+
+    public function test_null_characters_read_in_line_lets_the_stream_choose_its_default(): void
+    {
+        $stream = new LengthCapturingSourceStream("id,name\n1,foo", path('s3://bucket/users.csv'));
+
+        iterator_to_array((new CSVLineReader('"'))->readLines($stream));
+
+        static::assertSame([null], $stream->capturedLengths);
+    }
+
     public function test_detection_of_multiline_quotes(): void
     {
         $simpleContent = "field1,field2\nvalue1,value2";

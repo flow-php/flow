@@ -37,7 +37,7 @@ function from_csv(
     ?string $separator = null,
     ?string $enclosure = null,
     ?string $escape = null,
-    int $characters_read_in_line = 1000,
+    int $characters_read_in_line = 10 * 1024 * 1024,
     ?Schema $schema = null,
 ): CSVExtractor {
     $loader = (new CSVExtractor(is_string($path) ? path_real($path) : $path))
