@@ -17,7 +17,6 @@ enum Module: string
     case CORE = 'Core';
     case CSV = 'CSV';
     case DOCTRINE = 'Doctrine';
-    case ELASTIC_SEARCH = 'Elastic Search';
     case EXCEL = 'Excel';
     case FILESYSTEM = 'Filesystem';
     case GOOGLE_SHEET = 'Google Sheet';
@@ -57,7 +56,6 @@ enum Module: string
             self::CSV => 2,
             self::DOCTRINE => 3,
             self::POSTGRESQL => 4,
-            self::ELASTIC_SEARCH => 5,
             self::GOOGLE_SHEET => 6,
             self::CHART_JS => 7,
             self::JSON => 8,

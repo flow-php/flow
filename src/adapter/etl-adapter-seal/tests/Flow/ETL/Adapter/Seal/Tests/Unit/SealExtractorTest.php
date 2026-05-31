@@ -1,0 +1,27 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Adapter\Seal\Tests\Unit;
+
+use CmsIg\Seal\Search\SearchBuilder;
+use Flow\ETL\Adapter\Seal\Tests\SealMemoryTestCase;
+
+use function Flow\ETL\Adapter\Seal\from_seal;
+
+final class SealExtractorTest extends SealMemoryTestCase
+{
+    public function test_with_page_size_returns_the_same_extractor_instance(): void
+    {
+        $extractor = from_seal($this->engine, self::INDEX_NAME);
+
+        static::assertSame($extractor, $extractor->withPageSize(100));
+    }
+
+    public function test_with_search_builder_returns_the_same_extractor_instance(): void
+    {
+        $extractor = from_seal($this->engine, self::INDEX_NAME);
+
+        static::assertSame($extractor, $extractor->withSearchBuilder(static function (SearchBuilder $builder): void {}));
+    }
+}

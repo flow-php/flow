@@ -33,7 +33,6 @@ final readonly class PackageMeta
         'text' => 'Text',
         'http' => 'HTTP',
         'doctrine' => 'Doctrine',
-        'elasticsearch' => 'Elasticsearch',
         'chartjs' => 'ChartJS',
         'meilisearch' => 'Meilisearch',
         'google-sheet' => 'Google Sheet',

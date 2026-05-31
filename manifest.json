@@ -61,16 +61,6 @@
             }
         },
         {
-            "name": "flow-php/etl-adapter-elasticsearch",
-            "path": "src/adapter/etl-adapter-elasticsearch",
-            "type": "adapter",
-            "links": {
-                "documentation": "/documentation/components/adapters/elasticsearch",
-                "api": "/documentation/api/adapter/elasticsearch",
-                "files": "/documentation/api/adapter/elasticsearch/indices/files.html"
-            }
-        },
-        {
             "name": "flow-php/etl-adapter-google-sheet",
             "path": "src/adapter/etl-adapter-google-sheet",
             "type": "adapter",

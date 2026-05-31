@@ -1,1 +1,0 @@
-- [Elasticsearch Adapter](/documentation/components/adapters/elasticsearch)

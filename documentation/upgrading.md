@@ -864,9 +864,11 @@ typed(42, ValueType::INT4);
 
 ## Upgrading from 0.31.x to 0.32.x
 
-### 1) Removal of Meilisearch Adapter
+### 1) Removal of Meilisearch & Elasticsearch Adapters
 
-The Meilisearch adapter has been removed from Flow PHP. If you were using it, please migrate to Elasticsearch adapter.
+The Meilisearch and Elasticsearch adapters have been removed from Flow PHP and replaced by a single [SEAL](https://php-cmsig.github.io/search/) adapter (`flow-php/etl-adapter-seal`), a search engine abstraction layer that supports Elasticsearch, OpenSearch, Meilisearch, Solr, Typesense, Algolia, RediSearch, Loupe and more.
+
+If you were using either adapter, install `flow-php/etl-adapter-seal` together with the matching SEAL engine adapter (e.g. `cmsig/seal-elasticsearch-adapter` or `cmsig/seal-meilisearch-adapter`), build a `CmsIg\Seal\Engine`, and use `to_seal()` / `from_seal()` instead of the previous `to_es_bulk_index()` / `from_es()` (or Meilisearch) DSL functions.
 
 ### 2) Removed deprecated DSL functions
 

@@ -58,8 +58,6 @@ jobs:
             split_repository: 'etl-adapter-csv'
           - local_path: 'src/adapter/etl-adapter-doctrine'
             split_repository: 'etl-adapter-doctrine'
-          - local_path: 'src/adapter/etl-adapter-elasticsearch'
-            split_repository: 'etl-adapter-elasticsearch'
           - local_path: 'src/adapter/etl-adapter-excel'
             split_repository: 'etl-adapter-excel'
           - local_path: 'src/adapter/etl-adapter-google-sheet'

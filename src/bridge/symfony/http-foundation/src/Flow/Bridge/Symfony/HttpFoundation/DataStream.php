@@ -105,7 +105,7 @@ final class DataStream
     /**
      * Create regular response where whole dataset is loaded into the memory.
      * It's highly recommended to use limit transformation to avoid loading entire dataset into the memory.
-     * Some extractors like Parquet/Elasticsearch/Doctrine allows also for setting offset directly on the extractor.
+     * Some extractors like Parquet/Doctrine allows also for setting offset directly on the extractor.
      */
     public function response(Output $output): FlowBufferedResponse
     {
