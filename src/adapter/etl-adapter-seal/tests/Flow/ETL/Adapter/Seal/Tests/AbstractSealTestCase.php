@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Seal\Tests;
 
-use CmsIg\Seal\Adapter\Memory\MemoryAdapter;
-use CmsIg\Seal\Engine;
 use CmsIg\Seal\EngineInterface;
 use CmsIg\Seal\Schema\Field;
 use CmsIg\Seal\Schema\Index;
@@ -15,7 +13,7 @@ use Flow\ETL\Tests\FlowTestCase;
 use function Flow\ETL\Adapter\Seal\seal_create_index;
 use function Flow\ETL\Adapter\Seal\seal_drop_index;
 
-abstract class SealMemoryTestCase extends FlowTestCase
+abstract class AbstractSealTestCase extends FlowTestCase
 {
     protected const INDEX_NAME = 'test';
 
@@ -23,15 +21,29 @@ abstract class SealMemoryTestCase extends FlowTestCase
 
     protected function setUp(): void
     {
-        $this->engine = new Engine(new MemoryAdapter(), $this->schema());
+        $this->engine = $this->createEngine();
+
+        if ($this->engine->existIndex(self::INDEX_NAME)) {
+            seal_drop_index($this->engine, self::INDEX_NAME);
+        }
 
         seal_create_index($this->engine, self::INDEX_NAME);
     }
 
     protected function tearDown(): void
     {
-        seal_drop_index($this->engine, self::INDEX_NAME);
+        if (!isset($this->engine)) {
+            return;
+        }
+
+        if ($this->engine->existIndex(self::INDEX_NAME)) {
+            seal_drop_index($this->engine, self::INDEX_NAME);
+        }
     }
+
+    abstract protected function createEngine(): EngineInterface;
+
+    protected function refresh(): void {}
 
     protected function schema(): Schema
     {

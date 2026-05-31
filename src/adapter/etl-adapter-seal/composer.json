@@ -17,7 +17,10 @@
         "flow-php/etl": "self.version"
     },
     "require-dev": {
-        "cmsig/seal-memory-adapter": "^0.12"
+        "cmsig/seal-elasticsearch-adapter": "^0.12",
+        "cmsig/seal-meilisearch-adapter": "^0.12",
+        "cmsig/seal-memory-adapter": "^0.12",
+        "elasticsearch/elasticsearch": "^8.5.3"
     },
     "suggest": {
         "cmsig/seal-algolia-adapter": "To use SEAL with Algolia as the search backend",

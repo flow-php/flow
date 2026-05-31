@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Seal\Tests\Unit;
 
-use Flow\ETL\Adapter\Seal\Tests\SealMemoryTestCase;
+use Flow\ETL\Adapter\Seal\Tests\AbstractSealTestCase;
+use Flow\ETL\Adapter\Seal\Tests\Backend\MemoryBackend;
 
 use function Flow\ETL\Adapter\Seal\to_seal;
 use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\rows;
 
-final class SealLoaderTest extends SealMemoryTestCase
+final class SealLoaderTest extends AbstractSealTestCase
 {
+    use MemoryBackend;
+
     public function test_loading_empty_rows_writes_no_documents(): void
     {
         to_seal($this->engine, self::INDEX_NAME)->load(rows(), flow_context());

@@ -23,6 +23,7 @@
         <env name="PGSQL_DATABASE_URL" value="pgsql://postgres:postgres@127.0.0.1:5432/postgres?serverVersion=18%26charset=utf8"/>
         <env name="MYSQL_DATABASE_URL" value="mysql://mysql:mysql@127.0.0.1:3306/mysql"/>
         <env name="SQLITE_DATABASE_PATH" value="./var/db/sqlite/test.db"/>
+        <env name="ELASTICSEARCH_URL" value="http://127.0.0.1:9200"/>
         <env name="MEILISEARCH_URL" value="http://localhost:7700"/>
         <env name="MEILISEARCH_API_KEY" value="masterKey"/>
         <env name="OTEL_COLLECTOR_HTTP_ENDPOINT" value="http://localhost:4318"/>

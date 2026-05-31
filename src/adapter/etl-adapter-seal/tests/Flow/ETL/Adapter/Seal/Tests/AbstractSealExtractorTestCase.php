@@ -2,28 +2,27 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Adapter\Seal\Tests\Integration;
+namespace Flow\ETL\Adapter\Seal\Tests;
 
 use CmsIg\Seal\Search\Condition\Condition;
 use CmsIg\Seal\Search\SearchBuilder;
-use Flow\ETL\Adapter\Seal\Tests\SealMemoryTestCase;
 use Flow\ETL\Extractor\Signal;
 
 use function Flow\ETL\Adapter\Seal\from_seal;
 use function Flow\ETL\DSL\flow_context;
 
-final class SealExtractorTest extends SealMemoryTestCase
+abstract class AbstractSealExtractorTestCase extends AbstractSealTestCase
 {
     public function test_extracting_all_documents(): void
     {
         $this->seed(2);
 
-        self::assertExtractedRowsCount(2, from_seal($this->engine, self::INDEX_NAME));
+        static::assertExtractedRowsCount(2, from_seal($this->engine, self::INDEX_NAME));
     }
 
     public function test_extracting_from_an_empty_index_yields_no_rows(): void
     {
-        self::assertExtractedRowsCount(0, from_seal($this->engine, self::INDEX_NAME));
+        static::assertExtractedRowsCount(0, from_seal($this->engine, self::INDEX_NAME));
     }
 
     public function test_filtering_documents_with_a_search_builder(): void
@@ -37,15 +36,15 @@ final class SealExtractorTest extends SealMemoryTestCase
             $builder->addFilter(Condition::equal('age', 21));
         });
 
-        self::assertExtractedRowsCount(1, $extractor);
+        static::assertExtractedRowsCount(1, $extractor);
     }
 
     public function test_paginated_extraction_yields_multiple_batches(): void
     {
         $this->seed(5);
 
-        self::assertExtractedBatchesCount(3, from_seal($this->engine, self::INDEX_NAME)->withPageSize(2));
-        self::assertExtractedRowsCount(5, from_seal($this->engine, self::INDEX_NAME)->withPageSize(2));
+        static::assertExtractedBatchesCount(3, from_seal($this->engine, self::INDEX_NAME)->withPageSize(2));
+        static::assertExtractedRowsCount(5, from_seal($this->engine, self::INDEX_NAME)->withPageSize(2));
     }
 
     public function test_stop_signal_halts_extraction(): void
@@ -70,5 +69,7 @@ final class SealExtractorTest extends SealMemoryTestCase
         }
 
         $this->engine->bulk(self::INDEX_NAME, $documents, []);
+
+        $this->refresh();
     }
 }

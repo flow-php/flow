@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Adapter\Seal\Tests\Integration;
-
-use Flow\ETL\Adapter\Seal\Tests\SealMemoryTestCase;
+namespace Flow\ETL\Adapter\Seal\Tests;
 
 use function Flow\ETL\Adapter\Seal\to_seal;
 use function Flow\ETL\DSL\flow_context;
@@ -13,7 +11,7 @@ use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\string_entry;
 
-final class SealLoaderTest extends SealMemoryTestCase
+abstract class AbstractSealLoaderTestCase extends AbstractSealTestCase
 {
     public function test_loading_respects_a_custom_bulk_size(): void
     {
@@ -29,6 +27,8 @@ final class SealLoaderTest extends SealMemoryTestCase
 
         to_seal($this->engine, self::INDEX_NAME)->withBulkSize(3)->load(rows(...$documents), flow_context());
 
+        $this->refresh();
+
         static::assertSame(10, $this->engine->countDocuments(self::INDEX_NAME));
     }
 
@@ -42,6 +42,8 @@ final class SealLoaderTest extends SealMemoryTestCase
             flow_context(),
         );
 
+        $this->refresh();
+
         static::assertSame(2, $this->engine->countDocuments(self::INDEX_NAME));
         static::assertSame('Alice', $this->engine->getDocument(self::INDEX_NAME, '1')['name']);
     }
@@ -54,10 +56,13 @@ final class SealLoaderTest extends SealMemoryTestCase
             rows(row(string_entry('id', '1'), string_entry('name', 'Alice'), integer_entry('age', 30))),
             flow_context(),
         );
+        $this->refresh();
+
         $loader->load(
             rows(row(string_entry('id', '1'), string_entry('name', 'Alice Updated'), integer_entry('age', 31))),
             flow_context(),
         );
+        $this->refresh();
 
         static::assertSame(1, $this->engine->countDocuments(self::INDEX_NAME));
         static::assertSame('Alice Updated', $this->engine->getDocument(self::INDEX_NAME, '1')['name']);
