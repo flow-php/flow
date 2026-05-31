@@ -55,10 +55,12 @@ use Flow\Types\Value\Uuid;
 use UnitEnum;
 
 /**
- * @param array<string, Type<mixed>> $elements
- * @param array<string, Type<mixed>> $optional_elements
+ * @template T
  *
- * @return Type<array<string, mixed>>
+ * @param array<array-key, Type<T>> $elements
+ * @param array<array-key, Type<T>> $optional_elements
+ *
+ * @return StructureType<T>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
 function type_structure(array $elements = [], array $optional_elements = [], bool $allow_extra = false): Type

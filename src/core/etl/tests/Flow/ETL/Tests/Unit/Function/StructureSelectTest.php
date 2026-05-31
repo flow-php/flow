@@ -84,6 +84,7 @@ final class StructureSelectTest extends FlowTestCase
     {
         $structure = struct_entry(
             'struct',
+            // @mago-ignore analysis:possibly-invalid-argument
             [
                 'id' => null,
                 'email' => 'email@email.com',

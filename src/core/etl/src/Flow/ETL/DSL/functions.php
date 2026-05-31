@@ -980,10 +980,12 @@ function entries(Entry ...$entries): Entries
 }
 
 /**
- * @param ?array<string, mixed> $value
- * @param Type<mixed> $type
+ * @template TShape of array<array-key, mixed>
  *
- * @return ($value is null ? Entry<null> : Entry<array<string, mixed>>)
+ * @param ?TShape $value
+ * @param StructureType<mixed>|Type<TShape> $type
+ *
+ * @return ($value is null ? Entry<null> : Entry<TShape>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function struct_entry(string $name, ?array $value, Type $type, ?Metadata $metadata = null): Entry
@@ -1005,10 +1007,12 @@ function struct_entry(string $name, ?array $value, Type $type, ?Metadata $metada
 }
 
 /**
- * @param ?array<string, mixed> $value
- * @param Type<mixed> $type
+ * @template TShape of array<array-key, mixed>
  *
- * @return ($value is null ? Entry<null> : Entry<array<string, mixed>>)
+ * @param ?TShape $value
+ * @param StructureType<mixed>|Type<TShape> $type
+ *
+ * @return ($value is null ? Entry<null> : Entry<TShape>)
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function structure_entry(string $name, ?array $value, Type $type, ?Metadata $metadata = null): Entry

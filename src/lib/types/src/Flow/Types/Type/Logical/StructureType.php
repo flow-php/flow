@@ -36,23 +36,23 @@ use const JSON_THROW_ON_ERROR;
 /**
  * @template T
  *
- * @implements Type<array<string, T>>
+ * @implements Type<array<array-key, T>>
  */
 final readonly class StructureType implements Type
 {
     /**
-     * @var array<string, Type<T>>
+     * @var array<array-key, Type<T>>
      */
     private array $elements;
 
     /**
-     * @var array<string, Type<T>>
+     * @var array<array-key, Type<T>>
      */
     private array $optionalElements;
 
     /**
-     * @param array<string, Type<T>> $elements
-     * @param array<string, Type<T>> $optionalElements
+     * @param array<array-key, Type<T>> $elements
+     * @param array<array-key, Type<T>> $optionalElements
      *
      * @throws InvalidArgumentException
      */
@@ -158,7 +158,7 @@ final readonly class StructureType implements Type
     }
 
     /**
-     * @return array<string, Type<mixed>>
+     * @return array<array-key, Type<mixed>>
      */
     public function elements(): array
     {
@@ -203,7 +203,7 @@ final readonly class StructureType implements Type
     }
 
     /**
-     * @return array{type: 'structure', elements: array<string, array<string, mixed>>, optional_elements: array<string, array<string, mixed>>, allow_extra: bool}
+     * @return array{type: 'structure', elements: array<array-key, array<string, mixed>>, optional_elements: array<array-key, array<string, mixed>>, allow_extra: bool}
      */
     public function normalize(): array
     {
@@ -237,7 +237,7 @@ final readonly class StructureType implements Type
     }
 
     /**
-     * @return array<string, Type<mixed>>
+     * @return array<array-key, Type<mixed>>
      */
     public function optionalElements(): array
     {

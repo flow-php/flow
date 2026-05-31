@@ -170,11 +170,11 @@ final class SchemaConverter
                 return NestedColumn::struct(
                     $name,
                     array_map(
-                        function (string $elementName, Type $elementType) {
+                        function (int|string $elementName, Type $elementType) {
                             $elementOptional = $elementType instanceof OptionalType;
                             $elementType = $elementType instanceof OptionalType ? $elementType->base() : $elementType;
 
-                            return $this->flowToParquet($elementName, $elementType, $elementOptional);
+                            return $this->flowToParquet((string) $elementName, $elementType, $elementOptional);
                         },
                         array_keys($type->elements()),
                         $type->elements(),
