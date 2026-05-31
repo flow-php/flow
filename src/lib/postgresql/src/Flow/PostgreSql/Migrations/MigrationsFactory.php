@@ -11,6 +11,10 @@ use Flow\PostgreSql\Migrations\Generator\MigrationGenerator;
 use Flow\PostgreSql\Migrations\Repository\MigrationRepository;
 use Flow\PostgreSql\Migrations\Store\MigrationStore;
 use Flow\PostgreSql\Migrations\Store\PostgreSqlMigrationStore;
+use Flow\PostgreSql\Schema\Exclusion\AnyExclusionPolicy;
+use Flow\PostgreSql\Schema\Exclusion\ExactMatchExclusionPolicy;
+use Flow\PostgreSql\Schema\Exclusion\SchemaObjectType;
+use Flow\PostgreSql\Schema\Exclusion\ScopedExclusionPolicy;
 
 use function Flow\PostgreSql\DSL\catalog_comparator;
 use function Flow\PostgreSql\DSL\client_catalog_provider;
@@ -24,9 +28,23 @@ final readonly class MigrationsFactory
 
     public function createDiffGenerator(MigrationGenerator $generator): DiffMigrationGenerator
     {
-        return new DiffMigrationGenerator(client_catalog_provider($this->configuration->client, excludeTables: [
-            $this->configuration->tableName,
-        ]), $this->configuration->targetCatalogProvider, catalog_comparator(), $generator, $this->configuration->generateRollback);
+        $migrationsTablePolicy = new ScopedExclusionPolicy(
+            new ExactMatchExclusionPolicy($this->configuration->tableName),
+            SchemaObjectType::TABLE,
+            $this->configuration->tableSchema,
+        );
+
+        $exclusionPolicy = $this->configuration->exclusionPolicy === null
+            ? $migrationsTablePolicy
+            : new AnyExclusionPolicy($migrationsTablePolicy, $this->configuration->exclusionPolicy);
+
+        return new DiffMigrationGenerator(
+            client_catalog_provider($this->configuration->client, exclusionPolicy: $exclusionPolicy),
+            $this->configuration->targetCatalogProvider,
+            catalog_comparator(),
+            $generator,
+            $this->configuration->generateRollback,
+        );
     }
 
     public function createExecutor(): MigrationExecutor

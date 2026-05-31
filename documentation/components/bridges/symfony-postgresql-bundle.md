@@ -163,6 +163,69 @@ flow_postgresql:
 
 Multiple catalog providers can be combined. They are merged via `ChainCatalogProvider` into a single catalog.
 
+### Exclusions
+
+By default `flow:migrations:diff` compares **every** object found in the database against the catalog, so any
+object that is not described by a catalog provider is reported as a difference to drop. That is a problem when some
+objects are created outside of migrations — for example tables generated dynamically from user-uploaded content, or
+a whole schema owned by another system. List those objects under `migrations.exclude` and they are skipped while the
+diff is generated (the migrations tracking table is always excluded automatically).
+
+```yaml
+flow_postgresql:
+  migrations:
+    enabled: true
+    exclude:
+      - { schema: tenant_data }                  # exclude an entire schema and everything in it
+      - { table: legacy_audit }                  # exclude a table by exact name
+      - { starts_with: user_upload_ }            # exclude objects whose name starts with a prefix
+      - { ends_with: _tmp, type: view }          # ...ending with a suffix, narrowed to views
+      - { pattern: '/^cache_\d+$/', type: sequence } # ...matching a PCRE pattern, narrowed to sequences
+      - { exact: scratch, for_schema: staging }  # exact name, narrowed to the "staging" schema
+      - { policy_id: app.my_exclusion_policy }   # delegate to a custom ExclusionPolicy service
+```
+
+Each entry defines **exactly one** matcher:
+
+| Key           | Excludes                                                            |
+|---------------|--------------------------------------------------------------------|
+| `schema`      | The named schema and every object inside it (tables, views, sequences, functions, …) |
+| `table`       | A table by exact name (shorthand for `exact` narrowed to tables)   |
+| `exact`       | Any object whose name matches exactly                              |
+| `starts_with` | Any object whose name starts with the given prefix                 |
+| `ends_with`   | Any object whose name ends with the given suffix                   |
+| `pattern`     | Any object whose name matches the given PCRE pattern (with delimiters) |
+| `policy_id`   | Delegates to a service implementing `Flow\PostgreSql\Schema\Exclusion\ExclusionPolicy` |
+
+The `exact`, `starts_with`, `ends_with`, `pattern` and `policy_id` matchers can be narrowed with optional scopes:
+
+- `type` — limit to a single object type: `table`, `view`, `materialized_view`, `sequence`, `function`,
+  `procedure`, `domain` or `extension`. When omitted, the matcher applies to every type.
+- `for_schema` — limit to a single schema. When omitted, the matcher applies to every schema.
+
+Tables and whole schemas are filtered before they are introspected, so excluding dynamically created tables also
+avoids the cost of reading their columns, indexes and constraints on every diff.
+
+A custom `policy_id` service implements the same interface and receives every candidate object:
+
+```php
+<?php
+
+namespace App\Database;
+
+use Flow\PostgreSql\Schema\Exclusion\ExclusionPolicy;
+use Flow\PostgreSql\Schema\Exclusion\SchemaObject;
+
+final class MyExclusionPolicy implements ExclusionPolicy
+{
+    public function exclude(SchemaObject $object): bool
+    {
+        // $object->type, $object->schema and $object->name are available
+        return str_contains($object->name ?? '', '__generated__');
+    }
+}
+```
+
 ## Console Commands
 
 ### Database Commands

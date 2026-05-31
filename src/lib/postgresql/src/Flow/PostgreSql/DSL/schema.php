@@ -90,6 +90,15 @@ use Flow\PostgreSql\Schema\Diff\NoopViewDependencyResolver;
 use Flow\PostgreSql\Schema\Diff\RenameStrategy;
 use Flow\PostgreSql\Schema\Diff\ViewDependencyResolver;
 use Flow\PostgreSql\Schema\Domain as SchemaDomain;
+use Flow\PostgreSql\Schema\Exclusion\AnyExclusionPolicy;
+use Flow\PostgreSql\Schema\Exclusion\EndsWithExclusionPolicy;
+use Flow\PostgreSql\Schema\Exclusion\ExactMatchExclusionPolicy;
+use Flow\PostgreSql\Schema\Exclusion\ExclusionPolicy;
+use Flow\PostgreSql\Schema\Exclusion\PatternExclusionPolicy;
+use Flow\PostgreSql\Schema\Exclusion\SchemaObjectType;
+use Flow\PostgreSql\Schema\Exclusion\ScopedExclusionPolicy;
+use Flow\PostgreSql\Schema\Exclusion\StartsWithExclusionPolicy;
+use Flow\PostgreSql\Schema\Exclusion\WholeSchemaExclusionPolicy;
 use Flow\PostgreSql\Schema\ExecutionOrderStrategy;
 use Flow\PostgreSql\Schema\Extension as SchemaExtension;
 use Flow\PostgreSql\Schema\ForeignKeyDependencyOrder;
@@ -1874,15 +1883,59 @@ function schema_extension(string $name, ?string $version = null): SchemaExtensio
 
 /**
  * @param ?list<string> $schemaNames
- * @param list<string> $excludeTables
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function client_catalog_provider(
     Client\Client $client,
     ?array $schemaNames = null,
-    array $excludeTables = [],
+    ?ExclusionPolicy $exclusionPolicy = null,
 ): CatalogProvider {
-    return new PgCatalogProvider($client, $schemaNames, $excludeTables);
+    return new PgCatalogProvider($client, $schemaNames, $exclusionPolicy);
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function exclude_any(ExclusionPolicy ...$policies): ExclusionPolicy
+{
+    return new AnyExclusionPolicy(...$policies);
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function exclude_exact(string $name): ExclusionPolicy
+{
+    return new ExactMatchExclusionPolicy($name);
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function exclude_starts_with(string $prefix): ExclusionPolicy
+{
+    return new StartsWithExclusionPolicy($prefix);
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function exclude_ends_with(string $suffix): ExclusionPolicy
+{
+    return new EndsWithExclusionPolicy($suffix);
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function exclude_pattern(string $pattern): ExclusionPolicy
+{
+    return new PatternExclusionPolicy($pattern);
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function exclude_schema(string $schema): ExclusionPolicy
+{
+    return new WholeSchemaExclusionPolicy($schema);
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function exclude_scoped(
+    ExclusionPolicy $policy,
+    ?SchemaObjectType $type = null,
+    ?string $schema = null,
+): ExclusionPolicy {
+    return new ScopedExclusionPolicy($policy, $type, $schema);
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]

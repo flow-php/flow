@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Migrations;
 
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Schema\CatalogProvider;
+use Flow\PostgreSql\Schema\Exclusion\ExclusionPolicy;
 
 final readonly class Configuration
 {
@@ -20,5 +21,6 @@ final readonly class Configuration
         public string $rollbackFileName = 'rollback.php',
         public bool $allOrNothing = false,
         public bool $generateRollback = true,
+        public ?ExclusionPolicy $exclusionPolicy = null,
     ) {}
 }
