@@ -336,6 +336,61 @@ final class ConfigurationTest extends TestCase
         static::assertTrue($config['migrations']['generate_rollback']);
     }
 
+    public function test_migrations_exclude_defaults_to_empty(): void
+    {
+        $config = $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'migrations' => [
+                'enabled' => true,
+            ],
+        ]);
+
+        static::assertSame([], $config['migrations']['exclude']);
+    }
+
+    public function test_migrations_exclude_entries_are_parsed(): void
+    {
+        $config = $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'migrations' => [
+                'enabled' => true,
+                'exclude' => [
+                    ['schema' => 'tenant_data'],
+                    ['starts_with' => 'user_upload_', 'type' => 'table'],
+                    ['policy_id' => 'app.custom_exclusion'],
+                ],
+            ],
+        ]);
+
+        $exclude = $config['migrations']['exclude'];
+        static::assertCount(3, $exclude);
+        static::assertSame('tenant_data', $exclude[0]['schema']);
+        static::assertSame('user_upload_', $exclude[1]['starts_with']);
+        static::assertSame('table', $exclude[1]['type']);
+        static::assertSame('app.custom_exclusion', $exclude[2]['policy_id']);
+    }
+
+    public function test_migrations_exclude_rejects_unknown_type(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'migrations' => [
+                'enabled' => true,
+                'exclude' => [
+                    ['starts_with' => 'tmp_', 'type' => 'trigger'],
+                ],
+            ],
+        ]);
+    }
+
     public function test_migrations_enabled_without_catalog_providers_is_valid_at_config_level(): void
     {
         $config = $this->context->processConfig([

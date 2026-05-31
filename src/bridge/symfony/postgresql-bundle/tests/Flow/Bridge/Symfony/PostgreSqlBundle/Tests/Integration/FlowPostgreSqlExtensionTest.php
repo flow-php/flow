@@ -37,6 +37,9 @@ use Flow\PostgreSql\Migrations\Tests\Double\SpyClient;
 use Flow\PostgreSql\Migrations\VersionResolver;
 use Flow\PostgreSql\Schema\Catalog;
 use Flow\PostgreSql\Schema\ChainCatalogProvider;
+use Flow\PostgreSql\Schema\Exclusion\AnyExclusionPolicy;
+use Flow\PostgreSql\Schema\Exclusion\SchemaObject;
+use Flow\PostgreSql\Schema\Exclusion\SchemaObjectType;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Telemetry;
 use LogicException;
@@ -448,6 +451,88 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
         static::assertTrue($this->getContainer()->has(VersionResolver::class));
         static::assertTrue($this->getContainer()->has(MigrationGenerator::class));
         static::assertTrue($this->getContainer()->has(DiffMigrationGenerator::class));
+    }
+
+    public function test_migrations_exclude_config_builds_exclusion_policy(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres',
+                        ],
+                    ],
+                    'migrations' => [
+                        'enabled' => true,
+                        'directory' => '/tmp/test_migrations',
+                        'namespace' => 'App\\Migrations',
+                        'exclude' => [
+                            ['schema' => 'tenant_data'],
+                            ['starts_with' => 'user_upload_'],
+                            ['ends_with' => '_tmp', 'type' => 'view'],
+                            ['pattern' => '/^cache_\d+$/', 'type' => 'sequence'],
+                            ['table' => 'legacy_audit'],
+                        ],
+                    ],
+                    'catalog_providers' => [
+                        ['catalog' => ['schemas' => []]],
+                    ],
+                ]);
+            },
+        ]);
+
+        $configuration = $this->getContainer()->get('flow.postgresql.default.migrations.configuration');
+        static::assertInstanceOf(MigrationsConfiguration::class, $configuration);
+
+        $policy = $configuration->exclusionPolicy;
+        static::assertInstanceOf(AnyExclusionPolicy::class, $policy);
+
+        static::assertTrue($policy->exclude(new SchemaObject(SchemaObjectType::TABLE, 'tenant_data', 'uploads')));
+        static::assertTrue($policy->exclude(new SchemaObject(SchemaObjectType::TABLE, 'public', 'user_upload_9')));
+
+        static::assertTrue($policy->exclude(new SchemaObject(SchemaObjectType::VIEW, 'public', 'report_tmp')));
+        static::assertFalse($policy->exclude(new SchemaObject(SchemaObjectType::TABLE, 'public', 'report_tmp')));
+
+        static::assertTrue($policy->exclude(new SchemaObject(SchemaObjectType::SEQUENCE, 'public', 'cache_42')));
+        static::assertFalse($policy->exclude(new SchemaObject(SchemaObjectType::TABLE, 'public', 'cache_42')));
+
+        static::assertTrue($policy->exclude(new SchemaObject(SchemaObjectType::TABLE, 'public', 'legacy_audit')));
+        static::assertFalse($policy->exclude(new SchemaObject(SchemaObjectType::SEQUENCE, 'public', 'legacy_audit')));
+
+        static::assertFalse($policy->exclude(new SchemaObject(SchemaObjectType::TABLE, 'public', 'orders')));
+    }
+
+    public function test_migrations_exclude_entry_without_matcher_throws(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('must define exactly one of');
+
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres',
+                        ],
+                    ],
+                    'migrations' => [
+                        'enabled' => true,
+                        'directory' => '/tmp/test_migrations',
+                        'namespace' => 'App\\Migrations',
+                        'exclude' => [
+                            ['for_schema' => 'public'],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
     }
 
     public function test_client_with_telemetry_creates_default_clock_when_not_specified(): void

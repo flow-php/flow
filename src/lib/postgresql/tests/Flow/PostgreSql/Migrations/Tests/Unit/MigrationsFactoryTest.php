@@ -19,6 +19,7 @@ use Flow\PostgreSql\Migrations\VersionResolver;
 use Flow\PostgreSql\Schema\Catalog;
 use PHPUnit\Framework\TestCase;
 
+use function Flow\PostgreSql\DSL\exclude_starts_with;
 use function sys_get_temp_dir;
 
 final class MigrationsFactoryTest extends TestCase
@@ -31,6 +32,25 @@ final class MigrationsFactoryTest extends TestCase
                 new FakeCatalogProvider(new Catalog([])),
                 sys_get_temp_dir() . '/flow_migrations_test',
                 'App\\Migrations',
+            ),
+            new FakeMigrationRepository(),
+        );
+
+        static::assertInstanceOf(
+            DiffMigrationGenerator::class,
+            $factory->createDiffGenerator(new SpyMigrationGenerator(Version::fromString('20260401120000'))),
+        );
+    }
+
+    public function test_create_diff_generator_with_custom_exclusion_policy(): void
+    {
+        $factory = new MigrationsFactory(
+            new Configuration(
+                new SpyClient(),
+                new FakeCatalogProvider(new Catalog([])),
+                sys_get_temp_dir() . '/flow_migrations_test',
+                'App\\Migrations',
+                exclusionPolicy: exclude_starts_with('user_upload_'),
             ),
             new FakeMigrationRepository(),
         );

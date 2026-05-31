@@ -23,6 +23,9 @@ use Flow\PostgreSql\Schema\Constraint\ForeignKey;
 use Flow\PostgreSql\Schema\Constraint\PrimaryKey;
 use Flow\PostgreSql\Schema\Constraint\UniqueConstraint;
 use Flow\PostgreSql\Schema\Domain;
+use Flow\PostgreSql\Schema\Exclusion\ExclusionPolicy;
+use Flow\PostgreSql\Schema\Exclusion\SchemaObject;
+use Flow\PostgreSql\Schema\Exclusion\SchemaObjectType;
 use Flow\PostgreSql\Schema\Extension;
 use Flow\PostgreSql\Schema\Func;
 use Flow\PostgreSql\Schema\FunctionVolatility;
@@ -95,12 +98,11 @@ final readonly class PgCatalogProvider implements CatalogProvider
 
     /**
      * @param ?list<string> $schemaNames
-     * @param list<string> $excludeTables
      */
     public function __construct(
         private Client $client,
         private ?array $schemaNames = null,
-        private array $excludeTables = [],
+        private ?ExclusionPolicy $exclusionPolicy = null,
     ) {
         $this->columnTypeParser = new ColumnTypeParser();
         $this->expressionParser = new ExpressionParser();
@@ -911,6 +913,10 @@ final readonly class PgCatalogProvider implements CatalogProvider
         $tables = [];
 
         foreach ($this->readTableNames($schemaName) as $tableInfo) {
+            if ($this->excluded(SchemaObjectType::TABLE, $schemaName, $tableInfo['relname'])) {
+                continue;
+            }
+
             $tables[] = $this->readTable(
                 $tableInfo['relname'],
                 $schemaName,
@@ -923,13 +929,46 @@ final readonly class PgCatalogProvider implements CatalogProvider
         return new Schema(
             $schemaName,
             $tables,
-            $this->readSequences($schemaName),
-            $this->readViews($schemaName),
-            $this->readMaterializedViews($schemaName),
-            $this->readFunctions($schemaName),
-            $this->readProcedures($schemaName),
-            $this->readDomains($schemaName),
-            $this->readExtensions($schemaName),
+            array_values(array_filter(
+                $this->readSequences($schemaName),
+                fn(Sequence $s): bool => !$this->excluded(SchemaObjectType::SEQUENCE, $schemaName, $s->name),
+            )),
+            array_values(array_filter(
+                $this->readViews($schemaName),
+                fn(View $v): bool => !$this->excluded(SchemaObjectType::VIEW, $schemaName, $v->name),
+            )),
+            array_values(array_filter(
+                $this->readMaterializedViews($schemaName),
+                fn(MaterializedView $mv): bool => !$this->excluded(
+                    SchemaObjectType::MATERIALIZED_VIEW,
+                    $schemaName,
+                    $mv->name,
+                ),
+            )),
+            array_values(array_filter(
+                $this->readFunctions($schemaName),
+                fn(Func $f): bool => !$this->excluded(SchemaObjectType::FUNCTION, $schemaName, $f->name),
+            )),
+            array_values(array_filter(
+                $this->readProcedures($schemaName),
+                fn(Procedure $p): bool => !$this->excluded(SchemaObjectType::PROCEDURE, $schemaName, $p->name),
+            )),
+            array_values(array_filter(
+                $this->readDomains($schemaName),
+                fn(Domain $d): bool => !$this->excluded(SchemaObjectType::DOMAIN, $schemaName, $d->name),
+            )),
+            array_values(array_filter(
+                $this->readExtensions($schemaName),
+                fn(Extension $e): bool => !$this->excluded(SchemaObjectType::EXTENSION, $schemaName, $e->name),
+            )),
+        );
+    }
+
+    private function excluded(SchemaObjectType $type, string $schemaName, ?string $objectName): bool
+    {
+        return (
+            $this->exclusionPolicy !== null
+            && $this->exclusionPolicy->exclude(new SchemaObject($type, $schemaName, $objectName))
         );
     }
 
@@ -1058,16 +1097,6 @@ final readonly class PgCatalogProvider implements CatalogProvider
     private function readTableNames(string $schemaName): array
     {
         $conditions = and_(eq(col('nspname', 'n'), param(1)), in_(col('relkind', 'c'), [literal('r'), literal('p')]));
-
-        if ($this->excludeTables !== []) {
-            $conditions = and_(
-                $conditions,
-                not_(in_(
-                    col('relname', 'c'),
-                    array_map(static fn(string $t): Literal => literal($t), $this->excludeTables),
-                )),
-            );
-        }
 
         $rows = $this->client->fetchAllInto(
             type_mapper(type_structure([
@@ -1280,20 +1309,27 @@ final readonly class PgCatalogProvider implements CatalogProvider
      */
     private function resolveSchemaNames(): array
     {
-        return (
-            $this->schemaNames ?? array_values(array_map(
-                static fn(array $row): string => type_string()->assert($row['nspname']),
-                $this->client->fetchAllInto(
-                    type_mapper(type_structure(['nspname' => type_string()])),
-                    select(col('nspname'))
-                        ->from(table('pg_namespace', 'pg_catalog'))
-                        ->where(and_(
-                            not_like(col('nspname'), literal('pg_%')),
-                            ne(col('nspname'), literal('information_schema')),
-                        ))
-                        ->orderBy(asc(col('nspname'))),
-                ),
-            ))
-        );
+        $schemaNames = $this->schemaNames ?? array_values(array_map(
+            static fn(array $row): string => type_string()->assert($row['nspname']),
+            $this->client->fetchAllInto(
+                type_mapper(type_structure(['nspname' => type_string()])),
+                select(col('nspname'))
+                    ->from(table('pg_namespace', 'pg_catalog'))
+                    ->where(and_(
+                        not_like(col('nspname'), literal('pg_%')),
+                        ne(col('nspname'), literal('information_schema')),
+                    ))
+                    ->orderBy(asc(col('nspname'))),
+            ),
+        ));
+
+        if ($this->exclusionPolicy === null) {
+            return $schemaNames;
+        }
+
+        return array_values(array_filter(
+            $schemaNames,
+            fn(string $schemaName): bool => !$this->excluded(SchemaObjectType::SCHEMA, $schemaName, null),
+        ));
     }
 }

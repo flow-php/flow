@@ -38,6 +38,14 @@ use Flow\PostgreSql\Migrations\Repository\MigrationRepository;
 use Flow\PostgreSql\Migrations\Store\MigrationStore;
 use Flow\PostgreSql\Migrations\VersionGenerator\TimestampVersionGenerator;
 use Flow\PostgreSql\Migrations\VersionResolver;
+use Flow\PostgreSql\Schema\Exclusion\AnyExclusionPolicy;
+use Flow\PostgreSql\Schema\Exclusion\EndsWithExclusionPolicy;
+use Flow\PostgreSql\Schema\Exclusion\ExactMatchExclusionPolicy;
+use Flow\PostgreSql\Schema\Exclusion\PatternExclusionPolicy;
+use Flow\PostgreSql\Schema\Exclusion\ScopedExclusionPolicy;
+use Flow\PostgreSql\Schema\Exclusion\SchemaObjectType;
+use Flow\PostgreSql\Schema\Exclusion\StartsWithExclusionPolicy;
+use Flow\PostgreSql\Schema\Exclusion\WholeSchemaExclusionPolicy;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use LogicException;
 use Override;
@@ -324,6 +332,50 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             ->defaultTrue()
             ->info('Generate rollback files when creating migrations (default: true)')
             ->end()
+            ->arrayNode('exclude')
+            ->info('Schema objects excluded from migration diffing (e.g. tables created dynamically at runtime). Each entry defines exactly one matcher: schema, table, exact, starts_with, ends_with, pattern or policy_id.')
+            ->arrayPrototype()
+            ->children()
+            ->scalarNode('schema')
+            ->defaultNull()
+            ->info('Exclude an entire schema with all of its objects.')
+            ->end()
+            ->scalarNode('table')
+            ->defaultNull()
+            ->info('Exclude a table by exact name (shorthand for exact scoped to tables).')
+            ->end()
+            ->scalarNode('exact')
+            ->defaultNull()
+            ->info('Exclude any object whose name matches exactly.')
+            ->end()
+            ->scalarNode('starts_with')
+            ->defaultNull()
+            ->info('Exclude objects whose name starts with this prefix.')
+            ->end()
+            ->scalarNode('ends_with')
+            ->defaultNull()
+            ->info('Exclude objects whose name ends with this suffix.')
+            ->end()
+            ->scalarNode('pattern')
+            ->defaultNull()
+            ->info('Exclude objects whose name matches this PCRE pattern (with delimiters).')
+            ->end()
+            ->scalarNode('policy_id')
+            ->defaultNull()
+            ->info('Service ID of a custom Flow\\PostgreSql\\Schema\\Exclusion\\ExclusionPolicy.')
+            ->end()
+            ->enumNode('type')
+            ->values(['table', 'view', 'materialized_view', 'sequence', 'function', 'procedure', 'domain', 'extension'])
+            ->defaultNull()
+            ->info('Narrow the matcher to a single object type (ignored when using "schema" or "table").')
+            ->end()
+            ->scalarNode('for_schema')
+            ->defaultNull()
+            ->info('Narrow the matcher to a single schema.')
+            ->end()
+            ->end()
+            ->end()
+            ->end()
             ->end()
             ->end()
             ->arrayNode('catalog_providers')
@@ -347,7 +399,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     }
 
     /**
-     * @param array{connections: array<string, array{dsn: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>} $config
+     * @param array{connections: array<string, array{dsn: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>} $config
      */
     #[Override]
     public function loadExtension(array $config, ContainerConfigurator $configurator, ContainerBuilder $container): void
@@ -578,7 +630,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     }
 
     /**
-     * @param array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool} $mc
+     * @param array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>} $mc
      */
     private function registerMigrations(string $name, array $mc, ContainerBuilder $container, bool $isFirst): void
     {
@@ -595,6 +647,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             $mc['rollback_file_name'],
             $mc['all_or_nothing'],
             $mc['generate_rollback'],
+            $this->buildExclusionPolicy($mc['exclude'] ?? []),
         ]);
         $configDef->setPublic(true);
         $container->setDefinition("flow.postgresql.{$name}.migrations.configuration", $configDef);
@@ -682,6 +735,61 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             $container->setAlias(MigrationGenerator::class, "flow.postgresql.{$name}.migrations.generator");
             $container->setAlias(DiffMigrationGenerator::class, "flow.postgresql.{$name}.migrations.diff_generator");
         }
+    }
+
+    /**
+     * @param list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}> $exclude
+     */
+    private function buildExclusionPolicy(array $exclude): ?Definition
+    {
+        if ($exclude === []) {
+            return null;
+        }
+
+        $policies = [];
+
+        foreach ($exclude as $entry) {
+            $policies[] = $this->buildExclusionPolicyEntry($entry);
+        }
+
+        return new Definition(AnyExclusionPolicy::class, $policies);
+    }
+
+    /**
+     * @param array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string} $entry
+     */
+    private function buildExclusionPolicyEntry(array $entry): Definition|Reference
+    {
+        if ($entry['schema'] !== null) {
+            return new Definition(WholeSchemaExclusionPolicy::class, [$entry['schema']]);
+        }
+
+        $impliedType = null;
+
+        if ($entry['table'] !== null) {
+            $matcher = new Definition(ExactMatchExclusionPolicy::class, [$entry['table']]);
+            $impliedType = SchemaObjectType::TABLE;
+        } elseif ($entry['exact'] !== null) {
+            $matcher = new Definition(ExactMatchExclusionPolicy::class, [$entry['exact']]);
+        } elseif ($entry['starts_with'] !== null) {
+            $matcher = new Definition(StartsWithExclusionPolicy::class, [$entry['starts_with']]);
+        } elseif ($entry['ends_with'] !== null) {
+            $matcher = new Definition(EndsWithExclusionPolicy::class, [$entry['ends_with']]);
+        } elseif ($entry['pattern'] !== null) {
+            $matcher = new Definition(PatternExclusionPolicy::class, [$entry['pattern']]);
+        } elseif ($entry['policy_id'] !== null) {
+            $matcher = new Reference($entry['policy_id']);
+        } else {
+            throw new LogicException('Each "flow_postgresql.migrations.exclude" entry must define exactly one of: schema, table, exact, starts_with, ends_with, pattern, policy_id.');
+        }
+
+        $type = $entry['type'] !== null ? SchemaObjectType::from($entry['type']) : $impliedType;
+
+        if ($type === null && $entry['for_schema'] === null) {
+            return $matcher;
+        }
+
+        return new Definition(ScopedExclusionPolicy::class, [$matcher, $type, $entry['for_schema']]);
     }
 
     /**
