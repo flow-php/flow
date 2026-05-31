@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-05-31
 
 ### Added
+- [#2406](https://github.com/flow-php/flow/pull/2406) - **Add PHPUnit bridge compatibility with PHPUnit 11/12/13** - [@jdecool](https://github.com/jdecool)
 - [#2404](https://github.com/flow-php/flow/pull/2404) - **postgresql adapter schema converter** - [@norberttech](https://github.com/norberttech)
 - [#2403](https://github.com/flow-php/flow/pull/2403) - **Add memory usage consumption in PHPUnit OpenTelemetry bridge** - [@jdecool](https://github.com/jdecool)
 
