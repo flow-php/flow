@@ -46,7 +46,7 @@ final class TestEventMother
                 HRTime::fromSecondsAndNanoseconds(0, 0),
                 MemoryUsage::fromBytes(0),
                 MemoryUsage::fromBytes(0),
-                new GarbageCollectorStatus(0, 0, 0, 0, null, null, null, null, null, null, null, null),
+                new GarbageCollectorStatus(0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, false, false, false, 0),
             ),
             Duration::fromSecondsAndNanoseconds(0, 0),
             MemoryUsage::fromBytes(0),

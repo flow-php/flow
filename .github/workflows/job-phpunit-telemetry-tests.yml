@@ -1,0 +1,67 @@
+name: PHPUnit Telemetry Bridge Tests
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    strategy:
+      fail-fast: false
+      matrix:
+        phpunit-version:
+          - "11"
+          - "12"
+          - "13"
+        php-version:
+          - "8.3"
+          - "8.4"
+          - "8.5"
+        exclude:
+          # PHPUnit 13 requires PHP >= 8.4.1.
+          - phpunit-version: "13"
+            php-version: "8.3"
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "locked"
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl, pgsql, grpc, protobuf'
+          ini-values: 'memory_limit=-1'
+          apt-packages: "build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev"
+          pie-extensions: "flow-php/pg-query-ext:1.x-dev"
+
+      - name: "Install PHPUnit ${{ matrix.phpunit-version }}"
+        if: ${{ matrix.phpunit-version != '11' }}
+        run: |
+          composer require --working-dir=tools/phpunit --no-interaction --no-progress -W \
+            "phpunit/phpunit:^${{ matrix.phpunit-version }}"
+
+      - name: "Show PHPUnit version"
+        run: tools/phpunit/vendor/bin/phpunit --version
+
+      - name: "Test"
+        run: just test --testsuite bridge-phpunit-postgresql-unit,bridge-phpunit-postgresql-integration,bridge-phpunit-telemetry-unit
+        env:
+          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres?serverVersion=11&charset=utf8
