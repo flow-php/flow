@@ -176,52 +176,22 @@ final class StructureEntryTest extends FlowTestCase
 
     public function test_structure_element_names_as_numbers(): void
     {
-        static::assertNotEquals(
-            structure_entry(
-                'name',
-                // @mago-ignore analysis:possibly-invalid-argument
-                ['1' => 1, '2' => '2'],
-                // @mago-ignore analysis:possibly-invalid-argument
-                type_structure([
-                    '1' => type_integer(),
-                    '2' => type_string(),
-                ]),
-            ),
-            structure_entry(
-                'name',
-                // @mago-ignore analysis:possibly-invalid-argument
-                ['1' => 1, '2' => '2', '3' => '3'],
-                // @mago-ignore analysis:possibly-invalid-argument
-                type_structure([
-                    '1' => type_integer(),
-                    '2' => type_string(),
-                    '3' => type_string(),
-                ]),
-            ),
-        );
-        static::assertEquals(
-            structure_entry(
-                'name',
-                // @mago-ignore analysis:possibly-invalid-argument
-                ['1' => 1, '2' => 2, '3' => 3],
-                // @mago-ignore analysis:possibly-invalid-argument
-                type_structure([
-                    '1' => type_integer(),
-                    '2' => type_integer(),
-                    '3' => type_integer(),
-                ]),
-            ),
-            structure_entry(
-                'name',
-                // @mago-ignore analysis:possibly-invalid-argument
-                ['1' => 1, '2' => 2, '3' => 3],
-                // @mago-ignore analysis:possibly-invalid-argument
-                type_structure([
-                    '1' => type_integer(),
-                    '2' => type_integer(),
-                    '3' => type_integer(),
-                ]),
-            ),
-        );
+        static::assertNotEquals(structure_entry('name', ['1' => 1, '2' => '2'], type_structure([
+            '1' => type_integer(),
+            '2' => type_string(),
+        ])), structure_entry('name', ['1' => 1, '2' => '2', '3' => '3'], type_structure([
+            '1' => type_integer(),
+            '2' => type_string(),
+            '3' => type_string(),
+        ])));
+        static::assertEquals(structure_entry('name', ['1' => 1, '2' => 2, '3' => 3], type_structure([
+            '1' => type_integer(),
+            '2' => type_integer(),
+            '3' => type_integer(),
+        ])), structure_entry('name', ['1' => 1, '2' => 2, '3' => 3], type_structure([
+            '1' => type_integer(),
+            '2' => type_integer(),
+            '3' => type_integer(),
+        ])));
     }
 }

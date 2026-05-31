@@ -114,7 +114,7 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
      *
      * @return array<int, string>
      */
-    private function formatStructureElement(string $name, Type $structureType, array $buffer, int $level): array
+    private function formatStructureElement(int|string $name, Type $structureType, array $buffer, int $level): array
     {
         $indention = str_repeat('    ', $level);
 
