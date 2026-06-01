@@ -1,12 +1,14 @@
 ## [Unreleased] - 2026-06-01
 
 ### Added
+- [#2412](https://github.com/flow-php/flow/pull/2412) - **allow to prefix postgresql db name** - [@norberttech](https://github.com/norberttech)
 - [#2407](https://github.com/flow-php/flow/pull/2407) - **Symfony PostgreSql Bundle - migrations exclusion policy** - [@norberttech](https://github.com/norberttech)
 - [#2406](https://github.com/flow-php/flow/pull/2406) - **Add PHPUnit bridge compatibility with PHPUnit 11/12/13** - [@jdecool](https://github.com/jdecool)
 - [#2404](https://github.com/flow-php/flow/pull/2404) - **postgresql adapter schema converter** - [@norberttech](https://github.com/norberttech)
 - [#2403](https://github.com/flow-php/flow/pull/2403) - **Add memory usage consumption in PHPUnit OpenTelemetry bridge** - [@jdecool](https://github.com/jdecool)
 
 ### Changed
+- [#2413](https://github.com/flow-php/flow/pull/2413) - **Add missing OTEL configuration file format version** - [@stloyd](https://github.com/stloyd)
 - [#2405](https://github.com/flow-php/flow/pull/2405) - **thigthen structure type definition** - [@norberttech](https://github.com/norberttech)
 - [8a460b](https://github.com/flow-php/flow/commit/8a460b9b164c4e14afdf1ed1ef22644c5961fca5) - **refactor: cleanup github actions workflows** - [@norberttech](https://github.com/norberttech)
 - [#2397](https://github.com/flow-php/flow/pull/2397) - **Replaced PHPStan with Mago across entire project codebase** - [@norberttech](https://github.com/norberttech)
