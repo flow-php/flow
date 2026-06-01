@@ -651,6 +651,117 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
         static::assertFalse($this->getContainer()->has('flow.postgresql.default.telemetry.config'));
     }
 
+    public function test_connection_only_dsn_behaves_as_before(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/app',
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $params = $this->getContainer()->get('flow.postgresql.default.connection_parameters');
+        static::assertSame('app', $params->database());
+        static::assertSame('localhost', $params->host());
+    }
+
+    public function test_connection_parameters_apply_dbname_override_before_suffix(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/app',
+                            'dbname' => 'other',
+                            'dbname_suffix' => '_test',
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        static::assertSame(
+            'other_test',
+            $this->getContainer()->get('flow.postgresql.default.connection_parameters')->database(),
+        );
+    }
+
+    public function test_connection_parameters_apply_dsn_part_overrides(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://user:pass@localhost:5432/app',
+                            'host' => 'db.internal',
+                            'port' => 5544,
+                            'user' => 'svc',
+                            'password' => 'pw',
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $params = $this->getContainer()->get('flow.postgresql.default.connection_parameters');
+        static::assertSame('db.internal', $params->host());
+        static::assertSame(5544, $params->port());
+        static::assertSame('svc', $params->user());
+        static::assertSame('pw', $params->password());
+    }
+
+    public function test_connection_parameters_apply_dbname_suffix(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/app',
+                            'dbname_suffix' => '_test',
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        static::assertSame(
+            'app_test',
+            $this->getContainer()->get('flow.postgresql.default.connection_parameters')->database(),
+        );
+    }
+
+    public function test_connection_parameters_resolve_dbname_suffix_from_env(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container->setParameter('env(FLOW_TEST_DB_SUFFIX)', '_test7');
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/app',
+                            'dbname_suffix' => '%env(FLOW_TEST_DB_SUFFIX)%',
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        static::assertSame(
+            'app_test7',
+            $this->getContainer()->get('flow.postgresql.default.connection_parameters')->database(),
+        );
+    }
+
     public function test_connection_with_migrations_registers_migration_services(): void
     {
         $this->bootKernel([

@@ -208,6 +208,74 @@ final class ConfigurationTest extends TestCase
         static::assertSame('app.second_provider', $config['catalog_providers'][1]['catalog_provider_id']);
     }
 
+    public function test_connection_accepts_dbname_suffix(): void
+    {
+        $config = $this->context->processConfig([
+            'connections' => [
+                'default' => [
+                    'dsn' => 'postgresql://user:pass@localhost:5432/db',
+                    'dbname_suffix' => '_test',
+                ],
+            ],
+        ]);
+
+        static::assertSame('_test', $config['connections']['default']['dbname_suffix']);
+    }
+
+    public function test_connection_accepts_dsn_part_overrides(): void
+    {
+        $config = $this->context->processConfig([
+            'connections' => [
+                'default' => [
+                    'dsn' => 'postgresql://user:pass@localhost:5432/db',
+                    'dbname' => 'other',
+                    'host' => 'db.internal',
+                    'port' => 5544,
+                    'user' => 'svc',
+                    'password' => 'pw',
+                ],
+            ],
+        ]);
+
+        $connection = $config['connections']['default'];
+        static::assertSame('other', $connection['dbname']);
+        static::assertSame('db.internal', $connection['host']);
+        static::assertSame(5544, $connection['port']);
+        static::assertSame('svc', $connection['user']);
+        static::assertSame('pw', $connection['password']);
+    }
+
+    public function test_connection_overrides_default_to_no_override(): void
+    {
+        $config = $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+        ]);
+
+        $connection = $config['connections']['default'];
+        static::assertNull($connection['dbname']);
+        static::assertNull($connection['host']);
+        static::assertNull($connection['port']);
+        static::assertNull($connection['user']);
+        static::assertNull($connection['password']);
+        static::assertSame('', $connection['dbname_suffix']);
+    }
+
+    public function test_connection_port_rejects_non_int(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'connections' => [
+                'default' => [
+                    'dsn' => 'postgresql://user:pass@localhost:5432/db',
+                    'port' => 'not-an-int',
+                ],
+            ],
+        ]);
+    }
+
     public function test_connections_requires_at_least_one_element(): void
     {
         $this->expectException(InvalidConfigurationException::class);

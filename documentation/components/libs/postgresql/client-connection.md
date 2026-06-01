@@ -98,6 +98,44 @@ $client = pgsql_client(
 );
 ```
 
+## Overriding Parsed Parameters
+
+`ConnectionParameters` is immutable. Each `with*()` method returns a new instance, so a parsed DSN
+can be adjusted without re-parsing. 
+
+```php
+<?php
+
+use Flow\PostgreSql\Client\DsnParser;
+
+$params = (new DsnParser())->parse('postgresql://user:pass@localhost:5432/mydb')
+    ->withHost('db.internal')
+    ->withPort(5544)
+    ->withUser('svc')
+    ->withPassword('secret')
+    ->withDatabase('analytics');
+```
+
+### Database Suffix
+
+`withDatabaseSuffix()` appends a suffix to the configured database name. The base DSN stays constant
+and only the suffix changes per environment, which makes per-worker parallel-test databases work
+(`mydb` → `mydb_test7`) without a second DSN. The suffix is appended verbatim — nothing is inserted
+automatically, so include a separator yourself if you want one (e.g. `_test7`). An empty suffix is a
+no-op:
+
+```php
+<?php
+
+use Flow\PostgreSql\Client\DsnParser;
+
+$params = (new DsnParser())->parse('postgresql://user:pass@localhost:5432/mydb')
+    ->withDatabaseSuffix('_test7'); // database() === 'mydb_test7'
+```
+
+When combined with `withDatabase()`, apply the override first — the suffix is appended to the
+overridden name (`withDatabase('other')->withDatabaseSuffix('_test')` ⇒ `other_test`).
+
 ## Connection Lifecycle
 
 ### Checking Connection Status

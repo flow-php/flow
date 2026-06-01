@@ -8,6 +8,7 @@ use Flow\Bridge\PHPUnit\PostgreSQL\StaticClient;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Attribute\AsCatalogProvider;
 use Flow\Bridge\Symfony\PostgreSqlBundle\CatalogProvider\ArrayCatalogProvider;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Command\SessionPurgeCommand;
+use Flow\Bridge\Symfony\PostgreSqlBundle\Connection\ConnectionParametersFactory;
 use Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection\Compiler\CatalogProviderPass;
 use Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection\Compiler\CommandLocatorPass;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Generator\TwigMigrationGenerator;
@@ -106,6 +107,30 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             ->isRequired()
             ->cannotBeEmpty()
             ->info('PostgreSQL connection DSN (e.g. postgresql://user:pass@localhost:5432/dbname)')
+            ->end()
+            ->scalarNode('dbname')
+            ->defaultNull()
+            ->info('Overrides the database name parsed from the DSN.')
+            ->end()
+            ->scalarNode('host')
+            ->defaultNull()
+            ->info('Overrides the host parsed from the DSN.')
+            ->end()
+            ->integerNode('port')
+            ->defaultNull()
+            ->info('Overrides the port parsed from the DSN.')
+            ->end()
+            ->scalarNode('user')
+            ->defaultNull()
+            ->info('Overrides the user parsed from the DSN.')
+            ->end()
+            ->scalarNode('password')
+            ->defaultNull()
+            ->info('Overrides the password parsed from the DSN.')
+            ->end()
+            ->scalarNode('dbname_suffix')
+            ->defaultValue('')
+            ->info('Adds the given suffix to the configured database name.')
             ->end()
             ->booleanNode('test_transaction_rollback')
             ->defaultFalse()
@@ -399,7 +424,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     }
 
     /**
-     * @param array{connections: array<string, array{dsn: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>} $config
+     * @param array{connections: array<string, array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>} $config
      */
     #[Override]
     public function loadExtension(array $config, ContainerConfigurator $configurator, ContainerBuilder $container): void
@@ -537,7 +562,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     }
 
     /**
-     * @param array{dsn: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}} $connectionConfig
+     * @param array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}} $connectionConfig
      */
     private function registerConnection(
         string $name,
@@ -549,8 +574,19 @@ final class FlowPostgreSqlBundle extends AbstractBundle
         $container->setDefinition("flow.postgresql.{$name}.dsn_parser", $parserDef);
 
         $paramsDef = new Definition(ConnectionParameters::class);
-        $paramsDef->setFactory([new Reference("flow.postgresql.{$name}.dsn_parser"), 'parse']);
-        $paramsDef->setArguments([$connectionConfig['dsn']]);
+        $paramsDef->setFactory([ConnectionParametersFactory::class, 'create']);
+        $paramsDef->setArguments([
+            new Reference("flow.postgresql.{$name}.dsn_parser"),
+            $connectionConfig['dsn'],
+            [
+                'dbname' => $connectionConfig['dbname'] ?? null,
+                'host' => $connectionConfig['host'] ?? null,
+                'port' => $connectionConfig['port'] ?? null,
+                'user' => $connectionConfig['user'] ?? null,
+                'password' => $connectionConfig['password'] ?? null,
+                'dbname_suffix' => $connectionConfig['dbname_suffix'] ?? '',
+            ],
+        ]);
         $container->setDefinition("flow.postgresql.{$name}.connection_parameters", $paramsDef);
 
         $paramsDef->setPublic(true);
