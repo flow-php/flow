@@ -18,6 +18,7 @@ use Flow\PostgreSql\Schema\Sequence;
 use Flow\PostgreSql\Schema\Table;
 use Flow\PostgreSql\Schema\View;
 use Flow\PostgreSql\Schema\ViewDependencyOrder;
+use Throwable;
 
 final readonly class SchemaComparator
 {
@@ -36,6 +37,7 @@ final readonly class SchemaComparator
         private ExecutionOrderStrategy $materializedViewOrderStrategy = new MaterializedViewDependencyOrder(
             new Parser(),
         ),
+        private Parser $parser = new Parser(),
     ) {}
 
     public function compare(Schema $source, Schema $target): SchemaDiff
@@ -65,7 +67,7 @@ final readonly class SchemaComparator
             $source->views,
             $target->views,
             static fn(View $v): string => $v->name,
-            static fn(View $a, View $b): ?ViewDiff => $a->definition === $b->definition
+            fn(View $a, View $b): ?ViewDiff => $this->definitionsEqual($a->definition, $b->definition)
                 && $a->isUpdatable === $b->isUpdatable
                     ? null
                     : new ViewDiff($a, $b),
@@ -139,6 +141,11 @@ final readonly class SchemaComparator
         );
     }
 
+    private function definitionsEqual(string $a, string $b): bool
+    {
+        return $this->normalizeDefinition($a) === $this->normalizeDefinition($b);
+    }
+
     /**
      * @param list<Domain> $sourceDomains
      * @param list<Domain> $targetDomains
@@ -187,7 +194,7 @@ final readonly class SchemaComparator
                 $indexChanges = $this->indexComparator->compare($a->indexes, $b->indexes);
 
                 if (
-                    $a->definition === $b->definition
+                    $this->definitionsEqual($a->definition, $b->definition)
                     && $indexChanges->added === []
                     && $indexChanges->removed === []
                     && ($indexChanges->renamed === null || $indexChanges->renamed === [])
@@ -220,5 +227,14 @@ final readonly class SchemaComparator
         $renameResult = $this->tableStructureComparator->detectTableRenames($initial->added, $initial->removed);
 
         return new ChangeSet($renameResult->added, $renameResult->removed, $initial->modified, $renameResult->renamed);
+    }
+
+    private function normalizeDefinition(string $definition): string
+    {
+        try {
+            return $this->parser->parse($definition)->deparse();
+        } catch (Throwable) {
+            return $definition;
+        }
     }
 }
