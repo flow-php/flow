@@ -180,6 +180,15 @@ final readonly class ConnectionParameters
         );
     }
 
+    public function withDatabaseSuffix(string $suffix): self
+    {
+        if ($suffix === '') {
+            return $this;
+        }
+
+        return $this->withDatabase($this->database . $suffix);
+    }
+
     public function withHost(string $host): self
     {
         return new self(

@@ -49,6 +49,56 @@ flow_postgresql:
       dsn: '%env(DATABASE_URL)%'
 ```
 
+### Connection Overrides
+
+Each connection may override individual parts of the parsed DSN. Every key maps 1:1 onto an immutable
+`ConnectionParameters` method in the `flow-php/postgresql` library; the bundle adds no logic of its own.
+Overrides are applied at service-factory time, so values may be `%env(...)%` placeholders — they are
+resolved at runtime, not when the configuration is parsed.
+
+```yaml
+flow_postgresql:
+  connections:
+    default:
+      dsn: '%env(DATABASE_URL)%'
+
+      dbname: null            # Replaces the database name parsed from the DSN
+      host: null              # Replaces the host parsed from the DSN
+      port: null              # Replaces the port parsed from the DSN
+      user: null              # Replaces the user parsed from the DSN
+      password: null          # Replaces the password parsed from the DSN
+      dbname_suffix: ''       # Appends the given suffix to the configured database name
+```
+
+| Key             | Type   | Default | Effect                                                    |
+|-----------------|--------|---------|-----------------------------------------------------------|
+| `dbname`        | string | `null`  | Replaces the database name parsed from the DSN.           |
+| `host`          | string | `null`  | Replaces the host parsed from the DSN.                    |
+| `port`          | int    | `null`  | Replaces the port parsed from the DSN.                    |
+| `user`          | string | `null`  | Replaces the user parsed from the DSN.                    |
+| `password`      | string | `null`  | Replaces the password parsed from the DSN.                |
+| `dbname_suffix` | string | `''`    | Appends the given suffix to the configured database name. |
+
+`dbname`/`host`/`port`/`user`/`password` are applied first, then `dbname_suffix` **last** — so
+`dbname: 'foo'` + `dbname_suffix: '_test'` yields `foo_test`. A connection with only `dsn` behaves
+exactly as before.
+
+#### `dbname_suffix` for parallel tests
+
+```yaml
+# config/packages/flow_postgresql.yaml
+flow_postgresql:
+  connections:
+    default:
+      dsn: '%env(DATABASE_ANALYTICAL_URL)%'
+
+when@test:
+  flow_postgresql:
+    connections:
+      default:
+        dbname_suffix: '_test%env(default::TEST_TOKEN)%'
+```
+
 ### Telemetry
 
 Enable telemetry per connection to get distributed tracing, query logging, and metrics.

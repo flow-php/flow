@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\Client;
 
 use Flow\PostgreSql\Client\ConnectionParameters;
+use Flow\PostgreSql\Client\DsnParser;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
@@ -186,6 +187,45 @@ final class ConnectionParametersTest extends TestCase
         $testParams = $params->withDatabase($params->database() . '_test');
 
         static::assertSame('myapp_test', $testParams->database());
+    }
+
+    public function test_with_database_suffix_appends_to_database(): void
+    {
+        $params = ConnectionParameters::fromParams(database: 'app');
+
+        $modified = $params->withDatabaseSuffix('_test');
+
+        static::assertSame('app', $params->database());
+        static::assertSame('app_test', $modified->database());
+        static::assertNotSame($params, $modified);
+    }
+
+    public function test_with_database_suffix_composes_after_with_database(): void
+    {
+        $params = ConnectionParameters::fromParams(database: 'app');
+
+        $modified = $params->withDatabase('other')->withDatabaseSuffix('_test');
+
+        static::assertSame('other_test', $modified->database());
+    }
+
+    public function test_with_database_suffix_empty_is_no_op(): void
+    {
+        $params = ConnectionParameters::fromParams(database: 'app');
+
+        $modified = $params->withDatabaseSuffix('');
+
+        static::assertSame($params, $modified);
+        static::assertSame('app', $modified->database());
+    }
+
+    public function test_with_database_suffix_round_trips_with_dsn_parser(): void
+    {
+        $params = (new DsnParser())
+            ->parse('postgresql://user:pass@localhost:5432/mydb')
+            ->withDatabaseSuffix('_x');
+
+        static::assertSame('mydb_x', $params->database());
     }
 
     public function test_with_host(): void
