@@ -485,6 +485,30 @@ final class SchemaComparatorTest extends TestCase
         static::assertCount(1, $diff->modifiedMaterializedViews);
     }
 
+    public function test_materialized_view_formatting_only_difference_is_not_a_change(): void
+    {
+        $constraintComparator = new ConstraintComparator();
+        $comparator = new SchemaComparator(
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
+            new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            $constraintComparator,
+            new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+        );
+        $source = new Schema('public', materializedViews: [schema_materialized_view(
+            'mv',
+            "  SELECT a,\n   b\n  FROM t;",
+        )]);
+        $target = new Schema('public', materializedViews: [schema_materialized_view('mv', 'SELECT a, b FROM t')]);
+
+        $diff = $comparator->compare($source, $target);
+
+        static::assertSame([], $diff->modifiedMaterializedViews);
+    }
+
     public function test_materialized_view_modified_index(): void
     {
         $constraintComparator = new ConstraintComparator();
@@ -1110,6 +1134,117 @@ final class SchemaComparatorTest extends TestCase
 
         static::assertCount(1, $diff->addedViews);
         static::assertSame('v_users', $diff->addedViews[0]->name);
+    }
+
+    public function test_view_formatting_only_difference_is_not_a_change(): void
+    {
+        $constraintComparator = new ConstraintComparator();
+        $comparator = new SchemaComparator(
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
+            new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            $constraintComparator,
+            new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+        );
+        $source = new Schema('public', views: [schema_view('v', "  SELECT a,\n   b\n  FROM t;")]);
+        $target = new Schema('public', views: [schema_view('v', 'SELECT a, b FROM t')]);
+
+        $diff = $comparator->compare($source, $target);
+
+        static::assertSame([], $diff->modifiedViews);
+    }
+
+    public function test_view_real_change_is_detected(): void
+    {
+        $constraintComparator = new ConstraintComparator();
+        $comparator = new SchemaComparator(
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
+            new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            $constraintComparator,
+            new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+        );
+        $source = new Schema('public', views: [schema_view('v_users', 'SELECT id FROM users')]);
+        $target = new Schema('public', views: [schema_view('v_users', 'SELECT id, name FROM users')]);
+
+        $diff = $comparator->compare($source, $target);
+
+        static::assertCount(1, $diff->modifiedViews);
+    }
+
+    public function test_view_literal_change_is_detected(): void
+    {
+        $constraintComparator = new ConstraintComparator();
+        $comparator = new SchemaComparator(
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
+            new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            $constraintComparator,
+            new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+        );
+        $source = new Schema('public', views: [schema_view('v_users', 'SELECT id FROM users WHERE x = 1')]);
+        $target = new Schema('public', views: [schema_view('v_users', 'SELECT id FROM users WHERE x = 2')]);
+
+        $diff = $comparator->compare($source, $target);
+
+        static::assertCount(1, $diff->modifiedViews);
+    }
+
+    public function test_view_is_updatable_change_is_detected(): void
+    {
+        $constraintComparator = new ConstraintComparator();
+        $comparator = new SchemaComparator(
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
+            new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            $constraintComparator,
+            new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+        );
+        $source = new Schema('public', views: [schema_view('v_users', "SELECT id\nFROM users", isUpdatable: false)]);
+        $target = new Schema('public', views: [schema_view('v_users', 'SELECT id FROM users', isUpdatable: true)]);
+
+        $diff = $comparator->compare($source, $target);
+
+        static::assertCount(1, $diff->modifiedViews);
+    }
+
+    public function test_unparseable_view_definition_falls_back_to_raw_comparison(): void
+    {
+        $constraintComparator = new ConstraintComparator();
+        $comparator = new SchemaComparator(
+            new TableComparator(
+                new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+                $constraintComparator,
+                new GreedySimilarityRenameStrategy(new SimilarTextStrategy()),
+            ),
+            new IndexComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+            $constraintComparator,
+            new TableStructureComparator(new GreedySimilarityRenameStrategy(new SimilarTextStrategy())),
+        );
+
+        $equalGarbage = $comparator->compare(
+            new Schema('public', views: [schema_view('v_x', 'this is not sql')]),
+            new Schema('public', views: [schema_view('v_x', 'this is not sql')]),
+        );
+        static::assertSame([], $equalGarbage->modifiedViews);
+
+        $differentGarbage = $comparator->compare(
+            new Schema('public', views: [schema_view('v_x', 'this is not sql')]),
+            new Schema('public', views: [schema_view('v_x', 'also not sql')]),
+        );
+        static::assertCount(1, $differentGarbage->modifiedViews);
     }
 
     public function test_view_modified_definition(): void
