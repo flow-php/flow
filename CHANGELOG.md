@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-05-31
+## [Unreleased] - 2026-06-01
 
 ### Added
 - [#2407](https://github.com/flow-php/flow/pull/2407) - **Symfony PostgreSql Bundle - migrations exclusion policy** - [@norberttech](https://github.com/norberttech)
@@ -13,6 +13,7 @@
 - [#2391](https://github.com/flow-php/flow/pull/2391) - **Covered all bridges with Mago Analyzer** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2410](https://github.com/flow-php/flow/pull/2410) - **postgresql schema comparator handling views** - [@norberttech](https://github.com/norberttech)
 - [#2401](https://github.com/flow-php/flow/pull/2401) - **performance when processing remote CSV files** - [@norberttech](https://github.com/norberttech)
 - [#2402](https://github.com/flow-php/flow/pull/2402) - **default values in ForeingKey and UniqueConstraint postgersql** - [@norberttech](https://github.com/norberttech)
 - [400244](https://github.com/flow-php/flow/commit/4002444c062c2029d1713b8e8d0f82ab28d835fb) - **failing tests on lowest versions of dependencies** - [@norberttech](https://github.com/norberttech)
