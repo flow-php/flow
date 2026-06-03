@@ -41,7 +41,7 @@ final readonly class MigrationsFactory
         return new DiffMigrationGenerator(
             client_catalog_provider($this->configuration->client, exclusionPolicy: $exclusionPolicy),
             $this->configuration->targetCatalogProvider,
-            catalog_comparator(),
+            catalog_comparator(dropIfExists: $this->configuration->dropIfExists),
             $generator,
             $this->configuration->generateRollback,
         );

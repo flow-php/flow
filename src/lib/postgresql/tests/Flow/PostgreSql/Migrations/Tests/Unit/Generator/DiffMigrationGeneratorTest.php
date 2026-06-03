@@ -68,6 +68,32 @@ final class DiffMigrationGeneratorTest extends TestCase
         static::assertSame([], $spy->lastDownSql);
     }
 
+    public function test_drop_if_exists_override_threads_into_generated_sql(): void
+    {
+        $source = new Catalog([
+            new Schema('public', [
+                new Table('public', 'users', [
+                    new Column('id', ColumnType::integer(), false),
+                ]),
+            ]),
+        ]);
+        $target = new Catalog([new Schema('public', [])]);
+
+        $spy = new SpyMigrationGenerator(Version::fromString('20260403120000'));
+
+        $diffGenerator = new DiffMigrationGenerator(
+            new FakeCatalogProvider($source),
+            new FakeCatalogProvider($target),
+            CatalogComparator::create(),
+            $spy,
+        );
+
+        $diffGenerator->generate('drop_users', dropIfExists: true);
+
+        $upSqlJoined = implode(' ', $spy->lastUpSql ?? []);
+        static::assertStringContainsString('DROP TABLE IF EXISTS public.users', $upSqlJoined);
+    }
+
     public function test_from_empty_schema_uses_empty_catalog_as_source(): void
     {
         $sourceCatalogWithData = new Catalog([

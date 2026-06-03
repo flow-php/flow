@@ -48,6 +48,7 @@ final readonly class CatalogDiff implements Diff
         private ExecutionOrderStrategy $materializedViewOrderStrategy = new MaterializedViewDependencyOrder(
             new Parser(),
         ),
+        private bool $dropIfExists = false,
     ) {}
 
     /**
@@ -72,9 +73,10 @@ final readonly class CatalogDiff implements Diff
         $dependentViews = $this->resolveDependentViews();
 
         foreach ($dependentViews->toDrop as $dv) {
-            $sqls[] = $dv->view instanceof MaterializedView
+            $builder = $dv->view instanceof MaterializedView
                 ? drop()->materializedView($dv->qualifiedName())
                 : drop()->view($dv->qualifiedName());
+            $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
         foreach ($this->modifiedSchemas as $diff) {
@@ -109,7 +111,8 @@ final readonly class CatalogDiff implements Diff
         }
 
         foreach ($this->removedSchemas as $schema) {
-            $sqls[] = drop()->schema($schema->name)->cascade();
+            $builder = drop()->schema($schema->name)->cascade();
+            $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
         return $sqls;

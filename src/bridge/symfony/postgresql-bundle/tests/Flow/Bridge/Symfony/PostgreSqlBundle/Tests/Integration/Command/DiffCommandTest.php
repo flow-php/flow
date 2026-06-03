@@ -34,4 +34,19 @@ final class DiffCommandTest extends CommandTestCase
         static::assertStringContainsString('DROP TABLE', $rollbackContent);
         static::assertStringContainsString('implements Rollback', $rollbackContent);
     }
+
+    public function test_generates_schema_migration_with_drop_if_exists_flag(): void
+    {
+        $command = $this->context->command('flow.postgresql.command.diff');
+        $tester = new CommandTester($command);
+        $tester->execute(['name' => 'create_test_users_if_exists', '--drop-if-exists' => true]);
+
+        static::assertSame(Command::SUCCESS, $tester->getStatusCode());
+
+        $dirs = $this->context->migrationDirs('*_create_test_users_if_exists');
+        static::assertCount(1, $dirs);
+
+        $rollbackContent = $this->context->fileContent((string) $dirs[0] . '/rollback.php');
+        static::assertStringContainsString('DROP TABLE IF EXISTS', $rollbackContent);
+    }
 }

@@ -33,6 +33,7 @@ execute it with the Client, and map results to objects.
 | Add pagination to existing queries | [Query Modification](#query-modification)                                          | `ext-pg_query`              |
 | Analyze query performance          | [Query Plan Analysis](/documentation/components/libs/postgresql/client-explain.md) | `ext-pgsql`, `ext-pg_query` |
 | Traverse or modify AST directly    | [Advanced Features](#advanced-features)                                            | `ext-pg_query`              |
+| Generate SQL from schema diffs     | [Schema Diff](#schema-diff)                                                        | `ext-pg_query`              |
 
 ## Requirements
 
@@ -683,6 +684,42 @@ foreach ($query->raw()->getStmts() as $stmt) {
     $where = $select->getWhereClause();
     // ...
 }
+```
+
+---
+
+## Schema Diff
+
+Compare two catalogs and generate the SQL that turns the source into the target.
+
+```php
+<?php
+
+use Flow\PostgreSql\Schema\Catalog;
+
+use function Flow\PostgreSql\DSL\{catalog_comparator, schema, schema_column_integer, schema_table};
+
+$current = new Catalog([schema('public', tables: [schema_table('users', [schema_column_integer('id', false)])])]);
+$target = new Catalog([schema('public')]); // users removed
+
+foreach (catalog_comparator()->compare($current, $target)->generate() as $sql) {
+    echo $sql->toSql() . "\n"; // DROP TABLE public.users CASCADE
+}
+```
+
+### `dropIfExists`
+
+By default, generated `DROP` statements have no `IF EXISTS`, so a missing object fails loudly (drift detection).
+Set `dropIfExists: true` to render every diff-generated drop with `IF EXISTS` — useful for convergence migrations
+that must run against both fresh and legacy databases:
+
+```php
+// On the comparator (applies to every compare):
+catalog_comparator(dropIfExists: true)->compare($current, $target);
+
+// Or per call (overrides the comparator's default):
+catalog_comparator()->compare($current, $target, dropIfExists: true);
+// -> DROP TABLE IF EXISTS public.users CASCADE
 ```
 
 ---

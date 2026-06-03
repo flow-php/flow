@@ -38,9 +38,10 @@ final readonly class SchemaComparator
             new Parser(),
         ),
         private Parser $parser = new Parser(),
+        private bool $dropIfExists = false,
     ) {}
 
-    public function compare(Schema $source, Schema $target): SchemaDiff
+    public function compare(Schema $source, Schema $target, ?bool $dropIfExists = null): SchemaDiff
     {
         $tables = $this->diffTables($source->tables, $target->tables);
         $materializedViews = $this->diffMaterializedViews($source->materializedViews, $target->materializedViews);
@@ -138,6 +139,7 @@ final readonly class SchemaComparator
             $this->tableOrderStrategy,
             $this->viewOrderStrategy,
             $this->materializedViewOrderStrategy,
+            $dropIfExists ?? $this->dropIfExists,
         );
     }
 

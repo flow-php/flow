@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Tests\Unit\Schema\Diff;
 
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Schema\ReferentialAction;
+use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Catalog;
 use Flow\PostgreSql\Schema\Diff\StrictRenameStrategy;
 use Flow\PostgreSql\Schema\FunctionVolatility;
@@ -14,6 +15,7 @@ use Flow\PostgreSql\Schema\TriggerEvent;
 use Flow\PostgreSql\Schema\TriggerTiming;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
 use function Flow\PostgreSql\DSL\and_;
 use function Flow\PostgreSql\DSL\catalog_comparator;
 use function Flow\PostgreSql\DSL\col;
@@ -2609,5 +2611,77 @@ final class CatalogComparatorTest extends TestCase
         $diff = catalog_comparator()->compare($source, $target);
 
         static::assertCount(1, $diff->modifiedSchemas[0]->removedViews);
+    }
+
+    public function test_removed_view_drop_omits_if_exists_by_default(): void
+    {
+        $source = new Catalog([
+            schema('public', views: [
+                schema_view('active_users', select(literal(1))->toSql()),
+            ]),
+        ]);
+        $target = new Catalog([schema('public')]);
+
+        $sqls = array_map(
+            static fn(Sql $query): string => $query->toSql(),
+            catalog_comparator()->compare($source, $target)->generate(),
+        );
+
+        static::assertContains('DROP VIEW active_users', $sqls);
+        static::assertNotContains('DROP VIEW IF EXISTS active_users', $sqls);
+    }
+
+    public function test_removed_view_drop_gains_if_exists_when_flag_enabled(): void
+    {
+        $source = new Catalog([
+            schema('public', views: [
+                schema_view('active_users', select(literal(1))->toSql()),
+            ]),
+        ]);
+        $target = new Catalog([schema('public')]);
+
+        $sqls = array_map(
+            static fn(Sql $query): string => $query->toSql(),
+            catalog_comparator(dropIfExists: true)->compare($source, $target)->generate(),
+        );
+
+        static::assertContains('DROP VIEW IF EXISTS active_users', $sqls);
+        static::assertNotContains('DROP VIEW active_users', $sqls);
+    }
+
+    public function test_compare_override_forces_if_exists_on_default_off_comparator(): void
+    {
+        $source = new Catalog([
+            schema('public', views: [
+                schema_view('active_users', select(literal(1))->toSql()),
+            ]),
+        ]);
+        $target = new Catalog([schema('public')]);
+
+        $sqls = array_map(
+            static fn(Sql $query): string => $query->toSql(),
+            catalog_comparator()->compare($source, $target, true)->generate(),
+        );
+
+        static::assertContains('DROP VIEW IF EXISTS active_users', $sqls);
+        static::assertNotContains('DROP VIEW active_users', $sqls);
+    }
+
+    public function test_compare_override_suppresses_if_exists_on_default_on_comparator(): void
+    {
+        $source = new Catalog([
+            schema('public', views: [
+                schema_view('active_users', select(literal(1))->toSql()),
+            ]),
+        ]);
+        $target = new Catalog([schema('public')]);
+
+        $sqls = array_map(
+            static fn(Sql $query): string => $query->toSql(),
+            catalog_comparator(dropIfExists: true)->compare($source, $target, false)->generate(),
+        );
+
+        static::assertContains('DROP VIEW active_users', $sqls);
+        static::assertNotContains('DROP VIEW IF EXISTS active_users', $sqls);
     }
 }

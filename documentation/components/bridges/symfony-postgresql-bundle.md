@@ -143,7 +143,14 @@ flow_postgresql:
     rollback_file_name: "rollback.php"             # Name of the rollback file in each version directory
     all_or_nothing: false                          # Wrap all migrations in a single transaction
     generate_rollback: true                        # Generate rollback files automatically
+    drop_if_exists: false                          # Emit IF EXISTS on diff-generated DROP statements
 ```
+
+#### `drop_if_exists`
+
+Set `drop_if_exists: true` to render every diff-generated `DROP` with `IF EXISTS` — useful for convergence migrations
+that run against both fresh and legacy databases. Default `false`, so a missing object fails loudly (drift detection).
+Override for a single run with the [`--drop-if-exists`](#generating-migrations-from-schema-diff) flag.
 
 ### Catalog Providers
 
@@ -316,6 +323,7 @@ These commands are available when `migrations.enabled: true` for at least one co
 | `--up` / `--down`     | Migration direction (execute)                         |
 | `--allow-empty-diff`  | Don't fail when no changes detected (diff)            |
 | `--from-empty-schema` | Generate as if the database were empty (diff)         |
+| `--drop-if-exists`    | Emit `IF EXISTS` on generated DROP statements (diff)  |
 
 ## Migration Workflow
 
@@ -348,6 +356,13 @@ This creates a new versioned directory with `migration.php` containing the SQL t
 with the catalog, and `rollback.php` with the reverse operations (if `generate_rollback` is enabled).
 
 Use `--from-empty-schema` to generate a migration as if the database were empty (useful for initial setup).
+
+Use `--drop-if-exists` to emit `IF EXISTS` on every generated `DROP` for this run (a per-run override of the
+[`drop_if_exists`](#drop_if_exists) config key):
+
+```bash
+php bin/console flow:migrations:diff --drop-if-exists
+```
 
 ### Generating Blank Migrations
 
