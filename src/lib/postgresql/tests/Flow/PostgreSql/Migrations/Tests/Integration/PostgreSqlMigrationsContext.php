@@ -32,6 +32,11 @@ final class PostgreSqlMigrationsContext
         $this->client->close();
     }
 
+    public function dropSchemaIfExists(string $schema): void
+    {
+        $this->client->execute(drop()->schema($schema)->ifExists()->cascade()->toSql());
+    }
+
     public function dropTableIfExists(string $table): void
     {
         $this->client->execute(drop()->table($table)->ifExists()->cascade()->toSql());

@@ -1,5 +1,3 @@
-file_format: '1.0'
-
 receivers:
   otlp:
     protocols:
