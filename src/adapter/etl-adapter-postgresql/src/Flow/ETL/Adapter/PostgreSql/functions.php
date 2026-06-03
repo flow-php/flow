@@ -13,6 +13,7 @@ use Flow\ETL\Adapter\PostgreSql\Pagination\Order;
 use Flow\ETL\Attribute\DocumentationDSL;
 use Flow\ETL\Attribute\Module;
 use Flow\ETL\Attribute\Type as DSLType;
+use Flow\ETL\Loader;
 use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\Sql;
@@ -98,6 +99,18 @@ function pgsql_pagination_key_set(Key ...$keys): KeySet
 function to_pgsql_table(Client $client, string $table): PostgreSqlLoader
 {
     return new PostgreSqlLoader($client, $table);
+}
+
+/**
+ * Execute multiple loaders within a single PostgreSQL transaction.
+ *
+ * Each batch of rows is processed in its own transaction. If any loader
+ * fails, the entire batch is rolled back.
+ */
+#[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::LOADER)]
+function to_pgsql_transaction(Client $client, Loader ...$loaders): TransactionalPostgreSqlLoader
+{
+    return new TransactionalPostgreSqlLoader($client, ...$loaders);
 }
 
 /**

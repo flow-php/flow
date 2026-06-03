@@ -392,14 +392,42 @@ df()
     ->run();
 ```
 
+### Transactional Loading
+
+`to_pgsql_transaction()` wraps one or more loaders so each batch of rows is loaded inside a single transaction. If any
+loader throws, the whole batch is rolled back:
+
+```php
+use Flow\PostgreSql\QueryBuilder\Transaction\IsolationLevel;
+
+use function Flow\ETL\Adapter\PostgreSql\{to_pgsql_table, to_pgsql_transaction};
+
+df()
+    ->read(from_array($data))
+    ->write(to_pgsql_transaction(
+        $client,
+        to_pgsql_table($client, 'users'),
+        to_pgsql_table($client, 'users_audit'),
+    ))
+    ->run();
+```
+
+Use `withIsolationLevel()` to set the transaction isolation level:
+
+```php
+to_pgsql_transaction($client, to_pgsql_table($client, 'users'))
+    ->withIsolationLevel(IsolationLevel::SERIALIZABLE);
+```
+
 ## Loader DSL Functions Reference
 
-| Function                             | Description                                     |
-|--------------------------------------|-------------------------------------------------|
-| `to_pgsql_table($client, $table)`    | Create a PostgreSQL loader for a table          |
-| `pgsql_insert_options(...)`          | Configure insert behavior (conflicts, upsert)   |
-| `pgsql_update_options($primaryKeys)` | Configure update behavior (primary key columns) |
-| `pgsql_delete_options($primaryKeys)` | Configure delete behavior (primary key columns) |
+| Function                                       | Description                                         |
+|------------------------------------------------|-----------------------------------------------------|
+| `to_pgsql_table($client, $table)`              | Create a PostgreSQL loader for a table              |
+| `to_pgsql_transaction($client, ...$loaders)`   | Run multiple loaders within a single transaction    |
+| `pgsql_insert_options(...)`                    | Configure insert behavior (conflicts, upsert)       |
+| `pgsql_update_options($primaryKeys)`           | Configure update behavior (primary key columns)     |
+| `pgsql_delete_options($primaryKeys)`           | Configure delete behavior (primary key columns)     |
 
 ## Schema Conversion
 
