@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-06-03
 
 ### Added
+- [#2417](https://github.com/flow-php/flow/pull/2417) - **PostgreSql Transactional Loader** - [@norberttech](https://github.com/norberttech)
 - [#2414](https://github.com/flow-php/flow/pull/2414) - **--drop-if-exists option to postgresql migrator** - [@norberttech](https://github.com/norberttech)
 - [#2412](https://github.com/flow-php/flow/pull/2412) - **allow to prefix postgresql db name** - [@norberttech](https://github.com/norberttech)
 - [#2407](https://github.com/flow-php/flow/pull/2407) - **Symfony PostgreSql Bundle - migrations exclusion policy** - [@norberttech](https://github.com/norberttech)
