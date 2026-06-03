@@ -74,6 +74,8 @@ final readonly class PostgreSqlMigrationStore implements MigrationStore
 
     public function initialize(): void
     {
+        $this->client->execute(create()->schema($this->configuration->tableSchema)->ifNotExists());
+
         $this->client->execute(
             create()
                 ->table($this->configuration->tableName, $this->configuration->tableSchema)
