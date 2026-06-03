@@ -17,8 +17,9 @@ use function usleep;
  * Helper class to query OTEL Collector's Prometheus metrics endpoint.
  *
  * Used to verify that telemetry data flows through the collector.
- * Queries `otelcol_exporter_sent_*_total` metrics which indicate data was
+ * Queries `otelcol_exporter_sent_*` metrics which indicate data was
  * successfully exported (more reliable than receiver metrics in v0.115+).
+ * Collector v0.153.0 drops the `_total` suffix on these counters.
  * The collector exposes internal metrics at port 8888.
  */
 final readonly class CollectorMetrics
@@ -31,17 +32,17 @@ final readonly class CollectorMetrics
 
     public function getAcceptedLogRecords(): int
     {
-        return $this->getMetricValue('otelcol_exporter_sent_log_records_total');
+        return $this->getMetricValue('otelcol_exporter_sent_log_records');
     }
 
     public function getAcceptedMetricPoints(): int
     {
-        return $this->getMetricValue('otelcol_exporter_sent_metric_points_total');
+        return $this->getMetricValue('otelcol_exporter_sent_metric_points');
     }
 
     public function getAcceptedSpans(): int
     {
-        return $this->getMetricValue('otelcol_exporter_sent_spans_total');
+        return $this->getMetricValue('otelcol_exporter_sent_spans');
     }
 
     /**
@@ -53,7 +54,7 @@ final readonly class CollectorMetrics
      */
     public function waitForLogRecords(int $threshold, int $timeoutMs = 5000, int $pollIntervalMs = 10): int
     {
-        return $this->waitForMetric('otelcol_exporter_sent_log_records_total', $threshold, $timeoutMs, $pollIntervalMs);
+        return $this->waitForMetric('otelcol_exporter_sent_log_records', $threshold, $timeoutMs, $pollIntervalMs);
     }
 
     /**
@@ -65,12 +66,7 @@ final readonly class CollectorMetrics
      */
     public function waitForMetricPoints(int $threshold, int $timeoutMs = 5000, int $pollIntervalMs = 10): int
     {
-        return $this->waitForMetric(
-            'otelcol_exporter_sent_metric_points_total',
-            $threshold,
-            $timeoutMs,
-            $pollIntervalMs,
-        );
+        return $this->waitForMetric('otelcol_exporter_sent_metric_points', $threshold, $timeoutMs, $pollIntervalMs);
     }
 
     /**
@@ -82,7 +78,7 @@ final readonly class CollectorMetrics
      */
     public function waitForSpans(int $threshold, int $timeoutMs = 5000, int $pollIntervalMs = 10): int
     {
-        return $this->waitForMetric('otelcol_exporter_sent_spans_total', $threshold, $timeoutMs, $pollIntervalMs);
+        return $this->waitForMetric('otelcol_exporter_sent_spans', $threshold, $timeoutMs, $pollIntervalMs);
     }
 
     private function getMetricValue(string $metricName): int
