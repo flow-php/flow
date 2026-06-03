@@ -1151,6 +1151,7 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
                         'namespace' => 'Custom\\Migrations',
                         'table_name' => 'custom_migrations_table',
                         'table_schema' => 'custom_schema',
+                        'drop_if_exists' => true,
                     ],
                     'catalog_providers' => [
                         ['catalog_provider_id' => 'test.catalog_provider'],
@@ -1166,6 +1167,7 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
         static::assertSame('Custom\\Migrations', $configuration->migrationsNamespace);
         static::assertSame('custom_migrations_table', $configuration->tableName);
         static::assertSame('custom_schema', $configuration->tableSchema);
+        static::assertTrue($configuration->dropIfExists);
     }
 
     public function test_migration_generate_and_up_to_date_commands_registered(): void

@@ -22,5 +22,6 @@ final readonly class Configuration
         public bool $allOrNothing = false,
         public bool $generateRollback = true,
         public ?ExclusionPolicy $exclusionPolicy = null,
+        public bool $dropIfExists = false,
     ) {}
 }

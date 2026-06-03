@@ -88,6 +88,7 @@ final readonly class SchemaDiff implements Diff
         private ExecutionOrderStrategy $materializedViewOrderStrategy = new MaterializedViewDependencyOrder(
             new Parser(),
         ),
+        private bool $dropIfExists = false,
     ) {}
 
     /**
@@ -178,35 +179,43 @@ final readonly class SchemaDiff implements Diff
         $sqls = [];
 
         foreach ($materializedViews as $mv) {
-            $sqls[] = drop()->materializedView($mv->name);
+            $builder = drop()->materializedView($mv->name);
+            $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
         foreach ($views as $view) {
-            $sqls[] = drop()->view($view->name);
+            $builder = drop()->view($view->name);
+            $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
         foreach ($tables as $table) {
-            $sqls[] = drop()->table($table->qualifiedName())->cascade();
+            $builder = drop()->table($table->qualifiedName())->cascade();
+            $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
         foreach ($procedures as $proc) {
-            $sqls[] = drop()->procedure($proc->name);
+            $builder = drop()->procedure($proc->name);
+            $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
         foreach ($functions as $func) {
-            $sqls[] = drop()->function($func->name);
+            $builder = drop()->function($func->name);
+            $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
         foreach ($sequences as $seq) {
-            $sqls[] = drop()->sequence($seq->name);
+            $builder = drop()->sequence($seq->name);
+            $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
         foreach ($domains as $domain) {
-            $sqls[] = drop()->domain($domain->name)->cascade();
+            $builder = drop()->domain($domain->name)->cascade();
+            $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
         foreach ($extensions as $ext) {
-            $sqls[] = drop()->extension($ext->name);
+            $builder = drop()->extension($ext->name);
+            $sqls[] = $this->dropIfExists ? $builder->ifExists() : $builder;
         }
 
         return $sqls;

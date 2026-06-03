@@ -31,6 +31,7 @@ final readonly class CatalogComparator
         private ExecutionOrderStrategy $materializedViewOrderStrategy = new MaterializedViewDependencyOrder(
             new Parser(),
         ),
+        private bool $dropIfExists = false,
     ) {}
 
     /**
@@ -44,6 +45,7 @@ final readonly class CatalogComparator
         ?ExecutionOrderStrategy $tableOrderStrategy = null,
         ?ExecutionOrderStrategy $viewOrderStrategy = null,
         ?ExecutionOrderStrategy $materializedViewOrderStrategy = null,
+        bool $dropIfExists = false,
     ): self {
         $renameStrategy ??= new GreedySimilarityRenameStrategy(new SimilarTextStrategy());
         $constraintComparator = new ConstraintComparator();
@@ -64,16 +66,19 @@ final readonly class CatalogComparator
                 $tableOrderStrategy,
                 $viewOrderStrategy,
                 $materializedViewOrderStrategy,
+                dropIfExists: $dropIfExists,
             ),
             $viewDependencyResolver ?? new AstViewDependencyResolver(new Parser()),
             $tableOrderStrategy,
             $viewOrderStrategy,
             $materializedViewOrderStrategy,
+            dropIfExists: $dropIfExists,
         );
     }
 
-    public function compare(Catalog $source, Catalog $target): CatalogDiff
+    public function compare(Catalog $source, Catalog $target, ?bool $dropIfExists = null): CatalogDiff
     {
+        $effectiveDropIfExists = $dropIfExists ?? $this->dropIfExists;
         $sourceNames = $source->names();
         $targetNames = $target->names();
 
@@ -98,7 +103,11 @@ final readonly class CatalogComparator
                 continue;
             }
 
-            $schemaDiff = $this->schemaComparator->compare($source->get($name), $target->get($name));
+            $schemaDiff = $this->schemaComparator->compare(
+                $source->get($name),
+                $target->get($name),
+                $effectiveDropIfExists,
+            );
 
             if (!$schemaDiff->isEmpty()) {
                 $modifiedSchemas[] = $schemaDiff;
@@ -115,6 +124,7 @@ final readonly class CatalogComparator
             $this->tableOrderStrategy,
             $this->viewOrderStrategy,
             $this->materializedViewOrderStrategy,
+            $effectiveDropIfExists,
         );
     }
 }

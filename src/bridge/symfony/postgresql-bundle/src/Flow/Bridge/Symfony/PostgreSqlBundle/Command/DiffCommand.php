@@ -41,7 +41,13 @@ final class DiffCommand extends Command
             ->addOption('connection', 'c', InputOption::VALUE_OPTIONAL, 'The connection to use', null)
             ->addArgument('name', InputArgument::OPTIONAL, 'The name of the migration (e.g. \'add_categories\')')
             ->addOption('allow-empty-diff', null, InputOption::VALUE_NONE, 'Do not throw when no changes are detected')
-            ->addOption('from-empty-schema', null, InputOption::VALUE_NONE, 'Generate as if the database were empty');
+            ->addOption('from-empty-schema', null, InputOption::VALUE_NONE, 'Generate as if the database were empty')
+            ->addOption(
+                'drop-if-exists',
+                null,
+                InputOption::VALUE_NONE,
+                'Emit IF EXISTS on generated DROP statements (overrides the migrations.drop_if_exists config for this run)',
+            );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -58,9 +64,10 @@ final class DiffCommand extends Command
         $name = $input->getArgument('name');
         $allowEmpty = $input->getOption('allow-empty-diff') === true;
         $fromEmpty = $input->getOption('from-empty-schema') === true;
+        $dropIfExists = $input->getOption('drop-if-exists') === true ? true : null;
 
         try {
-            $version = $diffGenerator->generate($name, $allowEmpty, $fromEmpty);
+            $version = $diffGenerator->generate($name, $allowEmpty, $fromEmpty, $dropIfExists);
         } catch (MigrationException $e) {
             $io->warning($e->getMessage());
 

@@ -1958,8 +1958,14 @@ function catalog_comparator(
     ?RenameStrategy $renameStrategy = null,
     ?ViewDependencyResolver $viewDependencyResolver = null,
     ?ExecutionOrderStrategy $tableOrderStrategy = null,
+    bool $dropIfExists = false,
 ): CatalogComparator {
-    return CatalogComparator::create($renameStrategy, $viewDependencyResolver, $tableOrderStrategy);
+    return CatalogComparator::create(
+        $renameStrategy,
+        $viewDependencyResolver,
+        $tableOrderStrategy,
+        dropIfExists: $dropIfExists,
+    );
 }
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]

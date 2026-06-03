@@ -91,6 +91,19 @@ final class CatalogDiffTest extends TestCase
         static::assertSame('DROP SCHEMA audit CASCADE', $sqls[0]->toSql());
     }
 
+    public function test_drops_removed_schema_with_if_exists(): void
+    {
+        $source = new Catalog([schema('public'), schema('audit')]);
+        $target = new Catalog([schema('public')]);
+
+        $diff = new CatalogDiff($source, $target, removedSchemas: [schema('audit')], dropIfExists: true);
+
+        $sqls = $diff->generate();
+
+        static::assertCount(1, $sqls);
+        static::assertSame('DROP SCHEMA IF EXISTS audit CASCADE', $sqls[0]->toSql());
+    }
+
     public function test_empty_diff(): void
     {
         $catalog = new Catalog([schema('public')]);

@@ -23,12 +23,16 @@ final readonly class DiffMigrationGenerator
         private bool $generateRollback = true,
     ) {}
 
-    public function generate(?string $name = null, bool $allowEmpty = false, bool $fromEmptySchema = false): Version
-    {
+    public function generate(
+        ?string $name = null,
+        bool $allowEmpty = false,
+        bool $fromEmptySchema = false,
+        ?bool $dropIfExists = null,
+    ): Version {
         $source = $fromEmptySchema ? new Catalog([]) : $this->sourceCatalog->get();
         $target = $this->targetCatalog->get();
 
-        $diff = $this->comparator->compare($source, $target);
+        $diff = $this->comparator->compare($source, $target, $dropIfExists);
 
         if ($diff->isEmpty() && !$allowEmpty) {
             throw MigrationException::noChangesDetected();
@@ -41,7 +45,7 @@ final readonly class DiffMigrationGenerator
         if ($this->generateRollback) {
             $downSql = array_map(
                 static fn(Sql $query) => $query->toSql(),
-                $this->comparator->compare($target, $this->sourceCatalog->get())->generate(),
+                $this->comparator->compare($target, $this->sourceCatalog->get(), $dropIfExists)->generate(),
             );
         }
 

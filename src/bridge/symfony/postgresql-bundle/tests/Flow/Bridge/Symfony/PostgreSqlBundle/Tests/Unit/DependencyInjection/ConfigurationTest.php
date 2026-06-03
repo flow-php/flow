@@ -402,6 +402,22 @@ final class ConfigurationTest extends TestCase
         static::assertSame('public', $config['migrations']['table_schema']);
         static::assertFalse($config['migrations']['all_or_nothing']);
         static::assertTrue($config['migrations']['generate_rollback']);
+        static::assertFalse($config['migrations']['drop_if_exists']);
+    }
+
+    public function test_migrations_drop_if_exists_can_be_enabled(): void
+    {
+        $config = $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'migrations' => [
+                'enabled' => true,
+                'drop_if_exists' => true,
+            ],
+        ]);
+
+        static::assertTrue($config['migrations']['drop_if_exists']);
     }
 
     public function test_migrations_exclude_defaults_to_empty(): void

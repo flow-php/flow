@@ -184,6 +184,37 @@ final class SchemaDiffTest extends TestCase
         static::assertCount(8, $sqls);
     }
 
+    public function test_drops_all_removed_object_types_with_if_exists(): void
+    {
+        $s = schema('public');
+
+        $diff = new SchemaDiff(
+            $s,
+            $s,
+            removedTables: [schema_table('users', [schema_column_integer('id', false)])],
+            removedSequences: [schema_sequence('users_id_seq')],
+            removedViews: [schema_view('active_users', select(literal(1))->toSql())],
+            removedMaterializedViews: [schema_materialized_view('mv_stats', select(literal(1))->toSql())],
+            removedFunctions: [schema_function('my_func', 'text')],
+            removedProcedures: [schema_procedure('cleanup')],
+            removedDomains: [schema_domain('email', ColumnType::text())],
+            removedExtensions: [schema_extension('pgcrypto')],
+            dropIfExists: true,
+        );
+
+        $sqls = $diff->generate();
+
+        static::assertSame('DROP MATERIALIZED VIEW IF EXISTS mv_stats', $sqls[0]->toSql());
+        static::assertSame('DROP VIEW IF EXISTS active_users', $sqls[1]->toSql());
+        static::assertSame('DROP TABLE IF EXISTS public.users CASCADE', $sqls[2]->toSql());
+        static::assertSame('DROP PROCEDURE IF EXISTS cleanup', $sqls[3]->toSql());
+        static::assertSame('DROP FUNCTION IF EXISTS my_func', $sqls[4]->toSql());
+        static::assertSame('DROP SEQUENCE IF EXISTS users_id_seq', $sqls[5]->toSql());
+        static::assertSame('DROP DOMAIN IF EXISTS email CASCADE', $sqls[6]->toSql());
+        static::assertSame('DROP EXTENSION IF EXISTS pgcrypto', $sqls[7]->toSql());
+        static::assertCount(8, $sqls);
+    }
+
     public function test_drops_removed_domain(): void
     {
         $s = schema('public');
