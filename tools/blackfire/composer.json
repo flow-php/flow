@@ -3,7 +3,7 @@
   "description": "Flow PHP ETL - Tools",
   "require-dev": {
     "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
-    "blackfire/php-sdk": "^2.3"
+    "blackfire/php-sdk": "^3.0"
   },
   "config": {
     "allow-plugins": false
