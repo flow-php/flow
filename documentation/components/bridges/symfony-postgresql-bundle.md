@@ -190,6 +190,52 @@ return new class implements Migration {
 };
 ```
 
+#### Passing custom attributes via configuration
+
+Injecting the whole container forces any service a migration needs to be public. To avoid that, declare extra
+attributes under `migrations.context` — they are merged into the migration context next to the container. Each value
+can be a literal, an `@service_id` reference (use `@@` to keep a literal leading `@`), a `%parameter%` placeholder, or
+a `%env(VAR)%` expression. Referenced services may be private.
+
+```yaml
+flow_postgresql:
+  migrations:
+    enabled: true
+    context:
+      report_generator: '@app.report_generator'        # service (may be private)
+      readonly_url: '%env(DATABASE_READONLY_URL)%'      # resolved env
+      batch_size: 500                                   # literal
+```
+
+Each key is read in a migration via `MigrationContext::attribute()`:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use App\Migration\ReportGenerator;
+use Flow\PostgreSql\Migrations\Migration;
+use Flow\PostgreSql\Migrations\MigrationContext;
+
+return new class implements Migration {
+    public function migrate(MigrationContext $context): void
+    {
+        /** @var ReportGenerator $reports */
+        $reports = $context->attribute('report_generator');
+
+        // ... use the injected service / value ...
+    }
+
+    public function transactional(): bool
+    {
+        return true;
+    }
+};
+```
+
+The `service_container` key is always present and cannot be overridden by a `context` entry.
+
 ### Catalog Providers
 
 Catalog providers define the target database schema. When you run `flow:migrations:diff`, the bundle compares
