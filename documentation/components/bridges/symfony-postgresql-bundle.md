@@ -152,6 +152,90 @@ Set `drop_if_exists: true` to render every diff-generated `DROP` with `IF EXISTS
 that run against both fresh and legacy databases. Default `false`, so a missing object fails loudly (drift detection).
 Override for a single run with the [`--drop-if-exists`](#generating-migrations-from-schema-diff) flag.
 
+#### Accessing the service container in a migration
+
+When migrations are enabled, the bundle injects the application's service container into the migration context under
+`FlowPostgreSqlBundle::SERVICE_CONTAINER`. This gives migrations access to resolved parameters — including values
+that Symfony resolves at container build time, such as decrypted secrets and `%env(...)%` processors — and to any
+service, matching the behaviour of Doctrine's container-aware migrations.
+
+Read it through `MigrationContext::attribute()`, which throws when the attribute is absent (use `hasAttribute()` to
+check first):
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use Flow\Bridge\Symfony\PostgreSqlBundle\FlowPostgreSqlBundle;
+use Flow\PostgreSql\Migrations\Migration;
+use Flow\PostgreSql\Migrations\MigrationContext;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+return new class implements Migration {
+    public function migrate(MigrationContext $context): void
+    {
+        /** @var ContainerInterface $container */
+        $container = $context->attribute(FlowPostgreSqlBundle::SERVICE_CONTAINER);
+
+        $dsn = $container->getParameter('app.analytics_database_url_readonly');
+
+        // ... use the resolved value, e.g. to provision a role ...
+    }
+
+    public function transactional(): bool
+    {
+        return true;
+    }
+};
+```
+
+#### Passing custom attributes via configuration
+
+Injecting the whole container forces any service a migration needs to be public. To avoid that, declare extra
+attributes under `migrations.context` — they are merged into the migration context next to the container. Each value
+can be a literal, an `@service_id` reference (use `@@` to keep a literal leading `@`), a `%parameter%` placeholder, or
+a `%env(VAR)%` expression. Referenced services may be private.
+
+```yaml
+flow_postgresql:
+  migrations:
+    enabled: true
+    context:
+      report_generator: '@app.report_generator'        # service (may be private)
+      readonly_url: '%env(DATABASE_READONLY_URL)%'      # resolved env
+      batch_size: 500                                   # literal
+```
+
+Each key is read in a migration via `MigrationContext::attribute()`:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use App\Migration\ReportGenerator;
+use Flow\PostgreSql\Migrations\Migration;
+use Flow\PostgreSql\Migrations\MigrationContext;
+
+return new class implements Migration {
+    public function migrate(MigrationContext $context): void
+    {
+        /** @var ReportGenerator $reports */
+        $reports = $context->attribute('report_generator');
+
+        // ... use the injected service / value ...
+    }
+
+    public function transactional(): bool
+    {
+        return true;
+    }
+};
+```
+
+The `service_container` key is always present and cannot be overridden by a `context` entry.
+
 ### Catalog Providers
 
 Catalog providers define the target database schema. When you run `flow:migrations:diff`, the bundle compares

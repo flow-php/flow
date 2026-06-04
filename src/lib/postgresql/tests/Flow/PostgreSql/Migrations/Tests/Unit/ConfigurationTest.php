@@ -9,9 +9,25 @@ use Flow\PostgreSql\Migrations\Tests\Double\FakeCatalogProvider;
 use Flow\PostgreSql\Migrations\Tests\Double\SpyClient;
 use Flow\PostgreSql\Schema\Catalog;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 final class ConfigurationTest extends TestCase
 {
+    public function test_custom_attributes(): void
+    {
+        $attribute = new stdClass();
+
+        $config = new Configuration(
+            client: new SpyClient(),
+            targetCatalogProvider: new FakeCatalogProvider(new Catalog([])),
+            migrationsDirectory: '/app/migrations',
+            migrationsNamespace: 'App\\Migrations',
+            attributes: ['container' => $attribute],
+        );
+
+        static::assertSame(['container' => $attribute], $config->attributes);
+    }
+
     public function test_custom_values(): void
     {
         $client = new SpyClient();
@@ -51,5 +67,6 @@ final class ConfigurationTest extends TestCase
         static::assertSame('public', $config->tableSchema);
         static::assertFalse($config->allOrNothing);
         static::assertTrue($config->generateRollback);
+        static::assertSame([], $config->attributes);
     }
 }

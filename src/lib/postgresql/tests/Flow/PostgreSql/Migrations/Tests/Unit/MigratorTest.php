@@ -19,6 +19,7 @@ use Flow\PostgreSql\Migrations\Tests\Double\SpyRollback;
 use Flow\PostgreSql\Migrations\Version;
 use Flow\PostgreSql\Schema\Catalog;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 use function array_filter;
 use function iterator_to_array;
@@ -124,6 +125,34 @@ final class MigratorTest extends TestCase
             static::assertTrue($result->isSuccessful());
             static::assertSame(Direction::UP, $result->direction);
         }
+    }
+
+    public function test_migrate_propagates_configuration_attributes_to_context(): void
+    {
+        $attribute = new stdClass();
+        $executor = new SpyMigrationExecutor();
+        $client = new SpyClient();
+
+        $migrator = new Migrator(
+            new FakeMigrationRepository(
+                new AvailableMigration(Version::fromString('20260401120000'), 'first', new SpyMigration(), null),
+            ),
+            new FakeMigrationStore(),
+            $executor,
+            $client,
+            new Configuration(
+                $client,
+                new FakeCatalogProvider(new Catalog([])),
+                '/tmp',
+                'App\\Migrations',
+                attributes: ['container' => $attribute],
+            ),
+        );
+
+        $migrator->migrate();
+
+        static::assertCount(1, $executor->executedContexts);
+        static::assertSame($attribute, $executor->executedContexts[0]->attribute('container'));
     }
 
     public function test_migrate_initializes_store(): void
