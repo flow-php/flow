@@ -46,6 +46,7 @@ final readonly class ColumnDefinition
     {
         $constraint = new Constraint();
         $constraint->setContype(ConstrType::CONSTR_CHECK);
+        $constraint->setIsEnforced(true);
         $constraint->setRawExpr($condition->toAst());
 
         return new self(
@@ -159,6 +160,7 @@ final readonly class ColumnDefinition
     {
         $constraint = new Constraint();
         $constraint->setContype(ConstrType::CONSTR_FOREIGN);
+        $constraint->setIsEnforced(true);
 
         $rangeVar = new RangeVar();
         $rangeVar->setRelname($table);
@@ -223,6 +225,7 @@ final readonly class ColumnDefinition
             $generatedConstraint = new Constraint();
             $generatedConstraint->setContype(ConstrType::CONSTR_GENERATED);
             $generatedConstraint->setGeneratedWhen('a');
+            $generatedConstraint->setGeneratedKind('s');
             $generatedConstraint->setRawExpr($this->generatedExpression);
 
             $allConstraints[] = $generatedConstraint;

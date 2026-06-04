@@ -35,6 +35,7 @@ final readonly class CheckConstraint implements TableConstraint
     {
         $constraint = new Constraint();
         $constraint->setContype(ConstrType::CONSTR_CHECK);
+        $constraint->setIsEnforced(true);
 
         if ($this->name !== null) {
             $constraint->setConname($this->name);

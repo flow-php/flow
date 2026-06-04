@@ -9,6 +9,7 @@ use Flow\PostgreSql\Protobuf\AST\DeleteStmt;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\ResTarget;
+use Flow\PostgreSql\Protobuf\AST\ReturningClause;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
 use Flow\PostgreSql\QueryBuilder\Condition\Condition;
@@ -126,7 +127,8 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         }
 
         $returningExpressions = [];
-        $returningList = $deleteStmt->getReturningList();
+        $returningClause = $deleteStmt->getReturningClause();
+        $returningList = $returningClause !== null ? $returningClause->getExprs() : [];
 
         if (count($returningList) > 0) {
             foreach ($returningList as $resTargetNode) {
@@ -276,7 +278,9 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
                 $returningNodes[] = $resTargetNode;
             }
 
-            $deleteStmt->setReturningList($returningNodes);
+            $returningClause = new ReturningClause();
+            $returningClause->setExprs($returningNodes);
+            $deleteStmt->setReturningClause($returningClause);
         }
 
         return $deleteStmt;
