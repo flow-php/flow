@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 761
+ * Total functions: 770
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -1303,7 +1303,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">catalog_comparator</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">RenameStrategy</span> <span class=\"fn-param\">$renameStrategy</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ViewDependencyResolver</span> <span class=\"fn-param\">$viewDependencyResolver</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ExecutionOrderStrategy</span> <span class=\"fn-param\">$tableOrderStrategy</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CatalogComparator</span>
+                    <span class=\"fn-name\">catalog_comparator</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">RenameStrategy</span> <span class=\"fn-param\">$renameStrategy</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ViewDependencyResolver</span> <span class=\"fn-param\">$viewDependencyResolver</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ExecutionOrderStrategy</span> <span class=\"fn-param\">$tableOrderStrategy</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$dropIfExists</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CatalogComparator</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param null|ExecutionOrderStrategy<\\Flow\\PostgreSql\\Schema\\Table> $tableOrderStrategy
@@ -1311,7 +1311,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("\\Flow\\PostgreSql\\DSL\\catalog_comparator(" + "$" + "{" + "1:renameStrategy" + "}" + ", " + "$" + "{" + "2:viewDependencyResolver" + "}" + ", " + "$" + "{" + "3:tableOrderStrategy" + "}" + ")"),
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\catalog_comparator(" + "$" + "{" + "1:renameStrategy" + "}" + ", " + "$" + "{" + "2:viewDependencyResolver" + "}" + ", " + "$" + "{" + "3:tableOrderStrategy" + "}" + ", " + "$" + "{" + "4:dropIfExists" + "}" + ")"),
         boost: 10
     },                {
         label: "chain_catalog_provider",
@@ -1372,15 +1372,15 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">client_catalog_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Client</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$schemaNames</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$excludeTables</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CatalogProvider</span>
+                    <span class=\"fn-name\">client_catalog_provider</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Client</span> <span class=\"fn-param\">$client</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$schemaNames</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">ExclusionPolicy</span> <span class=\"fn-param\">$exclusionPolicy</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CatalogProvider</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param ?list<string> $schemaNames<br>@param list<string> $excludeTables
+                    @param ?list<string> $schemaNames
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\PostgreSql\\DSL\\client_catalog_provider(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:schemaNames" + "}" + ", " + "$" + "{" + "3:excludeTables" + "}" + ")"),
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\client_catalog_provider(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:schemaNames" + "}" + ", " + "$" + "{" + "3:exclusionPolicy" + "}" + ")"),
         boost: 10
     },                {
         label: "clock",
@@ -2071,6 +2071,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PostgreSql\\DSL\\column_type_varchar(" + "$" + "{" + "1:length" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "column_type_xml",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">column_type_xml</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ColumnType</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an XML data type.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\column_type_xml()"),
         boost: 10
     },                {
         label: "combine",
@@ -3603,6 +3621,111 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\exception_if_exists()"),
         boost: 10
     },                {
+        label: "exclude_any",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">exclude_any</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ExclusionPolicy</span> <span class=\"fn-param\">$policies</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ExclusionPolicy</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\exclude_any(" + "$" + "{" + "1:policies" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "exclude_ends_with",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">exclude_ends_with</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$suffix</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ExclusionPolicy</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\exclude_ends_with(" + "$" + "{" + "1:suffix" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "exclude_exact",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">exclude_exact</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ExclusionPolicy</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\exclude_exact(" + "$" + "{" + "1:name" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "exclude_pattern",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">exclude_pattern</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$pattern</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ExclusionPolicy</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\exclude_pattern(" + "$" + "{" + "1:pattern" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "exclude_schema",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">exclude_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ExclusionPolicy</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\exclude_schema(" + "$" + "{" + "1:schema" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "exclude_scoped",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">exclude_scoped</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ExclusionPolicy</span> <span class=\"fn-param\">$policy</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SchemaObjectType</span> <span class=\"fn-param\">$type</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ExclusionPolicy</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\exclude_scoped(" + "$" + "{" + "1:policy" + "}" + ", " + "$" + "{" + "2:type" + "}" + ", " + "$" + "{" + "3:schema" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "exclude_starts_with",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">exclude_starts_with</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$prefix</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ExclusionPolicy</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\exclude_starts_with(" + "$" + "{" + "1:prefix" + "}" + ")"),
+        boost: 10
+    },                {
         label: "execution_context",
         type: "function",
         detail: "flow\u002Ddsl\u002Ddata\u002Dframe",
@@ -4120,7 +4243,7 @@ const dslFunctions = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_csv</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$with_header</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$empty_to_null</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$separator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$enclosure</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$escape</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$characters_read_in_line</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">1000</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CSVExtractor</span>
+                    <span class=\"fn-name\">from_csv</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Path|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$with_header</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$empty_to_null</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$separator</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$enclosure</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$escape</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$characters_read_in_line</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">10485760</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CSVExtractor</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
                     @param Path|string $path<br>@param bool $empty_to_null - @deprecated use $loader->withEmptyToNull() instead<br>@param bool $with_header - @deprecated use $loader->withHeader() instead<br>@param null|string $separator - @deprecated use $loader->withSeparator() instead<br>@param null|string $enclosure - @deprecated use $loader->withEnclosure() instead<br>@param null|string $escape - @deprecated use $loader->withEscape() instead<br>@param int<1, max> $characters_read_in_line - @deprecated use $loader->withCharactersReadInLine() instead<br>@param null|Schema $schema - @deprecated use $loader->withSchema() instead
@@ -8853,6 +8976,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\schema_table(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:columns" + "}" + ", " + "$" + "{" + "3:primaryKey" + "}" + ", " + "$" + "{" + "4:indexes" + "}" + ", " + "$" + "{" + "5:foreignKeys" + "}" + ", " + "$" + "{" + "6:uniqueConstraints" + "}" + ", " + "$" + "{" + "7:checkConstraints" + "}" + ", " + "$" + "{" + "8:excludeConstraints" + "}" + ", " + "$" + "{" + "9:triggers" + "}" + ", " + "$" + "{" + "10:schema" + "}" + ", " + "$" + "{" + "11:unlogged" + "}" + ", " + "$" + "{" + "12:partitionStrategy" + "}" + ", " + "$" + "{" + "13:partitionColumns" + "}" + ", " + "$" + "{" + "14:inherits" + "}" + ", " + "$" + "{" + "15:tablespace" + "}" + ")"),
         boost: 10
     },                {
+        label: "schema_table_options",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">schema_table_options</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$foreignKeys</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$checkConstraints</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$excludeConstraints</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$triggers</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$unlogged</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">PartitionStrategy</span> <span class=\"fn-param\">$partitionStrategy</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$partitionColumns</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$inherits</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$tablespace</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TableOptions</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    @param list<SchemaForeignKey> $foreignKeys<br>@param list<SchemaCheckConstraint> $checkConstraints<br>@param list<SchemaExcludeConstraint> $excludeConstraints<br>@param list<SchemaTrigger> $triggers<br>@param list<string> $partitionColumns<br>@param list<string> $inherits
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PostgreSql\\DSL\\schema_table_options(" + "$" + "{" + "1:foreignKeys" + "}" + ", " + "$" + "{" + "2:checkConstraints" + "}" + ", " + "$" + "{" + "3:excludeConstraints" + "}" + ", " + "$" + "{" + "4:triggers" + "}" + ", " + "$" + "{" + "5:unlogged" + "}" + ", " + "$" + "{" + "6:partitionStrategy" + "}" + ", " + "$" + "{" + "7:partitionColumns" + "}" + ", " + "$" + "{" + "8:inherits" + "}" + ", " + "$" + "{" + "9:tablespace" + "}" + ")"),
+        boost: 10
+    },                {
         label: "schema_to_ascii",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -9874,7 +10015,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">structure_entry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Type</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Entry</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param ?array<string, mixed> $value<br>@param Type<mixed> $type<br>@return ($value is null ? Entry<null> : Entry<array<string, mixed>>)
+                    @template TShape of array<array-key, mixed><br>@param ?TShape $value<br>@param StructureType<mixed>|Type<TShape> $type<br>@return ($value is null ? Entry<null> : Entry<TShape>)
                 </div>
                             `
             return div
@@ -9925,7 +10066,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">struct_entry</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$value</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Type</span> <span class=\"fn-param\">$type</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Metadata</span> <span class=\"fn-param\">$metadata</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Entry</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param ?array<string, mixed> $value<br>@param Type<mixed> $type<br>@return ($value is null ? Entry<null> : Entry<array<string, mixed>>)
+                    @template TShape of array<array-key, mixed><br>@param ?TShape $value<br>@param StructureType<mixed>|Type<TShape> $type<br>@return ($value is null ? Entry<null> : Entry<TShape>)
                 </div>
                             `
             return div
@@ -11539,7 +11680,7 @@ const dslFunctions = [
                     <span class=\"fn-name\">type_structure</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$elements</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$optional_elements</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$allow_extra</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">false</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Type</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    @param array<string, Type<mixed>> $elements<br>@param array<string, Type<mixed>> $optional_elements<br>@return Type<array<string, mixed>>
+                    @template T<br>@param array<array-key, Type<T>> $elements<br>@param array<array-key, Type<T>> $optional_elements<br>@return StructureType<T>
                 </div>
                             `
             return div

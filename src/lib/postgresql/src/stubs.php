@@ -8,7 +8,7 @@ declare(strict_types=1);
  *
  * @codeCoverageIgnore
  */
-if (!\function_exists('pg_query_parse')) {
+if (!function_exists('pg_query_parse')) {
     /**
      * Parse PostgreSQL SQL and return JSON AST.
      *
@@ -16,7 +16,7 @@ if (!\function_exists('pg_query_parse')) {
      */
     function pg_query_parse(string $sql): string
     {
-        throw new \RuntimeException('pg_query extension is not loaded');
+        throw new RuntimeException('pg_query extension is not loaded');
     }
 
     /**
@@ -26,7 +26,7 @@ if (!\function_exists('pg_query_parse')) {
      */
     function pg_query_fingerprint(string $sql): string|false
     {
-        throw new \RuntimeException('pg_query extension is not loaded');
+        throw new RuntimeException('pg_query extension is not loaded');
     }
 
     /**
@@ -36,7 +36,7 @@ if (!\function_exists('pg_query_parse')) {
      */
     function pg_query_normalize(string $sql): string|false
     {
-        throw new \RuntimeException('pg_query extension is not loaded');
+        throw new RuntimeException('pg_query extension is not loaded');
     }
 
     /**
@@ -49,7 +49,7 @@ if (!\function_exists('pg_query_parse')) {
      */
     function pg_query_normalize_utility(string $sql): string|false
     {
-        throw new \RuntimeException('pg_query extension is not loaded');
+        throw new RuntimeException('pg_query extension is not loaded');
     }
 
     /**
@@ -59,7 +59,7 @@ if (!\function_exists('pg_query_parse')) {
      */
     function pg_query_parse_plpgsql(string $sql): string
     {
-        throw new \RuntimeException('pg_query extension is not loaded');
+        throw new RuntimeException('pg_query extension is not loaded');
     }
 
     /**
@@ -71,7 +71,7 @@ if (!\function_exists('pg_query_parse')) {
      */
     function pg_query_split(string $sql): array
     {
-        throw new \RuntimeException('pg_query extension is not loaded');
+        throw new RuntimeException('pg_query extension is not loaded');
     }
 
     /**
@@ -83,7 +83,7 @@ if (!\function_exists('pg_query_parse')) {
      */
     function pg_query_scan(string $sql): string
     {
-        throw new \RuntimeException('pg_query extension is not loaded');
+        throw new RuntimeException('pg_query extension is not loaded');
     }
 
     /**
@@ -98,7 +98,7 @@ if (!\function_exists('pg_query_parse')) {
      */
     function pg_query_parse_protobuf(string $sql): string
     {
-        throw new \RuntimeException('pg_query extension is not loaded');
+        throw new RuntimeException('pg_query extension is not loaded');
     }
 
     /**
@@ -112,7 +112,7 @@ if (!\function_exists('pg_query_parse')) {
      */
     function pg_query_deparse(string $protobuf): string
     {
-        throw new \RuntimeException('pg_query extension is not loaded');
+        throw new RuntimeException('pg_query extension is not loaded');
     }
 
     /**
@@ -137,7 +137,7 @@ if (!\function_exists('pg_query_parse')) {
         bool $trailing_newline = false,
         bool $commas_start_of_line = false,
     ): string {
-        throw new \RuntimeException('pg_query extension is not loaded');
+        throw new RuntimeException('pg_query extension is not loaded');
     }
 
     /**
@@ -155,7 +155,7 @@ if (!\function_exists('pg_query_parse')) {
      */
     function pg_query_summary(string $sql, int $options = 0, int $truncate_limit = 0): string
     {
-        throw new \RuntimeException('pg_query extension is not loaded');
+        throw new RuntimeException('pg_query extension is not loaded');
     }
 
     /**
@@ -170,19 +170,19 @@ if (!\function_exists('pg_query_parse')) {
      */
     function pg_query_is_utility_stmt(string $sql): bool
     {
-        throw new \RuntimeException('pg_query extension is not loaded');
+        throw new RuntimeException('pg_query extension is not loaded');
     }
 
     /* Parse mode constants */
-    \define('PG_QUERY_PARSE_DEFAULT', 0);
-    \define('PG_QUERY_PARSE_TYPE_NAME', 1);
-    \define('PG_QUERY_PARSE_PLPGSQL_EXPR', 2);
-    \define('PG_QUERY_PARSE_PLPGSQL_ASSIGN1', 4);
-    \define('PG_QUERY_PARSE_PLPGSQL_ASSIGN2', 8);
-    \define('PG_QUERY_PARSE_PLPGSQL_ASSIGN3', 16);
+    define('PG_QUERY_PARSE_DEFAULT', 0);
+    define('PG_QUERY_PARSE_TYPE_NAME', 1);
+    define('PG_QUERY_PARSE_PLPGSQL_EXPR', 2);
+    define('PG_QUERY_PARSE_PLPGSQL_ASSIGN1', 4);
+    define('PG_QUERY_PARSE_PLPGSQL_ASSIGN2', 8);
+    define('PG_QUERY_PARSE_PLPGSQL_ASSIGN3', 16);
 
     /* GUC option flags */
-    \define('PG_QUERY_PARSE_OPTS_DISABLE_BACKSLASH_QUOTE', 32);
-    \define('PG_QUERY_PARSE_OPTS_DISABLE_STANDARD_CONFORMING_STRINGS', 64);
-    \define('PG_QUERY_PARSE_OPTS_DISABLE_ESCAPE_STRING_WARNING', 128);
+    define('PG_QUERY_PARSE_OPTS_DISABLE_BACKSLASH_QUOTE', 32);
+    define('PG_QUERY_PARSE_OPTS_DISABLE_STANDARD_CONFORMING_STRINGS', 64);
+    define('PG_QUERY_PARSE_OPTS_DISABLE_ESCAPE_STRING_WARNING', 128);
 }

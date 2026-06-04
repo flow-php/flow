@@ -107,9 +107,9 @@ $application->addCommand(new class extends Command {
             $normalizedFunctions[] = $function->normalize();
         }
 
-        \file_put_contents(
-            __DIR__ . '/../' . \ltrim((string) $input->getArgument('output'), '/'),
-            \json_encode($normalizedFunctions),
+        file_put_contents(
+            __DIR__ . '/../' . ltrim((string) $input->getArgument('output'), '/'),
+            json_encode($normalizedFunctions),
         );
 
         return Command::SUCCESS;
@@ -146,9 +146,9 @@ $application->addCommand(new class extends Command {
             }
         }
 
-        \file_put_contents(
-            __DIR__ . '/../' . \ltrim((string) $input->getArgument('output'), '/'),
-            \json_encode($normalizedMethods),
+        file_put_contents(
+            __DIR__ . '/../' . ltrim((string) $input->getArgument('output'), '/'),
+            json_encode($normalizedMethods),
         );
 
         return Command::SUCCESS;

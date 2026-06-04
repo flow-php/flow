@@ -7,18 +7,18 @@ use Composer\InstalledVersions;
 use Flow\ParquetViewer\Parquet;
 
 (static function (): void {
-    \error_reporting(E_ALL);
-    \ini_set('display_errors', 'stderr');
-    \ini_set('memory_limit', -1);
+    error_reporting(E_ALL);
+    ini_set('display_errors', 'stderr');
+    ini_set('memory_limit', -1);
 
-    if (\is_file($autoload = __DIR__ . '/../../../autoload.php')) {
+    if (is_file($autoload = __DIR__ . '/../../../autoload.php')) {
         require $autoload;
-    } elseif (\is_file($autoload = __DIR__ . '/../../../../vendor/autoload.php')) {
+    } elseif (is_file($autoload = __DIR__ . '/../../../../vendor/autoload.php')) {
         require $autoload;
-    } elseif (\is_file($autoload = __DIR__ . '/../vendor/autoload.php')) {
+    } elseif (is_file($autoload = __DIR__ . '/../vendor/autoload.php')) {
         require $autoload;
     } else {
-        \fwrite(
+        fwrite(
             STDERR,
             'You must set up the project dependencies, run the following commands:'
             . PHP_EOL

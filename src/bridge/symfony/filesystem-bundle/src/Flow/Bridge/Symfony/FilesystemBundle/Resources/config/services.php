@@ -40,14 +40,14 @@ return static function (ContainerConfigurator $container): void {
         StdoutFilesystemFactory::class,
     )->private()->tag('flow.filesystem.factory', ['type' => 'stdout']);
 
-    if (\class_exists(AsyncAWSS3Filesystem::class)) {
+    if (class_exists(AsyncAWSS3Filesystem::class)) {
         $services->set(
             '.flow.filesystem.factory.aws_s3',
             AsyncAwsS3FilesystemFactory::class,
         )->private()->tag('flow.filesystem.factory', ['type' => 'aws_s3']);
     }
 
-    if (\class_exists(AzureBlobFilesystem::class)) {
+    if (class_exists(AzureBlobFilesystem::class)) {
         $services->set(
             '.flow.filesystem.factory.azure_blob',
             AzureBlobFilesystemFactory::class,

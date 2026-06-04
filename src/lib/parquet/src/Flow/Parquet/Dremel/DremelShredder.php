@@ -1109,7 +1109,7 @@ final readonly class DremelShredder
         }
     }
 
-    private function narrowFlatValue(mixed $value): null|object|bool|float|int|string
+    private function narrowFlatValue(mixed $value): object|bool|float|int|string|null
     {
         if ($value === null || is_scalar($value) || is_object($value)) {
             return $value;
