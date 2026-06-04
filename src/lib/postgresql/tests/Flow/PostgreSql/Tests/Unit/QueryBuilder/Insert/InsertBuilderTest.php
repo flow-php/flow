@@ -50,8 +50,9 @@ final class InsertBuilderTest extends TestCase
 
         static::assertInstanceOf(InsertStmt::class, $ast);
         static::assertNotNull($ast->getOnConflictClause());
-        static::assertNotNull($ast->getReturningList());
-        static::assertCount(3, $ast->getReturningList());
+        $returning = $ast->getReturningClause()?->getExprs();
+        static::assertNotNull($returning);
+        static::assertCount(3, $returning);
     }
 
     public function test_immutability_on_columns(): void
@@ -255,7 +256,7 @@ final class InsertBuilderTest extends TestCase
         $ast = $query->toAst();
 
         static::assertInstanceOf(InsertStmt::class, $ast);
-        $returning = $ast->getReturningList();
+        $returning = $ast->getReturningClause()?->getExprs();
         static::assertNotNull($returning);
         static::assertCount(2, $returning);
     }
@@ -271,7 +272,7 @@ final class InsertBuilderTest extends TestCase
         $ast = $query->toAst();
 
         static::assertInstanceOf(InsertStmt::class, $ast);
-        $returning = $ast->getReturningList();
+        $returning = $ast->getReturningClause()?->getExprs();
         static::assertNotNull($returning);
         static::assertCount(1, $returning);
     }
@@ -596,7 +597,7 @@ final class InsertBuilderTest extends TestCase
 
         $restoredAst = $restored->toAst();
 
-        $returning = $restoredAst->getReturningList();
+        $returning = $restoredAst->getReturningClause()?->getExprs();
         static::assertNotNull($returning);
         static::assertCount(1, $returning);
     }
@@ -654,8 +655,9 @@ final class InsertBuilderTest extends TestCase
 
         $restoredAst = $restored->toAst();
 
-        static::assertNotNull($restoredAst->getReturningList());
-        static::assertCount(1, $restoredAst->getReturningList());
+        $returning = $restoredAst->getReturningClause()?->getExprs();
+        static::assertNotNull($returning);
+        static::assertCount(1, $returning);
     }
 
     public function test_round_trip_with_schema_and_alias(): void

@@ -389,7 +389,12 @@ final class Traverser
                 $this->traverseNode($relationNode);
             }
             $this->traverseRepeatedField($insertStmt->getCols());
-            $this->traverseRepeatedField($insertStmt->getReturningList());
+
+            $insertReturningClause = $insertStmt->getReturningClause();
+
+            if ($insertReturningClause !== null) {
+                $this->traverseRepeatedField($insertReturningClause->getExprs());
+            }
 
             $insertSelectStmt = $insertStmt->getSelectStmt();
 
@@ -416,7 +421,12 @@ final class Traverser
             }
             $this->traverseRepeatedField($updateStmt->getTargetList());
             $this->traverseRepeatedField($updateStmt->getFromClause());
-            $this->traverseRepeatedField($updateStmt->getReturningList());
+
+            $updateReturningClause = $updateStmt->getReturningClause();
+
+            if ($updateReturningClause !== null) {
+                $this->traverseRepeatedField($updateReturningClause->getExprs());
+            }
 
             $updateWhereClause = $updateStmt->getWhereClause();
 
@@ -442,7 +452,12 @@ final class Traverser
                 $this->traverseNode($relationNode);
             }
             $this->traverseRepeatedField($deleteStmt->getUsingClause());
-            $this->traverseRepeatedField($deleteStmt->getReturningList());
+
+            $deleteReturningClause = $deleteStmt->getReturningClause();
+
+            if ($deleteReturningClause !== null) {
+                $this->traverseRepeatedField($deleteReturningClause->getExprs());
+            }
 
             $deleteWhereClause = $deleteStmt->getWhereClause();
 

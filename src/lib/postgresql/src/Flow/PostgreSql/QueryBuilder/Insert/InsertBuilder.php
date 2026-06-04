@@ -10,6 +10,7 @@ use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\PBList;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\ResTarget;
+use Flow\PostgreSql\Protobuf\AST\ReturningClause;
 use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Clause\ConflictTarget;
@@ -173,7 +174,8 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
 
         $returning = [];
         $returningAll = false;
-        $returningListNodes = $insertStmt->getReturningList();
+        $insertReturningClause = $insertStmt->getReturningClause();
+        $returningListNodes = $insertReturningClause !== null ? $insertReturningClause->getExprs() : [];
 
         foreach ($returningListNodes as $retNode) {
             $resTarget = $retNode->getResTarget();
@@ -459,7 +461,9 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             $retNode = new Node();
             $retNode->setResTarget($resTarget);
 
-            $insertStmt->setReturningList([$retNode]);
+            $returningClause = new ReturningClause();
+            $returningClause->setExprs([$retNode]);
+            $insertStmt->setReturningClause($returningClause);
         } elseif ($this->returning !== []) {
             $returningNodes = [];
 
@@ -473,7 +477,9 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
                 $returningNodes[] = $retNode;
             }
 
-            $insertStmt->setReturningList($returningNodes);
+            $returningClause = new ReturningClause();
+            $returningClause->setExprs($returningNodes);
+            $insertStmt->setReturningClause($returningClause);
         }
 
         if ($this->with !== null) {

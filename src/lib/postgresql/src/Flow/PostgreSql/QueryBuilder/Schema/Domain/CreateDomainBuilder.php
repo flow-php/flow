@@ -55,6 +55,7 @@ final readonly class CreateDomainBuilder implements CreateDomainOptionsStep, Cre
     {
         $constraint = new Constraint();
         $constraint->setContype(ConstrType::CONSTR_CHECK);
+        $constraint->setIsEnforced(true);
         $constraint->setRawExpr($condition->toAst());
 
         if ($this->currentConstraintName !== null) {

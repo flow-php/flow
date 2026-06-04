@@ -8,6 +8,7 @@ use Flow\PostgreSql\Protobuf\AST\Alias;
 use Flow\PostgreSql\Protobuf\AST\Node;
 use Flow\PostgreSql\Protobuf\AST\RangeVar;
 use Flow\PostgreSql\Protobuf\AST\ResTarget;
+use Flow\PostgreSql\Protobuf\AST\ReturningClause;
 use Flow\PostgreSql\Protobuf\AST\UpdateStmt;
 use Flow\PostgreSql\QueryBuilder\AstToSql;
 use Flow\PostgreSql\QueryBuilder\Clause\WithClause;
@@ -142,7 +143,8 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
         }
 
         $returning = [];
-        $returningList = $updateStmt->getReturningList();
+        $returningClause = $updateStmt->getReturningClause();
+        $returningList = $returningClause !== null ? $returningClause->getExprs() : [];
 
         if (count($returningList) > 0) {
             foreach ($returningList as $returningNode) {
@@ -296,7 +298,9 @@ final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
                 $returningList[] = $node;
             }
 
-            $updateStmt->setReturningList($returningList);
+            $returningClause = new ReturningClause();
+            $returningClause->setExprs($returningList);
+            $updateStmt->setReturningClause($returningClause);
         }
 
         if ($this->with !== null) {

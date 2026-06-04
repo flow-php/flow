@@ -120,6 +120,7 @@ final readonly class ForeignKeyConstraint implements TableConstraint
     {
         $constraint = new Constraint();
         $constraint->setContype(ConstrType::CONSTR_FOREIGN);
+        $constraint->setIsEnforced(true);
 
         if ($this->name !== null) {
             $constraint->setConname($this->name);

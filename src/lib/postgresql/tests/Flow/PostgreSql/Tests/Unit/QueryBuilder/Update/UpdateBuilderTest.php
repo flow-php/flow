@@ -80,7 +80,7 @@ final class UpdateBuilderTest extends TestCase
         static::assertNotNull($ast->getTargetList());
         static::assertNotNull($ast->getFromClause());
         static::assertTrue($ast->hasWhereClause());
-        static::assertNotNull($ast->getReturningList());
+        static::assertNotNull($ast->getReturningClause()?->getExprs());
     }
 
     public function test_from_ast_throws_on_empty_target_list(): void
@@ -179,7 +179,7 @@ final class UpdateBuilderTest extends TestCase
         static::assertNotNull($restoredAst->getTargetList());
         static::assertNotNull($restoredAst->getFromClause());
         static::assertTrue($restoredAst->hasWhereClause());
-        static::assertNotNull($restoredAst->getReturningList());
+        static::assertNotNull($restoredAst->getReturningClause()?->getExprs());
     }
 
     public function test_round_trip_simple(): void
@@ -235,7 +235,7 @@ final class UpdateBuilderTest extends TestCase
         $restored = UpdateBuilder::fromAst($ast);
         $restoredAst = $restored->toAst();
 
-        $returningList = $restoredAst->getReturningList();
+        $returningList = $restoredAst->getReturningClause()?->getExprs();
         static::assertNotNull($returningList);
         static::assertCount(2, $returningList);
     }
@@ -584,7 +584,7 @@ final class UpdateBuilderTest extends TestCase
             ->returning(Column::name('id'), Column::name('updated_at'));
 
         $ast = $query->toAst();
-        $returningList = $ast->getReturningList();
+        $returningList = $ast->getReturningClause()?->getExprs();
         static::assertNotNull($returningList);
         static::assertCount(2, $returningList);
     }
@@ -598,7 +598,7 @@ final class UpdateBuilderTest extends TestCase
             ->returningAll();
 
         $ast = $query->toAst();
-        $returningList = $ast->getReturningList();
+        $returningList = $ast->getReturningClause()?->getExprs();
         static::assertNotNull($returningList);
         static::assertCount(1, $returningList);
 

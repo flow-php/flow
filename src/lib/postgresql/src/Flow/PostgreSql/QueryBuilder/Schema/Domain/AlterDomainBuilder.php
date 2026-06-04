@@ -135,6 +135,7 @@ final readonly class AlterDomainBuilder implements AlterDomainActionStep, AlterD
         if ($this->subtype === 'C' && $this->expression !== null) {
             $constraint = new Constraint();
             $constraint->setContype(ConstrType::CONSTR_CHECK);
+            $constraint->setIsEnforced(true);
             $constraint->setRawExpr($this->expression->toAst());
 
             if ($this->constraintName !== null) {

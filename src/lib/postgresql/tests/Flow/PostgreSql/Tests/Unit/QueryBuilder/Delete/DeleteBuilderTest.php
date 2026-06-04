@@ -67,7 +67,8 @@ final class DeleteBuilderTest extends TestCase
         static::assertInstanceOf(DeleteStmt::class, $ast);
         static::assertFalse($ast->hasWhereClause());
 
-        $returningList = $ast->getReturningList();
+        $returningList = $ast->getReturningClause()?->getExprs();
+        static::assertNotNull($returningList);
         static::assertCount(1, $returningList);
     }
 
@@ -106,7 +107,7 @@ final class DeleteBuilderTest extends TestCase
 
         static::assertTrue($ast->hasWhereClause());
 
-        $returningList = $ast->getReturningList();
+        $returningList = $ast->getReturningClause()?->getExprs();
         static::assertNotNull($returningList);
         static::assertCount(3, $returningList);
     }
@@ -132,7 +133,7 @@ final class DeleteBuilderTest extends TestCase
         static::assertNotNull($relation);
         static::assertSame('all_data', $relation->getRelname());
         static::assertFalse($ast->hasWhereClause());
-        static::assertCount(0, $ast->getReturningList());
+        static::assertNull($ast->getReturningClause());
         static::assertCount(0, $ast->getUsingClause());
     }
 
@@ -143,7 +144,7 @@ final class DeleteBuilderTest extends TestCase
         $ast = $query->toAst();
         static::assertInstanceOf(DeleteStmt::class, $ast);
 
-        $returningList = $ast->getReturningList();
+        $returningList = $ast->getReturningClause()?->getExprs();
         static::assertNotNull($returningList);
         static::assertCount(1, $returningList);
 
@@ -299,7 +300,7 @@ final class DeleteBuilderTest extends TestCase
         $ast = $query->toAst();
         static::assertInstanceOf(DeleteStmt::class, $ast);
 
-        $returningList = $ast->getReturningList();
+        $returningList = $ast->getReturningClause()?->getExprs();
         static::assertNotNull($returningList);
         static::assertCount(2, $returningList);
 
@@ -560,7 +561,7 @@ final class DeleteBuilderTest extends TestCase
         static::assertSame('temp_logs', $relation->getRelname());
         static::assertFalse($ast->hasWhereClause());
 
-        $returningList = $ast->getReturningList();
+        $returningList = $ast->getReturningClause()?->getExprs();
         static::assertNotNull($returningList);
         static::assertCount(1, $returningList);
     }
@@ -665,7 +666,8 @@ final class DeleteBuilderTest extends TestCase
         $usingClause = $restoredAst->getUsingClause();
         static::assertCount(1, $usingClause);
 
-        $returningList = $restoredAst->getReturningList();
+        $returningList = $restoredAst->getReturningClause()?->getExprs();
+        static::assertNotNull($returningList);
         static::assertCount(2, $returningList);
     }
 
@@ -727,7 +729,7 @@ final class DeleteBuilderTest extends TestCase
         $restoredAst = $restored->toAst();
         static::assertTrue($restoredAst->hasWhereClause());
 
-        $returningList = $restoredAst->getReturningList();
+        $returningList = $restoredAst->getReturningClause()?->getExprs();
         static::assertNotNull($returningList);
         static::assertCount(1, $returningList);
     }
