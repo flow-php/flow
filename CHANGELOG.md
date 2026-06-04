@@ -16,6 +16,7 @@
 - [#2403](https://github.com/flow-php/flow/pull/2403) - **Add memory usage consumption in PHPUnit OpenTelemetry bridge** - [@jdecool](https://github.com/jdecool)
 
 ### Changed
+- [3fde06](https://github.com/flow-php/flow/commit/3fde069b383a8841d20a65c560356b9d26b0b9ce) - **chore: update project dependencies** - [@norberttech](https://github.com/norberttech)
 - [#2422](https://github.com/flow-php/flow/pull/2422) - **flow-php/arrow-ext - bump arrow/parquet to 58.3 and ext-php-rs to 0.15.15** - [@norberttech](https://github.com/norberttech)
 - [#2422](https://github.com/flow-php/flow/pull/2422) - **flow-php/arrow-ext - enable parquet simdutf8 feature** - [@norberttech](https://github.com/norberttech)
 - [#2422](https://github.com/flow-php/flow/pull/2422) - **flow-php/arrow-ext - handle new ArrayKey::ZendString variant in MAP key conversion** - [@norberttech](https://github.com/norberttech)
