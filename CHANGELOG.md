@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-06-03
+## [Unreleased] - 2026-06-04
 
 ### Added
 - [#2417](https://github.com/flow-php/flow/pull/2417) - **PostgreSql Transactional Loader** - [@norberttech](https://github.com/norberttech)
