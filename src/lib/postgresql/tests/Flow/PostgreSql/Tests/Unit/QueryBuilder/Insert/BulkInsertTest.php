@@ -48,6 +48,41 @@ final class BulkInsertTest extends TestCase
         static::assertStringContainsString('DO UPDATE', $query2->toSql());
     }
 
+    public function test_insert_into_schema_qualified_table(): void
+    {
+        $query = BulkInsert::into('enriched.production', ['a', 'b'], 1);
+
+        static::assertSame('INSERT INTO "enriched"."production" ("a", "b") VALUES ($1, $2)', $query->toSql());
+    }
+
+    public function test_insert_into_three_part_qualified_table(): void
+    {
+        $query = BulkInsert::into('db.enriched.production', ['a'], 1);
+
+        static::assertSame('INSERT INTO "db"."enriched"."production" ("a") VALUES ($1)', $query->toSql());
+    }
+
+    public function test_insert_into_already_quoted_qualified_table(): void
+    {
+        $query = BulkInsert::into('enriched."my.table"', ['a'], 1);
+
+        static::assertSame('INSERT INTO "enriched"."my.table" ("a") VALUES ($1)', $query->toSql());
+    }
+
+    public function test_schema_qualified_table_with_on_conflict_do_update(): void
+    {
+        $query = BulkInsert::into(
+            'enriched.production',
+            ['email', 'name'],
+            1,
+        )->onConflictDoUpdate(ConflictTarget::columns(['email']));
+
+        static::assertSame(
+            'INSERT INTO "enriched"."production" ("email", "name") VALUES ($1, $2) ON CONFLICT ("email") DO UPDATE SET "name" = EXCLUDED."name"',
+            $query->toSql(),
+        );
+    }
+
     public function test_insert_with_many_columns(): void
     {
         $query = BulkInsert::into('products', ['id', 'name', 'price', 'category', 'stock'], 2);

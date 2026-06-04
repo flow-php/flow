@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\QueryBuilder\Insert;
 
 use Flow\PostgreSql\QueryBuilder\Clause\ConflictTarget;
+use Flow\PostgreSql\QueryBuilder\QualifiedIdentifier;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use InvalidArgumentException;
 
@@ -96,7 +97,7 @@ final readonly class BulkInsert implements Sql
             $rows[] = '(' . implode(', ', $placeholders) . ')';
         }
 
-        $sql = sprintf('INSERT INTO "%s" (%s) VALUES %s', $this->table, $quotedColumns, implode(', ', $rows));
+        $sql = sprintf('INSERT INTO %s (%s) VALUES %s', $this->quotedTable(), $quotedColumns, implode(', ', $rows));
 
         if ($this->doNothing) {
             $sql .= ' ON CONFLICT';
@@ -123,6 +124,14 @@ final readonly class BulkInsert implements Sql
         }
 
         return $sql;
+    }
+
+    private function quotedTable(): string
+    {
+        return implode('.', array_map(
+            static fn(string $part): string => '"' . $part . '"',
+            QualifiedIdentifier::parse($this->table)->parts(),
+        ));
     }
 
     private function formatConflictTarget(ConflictTarget $target): string
