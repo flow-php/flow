@@ -7,7 +7,7 @@ namespace Flow\Bridge\PHPUnit\Telemetry\Tests\Mother;
 use Flow\Bridge\PHPUnit\Telemetry\Configuration;
 use Flow\Bridge\PHPUnit\Telemetry\CurlTransportConfig;
 use Flow\Bridge\PHPUnit\Telemetry\ErrorLogHandlerConfig;
-use Flow\Bridge\PHPUnit\Telemetry\SerializerType;
+use Flow\Bridge\Telemetry\OTLP\Serializer\SerializerType;
 use Flow\Telemetry\ErrorHandler\ErrorLogMessageType;
 
 final class ConfigurationMother

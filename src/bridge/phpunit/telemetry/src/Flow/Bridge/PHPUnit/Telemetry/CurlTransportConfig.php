@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\PHPUnit\Telemetry;
 
+use Flow\Bridge\Telemetry\OTLP\Serializer\SerializerType;
+
 final readonly class CurlTransportConfig
 {
     /**
