@@ -11,6 +11,13 @@ use RuntimeException;
 
 final class MigrationExceptionTest extends TestCase
 {
+    public function test_attribute_not_found(): void
+    {
+        $exception = MigrationException::attributeNotFound('container');
+
+        static::assertSame('Migration context attribute "container" not found.', $exception->getMessage());
+    }
+
     public function test_configuration_file_not_found(): void
     {
         $exception = MigrationException::configurationFileNotFound('migrations.php');

@@ -69,10 +69,15 @@ use function class_exists;
 use function Flow\Types\DSL\type_string;
 use function implode;
 use function in_array;
+use function is_string;
 use function sprintf;
+use function str_starts_with;
+use function substr;
 
 final class FlowPostgreSqlBundle extends AbstractBundle
 {
+    public const string SERVICE_CONTAINER = 'service_container';
+
     protected string $extensionAlias = 'flow_postgresql';
 
     #[Override]
@@ -361,6 +366,14 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             ->defaultFalse()
             ->info('Emit IF EXISTS on diff-generated DROP statements (default: false)')
             ->end()
+            ->arrayNode('context')
+            ->info(
+                'Extra attributes merged into the migration context alongside the service container (available under FlowPostgreSqlBundle::SERVICE_CONTAINER). Read them in a migration via MigrationContext::attribute(). Values can be literals, @service_id references (@@ escapes a literal @), %parameter% placeholders, or %env(VAR)% expressions. Useful for handing private services or resolved config to a migration without making them public.',
+            )
+            ->useAttributeAsKey('name')
+            ->variablePrototype()
+            ->end()
+            ->end()
             ->arrayNode('exclude')
             ->info('Schema objects excluded from migration diffing (e.g. tables created dynamically at runtime). Each entry defines exactly one matcher: schema, table, exact, starts_with, ends_with, pattern or policy_id.')
             ->arrayPrototype()
@@ -428,7 +441,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     }
 
     /**
-     * @param array{connections: array<string, array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>} $config
+     * @param array{connections: array<string, array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>} $config
      */
     #[Override]
     public function loadExtension(array $config, ContainerConfigurator $configurator, ContainerBuilder $container): void
@@ -670,7 +683,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     }
 
     /**
-     * @param array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>} $mc
+     * @param array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>} $mc
      */
     private function registerMigrations(string $name, array $mc, ContainerBuilder $container, bool $isFirst): void
     {
@@ -689,6 +702,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             $mc['generate_rollback'],
             $this->buildExclusionPolicy($mc['exclude'] ?? []),
             $mc['drop_if_exists'],
+            $this->buildMigrationContextAttributes($mc['context'] ?? []),
         ]);
         $configDef->setPublic(true);
         $container->setDefinition("flow.postgresql.{$name}.migrations.configuration", $configDef);
@@ -776,6 +790,37 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             $container->setAlias(MigrationGenerator::class, "flow.postgresql.{$name}.migrations.generator");
             $container->setAlias(DiffMigrationGenerator::class, "flow.postgresql.{$name}.migrations.diff_generator");
         }
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     *
+     * @return array<string, mixed>
+     */
+    private function buildMigrationContextAttributes(array $context): array
+    {
+        $attributes = [];
+
+        foreach ($context as $name => $value) {
+            $attributes[$name] = $this->resolveMigrationContextValue($value);
+        }
+
+        $attributes[self::SERVICE_CONTAINER] = new Reference('service_container');
+
+        return $attributes;
+    }
+
+    private function resolveMigrationContextValue(mixed $value): mixed
+    {
+        if (is_string($value) && str_starts_with($value, '@@')) {
+            return substr($value, 1);
+        }
+
+        if (is_string($value) && str_starts_with($value, '@')) {
+            return new Reference(substr($value, 1));
+        }
+
+        return $value;
     }
 
     /**

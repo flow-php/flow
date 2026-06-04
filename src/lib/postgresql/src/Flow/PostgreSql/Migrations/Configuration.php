@@ -10,6 +10,9 @@ use Flow\PostgreSql\Schema\Exclusion\ExclusionPolicy;
 
 final readonly class Configuration
 {
+    /**
+     * @param array<string, mixed> $attributes
+     */
     public function __construct(
         public Client $client,
         public CatalogProvider $targetCatalogProvider,
@@ -23,5 +26,6 @@ final readonly class Configuration
         public bool $generateRollback = true,
         public ?ExclusionPolicy $exclusionPolicy = null,
         public bool $dropIfExists = false,
+        public array $attributes = [],
     ) {}
 }

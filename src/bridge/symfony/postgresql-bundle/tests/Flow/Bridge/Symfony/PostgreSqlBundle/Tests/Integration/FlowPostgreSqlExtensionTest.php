@@ -13,6 +13,7 @@ use Flow\Bridge\Symfony\PostgreSqlBundle\Command\UpToDateCommand;
 use Flow\Bridge\Symfony\PostgreSqlBundle\FlowPostgreSqlBundle;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Messenger\FlowPostgreSqlTransportFactory;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\AttributeTestCatalogProvider;
+use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\MigrationSeedProvider;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Tests\Fixtures\VoidTelemetryFactory;
 use Flow\Bridge\Symfony\PostgreSQLCache\CacheCatalogProvider;
@@ -45,6 +46,7 @@ use Flow\Telemetry\Telemetry;
 use LogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 
@@ -451,6 +453,82 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
         static::assertTrue($this->getContainer()->has(VersionResolver::class));
         static::assertTrue($this->getContainer()->has(MigrationGenerator::class));
         static::assertTrue($this->getContainer()->has(DiffMigrationGenerator::class));
+    }
+
+    public function test_migrations_configuration_injects_service_container_attribute(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres',
+                        ],
+                    ],
+                    'migrations' => [
+                        'enabled' => true,
+                        'directory' => '/tmp/test_migrations',
+                        'namespace' => 'App\\Migrations',
+                    ],
+                    'catalog_providers' => [
+                        ['catalog' => ['schemas' => []]],
+                    ],
+                ]);
+            },
+        ]);
+
+        $configuration = $this->getContainer()->get('flow.postgresql.default.migrations.configuration');
+        static::assertInstanceOf(MigrationsConfiguration::class, $configuration);
+
+        static::assertArrayHasKey(FlowPostgreSqlBundle::SERVICE_CONTAINER, $configuration->attributes);
+        static::assertInstanceOf(
+            ContainerInterface::class,
+            $configuration->attributes[FlowPostgreSqlBundle::SERVICE_CONTAINER],
+        );
+    }
+
+    public function test_migrations_configuration_merges_configured_context_attributes(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                    $container->register('app.report_generator', MigrationSeedProvider::class);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => [
+                            'dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres',
+                        ],
+                    ],
+                    'migrations' => [
+                        'enabled' => true,
+                        'directory' => '/tmp/test_migrations',
+                        'namespace' => 'App\\Migrations',
+                        'context' => [
+                            'report_generator' => '@app.report_generator',
+                            'batch_size' => 500,
+                        ],
+                    ],
+                    'catalog_providers' => [
+                        ['catalog' => ['schemas' => []]],
+                    ],
+                ]);
+            },
+        ]);
+
+        $configuration = $this->getContainer()->get('flow.postgresql.default.migrations.configuration');
+        static::assertInstanceOf(MigrationsConfiguration::class, $configuration);
+
+        static::assertInstanceOf(MigrationSeedProvider::class, $configuration->attributes['report_generator']);
+        static::assertSame(500, $configuration->attributes['batch_size']);
+        static::assertInstanceOf(
+            ContainerInterface::class,
+            $configuration->attributes[FlowPostgreSqlBundle::SERVICE_CONTAINER],
+        );
     }
 
     public function test_migrations_exclude_config_builds_exclusion_policy(): void

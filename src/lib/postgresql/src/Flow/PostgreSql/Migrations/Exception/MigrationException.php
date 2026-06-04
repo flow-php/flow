@@ -12,6 +12,11 @@ use function sprintf;
 
 class MigrationException extends RuntimeException
 {
+    public static function attributeNotFound(string $name): self
+    {
+        return new self(sprintf('Migration context attribute "%s" not found.', $name));
+    }
+
     public static function configurationFileNotFound(string $fileName): self
     {
         return new self(sprintf(

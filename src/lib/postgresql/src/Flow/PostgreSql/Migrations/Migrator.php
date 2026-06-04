@@ -29,7 +29,7 @@ final readonly class Migrator
 
         $available = $this->repository->get($version);
         $plan = new MigrationPlan($available->version, $available->migration, $available->rollback, $direction);
-        $context = new MigrationContext($this->client);
+        $context = new MigrationContext($this->client, $this->configuration->attributes);
 
         if ($dryRun) {
             $this->client->beginTransaction();
@@ -177,7 +177,7 @@ final readonly class Migrator
         $results = [];
 
         $this->client->transaction(function () use ($plans, &$results): void {
-            $context = new MigrationContext($this->client);
+            $context = new MigrationContext($this->client, $this->configuration->attributes);
 
             foreach ($plans as $plan) {
                 $result = $this->executor->execute($plan, $context);
@@ -204,7 +204,7 @@ final readonly class Migrator
      */
     private function executePlans(array $plans): array
     {
-        $context = new MigrationContext($this->client);
+        $context = new MigrationContext($this->client, $this->configuration->attributes);
         $results = [];
 
         foreach ($plans as $plan) {
@@ -234,7 +234,7 @@ final readonly class Migrator
         $this->client->beginTransaction();
 
         try {
-            $context = new MigrationContext($this->client);
+            $context = new MigrationContext($this->client, $this->configuration->attributes);
             $results = [];
 
             foreach ($plans as $plan) {

@@ -314,6 +314,32 @@ final class ConfigurationTest extends TestCase
         );
     }
 
+    public function test_migrations_context_accepts_arbitrary_variables(): void
+    {
+        $config = $this->context->processConfig([
+            'connections' => [
+                'default' => ['dsn' => 'postgresql://user:pass@localhost:5432/db'],
+            ],
+            'migrations' => [
+                'enabled' => true,
+                'context' => [
+                    'report_generator' => '@app.report_generator',
+                    'readonly_url' => '%env(DATABASE_READONLY_URL)%',
+                    'batch_size' => 500,
+                ],
+            ],
+        ]);
+
+        static::assertSame(
+            [
+                'report_generator' => '@app.report_generator',
+                'readonly_url' => '%env(DATABASE_READONLY_URL)%',
+                'batch_size' => 500,
+            ],
+            $config['migrations']['context'],
+        );
+    }
+
     public function test_context_defaults_to_empty(): void
     {
         $config = $this->context->processConfig([
