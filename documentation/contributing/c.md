@@ -10,7 +10,7 @@ actual PostgreSQL parser.
 
 The `pg-query-ext` extension exposes PostgreSQL's SQL parser to PHP, providing functions for
 parsing, normalizing, fingerprinting, and splitting SQL queries. It statically links against
-`libpg_query` which embeds the PostgreSQL 17 grammar.
+`libpg_query` which embeds the PostgreSQL 18 grammar.
 
 For usage documentation, see [pg-query Extension](/documentation/components/extensions/pg-query-ext.md).
 

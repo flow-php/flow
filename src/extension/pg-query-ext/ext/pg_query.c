@@ -87,7 +87,7 @@ PHP_MINFO_FUNCTION(pg_query)
     php_info_print_table_start();
     php_info_print_table_header(2, "pg_query support", "enabled");
     php_info_print_table_row(2, "Version", PHP_PG_QUERY_VERSION);
-    php_info_print_table_row(2, "libpg_query version", "17-6.2.1");
+    php_info_print_table_row(2, "libpg_query version", "18.0.0");
     php_info_print_table_end();
 }
 

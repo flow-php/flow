@@ -1,5 +1,5 @@
 # Flow PHP pg_query Extension Makefile
-LIBPG_QUERY_VERSION := 17-latest
+LIBPG_QUERY_VERSION := 18-latest
 LIBPG_QUERY_DIR := ./vendor/libpg_query
 LIBPG_QUERY_LIB := $(LIBPG_QUERY_DIR)/libpg_query.a
 EXTENSION_DIR := ./ext

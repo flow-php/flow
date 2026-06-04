@@ -6,9 +6,9 @@ PHP_ARG_WITH([pg-query],
     [Include pg_query support. DIR is the libpg_query install prefix (optional - will download if not found)])])
 
 if test "$PHP_PG_QUERY" != "no"; then
-  dnl libpg_query 17-latest is required for postgres_deparse.h support
-  LIBPG_QUERY_VERSION="17-latest"
-  AC_MSG_NOTICE([Using libpg_query $LIBPG_QUERY_VERSION (PostgreSQL 17 grammar)])
+  dnl libpg_query 18-latest is required for postgres_deparse.h support
+  LIBPG_QUERY_VERSION="18-latest"
+  AC_MSG_NOTICE([Using libpg_query $LIBPG_QUERY_VERSION (PostgreSQL 18 grammar)])
 
   PG_QUERY_DIR=""
 
