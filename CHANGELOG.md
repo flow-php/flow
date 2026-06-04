@@ -13,6 +13,8 @@
 - [#2403](https://github.com/flow-php/flow/pull/2403) - **Add memory usage consumption in PHPUnit OpenTelemetry bridge** - [@jdecool](https://github.com/jdecool)
 
 ### Changed
+- [#2426](https://github.com/flow-php/flow/pull/2426) - **flow-php/postgresql - regenerated protobuf AST stubs and query builder for the PostgreSQL 18 grammar (incl. RETURNING)** - [@norberttech](https://github.com/norberttech)
+- [#2426](https://github.com/flow-php/flow/pull/2426) - **flow-php/pg-query-ext - pinned nix libpg_query to 18.0.0 to match the vendored build and documented keeping grammar versions in sync** - [@norberttech](https://github.com/norberttech)
 - [#2423](https://github.com/flow-php/flow/pull/2423) - **Move Telemetry `SerializerType` enum from PHPUnit to OTLP** - [@stloyd](https://github.com/stloyd)
 - [#2421](https://github.com/flow-php/flow/pull/2421) - **flow-php/pg-query-ext - bumped libpg_query to the PostgreSQL 18 grammar** - [@norberttech](https://github.com/norberttech)
 - [#2420](https://github.com/flow-php/flow/pull/2420) - **WithBuilder::select() now returns SelectFromStep** - [@norberttech](https://github.com/norberttech)
@@ -25,6 +27,8 @@
 - [#2391](https://github.com/flow-php/flow/pull/2391) - **Covered all bridges with Mago Analyzer** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2426](https://github.com/flow-php/flow/pull/2426) - **flow-php/postgresql - intermittent deparse segfault under the PostgreSQL 18 grammar caused by stale protobuf stubs** - [@norberttech](https://github.com/norberttech)
+- [#2426](https://github.com/flow-php/flow/pull/2426) - **flow-php/postgresql - constraints emitting NOT ENFORCED and generated columns emitting VIRTUAL under PostgreSQL 18** - [@norberttech](https://github.com/norberttech)
 - [#2420](https://github.com/flow-php/flow/pull/2420) - **Chained set operations (union/unionAll/intersect/except) dropped the middle operand** - [@norberttech](https://github.com/norberttech)
 - [#2420](https://github.com/flow-php/flow/pull/2420) - **Set operations with a WITH clause duplicated the CTE** - [@norberttech](https://github.com/norberttech)
 - [#2420](https://github.com/flow-php/flow/pull/2420) - **func() produced invalid SQL for keyword constructs like GREATEST** - [@norberttech](https://github.com/norberttech)
@@ -37,6 +41,7 @@
 - [400244](https://github.com/flow-php/flow/commit/4002444c062c2029d1713b8e8d0f82ab28d835fb) - **failing tests on lowest versions of dependencies** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [90bd91](https://github.com/flow-php/flow/commit/90bd91306d93b2a82fa5529c34708f7c506761f4) - **development leftovers** - [@norberttech](https://github.com/norberttech)
 - [#2393](https://github.com/flow-php/flow/pull/2393) - **support for docrtine 3.6** - [@norberttech](https://github.com/norberttech)
 
 ## [0.38.0] - 2026-05-22
