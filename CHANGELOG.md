@@ -11,6 +11,7 @@
 - [#2403](https://github.com/flow-php/flow/pull/2403) - **Add memory usage consumption in PHPUnit OpenTelemetry bridge** - [@jdecool](https://github.com/jdecool)
 
 ### Changed
+- [#2421](https://github.com/flow-php/flow/pull/2421) - **flow-php/pg-query-ext - bumped libpg_query to the PostgreSQL 18 grammar** - [@norberttech](https://github.com/norberttech)
 - [#2420](https://github.com/flow-php/flow/pull/2420) - **WithBuilder::select() now returns SelectFromStep** - [@norberttech](https://github.com/norberttech)
 - [#2420](https://github.com/flow-php/flow/pull/2420) - **Set-operation methods now return SelectSetOperationStep to allow chaining** - [@norberttech](https://github.com/norberttech)
 - [#2416](https://github.com/flow-php/flow/pull/2416) - **update otel collector version** - [@norberttech](https://github.com/norberttech)
