@@ -13,6 +13,9 @@
 - [#2403](https://github.com/flow-php/flow/pull/2403) - **Add memory usage consumption in PHPUnit OpenTelemetry bridge** - [@jdecool](https://github.com/jdecool)
 
 ### Changed
+- [#2422](https://github.com/flow-php/flow/pull/2422) - **flow-php/arrow-ext - bump arrow/parquet to 58.3 and ext-php-rs to 0.15.15** - [@norberttech](https://github.com/norberttech)
+- [#2422](https://github.com/flow-php/flow/pull/2422) - **flow-php/arrow-ext - enable parquet simdutf8 feature** - [@norberttech](https://github.com/norberttech)
+- [#2422](https://github.com/flow-php/flow/pull/2422) - **flow-php/arrow-ext - handle new ArrayKey::ZendString variant in MAP key conversion** - [@norberttech](https://github.com/norberttech)
 - [#2426](https://github.com/flow-php/flow/pull/2426) - **flow-php/postgresql - regenerated protobuf AST stubs and query builder for the PostgreSQL 18 grammar (incl. RETURNING)** - [@norberttech](https://github.com/norberttech)
 - [#2426](https://github.com/flow-php/flow/pull/2426) - **flow-php/pg-query-ext - pinned nix libpg_query to 18.0.0 to match the vendored build and documented keeping grammar versions in sync** - [@norberttech](https://github.com/norberttech)
 - [#2423](https://github.com/flow-php/flow/pull/2423) - **Move Telemetry `SerializerType` enum from PHPUnit to OTLP** - [@stloyd](https://github.com/stloyd)
