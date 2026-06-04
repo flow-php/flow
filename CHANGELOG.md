@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-06-04
 
 ### Added
+- [#2420](https://github.com/flow-php/flow/pull/2420) - **WithBuilder::selectDistinct() and selectDistinctOn()** - [@norberttech](https://github.com/norberttech)
 - [#2417](https://github.com/flow-php/flow/pull/2417) - **PostgreSql Transactional Loader** - [@norberttech](https://github.com/norberttech)
 - [#2414](https://github.com/flow-php/flow/pull/2414) - **--drop-if-exists option to postgresql migrator** - [@norberttech](https://github.com/norberttech)
 - [#2412](https://github.com/flow-php/flow/pull/2412) - **allow to prefix postgresql db name** - [@norberttech](https://github.com/norberttech)
@@ -10,6 +11,8 @@
 - [#2403](https://github.com/flow-php/flow/pull/2403) - **Add memory usage consumption in PHPUnit OpenTelemetry bridge** - [@jdecool](https://github.com/jdecool)
 
 ### Changed
+- [#2420](https://github.com/flow-php/flow/pull/2420) - **WithBuilder::select() now returns SelectFromStep** - [@norberttech](https://github.com/norberttech)
+- [#2420](https://github.com/flow-php/flow/pull/2420) - **Set-operation methods now return SelectSetOperationStep to allow chaining** - [@norberttech](https://github.com/norberttech)
 - [#2416](https://github.com/flow-php/flow/pull/2416) - **update otel collector version** - [@norberttech](https://github.com/norberttech)
 - [#2413](https://github.com/flow-php/flow/pull/2413) - **Add missing OTEL configuration file format version** - [@stloyd](https://github.com/stloyd)
 - [#2405](https://github.com/flow-php/flow/pull/2405) - **thigthen structure type definition** - [@norberttech](https://github.com/norberttech)
@@ -18,6 +21,10 @@
 - [#2391](https://github.com/flow-php/flow/pull/2391) - **Covered all bridges with Mago Analyzer** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2420](https://github.com/flow-php/flow/pull/2420) - **Chained set operations (union/unionAll/intersect/except) dropped the middle operand** - [@norberttech](https://github.com/norberttech)
+- [#2420](https://github.com/flow-php/flow/pull/2420) - **Set operations with a WITH clause duplicated the CTE** - [@norberttech](https://github.com/norberttech)
+- [#2420](https://github.com/flow-php/flow/pull/2420) - **func() produced invalid SQL for keyword constructs like GREATEST** - [@norberttech](https://github.com/norberttech)
+- [#2420](https://github.com/flow-php/flow/pull/2420) - **in_() with a subquery silently produced a scalar-subquery comparison** - [@norberttech](https://github.com/norberttech)
 - [#2415](https://github.com/flow-php/flow/pull/2415) - **saving postgresql migrations table in schema other than public** - [@norberttech](https://github.com/norberttech)
 - [#2415](https://github.com/flow-php/flow/pull/2415) - **reverted file_format introduced in otel collector config** - [@norberttech](https://github.com/norberttech)
 - [#2410](https://github.com/flow-php/flow/pull/2410) - **postgresql schema comparator handling views** - [@norberttech](https://github.com/norberttech)
