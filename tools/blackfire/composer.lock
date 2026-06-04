@@ -4,21 +4,21 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "384a73f6eda7941f7b18e991a5312de1",
+    "content-hash": "cc95a84ef22788add0ba9b7fc5be4750",
     "packages": [],
     "packages-dev": [
         {
             "name": "blackfire/php-sdk",
-            "version": "v2.6.0",
+            "version": "v3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/blackfireio/php-sdk.git",
-                "reference": "5d3b0e80fd7a77fd49832bdd6425d38ddd567991"
+                "reference": "ad3e1a20702f326957851c9711436f68cc83c769"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/blackfireio/php-sdk/zipball/5d3b0e80fd7a77fd49832bdd6425d38ddd567991",
-                "reference": "5d3b0e80fd7a77fd49832bdd6425d38ddd567991",
+                "url": "https://api.github.com/repos/blackfireio/php-sdk/zipball/ad3e1a20702f326957851c9711436f68cc83c769",
+                "reference": "ad3e1a20702f326957851c9711436f68cc83c769",
                 "shasum": ""
             },
             "require": {
@@ -79,9 +79,9 @@
             ],
             "support": {
                 "issues": "https://github.com/blackfireio/php-sdk/issues",
-                "source": "https://github.com/blackfireio/php-sdk/tree/v2.6.0"
+                "source": "https://github.com/blackfireio/php-sdk/tree/v3.0.0"
             },
-            "time": "2026-05-22T13:28:29+00:00"
+            "time": "2026-06-01T08:02:22+00:00"
         },
         {
             "name": "composer/ca-bundle",
