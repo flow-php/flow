@@ -1,6 +1,9 @@
 ## [Unreleased] - 2026-06-04
 
 ### Added
+- [#2427](https://github.com/flow-php/flow/pull/2427) - **flow-php/postgresql - custom attributes on migration context** - [@norberttech](https://github.com/norberttech)
+- [#2427](https://github.com/flow-php/flow/pull/2427) - **flow-php/symfony-postgresql-bundle - service container injected into migration context** - [@norberttech](https://github.com/norberttech)
+- [#2427](https://github.com/flow-php/flow/pull/2427) - **flow-php/symfony-postgresql-bundle - migrations.context config for extra attributes** - [@norberttech](https://github.com/norberttech)
 - [#2424](https://github.com/flow-php/flow/pull/2424) - **flow-php/postgresql - table options support with new Table and TableOptions schema objects.** - [@norberttech](https://github.com/norberttech)
 - [#2424](https://github.com/flow-php/flow/pull/2424) - **flow-php/etl-adapter-postgresql - optional TableOptions argument in toPostgreSqlTable().** - [@norberttech](https://github.com/norberttech)
 - [#2420](https://github.com/flow-php/flow/pull/2420) - **WithBuilder::selectDistinct() and selectDistinctOn()** - [@norberttech](https://github.com/norberttech)
