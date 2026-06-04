@@ -58,6 +58,11 @@ jobs:
         run: |
           brew install llvm
           echo "LIBCLANG_PATH=$(brew --prefix llvm)/lib" >> "$GITHUB_ENV"
+          # Pin the clang executable to the one shipped with the same llvm as
+          # libclang. Otherwise clang-sys (used by ext-php-rs's bindgen) falls
+          # back to `xcodebuild -find clang` and mixes Xcode's clang headers
+          # (e.g. arm_neon.h) with brew's newer libclang, which fails to compile.
+          echo "CLANG_PATH=$(brew --prefix llvm)/bin/clang" >> "$GITHUB_ENV"
 
       - name: Set LIBCLANG_PATH (Ubuntu)
         if: runner.os == 'Linux'
@@ -147,6 +152,9 @@ jobs:
         run: |
           brew install autoconf automake libtool llvm
           echo "LIBCLANG_PATH=$(brew --prefix llvm)/lib" >> "$GITHUB_ENV"
+          # See the build job: keep clang and libclang from the same llvm so
+          # bindgen does not mix brew's libclang with Xcode's clang headers.
+          echo "CLANG_PATH=$(brew --prefix llvm)/bin/clang" >> "$GITHUB_ENV"
 
       - name: Set LIBCLANG_PATH (Ubuntu)
         if: runner.os == 'Linux'
@@ -180,7 +188,7 @@ jobs:
         run: |
           sudo pie repository:remove packagist.org
           sudo pie repository:add path ${{ github.workspace }}/src/extension/arrow-ext
-          sudo env "PATH=$PATH" "LIBCLANG_PATH=$LIBCLANG_PATH" "RUSTUP_TOOLCHAIN=$RUSTUP_TOOLCHAIN" "CARGO_HOME=$CARGO_HOME" "RUSTUP_HOME=$RUSTUP_HOME" pie install flow-php/arrow-ext:0.0.9999@dev
+          sudo env "PATH=$PATH" "LIBCLANG_PATH=$LIBCLANG_PATH" ${CLANG_PATH:+"CLANG_PATH=$CLANG_PATH"} "RUSTUP_TOOLCHAIN=$RUSTUP_TOOLCHAIN" "CARGO_HOME=$CARGO_HOME" "RUSTUP_HOME=$RUSTUP_HOME" pie install flow-php/arrow-ext:0.0.9999@dev
 
       - name: Verify extension is loaded
         run: |
