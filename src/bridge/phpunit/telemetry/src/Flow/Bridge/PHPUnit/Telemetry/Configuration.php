@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\PHPUnit\Telemetry;
 
+use Flow\Bridge\Telemetry\OTLP\Serializer\SerializerType;
 use Flow\Telemetry\ErrorHandler\ErrorLogMessageType;
 use Flow\Telemetry\ErrorHandler\SyslogFacility;
 use Flow\Telemetry\ErrorHandler\SyslogSeverity;

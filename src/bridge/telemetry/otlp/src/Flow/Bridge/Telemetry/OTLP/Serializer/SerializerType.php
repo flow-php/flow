@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Bridge\PHPUnit\Telemetry;
+namespace Flow\Bridge\Telemetry\OTLP\Serializer;
 
 enum SerializerType: string
 {
