@@ -123,9 +123,19 @@ jobs:
         env:
           AZURITE_ACCOUNTS: flowphpaccount01:flowphpkey01
 
+      # TODO(fix-gha): diagnostic for the intermittent SIGSEGV (signal 11) in CI — capture a core dump
+      # so the failing run yields a real backtrace. Remove once the crashing extension is identified/fixed.
+      - name: "Configure core dumps"
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/var/ci-debug"
+          sudo sysctl -w kernel.core_pattern="$GITHUB_WORKSPACE/var/ci-debug/core.%e.%p"
+          sudo sysctl -w kernel.core_uses_pid=0 || true
+
       - name: "Test"
         timeout-minutes: 10
-        run: "just test --coverage-clover=./var/phpunit/coverage/clover/coverage.xml --log-junit ./var/phpunit/logs/junit.xml"
+        run: |
+          ulimit -c unlimited
+          just test --coverage-clover=./var/phpunit/coverage/clover/coverage.xml --log-junit ./var/phpunit/logs/junit.xml
         env:
           PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres?serverVersion=11&charset=utf8
           MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/mysql
@@ -142,6 +152,22 @@ jobs:
           OTEL_RECEIVER_GRPC_ENDPOINT: "localhost:4317"
           OTEL_COLLECTOR_METRICS_ENDPOINT: "http://localhost:8888/metrics"
           FLOW_PARQUET_TESTS_DEBUG: "0"
+
+      # Core-dump analysis only: re-running the full suite under gdb is impractical, and the core
+      # captured from the natural crash is the faithful artifact (no gdb-induced heap perturbation).
+      - name: "Capture segfault backtrace"
+        if: failure()
+        env:
+          CORE_ONLY: "1"
+        run: tools/ci/capture-segfault.sh
+
+      - name: "Upload crash diagnostics"
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: "segfault-tests-php${{ matrix.php-version }}-${{ matrix.dependencies }}"
+          path: var/ci-debug/
+          if-no-files-found: ignore
 
       - name: Upload to Codecov
         uses: ./.github/actions/codecov-report

@@ -61,7 +61,31 @@ jobs:
       - name: "Show PHPUnit version"
         run: tools/phpunit/vendor/bin/phpunit --version
 
+      # TODO(fix-gha): diagnostic for the intermittent SIGSEGV (signal 11) in CI — capture a core dump
+      # so the failing run yields a real backtrace. Remove once the crashing extension is identified/fixed.
+      - name: "Configure core dumps"
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/var/ci-debug"
+          sudo sysctl -w kernel.core_pattern="$GITHUB_WORKSPACE/var/ci-debug/core.%e.%p"
+          sudo sysctl -w kernel.core_uses_pid=0 || true
+
       - name: "Test"
-        run: just test --testsuite bridge-phpunit-postgresql-unit,bridge-phpunit-postgresql-integration,bridge-phpunit-telemetry-unit
+        run: |
+          ulimit -c unlimited
+          just test --testsuite bridge-phpunit-postgresql-unit,bridge-phpunit-postgresql-integration,bridge-phpunit-telemetry-unit
         env:
           PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres?serverVersion=11&charset=utf8
+
+      - name: "Capture segfault backtrace"
+        if: failure()
+        run: tools/ci/capture-segfault.sh tools/phpunit/vendor/bin/phpunit --testsuite bridge-phpunit-postgresql-unit,bridge-phpunit-postgresql-integration,bridge-phpunit-telemetry-unit
+        env:
+          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres?serverVersion=11&charset=utf8
+
+      - name: "Upload crash diagnostics"
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: "segfault-telemetry-php${{ matrix.php-version }}-phpunit${{ matrix.phpunit-version }}"
+          path: var/ci-debug/
+          if-no-files-found: ignore
