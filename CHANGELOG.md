@@ -34,6 +34,7 @@
 - [#2391](https://github.com/flow-php/flow/pull/2391) - **Covered all bridges with Mago Analyzer** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2428](https://github.com/flow-php/flow/pull/2428) - **flow-php/postgresql - BulkInsert now quotes schema-qualified table names per identifier part.** - [@norberttech](https://github.com/norberttech)
 - [#2426](https://github.com/flow-php/flow/pull/2426) - **flow-php/postgresql - intermittent deparse segfault under the PostgreSQL 18 grammar caused by stale protobuf stubs** - [@norberttech](https://github.com/norberttech)
 - [#2426](https://github.com/flow-php/flow/pull/2426) - **flow-php/postgresql - constraints emitting NOT ENFORCED and generated columns emitting VIRTUAL under PostgreSQL 18** - [@norberttech](https://github.com/norberttech)
 - [#2420](https://github.com/flow-php/flow/pull/2420) - **Chained set operations (union/unionAll/intersect/except) dropped the middle operand** - [@norberttech](https://github.com/norberttech)
