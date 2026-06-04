@@ -22,6 +22,7 @@ use Flow\PostgreSql\Schema\Constraint\UniqueConstraint;
 use Flow\PostgreSql\Schema\Exception\ColumnNotFoundException;
 
 use function array_map;
+use function array_values;
 use function Flow\PostgreSql\DSL\column;
 use function Flow\PostgreSql\DSL\create;
 
@@ -132,6 +133,195 @@ final readonly class Table
         }
 
         return false;
+    }
+
+    public function withCheckConstraint(CheckConstraint $checkConstraint): self
+    {
+        return new self(
+            schema: $this->schema,
+            name: $this->name,
+            columns: $this->columns,
+            primaryKey: $this->primaryKey,
+            indexes: $this->indexes,
+            foreignKeys: $this->foreignKeys,
+            uniqueConstraints: $this->uniqueConstraints,
+            checkConstraints: [...$this->checkConstraints, $checkConstraint],
+            excludeConstraints: $this->excludeConstraints,
+            triggers: $this->triggers,
+            unlogged: $this->unlogged,
+            partitionStrategy: $this->partitionStrategy,
+            partitionColumns: $this->partitionColumns,
+            inherits: $this->inherits,
+            tablespace: $this->tablespace,
+        );
+    }
+
+    public function withExcludeConstraint(ExcludeConstraint $excludeConstraint): self
+    {
+        return new self(
+            schema: $this->schema,
+            name: $this->name,
+            columns: $this->columns,
+            primaryKey: $this->primaryKey,
+            indexes: $this->indexes,
+            foreignKeys: $this->foreignKeys,
+            uniqueConstraints: $this->uniqueConstraints,
+            checkConstraints: $this->checkConstraints,
+            excludeConstraints: [...$this->excludeConstraints, $excludeConstraint],
+            triggers: $this->triggers,
+            unlogged: $this->unlogged,
+            partitionStrategy: $this->partitionStrategy,
+            partitionColumns: $this->partitionColumns,
+            inherits: $this->inherits,
+            tablespace: $this->tablespace,
+        );
+    }
+
+    public function withForeignKey(ForeignKey $foreignKey): self
+    {
+        return new self(
+            schema: $this->schema,
+            name: $this->name,
+            columns: $this->columns,
+            primaryKey: $this->primaryKey,
+            indexes: $this->indexes,
+            foreignKeys: [...$this->foreignKeys, $foreignKey],
+            uniqueConstraints: $this->uniqueConstraints,
+            checkConstraints: $this->checkConstraints,
+            excludeConstraints: $this->excludeConstraints,
+            triggers: $this->triggers,
+            unlogged: $this->unlogged,
+            partitionStrategy: $this->partitionStrategy,
+            partitionColumns: $this->partitionColumns,
+            inherits: $this->inherits,
+            tablespace: $this->tablespace,
+        );
+    }
+
+    public function withInherits(string ...$inherits): self
+    {
+        return new self(
+            schema: $this->schema,
+            name: $this->name,
+            columns: $this->columns,
+            primaryKey: $this->primaryKey,
+            indexes: $this->indexes,
+            foreignKeys: $this->foreignKeys,
+            uniqueConstraints: $this->uniqueConstraints,
+            checkConstraints: $this->checkConstraints,
+            excludeConstraints: $this->excludeConstraints,
+            triggers: $this->triggers,
+            unlogged: $this->unlogged,
+            partitionStrategy: $this->partitionStrategy,
+            partitionColumns: $this->partitionColumns,
+            inherits: array_values($inherits),
+            tablespace: $this->tablespace,
+        );
+    }
+
+    public function withOptions(TableOptions $options): self
+    {
+        return new self(
+            schema: $this->schema,
+            name: $this->name,
+            columns: $this->columns,
+            primaryKey: $this->primaryKey,
+            indexes: $this->indexes,
+            foreignKeys: $options->foreignKeys,
+            uniqueConstraints: $this->uniqueConstraints,
+            checkConstraints: $options->checkConstraints,
+            excludeConstraints: $options->excludeConstraints,
+            triggers: $options->triggers,
+            unlogged: $options->unlogged,
+            partitionStrategy: $options->partitionStrategy,
+            partitionColumns: $options->partitionColumns,
+            inherits: $options->inherits,
+            tablespace: $options->tablespace,
+        );
+    }
+
+    public function withPartitionBy(PartitionStrategy $strategy, string ...$columns): self
+    {
+        return new self(
+            schema: $this->schema,
+            name: $this->name,
+            columns: $this->columns,
+            primaryKey: $this->primaryKey,
+            indexes: $this->indexes,
+            foreignKeys: $this->foreignKeys,
+            uniqueConstraints: $this->uniqueConstraints,
+            checkConstraints: $this->checkConstraints,
+            excludeConstraints: $this->excludeConstraints,
+            triggers: $this->triggers,
+            unlogged: $this->unlogged,
+            partitionStrategy: $strategy,
+            partitionColumns: array_values($columns),
+            inherits: $this->inherits,
+            tablespace: $this->tablespace,
+        );
+    }
+
+    public function withTablespace(?string $tablespace): self
+    {
+        return new self(
+            schema: $this->schema,
+            name: $this->name,
+            columns: $this->columns,
+            primaryKey: $this->primaryKey,
+            indexes: $this->indexes,
+            foreignKeys: $this->foreignKeys,
+            uniqueConstraints: $this->uniqueConstraints,
+            checkConstraints: $this->checkConstraints,
+            excludeConstraints: $this->excludeConstraints,
+            triggers: $this->triggers,
+            unlogged: $this->unlogged,
+            partitionStrategy: $this->partitionStrategy,
+            partitionColumns: $this->partitionColumns,
+            inherits: $this->inherits,
+            tablespace: $tablespace,
+        );
+    }
+
+    public function withTrigger(Trigger $trigger): self
+    {
+        return new self(
+            schema: $this->schema,
+            name: $this->name,
+            columns: $this->columns,
+            primaryKey: $this->primaryKey,
+            indexes: $this->indexes,
+            foreignKeys: $this->foreignKeys,
+            uniqueConstraints: $this->uniqueConstraints,
+            checkConstraints: $this->checkConstraints,
+            excludeConstraints: $this->excludeConstraints,
+            triggers: [...$this->triggers, $trigger],
+            unlogged: $this->unlogged,
+            partitionStrategy: $this->partitionStrategy,
+            partitionColumns: $this->partitionColumns,
+            inherits: $this->inherits,
+            tablespace: $this->tablespace,
+        );
+    }
+
+    public function withUnlogged(bool $unlogged = true): self
+    {
+        return new self(
+            schema: $this->schema,
+            name: $this->name,
+            columns: $this->columns,
+            primaryKey: $this->primaryKey,
+            indexes: $this->indexes,
+            foreignKeys: $this->foreignKeys,
+            uniqueConstraints: $this->uniqueConstraints,
+            checkConstraints: $this->checkConstraints,
+            excludeConstraints: $this->excludeConstraints,
+            triggers: $this->triggers,
+            unlogged: $unlogged,
+            partitionStrategy: $this->partitionStrategy,
+            partitionColumns: $this->partitionColumns,
+            inherits: $this->inherits,
+            tablespace: $this->tablespace,
+        );
     }
 
     /**

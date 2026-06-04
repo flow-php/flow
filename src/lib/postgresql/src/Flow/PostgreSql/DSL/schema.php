@@ -117,6 +117,7 @@ use Flow\PostgreSql\Schema\Schema as DatabaseSchema;
 use Flow\PostgreSql\Schema\Schema;
 use Flow\PostgreSql\Schema\Sequence as SchemaSequence;
 use Flow\PostgreSql\Schema\Table as SchemaTable;
+use Flow\PostgreSql\Schema\TableOptions as SchemaTableOptions;
 use Flow\PostgreSql\Schema\Trigger as SchemaTrigger;
 use Flow\PostgreSql\Schema\TriggerEvent;
 use Flow\PostgreSql\Schema\TriggerTiming;
@@ -1441,6 +1442,39 @@ function schema_table(
         $indexes,
         $foreignKeys,
         $uniqueConstraints,
+        $checkConstraints,
+        $excludeConstraints,
+        $triggers,
+        $unlogged,
+        $partitionStrategy,
+        $partitionColumns,
+        $inherits,
+        $tablespace,
+    );
+}
+
+/**
+ * @param list<SchemaForeignKey> $foreignKeys
+ * @param list<SchemaCheckConstraint> $checkConstraints
+ * @param list<SchemaExcludeConstraint> $excludeConstraints
+ * @param list<SchemaTrigger> $triggers
+ * @param list<string> $partitionColumns
+ * @param list<string> $inherits
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function schema_table_options(
+    array $foreignKeys = [],
+    array $checkConstraints = [],
+    array $excludeConstraints = [],
+    array $triggers = [],
+    bool $unlogged = false,
+    ?PartitionStrategy $partitionStrategy = null,
+    array $partitionColumns = [],
+    array $inherits = [],
+    ?string $tablespace = null,
+): SchemaTableOptions {
+    return new SchemaTableOptions(
+        $foreignKeys,
         $checkConstraints,
         $excludeConstraints,
         $triggers,
