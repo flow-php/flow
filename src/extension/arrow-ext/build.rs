@@ -16,7 +16,8 @@ fn main() {
 
     println!("cargo:rustc-env=ARROW_VERSION={version}");
 
-    let arrow_version = resolve_dep_version("arrow-schema").unwrap_or_else(|| "unknown".to_string());
+    let arrow_version =
+        resolve_dep_version("arrow-schema").unwrap_or_else(|| "unknown".to_string());
     let parquet_version = resolve_dep_version("parquet").unwrap_or_else(|| "unknown".to_string());
 
     println!("cargo:rustc-env=ARROW_LIB_VERSION={arrow_version}");
@@ -32,7 +33,11 @@ fn resolve_dep_version(crate_name: &str) -> Option<String> {
             for line in chunk.lines() {
                 let line = line.trim();
                 if line.starts_with("version = ") {
-                    return Some(line.trim_start_matches("version = ").trim_matches('"').to_string());
+                    return Some(
+                        line.trim_start_matches("version = ")
+                            .trim_matches('"')
+                            .to_string(),
+                    );
                 }
             }
         }

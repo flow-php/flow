@@ -17,15 +17,18 @@ unsafe impl Sync for PhpDestinationStream {}
 
 impl PhpDestinationStream {
     pub fn new(obj: &mut ZendObject) -> Result<Self, String> {
-        let ce = ClassEntry::try_find("Flow\\Arrow\\OutputStream")
-            .ok_or_else(|| "Interface Flow\\Arrow\\OutputStream not loaded. Did you require the file?".to_string())?;
+        let ce = ClassEntry::try_find("Flow\\Arrow\\OutputStream").ok_or_else(|| {
+            "Interface Flow\\Arrow\\OutputStream not loaded. Did you require the file?".to_string()
+        })?;
         if !obj.instance_of(ce) {
             return Err("Destination must implement Flow\\Arrow\\OutputStream".to_string());
         }
 
         let ptr: *mut ZendObject = obj;
         unsafe { (*ptr).gc.refcount += 1 };
-        Ok(Self { obj: unsafe { ZBox::from_raw(ptr) } })
+        Ok(Self {
+            obj: unsafe { ZBox::from_raw(ptr) },
+        })
     }
 }
 
@@ -34,9 +37,10 @@ impl Write for PhpDestinationStream {
         let mut data = Zval::new();
         data.set_binary(buf.to_vec());
 
-        let _result = self.obj
+        let _result = self
+            .obj
             .try_call_method("append", vec![&data as &dyn IntoZvalDyn])
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to call append(): {:?}", e)))?;
+            .map_err(|e| io::Error::other(format!("Failed to call append(): {:?}", e)))?;
 
         // OutputStream::append() is all-or-nothing: it returns self on success
         // or throws on failure (caught above). No partial write path exists.

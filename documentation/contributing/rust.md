@@ -3,7 +3,7 @@
 [TOC]
 
 This document describes how to develop the `arrow-ext` PHP extension, which is written in Rust
-using the [ext-php-rs](https://github.com/nicedragons/ext-php-rs) framework.
+using the [ext-php-rs](https://github.com/extphprs/ext-php-rs) framework.
 
 ## Overview
 

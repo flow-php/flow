@@ -87,10 +87,10 @@ nix-shell --arg with-pg-query-ext false --arg with-c true --run "cd src/extensio
 The extension is only half of the story. A given `libpg_query` version pins a specific PostgreSQL
 **grammar**, and that grammar is shared across three places that must always agree:
 
-| Place | What it is | Used by |
-|-------|------------|---------|
-| `src/extension/pg-query-ext/vendor/libpg_query` (Makefile `PG_VERSION`) | the C library compiled into the extension | CI (`pie` build) |
-| `.nix/pkgs/php-pg-query-ext/package.nix` (`libpg_query` `version`/`rev`/`hash`) | the C library compiled into the **nix dev shell** | local `nix-shell` |
+| Place                                                                                                                           | What it is                                                                | Used by                           |
+|---------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|-----------------------------------|
+| `src/extension/pg-query-ext/vendor/libpg_query` (Makefile `PG_VERSION`)                                                         | the C library compiled into the extension                                 | CI (`pie` build)                  |
+| `.nix/pkgs/php-pg-query-ext/package.nix` (`libpg_query` `version`/`rev`/`hash`)                                                 | the C library compiled into the **nix dev shell**                         | local `nix-shell`                 |
 | `src/lib/postgresql/resources/proto/pg_query.proto` + the generated stubs in `src/lib/postgresql/src/Flow/PostgreSql/Protobuf/` | the protobuf schema the PHP side serializes/deserializes parse trees with | the `flow-php/postgresql` library |
 
 The PHP library round-trips parse trees as protobuf (`pg_query_parse_protobuf` → mutate → `pg_query_deparse`).

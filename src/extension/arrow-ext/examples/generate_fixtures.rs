@@ -107,7 +107,7 @@ fn generate_all_flat_types() {
     let col_uint32 = UInt32Array::from(vec![Some(0u32), Some(4294967295u32), None]);
     let col_uint64 = UInt64Array::from(vec![Some(0u64), Some(u64::MAX), None]);
     let col_float = Float32Array::from(vec![Some(1.5f32), Some(-2.5f32), None]);
-    let col_double = Float64Array::from(vec![Some(3.14159f64), Some(-2.71828f64), None]);
+    let col_double = Float64Array::from(vec![Some(1.23456f64), Some(-7.89012f64), None]);
     let col_string = StringArray::from(vec![Some("hello"), Some("world"), None]);
 
     let col_binary: BinaryArray = vec![
@@ -317,10 +317,7 @@ fn generate_deeply_nested() {
     let scores_builder = ListBuilder::new(Int64Builder::new());
     let struct_builder = StructBuilder::new(
         struct_fields,
-        vec![
-            Box::new(StringBuilder::new()),
-            Box::new(scores_builder),
-        ],
+        vec![Box::new(StringBuilder::new()), Box::new(scores_builder)],
     );
     let mut groups_builder = ListBuilder::new(struct_builder);
 

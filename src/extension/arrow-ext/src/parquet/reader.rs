@@ -2,7 +2,10 @@ use arrow_schema::DataType;
 use ext_php_rs::boxed::ZBox;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, ZendObject};
-use parquet::arrow::arrow_reader::{ArrowReaderMetadata, ArrowReaderOptions, ParquetRecordBatchReader, ParquetRecordBatchReaderBuilder};
+use parquet::arrow::arrow_reader::{
+    ArrowReaderMetadata, ArrowReaderOptions, ParquetRecordBatchReader,
+    ParquetRecordBatchReaderBuilder,
+};
 use parquet::arrow::ProjectionMask;
 
 use crate::parquet::exception::parquet_exception;
@@ -11,6 +14,7 @@ use crate::stream::php_source_stream::PhpSourceStream;
 
 #[php_class]
 #[php(name = "Flow\\Arrow\\Parquet\\Reader")]
+#[derive(Default)]
 pub struct Reader {
     stream: Option<PhpSourceStream>,
     reader_metadata: Option<ArrowReaderMetadata>,
@@ -19,20 +23,6 @@ pub struct Reader {
     batch_size: Option<usize>,
     active_batch_reader: Option<ParquetRecordBatchReader>,
     active_columns: Vec<String>,
-}
-
-impl Default for Reader {
-    fn default() -> Self {
-        Self {
-            stream: None,
-            reader_metadata: None,
-            num_row_groups: 0,
-            current_row_group: 0,
-            batch_size: None,
-            active_batch_reader: None,
-            active_columns: Vec::new(),
-        }
-    }
 }
 
 impl Reader {
@@ -82,9 +72,8 @@ impl Reader {
             columns.iter().map(|_| Vec::new()).collect();
 
         for batch_result in reader {
-            let batch = batch_result.map_err(|e| {
-                parquet_exception(format!("Failed to read batch: {}", e))
-            })?;
+            let batch = batch_result
+                .map_err(|e| parquet_exception(format!("Failed to read batch: {}", e)))?;
             let schema = batch.schema();
 
             for (idx, col_name) in columns.iter().enumerate() {
@@ -115,7 +104,7 @@ impl Reader {
                 .map_err(|_| parquet_exception("Failed to build result array"))?;
         }
 
-        Ok(Some(result.into()))
+        Ok(Some(result))
     }
 }
 
@@ -224,7 +213,7 @@ impl Reader {
         source: &mut ZendObject,
         options: Option<&ZendHashTable>,
     ) -> PhpResult<Self> {
-        let stream = PhpSourceStream::new(source).map_err(|e| parquet_exception(e))?;
+        let stream = PhpSourceStream::new(source).map_err(parquet_exception)?;
 
         let reader_metadata = ArrowReaderMetadata::load(&stream, ArrowReaderOptions::default())
             .map_err(|e| parquet_exception(format!("Failed to open Parquet file: {}", e)))?;
@@ -316,10 +305,7 @@ impl Reader {
             if let Some(ref mut batch_reader) = self.active_batch_reader {
                 match batch_reader.next() {
                     Some(Ok(batch)) => {
-                        return Ok(Some(Self::batch_to_php(
-                            &batch,
-                            &self.active_columns,
-                        )?));
+                        return Ok(Some(Self::batch_to_php(&batch, &self.active_columns)?));
                     }
                     Some(Err(e)) => {
                         self.active_batch_reader = None;
@@ -375,7 +361,9 @@ impl Reader {
                             .fields()
                             .iter()
                             .position(|f| f.name() == name)
-                            .ok_or_else(|| parquet_exception(format!("Column '{}' not found in schema", name)))
+                            .ok_or_else(|| {
+                                parquet_exception(format!("Column '{}' not found in schema", name))
+                            })
                     })
                     .collect();
                 let indices = indices?;
@@ -387,9 +375,9 @@ impl Reader {
                 builder = builder.with_batch_size(bs);
             }
 
-            let reader = builder.build().map_err(|e| {
-                parquet_exception(format!("Failed to build batch reader: {}", e))
-            })?;
+            let reader = builder
+                .build()
+                .map_err(|e| parquet_exception(format!("Failed to build batch reader: {}", e)))?;
 
             self.active_columns = selected_columns;
 
@@ -397,10 +385,7 @@ impl Reader {
                 self.active_batch_reader = Some(reader);
                 continue;
             } else {
-                let result = Self::consume_all_batches(
-                    reader,
-                    &self.active_columns,
-                )?;
+                let result = Self::consume_all_batches(reader, &self.active_columns)?;
                 self.current_row_group += 1;
                 self.active_columns = Vec::new();
                 return Ok(result);

@@ -16,18 +16,10 @@ use crate::stream::php_destination_stream::PhpDestinationStream;
 
 #[php_class]
 #[php(name = "Flow\\Arrow\\Parquet\\Writer")]
+#[derive(Default)]
 pub struct Writer {
     writer: Option<ArrowWriter<PhpDestinationStream>>,
     schema: Option<Arc<ArrowSchema>>,
-}
-
-impl Default for Writer {
-    fn default() -> Self {
-        Self {
-            writer: None,
-            schema: None,
-        }
-    }
 }
 
 fn parse_compression(
@@ -183,40 +175,34 @@ impl Writer {
         compression: Option<String>,
         options: Option<&ZendHashTable>,
     ) -> PhpResult<Self> {
-        let dest = PhpDestinationStream::new(stream).map_err(|e| parquet_exception(e))?;
+        let dest = PhpDestinationStream::new(stream).map_err(parquet_exception)?;
 
         let arrow_schema =
-            type_converter::php_schema_to_arrow(schema).map_err(|e| parquet_exception(e))?;
+            type_converter::php_schema_to_arrow(schema).map_err(parquet_exception)?;
 
         let compression_str = compression.as_deref().unwrap_or("SNAPPY");
 
         let props = if let Some(opts) = options {
-            if opts.len() > 0 {
+            if !opts.is_empty() {
                 let builder = WriterProperties::builder();
                 apply_writer_options(builder, opts, compression_str)
-                    .map_err(|e| parquet_exception(e))?
+                    .map_err(parquet_exception)?
                     .build()
             } else {
                 let codec = parse_compression(compression_str, None, None, None)
-                    .map_err(|e| parquet_exception(e))?;
-                WriterProperties::builder()
-                    .set_compression(codec)
-                    .build()
+                    .map_err(parquet_exception)?;
+                WriterProperties::builder().set_compression(codec).build()
             }
         } else {
-            let codec = parse_compression(compression_str, None, None, None)
-                .map_err(|e| parquet_exception(e))?;
-            WriterProperties::builder()
-                .set_compression(codec)
-                .build()
+            let codec =
+                parse_compression(compression_str, None, None, None).map_err(parquet_exception)?;
+            WriterProperties::builder().set_compression(codec).build()
         };
 
         let schema_arc = Arc::new(arrow_schema);
 
-        let writer =
-            ArrowWriter::try_new(dest, schema_arc.clone(), Some(props)).map_err(|e| {
-                parquet_exception(format!("Failed to create Parquet writer: {}", e))
-            })?;
+        let writer = ArrowWriter::try_new(dest, schema_arc.clone(), Some(props))
+            .map_err(|e| parquet_exception(format!("Failed to create Parquet writer: {}", e)))?;
 
         Ok(Self {
             writer: Some(writer),
@@ -249,19 +235,19 @@ impl Writer {
 
             let values: Vec<&ext_php_rs::types::Zval> = php_ht.values().collect();
 
-            let array = type_converter::php_array_to_arrow(&values, field.data_type(), field.name())
-                .map_err(|e| parquet_exception(e))?;
+            let array =
+                type_converter::php_array_to_arrow(&values, field.data_type(), field.name())
+                    .map_err(parquet_exception)?;
 
             columns.push(array);
         }
 
-        let record_batch = RecordBatch::try_new(schema, columns).map_err(|e| {
-            parquet_exception(format!("Failed to create record batch: {}", e))
-        })?;
+        let record_batch = RecordBatch::try_new(schema, columns)
+            .map_err(|e| parquet_exception(format!("Failed to create record batch: {}", e)))?;
 
-        writer.write(&record_batch).map_err(|e| {
-            parquet_exception(format!("Failed to write batch: {}", e))
-        })?;
+        writer
+            .write(&record_batch)
+            .map_err(|e| parquet_exception(format!("Failed to write batch: {}", e)))?;
 
         Ok(())
     }
@@ -274,9 +260,9 @@ impl Writer {
 
         self.schema = None;
 
-        writer.close().map_err(|e| {
-            parquet_exception(format!("Failed to close Parquet writer: {}", e))
-        })?;
+        writer
+            .close()
+            .map_err(|e| parquet_exception(format!("Failed to close Parquet writer: {}", e)))?;
 
         Ok(())
     }

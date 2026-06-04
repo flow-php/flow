@@ -17,8 +17,7 @@ pub fn register() -> Result<()> {
 }
 
 fn parquet_exception_ce() -> &'static ClassEntry {
-    ClassEntry::try_find("Flow\\Arrow\\Parquet\\Exception")
-        .unwrap_or_else(|| ce::exception())
+    ClassEntry::try_find("Flow\\Arrow\\Parquet\\Exception").unwrap_or_else(|| ce::exception())
 }
 
 pub fn parquet_exception(message: impl Into<String>) -> PhpException {

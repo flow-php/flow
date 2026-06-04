@@ -18,8 +18,7 @@ pub fn register() -> Result<()> {
             MethodFlags::Public | MethodFlags::Abstract,
         )
         .method(
-            FunctionBuilder::new_abstract("size")
-                .returns(DataType::Long, false, true),
+            FunctionBuilder::new_abstract("size").returns(DataType::Long, false, true),
             MethodFlags::Public | MethodFlags::Abstract,
         )
         .register()?;

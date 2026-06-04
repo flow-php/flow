@@ -63,7 +63,7 @@ echo "float: ";
 var_dump(is_float($data['col_float'][0]) && is_float($data['col_float'][1]) && $data['col_float'][2] === null);
 
 echo "double: ";
-var_dump($data['col_double'][0] === 3.14159 && $data['col_double'][1] === -2.71828 && $data['col_double'][2] === null);
+var_dump($data['col_double'][0] === 1.23456 && $data['col_double'][1] === -7.89012 && $data['col_double'][2] === null);
 
 // String
 echo "string: ";

@@ -1,12 +1,15 @@
 use arrow_array::builder::{
-    BooleanBuilder, Date32Builder, Decimal128Builder, FixedSizeBinaryBuilder, Float32Builder,
-    Float64Builder, Int16Builder, Int32Builder, Int64Builder, Int8Builder, StringBuilder,
-    BinaryBuilder, Time64MicrosecondBuilder, TimestampMicrosecondBuilder, UInt16Builder,
+    BinaryBuilder, BooleanBuilder, Date32Builder, Decimal128Builder, FixedSizeBinaryBuilder,
+    Float32Builder, Float64Builder, Int16Builder, Int32Builder, Int64Builder, Int8Builder,
+    StringBuilder, Time64MicrosecondBuilder, TimestampMicrosecondBuilder, UInt16Builder,
     UInt32Builder, UInt64Builder, UInt8Builder,
 };
 use arrow_array::*;
 use arrow_buffer::{NullBuffer, OffsetBuffer, ScalarBuffer};
-use arrow_schema::{DataType, Field, Fields, Schema, TimeUnit, extension::{Json, Uuid}};
+use arrow_schema::{
+    extension::{Json, Uuid},
+    DataType, Field, Fields, Schema, TimeUnit,
+};
 use ext_php_rs::convert::IntoZvalDyn;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ArrayKey, ZendHashTable, ZendObject, Zval};
@@ -64,17 +67,12 @@ fn create_date_interval(total_microseconds: i64) -> PhpResult<Zval> {
     let mut obj = ZendObject::new(ce);
 
     obj.try_call_method("__construct", vec![&spec as &dyn IntoZvalDyn])
-        .map_err(|e| {
-            parquet_exception(format!("Failed to construct DateInterval: {:?}", e))
-        })?;
+        .map_err(|e| parquet_exception(format!("Failed to construct DateInterval: {:?}", e)))?;
 
     if remaining_us > 0 {
         let fraction = remaining_us as f64 / 1_000_000.0;
         obj.set_property("f", fraction).map_err(|e| {
-            parquet_exception(format!(
-                "Failed to set DateInterval microseconds: {:?}",
-                e
-            ))
+            parquet_exception(format!("Failed to set DateInterval microseconds: {:?}", e))
         })?;
     }
 
@@ -101,20 +99,24 @@ fn extract_datetime_timestamp(zv: &Zval, column_name: &str) -> Result<(i64, i64)
     let ts_zv = obj
         .try_call_method("getTimestamp", vec![])
         .map_err(|e| format!("Column '{}': getTimestamp() failed: {:?}", column_name, e))?;
-    let seconds = ts_zv
-        .long()
-        .ok_or_else(|| format!("Column '{}': getTimestamp() did not return int", column_name))?;
+    let seconds = ts_zv.long().ok_or_else(|| {
+        format!(
+            "Column '{}': getTimestamp() did not return int",
+            column_name
+        )
+    })?;
 
     let format_u = "u".to_string();
     let us_zv = obj
         .try_call_method("format", vec![&format_u as &dyn IntoZvalDyn])
         .map_err(|e| format!("Column '{}': format('u') failed: {:?}", column_name, e))?;
-    let us_str = us_zv
-        .str()
-        .ok_or_else(|| format!("Column '{}': format('u') did not return string", column_name))?;
-    let microseconds: i64 = us_str
-        .parse()
-        .unwrap_or(0);
+    let us_str = us_zv.str().ok_or_else(|| {
+        format!(
+            "Column '{}': format('u') did not return string",
+            column_name
+        )
+    })?;
+    let microseconds: i64 = us_str.parse().unwrap_or(0);
 
     Ok((seconds, microseconds))
 }
@@ -134,18 +136,10 @@ fn extract_date_interval_microseconds(zv: &Zval, column_name: &str) -> Result<i6
         ));
     }
 
-    let h: i64 = obj
-        .get_property::<i64>("h")
-        .unwrap_or(0);
-    let i: i64 = obj
-        .get_property::<i64>("i")
-        .unwrap_or(0);
-    let s: i64 = obj
-        .get_property::<i64>("s")
-        .unwrap_or(0);
-    let f: f64 = obj
-        .get_property::<f64>("f")
-        .unwrap_or(0.0);
+    let h: i64 = obj.get_property::<i64>("h").unwrap_or(0);
+    let i: i64 = obj.get_property::<i64>("i").unwrap_or(0);
+    let s: i64 = obj.get_property::<i64>("s").unwrap_or(0);
+    let f: f64 = obj.get_property::<f64>("f").unwrap_or(0.0);
 
     Ok(h * 3_600_000_000 + i * 60_000_000 + s * 1_000_000 + (f * 1_000_000.0) as i64)
 }
@@ -332,17 +326,20 @@ fn convert_single_arrow_value(array: &dyn Array, index: usize) -> PhpResult<Zval
             create_datetime_immutable(arr.value(index), 0)
         }
         DataType::Timestamp(TimeUnit::Millisecond, _) => {
-            let arr = downcast_array::<TimestampMillisecondArray>(array, "TimestampMillisecondArray")?;
+            let arr =
+                downcast_array::<TimestampMillisecondArray>(array, "TimestampMillisecondArray")?;
             let v = arr.value(index);
             create_datetime_immutable(v / 1000, (v % 1000) * 1000)
         }
         DataType::Timestamp(TimeUnit::Microsecond, _) => {
-            let arr = downcast_array::<TimestampMicrosecondArray>(array, "TimestampMicrosecondArray")?;
+            let arr =
+                downcast_array::<TimestampMicrosecondArray>(array, "TimestampMicrosecondArray")?;
             let v = arr.value(index);
             create_datetime_immutable(v / 1_000_000, v % 1_000_000)
         }
         DataType::Timestamp(TimeUnit::Nanosecond, _) => {
-            let arr = downcast_array::<TimestampNanosecondArray>(array, "TimestampNanosecondArray")?;
+            let arr =
+                downcast_array::<TimestampNanosecondArray>(array, "TimestampNanosecondArray")?;
             let v = arr.value(index);
             create_datetime_immutable(v / 1_000_000_000, (v / 1000) % 1_000_000)
         }
@@ -365,8 +362,12 @@ fn convert_single_arrow_value(array: &dyn Array, index: usize) -> PhpResult<Zval
         DataType::Decimal128(_, _) => {
             let arr = downcast_array::<Decimal128Array>(array, "Decimal128Array")?;
             let str_val = arr.value_as_string(index);
-            let float_val: f64 = str_val.parse()
-                .map_err(|e| parquet_exception(format!("Failed to parse decimal value '{}': {}", str_val, e)))?;
+            let float_val: f64 = str_val.parse().map_err(|e| {
+                parquet_exception(format!(
+                    "Failed to parse decimal value '{}': {}",
+                    str_val, e
+                ))
+            })?;
             let mut zv = Zval::new();
             zv.set_double(float_val);
             Ok(zv)
@@ -433,12 +434,10 @@ fn convert_single_arrow_value(array: &dyn Array, index: usize) -> PhpResult<Zval
             zv.set_hashtable(ht);
             Ok(zv)
         }
-        other => {
-            Err(parquet_exception(format!(
-                "Unsupported Arrow type in nested conversion: {:?}",
-                other
-            )))
-        }
+        other => Err(parquet_exception(format!(
+            "Unsupported Arrow type in nested conversion: {:?}",
+            other
+        ))),
     }
 }
 
@@ -568,7 +567,7 @@ pub fn arrow_array_to_php_values(array: &dyn Array, field: Option<&Field>) -> Ph
 
         DataType::FixedSizeBinary(_) => {
             let arr = downcast_array::<FixedSizeBinaryArray>(array, "FixedSizeBinaryArray")?;
-            let is_uuid = field.map_or(false, |f| f.try_extension_type::<Uuid>().is_ok());
+            let is_uuid = field.is_some_and(|f| f.try_extension_type::<Uuid>().is_ok());
             let len = arr.len();
             let mut result = Vec::with_capacity(len);
             for i in 0..len {
@@ -608,15 +607,22 @@ pub fn arrow_array_to_php_values(array: &dyn Array, field: Option<&Field>) -> Ph
             convert_primitive_values(arr, |v| create_datetime_immutable(v, 0))
         }
         DataType::Timestamp(TimeUnit::Millisecond, _) => {
-            let arr = downcast_array::<TimestampMillisecondArray>(array, "TimestampMillisecondArray")?;
-            convert_primitive_values(arr, |v| create_datetime_immutable(v / 1000, (v % 1000) * 1000))
+            let arr =
+                downcast_array::<TimestampMillisecondArray>(array, "TimestampMillisecondArray")?;
+            convert_primitive_values(arr, |v| {
+                create_datetime_immutable(v / 1000, (v % 1000) * 1000)
+            })
         }
         DataType::Timestamp(TimeUnit::Microsecond, _) => {
-            let arr = downcast_array::<TimestampMicrosecondArray>(array, "TimestampMicrosecondArray")?;
-            convert_primitive_values(arr, |v| create_datetime_immutable(v / 1_000_000, v % 1_000_000))
+            let arr =
+                downcast_array::<TimestampMicrosecondArray>(array, "TimestampMicrosecondArray")?;
+            convert_primitive_values(arr, |v| {
+                create_datetime_immutable(v / 1_000_000, v % 1_000_000)
+            })
         }
         DataType::Timestamp(TimeUnit::Nanosecond, _) => {
-            let arr = downcast_array::<TimestampNanosecondArray>(array, "TimestampNanosecondArray")?;
+            let arr =
+                downcast_array::<TimestampNanosecondArray>(array, "TimestampNanosecondArray")?;
             convert_primitive_values(arr, |v| {
                 create_datetime_immutable(v / 1_000_000_000, (v / 1000) % 1_000_000)
             })
@@ -632,7 +638,7 @@ pub fn arrow_array_to_php_values(array: &dyn Array, field: Option<&Field>) -> Ph
         }
         DataType::Time64(TimeUnit::Microsecond) => {
             let arr = downcast_array::<Time64MicrosecondArray>(array, "Time64MicrosecondArray")?;
-            convert_primitive_values(arr, |v| create_date_interval(v))
+            convert_primitive_values(arr, create_date_interval)
         }
         DataType::Time64(TimeUnit::Nanosecond) => {
             let arr = downcast_array::<Time64NanosecondArray>(array, "Time64NanosecondArray")?;
@@ -649,8 +655,12 @@ pub fn arrow_array_to_php_values(array: &dyn Array, field: Option<&Field>) -> Ph
                     zv.set_null();
                 } else {
                     let str_val = arr.value_as_string(i);
-                    let float_val: f64 = str_val.parse()
-                        .map_err(|e| parquet_exception(format!("Failed to parse decimal value '{}': {}", str_val, e)))?;
+                    let float_val: f64 = str_val.parse().map_err(|e| {
+                        parquet_exception(format!(
+                            "Failed to parse decimal value '{}': {}",
+                            str_val, e
+                        ))
+                    })?;
                     zv.set_double(float_val);
                 }
                 result.push(zv);
@@ -658,10 +668,7 @@ pub fn arrow_array_to_php_values(array: &dyn Array, field: Option<&Field>) -> Ph
             Ok(result)
         }
 
-        DataType::List(_)
-        | DataType::LargeList(_)
-        | DataType::Struct(_)
-        | DataType::Map(_, _) => {
+        DataType::List(_) | DataType::LargeList(_) | DataType::Struct(_) | DataType::Map(_, _) => {
             let len = array.len();
             let mut result = Vec::with_capacity(len);
             for i in 0..len {
@@ -670,12 +677,10 @@ pub fn arrow_array_to_php_values(array: &dyn Array, field: Option<&Field>) -> Ph
             Ok(result)
         }
 
-        other => {
-            Err(parquet_exception(format!(
-                "Unsupported Arrow array type: {:?}",
-                other
-            )))
-        }
+        other => Err(parquet_exception(format!(
+            "Unsupported Arrow array type: {:?}",
+            other
+        ))),
     }
 }
 
@@ -705,10 +710,10 @@ fn parse_decimal_string(s: &str, scale: i8) -> Result<i128, String> {
         return Err("Empty decimal string".into());
     }
 
-    let (negative, digits_str) = if trimmed.starts_with('-') {
-        (true, &trimmed[1..])
-    } else if trimmed.starts_with('+') {
-        (false, &trimmed[1..])
+    let (negative, digits_str) = if let Some(stripped) = trimmed.strip_prefix('-') {
+        (true, stripped)
+    } else if let Some(stripped) = trimmed.strip_prefix('+') {
+        (false, stripped)
     } else {
         (false, trimmed)
     };
@@ -785,7 +790,9 @@ macro_rules! build_float_array {
                 if converted.is_infinite() && !v.is_infinite() {
                     return Err(format!(
                         "Column '{}': value {} overflows {}",
-                        $column_name, v, stringify!($cast_type)
+                        $column_name,
+                        v,
+                        stringify!($cast_type)
                     ));
                 }
                 builder.append_value(converted);
@@ -862,15 +869,23 @@ fn php_schema_entry_to_field(entry_ht: &ZendHashTable) -> Result<Field, String> 
         "UUID" => {
             let mut field = Field::new(&name, DataType::FixedSizeBinary(16), nullable);
             field.try_with_extension_type(Uuid).map_err(|e| {
-                format!("Column '{}': failed to set UUID extension type: {}", name, e)
+                format!(
+                    "Column '{}': failed to set UUID extension type: {}",
+                    name, e
+                )
             })?;
             return Ok(field);
         }
         "JSON" => {
             let mut field = Field::new(&name, DataType::Utf8, nullable);
-            field.try_with_extension_type(Json::default()).map_err(|e| {
-                format!("Column '{}': failed to set JSON extension type: {}", name, e)
-            })?;
+            field
+                .try_with_extension_type(Json::default())
+                .map_err(|e| {
+                    format!(
+                        "Column '{}': failed to set JSON extension type: {}",
+                        name, e
+                    )
+                })?;
             return Ok(field);
         }
         "FIXED_SIZE_BINARY" => {
@@ -889,15 +904,13 @@ fn php_schema_entry_to_field(entry_ht: &ZendHashTable) -> Result<Field, String> 
             let children = entry_ht
                 .get("children")
                 .and_then(|z| z.array())
-                .ok_or_else(|| {
-                    format!("Column '{}': LIST type requires 'children' array", name)
-                })?;
+                .ok_or_else(|| format!("Column '{}': LIST type requires 'children' array", name))?;
             let child_zv = children.values().next().ok_or_else(|| {
                 format!("Column '{}': LIST type requires exactly one child", name)
             })?;
-            let child_ht = child_zv.array().ok_or_else(|| {
-                format!("Column '{}': LIST child must be an array", name)
-            })?;
+            let child_ht = child_zv
+                .array()
+                .ok_or_else(|| format!("Column '{}': LIST child must be an array", name))?;
             let child_field = php_schema_entry_to_field(child_ht)?;
             DataType::List(Arc::new(child_field))
         }
@@ -923,9 +936,7 @@ fn php_schema_entry_to_field(entry_ht: &ZendHashTable) -> Result<Field, String> 
             let children = entry_ht
                 .get("children")
                 .and_then(|z| z.array())
-                .ok_or_else(|| {
-                    format!("Column '{}': MAP type requires 'children' array", name)
-                })?;
+                .ok_or_else(|| format!("Column '{}': MAP type requires 'children' array", name))?;
             let mut child_iter = children.values();
             let key_zv = child_iter.next().ok_or_else(|| {
                 format!(
@@ -939,28 +950,22 @@ fn php_schema_entry_to_field(entry_ht: &ZendHashTable) -> Result<Field, String> 
                     name
                 )
             })?;
-            let key_field = php_schema_entry_to_field(
-                key_zv.array().ok_or_else(|| {
+            let key_field =
+                php_schema_entry_to_field(key_zv.array().ok_or_else(|| {
                     format!("Column '{}': MAP key child must be an array", name)
-                })?,
-            )?;
-            let val_field = php_schema_entry_to_field(
-                val_zv.array().ok_or_else(|| {
+                })?)?;
+            let val_field =
+                php_schema_entry_to_field(val_zv.array().ok_or_else(|| {
                     format!("Column '{}': MAP value child must be an array", name)
-                })?,
-            )?;
-            let entries_struct =
-                DataType::Struct(Fields::from(vec![key_field, val_field]));
+                })?)?;
+            let entries_struct = DataType::Struct(Fields::from(vec![key_field, val_field]));
             DataType::Map(
                 Arc::new(Field::new("entries", entries_struct, false)),
                 false,
             )
         }
         other => {
-            return Err(format!(
-                "Column '{}': Unsupported type '{}'",
-                name, other
-            ));
+            return Err(format!("Column '{}': Unsupported type '{}'", name, other));
         }
     };
 
@@ -968,7 +973,7 @@ fn php_schema_entry_to_field(entry_ht: &ZendHashTable) -> Result<Field, String> 
 }
 
 pub fn php_schema_to_arrow(schema: &ZendHashTable) -> Result<Schema, String> {
-    if schema.len() == 0 {
+    if schema.is_empty() {
         return Err("Schema must have at least one column".into());
     }
 
@@ -1020,16 +1025,20 @@ pub fn php_array_to_arrow(
                 if zv.is_null() {
                     builder.append_null();
                 } else if let Some(v) = zv.long() {
-                    let converted = u64::try_from(v).map_err(|_| {
-                        format!(
+                    let converted =
+                        u64::try_from(v).map_err(|_| {
+                            format!(
                             "Column '{}': value {} out of range for u64 (valid range: {} to {})",
                             column_name, v, u64::MIN, u64::MAX
                         )
-                    })?;
+                        })?;
                     builder.append_value(converted);
                 } else if let Some(s) = zv.str() {
                     let parsed: u64 = s.parse().map_err(|e| {
-                        format!("Column '{}': failed to parse '{}' as u64: {}", column_name, s, e)
+                        format!(
+                            "Column '{}': failed to parse '{}' as u64: {}",
+                            column_name, s, e
+                        )
                     })?;
                     builder.append_value(parsed);
                 } else {
@@ -1096,10 +1105,7 @@ pub fn php_array_to_arrow(
                             .map(|b| *b as char)
                             .collect();
                         if hex.len() != 32 {
-                            return Err(format!(
-                                "Column '{}': invalid UUID string",
-                                column_name
-                            ));
+                            return Err(format!("Column '{}': invalid UUID string", column_name));
                         }
                         let mut uuid_bytes = [0u8; 16];
                         for i in 0..16 {
@@ -1109,12 +1115,14 @@ pub fn php_array_to_arrow(
                                 })?;
                         }
                         builder
-                            .append_value(&uuid_bytes)
+                            .append_value(uuid_bytes)
                             .map_err(|e| format!("Column '{}': {}", column_name, e))?;
                     } else {
                         return Err(format!(
                             "Column '{}': expected {} bytes for FIXED_SIZE_BINARY, got {}",
-                            column_name, n, bytes.len()
+                            column_name,
+                            n,
+                            bytes.len()
                         ));
                     }
                 } else {
@@ -1276,9 +1284,7 @@ pub fn php_array_to_arrow(
                     for field in fields.iter() {
                         if !field.is_nullable() {
                             let child_val = arr.get(field.name().as_str());
-                            if child_val.is_none()
-                                || child_val.unwrap().is_null()
-                            {
+                            if child_val.is_none() || child_val.unwrap().is_null() {
                                 return Err(format!(
                                     "Column '{}': non-nullable field '{}' is missing/null at row {}",
                                     column_name,
@@ -1291,8 +1297,7 @@ pub fn php_array_to_arrow(
                 }
             }
 
-            let null_bits: Vec<bool> =
-                values.iter().map(|zv| !zv.is_null()).collect();
+            let null_bits: Vec<bool> = values.iter().map(|zv| !zv.is_null()).collect();
             let null_buffer = NullBuffer::from(null_bits);
 
             let child_arrays: Result<Vec<ArrayRef>, String> = fields
@@ -1326,9 +1331,7 @@ pub fn php_array_to_arrow(
         }
         DataType::Map(entries_field, _) => {
             let (key_field, val_field) = match entries_field.data_type() {
-                DataType::Struct(fields) if fields.len() == 2 => {
-                    (&fields[0], &fields[1])
-                }
+                DataType::Struct(fields) if fields.len() == 2 => (&fields[0], &fields[1]),
                 _ => {
                     return Err(format!(
                         "Column '{}': MAP entries must be Struct with key and value",
@@ -1357,29 +1360,23 @@ pub fn php_array_to_arrow(
                     })?;
                     for (key, val) in arr.iter() {
                         let mut key_zv = Zval::new();
+                        let set_key = |zv: &mut Zval, s: &str| {
+                            zv.set_string(s, false).map_err(|_| {
+                                format!("Column '{}': failed to set MAP key string", column_name)
+                            })
+                        };
                         match key {
-                            ArrayKey::Long(n) => {
-                                key_zv.set_long(n);
-                            }
-                            ArrayKey::String(ref s) => {
-                                key_zv
-                                    .set_string(s, false)
-                                    .map_err(|_| {
-                                        format!(
-                                            "Column '{}': failed to set MAP key string",
-                                            column_name
-                                        )
-                                    })?;
-                            }
-                            ArrayKey::Str(s) => {
-                                key_zv
-                                    .set_string(s, false)
-                                    .map_err(|_| {
-                                        format!(
-                                            "Column '{}': failed to set MAP key string",
-                                            column_name
-                                        )
-                                    })?;
+                            ArrayKey::Long(n) => key_zv.set_long(n),
+                            ArrayKey::String(ref s) => set_key(&mut key_zv, s)?,
+                            ArrayKey::Str(s) => set_key(&mut key_zv, s)?,
+                            ArrayKey::ZendString(zs) => {
+                                let s = zs.as_str().map_err(|_| {
+                                    format!(
+                                        "Column '{}': failed to read MAP key string",
+                                        column_name
+                                    )
+                                })?;
+                                set_key(&mut key_zv, s)?;
                             }
                         }
                         key_zvals.push(key_zv);
@@ -1403,11 +1400,7 @@ pub fn php_array_to_arrow(
 
             let entries_struct = StructArray::try_new(
                 Fields::from(vec![
-                    Field::new(
-                        key_field.name(),
-                        key_field.data_type().clone(),
-                        false,
-                    ),
+                    Field::new(key_field.name(), key_field.data_type().clone(), false),
                     Field::new(
                         val_field.name(),
                         val_field.data_type().clone(),
