@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-06-04
 
 ### Added
+- [#2424](https://github.com/flow-php/flow/pull/2424) - **flow-php/postgresql - table options support with new Table and TableOptions schema objects.** - [@norberttech](https://github.com/norberttech)
+- [#2424](https://github.com/flow-php/flow/pull/2424) - **flow-php/etl-adapter-postgresql - optional TableOptions argument in toPostgreSqlTable().** - [@norberttech](https://github.com/norberttech)
 - [#2420](https://github.com/flow-php/flow/pull/2420) - **WithBuilder::selectDistinct() and selectDistinctOn()** - [@norberttech](https://github.com/norberttech)
 - [#2417](https://github.com/flow-php/flow/pull/2417) - **PostgreSql Transactional Loader** - [@norberttech](https://github.com/norberttech)
 - [#2414](https://github.com/flow-php/flow/pull/2414) - **--drop-if-exists option to postgresql migrator** - [@norberttech](https://github.com/norberttech)
