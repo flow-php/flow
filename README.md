@@ -13,6 +13,7 @@ Flow is a PHP-based, strongly typed data processing framework with a low memory 
 - 📜 [Documentation](https://flow-php.com/documentation/)
 - 🛠️ [Contributing](https://flow-php.com/documentation/contributing/)
 - 🚧 [Upgrading](https://flow-php.com/documentation/upgrading/)
+- 📦 [Packages](https://packagist.org/packages/flow-php/)
 - <img src="https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/636e0a69f118df70ad7828d4_icon_clyde_blurple_RGB.svg" width="16px" height="16px" alt="Discord"> [Discord Server](https://discord.gg/5dNXfQyACW)
 
 Supported PHP

@@ -18,6 +18,12 @@ use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 use function extension_loaded;
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\in_;
+use function Flow\PostgreSql\DSL\literal;
+use function Flow\PostgreSql\DSL\select;
+use function Flow\PostgreSql\DSL\sub_select;
+use function Flow\PostgreSql\DSL\table;
 
 final class InTest extends TestCase
 {
@@ -159,5 +165,24 @@ final class InTest extends TestCase
         $or = $cond1->or($cond2);
 
         static::assertInstanceOf(OrCondition::class, $or);
+    }
+
+    public function test_in_with_single_subquery_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('in_() does not support subqueries');
+
+        in_(col('y'), [sub_select(select(col('id'))->from(table('s')))]);
+    }
+
+    public function test_in_with_subquery_among_values_is_allowed(): void
+    {
+        static::assertSame(
+            'SELECT x FROM t WHERE y IN (1, (SELECT id FROM s))',
+            select(col('x'))
+                ->from(table('t'))
+                ->where(in_(col('y'), [literal(1), sub_select(select(col('id'))->from(table('s')))]))
+                ->toSql(),
+        );
     }
 }

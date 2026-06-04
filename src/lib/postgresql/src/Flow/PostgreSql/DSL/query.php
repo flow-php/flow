@@ -104,6 +104,7 @@ use function is_float;
 use function is_int;
 use function is_string;
 use function str_contains;
+use function strtolower;
 
 /**
  * Create a new SELECT query builder.
@@ -366,10 +367,28 @@ function parameters(int $count, int $startAt = 1): array
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function func(string $name, array $args = []): FunctionCall
 {
-    return new FunctionCall(
-        QualifiedIdentifier::parse($name)->parts(),
-        array_map(static fn(string|Expression $e): Expression => $e instanceof Expression ? $e : col($e), $args),
-    );
+    $parts = QualifiedIdentifier::parse($name)->parts();
+
+    if (count($parts) === 1) {
+        $helper = match (strtolower($parts[0])) {
+            'greatest' => 'greatest',
+            'least' => 'least',
+            'coalesce' => 'coalesce',
+            'nullif' => 'nullif',
+            'current_timestamp' => 'current_timestamp',
+            'current_date' => 'current_date',
+            'current_time' => 'current_time',
+            default => null,
+        };
+
+        if ($helper !== null) {
+            throw InvalidExpressionException::keywordConstruct($parts[0], $helper);
+        }
+    }
+
+    return new FunctionCall($parts, array_map(static fn(string|Expression $e): Expression => $e instanceof Expression
+        ? $e
+        : col($e), $args));
 }
 
 /**

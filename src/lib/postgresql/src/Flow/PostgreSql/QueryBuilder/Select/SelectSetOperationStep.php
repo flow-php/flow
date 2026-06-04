@@ -6,15 +6,15 @@ namespace Flow\PostgreSql\QueryBuilder\Select;
 
 interface SelectSetOperationStep extends SelectOrderByStep
 {
-    public function except(SelectFinalStep $other): SelectOrderByStep;
+    public function except(SelectFinalStep $other): SelectSetOperationStep;
 
-    public function exceptAll(SelectFinalStep $other): SelectOrderByStep;
+    public function exceptAll(SelectFinalStep $other): SelectSetOperationStep;
 
-    public function intersect(SelectFinalStep $other): SelectOrderByStep;
+    public function intersect(SelectFinalStep $other): SelectSetOperationStep;
 
-    public function intersectAll(SelectFinalStep $other): SelectOrderByStep;
+    public function intersectAll(SelectFinalStep $other): SelectSetOperationStep;
 
-    public function union(SelectFinalStep $other): SelectOrderByStep;
+    public function union(SelectFinalStep $other): SelectSetOperationStep;
 
-    public function unionAll(SelectFinalStep $other): SelectOrderByStep;
+    public function unionAll(SelectFinalStep $other): SelectSetOperationStep;
 }

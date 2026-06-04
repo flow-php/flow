@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\PostgreSql\Tests\Integration\QueryBuilder\Database;
 
-use Flow\PostgreSql\QueryBuilder\Select\SelectFromStep;
 use Flow\PostgreSql\Tests\Integration\PostgreSqlTestCase;
 
 use function count;
@@ -28,7 +27,6 @@ use function Flow\PostgreSql\DSL\select;
 use function Flow\PostgreSql\DSL\star;
 use function Flow\PostgreSql\DSL\table;
 use function Flow\PostgreSql\DSL\with;
-use function Flow\Types\DSL\type_instance_of;
 
 final class SelectDatabaseTest extends PostgreSqlTestCase
 {
@@ -145,14 +143,27 @@ final class SelectDatabaseTest extends PostgreSqlTestCase
             ->from(table(self::TABLE_ORDERS))
             ->groupBy(col('user_id'));
 
-        $selectStep = type_instance_of(SelectFromStep::class)->assert(
-            with(cte('order_totals', $cteQuery))->select(star()),
-        );
-        $query = $selectStep->from(table('order_totals'))->where(gt(col('total'), literal(200)));
+        $query = with(cte('order_totals', $cteQuery))
+            ->select(star())
+            ->from(table('order_totals'))
+            ->where(gt(col('total'), literal(200)));
 
         $rows = $this->pgsqlContext()->client()->fetchAll($query->toSql());
 
         static::assertGreaterThanOrEqual(1, count($rows));
+    }
+
+    public function test_chained_union_all_returns_all_branches(): void
+    {
+        $query = select(col('name'))
+            ->from(table(self::TABLE_USERS))
+            ->where(eq(col('age'), literal(30)))
+            ->unionAll(select(col('name'))->from(table(self::TABLE_USERS))->where(eq(col('age'), literal(25))))
+            ->unionAll(select(col('name'))->from(table(self::TABLE_USERS))->where(eq(col('age'), literal(35))));
+
+        $rows = $this->pgsqlContext()->client()->fetchAll($query->toSql());
+
+        static::assertCount(3, $rows);
     }
 
     public function test_select_with_group_by_and_aggregate(): void

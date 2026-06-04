@@ -67,6 +67,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         private array $windows = [],
         private ?SetOperation $setOp = null,
         private ?SelectFinalStep $setOpRhs = null,
+        private ?SelectFinalStep $setOpLhs = null,
         private array $orderBy = [],
         private ?int $limit = null,
         private ?int $offset = null,
@@ -252,6 +253,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $this->windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $this->offset,
@@ -259,40 +261,14 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function except(SelectFinalStep $other): SelectOrderByStep
+    public function except(SelectFinalStep $other): SelectSetOperationStep
     {
-        return new self(
-            with: $this->with,
-            selectList: $this->selectList,
-            distinct: $this->distinct,
-            distinctOn: $this->distinctOn,
-            from: $this->from,
-            joins: $this->joins,
-            where: $this->where,
-            groupBy: $this->groupBy,
-            having: $this->having,
-            windows: $this->windows,
-            setOp: SetOperation::EXCEPT,
-            setOpRhs: $other,
-        );
+        return $this->setOperation(SetOperation::EXCEPT, $other);
     }
 
-    public function exceptAll(SelectFinalStep $other): SelectOrderByStep
+    public function exceptAll(SelectFinalStep $other): SelectSetOperationStep
     {
-        return new self(
-            with: $this->with,
-            selectList: $this->selectList,
-            distinct: $this->distinct,
-            distinctOn: $this->distinctOn,
-            from: $this->from,
-            joins: $this->joins,
-            where: $this->where,
-            groupBy: $this->groupBy,
-            having: $this->having,
-            windows: $this->windows,
-            setOp: SetOperation::EXCEPT_ALL,
-            setOpRhs: $other,
-        );
+        return $this->setOperation(SetOperation::EXCEPT_ALL, $other);
     }
 
     public function forKeyShare(string ...$tables): SelectFinalStep
@@ -312,6 +288,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $this->windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $this->offset,
@@ -336,6 +313,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $this->windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $this->offset,
@@ -360,6 +338,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $this->windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $this->offset,
@@ -384,6 +363,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $this->windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $this->offset,
@@ -408,6 +388,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $this->windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $this->offset,
@@ -438,6 +419,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $this->windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $this->offset,
@@ -472,6 +454,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $this->windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $this->offset,
@@ -498,6 +481,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $this->windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $this->offset,
@@ -520,6 +504,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $this->windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $this->offset,
@@ -527,40 +512,14 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function intersect(SelectFinalStep $other): SelectOrderByStep
+    public function intersect(SelectFinalStep $other): SelectSetOperationStep
     {
-        return new self(
-            with: $this->with,
-            selectList: $this->selectList,
-            distinct: $this->distinct,
-            distinctOn: $this->distinctOn,
-            from: $this->from,
-            joins: $this->joins,
-            where: $this->where,
-            groupBy: $this->groupBy,
-            having: $this->having,
-            windows: $this->windows,
-            setOp: SetOperation::INTERSECT,
-            setOpRhs: $other,
-        );
+        return $this->setOperation(SetOperation::INTERSECT, $other);
     }
 
-    public function intersectAll(SelectFinalStep $other): SelectOrderByStep
+    public function intersectAll(SelectFinalStep $other): SelectSetOperationStep
     {
-        return new self(
-            with: $this->with,
-            selectList: $this->selectList,
-            distinct: $this->distinct,
-            distinctOn: $this->distinctOn,
-            from: $this->from,
-            joins: $this->joins,
-            where: $this->where,
-            groupBy: $this->groupBy,
-            having: $this->having,
-            windows: $this->windows,
-            setOp: SetOperation::INTERSECT_ALL,
-            setOpRhs: $other,
-        );
+        return $this->setOperation(SetOperation::INTERSECT_ALL, $other);
     }
 
     public function join(string|TableReference $table, Condition $on): SelectJoinStep
@@ -590,6 +549,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $this->windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $this->offset,
@@ -624,6 +584,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $this->windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $this->offset,
@@ -646,6 +607,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $this->windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $this->orderBy,
             limit: $limit,
             offset: $this->offset,
@@ -668,6 +630,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $this->windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $offset,
@@ -690,6 +653,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $this->windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $items,
             limit: $this->limit,
             offset: $this->offset,
@@ -724,6 +688,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $this->windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $this->offset,
@@ -749,6 +714,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $this->windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $this->offset,
@@ -774,6 +740,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $this->windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $this->offset,
@@ -802,6 +769,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $this->windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $this->offset,
@@ -818,40 +786,14 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         return $this->buildSimpleSelectAst();
     }
 
-    public function union(SelectFinalStep $other): SelectOrderByStep
+    public function union(SelectFinalStep $other): SelectSetOperationStep
     {
-        return new self(
-            with: $this->with,
-            selectList: $this->selectList,
-            distinct: $this->distinct,
-            distinctOn: $this->distinctOn,
-            from: $this->from,
-            joins: $this->joins,
-            where: $this->where,
-            groupBy: $this->groupBy,
-            having: $this->having,
-            windows: $this->windows,
-            setOp: SetOperation::UNION,
-            setOpRhs: $other,
-        );
+        return $this->setOperation(SetOperation::UNION, $other);
     }
 
-    public function unionAll(SelectFinalStep $other): SelectOrderByStep
+    public function unionAll(SelectFinalStep $other): SelectSetOperationStep
     {
-        return new self(
-            with: $this->with,
-            selectList: $this->selectList,
-            distinct: $this->distinct,
-            distinctOn: $this->distinctOn,
-            from: $this->from,
-            joins: $this->joins,
-            where: $this->where,
-            groupBy: $this->groupBy,
-            having: $this->having,
-            windows: $this->windows,
-            setOp: SetOperation::UNION_ALL,
-            setOpRhs: $other,
-        );
+        return $this->setOperation(SetOperation::UNION_ALL, $other);
     }
 
     public function where(Condition|ConditionBuilder $condition): SelectGroupByStep
@@ -879,6 +821,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $this->windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $this->offset,
@@ -901,6 +844,55 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             windows: $windows,
             setOp: $this->setOp,
             setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
+            orderBy: $this->orderBy,
+            limit: $this->limit,
+            offset: $this->offset,
+            locks: $this->locks,
+        );
+    }
+
+    private function setOperation(SetOperation $op, SelectFinalStep $other): self
+    {
+        if ($this->setOp !== null) {
+            // Already a set operation: nest the current query left-associatively as the left
+            // operand (matching PostgreSQL's `a UNION b UNION c` => `(a UNION b) UNION c`) and
+            // hoist the WITH clause to the new outer level.
+            return new self(with: $this->with, setOp: $op, setOpRhs: $other, setOpLhs: $this->withoutWith());
+        }
+
+        return new self(
+            with: $this->with,
+            selectList: $this->selectList,
+            distinct: $this->distinct,
+            distinctOn: $this->distinctOn,
+            from: $this->from,
+            joins: $this->joins,
+            where: $this->where,
+            groupBy: $this->groupBy,
+            having: $this->having,
+            windows: $this->windows,
+            setOp: $op,
+            setOpRhs: $other,
+        );
+    }
+
+    private function withoutWith(): self
+    {
+        return new self(
+            with: null,
+            selectList: $this->selectList,
+            distinct: $this->distinct,
+            distinctOn: $this->distinctOn,
+            from: $this->from,
+            joins: $this->joins,
+            where: $this->where,
+            groupBy: $this->groupBy,
+            having: $this->having,
+            windows: $this->windows,
+            setOp: $this->setOp,
+            setOpRhs: $this->setOpRhs,
+            setOpLhs: $this->setOpLhs,
             orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $this->offset,
@@ -926,7 +918,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
             $selectStmt->setAll($this->setOp->hasAll());
         }
 
-        $leftStmt = $this->buildSimpleSelectAst();
+        $leftStmt = $this->setOpLhs !== null ? $this->setOpLhs->toAst() : $this->buildSimpleSelectAst(false);
         $selectStmt->setLarg($leftStmt);
 
         if ($this->setOpRhs !== null) {
@@ -966,11 +958,11 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         return $selectStmt;
     }
 
-    private function buildSimpleSelectAst(): SelectStmt
+    private function buildSimpleSelectAst(bool $includeWith = true): SelectStmt
     {
         $selectStmt = new SelectStmt();
 
-        if ($this->with !== null) {
+        if ($includeWith && $this->with !== null) {
             $withNode = $this->with->toAst();
             $withClause = $withNode->getWithClause();
 
@@ -1193,17 +1185,9 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
 
         return new self(
             with: $with,
-            selectList: $left->selectList,
-            distinct: $left->distinct,
-            distinctOn: $left->distinctOn,
-            from: $left->from,
-            joins: $left->joins,
-            where: $left->where,
-            groupBy: $left->groupBy,
-            having: $left->having,
-            windows: $left->windows,
             setOp: $setOp,
             setOpRhs: $right,
+            setOpLhs: $left,
             orderBy: $orderBy,
             limit: $limit,
             offset: $offset,
