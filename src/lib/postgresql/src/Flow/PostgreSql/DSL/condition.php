@@ -28,9 +28,12 @@ use Flow\PostgreSql\QueryBuilder\Condition\OrCondition;
 use Flow\PostgreSql\QueryBuilder\Condition\SimilarTo;
 use Flow\PostgreSql\QueryBuilder\Expression\BinaryExpression;
 use Flow\PostgreSql\QueryBuilder\Expression\Expression;
+use Flow\PostgreSql\QueryBuilder\Expression\Subquery;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFinalStep;
+use InvalidArgumentException;
 
 use function array_values;
+use function count;
 
 /**
  * Create an equality comparison (column = value).
@@ -135,7 +138,15 @@ function between(string|Expression $expr, string|Expression $low, string|Express
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function in_(string|Expression $expr, array $values): In
 {
-    return new In($expr instanceof Expression ? $expr : col($expr), array_values($values));
+    $values = array_values($values);
+
+    if (count($values) === 1 && $values[0] instanceof Subquery) {
+        throw new InvalidArgumentException(
+            'in_() does not support subqueries; use any_($expr, ComparisonOperator::EQ, $subquery) for "IN (subquery)" semantics.',
+        );
+    }
+
+    return new In($expr instanceof Expression ? $expr : col($expr), $values);
 }
 
 /**

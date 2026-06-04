@@ -16,7 +16,6 @@ use Flow\PostgreSql\QueryBuilder\Expression\Column;
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use Flow\PostgreSql\QueryBuilder\Expression\Star;
 use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
-use Flow\PostgreSql\QueryBuilder\Select\SelectFromStep;
 use Flow\PostgreSql\QueryBuilder\Table\Table;
 use PHPUnit\Framework\TestCase;
 
@@ -77,7 +76,6 @@ use function Flow\PostgreSql\DSL\when;
 use function Flow\PostgreSql\DSL\window_def;
 use function Flow\PostgreSql\DSL\window_func;
 use function Flow\PostgreSql\DSL\with;
-use function Flow\Types\DSL\type_instance_of;
 
 final class SelectBuilderTest extends TestCase
 {
@@ -477,11 +475,10 @@ final class SelectBuilderTest extends TestCase
             CTEMaterialization::MATERIALIZED,
         ))
             ->select(star());
-        $fromStep = type_instance_of(SelectFromStep::class)->assert($withSelect);
 
         static::assertSame(
             'WITH active_users AS MATERIALIZED (SELECT id, name FROM users WHERE active = true) SELECT * FROM active_users',
-            $fromStep->from(table('active_users'))->toSql(),
+            $withSelect->from(table('active_users'))->toSql(),
         );
     }
 
@@ -497,11 +494,10 @@ final class SelectBuilderTest extends TestCase
             CTEMaterialization::NOT_MATERIALIZED,
         ))
             ->select(star());
-        $fromStep = type_instance_of(SelectFromStep::class)->assert($withSelect);
 
         static::assertSame(
             'WITH active_users AS NOT MATERIALIZED (SELECT id, name FROM users WHERE active = true) SELECT * FROM active_users',
-            $fromStep->from(table('active_users'))->toSql(),
+            $withSelect->from(table('active_users'))->toSql(),
         );
     }
 
@@ -515,11 +511,10 @@ final class SelectBuilderTest extends TestCase
                 ->where(eq(col('active'), literal(true))),
         ))
             ->select(star());
-        $fromStep = type_instance_of(SelectFromStep::class)->assert($withSelect);
 
         static::assertSame(
             'WITH active_users AS (SELECT id, name FROM users WHERE active = true) SELECT * FROM active_users',
-            $fromStep->from(table('active_users'))->toSql(),
+            $withSelect->from(table('active_users'))->toSql(),
         );
     }
 
@@ -1160,8 +1155,7 @@ final class SelectBuilderTest extends TestCase
         ]))->recursive()->select(col('org_tree.name')->as('employee'), col('org_tree.level'), col('org_tree.path')->as('reporting_chain'), col('d.name')->as('department'), col('re.salary'), col('re.salary_rank'), col('re.pct_of_max'), col('ds.avg_salary')->as('dept_avg'), case_when([
             when(binary_expr(col('re.salary'), '>', col('ds.avg_salary')), literal('Above Average')),
         ], literal('At/Below Average'))->as('salary_status'));
-        $fromStep = type_instance_of(SelectFromStep::class)->assert($withSelect);
-        $query = $fromStep
+        $query = $withSelect
             ->from(table('org_tree'))
             ->join(table('ranked_employees')->as('re'), eq(col('org_tree.id'), col('re.id')))
             ->join(table('dept_stats')->as('ds'), eq(col('re.department_id'), col('ds.department_id')))
@@ -1304,6 +1298,79 @@ final class SelectBuilderTest extends TestCase
         $ast = $unionQuery->toAst();
 
         static::assertTrue($ast->getAll());
+    }
+
+    public function test_chained_union_all_keeps_all_branches(): void
+    {
+        static::assertSame(
+            '(SELECT x FROM a UNION ALL SELECT x FROM b) UNION ALL SELECT x FROM c',
+            select(col('x'))
+                ->from(table('a'))
+                ->unionAll(select(col('x'))->from(table('b')))
+                ->unionAll(select(col('x'))->from(table('c')))
+                ->toSql(),
+        );
+    }
+
+    public function test_chained_union_keeps_all_branches(): void
+    {
+        static::assertSame(
+            '(SELECT x FROM a UNION SELECT x FROM b) UNION SELECT x FROM c',
+            select(col('x'))
+                ->from(table('a'))
+                ->union(select(col('x'))->from(table('b')))
+                ->union(select(col('x'))->from(table('c')))
+                ->toSql(),
+        );
+    }
+
+    public function test_chained_intersect_keeps_all_branches(): void
+    {
+        static::assertSame(
+            '(SELECT x FROM a INTERSECT SELECT x FROM b) INTERSECT SELECT x FROM c',
+            select(col('x'))
+                ->from(table('a'))
+                ->intersect(select(col('x'))->from(table('b')))
+                ->intersect(select(col('x'))->from(table('c')))
+                ->toSql(),
+        );
+    }
+
+    public function test_chained_except_keeps_all_branches(): void
+    {
+        static::assertSame(
+            '(SELECT x FROM a EXCEPT SELECT x FROM b) EXCEPT SELECT x FROM c',
+            select(col('x'))
+                ->from(table('a'))
+                ->except(select(col('x'))->from(table('b')))
+                ->except(select(col('x'))->from(table('c')))
+                ->toSql(),
+        );
+    }
+
+    public function test_chained_set_operation_round_trips_through_from_ast(): void
+    {
+        $chained = select(col('x'))
+            ->from(table('a'))
+            ->unionAll(select(col('x'))->from(table('b')))
+            ->unionAll(select(col('x'))->from(table('c')));
+
+        static::assertSame(
+            '(SELECT x FROM a UNION ALL SELECT x FROM b) UNION ALL SELECT x FROM c',
+            SelectBuilder::fromAst($chained->toAst())->toSql(),
+        );
+    }
+
+    public function test_set_operation_with_cte_emits_with_clause_once(): void
+    {
+        static::assertSame(
+            'WITH w AS (SELECT id FROM s) SELECT x FROM a UNION SELECT x FROM b',
+            with(cte('w', select(col('id'))->from(table('s'))))
+                ->select(col('x'))
+                ->from(table('a'))
+                ->union(select(col('x'))->from(table('b')))
+                ->toSql(),
+        );
     }
 
     public function test_select_with_where(): void

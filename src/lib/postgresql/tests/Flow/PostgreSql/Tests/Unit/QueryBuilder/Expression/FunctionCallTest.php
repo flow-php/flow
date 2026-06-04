@@ -10,8 +10,12 @@ use Flow\PostgreSql\Protobuf\AST\PBString;
 use Flow\PostgreSql\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PostgreSql\QueryBuilder\Expression\FunctionCall;
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
+
+use function Flow\PostgreSql\DSL\col;
+use function Flow\PostgreSql\DSL\func;
 
 final class FunctionCallTest extends TestCase
 {
@@ -139,5 +143,30 @@ final class FunctionCallTest extends TestCase
         static::assertNotSame($func, $newFunc);
         static::assertSame([], $func->getArgs());
         static::assertCount(1, $newFunc->getArgs());
+    }
+
+    #[TestWith(['greatest'])]
+    #[TestWith(['least'])]
+    #[TestWith(['coalesce'])]
+    #[TestWith(['nullif'])]
+    #[TestWith(['current_timestamp'])]
+    #[TestWith(['current_date'])]
+    #[TestWith(['current_time'])]
+    #[TestWith(['GREATEST'])]
+    public function test_func_rejects_keyword_construct(string $name): void
+    {
+        $this->expectException(InvalidExpressionException::class);
+
+        func($name, [col('a'), col('b')]);
+    }
+
+    public function test_func_allows_regular_function_name(): void
+    {
+        static::assertSame(['to_char'], func('to_char', [col('a'), col('b')])->getFuncName());
+    }
+
+    public function test_function_call_constructor_still_allows_keyword_name_for_round_trip(): void
+    {
+        static::assertSame(['greatest'], (new FunctionCall(['greatest'], [col('a')]))->getFuncName());
     }
 }

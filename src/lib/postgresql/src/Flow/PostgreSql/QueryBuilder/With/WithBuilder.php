@@ -14,7 +14,6 @@ use Flow\PostgreSql\QueryBuilder\Merge\MergeBuilder;
 use Flow\PostgreSql\QueryBuilder\Merge\MergeUsingStep;
 use Flow\PostgreSql\QueryBuilder\Select\SelectBuilder;
 use Flow\PostgreSql\QueryBuilder\Select\SelectFromStep;
-use Flow\PostgreSql\QueryBuilder\Select\SelectSelectStep;
 use Flow\PostgreSql\QueryBuilder\Update\UpdateBuilder;
 use Flow\PostgreSql\QueryBuilder\Update\UpdateTableStep;
 
@@ -59,15 +58,30 @@ final readonly class WithBuilder
     /**
      * Start a SELECT query with this WITH clause.
      */
-    public function select(Expression ...$expressions): SelectFromStep|SelectSelectStep
+    public function select(string|Expression ...$expressions): SelectFromStep
     {
-        $builder = SelectBuilder::with($this->withClause);
+        return SelectBuilder::with($this->withClause)->select(...$expressions);
+    }
 
-        if ($expressions !== []) {
-            return $builder->select(...$expressions);
-        }
+    /**
+     * Start a SELECT DISTINCT query with this WITH clause.
+     */
+    public function selectDistinct(string|Expression ...$expressions): SelectFromStep
+    {
+        return SelectBuilder::with($this->withClause)->selectDistinct(...$expressions);
+    }
 
-        return $builder;
+    /**
+     * Start a SELECT DISTINCT ON (...) query with this WITH clause.
+     *
+     * @param array<Expression|string> $distinctExpressions
+     * @param Expression|string ...$selectExpressions
+     */
+    public function selectDistinctOn(
+        array $distinctExpressions,
+        string|Expression ...$selectExpressions,
+    ): SelectFromStep {
+        return SelectBuilder::with($this->withClause)->selectDistinctOn($distinctExpressions, ...$selectExpressions);
     }
 
     /**
