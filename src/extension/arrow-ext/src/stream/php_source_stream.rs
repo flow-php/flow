@@ -27,8 +27,10 @@ pub struct PhpSourceStream {
 
 impl PhpSourceStream {
     pub fn new(obj: &mut ZendObject) -> Result<Self, String> {
-        let ce = ClassEntry::try_find("Flow\\Arrow\\RandomAccessFile")
-            .ok_or_else(|| "Interface Flow\\Arrow\\RandomAccessFile not loaded. Did you require the file?".to_string())?;
+        let ce = ClassEntry::try_find("Flow\\Arrow\\RandomAccessFile").ok_or_else(|| {
+            "Interface Flow\\Arrow\\RandomAccessFile not loaded. Did you require the file?"
+                .to_string()
+        })?;
         if !obj.instance_of(ce) {
             return Err("Source must implement Flow\\Arrow\\RandomAccessFile".to_string());
         }
@@ -37,14 +39,16 @@ impl PhpSourceStream {
         unsafe { (*ptr).gc.refcount += 1 };
         let owned = unsafe { ZBox::from_raw(ptr) };
 
-        let zval = owned.try_call_method("size", vec![])
+        let zval = owned
+            .try_call_method("size", vec![])
             .map_err(|e| format!("Failed to call size(): {:?}", e))?;
 
         if zval.is_null() {
             return Err("size() returned null; file size is required for Parquet reading".into());
         }
 
-        let size = zval.long()
+        let size = zval
+            .long()
             .ok_or_else(|| "size() must return an integer".to_string())?;
 
         Ok(Self {
@@ -79,7 +83,9 @@ impl ChunkReader for PhpSourceStream {
         let length_arg = length as i64;
         let offset_arg = start as i64;
 
-        let result = self.inner.obj
+        let result = self
+            .inner
+            .obj
             .try_call_method(
                 "read",
                 vec![

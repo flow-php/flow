@@ -21,6 +21,10 @@ pub extern "C" fn php_module_info(_module: *mut ModuleEntry) {
     info_table_end!();
 }
 
+/// # Safety
+///
+/// Invoked by the PHP/Zend engine during module startup. Must only be called by
+/// the engine through the registered startup hook, never directly.
 pub unsafe extern "C" fn module_startup(_type: i32, _module_number: i32) -> i32 {
     if let Err(e) = stream::output_stream::register() {
         eprintln!("arrow: failed to register Flow\\Arrow\\OutputStream: {e}");
