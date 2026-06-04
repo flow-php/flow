@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-06-04
+## [0.39.0] - 2026-06-04
 
 ### Added
 - [#2427](https://github.com/flow-php/flow/pull/2427) - **flow-php/postgresql - custom attributes on migration context** - [@norberttech](https://github.com/norberttech)
