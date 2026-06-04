@@ -12,7 +12,10 @@ use Flow\PostgreSql\Schema\Column;
 use Flow\PostgreSql\Schema\Constraint\PrimaryKey;
 use Flow\PostgreSql\Schema\Constraint\UniqueConstraint;
 use Flow\PostgreSql\Schema\IdentityGeneration;
+use Flow\PostgreSql\Schema\PartitionStrategy;
 use Flow\PostgreSql\Schema\Table;
+use Flow\PostgreSql\Schema\TriggerEvent;
+use Flow\PostgreSql\Schema\TriggerTiming;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\JsonType;
 use Flow\Types\Type\Logical\UuidType;
@@ -32,6 +35,11 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\uuid_schema;
 use function Flow\ETL\DSL\xml_schema;
+use function Flow\PostgreSql\DSL\schema_check;
+use function Flow\PostgreSql\DSL\schema_exclude;
+use function Flow\PostgreSql\DSL\schema_foreign_key;
+use function Flow\PostgreSql\DSL\schema_table_options;
+use function Flow\PostgreSql\DSL\schema_trigger;
 
 final class SchemaConverterTest extends TestCase
 {
@@ -277,5 +285,63 @@ final class SchemaConverterTest extends TestCase
         static::assertInstanceOf(UniqueConstraint::class, $table->uniqueConstraints[0]);
         static::assertSame(['email'], $table->uniqueConstraints[0]->columns);
         static::assertSame('uq_email', $table->uniqueConstraints[0]->name);
+    }
+
+    public function test_no_options_keeps_defaults(): void
+    {
+        $table = (new SchemaConverter())->toPostgreSqlTable(schema(int_schema('id')), 'events');
+
+        static::assertFalse($table->unlogged);
+        static::assertNull($table->tablespace);
+        static::assertSame([], $table->inherits);
+        static::assertSame([], $table->foreignKeys);
+        static::assertSame([], $table->checkConstraints);
+        static::assertSame([], $table->excludeConstraints);
+        static::assertSame([], $table->triggers);
+        static::assertNull($table->partitionStrategy);
+    }
+
+    public function test_options_collections_thread_into_table(): void
+    {
+        $table = (new SchemaConverter())->toPostgreSqlTable(
+            schema(int_schema('id'), int_schema('user_id')),
+            'orders',
+            'public',
+            schema_table_options(
+                foreignKeys: [schema_foreign_key(['user_id'], 'users', ['id'])],
+                checkConstraints: [schema_check('id > 0')],
+                excludeConstraints: [schema_exclude('USING gist (tsrange WITH &&)')],
+                triggers: [schema_trigger('trg', 'orders', TriggerTiming::AFTER, [TriggerEvent::INSERT], 'fn')],
+            ),
+        );
+
+        static::assertCount(1, $table->foreignKeys);
+        static::assertSame('users', $table->foreignKeys[0]->referenceTable);
+        static::assertCount(1, $table->checkConstraints);
+        static::assertCount(1, $table->excludeConstraints);
+        static::assertCount(1, $table->triggers);
+        static::assertSame('trg', $table->triggers[0]->name);
+    }
+
+    public function test_options_thread_into_table(): void
+    {
+        $table = (new SchemaConverter())->toPostgreSqlTable(
+            schema(int_schema('id')),
+            'events',
+            'public',
+            schema_table_options(
+                unlogged: true,
+                partitionStrategy: PartitionStrategy::RANGE,
+                partitionColumns: ['id'],
+                inherits: ['parent'],
+                tablespace: 'fast_storage',
+            ),
+        );
+
+        static::assertTrue($table->unlogged);
+        static::assertSame(PartitionStrategy::RANGE, $table->partitionStrategy);
+        static::assertSame(['id'], $table->partitionColumns);
+        static::assertSame(['parent'], $table->inherits);
+        static::assertSame('fast_storage', $table->tablespace);
     }
 }

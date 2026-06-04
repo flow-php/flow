@@ -18,6 +18,7 @@ use Flow\ETL\Schema;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Table;
+use Flow\PostgreSql\Schema\TableOptions;
 
 /**
  * Create a PostgreSQL cursor extractor using server-side cursors for memory-efficient extraction.
@@ -157,6 +158,7 @@ function pgsql_delete_options(array $primaryKeys): DeleteOptions
  * Convert a Flow Schema into a PostgreSQL table definition.
  *
  * @param string $databaseSchema PostgreSQL schema (namespace) the table belongs to
+ * @param ?TableOptions $options table-level options the Flow Schema cannot express (e.g. UNLOGGED)
  */
 #[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::HELPER)]
 function to_pgsql_schema_table(
@@ -164,8 +166,9 @@ function to_pgsql_schema_table(
     string $tableName,
     string $databaseSchema = 'public',
     ?EntryTypesMap $typesMap = null,
+    ?TableOptions $options = null,
 ): Table {
-    return (new SchemaConverter($typesMap))->toPostgreSqlTable($schema, $tableName, $databaseSchema);
+    return (new SchemaConverter($typesMap))->toPostgreSqlTable($schema, $tableName, $databaseSchema, $options);
 }
 
 /**

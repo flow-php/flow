@@ -15,6 +15,7 @@ use Flow\PostgreSql\Schema\Constraint\UniqueConstraint;
 use Flow\PostgreSql\Schema\IdentityGeneration;
 use Flow\PostgreSql\Schema\Index;
 use Flow\PostgreSql\Schema\Table;
+use Flow\PostgreSql\Schema\TableOptions;
 use Flow\Types\Type;
 
 use function array_keys;
@@ -49,8 +50,12 @@ final readonly class SchemaConverter
         return new Schema(...$definitions);
     }
 
-    public function toPostgreSqlTable(Schema $schema, string $tableName, string $databaseSchema = 'public'): Table
-    {
+    public function toPostgreSqlTable(
+        Schema $schema,
+        string $tableName,
+        string $databaseSchema = 'public',
+        ?TableOptions $options = null,
+    ): Table {
         $columns = [];
         $position = 1;
 
@@ -65,14 +70,14 @@ final readonly class SchemaConverter
             );
         }
 
-        return new Table(
+        return (new Table(
             schema: $databaseSchema,
             name: $tableName,
             columns: $columns,
             primaryKey: $this->primaryKey($schema),
             indexes: $this->indexes($schema),
             uniqueConstraints: $this->uniqueConstraints($schema),
-        );
+        ))->withOptions($options ?? new TableOptions());
     }
 
     /**

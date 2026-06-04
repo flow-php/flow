@@ -20,10 +20,12 @@ use function Flow\PostgreSql\DSL\column_type_timestamptz;
 use function Flow\PostgreSql\DSL\column_type_varchar;
 use function Flow\PostgreSql\DSL\schema_check;
 use function Flow\PostgreSql\DSL\schema_column;
+use function Flow\PostgreSql\DSL\schema_exclude;
 use function Flow\PostgreSql\DSL\schema_foreign_key;
 use function Flow\PostgreSql\DSL\schema_index;
 use function Flow\PostgreSql\DSL\schema_primary_key;
 use function Flow\PostgreSql\DSL\schema_table;
+use function Flow\PostgreSql\DSL\schema_table_options;
 use function Flow\PostgreSql\DSL\schema_trigger;
 use function Flow\PostgreSql\DSL\schema_unique;
 
@@ -994,5 +996,205 @@ final class TableTest extends TestCase
             'CREATE TABLE public.users (id int NOT NULL, email varchar(255), UNIQUE NULLS NOT DISTINCT (email))',
             $sqls[0]->toSql(),
         );
+    }
+
+    public function test_with_check_constraint(): void
+    {
+        $table = schema_table('products', [
+            schema_column('id', column_type_integer(), nullable: false),
+            schema_column('price', column_type_integer(), nullable: false),
+        ]);
+
+        $withConstraint = $table->withCheckConstraint(schema_check('price > 0'));
+
+        static::assertCount(0, $table->checkConstraints);
+        static::assertCount(1, $withConstraint->checkConstraints);
+        static::assertSame(
+            'CREATE TABLE public.products (id int NOT NULL, price int NOT NULL, CHECK (price > 0))',
+            $withConstraint->toSql()[0]->toSql(),
+        );
+    }
+
+    public function test_with_exclude_constraint(): void
+    {
+        $table = schema_table('reservations', [
+            schema_column('id', column_type_integer(), nullable: false),
+        ]);
+
+        $withConstraint = $table->withExcludeConstraint(schema_exclude('USING gist (tsrange WITH &&)'));
+
+        static::assertCount(0, $table->excludeConstraints);
+        static::assertCount(1, $withConstraint->excludeConstraints);
+    }
+
+    public function test_with_foreign_key(): void
+    {
+        $table = schema_table('orders', [
+            schema_column('id', column_type_integer(), nullable: false),
+            schema_column('user_id', column_type_integer(), nullable: false),
+        ]);
+
+        $withFk = $table->withForeignKey(schema_foreign_key(['user_id'], 'users', ['id']));
+
+        static::assertCount(0, $table->foreignKeys);
+        static::assertCount(1, $withFk->foreignKeys);
+        static::assertSame('users', $withFk->foreignKeys[0]->referenceTable);
+    }
+
+    public function test_with_foreign_key_appends_not_replaces(): void
+    {
+        $table = schema_table(
+            'orders',
+            [
+                schema_column('id', column_type_integer(), nullable: false),
+                schema_column('user_id', column_type_integer(), nullable: false),
+                schema_column('product_id', column_type_integer(), nullable: false),
+            ],
+            foreignKeys: [schema_foreign_key(['user_id'], 'users', ['id'])],
+        );
+
+        $withSecond = $table->withForeignKey(schema_foreign_key(['product_id'], 'products', ['id']));
+
+        static::assertCount(1, $table->foreignKeys);
+        static::assertCount(2, $withSecond->foreignKeys);
+        static::assertSame('users', $withSecond->foreignKeys[0]->referenceTable);
+        static::assertSame('products', $withSecond->foreignKeys[1]->referenceTable);
+    }
+
+    public function test_with_inherits(): void
+    {
+        $table = schema_table('employees', [
+            schema_column('id', column_type_integer(), nullable: false),
+            schema_column('name', column_type_varchar(255)),
+        ]);
+
+        $withInherits = $table->withInherits('persons');
+
+        static::assertSame([], $table->inherits);
+        static::assertSame(['persons'], $withInherits->inherits);
+        static::assertSame(
+            'CREATE TABLE public.employees (id int NOT NULL, name varchar(255)) INHERITS (persons)',
+            $withInherits->toSql()[0]->toSql(),
+        );
+    }
+
+    public function test_with_options_empty_resets_to_defaults(): void
+    {
+        $table = schema_table(
+            'events',
+            [
+                schema_column('id', column_type_integer(), nullable: false),
+            ],
+            unlogged: true,
+            tablespace: 'fast_storage',
+        );
+
+        $reset = $table->withOptions(schema_table_options());
+
+        static::assertTrue($table->unlogged);
+        static::assertSame('fast_storage', $table->tablespace);
+        static::assertFalse($reset->unlogged);
+        static::assertNull($reset->tablespace);
+    }
+
+    public function test_with_options_replaces_all_option_fields(): void
+    {
+        $table = schema_table('events', [
+            schema_column('id', column_type_integer(), nullable: false),
+        ]);
+
+        $withOptions = $table->withOptions(schema_table_options(
+            foreignKeys: [schema_foreign_key(['id'], 'parents', ['id'])],
+            triggers: [schema_trigger('trg', 'events', TriggerTiming::AFTER, [TriggerEvent::INSERT], 'fn')],
+            unlogged: true,
+            tablespace: 'fast_storage',
+            inherits: ['base'],
+        ));
+
+        static::assertFalse($table->unlogged);
+        static::assertCount(0, $table->foreignKeys);
+        static::assertTrue($withOptions->unlogged);
+        static::assertSame('fast_storage', $withOptions->tablespace);
+        static::assertSame(['base'], $withOptions->inherits);
+        static::assertCount(1, $withOptions->foreignKeys);
+        static::assertCount(1, $withOptions->triggers);
+    }
+
+    public function test_with_partition_by(): void
+    {
+        $table = schema_table('events', [
+            schema_column('id', column_type_integer(), nullable: false),
+        ]);
+
+        $partitioned = $table->withPartitionBy(PartitionStrategy::HASH, 'id');
+
+        static::assertNull($table->partitionStrategy);
+        static::assertSame(PartitionStrategy::HASH, $partitioned->partitionStrategy);
+        static::assertSame(['id'], $partitioned->partitionColumns);
+        static::assertSame(
+            'CREATE TABLE public.events (id int NOT NULL) PARTITION BY HASH (id)',
+            $partitioned->toSql()[0]->toSql(),
+        );
+    }
+
+    public function test_with_tablespace(): void
+    {
+        $table = schema_table('events', [
+            schema_column('id', column_type_integer(), nullable: false),
+        ]);
+
+        $withTablespace = $table->withTablespace('fast_storage');
+
+        static::assertNull($table->tablespace);
+        static::assertSame('fast_storage', $withTablespace->tablespace);
+        static::assertSame(
+            'CREATE TABLE public.events (id int NOT NULL) TABLESPACE fast_storage',
+            $withTablespace->toSql()[0]->toSql(),
+        );
+    }
+
+    public function test_with_trigger(): void
+    {
+        $table = schema_table('users', [
+            schema_column('id', column_type_integer(), nullable: false),
+        ]);
+
+        $withTrigger = $table->withTrigger(schema_trigger(
+            'trg_audit',
+            'users',
+            TriggerTiming::AFTER,
+            [TriggerEvent::INSERT],
+            'audit_function',
+        ));
+
+        static::assertCount(0, $table->triggers);
+        static::assertCount(1, $withTrigger->triggers);
+        static::assertSame('trg_audit', $withTrigger->triggers[0]->name);
+    }
+
+    public function test_with_unlogged(): void
+    {
+        $table = schema_table('events', [
+            schema_column('id', column_type_integer(), nullable: false),
+            schema_column('name', column_type_varchar(255)),
+        ]);
+
+        $unlogged = $table->withUnlogged();
+
+        static::assertFalse($table->unlogged);
+        static::assertTrue($unlogged->unlogged);
+        static::assertSame(
+            'CREATE UNLOGGED TABLE public.events (id int NOT NULL, name varchar(255))',
+            $unlogged->toSql()[0]->toSql(),
+        );
+    }
+
+    public function test_with_unlogged_false_is_noop_on_default(): void
+    {
+        $table = schema_table('events', [
+            schema_column('id', column_type_integer(), nullable: false),
+        ]);
+
+        static::assertFalse($table->withUnlogged(false)->unlogged);
     }
 }

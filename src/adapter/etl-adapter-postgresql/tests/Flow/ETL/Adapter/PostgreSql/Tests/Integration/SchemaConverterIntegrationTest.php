@@ -20,6 +20,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\PostgreSql\DSL\client_catalog_provider;
 use function Flow\PostgreSql\DSL\drop;
+use function Flow\PostgreSql\DSL\schema_table_options;
 
 final class SchemaConverterIntegrationTest extends IntegrationTestCase
 {
@@ -70,5 +71,28 @@ final class SchemaConverterIntegrationTest extends IntegrationTestCase
         static::assertInstanceOf(BooleanType::class, $flowSchema->get('active')->type());
         static::assertInstanceOf(JsonType::class, $flowSchema->get('payload')->type());
         static::assertFalse($flowSchema->get('id')->isNullable());
+    }
+
+    public function test_creates_unlogged_table_from_options(): void
+    {
+        $table = to_pgsql_schema_table(
+            schema(
+                int_schema('id', metadata: PostgreSqlMetadata::primaryKey('pk_' . $this->tableName)),
+                str_schema('payload'),
+            ),
+            $this->tableName,
+            options: schema_table_options(unlogged: true),
+        );
+
+        foreach ($table->toSql() as $sql) {
+            $this->client->execute($sql);
+        }
+
+        $introspected = client_catalog_provider($this->client, ['public'])
+            ->get()
+            ->get('public')
+            ->table($this->tableName);
+
+        static::assertTrue($introspected->unlogged);
     }
 }
