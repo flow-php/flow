@@ -4,9 +4,14 @@ on:
   push:
     tags:
       - '*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to (re)build and publish precompiled binaries for'
+        required: true
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   EXTENSION_NAME: arrow
@@ -16,27 +21,45 @@ jobs:
   create-release:
     name: Create Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
     steps:
       - name: Get tag
         id: tag
-        run: echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "tag=$INPUT_TAG" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Create draft release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+          REPO: ${{ github.repository }}
         run: |
-          gh release create "${{ steps.tag.outputs.tag }}" \
-            --repo "${{ github.repository }}" \
-            --draft \
-            --title "${{ steps.tag.outputs.tag }}" \
-            --generate-notes
+          if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+            echo "Release $TAG already exists, reusing it."
+          else
+            gh release create "$TAG" \
+              --repo "$REPO" \
+              --draft \
+              --title "$TAG" \
+              --generate-notes
+          fi
 
   build-linux:
     name: "Linux ${{ matrix.arch }} - PHP ${{ matrix.php }} - ${{ matrix.ts }}"
     needs: create-release
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -45,16 +68,22 @@ jobs:
         ts: ['nts', 'zts']
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ needs.create-release.outputs.tag }}
+          persist-credentials: false
 
       - name: Set build variables
         id: build-vars
+        env:
+          TS: ${{ matrix.ts }}
+          PHP: ${{ matrix.php }}
         run: |
-          if [ "${{ matrix.ts }}" = "zts" ]; then
-            echo "php-image=${{ matrix.php }}-zts" >> "$GITHUB_OUTPUT"
+          if [ "$TS" = "zts" ]; then
+            echo "php-image=${PHP}-zts" >> "$GITHUB_OUTPUT"
             echo "ts-suffix=-zts" >> "$GITHUB_OUTPUT"
           else
-            echo "php-image=${{ matrix.php }}-cli" >> "$GITHUB_OUTPUT"
+            echo "php-image=${PHP}-cli" >> "$GITHUB_OUTPUT"
             echo "ts-suffix=" >> "$GITHUB_OUTPUT"
           fi
 
@@ -62,12 +91,16 @@ jobs:
         run: mkdir -p dist
 
       - name: Build in Docker container
+        env:
+          WORKSPACE: ${{ github.workspace }}
+          ARROW_VERSION: ${{ needs.create-release.outputs.tag }}
+          PHP_IMAGE: ${{ steps.build-vars.outputs.php-image }}
         run: |
           docker run --rm \
-            -v "${{ github.workspace }}:/workspace" \
+            -v "$WORKSPACE:/workspace" \
             -w /workspace \
-            -e ARROW_VERSION="${{ needs.create-release.outputs.tag }}" \
-            php:${{ steps.build-vars.outputs.php-image }} \
+            -e ARROW_VERSION="$ARROW_VERSION" \
+            "php:$PHP_IMAGE" \
             bash -c '
               set -euo pipefail
 
@@ -96,9 +129,14 @@ jobs:
             '
 
       - name: Create ZIP archive
+        env:
+          TAG: ${{ needs.create-release.outputs.tag }}
+          PHP: ${{ matrix.php }}
+          ARCH: ${{ matrix.arch }}
+          TS_SUFFIX: ${{ steps.build-vars.outputs.ts-suffix }}
         run: |
           cd dist
-          ARTIFACT_NAME="php_${{ env.EXTENSION_NAME }}-${{ needs.create-release.outputs.tag }}_php${{ matrix.php }}-${{ matrix.arch }}-linux-glibc${{ steps.build-vars.outputs.ts-suffix }}.zip"
+          ARTIFACT_NAME="php_${EXTENSION_NAME}-${TAG}_php${PHP}-${ARCH}-linux-glibc${TS_SUFFIX}.zip"
           zip "$ARTIFACT_NAME" arrow.so
           echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> "$GITHUB_ENV"
           echo "ARTIFACT_PATH=dist/$ARTIFACT_NAME" >> "$GITHUB_ENV"
@@ -106,15 +144,20 @@ jobs:
       - name: Upload to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.create-release.outputs.tag }}
+          REPO: ${{ github.repository }}
         run: |
-          gh release upload "${{ needs.create-release.outputs.tag }}" \
-            "${{ env.ARTIFACT_PATH }}" \
-            --repo "${{ github.repository }}"
+          gh release upload "$TAG" \
+            "$ARTIFACT_PATH" \
+            --repo "$REPO" \
+            --clobber
 
   build-macos:
     name: "macOS arm64 - PHP ${{ matrix.php }} - ${{ matrix.ts }}"
     needs: create-release
     runs-on: macos-latest
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -122,10 +165,13 @@ jobs:
         ts: ['nts', 'zts']
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ needs.create-release.outputs.tag }}
+          persist-credentials: false
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2.37.1
         with:
           php-version: ${{ matrix.php }}
         env:
@@ -133,20 +179,23 @@ jobs:
 
       - name: Set build variables
         id: build-vars
+        env:
+          TS: ${{ matrix.ts }}
         run: |
-          if [ "${{ matrix.ts }}" = "zts" ]; then
+          if [ "$TS" = "zts" ]; then
             echo "ts-suffix=-zts" >> "$GITHUB_OUTPUT"
           else
             echo "ts-suffix=" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
 
       - name: Install build dependencies
         run: |
           brew install llvm
           echo "LIBCLANG_PATH=$(brew --prefix llvm)/lib" >> "$GITHUB_ENV"
+          echo "CLANG_PATH=$(brew --prefix llvm)/bin/clang" >> "$GITHUB_ENV"
 
       - name: Build extension
         env:
@@ -159,11 +208,15 @@ jobs:
           echo "arrow extension loaded successfully"
 
       - name: Create ZIP archive
+        env:
+          TAG: ${{ needs.create-release.outputs.tag }}
+          PHP: ${{ matrix.php }}
+          TS_SUFFIX: ${{ steps.build-vars.outputs.ts-suffix }}
         run: |
           mkdir -p dist
           cp target/release/libarrow.dylib dist/arrow.so
           cd dist
-          ARTIFACT_NAME="php_${{ env.EXTENSION_NAME }}-${{ needs.create-release.outputs.tag }}_php${{ matrix.php }}-arm64-darwin-bsdlibc${{ steps.build-vars.outputs.ts-suffix }}.zip"
+          ARTIFACT_NAME="php_${EXTENSION_NAME}-${TAG}_php${PHP}-arm64-darwin-bsdlibc${TS_SUFFIX}.zip"
           zip "$ARTIFACT_NAME" arrow.so
           echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> "$GITHUB_ENV"
           echo "ARTIFACT_PATH=dist/$ARTIFACT_NAME" >> "$GITHUB_ENV"
@@ -171,20 +224,27 @@ jobs:
       - name: Upload to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.create-release.outputs.tag }}
+          REPO: ${{ github.repository }}
         run: |
-          gh release upload "${{ needs.create-release.outputs.tag }}" \
-            "${{ env.ARTIFACT_PATH }}" \
-            --repo "${{ github.repository }}"
+          gh release upload "$TAG" \
+            "$ARTIFACT_PATH" \
+            --repo "$REPO" \
+            --clobber
 
   publish-release:
     name: Publish Release
     needs: [create-release, build-linux, build-macos]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Mark release as published
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.create-release.outputs.tag }}
+          REPO: ${{ github.repository }}
         run: |
-          gh release edit "${{ needs.create-release.outputs.tag }}" \
-            --repo "${{ github.repository }}" \
+          gh release edit "$TAG" \
+            --repo "$REPO" \
             --draft=false

@@ -1,0 +1,5 @@
+# zizmor configuration: https://docs.zizmor.sh/configuration/
+rules:
+  dangerous-triggers:
+    ignore:
+      - readonly.yaml
