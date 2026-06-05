@@ -1,3 +1,8 @@
+## [Unreleased] - 2026-06-05
+
+### Changed
+- [460061](https://github.com/flow-php/flow/commit/46006120b9fbebbb5c84b4cf0c0dd9032285cef1) - **fix(flow-php/arrow-ext): macOS arm64 release binary build** - [@norberttech](https://github.com/norberttech)
+
 ## [0.39.0] - 2026-06-04
 
 ### Added
