@@ -43,22 +43,41 @@ final class TestEventMother
         return new PreparationStarted(self::createInfo(), self::createTestMethod($className, $methodName));
     }
 
+    /**
+     * PHPUnit 13 extended Info::__construct() from 5 to 11 arguments, adding trailing CpuTime
+     * values.
+     */
     private static function createInfo(): Info
     {
-        return new Info(
+        $arguments = [
             self::createSnapshot(),
             Duration::fromSecondsAndNanoseconds(0, 0),
             MemoryUsage::fromBytes(0),
             Duration::fromSecondsAndNanoseconds(0, 0),
             MemoryUsage::fromBytes(0),
-        );
+        ];
+
+        $constructor = (new ReflectionClass(Info::class))->getConstructor();
+
+        if ($constructor !== null) {
+            $parameters = $constructor->getParameters();
+
+            for ($position = count($arguments); $position < count($parameters); $position++) {
+                $type = $parameters[$position]->getType();
+
+                if ($type instanceof ReflectionNamedType) {
+                    $cpuTime = $type->getName();
+                    $arguments[] = $cpuTime::fromSecondsAndNanoseconds(0, 0);
+                }
+            }
+        }
+
+        return new Info(...$arguments);
     }
 
     /**
-     * PHPUnit 13 extended Snapshot::__construct() with userCpuTime/systemCpuTime/totalCpuTime
-     * (CpuTime). The trailing arguments are built reflectively from the constructor's own
-     * parameter types so the mother stays compatible with PHPUnit 11/12 (4 arguments) and 13
-     * (7 arguments) without referencing the 13-only CpuTime class.
+     * PHPUnit 13 extended Snapshot::__construct() from 4 to 7 arguments, adding trailing CpuTime
+     * values. See createInfo() for the reflective rationale.
      */
     private static function createSnapshot(): Snapshot
     {
