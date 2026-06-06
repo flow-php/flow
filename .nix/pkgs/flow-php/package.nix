@@ -1,5 +1,6 @@
 {
     php,
+    fetchurl,
     php-snappy,
     php-lz4,
     php-brotli,
@@ -38,7 +39,15 @@ let
         ++ (if with-pg-query-ext then [(php-pg-query-ext.override { inherit php; })] else [])
         ++ (if with-arrow-ext then [(php-arrow-ext.override { inherit php; })] else [])
         ++ (if with-grpc then [grpc] else [])
-        ++ (if with-protobuf then [protobuf] else [])
+        ++ (if with-protobuf then [
+            (protobuf.overrideAttrs (old: {
+                version = "5.35.0";
+                src = fetchurl {
+                    url = "https://pecl.php.net/get/protobuf-5.35.0.tgz";
+                    sha256 = "1wk5q2fd7wlb2qs41ikdbdhpf4248i86fsphg7gnq97zi88aar7m";
+                };
+            }))
+        ] else [])
     );
 in
 flowPHP.buildEnv {
