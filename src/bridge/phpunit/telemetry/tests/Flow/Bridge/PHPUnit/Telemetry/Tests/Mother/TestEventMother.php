@@ -16,6 +16,10 @@ use PHPUnit\Event\Test\Finished;
 use PHPUnit\Event\Test\PreparationStarted;
 use PHPUnit\Event\TestData\TestDataCollection;
 use PHPUnit\Metadata\MetadataCollection;
+use ReflectionClass;
+use ReflectionNamedType;
+
+use function count;
 
 final class TestEventMother
 {
@@ -42,17 +46,45 @@ final class TestEventMother
     private static function createInfo(): Info
     {
         return new Info(
-            new Snapshot(
-                HRTime::fromSecondsAndNanoseconds(0, 0),
-                MemoryUsage::fromBytes(0),
-                MemoryUsage::fromBytes(0),
-                new GarbageCollectorStatus(0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, false, false, false, 0),
-            ),
+            self::createSnapshot(),
             Duration::fromSecondsAndNanoseconds(0, 0),
             MemoryUsage::fromBytes(0),
             Duration::fromSecondsAndNanoseconds(0, 0),
             MemoryUsage::fromBytes(0),
         );
+    }
+
+    /**
+     * PHPUnit 13 extended Snapshot::__construct() with userCpuTime/systemCpuTime/totalCpuTime
+     * (CpuTime). The trailing arguments are built reflectively from the constructor's own
+     * parameter types so the mother stays compatible with PHPUnit 11/12 (4 arguments) and 13
+     * (7 arguments) without referencing the 13-only CpuTime class.
+     */
+    private static function createSnapshot(): Snapshot
+    {
+        $arguments = [
+            HRTime::fromSecondsAndNanoseconds(0, 0),
+            MemoryUsage::fromBytes(0),
+            MemoryUsage::fromBytes(0),
+            new GarbageCollectorStatus(0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, false, false, false, 0),
+        ];
+
+        $constructor = (new ReflectionClass(Snapshot::class))->getConstructor();
+
+        if ($constructor !== null) {
+            $parameters = $constructor->getParameters();
+
+            for ($position = count($arguments); $position < count($parameters); $position++) {
+                $type = $parameters[$position]->getType();
+
+                if ($type instanceof ReflectionNamedType) {
+                    $cpuTime = $type->getName();
+                    $arguments[] = $cpuTime::fromSecondsAndNanoseconds(0, 0);
+                }
+            }
+        }
+
+        return new Snapshot(...$arguments);
     }
 
     /**
