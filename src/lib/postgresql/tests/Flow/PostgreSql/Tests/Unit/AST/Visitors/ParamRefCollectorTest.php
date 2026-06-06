@@ -32,6 +32,28 @@ final class ParamRefCollectorTest extends TestCase
         static::assertSame(3, $collector->getMaxParamNumber());
     }
 
+    public function test_collects_params_inside_between(): void
+    {
+        $parsed = sql_parse('SELECT * FROM t WHERE t.d BETWEEN $1 AND $2');
+
+        $collector = new ParamRefCollector();
+        $parsed->traverse($collector);
+
+        static::assertCount(2, $collector->getParamRefs());
+        static::assertSame(2, $collector->getMaxParamNumber());
+    }
+
+    public function test_collects_params_inside_in_list(): void
+    {
+        $parsed = sql_parse('SELECT * FROM t WHERE t.s IN ($1, $2, $3)');
+
+        $collector = new ParamRefCollector();
+        $parsed->traverse($collector);
+
+        static::assertCount(3, $collector->getParamRefs());
+        static::assertSame(3, $collector->getMaxParamNumber());
+    }
+
     public function test_collects_no_params_from_query_without_placeholders(): void
     {
         $parsed = sql_parse('SELECT * FROM users WHERE active = true');

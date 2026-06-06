@@ -570,6 +570,12 @@ final class Traverser
             $this->traverseRepeatedField($boolExpr->getArgs());
         }
 
+        $list = $node->getList();
+
+        if ($list !== null) {
+            $this->traverseRepeatedField($list->getItems());
+        }
+
         $caseExpr = $node->getCaseExpr();
 
         if ($caseExpr !== null) {
