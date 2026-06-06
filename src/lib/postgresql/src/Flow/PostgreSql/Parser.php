@@ -36,13 +36,13 @@ final class Parser
     public function parse(string $sql): ParsedQuery
     {
         try {
-            $json = pg_query_parse($sql);
+            $protobuf = pg_query_parse_protobuf($sql);
         } catch (RuntimeException $e) {
             throw new ParserException($e->getMessage());
         }
 
         $result = new ParseResult();
-        $result->mergeFromJsonString($json);
+        $result->mergeFromString($protobuf);
 
         return new ParsedQuery($result);
     }

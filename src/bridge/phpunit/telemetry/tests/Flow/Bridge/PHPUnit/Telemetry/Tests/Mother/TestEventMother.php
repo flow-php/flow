@@ -16,6 +16,10 @@ use PHPUnit\Event\Test\Finished;
 use PHPUnit\Event\Test\PreparationStarted;
 use PHPUnit\Event\TestData\TestDataCollection;
 use PHPUnit\Metadata\MetadataCollection;
+use ReflectionClass;
+use ReflectionNamedType;
+
+use function count;
 
 final class TestEventMother
 {
@@ -39,20 +43,67 @@ final class TestEventMother
         return new PreparationStarted(self::createInfo(), self::createTestMethod($className, $methodName));
     }
 
+    /**
+     * PHPUnit 13 extended Info::__construct() from 5 to 11 arguments, adding trailing CpuTime
+     * values.
+     */
     private static function createInfo(): Info
     {
-        return new Info(
-            new Snapshot(
-                HRTime::fromSecondsAndNanoseconds(0, 0),
-                MemoryUsage::fromBytes(0),
-                MemoryUsage::fromBytes(0),
-                new GarbageCollectorStatus(0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, false, false, false, 0),
-            ),
+        $arguments = [
+            self::createSnapshot(),
             Duration::fromSecondsAndNanoseconds(0, 0),
             MemoryUsage::fromBytes(0),
             Duration::fromSecondsAndNanoseconds(0, 0),
             MemoryUsage::fromBytes(0),
-        );
+        ];
+
+        $constructor = (new ReflectionClass(Info::class))->getConstructor();
+
+        if ($constructor !== null) {
+            $parameters = $constructor->getParameters();
+
+            for ($position = count($arguments); $position < count($parameters); $position++) {
+                $type = $parameters[$position]->getType();
+
+                if ($type instanceof ReflectionNamedType) {
+                    $cpuTime = $type->getName();
+                    $arguments[] = $cpuTime::fromSecondsAndNanoseconds(0, 0);
+                }
+            }
+        }
+
+        return new Info(...$arguments);
+    }
+
+    /**
+     * PHPUnit 13 extended Snapshot::__construct() from 4 to 7 arguments, adding trailing CpuTime
+     * values. See createInfo() for the reflective rationale.
+     */
+    private static function createSnapshot(): Snapshot
+    {
+        $arguments = [
+            HRTime::fromSecondsAndNanoseconds(0, 0),
+            MemoryUsage::fromBytes(0),
+            MemoryUsage::fromBytes(0),
+            new GarbageCollectorStatus(0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, false, false, false, 0),
+        ];
+
+        $constructor = (new ReflectionClass(Snapshot::class))->getConstructor();
+
+        if ($constructor !== null) {
+            $parameters = $constructor->getParameters();
+
+            for ($position = count($arguments); $position < count($parameters); $position++) {
+                $type = $parameters[$position]->getType();
+
+                if ($type instanceof ReflectionNamedType) {
+                    $cpuTime = $type->getName();
+                    $arguments[] = $cpuTime::fromSecondsAndNanoseconds(0, 0);
+                }
+            }
+        }
+
+        return new Snapshot(...$arguments);
     }
 
     /**
