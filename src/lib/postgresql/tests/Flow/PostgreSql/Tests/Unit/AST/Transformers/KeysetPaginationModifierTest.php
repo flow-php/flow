@@ -157,6 +157,18 @@ final class KeysetPaginationModifierTest extends TestCase
             'SELECT * FROM users WHERE status = $1 ORDER BY id LIMIT 10',
         ];
 
+        yield 'base query with BETWEEN params - keyset offset past list bounds' => [
+            'SELECT * FROM t WHERE t.d BETWEEN $1 AND $2',
+            new KeysetPaginationConfig(10, [sql_keyset_column('t.id', SortOrder::ASC)], [100]),
+            'SELECT * FROM t WHERE t.d BETWEEN $1 AND $2 AND t.id > $3 ORDER BY t.id ASC LIMIT 10',
+        ];
+
+        yield 'base query with IN list params - keyset offset past list items' => [
+            'SELECT * FROM t WHERE t.s IN ($1, $2, $3)',
+            new KeysetPaginationConfig(10, [sql_keyset_column('t.id', SortOrder::ASC)], [100]),
+            'SELECT * FROM t WHERE t.s IN ($1, $2, $3) AND t.id > $4 ORDER BY t.id ASC LIMIT 10',
+        ];
+
         yield 'with out-of-order parameters - max detected correctly' => [
             'SELECT * FROM users WHERE id > $10 OR status = $1 ORDER BY id',
             new KeysetPaginationConfig(10, [sql_keyset_column('id', SortOrder::ASC)], [42]),

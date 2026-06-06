@@ -10,6 +10,7 @@ use Flow\PostgreSql\AST\NodeVisitor;
 use Flow\PostgreSql\AST\Traverser;
 use Flow\PostgreSql\AST\Visitors\ColumnRefCollector;
 use Flow\PostgreSql\AST\Visitors\FuncCallCollector;
+use Flow\PostgreSql\AST\Visitors\ParamRefCollector;
 use Flow\PostgreSql\AST\Visitors\RangeVarCollector;
 use Flow\PostgreSql\Protobuf\AST\A_Const;
 use Flow\PostgreSql\Protobuf\AST\ColumnRef;
@@ -394,6 +395,30 @@ final class TraverserTest extends TestCase
         static::assertCount(3, $columnCollector->getColumnRefs());
         static::assertCount(1, $funcCollector->getFuncCalls());
         static::assertCount(1, $rangeVarCollector->getRangeVars());
+    }
+
+    public function test_param_ref_collector_inside_between(): void
+    {
+        $collector = new ParamRefCollector();
+        $traverser = new Traverser($collector);
+
+        $result = $this->parseQuery('SELECT * FROM t WHERE t.d BETWEEN $1 AND $2');
+        $traverser->traverse($result);
+
+        static::assertCount(2, $collector->getParamRefs());
+        static::assertSame(2, $collector->getMaxParamNumber());
+    }
+
+    public function test_param_ref_collector_inside_in_list(): void
+    {
+        $collector = new ParamRefCollector();
+        $traverser = new Traverser($collector);
+
+        $result = $this->parseQuery('SELECT * FROM t WHERE t.s IN ($1, $2, $3)');
+        $traverser->traverse($result);
+
+        static::assertCount(3, $collector->getParamRefs());
+        static::assertSame(3, $collector->getMaxParamNumber());
     }
 
     public function test_range_var_collector(): void
