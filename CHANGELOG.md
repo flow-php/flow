@@ -6,6 +6,9 @@
 - [#2430](https://github.com/flow-php/flow/pull/2430) - **flow-php/phpunit-telemetry-bridge - TestEventMother builds Snapshot reflectively for PHPUnit 11/12/13 compatibility** - [@norberttech](https://github.com/norberttech)
 - [460061](https://github.com/flow-php/flow/commit/46006120b9fbebbb5c84b4cf0c0dd9032285cef1) - **fix(flow-php/arrow-ext): macOS arm64 release binary build** - [@norberttech](https://github.com/norberttech)
 
+### Fixed
+- [#2431](https://github.com/flow-php/flow/pull/2431) - **flow-php/postgresql - detect ParamRef nodes inside List expressions so BETWEEN/IN/VALUES placeholders are counted during keyset pagination offset.** - [@norberttech](https://github.com/norberttech)
+
 ## [0.39.0] - 2026-06-04
 
 ### Added
