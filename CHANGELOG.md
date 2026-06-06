@@ -1,6 +1,9 @@
-## [Unreleased] - 2026-06-05
+## [Unreleased] - 2026-06-06
 
 ### Changed
+- [#2430](https://github.com/flow-php/flow/pull/2430) - **flow-php/postgresql - Parser::parse() ingests binary protobuf instead of JSON** - [@norberttech](https://github.com/norberttech)
+- [#2430](https://github.com/flow-php/flow/pull/2430) - **flow-php/postgresql - dev ext-protobuf bumped to 5.35.0 (depth limit 64 to 100)** - [@norberttech](https://github.com/norberttech)
+- [#2430](https://github.com/flow-php/flow/pull/2430) - **flow-php/phpunit-telemetry-bridge - TestEventMother builds Snapshot reflectively for PHPUnit 11/12/13 compatibility** - [@norberttech](https://github.com/norberttech)
 - [460061](https://github.com/flow-php/flow/commit/46006120b9fbebbb5c84b4cf0c0dd9032285cef1) - **fix(flow-php/arrow-ext): macOS arm64 release binary build** - [@norberttech](https://github.com/norberttech)
 
 ## [0.39.0] - 2026-06-04
