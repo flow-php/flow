@@ -1,5 +1,10 @@
 ## [Unreleased] - 2026-06-07
 
+### Added
+- [#2434](https://github.com/flow-php/flow/pull/2434) - **flow-php/symfony-telemetry-bundle - #[WithTelemetryChannel] attribute to scope a service's logger to a named channel** - [@norberttech](https://github.com/norberttech)
+- [#2434](https://github.com/flow-php/flow/pull/2434) - **flow-php/symfony-telemetry-bundle - optional capture_framework_channels to reroute Symfony's monolog.logger channels (off by default)** - [@norberttech](https://github.com/norberttech)
+- [#2434](https://github.com/flow-php/flow/pull/2434) - **flow-php/symfony-telemetry-bundle - per-channel binding of PSR-3 LoggerInterface and native Logger with $Logger aliases** - [@norberttech](https://github.com/norberttech)
+
 ### Changed
 - [#2430](https://github.com/flow-php/flow/pull/2430) - **flow-php/postgresql - Parser::parse() ingests binary protobuf instead of JSON** - [@norberttech](https://github.com/norberttech)
 - [#2430](https://github.com/flow-php/flow/pull/2430) - **flow-php/postgresql - dev ext-protobuf bumped to 5.35.0 (depth limit 64 to 100)** - [@norberttech](https://github.com/norberttech)
