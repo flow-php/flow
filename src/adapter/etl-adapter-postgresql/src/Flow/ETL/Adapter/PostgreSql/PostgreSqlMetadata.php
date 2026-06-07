@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\PostgreSql;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema\Metadata;
 use Flow\PostgreSql\Schema\IdentityGeneration;
+
+use function str_contains;
 
 /**
  * Per-column metadata keys understood by {@see SchemaConverter} when converting a Flow Schema to a
@@ -39,14 +42,25 @@ enum PostgreSqlMetadata: string
         return Metadata::with(self::IDENTITY->value, $generation->value);
     }
 
-    public static function index(string $name): Metadata
+    public static function index(string $name, int $position = PHP_INT_MAX): Metadata
     {
-        return Metadata::with(self::INDEX->value, $name);
+        if (str_contains($name, ':')) {
+            throw InvalidArgumentException::because('PostgreSQL index name "%s" must not contain a colon ":"', $name);
+        }
+
+        return Metadata::with(self::INDEX->value . ':' . $name, $position);
     }
 
-    public static function indexUnique(string $name): Metadata
+    public static function indexUnique(string $name, int $position = PHP_INT_MAX): Metadata
     {
-        return Metadata::with(self::INDEX_UNIQUE->value, $name);
+        if (str_contains($name, ':')) {
+            throw InvalidArgumentException::because(
+                'PostgreSQL unique index name "%s" must not contain a colon ":"',
+                $name,
+            );
+        }
+
+        return Metadata::with(self::INDEX_UNIQUE->value . ':' . $name, $position);
     }
 
     public static function length(int $length): Metadata

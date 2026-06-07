@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit;
 
 use Flow\ETL\Adapter\PostgreSql\PostgreSqlMetadata;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\PostgreSql\Schema\IdentityGeneration;
 use PHPUnit\Framework\TestCase;
 
@@ -45,16 +46,52 @@ final class PostgreSqlMetadataTest extends TestCase
     {
         $metadata = PostgreSqlMetadata::index('idx_name');
 
-        static::assertTrue($metadata->has(PostgreSqlMetadata::INDEX->value));
-        static::assertSame('idx_name', $metadata->get(PostgreSqlMetadata::INDEX->value));
+        static::assertTrue($metadata->has(PostgreSqlMetadata::INDEX->value . ':idx_name'));
+        static::assertSame(PHP_INT_MAX, $metadata->get(PostgreSqlMetadata::INDEX->value . ':idx_name'));
+    }
+
+    public function test_index_factory_rejects_colon_in_name(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        PostgreSqlMetadata::index('bad:name');
+    }
+
+    public function test_index_factory_with_position(): void
+    {
+        $metadata = PostgreSqlMetadata::index('idx_name', 2);
+
+        static::assertSame(2, $metadata->get(PostgreSqlMetadata::INDEX->value . ':idx_name'));
     }
 
     public function test_index_unique_factory(): void
     {
         $metadata = PostgreSqlMetadata::indexUnique('uq_email');
 
-        static::assertTrue($metadata->has(PostgreSqlMetadata::INDEX_UNIQUE->value));
-        static::assertSame('uq_email', $metadata->get(PostgreSqlMetadata::INDEX_UNIQUE->value));
+        static::assertTrue($metadata->has(PostgreSqlMetadata::INDEX_UNIQUE->value . ':uq_email'));
+        static::assertSame(PHP_INT_MAX, $metadata->get(PostgreSqlMetadata::INDEX_UNIQUE->value . ':uq_email'));
+    }
+
+    public function test_index_unique_factory_rejects_colon_in_name(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        PostgreSqlMetadata::indexUnique('bad:name');
+    }
+
+    public function test_index_unique_factory_with_position(): void
+    {
+        $metadata = PostgreSqlMetadata::indexUnique('uq_email', 1);
+
+        static::assertSame(1, $metadata->get(PostgreSqlMetadata::INDEX_UNIQUE->value . ':uq_email'));
+    }
+
+    public function test_merge_keeps_both_index_keys(): void
+    {
+        $metadata = PostgreSqlMetadata::index('idx_a', 1)->merge(PostgreSqlMetadata::index('idx_b', 2));
+
+        static::assertSame(1, $metadata->get(PostgreSqlMetadata::INDEX->value . ':idx_a'));
+        static::assertSame(2, $metadata->get(PostgreSqlMetadata::INDEX->value . ':idx_b'));
     }
 
     public function test_length_factory(): void

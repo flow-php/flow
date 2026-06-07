@@ -19,6 +19,8 @@ use Flow\PostgreSql\Schema\TableOptions;
 use Flow\Types\Type;
 
 use function array_keys;
+use function array_map;
+use function array_search;
 use function count;
 use function Flow\ETL\DSL\definition_from_type;
 use function Flow\PostgreSql\DSL\column_type_from_string;
@@ -26,6 +28,11 @@ use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_string;
 use function implode;
 use function in_array;
+use function is_int;
+use function str_starts_with;
+use function strlen;
+use function substr;
+use function usort;
 
 /**
  * Converts between a Flow {@see Schema} and a PostgreSQL {@see Table}.
@@ -122,14 +129,22 @@ final readonly class SchemaConverter
         }
 
         foreach ($table->uniqueConstraints as $unique) {
-            if (in_array($column->name, $unique->columns, true)) {
-                $metadata = $metadata->merge(PostgreSqlMetadata::indexUnique($unique->name ?? ''));
+            $position = array_search($column->name, $unique->columns, true);
+
+            if ($position !== false) {
+                $metadata = $metadata->merge(PostgreSqlMetadata::indexUnique($unique->name ?? '', $position));
             }
         }
 
         foreach ($table->indexes as $index) {
-            if (!$index->unique && !$index->primary && in_array($column->name, $index->columns, true)) {
-                $metadata = $metadata->merge(PostgreSqlMetadata::index($index->name));
+            if ($index->unique || $index->primary) {
+                continue;
+            }
+
+            $position = array_search($column->name, $index->columns, true);
+
+            if ($position !== false) {
+                $metadata = $metadata->merge(PostgreSqlMetadata::index($index->name, $position));
             }
         }
 
@@ -215,13 +230,57 @@ final readonly class SchemaConverter
     }
 
     /**
+     *
+     * @return array<string, non-empty-list<string>>
+     */
+    private function groupColumnsByIndexPrefix(Schema $schema, string $prefix): array
+    {
+        $prefix .= ':';
+        /** @var array<string, list<array{column: string, position: int, ordinal: int}>> $grouped */
+        $grouped = [];
+        $ordinal = 0;
+
+        foreach ($schema->definitions() as $definition) {
+            foreach ($definition->metadata()->normalize() as $key => $value) {
+                if (str_starts_with($key, $prefix)) {
+                    $grouped[substr($key, strlen($prefix))][] = [
+                        'column' => $definition->entry()->name(),
+                        'position' => is_int($value) ? $value : PHP_INT_MAX,
+                        'ordinal' => $ordinal,
+                    ];
+                }
+            }
+
+            $ordinal++;
+        }
+
+        $ordered = [];
+
+        foreach ($grouped as $name => $columns) {
+            if ($columns === []) {
+                continue;
+            }
+
+            usort(
+                $columns,
+                static fn(array $a, array $b): int => (
+                    [$a['position'], $a['ordinal']] <=> [$b['position'], $b['ordinal']]
+                ),
+            );
+            $ordered[$name] = array_map(static fn(array $c): string => $c['column'], $columns);
+        }
+
+        return $ordered;
+    }
+
+    /**
      * @return list<Index>
      */
     private function indexes(Schema $schema): array
     {
         $indexes = [];
 
-        foreach ($this->groupColumnsByMetadata($schema, PostgreSqlMetadata::INDEX->value) as $name => $columns) {
+        foreach ($this->groupColumnsByIndexPrefix($schema, PostgreSqlMetadata::INDEX->value) as $name => $columns) {
             $indexes[] = new Index(name: $name, columns: $columns);
         }
 
@@ -254,7 +313,10 @@ final readonly class SchemaConverter
     {
         $constraints = [];
 
-        foreach ($this->groupColumnsByMetadata($schema, PostgreSqlMetadata::INDEX_UNIQUE->value) as $name => $columns) {
+        foreach ($this->groupColumnsByIndexPrefix(
+            $schema,
+            PostgreSqlMetadata::INDEX_UNIQUE->value,
+        ) as $name => $columns) {
             $constraints[] = new UniqueConstraint(columns: $columns, name: $name === '' ? null : $name);
         }
 
