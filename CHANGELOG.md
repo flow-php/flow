@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-06-06
+## [Unreleased] - 2026-06-07
 
 ### Changed
 - [#2430](https://github.com/flow-php/flow/pull/2430) - **flow-php/postgresql - Parser::parse() ingests binary protobuf instead of JSON** - [@norberttech](https://github.com/norberttech)
