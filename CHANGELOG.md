@@ -1,11 +1,15 @@
 ## [Unreleased] - 2026-06-07
 
 ### Added
+- [#2435](https://github.com/flow-php/flow/pull/2435) - **etl-adapter-postgresql - explicit column position in index/unique metadata** - [@norberttech](https://github.com/norberttech)
+- [#2435](https://github.com/flow-php/flow/pull/2435) - **etl-adapter-postgresql - a column can belong to multiple indexes** - [@norberttech](https://github.com/norberttech)
 - [#2434](https://github.com/flow-php/flow/pull/2434) - **flow-php/symfony-telemetry-bundle - #[WithTelemetryChannel] attribute to scope a service's logger to a named channel** - [@norberttech](https://github.com/norberttech)
 - [#2434](https://github.com/flow-php/flow/pull/2434) - **flow-php/symfony-telemetry-bundle - optional capture_framework_channels to reroute Symfony's monolog.logger channels (off by default)** - [@norberttech](https://github.com/norberttech)
 - [#2434](https://github.com/flow-php/flow/pull/2434) - **flow-php/symfony-telemetry-bundle - per-channel binding of PSR-3 LoggerInterface and native Logger with $Logger aliases** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2435](https://github.com/flow-php/flow/pull/2435) - **etl-adapter-postgresql - composite index/unique columns ordered by position, schema order as tiebreak** - [@norberttech](https://github.com/norberttech)
+- [#2435](https://github.com/flow-php/flow/pull/2435) - **etl-adapter-postgresql - reverse Table to Flow conversion preserves index column order** - [@norberttech](https://github.com/norberttech)
 - [#2430](https://github.com/flow-php/flow/pull/2430) - **flow-php/postgresql - Parser::parse() ingests binary protobuf instead of JSON** - [@norberttech](https://github.com/norberttech)
 - [#2430](https://github.com/flow-php/flow/pull/2430) - **flow-php/postgresql - dev ext-protobuf bumped to 5.35.0 (depth limit 64 to 100)** - [@norberttech](https://github.com/norberttech)
 - [#2430](https://github.com/flow-php/flow/pull/2430) - **flow-php/phpunit-telemetry-bridge - TestEventMother builds Snapshot reflectively for PHPUnit 11/12/13 compatibility** - [@norberttech](https://github.com/norberttech)
