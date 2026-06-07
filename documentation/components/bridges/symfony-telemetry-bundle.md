@@ -14,11 +14,14 @@ backends.
 
 ## Installation
 
-For detailed installation instructions, see the [installation page](/documentation/installation/packages/symfony-telemetry-bundle.md).
+For detailed installation instructions, see
+the [installation page](/documentation/installation/packages/symfony-telemetry-bundle.md).
 
 ## Overview
 
-This bundle is built on top of [flow-php/telemetry](/documentation/components/libs/telemetry.md) — see that page for the underlying `Telemetry`, tracer/meter/logger API, and processor/exporter primitives. For exporting to OTLP-compatible backends, it also uses the [Telemetry OTLP Bridge](/documentation/components/bridges/telemetry-otlp-bridge.md).
+This bundle is built on top of [flow-php/telemetry](/documentation/components/libs/telemetry.md) — see that page for the
+underlying `Telemetry`, tracer/meter/logger API, and processor/exporter primitives. For exporting to OTLP-compatible
+backends, it also uses the [Telemetry OTLP Bridge](/documentation/components/bridges/telemetry-otlp-bridge.md).
 
 This bundle integrates Flow PHP's Telemetry library with Symfony applications. It provides:
 
@@ -158,7 +161,7 @@ flow_telemetry:
 
     fanout:
       type: composite
-      handlers: [default, to_file, to_syslog]
+      handlers: [ default, to_file, to_syslog ]
 
     silent:
       type: noop
@@ -177,63 +180,64 @@ Service IDs registered by the bundle (predictable for `decorates:`):
 
 #### error_log (default)
 
-Writes formatted Throwables via PHP's `error_log()` — stderr in CLI by default, or the `error_log` ini setting otherwise.
+Writes formatted Throwables via PHP's `error_log()` — stderr in CLI by default, or the `error_log` ini setting
+otherwise.
 Matches the OTEL spec recommendation to log to standard error output.
 
-| Option            | Type    | Default           | Description                                                       |
-|-------------------|---------|-------------------|-------------------------------------------------------------------|
-| `message_type`    | enum    | `operating_system` | `operating_system` (0), `email` (1), `file` (3), `sapi` (4)       |
-| `expand_newlines` | boolean | `false`           | Emit one `error_log()` call per line of the formatted message     |
-| `message_prefix`  | string  | `[flow-telemetry]` | Prefix prepended to every message                                 |
+| Option            | Type    | Default            | Description                                                   |
+|-------------------|---------|--------------------|---------------------------------------------------------------|
+| `message_type`    | enum    | `operating_system` | `operating_system` (0), `email` (1), `file` (3), `sapi` (4)   |
+| `expand_newlines` | boolean | `false`            | Emit one `error_log()` call per line of the formatted message |
+| `message_prefix`  | string  | `[flow-telemetry]` | Prefix prepended to every message                             |
 
 #### stream
 
 Appends formatted Throwables (one per line) to a file path or `php://` stream wrapper. The handle is opened lazily on
 the first call and reused.
 
-| Option               | Type    | Default            | Description                                                  |
-|----------------------|---------|--------------------|--------------------------------------------------------------|
-| `destination`        | string  | -                  | File path or `php://stdout`/`php://stderr`/etc. (required)   |
-| `file_permissions`   | integer | `0644`             | Permissions for newly created files (ignored for `php://`)   |
-| `create_directories` | boolean | `true`             | Create parent directories of the destination if missing      |
-| `message_prefix`     | string  | `[flow-telemetry]` | Prefix prepended to every line                               |
+| Option               | Type    | Default            | Description                                                |
+|----------------------|---------|--------------------|------------------------------------------------------------|
+| `destination`        | string  | -                  | File path or `php://stdout`/`php://stderr`/etc. (required) |
+| `file_permissions`   | integer | `0644`             | Permissions for newly created files (ignored for `php://`) |
+| `create_directories` | boolean | `true`             | Create parent directories of the destination if missing    |
+| `message_prefix`     | string  | `[flow-telemetry]` | Prefix prepended to every line                             |
 
 #### syslog
 
 Writes via `openlog/syslog/closelog`.
 
-| Option     | Type    | Default          | Description                                            |
-|------------|---------|------------------|--------------------------------------------------------|
-| `ident`    | string  | `flow-telemetry` | Syslog identity tag                                    |
-| `facility` | enum    | `user`           | RFC 5424 facility (see table below)                    |
-| `log_opts` | integer | `LOG_PID`        | Bitmask of `LOG_*` flags passed to `openlog()`         |
-| `severity` | enum    | `error`          | RFC 5424 severity (see table below)                    |
+| Option     | Type    | Default          | Description                                    |
+|------------|---------|------------------|------------------------------------------------|
+| `ident`    | string  | `flow-telemetry` | Syslog identity tag                            |
+| `facility` | enum    | `user`           | RFC 5424 facility (see table below)            |
+| `log_opts` | integer | `LOG_PID`        | Bitmask of `LOG_*` flags passed to `openlog()` |
+| `severity` | enum    | `error`          | RFC 5424 severity (see table below)            |
 
 #### udp_syslog
 
 Sends RFC 5424 syslog frames over UDP.
 
-| Option     | Type    | Default          | Description                                  |
-|------------|---------|------------------|----------------------------------------------|
-| `host`     | string  | -                | Remote syslog host (required)                |
-| `port`     | integer | `514`            | Remote syslog port                           |
-| `ident`    | string  | `flow-telemetry` | Syslog identity tag                          |
-| `facility` | enum    | `user`           | RFC 5424 facility                            |
-| `severity` | enum    | `error`          | RFC 5424 severity                            |
+| Option     | Type    | Default          | Description                   |
+|------------|---------|------------------|-------------------------------|
+| `host`     | string  | -                | Remote syslog host (required) |
+| `port`     | integer | `514`            | Remote syslog port            |
+| `ident`    | string  | `flow-telemetry` | Syslog identity tag           |
+| `facility` | enum    | `user`           | RFC 5424 facility             |
+| `severity` | enum    | `error`          | RFC 5424 severity             |
 
 #### composite
 
 Fans an error out to multiple named handlers. Each child invocation is wrapped so a misbehaving handler cannot prevent
 siblings from running.
 
-| Option     | Type            | Default | Description                                                |
-|------------|-----------------|---------|------------------------------------------------------------|
-| `handlers` | list of strings | -       | Names of other entries in `error_handlers:` (required)     |
+| Option     | Type            | Default | Description                                            |
+|------------|-----------------|---------|--------------------------------------------------------|
+| `handlers` | list of strings | -       | Names of other entries in `error_handlers:` (required) |
 
 ```yaml
 fanout:
   type: composite
-  handlers: [default, to_file]
+  handlers: [ default, to_file ]
 ```
 
 #### noop
@@ -248,9 +252,9 @@ silent: { type: noop }
 
 Aliases an existing service that implements `Flow\Telemetry\ErrorHandler\ErrorHandler`.
 
-| Option       | Type   | Default | Description                                              |
-|--------------|--------|---------|----------------------------------------------------------|
-| `service_id` | string | -       | Service id of the user-provided handler (required)       |
+| Option       | Type   | Default | Description                                        |
+|--------------|--------|---------|----------------------------------------------------|
+| `service_id` | string | -       | Service id of the user-provided handler (required) |
 
 ```yaml
 custom:
@@ -260,18 +264,18 @@ custom:
 
 #### Facility values
 
-| Value     | Constant      |
-|-----------|---------------|
-| `kernel`  | `LOG_KERN`    |
-| `user`    | `LOG_USER`    |
-| `mail`    | `LOG_MAIL`    |
-| `daemon`  | `LOG_DAEMON`  |
-| `auth`    | `LOG_AUTH`    |
-| `syslog`  | `LOG_SYSLOG`  |
-| `lpr`     | `LOG_LPR`     |
-| `news`    | `LOG_NEWS`    |
-| `uucp`    | `LOG_UUCP`    |
-| `cron`    | `LOG_CRON`    |
+| Value              | Constant                   |
+|--------------------|----------------------------|
+| `kernel`           | `LOG_KERN`                 |
+| `user`             | `LOG_USER`                 |
+| `mail`             | `LOG_MAIL`                 |
+| `daemon`           | `LOG_DAEMON`               |
+| `auth`             | `LOG_AUTH`                 |
+| `syslog`           | `LOG_SYSLOG`               |
+| `lpr`              | `LOG_LPR`                  |
+| `news`             | `LOG_NEWS`                 |
+| `uucp`             | `LOG_UUCP`                 |
+| `cron`             | `LOG_CRON`                 |
 | `local0`..`local7` | `LOG_LOCAL0`..`LOG_LOCAL7` |
 
 #### Severity values
@@ -296,21 +300,21 @@ sub-blocks: `otlp`, `service`, `console`, `memory`, `void`. Per-signal processor
 ```yaml
 flow_telemetry:
   exporters:
-    otlp:                              # exporter name
-      otlp:                            # sub-block selects implementation
+    otlp: # exporter name
+      otlp: # sub-block selects implementation
         transport:
           type: curl
           endpoint: 'http://otel-collector:4318'
           encoding: protobuf
 ```
 
-| Sub-block | Options                                | Description                              |
-|-----------|----------------------------------------|------------------------------------------|
-| `otlp`    | `transport: { ... }`                   | Sends batches over OTLP curl/grpc/service |
-| `service` | `id: <service_id>`                     | Aliases an existing user-provided service |
-| `console` | none (use `~` / `null` / `{}`)          | Pretty-prints to console                  |
-| `memory`  | none                                   | Stores batches in memory (testing)        |
-| `void`    | none                                   | Discards everything (no-op)               |
+| Sub-block | Options                        | Description                               |
+|-----------|--------------------------------|-------------------------------------------|
+| `otlp`    | `transport: { ... }`           | Sends batches over OTLP curl/grpc/service |
+| `service` | `id: <service_id>`             | Aliases an existing user-provided service |
+| `console` | none (use `~` / `null` / `{}`) | Pretty-prints to console                  |
+| `memory`  | none                           | Stores batches in memory (testing)        |
+| `void`    | none                           | Discards everything (no-op)               |
 
 Service IDs registered by the bundle (predictable for `decorates:`):
 
@@ -424,10 +428,10 @@ processor:
 
 Batches items before export.
 
-| Option       | Type    | Default | Description                                  |
-|--------------|---------|---------|----------------------------------------------|
-| `batch_size` | integer | `512`   | Number of items per batch                    |
-| `exporter`   | string  | -       | Name of a top-level exporter (required)      |
+| Option       | Type    | Default | Description                             |
+|--------------|---------|---------|-----------------------------------------|
+| `batch_size` | integer | `512`   | Number of items per batch               |
+| `exporter`   | string  | -       | Name of a top-level exporter (required) |
 
 ```yaml
 processor:
@@ -545,9 +549,9 @@ budget for graceful drain at shutdown:
 
 | Setting               | Default | Applies to | Bounds                                                      |
 |-----------------------|--------:|------------|-------------------------------------------------------------|
-| `timeout_ms`          |   250   | curl, grpc | Per-request deadline (curl: total request; grpc: per-call)  |
-| `connect_timeout_ms`  |   250   | curl only  | TCP/TLS connect; gRPC has no separate bound                 |
-| `shutdown_timeout_ms` |  5000   | curl, grpc | Wall-clock budget for draining pending requests at shutdown |
+| `timeout_ms`          |     250 | curl, grpc | Per-request deadline (curl: total request; grpc: per-call)  |
+| `connect_timeout_ms`  |     250 | curl only  | TCP/TLS connect; gRPC has no separate bound                 |
+| `shutdown_timeout_ms` |    5000 | curl, grpc | Wall-clock budget for draining pending requests at shutdown |
 
 The defaults assume the recommended deployment: an OpenTelemetry Collector running close to the application (loopback,
 UDS, or sidecar). `shutdown_timeout_ms` is independent of `timeout_ms` — keep the per-request value tight to surface
@@ -589,24 +593,24 @@ For the underlying behavior — when a forwarded batch is treated as absorbed vs
 
 #### curl (default)
 
-| Option                | Type    | Default | Description                                                                |
-|-----------------------|---------|---------|----------------------------------------------------------------------------|
-| `endpoint`            | string  | -       | OTLP base URL (required)                                                   |
-| `timeout_ms`          | integer | `250`   | Total per-request deadline in **milliseconds**                             |
-| `connect_timeout_ms`  | integer | `250`   | TCP/TLS connect deadline in **milliseconds**                               |
+| Option                | Type    | Default | Description                                                                     |
+|-----------------------|---------|---------|---------------------------------------------------------------------------------|
+| `endpoint`            | string  | -       | OTLP base URL (required)                                                        |
+| `timeout_ms`          | integer | `250`   | Total per-request deadline in **milliseconds**                                  |
+| `connect_timeout_ms`  | integer | `250`   | TCP/TLS connect deadline in **milliseconds**                                    |
 | `shutdown_timeout_ms` | integer | `5000`  | Wall-clock budget in **milliseconds** for draining pending requests at shutdown |
-| `compression`         | boolean | `false` | Enable compression                                                         |
-| `follow_redirects`    | boolean | `true`  | Follow HTTP redirects                                                      |
-| `max_redirects`       | integer | `3`     | Maximum redirects to follow                                                |
-| `proxy`               | string  | `null`  | Proxy URL                                                                  |
-| `ssl_verify_peer`     | boolean | `true`  | Verify SSL peer                                                            |
-| `ssl_verify_host`     | boolean | `true`  | Verify SSL host                                                            |
-| `ssl_cert_path`       | string  | `null`  | SSL certificate path                                                       |
-| `ssl_key_path`        | string  | `null`  | SSL key path                                                               |
-| `ca_info_path`        | string  | `null`  | CA info path                                                               |
-| `headers`             | object  | `{}`    | Additional HTTP headers                                                    |
-| `encoding`            | enum    | `json`  | OTLP/HTTP wire encoding: `json` or `protobuf`                              |
-| `failover`            | object  | `null`  | Optional [failover transport](#failover-transport)                         |
+| `compression`         | boolean | `false` | Enable compression                                                              |
+| `follow_redirects`    | boolean | `true`  | Follow HTTP redirects                                                           |
+| `max_redirects`       | integer | `3`     | Maximum redirects to follow                                                     |
+| `proxy`               | string  | `null`  | Proxy URL                                                                       |
+| `ssl_verify_peer`     | boolean | `true`  | Verify SSL peer                                                                 |
+| `ssl_verify_host`     | boolean | `true`  | Verify SSL host                                                                 |
+| `ssl_cert_path`       | string  | `null`  | SSL certificate path                                                            |
+| `ssl_key_path`        | string  | `null`  | SSL key path                                                                    |
+| `ca_info_path`        | string  | `null`  | CA info path                                                                    |
+| `headers`             | object  | `{}`    | Additional HTTP headers                                                         |
+| `encoding`            | enum    | `json`  | OTLP/HTTP wire encoding: `json` or `protobuf`                                   |
+| `failover`            | object  | `null`  | Optional [failover transport](#failover-transport)                              |
 
 See [Timeouts](#timeouts) for guidance on the millisecond defaults.
 
@@ -631,14 +635,14 @@ gRPC transport. `encoding` is rejected by validation (OTLP/gRPC mandates Protobu
 `connect_timeout_ms` is rejected because gRPC has no separate connect bound — `timeout_ms` is the per-call deadline
 covering DNS, connect, send and receive together.
 
-| Option                | Type    | Default | Description                                                                |
-|-----------------------|---------|---------|----------------------------------------------------------------------------|
-| `endpoint`            | string  | -       | gRPC endpoint (required)                                                   |
-| `timeout_ms`          | integer | `250`   | Per-call deadline in **milliseconds**                                      |
+| Option                | Type    | Default | Description                                                                  |
+|-----------------------|---------|---------|------------------------------------------------------------------------------|
+| `endpoint`            | string  | -       | gRPC endpoint (required)                                                     |
+| `timeout_ms`          | integer | `250`   | Per-call deadline in **milliseconds**                                        |
 | `shutdown_timeout_ms` | integer | `5000`  | Wall-clock budget in **milliseconds** for draining pending calls at shutdown |
-| `insecure`            | boolean | `true`  | Allow insecure connections                                                 |
-| `headers`             | object  | `{}`    | gRPC metadata                                                              |
-| `failover`            | object  | `null`  | Optional [failover transport](#failover-transport)                         |
+| `insecure`            | boolean | `true`  | Allow insecure connections                                                   |
+| `headers`             | object  | `{}`    | gRPC metadata                                                                |
+| `failover`            | object  | `null`  | Optional [failover transport](#failover-transport)                           |
 
 ```yaml
 exporters:
@@ -658,11 +662,11 @@ per batch to the configured destination — either an absolute file path or a `p
 `LOCK_EX` around each `fwrite`. Only JSON encoding is supported per the spec; `encoding` and HTTP-specific options
 (`timeout`, `ssl_*`, `headers`, etc.) are rejected at config time.
 
-| Option                | Type    | Default  | Description                                                                  |
-|-----------------------|---------|----------|------------------------------------------------------------------------------|
-| `endpoint`            | string  | -        | File path or `php://` stream wrapper URI (required)                          |
-| `file_permissions`    | integer | `0644`   | File mode applied when creating new files; ignored for `php://` destinations |
-| `create_directories`  | boolean | `true`   | Create the destination's parent directories if missing; ignored for `php://` destinations |
+| Option               | Type    | Default | Description                                                                               |
+|----------------------|---------|---------|-------------------------------------------------------------------------------------------|
+| `endpoint`           | string  | -       | File path or `php://` stream wrapper URI (required)                                       |
+| `file_permissions`   | integer | `0644`  | File mode applied when creating new files; ignored for `php://` destinations              |
+| `create_directories` | boolean | `true`  | Create the destination's parent directories if missing; ignored for `php://` destinations |
 
 ```yaml
 exporters:
@@ -726,9 +730,9 @@ flow_telemetry:
   tracer_provider:
     processor: { type: batching, exporter: otlp_traces,  batch_size: 1024 }
   meter_provider:
-    processor: { type: batching, exporter: otlp_metrics, batch_size: 256  }
+    processor: { type: batching, exporter: otlp_metrics, batch_size: 256 }
   logger_provider:
-    processor: { type: batching, exporter: otlp_logs,    batch_size: 100  }
+    processor: { type: batching, exporter: otlp_logs,    batch_size: 100 }
 ```
 
 ### Migrating from older config
@@ -933,9 +937,15 @@ flow_telemetry:
 
 ### Main Logger
 
-The bundle depends on [PSR-3 Telemetry Bridge](/documentation/components/bridges/psr3-telemetry-bridge.md) and registers a PSR-3 wrapper service for every named Telemetry logger at `flow.telemetry.<name>.logger.psr3`. This makes Flow Telemetry loggers usable as Symfony's `logger` service, removing the need for Monolog when telemetry is the only logging destination.
+The bundle depends on [PSR-3 Telemetry Bridge](/documentation/components/bridges/psr3-telemetry-bridge.md) and registers
+a PSR-3 wrapper service for every named Telemetry logger at `flow.telemetry.<name>.logger.psr3`. This makes Flow
+Telemetry loggers usable as Symfony's `logger` service, removing the need for Monolog when telemetry is the only logging
+destination.
 
-In addition, the bundle always registers a `default` logger, meter, and tracer — `flow.telemetry.default.logger`, `flow.telemetry.default.logger.psr3`, `flow.telemetry.default.meter`, `flow.telemetry.default.tracer` — regardless of what is configured under `loggers`/`meters`/`tracers`. Defining your own `default` entry under those keys is allowed and will override the auto-default.
+In addition, the bundle always registers a `default` logger, meter, and tracer — `flow.telemetry.default.logger`,
+`flow.telemetry.default.logger.psr3`, `flow.telemetry.default.meter`, `flow.telemetry.default.tracer` — regardless of
+what is configured under `loggers`/`meters`/`tracers`. Defining your own `default` entry under those keys is allowed and
+will override the auto-default.
 
 **Options:**
 
@@ -945,9 +955,14 @@ In addition, the bundle always registers a `default` logger, meter, and tracer �
 
 **Behavior:**
 
-- When `framework_logger` is set, the bundle aliases the Symfony `logger` service to `flow.telemetry.<framework_logger>.logger.psr3`. If no logger with that name exists, container compilation fails with a clear error.
-- When `framework_logger` is `null` and Symfony's `logger` service is the default `Symfony\Component\HttpKernel\Log\Logger`, the bundle automatically aliases `logger` to `flow.telemetry.default.logger.psr3`.
-- When `framework_logger` is `null` and `logger` is provided by another bundle (Monolog, custom alias, etc.), the bundle leaves `logger` alone.
+- When `framework_logger` is set, the bundle aliases the Symfony `logger` service to
+  `flow.telemetry.<framework_logger>.logger.psr3`. If no logger with that name exists, container compilation fails with
+  a clear error.
+- When `framework_logger` is `null` and Symfony's `logger` service is the default
+  `Symfony\Component\HttpKernel\Log\Logger`, the bundle automatically aliases `logger` to
+  `flow.telemetry.default.logger.psr3`.
+- When `framework_logger` is `null` and `logger` is provided by another bundle (Monolog, custom alias, etc.), the bundle
+  leaves `logger` alone.
 
 ```yaml
 flow_telemetry:
@@ -957,6 +972,128 @@ flow_telemetry:
 
   framework_logger: app   # Symfony "logger" service -> flow.telemetry.app.logger.psr3
 ```
+
+### Logging Channels
+
+Channels let you route different parts of your application to different telemetry loggers — the Flow Telemetry
+equivalent of Monolog channels — without installing Monolog. Each channel is a [named logger](#named-instruments);
+messages emitted through it are tagged with a `log.channel` scope attribute, so you can filter and group them per
+channel in your backend.
+
+A service opts into a channel by carrying the `flow.telemetry.channel` tag. The recommended way is the
+`#[WithTelemetryChannel]` attribute:
+
+```php
+<?php
+
+namespace App\Messaging;
+
+use Flow\Bridge\Symfony\TelemetryBundle\Attribute\WithTelemetryChannel;
+use Psr\Log\LoggerInterface;
+
+#[WithTelemetryChannel('events')]
+final class OrderSubscriber
+{
+    public function __construct(
+        private readonly LoggerInterface $logger, // resolves to the "events" channel logger
+    ) {
+    }
+}
+```
+
+The autowired `LoggerInterface` now resolves to `flow.telemetry.events.logger.psr3` instead of the default logger. A
+tagged service may instead typehint the native `Flow\Telemetry\Logger\Logger` — it resolves to that channel's native
+logger (`flow.telemetry.events.logger`), the instance the PSR-3 wrapper delegates to. Both the PSR-3 interface and the
+native class are bound, so either typehint works.
+
+The channel can also be requested with a raw tag in `services.yaml`:
+
+```yaml
+services:
+  App\Messaging\OrderSubscriber:
+    tags:
+      - { name: 'flow.telemetry.channel', channel: 'events' }
+```
+
+**Behavior:**
+
+- Each distinct channel is synthesized on demand as `flow.telemetry.<channel>.logger` (+ its PSR-3 wrapper
+  `flow.telemetry.<channel>.logger.psr3`), carrying a `log.channel: <channel>` scope attribute — unless a logger of that
+  name already exists, which is then reused untouched (so the `log.channel` attribute is only added to loggers the
+  bundle creates).
+- To route a service to the bundle's main logger, use the `default` channel (`#[WithTelemetryChannel('default')]`).
+  A `default` logger always exists, so it is reused as-is rather than re-created. Every channel name — including `app`,
+  which carries no special meaning here — behaves the same way.
+- For every channel in use, two named-argument autowiring aliases are registered — `LoggerInterface $<channel>Logger`
+  (the PSR-3 wrapper) and `Logger $<channel>Logger` (the native Flow `Logger`) — so any service can request a channel
+  logger by argument name (e.g. `LoggerInterface $eventsLogger`, `Logger $httpClientLogger`) without the tag.
+- On a tagged service, an explicit `@logger` reference is rewritten to the channel logger as well — in both constructor
+  arguments and method calls (e.g. `setLogger()`), preserving the reference's invalid-behavior flag.
+- A channel already declared under `loggers` is **not** overwritten, so you can customise its `version`, `schema_url`,
+  or `attributes`. Because declaring it opts out of synthesis, set `log.channel` yourself if you want it:
+
+```yaml
+flow_telemetry:
+  loggers:
+    events:
+      version: '1.0.0'
+      attributes:
+        log.channel: events      # not auto-added for a declared logger — set it explicitly
+        team: checkout
+```
+
+#### Capturing Framework Channels
+
+Symfony's own services already declare channels by tagging themselves `monolog.logger` (the router, the request logger,
+the event dispatcher, the HTTP client, cache pools, the messenger, …) — that tag comes from FrameworkBundle and is
+present whether or not MonologBundle is installed. Enable `capture_framework_channels` and the bundle **consumes that
+tag**, routing these framework channels to Flow telemetry loggers exactly the way MonologBundle would — making it a
+drop-in replacement for Monolog's channel routing, without Monolog.
+
+It is **disabled by default**, because MonologBundle claims the same `monolog.logger` tag: if both are installed and
+both process it, they fight over the same services. Enable it only when Flow telemetry owns channel routing (i.e. you
+are not running MonologBundle):
+
+```yaml
+flow_telemetry:
+  capture_framework_channels: true   # default: false
+```
+
+Each framework channel becomes `flow.telemetry.<channel>.logger` (e.g. `flow.telemetry.router.logger`,
+`flow.telemetry.http_client.logger`), carries the `log.channel` scope attribute, and gets the
+`LoggerInterface $<channel>Logger` / `Logger $<channel>Logger` autowiring aliases — the same treatment as an explicitly
+tagged service. A channel you declare under `loggers` still wins, so you can customise any framework channel's scope.
+
+Services that opt in explicitly via `#[WithTelemetryChannel]` / the `flow.telemetry.channel` tag are always routed
+regardless of this flag.
+
+> [!NOTE]
+> `capture_framework_channels` rewrites the `logger` reference on framework services to their channel logger. A
+> service-specific channel takes precedence over the global [`framework_logger`](#main-logger) redirect.
+
+#### Coexisting with MonologBundle
+
+You can run this bundle **alongside MonologBundle** — as long as `capture_framework_channels` stays `false` (the
+default). The two are independent because they read different DI tags: framework capture reads Symfony's
+`monolog.logger`, while the `#[WithTelemetryChannel]` attribute uses this bundle's own `flow.telemetry.channel` tag,
+which Monolog never looks at. With the flag off, this bundle never touches `monolog.logger`, so:
+
+- MonologBundle keeps full ownership of every framework channel (router, request, Doctrine, …) and the default `app`
+  logger — uncontested.
+- `#[WithTelemetryChannel('events')]` still scopes an individual class: it binds only that service's `LoggerInterface`
+  (and native `Logger`) to the Flow telemetry channel logger. Because the binding fills the argument directly, it wins
+  over Monolog's global `LoggerInterface` autowiring alias for that one class; every other class keeps resolving to
+  Monolog.
+
+What you **cannot** do is enable `capture_framework_channels` *and* keep MonologBundle: both passes then rewrite the same
+`monolog.logger`-tagged services, and the outcome depends on compiler-pass ordering. Ownership of the framework channels
+is all-or-nothing:
+
+- **Flow telemetry owns the framework channels** — `capture_framework_channels: true`, MonologBundle not installed.
+- **Monolog owns the framework channels, Flow scopes specific classes** — `capture_framework_channels: false`,
+  MonologBundle installed.
+
+The `#[WithTelemetryChannel]` attribute works in both setups.
 
 ## Pattern Matching
 

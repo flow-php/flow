@@ -6,7 +6,9 @@ namespace Flow\Bridge\Symfony\TelemetryBundle;
 
 use Flow\Bridge\Psr3\Telemetry\LogRecordConverter;
 use Flow\Bridge\Psr3\Telemetry\TelemetryLogger;
+use Flow\Bridge\Symfony\TelemetryBundle\Attribute\WithTelemetryChannel;
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\CacheTelemetryPass;
+use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\ChannelLoggerPass;
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\DBALTelemetryPass;
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\FrameworkLoggerPass;
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\HttpClientTelemetryPass;
@@ -82,6 +84,7 @@ use Psr\Clock\ClockInterface;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -123,6 +126,14 @@ final class FlowTelemetryBundle extends AbstractBundle
 
         $container->addCompilerPass(new OTLPAvailabilityPass());
         $container->addCompilerPass(new FrameworkLoggerPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, -64);
+
+        $container->registerAttributeForAutoconfiguration(
+            WithTelemetryChannel::class,
+            static function (ChildDefinition $definition, WithTelemetryChannel $attribute): void {
+                $definition->addTag(ChannelLoggerPass::TAG, ['channel' => $attribute->channel]);
+            },
+        );
+        $container->addCompilerPass(new ChannelLoggerPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION);
 
         if (interface_exists(self::HTTP_CLIENT_INTERFACE)) {
             $container->addCompilerPass(new HttpClientTelemetryPass());
@@ -263,6 +274,12 @@ final class FlowTelemetryBundle extends AbstractBundle
                 'Name of the logger (matching a key under "loggers", or "default") whose PSR-3 wrapper will be aliased to Symfony\'s "logger" service. Leave null to auto-replace only when Symfony\'s default HttpKernel Logger is currently bound.',
             )
             ->defaultNull()
+            ->end()
+            ->booleanNode('capture_framework_channels')
+            ->info(
+                'Reroute services Symfony tags "monolog.logger" to per-channel Flow telemetry loggers. Disabled by default to avoid colliding with MonologBundle, which claims the same tag.',
+            )
+            ->defaultFalse()
             ->end()
             ->arrayNode('context_storage')
             ->info('Context storage configuration')
@@ -557,12 +574,13 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * @param array{resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, framework_logger?: null|string, context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, exporters?: array<string, array<string, mixed>>, error_handlers?: array<string, array<string, mixed>>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config
+     * @param array{resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, framework_logger?: null|string, capture_framework_channels?: bool, context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, exporters?: array<string, array<string, mixed>>, error_handlers?: array<string, array<string, mixed>>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config
      */
     #[Override]
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         $builder->setParameter('flow.telemetry.framework_logger', $config['framework_logger'] ?? null);
+        $builder->setParameter('flow.telemetry.capture_framework_channels', $config['capture_framework_channels'] ?? false);
 
         $tracers = ($config['tracers'] ?? []) + ['default' => []];
         $meters = ($config['meters'] ?? []) + ['default' => []];
@@ -1996,11 +2014,19 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * @param array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}> $config
+     * Register the named logger and its PSR-3 wrapper, returning the PSR-3 service id.
+     *
+     * Idempotent: a logger already defined under this name (e.g. declared via
+     * configuration) is left untouched, so a channel synthesized by
+     * {@see ChannelLoggerPass} never overrides a user-declared scope.
+     *
+     * @param array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>} $loggerConfig
      */
-    private function registerLoggers(array $config, ContainerBuilder $builder): void
+    public static function defineLogger(string $name, array $loggerConfig, ContainerBuilder $builder): string
     {
-        foreach ($config as $name => $loggerConfig) {
+        $loggerServiceId = 'flow.telemetry.' . $name . '.logger';
+
+        if (!$builder->hasDefinition($loggerServiceId)) {
             $definition = new Definition(Logger::class);
             $definition->setFactory([new Reference('flow.telemetry'), 'logger']);
             $definition->setArgument(0, $name);
@@ -2019,7 +2045,6 @@ final class FlowTelemetryBundle extends AbstractBundle
             }
 
             $definition->setPublic(true);
-            $loggerServiceId = 'flow.telemetry.' . $name . '.logger';
             $builder->setDefinition($loggerServiceId, $definition);
 
             $psr3Definition = new Definition(TelemetryLogger::class);
@@ -2027,6 +2052,18 @@ final class FlowTelemetryBundle extends AbstractBundle
             $psr3Definition->setArgument(1, new Reference('flow.telemetry.psr3.log_record_converter'));
             $psr3Definition->setPublic(true);
             $builder->setDefinition($loggerServiceId . '.psr3', $psr3Definition);
+        }
+
+        return $loggerServiceId . '.psr3';
+    }
+
+    /**
+     * @param array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}> $config
+     */
+    private function registerLoggers(array $config, ContainerBuilder $builder): void
+    {
+        foreach ($config as $name => $loggerConfig) {
+            self::defineLogger($name, $loggerConfig, $builder);
         }
     }
 
