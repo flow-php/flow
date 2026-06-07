@@ -500,13 +500,57 @@ $schema = schema(
 | `PostgreSqlMetadata::precision($p)` / `::scale($s)` | Emit `numeric($p, $s)`                   |
 | `PostgreSqlMetadata::default($v)` | Set a column `DEFAULT`                                      |
 | `PostgreSqlMetadata::primaryKey($name)` | Include the column in the table primary key          |
-| `PostgreSqlMetadata::indexUnique($name)` | Include the column in a named `UNIQUE` constraint   |
-| `PostgreSqlMetadata::index($name)` | Include the column in a named index                       |
+| `PostgreSqlMetadata::indexUnique($name, $position)` | Include the column in a named `UNIQUE` constraint, optionally at an explicit position |
+| `PostgreSqlMetadata::index($name, $position)` | Include the column in a named index, optionally at an explicit position |
 | `PostgreSqlMetadata::identity($generation)` | Make the column an identity column               |
 | `PostgreSqlMetadata::generated($expr)` | Make the column a generated column                    |
 
 Columns sharing the same primary key, unique constraint, or index name are grouped together, so composite keys are
 expressed by attaching the same name to several definitions.
+
+#### Ordering Columns Within an Index
+
+For composite indexes and unique constraints, column order matters. By default columns are ordered the way they appear
+in the schema. Pass an explicit `$position` (ascending, lower first) to `index()` / `indexUnique()` to control the
+order independently of schema field order — useful, for example, for a keyset-pagination index where the leading
+column must serve `ORDER BY`:
+
+```php
+use Flow\ETL\Adapter\PostgreSql\PostgreSqlMetadata;
+
+use function Flow\ETL\Adapter\PostgreSql\to_pgsql_schema_table;
+use function Flow\ETL\DSL\{datetime_schema, int_schema, schema};
+
+// `id` is field 0, `created_at` is field 1, but the index must lead with `created_at`.
+$table = to_pgsql_schema_table(
+    schema(
+        int_schema('id', metadata: PostgreSqlMetadata::index('orders_created_at_id_idx', position: 2)),
+        datetime_schema('created_at', metadata: PostgreSqlMetadata::index('orders_created_at_id_idx', position: 1)),
+    ),
+    'orders',
+);
+
+// => CREATE INDEX orders_created_at_id_idx ON public.orders (created_at, id)
+```
+
+Columns without an explicit position default to the end (`PHP_INT_MAX`), and schema order breaks ties — so leaving
+positions off keeps the schema-order behavior.
+
+#### A Column in Multiple Indexes
+
+Because each index is tracked under its own metadata key, a single column can belong to several indexes at once. Chain
+`merge()` to attach more than one:
+
+```php
+$schema = schema(
+    int_schema('id', metadata: PostgreSqlMetadata::primaryKey('pk_orders')
+        ->merge(PostgreSqlMetadata::index('orders_created_at_id_idx', position: 2))),
+    datetime_schema('created_at', metadata: PostgreSqlMetadata::index('orders_created_at_id_idx', position: 1)),
+);
+```
+
+> Index and unique-constraint names must not contain a colon (`:`) — it is reserved internally as the name/position
+> separator and passing one throws an `InvalidArgumentException`.
 
 ### Reading a Flow Schema back from a Table
 

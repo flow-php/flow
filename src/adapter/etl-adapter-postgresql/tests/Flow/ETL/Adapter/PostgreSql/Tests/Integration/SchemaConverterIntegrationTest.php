@@ -14,6 +14,7 @@ use Flow\Types\Type\Native\StringType;
 use function Flow\ETL\Adapter\PostgreSql\pgsql_table_to_flow_schema;
 use function Flow\ETL\Adapter\PostgreSql\to_pgsql_schema_table;
 use function Flow\ETL\DSL\bool_schema;
+use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\schema;
@@ -71,6 +72,45 @@ final class SchemaConverterIntegrationTest extends IntegrationTestCase
         static::assertInstanceOf(BooleanType::class, $flowSchema->get('active')->type());
         static::assertInstanceOf(JsonType::class, $flowSchema->get('payload')->type());
         static::assertFalse($flowSchema->get('id')->isNullable());
+    }
+
+    public function test_creates_index_with_explicit_column_order(): void
+    {
+        $indexName = 'idx_' . $this->tableName . '_keyset';
+
+        $table = to_pgsql_schema_table(
+            schema(
+                int_schema(
+                    'id',
+                    metadata: PostgreSqlMetadata::primaryKey('pk_' . $this->tableName)->merge(PostgreSqlMetadata::index(
+                        $indexName,
+                        2,
+                    )),
+                ),
+                datetime_schema('created_at', metadata: PostgreSqlMetadata::index($indexName, 1)),
+            ),
+            $this->tableName,
+        );
+
+        foreach ($table->toSql() as $sql) {
+            $this->client->execute($sql);
+        }
+
+        $introspected = client_catalog_provider($this->client, ['public'])
+            ->get()
+            ->get('public')
+            ->table($this->tableName);
+
+        $keyset = null;
+
+        foreach ($introspected->indexes as $index) {
+            if ($index->name === $indexName) {
+                $keyset = $index;
+            }
+        }
+
+        static::assertNotNull($keyset);
+        static::assertSame(['created_at', 'id'], $keyset->columns);
     }
 
     public function test_creates_unlogged_table_from_options(): void

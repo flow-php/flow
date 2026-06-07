@@ -12,6 +12,7 @@ use Flow\PostgreSql\Schema\Column;
 use Flow\PostgreSql\Schema\Constraint\PrimaryKey;
 use Flow\PostgreSql\Schema\Constraint\UniqueConstraint;
 use Flow\PostgreSql\Schema\IdentityGeneration;
+use Flow\PostgreSql\Schema\Index;
 use Flow\PostgreSql\Schema\PartitionStrategy;
 use Flow\PostgreSql\Schema\Table;
 use Flow\PostgreSql\Schema\TriggerEvent;
@@ -155,6 +156,95 @@ final class SchemaConverterTest extends TestCase
         static::assertSame('idx_email', $table->indexes[0]->name);
         static::assertSame(['email'], $table->indexes[0]->columns);
         static::assertFalse($table->indexes[0]->unique);
+    }
+
+    public function test_index_explicit_position_overrides_schema_order(): void
+    {
+        $table = (new SchemaConverter())->toPostgreSqlTable(
+            schema(
+                int_schema('id', metadata: PostgreSqlMetadata::index('idx', 2)),
+                datetime_schema('created_at', metadata: PostgreSqlMetadata::index('idx', 1)),
+            ),
+            'orders',
+        );
+
+        static::assertCount(1, $table->indexes);
+        static::assertSame('idx', $table->indexes[0]->name);
+        static::assertSame(['created_at', 'id'], $table->indexes[0]->columns);
+    }
+
+    public function test_composite_index_without_positions_preserves_schema_order(): void
+    {
+        $table = (new SchemaConverter())->toPostgreSqlTable(
+            schema(
+                int_schema('id', metadata: PostgreSqlMetadata::index('idx')),
+                datetime_schema('created_at', metadata: PostgreSqlMetadata::index('idx')),
+            ),
+            'orders',
+        );
+
+        static::assertSame(['id', 'created_at'], $table->indexes[0]->columns);
+    }
+
+    public function test_composite_unique_with_positions_is_ordered(): void
+    {
+        $table = (new SchemaConverter())->toPostgreSqlTable(
+            schema(
+                int_schema('warehouse', metadata: PostgreSqlMetadata::indexUnique('uq_stock', 2)),
+                int_schema('product_id', metadata: PostgreSqlMetadata::indexUnique('uq_stock', 1)),
+            ),
+            'stock',
+        );
+
+        static::assertCount(1, $table->uniqueConstraints);
+        static::assertSame(['product_id', 'warehouse'], $table->uniqueConstraints[0]->columns);
+        static::assertSame('uq_stock', $table->uniqueConstraints[0]->name);
+    }
+
+    public function test_column_can_belong_to_multiple_indexes(): void
+    {
+        $table = (new SchemaConverter())->toPostgreSqlTable(
+            schema(
+                int_schema(
+                    'id',
+                    metadata: PostgreSqlMetadata::index('idx_a', 1)->merge(PostgreSqlMetadata::index('idx_b', 2)),
+                ),
+                datetime_schema('created_at', metadata: PostgreSqlMetadata::index('idx_b', 1)),
+            ),
+            'orders',
+        );
+
+        $byName = [];
+
+        foreach ($table->indexes as $index) {
+            $byName[$index->name] = $index->columns;
+        }
+
+        static::assertArrayHasKey('idx_a', $byName);
+        static::assertArrayHasKey('idx_b', $byName);
+        static::assertSame(['id'], $byName['idx_a']);
+        static::assertSame(['created_at', 'id'], $byName['idx_b']);
+    }
+
+    public function test_reverse_preserves_index_column_order(): void
+    {
+        $table = new Table(
+            schema: 'public',
+            name: 'orders',
+            columns: [
+                Column::create('id', ColumnType::bigint(), nullable: false),
+                Column::create('created_at', ColumnType::timestamptz()),
+            ],
+            indexes: [
+                new Index(name: 'idx', columns: ['created_at', 'id']),
+            ],
+        );
+
+        $converter = new SchemaConverter();
+        $roundTripped = $converter->toPostgreSqlTable($converter->toFlowSchema($table), 'orders');
+
+        static::assertCount(1, $roundTripped->indexes);
+        static::assertSame(['created_at', 'id'], $roundTripped->indexes[0]->columns);
     }
 
     public function test_nullability_from_definition(): void
