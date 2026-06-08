@@ -25,6 +25,13 @@ use Flow\Bridge\Telemetry\OTLP\Transport\GrpcTransport;
 use Flow\Bridge\Telemetry\OTLP\Transport\StreamTransport;
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Context\MemoryContextStorage;
+use Flow\Telemetry\Filter\All;
+use Flow\Telemetry\Filter\Any;
+use Flow\Telemetry\Filter\AttributeFilter;
+use Flow\Telemetry\Filter\AttributeRule;
+use Flow\Telemetry\Filter\AttributeSource;
+use Flow\Telemetry\Filter\MatchMode;
+use Flow\Telemetry\Filter\Not;
 use Flow\Telemetry\ErrorHandler\CompositeErrorHandler;
 use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\ErrorHandler\ErrorLogMessageType;
@@ -36,16 +43,20 @@ use Flow\Telemetry\ErrorHandler\SyslogSeverity;
 use Flow\Telemetry\ErrorHandler\UdpSyslogHandler;
 use Flow\Telemetry\Logger\Logger;
 use Flow\Telemetry\Logger\LoggerProvider;
+use Flow\Telemetry\Logger\Middleware\AttributeFilteringLogMiddleware;
+use Flow\Telemetry\Logger\Middleware\EnrichingLogMiddleware;
+use Flow\Telemetry\Logger\Middleware\SeverityFilteringLogMiddleware;
 use Flow\Telemetry\Logger\Processor\BatchingLogProcessor;
 use Flow\Telemetry\Logger\Processor\CompositeLogProcessor;
 use Flow\Telemetry\Logger\Processor\PassThroughLogProcessor;
-use Flow\Telemetry\Logger\Processor\SeverityFilteringLogProcessor;
+use Flow\Telemetry\Logger\Processor\PipelineLogProcessor;
 use Flow\Telemetry\Logger\Severity;
 use Flow\Telemetry\Meter\AggregationTemporality;
 use Flow\Telemetry\Meter\Meter;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Meter\Processor\BatchingMetricProcessor;
 use Flow\Telemetry\Meter\Processor\CompositeMetricProcessor;
+use Flow\Telemetry\Meter\Processor\AttributeFilteringMetricProcessor;
 use Flow\Telemetry\Meter\Processor\PassThroughMetricProcessor;
 use Flow\Telemetry\Propagation\CompositePropagator;
 use Flow\Telemetry\Propagation\W3CBaggage;
@@ -72,9 +83,11 @@ use Flow\Telemetry\Resource\Detector\ProcessDetector;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\Processor\BatchingSpanProcessor;
 use Flow\Telemetry\Tracer\Processor\CompositeSpanProcessor;
+use Flow\Telemetry\Tracer\Processor\AttributeFilteringSpanProcessor;
 use Flow\Telemetry\Tracer\Processor\PassThroughSpanProcessor;
 use Flow\Telemetry\Tracer\Sampler\AlwaysOffSampler;
 use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
+use Flow\Telemetry\Tracer\Sampler\AttributeMatchingSampler;
 use Flow\Telemetry\Tracer\Sampler\ParentBasedSampler;
 use Flow\Telemetry\Tracer\Sampler\TraceIdRatioBasedSampler;
 use Flow\Telemetry\Tracer\Tracer;
@@ -94,11 +107,14 @@ use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 use Twig\Extension\AbstractExtension;
 
 use function array_key_exists;
+use function array_values;
 use function class_exists;
 use function count;
+use function implode;
 use function in_array;
 use function interface_exists;
 use function is_array;
+use function is_int;
 use function is_string;
 use function sprintf;
 use function ucfirst;
@@ -281,6 +297,13 @@ final class FlowTelemetryBundle extends AbstractBundle
             )
             ->defaultFalse()
             ->end()
+            ->enumNode('channel_attribute_target')
+            ->info(
+                'Where the "log.channel" attribute of a synthesized channel logger is placed: "scope" (instrumentation scope), "signal" (every emitted record), or "both" (default). Applies to framework-captured and #[WithTelemetryChannel] channels alike.',
+            )
+            ->values(['scope', 'signal', 'both'])
+            ->defaultValue('both')
+            ->end()
             ->arrayNode('context_storage')
             ->info('Context storage configuration')
             ->addDefaultsIfNotSet()
@@ -327,7 +350,7 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->addDefaultsIfNotSet()
             ->children()
             ->enumNode('type')
-            ->values(['always_on', 'always_off', 'trace_id_ratio', 'parent_based', 'service'])
+            ->values(['always_on', 'always_off', 'trace_id_ratio', 'parent_based', 'attribute_matching', 'service'])
             ->defaultValue('always_on')
             ->end()
             ->floatNode('ratio')
@@ -339,6 +362,46 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->scalarNode('service_id')
             ->info('Custom sampler service ID (only for type: service)')
             ->defaultNull()
+            ->end()
+            ->booleanNode('exclude')
+            ->info('attribute_matching: when true (default) a match drops the span; when false only matching spans are sampled')
+            ->defaultTrue()
+            ->end()
+            ->arrayNode('sources')
+            ->info('attribute_matching: which attribute sets to inspect - any of signal (default), resource, scope')
+            ->enumPrototype()
+            ->values(['signal', 'resource', 'scope'])
+            ->end()
+            ->defaultValue(['signal'])
+            ->end()
+            ->scalarNode('cache_dir')
+            ->info('attribute_matching: directory for the generated matcher cache. Defaults to %kernel.cache_dir%/flow_telemetry_filters')
+            ->defaultNull()
+            ->end()
+            ->integerNode('cache_dir_permissions')
+            ->info('attribute_matching: octal mode applied when the matcher cache directory is created (default 0o700, owner-only; write it as a YAML octal literal e.g. 0o750)')
+            ->defaultValue(0o700)
+            ->min(0)
+            ->max(0o777)
+            ->end()
+            ->variableNode('matcher')
+            ->info('attribute_matching: the matcher tree (all/any/not or a leaf rule { path, mode, value, case_sensitive? }); nestable to any depth')
+            ->defaultNull()
+            ->end()
+            ->arrayNode('delegate')
+            ->info('attribute_matching: sampler that decides spans which do not match (default: always_on)')
+            ->addDefaultsIfNotSet()
+            ->children()
+            ->enumNode('type')
+            ->values(['always_on', 'always_off', 'trace_id_ratio'])
+            ->defaultValue('always_on')
+            ->end()
+            ->floatNode('ratio')
+            ->defaultValue(1.0)
+            ->min(0.0)
+            ->max(1.0)
+            ->end()
+            ->end()
             ->end()
             ->end()
             ->end()
@@ -515,10 +578,22 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->defaultNull()
             ->end()
             ->arrayNode('attributes')
-            ->info('Additional scope attributes')
+            ->info('Scope and signal attribute defaults for this instrumentation scope')
+            ->children()
+            ->arrayNode('scope')
+            ->info('Attributes attached to the instrumentation scope')
             ->normalizeKeys(false)
             ->useAttributeAsKey('name')
             ->prototype('variable')
+            ->end()
+            ->end()
+            ->arrayNode('signal')
+            ->info('Default attributes merged into every emitted signal (per-call values win)')
+            ->normalizeKeys(false)
+            ->useAttributeAsKey('name')
+            ->prototype('variable')
+            ->end()
+            ->end()
             ->end()
             ->end()
             ->end()
@@ -538,10 +613,22 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->defaultNull()
             ->end()
             ->arrayNode('attributes')
-            ->info('Additional scope attributes')
+            ->info('Scope and signal attribute defaults for this instrumentation scope')
+            ->children()
+            ->arrayNode('scope')
+            ->info('Attributes attached to the instrumentation scope')
             ->normalizeKeys(false)
             ->useAttributeAsKey('name')
             ->prototype('variable')
+            ->end()
+            ->end()
+            ->arrayNode('signal')
+            ->info('Default attributes merged into every emitted signal (per-call values win)')
+            ->normalizeKeys(false)
+            ->useAttributeAsKey('name')
+            ->prototype('variable')
+            ->end()
+            ->end()
             ->end()
             ->end()
             ->end()
@@ -561,10 +648,22 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->defaultNull()
             ->end()
             ->arrayNode('attributes')
-            ->info('Additional scope attributes')
+            ->info('Scope and signal attribute defaults for this instrumentation scope')
+            ->children()
+            ->arrayNode('scope')
+            ->info('Attributes attached to the instrumentation scope')
             ->normalizeKeys(false)
             ->useAttributeAsKey('name')
             ->prototype('variable')
+            ->end()
+            ->end()
+            ->arrayNode('signal')
+            ->info('Default attributes merged into every emitted signal (per-call values win)')
+            ->normalizeKeys(false)
+            ->useAttributeAsKey('name')
+            ->prototype('variable')
+            ->end()
+            ->end()
             ->end()
             ->end()
             ->end()
@@ -574,13 +673,14 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * @param array{resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, framework_logger?: null|string, capture_framework_channels?: bool, context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, exporters?: array<string, array<string, mixed>>, error_handlers?: array<string, array<string, mixed>>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}>} $config
+     * @param array{resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, framework_logger?: null|string, capture_framework_channels?: bool, channel_attribute_target?: 'scope'|'signal'|'both', context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, exporters?: array<string, array<string, mixed>>, error_handlers?: array<string, array<string, mixed>>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>} $config
      */
     #[Override]
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         $builder->setParameter('flow.telemetry.framework_logger', $config['framework_logger'] ?? null);
         $builder->setParameter('flow.telemetry.capture_framework_channels', $config['capture_framework_channels'] ?? false);
+        $builder->setParameter('flow.telemetry.channel_attribute_target', $config['channel_attribute_target'] ?? 'both');
 
         $tracers = ($config['tracers'] ?? []) + ['default' => []];
         $meters = ($config['meters'] ?? []) + ['default' => []];
@@ -1218,19 +1318,25 @@ final class FlowTelemetryBundle extends AbstractBundle
 
                 break;
 
-            case 'severity_filtering':
-                $innerProcessorConfig = is_array($config['inner_processor'] ?? null) ? $config['inner_processor'] : [];
-                $innerProcessorServiceId = $this->buildLogProcessor(
-                    $innerProcessorConfig,
-                    $processorServiceId . '.inner',
-                    $builder,
-                );
+            case 'pipeline':
+                $middlewareConfigs = is_array($config['middleware'] ?? null) ? $config['middleware'] : [];
+                $middlewareRefs = [];
+
                 // @mago-expect analysis:mixed-assignment
-                $minSeverity = $config['minimum_severity'] ?? 'info';
-                $minimumSeverity = $this->mapSeverity(is_string($minSeverity) ? $minSeverity : 'info');
-                $definition = new Definition(SeverityFilteringLogProcessor::class);
-                $definition->setArgument(0, new Reference($innerProcessorServiceId));
-                $definition->setArgument(1, $minimumSeverity);
+                foreach ($middlewareConfigs as $idx => $middlewareConfig) {
+                    $middlewareRefs[] = new Reference($this->buildLogMiddleware(
+                        is_array($middlewareConfig) ? $middlewareConfig : [],
+                        $processorServiceId . '.middleware.' . $idx,
+                        $builder,
+                    ));
+                }
+
+                $sinkConfig = is_array($config['sink'] ?? null) ? $config['sink'] : [];
+                $sinkServiceId = $this->buildLogProcessor($sinkConfig, $processorServiceId . '.sink', $builder);
+
+                $definition = new Definition(PipelineLogProcessor::class);
+                $definition->setArgument(0, $middlewareRefs);
+                $definition->setArgument(1, new Reference($sinkServiceId));
                 $builder->setDefinition($processorServiceId, $definition);
 
                 break;
@@ -1343,6 +1449,21 @@ final class FlowTelemetryBundle extends AbstractBundle
 
                 break;
 
+            case 'attribute_filtering':
+                $innerProcessorConfig = is_array($config['inner_processor'] ?? null) ? $config['inner_processor'] : [];
+                $innerProcessorServiceId = $this->buildMetricProcessor(
+                    $innerProcessorConfig,
+                    $processorServiceId . '.inner',
+                    $builder,
+                );
+                $filterServiceId = $this->buildAttributeFilter($config, $processorServiceId, $builder);
+                $definition = new Definition(AttributeFilteringMetricProcessor::class);
+                $definition->setArgument(0, new Reference($innerProcessorServiceId));
+                $definition->setArgument(1, new Reference($filterServiceId));
+                $builder->setDefinition($processorServiceId, $definition);
+
+                break;
+
             default:
                 throw new RuntimeException(sprintf('Unknown metric processor type: %s', (string) $type));
         }
@@ -1399,11 +1520,51 @@ final class FlowTelemetryBundle extends AbstractBundle
 
                 break;
 
+            case 'attribute_matching':
+                $filterServiceId = $this->buildAttributeFilter($config, $samplerServiceId, $builder);
+                $delegateConfig = is_array($config['delegate'] ?? null) ? $config['delegate'] : [];
+                $delegateServiceId = $this->buildDelegateSampler(
+                    $delegateConfig,
+                    $samplerServiceId . '.delegate',
+                    $builder,
+                );
+                $definition = new Definition(AttributeMatchingSampler::class);
+                $definition->setArgument(0, new Reference($filterServiceId));
+                $definition->setArgument(1, new Reference($delegateServiceId));
+                $builder->setDefinition($samplerServiceId, $definition);
+
+                break;
+
             default:
                 throw new RuntimeException(sprintf('Unknown sampler type: %s', (string) $type));
         }
 
         return $samplerServiceId;
+    }
+
+    /**
+     * Build the leaf delegate sampler (always_on / always_off / trace_id_ratio) for an
+     * attribute_matching sampler and return its service id.
+     *
+     * @param array<array-key, mixed> $config
+     */
+    private function buildDelegateSampler(array $config, string $serviceId, ContainerBuilder $builder): string
+    {
+        // @mago-expect analysis:mixed-assignment
+        $type = $config['type'] ?? 'always_on';
+
+        if ($type === 'trace_id_ratio') {
+            $definition = new Definition(TraceIdRatioBasedSampler::class);
+            $definition->setArgument(0, $config['ratio'] ?? 1.0);
+        } elseif ($type === 'always_off') {
+            $definition = new Definition(AlwaysOffSampler::class);
+        } else {
+            $definition = new Definition(AlwaysOnSampler::class);
+        }
+
+        $builder->setDefinition($serviceId, $definition);
+
+        return $serviceId;
     }
 
     /**
@@ -1478,6 +1639,21 @@ final class FlowTelemetryBundle extends AbstractBundle
                 $definition = new Definition(CompositeSpanProcessor::class);
                 $definition->setArgument(0, $processorRefs);
                 $definition->setArgument(1, $errorHandlerRef);
+                $builder->setDefinition($processorServiceId, $definition);
+
+                break;
+
+            case 'attribute_filtering':
+                $innerProcessorConfig = is_array($config['inner_processor'] ?? null) ? $config['inner_processor'] : [];
+                $innerProcessorServiceId = $this->buildSpanProcessor(
+                    $innerProcessorConfig,
+                    $processorServiceId . '.inner',
+                    $builder,
+                );
+                $filterServiceId = $this->buildAttributeFilter($config, $processorServiceId, $builder);
+                $definition = new Definition(AttributeFilteringSpanProcessor::class);
+                $definition->setArgument(0, new Reference($innerProcessorServiceId));
+                $definition->setArgument(1, new Reference($filterServiceId));
                 $builder->setDefinition($processorServiceId, $definition);
 
                 break;
@@ -1685,7 +1861,7 @@ final class FlowTelemetryBundle extends AbstractBundle
         $childProcessorTypes = ['memory', 'batching', 'passthrough', 'void', 'service'];
 
         $node
-            ->info('Inner processor configuration for severity_filtering (only for type: severity_filtering)')
+            ->info('Inner (wrapped) processor for severity_filtering / attribute_filtering')
             ->children()
             ->enumNode('type')
             ->values($childProcessorTypes)
@@ -1734,6 +1910,203 @@ final class FlowTelemetryBundle extends AbstractBundle
             'error' => Severity::ERROR,
             'fatal' => Severity::FATAL,
             default => throw new RuntimeException(sprintf('Unknown severity level: %s', $severity)),
+        };
+    }
+
+    /**
+     * Build the matcher tree and AttributeFilter for an attribute_filtering processor
+     * and return the filter service id.
+     *
+     * @param array<array-key, mixed> $config
+     */
+    private function buildAttributeFilter(array $config, string $serviceIdPrefix, ContainerBuilder $builder): string
+    {
+        if (!array_key_exists('matcher', $config) || $config['matcher'] === null) {
+            throw new RuntimeException('attribute_filtering processor requires a "matcher"');
+        }
+
+        $matcherRef = $this->buildMatcher($config['matcher'], $serviceIdPrefix . '.matcher', $builder);
+
+        $sources = is_array($config['sources'] ?? null) && $config['sources'] !== [] ? $config['sources'] : ['signal'];
+        $sourceEnums = [];
+
+        // @mago-expect analysis:mixed-assignment
+        foreach ($sources as $source) {
+            $sourceEnums[] = $this->mapAttributeSource(is_string($source) ? $source : 'signal');
+        }
+
+        // @mago-expect analysis:mixed-assignment
+        $cacheDir = $config['cache_dir'] ?? null;
+        // @mago-expect analysis:mixed-assignment
+        $cacheDirPermissions = $config['cache_dir_permissions'] ?? 0o700;
+
+        $filterServiceId = $serviceIdPrefix . '.filter';
+        $filterDefinition = new Definition(AttributeFilter::class);
+        $filterDefinition->setArgument(0, $matcherRef);
+        $filterDefinition->setArgument(1, ($config['exclude'] ?? true) === true);
+        $filterDefinition->setArgument(2, $sourceEnums);
+        $filterDefinition->setArgument(
+            3,
+            is_string($cacheDir) && $cacheDir !== '' ? $cacheDir : '%kernel.cache_dir%/flow_telemetry_filters',
+        );
+        $filterDefinition->setArgument(4, is_int($cacheDirPermissions) ? $cacheDirPermissions : 0o700);
+        $builder->setDefinition($filterServiceId, $filterDefinition);
+
+        return $filterServiceId;
+    }
+
+    /**
+     * Recursively build a matcher tree from config and return a reference to its
+     * root service. A node is either a composite - exactly one of `all`/`any`
+     * (a list of child matchers) or `not` (a single child matcher) - or a leaf
+     * rule carrying a `path`. The four kinds are mutually exclusive.
+     *
+     * @param mixed $node
+     */
+    private function buildMatcher(mixed $node, string $serviceId, ContainerBuilder $builder): Reference
+    {
+        if (!is_array($node)) {
+            throw new RuntimeException('attribute_filtering matcher must be a map: one of "all", "any", "not", or a rule with a "path"');
+        }
+
+        $kinds = [];
+
+        foreach (['all', 'any', 'not', 'path'] as $key) {
+            if (array_key_exists($key, $node)) {
+                $kinds[] = $key;
+            }
+        }
+
+        if (count($kinds) !== 1) {
+            throw new RuntimeException(sprintf(
+                'attribute_filtering matcher node must contain exactly one of "all", "any", "not" or "path", got: %s',
+                $kinds === [] ? 'none' : implode(', ', $kinds),
+            ));
+        }
+
+        if ($kinds[0] === 'all' || $kinds[0] === 'any') {
+            // @mago-expect analysis:mixed-assignment
+            $children = is_array($node[$kinds[0]]) ? array_values($node[$kinds[0]]) : [];
+
+            if ($children === []) {
+                throw new RuntimeException(sprintf('attribute_filtering "%s" matcher requires at least one child matcher', $kinds[0]));
+            }
+
+            $childRefs = [];
+
+            // @mago-expect analysis:mixed-assignment
+            foreach ($children as $idx => $child) {
+                $childRefs[] = $this->buildMatcher($child, $serviceId . '.' . $idx, $builder);
+            }
+
+            $definition = new Definition($kinds[0] === 'all' ? All::class : Any::class);
+            $definition->setArguments($childRefs);
+            $builder->setDefinition($serviceId, $definition);
+
+            return new Reference($serviceId);
+        }
+
+        if ($kinds[0] === 'not') {
+            $definition = new Definition(Not::class);
+            $definition->setArgument(0, $this->buildMatcher($node['not'], $serviceId . '.0', $builder));
+            $builder->setDefinition($serviceId, $definition);
+
+            return new Reference($serviceId);
+        }
+
+        // @mago-expect analysis:mixed-assignment
+        $rawPath = $node['path'];
+
+        if (is_array($rawPath)) {
+            $path = array_values($rawPath);
+        } elseif (is_string($rawPath)) {
+            $path = $rawPath;
+        } else {
+            throw new RuntimeException('attribute_filtering matcher rule "path" must be a string or a list of strings');
+        }
+
+        $mode = is_string($node['mode'] ?? null) ? $node['mode'] : '';
+
+        $definition = new Definition(AttributeRule::class);
+        $definition->setArgument(0, $path);
+        $definition->setArgument(1, $this->mapMatchMode($mode));
+        $definition->setArgument(2, $node['value'] ?? '');
+        $definition->setArgument(3, ($node['case_sensitive'] ?? true) === true);
+        $builder->setDefinition($serviceId, $definition);
+
+        return new Reference($serviceId);
+    }
+
+    /**
+     * Build a single log pipeline middleware (enriching / attribute_filtering /
+     * severity_filtering) and return its service id.
+     *
+     * @param array<array-key, mixed> $config
+     */
+    private function buildLogMiddleware(array $config, string $serviceId, ContainerBuilder $builder): string
+    {
+        // @mago-expect analysis:mixed-assignment
+        $type = $config['type'] ?? '';
+
+        switch ($type) {
+            case 'enriching':
+                $attributes = is_array($config['attributes'] ?? null) ? $config['attributes'] : [];
+                $attributesDefinition = new Definition(Attributes::class);
+                $attributesDefinition->setFactory([Attributes::class, 'create']);
+                $attributesDefinition->setArgument(0, $attributes);
+                $definition = new Definition(EnrichingLogMiddleware::class);
+                $definition->setArgument(0, $attributesDefinition);
+
+                break;
+
+            case 'attribute_filtering':
+                $filterServiceId = $this->buildAttributeFilter($config, $serviceId, $builder);
+                $definition = new Definition(AttributeFilteringLogMiddleware::class);
+                $definition->setArgument(0, new Reference($filterServiceId));
+
+                break;
+
+            case 'severity_filtering':
+                // @mago-expect analysis:mixed-assignment
+                $minSeverity = $config['minimum_severity'] ?? 'info';
+                $definition = new Definition(SeverityFilteringLogMiddleware::class);
+                $definition->setArgument(0, $this->mapSeverity(is_string($minSeverity) ? $minSeverity : 'info'));
+
+                break;
+
+            default:
+                throw new RuntimeException(sprintf('Unknown log middleware type: %s', (string) $type));
+        }
+
+        $builder->setDefinition($serviceId, $definition);
+
+        return $serviceId;
+    }
+
+    private function mapMatchMode(string $mode): MatchMode
+    {
+        return match ($mode) {
+            'equal' => MatchMode::EQUAL,
+            'not_equal' => MatchMode::NOT_EQUAL,
+            'greater_than' => MatchMode::GREATER_THAN,
+            'greater_than_equal' => MatchMode::GREATER_THAN_EQUAL,
+            'less_than' => MatchMode::LESS_THAN,
+            'less_than_equal' => MatchMode::LESS_THAN_EQUAL,
+            'regexp' => MatchMode::REGEXP,
+            'starts_with' => MatchMode::STARTS_WITH,
+            'ends_with' => MatchMode::ENDS_WITH,
+            'contains' => MatchMode::CONTAINS,
+            default => throw new RuntimeException(sprintf('Unknown attribute match mode: %s', $mode)),
+        };
+    }
+
+    private function mapAttributeSource(string $source): AttributeSource
+    {
+        return match ($source) {
+            'signal' => AttributeSource::SIGNAL,
+            'resource' => AttributeSource::RESOURCE,
+            'scope' => AttributeSource::SCOPE,
+            default => throw new RuntimeException(sprintf('Unknown attribute source: %s', $source)),
         };
     }
 
@@ -1811,8 +2184,12 @@ final class FlowTelemetryBundle extends AbstractBundle
         $childProcessorTypes = ['memory', 'batching', 'passthrough', 'void', 'service'];
 
         if ($signalType === 'log') {
-            $processorTypes[] = 'severity_filtering';
-            $childProcessorTypes[] = 'severity_filtering';
+            // Logs filter/enrich via a pipeline of middleware (see pipeline type);
+            // attribute/severity filtering are middleware, not standalone log processors.
+            $processorTypes[] = 'pipeline';
+        } else {
+            $processorTypes[] = 'attribute_filtering';
+            $childProcessorTypes[] = 'attribute_filtering';
         }
 
         $node
@@ -1845,6 +2222,31 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->info('Name of an error_handler entry forwarded to this processor')
             ->defaultValue('default')
             ->end()
+            ->booleanNode('exclude')
+            ->info('attribute_filtering: when true (default) a match drops the signal; when false only matching signals are kept')
+            ->defaultTrue()
+            ->end()
+            ->arrayNode('sources')
+            ->info('attribute_filtering: which attribute sets to inspect - any of signal (default), resource, scope. A signal matches if the matcher matches in ANY listed source.')
+            ->enumPrototype()
+            ->values(['signal', 'resource', 'scope'])
+            ->end()
+            ->defaultValue(['signal'])
+            ->end()
+            ->scalarNode('cache_dir')
+            ->info('attribute_filtering: directory for the generated matcher cache. Defaults to %kernel.cache_dir%/flow_telemetry_filters')
+            ->defaultNull()
+            ->end()
+            ->integerNode('cache_dir_permissions')
+            ->info('attribute_filtering: octal mode applied when the matcher cache directory is created (default 0o700, owner-only; write it as a YAML octal literal e.g. 0o750)')
+            ->defaultValue(0o700)
+            ->min(0)
+            ->max(0o777)
+            ->end()
+            ->variableNode('matcher')
+            ->info('attribute_filtering: the matcher tree. A node is exactly one of: "all"/"any" (a list of child matchers), "not" (a single child matcher), or a leaf rule { path, mode, value, case_sensitive? }. Nestable to any depth.')
+            ->defaultNull()
+            ->end()
             ->arrayNode('processors')
             ->info('Array of processor configurations (only for type: composite)')
             ->arrayPrototype()
@@ -1871,11 +2273,152 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->info('Name of an error_handler entry forwarded to this child processor')
             ->defaultValue('default')
             ->end()
+            ->booleanNode('exclude')
+            ->defaultTrue()
+            ->end()
+            ->arrayNode('sources')
+            ->enumPrototype()
+            ->values(['signal', 'resource', 'scope'])
+            ->end()
+            ->defaultValue(['signal'])
+            ->end()
+            ->scalarNode('cache_dir')
+            ->defaultNull()
+            ->end()
+            ->integerNode('cache_dir_permissions')
+            ->defaultValue(0o700)
+            ->min(0)
+            ->max(0o777)
+            ->end()
+            ->variableNode('matcher')
+            ->defaultNull()
+            ->end()
             ->append($this->innerProcessorNode($signalType))
             ->end()
             ->end()
             ->end()
             ->append($this->innerProcessorNode($signalType))
+            ->append($this->logMiddlewareNode())
+            ->append($this->sinkNode())
+            ->end();
+
+        return $node;
+    }
+
+    /**
+     * Ordered list of log pipeline middleware. Only meaningful for the log `pipeline`
+     * processor type; each entry is one of enriching / attribute_filtering / severity_filtering.
+     */
+    private function logMiddlewareNode(): ArrayNodeDefinition
+    {
+        $builder = new \Symfony\Component\Config\Definition\Builder\TreeBuilder('middleware');
+        /** @var ArrayNodeDefinition $node */
+        $node = $builder->getRootNode();
+
+        $node
+            ->info('Ordered log middleware (only for type: pipeline)')
+            ->arrayPrototype()
+            ->children()
+            ->enumNode('type')
+            ->values(['enriching', 'attribute_filtering', 'severity_filtering'])
+            ->isRequired()
+            ->end()
+            ->arrayNode('attributes')
+            ->info('enriching: default attributes merged into every record (call-site values win)')
+            ->normalizeKeys(false)
+            ->useAttributeAsKey('name')
+            ->prototype('variable')
+            ->end()
+            ->end()
+            ->enumNode('minimum_severity')
+            ->info('severity_filtering: minimum severity level')
+            ->values(['trace', 'debug', 'info', 'warn', 'error', 'fatal'])
+            ->defaultValue('info')
+            ->end()
+            ->booleanNode('exclude')
+            ->info('attribute_filtering: when true (default) a match drops the entry; when false only matching entries are kept')
+            ->defaultTrue()
+            ->end()
+            ->arrayNode('sources')
+            ->info('attribute_filtering: which attribute sets to inspect - any of signal (default), resource, scope')
+            ->enumPrototype()
+            ->values(['signal', 'resource', 'scope'])
+            ->end()
+            ->defaultValue(['signal'])
+            ->end()
+            ->scalarNode('cache_dir')
+            ->info('attribute_filtering: directory for the generated matcher cache. Defaults to %kernel.cache_dir%/flow_telemetry_filters')
+            ->defaultNull()
+            ->end()
+            ->integerNode('cache_dir_permissions')
+            ->info('attribute_filtering: octal mode applied when the matcher cache directory is created (default 0o700, owner-only; write it as a YAML octal literal e.g. 0o750)')
+            ->defaultValue(0o700)
+            ->min(0)
+            ->max(0o777)
+            ->end()
+            ->variableNode('matcher')
+            ->info('attribute_filtering: the matcher tree (all/any/not or a leaf rule { path, mode, value, case_sensitive? }); nestable to any depth')
+            ->defaultNull()
+            ->end()
+            ->end()
+            ->end();
+
+        return $node;
+    }
+
+    /**
+     * Terminal processor (sink) for a log pipeline. Only meaningful for the log
+     * `pipeline` processor type.
+     */
+    private function sinkNode(): ArrayNodeDefinition
+    {
+        $builder = new \Symfony\Component\Config\Definition\Builder\TreeBuilder('sink');
+        /** @var ArrayNodeDefinition $node */
+        $node = $builder->getRootNode();
+
+        $node
+            ->info('Terminal processor for the pipeline (only for type: pipeline)')
+            ->children()
+            ->enumNode('type')
+            ->values(['composite', 'memory', 'batching', 'passthrough', 'void', 'service'])
+            ->isRequired()
+            ->end()
+            ->integerNode('batch_size')
+            ->defaultValue(512)
+            ->min(1)
+            ->end()
+            ->scalarNode('exporter')
+            ->defaultNull()
+            ->end()
+            ->scalarNode('service_id')
+            ->defaultNull()
+            ->end()
+            ->scalarNode('error_handler')
+            ->defaultValue('default')
+            ->end()
+            ->arrayNode('processors')
+            ->info('Child processors (only for sink type: composite)')
+            ->arrayPrototype()
+            ->children()
+            ->enumNode('type')
+            ->values(['memory', 'batching', 'passthrough', 'void', 'service'])
+            ->isRequired()
+            ->end()
+            ->integerNode('batch_size')
+            ->defaultValue(512)
+            ->min(1)
+            ->end()
+            ->scalarNode('exporter')
+            ->defaultNull()
+            ->end()
+            ->scalarNode('service_id')
+            ->defaultNull()
+            ->end()
+            ->scalarNode('error_handler')
+            ->defaultValue('default')
+            ->end()
+            ->end()
+            ->end()
             ->end();
 
         return $node;
@@ -2020,7 +2563,7 @@ final class FlowTelemetryBundle extends AbstractBundle
      * configuration) is left untouched, so a channel synthesized by
      * {@see ChannelLoggerPass} never overrides a user-declared scope.
      *
-     * @param array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>} $loggerConfig
+     * @param array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}} $loggerConfig
      */
     public static function defineLogger(string $name, array $loggerConfig, ContainerBuilder $builder): string
     {
@@ -2033,16 +2576,7 @@ final class FlowTelemetryBundle extends AbstractBundle
             $definition->setArgument(1, $loggerConfig['version'] ?? 'unknown');
             $definition->setArgument(2, $loggerConfig['schema_url'] ?? null);
 
-            $attributes = $loggerConfig['attributes'] ?? [];
-
-            if (count($attributes) > 0) {
-                $attributesDefinition = new Definition(Attributes::class);
-                $attributesDefinition->setFactory([Attributes::class, 'create']);
-                $attributesDefinition->setArgument(0, $attributes);
-                $definition->setArgument(3, $attributesDefinition);
-            } else {
-                $definition->setArgument(3, null);
-            }
+            self::applyScopeAndSignalAttributes($definition, $loggerConfig);
 
             $definition->setPublic(true);
             $builder->setDefinition($loggerServiceId, $definition);
@@ -2068,7 +2602,7 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * @param array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}> $config
+     * @param array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}> $config
      */
     private function registerMeters(array $config, ContainerBuilder $builder): void
     {
@@ -2079,20 +2613,45 @@ final class FlowTelemetryBundle extends AbstractBundle
             $definition->setArgument(1, $meterConfig['version'] ?? 'unknown');
             $definition->setArgument(2, $meterConfig['schema_url'] ?? null);
 
-            $attributes = $meterConfig['attributes'] ?? [];
-
-            if (count($attributes) > 0) {
-                $attributesDefinition = new Definition(Attributes::class);
-                $attributesDefinition->setFactory([Attributes::class, 'create']);
-                $attributesDefinition->setArgument(0, $attributes);
-                $definition->setArgument(3, $attributesDefinition);
-            } else {
-                $definition->setArgument(3, null);
-            }
+            self::applyScopeAndSignalAttributes($definition, $meterConfig);
 
             $definition->setPublic(true);
             $builder->setDefinition('flow.telemetry.' . $name . '.meter', $definition);
         }
+    }
+
+    /**
+     * Wire scope (constructor arg 3) and signal (constructor arg 4) attribute defaults onto a
+     * tracer/meter/logger factory definition. Each is an {@see Attributes} service, or null when empty.
+     *
+     * @param array<array-key, mixed> $config a single tracer/meter/logger configuration entry
+     */
+    private static function applyScopeAndSignalAttributes(Definition $definition, array $config): void
+    {
+        $attributes = is_array($config['attributes'] ?? null) ? $config['attributes'] : [];
+
+        $definition->setArgument(3, self::attributesArgument(
+            is_array($attributes['scope'] ?? null) ? $attributes['scope'] : [],
+        ));
+        $definition->setArgument(4, self::attributesArgument(
+            is_array($attributes['signal'] ?? null) ? $attributes['signal'] : [],
+        ));
+    }
+
+    /**
+     * @param array<array-key, mixed> $attributes
+     */
+    private static function attributesArgument(array $attributes): ?Definition
+    {
+        if ($attributes === []) {
+            return null;
+        }
+
+        $definition = new Definition(Attributes::class);
+        $definition->setFactory([Attributes::class, 'create']);
+        $definition->setArgument(0, $attributes);
+
+        return $definition;
     }
 
     /**
@@ -2381,7 +2940,7 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * @param array<string, array{version?: string, schema_url?: null|string, attributes?: array<string, mixed>}> $config
+     * @param array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}> $config
      */
     private function registerTracers(array $config, ContainerBuilder $builder): void
     {
@@ -2392,16 +2951,7 @@ final class FlowTelemetryBundle extends AbstractBundle
             $definition->setArgument(1, $tracerConfig['version'] ?? 'unknown');
             $definition->setArgument(2, $tracerConfig['schema_url'] ?? null);
 
-            $attributes = $tracerConfig['attributes'] ?? [];
-
-            if (count($attributes) > 0) {
-                $attributesDefinition = new Definition(Attributes::class);
-                $attributesDefinition->setFactory([Attributes::class, 'create']);
-                $attributesDefinition->setArgument(0, $attributes);
-                $definition->setArgument(3, $attributesDefinition);
-            } else {
-                $definition->setArgument(3, null);
-            }
+            self::applyScopeAndSignalAttributes($definition, $tracerConfig);
 
             $definition->setPublic(true);
             $builder->setDefinition('flow.telemetry.' . $name . '.tracer', $definition);

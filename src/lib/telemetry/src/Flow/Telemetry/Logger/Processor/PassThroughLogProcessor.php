@@ -8,7 +8,7 @@ use Flow\Telemetry\ErrorHandler\ErrorHandler;
 use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Logger\LogEntry;
-use Flow\Telemetry\Logger\LogProcessor;
+use Flow\Telemetry\Logger\LogSink;
 use Flow\Telemetry\Signal\Signals;
 use Throwable;
 
@@ -19,7 +19,7 @@ use Throwable;
  * one at a time. This is useful for debugging and development where
  * immediate visibility of logs is more important than performance.
  */
-final readonly class PassThroughLogProcessor implements LogProcessor
+final readonly class PassThroughLogProcessor implements LogSink
 {
     public function __construct(
         private Exporter $exporter,

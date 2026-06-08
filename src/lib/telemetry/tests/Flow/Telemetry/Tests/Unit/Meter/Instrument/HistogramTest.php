@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Meter\Instrument;
 
+use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Meter\AggregationTemporality;
 use Flow\Telemetry\Meter\Instrument\Histogram;
 use Flow\Telemetry\Meter\MetricType;
@@ -443,5 +444,22 @@ final class HistogramTest extends TestCase
                 static::assertSame(0, $bucketCounts[$i], "Expected bucket {$i} to have count 0");
             }
         }
+    }
+
+    public function test_signal_attributes_merge_into_data_points_with_per_call_precedence(): void
+    {
+        $histogram = new Histogram(
+            'test.histogram',
+            ResourceMother::default(),
+            InstrumentationScopeMother::default(),
+            ClockMother::frozen(),
+            signalAttributes: Attributes::create(['env' => 'prod', 'region' => 'eu']),
+        );
+
+        $histogram->record(1.0, ['env' => 'dev']);
+        $metric = $histogram->collect()[0];
+
+        static::assertSame('dev', $metric->attributes->get('env'));
+        static::assertSame('eu', $metric->attributes->get('region'));
     }
 }

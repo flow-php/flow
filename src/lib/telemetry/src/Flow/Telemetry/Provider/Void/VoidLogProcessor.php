@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Provider\Void;
 
 use Flow\Telemetry\Logger\LogEntry;
-use Flow\Telemetry\Logger\LogProcessor;
+use Flow\Telemetry\Logger\LogSink;
 
 /**
  * No-op log processor that discards all data.
  */
-final readonly class VoidLogProcessor implements LogProcessor
+final readonly class VoidLogProcessor implements LogSink
 {
     public function flush(): bool
     {

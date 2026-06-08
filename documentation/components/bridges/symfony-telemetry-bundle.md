@@ -330,11 +330,11 @@ flow_telemetry:
   tracer_provider:
     error_handler: default  # name from error_handlers; defaults to "default"
     sampler:
-      type: always_on   # always_on|always_off|trace_id_ratio|parent_based|service
+      type: always_on   # always_on|always_off|trace_id_ratio|parent_based|attribute_matching|service
       ratio: 1.0        # Sampling ratio (0.0-1.0, only for trace_id_ratio)
       service_id: null  # Custom sampler service (only for type: service)
     processor:
-      type: batching    # composite|memory|batching|passthrough|void|service
+      type: batching    # composite|memory|batching|passthrough|void|attribute_filtering|service
       batch_size: 512
       exporter: otlp    # name of a top-level exporter
       error_handler: default
@@ -342,13 +342,34 @@ flow_telemetry:
 
 **Sampler types:**
 
-| Type             | Description                             |
-|------------------|-----------------------------------------|
-| `always_on`      | Sample all traces (default)             |
-| `always_off`     | Sample no traces                        |
-| `trace_id_ratio` | Sample based on trace ID ratio          |
-| `parent_based`   | Respect parent span's sampling decision |
-| `service`        | Custom sampler service                  |
+| Type                 | Description                                                              |
+|----------------------|--------------------------------------------------------------------------|
+| `always_on`          | Sample all traces (default)                                              |
+| `always_off`         | Sample no traces                                                         |
+| `trace_id_ratio`     | Sample based on trace ID ratio                                           |
+| `parent_based`       | Respect parent span's sampling decision                                  |
+| `attribute_matching` | Drop spans matching an attribute matcher (start-time attrs); defer the rest to a delegate sampler |
+| `service`            | Custom sampler service                                                   |
+
+**`attribute_matching`** is the OTel-idiomatic way to drop spans by attribute — the decision is made at span start, so a
+matched span never records or reaches a processor. It only sees attributes available at span start (not end-state values
+like status codes). It reuses the same `matcher` / `exclude` / `sources` / `cache_dir` options as the
+[`attribute_filtering`](#attribute_filtering) processor, plus a `delegate` sampler for spans that don't match:
+
+```yaml
+flow_telemetry:
+  tracer_provider:
+    sampler:
+      type: attribute_matching
+      matcher:
+        any:
+          - { path: http.route, mode: equal, value: /health }
+          - { path: http.route, mode: starts_with, value: /ready }
+      # exclude: true (default) drops matches; sources: [signal] (default)
+      delegate:
+        type: trace_id_ratio   # always_on (default) | always_off | trace_id_ratio
+        ratio: 0.1             # everything that is NOT a health/ready probe is 10% sampled
+```
 
 ### MeterProvider
 
@@ -371,21 +392,22 @@ flow_telemetry:
   logger_provider:
     error_handler: default
     processor:
-      type: batching   # composite|memory|batching|passthrough|void|severity_filtering|service
+      type: batching   # composite|memory|batching|passthrough|void|pipeline|service
       batch_size: 512
       exporter: otlp
       error_handler: default
 ```
 
-**Severity filtering** (logs only):
+**Pipeline** (logs only) — chain middleware (enrich/filter) before a terminal sink:
 
 ```yaml
 flow_telemetry:
   logger_provider:
     processor:
-      type: severity_filtering
-      minimum_severity: warn  # trace|debug|info|warn|error|fatal
-      inner_processor:
+      type: pipeline
+      middleware:
+        - { type: severity_filtering, minimum_severity: warn }  # trace|debug|info|warn|error|fatal
+      sink:
         type: batching
         exporter: otlp
         batch_size: 200
@@ -462,20 +484,153 @@ processor:
   service_id: 'app.custom_processor'
 ```
 
-#### severity_filtering (logger_provider only)
+#### pipeline (logger_provider only)
 
-Filters logs by minimum severity level. The wrapped `inner_processor` is built with the same set of types as a top-level
-processor (except `composite`/`severity_filtering`).
+Runs each log record through an ordered list of **middleware** (enrich / filter), then forwards the survivors to a
+single **sink**. This is the log-only way to combine more than one processing step (the OpenTelemetry
+`LogRecordProcessor` model: each step may modify the record or drop it, with changes visible to the next).
+
+| Option       | Type   | Default      | Description                                                                 |
+|--------------|--------|--------------|-----------------------------------------------------------------------------|
+| `middleware` | list   | `[]`         | Ordered middleware; the first to drop a record short-circuits the rest      |
+| `sink`       | object | – (required) | Terminal processor (`memory`, `batching`, `passthrough`, `void`, `service`, or `composite`) that exports survivors |
+
+Each `middleware` entry has a `type` and its own options:
+
+| `type`               | Options                                                                 | Effect                                          |
+|----------------------|-------------------------------------------------------------------------|-------------------------------------------------|
+| `enriching`          | `attributes` (map)                                                      | Merges default attributes (call-site values win)|
+| `severity_filtering` | `minimum_severity` (`trace`…`fatal`, default `info`)                    | Drops records below the level                   |
+| `attribute_filtering`| `matcher`, `exclude`, `sources`, `cache_dir` (see [attribute_filtering](#attribute_filtering)) | Drops/keeps records by attribute matcher        |
 
 ```yaml
 processor:
-  type: severity_filtering
-  minimum_severity: warn
-  inner_processor:
+  type: pipeline
+  middleware:
+    - { type: enriching, attributes: { 'deployment.environment': prod } }
+    - { type: severity_filtering, minimum_severity: warn }
+    - type: attribute_filtering
+      matcher: { any: [ { path: http.route, mode: equal, value: /health } ] }
+  sink:
     type: batching
     exporter: otlp
     batch_size: 200
 ```
+
+#### attribute_filtering
+
+Drops (or keeps) signals based on their attributes — useful for reducing noise, e.g. discarding health-check or bot
+traffic before it is exported. On `tracer_provider` and `meter_provider` it is a **processor** that wraps an
+`inner_processor` (which receives the survivors). On `logger_provider` it is instead a **middleware** inside a
+[`pipeline`](#pipeline-logger_provider-only) (no `inner_processor` — the pipeline's `sink` receives the survivors). The
+`matcher`/`exclude`/`sources`/`cache_dir` options below apply in both forms.
+
+| Option            | Type           | Default                                      | Description                                                        |
+|-------------------|----------------|----------------------------------------------|--------------------------------------------------------------------|
+| `matcher`         | object         | – (required)                                 | The matcher tree (see below)                                       |
+| `exclude`         | boolean        | `true`                                       | `true`: drop matching signals; `false`: keep ONLY matching signals |
+| `sources`         | list of enum   | `[signal]`                                   | Which attribute sets to inspect: any of `signal`, `resource`, `scope`. The matcher is evaluated against each listed source and OR-combined — a signal matches if it matches in **any** source |
+| `cache_dir`       | string         | `%kernel.cache_dir%/flow_telemetry_filters`  | Directory for the compiled matcher cache                          |
+| `cache_dir_permissions` | int      | `0o700`                                      | Octal mode applied when the cache directory is **created** (owner-only by default, since it holds `require`d PHP; subject to umask). Write it as a YAML octal literal, e.g. `0o750`. Only applies on creation — an existing directory is left untouched |
+| `inner_processor` | object         | – (required for span/metric)                 | **tracer/meter only** — the wrapped processor that receives surviving signals (leaf types only: `memory`, `batching`, `passthrough`, `void`, `service`). For logs, omit it: the [`pipeline`](#pipeline-logger_provider-only) `sink` receives survivors |
+
+The `matcher` is a tree. Each node is **exactly one** of:
+
+- `all: [ … ]` — a list of child matchers; matches when **every** child matches (AND).
+- `any: [ … ]` — a list of child matchers; matches when **at least one** child matches (OR).
+- `not: { … }` — a single child matcher; matches when the child does **not**.
+- a **leaf rule** carrying a `path` (the four kinds are mutually exclusive — mixing them in one node is a configuration error).
+
+Composites and leaves nest to any depth, so arbitrary combinations of ANDs, ORs and NOTs are expressible. A leaf rule
+accepts:
+
+| Option           | Type         | Default  | Description                                                                |
+|------------------|--------------|----------|----------------------------------------------------------------------------|
+| `path`           | string\|list | required | Attribute key, or a list of segments descending into nested array values   |
+| `mode`           | enum         | required | Comparison mode (see below)                                                |
+| `value`          | scalar       | required | Expected value (must be a string for the pattern modes)                    |
+| `case_sensitive` | boolean      | `true`   | Substring modes only                                                       |
+
+**Modes:** `equal`, `not_equal`, `greater_than`, `greater_than_equal`, `less_than`, `less_than_equal`, `regexp`,
+`starts_with`, `ends_with`, `contains`.
+
+Drop health-check and bot logs (drop if **any** branch matches) — on `logger_provider`, attribute filtering is a
+middleware inside a [`pipeline`](#pipeline-logger_provider-only); the `sink` receives the survivors:
+
+```yaml
+flow_telemetry:
+  logger_provider:
+    processor:
+      type: pipeline
+      middleware:
+        - type: attribute_filtering
+          matcher:
+            any:
+              - { path: http.route, mode: equal, value: /health }
+              - { path: http.user_agent, mode: contains, value: bot, case_sensitive: false }
+      sink:
+        type: batching
+        exporter: otlp
+```
+
+Keep **only** payments-scope metrics that are not internal (`exclude: false`, `sources: [scope]`, negation):
+
+```yaml
+flow_telemetry:
+  meter_provider:
+    processor:
+      type: attribute_filtering
+      exclude: false
+      sources: [scope]
+      matcher:
+        all:
+          - { path: name, mode: equal, value: app.payments }
+          - not: { path: internal, mode: equal, value: true }
+      inner_processor:
+        type: batching
+        exporter: otlp
+```
+
+Inspect more than one source at once — drop a signal whose route is `/health` whether that attribute sits on the
+signal itself **or** on the resource:
+
+```yaml
+flow_telemetry:
+  tracer_provider:
+    processor:
+      type: attribute_filtering
+      sources: [signal, resource]
+      matcher: { path: http.route, mode: equal, value: /health }
+      inner_processor:
+        type: batching
+        exporter: otlp
+```
+
+Deeply nested combinations — drop a span when it is a fast internal call **or** a non-health route on a flagged tenant
+(`(duration < 5 AND internal) OR (tenant = a AND NOT route ^= /health)`):
+
+```yaml
+flow_telemetry:
+  tracer_provider:
+    processor:
+      type: attribute_filtering
+      matcher:
+        any:
+          - all:
+              - { path: [timing, duration_ms], mode: less_than, value: 5 }
+              - { path: internal, mode: equal, value: true }
+          - all:
+              - { path: tenant, mode: equal, value: a }
+              - not: { path: http.route, mode: starts_with, value: /health }
+      inner_processor:
+        type: batching
+        exporter: otlp
+```
+
+The matcher is compiled to a cached PHP matcher in `cache_dir` (the project cache directory by default) so per-signal
+evaluation stays cheap; it falls back to interpreted matching when the directory is not writable. Because the compiled
+file is `require`d, `cache_dir` must be **trusted** (not writable by untrusted users) — the project cache directory is
+application-private, so the default is safe.
 
 ### Exporter Definitions
 
@@ -905,15 +1060,24 @@ flow_telemetry:
 
 ### Named Instruments
 
-Configure named tracers, meters, and loggers with custom instrumentation scope attributes.
+Configure named tracers, meters, and loggers with custom attributes.
 
 **Options:**
 
-| Option       | Type   | Default     | Description                         |
-|--------------|--------|-------------|-------------------------------------|
-| `version`    | string | `'unknown'` | Instrumentation scope version       |
-| `schema_url` | string | `null`      | Schema URL for semantic conventions |
-| `attributes` | object | `{}`        | Additional scope attributes         |
+| Option              | Type   | Default     | Description                                                          |
+|---------------------|--------|-------------|---------------------------------------------------------------------|
+| `version`           | string | `'unknown'` | Instrumentation scope version                                       |
+| `schema_url`        | string | `null`      | Schema URL for semantic conventions                                 |
+| `attributes.scope`  | object | `{}`        | Attributes attached to the instrumentation scope                    |
+| `attributes.signal` | object | `{}`        | Default attributes merged into every emitted signal                 |
+
+`attributes` has two sub-keys:
+
+- **`scope`** — attributes attached to the instrumentation scope itself (shared by every signal emitted through this
+  tracer/meter/logger). These are what a `sources: [scope]` filter inspects.
+- **`signal`** — default attributes merged into every individual signal (each span/metric data point/log record)
+  emitted through this instrument. Attributes passed at the call site (e.g. `$logger->info('...', ['env' => 'dev'])`)
+  override the configured defaults of the same key. These are what a `sources: [signal]` filter inspects (the default).
 
 ```yaml
 flow_telemetry:
@@ -922,13 +1086,18 @@ flow_telemetry:
       version: '1.0.0'  # default: 'unknown'
       schema_url: 'https://opentelemetry.io/schemas/1.21.0'
       attributes:
-        custom.attribute: 'value'
+        scope:
+          custom.attribute: 'value'
+        signal:
+          deployment.environment: 'prod'
 
   meters:
     my_meter:
       version: '1.0.0'  # default: 'unknown'
       schema_url: null
-      attributes: { }
+      attributes:
+        signal:
+          deployment.environment: 'prod'
 
   loggers:
     my_logger:
@@ -977,8 +1146,9 @@ flow_telemetry:
 
 Channels let you route different parts of your application to different telemetry loggers — the Flow Telemetry
 equivalent of Monolog channels — without installing Monolog. Each channel is a [named logger](#named-instruments);
-messages emitted through it are tagged with a `log.channel` scope attribute, so you can filter and group them per
-channel in your backend.
+messages emitted through it carry a `log.channel` attribute, so you can filter and group them per channel in your
+backend. Where that attribute is placed — the instrumentation scope, every emitted record, or both — is controlled by
+[`channel_attribute_target`](#channel-attribute-placement).
 
 A service opts into a channel by carrying the `flow.telemetry.channel` tag. The recommended way is the
 `#[WithTelemetryChannel]` attribute:
@@ -1018,9 +1188,9 @@ services:
 **Behavior:**
 
 - Each distinct channel is synthesized on demand as `flow.telemetry.<channel>.logger` (+ its PSR-3 wrapper
-  `flow.telemetry.<channel>.logger.psr3`), carrying a `log.channel: <channel>` scope attribute — unless a logger of that
-  name already exists, which is then reused untouched (so the `log.channel` attribute is only added to loggers the
-  bundle creates).
+  `flow.telemetry.<channel>.logger.psr3`), carrying a `log.channel: <channel>` attribute placed per
+  [`channel_attribute_target`](#channel-attribute-placement) — unless a logger of that name already exists, which is then
+  reused untouched (so the `log.channel` attribute is only added to loggers the bundle creates).
 - To route a service to the bundle's main logger, use the `default` channel (`#[WithTelemetryChannel('default')]`).
   A `default` logger always exists, so it is reused as-is rather than re-created. Every channel name — including `app`,
   which carries no special meaning here — behaves the same way.
@@ -1038,8 +1208,9 @@ flow_telemetry:
     events:
       version: '1.0.0'
       attributes:
-        log.channel: events      # not auto-added for a declared logger — set it explicitly
-        team: checkout
+        scope:
+          log.channel: events    # not auto-added for a declared logger — set it explicitly
+          team: checkout
 ```
 
 #### Capturing Framework Channels
@@ -1060,12 +1231,34 @@ flow_telemetry:
 ```
 
 Each framework channel becomes `flow.telemetry.<channel>.logger` (e.g. `flow.telemetry.router.logger`,
-`flow.telemetry.http_client.logger`), carries the `log.channel` scope attribute, and gets the
+`flow.telemetry.http_client.logger`), carries the `log.channel` attribute (placed per
+[`channel_attribute_target`](#channel-attribute-placement)), and gets the
 `LoggerInterface $<channel>Logger` / `Logger $<channel>Logger` autowiring aliases — the same treatment as an explicitly
 tagged service. A channel you declare under `loggers` still wins, so you can customise any framework channel's scope.
 
 Services that opt in explicitly via `#[WithTelemetryChannel]` / the `flow.telemetry.channel` tag are always routed
 regardless of this flag.
+
+#### Channel Attribute Placement
+
+The synthesized `log.channel` attribute can be attached to the instrumentation **scope**, to every emitted **signal**
+(log record), or to **both**. `channel_attribute_target` controls this for **all** synthesized channel loggers —
+framework-captured and `#[WithTelemetryChannel]` alike:
+
+```yaml
+flow_telemetry:
+  channel_attribute_target: both   # both (default) | scope | signal
+```
+
+- **`scope`** — `log.channel` sits on the instrumentation scope. Filter by channel with an
+  [`attribute_filtering`](#attribute_filtering) processor using `sources: [scope]`. Not present on individual records.
+- **`signal`** — `log.channel` is merged into every emitted record, so it is visible per-record and filterable with the
+  default `sources: [signal]` (the closest match to how Monolog stamps the channel on each record).
+- **`both`** (default) — placed on the scope *and* every record, so it is filterable either way at the cost of storing
+  the attribute on each record.
+
+This only governs channels the bundle synthesizes; a channel you declare yourself under `loggers` opts out of synthesis,
+so set `log.channel` explicitly on whichever of `attributes.scope` / `attributes.signal` you want.
 
 > [!NOTE]
 > `capture_framework_channels` rewrites the `logger` reference on framework services to their channel logger. A
@@ -1280,9 +1473,10 @@ flow_telemetry:
 
   logger_provider:
     processor:
-      type: severity_filtering
-      minimum_severity: info
-      inner_processor:
+      type: pipeline
+      middleware:
+        - { type: severity_filtering, minimum_severity: info }
+      sink:
         type: batching
         exporter: otlp_logs
 
@@ -1292,7 +1486,8 @@ flow_telemetry:
     audit:
       version: '%env(APP_VERSION)%'
       attributes:
-        channel: audit
+        scope:
+          channel: audit
   meters:
     business:
       version: '%env(APP_VERSION)%'

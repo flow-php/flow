@@ -8,7 +8,7 @@ use Flow\Telemetry\ErrorHandler\ErrorHandler;
 use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Logger\LogEntry;
-use Flow\Telemetry\Logger\LogProcessor;
+use Flow\Telemetry\Logger\LogSink;
 use Flow\Telemetry\Signal\Signals;
 use Throwable;
 
@@ -22,7 +22,7 @@ use function count;
  * - flush() is explicitly called
  * - the system is shutting down
  */
-final class BatchingLogProcessor implements LogProcessor
+final class BatchingLogProcessor implements LogSink
 {
     /**
      * @var array<LogEntry>

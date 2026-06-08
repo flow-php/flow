@@ -60,6 +60,7 @@ final readonly class TracerProvider
      * @param string $version The version of the instrumentation scope
      * @param null|string $schemaUrl Schema URL for semantic conventions
      * @param null|Attributes $attributes Additional scope attributes
+     * @param null|Attributes $signalAttributes Default attributes merged into every started span (per-call values win)
      */
     public function tracer(
         Resource $resource,
@@ -67,6 +68,7 @@ final readonly class TracerProvider
         string $version = 'unknown',
         ?string $schemaUrl = null,
         ?Attributes $attributes = null,
+        ?Attributes $signalAttributes = null,
     ): Tracer {
         return new Tracer(
             $resource,
@@ -77,6 +79,7 @@ final readonly class TracerProvider
             $this->sampler,
             $this->limits,
             $this->errorHandler,
+            $signalAttributes ?? new Attributes(),
         );
     }
 }

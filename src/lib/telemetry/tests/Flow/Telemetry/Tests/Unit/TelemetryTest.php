@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit;
 
+use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Logger\Logger;
 use Flow\Telemetry\Logger\LoggerProvider;
@@ -160,6 +161,48 @@ final class TelemetryTest extends TestCase
 
         static::assertSame('test-tracer', $tracer->name());
         static::assertSame('1.0.0', $tracer->version());
+    }
+
+    public function test_signal_attributes_participate_in_provider_instance_cache(): void
+    {
+        $clock = new SystemClock();
+        $contextStorage = new MemoryContextStorage();
+        $telemetry = new Telemetry(
+            $this->resource,
+            new TracerProvider($this->createSpanProcessor(), $clock, $contextStorage),
+            new MeterProvider($this->createMetricProcessor(), $clock),
+            new LoggerProvider($this->createLogProcessor(), $clock, $contextStorage),
+        );
+
+        $prod = Attributes::create(['env' => 'prod']);
+        $dev = Attributes::create(['env' => 'dev']);
+
+        static::assertSame(
+            $telemetry->logger('l', '1.0.0', signalAttributes: $prod),
+            $telemetry->logger('l', '1.0.0', signalAttributes: Attributes::create(['env' => 'prod'])),
+        );
+        static::assertNotSame(
+            $telemetry->logger('l', '1.0.0', signalAttributes: $prod),
+            $telemetry->logger('l', '1.0.0', signalAttributes: $dev),
+        );
+
+        static::assertSame(
+            $telemetry->meter('m', '1.0.0', signalAttributes: $prod),
+            $telemetry->meter('m', '1.0.0', signalAttributes: Attributes::create(['env' => 'prod'])),
+        );
+        static::assertNotSame(
+            $telemetry->meter('m', '1.0.0', signalAttributes: $prod),
+            $telemetry->meter('m', '1.0.0', signalAttributes: $dev),
+        );
+
+        static::assertSame(
+            $telemetry->tracer('t', '1.0.0', signalAttributes: $prod),
+            $telemetry->tracer('t', '1.0.0', signalAttributes: Attributes::create(['env' => 'prod'])),
+        );
+        static::assertNotSame(
+            $telemetry->tracer('t', '1.0.0', signalAttributes: $prod),
+            $telemetry->tracer('t', '1.0.0', signalAttributes: $dev),
+        );
     }
 
     private function createLogProcessor(): MemoryLogProcessor

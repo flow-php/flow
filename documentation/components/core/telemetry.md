@@ -298,7 +298,20 @@ pass_through_log_processor($exporter)
 | `pass_through_span_processor()` | Immediate span export |
 | `pass_through_metric_processor()` | Immediate metric export |
 | `pass_through_log_processor()` | Immediate log export |
-| `severity_filtering_log_processor()` | Filter logs by severity |
+| `pipeline_log_processor()` | Run logs through middleware, then a sink |
+| `enriching_log_middleware()` | Merge default attributes into log records |
+| `severity_filtering_log_middleware()` | Filter logs by severity |
+| `attribute_filtering_log_middleware()` | Filter logs by attribute matcher |
+
+### Samplers
+
+| Function | Description |
+|----------|-------------|
+| `always_on_sampler()` | Record and sample every span |
+| `always_off_sampler()` | Drop every span |
+| `trace_id_ratio_based_sampler()` | Sample a deterministic fraction of traces |
+| `parent_based_sampler()` | Honor the parent's decision; root sampler for parentless spans |
+| `attribute_matching_sampler()` | Drop spans matching an attribute filter, defer the rest to a delegate |
 
 ### Exporters (Console)
 

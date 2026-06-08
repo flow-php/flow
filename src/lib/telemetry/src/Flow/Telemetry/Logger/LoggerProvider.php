@@ -56,6 +56,7 @@ final readonly class LoggerProvider
      * @param string $version The version of the instrumentation scope
      * @param null|string $schemaUrl Schema URL for semantic conventions
      * @param null|Attributes $attributes Additional scope attributes
+     * @param null|Attributes $signalAttributes Default attributes merged into every emitted log record (per-call values win)
      */
     public function logger(
         Resource $resource,
@@ -63,6 +64,7 @@ final readonly class LoggerProvider
         string $version = 'unknown',
         ?string $schemaUrl = null,
         ?Attributes $attributes = null,
+        ?Attributes $signalAttributes = null,
     ): Logger {
         return new Logger(
             $resource,
@@ -72,6 +74,7 @@ final readonly class LoggerProvider
             $this->contextStorage,
             $this->limits,
             $this->errorHandler,
+            $signalAttributes ?? new Attributes(),
         );
     }
 }

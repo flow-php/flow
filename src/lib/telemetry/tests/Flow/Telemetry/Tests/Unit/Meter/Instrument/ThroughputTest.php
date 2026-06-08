@@ -207,6 +207,23 @@ final class ThroughputTest extends TestCase
         static::assertSame('Rows processed per second', $metrics[0]->description);
     }
 
+    public function test_signal_attributes_merge_into_data_points_with_per_call_precedence(): void
+    {
+        $throughput = new Throughput(
+            'test.throughput',
+            ResourceMother::default(),
+            InstrumentationScopeMother::default(),
+            ClockMother::frozen(),
+            signalAttributes: Attributes::create(['env' => 'prod', 'region' => 'eu']),
+        );
+
+        $throughput->add(10, ['env' => 'dev']);
+        $metric = $throughput->collect()[0];
+
+        static::assertSame('dev', $metric->attributes->get('env'));
+        static::assertSame('eu', $metric->attributes->get('region'));
+    }
+
     public function test_no_metrics_when_no_add_calls(): void
     {
         $throughput = new Throughput(

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Telemetry\DSL;
 
 use DateTimeImmutable;
+use DateTimeInterface;
 use Flow\ETL\Attribute\DocumentationDSL;
 use Flow\ETL\Attribute\Module;
 use Flow\ETL\Attribute\Type as DSLType;
@@ -26,13 +27,26 @@ use Flow\Telemetry\ErrorHandler\SyslogHandler;
 use Flow\Telemetry\ErrorHandler\SyslogSeverity;
 use Flow\Telemetry\ErrorHandler\UdpSyslogHandler;
 use Flow\Telemetry\Exporter\Exporter;
+use Flow\Telemetry\Filter\All;
+use Flow\Telemetry\Filter\Any;
+use Flow\Telemetry\Filter\AttributeFilter;
+use Flow\Telemetry\Filter\AttributeRule;
+use Flow\Telemetry\Filter\AttributeSource;
+use Flow\Telemetry\Filter\Matcher;
+use Flow\Telemetry\Filter\MatchMode;
+use Flow\Telemetry\Filter\Not;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Logger\LoggerProvider;
+use Flow\Telemetry\Logger\LogMiddleware;
 use Flow\Telemetry\Logger\LogProcessor;
 use Flow\Telemetry\Logger\LogRecordLimits;
+use Flow\Telemetry\Logger\LogSink;
+use Flow\Telemetry\Logger\Middleware\AttributeFilteringLogMiddleware;
+use Flow\Telemetry\Logger\Middleware\EnrichingLogMiddleware;
+use Flow\Telemetry\Logger\Middleware\SeverityFilteringLogMiddleware;
 use Flow\Telemetry\Logger\Processor\BatchingLogProcessor;
 use Flow\Telemetry\Logger\Processor\PassThroughLogProcessor;
-use Flow\Telemetry\Logger\Processor\SeverityFilteringLogProcessor;
+use Flow\Telemetry\Logger\Processor\PipelineLogProcessor;
 use Flow\Telemetry\Logger\Severity;
 use Flow\Telemetry\Meter\AggregationTemporality;
 use Flow\Telemetry\Meter\Exemplar\AlwaysOffExemplarFilter;
@@ -42,6 +56,7 @@ use Flow\Telemetry\Meter\Exemplar\TraceBasedExemplarFilter;
 use Flow\Telemetry\Meter\MeterProvider;
 use Flow\Telemetry\Meter\MetricLimits;
 use Flow\Telemetry\Meter\MetricProcessor;
+use Flow\Telemetry\Meter\Processor\AttributeFilteringMetricProcessor;
 use Flow\Telemetry\Meter\Processor\BatchingMetricProcessor;
 use Flow\Telemetry\Meter\Processor\PassThroughMetricProcessor;
 use Flow\Telemetry\Propagation\ArrayCarrier;
@@ -76,10 +91,15 @@ use Flow\Telemetry\Resource\Detector\ProcessDetector;
 use Flow\Telemetry\Resource\ResourceDetector;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\GenericEvent;
+use Flow\Telemetry\Tracer\Processor\AttributeFilteringSpanProcessor;
 use Flow\Telemetry\Tracer\Processor\BatchingSpanProcessor;
 use Flow\Telemetry\Tracer\Processor\PassThroughSpanProcessor;
+use Flow\Telemetry\Tracer\Sampler\AlwaysOffSampler;
 use Flow\Telemetry\Tracer\Sampler\AlwaysOnSampler;
+use Flow\Telemetry\Tracer\Sampler\AttributeMatchingSampler;
+use Flow\Telemetry\Tracer\Sampler\ParentBasedSampler;
 use Flow\Telemetry\Tracer\Sampler\Sampler;
+use Flow\Telemetry\Tracer\Sampler\TraceIdRatioBasedSampler;
 use Flow\Telemetry\Tracer\SpanContext;
 use Flow\Telemetry\Tracer\SpanLimits;
 use Flow\Telemetry\Tracer\SpanLink;
@@ -585,17 +605,147 @@ function pass_through_log_processor(
 }
 
 /**
- * Create a SeverityFilteringLogProcessor.
+ * Create a PipelineLogProcessor: run each log entry through an ordered chain of
+ * middleware, then forward the survivors to a single sink.
  *
- * @param LogProcessor $processor The processor to wrap
+ * @param list<LogMiddleware> $middleware run in order; the first to drop an entry short-circuits the rest
+ * @param LogSink $sink the terminal processor that exports surviving entries
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function pipeline_log_processor(array $middleware, LogSink $sink): PipelineLogProcessor
+{
+    return new PipelineLogProcessor($middleware, $sink);
+}
+
+/**
+ * Create an EnrichingLogMiddleware that merges default attributes into every log
+ * entry. Attributes set at the call site win over these defaults.
+ *
+ * @param array<string, array<array-key, mixed>|bool|\DateTimeInterface|float|int|string|\Throwable>|Attributes $attributes
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function enriching_log_middleware(array|Attributes $attributes): EnrichingLogMiddleware
+{
+    return new EnrichingLogMiddleware($attributes);
+}
+
+/**
+ * Create an AttributeFilteringLogMiddleware that drops log entries matching the filter.
+ *
+ * @param AttributeFilter $filter The attribute filter to apply
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function attribute_filtering_log_middleware(AttributeFilter $filter): AttributeFilteringLogMiddleware
+{
+    return new AttributeFilteringLogMiddleware($filter);
+}
+
+/**
+ * Create a SeverityFilteringLogMiddleware that drops log entries below a minimum severity.
+ *
  * @param Severity $minimumSeverity Minimum severity level (default: INFO)
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
-function severity_filtering_log_processor(
-    LogProcessor $processor,
-    Severity $minimumSeverity = Severity::INFO,
-): SeverityFilteringLogProcessor {
-    return new SeverityFilteringLogProcessor($processor, $minimumSeverity);
+function severity_filtering_log_middleware(Severity $minimumSeverity = Severity::INFO): SeverityFilteringLogMiddleware
+{
+    return new SeverityFilteringLogMiddleware($minimumSeverity);
+}
+
+/**
+ * Create a single attribute-matching rule for an AttributeFilter.
+ *
+ * @param array<string>|string $path attribute path: a top-level key, or segments descending into nested array values
+ * @param MatchMode $mode comparison applied between the value at the path and the expected value
+ * @param bool|DateTimeInterface|float|int|string $expected expected value (must be a string for the pattern modes)
+ * @param bool $caseSensitive applies to the substring modes only (STARTS_WITH, ENDS_WITH, CONTAINS)
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function attribute_rule(
+    array|string $path,
+    MatchMode $mode,
+    string|int|float|bool|DateTimeInterface $expected,
+    bool $caseSensitive = true,
+): AttributeRule {
+    return new AttributeRule($path, $mode, $expected, $caseSensitive);
+}
+
+/**
+ * Combine matchers so that every one must match (logical AND).
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function all(Matcher ...$matchers): All
+{
+    return new All(...$matchers);
+}
+
+/**
+ * Combine matchers so that at least one must match (logical OR).
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function any(Matcher ...$matchers): Any
+{
+    return new Any(...$matchers);
+}
+
+/**
+ * Negate a matcher (logical NOT).
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function not(Matcher $matcher): Not
+{
+    return new Not($matcher);
+}
+
+/**
+ * Create an AttributeFilter from a matcher.
+ *
+ * @param Matcher $matcher the matcher to evaluate against a signal's attributes (compose with all(), any(), not())
+ * @param bool $exclude when true (default) a match drops the signal; when false only matching signals are kept
+ * @param list<AttributeSource> $sources which attribute sets to inspect (signal, resource and/or scope); the matcher is
+ *                                       OR-combined across them, defaulting to the signal's own attributes
+ * @param null|string $cacheDir directory for the generated matcher file (defaults to the system temp directory). It is
+ *                              `require`d, so it MUST be trusted - not writable by untrusted users. Prefer an
+ *                              application-private directory over the shared system temp in multi-tenant environments.
+ * @param int $cacheDirPermissions mode applied when the cache directory is created (octal, subject to umask; defaults
+ *                                 to 0700 - owner only, since the directory holds `require`d PHP)
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function attribute_filter(
+    Matcher $matcher,
+    bool $exclude = true,
+    array $sources = [AttributeSource::SIGNAL],
+    ?string $cacheDir = null,
+    int $cacheDirPermissions = 0o700,
+): AttributeFilter {
+    return new AttributeFilter($matcher, $exclude, $sources, $cacheDir, $cacheDirPermissions);
+}
+
+/**
+ * Create an AttributeFilteringMetricProcessor.
+ *
+ * @param MetricProcessor $processor The processor to wrap
+ * @param AttributeFilter $filter The attribute filter to apply
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function attribute_filtering_metric_processor(
+    MetricProcessor $processor,
+    AttributeFilter $filter,
+): AttributeFilteringMetricProcessor {
+    return new AttributeFilteringMetricProcessor($processor, $filter);
+}
+
+/**
+ * Create an AttributeFilteringSpanProcessor.
+ *
+ * @param SpanProcessor $processor The processor to wrap
+ * @param AttributeFilter $filter The attribute filter to apply
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function attribute_filtering_span_processor(
+    SpanProcessor $processor,
+    AttributeFilter $filter,
+): AttributeFilteringSpanProcessor {
+    return new AttributeFilteringSpanProcessor($processor, $filter);
 }
 
 /**
@@ -699,6 +849,65 @@ function always_off_exemplar_filter(): AlwaysOffExemplarFilter
 function trace_based_exemplar_filter(): TraceBasedExemplarFilter
 {
     return new TraceBasedExemplarFilter();
+}
+
+/**
+ * Create an AlwaysOnSampler. Records and samples every span.
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function always_on_sampler(): AlwaysOnSampler
+{
+    return new AlwaysOnSampler();
+}
+
+/**
+ * Create an AlwaysOffSampler. Drops every span.
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function always_off_sampler(): AlwaysOffSampler
+{
+    return new AlwaysOffSampler();
+}
+
+/**
+ * Create a TraceIdRatioBasedSampler. Samples a deterministic fraction of traces.
+ *
+ * @param float $ratio Sampling probability between 0.0 and 1.0
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function trace_id_ratio_based_sampler(float $ratio): TraceIdRatioBasedSampler
+{
+    return new TraceIdRatioBasedSampler($ratio);
+}
+
+/**
+ * Create a ParentBasedSampler. Honors the parent span's sampling decision, falling
+ * back to the root sampler for spans without a parent.
+ *
+ * @param Sampler $root Sampler used for root spans (no parent)
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function parent_based_sampler(Sampler $root = new AlwaysOnSampler()): ParentBasedSampler
+{
+    return new ParentBasedSampler($root);
+}
+
+/**
+ * Create an AttributeMatchingSampler. Drops spans whose start-time attributes match
+ * the filter (or keeps ONLY matching spans when the filter's exclude is false), and
+ * defers all other spans to the delegate sampler.
+ *
+ * Only attributes available at span start are visible; attributes added later are not.
+ *
+ * @param AttributeFilter $filter The attribute filter evaluated against the span's start attributes
+ * @param Sampler $delegate Sampler that decides spans which do not match (default: AlwaysOnSampler)
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function attribute_matching_sampler(
+    AttributeFilter $filter,
+    Sampler $delegate = new AlwaysOnSampler(),
+): AttributeMatchingSampler {
+    return new AttributeMatchingSampler($filter, $delegate);
 }
 
 /**

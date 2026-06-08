@@ -19,8 +19,10 @@ use Flow\Telemetry\ErrorHandler\NullErrorHandler;
 use Flow\Telemetry\ErrorHandler\StreamHandler;
 use Flow\Telemetry\ErrorHandler\SyslogHandler;
 use Flow\Telemetry\ErrorHandler\UdpSyslogHandler;
+use Flow\Telemetry\Filter\AttributeFilter;
+use Flow\Telemetry\Logger\Middleware\SeverityFilteringLogMiddleware;
 use Flow\Telemetry\Logger\Processor\BatchingLogProcessor;
-use Flow\Telemetry\Logger\Processor\SeverityFilteringLogProcessor;
+use Flow\Telemetry\Logger\Processor\PipelineLogProcessor;
 use Flow\Telemetry\Meter\Processor\BatchingMetricProcessor;
 use Flow\Telemetry\Provider\Clock\SystemClock;
 use Flow\Telemetry\Provider\Console\ConsoleExporter;
@@ -34,6 +36,8 @@ use Flow\Telemetry\Resource\Detector\CachingDetector;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\Processor\BatchingSpanProcessor;
 use Flow\Telemetry\Tracer\Processor\CompositeSpanProcessor;
+use Flow\Telemetry\Tracer\Sampler\AttributeMatchingSampler;
+use Flow\Telemetry\Tracer\Sampler\TraceIdRatioBasedSampler;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\TestWith;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -654,7 +658,7 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         ]);
     }
 
-    public function test_severity_filtering_wraps_batching_log_processor(): void
+    public function test_pipeline_with_severity_middleware_and_batching_sink(): void
     {
         $this->bootKernel([
             'config' => static function (TestKernel $kernel): void {
@@ -669,9 +673,11 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
                     ],
                     'logger_provider' => [
                         'processor' => [
-                            'type' => 'severity_filtering',
-                            'minimum_severity' => 'warn',
-                            'inner_processor' => [
+                            'type' => 'pipeline',
+                            'middleware' => [
+                                ['type' => 'severity_filtering', 'minimum_severity' => 'warn'],
+                            ],
+                            'sink' => [
                                 'type' => 'batching',
                                 'exporter' => 'otlp',
                                 'batch_size' => 200,
@@ -684,8 +690,48 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
         $container = $this->getContainer();
         static::assertInstanceOf(
-            SeverityFilteringLogProcessor::class,
+            PipelineLogProcessor::class,
             $container->get('flow.telemetry.logger_provider.processor'),
+        );
+        static::assertInstanceOf(
+            SeverityFilteringLogMiddleware::class,
+            $container->get('flow.telemetry.logger_provider.processor.middleware.0'),
+        );
+        static::assertInstanceOf(
+            BatchingLogProcessor::class,
+            $container->get('flow.telemetry.logger_provider.processor.sink.processor'),
+        );
+    }
+
+    public function test_attribute_matching_sampler_with_delegate(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'tracer_provider' => [
+                        'sampler' => [
+                            'type' => 'attribute_matching',
+                            'matcher' => ['path' => 'http.route', 'mode' => 'equal', 'value' => '/health'],
+                            'delegate' => ['type' => 'trace_id_ratio', 'ratio' => 0.1],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+        static::assertInstanceOf(
+            AttributeMatchingSampler::class,
+            $container->get('flow.telemetry.tracer_provider.sampler'),
+        );
+        static::assertInstanceOf(
+            AttributeFilter::class,
+            $container->get('flow.telemetry.tracer_provider.sampler.filter'),
+        );
+        static::assertInstanceOf(
+            TraceIdRatioBasedSampler::class,
+            $container->get('flow.telemetry.tracer_provider.sampler.delegate'),
         );
     }
 

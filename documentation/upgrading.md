@@ -7,13 +7,105 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
+## Upgrading from 0.39.x to 0.40.x
+
+### 1) `flow-php/telemetry` - Log severity filtering moved to a pipeline middleware
+
+| Before                                                          | After                                                                                   |
+|-----------------------------------------------------------------|-----------------------------------------------------------------------------------------|
+| `Flow\Telemetry\Logger\Processor\SeverityFilteringLogProcessor` | `Flow\Telemetry\Logger\Middleware\SeverityFilteringLogMiddleware`                       |
+| `new SeverityFilteringLogProcessor($inner, $minSeverity)`       | `new PipelineLogProcessor([new SeverityFilteringLogMiddleware($minSeverity)], $inner)`  |
+| `severity_filtering_log_processor($processor, $minSeverity)`    | `pipeline_log_processor([severity_filtering_log_middleware($minSeverity)], $processor)` |
+
+The previously wrapped processor is now the pipeline's **sink** and must implement
+`Flow\Telemetry\Logger\LogSink` (the built-in `batching`, `pass_through`, `memory`, `void` and `composite`
+log processors already do).
+
+Before:
+
+```php
+$processor = severity_filtering_log_processor(
+    batching_log_processor($exporter),
+    Severity::WARN,
+);
+```
+
+After:
+
+```php
+$processor = pipeline_log_processor(
+    [severity_filtering_log_middleware(Severity::WARN)],
+    batching_log_processor($exporter),
+);
+```
+
+### 2) `flow-php/symfony-telemetry-bundle` - `severity_filtering` log processor type replaced by `pipeline`
+
+The `severity_filtering` processor type (with its `inner_processor`) is no longer a `logger_provider`
+processor type; it is a middleware inside a `pipeline`.
+
+Before:
+
+```yaml
+flow_telemetry:
+  logger_provider:
+    processor:
+      type: severity_filtering
+      minimum_severity: warn
+      inner_processor:
+        type: batching
+        exporter: otlp
+```
+
+After:
+
+```yaml
+flow_telemetry:
+  logger_provider:
+    processor:
+      type: pipeline
+      middleware:
+        - { type: severity_filtering, minimum_severity: warn }
+      sink:
+        type: batching
+        exporter: otlp
+```
+
+### 3) `flow-php/symfony-telemetry-bundle` - named scope `attributes` split into `scope` and `signal`
+
+Applies to `tracers`, `meters`, and `loggers`. The `attributes` map is no longer a flat list of scope
+attributes; scope attributes move under `attributes.scope`.
+
+Before:
+
+```yaml
+flow_telemetry:
+  loggers:
+    audit:
+      attributes:
+        team: checkout
+```
+
+After:
+
+```yaml
+flow_telemetry:
+  loggers:
+    audit:
+      attributes:
+        scope:
+          team: checkout
+```
+
+---
+
 ## Upgrading from 0.37.x to 0.38.x
 
 ### 1) `flow-php/types` - PHPStan extension extracted to `flow-php/phpstan-types-bridge`
 
 The `StructureTypeReturnTypeExtension` — which narrows the return type of `type_structure()` for PHPStan —
 has been moved out of `flow-php/types` into a dedicated package, `flow-php/phpstan-types-bridge`.
-`flow-php/types` no longer ships any PHPStan code. 
+`flow-php/types` no longer ships any PHPStan code.
 
 | Before                                                | After                                                        |
 |-------------------------------------------------------|--------------------------------------------------------------|

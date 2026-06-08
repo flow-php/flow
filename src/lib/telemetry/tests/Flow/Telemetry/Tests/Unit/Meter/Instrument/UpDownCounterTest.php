@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Meter\Instrument;
 
+use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Meter\Instrument\UpDownCounter;
 use Flow\Telemetry\Meter\MetricType;
 use Flow\Telemetry\Tests\Mother\ClockMother;
@@ -142,5 +143,22 @@ final class UpDownCounterTest extends TestCase
         $metrics = $counter->collect();
 
         static::assertCount(0, $metrics);
+    }
+
+    public function test_signal_attributes_merge_into_data_points_with_per_call_precedence(): void
+    {
+        $counter = new UpDownCounter(
+            'test.updown',
+            ResourceMother::default(),
+            InstrumentationScopeMother::default(),
+            ClockMother::frozen(),
+            signalAttributes: Attributes::create(['env' => 'prod', 'region' => 'eu']),
+        );
+
+        $counter->add(5, ['env' => 'dev']);
+        $metric = $counter->collect()[0];
+
+        static::assertSame('dev', $metric->attributes->get('env'));
+        static::assertSame('eu', $metric->attributes->get('region'));
     }
 }

@@ -20,6 +20,7 @@ use Flow\Telemetry\Tracer\SpanContext;
 use Psr\Clock\ClockInterface;
 
 use function array_filter;
+use function array_merge;
 use function count;
 use function hrtime;
 use function is_scalar;
@@ -79,6 +80,7 @@ final class Throughput implements Instrument
         private readonly ?string $description = null,
         private readonly ?int $ratePrecision = 2,
         private readonly TimeUnit $timeUnit = TimeUnit::SECONDS,
+        private readonly Attributes $signalAttributes = new Attributes(),
     ) {
         $this->overflowKey = Attributes::create([MetricLimits::OVERFLOW_ATTRIBUTE => true])->id();
     }
@@ -93,6 +95,10 @@ final class Throughput implements Instrument
     public function add(int $count, array|Attributes $attributes = [], ?SpanContext $context = null): void
     {
         $normalized = $attributes instanceof Attributes ? $attributes->normalize() : $attributes;
+
+        if (!$this->signalAttributes->isEmpty()) {
+            $normalized = array_merge($this->signalAttributes->normalize(), $normalized);
+        }
         /** @var array<string, bool|float|int|string> $attrs */
         $attrs = array_filter($normalized, static fn($v): bool => is_scalar($v));
         $key = Attributes::create($attrs)->id();
