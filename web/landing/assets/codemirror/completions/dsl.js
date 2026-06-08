@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 770
+ * Total functions: 785
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -156,6 +156,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\all(" + "$" + "{" + "1:functions" + "}" + ")"),
         boost: 10
     },                {
+        label: "all",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">all</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Matcher</span> <span class=\"fn-param\">$matchers</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">All</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Combine matchers so that every one must match (logical AND).
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\all(" + "$" + "{" + "1:matchers" + "}" + ")"),
+        boost: 10
+    },                {
         label: "all_",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -210,6 +228,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Telemetry\\DSL\\always_off_exemplar_filter()"),
         boost: 10
     },                {
+        label: "always_off_sampler",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">always_off_sampler</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AlwaysOffSampler</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an AlwaysOffSampler. Drops every span.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\always_off_sampler()"),
+        boost: 10
+    },                {
         label: "always_on_exemplar_filter",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -226,6 +262,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\Telemetry\\DSL\\always_on_exemplar_filter()"),
+        boost: 10
+    },                {
+        label: "always_on_sampler",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">always_on_sampler</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AlwaysOnSampler</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an AlwaysOnSampler. Records and samples every span.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\always_on_sampler()"),
         boost: 10
     },                {
         label: "analyze",
@@ -292,6 +346,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\any(" + "$" + "{" + "1:values" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "any",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">any</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Matcher</span> <span class=\"fn-param\">$matchers</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Any</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Combine matchers so that at least one must match (logical OR).
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\any(" + "$" + "{" + "1:matchers" + "}" + ")"),
         boost: 10
     },                {
         label: "any_",
@@ -706,6 +778,114 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PostgreSql\\DSL\\ast_view_dependency_resolver()"),
+        boost: 10
+    },                {
+        label: "attribute_filter",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">attribute_filter</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Matcher</span> <span class=\"fn-param\">$matcher</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$exclude</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$sources</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[...]</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$cacheDir</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$cacheDirPermissions</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">448</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AttributeFilter</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an AttributeFilter from a matcher.<br>@param Matcher $matcher the matcher to evaluate against a signal\'s attributes (compose with all(), any(), not())<br>@param bool $exclude when true (default) a match drops the signal; when false only matching signals are kept<br>@param list<AttributeSource> $sources which attribute sets to inspect (signal, resource and/or scope); the matcher is<br>                                      OR-combined across them, defaulting to the signal\'s own attributes<br>@param null|string $cacheDir directory for the generated matcher file (defaults to the system temp directory). It is<br>                             \`require\`d, so it MUST be trusted - not writable by untrusted users. Prefer an<br>                             application-private directory over the shared system temp in multi-tenant environments.<br>@param int $cacheDirPermissions mode applied when the cache directory is created (octal, subject to umask; defaults<br>                                to 0700 - owner only, since the directory holds \`require\`d PHP)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\attribute_filter(" + "$" + "{" + "1:matcher" + "}" + ", " + "$" + "{" + "2:exclude" + "}" + ", " + "$" + "{" + "3:sources" + "}" + ", " + "$" + "{" + "4:cacheDir" + "}" + ", " + "$" + "{" + "5:cacheDirPermissions" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "attribute_filtering_log_middleware",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">attribute_filtering_log_middleware</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">AttributeFilter</span> <span class=\"fn-param\">$filter</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AttributeFilteringLogMiddleware</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an AttributeFilteringLogMiddleware that drops log entries matching the filter.<br>@param AttributeFilter $filter The attribute filter to apply
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\attribute_filtering_log_middleware(" + "$" + "{" + "1:filter" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "attribute_filtering_metric_processor",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">attribute_filtering_metric_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">MetricProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">AttributeFilter</span> <span class=\"fn-param\">$filter</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AttributeFilteringMetricProcessor</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an AttributeFilteringMetricProcessor.<br>@param MetricProcessor $processor The processor to wrap<br>@param AttributeFilter $filter The attribute filter to apply
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\attribute_filtering_metric_processor(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:filter" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "attribute_filtering_span_processor",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">attribute_filtering_span_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SpanProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">AttributeFilter</span> <span class=\"fn-param\">$filter</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AttributeFilteringSpanProcessor</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an AttributeFilteringSpanProcessor.<br>@param SpanProcessor $processor The processor to wrap<br>@param AttributeFilter $filter The attribute filter to apply
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\attribute_filtering_span_processor(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:filter" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "attribute_matching_sampler",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">attribute_matching_sampler</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">AttributeFilter</span> <span class=\"fn-param\">$filter</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Sampler</span> <span class=\"fn-param\">$delegate</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Tracer\\Sampler\\AlwaysOnSampler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AttributeMatchingSampler</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an AttributeMatchingSampler. Drops spans whose start-time attributes match<br>the filter (or keeps ONLY matching spans when the filter\'s exclude is false), and<br>defers all other spans to the delegate sampler.<br>Only attributes available at span start are visible; attributes added later are not.<br>@param AttributeFilter $filter The attribute filter evaluated against the span\'s start attributes<br>@param Sampler $delegate Sampler that decides spans which do not match (default: AlwaysOnSampler)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\attribute_matching_sampler(" + "$" + "{" + "1:filter" + "}" + ", " + "$" + "{" + "2:delegate" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "attribute_rule",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">attribute_rule</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">MatchMode</span> <span class=\"fn-param\">$mode</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DateTimeInterface|string|int|float|bool</span> <span class=\"fn-param\">$expected</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">bool</span> <span class=\"fn-param\">$caseSensitive</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">true</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">AttributeRule</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a single attribute-matching rule for an AttributeFilter.<br>@param array<string>|string $path attribute path: a top-level key, or segments descending into nested array values<br>@param MatchMode $mode comparison applied between the value at the path and the expected value<br>@param bool|DateTimeInterface|float|int|string $expected expected value (must be a string for the pattern modes)<br>@param bool $caseSensitive applies to the substring modes only (STARTS_WITH, ENDS_WITH, CONTAINS)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\attribute_rule(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:mode" + "}" + ", " + "$" + "{" + "3:expected" + "}" + ", " + "$" + "{" + "4:caseSensitive" + "}" + ")"),
         boost: 10
     },                {
         label: "average",
@@ -3427,6 +3607,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\Adapter\\Parquet\\empty_generator()"),
+        boost: 10
+    },                {
+        label: "enriching_log_middleware",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">enriching_log_middleware</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Attributes|array</span> <span class=\"fn-param\">$attributes</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">EnrichingLogMiddleware</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create an EnrichingLogMiddleware that merges default attributes into every log<br>entry. Attributes set at the call site win over these defaults.<br>@param array<string, array<array-key, mixed>|bool|\\DateTimeInterface|float|int|string|\\Throwable>|Attributes $attributes
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\enriching_log_middleware(" + "$" + "{" + "1:attributes" + "}" + ")"),
         boost: 10
     },                {
         label: "entries",
@@ -6369,6 +6567,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\not(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },                {
+        label: "not",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">not</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Matcher</span> <span class=\"fn-param\">$matcher</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Not</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Negate a matcher (logical NOT).
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\not(" + "$" + "{" + "1:matcher" + "}" + ")"),
+        boost: 10
+    },                {
         label: "notify",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -6978,6 +7194,24 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\parameters(" + "$" + "{" + "1:count" + "}" + ", " + "$" + "{" + "2:startAt" + "}" + ")"),
         boost: 10
     },                {
+        label: "parent_based_sampler",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">parent_based_sampler</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Sampler</span> <span class=\"fn-param\">$root</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Tracer\\Sampler\\AlwaysOnSampler::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ParentBasedSampler</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a ParentBasedSampler. Honors the parent span\'s sampling decision, falling<br>back to the root sampler for spans without a parent.<br>@param Sampler $root Sampler used for root spans (no parent)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\parent_based_sampler(" + "$" + "{" + "1:root" + "}" + ")"),
+        boost: 10
+    },                {
         label: "parsed_select",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -7201,6 +7435,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\Adapter\\ChartJS\\pie_chart(" + "$" + "{" + "1:label" + "}" + ", " + "$" + "{" + "2:datasets" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "pipeline_log_processor",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pipeline_log_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$middleware</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">LogSink</span> <span class=\"fn-param\">$sink</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PipelineLogProcessor</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a PipelineLogProcessor: run each log entry through an ordered chain of<br>middleware, then forward the survivors to a single sink.<br>@param list<LogMiddleware> $middleware run in order; the first to drop an entry short-circuits the rest<br>@param LogSink $sink the terminal processor that exports surviving entries
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\pipeline_log_processor(" + "$" + "{" + "1:middleware" + "}" + ", " + "$" + "{" + "2:sink" + "}" + ")"),
         boost: 10
     },                {
         label: "postgresql_context",
@@ -9219,22 +9471,22 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\set_transaction()"),
         boost: 10
     },                {
-        label: "severity_filtering_log_processor",
+        label: "severity_filtering_log_middleware",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
         info: () => {
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">severity_filtering_log_processor</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">LogProcessor</span> <span class=\"fn-param\">$processor</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">Severity</span> <span class=\"fn-param\">$minimumSeverity</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Logger\\Severity::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SeverityFilteringLogProcessor</span>
+                    <span class=\"fn-name\">severity_filtering_log_middleware</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Severity</span> <span class=\"fn-param\">$minimumSeverity</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\Telemetry\\Logger\\Severity::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SeverityFilteringLogMiddleware</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Create a SeverityFilteringLogProcessor.<br>@param LogProcessor $processor The processor to wrap<br>@param Severity $minimumSeverity Minimum severity level (default: INFO)
+                    Create a SeverityFilteringLogMiddleware that drops log entries below a minimum severity.<br>@param Severity $minimumSeverity Minimum severity level (default: INFO)
                 </div>
                             `
             return div
         },
-        apply: snippet("\\Flow\\Telemetry\\DSL\\severity_filtering_log_processor(" + "$" + "{" + "1:processor" + "}" + ", " + "$" + "{" + "2:minimumSeverity" + "}" + ")"),
+        apply: snippet("\\Flow\\Telemetry\\DSL\\severity_filtering_log_middleware(" + "$" + "{" + "1:minimumSeverity" + "}" + ")"),
         boost: 10
     },                {
         label: "severity_mapper",
@@ -10984,6 +11236,24 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\Telemetry\\DSL\\trace_id(" + "$" + "{" + "1:hex" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "trace_id_ratio_based_sampler",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">trace_id_ratio_based_sampler</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">float</span> <span class=\"fn-param\">$ratio</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">TraceIdRatioBasedSampler</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a TraceIdRatioBasedSampler. Samples a deterministic fraction of traces.<br>@param float $ratio Sampling probability between 0.0 and 1.0
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\Telemetry\\DSL\\trace_id_ratio_based_sampler(" + "$" + "{" + "1:ratio" + "}" + ")"),
         boost: 10
     },                {
         label: "transaction_snapshot",
