@@ -1,6 +1,12 @@
-## [Unreleased] - 2026-06-07
+## [Unreleased] - 2026-06-08
 
 ### Added
+- [#2437](https://github.com/flow-php/flow/pull/2437) - **flow-php/telemetry - attribute filter with compiled matcher tree (rule/all/any/not)** - [@norberttech](https://github.com/norberttech)
+- [#2437](https://github.com/flow-php/flow/pull/2437) - **flow-php/telemetry - attribute filtering processors for spans and metrics** - [@norberttech](https://github.com/norberttech)
+- [#2437](https://github.com/flow-php/flow/pull/2437) - **flow-php/telemetry - log pipeline with enrich/filter/severity middleware and a sink** - [@norberttech](https://github.com/norberttech)
+- [#2437](https://github.com/flow-php/flow/pull/2437) - **flow-php/telemetry - attribute matching sampler and DSL functions for all samplers** - [@norberttech](https://github.com/norberttech)
+- [#2437](https://github.com/flow-php/flow/pull/2437) - **flow-php/telemetry - per-scope signal attributes merged into every signal** - [@norberttech](https://github.com/norberttech)
+- [#2437](https://github.com/flow-php/flow/pull/2437) - **flow-php/symfony-telemetry-bundle - config for filtering, log pipeline, sampler and logging channels** - [@norberttech](https://github.com/norberttech)
 - [#2435](https://github.com/flow-php/flow/pull/2435) - **etl-adapter-postgresql - explicit column position in index/unique metadata** - [@norberttech](https://github.com/norberttech)
 - [#2435](https://github.com/flow-php/flow/pull/2435) - **etl-adapter-postgresql - a column can belong to multiple indexes** - [@norberttech](https://github.com/norberttech)
 - [#2434](https://github.com/flow-php/flow/pull/2434) - **flow-php/symfony-telemetry-bundle - #[WithTelemetryChannel] attribute to scope a service's logger to a named channel** - [@norberttech](https://github.com/norberttech)
@@ -8,6 +14,7 @@
 - [#2434](https://github.com/flow-php/flow/pull/2434) - **flow-php/symfony-telemetry-bundle - per-channel binding of PSR-3 LoggerInterface and native Logger with $Logger aliases** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2437](https://github.com/flow-php/flow/pull/2437) - **flow-php/symfony-telemetry-bundle - named scope attributes split into scope and signal** - [@norberttech](https://github.com/norberttech)
 - [#2435](https://github.com/flow-php/flow/pull/2435) - **etl-adapter-postgresql - composite index/unique columns ordered by position, schema order as tiebreak** - [@norberttech](https://github.com/norberttech)
 - [#2435](https://github.com/flow-php/flow/pull/2435) - **etl-adapter-postgresql - reverse Table to Flow conversion preserves index column order** - [@norberttech](https://github.com/norberttech)
 - [#2430](https://github.com/flow-php/flow/pull/2430) - **flow-php/postgresql - Parser::parse() ingests binary protobuf instead of JSON** - [@norberttech](https://github.com/norberttech)
@@ -17,6 +24,10 @@
 
 ### Fixed
 - [#2431](https://github.com/flow-php/flow/pull/2431) - **flow-php/postgresql - detect ParamRef nodes inside List expressions so BETWEEN/IN/VALUES placeholders are counted during keyset pagination offset.** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#2437](https://github.com/flow-php/flow/pull/2437) - **flow-php/telemetry - SeverityFilteringLogProcessor replaced by log middleware and pipeline** - [@norberttech](https://github.com/norberttech)
+- [#2437](https://github.com/flow-php/flow/pull/2437) - **flow-php/symfony-telemetry-bundle - severity_filtering log processor type replaced by pipeline** - [@norberttech](https://github.com/norberttech)
 
 ## [0.39.0] - 2026-06-04
 
