@@ -6,14 +6,16 @@
 
 ## Introduction
 
-Telemetry integration in Flow PHP provides observability into your ETL pipelines through distributed tracing, metrics collection, and structured logging. Understanding what happens inside your data processing workflows is essential for:
+Telemetry integration in Flow PHP provides observability into your ETL pipelines through distributed tracing, metrics
+collection, and structured logging. Understanding what happens inside your data processing workflows is essential for:
 
 - **Debugging** - Identify bottlenecks and failures in complex pipelines
 - **Monitoring** - Track performance metrics in production environments
 - **Optimization** - Measure throughput and resource usage to improve efficiency
 - **Compliance** - Maintain audit trails of data processing operations
 
-Flow PHP's telemetry is built on OpenTelemetry-compatible concepts, allowing integration with popular observability platforms like Jaeger, Grafana, Datadog, and others.
+Flow PHP's telemetry is built on OpenTelemetry-compatible concepts, allowing integration with popular observability
+platforms like Jaeger, Grafana, Datadog, and others.
 
 ## Quick Start
 
@@ -58,11 +60,11 @@ df(config_builder()->withTelemetry($telemetry, telemetry_options(
 
 Flow PHP provides granular control over what telemetry data is collected through `telemetry_options()`:
 
-| Option | Description | Performance Impact |
-|--------|-------------|-------------------|
-| `trace_loading` | Creates spans for each loader execution | Low |
+| Option                  | Description                                  | Performance Impact                      |
+|-------------------------|----------------------------------------------|-----------------------------------------|
+| `trace_loading`         | Creates spans for each loader execution      | Low                                     |
 | `trace_transformations` | Creates spans for each transformer execution | Medium (many transformers = many spans) |
-| `collect_metrics` | Records counters and throughput metrics | Low |
+| `collect_metrics`       | Records counters and throughput metrics      | Low                                     |
 
 ### Selective Configuration
 
@@ -109,7 +111,8 @@ $config = config_builder()
 
 ### Console Exporters (Development)
 
-Console exporters output telemetry data directly to stdout with ASCII table formatting. They're ideal for local development and debugging:
+Console exporters output telemetry data directly to stdout with ASCII table formatting. They're ideal for local
+development and debugging:
 
 ```php
 use function Flow\Telemetry\DSL\{
@@ -198,20 +201,22 @@ $transport = otlp_grpc_transport(endpoint: 'localhost:4317');
 
 Every DataFrame execution creates a root span with the following attributes:
 
-| Attribute | Description |
-|-----------|-------------|
-| `dataframe.id` | Unique identifier for the DataFrame execution |
-| `rows.total` | Total number of rows processed |
-| `rows.throughput.per_second` | Processing throughput |
-| `memory.min.mb` | Minimum memory consumption during execution |
-| `memory.max.mb` | Maximum memory consumption during execution |
+| Attribute                    | Description                                   |
+|------------------------------|-----------------------------------------------|
+| `dataframe.id`               | Unique identifier for the DataFrame execution |
+| `rows.total`                 | Total number of rows processed                |
+| `rows.throughput.per_second` | Processing throughput                         |
+| `memory.min.mb`              | Minimum memory consumption during execution   |
+| `memory.max.mb`              | Maximum memory consumption during execution   |
 
 When `trace_loading` is enabled, child spans are created for each loader with:
+
 - Span name: Loader class name (e.g., `Flow\ETL\Loader\StreamLoader`)
 - Parent: DataFrame span
 - Status: OK on success, ERROR on failure
 
 When `trace_transformations` is enabled, child spans are created for each transformer with:
+
 - Span name: Transformer class name (e.g., `Flow\ETL\Transformer\EntryNameTransformer`)
 - Parent: DataFrame span
 - Status: OK on success, ERROR on failure
@@ -220,10 +225,10 @@ When `trace_transformations` is enabled, child spans are created for each transf
 
 When `collect_metrics` is enabled:
 
-| Metric | Type | Description |
-|--------|------|-------------|
-| `rows.processed.total` | Counter | Cumulative count of processed rows |
-| `rows.processed.throughput` | Throughput | Rows processed per time unit |
+| Metric                      | Type       | Description                        |
+|-----------------------------|------------|------------------------------------|
+| `rows.processed.total`      | Counter    | Cumulative count of processed rows |
+| `rows.processed.throughput` | Throughput | Rows processed per time unit       |
 
 ### Logs
 
@@ -274,87 +279,88 @@ pass_through_log_processor($exporter)
 
 ### Core Telemetry
 
-| Function | Description |
-|----------|-------------|
-| `telemetry()` | Create a Telemetry instance |
-| `resource()` | Create a Resource with attributes |
-| `telemetry_options()` | Configure telemetry options |
+| Function              | Description                       |
+|-----------------------|-----------------------------------|
+| `telemetry()`         | Create a Telemetry instance       |
+| `resource()`          | Create a Resource with attributes |
+| `telemetry_options()` | Configure telemetry options       |
 
 ### Providers
 
-| Function | Description |
-|----------|-------------|
+| Function            | Description             |
+|---------------------|-------------------------|
 | `tracer_provider()` | Create a TracerProvider |
-| `meter_provider()` | Create a MeterProvider |
+| `meter_provider()`  | Create a MeterProvider  |
 | `logger_provider()` | Create a LoggerProvider |
 
 ### Processors
 
-| Function | Description |
-|----------|-------------|
-| `batching_span_processor()` | Batch span processing |
-| `batching_metric_processor()` | Batch metric processing |
-| `batching_log_processor()` | Batch log processing |
-| `pass_through_span_processor()` | Immediate span export |
-| `pass_through_metric_processor()` | Immediate metric export |
-| `pass_through_log_processor()` | Immediate log export |
-| `pipeline_log_processor()` | Run logs through middleware, then a sink |
-| `enriching_log_middleware()` | Merge default attributes into log records |
-| `severity_filtering_log_middleware()` | Filter logs by severity |
-| `attribute_filtering_log_middleware()` | Filter logs by attribute matcher |
+| Function                               | Description                               |
+|----------------------------------------|-------------------------------------------|
+| `batching_span_processor()`            | Batch span processing                     |
+| `batching_metric_processor()`          | Batch metric processing                   |
+| `batching_log_processor()`             | Batch log processing                      |
+| `pass_through_span_processor()`        | Immediate span export                     |
+| `pass_through_metric_processor()`      | Immediate metric export                   |
+| `pass_through_log_processor()`         | Immediate log export                      |
+| `pipeline_log_processor()`             | Run logs through middleware, then a sink  |
+| `enriching_log_middleware()`           | Merge default attributes into log records |
+| `severity_filtering_log_middleware()`  | Filter logs by severity                   |
+| `attribute_filtering_log_middleware()` | Filter logs by attribute matcher          |
 
 ### Samplers
 
-| Function | Description |
-|----------|-------------|
-| `always_on_sampler()` | Record and sample every span |
-| `always_off_sampler()` | Drop every span |
-| `trace_id_ratio_based_sampler()` | Sample a deterministic fraction of traces |
-| `parent_based_sampler()` | Honor the parent's decision; root sampler for parentless spans |
-| `attribute_matching_sampler()` | Drop spans matching an attribute filter, defer the rest to a delegate |
+| Function                         | Description                                                           |
+|----------------------------------|-----------------------------------------------------------------------|
+| `always_on_sampler()`            | Record and sample every span                                          |
+| `always_off_sampler()`           | Drop every span                                                       |
+| `trace_id_ratio_based_sampler()` | Sample a deterministic fraction of traces                             |
+| `parent_based_sampler()`         | Honor the parent's decision; root sampler for parentless spans        |
+| `attribute_matching_sampler()`   | Drop spans matching an attribute filter, defer the rest to a delegate |
 
 ### Exporters (Console)
 
-| Function | Description |
-|----------|-------------|
-| `console_exporter()` | Export spans to console |
+| Function             | Description               |
+|----------------------|---------------------------|
+| `console_exporter()` | Export spans to console   |
 | `console_exporter()` | Export metrics to console |
-| `console_exporter()` | Export logs to console |
+| `console_exporter()` | Export logs to console    |
 
 ### Exporters (OTLP)
 
-| Function | Description |
-|----------|-------------|
-| `otlp_exporter()` | Export spans via OTLP |
+| Function          | Description             |
+|-------------------|-------------------------|
+| `otlp_exporter()` | Export spans via OTLP   |
 | `otlp_exporter()` | Export metrics via OTLP |
-| `otlp_exporter()` | Export logs via OTLP |
+| `otlp_exporter()` | Export logs via OTLP    |
 
 ### Transport (OTLP)
 
-| Function | Description |
-|----------|-------------|
-| `otlp_curl_transport()` | Async curl transport |
-| `otlp_grpc_transport()` | gRPC transport |
-| `otlp_json_serializer()` | JSON serialization |
+| Function                     | Description            |
+|------------------------------|------------------------|
+| `otlp_curl_transport()`      | Async curl transport   |
+| `otlp_grpc_transport()`      | gRPC transport         |
+| `otlp_json_serializer()`     | JSON serialization     |
 | `otlp_protobuf_serializer()` | Protobuf serialization |
 
 ### Testing
 
-| Function | Description |
-|----------|-------------|
-| `memory_exporter()` | Store spans in memory |
-| `memory_exporter()` | Store metrics in memory |
-| `memory_exporter()` | Store logs in memory |
-| `void_span_processor()` | No-op span processor |
-| `void_metric_processor()` | No-op metric processor |
-| `void_log_processor()` | No-op log processor |
+| Function                  | Description             |
+|---------------------------|-------------------------|
+| `memory_exporter()`       | Store spans in memory   |
+| `memory_exporter()`       | Store metrics in memory |
+| `memory_exporter()`       | Store logs in memory    |
+| `void_span_processor()`   | No-op span processor    |
+| `void_metric_processor()` | No-op metric processor  |
+| `void_log_processor()`    | No-op log processor     |
 
 ## Best Practices
 
 ### When to Enable Each Option
 
 - **`trace_loading: true`** - Enable when debugging write operations or when you need to identify slow loaders
-- **`trace_transformations: true`** - Enable temporarily when debugging transformation logic; disable in production for high-throughput pipelines
+- **`trace_transformations: true`** - Enable temporarily when debugging transformation logic; disable in production for
+  high-throughput pipelines
 - **`collect_metrics: true`** - Safe to enable in production; provides valuable throughput data with minimal overhead
 
 ### Performance Considerations
@@ -391,7 +397,8 @@ resource([
 
 ## Disabling Telemetry
 
-Telemetry is disabled by default. If you've enabled it but want to disable it for certain environments, simply don't pass telemetry configuration:
+Telemetry is disabled by default. If you've enabled it but want to disable it for certain environments, simply don't
+pass telemetry configuration:
 
 ```php
 // No telemetry - uses void providers internally
