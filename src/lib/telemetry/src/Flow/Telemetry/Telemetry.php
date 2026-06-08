@@ -88,14 +88,25 @@ final class Telemetry
      * @param string $version The version of the instrumentation scope
      * @param null|string $schemaUrl Schema URL for semantic conventions
      * @param null|Attributes $attributes Additional scope attributes
+     * @param null|Attributes $signalAttributes Default attributes merged into every emitted log record (per-call values win)
      */
     public function logger(
         string $name,
         string $version = 'unknown',
         ?string $schemaUrl = null,
         ?Attributes $attributes = null,
+        ?Attributes $signalAttributes = null,
     ): Logger {
-        $key = $name . '@' . $version . '@' . ($schemaUrl ?? '') . '@' . ($attributes?->id() ?? '');
+        $key =
+            $name
+            . '@'
+            . $version
+            . '@'
+            . ($schemaUrl ?? '')
+            . '@'
+            . ($attributes?->id() ?? '')
+            . '@'
+            . ($signalAttributes?->id() ?? '');
 
         if (!array_key_exists($key, $this->loggers)) {
             $this->loggers[$key] = $this->loggerProvider->logger(
@@ -104,6 +115,7 @@ final class Telemetry
                 $version,
                 $schemaUrl,
                 $attributes,
+                $signalAttributes,
             );
         }
 
@@ -120,14 +132,25 @@ final class Telemetry
      * @param string $version The version of the instrumentation scope
      * @param null|string $schemaUrl Schema URL for semantic conventions
      * @param null|Attributes $attributes Additional scope attributes
+     * @param null|Attributes $signalAttributes Default attributes merged into every recorded metric data point (per-call values win)
      */
     public function meter(
         string $name,
         string $version = 'unknown',
         ?string $schemaUrl = null,
         ?Attributes $attributes = null,
+        ?Attributes $signalAttributes = null,
     ): Meter {
-        $key = $name . '@' . $version . '@' . ($schemaUrl ?? '') . '@' . ($attributes?->id() ?? '');
+        $key =
+            $name
+            . '@'
+            . $version
+            . '@'
+            . ($schemaUrl ?? '')
+            . '@'
+            . ($attributes?->id() ?? '')
+            . '@'
+            . ($signalAttributes?->id() ?? '');
 
         if (!array_key_exists($key, $this->meters)) {
             $this->meters[$key] = $this->meterProvider->meter(
@@ -136,6 +159,7 @@ final class Telemetry
                 $version,
                 $schemaUrl,
                 $attributes,
+                $signalAttributes,
             );
         }
 
@@ -201,14 +225,25 @@ final class Telemetry
      * @param string $version The version of the instrumentation scope
      * @param null|string $schemaUrl Schema URL for semantic conventions
      * @param null|Attributes $attributes Additional scope attributes
+     * @param null|Attributes $signalAttributes Default attributes merged into every started span (per-call values win)
      */
     public function tracer(
         string $name,
         string $version = 'unknown',
         ?string $schemaUrl = null,
         ?Attributes $attributes = null,
+        ?Attributes $signalAttributes = null,
     ): Tracer {
-        $key = $name . '@' . $version . '@' . ($schemaUrl ?? '') . '@' . ($attributes?->id() ?? '');
+        $key =
+            $name
+            . '@'
+            . $version
+            . '@'
+            . ($schemaUrl ?? '')
+            . '@'
+            . ($attributes?->id() ?? '')
+            . '@'
+            . ($signalAttributes?->id() ?? '');
 
         if (!array_key_exists($key, $this->tracers)) {
             $this->tracers[$key] = $this->tracerProvider->tracer(
@@ -217,6 +252,7 @@ final class Telemetry
                 $version,
                 $schemaUrl,
                 $attributes,
+                $signalAttributes,
             );
         }
 

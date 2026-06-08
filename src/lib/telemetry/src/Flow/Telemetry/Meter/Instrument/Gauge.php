@@ -18,6 +18,7 @@ use Flow\Telemetry\Tracer\SpanContext;
 use Psr\Clock\ClockInterface;
 
 use function array_filter;
+use function array_merge;
 use function count;
 use function is_scalar;
 
@@ -69,6 +70,7 @@ final class Gauge implements Instrument
         private readonly MetricLimits $limits = new MetricLimits(),
         private readonly ?string $unit = null,
         private readonly ?string $description = null,
+        private readonly Attributes $signalAttributes = new Attributes(),
     ) {
         $this->overflowKey = Attributes::create([MetricLimits::OVERFLOW_ATTRIBUTE => true])->id();
     }
@@ -119,6 +121,10 @@ final class Gauge implements Instrument
     public function record(int|float $value, array|Attributes $attributes = [], ?SpanContext $context = null): void
     {
         $normalized = $attributes instanceof Attributes ? $attributes->normalize() : $attributes;
+
+        if (!$this->signalAttributes->isEmpty()) {
+            $normalized = array_merge($this->signalAttributes->normalize(), $normalized);
+        }
         /** @var array<string, bool|float|int|string> $attrs */
         $attrs = array_filter($normalized, static fn($v): bool => is_scalar($v));
         $key = Attributes::create($attrs)->id();

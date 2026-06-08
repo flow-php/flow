@@ -166,17 +166,57 @@ final class ChannelLoggerPassTest extends TestCase
         );
     }
 
-    public function test_synthesizes_channel_logger_with_log_channel_scope_attribute(): void
+    public function test_synthesizes_channel_logger_with_log_channel_on_both_scope_and_signal_by_default(): void
     {
         $container = $this->containerWithTaggedConsumer('events');
 
         (new ChannelLoggerPass())->process($container);
 
+        $logger = $container->getDefinition('flow.telemetry.events.logger');
+
         // @mago-expect analysis:mixed-assignment
-        $attributes = $container->getDefinition('flow.telemetry.events.logger')->getArgument(3);
-        static::assertInstanceOf(Definition::class, $attributes);
-        static::assertSame(Attributes::class, $attributes->getClass());
-        static::assertSame(['log.channel' => 'events'], $attributes->getArgument(0));
+        $scope = $logger->getArgument(3);
+        static::assertInstanceOf(Definition::class, $scope);
+        static::assertSame(Attributes::class, $scope->getClass());
+        static::assertSame(['log.channel' => 'events'], $scope->getArgument(0));
+
+        // @mago-expect analysis:mixed-assignment
+        $signal = $logger->getArgument(4);
+        static::assertInstanceOf(Definition::class, $signal);
+        static::assertSame(Attributes::class, $signal->getClass());
+        static::assertSame(['log.channel' => 'events'], $signal->getArgument(0));
+    }
+
+    public function test_channel_attribute_target_scope_places_log_channel_on_scope_only(): void
+    {
+        $container = $this->containerWithTaggedConsumer('events');
+        $container->setParameter('flow.telemetry.channel_attribute_target', 'scope');
+
+        (new ChannelLoggerPass())->process($container);
+
+        $logger = $container->getDefinition('flow.telemetry.events.logger');
+
+        // @mago-expect analysis:mixed-assignment
+        $scope = $logger->getArgument(3);
+        static::assertInstanceOf(Definition::class, $scope);
+        static::assertSame(['log.channel' => 'events'], $scope->getArgument(0));
+        static::assertNull($logger->getArgument(4));
+    }
+
+    public function test_channel_attribute_target_signal_places_log_channel_on_signal_only(): void
+    {
+        $container = $this->containerWithTaggedConsumer('events');
+        $container->setParameter('flow.telemetry.channel_attribute_target', 'signal');
+
+        (new ChannelLoggerPass())->process($container);
+
+        $logger = $container->getDefinition('flow.telemetry.events.logger');
+
+        static::assertNull($logger->getArgument(3));
+        // @mago-expect analysis:mixed-assignment
+        $signal = $logger->getArgument(4);
+        static::assertInstanceOf(Definition::class, $signal);
+        static::assertSame(['log.channel' => 'events'], $signal->getArgument(0));
     }
 
     public function test_captures_framework_monolog_logger_channel(): void

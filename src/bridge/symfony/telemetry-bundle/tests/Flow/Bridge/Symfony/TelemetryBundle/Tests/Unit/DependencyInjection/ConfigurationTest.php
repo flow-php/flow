@@ -360,7 +360,7 @@ final class ConfigurationTest extends TestCase
         static::assertSame('app.datadog_exporter', $config['exporters']['datadog']['service']['id']);
     }
 
-    public function test_severity_filtering_wraps_batching(): void
+    public function test_log_pipeline_with_severity_middleware_and_batching_sink(): void
     {
         $config = $this->context->processConfig([
             'resource' => [],
@@ -373,9 +373,11 @@ final class ConfigurationTest extends TestCase
             ],
             'logger_provider' => [
                 'processor' => [
-                    'type' => 'severity_filtering',
-                    'minimum_severity' => 'warn',
-                    'inner_processor' => [
+                    'type' => 'pipeline',
+                    'middleware' => [
+                        ['type' => 'severity_filtering', 'minimum_severity' => 'warn'],
+                    ],
+                    'sink' => [
                         'type' => 'batching',
                         'exporter' => 'otlp',
                         'batch_size' => 200,
@@ -384,9 +386,11 @@ final class ConfigurationTest extends TestCase
             ],
         ]);
 
-        static::assertSame('severity_filtering', $config['logger_provider']['processor']['type']);
-        static::assertSame('warn', $config['logger_provider']['processor']['minimum_severity']);
-        static::assertSame('otlp', $config['logger_provider']['processor']['inner_processor']['exporter']);
+        static::assertSame('pipeline', $config['logger_provider']['processor']['type']);
+        static::assertSame('severity_filtering', $config['logger_provider']['processor']['middleware'][0]['type']);
+        static::assertSame('warn', $config['logger_provider']['processor']['middleware'][0]['minimum_severity']);
+        static::assertSame('otlp', $config['logger_provider']['processor']['sink']['exporter']);
+        static::assertSame(200, $config['logger_provider']['processor']['sink']['batch_size']);
     }
 
     public function test_stream_transport_accepts_file_options(): void

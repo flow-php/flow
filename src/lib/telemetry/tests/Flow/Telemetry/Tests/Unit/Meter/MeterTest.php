@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\Meter;
 
 use DateTimeImmutable;
+use Flow\Telemetry\Attributes;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Meter\Instrument\Counter;
 use Flow\Telemetry\Meter\Instrument\Gauge;
@@ -429,5 +430,23 @@ final class MeterTest extends TestCase
         static::assertSame(['queue' => 'tasks'], $metric->attributes->normalize());
         static::assertSame('items', $metric->unit);
         static::assertSame('Queue size', $metric->description);
+    }
+
+    public function test_default_signal_attributes_are_applied_to_created_instruments(): void
+    {
+        $meter = new Meter(
+            ResourceMother::default(),
+            new InstrumentationScope('test-meter', '1.0.0'),
+            new VoidMetricProcessor(),
+            ClockMother::frozen(),
+            signalAttributes: Attributes::create(['env' => 'prod']),
+        );
+
+        $counter = $meter->createCounter('requests');
+        $counter->add(1, ['route' => '/health']);
+        $metric = $counter->collect()[0];
+
+        static::assertSame('prod', $metric->attributes->get('env'));
+        static::assertSame('/health', $metric->attributes->get('route'));
     }
 }

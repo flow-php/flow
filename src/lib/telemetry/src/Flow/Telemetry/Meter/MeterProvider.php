@@ -60,6 +60,7 @@ final readonly class MeterProvider
      * @param string $version The version of the instrumentation scope
      * @param null|string $schemaUrl Schema URL for semantic conventions
      * @param null|Attributes $attributes Additional scope attributes
+     * @param null|Attributes $signalAttributes Default attributes merged into every recorded metric data point (per-call values win)
      */
     public function meter(
         Resource $resource,
@@ -67,6 +68,7 @@ final readonly class MeterProvider
         string $version = 'unknown',
         ?string $schemaUrl = null,
         ?Attributes $attributes = null,
+        ?Attributes $signalAttributes = null,
     ): Meter {
         return new Meter(
             $resource,
@@ -77,6 +79,7 @@ final readonly class MeterProvider
             $this->exemplarFilter,
             $this->limits,
             $this->errorHandler,
+            $signalAttributes ?? new Attributes(),
         );
     }
 }

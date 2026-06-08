@@ -66,6 +66,7 @@ final class Tracer
         private readonly ?Sampler $sampler = null,
         private readonly SpanLimits $limits = new SpanLimits(),
         private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
+        private readonly Attributes $signalAttributes = new Attributes(),
     ) {
         /** @var \SplStack<SpanContext> $stack */
         $stack = new SplStack();
@@ -233,6 +234,11 @@ final class Tracer
         );
 
         $attributesToSet = $attributes instanceof Attributes ? $attributes : Attributes::create($attributes);
+
+        if (!$this->signalAttributes->isEmpty()) {
+            $attributesToSet = $this->signalAttributes->merge($attributesToSet);
+        }
+
         $span->setAttributes($attributesToSet);
 
         foreach ($links as $link) {

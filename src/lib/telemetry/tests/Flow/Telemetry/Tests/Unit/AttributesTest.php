@@ -13,6 +13,21 @@ use RuntimeException;
 
 final class AttributesTest extends TestCase
 {
+    public function test_all_returns_the_raw_attribute_map(): void
+    {
+        $now = new DateTimeImmutable();
+
+        static::assertSame(
+            ['name' => 'Alice', 'count' => 42, 'at' => $now],
+            Attributes::create(['name' => 'Alice', 'count' => 42, 'at' => $now])->all(),
+        );
+    }
+
+    public function test_all_excludes_null_values(): void
+    {
+        static::assertSame(['kept' => 1], Attributes::create(['kept' => 1, 'dropped' => null])->all());
+    }
+
     public static function id_provider(): Generator
     {
         yield 'empty attributes' => [

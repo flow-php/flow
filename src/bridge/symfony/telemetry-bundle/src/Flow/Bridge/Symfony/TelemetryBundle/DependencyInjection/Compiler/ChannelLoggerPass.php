@@ -42,14 +42,18 @@ use function ucwords;
  * invalid-behavior flag. Per channel, both a "LoggerInterface $<channel>Logger" and
  * a "Logger $<channel>Logger" autowiring alias are registered so any service can
  * request a channel logger by named argument. Each channel is synthesized on demand
- * carrying a "log.channel" scope attribute; a logger already declared under that
- * name (e.g. the always-present "default") is reused as-is.
+ * carrying a "log.channel" attribute; where it is placed - the instrumentation scope,
+ * every emitted record, or both - is governed by the
+ * "flow.telemetry.channel_attribute_target" parameter (default "both"). A logger
+ * already declared under that name (e.g. the always-present "default") is reused as-is.
  */
 final class ChannelLoggerPass implements CompilerPassInterface
 {
     public const string TAG = 'flow.telemetry.channel';
 
     private const string CAPTURE_PARAMETER = 'flow.telemetry.capture_framework_channels';
+
+    private const string ATTRIBUTE_TARGET_PARAMETER = 'flow.telemetry.channel_attribute_target';
 
     private const string FRAMEWORK_TAG = 'monolog.logger';
 
@@ -124,11 +128,36 @@ final class ChannelLoggerPass implements CompilerPassInterface
     {
         $psr3Id = FlowTelemetryBundle::defineLogger(
             $channel,
-            ['attributes' => ['log.channel' => $channel]],
+            ['attributes' => $this->channelAttributes($channel, $container)],
             $container,
         );
 
         return ['flow.telemetry.' . $channel . '.logger', $psr3Id];
+    }
+
+    /**
+     * @return array{scope?: array<string, string>, signal?: array<string, string>}
+     */
+    private function channelAttributes(string $channel, ContainerBuilder $container): array
+    {
+        $value = ['log.channel' => $channel];
+
+        return match ($this->channelAttributeTarget($container)) {
+            'scope' => ['scope' => $value],
+            'signal' => ['signal' => $value],
+            default => ['scope' => $value, 'signal' => $value],
+        };
+    }
+
+    private function channelAttributeTarget(ContainerBuilder $container): string
+    {
+        if (!$container->hasParameter(self::ATTRIBUTE_TARGET_PARAMETER)) {
+            return 'both';
+        }
+
+        $target = $container->getParameter(self::ATTRIBUTE_TARGET_PARAMETER);
+
+        return is_string($target) ? $target : 'both';
     }
 
     private function requireChannel(string $serviceId, mixed $tag, ContainerBuilder $container): string

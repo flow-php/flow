@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Tests\Unit\Meter\Instrument;
 
+use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Meter\AggregationTemporality;
 use Flow\Telemetry\Meter\Instrument\Counter;
 use Flow\Telemetry\Meter\MetricType;
@@ -229,5 +230,22 @@ final class CounterTest extends TestCase
         static::assertCount(1, $metrics[0]->exemplars);
         static::assertSame(20, $metrics[0]->exemplars[0]->value);
         static::assertSame($spanContext2->traceId->toHex(), $metrics[0]->exemplars[0]->traceId->toHex());
+    }
+
+    public function test_signal_attributes_merge_into_data_points_with_per_call_precedence(): void
+    {
+        $counter = new Counter(
+            'test.counter',
+            ResourceMother::default(),
+            InstrumentationScopeMother::default(),
+            ClockMother::frozen(),
+            signalAttributes: Attributes::create(['env' => 'prod', 'region' => 'eu']),
+        );
+
+        $counter->add(1, ['env' => 'dev']);
+        $metric = $counter->collect()[0];
+
+        static::assertSame('dev', $metric->attributes->get('env'));
+        static::assertSame('eu', $metric->attributes->get('region'));
     }
 }

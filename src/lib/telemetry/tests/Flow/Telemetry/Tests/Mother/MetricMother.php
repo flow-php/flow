@@ -67,4 +67,17 @@ final class MetricMother
             description: $description,
         );
     }
+
+    public static function counterWithAttributes(string $name, int|float $value, Attributes $attributes): Metric
+    {
+        return new Metric(
+            name: $name,
+            type: MetricType::COUNTER,
+            value: $value,
+            attributes: $attributes,
+            timestamp: new DateTimeImmutable(),
+            resource: ResourceMother::default(),
+            scope: InstrumentationScopeMother::default(),
+        );
+    }
 }

@@ -8,7 +8,7 @@ use Flow\Telemetry\ErrorHandler\ErrorHandler;
 use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\Exporter\Exporter;
 use Flow\Telemetry\Logger\LogEntry;
-use Flow\Telemetry\Logger\LogProcessor;
+use Flow\Telemetry\Logger\LogSink;
 use Flow\Telemetry\Logger\Severity;
 use Flow\Telemetry\Signal\Signals;
 use Throwable;
@@ -21,7 +21,7 @@ use function str_contains;
 /**
  * Processor that stores log entries in memory and exports via configured exporter.
  */
-final class MemoryLogProcessor implements LogProcessor
+final class MemoryLogProcessor implements LogSink
 {
     /**
      * @var array<LogEntry>

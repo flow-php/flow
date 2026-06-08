@@ -88,6 +88,16 @@ final readonly class Attributes
     }
 
     /**
+     * The raw attribute map, without normalization.
+     *
+     * @return TAttributeValueMap
+     */
+    public function all(): array
+    {
+        return $this->values;
+    }
+
+    /**
      * Get a specific attribute value.
      *
      * @return null|TAttributeValue

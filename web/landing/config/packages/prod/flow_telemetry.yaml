@@ -10,9 +10,10 @@ flow_telemetry:
                     encoding: json
     logger_provider:
         processor:
-            type: severity_filtering
-            minimum_severity: warn
-            inner_processor:
+            type: pipeline
+            middleware:
+                - { type: severity_filtering, minimum_severity: warn }
+            sink:
                 type: batching
                 exporter: otlp_http_logs
 

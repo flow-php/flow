@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Meter;
 
+use Flow\Telemetry\Attributes;
 use Flow\Telemetry\ErrorHandler\ErrorHandler;
 use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\InstrumentationScope;
@@ -66,6 +67,7 @@ final class Meter
         private readonly ExemplarFilter $exemplarFilter = new TraceBasedExemplarFilter(),
         private readonly MetricLimits $limits = new MetricLimits(),
         private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
+        private readonly Attributes $signalAttributes = new Attributes(),
     ) {}
 
     /**
@@ -135,6 +137,7 @@ final class Meter
                 $this->limits,
                 $unit,
                 $description,
+                $this->signalAttributes,
             );
         }
 
@@ -166,6 +169,7 @@ final class Meter
                 $this->limits,
                 $unit,
                 $description,
+                $this->signalAttributes,
             );
         }
 
@@ -204,6 +208,7 @@ final class Meter
                 $unit,
                 $description,
                 $boundaries ?? Histogram::DEFAULT_BOUNDARIES,
+                $this->signalAttributes,
             );
         }
 
@@ -246,6 +251,7 @@ final class Meter
                 $description,
                 $ratePrecision,
                 $timeUnit,
+                $this->signalAttributes,
             );
         }
 
@@ -278,6 +284,7 @@ final class Meter
                 $this->limits,
                 $unit,
                 $description,
+                $this->signalAttributes,
             );
         }
 

@@ -46,6 +46,7 @@ final class Logger
         private readonly ContextStorage $contextStorage,
         private readonly LogRecordLimits $limits = new LogRecordLimits(),
         private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
+        private readonly Attributes $signalAttributes = new Attributes(),
     ) {}
 
     /**
@@ -90,6 +91,16 @@ final class Logger
      */
     public function emit(LogRecord $record, ?SpanContext $spanContext = null): void
     {
+        if (!$this->signalAttributes->isEmpty()) {
+            $record = new LogRecord(
+                $record->severity,
+                $record->body,
+                $this->signalAttributes->merge($record->attributes),
+                $record->timestamp,
+                $record->observedTimestamp,
+            );
+        }
+
         $droppedAttributeCount = 0;
 
         if (

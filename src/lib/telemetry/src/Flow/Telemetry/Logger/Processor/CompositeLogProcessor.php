@@ -8,6 +8,7 @@ use Flow\Telemetry\ErrorHandler\ErrorHandler;
 use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Logger\LogProcessor;
+use Flow\Telemetry\Logger\LogSink;
 use Throwable;
 
 /**
@@ -18,7 +19,7 @@ use Throwable;
  * - Combine batching with memory storage for testing
  * - Add custom processing alongside export
  */
-final readonly class CompositeLogProcessor implements LogProcessor
+final readonly class CompositeLogProcessor implements LogSink
 {
     /**
      * @param array<LogProcessor> $processors

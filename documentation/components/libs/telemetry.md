@@ -82,6 +82,35 @@ $metrics = $metricProcessor->collectedMetrics();
 $logs = $logProcessor->collectedLogs();
 ```
 
+### Scope vs Signal Attributes
+
+`tracer()`, `meter()`, and `logger()` accept two distinct attribute sets:
+
+- **Scope attributes** (`$attributes`) are attached to the instrumentation scope and shared, unchanged, by every signal
+  the instrument emits.
+- **Default signal attributes** (`$signalAttributes`) are merged into every individual signal (each span, metric data
+  point, or log record) the instrument produces. Attributes supplied at the call site override the configured defaults
+  of the same key.
+
+```php
+<?php
+
+use Flow\Telemetry\Attributes;
+
+$logger = $telemetry->logger(
+    'my-service',
+    '1.0.0',
+    attributes: Attributes::create(['service.tier' => 'backend']),        // scope
+    signalAttributes: Attributes::create(['deployment.environment' => 'prod']), // every record
+);
+
+// Emitted record carries deployment.environment=prod (default) and request.id=abc (per-call).
+$logger->info('request handled', ['request.id' => 'abc']);
+
+// Per-call value wins over the default of the same key.
+$logger->info('overridden', ['deployment.environment' => 'staging']);
+```
+
 ### Console Output Setup (Development)
 
 ```php
@@ -499,6 +528,181 @@ Each signal type has its own processor implementations:
 - `PassThroughSpanProcessor`, `BatchingSpanProcessor`, `MemorySpanProcessor`, `VoidSpanProcessor`
 - `PassThroughMetricProcessor`, `BatchingMetricProcessor`, `MemoryMetricProcessor`, `VoidMetricProcessor`
 - `PassThroughLogProcessor`, `BatchingLogProcessor`, `MemoryLogProcessor`, `VoidLogProcessor`
+
+### Filtering by attributes
+
+Attribute filtering drops (or keeps) signals based on their attributes, which is useful for reducing
+noise — for example discarding health-check spans or bot traffic before it reaches an exporter. For spans
+and metrics this is a processor wrapping an inner processor; for logs it is a middleware in a
+[log pipeline](#log-processing-pipeline) (see below). Both forward only the signals that survive an
+`AttributeFilter`.
+
+An `AttributeFilter` evaluates a single root **matcher**. The leaf matcher, `attribute_rule()`, targets
+an attribute *path* and applies a `MatchMode`:
+
+| Family      | Modes                                                                              |
+|-------------|------------------------------------------------------------------------------------|
+| Equality    | `EQUAL`, `NOT_EQUAL` (strict comparison against the expected value)                 |
+| Ordering    | `GREATER_THAN`, `GREATER_THAN_EQUAL`, `LESS_THAN`, `LESS_THAN_EQUAL`                |
+| Pattern     | `REGEXP`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS` (operate on the value's string form) |
+
+A path is one segment (a top-level attribute key) or several segments descending into nested array
+values (e.g. `['user', 'id']`). The pattern modes accept a per-rule `caseSensitive` flag (default `true`).
+
+Rules compose with the `all()`, `any()` and `not()` matchers — each is itself a matcher, so they nest
+freely:
+
+```php
+<?php
+
+use Flow\Telemetry\Filter\MatchMode;
+
+use function Flow\Telemetry\DSL\any;
+use function Flow\Telemetry\DSL\attribute_filter;
+use function Flow\Telemetry\DSL\attribute_filtering_span_processor;
+use function Flow\Telemetry\DSL\attribute_rule;
+use function Flow\Telemetry\DSL\batching_span_processor;
+use function Flow\Telemetry\DSL\console_exporter;
+
+// Drop health-check spans OR any span faster than 5ms before they are exported
+$processor = attribute_filtering_span_processor(
+    batching_span_processor(console_exporter()),
+    attribute_filter(
+        any(
+            attribute_rule('http.route', MatchMode::EQUAL, '/health'),
+            attribute_rule(['timing', 'duration_ms'], MatchMode::LESS_THAN, 5),
+        ),
+    )
+);
+```
+
+A single rule can be passed directly, without wrapping it in `all()`/`any()`:
+
+```php
+$filter = attribute_filter(attribute_rule('http.route', MatchMode::EQUAL, '/health'));
+```
+
+By default a match **excludes** the signal (drops it). Set `exclude: false` to keep ONLY matching
+signals, and point the filter at resource and/or scope attributes instead of the signal's own with
+`sources` (a list — the matcher is run against each and OR-combined, so a signal matches if the matcher
+matches in **any** listed source):
+
+```php
+<?php
+
+use Flow\Telemetry\Filter\AttributeSource;
+use Flow\Telemetry\Filter\MatchMode;
+
+use function Flow\Telemetry\DSL\all;
+use function Flow\Telemetry\DSL\attribute_filter;
+use function Flow\Telemetry\DSL\attribute_rule;
+use function Flow\Telemetry\DSL\not;
+
+// Keep ONLY metrics from the payments scope that are not internal
+$filter = attribute_filter(
+    all(
+        attribute_rule('name', MatchMode::EQUAL, 'app.payments'),
+        not(attribute_rule('internal', MatchMode::EQUAL, true)),
+    ),
+    exclude: false,
+    sources: [AttributeSource::SCOPE],
+);
+```
+
+The matcher tree is compiled to a small PHP matcher cached on disk (in the system temp directory by
+default, or a directory passed as `cacheDir`) so per-signal evaluation stays cheap. When the cache
+directory is not writable — or a matcher cannot be compiled — the processor transparently falls back to
+interpreted matching. Custom matchers implement the `Matcher` interface (and optionally
+`CompilableMatcher` to take part in code generation).
+
+> **Security:** the compiled matcher is `require`d, so the cache directory must be **trusted** — never
+> writable by untrusted users. Rule values are escaped (via `var_export`) and signal attributes are
+> never written into the generated code, so neither can inject PHP; the risk is a shared, writable cache
+> directory letting another user pre-plant code at the deterministic file path. The default
+> (`sys_get_temp_dir()`) is world-accessible — pass an application-private `cacheDir` in multi-tenant
+> environments. The directory is created with `0700` (owner-only); pass `cacheDirPermissions` to widen it
+> (e.g. `0750` when a different reader user shares the group), validated to `0`–`0777` and applied only on
+> creation.
+
+For **spans** and **metrics**, filtering is a processor that wraps an inner processor:
+`AttributeFilteringSpanProcessor` / `AttributeFilteringMetricProcessor`, created with
+`attribute_filtering_span_processor()` and `attribute_filtering_metric_processor()`.
+
+### Log processing pipeline
+
+Logs are processed by a **pipeline** of ordered **middleware** terminating in a single **sink**, mirroring the
+OpenTelemetry `LogRecordProcessor` model (each step may modify the record - which the spec explicitly allows - or drop
+it, with changes visible to the next step). A `LogMiddleware` returns the entry to pass on (possibly enriched) or `null`
+to drop it; a `LogSink` (batching, pass-through, memory, void, composite) exports the survivors.
+
+```php
+<?php
+
+use Flow\Telemetry\Filter\MatchMode;
+use Flow\Telemetry\Logger\Severity;
+
+use function Flow\Telemetry\DSL\attribute_filter;
+use function Flow\Telemetry\DSL\attribute_filtering_log_middleware;
+use function Flow\Telemetry\DSL\attribute_rule;
+use function Flow\Telemetry\DSL\batching_log_processor;
+use function Flow\Telemetry\DSL\enriching_log_middleware;
+use function Flow\Telemetry\DSL\pipeline_log_processor;
+use function Flow\Telemetry\DSL\severity_filtering_log_middleware;
+
+// enrich -> drop below WARN -> drop health checks -> batch to the exporter
+$processor = pipeline_log_processor(
+    [
+        enriching_log_middleware(['deployment.environment' => 'prod']),
+        severity_filtering_log_middleware(Severity::WARN),
+        attribute_filtering_log_middleware(attribute_filter(
+            attribute_rule('http.route', MatchMode::EQUAL, '/health'),
+        )),
+    ],
+    batching_log_processor($exporter),
+);
+```
+
+The middleware are `EnrichingLogMiddleware`, `AttributeFilteringLogMiddleware` and `SeverityFilteringLogMiddleware`
+(`enriching_log_middleware()`, `attribute_filtering_log_middleware()`, `severity_filtering_log_middleware()`), composed
+into a `PipelineLogProcessor` by `pipeline_log_processor()`. `EnrichingLogMiddleware`'s attributes are defaults -
+attributes set at the call site win over them. Implement `LogMiddleware` to add your own step.
+
+## Sampling
+
+A `Sampler` decides, at span **start**, whether a span is recorded and exported. This is the OpenTelemetry-idiomatic
+way to drop spans — a dropped span never records, so it never reaches a processor or exporter.
+
+| Sampler | DSL | Behavior |
+|---|---|---|
+| `AlwaysOnSampler` | `always_on_sampler()` | Record + sample every span (the default) |
+| `AlwaysOffSampler` | `always_off_sampler()` | Drop every span |
+| `TraceIdRatioBasedSampler` | `trace_id_ratio_based_sampler($ratio)` | Sample a deterministic fraction of traces |
+| `ParentBasedSampler` | `parent_based_sampler($root)` | Honor the parent's decision; use the root sampler for parentless spans |
+| `AttributeMatchingSampler` | `attribute_matching_sampler($filter, $delegate)` | Drop spans whose **start-time** attributes match an `AttributeFilter`, deferring the rest to a delegate sampler |
+
+`AttributeMatchingSampler` reuses the same matcher stack as the [filtering processors](#filtering-by-attributes) — the
+`AttributeFilter` (matcher tree, compiled drop-closure, `sources`, `exclude` polarity). A match drops the span (the
+default) or keeps only matching spans (`exclude: false`); everything else is decided by the `$delegate` sampler, so it
+composes with ratio/parent-based sampling. It only sees attributes available at span start — end-state attributes
+(status codes, durations) are not visible, so end-attribute filtering remains a [span processor](#filtering-by-attributes)
+concern.
+
+```php
+<?php
+
+use Flow\Telemetry\Filter\MatchMode;
+
+use function Flow\Telemetry\DSL\attribute_filter;
+use function Flow\Telemetry\DSL\attribute_matching_sampler;
+use function Flow\Telemetry\DSL\attribute_rule;
+use function Flow\Telemetry\DSL\trace_id_ratio_based_sampler;
+
+// Drop health-check spans; sample everything else at 10%
+$sampler = attribute_matching_sampler(
+    attribute_filter(attribute_rule('http.route', MatchMode::EQUAL, '/health')),
+    trace_id_ratio_based_sampler(0.1),
+);
+```
 
 ## Exporters
 
