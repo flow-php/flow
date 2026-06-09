@@ -32,25 +32,6 @@ jobs:
           MYSQL_PASSWORD: mysql
           MYSQL_DATABASE: mysql
           MYSQL_ROOT_PASSWORD: root
-      elasticsearch:
-        image: elasticsearch:8.19.0
-        env:
-          discovery.type: single-node
-          xpack.security.enabled: "false"
-        options: >-
-          --health-cmd "curl http://localhost:9200/_cluster/health"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
-        ports:
-          - 9200/tcp
-      meilisearch:
-        image: getmeili/meilisearch:v1.16
-        env:
-          MEILI_MASTER_KEY: masterKey
-          MEILI_NO_ANALYTICS: "true"
-        ports:
-          - 7700/tcp
     strategy:
       fail-fast: false
       matrix:
@@ -164,8 +145,6 @@ jobs:
         env:
           PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres?serverVersion=18&charset=utf8
           MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/mysql
-          ELASTICSEARCH_URL: http://127.0.0.1:${{ job.services.elasticsearch.ports['9200'] }}
-          MEILISEARCH_URL: http://127.0.0.1:${{ job.services.meilisearch.ports['7700'] }}
           SQLITE_DATABASE_URL: "sqlite:///:memory:"
           AZURITE_HOST: "localhost"
           AZURITE_BLOB_PORT: "10000"

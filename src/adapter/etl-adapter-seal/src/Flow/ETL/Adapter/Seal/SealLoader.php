@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Seal;
 
 use CmsIg\Seal\EngineInterface;
+use Flow\ETL\Adapter\Seal\RowsNormalizer\EntryNormalizer;
 use Flow\ETL\Config\Telemetry\TelemetryAttributes;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
@@ -29,15 +30,12 @@ final class SealLoader implements Loader
         $context->telemetry()->loadingStarted($this);
 
         try {
-            $documents = [];
-
-            foreach ($rows as $row) {
-                /** @var array<string, mixed> $document */
-                $document = $row->toArray();
-                $documents[] = $document;
-            }
-
-            $this->engine->bulk($this->index, $documents, [], $this->bulkSize);
+            $this->engine->bulk(
+                $this->index,
+                (new RowsNormalizer(new EntryNormalizer()))->normalize($rows),
+                [],
+                $this->bulkSize,
+            );
 
             $context->telemetry()->loadingCompleted($this, [TelemetryAttributes::ATTR_LOADING_ROWS => $rows->count()]);
         } catch (Throwable $e) {

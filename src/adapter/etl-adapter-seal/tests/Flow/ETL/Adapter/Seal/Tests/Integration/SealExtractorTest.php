@@ -2,27 +2,28 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Adapter\Seal\Tests;
+namespace Flow\ETL\Adapter\Seal\Tests\Integration;
 
 use CmsIg\Seal\Search\Condition\Condition;
 use CmsIg\Seal\Search\SearchBuilder;
+use Flow\ETL\Adapter\Seal\Tests\SealTestCase;
 use Flow\ETL\Extractor\Signal;
 
 use function Flow\ETL\Adapter\Seal\from_seal;
 use function Flow\ETL\DSL\flow_context;
 
-abstract class AbstractSealExtractorTestCase extends AbstractSealTestCase
+final class SealExtractorTest extends SealTestCase
 {
     public function test_extracting_all_documents(): void
     {
         $this->seed(2);
 
-        static::assertExtractedRowsCount(2, from_seal($this->engine, self::INDEX_NAME));
+        static::assertExtractedRowsCount(2, from_seal($this->sealContext()->engine(), self::INDEX_NAME));
     }
 
     public function test_extracting_from_an_empty_index_yields_no_rows(): void
     {
-        static::assertExtractedRowsCount(0, from_seal($this->engine, self::INDEX_NAME));
+        static::assertExtractedRowsCount(0, from_seal($this->sealContext()->engine(), self::INDEX_NAME));
     }
 
     public function test_filtering_documents_with_a_search_builder(): void
@@ -30,7 +31,7 @@ abstract class AbstractSealExtractorTestCase extends AbstractSealTestCase
         $this->seed(3);
 
         $extractor = from_seal(
-            $this->engine,
+            $this->sealContext()->engine(),
             self::INDEX_NAME,
         )->withSearchBuilder(static function (SearchBuilder $builder): void {
             $builder->addFilter(Condition::equal('age', 21));
@@ -43,15 +44,23 @@ abstract class AbstractSealExtractorTestCase extends AbstractSealTestCase
     {
         $this->seed(5);
 
-        static::assertExtractedBatchesCount(3, from_seal($this->engine, self::INDEX_NAME)->withPageSize(2));
-        static::assertExtractedRowsCount(5, from_seal($this->engine, self::INDEX_NAME)->withPageSize(2));
+        static::assertExtractedBatchesCount(
+            3,
+            from_seal($this->sealContext()->engine(), self::INDEX_NAME)->withPageSize(2),
+        );
+        static::assertExtractedRowsCount(
+            5,
+            from_seal($this->sealContext()->engine(), self::INDEX_NAME)->withPageSize(2),
+        );
     }
 
     public function test_stop_signal_halts_extraction(): void
     {
         $this->seed(5);
 
-        $generator = from_seal($this->engine, self::INDEX_NAME)->withPageSize(2)->extract(flow_context());
+        $generator = from_seal($this->sealContext()->engine(), self::INDEX_NAME)
+            ->withPageSize(2)
+            ->extract(flow_context());
 
         static::assertCount(2, $generator->current());
 
@@ -68,8 +77,6 @@ abstract class AbstractSealExtractorTestCase extends AbstractSealTestCase
             $documents[] = ['id' => (string) $i, 'name' => 'User ' . $i, 'age' => 20 + $i];
         }
 
-        $this->engine->bulk(self::INDEX_NAME, $documents, []);
-
-        $this->refresh();
+        $this->sealContext()->engine()->bulk(self::INDEX_NAME, $documents, []);
     }
 }

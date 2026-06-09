@@ -26,29 +26,6 @@ services:
             MYSQL_ROOT_PASSWORD: root
         networks:
             - flow-php
-    elasticsearch:
-        image: elasticsearch:8.19.0
-        container_name: flow-php-elasticsearch
-        ports:
-            - 9200:9200
-        environment:
-            - node.name=es01
-            - discovery.type=single-node
-            - xpack.security.enabled=false
-            - bootstrap.memory_lock=true
-            - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-        networks:
-            - flow-php
-    meilisearch:
-        image: getmeili/meilisearch:v1.16
-        container_name: flow-php-meilisearch
-        ports:
-            - "7700:7700"
-        environment:
-            - MEILI_MASTER_KEY=masterKey
-            - MEILI_NO_ANALYTICS=true
-        networks:
-            - flow-php
     azurite:
         image: mcr.microsoft.com/azure-storage/azurite
         container_name: flow-php-azurite
