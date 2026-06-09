@@ -36,6 +36,7 @@ use Flow\Telemetry\Provider\Void\VoidMetricProcessor;
 use Flow\Telemetry\Provider\Void\VoidSpanProcessor;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Resource\Detector\CachingDetector;
+use Flow\Telemetry\Resource\Detector\GitDetector;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\Processor\BatchingSpanProcessor;
 use Flow\Telemetry\Tracer\Processor\CompositeSpanProcessor;
@@ -116,6 +117,41 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
                 unlink($cachePath);
             }
         }
+    }
+
+    public function test_git_detector_is_not_registered_by_default(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                ]);
+            },
+        ]);
+
+        static::assertFalse($this->getContainer()->has('flow.telemetry.resource.detector.git'));
+    }
+
+    public function test_git_detector_is_registered_when_enabled(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [
+                        'detectors' => [
+                            'static' => [
+                                'git' => ['enabled' => true],
+                            ],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        static::assertTrue($container->has('flow.telemetry.resource.detector.git'));
+        static::assertInstanceOf(GitDetector::class, $container->get('flow.telemetry.resource.detector.git'));
     }
 
     public function test_clock_can_be_overridden_with_custom_service(): void

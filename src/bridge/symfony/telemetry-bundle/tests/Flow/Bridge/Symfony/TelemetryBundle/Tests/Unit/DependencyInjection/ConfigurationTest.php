@@ -30,6 +30,42 @@ final class ConfigurationTest extends TestCase
         static::assertSame('app.custom_clock', $config['clock_service_id']);
     }
 
+    public function test_git_detector_can_be_configured(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [
+                'detectors' => [
+                    'static' => [
+                        'git' => [
+                            'enabled' => true,
+                            'binary' => '/usr/bin/git',
+                            'working_directory' => '/srv/app',
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $git = $config['resource']['detectors']['static']['git'];
+
+        static::assertTrue($git['enabled']);
+        static::assertSame('/usr/bin/git', $git['binary']);
+        static::assertSame('/srv/app', $git['working_directory']);
+    }
+
+    public function test_git_detector_defaults_to_disabled(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+        ]);
+
+        $git = $config['resource']['detectors']['static']['git'];
+
+        static::assertFalse($git['enabled']);
+        static::assertSame('git', $git['binary']);
+        static::assertNull($git['working_directory']);
+    }
+
     public function test_clock_service_id_defaults_to_null(): void
     {
         $config = $this->context->processConfig([
