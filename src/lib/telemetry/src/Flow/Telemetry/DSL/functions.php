@@ -84,6 +84,7 @@ use Flow\Telemetry\Resource\Detector\CachingDetector;
 use Flow\Telemetry\Resource\Detector\ChainDetector;
 use Flow\Telemetry\Resource\Detector\ComposerDetector;
 use Flow\Telemetry\Resource\Detector\EnvironmentDetector;
+use Flow\Telemetry\Resource\Detector\GitDetector;
 use Flow\Telemetry\Resource\Detector\HostDetector;
 use Flow\Telemetry\Resource\Detector\ManualDetector;
 use Flow\Telemetry\Resource\Detector\OsDetector;
@@ -1021,6 +1022,18 @@ function environment_detector(): EnvironmentDetector
 function composer_detector(): ComposerDetector
 {
     return new ComposerDetector();
+}
+
+/**
+ * Create a GitDetector.
+ *
+ * @param null|string $workingDirectory Directory to run git in (default: current working directory)
+ * @param string $gitBinary Path to the git binary (default: "git", resolved from $PATH)
+ */
+#[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::HELPER)]
+function git_detector(?string $workingDirectory = null, string $gitBinary = 'git'): GitDetector
+{
+    return new GitDetector($workingDirectory, $gitBinary);
 }
 
 /**
