@@ -37,14 +37,16 @@ final class SealExtractor implements Extractor
     {
         $offset = 0;
 
+        $search = $this->engine->createSearchBuilder($this->index);
+
+        if ($this->searchBuilder !== null) {
+            ($this->searchBuilder)($search);
+        }
+
+        $search->limit($this->pageSize);
+
         while (true) {
-            $search = $this->engine->createSearchBuilder($this->index);
-
-            if ($this->searchBuilder !== null) {
-                ($this->searchBuilder)($search);
-            }
-
-            $search->limit($this->pageSize)->offset($offset);
+            $search->offset($offset);
 
             $documents = [];
 
