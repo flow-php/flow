@@ -9,7 +9,6 @@ use Flow\PostgreSql\Client\Types\Converter\BooleanConverter;
 use Flow\PostgreSql\Client\Types\Converter\ByteaConverter;
 use Flow\PostgreSql\Client\Types\Converter\CidrConverter;
 use Flow\PostgreSql\Client\Types\Converter\DateConverter;
-use Flow\PostgreSql\Client\Types\Converter\DateTimeConverter;
 use Flow\PostgreSql\Client\Types\Converter\FloatArrayConverter;
 use Flow\PostgreSql\Client\Types\Converter\FloatConverter;
 use Flow\PostgreSql\Client\Types\Converter\InetConverter;
@@ -24,6 +23,8 @@ use Flow\PostgreSql\Client\Types\Converter\NumericConverter;
 use Flow\PostgreSql\Client\Types\Converter\StringConverter;
 use Flow\PostgreSql\Client\Types\Converter\TextArrayConverter;
 use Flow\PostgreSql\Client\Types\Converter\TimeConverter;
+use Flow\PostgreSql\Client\Types\Converter\TimestampConverter;
+use Flow\PostgreSql\Client\Types\Converter\TimestampTzConverter;
 use Flow\PostgreSql\Client\Types\Converter\UuidArrayConverter;
 use Flow\PostgreSql\Client\Types\Converter\UuidConverter;
 
@@ -122,7 +123,8 @@ final class ValueConverters
             new BooleanConverter(),
             new DateConverter(),
             new TimeConverter(),
-            new DateTimeConverter(),
+            new TimestampConverter(),
+            new TimestampTzConverter(),
             new UuidConverter(),
             new JsonConverter(),
             new ByteaConverter(),

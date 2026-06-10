@@ -59,14 +59,14 @@ final class EntryTypesMapTest extends TestCase
         static::assertTrue($result->value);
     }
 
-    public function test_maps_datetime_entry_to_timestamptz_type(): void
+    public function test_maps_datetime_entry_to_timestamp_type(): void
     {
         $map = new EntryTypesMap();
         $date = new DateTimeImmutable('2024-01-15 10:30:00');
         $result = $map->mapEntry(datetime_entry('created_at', $date));
 
         static::assertInstanceOf(TypedValue::class, $result);
-        static::assertSame(ValueType::TIMESTAMPTZ, $result->targetType);
+        static::assertSame(ValueType::TIMESTAMP, $result->targetType);
         static::assertEquals($date, $result->value);
     }
 

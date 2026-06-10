@@ -107,7 +107,7 @@ final class SchemaConverterTest extends TestCase
         static::assertTrue($table->column('name')->type->isEqual(ColumnType::text()));
         static::assertTrue($table->column('price')->type->isEqual(ColumnType::doublePrecision()));
         static::assertTrue($table->column('active')->type->isEqual(ColumnType::boolean()));
-        static::assertTrue($table->column('created_at')->type->isEqual(ColumnType::timestamptz()));
+        static::assertTrue($table->column('created_at')->type->isEqual(ColumnType::timestamp()));
         static::assertTrue($table->column('uuid')->type->isEqual(ColumnType::uuid()));
         static::assertTrue($table->column('payload')->type->isEqual(ColumnType::jsonb()));
         static::assertTrue($table->column('document')->type->isEqual(ColumnType::xml()));

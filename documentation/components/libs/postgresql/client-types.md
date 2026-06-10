@@ -5,22 +5,24 @@
 [TOC]
 
 The client handles type conversion between PHP and PostgreSQL in two directions:
+
 - **Parameter binding**: Converting PHP values to PostgreSQL format when executing queries
 - **Result casting**: Converting PostgreSQL results back to PHP types
 
 ## Result Casting
 
-When fetching data, PostgreSQL returns all values as strings. The client automatically casts **unambiguous types** to their
+When fetching data, PostgreSQL returns all values as strings. The client automatically casts **unambiguous types** to
+their
 native PHP equivalents:
 
-| PostgreSQL Type    | PHP Type                         | Notes                            |
-|--------------------|----------------------------------|----------------------------------|
-| BOOL               | `bool`                           | `'t'` → `true`, `'f'` → `false`  |
-| INT2, INT4         | `int`                            | smallint, integer                |
-| INT8               | `int` or `string`                | `int` on 64-bit, `string` on 32-bit to avoid overflow |
-| FLOAT4, FLOAT8     | `float`                          | Handles `Infinity`, `-Infinity`, `NaN` |
-| BYTEA              | `string`                         | Decoded binary data              |
-| Everything else    | `string`                         | JSON, UUID, dates, arrays, etc.  |
+| PostgreSQL Type | PHP Type          | Notes                                                 |
+|-----------------|-------------------|-------------------------------------------------------|
+| BOOL            | `bool`            | `'t'` → `true`, `'f'` → `false`                       |
+| INT2, INT4      | `int`             | smallint, integer                                     |
+| INT8            | `int` or `string` | `int` on 64-bit, `string` on 32-bit to avoid overflow |
+| FLOAT4, FLOAT8  | `float`           | Handles `Infinity`, `-Infinity`, `NaN`                |
+| BYTEA           | `string`          | Decoded binary data                                   |
+| Everything else | `string`          | JSON, UUID, dates, arrays, etc.                       |
 
 **Why only these types?** Types like JSON, UUID, timestamps, and arrays have multiple valid PHP representations.
 Rather than choosing one, the client returns them as strings, letting you parse them as needed:
@@ -49,15 +51,15 @@ $createdAt = new \DateTimeImmutable($row['created_at']);
 
 PHP values are automatically converted when binding parameters:
 
-| PHP Type             | PostgreSQL Type           | Notes                                    |
-|----------------------|---------------------------|------------------------------------------|
-| `string`             | TEXT                      | Default for strings                      |
-| `int`                | INTEGER (INT4)            |                                          |
-| `float`              | DOUBLE PRECISION (FLOAT8) |                                          |
-| `bool`               | BOOLEAN                   | `true` → `'t'`, `false` → `'f'`          |
-| `null`               | NULL                      |                                          |
-| `\DateTimeInterface` | TIMESTAMPTZ               | Formatted as ISO 8601 with timezone      |
-| `array`              | ⚠️ Ambiguous              | Use `typed()` to specify JSON or ARRAY   |
+| PHP Type             | PostgreSQL Type           | Notes                                                                             |
+|----------------------|---------------------------|-----------------------------------------------------------------------------------|
+| `string`             | TEXT                      | Default for strings                                                               |
+| `int`                | INTEGER (INT4)            |                                                                                   |
+| `float`              | DOUBLE PRECISION (FLOAT8) |                                                                                   |
+| `bool`               | BOOLEAN                   | `true` → `'t'`, `false` → `'f'`                                                   |
+| `null`               | NULL                      |                                                                                   |
+| `\DateTimeInterface` | TIMESTAMP                 | Normalized to UTC; use `typed()` with `ValueType::TIMESTAMPTZ` to keep the offset |
+| `array`              | ⚠️ Ambiguous              | Use `typed()` to specify JSON or ARRAY                                            |
 
 ### The Array Ambiguity
 
@@ -142,98 +144,99 @@ $client->execute(
 
 ### Type DSL Functions
 
-| DSL Function | PostgreSQL Type | Use Case |
-|--------------|-----------------|----------|
-| **String types** | | |
-| `value_type_text()` | TEXT | Text strings |
-| `value_type_varchar()` | VARCHAR | Variable-length strings |
-| `value_type_char()` | CHAR | Fixed-length strings |
-| **Integer types** | | |
-| `value_type_int2()` / `value_type_smallint()` | SMALLINT | Small integers |
-| `value_type_int4()` / `value_type_integer()` | INTEGER | Standard integers |
-| `value_type_int8()` / `value_type_bigint()` | BIGINT | Large integers |
-| **Floating point types** | | |
-| `value_type_float4()` / `value_type_real()` | REAL | Single precision floats |
-| `value_type_float8()` / `value_type_double()` | DOUBLE PRECISION | Double precision floats |
-| `value_type_numeric()` | NUMERIC | Arbitrary precision numbers |
-| `value_type_money()` | MONEY | Currency amounts |
-| **Boolean type** | | |
-| `value_type_bool()` / `value_type_boolean()` | BOOLEAN | True/false values |
-| **Binary types** | | |
-| `value_type_bytea()` | BYTEA | Binary data |
-| `value_type_bit()` | BIT | Bit strings |
-| `value_type_varbit()` | VARBIT | Variable-length bit strings |
-| **Date/time types** | | |
-| `value_type_date()` | DATE | Dates without time |
-| `value_type_time()` | TIME | Time without timezone |
-| `value_type_timetz()` | TIMETZ | Time with timezone |
-| `value_type_timestamp()` | TIMESTAMP | Timestamp without timezone |
-| `value_type_timestamptz()` | TIMESTAMPTZ | Timestamp with timezone |
-| `value_type_interval()` | INTERVAL | Time intervals |
-| **JSON types** | | |
-| `value_type_json()` | JSON | JSON data |
-| `value_type_jsonb()` | JSONB | Binary JSON data |
-| **UUID type** | | |
-| `value_type_uuid()` | UUID | Universally unique identifiers |
-| **Network types** | | |
-| `value_type_inet()` | INET | IPv4/IPv6 addresses |
-| `value_type_cidr()` | CIDR | Network addresses |
-| `value_type_macaddr()` | MACADDR | MAC addresses |
-| `value_type_macaddr8()` | MACADDR8 | MAC addresses (EUI-64) |
-| **Other types** | | |
-| `value_type_xml()` | XML | XML data |
-| `value_type_oid()` | OID | Object identifiers |
-| **Array types** | | |
-| `value_type_text_array()` | TEXT[] | Array of strings |
-| `value_type_int4_array()` | INTEGER[] | Array of integers |
-| `value_type_int8_array()` | BIGINT[] | Array of big integers |
-| `value_type_float8_array()` | FLOAT8[] | Array of floats |
-| `value_type_bool_array()` | BOOLEAN[] | Array of booleans |
-| `value_type_uuid_array()` | UUID[] | Array of UUIDs |
-| `value_type_json_array()` | JSON[] | Array of JSON |
-| `value_type_jsonb_array()` | JSONB[] | Array of JSONB |
+| DSL Function                                  | PostgreSQL Type  | Use Case                       |
+|-----------------------------------------------|------------------|--------------------------------|
+| **String types**                              |                  |                                |
+| `value_type_text()`                           | TEXT             | Text strings                   |
+| `value_type_varchar()`                        | VARCHAR          | Variable-length strings        |
+| `value_type_char()`                           | CHAR             | Fixed-length strings           |
+| **Integer types**                             |                  |                                |
+| `value_type_int2()` / `value_type_smallint()` | SMALLINT         | Small integers                 |
+| `value_type_int4()` / `value_type_integer()`  | INTEGER          | Standard integers              |
+| `value_type_int8()` / `value_type_bigint()`   | BIGINT           | Large integers                 |
+| **Floating point types**                      |                  |                                |
+| `value_type_float4()` / `value_type_real()`   | REAL             | Single precision floats        |
+| `value_type_float8()` / `value_type_double()` | DOUBLE PRECISION | Double precision floats        |
+| `value_type_numeric()`                        | NUMERIC          | Arbitrary precision numbers    |
+| `value_type_money()`                          | MONEY            | Currency amounts               |
+| **Boolean type**                              |                  |                                |
+| `value_type_bool()` / `value_type_boolean()`  | BOOLEAN          | True/false values              |
+| **Binary types**                              |                  |                                |
+| `value_type_bytea()`                          | BYTEA            | Binary data                    |
+| `value_type_bit()`                            | BIT              | Bit strings                    |
+| `value_type_varbit()`                         | VARBIT           | Variable-length bit strings    |
+| **Date/time types**                           |                  |                                |
+| `value_type_date()`                           | DATE             | Dates without time             |
+| `value_type_time()`                           | TIME             | Time without timezone          |
+| `value_type_timetz()`                         | TIMETZ           | Time with timezone             |
+| `value_type_timestamp()`                      | TIMESTAMP        | Timestamp without timezone     |
+| `value_type_timestamptz()`                    | TIMESTAMPTZ      | Timestamp with timezone        |
+| `value_type_interval()`                       | INTERVAL         | Time intervals                 |
+| **JSON types**                                |                  |                                |
+| `value_type_json()`                           | JSON             | JSON data                      |
+| `value_type_jsonb()`                          | JSONB            | Binary JSON data               |
+| **UUID type**                                 |                  |                                |
+| `value_type_uuid()`                           | UUID             | Universally unique identifiers |
+| **Network types**                             |                  |                                |
+| `value_type_inet()`                           | INET             | IPv4/IPv6 addresses            |
+| `value_type_cidr()`                           | CIDR             | Network addresses              |
+| `value_type_macaddr()`                        | MACADDR          | MAC addresses                  |
+| `value_type_macaddr8()`                       | MACADDR8         | MAC addresses (EUI-64)         |
+| **Other types**                               |                  |                                |
+| `value_type_xml()`                            | XML              | XML data                       |
+| `value_type_oid()`                            | OID              | Object identifiers             |
+| **Array types**                               |                  |                                |
+| `value_type_text_array()`                     | TEXT[]           | Array of strings               |
+| `value_type_int4_array()`                     | INTEGER[]        | Array of integers              |
+| `value_type_int8_array()`                     | BIGINT[]         | Array of big integers          |
+| `value_type_float8_array()`                   | FLOAT8[]         | Array of floats                |
+| `value_type_bool_array()`                     | BOOLEAN[]        | Array of booleans              |
+| `value_type_uuid_array()`                     | UUID[]           | Array of UUIDs                 |
+| `value_type_json_array()`                     | JSON[]           | Array of JSON                  |
+| `value_type_jsonb_array()`                    | JSONB[]          | Array of JSONB                 |
 
 ## Built-in Value Converters
 
 The client includes converters for all common PostgreSQL types. These converters handle the `toDatabase()` conversion
 when you use `typed()`:
 
-| Converter           | PostgreSQL Types            | PHP Input Types                 |
-|---------------------|-----------------------------|---------------------------------|
-| StringConverter     | TEXT, VARCHAR, CHAR, BPCHAR | `string`                        |
-| IntegerConverter    | INT2, INT4, INT8            | `int`                           |
-| FloatConverter      | FLOAT4, FLOAT8              | `float`                         |
-| BooleanConverter    | BOOL                        | `bool`                          |
-| DateTimeConverter   | TIMESTAMP, TIMESTAMPTZ      | `\DateTimeInterface`            |
-| DateConverter       | DATE                        | `\DateTimeInterface`            |
-| TimeConverter       | TIME, TIMETZ                | `\DateTimeInterface`            |
-| UuidConverter       | UUID                        | `string`                        |
-| JsonConverter       | JSON, JSONB                 | `array`, `object`, `string`     |
-| ByteaConverter      | BYTEA                       | `string` (binary)               |
-| BoolArrayConverter  | BOOL[]                      | `array`                         |
-| IntArrayConverter   | INT2[], INT4[], INT8[]      | `array`                         |
-| FloatArrayConverter | FLOAT4[], FLOAT8[]          | `array`                         |
-| TextArrayConverter  | TEXT[], VARCHAR[]           | `array`                         |
-| UuidArrayConverter  | UUID[]                      | `array`                         |
-| JsonArrayConverter  | JSON[], JSONB[]             | `array`                         |
-| IntervalConverter   | INTERVAL                    | `\DateInterval`, `string`       |
-| NumericConverter    | NUMERIC                     | `string`, `int`, `float`        |
-| MoneyConverter      | MONEY                       | `string`, `int`, `float`        |
-| InetConverter       | INET                        | `string`                        |
-| CidrConverter       | CIDR                        | `string`                        |
+| Converter            | PostgreSQL Types            | PHP Input Types             |
+|----------------------|-----------------------------|-----------------------------|
+| StringConverter      | TEXT, VARCHAR, CHAR, BPCHAR | `string`                    |
+| IntegerConverter     | INT2, INT4, INT8            | `int`                       |
+| FloatConverter       | FLOAT4, FLOAT8              | `float`                     |
+| BooleanConverter     | BOOL                        | `bool`                      |
+| TimestampConverter   | TIMESTAMP                   | `\DateTimeInterface` (UTC)  |
+| TimestampTzConverter | TIMESTAMPTZ                 | `\DateTimeInterface`        |
+| DateConverter        | DATE                        | `\DateTimeInterface`        |
+| TimeConverter        | TIME, TIMETZ                | `\DateTimeInterface`        |
+| UuidConverter        | UUID                        | `string`                    |
+| JsonConverter        | JSON, JSONB                 | `array`, `object`, `string` |
+| ByteaConverter       | BYTEA                       | `string` (binary)           |
+| BoolArrayConverter   | BOOL[]                      | `array`                     |
+| IntArrayConverter    | INT2[], INT4[], INT8[]      | `array`                     |
+| FloatArrayConverter  | FLOAT4[], FLOAT8[]          | `array`                     |
+| TextArrayConverter   | TEXT[], VARCHAR[]           | `array`                     |
+| UuidArrayConverter   | UUID[]                      | `array`                     |
+| JsonArrayConverter   | JSON[], JSONB[]             | `array`                     |
+| IntervalConverter    | INTERVAL                    | `\DateInterval`, `string`   |
+| NumericConverter     | NUMERIC                     | `string`, `int`, `float`    |
+| MoneyConverter       | MONEY                       | `string`, `int`, `float`    |
+| InetConverter        | INET                        | `string`                    |
+| CidrConverter        | CIDR                        | `string`                    |
 
 ### Converter Notes
 
 - **FloatConverter**: Handles special PostgreSQL float values (`Infinity`, `-Infinity`, `NaN`)
 - **Array Converters**: Type-specific converters for PostgreSQL arrays. Each validates element types strictly:
-  - `BoolArrayConverter`: Expects `bool` elements
-  - `IntArrayConverter`: Expects `int` elements
-  - `FloatArrayConverter`: Expects `float` elements
-  - `TextArrayConverter`: Expects `string` or scalar elements
-  - `UuidArrayConverter`: Expects `string` elements (UUID format)
-  - `JsonArrayConverter`: Expects `array` or `object` elements (JSON-encodable)
-  - All converters support `null` elements (converted to PostgreSQL `NULL`)
-  - Invalid element types throw `ValueConversionException`
+    - `BoolArrayConverter`: Expects `bool` elements
+    - `IntArrayConverter`: Expects `int` elements
+    - `FloatArrayConverter`: Expects `float` elements
+    - `TextArrayConverter`: Expects `string` or scalar elements
+    - `UuidArrayConverter`: Expects `string` elements (UUID format)
+    - `JsonArrayConverter`: Expects `array` or `object` elements (JSON-encodable)
+    - All converters support `null` elements (converted to PostgreSQL `NULL`)
+    - Invalid element types throw `ValueConversionException`
 - **JsonConverter**: Accepts PHP arrays, objects, or already-encoded JSON strings
 - **NumericConverter**: Preserves precision as string to avoid floating-point errors
 

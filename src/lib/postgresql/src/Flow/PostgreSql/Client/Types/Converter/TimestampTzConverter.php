@@ -11,14 +11,18 @@ use Flow\PostgreSql\Client\Types\ValueType;
 
 use function is_string;
 
-final class DateTimeConverter implements ValueConverter
+/**
+ * Converts values to PostgreSQL `timestamptz` (timestamp with time zone).
+ *
+ * The timezone offset is kept in the formatted value; PostgreSQL reads it and
+ * normalizes the instant to UTC on store. For naive `timestamp` columns use
+ * {@see TimestampConverter} instead.
+ */
+final class TimestampTzConverter implements ValueConverter
 {
     public function supportedTypes(): array
     {
-        return [
-            ValueType::TIMESTAMP,
-            ValueType::TIMESTAMPTZ,
-        ];
+        return [ValueType::TIMESTAMPTZ];
     }
 
     public function toDatabase(mixed $value): ?string
@@ -35,6 +39,6 @@ final class DateTimeConverter implements ValueConverter
             return $value;
         }
 
-        throw ValueConversionException::cannotConvert($value, 'datetime');
+        throw ValueConversionException::cannotConvert($value, 'timestamptz');
     }
 }

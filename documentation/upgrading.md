@@ -97,6 +97,30 @@ flow_telemetry:
           team: checkout
 ```
 
+### 4) `flow-php/postgresql` - `DateTimeConverter` split into `TimestampConverter` and `TimestampTzConverter`
+
+| Before                                                     | After                                                                         |
+|------------------------------------------------------------|-------------------------------------------------------------------------------|
+| `Flow\PostgreSql\Client\Types\Converter\DateTimeConverter` | `TimestampConverter` (`TIMESTAMP`) and `TimestampTzConverter` (`TIMESTAMPTZ`) |
+| `typed($value, ValueType::TIMESTAMP)` keeps the offset     | `typed($value, ValueType::TIMESTAMP)` normalizes the value to UTC             |
+| `timestamp` column read as `2024-01-15 10:30:00`           | `timestamp` column read as `2024-01-15 10:30:00+00:00`                        |
+
+### 5) `flow-php/etl-adapter-postgresql` - `DateTimeEntry` maps to `timestamp` instead of `timestamptz`
+
+| Flow type                 | Before        | After       |
+|---------------------------|---------------|-------------|
+| `DateTimeEntry` (binding) | `TIMESTAMPTZ` | `TIMESTAMP` |
+| `DateTimeType` (DDL)      | `timestamptz` | `timestamp` |
+
+To keep the previous behavior, pass overrides to `EntryTypesMap`:
+
+```php
+to_pgsql_table($client, 'users')->withTypesMap(new EntryTypesMap(
+    [DateTimeEntry::class => ValueType::TIMESTAMPTZ],
+    [DateTimeType::class => ColumnType::timestamptz()],
+));
+```
+
 ---
 
 ## Upgrading from 0.37.x to 0.38.x

@@ -44,7 +44,7 @@ use function Flow\PostgreSql\DSL\column_type_jsonb;
 use function Flow\PostgreSql\DSL\column_type_serial;
 use function Flow\PostgreSql\DSL\column_type_text;
 use function Flow\PostgreSql\DSL\column_type_time;
-use function Flow\PostgreSql\DSL\column_type_timestamptz;
+use function Flow\PostgreSql\DSL\column_type_timestamp;
 use function Flow\PostgreSql\DSL\column_type_uuid;
 use function Flow\PostgreSql\DSL\create;
 use function Flow\PostgreSql\DSL\select;
@@ -76,7 +76,7 @@ final class PostgreSqlLoaderAllTypesIntegrationTest extends IntegrationTestCase
                 ->column(column('col_float', column_type_double_precision()))
                 ->column(column('col_boolean', column_type_boolean()))
                 ->column(column('col_date', column_type_date()))
-                ->column(column('col_datetime', column_type_timestamptz()))
+                ->column(column('col_datetime', column_type_timestamp()))
                 ->column(column('col_time', column_type_time()))
                 ->column(column('col_uuid', column_type_uuid()))
                 ->column(column('col_json', column_type_jsonb()))
