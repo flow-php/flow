@@ -106,8 +106,8 @@ final readonly class Connection
                     ->forUpdateSkipLocked(),
                 [
                     $this->queueName,
-                    typed($now, ValueType::TIMESTAMPTZ),
-                    typed($redeliverCutoff, ValueType::TIMESTAMPTZ),
+                    typed($now, ValueType::TIMESTAMP),
+                    typed($redeliverCutoff, ValueType::TIMESTAMP),
                 ],
             );
 
@@ -129,7 +129,7 @@ final readonly class Connection
                     ->set('delivered_at', param(1))
                     ->where(eq(col('id'), param(2))),
                 [
-                    typed($now, ValueType::TIMESTAMPTZ),
+                    typed($now, ValueType::TIMESTAMP),
                     (int) $rowId,
                 ],
             );
@@ -152,7 +152,7 @@ final readonly class Connection
                 )),
             [
                 $this->queueName,
-                typed($now, ValueType::TIMESTAMPTZ),
+                typed($now, ValueType::TIMESTAMP),
             ],
         );
     }
@@ -173,7 +173,7 @@ final readonly class Connection
                 ->set('delivered_at', param(1))
                 ->where(eq(col('id'), param(2))),
             [
-                typed(new DateTimeImmutable('now'), ValueType::TIMESTAMPTZ),
+                typed(new DateTimeImmutable('now'), ValueType::TIMESTAMP),
                 (int) $id,
             ],
         );
@@ -202,8 +202,8 @@ final readonly class Connection
                 $body,
                 json_encode($headers, JSON_THROW_ON_ERROR),
                 $this->queueName,
-                typed($now, ValueType::TIMESTAMPTZ),
-                typed($availableAt, ValueType::TIMESTAMPTZ),
+                typed($now, ValueType::TIMESTAMP),
+                typed($availableAt, ValueType::TIMESTAMP),
             ],
         );
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\PostgreSQLMessenger\Tests\Unit;
 
 use Flow\Bridge\Symfony\PostgreSQLMessenger\MessengerCatalogProvider;
+use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\Schema\IdentityGeneration;
 use PHPUnit\Framework\TestCase;
 
@@ -91,6 +92,17 @@ final class MessengerCatalogProviderTest extends TestCase
         $table = $provider->get()->get('public')->tables[0];
 
         static::assertSame('messenger_messages', $table->name);
+    }
+
+    public function test_timestamp_columns_use_timestamp_without_time_zone(): void
+    {
+        $provider = new MessengerCatalogProvider();
+        $table = $provider->get()->get('public')->tables[0];
+
+        static::assertTrue($table->column('created_at')->type->isEqual(ColumnType::timestamp()));
+        static::assertTrue($table->column('available_at')->type->isEqual(ColumnType::timestamp()));
+        static::assertTrue($table->column('delivered_at')->type->isEqual(ColumnType::timestamp()));
+        static::assertFalse($table->column('created_at')->type->isEqual(ColumnType::timestamptz()));
     }
 
     public function test_table_has_expected_columns(): void

@@ -12,7 +12,7 @@ use Flow\PostgreSql\Schema\IdentityGeneration;
 use function Flow\PostgreSql\DSL\schema;
 use function Flow\PostgreSql\DSL\schema_column;
 use function Flow\PostgreSql\DSL\schema_column_text;
-use function Flow\PostgreSql\DSL\schema_column_timestamp_tz;
+use function Flow\PostgreSql\DSL\schema_column_timestamp;
 use function Flow\PostgreSql\DSL\schema_column_varchar;
 use function Flow\PostgreSql\DSL\schema_index;
 use function Flow\PostgreSql\DSL\schema_primary_key;
@@ -42,9 +42,9 @@ final readonly class MessengerCatalogProvider implements CatalogProvider
                         schema_column_text('body', nullable: false),
                         schema_column_text('headers', nullable: false),
                         schema_column_varchar('queue_name', 190, nullable: false, default: 'default'),
-                        schema_column_timestamp_tz('created_at', nullable: false),
-                        schema_column_timestamp_tz('available_at', nullable: false),
-                        schema_column_timestamp_tz('delivered_at', nullable: true),
+                        schema_column_timestamp('created_at', nullable: false),
+                        schema_column_timestamp('available_at', nullable: false),
+                        schema_column_timestamp('delivered_at', nullable: true),
                     ],
                     primaryKey: schema_primary_key(['id']),
                     indexes: [

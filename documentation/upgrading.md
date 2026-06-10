@@ -121,6 +121,22 @@ to_pgsql_table($client, 'users')->withTypesMap(new EntryTypesMap(
 ));
 ```
 
+### 6) `flow-php/symfony-postgresql-messenger` - `messenger_messages` time columns use `timestamp` instead of `timestamptz`
+
+| Column type for `created_at`, `available_at`, `delivered_at` | Before        | After       |
+|--------------------------------------------------------------|---------------|-------------|
+| `MessengerCatalogProvider` (DDL)                             | `timestamptz` | `timestamp` |
+| `Connection` bindings                                        | `TIMESTAMPTZ` | `TIMESTAMP` |
+
+Existing tables, realign the column type (UTC instants preserved):
+
+```sql
+ALTER TABLE messenger_messages
+    ALTER COLUMN created_at   TYPE timestamp USING created_at   AT TIME ZONE 'UTC',
+    ALTER COLUMN available_at TYPE timestamp USING available_at AT TIME ZONE 'UTC',
+    ALTER COLUMN delivered_at TYPE timestamp USING delivered_at AT TIME ZONE 'UTC';
+```
+
 ---
 
 ## Upgrading from 0.37.x to 0.38.x
