@@ -1,6 +1,7 @@
-## [Unreleased] - 2026-06-08
+## [Unreleased] - 2026-06-10
 
 ### Added
+- [#2439](https://github.com/flow-php/flow/pull/2439) - **flow-php/postgresql - TimestampConverter normalizing DateTimeInterface to UTC** - [@norberttech](https://github.com/norberttech)
 - [#2437](https://github.com/flow-php/flow/pull/2437) - **flow-php/telemetry - attribute filter with compiled matcher tree (rule/all/any/not)** - [@norberttech](https://github.com/norberttech)
 - [#2437](https://github.com/flow-php/flow/pull/2437) - **flow-php/telemetry - attribute filtering processors for spans and metrics** - [@norberttech](https://github.com/norberttech)
 - [#2437](https://github.com/flow-php/flow/pull/2437) - **flow-php/telemetry - log pipeline with enrich/filter/severity middleware and a sink** - [@norberttech](https://github.com/norberttech)
@@ -14,6 +15,8 @@
 - [#2434](https://github.com/flow-php/flow/pull/2434) - **flow-php/symfony-telemetry-bundle - per-channel binding of PSR-3 LoggerInterface and native Logger with $Logger aliases** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2439](https://github.com/flow-php/flow/pull/2439) - **flow-php/postgresql - DateTimeConverter split into TimestampConverter and TimestampTzConverter** - [@norberttech](https://github.com/norberttech)
+- [#2439](https://github.com/flow-php/flow/pull/2439) - **flow-php/etl-adapter-postgresql - DateTimeEntry and DateTimeType default to timestamp instead of timestamptz** - [@norberttech](https://github.com/norberttech)
 - [#2437](https://github.com/flow-php/flow/pull/2437) - **flow-php/symfony-telemetry-bundle - named scope attributes split into scope and signal** - [@norberttech](https://github.com/norberttech)
 - [#2435](https://github.com/flow-php/flow/pull/2435) - **etl-adapter-postgresql - composite index/unique columns ordered by position, schema order as tiebreak** - [@norberttech](https://github.com/norberttech)
 - [#2435](https://github.com/flow-php/flow/pull/2435) - **etl-adapter-postgresql - reverse Table to Flow conversion preserves index column order** - [@norberttech](https://github.com/norberttech)
@@ -23,6 +26,7 @@
 - [460061](https://github.com/flow-php/flow/commit/46006120b9fbebbb5c84b4cf0c0dd9032285cef1) - **fix(flow-php/arrow-ext): macOS arm64 release binary build** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2439](https://github.com/flow-php/flow/pull/2439) - **flow-php/postgresql - timestamp reads tagged as UTC to preserve the instant** - [@norberttech](https://github.com/norberttech)
 - [#2431](https://github.com/flow-php/flow/pull/2431) - **flow-php/postgresql - detect ParamRef nodes inside List expressions so BETWEEN/IN/VALUES placeholders are counted during keyset pagination offset.** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
