@@ -9,42 +9,40 @@ use CmsIg\Seal\Engine;
 use CmsIg\Seal\EngineInterface;
 use CmsIg\Seal\Schema\Schema;
 
-use function Flow\ETL\Adapter\Seal\seal_create_index;
-use function Flow\ETL\Adapter\Seal\seal_drop_index;
+use function array_keys;
 
 final class SealContext
 {
-    private readonly EngineInterface $engine;
+    /**
+     * @var list<array{EngineInterface, string}>
+     */
+    private array $indexes = [];
 
-    public function __construct(
-        Schema $schema,
-        private readonly string $indexName,
-    ) {
-        $this->engine = new Engine(new MemoryAdapter(), $schema);
-
-        if ($this->engine->existIndex($this->indexName)) {
-            seal_drop_index($this->engine, $this->indexName);
+    public function dropIndexes(): void
+    {
+        foreach ($this->indexes as [$engine, $index]) {
+            if ($engine->existIndex($index)) {
+                $engine->dropIndex($index, ['return_slow_promise_result' => true])?->wait();
+            }
         }
 
-        seal_create_index($this->engine, $this->indexName);
+        $this->indexes = [];
     }
 
-    public function dropIndex(): void
+    public function engine(Schema $schema): EngineInterface
     {
-        if ($this->engine->existIndex($this->indexName)) {
-            seal_drop_index($this->engine, $this->indexName);
+        $engine = new Engine(new MemoryAdapter(), $schema);
+
+        foreach (array_keys($schema->indexes) as $index) {
+            if ($engine->existIndex($index)) {
+                $engine->dropIndex($index, ['return_slow_promise_result' => true])?->wait();
+            }
+
+            $engine->createIndex($index, ['return_slow_promise_result' => true])?->wait();
+
+            $this->indexes[] = [$engine, $index];
         }
-    }
 
-    public function engine(): EngineInterface
-    {
-        return $this->engine;
+        return $engine;
     }
-
-    public function indexName(): string
-    {
-        return $this->indexName;
-    }
-
-    public function refresh(): void {}
 }

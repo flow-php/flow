@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Seal\Tests\Unit;
 
 use CmsIg\Seal\Schema\Field;
-use Flow\ETL\Adapter\Seal\SchemaConverter;
 use Flow\ETL\Adapter\Seal\SealMetadata;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Tests\FlowTestCase;
@@ -14,6 +13,8 @@ use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
 
+use function Flow\ETL\Adapter\Seal\seal_schema_to_flow;
+use function Flow\ETL\Adapter\Seal\to_seal_schema;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\datetime_schema;
 use function Flow\ETL\DSL\float_schema;
@@ -31,7 +32,7 @@ final class SchemaConverterTest extends FlowTestCase
 {
     public function test_converting_flow_schema_to_a_seal_index(): void
     {
-        $sealSchema = (new SchemaConverter())->toSealSchema(
+        $sealSchema = to_seal_schema(
             schema(
                 str_schema('id'),
                 str_schema('title'),
@@ -65,7 +66,7 @@ final class SchemaConverterTest extends FlowTestCase
 
     public function test_identifier_can_be_marked_with_metadata(): void
     {
-        $sealSchema = (new SchemaConverter())->toSealSchema(
+        $sealSchema = to_seal_schema(
             schema(str_schema('uuid', metadata: SealMetadata::identifier()), str_schema('name')),
             'index',
         );
@@ -75,9 +76,7 @@ final class SchemaConverterTest extends FlowTestCase
 
     public function test_reverse_converts_a_seal_index_back_to_a_flow_schema(): void
     {
-        $converter = new SchemaConverter();
-
-        $flowSchema = $converter->toFlowSchema($converter->toSealSchema(
+        $flowSchema = seal_schema_to_flow(to_seal_schema(
             schema(
                 str_schema('id'),
                 int_schema('count'),
@@ -99,12 +98,12 @@ final class SchemaConverterTest extends FlowTestCase
     {
         $this->expectException(RuntimeException::class);
 
-        (new SchemaConverter())->toSealSchema(schema(str_schema('name')), 'index');
+        to_seal_schema(schema(str_schema('name')), 'index');
     }
 
     public function test_using_metadata_to_override_default_field_flags(): void
     {
-        $sealSchema = (new SchemaConverter())->toSealSchema(
+        $sealSchema = to_seal_schema(
             schema(
                 str_schema('id'),
                 str_schema('title', metadata: SealMetadata::filterable()->merge(SealMetadata::sortable())),

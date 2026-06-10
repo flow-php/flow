@@ -4,44 +4,65 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Seal\Tests\Integration;
 
-use CmsIg\Seal\Schema\Schema;
 use Flow\ETL\Adapter\Seal\Tests\SealTestCase;
 use Flow\ETL\Tests\Double\FakeStaticOrdersExtractor;
 
-use function Flow\ETL\Adapter\Seal\to_seal;
+use function Flow\ETL\Adapter\Seal\from_seal;
 use function Flow\ETL\Adapter\Seal\to_seal_schema;
-use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\Adapter\Seal\to_seal_upsert;
+use function Flow\ETL\DSL\analyze;
+use function Flow\ETL\DSL\data_frame;
 
 final class SealAllEntryTypesTest extends SealTestCase
 {
-    public function test_round_trip_of_all_flow_entry_types(): void
+    public function test_extracting_pipeline_reads_back_all_flow_entry_types(): void
     {
-        $engine = $this->sealContext()->engine();
+        $engine = $this->sealContext()->engine(to_seal_schema(FakeStaticOrdersExtractor::schema(), 'orders', 'index'));
 
-        to_seal($engine, self::INDEX_NAME)->load((new FakeStaticOrdersExtractor(5))->toRows(), flow_context());
+        data_frame()->read(new FakeStaticOrdersExtractor(100))->write(to_seal_upsert($engine, 'orders'))->run();
 
-        static::assertSame(5, $engine->countDocuments(self::INDEX_NAME));
+        $rows = data_frame()->read(from_seal($engine, 'orders'))->fetch()->toArray();
 
-        $document = $engine->getDocument(self::INDEX_NAME, '0');
+        static::assertCount(100, $rows);
 
-        static::assertSame('user-0@example.com', $document['email']);
+        $order = null;
+
+        foreach ($rows as $row) {
+            if ($row['email'] === 'user-0@example.com') {
+                $order = $row;
+
+                break;
+            }
+        }
+
+        static::assertNotNull($order);
+        static::assertSame('John Doe 0', $order['customer']);
 
         /** @var array<string, mixed> $address */
-        $address = $document['address'];
+        $address = $order['address'];
         static::assertSame('123 Main St, Apt 0', $address['street']);
 
         /** @var list<mixed> $notes */
-        $notes = $document['notes'];
+        $notes = $order['notes'];
         static::assertCount(3, $notes);
 
         /** @var list<array<string, mixed>> $items */
-        $items = $document['items'];
+        $items = $order['items'];
         static::assertSame('SKU_0001', $items[0]['sku']);
         static::assertSame(1, $items[0]['quantity']);
     }
 
-    protected function schema(): Schema
+    public function test_indexing_pipeline_loads_all_flow_entry_types(): void
     {
-        return to_seal_schema(FakeStaticOrdersExtractor::schema(), self::INDEX_NAME, 'index');
+        $engine = $this->sealContext()->engine(to_seal_schema(FakeStaticOrdersExtractor::schema(), 'orders', 'index'));
+
+        $report = data_frame()
+            ->read(new FakeStaticOrdersExtractor(100))
+            ->write(to_seal_upsert($engine, 'orders'))
+            ->run(analyze: analyze());
+
+        static::assertNotNull($report);
+        static::assertSame(100, $report->statistics()->totalRows());
+        static::assertSame(100, $engine->countDocuments('orders'));
     }
 }

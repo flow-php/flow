@@ -19,13 +19,13 @@ To migrate, install the SEAL adapter together with the engine adapter for your b
 composer require flow-php/etl-adapter-seal cmsig/seal-elasticsearch-adapter
 ```
 
-Then build a `CmsIg\Seal\Engine` and pass it to `to_seal()` / `from_seal()` instead of the previous `to_es_bulk_index()` / `from_es()` (or Meilisearch) DSL functions:
+Then build a `CmsIg\Seal\Engine` and pass it to `to_seal_upsert()` / `from_seal()` instead of the previous `to_es_bulk_index()` / `from_es()` (or Meilisearch) DSL functions:
 
 ```php
 use CmsIg\Seal\Engine;
 use CmsIg\Seal\Adapter\Elasticsearch\ElasticsearchAdapter;
 
-use function Flow\ETL\Adapter\Seal\to_seal;
+use function Flow\ETL\Adapter\Seal\to_seal_upsert;
 
 $engine = new Engine(
     new ElasticsearchAdapter($client),
@@ -34,7 +34,7 @@ $engine = new Engine(
 
 data_frame()
     ->read(/* ... */)
-    ->write(to_seal($engine, 'index_name'))
+    ->write(to_seal_upsert($engine, 'index_name'))
     ->run();
 ```
 
