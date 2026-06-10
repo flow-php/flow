@@ -8,14 +8,14 @@ use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Flow\PostgreSql\Client\Exception\ValueConversionException;
-use Flow\PostgreSql\Client\Types\Converter\DateTimeConverter;
+use Flow\PostgreSql\Client\Types\Converter\TimestampTzConverter;
 use Flow\PostgreSql\Client\Types\ValueType;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-final class DateTimeConverterTest extends TestCase
+final class TimestampTzConverterTest extends TestCase
 {
     public static function provide_invalid_values(): Generator
     {
@@ -65,30 +65,29 @@ final class DateTimeConverterTest extends TestCase
     #[DataProvider('provide_invalid_values')]
     public function test_invalid_value_throws_exception(mixed $value): void
     {
-        $converter = new DateTimeConverter();
+        $converter = new TimestampTzConverter();
         $this->expectException(ValueConversionException::class);
         $converter->toDatabase($value);
     }
 
     public function test_null_handling(): void
     {
-        $converter = new DateTimeConverter();
+        $converter = new TimestampTzConverter();
         static::assertNull($converter->toDatabase(null));
     }
 
     public function test_supported_types(): void
     {
-        $converter = new DateTimeConverter();
+        $converter = new TimestampTzConverter();
         $types = $converter->supportedTypes();
 
-        static::assertContains(ValueType::TIMESTAMP, $types);
-        static::assertContains(ValueType::TIMESTAMPTZ, $types);
+        static::assertSame([ValueType::TIMESTAMPTZ], $types);
     }
 
     #[DataProvider('provide_valid_values')]
     public function test_to_database(DateTimeInterface|string $input, string $expected): void
     {
-        $converter = new DateTimeConverter();
+        $converter = new TimestampTzConverter();
         static::assertSame($expected, $converter->toDatabase($input));
     }
 }

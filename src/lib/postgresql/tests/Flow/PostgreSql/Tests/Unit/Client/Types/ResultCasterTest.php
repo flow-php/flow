@@ -45,7 +45,6 @@ final class ResultCasterTest extends TestCase
         yield 'jsonb' => ['jsonb'];
         yield 'uuid' => ['uuid'];
         yield 'date' => ['date'];
-        yield 'timestamp' => ['timestamp'];
         yield 'timestamptz' => ['timestamptz'];
         yield 'time' => ['time'];
         yield 'timetz' => ['timetz'];
@@ -130,5 +129,28 @@ final class ResultCasterTest extends TestCase
     {
         $value = 'test string value';
         static::assertSame($value, $this->caster->cast($value, $type));
+    }
+
+    public function test_timestamp_is_marked_as_utc(): void
+    {
+        static::assertSame('2024-01-15 14:30:45+00:00', $this->caster->cast('2024-01-15 14:30:45', 'timestamp'));
+    }
+
+    public function test_timestamp_with_microseconds_is_marked_as_utc(): void
+    {
+        static::assertSame('2024-01-15 14:30:45.123456+00:00', $this->caster->cast(
+            '2024-01-15 14:30:45.123456',
+            'timestamp',
+        ));
+    }
+
+    public function test_timestamp_negative_infinity_is_not_marked(): void
+    {
+        static::assertSame('-infinity', $this->caster->cast('-infinity', 'timestamp'));
+    }
+
+    public function test_timestamp_positive_infinity_is_not_marked(): void
+    {
+        static::assertSame('infinity', $this->caster->cast('infinity', 'timestamp'));
     }
 }

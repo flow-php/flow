@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Tests\Unit\Client\Types;
 
 use Flow\PostgreSql\Client\Types\Converter\BooleanConverter;
-use Flow\PostgreSql\Client\Types\Converter\DateTimeConverter;
 use Flow\PostgreSql\Client\Types\Converter\IntArrayConverter;
 use Flow\PostgreSql\Client\Types\Converter\IntegerConverter;
 use Flow\PostgreSql\Client\Types\Converter\JsonConverter;
 use Flow\PostgreSql\Client\Types\Converter\StringConverter;
 use Flow\PostgreSql\Client\Types\Converter\TextArrayConverter;
+use Flow\PostgreSql\Client\Types\Converter\TimestampConverter;
+use Flow\PostgreSql\Client\Types\Converter\TimestampTzConverter;
 use Flow\PostgreSql\Client\Types\Converter\UuidArrayConverter;
 use Flow\PostgreSql\Client\Types\Converter\UuidConverter;
 use Flow\PostgreSql\Client\Types\PostgreSqlVersion;
@@ -63,7 +64,8 @@ final class ValueConvertersTest extends TestCase
         static::assertInstanceOf(StringConverter::class, $converters->forValueType(ValueType::TEXT));
         static::assertInstanceOf(IntegerConverter::class, $converters->forValueType(ValueType::INT4));
         static::assertInstanceOf(BooleanConverter::class, $converters->forValueType(ValueType::BOOL));
-        static::assertInstanceOf(DateTimeConverter::class, $converters->forValueType(ValueType::TIMESTAMP));
+        static::assertInstanceOf(TimestampConverter::class, $converters->forValueType(ValueType::TIMESTAMP));
+        static::assertInstanceOf(TimestampTzConverter::class, $converters->forValueType(ValueType::TIMESTAMPTZ));
         static::assertInstanceOf(UuidConverter::class, $converters->forValueType(ValueType::UUID));
         static::assertInstanceOf(JsonConverter::class, $converters->forValueType(ValueType::JSON));
     }

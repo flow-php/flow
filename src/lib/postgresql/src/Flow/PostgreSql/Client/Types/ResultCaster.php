@@ -25,6 +25,7 @@ use const PHP_INT_SIZE;
  * - int8 → int (on 64-bit) or string (on 32-bit to avoid overflow)
  * - float4, float8 → float (including Infinity, -Infinity, NaN)
  * - bytea → string (decoded binary)
+ * - timestamp → string with a +00:00 offset appended (values are stored in UTC)
  *
  * All other types remain as strings for higher layers to interpret.
  */
@@ -38,6 +39,7 @@ final readonly class ResultCaster
             'int8' => PHP_INT_SIZE >= 8 ? (int) $value : $value,
             'float4', 'float8' => $this->castFloat($value),
             'bytea' => $this->castBytea($value),
+            'timestamp' => $this->castTimestamp($value),
             default => $value,
         };
     }
@@ -51,6 +53,20 @@ final readonly class ResultCaster
         }
 
         return $decoded;
+    }
+
+    /**
+     * `timestamp` (without time zone) values are stored in UTC by TimestampConverter.
+     * The database returns them without an offset, so we tag them as UTC to keep the
+     * instant intact once a higher layer parses the string into a DateTimeInterface.
+     */
+    private function castTimestamp(string $value): string
+    {
+        if ($value === 'infinity' || $value === '-infinity') {
+            return $value;
+        }
+
+        return $value . '+00:00';
     }
 
     private function castFloat(string $value): float
