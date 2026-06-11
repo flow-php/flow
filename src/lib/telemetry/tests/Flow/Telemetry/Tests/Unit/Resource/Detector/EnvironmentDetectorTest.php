@@ -29,17 +29,40 @@ final class EnvironmentDetectorTest extends TestCase
         static::assertSame('', $resource->get('key'));
     }
 
-    public function test_detect_handles_escaped_commas_in_values(): void
+    public function test_detect_percent_decodes_commas_and_equals_in_values(): void
     {
-        putenv('OTEL_RESOURCE_ATTRIBUTES=key=value\,with\,commas,other=normal');
+        putenv('OTEL_RESOURCE_ATTRIBUTES=key=value%2Cwith%2Ccommas%3Dand%3Dequals,other=normal');
 
         $detector = new EnvironmentDetector();
         $resource = $detector->detect();
 
         static::assertTrue($resource->has('key'));
         static::assertTrue($resource->has('other'));
-        static::assertSame('value,with,commas', $resource->get('key'));
+        static::assertSame('value,with,commas=and=equals', $resource->get('key'));
         static::assertSame('normal', $resource->get('other'));
+    }
+
+    public function test_detect_percent_decodes_keys(): void
+    {
+        putenv('OTEL_RESOURCE_ATTRIBUTES=weird%2Ckey=value,space%20key=data');
+
+        $detector = new EnvironmentDetector();
+        $resource = $detector->detect();
+
+        static::assertTrue($resource->has('weird,key'));
+        static::assertTrue($resource->has('space key'));
+        static::assertSame('value', $resource->get('weird,key'));
+        static::assertSame('data', $resource->get('space key'));
+    }
+
+    public function test_detect_percent_decodes_whitespace_in_values(): void
+    {
+        putenv('OTEL_RESOURCE_ATTRIBUTES=key=hello%20world');
+
+        $detector = new EnvironmentDetector();
+        $resource = $detector->detect();
+
+        static::assertSame('hello world', $resource->get('key'));
     }
 
     public function test_detect_ignores_empty_keys(): void

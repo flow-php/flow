@@ -140,6 +140,17 @@ final class TelemetryFactoryTest extends TestCase
         $telemetry->shutdown();
     }
 
+    public function test_create_with_resource_attributes(): void
+    {
+        $telemetry = TelemetryFactory::create(ConfigurationMother::withResourceAttributes([
+            'service.version' => '1.0.0',
+            'deployment.environment.name' => 'ci',
+        ]));
+
+        static::assertInstanceOf(Telemetry::class, $telemetry);
+        $telemetry->shutdown();
+    }
+
     public function test_create_with_stream_error_handler(): void
     {
         $config = $this->configWithErrorHandler(new StreamErrorHandlerConfig(

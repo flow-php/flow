@@ -44,7 +44,8 @@ final class TelemetryFactory
                 'service.name' => $config->serviceName,
                 'telemetry.sdk.name' => 'flow-php-phpunit-telemetry',
                 'telemetry.sdk.language' => 'php',
-            ]));
+            ]))
+            ->merge(resource($config->resourceAttributes));
 
         $clock = new SystemClock();
         $contextStorage = memory_context_storage();

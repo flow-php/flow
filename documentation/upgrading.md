@@ -121,7 +121,8 @@ to_pgsql_table($client, 'users')->withTypesMap(new EntryTypesMap(
 ));
 ```
 
-### 6) `flow-php/symfony-postgresql-messenger` - `messenger_messages` time columns use `timestamp` instead of `timestamptz`
+### 6) `flow-php/symfony-postgresql-messenger` - `messenger_messages` time columns use `timestamp` instead of
+`timestamptz`
 
 | Column type for `created_at`, `available_at`, `delivered_at` | Before        | After       |
 |--------------------------------------------------------------|---------------|-------------|
@@ -132,10 +133,20 @@ Existing tables, realign the column type (UTC instants preserved):
 
 ```sql
 ALTER TABLE messenger_messages
-    ALTER COLUMN created_at   TYPE timestamp USING created_at   AT TIME ZONE 'UTC',
-    ALTER COLUMN available_at TYPE timestamp USING available_at AT TIME ZONE 'UTC',
-    ALTER COLUMN delivered_at TYPE timestamp USING delivered_at AT TIME ZONE 'UTC';
+    ALTER COLUMN created_at TYPE TIMESTAMP USING created_at AT TIME ZONE 'UTC',
+    ALTER COLUMN available_at TYPE TIMESTAMP USING available_at AT TIME ZONE 'UTC',
+    ALTER COLUMN delivered_at TYPE TIMESTAMP USING delivered_at AT TIME ZONE 'UTC';
 ```
+
+### 7) `flow-php/telemetry` - `OTEL_RESOURCE_ATTRIBUTES` keys and values are percent-decoded, not backslash-escaped
+
+| Escaping a `,` or `=` in `OTEL_RESOURCE_ATTRIBUTES` | Before                    | After                       |
+|-----------------------------------------------------|---------------------------|-----------------------------|
+| literal comma in a value                            | `key=value\,with\,commas` | `key=value%2Cwith%2Ccommas` |
+| literal `=` in a value                              | not supported             | `key=a%3Db`                 |
+
+Re-encode any `OTEL_RESOURCE_ATTRIBUTES` that relied on backslash escaping; both keys and values are now
+percent-decoded.
 
 ---
 

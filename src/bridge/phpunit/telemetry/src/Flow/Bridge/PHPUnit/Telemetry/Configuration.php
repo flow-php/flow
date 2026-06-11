@@ -128,6 +128,9 @@ final readonly class Configuration
         'error_handler_severity',
     ];
 
+    /**
+     * @param array<string, string> $resourceAttributes
+     */
     public function __construct(
         public string $serviceName,
         public CurlTransportConfig|GrpcTransportConfig|StreamTransportConfig $transport,
@@ -138,6 +141,7 @@ final readonly class Configuration
         public int $batchSize,
         public ErrorLogHandlerConfig|NullErrorHandlerConfig|StreamErrorHandlerConfig|SyslogErrorHandlerConfig|UdpSyslogErrorHandlerConfig $errorHandler,
         public bool $memoryRealUsage = false,
+        public array $resourceAttributes = [],
     ) {}
 
     public static function fromParameters(ParameterCollection $parameters): self
@@ -168,6 +172,7 @@ final readonly class Configuration
             batchSize: self::resolveInt($parameters, 'batch_size', self::DEFAULT_BATCH_SIZE),
             errorHandler: self::resolveErrorHandler($parameters),
             memoryRealUsage: self::resolveBool($parameters, 'memory_real_usage', false),
+            resourceAttributes: self::parseResourceAttributes(self::resolve($parameters, 'resource_attributes') ?? ''),
         );
     }
 
@@ -278,6 +283,44 @@ final readonly class Configuration
         }
 
         return $headers;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function parseResourceAttributes(string $raw): array
+    {
+        if ($raw === '') {
+            return [];
+        }
+
+        $attributes = [];
+
+        foreach (explode(',', $raw) as $entry) {
+            $entry = trim($entry);
+
+            if ($entry === '') {
+                continue;
+            }
+
+            if (!str_contains($entry, '=')) {
+                throw new InvalidArgumentException(sprintf(
+                    'Invalid resource attribute entry "%s", expected format "name=value".',
+                    $entry,
+                ));
+            }
+
+            [$name, $value] = explode('=', $entry, 2);
+            $name = urldecode(trim($name));
+
+            if ($name === '') {
+                throw new InvalidArgumentException('Resource attribute name cannot be empty.');
+            }
+
+            $attributes[$name] = urldecode($value);
+        }
+
+        return $attributes;
     }
 
     private static function readEnv(string $fullName): ?string

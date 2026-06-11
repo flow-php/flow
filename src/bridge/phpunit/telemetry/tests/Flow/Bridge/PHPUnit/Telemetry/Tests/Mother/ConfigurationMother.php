@@ -154,4 +154,22 @@ final class ConfigurationMother
             memoryRealUsage: true,
         );
     }
+
+    /**
+     * @param array<string, string> $resourceAttributes
+     */
+    public static function withResourceAttributes(array $resourceAttributes): Configuration
+    {
+        return new Configuration(
+            serviceName: 'phpunit',
+            transport: self::defaultTransport(),
+            emitTraces: true,
+            emitMetrics: true,
+            emitTestSpans: true,
+            emitTestCaseSpans: true,
+            batchSize: Configuration::DEFAULT_BATCH_SIZE,
+            errorHandler: self::defaultErrorHandler(),
+            resourceAttributes: $resourceAttributes,
+        );
+    }
 }
