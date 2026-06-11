@@ -50,7 +50,7 @@ runs:
         flags: tests
 
     - name: Upload code coverage (pull request)
-      if: ${{ github.event_name == 'pull_request' && !cancelled() && inputs.dependencies == 'locked' }}
+      if: ${{ github.event_name == 'pull_request' && !cancelled() && inputs.dependencies == 'locked' && inputs.php-version == '8.3' }}
       uses: codecov/codecov-action@v6
       with:
         token: ${{ inputs.token }}

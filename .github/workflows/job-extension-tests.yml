@@ -34,7 +34,7 @@ jobs:
         with:
           php-version: "${{ matrix.php-version }}"
           dependencies: "${{ matrix.dependencies }}"
-          coverage: "pcov"
+          coverage: ${{ matrix.php-version == '8.3' && 'pcov' || 'none' }}
           extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, brotli, lz4, zstd, snappy-https://github.com/kjdev/php-ext-snappy@0.2.1'
           php-env: '{"SNAPPY_CONFIGURE_PREFIX_OPTS": "CXXFLAGS=-std=c++11"}'
           cache-key-suffix: "-extensions"
