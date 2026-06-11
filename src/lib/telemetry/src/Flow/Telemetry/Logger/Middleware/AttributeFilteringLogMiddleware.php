@@ -20,6 +20,10 @@ use Flow\Telemetry\Logger\LogMiddleware;
  */
 final readonly class AttributeFilteringLogMiddleware implements LogMiddleware
 {
+    public const string SEVERITY_KEY = 'log.severity';
+
+    public const string SEVERITY_NAME_KEY = 'log.severity_name';
+
     /**
      * @var Closure(Attributes ...): bool
      */
@@ -52,7 +56,11 @@ final readonly class AttributeFilteringLogMiddleware implements LogMiddleware
     {
         return AttributeSource::select(
             $this->sources,
-            $entry->record->attributes,
+            $entry
+                ->record
+                ->attributes
+                ->with(self::SEVERITY_KEY, $entry->record->severity->value)
+                ->with(self::SEVERITY_NAME_KEY, $entry->record->severity->name()),
             $entry->resource->attributes,
             $entry->scope->attributes,
         );

@@ -540,11 +540,11 @@ and metrics this is a processor wrapping an inner processor; for logs it is a mi
 An `AttributeFilter` evaluates a single root **matcher**. The leaf matcher, `attribute_rule()`, targets
 an attribute *path* and applies a `MatchMode`:
 
-| Family      | Modes                                                                              |
-|-------------|------------------------------------------------------------------------------------|
-| Equality    | `EQUAL`, `NOT_EQUAL` (strict comparison against the expected value)                 |
-| Ordering    | `GREATER_THAN`, `GREATER_THAN_EQUAL`, `LESS_THAN`, `LESS_THAN_EQUAL`                |
-| Pattern     | `REGEXP`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS` (operate on the value's string form) |
+| Family   | Modes                                                                                 |
+|----------|---------------------------------------------------------------------------------------|
+| Equality | `EQUAL`, `NOT_EQUAL` (strict comparison against the expected value)                   |
+| Ordering | `GREATER_THAN`, `GREATER_THAN_EQUAL`, `LESS_THAN`, `LESS_THAN_EQUAL`                  |
+| Pattern  | `REGEXP`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS` (operate on the value's string form) |
 
 A path is one segment (a top-level attribute key) or several segments descending into nested array
 values (e.g. `['user', 'id']`). The pattern modes accept a per-rule `caseSensitive` flag (default `true`).
@@ -672,19 +672,20 @@ attributes set at the call site win over them. Implement `LogMiddleware` to add 
 A `Sampler` decides, at span **start**, whether a span is recorded and exported. This is the OpenTelemetry-idiomatic
 way to drop spans — a dropped span never records, so it never reaches a processor or exporter.
 
-| Sampler | DSL | Behavior |
-|---|---|---|
-| `AlwaysOnSampler` | `always_on_sampler()` | Record + sample every span (the default) |
-| `AlwaysOffSampler` | `always_off_sampler()` | Drop every span |
-| `TraceIdRatioBasedSampler` | `trace_id_ratio_based_sampler($ratio)` | Sample a deterministic fraction of traces |
-| `ParentBasedSampler` | `parent_based_sampler($root)` | Honor the parent's decision; use the root sampler for parentless spans |
+| Sampler                    | DSL                                              | Behavior                                                                                                        |
+|----------------------------|--------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| `AlwaysOnSampler`          | `always_on_sampler()`                            | Record + sample every span (the default)                                                                        |
+| `AlwaysOffSampler`         | `always_off_sampler()`                           | Drop every span                                                                                                 |
+| `TraceIdRatioBasedSampler` | `trace_id_ratio_based_sampler($ratio)`           | Sample a deterministic fraction of traces                                                                       |
+| `ParentBasedSampler`       | `parent_based_sampler($root)`                    | Honor the parent's decision; use the root sampler for parentless spans                                          |
 | `AttributeMatchingSampler` | `attribute_matching_sampler($filter, $delegate)` | Drop spans whose **start-time** attributes match an `AttributeFilter`, deferring the rest to a delegate sampler |
 
 `AttributeMatchingSampler` reuses the same matcher stack as the [filtering processors](#filtering-by-attributes) — the
 `AttributeFilter` (matcher tree, compiled drop-closure, `sources`, `exclude` polarity). A match drops the span (the
 default) or keeps only matching spans (`exclude: false`); everything else is decided by the `$delegate` sampler, so it
 composes with ratio/parent-based sampling. It only sees attributes available at span start — end-state attributes
-(status codes, durations) are not visible, so end-attribute filtering remains a [span processor](#filtering-by-attributes)
+(status codes, durations) are not visible, so end-attribute filtering remains
+a [span processor](#filtering-by-attributes)
 concern.
 
 ```php

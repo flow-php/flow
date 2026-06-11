@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration;
 
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Mother\LogEntryMother;
 use Flow\Telemetry\Attributes;
 use Flow\Telemetry\Filter\AttributeFilter;
 use Flow\Telemetry\Filter\AttributeSource;
 use Flow\Telemetry\Logger\Middleware\AttributeFilteringLogMiddleware;
 use Flow\Telemetry\Logger\Processor\BatchingLogProcessor;
 use Flow\Telemetry\Logger\Processor\PipelineLogProcessor;
+use Flow\Telemetry\Logger\Severity;
 use Flow\Telemetry\Meter\Processor\AttributeFilteringMetricProcessor;
 use Flow\Telemetry\Tracer\Processor\AttributeFilteringSpanProcessor;
 
@@ -316,6 +318,66 @@ final class AttributeFilteringProcessorTest extends KernelTestCase
             'severity' => 1,
             'path' => '/api',
         ])));
+    }
+
+    public function test_per_channel_severity_thresholds_drive_the_wired_middleware(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => self::OTLP,
+                    'logger_provider' => [
+                        'processor' => [
+                            'type' => 'pipeline',
+                            'middleware' => [
+                                [
+                                    'type' => 'attribute_filtering',
+                                    // Keep ERROR+ from payments, but DEBUG+ from importer.
+                                    'exclude' => false,
+                                    'matcher' => [
+                                        'any' => [
+                                            [
+                                                'all' => [
+                                                    ['path' => 'log.channel', 'mode' => 'equal', 'value' => 'payments'],
+                                                    [
+                                                        'path' => AttributeFilteringLogMiddleware::SEVERITY_KEY,
+                                                        'mode' => 'greater_than_equal',
+                                                        'value' => Severity::ERROR->value,
+                                                    ],
+                                                ],
+                                            ],
+                                            [
+                                                'all' => [
+                                                    ['path' => 'log.channel', 'mode' => 'equal', 'value' => 'importer'],
+                                                    [
+                                                        'path' => AttributeFilteringLogMiddleware::SEVERITY_KEY,
+                                                        'mode' => 'greater_than_equal',
+                                                        'value' => Severity::DEBUG->value,
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                            'sink' => ['type' => 'void'],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $middleware = $this->getContainer()->get('flow.telemetry.logger_provider.processor.middleware.0');
+        static::assertInstanceOf(AttributeFilteringLogMiddleware::class, $middleware);
+
+        $paymentsError = LogEntryMother::onChannel(Severity::ERROR, 'payments');
+        $importerDebug = LogEntryMother::onChannel(Severity::DEBUG, 'importer');
+
+        static::assertSame($paymentsError, $middleware->process($paymentsError));
+        static::assertSame($importerDebug, $middleware->process($importerDebug));
+        static::assertNull($middleware->process(LogEntryMother::onChannel(Severity::INFO, 'payments')));
+        static::assertNull($middleware->process(LogEntryMother::onChannel(Severity::TRACE, 'importer')));
     }
 
     public function test_matcher_compiles_into_the_kernel_cache_dir(): void

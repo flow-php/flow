@@ -627,6 +627,47 @@ flow_telemetry:
         exporter: otlp
 ```
 
+**Filtering logs by severity (logs only).** Severity is not an attribute, but on `logger_provider` the
+`attribute_filtering` middleware exposes the record's severity to the matcher as two reserved **signal** keys, so
+per-channel (or per-attribute) severity thresholds are expressible alongside any other attribute:
+
+- `log.severity` — the OpenTelemetry severity **number** (`trace`=1, `debug`=5, `info`=9, `warn`=13, `error`=17,
+  `fatal`=21), for ordered comparisons (`greater_than_equal`, …).
+- `log.severity_name` — the level **name** (`TRACE`…`FATAL`), for `equal`/`regexp`.
+
+These keys exist only for the filter decision — they are never exported (severity already travels in the native OTLP
+`severityNumber`/`severityText` fields) and they shadow any user attribute of the same name. Because they live on the
+`signal` source, an `all` node that combines severity with another attribute needs that attribute on `signal` too — the
+channel's `log.channel` attribute is on `signal` under the default `channel_attribute_target: both`.
+
+Keep `error`+ from the `payments` channel but `debug`+ from the `importer` channel (`exclude: false` keeps only
+matching records — exactly the case a single global [`severity_filtering`](#pipeline-logger_provider-only) threshold
+cannot express):
+
+```yaml
+flow_telemetry:
+  logger_provider:
+    processor:
+      type: pipeline
+      middleware:
+        - type: attribute_filtering
+          exclude: false
+          matcher:
+            any:
+              - all:
+                  - { path: log.channel, mode: equal, value: payments }
+                  - { path: log.severity, mode: greater_than_equal, value: 17 }   # error+
+              - all:
+                  - { path: log.channel, mode: equal, value: importer }
+                  - { path: log.severity, mode: greater_than_equal, value: 5 }    # debug+
+      sink:
+        type: batching
+        exporter: otlp
+```
+
+For a single global threshold prefer the simpler `severity_filtering` middleware; reach for `log.severity` only when
+the threshold varies by channel or another attribute.
+
 The matcher is compiled to a cached PHP matcher in `cache_dir` (the project cache directory by default) so per-signal
 evaluation stays cheap; it falls back to interpreted matching when the directory is not writable. Because the compiled
 file is `require`d, `cache_dir` must be **trusted** (not writable by untrusted users) — the project cache directory is
