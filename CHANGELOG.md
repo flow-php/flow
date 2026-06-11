@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-06-11
 
 ### Added
+- [#2442](https://github.com/flow-php/flow/pull/2442) - **flow-php/telemetry - log severity exposed to the attribute filter as log.severity and log.severity_name** - [@norberttech](https://github.com/norberttech)
+- [#2442](https://github.com/flow-php/flow/pull/2442) - **flow-php/symfony-telemetry-bundle - per-channel severity thresholds via attribute_filtering log middleware** - [@norberttech](https://github.com/norberttech)
 - [#2441](https://github.com/flow-php/flow/pull/2441) - **flow-php/phpunit-telemetry-bridge - resource_attributes parameter for custom OTLP resource attributes** - [@norberttech](https://github.com/norberttech)
 - [#2439](https://github.com/flow-php/flow/pull/2439) - **flow-php/postgresql - TimestampConverter normalizing DateTimeInterface to UTC** - [@norberttech](https://github.com/norberttech)
 - [#2437](https://github.com/flow-php/flow/pull/2437) - **flow-php/telemetry - attribute filter with compiled matcher tree (rule/all/any/not)** - [@norberttech](https://github.com/norberttech)
