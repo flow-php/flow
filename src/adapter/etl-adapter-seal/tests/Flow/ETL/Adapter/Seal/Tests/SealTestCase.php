@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Seal\Tests;
 
+use CmsIg\Seal\Adapter\Memory\MemoryAdapter;
 use Flow\ETL\Adapter\Seal\Tests\Context\SealContext;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -20,7 +21,7 @@ abstract class SealTestCase extends FlowTestCase
     protected function sealContext(): SealContext
     {
         if ($this->sealContext === null) {
-            $this->sealContext = new SealContext();
+            $this->sealContext = new SealContext(new MemoryAdapter());
         }
 
         return $this->sealContext;

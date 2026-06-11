@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\Seal\Tests\Integration;
 
 use CmsIg\Seal\Search\Condition\Condition;
 use CmsIg\Seal\Search\SearchBuilder;
-use Flow\ETL\Adapter\Seal\Tests\SealTestCase;
+use Flow\ETL\Adapter\Seal\Tests\IntegrationTestCase;
 use Flow\ETL\Extractor\Signal;
 
 use function Flow\ETL\Adapter\Seal\from_seal;
@@ -16,7 +16,7 @@ use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
-final class SealExtractorTest extends SealTestCase
+final class SealExtractorTest extends IntegrationTestCase
 {
     public function test_extracting_all_documents(): void
     {
@@ -34,6 +34,7 @@ final class SealExtractorTest extends SealTestCase
             ],
             [],
         );
+        $this->sealContext()->refresh();
 
         static::assertExtractedRowsCount(2, from_seal($engine, 'users'));
     }
@@ -66,6 +67,7 @@ final class SealExtractorTest extends SealTestCase
             ],
             [],
         );
+        $this->sealContext()->refresh();
 
         $extractor = from_seal($engine, 'users')->withSearchBuilder(static function (SearchBuilder $builder): void {
             $builder->addFilter(Condition::equal('age', 21));
@@ -89,6 +91,7 @@ final class SealExtractorTest extends SealTestCase
         }
 
         $engine->bulk('users', $documents, []);
+        $this->sealContext()->refresh();
 
         static::assertExtractedBatchesCount(3, from_seal($engine, 'users')->withPageSize(2));
         static::assertExtractedRowsCount(5, from_seal($engine, 'users')->withPageSize(2));
@@ -109,6 +112,7 @@ final class SealExtractorTest extends SealTestCase
         }
 
         $engine->bulk('users', $documents, []);
+        $this->sealContext()->refresh();
 
         $generator = from_seal($engine, 'users')->withPageSize(2)->extract(flow_context());
 

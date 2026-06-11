@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Seal\Tests\Integration;
 
-use Flow\ETL\Adapter\Seal\Tests\SealTestCase;
+use Flow\ETL\Adapter\Seal\Tests\IntegrationTestCase;
 
 use function Flow\ETL\Adapter\Seal\to_seal_delete;
 use function Flow\ETL\Adapter\Seal\to_seal_schema;
@@ -18,7 +18,7 @@ use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_entry;
 
-final class SealLoaderTest extends SealTestCase
+final class SealLoaderTest extends IntegrationTestCase
 {
     public function test_deleting_documents_by_identifier(): void
     {
@@ -35,8 +35,10 @@ final class SealLoaderTest extends SealTestCase
             ),
             flow_context(),
         );
+        $this->sealContext()->refresh();
 
         to_seal_delete($engine, 'users')->load(rows(row(string_entry('id', '1'))), flow_context());
+        $this->sealContext()->refresh();
 
         static::assertSame(1, $engine->countDocuments('users'));
         static::assertSame('Bob', $engine->getDocument('users', '2')['name']);
@@ -54,10 +56,12 @@ final class SealLoaderTest extends SealTestCase
             rows(row(string_entry('sku', 'SKU_0001'), string_entry('name', 'Keyboard'))),
             flow_context(),
         );
+        $this->sealContext()->refresh();
 
         to_seal_delete($engine, 'products')
             ->withIdentifierEntry('sku')
             ->load(rows(row(string_entry('sku', 'SKU_0001'))), flow_context());
+        $this->sealContext()->refresh();
 
         static::assertSame(0, $engine->countDocuments('products'));
     }
@@ -81,6 +85,7 @@ final class SealLoaderTest extends SealTestCase
         }
 
         to_seal_upsert($engine, 'users')->withBulkSize(3)->load(rows(...$documents), flow_context());
+        $this->sealContext()->refresh();
 
         static::assertSame(10, $engine->countDocuments('users'));
     }
@@ -100,6 +105,7 @@ final class SealLoaderTest extends SealTestCase
             ),
             flow_context(),
         );
+        $this->sealContext()->refresh();
 
         static::assertSame(2, $engine->countDocuments('users'));
         static::assertSame('Alice', $engine->getDocument('users', '1')['name']);
@@ -122,6 +128,7 @@ final class SealLoaderTest extends SealTestCase
             rows(row(string_entry('id', '1'), string_entry('name', 'Alice Updated'), integer_entry('age', 31))),
             flow_context(),
         );
+        $this->sealContext()->refresh();
 
         static::assertSame(1, $engine->countDocuments('users'));
         static::assertSame('Alice Updated', $engine->getDocument('users', '1')['name']);

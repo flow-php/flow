@@ -52,8 +52,10 @@
         "webmozart/glob": "^3.0 || ^4.0"
     },
     "require-dev": {
+        "cmsig/seal-elasticsearch-adapter": "^0.12",
         "cmsig/seal-memory-adapter": "^0.12",
         "composer/semver": "^3.4",
+        "elasticsearch/elasticsearch": "^8.5.3",
         "fakerphp/faker": "^1.23",
         "fig/log-test": "^1.1",
         "grpc/grpc": "^1.74",

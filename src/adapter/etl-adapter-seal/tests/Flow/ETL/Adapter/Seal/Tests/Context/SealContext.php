@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Seal\Tests\Context;
 
-use CmsIg\Seal\Adapter\Memory\MemoryAdapter;
+use Closure;
+use CmsIg\Seal\Adapter\AdapterInterface;
 use CmsIg\Seal\Engine;
 use CmsIg\Seal\EngineInterface;
 use CmsIg\Seal\Schema\Schema;
@@ -17,6 +18,14 @@ final class SealContext
      * @var list<array{EngineInterface, string}>
      */
     private array $indexes = [];
+
+    /**
+     * @param null|Closure(): void $refresh
+     */
+    public function __construct(
+        private readonly AdapterInterface $adapter,
+        private readonly ?Closure $refresh = null,
+    ) {}
 
     public function dropIndexes(): void
     {
@@ -31,7 +40,7 @@ final class SealContext
 
     public function engine(Schema $schema): EngineInterface
     {
-        $engine = new Engine(new MemoryAdapter(), $schema);
+        $engine = new Engine($this->adapter, $schema);
 
         foreach (array_keys($schema->indexes) as $index) {
             if ($engine->existIndex($index)) {
@@ -44,5 +53,12 @@ final class SealContext
         }
 
         return $engine;
+    }
+
+    public function refresh(): void
+    {
+        if ($this->refresh !== null) {
+            ($this->refresh)();
+        }
     }
 }
