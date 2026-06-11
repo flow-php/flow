@@ -923,6 +923,10 @@ The `EnvironmentDetector` reads standard OpenTelemetry environment variables:
 - `OTEL_SERVICE_NAME` - Sets the `service.name` attribute
 - `OTEL_RESOURCE_ATTRIBUTES` - Sets additional attributes in `key=value,key2=value2` format
 
+Per the OpenTelemetry Resource SDK specification, `,` and `=` inside keys and values MUST be
+percent-encoded (other characters MAY be); both keys and values are percent-decoded. For example,
+`note=a%2Cb` yields the attribute `note` with value `a,b`.
+
 ```bash
 export OTEL_SERVICE_NAME=my-service
 export OTEL_RESOURCE_ATTRIBUTES=service.version=1.0.0,deployment.environment.name=production

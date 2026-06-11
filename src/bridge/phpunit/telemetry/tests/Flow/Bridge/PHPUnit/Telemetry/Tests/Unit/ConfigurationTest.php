@@ -253,6 +253,7 @@ final class ConfigurationTest extends TestCase
         static::assertTrue($config->emitTestSpans);
         static::assertTrue($config->emitTestCaseSpans);
         static::assertFalse($config->memoryRealUsage);
+        static::assertSame([], $config->resourceAttributes);
 
         static::assertInstanceOf(CurlTransportConfig::class, $config->transport);
         static::assertSame('http://localhost:4318', $config->transport->endpoint);
@@ -708,6 +709,89 @@ final class ConfigurationTest extends TestCase
             'error_handler' => 'noop',
             'error_handler_message_prefix' => '[unused]',
         ]));
+    }
+
+    public function test_resource_attributes_duplicate_name_last_wins(): void
+    {
+        $config = Configuration::fromParameters(ParameterCollection::fromArray([
+            'resource_attributes' => 'team=first,team=second',
+        ]));
+
+        static::assertSame(['team' => 'second'], $config->resourceAttributes);
+    }
+
+    public function test_resource_attributes_empty_name_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Resource attribute name cannot be empty');
+
+        Configuration::fromParameters(ParameterCollection::fromArray([
+            'resource_attributes' => '=value',
+        ]));
+    }
+
+    public function test_resource_attributes_empty_string_is_empty_array(): void
+    {
+        $config = Configuration::fromParameters(ParameterCollection::fromArray([
+            'resource_attributes' => '',
+        ]));
+
+        static::assertSame([], $config->resourceAttributes);
+    }
+
+    public function test_resource_attributes_env_var_wins_over_parameter(): void
+    {
+        putenv('FLOW_PHPUNIT_OTEL_RESOURCE_ATTRIBUTES=service.version=2.0.0');
+
+        try {
+            $config = Configuration::fromParameters(ParameterCollection::fromArray([
+                'resource_attributes' => 'service.version=1.0.0',
+            ]));
+
+            static::assertSame(['service.version' => '2.0.0'], $config->resourceAttributes);
+        } finally {
+            putenv('FLOW_PHPUNIT_OTEL_RESOURCE_ATTRIBUTES');
+        }
+    }
+
+    public function test_resource_attributes_missing_equals_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid resource attribute entry "team", expected format "name=value"');
+
+        Configuration::fromParameters(ParameterCollection::fromArray([
+            'resource_attributes' => 'team',
+        ]));
+    }
+
+    public function test_resource_attributes_multiple_pairs_parsed(): void
+    {
+        $config = Configuration::fromParameters(ParameterCollection::fromArray([
+            'resource_attributes' => 'service.version=1.0.0,deployment.environment.name=ci',
+        ]));
+
+        static::assertSame(
+            ['service.version' => '1.0.0', 'deployment.environment.name' => 'ci'],
+            $config->resourceAttributes,
+        );
+    }
+
+    public function test_resource_attributes_single_pair_parsed(): void
+    {
+        $config = Configuration::fromParameters(ParameterCollection::fromArray([
+            'resource_attributes' => 'service.version=1.0.0',
+        ]));
+
+        static::assertSame(['service.version' => '1.0.0'], $config->resourceAttributes);
+    }
+
+    public function test_resource_attributes_url_encoded_value_decoded(): void
+    {
+        $config = Configuration::fromParameters(ParameterCollection::fromArray([
+            'resource_attributes' => 'note=a%2Cb%20c',
+        ]));
+
+        static::assertSame(['note' => 'a,b c'], $config->resourceAttributes);
     }
 
     public function test_server_superglobal_wins_over_getenv(): void

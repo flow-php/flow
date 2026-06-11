@@ -8,13 +8,12 @@ use Flow\Telemetry\Resource;
 use Flow\Telemetry\Resource\Attribute\ServiceAttribute;
 use Flow\Telemetry\Resource\ResourceDetector;
 
-use function count;
+use function explode;
 use function getenv;
-use function stripslashes;
-use function strlen;
 use function strpos;
 use function substr;
 use function trim;
+use function urldecode;
 
 /**
  * Detects resource attributes from environment variables.
@@ -28,9 +27,11 @@ use function trim;
  * OTEL_RESOURCE_ATTRIBUTES=key1=value1,key2=value2
  * ```
  *
- * Special characters in values can be escaped with backslash:
+ * Per the OpenTelemetry Resource SDK specification, the `,` and `=` characters in keys and
+ * values MUST be percent-encoded (other characters MAY be percent-encoded); both keys and
+ * values are percent-decoded:
  * ```
- * OTEL_RESOURCE_ATTRIBUTES=key=value\,with\,commas
+ * OTEL_RESOURCE_ATTRIBUTES=key=value%2Cwith%2Ccommas
  * ```
  *
  * OTEL_SERVICE_NAME takes precedence over service.name in OTEL_RESOURCE_ATTRIBUTES.
@@ -83,9 +84,8 @@ final readonly class EnvironmentDetector implements ResourceDetector
         }
 
         $attributes = [];
-        $pairs = $this->splitByComma($rawAttributes);
 
-        foreach ($pairs as $pair) {
+        foreach (explode(',', $rawAttributes) as $pair) {
             $pair = trim($pair);
 
             if ($pair === '') {
@@ -98,58 +98,15 @@ final readonly class EnvironmentDetector implements ResourceDetector
                 continue;
             }
 
-            $key = trim(substr($pair, 0, $equalsPos));
-            $value = trim(substr($pair, $equalsPos + 1));
+            $key = urldecode(trim(substr($pair, 0, $equalsPos)));
 
             if ($key === '') {
                 continue;
             }
 
-            $value = stripslashes($value);
-            $attributes[$key] = $value;
+            $attributes[$key] = urldecode(trim(substr($pair, $equalsPos + 1)));
         }
 
         return $attributes;
-    }
-
-    /**
-     * Split a string by commas, respecting escaped commas.
-     *
-     * @return array<string>
-     */
-    private function splitByComma(string $input): array
-    {
-        $result = [];
-        $current = '';
-        $length = strlen($input);
-        $i = 0;
-
-        while ($i < $length) {
-            $char = $input[$i];
-
-            if ($char === '\\' && ($i + 1) < $length) {
-                $current .= $char . $input[$i + 1];
-                $i += 2;
-
-                continue;
-            }
-
-            if ($char === ',') {
-                $result[] = $current;
-                $current = '';
-                $i++;
-
-                continue;
-            }
-
-            $current .= $char;
-            $i++;
-        }
-
-        if ($current !== '' || count($result) > 0) {
-            $result[] = $current;
-        }
-
-        return $result;
     }
 }
