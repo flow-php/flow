@@ -1,6 +1,7 @@
-## [Unreleased] - 2026-06-10
+## [Unreleased] - 2026-06-11
 
 ### Added
+- [#2441](https://github.com/flow-php/flow/pull/2441) - **flow-php/phpunit-telemetry-bridge - resource_attributes parameter for custom OTLP resource attributes** - [@norberttech](https://github.com/norberttech)
 - [#2439](https://github.com/flow-php/flow/pull/2439) - **flow-php/postgresql - TimestampConverter normalizing DateTimeInterface to UTC** - [@norberttech](https://github.com/norberttech)
 - [#2437](https://github.com/flow-php/flow/pull/2437) - **flow-php/telemetry - attribute filter with compiled matcher tree (rule/all/any/not)** - [@norberttech](https://github.com/norberttech)
 - [#2437](https://github.com/flow-php/flow/pull/2437) - **flow-php/telemetry - attribute filtering processors for spans and metrics** - [@norberttech](https://github.com/norberttech)
@@ -15,6 +16,7 @@
 - [#2434](https://github.com/flow-php/flow/pull/2434) - **flow-php/symfony-telemetry-bundle - per-channel binding of PSR-3 LoggerInterface and native Logger with $Logger aliases** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2441](https://github.com/flow-php/flow/pull/2441) - **flow-php/telemetry - OTEL_RESOURCE_ATTRIBUTES now percent-decodes keys and values per OTel spec** - [@norberttech](https://github.com/norberttech)
 - [#2440](https://github.com/flow-php/flow/pull/2440) - **flow-php/symfony-postgresql-messenger-bridge - store messenger_messages time columns as timestamp instead of timestamptz** - [@norberttech](https://github.com/norberttech)
 - [#2439](https://github.com/flow-php/flow/pull/2439) - **flow-php/postgresql - DateTimeConverter split into TimestampConverter and TimestampTzConverter** - [@norberttech](https://github.com/norberttech)
 - [#2439](https://github.com/flow-php/flow/pull/2439) - **flow-php/etl-adapter-postgresql - DateTimeEntry and DateTimeType default to timestamp instead of timestamptz** - [@norberttech](https://github.com/norberttech)
