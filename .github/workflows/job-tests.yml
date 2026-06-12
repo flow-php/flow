@@ -48,8 +48,7 @@ jobs:
       matrix:
         dependencies: ${{ fromJSON(inputs.dependencies) }}
         php-version:
-          - "8.3"
-          - "8.4"
+          # DEBUG BRANCH: only 8.5 (the crashing job). Revert before merge.
           - "8.5"
         operating-system:
           - "ubuntu-latest"
@@ -93,7 +92,8 @@ jobs:
         with:
           php-version: "${{ matrix.php-version }}"
           dependencies: "${{ matrix.dependencies }}"
-          coverage: ${{ matrix.php-version == '8.3' && 'pcov' || 'none' }}
+          coverage: 'pcov' # DEBUG BRANCH: force pcov on 8.5 to match the crashing config. Revert before merge.
+          # DEBUG: grpc restored; testing GRPC_EXPERIMENTS=-work_serializer_dispatch workaround (grpc#38216) for the shutdown SIGSEGV. Revert before merge.
           extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl, pgsql, grpc, protobuf'
           ini-values: 'memory_limit=-1, post_max_size=32M, upload_max_filesize=32M'
           apt-packages: "build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev"
@@ -123,9 +123,34 @@ jobs:
         env:
           AZURITE_ACCOUNTS: flowphpaccount01:flowphpkey01
 
-      - name: "Test"
-        timeout-minutes: 10
-        run: "just test --log-junit ./var/phpunit/logs/junit.xml ${{ matrix.php-version == '8.3' && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}"
+      # DEBUG BRANCH: run phpunit under gdb so the PHP 8.5 shutdown SIGSEGV prints a
+      # backtrace + loaded shared libraries (identifies the crashing extension even
+      # without debug symbols). `handle all nostop ... pass` then re-enabling stop for
+      # SIGSEGV/SIGABRT avoids gdb halting on glibc's threading signals (SIG32/33).
+      # Whole step is temporary — revert this file before merging.
+      - name: "Test (DEBUG: gdb backtrace on segfault)"
+        timeout-minutes: 25
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq gdb
+          ulimit -c unlimited
+          mkdir -p ./var/phpunit/coverage/clover ./var/phpunit/logs
+          gdb -batch -nx \
+            -ex "set pagination off" \
+            -ex "set confirm off" \
+            -ex "handle all nostop noprint pass" \
+            -ex "handle SIGSEGV stop print pass" \
+            -ex "handle SIGABRT stop print pass" \
+            -ex "run" \
+            -ex "printf \"\n===== CRASHING THREAD BACKTRACE =====\n\"" \
+            -ex "bt full" \
+            -ex "printf \"\n===== ALL THREAD BACKTRACES =====\n\"" \
+            -ex "thread apply all bt" \
+            -ex "printf \"\n===== LOADED SHARED LIBRARIES =====\n\"" \
+            -ex "info sharedlibrary" \
+            --args "$(which php)" -d pcov.enabled=1 -d memory_limit=-1 \
+              tools/phpunit/vendor/bin/phpunit \
+              --coverage-clover=./var/phpunit/coverage/clover/coverage.xml \
+              --log-junit ./var/phpunit/logs/junit.xml
         env:
           PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres?serverVersion=11&charset=utf8
           MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/mysql
@@ -142,6 +167,8 @@ jobs:
           OTEL_RECEIVER_GRPC_ENDPOINT: "localhost:4317"
           OTEL_COLLECTOR_METRICS_ENDPOINT: "http://localhost:8888/metrics"
           FLOW_PARQUET_TESTS_DEBUG: "0"
+          # DEBUG: grpc#38216 maintainer-suggested workaround for the event_engine/dlclose shutdown SIGSEGV. Revert before merge.
+          GRPC_EXPERIMENTS: "-work_serializer_dispatch"
 
       - name: Upload to Codecov
         uses: ./.github/actions/codecov-report
