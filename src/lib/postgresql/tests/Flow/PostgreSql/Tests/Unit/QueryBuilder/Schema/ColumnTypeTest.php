@@ -271,6 +271,28 @@ final class ColumnTypeTest extends TestCase
         static::assertTrue(column_type_varchar(255)->isEqual(column_type_varchar(255)));
     }
 
+    public function test_is_same_base_type_array_vs_scalar(): void
+    {
+        static::assertFalse(ColumnType::array(column_type_text())->isSameBaseType(column_type_text()));
+    }
+
+    public function test_is_same_base_type_different_base_types(): void
+    {
+        static::assertFalse(ColumnType::numeric(10, 3)->isSameBaseType(ColumnType::doublePrecision()));
+        static::assertFalse(column_type_integer()->isSameBaseType(column_type_bigint()));
+    }
+
+    public function test_is_same_base_type_ignores_typmods(): void
+    {
+        static::assertTrue(ColumnType::numeric(10, 3)->isSameBaseType(ColumnType::numeric()));
+        static::assertTrue(column_type_varchar(255)->isSameBaseType(column_type_varchar(100)));
+    }
+
+    public function test_is_same_base_type_serial_normalizes_to_integer(): void
+    {
+        static::assertTrue(ColumnType::serial()->isSameBaseType(column_type_integer()));
+    }
+
     public function test_json(): void
     {
         $type = ColumnType::json();

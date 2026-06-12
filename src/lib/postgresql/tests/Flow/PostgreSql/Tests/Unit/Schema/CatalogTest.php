@@ -8,6 +8,7 @@ use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Schema\ReferentialAction;
 use Flow\PostgreSql\Schema\Catalog;
 use Flow\PostgreSql\Schema\Column;
+use Flow\PostgreSql\Schema\ColumnDefault;
 use Flow\PostgreSql\Schema\Constraint\CheckConstraint;
 use Flow\PostgreSql\Schema\Constraint\ExcludeConstraint;
 use Flow\PostgreSql\Schema\Constraint\ForeignKey;
@@ -608,7 +609,12 @@ final class CatalogTest extends TestCase
                 new Column('id', ColumnType::integer(), false),
                 new Column('user_id', ColumnType::integer(), false),
                 new Column('amount', ColumnType::numeric(10, 2), false),
-                new Column('status', ColumnType::text(), false, default: "'pending'"),
+                new Column(
+                    'status',
+                    ColumnType::text(),
+                    false,
+                    default: ColumnDefault::fromExpression("'pending'", ColumnType::text()),
+                ),
             ],
             primaryKey: new PrimaryKey(['id'], 'orders_pkey'),
             indexes: [
@@ -735,8 +741,18 @@ final class CatalogTest extends TestCase
     public function test_round_trip_preserves_column_default_value(): void
     {
         $table = new Table('public', 'defaults', [
-            new Column('status', ColumnType::text(), false, default: "'active'"),
-            new Column('count', ColumnType::integer(), false, default: '0'),
+            new Column(
+                'status',
+                ColumnType::text(),
+                false,
+                default: ColumnDefault::fromExpression("'active'", ColumnType::text()),
+            ),
+            new Column(
+                'count',
+                ColumnType::integer(),
+                false,
+                default: ColumnDefault::fromExpression('0', ColumnType::integer()),
+            ),
             new Column('no_default', ColumnType::text(), true),
         ]);
 
@@ -744,17 +760,23 @@ final class CatalogTest extends TestCase
         $restored = Catalog::fromArray($catalog->normalize());
 
         $restoredTable = $restored->get('public')->table('defaults');
-        static::assertSame("'active'", $restoredTable->column('status')->default);
-        static::assertSame('0', $restoredTable->column('count')->default);
+        static::assertSame("'active'", $restoredTable->column('status')->default?->literal);
+        static::assertSame('0', $restoredTable->column('count')->default?->literal);
         static::assertNull($restoredTable->column('no_default')->default);
     }
 
     public function test_round_trip_preserves_domain_with_check_constraints(): void
     {
-        $domain = new Domain('positive_int', ColumnType::integer(), nullable: false, default: '0', checkConstraints: [
-            new CheckConstraint('VALUE > 0', 'chk_positive'),
-            new CheckConstraint('VALUE < 1000000', 'chk_max'),
-        ]);
+        $domain = new Domain(
+            'positive_int',
+            ColumnType::integer(),
+            nullable: false,
+            default: ColumnDefault::fromExpression('0', ColumnType::integer()),
+            checkConstraints: [
+                new CheckConstraint('VALUE > 0', 'chk_positive'),
+                new CheckConstraint('VALUE < 1000000', 'chk_max'),
+            ],
+        );
 
         $catalog = new Catalog([new Schema('public', domains: [$domain])]);
         $restored = Catalog::fromArray($catalog->normalize());
@@ -762,7 +784,7 @@ final class CatalogTest extends TestCase
         $restoredDomain = $restored->get('public')->domains[0];
         static::assertSame('positive_int', $restoredDomain->name);
         static::assertFalse($restoredDomain->nullable);
-        static::assertSame('0', $restoredDomain->default);
+        static::assertSame('0', $restoredDomain->default?->literal);
         static::assertCount(2, $restoredDomain->checkConstraints);
         static::assertSame('value > 0', $restoredDomain->checkConstraints[0]->expression);
         static::assertSame('chk_positive', $restoredDomain->checkConstraints[0]->name);

@@ -74,7 +74,7 @@ final class MessengerCatalogProviderTest extends TestCase
         $provider = new MessengerCatalogProvider();
         $queueNameColumn = $provider->get()->get('public')->tables[0]->column('queue_name');
 
-        static::assertSame("'default'", $queueNameColumn->default);
+        static::assertSame("'default'", $queueNameColumn->default?->literal);
     }
 
     public function test_table_has_custom_name_and_schema(): void

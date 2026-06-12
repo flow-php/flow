@@ -379,7 +379,9 @@ final readonly class Table
             }
 
             if ($col->default !== null) {
-                $colDef = $colDef->defaultRaw(ExpressionFactory::fromAst((new ExpressionParser())->parse($col->default)));
+                $colDef = $colDef->defaultRaw(ExpressionFactory::fromAst(
+                    (new ExpressionParser())->parse($col->default->applicableSql()),
+                ));
             }
 
             if ($col->isIdentity) {

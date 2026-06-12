@@ -12,14 +12,16 @@ use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Constraint\CheckConstraint;
 
+use function array_key_exists;
 use function array_map;
 use function Flow\PostgreSql\DSL\create;
 
 /**
  * @phpstan-import-type ColumnTypeShape from ColumnType
+ * @phpstan-import-type ColumnDefaultShape from ColumnDefault
  * @phpstan-import-type CheckConstraintShape from CheckConstraint
  *
- * @phpstan-type DomainShape = array{name: string, base_type: ColumnTypeShape, nullable: bool, default: ?string, check_constraints: list<CheckConstraintShape>}
+ * @phpstan-type DomainShape = array{name: string, base_type: ColumnTypeShape, nullable: bool, default: ?ColumnDefaultShape, check_constraints: list<CheckConstraintShape>}
  */
 final readonly class Domain
 {
@@ -30,7 +32,7 @@ final readonly class Domain
         public string $name,
         public ColumnType $baseType,
         public bool $nullable = true,
-        public ?string $default = null,
+        public ?ColumnDefault $default = null,
         public array $checkConstraints = [],
     ) {}
 
@@ -44,11 +46,13 @@ final readonly class Domain
         bool|float|int|string|Expression|null $default = null,
         array $checkConstraints = [],
     ): self {
+        $formattedDefault = (new ColumnDefaultFormatter())->format($default);
+
         return new self(
             $name,
             $baseType,
             $nullable,
-            (new ColumnDefaultFormatter())->format($default),
+            $formattedDefault === null ? null : ColumnDefault::fromExpression($formattedDefault, $baseType),
             $checkConstraints,
         );
     }
@@ -62,7 +66,9 @@ final readonly class Domain
             name: $data['name'],
             baseType: ColumnType::fromArray($data['base_type']),
             nullable: $data['nullable'],
-            default: $data['default'] ?? null,
+            default: array_key_exists('default', $data) && $data['default'] !== null
+                ? ColumnDefault::fromArray($data['default'])
+                : null,
             checkConstraints: array_map(static fn(array $cc): CheckConstraint => CheckConstraint::fromArray(
                 $cc,
             ), $data['check_constraints']),
@@ -78,7 +84,7 @@ final readonly class Domain
             'name' => $this->name,
             'base_type' => $this->baseType->normalize(),
             'nullable' => $this->nullable,
-            'default' => $this->default,
+            'default' => $this->default?->normalize(),
             'check_constraints' => array_map(
                 static fn(CheckConstraint $cc): array => $cc->normalize(),
                 $this->checkConstraints,
@@ -95,7 +101,9 @@ final readonly class Domain
         }
 
         if ($this->default !== null) {
-            $builder = $builder->default(ExpressionFactory::fromAst((new ExpressionParser())->parse($this->default)));
+            $builder = $builder->default(ExpressionFactory::fromAst(
+                (new ExpressionParser())->parse($this->default->applicableSql()),
+            ));
         }
 
         foreach ($this->checkConstraints as $cc) {

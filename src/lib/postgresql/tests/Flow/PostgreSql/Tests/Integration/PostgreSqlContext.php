@@ -9,9 +9,16 @@ use RuntimeException;
 
 use function fclose;
 use function file_get_contents;
+use function Flow\PostgreSql\DSL\and_;
+use function Flow\PostgreSql\DSL\col;
 use function Flow\PostgreSql\DSL\drop;
+use function Flow\PostgreSql\DSL\eq;
+use function Flow\PostgreSql\DSL\func;
+use function Flow\PostgreSql\DSL\literal;
 use function Flow\PostgreSql\DSL\pgsql_client;
 use function Flow\PostgreSql\DSL\pgsql_connection_dsn;
+use function Flow\PostgreSql\DSL\select;
+use function Flow\PostgreSql\DSL\table;
 use function getcwd;
 use function getenv;
 use function is_file;
@@ -92,6 +99,30 @@ final class PostgreSqlContext
         $this->secondaryClients = [];
 
         $this->client->close();
+    }
+
+    /**
+     * Reads the raw default expression stored in pg_attrdef for a column,
+     * including the implicit type cast PostgreSQL keeps (e.g. '0'::numeric).
+     * The column must have a stored default.
+     */
+    public function columnDefaultExpression(string $schema, string $table, string $column): string
+    {
+        return $this->client->fetchScalarString(
+            select(func('pg_catalog.pg_get_expr', [col('adbin', 'd'), col('adrelid', 'd')]))
+                ->from(table('pg_attrdef', 'pg_catalog')->as('d'))
+                ->join(
+                    table('pg_attribute', 'pg_catalog')->as('a'),
+                    and_(eq(col('attrelid', 'a'), col('adrelid', 'd')), eq(col('attnum', 'a'), col('adnum', 'd'))),
+                )
+                ->join(table('pg_class', 'pg_catalog')->as('c'), eq(col('oid', 'c'), col('adrelid', 'd')))
+                ->join(table('pg_namespace', 'pg_catalog')->as('n'), eq(col('oid', 'n'), col('relnamespace', 'c')))
+                ->where(and_(
+                    eq(col('relname', 'c'), literal($table)),
+                    eq(col('nspname', 'n'), literal($schema)),
+                    eq(col('attname', 'a'), literal($column)),
+                )),
+        );
     }
 
     public function dropDomainIfExists(string $domain): void

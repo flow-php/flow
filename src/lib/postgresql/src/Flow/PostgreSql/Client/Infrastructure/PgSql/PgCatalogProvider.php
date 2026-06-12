@@ -9,7 +9,6 @@ use Flow\PostgreSql\Parser\CheckDefinitionParser;
 use Flow\PostgreSql\Parser\ColumnTypeParser;
 use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\Parser\TriggerDefinitionParser;
-use Flow\PostgreSql\Protobuf\AST\Integer;
 use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
 use Flow\PostgreSql\QueryBuilder\Expression\Literal;
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
@@ -17,6 +16,7 @@ use Flow\PostgreSql\QueryBuilder\Schema\ReferentialAction;
 use Flow\PostgreSql\Schema\Catalog;
 use Flow\PostgreSql\Schema\CatalogProvider;
 use Flow\PostgreSql\Schema\Column;
+use Flow\PostgreSql\Schema\ColumnDefault;
 use Flow\PostgreSql\Schema\Constraint\CheckConstraint;
 use Flow\PostgreSql\Schema\Constraint\ExcludeConstraint;
 use Flow\PostgreSql\Schema\Constraint\ForeignKey;
@@ -74,7 +74,6 @@ use function Flow\PostgreSql\DSL\type_mapper;
 use function Flow\PostgreSql\DSL\when;
 use function Flow\Types\DSL\type_array;
 use function Flow\Types\DSL\type_boolean;
-use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_integer;
 use function Flow\Types\DSL\type_null;
 use function Flow\Types\DSL\type_string;
@@ -82,7 +81,6 @@ use function Flow\Types\DSL\type_structure;
 use function Flow\Types\DSL\type_union;
 use function preg_match;
 use function sprintf;
-use function str_replace;
 use function strtolower;
 use function trim;
 
@@ -129,57 +127,6 @@ final readonly class PgCatalogProvider implements CatalogProvider
     private function mapReferentialAction(string $code): ReferentialAction
     {
         return ReferentialAction::tryFrom($code) ?? ReferentialAction::NO_ACTION;
-    }
-
-    /**
-     * Strip implicit type casts from default values that PostgreSQL adds for storage.
-     *
-     * PostgreSQL stores `'pending'` as `'pending'::character varying` — the cast is implicit
-     * and redundant since the column type is already known. This method parses the expression
-     * and removes the outer TypeCast when it wraps a simple constant.
-     */
-    private function normalizeDefault(?string $default): ?string
-    {
-        if ($default === null) {
-            return null;
-        }
-
-        $node = $this->expressionParser->parse($default);
-        $typeCast = $node->getTypeCast();
-
-        if ($typeCast === null) {
-            return $default;
-        }
-
-        $inner = $typeCast->getArg();
-
-        if ($inner === null) {
-            return $default;
-        }
-
-        $aConst = $inner->getAConst();
-
-        if ($aConst === null) {
-            return $default;
-        }
-
-        $sval = $aConst->getSval();
-
-        if ($sval !== null) {
-            return "'" . str_replace("'", "''", $sval->getSval()) . "'";
-        }
-
-        if ($aConst->getIval() !== null) {
-            return (string) type_instance_of(Integer::class)->assert($aConst->getIval())->getIval();
-        }
-
-        $fval = $aConst->getFval();
-
-        if ($fval !== null) {
-            return $fval->getFval();
-        }
-
-        return $default;
     }
 
     /**
@@ -318,12 +265,15 @@ final readonly class PgCatalogProvider implements CatalogProvider
             $isGenerated = $generated !== '';
 
             $defaultValue = type_union(type_string(), type_null())->assert($row['default_value'] ?? null);
+            $columnType = $this->columnTypeParser->parse(type_string()->assert($row['type_name']));
 
             $columns[] = new Column(
                 type_string()->assert($row['name']),
-                $this->columnTypeParser->parse(type_string()->assert($row['type_name'])),
+                $columnType,
                 type_boolean()->assert($row['nullable']),
-                $isGenerated || $isIdentity ? null : $this->normalizeDefault($defaultValue),
+                $isGenerated || $isIdentity || $defaultValue === null
+                    ? null
+                    : ColumnDefault::fromExpression($defaultValue, $columnType),
                 $isIdentity,
                 $isIdentity ? IdentityGeneration::from($identity) : null,
                 $isGenerated,
@@ -411,12 +361,13 @@ final readonly class PgCatalogProvider implements CatalogProvider
             $row = type_array()->assert($row);
             $name = type_string()->assert($row['name']);
             $defaultValue = type_union(type_string(), type_null())->assert($row['default_value'] ?? null);
+            $baseType = $this->columnTypeParser->parse(type_string()->assert($row['base_type']));
 
             $domains[] = new Domain(
                 $name,
-                $this->columnTypeParser->parse(type_string()->assert($row['base_type'])),
+                $baseType,
                 type_boolean()->assert($row['nullable']),
-                $this->normalizeDefault($defaultValue),
+                $defaultValue === null ? null : ColumnDefault::fromExpression($defaultValue, $baseType),
                 $this->readDomainCheckConstraints($name, $schemaName),
             );
         }

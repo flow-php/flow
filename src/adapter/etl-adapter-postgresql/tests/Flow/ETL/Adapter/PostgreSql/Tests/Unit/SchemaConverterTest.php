@@ -67,7 +67,7 @@ final class SchemaConverterTest extends TestCase
             'flags',
         );
 
-        static::assertSame('true', $table->column('active')->default);
+        static::assertSame('true', $table->column('active')->default?->literal);
     }
 
     public function test_empty_schema_throws(): void

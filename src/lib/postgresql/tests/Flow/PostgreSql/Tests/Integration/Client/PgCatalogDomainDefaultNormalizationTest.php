@@ -52,6 +52,6 @@ final class PgCatalogDomainDefaultNormalizationTest extends PostgreSqlTestCase
 
         static::assertCount(1, $schema->domains);
         static::assertSame('status_type', $schema->domains[0]->name);
-        static::assertSame("'pending'", $schema->domains[0]->default);
+        static::assertSame("'pending'", $schema->domains[0]->default?->literal);
     }
 }

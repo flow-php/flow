@@ -6,6 +6,7 @@ namespace Flow\PostgreSql\Tests\Unit\Schema\Diff;
 
 use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 use Flow\PostgreSql\Schema\Column;
+use Flow\PostgreSql\Schema\ColumnDefault;
 use Flow\PostgreSql\Schema\Diff\ColumnDiff;
 use Flow\PostgreSql\Schema\IdentityGeneration;
 use PHPUnit\Framework\TestCase;
@@ -138,8 +139,18 @@ final class ColumnDiffTest extends TestCase
     {
         $diff = new ColumnDiff(
             'public.test_table',
-            new Column('col', ColumnType::text(), true, 'old_default'),
-            new Column('col', ColumnType::text(), true, 'new_default'),
+            new Column(
+                'col',
+                ColumnType::text(),
+                true,
+                ColumnDefault::fromExpression("'old_default'", ColumnType::text()),
+            ),
+            new Column(
+                'col',
+                ColumnType::text(),
+                true,
+                ColumnDefault::fromExpression("'new_default'", ColumnType::text()),
+            ),
         );
 
         static::assertTrue($diff->hasDefaultChanged());
@@ -218,7 +229,7 @@ final class ColumnDiffTest extends TestCase
     {
         $diff = new ColumnDiff(
             'public.users',
-            new Column('col', ColumnType::text(), true, '42'),
+            new Column('col', ColumnType::text(), true, ColumnDefault::fromExpression("'42'", ColumnType::text())),
             new Column('col', ColumnType::text(), true, null),
         );
 
@@ -260,12 +271,120 @@ final class ColumnDiffTest extends TestCase
         );
     }
 
+    public function test_type_change_reapplies_default_with_same_literal(): void
+    {
+        $diff = new ColumnDiff(
+            'public.users',
+            new Column(
+                'amount',
+                ColumnType::doublePrecision(),
+                true,
+                ColumnDefault::fromExpression("'0'", ColumnType::doublePrecision()),
+            ),
+            new Column(
+                'amount',
+                ColumnType::numeric(10, 3),
+                true,
+                ColumnDefault::fromExpression("'0'", ColumnType::numeric(10, 3)),
+            ),
+        );
+
+        $sqls = $diff->generate();
+
+        static::assertCount(2, $sqls);
+        static::assertSame('ALTER TABLE public.users ALTER COLUMN amount TYPE numeric(10, 3)', $sqls[0]->toSql());
+        static::assertSame("ALTER TABLE public.users ALTER COLUMN amount SET DEFAULT '0'", $sqls[1]->toSql());
+    }
+
+    public function test_type_change_with_changed_default_emits_single_set_default(): void
+    {
+        $diff = new ColumnDiff(
+            'public.users',
+            new Column(
+                'amount',
+                ColumnType::doublePrecision(),
+                true,
+                ColumnDefault::fromExpression("'0'", ColumnType::doublePrecision()),
+            ),
+            new Column(
+                'amount',
+                ColumnType::numeric(10, 3),
+                true,
+                ColumnDefault::fromExpression("'1'", ColumnType::numeric(10, 3)),
+            ),
+        );
+
+        $sqls = $diff->generate();
+
+        static::assertCount(2, $sqls);
+        static::assertSame('ALTER TABLE public.users ALTER COLUMN amount TYPE numeric(10, 3)', $sqls[0]->toSql());
+        static::assertSame("ALTER TABLE public.users ALTER COLUMN amount SET DEFAULT '1'", $sqls[1]->toSql());
+    }
+
+    public function test_type_change_with_no_default_emits_no_set_default(): void
+    {
+        $diff = new ColumnDiff(
+            'public.users',
+            new Column('amount', ColumnType::doublePrecision(), true, null),
+            new Column('amount', ColumnType::numeric(10, 3), true, null),
+        );
+
+        $sqls = $diff->generate();
+
+        static::assertCount(1, $sqls);
+        static::assertSame('ALTER TABLE public.users ALTER COLUMN amount TYPE numeric(10, 3)', $sqls[0]->toSql());
+    }
+
+    public function test_type_change_to_null_default_drops_default(): void
+    {
+        $diff = new ColumnDiff(
+            'public.users',
+            new Column(
+                'amount',
+                ColumnType::doublePrecision(),
+                true,
+                ColumnDefault::fromExpression("'0'", ColumnType::doublePrecision()),
+            ),
+            new Column('amount', ColumnType::numeric(10, 3), true, null),
+        );
+
+        $sqls = $diff->generate();
+
+        static::assertCount(2, $sqls);
+        static::assertSame('ALTER TABLE public.users ALTER COLUMN amount TYPE numeric(10, 3)', $sqls[0]->toSql());
+        static::assertSame('ALTER TABLE public.users ALTER COLUMN amount DROP DEFAULT', $sqls[1]->toSql());
+    }
+
+    public function test_type_change_with_generation_transition_keeps_drop_and_readd(): void
+    {
+        $diff = new ColumnDiff(
+            'public.users',
+            new Column('total', ColumnType::doublePrecision(), true),
+            new Column(
+                'total',
+                ColumnType::numeric(10, 3),
+                true,
+                isGenerated: true,
+                generationExpression: 'price * qty',
+            ),
+        );
+
+        $sqls = $diff->generate();
+
+        static::assertCount(2, $sqls);
+        static::assertSame('ALTER TABLE public.users DROP total', $sqls[0]->toSql());
+        static::assertSame(
+            'ALTER TABLE public.users ADD COLUMN total numeric(10, 3) GENERATED ALWAYS AS (price * qty) STORED',
+            $sqls[1]->toSql(),
+        );
+    }
+
     public function test_handles_multiple_changes_type_nullable_default(): void
     {
         $diff = new ColumnDiff(
             'public.users',
             new Column('col', ColumnType::text(), true, null),
-            new Column('col', ColumnType::integer(), false, '0'),
+            new Column('col', ColumnType::integer(), false, ColumnDefault::fromExpression('0', ColumnType::integer())),
         );
 
         $sqls = $diff->generate();
@@ -319,7 +438,7 @@ final class ColumnDiffTest extends TestCase
                 'id',
                 ColumnType::integer(),
                 false,
-                default: '0',
+                default: ColumnDefault::fromExpression('0', ColumnType::integer()),
                 isIdentity: true,
                 identityGeneration: IdentityGeneration::BY_DEFAULT,
             ),
@@ -339,8 +458,18 @@ final class ColumnDiffTest extends TestCase
     {
         $diff = new ColumnDiff(
             'public.test_table',
-            new Column('col', ColumnType::text(), true, 'default_val'),
-            new Column('col', ColumnType::text(), true, 'default_val'),
+            new Column(
+                'col',
+                ColumnType::text(),
+                true,
+                ColumnDefault::fromExpression("'default_val'", ColumnType::text()),
+            ),
+            new Column(
+                'col',
+                ColumnType::text(),
+                true,
+                ColumnDefault::fromExpression("'default_val'", ColumnType::text()),
+            ),
         );
 
         static::assertFalse($diff->hasNameChanged());
@@ -473,7 +602,7 @@ final class ColumnDiffTest extends TestCase
         $diff = new ColumnDiff(
             'public.users',
             new Column('col', ColumnType::text(), true, null),
-            new Column('col', ColumnType::text(), true, '42'),
+            new Column('col', ColumnType::text(), true, ColumnDefault::fromExpression('42', ColumnType::text())),
         );
 
         $sqls = $diff->generate();

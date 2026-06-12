@@ -34,7 +34,7 @@ final class DomainTest extends TestCase
         );
 
         static::assertFalse($domain->nullable);
-        static::assertSame('0', $domain->default);
+        static::assertSame('0', $domain->default?->literal);
         static::assertCount(1, $domain->checkConstraints);
         static::assertSame('value > 0', $domain->checkConstraints[0]->expression);
     }

@@ -266,6 +266,22 @@ final readonly class ColumnType
     }
 
     /**
+     * Same base type ignoring type modifiers (precision/scale).
+     *
+     * A column default's stored cast (e.g. '0'::numeric) carries the base type but no typmod, while
+     * the column itself is typed numeric(10,3). Comparing those for stale-cast drift must ignore the
+     * typmod and look only at the base type identity.
+     */
+    public function isSameBaseType(self $other): bool
+    {
+        return (
+            self::normalizedName($this->name) === self::normalizedName($other->name)
+            && $this->normalizedSchema() === $other->normalizedSchema()
+            && $this->isArray === $other->isArray
+        );
+    }
+
+    /**
      * @return ColumnTypeShape
      */
     public function normalize(): array

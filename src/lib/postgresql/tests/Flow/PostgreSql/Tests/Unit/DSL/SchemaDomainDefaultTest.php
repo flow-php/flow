@@ -18,14 +18,14 @@ final class SchemaDomainDefaultTest extends TestCase
     {
         $domain = schema_domain('ts', column_type_timestamptz(), default: func('now'));
 
-        static::assertSame('now()', $domain->default);
+        static::assertSame('now()', $domain->default?->literal);
     }
 
     public function test_int_default_is_stored_as_literal(): void
     {
         $domain = schema_domain('positive_int', column_type_integer(), default: 0);
 
-        static::assertSame('0', $domain->default);
+        static::assertSame('0', $domain->default?->literal);
     }
 
     public function test_null_default_is_stored_as_null(): void
@@ -37,7 +37,7 @@ final class SchemaDomainDefaultTest extends TestCase
     {
         $domain = schema_domain('email', column_type_text(), default: 'unknown');
 
-        static::assertSame("'unknown'", $domain->default);
+        static::assertSame("'unknown'", $domain->default?->literal);
     }
 
     public function test_round_trip_through_to_sql(): void
