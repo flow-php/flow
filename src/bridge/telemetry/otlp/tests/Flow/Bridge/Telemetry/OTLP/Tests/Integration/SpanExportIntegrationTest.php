@@ -15,7 +15,9 @@ use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanLink;
 use Flow\Telemetry\Tracer\SpanStatus;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
+#[Group('grpc')]
 final class SpanExportIntegrationTest extends IntegrationTestCase
 {
     #[DataProvider('transportProvider')]
