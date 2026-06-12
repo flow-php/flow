@@ -103,7 +103,7 @@ jobs:
           dependencies: locked
 
       - name: Run Parquet Integration Tests with Arrow
-        run: just test --testsuite=lib-parquet-integration
+        run: just test --testsuite=lib-parquet-integration ${{ (matrix.php == '8.3' && matrix.os == 'ubuntu-latest') && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}
 
       - name: Upload to Codecov
         if: ${{ !cancelled() && matrix.php == '8.3' && matrix.os == 'ubuntu-latest' }}

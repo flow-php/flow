@@ -129,7 +129,7 @@ jobs:
         timeout-minutes: 15
         run: "just test --exclude-group grpc --log-junit ./var/phpunit/logs/junit.xml ${{ matrix.php-version == '8.3' && '--coverage-clover=./var/phpunit/coverage/clover/coverage.xml' || '' }}"
         env:
-          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres?serverVersion=11&charset=utf8
+          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres?serverVersion=18&charset=utf8
           MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/mysql
           SQLITE_DATABASE_URL: "sqlite:///:memory:"
           AZURITE_HOST: "localhost"
@@ -152,9 +152,9 @@ jobs:
       - name: "Test (grpc)"
         timeout-minutes: 10
         continue-on-error: ${{ matrix.php-version == '8.5' }}
-        run: "just test --group grpc --log-junit ./var/phpunit/logs/grpc-junit.xml"
+        run: "just test --group grpc --log-junit ./var/phpunit/logs/grpc-junit.xml ${{ matrix.php-version == '8.3' && '--coverage-clover=./var/phpunit/coverage/clover/grpc-coverage.xml' || '' }}"
         env:
-          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres?serverVersion=11&charset=utf8
+          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres?serverVersion=18&charset=utf8
           MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/mysql
           SQLITE_DATABASE_URL: "sqlite:///:memory:"
           AZURITE_HOST: "localhost"
