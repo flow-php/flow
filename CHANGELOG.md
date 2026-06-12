@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-06-11
+## [Unreleased] - 2026-06-12
 
 ### Added
 - [#2442](https://github.com/flow-php/flow/pull/2442) - **flow-php/telemetry - log severity exposed to the attribute filter as log.severity and log.severity_name** - [@norberttech](https://github.com/norberttech)
@@ -31,6 +31,7 @@
 - [460061](https://github.com/flow-php/flow/commit/46006120b9fbebbb5c84b4cf0c0dd9032285cef1) - **fix(flow-php/arrow-ext): macOS arm64 release binary build** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2444](https://github.com/flow-php/flow/pull/2444) - **flow-php/telemetry-otlp-bridge - isolate grpc tests so the PHP 8.5 shutdown SIGSEGV (grpc#38216) no longer fails CI** - [@norberttech](https://github.com/norberttech)
 - [#2439](https://github.com/flow-php/flow/pull/2439) - **flow-php/postgresql - timestamp reads tagged as UTC to preserve the instant** - [@norberttech](https://github.com/norberttech)
 - [#2431](https://github.com/flow-php/flow/pull/2431) - **flow-php/postgresql - detect ParamRef nodes inside List expressions so BETWEEN/IN/VALUES placeholders are counted during keyset pagination offset.** - [@norberttech](https://github.com/norberttech)
 
