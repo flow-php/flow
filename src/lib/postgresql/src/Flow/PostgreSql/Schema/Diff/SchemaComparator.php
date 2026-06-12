@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PostgreSql\Schema\Diff;
 
 use Flow\PostgreSql\Parser;
+use Flow\PostgreSql\Schema\ColumnDefault;
 use Flow\PostgreSql\Schema\Domain;
 use Flow\PostgreSql\Schema\ExecutionOrderStrategy;
 use Flow\PostgreSql\Schema\Extension;
@@ -169,7 +170,7 @@ final readonly class SchemaComparator
                 $hasPropertyChange =
                     !$a->baseType->isEqual($b->baseType)
                     || $a->nullable !== $b->nullable
-                    || $a->default !== $b->default;
+                    || !ColumnDefault::nullableEquals($a->default, $b->default);
 
                 if (!$hasPropertyChange && $checkDiff->added === [] && $checkDiff->removed === []) {
                     return null;

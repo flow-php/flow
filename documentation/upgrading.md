@@ -9,7 +9,20 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ## Upgrading from 0.39.x to 0.40.x
 
-### 1) `flow-php/telemetry` - Log severity filtering moved to a pipeline middleware
+### 1) `flow-php/postgresql` - column and domain defaults are modeled as `ColumnDefault`
+
+| Before                                                        | After                                                                       |
+|---------------------------------------------------------------|-----------------------------------------------------------------------------|
+| `Column::$default` / `Domain::$default` type `?string`        | `?Flow\PostgreSql\Schema\ColumnDefault`                                     |
+| `new Column('c', $type, true, "'0'")`                         | `new Column('c', $type, true, ColumnDefault::fromExpression("'0'", $type))` |
+| `$column->default` (string)                                   | `$column->default?->literal` / `$column->default?->applicableSql()`         |
+| `ColumnShape['default']` / `DomainShape['default']` `?string` | `?array{literal: string, type: ?ColumnTypeShape, kind: string}`             |
+
+`Column::create()` / `Domain::create()` still accept `bool|float|int|string|Expression|null`.
+Schema arrays serialized by `Column::normalize()` / `Domain::normalize()` before 0.40 must be
+regenerated — `fromArray()` reads the nested `default` shape only.
+
+### 2) `flow-php/telemetry` - Log severity filtering moved to a pipeline middleware
 
 | Before                                                          | After                                                                                   |
 |-----------------------------------------------------------------|-----------------------------------------------------------------------------------------|
@@ -122,6 +135,7 @@ to_pgsql_table($client, 'users')->withTypesMap(new EntryTypesMap(
 ```
 
 ### 6) `flow-php/symfony-postgresql-messenger` - `messenger_messages` time columns use `timestamp` instead of
+
 `timestamptz`
 
 | Column type for `created_at`, `available_at`, `delivered_at` | Before        | After       |

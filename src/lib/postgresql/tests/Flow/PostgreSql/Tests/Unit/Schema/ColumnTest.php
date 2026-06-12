@@ -54,7 +54,7 @@ final class ColumnTest extends TestCase
     {
         $column = schema_column('name', column_type_varchar(255), default: 'unknown');
 
-        static::assertSame("'unknown'", $column->default);
+        static::assertSame("'unknown'", $column->default?->literal);
     }
 
     public function test_is_equal_for_identical_columns(): void

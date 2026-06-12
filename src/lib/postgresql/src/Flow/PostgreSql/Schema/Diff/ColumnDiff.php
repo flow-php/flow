@@ -8,6 +8,7 @@ use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Schema\Column;
+use Flow\PostgreSql\Schema\ColumnDefault;
 use Flow\PostgreSql\Schema\IdentityGeneration;
 
 use function Flow\PostgreSql\DSL\alter;
@@ -50,7 +51,9 @@ final readonly class ColumnDiff implements Diff
             }
 
             if ($this->target->default !== null) {
-                $colDef = $colDef->defaultRaw(ExpressionFactory::fromAst((new ExpressionParser())->parse($this->target->default)));
+                $colDef = $colDef->defaultRaw(ExpressionFactory::fromAst(
+                    (new ExpressionParser())->parse($this->target->default->applicableSql()),
+                ));
             }
 
             if ($this->target->isGenerated && $this->target->generationExpression !== null) {
@@ -66,7 +69,9 @@ final readonly class ColumnDiff implements Diff
             return $sqls;
         }
 
-        if (!$this->target->type->isEqual($this->source->type)) {
+        $typeChanged = !$this->target->type->isEqual($this->source->type);
+
+        if ($typeChanged) {
             $sqls[] = alter()->table($this->qualifiedTableName)->alterColumnType($columnName, $this->target->type);
         }
 
@@ -76,15 +81,26 @@ final readonly class ColumnDiff implements Diff
                 : alter()->table($this->qualifiedTableName)->alterColumnSetNotNull($columnName);
         }
 
-        if ($this->target->default !== $this->source->default) {
+        if (!ColumnDefault::nullableEquals($this->target->default, $this->source->default)) {
             $sqls[] = $this->target->default === null
                 ? alter()->table($this->qualifiedTableName)->alterColumnDropDefault($columnName)
                 : alter()
                     ->table($this->qualifiedTableName)
                     ->alterColumnSetDefault(
                         $columnName,
-                        ExpressionFactory::fromAst((new ExpressionParser())->parse($this->target->default)),
+                        ExpressionFactory::fromAst(
+                            (new ExpressionParser())->parse($this->target->default->applicableSql()),
+                        ),
                     );
+        } elseif ($typeChanged && $this->target->default !== null) {
+            $sqls[] = alter()
+                ->table($this->qualifiedTableName)
+                ->alterColumnSetDefault(
+                    $columnName,
+                    ExpressionFactory::fromAst(
+                        (new ExpressionParser())->parse($this->target->default->applicableSql()),
+                    ),
+                );
         }
 
         return $sqls;
@@ -92,7 +108,7 @@ final readonly class ColumnDiff implements Diff
 
     public function hasDefaultChanged(): bool
     {
-        return $this->source->default !== $this->target->default;
+        return !ColumnDefault::nullableEquals($this->source->default, $this->target->default);
     }
 
     public function hasGenerationChanged(): bool

@@ -10,8 +10,9 @@ use Flow\PostgreSql\QueryBuilder\Schema\ColumnType;
 
 /**
  * @phpstan-import-type ColumnTypeShape from ColumnType
+ * @phpstan-import-type ColumnDefaultShape from ColumnDefault
  *
- * @phpstan-type ColumnShape = array{name: string, type: ColumnTypeShape, nullable: bool, default?: ?string, is_identity?: bool, identity_generation?: ?string, is_generated?: bool, generation_expression?: ?string, ordinal_position?: ?int}
+ * @phpstan-type ColumnShape = array{name: string, type: ColumnTypeShape, nullable: bool, default?: ?ColumnDefaultShape, is_identity?: bool, identity_generation?: ?string, is_generated?: bool, generation_expression?: ?string, ordinal_position?: ?int}
  */
 final readonly class Column
 {
@@ -21,7 +22,7 @@ final readonly class Column
         public string $name,
         public ColumnType $type,
         public bool $nullable,
-        public ?string $default = null,
+        public ?ColumnDefault $default = null,
         public bool $isIdentity = false,
         public ?IdentityGeneration $identityGeneration = null,
         public bool $isGenerated = false,
@@ -44,11 +45,13 @@ final readonly class Column
         ?string $generationExpression = null,
         ?int $ordinalPosition = null,
     ): self {
+        $formattedDefault = (new ColumnDefaultFormatter())->format($default);
+
         return new self(
             $name,
             $type,
             $nullable,
-            (new ColumnDefaultFormatter())->format($default),
+            $formattedDefault === null ? null : ColumnDefault::fromExpression($formattedDefault, $type),
             $isIdentity,
             $identityGeneration,
             $isGenerated,
@@ -66,7 +69,9 @@ final readonly class Column
             name: $data['name'],
             type: ColumnType::fromArray($data['type']),
             nullable: $data['nullable'],
-            default: $data['default'] ?? null,
+            default: array_key_exists('default', $data) && $data['default'] !== null
+                ? ColumnDefault::fromArray($data['default'])
+                : null,
             isIdentity: $data['is_identity'] ?? false,
             identityGeneration: array_key_exists('identity_generation', $data) && $data['identity_generation'] !== null
                 ? IdentityGeneration::from($data['identity_generation'])
@@ -87,7 +92,7 @@ final readonly class Column
         return (
             $this->type->isEqual($other->type)
             && $this->nullable === $other->nullable
-            && $this->default === $other->default
+            && ColumnDefault::nullableEquals($this->default, $other->default)
             && $this->isIdentity === $other->isIdentity
             && $this->identityGeneration === $other->identityGeneration
             && $this->isGenerated === $other->isGenerated
@@ -104,7 +109,7 @@ final readonly class Column
             'name' => $this->name,
             'type' => $this->type->normalize(),
             'nullable' => $this->nullable,
-            'default' => $this->default,
+            'default' => $this->default?->normalize(),
             'is_identity' => $this->isIdentity,
             'identity_generation' => $this->identityGeneration?->value,
             'is_generated' => $this->isGenerated,

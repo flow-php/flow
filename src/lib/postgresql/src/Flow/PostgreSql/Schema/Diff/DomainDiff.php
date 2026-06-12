@@ -8,6 +8,7 @@ use Flow\PostgreSql\Parser\ExpressionParser;
 use Flow\PostgreSql\QueryBuilder\Condition\ConditionFactory;
 use Flow\PostgreSql\QueryBuilder\Expression\ExpressionFactory;
 use Flow\PostgreSql\QueryBuilder\Sql;
+use Flow\PostgreSql\Schema\ColumnDefault;
 use Flow\PostgreSql\Schema\Constraint\CheckConstraint;
 use Flow\PostgreSql\Schema\Domain;
 use RuntimeException;
@@ -46,12 +47,14 @@ final readonly class DomainDiff implements Diff
                 : alter()->domain($this->target->name)->setNotNull();
         }
 
-        if ($this->target->default !== $this->source->default) {
+        if (!ColumnDefault::nullableEquals($this->target->default, $this->source->default)) {
             $sqls[] = $this->target->default === null
                 ? alter()->domain($this->target->name)->dropDefault()
                 : alter()
                     ->domain($this->target->name)
-                    ->setDefault(ExpressionFactory::fromAst((new ExpressionParser())->parse($this->target->default)));
+                    ->setDefault(ExpressionFactory::fromAst(
+                        (new ExpressionParser())->parse($this->target->default->applicableSql()),
+                    ));
         }
 
         foreach ($this->removedCheckConstraints as $cc) {
@@ -88,7 +91,7 @@ final readonly class DomainDiff implements Diff
 
     public function hasDefaultChanged(): bool
     {
-        return $this->source->default !== $this->target->default;
+        return !ColumnDefault::nullableEquals($this->source->default, $this->target->default);
     }
 
     public function hasNullableChanged(): bool
