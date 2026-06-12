@@ -40,16 +40,16 @@ jobs:
           cache-key-suffix: "-extensions"
 
       - name: "Test Brotli"
-        run: "just test --group brotli-extension"
+        run: "just test --group brotli-extension ${{ matrix.php-version == '8.3' && '--coverage-clover=./var/phpunit/coverage/clover/brotli.xml' || '' }}"
 
       - name: "Test LZ4"
-        run: "just test --group lz4-extension"
+        run: "just test --group lz4-extension ${{ matrix.php-version == '8.3' && '--coverage-clover=./var/phpunit/coverage/clover/lz4.xml' || '' }}"
 
       - name: "Test ZSTD"
-        run: "just test --group zstd-extension"
+        run: "just test --group zstd-extension ${{ matrix.php-version == '8.3' && '--coverage-clover=./var/phpunit/coverage/clover/zstd.xml' || '' }}"
 
       - name: "Test Snappy"
-        run: "just test --group snappy-extension"
+        run: "just test --group snappy-extension ${{ matrix.php-version == '8.3' && '--coverage-clover=./var/phpunit/coverage/clover/snappy.xml' || '' }}"
 
       - name: Upload to Codecov
         if: ${{ !cancelled() && matrix.php-version == '8.3' }}

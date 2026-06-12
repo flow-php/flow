@@ -1,10 +1,10 @@
 codecov:
   notify:
-    after_n_builds: 3
+    after_n_builds: 1
 
 comment:
   layout: "condensed_header, diff, components"
-  after_n_builds: 3
+  after_n_builds: 1
 
 flag_management:
   default_rules:
@@ -15,6 +15,8 @@ flag_management:
     - name: extension-tests
       carryforward: true
     - name: arrow-extension
+      carryforward: true
+    - name: telemetry-tests
       carryforward: true
 
 component_management:

@@ -44,6 +44,8 @@ jobs:
 
   phpunit-telemetry-tests:
     uses: ./.github/workflows/job-phpunit-telemetry-tests.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   extension-tests:
     uses: ./.github/workflows/job-extension-tests.yml
