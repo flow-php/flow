@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-06-12
 
 ### Added
+- [#2446](https://github.com/flow-php/flow/pull/2446) - **flow-php/postgresql - ColumnDefault value object and ColumnType::isSameBaseType()** - [@norberttech](https://github.com/norberttech)
 - [#2442](https://github.com/flow-php/flow/pull/2442) - **flow-php/telemetry - log severity exposed to the attribute filter as log.severity and log.severity_name** - [@norberttech](https://github.com/norberttech)
 - [#2442](https://github.com/flow-php/flow/pull/2442) - **flow-php/symfony-telemetry-bundle - per-channel severity thresholds via attribute_filtering log middleware** - [@norberttech](https://github.com/norberttech)
 - [#2441](https://github.com/flow-php/flow/pull/2441) - **flow-php/phpunit-telemetry-bridge - resource_attributes parameter for custom OTLP resource attributes** - [@norberttech](https://github.com/norberttech)
@@ -18,6 +19,7 @@
 - [#2434](https://github.com/flow-php/flow/pull/2434) - **flow-php/symfony-telemetry-bundle - per-channel binding of PSR-3 LoggerInterface and native Logger with $Logger aliases** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2446](https://github.com/flow-php/flow/pull/2446) - **flow-php/postgresql - column and domain defaults are modeled as ColumnDefault (breaking ColumnShape/DomainShape default shape)** - [@norberttech](https://github.com/norberttech)
 - [#2441](https://github.com/flow-php/flow/pull/2441) - **flow-php/telemetry - OTEL_RESOURCE_ATTRIBUTES now percent-decodes keys and values per OTel spec** - [@norberttech](https://github.com/norberttech)
 - [#2440](https://github.com/flow-php/flow/pull/2440) - **flow-php/symfony-postgresql-messenger-bridge - store messenger_messages time columns as timestamp instead of timestamptz** - [@norberttech](https://github.com/norberttech)
 - [#2439](https://github.com/flow-php/flow/pull/2439) - **flow-php/postgresql - DateTimeConverter split into TimestampConverter and TimestampTzConverter** - [@norberttech](https://github.com/norberttech)
@@ -31,6 +33,7 @@
 - [460061](https://github.com/flow-php/flow/commit/46006120b9fbebbb5c84b4cf0c0dd9032285cef1) - **fix(flow-php/arrow-ext): macOS arm64 release binary build** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2446](https://github.com/flow-php/flow/pull/2446) - **flow-php/postgresql - schema diff now detects stale-cast drift in column and domain defaults** - [@norberttech](https://github.com/norberttech)
 - [#2444](https://github.com/flow-php/flow/pull/2444) - **flow-php/telemetry-otlp-bridge - isolate grpc tests so the PHP 8.5 shutdown SIGSEGV (grpc#38216) no longer fails CI** - [@norberttech](https://github.com/norberttech)
 - [#2439](https://github.com/flow-php/flow/pull/2439) - **flow-php/postgresql - timestamp reads tagged as UTC to preserve the instant** - [@norberttech](https://github.com/norberttech)
 - [#2431](https://github.com/flow-php/flow/pull/2431) - **flow-php/postgresql - detect ParamRef nodes inside List expressions so BETWEEN/IN/VALUES placeholders are counted during keyset pagination offset.** - [@norberttech](https://github.com/norberttech)
