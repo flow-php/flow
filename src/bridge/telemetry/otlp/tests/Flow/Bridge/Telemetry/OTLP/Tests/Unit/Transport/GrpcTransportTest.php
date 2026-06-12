@@ -13,6 +13,7 @@ use Flow\Telemetry\Tests\Mother\SpanMother;
 use Google\Protobuf\Internal\Message;
 use Grpc\BaseStub;
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -23,6 +24,7 @@ use function count;
 use function extension_loaded;
 use function str_contains;
 
+#[Group('grpc')]
 final class GrpcTransportTest extends TestCase
 {
     #[RequiresPhpExtension('grpc')]

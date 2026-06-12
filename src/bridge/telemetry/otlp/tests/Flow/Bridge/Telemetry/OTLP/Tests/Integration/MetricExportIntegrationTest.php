@@ -7,7 +7,9 @@ namespace Flow\Bridge\Telemetry\OTLP\Tests\Integration;
 use Flow\Bridge\Telemetry\OTLP\Tests\Context\TransportConfiguration;
 use Flow\Telemetry\Resource;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 
+#[Group('grpc')]
 final class MetricExportIntegrationTest extends IntegrationTestCase
 {
     #[DataProvider('transportProvider')]
