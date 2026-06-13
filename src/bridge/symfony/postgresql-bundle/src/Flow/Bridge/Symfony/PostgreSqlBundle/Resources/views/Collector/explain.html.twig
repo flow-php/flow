@@ -1,0 +1,22 @@
+{% macro node(n, depth) %}
+    <li style="padding: 2px 0 2px {{ depth * 18 }}px;">
+        {% if depth > 0 %}<span style="color: var(--color-muted);">→ </span>{% endif %}
+        <strong>{{ n.nodeType.value }}</strong>
+        {% if n.relationName %}
+            on <code>{{ n.relationName }}</code>{% if n.alias and n.alias != n.relationName %} <span class="text-muted">({{ n.alias }})</span>{% endif %}
+        {% endif %}
+        <span class="text-muted text-small">cost={{ n.cost.totalCost|number_format(2) }} · rows≈{{ n.estimatedRows }}</span>
+        {% if n.hasChildren %}
+            <ul style="list-style:none; margin:0; padding:0;">
+                {% for child in n.children %}{{ _self.node(child, depth + 1) }}{% endfor %}
+            </ul>
+        {% endif %}
+    </li>
+{% endmacro %}
+
+<div class="flow-pg-explain">
+    <ul style="list-style:none; margin:0; padding:0; font-size:13px;">
+        {{ _self.node(plan.rootNode, 0) }}
+    </ul>
+    <p class="text-small text-muted">Plain <code>EXPLAIN</code> — estimated plan; the query was not executed.</p>
+</div>

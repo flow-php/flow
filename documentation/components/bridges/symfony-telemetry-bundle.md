@@ -342,14 +342,14 @@ flow_telemetry:
 
 **Sampler types:**
 
-| Type                 | Description                                                              |
-|----------------------|--------------------------------------------------------------------------|
-| `always_on`          | Sample all traces (default)                                              |
-| `always_off`         | Sample no traces                                                         |
-| `trace_id_ratio`     | Sample based on trace ID ratio                                           |
-| `parent_based`       | Respect parent span's sampling decision                                  |
+| Type                 | Description                                                                                       |
+|----------------------|---------------------------------------------------------------------------------------------------|
+| `always_on`          | Sample all traces (default)                                                                       |
+| `always_off`         | Sample no traces                                                                                  |
+| `trace_id_ratio`     | Sample based on trace ID ratio                                                                    |
+| `parent_based`       | Respect parent span's sampling decision                                                           |
 | `attribute_matching` | Drop spans matching an attribute matcher (start-time attrs); defer the rest to a delegate sampler |
-| `service`            | Custom sampler service                                                   |
+| `service`            | Custom sampler service                                                                            |
 
 **`attribute_matching`** is the OTel-idiomatic way to drop spans by attribute — the decision is made at span start, so a
 matched span never records or reaches a processor. It only sees attributes available at span start (not end-state values
@@ -490,18 +490,18 @@ Runs each log record through an ordered list of **middleware** (enrich / filter)
 single **sink**. This is the log-only way to combine more than one processing step (the OpenTelemetry
 `LogRecordProcessor` model: each step may modify the record or drop it, with changes visible to the next).
 
-| Option       | Type   | Default      | Description                                                                 |
-|--------------|--------|--------------|-----------------------------------------------------------------------------|
-| `middleware` | list   | `[]`         | Ordered middleware; the first to drop a record short-circuits the rest      |
+| Option       | Type   | Default      | Description                                                                                                        |
+|--------------|--------|--------------|--------------------------------------------------------------------------------------------------------------------|
+| `middleware` | list   | `[]`         | Ordered middleware; the first to drop a record short-circuits the rest                                             |
 | `sink`       | object | – (required) | Terminal processor (`memory`, `batching`, `passthrough`, `void`, `service`, or `composite`) that exports survivors |
 
 Each `middleware` entry has a `type` and its own options:
 
-| `type`               | Options                                                                 | Effect                                          |
-|----------------------|-------------------------------------------------------------------------|-------------------------------------------------|
-| `enriching`          | `attributes` (map)                                                      | Merges default attributes (call-site values win)|
-| `severity_filtering` | `minimum_severity` (`trace`…`fatal`, default `info`)                    | Drops records below the level                   |
-| `attribute_filtering`| `matcher`, `exclude`, `sources`, `cache_dir` (see [attribute_filtering](#attribute_filtering)) | Drops/keeps records by attribute matcher        |
+| `type`                | Options                                                                                        | Effect                                           |
+|-----------------------|------------------------------------------------------------------------------------------------|--------------------------------------------------|
+| `enriching`           | `attributes` (map)                                                                             | Merges default attributes (call-site values win) |
+| `severity_filtering`  | `minimum_severity` (`trace`…`fatal`, default `info`)                                           | Drops records below the level                    |
+| `attribute_filtering` | `matcher`, `exclude`, `sources`, `cache_dir` (see [attribute_filtering](#attribute_filtering)) | Drops/keeps records by attribute matcher         |
 
 ```yaml
 processor:
@@ -525,31 +525,32 @@ traffic before it is exported. On `tracer_provider` and `meter_provider` it is a
 [`pipeline`](#pipeline-logger_provider-only) (no `inner_processor` — the pipeline's `sink` receives the survivors). The
 `matcher`/`exclude`/`sources`/`cache_dir` options below apply in both forms.
 
-| Option            | Type           | Default                                      | Description                                                        |
-|-------------------|----------------|----------------------------------------------|--------------------------------------------------------------------|
-| `matcher`         | object         | – (required)                                 | The matcher tree (see below)                                       |
-| `exclude`         | boolean        | `true`                                       | `true`: drop matching signals; `false`: keep ONLY matching signals |
-| `sources`         | list of enum   | `[signal]`                                   | Which attribute sets to inspect: any of `signal`, `resource`, `scope`. The matcher is evaluated against each listed source and OR-combined — a signal matches if it matches in **any** source |
-| `cache_dir`       | string         | `%kernel.cache_dir%/flow_telemetry_filters`  | Directory for the compiled matcher cache                          |
-| `cache_dir_permissions` | int      | `0o700`                                      | Octal mode applied when the cache directory is **created** (owner-only by default, since it holds `require`d PHP; subject to umask). Write it as a YAML octal literal, e.g. `0o750`. Only applies on creation — an existing directory is left untouched |
-| `inner_processor` | object         | – (required for span/metric)                 | **tracer/meter only** — the wrapped processor that receives surviving signals (leaf types only: `memory`, `batching`, `passthrough`, `void`, `service`). For logs, omit it: the [`pipeline`](#pipeline-logger_provider-only) `sink` receives survivors |
+| Option                  | Type         | Default                                     | Description                                                                                                                                                                                                                                             |
+|-------------------------|--------------|---------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `matcher`               | object       | – (required)                                | The matcher tree (see below)                                                                                                                                                                                                                            |
+| `exclude`               | boolean      | `true`                                      | `true`: drop matching signals; `false`: keep ONLY matching signals                                                                                                                                                                                      |
+| `sources`               | list of enum | `[signal]`                                  | Which attribute sets to inspect: any of `signal`, `resource`, `scope`. The matcher is evaluated against each listed source and OR-combined — a signal matches if it matches in **any** source                                                           |
+| `cache_dir`             | string       | `%kernel.cache_dir%/flow_telemetry_filters` | Directory for the compiled matcher cache                                                                                                                                                                                                                |
+| `cache_dir_permissions` | int          | `0o700`                                     | Octal mode applied when the cache directory is **created** (owner-only by default, since it holds `require`d PHP; subject to umask). Write it as a YAML octal literal, e.g. `0o750`. Only applies on creation — an existing directory is left untouched |
+| `inner_processor`       | object       | – (required for span/metric)                | **tracer/meter only** — the wrapped processor that receives surviving signals (leaf types only: `memory`, `batching`, `passthrough`, `void`, `service`). For logs, omit it: the [`pipeline`](#pipeline-logger_provider-only) `sink` receives survivors  |
 
 The `matcher` is a tree. Each node is **exactly one** of:
 
 - `all: [ … ]` — a list of child matchers; matches when **every** child matches (AND).
 - `any: [ … ]` — a list of child matchers; matches when **at least one** child matches (OR).
 - `not: { … }` — a single child matcher; matches when the child does **not**.
-- a **leaf rule** carrying a `path` (the four kinds are mutually exclusive — mixing them in one node is a configuration error).
+- a **leaf rule** carrying a `path` (the four kinds are mutually exclusive — mixing them in one node is a configuration
+  error).
 
 Composites and leaves nest to any depth, so arbitrary combinations of ANDs, ORs and NOTs are expressible. A leaf rule
 accepts:
 
-| Option           | Type         | Default  | Description                                                                |
-|------------------|--------------|----------|----------------------------------------------------------------------------|
-| `path`           | string\|list | required | Attribute key, or a list of segments descending into nested array values   |
-| `mode`           | enum         | required | Comparison mode (see below)                                                |
-| `value`          | scalar       | required | Expected value (must be a string for the pattern modes)                    |
-| `case_sensitive` | boolean      | `true`   | Substring modes only                                                       |
+| Option           | Type         | Default  | Description                                                              |
+|------------------|--------------|----------|--------------------------------------------------------------------------|
+| `path`           | string\|list | required | Attribute key, or a list of segments descending into nested array values |
+| `mode`           | enum         | required | Comparison mode (see below)                                              |
+| `value`          | scalar       | required | Expected value (must be a string for the pattern modes)                  |
+| `case_sensitive` | boolean      | `true`   | Substring modes only                                                     |
 
 **Modes:** `equal`, `not_equal`, `greater_than`, `greater_than_equal`, `less_than`, `less_than_equal`, `regexp`,
 `starts_with`, `ends_with`, `contains`.
@@ -581,7 +582,7 @@ flow_telemetry:
     processor:
       type: attribute_filtering
       exclude: false
-      sources: [scope]
+      sources: [ scope ]
       matcher:
         all:
           - { path: name, mode: equal, value: app.payments }
@@ -599,7 +600,7 @@ flow_telemetry:
   tracer_provider:
     processor:
       type: attribute_filtering
-      sources: [signal, resource]
+      sources: [ signal, resource ]
       matcher: { path: http.route, mode: equal, value: /health }
       inner_processor:
         type: batching
@@ -617,7 +618,7 @@ flow_telemetry:
       matcher:
         any:
           - all:
-              - { path: [timing, duration_ms], mode: less_than, value: 5 }
+              - { path: [ timing, duration_ms ], mode: less_than, value: 5 }
               - { path: internal, mode: equal, value: true }
           - all:
               - { path: tenant, mode: equal, value: a }
@@ -1099,18 +1100,40 @@ flow_telemetry:
         - '/^cache\.validator.*/'
 ```
 
+### Web Profiler
+
+Adds a **Flow Telemetry** panel to the Symfony Web Profiler showing the signals captured during the
+current request — spans as a timeline waterfall, metrics, and (when `capture_logs` is enabled) logs —
+so telemetry is visible locally without an external OTLP backend. The toolbar shows the total signal
+count; the panel breaks it down per signal type.
+
+```yaml
+flow_telemetry:
+  profiler:
+    # enabled: null (default) auto-enables when WebProfilerBundle is registered; true forces it on
+    # (throws if WebProfilerBundle is absent); false forces it off.
+    enabled: ~
+    capture_logs: false # also capture logs and render them in the panel's Logs section (off by default)
+```
+
+When enabled, the bundle mirrors every exported traces/metrics batch into a shared in-memory store by
+decorating the exporters the `tracer_provider` / `meter_provider` (and, with `capture_logs: true`, the
+`logger_provider`) reference. OTLP export is unaffected — the real exporter still receives every batch.
+
+The store is exposed under the stable, public service id **`flow.telemetry.profiler.store`**.
+
 ### Named Instruments
 
 Configure named tracers, meters, and loggers with custom attributes.
 
 **Options:**
 
-| Option              | Type   | Default     | Description                                                          |
-|---------------------|--------|-------------|---------------------------------------------------------------------|
-| `version`           | string | `'unknown'` | Instrumentation scope version                                       |
-| `schema_url`        | string | `null`      | Schema URL for semantic conventions                                 |
-| `attributes.scope`  | object | `{}`        | Attributes attached to the instrumentation scope                    |
-| `attributes.signal` | object | `{}`        | Default attributes merged into every emitted signal                 |
+| Option              | Type   | Default     | Description                                         |
+|---------------------|--------|-------------|-----------------------------------------------------|
+| `version`           | string | `'unknown'` | Instrumentation scope version                       |
+| `schema_url`        | string | `null`      | Schema URL for semantic conventions                 |
+| `attributes.scope`  | object | `{}`        | Attributes attached to the instrumentation scope    |
+| `attributes.signal` | object | `{}`        | Default attributes merged into every emitted signal |
 
 `attributes` has two sub-keys:
 
@@ -1230,7 +1253,8 @@ services:
 
 - Each distinct channel is synthesized on demand as `flow.telemetry.<channel>.logger` (+ its PSR-3 wrapper
   `flow.telemetry.<channel>.logger.psr3`), carrying a `log.channel: <channel>` attribute placed per
-  [`channel_attribute_target`](#channel-attribute-placement) — unless a logger of that name already exists, which is then
+  [`channel_attribute_target`](#channel-attribute-placement) — unless a logger of that name already exists, which is
+  then
   reused untouched (so the `log.channel` attribute is only added to loggers the bundle creates).
 - To route a service to the bundle's main logger, use the `default` channel (`#[WithTelemetryChannel('default')]`).
   A `default` logger always exists, so it is reused as-is rather than re-created. Every channel name — including `app`,
@@ -1319,7 +1343,8 @@ which Monolog never looks at. With the flag off, this bundle never touches `mono
   over Monolog's global `LoggerInterface` autowiring alias for that one class; every other class keeps resolving to
   Monolog.
 
-What you **cannot** do is enable `capture_framework_channels` *and* keep MonologBundle: both passes then rewrite the same
+What you **cannot** do is enable `capture_framework_channels` *and* keep MonologBundle: both passes then rewrite the
+same
 `monolog.logger`-tagged services, and the outcome depends on compiler-pass ordering. Ownership of the framework channels
 is all-or-nothing:
 

@@ -122,6 +122,35 @@ flow_postgresql:
         max_parameter_length: 100            # Max length of each parameter value (chars)
 ```
 
+### Web Profiler
+
+Adds a **Flow PostgreSQL** panel to the Symfony Web Profiler listing the SQL executed during the
+current request — like the Doctrine bundle's Queries panel, but for the Flow PostgreSQL client and
+independent of telemetry. Each connection's client is decorated with a recording wrapper that
+captures statement, bound parameters, duration, returned/affected rows, the calling code location,
+and failures.
+
+```yaml
+flow_postgresql:
+  profiler:
+    # enabled: null (default) auto-enables when WebProfilerBundle is registered; true forces it on
+    # (throws if WebProfilerBundle is absent); false forces it off entirely.
+    enabled: ~
+    include_parameters: true # show bound query parameters in the panel
+```
+
+Recording is dev-only and adds nothing in production: when the profiler is disabled — or
+WebProfilerBundle is absent in `enabled: ~` mode — no connection is decorated. A single connection
+can opt out while the profiler is on:
+
+```yaml
+flow_postgresql:
+  connections:
+    default:
+      dsn: '%env(DATABASE_URL)%'
+      profiler: false # do not record queries in selected connection (default: true)
+```
+
 ### Migrations
 
 Migrations are configured at the top level, not per connection. Use `--connection` to target a specific connection

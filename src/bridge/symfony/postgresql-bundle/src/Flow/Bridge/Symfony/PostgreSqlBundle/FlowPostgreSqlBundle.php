@@ -13,6 +13,7 @@ use Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection\Compiler\CatalogPro
 use Flow\Bridge\Symfony\PostgreSqlBundle\DependencyInjection\Compiler\CommandLocatorPass;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Generator\TwigMigrationGenerator;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Messenger\FlowPostgreSqlTransportFactory;
+use Flow\Bridge\Symfony\PostgreSqlBundle\Profiler\ProfilerController;
 use Flow\Bridge\Symfony\PostgreSqlBundle\Repository\FilesystemMigrationRepository;
 use Flow\Bridge\Symfony\PostgreSQLCache\CacheCatalogProvider;
 use Flow\Bridge\Symfony\PostgreSQLCache\FlowPostgreSqlCacheAdapter;
@@ -24,6 +25,7 @@ use Flow\Filesystem\Path;
 use Flow\PostgreSql\Client\Client;
 use Flow\PostgreSql\Client\ConnectionParameters;
 use Flow\PostgreSql\Client\Context;
+use Flow\PostgreSql\Client\Debug\RecordingClient;
 use Flow\PostgreSql\Client\DsnParser;
 use Flow\PostgreSql\Client\Infrastructure\PgSql\PgSqlClient;
 use Flow\PostgreSql\Client\Telemetry\PostgreSqlTelemetryConfig;
@@ -69,6 +71,7 @@ use function class_exists;
 use function Flow\Types\DSL\type_string;
 use function implode;
 use function in_array;
+use function is_bool;
 use function is_string;
 use function sprintf;
 use function str_starts_with;
@@ -78,7 +81,21 @@ final class FlowPostgreSqlBundle extends AbstractBundle
 {
     public const string SERVICE_CONTAINER = 'service_container';
 
+    private const string WEB_PROFILER_BUNDLE = 'Symfony\\Bundle\\WebProfilerBundle\\WebProfilerBundle';
+
     protected string $extensionAlias = 'flow_postgresql';
+
+    /**
+     * The bundle class lives directly in its package root rather than the "modern" `<root>/src/`
+     * layout that {@see AbstractBundle::getPath()} assumes (it returns `dirname(file, 2)`), so the
+     * default overshoots by one directory and Twig never registers the `@FlowPostgreSql` view
+     * namespace. Pin the path to this directory so `Resources/views` resolves.
+     */
+    #[Override]
+    public function getPath(): string
+    {
+        return __DIR__;
+    }
 
     #[Override]
     public function build(ContainerBuilder $container): void
@@ -190,6 +207,10 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             ->min(0)
             ->end()
             ->end()
+            ->end()
+            ->booleanNode('profiler')
+            ->info('Record this connection\'s queries in the Flow PostgreSQL Web Profiler panel when the profiler is enabled (default true). Set false to skip decorating this connection.')
+            ->defaultTrue()
             ->end()
             ->end()
             ->end()
@@ -437,11 +458,30 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             ->end()
             ->end()
             ->end()
+            ->arrayNode('profiler')
+            ->info('Symfony Web Profiler SQL queries panel (dev only; requires symfony/web-profiler-bundle)')
+            ->canBeUnset()
+            ->addDefaultsIfNotSet()
+            ->children()
+            ->variableNode('enabled')
+            ->info('null (default) = auto-enable iff WebProfilerBundle is registered; true/false to force')
+            ->defaultNull()
+            ->validate()
+            ->ifTrue(static fn (mixed $v): bool => $v !== null && !is_bool($v))
+            ->thenInvalid('flow_postgresql.profiler.enabled must be true, false, or null')
+            ->end()
+            ->end()
+            ->booleanNode('include_parameters')
+            ->info('Show bound query parameters in the panel')
+            ->defaultTrue()
+            ->end()
+            ->end()
+            ->end()
             ->end();
     }
 
     /**
-     * @param array{connections: array<string, array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>} $config
+     * @param array{connections: array<string, array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}, profiler?: bool}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>, profiler?: array{enabled?: bool|null, include_parameters?: bool}} $config
      */
     #[Override]
     public function loadExtension(array $config, ContainerConfigurator $configurator, ContainerBuilder $container): void
@@ -479,6 +519,87 @@ final class FlowPostgreSqlBundle extends AbstractBundle
         $this->registerMessenger($config['messenger'], $connectionNames, $container);
         $this->registerCache($config['cache'] ?? [], $connectionNames, $container);
         $this->registerSession($config['session'] ?? [], $connectionNames, $container);
+        $this->registerProfiler($config, $configurator, $container, $connectionNames);
+    }
+
+    /**
+     * @param array<array-key, mixed> $config
+     * @param list<string> $connectionNames
+     */
+    private function registerProfiler(
+        array $config,
+        ContainerConfigurator $configurator,
+        ContainerBuilder $container,
+        array $connectionNames,
+    ): void {
+        $profilerConfig = is_array($config['profiler'] ?? null) ? $config['profiler'] : [];
+        // @mago-expect analysis:mixed-assignment
+        $enabled = $profilerConfig['enabled'] ?? null;
+        $includeParameters = (bool) ($profilerConfig['include_parameters'] ?? true);
+
+        if ($enabled === false) {
+            return;
+        }
+
+        $hasWebProfiler = $this->isWebProfilerBundleRegistered($container);
+
+        if ($enabled === true && !$hasWebProfiler) {
+            throw new LogicException(
+                'flow_postgresql.profiler.enabled is true but symfony/web-profiler-bundle is not registered in the kernel. Install it (composer require --dev symfony/web-profiler-bundle) and enable it for this environment, or set profiler.enabled to null/false.',
+            );
+        }
+
+        if ($enabled === null && !$hasWebProfiler) {
+            return;
+        }
+
+        $container->setParameter('flow.postgresql.profiler.include_parameters', $includeParameters);
+        $configurator->import(__DIR__ . '/Resources/config/profiler.php');
+
+        $connections = is_array($config['connections'] ?? null) ? $config['connections'] : [];
+        $clientRefs = [];
+
+        foreach ($connectionNames as $name) {
+            $connectionConfig = is_array($connections[$name] ?? null) ? $connections[$name] : [];
+
+            if (($connectionConfig['profiler'] ?? true) === false) {
+                continue;
+            }
+
+            $recordingDefinition = new Definition(RecordingClient::class, [
+                new Reference("flow.postgresql.{$name}.client.profiler.inner"),
+                new Reference('flow.postgresql.profiler.query_log'),
+                $name,
+            ]);
+            $recordingDefinition->setDecoratedService("flow.postgresql.{$name}.client", null, 10);
+            $recordingDefinition->setPublic(true);
+            $container->setDefinition("flow.postgresql.{$name}.client.profiler", $recordingDefinition);
+
+            $clientRefs[$name] = new Reference("flow.postgresql.{$name}.client");
+        }
+
+        $locator = new Definition(ServiceLocator::class, [$clientRefs]);
+        $locator->addTag('container.service_locator');
+        $container->setDefinition('flow.postgresql.profiler.client_locator', $locator);
+
+        $controller = new Definition(ProfilerController::class, [
+            new Reference('twig'),
+            new Reference('flow.postgresql.profiler.client_locator'),
+            new Reference('profiler'),
+        ]);
+        $controller->setPublic(true);
+        $container->setDefinition(ProfilerController::class, $controller);
+    }
+
+    private function isWebProfilerBundleRegistered(ContainerBuilder $container): bool
+    {
+        if (!$container->hasParameter('kernel.bundles')) {
+            return false;
+        }
+
+        $bundles = $container->getParameter('kernel.bundles');
+
+        return is_array($bundles) && in_array(self::WEB_PROFILER_BUNDLE, $bundles, true);
     }
 
     /**
@@ -579,7 +700,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     }
 
     /**
-     * @param array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}} $connectionConfig
+     * @param array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}, profiler?: bool} $connectionConfig
      */
     private function registerConnection(
         string $name,

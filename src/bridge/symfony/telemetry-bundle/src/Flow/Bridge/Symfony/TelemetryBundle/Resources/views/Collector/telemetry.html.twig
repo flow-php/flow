@@ -1,0 +1,243 @@
+{% extends '@WebProfiler/Profiler/layout.html.twig' %}
+
+{% macro attribute_table(attributes) %}
+    <table class="text-small">
+        <tbody>
+            {% for key, value in attributes %}
+                <tr>
+                    <th>{{ key }}</th>
+                    <td>{{ value is iterable ? value|json_encode : (value is same as(true) ? 'true' : (value is same as(false) ? 'false' : value)) }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endmacro %}
+
+{% block toolbar %}
+    {% set icon %}
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M4 4h4v4H4V4zm6 3h10v2H10V7zM4 10h4v4H4v-4zm6 3h10v2H10v-2zM4 16h4v4H4v-4zm6 3h10v2H10v-2z"/></svg>
+        <span class="sf-toolbar-value">{{ collector.signalCount }}</span>
+        <span class="sf-toolbar-label">signals</span>
+    {% endset %}
+
+    {% set text %}
+        <div class="sf-toolbar-info-piece">
+            <b>Spans</b>
+            <span class="sf-toolbar-status">{{ collector.spanCount }}</span>
+        </div>
+        <div class="sf-toolbar-info-piece">
+            <b>Span time</b>
+            <span>{{ collector.totalDurationMs|number_format(2) }} ms</span>
+        </div>
+        <div class="sf-toolbar-info-piece">
+            <b>Metrics</b>
+            <span class="sf-toolbar-status">{{ collector.metricCount }}</span>
+        </div>
+        {% if collector.logCount > 0 %}
+            <div class="sf-toolbar-info-piece">
+                <b>Logs</b>
+                <span class="sf-toolbar-status">{{ collector.logCount }}</span>
+            </div>
+        {% endif %}
+    {% endset %}
+
+    {{ include('@WebProfiler/Profiler/toolbar_item.html.twig', { link: profiler_url, status: collector.signalCount > 0 ? '' : 'disabled' }) }}
+{% endblock %}
+
+{% block menu %}
+    <span class="label {{ collector.signalCount == 0 ? 'disabled' }}">
+        <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M4 4h4v4H4V4zm6 3h10v2H10V7zM4 10h4v4H4v-4zm6 3h10v2H10v-2zM4 16h4v4H4v-4zm6 3h10v2H10v-2z"/></svg>
+        </span>
+        <strong>Flow Telemetry</strong>
+        <span class="count">
+            <span>{{ collector.signalCount }}</span>
+        </span>
+    </span>
+{% endblock %}
+
+{% block panel %}
+    <h2>Flow Telemetry</h2>
+
+    <div class="metrics">
+        <div class="metric">
+            <span class="value">{{ collector.spanCount }}</span>
+            <span class="label">Spans</span>
+        </div>
+        <div class="metric">
+            <span class="value">{{ collector.totalDurationMs|number_format(2) }} <span class="unit">ms</span></span>
+            <span class="label">Total span time</span>
+        </div>
+        <div class="metric">
+            <span class="value">{{ collector.metricCount }}</span>
+            <span class="label">Metrics</span>
+        </div>
+        {% if collector.logCount > 0 %}
+            <div class="metric">
+                <span class="value">{{ collector.logCount }}</span>
+                <span class="label">Logs</span>
+            </div>
+        {% endif %}
+    </div>
+
+    <h3>Timeline</h3>
+
+    {% if collector.spans is empty %}
+        <div class="empty"><p>No spans were captured for this request.</p></div>
+    {% else %}
+        {% set total = collector.timelineDurationMs > 0 ? collector.timelineDurationMs : 1 %}
+        <style>
+            .flow-tl { width: 100%; border-collapse: collapse; font-size: 12px; }
+            .flow-tl td { padding: 5px 8px; border-bottom: 1px solid rgba(128, 128, 128, 0.2); vertical-align: middle; }
+            .flow-tl-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 340px; }
+            .flow-tl-track { position: relative; display: block; width: 100%; height: 14px; background: rgba(128, 128, 128, 0.18); border-radius: 7px; overflow: hidden; }
+            .flow-tl-bar { position: absolute; top: 0; bottom: 0; min-width: 2px; box-sizing: border-box; background: #3b82f6; }
+            .flow-tl-bar.kind-client { background: #8b5cf6; }
+            .flow-tl-bar.kind-server { background: #10b981; }
+            .flow-tl-bar.kind-internal { background: #3b82f6; }
+            .flow-tl-bar.kind-producer, .flow-tl-bar.kind-consumer { background: #f59e0b; }
+            .flow-tl-bar.is-error { background: #ef4444; }
+            .flow-tl-dur { text-align: right; white-space: nowrap; color: var(--color-muted, #999); font-variant-numeric: tabular-nums; }
+        </style>
+        <table class="flow-tl">
+            <tbody>
+                {% for span in collector.spans %}
+                    {% set left = span.offsetMs / total * 100 %}
+                    {% set width = max((span.durationMs ?? 0) / total * 100, 0.4) %}
+                    <tr>
+                        <td class="flow-tl-name" style="padding-left: {{ 8 + span.depth * 12 }}px" title="{{ span.name }} — {{ span.scope }}">
+                            {% if span.depth > 0 %}<span style="color: var(--color-muted);">└ </span>{% endif %}{{ span.name }}
+                        </td>
+                        <td style="width: 60%;">
+                            <div class="flow-tl-track">
+                                <div class="flow-tl-bar kind-{{ span.kind }}{{ span.statusCode == 2 ? ' is-error' }}" style="left: {{ left }}%; width: {{ width }}%;" title="+{{ span.offsetMs|number_format(2) }} ms"></div>
+                            </div>
+                        </td>
+                        <td class="flow-tl-dur">{{ span.durationMs is null ? '—' : span.durationMs|number_format(2) ~ ' ms' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p class="text-small text-muted">Total window: {{ collector.timelineDurationMs|number_format(2) }} ms · bars are positioned relative to the first captured span.</p>
+    {% endif %}
+
+    <h3>Spans</h3>
+
+    {% if collector.spans is empty %}
+        <div class="empty"><p>No spans were captured for this request.</p></div>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Kind</th>
+                    <th>Scope</th>
+                    <th class="text-right">Duration</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for span in collector.spans %}
+                    <tr>
+                        <td>
+                            <span style="display:inline-block; width: {{ span.depth * 16 }}px;"></span>
+                            {% if span.depth > 0 %}<span style="color: var(--color-muted);">└ </span>{% endif %}
+                            <span title="{{ span.spanId }}">{{ span.name }}</span>
+                            {% if span.attributes is not empty %}
+                                <a class="btn btn-link text-small sf-toggle" data-toggle-selector="#span-attr-{{ loop.index }}" data-toggle-alt-content="Hide attributes">Attributes ({{ span.attributes|length }})</a>
+                                <div id="span-attr-{{ loop.index }}" class="hidden">
+                                    {{ _self.attribute_table(span.attributes) }}
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>{{ span.kind }}</td>
+                        <td>{{ span.scope }}</td>
+                        <td class="text-right">{{ span.durationMs is null ? '—' : span.durationMs|number_format(2) ~ ' ms' }}</td>
+                        <td>
+                            {% if span.statusCode == 2 %}
+                                <span class="label status-error">error</span>
+                                {% if span.statusDescription %}<span class="text-small text-muted">{{ span.statusDescription }}</span>{% endif %}
+                            {% elseif span.statusCode == 1 %}
+                                <span class="label status-success">ok</span>
+                            {% else %}
+                                <span class="label">unset</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <h3>Metrics</h3>
+
+    {% if collector.metrics is empty %}
+        <div class="empty"><p>No metrics were recorded for this request.</p></div>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th class="text-right">Value</th>
+                    <th>Unit</th>
+                    <th>Scope</th>
+                    <th>Attributes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for metric in collector.metrics %}
+                    <tr>
+                        <td>{{ metric.name }}</td>
+                        <td>{{ metric.type }}</td>
+                        <td class="text-right">{{ metric.value }}</td>
+                        <td>{{ metric.unit ?? '—' }}</td>
+                        <td>{{ metric.scope }}</td>
+                        <td>
+                            {% if metric.attributes is empty %}
+                                —
+                            {% else %}
+                                <a class="btn btn-link text-small sf-toggle" data-toggle-selector="#metric-attr-{{ loop.index }}" data-toggle-alt-content="Hide attributes">Attributes ({{ metric.attributes|length }})</a>
+                                <div id="metric-attr-{{ loop.index }}" class="hidden">
+                                    {{ _self.attribute_table(metric.attributes) }}
+                                </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if collector.logs is not empty %}
+        <h3>Logs</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Severity</th>
+                    <th>Scope</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in collector.logs %}
+                    <tr>
+                        <td><span class="label {{ log.severityCode >= 17 ? 'status-error' : (log.severityCode >= 13 ? 'status-warning') }}">{{ log.severity|lower }}</span></td>
+                        <td>{{ log.scope }}</td>
+                        <td>
+                            <code>{{ log.message }}</code>
+                            {% if log.hasAttributes %}
+                                <div>
+                                    <a class="btn btn-link text-small sf-toggle" data-toggle-selector="#log-attr-{{ loop.index }}" data-toggle-alt-content="Hide attributes">Show attributes</a>
+                                </div>
+                                <div id="log-attr-{{ loop.index }}" class="context sf-toggle-content sf-toggle-hidden hidden">
+                                    {{ profiler_dump(log.attributes, maxDepth: 1) }}
+                                </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}
