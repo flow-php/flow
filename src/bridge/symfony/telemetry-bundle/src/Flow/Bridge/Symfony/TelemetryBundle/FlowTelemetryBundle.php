@@ -13,6 +13,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\DBALTelemet
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\FrameworkLoggerPass;
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\HttpClientTelemetryPass;
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\OTLPAvailabilityPass;
+use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\ProfilerSignalCapturePass;
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\Psr18ClientTelemetryPass;
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
 use Flow\Bridge\Symfony\TelemetryBundle\Resource\Detector\SymfonyDeploymentDetector;
@@ -114,6 +115,7 @@ use function implode;
 use function in_array;
 use function interface_exists;
 use function is_array;
+use function is_bool;
 use function is_int;
 use function is_string;
 use function sprintf;
@@ -135,12 +137,21 @@ final class FlowTelemetryBundle extends AbstractBundle
 
     private const string PSR18_TRACEABLE_CLIENT = 'Flow\\Bridge\\Psr18\\Telemetry\\PSR18TraceableClient';
 
+    private const string WEB_PROFILER_BUNDLE = 'Symfony\\Bundle\\WebProfilerBundle\\WebProfilerBundle';
+
+    #[Override]
+    public function getPath(): string
+    {
+        return __DIR__;
+    }
+
     #[Override]
     public function build(ContainerBuilder $container): void
     {
         parent::build($container);
 
         $container->addCompilerPass(new OTLPAvailabilityPass());
+        $container->addCompilerPass(new ProfilerSignalCapturePass());
         $container->addCompilerPass(new FrameworkLoggerPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, -64);
 
         $container->registerAttributeForAutoconfiguration(
@@ -564,6 +575,27 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->end()
             ->end()
             ->end()
+            ->arrayNode('profiler')
+            ->info('Symfony Web Profiler integration (dev only; requires symfony/web-profiler-bundle)')
+            ->canBeUnset()
+            ->addDefaultsIfNotSet()
+            ->children()
+            ->variableNode('enabled')
+            ->info(
+                'null (default) = auto-enable iff WebProfilerBundle is present; true/false to force on/off',
+            )
+            ->defaultNull()
+            ->validate()
+            ->ifTrue(static fn (mixed $v): bool => $v !== null && !is_bool($v))
+            ->thenInvalid('flow_telemetry.profiler.enabled must be true, false, or null')
+            ->end()
+            ->end()
+            ->booleanNode('capture_logs')
+            ->info('Also tee logs into the profiler store (Symfony already has a Logs panel; off by default)')
+            ->defaultFalse()
+            ->end()
+            ->end()
+            ->end()
             ->arrayNode('tracers')
             ->info('Named tracer configurations')
             ->useAttributeAsKey('name')
@@ -673,7 +705,7 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * @param array{resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, framework_logger?: null|string, capture_framework_channels?: bool, channel_attribute_target?: 'scope'|'signal'|'both', context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, exporters?: array<string, array<string, mixed>>, error_handlers?: array<string, array<string, mixed>>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>} $config
+     * @param array{resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, framework_logger?: null|string, capture_framework_channels?: bool, channel_attribute_target?: 'scope'|'signal'|'both', context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, exporters?: array<string, array<string, mixed>>, error_handlers?: array<string, array<string, mixed>>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, profiler?: array{enabled?: bool|null, capture_logs?: bool}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>} $config
      */
     #[Override]
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
@@ -698,6 +730,7 @@ final class FlowTelemetryBundle extends AbstractBundle
         $this->registerTelemetry($config, $builder);
         $instrumentation = is_array($config['instrumentation'] ?? null) ? $config['instrumentation'] : [];
         $this->registerInstrumentation($instrumentation, $container, $builder);
+        $this->registerProfiler($config, $container, $builder);
         $this->registerTracers($tracers, $builder);
         $this->registerMeters($meters, $builder);
         $this->registerLoggers($loggers, $builder);
@@ -2554,6 +2587,131 @@ final class FlowTelemetryBundle extends AbstractBundle
         }
 
         $this->registerParameterOnlyInstrumentation($config, $builder);
+    }
+
+    /**
+     * @param array<array-key, mixed> $config
+     */
+    private function registerProfiler(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
+    {
+        $profilerConfig = is_array($config['profiler'] ?? null) ? $config['profiler'] : [];
+        // @mago-expect analysis:mixed-assignment
+        $enabled = $profilerConfig['enabled'] ?? null;
+        $captureLogs = (bool) ($profilerConfig['capture_logs'] ?? false);
+
+        $hasWebProfiler = $this->isWebProfilerBundleRegistered($builder);
+
+        if ($enabled === false) {
+            return;
+        }
+
+        if ($enabled === true && !$hasWebProfiler) {
+            throw new RuntimeException(
+                'Profiler integration requires symfony/web-profiler-bundle to be registered in the kernel. Install it (composer require --dev symfony/web-profiler-bundle) and enable it for this environment.',
+            );
+        }
+
+        if ($enabled === null && !$hasWebProfiler) {
+            return;
+        }
+
+        $tracerProviderConfig = is_array($config['tracer_provider'] ?? null) ? $config['tracer_provider'] : [];
+        $meterProviderConfig = is_array($config['meter_provider'] ?? null) ? $config['meter_provider'] : [];
+
+        $capturedIds = [];
+
+        foreach ($this->collectExporterServiceIds($tracerProviderConfig) as $id) {
+            $capturedIds[$id] = $id;
+        }
+
+        foreach ($this->collectExporterServiceIds($meterProviderConfig) as $id) {
+            $capturedIds[$id] = $id;
+        }
+
+        if ($captureLogs) {
+            $loggerProviderConfig = is_array($config['logger_provider'] ?? null) ? $config['logger_provider'] : [];
+
+            foreach ($this->collectExporterServiceIds($loggerProviderConfig) as $id) {
+                $capturedIds[$id] = $id;
+            }
+        }
+
+        $builder->setParameter('flow.telemetry.profiler.captured_exporters', array_values($capturedIds));
+        $builder->setParameter('flow.telemetry.profiler.capture_logs', $captureLogs);
+
+        $container->import(__DIR__ . '/Resources/config/profiler.php');
+    }
+
+    /**
+     * @param array<array-key, mixed> $providerConfig
+     *
+     * @return list<string>
+     */
+    private function collectExporterServiceIds(array $providerConfig): array
+    {
+        $processorConfig = is_array($providerConfig['processor'] ?? null) ? $providerConfig['processor'] : [];
+
+        $ids = [];
+
+        foreach ($this->collectExporterNames($processorConfig) as $name) {
+            $ids[] = 'flow.telemetry.exporter.' . $name;
+        }
+
+        return $ids;
+    }
+
+    /**
+     * @param array<array-key, mixed> $processorConfig
+     *
+     * @return list<string>
+     */
+    private function collectExporterNames(array $processorConfig): array
+    {
+        $names = [];
+
+        // @mago-expect analysis:mixed-assignment
+        $exporter = $processorConfig['exporter'] ?? null;
+
+        if (is_string($exporter) && $exporter !== '') {
+            $names[] = $exporter;
+        }
+
+        // @mago-expect analysis:mixed-assignment
+        $children = $processorConfig['processors'] ?? null;
+
+        // @mago-expect analysis:mixed-assignment
+        foreach (is_array($children) ? $children : [] as $child) {
+            if (is_array($child)) {
+                $names = [...$names, ...$this->collectExporterNames($child)];
+            }
+        }
+
+        foreach (['inner_processor', 'sink'] as $key) {
+            // @mago-expect analysis:mixed-assignment
+            $nested = $processorConfig[$key] ?? null;
+
+            if (is_array($nested)) {
+                $names = [...$names, ...$this->collectExporterNames($nested)];
+            }
+        }
+
+        return $names;
+    }
+
+    /**
+     * Auto-detect the profiler only when WebProfilerBundle is actually wired into the kernel, not
+     * merely installed in vendor. Detection is by registered class (the "kernel.bundles" value),
+     * which is stable across Symfony 6.4/7.4/8.0 regardless of the bundle's registration key.
+     */
+    private function isWebProfilerBundleRegistered(ContainerBuilder $builder): bool
+    {
+        if (!$builder->hasParameter('kernel.bundles')) {
+            return false;
+        }
+
+        $bundles = $builder->getParameter('kernel.bundles');
+
+        return is_array($bundles) && in_array(self::WEB_PROFILER_BUNDLE, $bundles, true);
     }
 
     /**

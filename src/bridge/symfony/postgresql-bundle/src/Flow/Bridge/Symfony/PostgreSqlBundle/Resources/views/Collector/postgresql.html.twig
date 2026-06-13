@@ -1,0 +1,182 @@
+{% extends '@WebProfiler/Profiler/layout.html.twig' %}
+
+{% macro parameter_table(parameters) %}
+    <table class="text-small">
+        <tbody>
+            {% for key, value in parameters %}
+                <tr>
+                    <th>{{ key }}</th>
+                    <td>{{ value is iterable ? value|json_encode : (value is same as(true) ? 'true' : (value is same as(false) ? 'false' : value)) }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endmacro %}
+
+{% block toolbar %}
+    {% set icon %}
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 3C7.58 3 4 4.79 4 7s3.58 4 8 4 8-1.79 8-4-3.58-4-8-4zM4 9v3c0 2.21 3.58 4 8 4s8-1.79 8-4V9c0 2.21-3.58 4-8 4S4 11.21 4 9zm0 5v3c0 2.21 3.58 4 8 4s8-1.79 8-4v-3c0 2.21-3.58 4-8 4s-8-1.79-8-4z"/></svg>
+        <span class="sf-toolbar-value">{{ collector.queryCount }}</span>
+        <span class="sf-toolbar-label">queries</span>
+    {% endset %}
+
+    {% set text %}
+        <div class="sf-toolbar-info-piece">
+            <b>Queries</b>
+            <span class="sf-toolbar-status">{{ collector.queryCount }}</span>
+        </div>
+        <div class="sf-toolbar-info-piece">
+            <b>Query time</b>
+            <span>{{ collector.totalDurationMs|number_format(2) }} ms</span>
+        </div>
+        {% if collector.duplicateCount > 0 %}
+            <div class="sf-toolbar-info-piece">
+                <b>Duplicates</b>
+                <span class="sf-toolbar-status sf-toolbar-status-yellow">{{ collector.duplicateCount }}</span>
+            </div>
+        {% endif %}
+        {% if collector.failedCount > 0 %}
+            <div class="sf-toolbar-info-piece">
+                <b>Failed</b>
+                <span class="sf-toolbar-status sf-toolbar-status-red">{{ collector.failedCount }}</span>
+            </div>
+        {% endif %}
+    {% endset %}
+
+    {{ include('@WebProfiler/Profiler/toolbar_item.html.twig', { link: profiler_url, status: collector.failedCount > 0 ? 'red' : (collector.queryCount > 0 ? '' : 'disabled') }) }}
+{% endblock %}
+
+{% block menu %}
+    <span class="label {{ collector.queryCount == 0 ? 'disabled' }} {{ collector.failedCount > 0 ? 'label-status-error' }}">
+        <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M12 3C7.58 3 4 4.79 4 7s3.58 4 8 4 8-1.79 8-4-3.58-4-8-4zM4 9v3c0 2.21 3.58 4 8 4s8-1.79 8-4V9c0 2.21-3.58 4-8 4S4 11.21 4 9zm0 5v3c0 2.21 3.58 4 8 4s8-1.79 8-4v-3c0 2.21-3.58 4-8 4s-8-1.79-8-4z"/></svg>
+        </span>
+        <strong>Flow PostgreSQL</strong>
+        <span class="count">
+            <span>{{ collector.queryCount }}</span>
+        </span>
+    </span>
+{% endblock %}
+
+{% block panel %}
+    {% if 'explain' == page %}
+        {{ render(controller('Flow\\Bridge\\Symfony\\PostgreSqlBundle\\Profiler\\ProfilerController::explainAction', {
+            token: token,
+            connection: request.query.get('connection'),
+            query: request.query.get('query'),
+        })) }}
+    {% else %}
+        {{ block('queries') }}
+    {% endif %}
+{% endblock %}
+
+{% block queries %}
+    <h2>Flow PostgreSQL Queries</h2>
+
+    <div class="metrics">
+        <div class="metric">
+            <span class="value">{{ collector.queryCount }}</span>
+            <span class="label">Queries</span>
+        </div>
+        <div class="metric">
+            <span class="value">{{ collector.totalDurationMs|number_format(2) }} <span class="unit">ms</span></span>
+            <span class="label">Total query time</span>
+        </div>
+        <div class="metric{{ collector.duplicateCount > 0 ? ' yellow' }}">
+            <span class="value">{{ collector.duplicateCount }}</span>
+            <span class="label">Duplicates</span>
+        </div>
+        <div class="metric{{ collector.failedCount > 0 ? ' red' }}">
+            <span class="value">{{ collector.failedCount }}</span>
+            <span class="label">Failed</span>
+        </div>
+    </div>
+
+    {% if collector.queryCount == 0 %}
+        <div class="empty"><p>No PostgreSQL queries were executed for this request.</p></div>
+    {% else %}
+        {% for connection, queries in collector.queries %}
+            <h3>Connection: {{ connection }} <small class="text-muted">({{ queries|length }} queries)</small></h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th class="text-right">Rows</th>
+                        <th class="text-right">Duration</th>
+                        <th>Query</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for query in queries %}
+                        {% set row = loop.index0 %}
+                        <tr{% if query.failed %} class="status-error"{% endif %}>
+                            <td>{{ loop.index }}</td>
+                            <td class="text-right">{{ query.returnedRows ?? '—' }}</td>
+                            <td class="text-right">{{ query.durationMs|number_format(2) }} ms</td>
+                            <td>
+                                <code class="sql">{{ query.statement }}</code>
+                                {% if query.isDuplicate %}
+                                    <span class="label label-status-warning text-small" title="This statement ran {{ query.runCount }} times">×{{ query.runCount }}</span>
+                                {% endif %}
+                                <div class="text-small text-muted">
+                                    {% if query.caller %}<span title="{{ query.caller }}">{{ query.caller|split('/')|last }}</span>{% endif %}
+                                    {% if query.parameters is not empty %}
+                                        · <a class="btn btn-link text-small sf-toggle" data-toggle-selector="#query-params-{{ connection }}-{{ row }}" data-toggle-alt-content="Hide parameters">View parameters</a>
+                                    {% endif %}
+                                    {% if query.explainable %}
+                                        · <a class="link-inverse" href="{{ path('_profiler', { panel: 'flow_postgresql', token: token, page: 'explain', connection: connection, query: row }) }}" onclick="return flowPgExplain(this);" data-target-id="flow-pg-explain-{{ connection }}-{{ row }}">Explain query</a>
+                                    {% endif %}
+                                </div>
+                                {% if query.parameters is not empty %}
+                                    <div id="query-params-{{ connection }}-{{ row }}" class="hidden">
+                                        {{ _self.parameter_table(query.parameters) }}
+                                    </div>
+                                {% endif %}
+                                {% if query.explainable %}
+                                    <div id="flow-pg-explain-{{ connection }}-{{ row }}" class="hidden"></div>
+                                {% endif %}
+                                {% if query.failed and query.error %}
+                                    <div class="text-small status-error">{{ query.error }}</div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endfor %}
+
+        <script{{ csp_script_nonce|default('') ? ' nonce="' ~ csp_script_nonce ~ '"' : '' }}>//<![CDATA[
+            function flowPgExplain(link) {
+                "use strict";
+                var target = document.getElementById(link.getAttribute('data-target-id'));
+                if (target.style.display === 'block') {
+                    target.style.display = 'none';
+                    link.innerHTML = 'Explain query';
+                    return false;
+                }
+                if (target.getAttribute('data-loaded') !== link.href) {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('GET', link.href, true);
+                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                    xhr.onreadystatechange = function () {
+                        if (xhr.readyState === 4) {
+                            if (xhr.status === 200) {
+                                // The profiler renders the fragment inside full page chrome; extract just our panel.
+                                var parsed = new DOMParser().parseFromString(xhr.responseText, 'text/html');
+                                var fragment = parsed.querySelector('.flow-pg-explain');
+                                target.innerHTML = fragment ? fragment.outerHTML : xhr.responseText;
+                            } else {
+                                target.innerHTML = 'An error occurred while loading the query explanation.';
+                            }
+                            target.setAttribute('data-loaded', link.href);
+                        }
+                    };
+                    xhr.send('');
+                }
+                target.style.display = 'block';
+                link.innerHTML = 'Hide query explanation';
+                return false;
+            }
+        //]]></script>
+    {% endif %}
+{% endblock %}
