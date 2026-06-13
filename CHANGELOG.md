@@ -1,6 +1,10 @@
-## [Unreleased] - 2026-06-12
+## [Unreleased] - 2026-06-13
 
 ### Added
+- [#2448](https://github.com/flow-php/flow/pull/2448) - **flow-php/symfony-telemetry-bundle - Web Profiler panel with spans, metrics and logs.** - [@norberttech](https://github.com/norberttech)
+- [#2448](https://github.com/flow-php/flow/pull/2448) - **flow-php/symfony-postgresql-bundle - Web Profiler panel recording queries with EXPLAIN support.** - [@norberttech](https://github.com/norberttech)
+- [#2448](https://github.com/flow-php/flow/pull/2448) - **flow-php/postgresql - RecordingClient and QueryLog to capture executed queries.** - [@norberttech](https://github.com/norberttech)
+- [#2448](https://github.com/flow-php/flow/pull/2448) - **flow-php/telemetry - CompositeExporter fanning signals out to multiple exporters.** - [@norberttech](https://github.com/norberttech)
 - [#2446](https://github.com/flow-php/flow/pull/2446) - **flow-php/postgresql - ColumnDefault value object and ColumnType::isSameBaseType()** - [@norberttech](https://github.com/norberttech)
 - [#2442](https://github.com/flow-php/flow/pull/2442) - **flow-php/telemetry - log severity exposed to the attribute filter as log.severity and log.severity_name** - [@norberttech](https://github.com/norberttech)
 - [#2442](https://github.com/flow-php/flow/pull/2442) - **flow-php/symfony-telemetry-bundle - per-channel severity thresholds via attribute_filtering log middleware** - [@norberttech](https://github.com/norberttech)
