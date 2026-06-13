@@ -9,6 +9,7 @@ use Flow\PostgreSql\Client\Debug\QueryLog;
 use Flow\PostgreSql\Client\Debug\RecordingClient;
 use Flow\PostgreSql\Client\Exception\PostgreSqlError;
 use Flow\PostgreSql\Client\Exception\QueryException;
+use Flow\PostgreSql\Client\RowMapper;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use Flow\PostgreSql\Tests\Mother\FakeClient;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -47,6 +48,76 @@ final class RecordingClientTest extends TestCase
         (new RecordingClient(new FakeClient(), $log, 'analytics'))->execute('SELECT 1');
 
         static::assertSame('analytics', $log->queries()[0]->connection);
+    }
+
+    public function test_every_statement_bearing_method_is_recorded(): void
+    {
+        $log = new QueryLog();
+        $client = new RecordingClient(new FakeClient($this->createMock(Cursor::class)), $log);
+        $mapper = $this->createMock(RowMapper::class);
+
+        $client->execute('UPDATE t SET a = 1');
+        $client->explain('SELECT 1');
+        $client->fetch('SELECT 1');
+        $client->fetchAll('SELECT 1');
+        $client->fetchAllInto($mapper, 'SELECT 1');
+        $client->fetchInto($mapper, 'SELECT 1');
+        $client->fetchOne('SELECT 1');
+        $client->fetchOneInto($mapper, 'SELECT 1');
+        $client->fetchScalar('SELECT 1');
+        $client->fetchScalarBool('SELECT 1');
+        $client->fetchScalarFloat('SELECT 1');
+        $client->fetchScalarInt('SELECT 1');
+        $client->fetchScalarString('SELECT 1');
+        $client->fetchSingle('SELECT 1');
+        $client->fetchSingleInto($mapper, 'SELECT 1');
+        $client->cursor('SELECT 1');
+
+        static::assertCount(16, $log->queries());
+    }
+
+    public function test_failed_cursor_records_failure_and_rethrows(): void
+    {
+        $log = new QueryLog();
+        $inner = new FakeClient($this->createMock(Cursor::class));
+        $inner->failNextQuery(QueryException::executionFailed('SELECT bad', PostgreSqlError::unknown('boom')));
+        $client = new RecordingClient($inner, $log);
+
+        try {
+            $client->cursor('SELECT bad');
+            static::fail('Expected QueryException to be re-thrown');
+        } catch (QueryException) {
+            // expected
+        }
+
+        static::assertTrue($log->queries()[0]->failed);
+        static::assertNull($log->queries()[0]->rowCount);
+    }
+
+    public function test_delegation_methods_forward_without_recording(): void
+    {
+        $log = new QueryLog();
+        $inner = new FakeClient();
+        $client = new RecordingClient($inner, $log);
+
+        $client->beginTransaction();
+        $client->commit();
+        $client->rollBack();
+        $client->setAutoCommit(true);
+        $client->close();
+        $client->converters();
+        $client->parameters();
+        $client->listen('channel');
+        $client->unlisten('channel');
+        $client->wait(0);
+
+        static::assertSame(0, $client->getTransactionNestingLevel());
+        static::assertTrue($client->isAutoCommit());
+        static::assertTrue($client->isConnected());
+        static::assertSame(0, $client->lastInsertId('seq'));
+        static::assertSame('result', $client->transaction(static fn(): string => 'result'));
+
+        static::assertSame([], $log->queries());
     }
 
     public function test_fetch_records_one_row_when_row_returned(): void

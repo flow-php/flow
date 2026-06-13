@@ -133,7 +133,7 @@ and failures.
 ```yaml
 flow_postgresql:
   profiler:
-    # enabled: null (default) auto-enables iff WebProfilerBundle is registered; true forces it on
+    # enabled: null (default) auto-enables when WebProfilerBundle is registered; true forces it on
     # (throws if WebProfilerBundle is absent); false forces it off entirely.
     enabled: ~
     include_parameters: true # show bound query parameters in the panel
@@ -148,7 +148,7 @@ flow_postgresql:
   connections:
     default:
       dsn: '%env(DATABASE_URL)%'
-      profiler: false   # do not record this connection's queries (default: true)
+      profiler: false # do not record queries in selected connection (default: true)
 ```
 
 ### Migrations

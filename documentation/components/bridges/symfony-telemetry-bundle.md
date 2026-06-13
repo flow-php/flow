@@ -1110,7 +1110,7 @@ count; the panel breaks it down per signal type.
 ```yaml
 flow_telemetry:
   profiler:
-    # enabled: null (default) auto-enables iff WebProfilerBundle is registered; true forces it on
+    # enabled: null (default) auto-enables when WebProfilerBundle is registered; true forces it on
     # (throws if WebProfilerBundle is absent); false forces it off.
     enabled: ~
     capture_logs: false # also capture logs and render them in the panel's Logs section (off by default)

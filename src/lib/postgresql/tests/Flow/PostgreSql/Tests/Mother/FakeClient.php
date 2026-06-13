@@ -12,9 +12,14 @@ use Flow\PostgreSql\Client\Exception\QueryException;
 use Flow\PostgreSql\Client\Notification;
 use Flow\PostgreSql\Client\RowMapper;
 use Flow\PostgreSql\Client\Types\ValueConverters;
+use Flow\PostgreSql\Explain\Plan\Cost;
 use Flow\PostgreSql\Explain\Plan\Plan;
+use Flow\PostgreSql\Explain\Plan\PlanNode;
+use Flow\PostgreSql\Explain\Plan\PlanNodeType;
 use Flow\PostgreSql\QueryBuilder\Sql;
 use RuntimeException;
+
+use function Flow\PostgreSql\DSL\pgsql_connection_params;
 
 /**
  * Configurable {@see Client} test double for exercising decorators. Query methods return canned
@@ -64,7 +69,9 @@ final class FakeClient implements Client
 
     public function converters(): ValueConverters
     {
-        throw new RuntimeException('not configured');
+        $this->delegated[] = 'converters';
+
+        return ValueConverters::create();
     }
 
     public function cursor(Sql|string $sql, array $parameters = []): Cursor
@@ -87,7 +94,9 @@ final class FakeClient implements Client
 
     public function explain(Sql|string $sql, array $parameters = [], ?ExplainConfig $config = null): Plan
     {
-        throw new RuntimeException('not configured');
+        $this->guard();
+
+        return new Plan(new PlanNode(PlanNodeType::SEQ_SCAN, new Cost(0.0, 10.0), 100, 8));
     }
 
     public function fetch(Sql|string $sql, array $parameters = []): ?array
@@ -210,7 +219,9 @@ final class FakeClient implements Client
 
     public function parameters(): ConnectionParameters
     {
-        throw new RuntimeException('not configured');
+        $this->delegated[] = 'parameters';
+
+        return pgsql_connection_params('testdb', 'localhost', 5432, 'user');
     }
 
     public function rollBack(): void

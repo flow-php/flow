@@ -153,6 +153,50 @@ final class FlowTelemetryProfilerTest extends KernelTestCase
         static::assertGreaterThanOrEqual(1, $collector->getSpanCount());
     }
 
+    public function test_capture_logs_and_composite_processor_exporters_are_decorated(): void
+    {
+        $kernel = $this->bootKernel([
+            'config' => function (TestKernel $kernel): void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestBundle(TwigBundle::class);
+                $kernel->addTestBundle(WebProfilerBundle::class);
+                $kernel->addTestExtensionConfig('framework', array_merge($this->frameworkConfig(), [
+                    'profiler' => ['enabled' => true, 'collect' => true],
+                ]));
+                $kernel->addTestExtensionConfig('twig', ['debug' => true, 'strict_variables' => true]);
+                $kernel->addTestExtensionConfig('web_profiler', ['toolbar' => false, 'intercept_redirects' => false]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => [
+                        'traces_a' => ['memory' => null],
+                        'traces_b' => ['memory' => null],
+                        'app_logs' => ['memory' => null],
+                    ],
+                    // Composite processor exercises the recursive exporter-id collection.
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'composite',
+                            'processors' => [
+                                ['type' => 'batching', 'exporter' => 'traces_a'],
+                                ['type' => 'batching', 'exporter' => 'traces_b'],
+                            ],
+                        ],
+                    ],
+                    'logger_provider' => [
+                        'processor' => ['type' => 'batching', 'exporter' => 'app_logs'],
+                    ],
+                    'profiler' => ['enabled' => true, 'capture_logs' => true],
+                ]);
+                $this->publishProfilerService($kernel);
+            },
+        ]);
+        $container = $kernel->getContainer();
+
+        static::assertInstanceOf(CompositeExporter::class, $container->get('flow.telemetry.exporter.traces_a'));
+        static::assertInstanceOf(CompositeExporter::class, $container->get('flow.telemetry.exporter.traces_b'));
+        static::assertInstanceOf(CompositeExporter::class, $container->get('flow.telemetry.exporter.app_logs'));
+    }
+
     /**
      * @param array{enabled?: bool|null, capture_logs?: bool} $profilerConfig
      */
