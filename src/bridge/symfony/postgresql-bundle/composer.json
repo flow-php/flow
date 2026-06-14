@@ -21,6 +21,8 @@
         "twig/twig": "^3.0"
     },
     "require-dev": {
+        "composer-runtime-api": "^2.2",
+        "composer/semver": "^3.4",
         "flow-php/phpunit-postgresql-bridge": "self.version",
         "flow-php/symfony-postgresql-cache-bridge": "self.version",
         "flow-php/symfony-postgresql-messenger-bridge": "self.version",
