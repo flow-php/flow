@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-06-13
+## [Unreleased] - 2026-06-14
 
 ### Added
 - [#2448](https://github.com/flow-php/flow/pull/2448) - **flow-php/symfony-telemetry-bundle - Web Profiler panel with spans, metrics and logs.** - [@norberttech](https://github.com/norberttech)
@@ -23,6 +23,7 @@
 - [#2434](https://github.com/flow-php/flow/pull/2434) - **flow-php/symfony-telemetry-bundle - per-channel binding of PSR-3 LoggerInterface and native Logger with $Logger aliases** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2449](https://github.com/flow-php/flow/pull/2449) - **Migrate Symfony XML configuration usage to the PHP one** - [@stloyd](https://github.com/stloyd)
 - [#2446](https://github.com/flow-php/flow/pull/2446) - **flow-php/postgresql - column and domain defaults are modeled as ColumnDefault (breaking ColumnShape/DomainShape default shape)** - [@norberttech](https://github.com/norberttech)
 - [#2441](https://github.com/flow-php/flow/pull/2441) - **flow-php/telemetry - OTEL_RESOURCE_ATTRIBUTES now percent-decodes keys and values per OTel spec** - [@norberttech](https://github.com/norberttech)
 - [#2440](https://github.com/flow-php/flow/pull/2440) - **flow-php/symfony-postgresql-messenger-bridge - store messenger_messages time columns as timestamp instead of timestamptz** - [@norberttech](https://github.com/norberttech)
