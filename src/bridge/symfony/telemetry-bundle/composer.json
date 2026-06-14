@@ -28,6 +28,8 @@
         "symfony/polyfill-mbstring": "^1.33"
     },
     "require-dev": {
+        "composer-runtime-api": "^2.2",
+        "composer/semver": "^3.4",
         "doctrine/dbal": "^4.4",
         "flow-php/psr18-telemetry-bridge": "self.version",
         "flow-php/telemetry-otlp-bridge": "self.version",
