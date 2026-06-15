@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-06-14
+## [Unreleased] - 2026-06-15
 
 ### Added
 - [#2448](https://github.com/flow-php/flow/pull/2448) - **flow-php/symfony-telemetry-bundle - Web Profiler panel with spans, metrics and logs.** - [@norberttech](https://github.com/norberttech)
@@ -23,6 +23,7 @@
 - [#2434](https://github.com/flow-php/flow/pull/2434) - **flow-php/symfony-telemetry-bundle - per-channel binding of PSR-3 LoggerInterface and native Logger with $Logger aliases** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2450](https://github.com/flow-php/flow/pull/2450) - **Fallback to the Symfony XML configuration only at `^6.4.0`** - [@stloyd](https://github.com/stloyd)
 - [#2449](https://github.com/flow-php/flow/pull/2449) - **Migrate Symfony XML configuration usage to the PHP one** - [@stloyd](https://github.com/stloyd)
 - [#2446](https://github.com/flow-php/flow/pull/2446) - **flow-php/postgresql - column and domain defaults are modeled as ColumnDefault (breaking ColumnShape/DomainShape default shape)** - [@norberttech](https://github.com/norberttech)
 - [#2441](https://github.com/flow-php/flow/pull/2441) - **flow-php/telemetry - OTEL_RESOURCE_ATTRIBUTES now percent-decodes keys and values per OTel spec** - [@norberttech](https://github.com/norberttech)
