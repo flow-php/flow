@@ -10,8 +10,6 @@ use CmsIg\Seal\Engine;
 use CmsIg\Seal\EngineInterface;
 use CmsIg\Seal\Schema\Schema;
 
-use function array_keys;
-
 final class SealContext
 {
     /**
@@ -42,7 +40,7 @@ final class SealContext
     {
         $engine = new Engine($this->adapter, $schema);
 
-        foreach (array_keys($schema->indexes) as $index) {
+        foreach ($schema->indexes as $index => $_value) {
             if ($engine->existIndex($index)) {
                 $engine->dropIndex($index, ['return_slow_promise_result' => true])?->wait();
             }

@@ -133,6 +133,7 @@ jobs:
         env:
           PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres?serverVersion=18&charset=utf8
           MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/mysql
+          ELASTICSEARCH_URL: http://127.0.0.1:${{ job.services.elasticsearch.ports['9200'] }}
           SQLITE_DATABASE_URL: "sqlite:///:memory:"
           AZURITE_HOST: "localhost"
           AZURITE_BLOB_PORT: "10000"
@@ -158,7 +159,6 @@ jobs:
         env:
           PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/postgres?serverVersion=18&charset=utf8
           MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/mysql
-          ELASTICSEARCH_URL: http://127.0.0.1:${{ job.services.elasticsearch.ports['9200'] }}
           SQLITE_DATABASE_URL: "sqlite:///:memory:"
           AZURITE_HOST: "localhost"
           AZURITE_BLOB_PORT: "10000"

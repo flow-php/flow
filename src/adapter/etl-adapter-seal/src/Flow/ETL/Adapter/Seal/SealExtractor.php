@@ -13,7 +13,6 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Generator;
 
-use function count;
 use function Flow\ETL\DSL\array_to_rows;
 
 final class SealExtractor implements Extractor
@@ -49,12 +48,14 @@ final class SealExtractor implements Extractor
             $search->offset($offset);
 
             $documents = [];
+            $count = 0;
 
             foreach ($search->getResult() as $document) {
                 $documents[] = $document;
+                $count++;
             }
 
-            if ($documents === []) {
+            if ($count === 0) {
                 return;
             }
 
@@ -64,7 +65,7 @@ final class SealExtractor implements Extractor
                 return;
             }
 
-            if (count($documents) < $this->pageSize) {
+            if ($count < $this->pageSize) {
                 return;
             }
 
