@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 787
+ * Total functions: 784
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -3663,21 +3663,6 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\entry(" + "$" + "{" + "1:entry" + "}" + ")"),
         boost: 10
     },                {
-        label: "entry_id_factory",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">entry_id_factory</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$entry_name</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">IdFactory</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Elasticsearch\\entry_id_factory(" + "$" + "{" + "1:entry_name" + "}" + ")"),
-        boost: 10
-    },                {
         label: "enum_entry",
         type: "function",
         detail: "flow\u002Ddsl\u002Dentries",
@@ -3781,24 +3766,6 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\Telemetry\\DSL\\error_log_handler(" + "$" + "{" + "1:messageType" + "}" + ", " + "$" + "{" + "2:expandNewlines" + "}" + ", " + "$" + "{" + "3:messagePrefix" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "es_hits_to_rows",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">es_hits_to_rows</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">DocumentDataSource</span> <span class=\"fn-param\">$source</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\ETL\\Adapter\\Elasticsearch\\ElasticsearchPHP\\DocumentDataSource::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">HitsIntoRowsTransformer</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Transforms elasticsearch results into clear Flow Rows using [\'hits\'][\'hits\'][x][\'_source\'].<br>@return HitsIntoRowsTransformer
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Elasticsearch\\es_hits_to_rows(" + "$" + "{" + "1:source" + "}" + ")"),
         boost: 10
     },                {
         label: "exception_if_exists",
@@ -4569,24 +4536,6 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\Adapter\\Http\\from_dynamic_http_requests(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:requestFactory" + "}" + ")"),
         boost: 10
     },                {
-        label: "from_es",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dextractors",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_es</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$config</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$parameters</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$pit_params</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ElasticsearchExtractor</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    Extractor will automatically try to iterate over whole index using one of the two iteration methods:.<br>- from/size<br>- search_after<br>Search after is selected when you provide define sort parameters in query, otherwise it will fallback to from/size.<br>@param array{<br> hosts?: array<string>,<br> connectionParams?: array<mixed>,<br> retries?: int,<br> sniffOnStart?: bool,<br> sslCert?: array<string>,<br> sslKey?: array<string>,<br> sslVerification?: bool|string,<br> elasticMetaHeader?: bool,<br> includePortInHostHeader?: bool<br>} $config<br>@param array<mixed> $parameters - https://www.elastic.co/guide/en/elasticsearch/reference/master/search-search.html<br>@param ?array<mixed> $pit_params - when used extractor will create point in time to stabilize search results. Point in time is automatically closed when last element is extracted. https://www.elastic.co/guide/en/elasticsearch/reference/master/point-in-time-api.html - @deprecated use withPointInTime method instead
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Elasticsearch\\from_es(" + "$" + "{" + "1:config" + "}" + ", " + "$" + "{" + "2:parameters" + "}" + ", " + "$" + "{" + "3:pit_params" + "}" + ")"),
-        boost: 10
-    },                {
         label: "from_excel",
         type: "function",
         detail: "flow\u002Ddsl\u002Dextractors",
@@ -4750,6 +4699,21 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\from_rows(" + "$" + "{" + "1:rows" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "from_seal",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dextractors",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">from_seal</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EngineInterface</span> <span class=\"fn-param\">$engine</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$index</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SealExtractor</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Seal\\from_seal(" + "$" + "{" + "1:engine" + "}" + ", " + "$" + "{" + "2:index" + "}" + ")"),
         boost: 10
     },                {
         label: "from_sequence_date_period",
@@ -5071,21 +5035,6 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\hash(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:algorithm" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "hash_id_factory",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dhelpers",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">hash_id_factory</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$entry_names</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">IdFactory</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Elasticsearch\\hash_id_factory(" + "$" + "{" + "1:entry_names" + "}" + ")"),
         boost: 10
     },                {
         label: "host_detector",
@@ -9384,6 +9333,21 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PostgreSql\\DSL\\schema_view(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:definition" + "}" + ", " + "$" + "{" + "3:isUpdatable" + "}" + ")"),
         boost: 10
     },                {
+        label: "seal_schema_to_flow",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">seal_schema_to_flow</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Schema</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Seal\\seal_schema_to_flow(" + "$" + "{" + "1:schema" + "}" + ")"),
+        boost: 10
+    },                {
         label: "select",
         type: "function",
         detail: "flow\u002Ddsl\u002Dtransformers",
@@ -10902,42 +10866,6 @@ const dslFunctions = [
         apply: snippet("\\Flow\\ETL\\DSL\\to_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:data" + "}" + ", " + "$" + "{" + "3:entryFactory" + "}" + ")"),
         boost: 10
     },                {
-        label: "to_es_bulk_index",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dloaders",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_es_bulk_index</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$config</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$index</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">IdFactory</span> <span class=\"fn-param\">$id_factory</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$parameters</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ElasticsearchLoader</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                    https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html.<br>In order to control the size of the single request, use DataFrame::chunkSize() method just before calling DataFrame::load().<br>@param array{<br> hosts?: array<string>,<br> connectionParams?: array<mixed>,<br> retries?: int,<br> sniffOnStart?: bool,<br> sslCert?: array<string>,<br> sslKey?: array<string>,<br> sslVerification?: bool|string,<br> elasticMetaHeader?: bool,<br> includePortInHostHeader?: bool<br>} $config<br>@param string $index<br>@param IdFactory $id_factory<br>@param array<mixed> $parameters - https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html - @deprecated use withParameters method instead
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Elasticsearch\\to_es_bulk_index(" + "$" + "{" + "1:config" + "}" + ", " + "$" + "{" + "2:index" + "}" + ", " + "$" + "{" + "3:id_factory" + "}" + ", " + "$" + "{" + "4:parameters" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "to_es_bulk_update",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dloaders",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">to_es_bulk_update</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">array</span> <span class=\"fn-param\">$config</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$index</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">IdFactory</span> <span class=\"fn-param\">$id_factory</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$parameters</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">[]</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ElasticsearchLoader</span>
-                </div>
-                                <div style="color: #8b949e; font-size: 13px;">
-                     https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html.<br>In order to control the size of the single request, use DataFrame::chunkSize() method just before calling DataFrame::load().<br>@param array{<br> hosts?: array<string>,<br> connectionParams?: array<mixed>,<br> retries?: int,<br> sniffOnStart?: bool,<br> sslCert?: array<string>,<br> sslKey?: array<string>,<br> sslVerification?: bool|string,<br> elasticMetaHeader?: bool,<br> includePortInHostHeader?: bool<br>} $config<br>@param string $index<br>@param IdFactory $id_factory<br>@param array<mixed> $parameters - https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html - @deprecated use withParameters method instead
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Elasticsearch\\to_es_bulk_update(" + "$" + "{" + "1:config" + "}" + ", " + "$" + "{" + "2:index" + "}" + ", " + "$" + "{" + "3:id_factory" + "}" + ", " + "$" + "{" + "4:parameters" + "}" + ")"),
-        boost: 10
-    },                {
         label: "to_excel",
         type: "function",
         detail: "flow\u002Ddsl\u002Dloaders",
@@ -11035,6 +10963,51 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\Adapter\\Parquet\\to_parquet(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:options" + "}" + ", " + "$" + "{" + "3:compressions" + "}" + ", " + "$" + "{" + "4:schema" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "to_seal_delete",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dloaders",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">to_seal_delete</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EngineInterface</span> <span class=\"fn-param\">$engine</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$index</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SealLoader</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Seal\\to_seal_delete(" + "$" + "{" + "1:engine" + "}" + ", " + "$" + "{" + "2:index" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "to_seal_schema",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">to_seal_schema</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">Schema</span> <span class=\"fn-param\">$schema</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$index_name</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$identifier</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Schema</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Seal\\to_seal_schema(" + "$" + "{" + "1:schema" + "}" + ", " + "$" + "{" + "2:index_name" + "}" + ", " + "$" + "{" + "3:identifier" + "}" + ")"),
+        boost: 10
+    },                {
+        label: "to_seal_upsert",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dloaders",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">to_seal_upsert</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EngineInterface</span> <span class=\"fn-param\">$engine</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$index</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SealLoader</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\ETL\\Adapter\\Seal\\to_seal_upsert(" + "$" + "{" + "1:engine" + "}" + ", " + "$" + "{" + "2:index" + "}" + ")"),
         boost: 10
     },                {
         label: "to_stderr",
