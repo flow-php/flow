@@ -1,3 +1,8 @@
+## [Unreleased] - 2026-06-16
+
+### Fixed
+- [dd2562](https://github.com/flow-php/flow/commit/dd2562286e0c069f480cd8763915930abf95d32b) - **arrow-rs extension github workflow** - [@norberttech](https://github.com/norberttech)
+
 ## [0.40.0] - 2026-06-16
 
 ### Added
