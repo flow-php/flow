@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-06-15
+## [Unreleased] - 2026-06-16
 
 ### Added
 - [#2448](https://github.com/flow-php/flow/pull/2448) - **flow-php/symfony-telemetry-bundle - Web Profiler panel with spans, metrics and logs.** - [@norberttech](https://github.com/norberttech)
@@ -39,6 +39,7 @@
 - [460061](https://github.com/flow-php/flow/commit/46006120b9fbebbb5c84b4cf0c0dd9032285cef1) - **fix(flow-php/arrow-ext): macOS arm64 release binary build** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2452](https://github.com/flow-php/flow/pull/2452) - **flow-php/postgresql - BulkInsert upsert with an empty update set now emits ON CONFLICT DO NOTHING instead of a plain INSERT.** - [@norberttech](https://github.com/norberttech)
 - [#2447](https://github.com/flow-php/flow/pull/2447) - **collect coverage only from php8.3 tests** - [@norberttech](https://github.com/norberttech)
 - [#2446](https://github.com/flow-php/flow/pull/2446) - **flow-php/postgresql - schema diff now detects stale-cast drift in column and domain defaults** - [@norberttech](https://github.com/norberttech)
 - [#2444](https://github.com/flow-php/flow/pull/2444) - **flow-php/telemetry-otlp-bridge - isolate grpc tests so the PHP 8.5 shutdown SIGSEGV (grpc#38216) no longer fails CI** - [@norberttech](https://github.com/norberttech)
