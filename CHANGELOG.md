@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-06-16
+## [0.40.0] - 2026-06-16
 
 ### Added
 - [#2448](https://github.com/flow-php/flow/pull/2448) - **flow-php/symfony-telemetry-bundle - Web Profiler panel with spans, metrics and logs.** - [@norberttech](https://github.com/norberttech)
