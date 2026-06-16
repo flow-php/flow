@@ -149,6 +149,51 @@ final class BulkInsertTest extends TestCase
         );
     }
 
+    public function test_on_conflict_do_update_with_all_columns_as_conflict_target_emits_do_nothing(): void
+    {
+        $query = BulkInsert::into('t', ['a', 'b'], 1)->onConflictDoUpdate(ConflictTarget::columns(['a', 'b']));
+
+        static::assertSame(
+            'INSERT INTO "t" ("a", "b") VALUES ($1, $2) ON CONFLICT ("a", "b") DO NOTHING',
+            $query->toSql(),
+        );
+    }
+
+    public function test_on_conflict_do_update_with_constraint_and_empty_update_columns_emits_do_nothing(): void
+    {
+        $query = BulkInsert::into('t', ['a', 'b'], 1)->onConflictDoUpdate(ConflictTarget::constraint('t_pkey'), []);
+
+        static::assertSame(
+            'INSERT INTO "t" ("a", "b") VALUES ($1, $2) ON CONFLICT ON CONSTRAINT "t_pkey" DO NOTHING',
+            $query->toSql(),
+        );
+    }
+
+    public function test_on_conflict_do_update_with_empty_update_columns_emits_do_nothing(): void
+    {
+        $query = BulkInsert::into('users', ['email', 'name'], 1)->onConflictDoUpdate(
+            ConflictTarget::columns(['email']),
+            [],
+        );
+
+        static::assertSame(
+            'INSERT INTO "users" ("email", "name") VALUES ($1, $2) ON CONFLICT ("email") DO NOTHING',
+            $query->toSql(),
+        );
+    }
+
+    public function test_on_conflict_do_update_with_subset_target_still_emits_do_update(): void
+    {
+        $query = BulkInsert::into('users', ['email', 'name'], 1)->onConflictDoUpdate(ConflictTarget::columns([
+            'email',
+        ]));
+
+        static::assertSame(
+            'INSERT INTO "users" ("email", "name") VALUES ($1, $2) ON CONFLICT ("email") DO UPDATE SET "name" = EXCLUDED."name"',
+            $query->toSql(),
+        );
+    }
+
     public function test_on_conflict_do_update_with_constraint(): void
     {
         $query = BulkInsert::into('users', ['email', 'name'], 1)->onConflictDoUpdate(
