@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Seal\Tests\Integration;
 
 use CmsIg\Seal\Search\Condition\Condition;
 use CmsIg\Seal\Search\SearchBuilder;
+use Flow\ETL\Adapter\Seal\SealMetadata;
 use Flow\ETL\Adapter\Seal\Tests\IntegrationTestCase;
 use Flow\ETL\Extractor\Signal;
 
@@ -52,8 +53,11 @@ final class SealExtractorTest extends IntegrationTestCase
 
     public function test_filtering_documents_with_a_search_builder(): void
     {
+        // On Elasticsearch only searchable fields can be filtered; the "name" text field is marked
+        // filterable so SEAL resolves the term filter against its keyword sub-field. Integer fields
+        // (like "age") are mapped as non-indexed on Elasticsearch and support sorting only, not filtering.
         $engine = $this->sealContext()->engine(to_seal_schema(
-            schema(str_schema('id'), str_schema('name'), int_schema('age')),
+            schema(str_schema('id'), str_schema('name', false, SealMetadata::filterable()), int_schema('age')),
             'users',
             'id',
         ));
@@ -70,7 +74,7 @@ final class SealExtractorTest extends IntegrationTestCase
         $this->sealContext()->refresh();
 
         $extractor = from_seal($engine, 'users')->withSearchBuilder(static function (SearchBuilder $builder): void {
-            $builder->addFilter(Condition::equal('age', 21));
+            $builder->addFilter(Condition::equal('name', 'User 1'));
         });
 
         static::assertExtractedRowsCount(1, $extractor);
