@@ -13,6 +13,8 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
+use Flow\ETL\Schema\SortingStrategy;
+use Flow\ETL\Schema\SortingStrategy\AlphabeticalStrategy;
 
 use function array_key_exists;
 use function array_keys;
@@ -27,6 +29,7 @@ use function Flow\ETL\DSL\schema;
 use function implode;
 use function is_array;
 use function sprintf;
+use function usort;
 
 final class Schema implements Countable
 {
@@ -581,6 +584,20 @@ final class Schema implements Countable
     public function setMetadata(string $definition, Metadata $metadata): self
     {
         $this->get($definition)->setMetadata($metadata);
+
+        return $this;
+    }
+
+    /**
+     * @return Schema
+     */
+    public function sort(SortingStrategy $strategy = new AlphabeticalStrategy()): self
+    {
+        $definitions = array_values($this->definitions);
+
+        usort($definitions, static fn(Definition $left, Definition $right): int => $strategy->compare($left, $right));
+
+        $this->setDefinitions(...$definitions);
 
         return $this;
     }

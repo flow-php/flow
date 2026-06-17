@@ -179,3 +179,9 @@ function pgsql_table_to_flow_schema(Table $table, ?EntryTypesMap $typesMap = nul
 {
     return (new SchemaConverter($typesMap))->toFlowSchema($table);
 }
+
+#[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::HELPER)]
+function pgsql_sort_strategy(?EntryTypesMap $typesMap = null): PostgreSqlSortingStrategy
+{
+    return new PostgreSqlSortingStrategy($typesMap ?? new EntryTypesMap());
+}
