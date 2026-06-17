@@ -76,6 +76,10 @@ final readonly class BulkInsert implements Sql
             $assignments[$column] = 'EXCLUDED."' . $column . '"';
         }
 
+        if ($assignments === []) {
+            return new self($this->table, $this->columns, $this->rowCount, $target, true, []);
+        }
+
         return new self($this->table, $this->columns, $this->rowCount, $target, false, $assignments);
     }
 

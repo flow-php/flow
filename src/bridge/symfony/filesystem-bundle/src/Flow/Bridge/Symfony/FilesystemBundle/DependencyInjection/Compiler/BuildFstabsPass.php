@@ -6,6 +6,7 @@ namespace Flow\Bridge\Symfony\FilesystemBundle\DependencyInjection\Compiler;
 
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\LogicException;
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FstabBuilder;
+use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\FilesystemTable;
 use Flow\Filesystem\Telemetry\FilesystemTelemetryConfig;
 use Flow\Filesystem\Telemetry\FilesystemTelemetryOptions;
@@ -22,6 +23,7 @@ use function is_string;
 use function lcfirst;
 use function sprintf;
 use function str_replace;
+use function ucfirst;
 use function ucwords;
 
 final class BuildFstabsPass implements CompilerPassInterface
@@ -29,6 +31,8 @@ final class BuildFstabsPass implements CompilerPassInterface
     public const string CONFIG_PARAMETER = 'flow.filesystem.config';
 
     public const string FSTAB_SERVICE_PREFIX = '.flow.filesystem.fstab.';
+
+    public const string FS_SERVICE_PREFIX = '.flow.filesystem.fs.';
 
     public const string TELEMETRY_CONFIG_SERVICE_PREFIX = '.flow.filesystem.telemetry_config.';
 
@@ -111,6 +115,14 @@ final class BuildFstabsPass implements CompilerPassInterface
 
             $aliasId = FilesystemTable::class . ' $' . $this->camelCase($fstabNameStr) . 'Fstab';
             $container->setAlias($aliasId, $serviceId)->setPublic(true);
+
+            $this->registerMountServices(
+                $container,
+                $fstabNameStr,
+                $serviceId,
+                array_keys($resolvedFilesystems),
+                $fstabNameStr === $defaultFstab,
+            );
         }
 
         if ($defaultFstab !== null) {
@@ -175,7 +187,41 @@ final class BuildFstabsPass implements CompilerPassInterface
 
     private function camelCase(string $name): string
     {
-        return lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', $name))));
+        return lcfirst(str_replace(' ', '', ucwords(str_replace(['_', '-', '.', '+'], ' ', $name))));
+    }
+
+    /**
+     * @param list<string> $protocols mount protocols within the fstab
+     */
+    private function registerMountServices(
+        ContainerBuilder $container,
+        string $fstabName,
+        string $fstabServiceId,
+        array $protocols,
+        bool $isDefault,
+    ): void {
+        foreach ($protocols as $protocol) {
+            $mountServiceId = self::FS_SERVICE_PREFIX . $fstabName . '.' . $protocol;
+
+            $mountDefinition = new Definition(Filesystem::class);
+            $mountDefinition->setFactory([new Reference($fstabServiceId), 'for']);
+            $mountDefinition->setArguments([$protocol]);
+            $mountDefinition->setPublic(false);
+            $container->setDefinition($mountServiceId, $mountDefinition);
+
+            $container
+                ->setAlias(
+                    Filesystem::class . ' $' . $this->camelCase($fstabName) . ucfirst($this->camelCase($protocol)),
+                    $mountServiceId,
+                )
+                ->setPublic(true);
+
+            if ($isDefault) {
+                $container
+                    ->setAlias(Filesystem::class . ' $' . $this->camelCase($protocol), $mountServiceId)
+                    ->setPublic(true);
+            }
+        }
     }
 
     /**

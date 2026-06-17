@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\FilesystemBundle;
 
+use Flow\Bridge\Symfony\FilesystemBundle\Attribute\AsFilesystem;
 use Flow\Bridge\Symfony\FilesystemBundle\Attribute\AsFilesystemFactory;
 use Flow\Bridge\Symfony\FilesystemBundle\DependencyInjection\Compiler\BuildFstabsPass;
 use Flow\Bridge\Symfony\FilesystemBundle\DependencyInjection\Compiler\RegisterFilesystemFactoriesPass;
 use Flow\Bridge\Symfony\FilesystemBundle\DependencyInjection\Compiler\RegisterFstabLocatorPass;
+use Flow\Bridge\Symfony\FilesystemBundle\DependencyInjection\Compiler\ResolveFilesystemArgumentsPass;
 use Flow\Bridge\Symfony\FilesystemCache\FlowFilesystemCacheAdapter;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use Override;
+use ReflectionParameter;
 use Reflector;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -47,6 +50,7 @@ final class FlowFilesystemBundle extends AbstractBundle
         $container->addCompilerPass(new RegisterFilesystemFactoriesPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, 10);
         $container->addCompilerPass(new BuildFstabsPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, 0);
         $container->addCompilerPass(new RegisterFstabLocatorPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, -10);
+        $container->addCompilerPass(new ResolveFilesystemArgumentsPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, -20);
 
         $container->registerAttributeForAutoconfiguration(AsFilesystemFactory::class, static function (
             ChildDefinition $definition,
@@ -54,6 +58,18 @@ final class FlowFilesystemBundle extends AbstractBundle
             Reflector $reflector,
         ): void {
             $definition->addTag(RegisterFilesystemFactoriesPass::TAG, ['type' => $attribute->type]);
+        });
+
+        $container->registerAttributeForAutoconfiguration(AsFilesystem::class, static function (
+            ChildDefinition $definition,
+            AsFilesystem $attribute,
+            ReflectionParameter $parameter,
+        ): void {
+            $definition->addTag(ResolveFilesystemArgumentsPass::TAG, [
+                'argument' => $parameter->getName(),
+                'mount' => $attribute->mount,
+                'fstab' => $attribute->fstab ?? '',
+            ]);
         });
     }
 

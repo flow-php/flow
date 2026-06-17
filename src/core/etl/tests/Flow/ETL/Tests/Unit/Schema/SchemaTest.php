@@ -9,6 +9,7 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
@@ -16,12 +17,14 @@ use Generator;
 use JsonException;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function array_keys;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\integer_schema;
 use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\list_schema;
 use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_from_json;
@@ -39,6 +42,18 @@ use function json_encode;
 
 final class SchemaTest extends FlowTestCase
 {
+    public static function provide_add_after_reference_inputs(): Generator
+    {
+        yield 'string reference' => ['id'];
+        yield 'Reference reference' => [ref('id')];
+    }
+
+    public static function provide_add_before_reference_inputs(): Generator
+    {
+        yield 'string reference' => ['name'];
+        yield 'Reference reference' => [ref('name')];
+    }
+
     public static function provide_is_same_cases(): Generator
     {
         yield 'identical simple schemas' => [
@@ -192,6 +207,83 @@ final class SchemaTest extends FlowTestCase
         ];
     }
 
+    public static function provide_move_after_reference_inputs(): Generator
+    {
+        yield 'string name, string reference' => ['active', 'id'];
+        yield 'string name, Reference reference' => ['active', ref('id')];
+        yield 'Reference name, string reference' => [ref('active'), 'id'];
+        yield 'Reference name, Reference reference' => [ref('active'), ref('id')];
+    }
+
+    public static function provide_move_before_reference_inputs(): Generator
+    {
+        yield 'string name, string reference' => ['active', 'name'];
+        yield 'string name, Reference reference' => ['active', ref('name')];
+        yield 'Reference name, string reference' => [ref('active'), 'name'];
+        yield 'Reference name, Reference reference' => [ref('active'), ref('name')];
+    }
+
+    public static function provide_move_to_reference_inputs(): Generator
+    {
+        yield 'string name' => ['active'];
+        yield 'Reference name' => [ref('active')];
+    }
+
+    public static function provide_reorder_reference_inputs(): Generator
+    {
+        yield 'string names' => [['id', 'name', 'email']];
+        yield 'Reference names' => [[ref('id'), ref('name'), ref('email')]];
+        yield 'mixed names' => [[ref('id'), 'name', ref('email')]];
+    }
+
+    #[DataProvider('provide_add_after_reference_inputs')]
+    public function test_add_after(string|Reference $reference): void
+    {
+        $schema = schema(int_schema('id'), str_schema('name'))->addAfter($reference, bool_schema('active'));
+
+        static::assertSame(['id', 'active', 'name'], array_keys($schema->definitions()));
+    }
+
+    public function test_add_after_duplicate_definition(): void
+    {
+        $this->expectException(SchemaDefinitionNotUniqueException::class);
+
+        schema(int_schema('id'), str_schema('name'))->addAfter('name', int_schema('id'));
+    }
+
+    public function test_add_after_non_existing_reference(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        schema(int_schema('id'), str_schema('name'))->addAfter('not-existing', bool_schema('active'));
+    }
+
+    #[DataProvider('provide_add_before_reference_inputs')]
+    public function test_add_before(string|Reference $reference): void
+    {
+        $schema = schema(int_schema('id'), str_schema('name'))->addBefore(
+            $reference,
+            bool_schema('active'),
+            str_schema('email'),
+        );
+
+        static::assertSame(['id', 'active', 'email', 'name'], array_keys($schema->definitions()));
+    }
+
+    public function test_add_before_duplicate_definition(): void
+    {
+        $this->expectException(SchemaDefinitionNotUniqueException::class);
+
+        schema(int_schema('id'), str_schema('name'))->addBefore('name', int_schema('id'));
+    }
+
+    public function test_add_before_non_existing_reference(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        schema(int_schema('id'), str_schema('name'))->addBefore('not-existing', bool_schema('active'));
+    }
+
     public function test_add_metadata(): void
     {
         $schema = schema(int_schema('id'), str_schema('name'));
@@ -274,6 +366,50 @@ final class SchemaTest extends FlowTestCase
         );
     }
 
+    public function test_insert_at(): void
+    {
+        $schema = schema(int_schema('id'), str_schema('name'))->insertAt(1, bool_schema('active'));
+
+        static::assertSame(['id', 'active', 'name'], array_keys($schema->definitions()));
+    }
+
+    public function test_insert_at_appends_when_index_equals_count(): void
+    {
+        $schema = schema(int_schema('id'), str_schema('name'))->insertAt(2, bool_schema('active'));
+
+        static::assertSame(['id', 'name', 'active'], array_keys($schema->definitions()));
+    }
+
+    public function test_insert_at_duplicate_definition(): void
+    {
+        $this->expectException(SchemaDefinitionNotUniqueException::class);
+
+        schema(int_schema('id'), str_schema('name'))->insertAt(1, int_schema('id'));
+    }
+
+    public function test_insert_at_negative_index(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot insert definitions at index -1, schema has 2 definitions');
+
+        schema(int_schema('id'), str_schema('name'))->insertAt(-1, bool_schema('active'));
+    }
+
+    public function test_insert_at_out_of_range(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot insert definitions at index 3, schema has 2 definitions');
+
+        schema(int_schema('id'), str_schema('name'))->insertAt(3, bool_schema('active'));
+    }
+
+    public function test_insert_at_prepends_at_zero(): void
+    {
+        $schema = schema(int_schema('id'), str_schema('name'))->insertAt(0, bool_schema('active'));
+
+        static::assertSame(['active', 'id', 'name'], array_keys($schema->definitions()));
+    }
+
     #[DataProvider('provide_is_same_cases')]
     public function test_is_same(Schema $schema1, Schema $schema2, bool $expected): void
     {
@@ -312,6 +448,116 @@ final class SchemaTest extends FlowTestCase
         static::assertSame($schema1, $merged);
     }
 
+    #[DataProvider('provide_move_after_reference_inputs')]
+    public function test_move_after(string|Reference $name, string|Reference $reference): void
+    {
+        $schema = schema(int_schema('id'), str_schema('name'), bool_schema('active'))->moveAfter($name, $reference);
+
+        static::assertSame(['id', 'active', 'name'], array_keys($schema->definitions()));
+    }
+
+    public function test_move_after_forward(): void
+    {
+        $schema = schema(int_schema('id'), str_schema('name'), bool_schema('active'))->moveAfter('id', 'name');
+
+        static::assertSame(['name', 'id', 'active'], array_keys($schema->definitions()));
+    }
+
+    public function test_move_after_non_existing_entry(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        schema(int_schema('id'), str_schema('name'))->moveAfter('not-existing', 'name');
+    }
+
+    public function test_move_after_non_existing_reference(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        schema(int_schema('id'), str_schema('name'))->moveAfter('name', 'not-existing');
+    }
+
+    #[DataProvider('provide_move_before_reference_inputs')]
+    public function test_move_before(string|Reference $name, string|Reference $reference): void
+    {
+        $schema = schema(int_schema('id'), str_schema('name'), bool_schema('active'))->moveBefore($name, $reference);
+
+        static::assertSame(['id', 'active', 'name'], array_keys($schema->definitions()));
+    }
+
+    public function test_move_before_forward(): void
+    {
+        $schema = schema(int_schema('id'), str_schema('name'), bool_schema('active'))->moveBefore('id', 'active');
+
+        static::assertSame(['name', 'id', 'active'], array_keys($schema->definitions()));
+    }
+
+    public function test_move_before_non_existing_entry(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        schema(int_schema('id'), str_schema('name'))->moveBefore('not-existing', 'name');
+    }
+
+    public function test_move_before_non_existing_reference(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        schema(int_schema('id'), str_schema('name'))->moveBefore('name', 'not-existing');
+    }
+
+    public function test_move_preserves_definition_metadata(): void
+    {
+        $schema = schema(
+            str_schema('name'),
+            int_schema('id', metadata: Metadata::fromArray(['primary_key' => true])),
+        )->moveTo('id', 0);
+
+        static::assertSame(['id', 'name'], array_keys($schema->definitions()));
+        static::assertEquals(
+            int_schema('id', metadata: Metadata::fromArray(['primary_key' => true])),
+            $schema->get('id'),
+        );
+    }
+
+    public function test_move_relative_to_itself(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot move entry "id" relative to itself');
+
+        schema(int_schema('id'), str_schema('name'))->moveBefore('id', 'id');
+    }
+
+    #[DataProvider('provide_move_to_reference_inputs')]
+    public function test_move_to(string|Reference $name): void
+    {
+        $schema = schema(int_schema('id'), str_schema('name'), bool_schema('active'))->moveTo($name, 0);
+
+        static::assertSame(['active', 'id', 'name'], array_keys($schema->definitions()));
+    }
+
+    public function test_move_to_forward(): void
+    {
+        $schema = schema(int_schema('id'), str_schema('name'), bool_schema('active'))->moveTo('id', 2);
+
+        static::assertSame(['name', 'active', 'id'], array_keys($schema->definitions()));
+    }
+
+    public function test_move_to_non_existing(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        schema(int_schema('id'), str_schema('name'))->moveTo('not-existing', 0);
+    }
+
+    public function test_move_to_out_of_range(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot move entry "id" to index 2, schema has 2 definitions');
+
+        schema(int_schema('id'), str_schema('name'))->moveTo('id', 2);
+    }
+
     public function test_normalizing_and_recreating_schema(): void
     {
         $schema = schema(
@@ -328,6 +574,41 @@ final class SchemaTest extends FlowTestCase
         );
 
         static::assertEquals($schema, Schema::fromArray($schema->normalize()));
+    }
+
+    public function test_positional_mutation_returns_same_instance(): void
+    {
+        $schema = schema(int_schema('id'), str_schema('name'));
+
+        static::assertSame($schema, $schema->prepend(bool_schema('active')));
+    }
+
+    public function test_prepend(): void
+    {
+        $schema = schema(
+            str_schema('name'),
+            str_schema('email'),
+        )->prepend(int_schema('id', metadata: Metadata::fromArray(['primary_key' => true])));
+
+        static::assertSame(['id', 'name', 'email'], array_keys($schema->definitions()));
+        static::assertEquals(
+            int_schema('id', metadata: Metadata::fromArray(['primary_key' => true])),
+            $schema->get('id'),
+        );
+    }
+
+    public function test_prepend_duplicate_definition(): void
+    {
+        $this->expectException(SchemaDefinitionNotUniqueException::class);
+
+        schema(int_schema('id'), str_schema('name'))->prepend(int_schema('id'));
+    }
+
+    public function test_prepend_multiple(): void
+    {
+        $schema = schema(int_schema('id'))->prepend(str_schema('name'), bool_schema('active'));
+
+        static::assertSame(['name', 'active', 'id'], array_keys($schema->definitions()));
     }
 
     public function test_remove_non_existing_definition(): void
@@ -354,6 +635,41 @@ final class SchemaTest extends FlowTestCase
         $this->expectException(SchemaDefinitionNotFoundException::class);
 
         schema(int_schema('id'), str_schema('name'))->rename('not-existing', 'new_name');
+    }
+
+    /**
+     * @param list<string|Reference> $names
+     */
+    #[DataProvider('provide_reorder_reference_inputs')]
+    public function test_reorder(array $names): void
+    {
+        $schema = schema(str_schema('name'), str_schema('email'), int_schema('id'))->reorder(...$names);
+
+        static::assertSame(['id', 'name', 'email'], array_keys($schema->definitions()));
+    }
+
+    public function test_reorder_duplicate_name(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot reorder entry "id" more than once');
+
+        schema(int_schema('id'), str_schema('name'))->reorder('id', 'id');
+    }
+
+    public function test_reorder_keeps_unlisted_columns(): void
+    {
+        $schema = schema(str_schema('name'), str_schema('email'), int_schema('id'), bool_schema('active'))->reorder(
+            'id',
+        );
+
+        static::assertSame(['id', 'name', 'email', 'active'], array_keys($schema->definitions()));
+    }
+
+    public function test_reorder_non_existing(): void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        schema(int_schema('id'), str_schema('name'))->reorder('not-existing');
     }
 
     public function test_replace_non_existing_reference(): void
