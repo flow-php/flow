@@ -1,4 +1,7 @@
-## [Unreleased] - 2026-06-16
+## [Unreleased] - 2026-06-17
+
+### Added
+- [#2454](https://github.com/flow-php/flow/pull/2454) - **Positional schema definition mutations on Flow\ETL\Schema: prepend(), insertAt(), addBefore(), addAfter(), moveTo(), moveBefore(), moveAfter() and reorder()** - [@bendavies](https://github.com/bendavies)
 
 ### Fixed
 - [dd2562](https://github.com/flow-php/flow/commit/dd2562286e0c069f480cd8763915930abf95d32b) - **arrow-rs extension github workflow** - [@norberttech](https://github.com/norberttech)
