@@ -17,6 +17,7 @@ use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Row\Entry\XMLElementEntry;
 use Flow\ETL\Row\Entry\XMLEntry;
 
+use function array_keys;
 use function is_array;
 use function is_bool;
 use function is_float;
@@ -60,8 +61,8 @@ final readonly class EntryNormalizer
 
         $normalized = [];
 
-        foreach ($value as $key => $nested) {
-            $normalized[$key] = $this->normalizeValue($nested);
+        foreach (array_keys($value) as $key) {
+            $normalized[$key] = $this->normalizeValue($value[$key]);
         }
 
         return $normalized;

@@ -45,9 +45,7 @@ final class TwigSpanCleanupSubscriberTest extends TestCase
 
         $subscriber = new TwigSpanCleanupSubscriber($extension);
         $command = new Command('app:process');
-        $subscriber->onConsoleTerminate(
-            new ConsoleTerminateEvent($command, new ArrayInput([]), new NullOutput(), 0),
-        );
+        $subscriber->onConsoleTerminate(new ConsoleTerminateEvent($command, new ArrayInput([]), new NullOutput(), 0));
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
@@ -66,9 +64,7 @@ final class TwigSpanCleanupSubscriberTest extends TestCase
 
         $subscriber = new TwigSpanCleanupSubscriber($extension);
         $kernel = $this->createStub(HttpKernelInterface::class);
-        $subscriber->onTerminate(
-            new TerminateEvent($kernel, new Request(), new Response()),
-        );
+        $subscriber->onTerminate(new TerminateEvent($kernel, new Request(), new Response()));
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);

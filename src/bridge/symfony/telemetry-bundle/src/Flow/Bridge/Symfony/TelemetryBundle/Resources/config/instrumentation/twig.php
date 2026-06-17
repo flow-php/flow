@@ -21,8 +21,7 @@ return static function (ContainerConfigurator $container): void {
             '%flow.telemetry.twig.trace_macros%',
             '%flow.telemetry.twig.exclude_templates%',
         ])
-        ->tag('twig.extension')
-        ->tag('kernel.reset', ['method' => 'reset']);
+        ->tag('twig.extension')->tag('kernel.reset', ['method' => 'reset']);
 
     $services
         ->set('flow.telemetry.twig.span_cleanup_subscriber', TwigSpanCleanupSubscriber::class)
