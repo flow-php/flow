@@ -271,6 +271,15 @@ final class SchemaConverterTest extends TestCase
         static::assertTrue($table->column('amount')->type->isEqual(ColumnType::numeric(10, 2)));
     }
 
+    public function test_prepend_drives_create_table_column_order(): void
+    {
+        $schema = schema(str_schema('name'), str_schema('email'))->prepend(int_schema('id'));
+
+        $table = (new SchemaConverter())->toPostgreSqlTable($schema, 'users');
+
+        static::assertSame(['id', 'name', 'email'], $table->columnNames());
+    }
+
     public function test_primary_key_forces_not_null(): void
     {
         $table = (new SchemaConverter())->toPostgreSqlTable(

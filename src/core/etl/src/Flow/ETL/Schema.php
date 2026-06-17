@@ -17,13 +17,17 @@ use Flow\ETL\Schema\Metadata;
 use function array_key_exists;
 use function array_map;
 use function array_merge;
+use function array_splice;
 use function array_values;
 use function count;
 use function Flow\ETL\DSL\definition_from_array;
 use function Flow\ETL\DSL\schema;
 use function implode;
 use function is_array;
+use function is_int;
 use function sprintf;
+use function str_starts_with;
+use function substr;
 
 final class Schema implements Countable
 {
@@ -122,6 +126,68 @@ final class Schema implements Countable
     }
 
     /**
+     * Inserts new definitions right after an existing one.
+     *
+     * @param Definition<mixed> ...$definitions
+     *
+     * @throws SchemaDefinitionNotFoundException
+     *
+     * @return Schema
+     */
+    public function addAfter(string|Reference $reference, Definition ...$definitions): self
+    {
+        $this->get($reference);
+
+        $target = EntryReference::init($reference);
+        $result = [];
+
+        foreach (array_values($this->definitions) as $definition) {
+            $result[] = $definition;
+
+            if ($definition->entry()->is($target)) {
+                foreach ($definitions as $new) {
+                    $result[] = $new;
+                }
+            }
+        }
+
+        $this->setDefinitions(...$result);
+
+        return $this;
+    }
+
+    /**
+     * Inserts new definitions right before an existing one.
+     *
+     * @param Definition<mixed> ...$definitions
+     *
+     * @throws SchemaDefinitionNotFoundException
+     *
+     * @return Schema
+     */
+    public function addBefore(string|Reference $reference, Definition ...$definitions): self
+    {
+        $this->get($reference);
+
+        $target = EntryReference::init($reference);
+        $result = [];
+
+        foreach (array_values($this->definitions) as $definition) {
+            if ($definition->entry()->is($target)) {
+                foreach ($definitions as $new) {
+                    $result[] = $new;
+                }
+            }
+
+            $result[] = $definition;
+        }
+
+        $this->setDefinitions(...$result);
+
+        return $this;
+    }
+
+    /**
      * Adds metadata to a given definition.
      *
      * @param array<array-key, mixed>|bool|float|int|string $value
@@ -196,6 +262,34 @@ final class Schema implements Countable
         }
 
         $this->setDefinitions(...$definitions);
+
+        return $this;
+    }
+
+    /**
+     * Inserts new definitions at an explicit position (0 = beginning, count() = end).
+     *
+     * @param Definition<mixed> ...$definitions
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return Schema
+     */
+    public function insertAt(int $index, Definition ...$definitions): self
+    {
+        $current = array_values($this->definitions);
+
+        if ($index < 0 || $index > count($current)) {
+            throw InvalidArgumentException::because(
+                'Cannot insert definitions at index %d, schema has %d definition(s)',
+                $index,
+                count($current),
+            );
+        }
+
+        array_splice($current, $index, 0, $definitions);
+
+        $this->setDefinitions(...$current);
 
         return $this;
     }
@@ -301,6 +395,89 @@ final class Schema implements Countable
     }
 
     /**
+     * Relocates an existing definition (preserving its metadata) to a new position.
+     * The position is either a numeric index (the final position after removal; use count() - 1 for
+     * the end) or a string anchor prefixed with "before:" / "after:" referencing another column.
+     *
+     * @throws InvalidArgumentException
+     * @throws SchemaDefinitionNotFoundException
+     *
+     * @return Schema
+     */
+    public function move(string|Reference $name, int|string $position): self
+    {
+        $definition = $this->get($name);
+        $movedName = $definition->entry()->name();
+
+        $remaining = [];
+
+        foreach (array_values($this->definitions) as $next) {
+            if ($next->entry()->name() !== $movedName) {
+                $remaining[] = $next;
+            }
+        }
+
+        if (is_int($position)) {
+            if ($position < 0 || $position > count($remaining)) {
+                throw InvalidArgumentException::because(
+                    'Cannot move "%s" to index %d, schema has %d definition(s)',
+                    $movedName,
+                    $position,
+                    count($this->definitions),
+                );
+            }
+
+            array_splice($remaining, $position, 0, [$definition]);
+
+            $this->setDefinitions(...$remaining);
+
+            return $this;
+        }
+
+        if (str_starts_with($position, 'before:')) {
+            $anchor = EntryReference::init(substr($position, 7));
+            $before = true;
+        } elseif (str_starts_with($position, 'after:')) {
+            $anchor = EntryReference::init(substr($position, 6));
+            $before = false;
+        } else {
+            throw InvalidArgumentException::because(
+                'Move position must be an integer index or a string prefixed with "before:" or "after:", given: "%s"',
+                $position,
+            );
+        }
+
+        if ($anchor->name() === $movedName) {
+            throw InvalidArgumentException::because('Cannot move "%s" relative to itself', $movedName);
+        }
+
+        $result = [];
+        $found = false;
+
+        foreach ($remaining as $next) {
+            if ($before && $next->entry()->is($anchor)) {
+                $result[] = $definition;
+                $found = true;
+            }
+
+            $result[] = $next;
+
+            if (!$before && $next->entry()->is($anchor)) {
+                $result[] = $definition;
+                $found = true;
+            }
+        }
+
+        if (!$found) {
+            throw new SchemaDefinitionNotFoundException($anchor->name());
+        }
+
+        $this->setDefinitions(...$result);
+
+        return $this;
+    }
+
+    /**
      * @return array<array-key, array<mixed>>
      */
     public function normalize(): array
@@ -312,6 +489,20 @@ final class Schema implements Countable
         }
 
         return $definitions;
+    }
+
+    /**
+     * Inserts new definitions at the beginning of the schema.
+     *
+     * @param Definition<mixed> ...$definitions
+     *
+     * @return Schema
+     */
+    public function prepend(Definition ...$definitions): self
+    {
+        $this->setDefinitions(...array_merge($definitions, array_values($this->definitions)));
+
+        return $this;
     }
 
     public function references(): References
@@ -371,6 +562,36 @@ final class Schema implements Countable
         }
 
         $this->setDefinitions(...$definitions);
+
+        return $this;
+    }
+
+    /**
+     * Reorders definitions by name. Any unlisted definitions keep their relative order and are
+     * appended after the listed ones.
+     *
+     * @throws SchemaDefinitionNotFoundException
+     *
+     * @return Schema
+     */
+    public function reorder(string|Reference ...$names): self
+    {
+        $ordered = [];
+        $reordered = [];
+
+        foreach ($names as $name) {
+            $definition = $this->get($name);
+            $ordered[] = $definition;
+            $reordered[$definition->entry()->name()] = true;
+        }
+
+        foreach (array_values($this->definitions) as $definition) {
+            if (!array_key_exists($definition->entry()->name(), $reordered)) {
+                $ordered[] = $definition;
+            }
+        }
+
+        $this->setDefinitions(...$ordered);
 
         return $this;
     }
