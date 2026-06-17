@@ -157,10 +157,6 @@ component_management:
       name: adapter-doctrine
       paths:
         - src/adapter/etl-adapter-doctrine/**
-    - component_id: adapter-elasticsearch
-      name: adapter-elasticsearch
-      paths:
-        - src/adapter/etl-adapter-elasticsearch/**
     - component_id: adapter-google-sheet
       name: adapter-google-sheet
       paths:
@@ -201,6 +197,10 @@ component_management:
       name: adapter-postgresql
       paths:
         - src/adapter/etl-adapter-postgresql/**
+    - component_id: adapter-seal
+      name: adapter-seal
+      paths:
+        - src/adapter/etl-adapter-seal/**
     - component_id: bridge-phpunit-postgresql
       name: bridge-phpunit-postgresql
       paths:

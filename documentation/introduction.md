@@ -7,7 +7,7 @@ seo_description: Strongly typed, memory-efficient data processing for PHP — in
 
 Flow is a strongly typed, memory-efficient data processing framework for PHP.
 It gives you a single fluent API to read, transform, and write data across CSV,
-JSON, XML, Parquet, REST, RDBMS, Elasticsearch, and more — without per-format
+JSON, XML, Parquet, REST, RDBMS, SEAL, and more — without per-format
 boilerplate.
 
 If you build pipelines, ETL jobs, exports, imports, or reporting in PHP and
@@ -71,7 +71,7 @@ every value strongly typed.
 **Working with a specific source or sink**
 
 - Browse [Adapters](/documentation/components/adapters/csv) — CSV, JSON, XML,
-  Parquet, Avro, Excel, HTTP, PostgreSQL, Doctrine, Elasticsearch, ChartJS.
+  Parquet, Avro, Excel, HTTP, PostgreSQL, Doctrine, SEAL, ChartJS.
 
 **See it running**
 

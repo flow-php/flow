@@ -27,13 +27,14 @@ services:
         networks:
             - flow-php
     elasticsearch:
-        image: elasticsearch:7.17.2
+        image: elasticsearch:8.19.0
         container_name: flow-php-elasticsearch
         ports:
             - 9200:9200
         environment:
             - node.name=es01
             - discovery.type=single-node
+            - xpack.security.enabled=false
             - bootstrap.memory_lock=true
             - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
         networks:

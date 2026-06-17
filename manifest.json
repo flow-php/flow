@@ -61,16 +61,6 @@
             }
         },
         {
-            "name": "flow-php/etl-adapter-elasticsearch",
-            "path": "src/adapter/etl-adapter-elasticsearch",
-            "type": "adapter",
-            "links": {
-                "documentation": "/documentation/components/adapters/elasticsearch",
-                "api": "/documentation/api/adapter/elasticsearch",
-                "files": "/documentation/api/adapter/elasticsearch/indices/files.html"
-            }
-        },
-        {
             "name": "flow-php/etl-adapter-google-sheet",
             "path": "src/adapter/etl-adapter-google-sheet",
             "type": "adapter",
@@ -327,6 +317,16 @@
                 "documentation": "/documentation/components/adapters/postgresql",
                 "api": "/documentation/api/adapter/postgresql",
                 "files": "/documentation/api/adapter/postgresql/indices/files.html"
+            }
+        },
+        {
+            "name": "flow-php/etl-adapter-seal",
+            "path": "src/adapter/etl-adapter-seal",
+            "type": "adapter",
+            "links": {
+                "documentation": "/documentation/components/adapters/seal",
+                "api": "/documentation/api/adapter/seal",
+                "files": "/documentation/api/adapter/seal/indices/files.html"
             }
         },
         {

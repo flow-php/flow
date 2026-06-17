@@ -62,7 +62,6 @@ final class PackageMetaTest extends TestCase
     #[TestWith(['flow-php/etl-adapter-xml', 'adapter', 'Adapter', 'XML'])]
     #[TestWith(['flow-php/etl-adapter-http', 'adapter', 'Adapter', 'HTTP'])]
     #[TestWith(['flow-php/etl-adapter-google-sheet', 'adapter', 'Adapter', 'Google Sheet'])]
-    #[TestWith(['flow-php/etl-adapter-elasticsearch', 'adapter', 'Adapter', 'Elasticsearch'])]
     #[TestWith(['flow-php/parquet', 'lib', 'Library', 'Parquet'])]
     #[TestWith(['flow-php/postgresql', 'lib', 'Library', 'PostgreSQL'])]
     #[TestWith(['flow-php/azure-sdk', 'lib', 'Library', 'Azure SDK'])]

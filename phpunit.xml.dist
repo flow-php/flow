@@ -23,9 +23,7 @@
         <env name="PGSQL_DATABASE_URL" value="pgsql://postgres:postgres@127.0.0.1:5432/postgres?serverVersion=18%26charset=utf8"/>
         <env name="MYSQL_DATABASE_URL" value="mysql://mysql:mysql@127.0.0.1:3306/mysql"/>
         <env name="SQLITE_DATABASE_PATH" value="./var/db/sqlite/test.db"/>
-        <env name="ELASTICSEARCH_URL" value="localhost:9200"/>
-        <env name="MEILISEARCH_URL" value="http://localhost:7700"/>
-        <env name="MEILISEARCH_API_KEY" value="masterKey"/>
+        <env name="ELASTICSEARCH_URL" value="http://127.0.0.1:9200"/>
         <env name="OTEL_COLLECTOR_HTTP_ENDPOINT" value="http://localhost:4318"/>
         <env name="OTEL_COLLECTOR_OUTPUT_DIR" value="./var/otel"/>
         <env name="OTEL_RECEIVER_HTTP_ENDPOINT" value="http://localhost:4318"/>
@@ -239,13 +237,6 @@
         <testsuite name="adapter-doctrine-integration">
             <directory>src/adapter/etl-adapter-doctrine/tests/Flow/ETL/Adapter/Doctrine/Tests/Integration</directory>
         </testsuite>
-        <testsuite name="adapter-elasticsearch-unit">
-            <directory>src/adapter/etl-adapter-elasticsearch/tests/Flow/ETL/Adapter/Elasticsearch/Tests/Unit</directory>
-        </testsuite>
-        <testsuite name="adapter-elasticsearch-integration">
-            <directory>src/adapter/etl-adapter-elasticsearch/tests/Flow/ETL/Adapter/Elasticsearch/Tests/Integration
-            </directory>
-        </testsuite>
         <testsuite name="adapter-excel-unit">
             <directory>src/adapter/etl-adapter-excel/tests/Flow/ETL/Adapter/Excel/Tests/Unit</directory>
         </testsuite>
@@ -285,6 +276,12 @@
         </testsuite>
         <testsuite name="adapter-postgresql-integration">
             <directory>src/adapter/etl-adapter-postgresql/tests/Flow/ETL/Adapter/PostgreSql/Tests/Integration</directory>
+        </testsuite>
+        <testsuite name="adapter-seal-unit">
+            <directory>src/adapter/etl-adapter-seal/tests/Flow/ETL/Adapter/Seal/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="adapter-seal-integration">
+            <directory>src/adapter/etl-adapter-seal/tests/Flow/ETL/Adapter/Seal/Tests/Integration</directory>
         </testsuite>
         <testsuite name="adapter-text-integration">
             <directory>src/adapter/etl-adapter-text/tests/Flow/ETL/Adapter/Text/Tests/Integration</directory>
@@ -335,7 +332,6 @@
             <file>src/bridge/monolog/http/src/Flow/Bridge/Monolog/Http/DSL/functions.php</file>
             <file>src/bridge/symfony/http-foundation/src/Flow/Bridge/Symfony/HttpFoundation/functions.php</file>
             <file>src/adapter/etl-adapter-avro/src/Flow/ETL/Adapter/Avro/functions.php</file>
-            <file>src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/functions.php</file>
             <file>src/adapter/etl-adapter-json/src/Flow/ETL/Adapter/JSON/functions.php</file>
             <file>src/adapter/etl-adapter-http/src/Flow/ETL/Adapter/Http/DSL/functions.php</file>
             <file>src/adapter/etl-adapter-text/src/Flow/ETL/Adapter/Text/functions.php</file>
@@ -346,6 +342,7 @@
             <file>src/adapter/etl-adapter-excel/src/Flow/ETL/Adapter/Excel/DSL/functions.php</file>
             <file>src/adapter/etl-adapter-xml/src/Flow/ETL/Adapter/XML/functions.php</file>
             <file>src/adapter/etl-adapter-doctrine/src/Flow/ETL/Adapter/Doctrine/functions.php</file>
+            <file>src/adapter/etl-adapter-seal/src/Flow/ETL/Adapter/Seal/functions.php</file>
             <file>src/cli/src/Flow/CLI/DSL/functions.php</file>
             <file>src/lib/postgresql/src/Flow/PostgreSql/DSL/functions.php</file>
             <file>src/lib/types/src/Flow/Types/DSL/functions.php</file>

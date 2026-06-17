@@ -1,0 +1,56 @@
+{
+    "name": "flow-php/etl-adapter-seal",
+    "type": "library",
+    "description": "Flow PHP Adapter for Seal - php Search Engine Abstraction Layer https://php-cmsig.github.io/",
+    "keywords": [
+        "etl",
+        "extract",
+        "transform",
+        "load",
+        "seal",
+        "search",
+        "adapter"
+    ],
+    "require": {
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+        "cmsig/seal": "^0.12",
+        "flow-php/etl": "self.version"
+    },
+    "require-dev": {
+        "cmsig/seal-elasticsearch-adapter": "^0.12",
+        "cmsig/seal-memory-adapter": "^0.12",
+        "elasticsearch/elasticsearch": "^8.5.3"
+    },
+    "suggest": {
+        "cmsig/seal-algolia-adapter": "To use SEAL with Algolia as the search backend",
+        "cmsig/seal-elasticsearch-adapter": "To use SEAL with Elasticsearch as the search backend",
+        "cmsig/seal-loupe-adapter": "To use SEAL with Loupe (embedded, file-based) as the search backend",
+        "cmsig/seal-meilisearch-adapter": "To use SEAL with Meilisearch as the search backend",
+        "cmsig/seal-opensearch-adapter": "To use SEAL with OpenSearch as the search backend",
+        "cmsig/seal-redisearch-adapter": "To use SEAL with RediSearch as the search backend",
+        "cmsig/seal-solr-adapter": "To use SEAL with Apache Solr as the search backend",
+        "cmsig/seal-typesense-adapter": "To use SEAL with Typesense as the search backend"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        },
+        "files": [
+            "src/Flow/ETL/Adapter/Seal/functions.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

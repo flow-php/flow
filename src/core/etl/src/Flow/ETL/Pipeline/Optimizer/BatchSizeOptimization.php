@@ -43,7 +43,6 @@ final class BatchSizeOptimization implements Optimization
      */
     private array $supportedLoaders = [
         'Flow\ETL\Adapter\Doctrine\DbalLoader',
-        'Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\ElasticsearchLoader',
         'Flow\ETL\Adapter\PostgreSql\PostgreSqlLoader',
     ];
 

@@ -17,7 +17,6 @@ enum Module: string
     case CORE = 'Core';
     case CSV = 'CSV';
     case DOCTRINE = 'Doctrine';
-    case ELASTIC_SEARCH = 'Elastic Search';
     case EXCEL = 'Excel';
     case FILESYSTEM = 'Filesystem';
     case GOOGLE_SHEET = 'Google Sheet';
@@ -34,6 +33,7 @@ enum Module: string
     case PSR3_TELEMETRY_BRIDGE = 'PSR-3 Telemetry Bridge';
     case PSR7_TELEMETRY_BRIDGE = 'PSR-7 Telemetry Bridge';
     case S3_FILESYSTEM = 'S3 Filesystem';
+    case SEAL = 'Seal';
     case SYMFONY_HTTP_FOUNDATION_TELEMETRY_BRIDGE = 'Symfony HttpFoundation Telemetry Bridge';
     case SYMFONY_TELEMETRY_BUNDLE = 'Symfony Telemetry Bundle';
     case TELEMETRY = 'Telemetry';
@@ -56,7 +56,6 @@ enum Module: string
             self::CSV => 2,
             self::DOCTRINE => 3,
             self::POSTGRESQL => 4,
-            self::ELASTIC_SEARCH => 5,
             self::GOOGLE_SHEET => 6,
             self::CHART_JS => 7,
             self::JSON => 8,
@@ -81,6 +80,7 @@ enum Module: string
             self::POSTGRESQL_MIGRATIONS => 27,
             self::POSTGRESQL_VALINOR_BRIDGE => 28,
             self::PSR3_TELEMETRY_BRIDGE => 29,
+            self::SEAL => 30,
             default => 99,
         };
     }

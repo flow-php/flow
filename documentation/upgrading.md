@@ -7,6 +7,39 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
+## [Unreleased]
+
+### 1) Removal of Elasticsearch Adapter
+
+The Elasticsearch adapter has been removed from Flow PHP and replaced by the [SEAL](https://php-cmsig.github.io/search/) adapter (`flow-php/etl-adapter-seal`), a search engine abstraction layer that supports Elasticsearch, OpenSearch, Meilisearch, Solr, Typesense, Algolia, RediSearch and Loupe.
+
+To migrate, install the SEAL adapter together with the engine adapter for your backend:
+
+```
+composer require flow-php/etl-adapter-seal cmsig/seal-elasticsearch-adapter
+```
+
+Then build a `CmsIg\Seal\Engine` and pass it to `to_seal_upsert()` instead of the previous `to_es_bulk_index()` (or Meilisearch) DSL functions:
+
+```php
+use CmsIg\Seal\Engine;
+use CmsIg\Seal\Adapter\Elasticsearch\ElasticsearchAdapter;
+
+use function Flow\ETL\Adapter\Seal\to_seal_upsert;
+
+$engine = new Engine(
+    new ElasticsearchAdapter($client),
+    $schema,
+);
+
+data_frame()
+    ->read(/* ... */)
+    ->write(to_seal_upsert($engine, 'index_name'))
+    ->run();
+```
+
+---
+
 ## Upgrading from 0.39.x to 0.40.x
 
 ### 1) `flow-php/postgresql` - column and domain defaults are modeled as `ColumnDefault`
