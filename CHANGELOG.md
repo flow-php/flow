@@ -1,7 +1,12 @@
 ## [Unreleased] - 2026-06-17
 
 ### Added
+- [#2457](https://github.com/flow-php/flow/pull/2457) - **flow-php/symfony-filesystem-bundle - inject individual mounted filesystems via named-argument aliases** - [@norberttech](https://github.com/norberttech)
+- [#2457](https://github.com/flow-php/flow/pull/2457) - **flow-php/symfony-filesystem-bundle - #[AsFilesystem] attribute to select a mount to inject** - [@norberttech](https://github.com/norberttech)
 - [#2454](https://github.com/flow-php/flow/pull/2454) - **Positional schema definition mutations on Flow\ETL\Schema: prepend(), insertAt(), addBefore(), addAfter(), moveTo(), moveBefore(), moveAfter() and reorder()** - [@bendavies](https://github.com/bendavies)
+
+### Changed
+- [#2457](https://github.com/flow-php/flow/pull/2457) - **flow-php/filesystem - rename FilesystemTable::for() parameter $protocol to $mount** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
 - [dd2562](https://github.com/flow-php/flow/commit/dd2562286e0c069f480cd8763915930abf95d32b) - **arrow-rs extension github workflow** - [@norberttech](https://github.com/norberttech)
