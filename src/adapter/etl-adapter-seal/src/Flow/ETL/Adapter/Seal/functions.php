@@ -23,12 +23,6 @@ function to_seal_delete(EngineInterface $engine, string $index): SealLoader
     return new SealLoader($engine, $index, Operation::DELETE);
 }
 
-#[DocumentationDSL(module: Module::SEAL, type: Type::EXTRACTOR)]
-function from_seal(EngineInterface $engine, string $index): SealExtractor
-{
-    return new SealExtractor($engine, $index);
-}
-
 #[DocumentationDSL(module: Module::SEAL, type: Type::HELPER)]
 function to_seal_schema(Schema $schema, string $index_name, ?string $identifier = null): SealSchema
 {

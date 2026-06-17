@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 784
+ * Total functions: 783
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -4699,21 +4699,6 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\ETL\\DSL\\from_rows(" + "$" + "{" + "1:rows" + "}" + ")"),
-        boost: 10
-    },                {
-        label: "from_seal",
-        type: "function",
-        detail: "flow\u002Ddsl\u002Dextractors",
-        info: () => {
-            const div = document.createElement("div")
-            div.innerHTML = `
-                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">from_seal</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">EngineInterface</span> <span class=\"fn-param\">$engine</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">string</span> <span class=\"fn-param\">$index</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">SealExtractor</span>
-                </div>
-                            `
-            return div
-        },
-        apply: snippet("\\Flow\\ETL\\Adapter\\Seal\\from_seal(" + "$" + "{" + "1:engine" + "}" + ", " + "$" + "{" + "2:index" + "}" + ")"),
         boost: 10
     },                {
         label: "from_sequence_date_period",

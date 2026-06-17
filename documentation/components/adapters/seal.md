@@ -43,7 +43,6 @@ a SEAL schema. This works the same way as the Doctrine and PostgreSQL adapters, 
 connection/client - and it plays well with the [SEAL Symfony bundle](https://php-cmsig.github.io/search/integrations/symfony.html),
 where a fully configured engine can simply be injected.
 
-- **Extractor** - `from_seal()` reads documents from a search index with built-in pagination.
 - **Loader** - `to_seal_upsert()` / `to_seal_delete()` write or remove documents in a search index in bulks.
 - **Schema Conversion** - `to_seal_schema()` / `seal_schema_to_flow()` convert between Flow and SEAL schemas.
 
@@ -130,45 +129,6 @@ Before saving, rows are normalized into search documents:
 | `json`                    | decoded array                                   |
 | `list`, `map`, `structure` | array (nested values normalized recursively)   |
 
-## Extractor
-
-### Basic Usage
-
-`from_seal()` reads all documents from an index, paginating internally:
-
-```php
-use function Flow\ETL\Adapter\Seal\from_seal;
-use function Flow\ETL\Adapter\JSON\to_json;
-use function Flow\ETL\DSL\data_frame;
-
-data_frame()
-    ->read(from_seal($engine, 'users'))
-    ->write(to_json(__DIR__ . '/users.json'))
-    ->run();
-```
-
-### Page Size
-
-Documents are fetched in pages of 1000 by default, adjustable with `withPageSize()`:
-
-```php
-from_seal($engine, 'users')->withPageSize(500);
-```
-
-### Filtering with a Search Builder
-
-Narrow down the extracted documents with SEAL's search builder (filters, sorting, etc.). The configured search is
-built once and reused across pages:
-
-```php
-use CmsIg\Seal\Search\Condition\Condition;
-use CmsIg\Seal\Search\SearchBuilder;
-
-from_seal($engine, 'users')->withSearchBuilder(static function (SearchBuilder $builder): void {
-    $builder->addFilter(Condition::equal('age', 21));
-});
-```
-
 ## Schema Conversion
 
 `to_seal_schema()` converts a Flow schema into a SEAL schema for a single index. SEAL requires exactly one identifier
@@ -224,5 +184,5 @@ Default flags can be overridden per definition through entry metadata:
 > `$engine->createIndex('users')`, `$engine->dropIndex('users')`.
 
 > **Note:** Some search backends index documents asynchronously - a document saved by the loader may not be
-> immediately visible to `from_seal()` or `countDocuments()`. Consult your backend's documentation; SEAL exposes the
+> immediately visible to `countDocuments()`. Consult your backend's documentation; SEAL exposes the
 > `['return_slow_promise_result' => true]` option to wait for indexing tasks.
