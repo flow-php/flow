@@ -24,14 +24,6 @@ final readonly class TypeStrategy implements SortingStrategy
         $leftPriority = $this->priorities->for($left);
         $rightPriority = $this->priorities->for($right);
 
-        if ($leftPriority === $rightPriority) {
-            return 0;
-        }
-
-        if ($this->order === SortOrder::ASC) {
-            return $leftPriority <=> $rightPriority;
-        }
-
-        return $rightPriority <=> $leftPriority;
+        return $this->order === SortOrder::ASC ? $leftPriority <=> $rightPriority : $rightPriority <=> $leftPriority;
     }
 }

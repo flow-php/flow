@@ -20,8 +20,6 @@ use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\StringType;
 
-use function array_key_exists;
-
 final readonly class TypePriorities
 {
     /**
@@ -43,6 +41,8 @@ final readonly class TypePriorities
         XMLElementType::class => 13,
     ];
 
+    public const int UNKNOWN_TYPE_PRIORITY = PHP_INT_MAX;
+
     /**
      * @param array<class-string<Type<mixed>>, int> $priorities
      */
@@ -55,12 +55,6 @@ final readonly class TypePriorities
      */
     public function for(Definition $definition): int
     {
-        $type = $definition->type()::class;
-
-        if (!array_key_exists($type, $this->priorities)) {
-            return 99999;
-        }
-
-        return $this->priorities[$type];
+        return $this->priorities[$definition->type()::class] ?? self::UNKNOWN_TYPE_PRIORITY;
     }
 }
