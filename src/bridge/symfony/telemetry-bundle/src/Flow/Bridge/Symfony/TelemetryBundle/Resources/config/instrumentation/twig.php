@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Twig\TracingTwigExtension;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Twig\TwigSpanCleanupSubscriber;
 use Flow\Telemetry\Telemetry;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
@@ -20,5 +21,13 @@ return static function (ContainerConfigurator $container): void {
             '%flow.telemetry.twig.trace_macros%',
             '%flow.telemetry.twig.exclude_templates%',
         ])
-        ->tag('twig.extension');
+        ->tag('twig.extension')
+        ->tag('kernel.reset', ['method' => 'reset']);
+
+    $services
+        ->set('flow.telemetry.twig.span_cleanup_subscriber', TwigSpanCleanupSubscriber::class)
+        ->args([
+            service('flow.telemetry.twig.extension'),
+        ])
+        ->tag('kernel.event_subscriber');
 };
