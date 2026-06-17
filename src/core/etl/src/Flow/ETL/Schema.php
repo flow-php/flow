@@ -15,8 +15,11 @@ use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\Metadata;
 
 use function array_key_exists;
+use function array_keys;
 use function array_map;
 use function array_merge;
+use function array_search;
+use function array_splice;
 use function array_values;
 use function count;
 use function Flow\ETL\DSL\definition_from_array;
@@ -122,6 +125,34 @@ final class Schema implements Countable
     }
 
     /**
+     * Inserts definitions immediately after an existing column.
+     *
+     * @param Definition<mixed> ...$definitions
+     *
+     * @throws SchemaDefinitionNotFoundException
+     *
+     * @return Schema
+     */
+    public function addAfter(string|Reference $reference, Definition ...$definitions): self
+    {
+        return $this->insertAt($this->indexOf($reference) + 1, ...$definitions);
+    }
+
+    /**
+     * Inserts definitions immediately before an existing column.
+     *
+     * @param Definition<mixed> ...$definitions
+     *
+     * @throws SchemaDefinitionNotFoundException
+     *
+     * @return Schema
+     */
+    public function addBefore(string|Reference $reference, Definition ...$definitions): self
+    {
+        return $this->insertAt($this->indexOf($reference), ...$definitions);
+    }
+
+    /**
      * Adds metadata to a given definition.
      *
      * @param array<array-key, mixed>|bool|float|int|string $value
@@ -196,6 +227,35 @@ final class Schema implements Countable
         }
 
         $this->setDefinitions(...$definitions);
+
+        return $this;
+    }
+
+    /**
+     * Inserts definitions at an explicit position. Index 0 prepends, an index equal to the
+     * number of definitions appends.
+     *
+     * @param Definition<mixed> ...$definitions
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return Schema
+     */
+    public function insertAt(int $index, Definition ...$definitions): self
+    {
+        $definitionsList = array_values($this->definitions);
+
+        if ($index < 0 || $index > count($definitionsList)) {
+            throw new InvalidArgumentException(sprintf(
+                'Cannot insert definitions at index %d, schema has %d definitions',
+                $index,
+                count($definitionsList),
+            ));
+        }
+
+        array_splice($definitionsList, $index, 0, $definitions);
+
+        $this->setDefinitions(...$definitionsList);
 
         return $this;
     }
@@ -301,6 +361,66 @@ final class Schema implements Countable
     }
 
     /**
+     * Moves an existing column to immediately after another column, preserving its definition.
+     *
+     * @throws InvalidArgumentException
+     * @throws SchemaDefinitionNotFoundException
+     *
+     * @return Schema
+     */
+    public function moveAfter(string|Reference $name, string|Reference $reference): self
+    {
+        return $this->moveRelative($name, $reference, 1);
+    }
+
+    /**
+     * Moves an existing column to immediately before another column, preserving its definition.
+     *
+     * @throws InvalidArgumentException
+     * @throws SchemaDefinitionNotFoundException
+     *
+     * @return Schema
+     */
+    public function moveBefore(string|Reference $name, string|Reference $reference): self
+    {
+        return $this->moveRelative($name, $reference, 0);
+    }
+
+    /**
+     * Moves an existing column to an explicit position, preserving its definition.
+     * The index is the final position of the column in the resulting schema.
+     *
+     * @throws InvalidArgumentException
+     * @throws SchemaDefinitionNotFoundException
+     *
+     * @return Schema
+     */
+    public function moveTo(string|Reference $name, int $index): self
+    {
+        $from = $this->indexOf($name);
+        $definitionsList = array_values($this->definitions);
+
+        if ($index < 0 || $index >= count($definitionsList)) {
+            throw new InvalidArgumentException(sprintf(
+                'Cannot move entry "%s" to index %d, schema has %d definitions',
+                (string) $name,
+                $index,
+                count($definitionsList),
+            ));
+        }
+
+        // Mago infers array_splice()'s return as array<array-key, mixed>, dropping the element type,
+        // so we restore it explicitly. See https://github.com/carthage-software/mago/issues/1982
+        /** @var list<Definition<mixed>> $moved */
+        $moved = array_splice($definitionsList, $from, 1);
+        array_splice($definitionsList, $index, 0, $moved);
+
+        $this->setDefinitions(...$definitionsList);
+
+        return $this;
+    }
+
+    /**
      * @return array<array-key, array<mixed>>
      */
     public function normalize(): array
@@ -312,6 +432,20 @@ final class Schema implements Countable
         }
 
         return $definitions;
+    }
+
+    /**
+     * Inserts definitions at the beginning of the schema.
+     *
+     * @param Definition<mixed> ...$definitions
+     *
+     * @return Schema
+     */
+    public function prepend(Definition ...$definitions): self
+    {
+        $this->setDefinitions(...$definitions, ...array_values($this->definitions));
+
+        return $this;
     }
 
     public function references(): References
@@ -376,6 +510,42 @@ final class Schema implements Countable
     }
 
     /**
+     * Reorders columns by name. Any columns not listed keep their relative order and are appended.
+     *
+     * @throws InvalidArgumentException
+     * @throws SchemaDefinitionNotFoundException
+     *
+     * @return Schema
+     */
+    public function reorder(string|Reference ...$names): self
+    {
+        $definitions = [];
+        $reordered = [];
+
+        foreach ($names as $name) {
+            $definition = $this->findDefinition($name) ?: throw new SchemaDefinitionNotFoundException((string) $name);
+            $key = $definition->entry()->name();
+
+            if (array_key_exists($key, $reordered)) {
+                throw new InvalidArgumentException(sprintf('Cannot reorder entry "%s" more than once', (string) $name));
+            }
+
+            $reordered[$key] = true;
+            $definitions[] = $definition;
+        }
+
+        foreach ($this->definitions as $key => $definition) {
+            if (!array_key_exists($key, $reordered)) {
+                $definitions[] = $definition;
+            }
+        }
+
+        $this->setDefinitions(...$definitions);
+
+        return $this;
+    }
+
+    /**
      * @param Definition<mixed> $definition
      *
      * @return Schema
@@ -411,6 +581,54 @@ final class Schema implements Countable
     public function setMetadata(string $definition, Metadata $metadata): self
     {
         $this->get($definition)->setMetadata($metadata);
+
+        return $this;
+    }
+
+    private function indexOf(string|Reference $reference): int
+    {
+        $index = array_search(EntryReference::init($reference)->name(), array_keys($this->definitions), true);
+
+        if ($index === false) {
+            throw new SchemaDefinitionNotFoundException((string) $reference);
+        }
+
+        return $index;
+    }
+
+    private function moveRelative(string|Reference $name, string|Reference $reference, int $offset): self
+    {
+        $from = $this->indexOf($name);
+        $referenceName = EntryReference::init($reference)->name();
+
+        if (!$this->findDefinition($reference)) {
+            throw new SchemaDefinitionNotFoundException((string) $reference);
+        }
+
+        if (EntryReference::init($name)->name() === $referenceName) {
+            throw new InvalidArgumentException(sprintf('Cannot move entry "%s" relative to itself', (string) $name));
+        }
+
+        $definitionsList = array_values($this->definitions);
+
+        // Mago infers array_splice()'s return as array<array-key, mixed>, dropping the element type,
+        // so we restore it explicitly. See https://github.com/carthage-software/mago/issues/1982
+        /** @var list<Definition<mixed>> $moved */
+        $moved = array_splice($definitionsList, $from, 1);
+
+        $referenceIndex = 0;
+
+        foreach ($definitionsList as $position => $definition) {
+            if ($definition->entry()->name() === $referenceName) {
+                $referenceIndex = $position;
+
+                break;
+            }
+        }
+
+        array_splice($definitionsList, $referenceIndex + $offset, 0, $moved);
+
+        $this->setDefinitions(...$definitionsList);
 
         return $this;
     }
