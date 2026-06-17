@@ -1,6 +1,12 @@
 ## [Unreleased] - 2026-06-17
 
 ### Added
+- [#2408](https://github.com/flow-php/flow/pull/2408) - **SEAL adapter (flow-php/etl-adapter-seal) — a single, strongly typed integration for SEAL search engines (Elasticsearch, OpenSearch, Meilisearch, Algolia, Solr,
+Typesense, RediSearch, Loupe)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2408](https://github.com/flow-php/flow/pull/2408) - **from_seal() extractor and to_seal() loader, working with any SEAL EngineInterface** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2408](https://github.com/flow-php/flow/pull/2408) - **to_seal_schema() and seal_schema_to_flow() DSL — recursive, bi-directional Flow Schema ↔ SEAL Schema conversion (nested structures, lists and
+maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2408](https://github.com/flow-php/flow/pull/2408) - **seal_create_index(), seal_drop_index(), seal_create_schema() and seal_drop_schema() DSL index-lifecycle helpers** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2457](https://github.com/flow-php/flow/pull/2457) - **flow-php/symfony-filesystem-bundle - inject individual mounted filesystems via named-argument aliases** - [@norberttech](https://github.com/norberttech)
 - [#2457](https://github.com/flow-php/flow/pull/2457) - **flow-php/symfony-filesystem-bundle - #[AsFilesystem] attribute to select a mount to inject** - [@norberttech](https://github.com/norberttech)
 - [#2454](https://github.com/flow-php/flow/pull/2454) - **Positional schema definition mutations on Flow\ETL\Schema: prepend(), insertAt(), addBefore(), addAfter(), moveTo(), moveBefore(), moveAfter() and reorder()** - [@bendavies](https://github.com/bendavies)
@@ -10,6 +16,10 @@
 
 ### Fixed
 - [dd2562](https://github.com/flow-php/flow/commit/dd2562286e0c069f480cd8763915930abf95d32b) - **arrow-rs extension github workflow** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#2408](https://github.com/flow-php/flow/pull/2408) - **Elasticsearch adapter (flow-php/etl-adapter-elasticsearch) — superseded by the SEAL adapter; use SEAL with the Elasticsearch backend
+(cmsig/seal-elasticsearch-adapter)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 
 ## [0.40.0] - 2026-06-16
 
