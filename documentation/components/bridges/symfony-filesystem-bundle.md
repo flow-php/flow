@@ -81,6 +81,52 @@ final class ReportBuilder
 > Most applications need exactly one fstab with multiple filesystems mounted under it. Multi-fstab support
 > exists for advanced cases — see [Multi-Fstab Support](#multi-fstab-support).
 
+### Injecting a Single Filesystem
+
+When a service only needs one mounted filesystem, inject the `Flow\Filesystem\Filesystem` directly instead
+of the whole table. Every mount is registered as a private service and exposed two ways.
+
+**Named-argument autowiring** — each mount of the default fstab is aliased as `Filesystem $<protocol>`, and
+every mount (of any fstab) as `Filesystem $<fstab><Protocol>`. Protocols containing `-`, `.` or `+` are
+camel-cased (`aws-s3` → `awsS3`). This mirrors the `FilesystemTable $<name>Fstab` convention:
+
+```php
+use Flow\Filesystem\Filesystem;
+
+final class ReportBuilder
+{
+    public function __construct(
+        private readonly Filesystem $warehouse,       // → default fstab, 'warehouse' mount
+        private readonly Filesystem $analyticsFile,   // → 'analytics' fstab, 'file' mount
+    ) {
+    }
+}
+```
+
+**`#[AsFilesystem]` attribute** — for explicit selection or when the argument name should differ from the
+protocol. Omitting `fstab` targets the default fstab:
+
+```php
+use Flow\Bridge\Symfony\FilesystemBundle\Attribute\AsFilesystem;
+use Flow\Filesystem\Filesystem;
+
+final class ReportBuilder
+{
+    public function __construct(
+        #[AsFilesystem('warehouse')]
+        private readonly Filesystem $primary,
+        #[AsFilesystem('cold', fstab: 'archive')]
+        private readonly Filesystem $coldStorage,
+    ) {
+    }
+}
+```
+
+Named-argument aliases work for any autowired service; the attribute requires the consuming service to be
+autoconfigured (the default for everything under your `App\` namespace). Both resolve through the fstab's
+`FilesystemTable::for()`, so telemetry decoration is preserved. An unknown protocol or fstab fails at
+container-compile time with the available options listed.
+
 ## Configuration Reference
 
 ### Fstabs

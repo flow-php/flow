@@ -8,6 +8,7 @@ use Flow\Bridge\Symfony\FilesystemBundle\DependencyInjection\Compiler\BuildFstab
 use Flow\Bridge\Symfony\FilesystemBundle\Exception\LogicException;
 use Flow\Bridge\Symfony\FilesystemBundle\Filesystem\FstabBuilder;
 use Flow\Bridge\Symfony\FilesystemBundle\Tests\Context\BuildFstabsPassContext;
+use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\FilesystemTable;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -222,5 +223,97 @@ final class BuildFstabsPassTest extends TestCase
         );
 
         (new BuildFstabsPass())->process($container);
+    }
+
+    public function test_registers_per_mount_filesystem_service_resolving_through_fstab(): void
+    {
+        $container = $this->context->containerWithConfig([
+            'default_fstab' => 'default',
+            'fstabs' => [
+                'default' => [
+                    'filesystems' => [
+                        'memory' => ['type' => 'memory'],
+                    ],
+                ],
+            ],
+        ]);
+
+        (new BuildFstabsPass())->process($container);
+
+        $definition = $container->getDefinition('.flow.filesystem.fs.default.memory');
+
+        static::assertSame(Filesystem::class, $definition->getClass());
+        static::assertEquals([new Reference('.flow.filesystem.fstab.default'), 'for'], $definition->getFactory());
+        static::assertSame(['memory'], $definition->getArguments());
+        static::assertFalse($definition->isPublic());
+    }
+
+    public function test_registers_bare_and_prefixed_mount_aliases_for_default_fstab(): void
+    {
+        $container = $this->context->containerWithConfig([
+            'default_fstab' => 'default',
+            'fstabs' => [
+                'default' => [
+                    'filesystems' => [
+                        'memory' => ['type' => 'memory'],
+                    ],
+                ],
+            ],
+        ]);
+
+        (new BuildFstabsPass())->process($container);
+
+        static::assertSame(
+            '.flow.filesystem.fs.default.memory',
+            (string) $container->getAlias(Filesystem::class . ' $memory'),
+        );
+        static::assertSame(
+            '.flow.filesystem.fs.default.memory',
+            (string) $container->getAlias(Filesystem::class . ' $defaultMemory'),
+        );
+    }
+
+    public function test_registers_only_prefixed_mount_alias_for_non_default_fstab(): void
+    {
+        $container = $this->context->containerWithConfig([
+            'default_fstab' => 'primary',
+            'fstabs' => [
+                'primary' => [
+                    'filesystems' => [
+                        'memory' => ['type' => 'memory'],
+                    ],
+                ],
+                'secondary' => [
+                    'filesystems' => [
+                        'file' => ['type' => 'file'],
+                    ],
+                ],
+            ],
+        ]);
+
+        (new BuildFstabsPass())->process($container);
+
+        static::assertTrue($container->hasAlias(Filesystem::class . ' $secondaryFile'));
+        static::assertFalse($container->hasAlias(Filesystem::class . ' $file'));
+    }
+
+    public function test_camel_cases_separator_protocols_in_mount_aliases(): void
+    {
+        $container = $this->context->containerWithConfig([
+            'default_fstab' => 'default',
+            'fstabs' => [
+                'default' => [
+                    'filesystems' => [
+                        'aws-s3' => ['type' => 'memory'],
+                    ],
+                ],
+            ],
+        ]);
+
+        (new BuildFstabsPass())->process($container);
+
+        static::assertTrue($container->hasDefinition('.flow.filesystem.fs.default.aws-s3'));
+        static::assertTrue($container->hasAlias(Filesystem::class . ' $awsS3'));
+        static::assertTrue($container->hasAlias(Filesystem::class . ' $defaultAwsS3'));
     }
 }

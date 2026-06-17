@@ -36,9 +36,9 @@ final class FilesystemTable
         return array_values($this->mounts);
     }
 
-    public function for(Path|string $protocol): Filesystem
+    public function for(Path|string $mount): Filesystem
     {
-        $name = $protocol instanceof Path ? $protocol->protocol() : $protocol;
+        $name = $mount instanceof Path ? $mount->protocol() : $mount;
 
         if (!array_key_exists($name, $this->mounts)) {
             throw new InvalidArgumentException("Filesystem with protocol {$name} is not mounted.");
