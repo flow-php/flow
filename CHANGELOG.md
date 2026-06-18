@@ -1,6 +1,10 @@
 ## [Unreleased] - 2026-06-18
 
 ### Added
+- [#2459](https://github.com/flow-php/flow/pull/2459) - **Flow\ETL\Schema::sort() accepting a pluggable SortingStrategy (defaults to AlphabeticalStrategy)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2459](https://github.com/flow-php/flow/pull/2459) - **Core sorting strategies AlphabeticalStrategy, TypeStrategy, MetadataStrategy and CombinedStrategy, exposed via
+sort_by_name(), sort_by_type(), sort_by_type_and_name() and sort_by_metadata() DSL helpers** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2459](https://github.com/flow-php/flow/pull/2459) - **PostgreSqlSortingStrategy (primary-key columns first, then by PostgreSQL type, then by name) exposed via the pgsql_sort_strategy() DSL helper** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2460](https://github.com/flow-php/flow/pull/2460) - **flow-php/symfony-telemetry-bundle - inject trace context into outgoing response headers** - [@norberttech](https://github.com/norberttech)
 - [#2458](https://github.com/flow-php/flow/pull/2458) - **flow-php/symfony-telemetry-bundle - cleanup subscriber completing Twig spans orphaned by a render exception on terminate/kernel.reset** - [@norberttech](https://github.com/norberttech)
 - [#2408](https://github.com/flow-php/flow/pull/2408) - **SEAL adapter (flow-php/etl-adapter-seal) — a single, strongly typed integration for SEAL search engines (Elasticsearch, OpenSearch, Meilisearch, Algolia, Solr,
