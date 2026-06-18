@@ -2,26 +2,26 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit;
+namespace Flow\ETL\Adapter\PostgreSql\Tests\Unit\Schema\SortingStrategy;
 
 use Flow\ETL\Adapter\PostgreSql\PostgreSqlMetadata;
-use Flow\ETL\Adapter\PostgreSql\PostgreSqlSortingStrategy;
+use Flow\ETL\Adapter\PostgreSql\Schema\SortingStrategy\TypeStrategy;
 use PHPUnit\Framework\TestCase;
 
 use function array_keys;
-use function Flow\ETL\Adapter\PostgreSql\pgsql_sort_strategy;
+use function Flow\ETL\Adapter\PostgreSql\pgsql_schema_sort_by_type;
 use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
 
-final class PostgreSqlSortingStrategyTest extends TestCase
+final class TypeStrategyTest extends TestCase
 {
     public function test_explicit_type_metadata_overrides_mapping(): void
     {
         $schema = schema(int_schema('a', metadata: PostgreSqlMetadata::type('zzz_custom')), int_schema('b'));
 
-        static::assertSame(['b', 'a'], array_keys($schema->sort(new PostgreSqlSortingStrategy())->definitions()));
+        static::assertSame(['b', 'a'], array_keys($schema->sort(new TypeStrategy())->definitions()));
     }
 
     public function test_groups_by_type_then_name(): void
@@ -30,7 +30,7 @@ final class PostgreSqlSortingStrategyTest extends TestCase
 
         static::assertSame(
             ['active', 'amount', 'count', 'label'],
-            array_keys($schema->sort(new PostgreSqlSortingStrategy())->definitions()),
+            array_keys($schema->sort(new TypeStrategy())->definitions()),
         );
     }
 
@@ -42,6 +42,9 @@ final class PostgreSqlSortingStrategyTest extends TestCase
             str_schema('email'),
         );
 
-        static::assertSame(['id', 'email', 'name'], array_keys($schema->sort(pgsql_sort_strategy())->definitions()));
+        static::assertSame(
+            ['id', 'email', 'name'],
+            array_keys($schema->sort(pgsql_schema_sort_by_type())->definitions()),
+        );
     }
 }

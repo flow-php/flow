@@ -30,11 +30,11 @@ use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_from_json;
 use function Flow\ETL\DSL\schema_metadata;
+use function Flow\ETL\DSL\schema_sort_by_metadata;
+use function Flow\ETL\DSL\schema_sort_by_name;
+use function Flow\ETL\DSL\schema_sort_by_type;
+use function Flow\ETL\DSL\schema_sort_by_type_and_name;
 use function Flow\ETL\DSL\schema_to_json;
-use function Flow\ETL\DSL\sort_by_metadata;
-use function Flow\ETL\DSL\sort_by_name;
-use function Flow\ETL\DSL\sort_by_type;
-use function Flow\ETL\DSL\sort_by_type_and_name;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
 use function Flow\ETL\DSL\structure_schema;
@@ -815,7 +815,7 @@ final class SchemaTest extends FlowTestCase
             int_schema('b'),
         );
 
-        static::assertSame(['a', 'c', 'b'], array_keys($schema->sort(sort_by_metadata('group'))->definitions()));
+        static::assertSame(['a', 'c', 'b'], array_keys($schema->sort(schema_sort_by_metadata('group'))->definitions()));
     }
 
     public function test_sort_by_name_descending(): void
@@ -824,7 +824,7 @@ final class SchemaTest extends FlowTestCase
 
         static::assertSame(
             ['name', 'id', 'active'],
-            array_keys($schema->sort(sort_by_name(SortOrder::DESC))->definitions()),
+            array_keys($schema->sort(schema_sort_by_name(SortOrder::DESC))->definitions()),
         );
     }
 
@@ -832,14 +832,14 @@ final class SchemaTest extends FlowTestCase
     {
         $schema = schema(str_schema('name'), bool_schema('active'), int_schema('id'));
 
-        static::assertSame(['id', 'active', 'name'], array_keys($schema->sort(sort_by_type())->definitions()));
+        static::assertSame(['id', 'active', 'name'], array_keys($schema->sort(schema_sort_by_type())->definitions()));
     }
 
     public function test_sort_by_type_and_name(): void
     {
         $schema = schema(int_schema('z'), str_schema('m'), int_schema('a'));
 
-        static::assertSame(['a', 'z', 'm'], array_keys($schema->sort(sort_by_type_and_name())->definitions()));
+        static::assertSame(['a', 'z', 'm'], array_keys($schema->sort(schema_sort_by_type_and_name())->definitions()));
     }
 
     public function test_sort_empty_schema(): void

@@ -2375,7 +2375,7 @@ function compare_entries_by_type_and_name(
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function sort_by_name(SortOrder $order = SortOrder::ASC): SortingStrategy
+function schema_sort_by_name(SortOrder $order = SortOrder::ASC): SortingStrategy
 {
     return new AlphabeticalStrategy($order);
 }
@@ -2384,7 +2384,7 @@ function sort_by_name(SortOrder $order = SortOrder::ASC): SortingStrategy
  * @param array<class-string<Type<mixed>>, int> $priorities
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function sort_by_type(
+function schema_sort_by_type(
     array $priorities = SchemaTypePriorities::PRIORITIES,
     SortOrder $order = SortOrder::ASC,
 ): SortingStrategy {
@@ -2395,7 +2395,7 @@ function sort_by_type(
  * @param array<class-string<Type<mixed>>, int> $priorities
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function sort_by_type_and_name(
+function schema_sort_by_type_and_name(
     array $priorities = SchemaTypePriorities::PRIORITIES,
     SortOrder $order = SortOrder::ASC,
 ): SortingStrategy {
@@ -2406,7 +2406,7 @@ function sort_by_type_and_name(
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function sort_by_metadata(string $key, SortOrder $order = SortOrder::ASC): SortingStrategy
+function schema_sort_by_metadata(string $key, SortOrder $order = SortOrder::ASC): SortingStrategy
 {
     return new MetadataStrategy($key, $order);
 }

@@ -2,15 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Adapter\PostgreSql;
+namespace Flow\ETL\Adapter\PostgreSql\Schema\SortingStrategy;
 
+use Flow\ETL\Adapter\PostgreSql\EntryTypesMap;
 use Flow\ETL\Adapter\PostgreSql\Exception\TypeMappingException;
+use Flow\ETL\Adapter\PostgreSql\PostgreSqlMetadata;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\SortingStrategy;
 
 use function Flow\Types\DSL\type_string;
 
-final readonly class PostgreSqlSortingStrategy implements SortingStrategy
+final readonly class TypeStrategy implements SortingStrategy
 {
     public function __construct(
         private EntryTypesMap $typesMap = new EntryTypesMap(),
