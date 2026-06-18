@@ -131,6 +131,8 @@ final class FlowTelemetryBundle extends AbstractBundle
 
     private const string HTTP_CLIENT_INTERFACE = 'Symfony\\Contracts\\HttpClient\\HttpClientInterface';
 
+    private const string HTTP_FOUNDATION_REQUEST_CARRIER = 'Flow\\Bridge\\Symfony\\HttpFoundationTelemetry\\RequestCarrier';
+
     private const string MESSENGER_MIDDLEWARE_INTERFACE = 'Symfony\\Component\\Messenger\\Middleware\\MiddlewareInterface';
 
     private const string PSR18_CLIENT_INTERFACE = 'Psr\\Http\\Client\\ClientInterface';
@@ -471,7 +473,7 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->end()
             ->end()
             ->booleanNode('context_propagation')
-            ->info('Enable context propagation from incoming HTTP headers (requires propagator)')
+            ->info('Extract trace context from incoming request headers and inject it into outgoing response headers (requires flow-php/symfony-http-foundation-telemetry-bridge; silently disabled when absent)')
             ->defaultTrue()
             ->end()
             ->end()
@@ -2537,7 +2539,7 @@ final class FlowTelemetryBundle extends AbstractBundle
             );
             $builder->setParameter(
                 'flow.telemetry.http_kernel.context_propagation',
-                $httpKernelConfig['context_propagation'] ?? true,
+                ($httpKernelConfig['context_propagation'] ?? true) && class_exists(self::HTTP_FOUNDATION_REQUEST_CARRIER),
             );
             $container->import(__DIR__ . '/Resources/config/instrumentation/http_kernel.php');
         }

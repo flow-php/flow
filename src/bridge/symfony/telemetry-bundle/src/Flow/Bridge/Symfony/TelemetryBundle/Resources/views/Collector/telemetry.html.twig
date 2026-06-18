@@ -174,7 +174,10 @@
     {% if collector.metrics is empty %}
         <div class="empty"><p>No metrics were recorded for this request.</p></div>
     {% else %}
-        <table>
+        <style>
+            .flow-metrics tr.sf-toggle-content.sf-toggle-visible { display: table-row; }
+        </style>
+        <table class="flow-metrics">
             <thead>
                 <tr>
                     <th>Name</th>
@@ -198,12 +201,16 @@
                                 —
                             {% else %}
                                 <a class="btn btn-link text-small sf-toggle" data-toggle-selector="#metric-attr-{{ loop.index }}" data-toggle-alt-content="Hide attributes">Attributes ({{ metric.attributes|length }})</a>
-                                <div id="metric-attr-{{ loop.index }}" class="hidden">
-                                    {{ _self.attribute_table(metric.attributes) }}
-                                </div>
                             {% endif %}
                         </td>
                     </tr>
+                    {% if metric.attributes is not empty %}
+                        <tr id="metric-attr-{{ loop.index }}" class="hidden">
+                            <td colspan="6">
+                                {{ _self.attribute_table(metric.attributes) }}
+                            </td>
+                        </tr>
+                    {% endif %}
                 {% endfor %}
             </tbody>
         </table>
