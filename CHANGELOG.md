@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-06-18
 
 ### Added
+- [#2460](https://github.com/flow-php/flow/pull/2460) - **flow-php/symfony-telemetry-bundle - inject trace context into outgoing response headers** - [@norberttech](https://github.com/norberttech)
 - [#2458](https://github.com/flow-php/flow/pull/2458) - **flow-php/symfony-telemetry-bundle - cleanup subscriber completing Twig spans orphaned by a render exception on terminate/kernel.reset** - [@norberttech](https://github.com/norberttech)
 - [#2408](https://github.com/flow-php/flow/pull/2408) - **SEAL adapter (flow-php/etl-adapter-seal) — a single, strongly typed integration for SEAL search engines (Elasticsearch, OpenSearch, Meilisearch, Algolia, Solr,
 Typesense, RediSearch, Loupe)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
@@ -13,9 +14,11 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2454](https://github.com/flow-php/flow/pull/2454) - **Positional schema definition mutations on Flow\ETL\Schema: prepend(), insertAt(), addBefore(), addAfter(), moveTo(), moveBefore(), moveAfter() and reorder()** - [@bendavies](https://github.com/bendavies)
 
 ### Changed
+- [#2460](https://github.com/flow-php/flow/pull/2460) - **flow-php/symfony-telemetry-bundle - flow-php/symfony-http-foundation-telemetry-bridge is now an optional dependency; context propagation is silently disabled when absent** - [@norberttech](https://github.com/norberttech)
 - [#2457](https://github.com/flow-php/flow/pull/2457) - **flow-php/filesystem - rename FilesystemTable::for() parameter $protocol to $mount** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2460](https://github.com/flow-php/flow/pull/2460) - **flow-php/symfony-telemetry-bundle - metric attributes render as a toggleable table row in the profiler panel** - [@norberttech](https://github.com/norberttech)
 - [#2458](https://github.com/flow-php/flow/pull/2458) - **flow-php/symfony-telemetry-bundle - successful Twig spans now report OK status** - [@norberttech](https://github.com/norberttech)
 - [dd2562](https://github.com/flow-php/flow/commit/dd2562286e0c069f480cd8763915930abf95d32b) - **arrow-rs extension github workflow** - [@norberttech](https://github.com/norberttech)
 
