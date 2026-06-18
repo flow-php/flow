@@ -1,6 +1,7 @@
-## [Unreleased] - 2026-06-17
+## [Unreleased] - 2026-06-18
 
 ### Added
+- [#2458](https://github.com/flow-php/flow/pull/2458) - **flow-php/symfony-telemetry-bundle - cleanup subscriber completing Twig spans orphaned by a render exception on terminate/kernel.reset** - [@norberttech](https://github.com/norberttech)
 - [#2408](https://github.com/flow-php/flow/pull/2408) - **SEAL adapter (flow-php/etl-adapter-seal) — a single, strongly typed integration for SEAL search engines (Elasticsearch, OpenSearch, Meilisearch, Algolia, Solr,
 Typesense, RediSearch, Loupe)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2408](https://github.com/flow-php/flow/pull/2408) - **from_seal() extractor and to_seal() loader, working with any SEAL EngineInterface** - [@MrHDOLEK](https://github.com/MrHDOLEK)
@@ -15,6 +16,7 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2457](https://github.com/flow-php/flow/pull/2457) - **flow-php/filesystem - rename FilesystemTable::for() parameter $protocol to $mount** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2458](https://github.com/flow-php/flow/pull/2458) - **flow-php/symfony-telemetry-bundle - successful Twig spans now report OK status** - [@norberttech](https://github.com/norberttech)
 - [dd2562](https://github.com/flow-php/flow/commit/dd2562286e0c069f480cd8763915930abf95d32b) - **arrow-rs extension github workflow** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
