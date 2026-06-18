@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Schema\SortingStrategy;
+namespace Flow\ETL\Schema\SortingStrategy\TypeStrategy;
 
 use Flow\ETL\Schema\Definition;
 use Flow\Types\Type;

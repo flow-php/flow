@@ -7,6 +7,7 @@ namespace Flow\ETL\Schema\SortingStrategy;
 use Flow\ETL\Row\SortOrder;
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\SortingStrategy;
+use Flow\ETL\Schema\SortingStrategy\TypeStrategy\TypePriorities;
 
 final readonly class TypeStrategy implements SortingStrategy
 {
