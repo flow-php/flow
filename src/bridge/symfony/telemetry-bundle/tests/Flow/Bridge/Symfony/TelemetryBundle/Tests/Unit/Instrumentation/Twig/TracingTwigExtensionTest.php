@@ -5,18 +5,10 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Instrumentation\Twig;
 
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Twig\TracingTwigExtension;
-use Flow\Telemetry\Context\MemoryContextStorage;
-use Flow\Telemetry\Logger\LoggerProvider;
-use Flow\Telemetry\Meter\MeterProvider;
-use Flow\Telemetry\Provider\Clock\SystemClock;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Mother\TelemetryMother;
 use Flow\Telemetry\Provider\Memory\MemoryExporter;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
-use Flow\Telemetry\Provider\Void\VoidLogProcessor;
-use Flow\Telemetry\Provider\Void\VoidMetricProcessor;
-use Flow\Telemetry\Resource;
-use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
-use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Twig\Profiler\NodeVisitor\ProfilerNodeVisitor;
@@ -28,7 +20,7 @@ final class TracingTwigExtensionTest extends TestCase
     public function test_excluded_template_does_not_trace_nested_blocks(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $extension = new TracingTwigExtension(
             $telemetry,
@@ -55,7 +47,7 @@ final class TracingTwigExtensionTest extends TestCase
     public function test_get_node_visitors_returns_profiler_node_visitor(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $extension = new TracingTwigExtension($telemetry);
 
@@ -68,7 +60,7 @@ final class TracingTwigExtensionTest extends TestCase
     public function test_get_span_name_with_block_profile_returns_formatted_string(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $extension = new TracingTwigExtension($telemetry, traceTemplates: true, traceBlocks: true);
 
@@ -84,7 +76,7 @@ final class TracingTwigExtensionTest extends TestCase
     public function test_get_span_name_with_macro_profile_returns_formatted_string(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $extension = new TracingTwigExtension($telemetry, traceTemplates: true, traceMacros: true);
 
@@ -100,7 +92,7 @@ final class TracingTwigExtensionTest extends TestCase
     public function test_get_span_name_with_root_profile_returns_profile_name(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $extension = new TracingTwigExtension($telemetry);
 
@@ -116,7 +108,7 @@ final class TracingTwigExtensionTest extends TestCase
     public function test_get_span_name_with_template_profile_returns_template_path(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $extension = new TracingTwigExtension($telemetry, traceTemplates: true);
 
@@ -132,7 +124,7 @@ final class TracingTwigExtensionTest extends TestCase
     public function test_is_template_excluded_exact_match(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $extension = new TracingTwigExtension(
             $telemetry,
@@ -154,7 +146,7 @@ final class TracingTwigExtensionTest extends TestCase
     public function test_is_template_excluded_no_match_returns_false(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $extension = new TracingTwigExtension(
             $telemetry,
@@ -174,7 +166,7 @@ final class TracingTwigExtensionTest extends TestCase
     public function test_is_template_excluded_regex_match(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $extension = new TracingTwigExtension($telemetry, traceTemplates: true, excludeTemplates: ['/^@WebProfiler/']);
 
@@ -188,7 +180,7 @@ final class TracingTwigExtensionTest extends TestCase
     public function test_should_trace_respects_block_flag(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $extension = new TracingTwigExtension($telemetry, traceTemplates: true, traceBlocks: false);
 
@@ -202,7 +194,7 @@ final class TracingTwigExtensionTest extends TestCase
     public function test_should_trace_respects_macro_flag(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $extension = new TracingTwigExtension($telemetry, traceTemplates: true, traceMacros: false);
 
@@ -216,7 +208,7 @@ final class TracingTwigExtensionTest extends TestCase
     public function test_should_trace_respects_template_flag(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $extension = new TracingTwigExtension($telemetry, traceTemplates: false);
 
@@ -230,7 +222,7 @@ final class TracingTwigExtensionTest extends TestCase
     public function test_span_has_correct_attributes_for_block(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $extension = new TracingTwigExtension($telemetry, traceTemplates: true, traceBlocks: true);
 
@@ -250,7 +242,7 @@ final class TracingTwigExtensionTest extends TestCase
     public function test_span_has_correct_attributes_for_template(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $extension = new TracingTwigExtension($telemetry, traceTemplates: true);
 
@@ -267,10 +259,29 @@ final class TracingTwigExtensionTest extends TestCase
         static::assertArrayNotHasKey('twig.name', $attributes);
     }
 
+    public function test_span_has_ok_status_after_leave(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
+
+        $extension = new TracingTwigExtension($telemetry, traceTemplates: true);
+
+        $profile = new Profile('templates/home.html.twig', Profile::TEMPLATE, 'templates/home.html.twig');
+        $extension->enter($profile);
+        $extension->leave($profile);
+
+        $spans = $spanProcessor->endedSpans();
+        static::assertCount(1, $spans);
+
+        $status = $spans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isOk());
+    }
+
     public function test_span_kind_is_internal(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
         $extension = new TracingTwigExtension($telemetry);
 
@@ -283,16 +294,68 @@ final class TracingTwigExtensionTest extends TestCase
         static::assertSame(SpanKind::INTERNAL, $spans[0]->kind());
     }
 
-    private function createTelemetry(MemorySpanProcessor $spanProcessor): Telemetry
+    public function test_reset_completes_orphaned_span_as_error(): void
     {
-        $clock = new SystemClock();
-        $contextStorage = new MemoryContextStorage();
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
 
-        return new Telemetry(
-            Resource::create(['service.name' => 'test']),
-            new TracerProvider($spanProcessor, $clock, $contextStorage),
-            new MeterProvider(new VoidMetricProcessor(), $clock),
-            new LoggerProvider(new VoidLogProcessor(), $clock, $contextStorage),
+        $extension = new TracingTwigExtension($telemetry, traceTemplates: true);
+
+        $profile = new Profile('templates/home.html.twig', Profile::TEMPLATE, 'templates/home.html.twig');
+        $extension->enter($profile);
+
+        static::assertCount(0, $spanProcessor->endedSpans());
+
+        $extension->reset();
+
+        $spans = $spanProcessor->endedSpans();
+        static::assertCount(1, $spans);
+
+        $status = $spans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isError());
+        static::assertSame('Twig rendering did not complete', $status->description);
+    }
+
+    public function test_reset_clears_excluded_depth_so_tracing_resumes(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
+
+        $extension = new TracingTwigExtension(
+            $telemetry,
+            traceTemplates: true,
+            excludeTemplates: ['@WebProfiler/layout.html.twig'],
         );
+
+        $excluded = new Profile('@WebProfiler/layout.html.twig', Profile::TEMPLATE, '@WebProfiler/layout.html.twig');
+        $extension->enter($excluded);
+
+        $extension->reset();
+
+        $profile = new Profile('templates/home.html.twig', Profile::TEMPLATE, 'templates/home.html.twig');
+        $extension->enter($profile);
+        $extension->leave($profile);
+
+        $spans = $spanProcessor->endedSpans();
+        static::assertCount(1, $spans);
+        static::assertSame('templates/home.html.twig', $spans[0]->name());
+    }
+
+    public function test_reset_without_active_spans_is_noop(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $telemetry = TelemetryMother::withSpanProcessor($spanProcessor);
+
+        $extension = new TracingTwigExtension($telemetry, traceTemplates: true);
+
+        $profile = new Profile('templates/home.html.twig', Profile::TEMPLATE, 'templates/home.html.twig');
+        $extension->enter($profile);
+        $extension->leave($profile);
+
+        $extension->reset();
+        $extension->reset();
+
+        static::assertCount(1, $spanProcessor->endedSpans());
     }
 }

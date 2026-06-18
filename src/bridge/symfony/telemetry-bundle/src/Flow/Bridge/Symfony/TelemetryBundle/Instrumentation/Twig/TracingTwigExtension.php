@@ -8,6 +8,7 @@ use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
+use Flow\Telemetry\Tracer\SpanStatus;
 use Flow\Telemetry\Tracer\Tracer;
 use Override;
 use SplObjectStorage;
@@ -94,10 +95,27 @@ final class TracingTwigExtension extends AbstractExtension
 
         // @mago-expect analysis:no-value(2),redundant-type-comparison(2),redundant-logical-operation(2)
         if (is_array($spanData) && $spanData['tracer'] instanceof Tracer && $spanData['span'] instanceof Span) {
+            $spanData['span']->setStatus(SpanStatus::ok());
             $spanData['tracer']->complete($spanData['span']);
         }
 
         unset($this->activeSpans[$profile]);
+    }
+
+    public function reset(): void
+    {
+        foreach ($this->activeSpans as $profile) {
+            // @mago-expect analysis:mixed-assignment
+            $spanData = $this->activeSpans[$profile];
+
+            if (is_array($spanData) && $spanData['tracer'] instanceof Tracer && $spanData['span'] instanceof Span) {
+                $spanData['span']->setStatus(SpanStatus::error('Twig rendering did not complete'));
+                $spanData['tracer']->complete($spanData['span']);
+            }
+        }
+
+        $this->activeSpans = new SplObjectStorage();
+        $this->excludedDepth = 0;
     }
 
     private function getSpanName(Profile $profile): string
