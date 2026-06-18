@@ -1,6 +1,7 @@
 ## [Unreleased] - 2026-06-18
 
 ### Added
+- [#2462](https://github.com/flow-php/flow/pull/2462) - **flow-php/symfony-telemetry-bundle - messenger propagation_style option (continue/link) with new MessengerTracePropagation enum** - [@norberttech](https://github.com/norberttech)
 - [#2459](https://github.com/flow-php/flow/pull/2459) - **Flow\ETL\Schema::sort() accepting a pluggable SortingStrategy (defaults to AlphabeticalStrategy)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2459](https://github.com/flow-php/flow/pull/2459) - **Core sorting strategies AlphabeticalStrategy, TypeStrategy, MetadataStrategy and CombinedStrategy, exposed via
 sort_by_name(), sort_by_type(), sort_by_type_and_name() and sort_by_metadata() DSL helpers** - [@MrHDOLEK](https://github.com/MrHDOLEK)
@@ -18,6 +19,7 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2454](https://github.com/flow-php/flow/pull/2454) - **Positional schema definition mutations on Flow\ETL\Schema: prepend(), insertAt(), addBefore(), addAfter(), moveTo(), moveBefore(), moveAfter() and reorder()** - [@bendavies](https://github.com/bendavies)
 
 ### Changed
+- [#2462](https://github.com/flow-php/flow/pull/2462) - **flow-php/symfony-telemetry-bundle - consumer span now defaults to a linked trace instead of continuing the producer trace** - [@norberttech](https://github.com/norberttech)
 - [#2460](https://github.com/flow-php/flow/pull/2460) - **flow-php/symfony-telemetry-bundle - flow-php/symfony-http-foundation-telemetry-bridge is now an optional dependency; context propagation is silently disabled when absent** - [@norberttech](https://github.com/norberttech)
 - [#2457](https://github.com/flow-php/flow/pull/2457) - **flow-php/filesystem - rename FilesystemTable::for() parameter $protocol to $mount** - [@norberttech](https://github.com/norberttech)
 
