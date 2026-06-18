@@ -8,6 +8,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\FrameworkLo
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\OTLPAvailabilityPass;
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
 use Flow\Bridge\Symfony\TelemetryBundle\FlowTelemetryBundle;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerTracePropagation;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
 use Flow\Bridge\Telemetry\OTLP\Transport\CurlTransport;
@@ -44,9 +45,11 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\Log\Logger as SymfonyDefaultLogger;
+use Symfony\Component\Messenger\Middleware\MiddlewareInterface as MessengerMiddlewareInterface;
 
 use function bin2hex;
 use function extension_loaded;
+use function interface_exists;
 use function is_file;
 use function random_bytes;
 use function sys_get_temp_dir;
@@ -478,6 +481,91 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $definition = $container->getDefinition('flow.telemetry.exporter.otlp');
         static::assertInstanceOf(Reference::class, $definition->getArgument(1));
         static::assertSame('flow.telemetry.error_handler.silent', (string) $definition->getArgument(1));
+    }
+
+    public function test_messenger_middleware_defaults_to_link_propagation_style(): void
+    {
+        if (!interface_exists(MessengerMiddlewareInterface::class)) {
+            static::markTestSkipped('symfony/messenger is not installed');
+        }
+
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.environment', 'test');
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
+        $extension = (new FlowTelemetryBundle())->getContainerExtension();
+        assert($extension !== null);
+        $extension->load([[
+            'resource' => [],
+            'instrumentation' => [
+                'messenger' => [
+                    'enabled' => true,
+                ],
+            ],
+        ]], $container);
+
+        static::assertSame(
+            MessengerTracePropagation::Link,
+            $container->getDefinition('flow.telemetry.messenger.middleware')->getArgument(3),
+        );
+    }
+
+    public function test_messenger_middleware_receives_continue_propagation_style(): void
+    {
+        if (!interface_exists(MessengerMiddlewareInterface::class)) {
+            static::markTestSkipped('symfony/messenger is not installed');
+        }
+
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.environment', 'test');
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
+        $extension = (new FlowTelemetryBundle())->getContainerExtension();
+        assert($extension !== null);
+        $extension->load([[
+            'resource' => [],
+            'instrumentation' => [
+                'messenger' => [
+                    'enabled' => true,
+                    'context_propagation' => true,
+                    'propagation_style' => 'continue',
+                ],
+            ],
+        ]], $container);
+
+        static::assertSame(
+            MessengerTracePropagation::Continuation,
+            $container->getDefinition('flow.telemetry.messenger.middleware')->getArgument(3),
+        );
+    }
+
+    public function test_messenger_middleware_receives_link_propagation_style(): void
+    {
+        if (!interface_exists(MessengerMiddlewareInterface::class)) {
+            static::markTestSkipped('symfony/messenger is not installed');
+        }
+
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.environment', 'test');
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
+        $extension = (new FlowTelemetryBundle())->getContainerExtension();
+        assert($extension !== null);
+        $extension->load([[
+            'resource' => [],
+            'instrumentation' => [
+                'messenger' => [
+                    'enabled' => true,
+                    'context_propagation' => true,
+                    'propagation_style' => 'link',
+                ],
+            ],
+        ]], $container);
+
+        static::assertSame(
+            MessengerTracePropagation::Link,
+            $container->getDefinition('flow.telemetry.messenger.middleware')->getArgument(3),
+        );
     }
 
     public function test_otlp_transport_failover_inline_curl_with_stream_failover(): void

@@ -13,6 +13,7 @@ use Flow\Telemetry\Propagation\Propagator;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanContext;
 use Flow\Telemetry\Tracer\SpanKind;
+use Flow\Telemetry\Tracer\SpanLink;
 use Flow\Telemetry\Tracer\SpanStatus;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Middleware\MiddlewareInterface;
@@ -31,6 +32,7 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         private Telemetry $telemetry,
         private ?ContextStorage $contextStorage = null,
         private ?Propagator $propagator = null,
+        private MessengerTracePropagation $propagation = MessengerTracePropagation::Link,
     ) {}
 
     public function handle(Envelope $envelope, StackInterface $stack): Envelope
@@ -46,10 +48,6 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         $transportIdStamp = $envelope->last(TransportMessageIdStamp::class);
 
         $isReceived = $receivedStamp !== null;
-
-        if ($isReceived) {
-            $this->extractContext($envelope);
-        }
 
         $kind = $isReceived ? SpanKind::CONSUMER : SpanKind::PRODUCER;
         $operation = $isReceived ? 'receive' : 'send';
@@ -73,7 +71,34 @@ final readonly class TracingMiddleware implements MiddlewareInterface
             $attributes['messaging.message.id'] = (string) $transportIdStamp->getId();
         }
 
-        $span = $tracer->span($spanName, $kind, $attributes);
+        $remote = $isReceived ? $this->extractRemoteContext($envelope) : null;
+        $links = [];
+
+        if ($remote !== null && $remote->spanContext !== null) {
+            $remoteSpanContext = $remote->spanContext;
+            $remoteBaggage = $remote->baggage;
+
+            if ($this->propagation === MessengerTracePropagation::Continuation) {
+                $context = Context::withTraceId($remoteSpanContext->traceId)->withActiveSpan($remoteSpanContext->spanId);
+
+                if ($remoteBaggage !== null) {
+                    $context = $context->withBaggage($remoteBaggage);
+                }
+
+                $this->contextStorage?->attach($context);
+            } else {
+                $links[] = SpanLink::create(
+                    SpanContext::createRemote($remoteSpanContext->traceId, $remoteSpanContext->spanId),
+                    ['messaging.operation.type' => 'process'],
+                );
+
+                if ($remoteBaggage !== null && $this->contextStorage !== null) {
+                    $this->contextStorage->attach($this->contextStorage->current()->withBaggage($remoteBaggage));
+                }
+            }
+        }
+
+        $span = $tracer->span($spanName, $kind, $attributes, $links);
 
         if (!$isReceived) {
             $envelope = $this->injectContext($envelope);
@@ -94,33 +119,19 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         }
     }
 
-    private function extractContext(Envelope $envelope): void
+    private function extractRemoteContext(Envelope $envelope): ?PropagationContext
     {
         if ($this->contextStorage === null || $this->propagator === null) {
-            return;
+            return null;
         }
 
         $stamp = $envelope->last(TelemetryStamp::class);
 
         if (!$stamp instanceof TelemetryStamp) {
-            return;
+            return null;
         }
 
-        $carrier = new TelemetryStampCarrier($stamp);
-        $propagationContext = $this->propagator->extract($carrier);
-
-        $spanContext = $propagationContext->spanContext;
-
-        if ($spanContext !== null) {
-            $context = Context::withTraceId($spanContext->traceId);
-            $context = $context->withActiveSpan($spanContext->spanId);
-
-            if ($propagationContext->baggage !== null) {
-                $context = $context->withBaggage($propagationContext->baggage);
-            }
-
-            $this->contextStorage->attach($context);
-        }
+        return $this->propagator->extract(new TelemetryStampCarrier($stamp));
     }
 
     private function getShortClassName(string $className): string

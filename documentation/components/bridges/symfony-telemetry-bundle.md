@@ -1024,7 +1024,21 @@ flow_telemetry:
     messenger:
       enabled: true
       context_propagation: true  # Propagate context across message boundaries
+      propagation_style: link     # How the consumer span relates to the producer span
 ```
+
+When `context_propagation` is enabled, `propagation_style` controls how a consumed message's span
+relates to the producing (publishing) span:
+
+- `link` (default) — the consumer span stays in the worker's own trace (under the `messenger:consume`
+  console span) and carries a span link back to the producer span. Producer and consumer get separate,
+  clean traces connected by a link. Recommended for decoupled, batch, or long-delay queues, where
+  continuing the trace would otherwise absorb the entire queue wait into a single span's duration.
+- `continue` — the consumer span adopts the producer's trace and becomes its child, so
+  publish → queue → consume is one continuous distributed trace. Fine for fast, 1:1 processing.
+
+`propagation_style` has no effect when `context_propagation` is `false` (there is nothing to relate to).
+The producer side is identical in both modes — the telemetry stamp is always written on dispatch.
 
 #### Twig
 
@@ -1580,6 +1594,7 @@ flow_telemetry:
     messenger:
       enabled: true
       context_propagation: true
+      propagation_style: link
     dbal:
       enabled: true
       log_sql: true
