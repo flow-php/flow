@@ -572,4 +572,113 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         static::assertSame('test_index', $attributes['http.route']);
         static::assertSame(TestController::class . '::index', $attributes['controller']);
     }
+
+    public function test_injects_context_into_response_when_propagation_enabled(): void
+    {
+        $kernel = $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => [
+                        'utf8' => true,
+                        'resource' => __DIR__ . '/../../../Fixtures/config/routes.php',
+                    ],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => 'memory',
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => [
+                            'enabled' => true,
+                            'context_propagation' => true,
+                        ],
+                        'console' => ['enabled' => false],
+                        'messenger' => false,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var Router $router */
+        $router = $container->get('router');
+        $routes = $router->getRouteCollection();
+        $routes->add('test_index', new Route('/test', ['_controller' => TestController::class . '::index']));
+
+        $request = Request::create('/test', 'GET');
+        $response = $kernel->handle($request);
+        $kernel->terminate($request, $response);
+
+        static::assertSame(200, $response->getStatusCode());
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spans = $processor->endedSpans();
+
+        static::assertCount(1, $spans);
+
+        $span = $spans[0];
+        static::assertSame(
+            "00-{$span->context()->traceId->toHex()}-{$span->context()->spanId->toHex()}-01",
+            $response->headers->get('traceparent'),
+        );
+    }
+
+    public function test_does_not_inject_context_into_response_when_propagation_disabled(): void
+    {
+        $kernel = $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => [
+                        'utf8' => true,
+                        'resource' => __DIR__ . '/../../../Fixtures/config/routes.php',
+                    ],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => 'memory',
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => [
+                            'enabled' => true,
+                            'context_propagation' => false,
+                        ],
+                        'console' => ['enabled' => false],
+                        'messenger' => false,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var Router $router */
+        $router = $container->get('router');
+        $routes = $router->getRouteCollection();
+        $routes->add('test_index', new Route('/test', ['_controller' => TestController::class . '::index']));
+
+        $request = Request::create('/test', 'GET');
+        $response = $kernel->handle($request);
+        $kernel->terminate($request, $response);
+
+        static::assertSame(200, $response->getStatusCode());
+        static::assertFalse($response->headers->has('traceparent'));
+    }
 }

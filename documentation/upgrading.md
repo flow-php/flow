@@ -11,7 +11,9 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ### 1) Removal of Elasticsearch Adapter
 
-The Elasticsearch adapter has been removed from Flow PHP and replaced by the [SEAL](https://php-cmsig.github.io/search/) adapter (`flow-php/etl-adapter-seal`), a search engine abstraction layer that supports Elasticsearch, OpenSearch, Meilisearch, Solr, Typesense, Algolia, RediSearch and Loupe.
+The Elasticsearch adapter has been removed from Flow PHP and replaced by the [SEAL](https://php-cmsig.github.io/search/)
+adapter (`flow-php/etl-adapter-seal`), a search engine abstraction layer that supports Elasticsearch, OpenSearch,
+Meilisearch, Solr, Typesense, Algolia, RediSearch and Loupe.
 
 To migrate, install the SEAL adapter together with the engine adapter for your backend:
 
@@ -19,7 +21,8 @@ To migrate, install the SEAL adapter together with the engine adapter for your b
 composer require flow-php/etl-adapter-seal cmsig/seal-elasticsearch-adapter
 ```
 
-Then build a `CmsIg\Seal\Engine` and pass it to `to_seal_upsert()` instead of the previous `to_es_bulk_index()` (or Meilisearch) DSL functions:
+Then build a `CmsIg\Seal\Engine` and pass it to `to_seal_upsert()` instead of the previous `to_es_bulk_index()` (or
+Meilisearch) DSL functions:
 
 ```php
 use CmsIg\Seal\Engine;
@@ -36,6 +39,21 @@ data_frame()
     ->read(/* ... */)
     ->write(to_seal_upsert($engine, 'index_name'))
     ->run();
+```
+
+### 2) `flow-php/symfony-telemetry-bundle` -
+
+`flow-php/symfony-http-foundation-telemetry-bridge` is now an optional dependency
+
+| Before                               | After                                                       |
+|--------------------------------------|-------------------------------------------------------------|
+| installed transitively by the bundle | install explicitly to enable HTTP trace context propagation |
+
+`instrumentation.http_kernel.context_propagation` is silently disabled when the bridge is absent. To keep extracting
+incoming and injecting outgoing W3C trace headers:
+
+```
+composer require flow-php/symfony-http-foundation-telemetry-bridge
 ```
 
 ---

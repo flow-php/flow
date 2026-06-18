@@ -6,10 +6,12 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel;
 
 use Closure;
 use DateTimeImmutable;
+use Flow\Bridge\Symfony\HttpFoundationTelemetry\RequestCarrier;
+use Flow\Bridge\Symfony\HttpFoundationTelemetry\ResponseCarrier;
 use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\ContextStorage;
 use Flow\Telemetry\PackageVersion;
-use Flow\Telemetry\Propagation\ArrayCarrier;
+use Flow\Telemetry\Propagation\PropagationContext;
 use Flow\Telemetry\Propagation\Propagator;
 use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\Span;
@@ -18,6 +20,7 @@ use Flow\Telemetry\Tracer\SpanStatus;
 use Flow\Telemetry\Tracer\Tracer;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
@@ -48,7 +51,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         array $excludePaths,
         private ContextStorage $contextStorage,
         private Propagator $propagator,
-        private bool $extractContext = true,
+        private bool $contextPropagation = true,
     ) {
         $this->excludePathRules = array_map(
             static fn(array $config): PathExclusionRule => PathExclusionRule::fromConfig($config),
@@ -111,7 +114,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
             return;
         }
 
-        if ($event->isMainRequest() && $this->extractContext) {
+        if ($event->isMainRequest() && $this->contextPropagation) {
             $this->extractContextFromRequest($request);
         }
 
@@ -149,6 +152,10 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         } else {
             $span->setStatus(SpanStatus::ok());
         }
+
+        if ($event->isMainRequest() && $this->contextPropagation) {
+            $this->injectContextIntoResponse($span, $response);
+        }
     }
 
     public function onTerminate(TerminateEvent $event): void
@@ -173,16 +180,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
     private function extractContextFromRequest(Request $request): void
     {
-        $headers = [];
-
-        foreach ($request->headers->all() as $key => $values) {
-            if (count($values) > 0 && is_string($values[0])) {
-                $headers[$key] = $values[0];
-            }
-        }
-
-        $carrier = new ArrayCarrier($headers);
-        $propagationContext = $this->propagator->extract($carrier);
+        $propagationContext = $this->propagator->extract(new RequestCarrier($request));
 
         $spanContext = $propagationContext->spanContext;
 
@@ -196,6 +194,13 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
             $this->contextStorage->attach($context);
         }
+    }
+
+    private function injectContextIntoResponse(Span $span, Response $response): void
+    {
+        $propagationContext = new PropagationContext($span->context(), $this->contextStorage->current()->baggage);
+
+        $this->propagator->inject($propagationContext, new ResponseCarrier($response));
     }
 
     /**
