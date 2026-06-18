@@ -10,6 +10,7 @@ use Flow\ETL\Adapter\PostgreSql\LoaderOptions\UpdateOptions;
 use Flow\ETL\Adapter\PostgreSql\Pagination\Key;
 use Flow\ETL\Adapter\PostgreSql\Pagination\KeySet;
 use Flow\ETL\Adapter\PostgreSql\Pagination\Order;
+use Flow\ETL\Adapter\PostgreSql\Schema\SortingStrategy\TypeStrategy;
 use Flow\ETL\Attribute\DocumentationDSL;
 use Flow\ETL\Attribute\Module;
 use Flow\ETL\Attribute\Type as DSLType;
@@ -178,4 +179,10 @@ function to_pgsql_schema_table(
 function pgsql_table_to_flow_schema(Table $table, ?EntryTypesMap $typesMap = null): Schema
 {
     return (new SchemaConverter($typesMap))->toFlowSchema($table);
+}
+
+#[DocumentationDSL(module: Module::POSTGRESQL, type: DSLType::HELPER)]
+function pgsql_schema_sort_by_type(?EntryTypesMap $typesMap = null): TypeStrategy
+{
+    return new TypeStrategy($typesMap ?? new EntryTypesMap());
 }

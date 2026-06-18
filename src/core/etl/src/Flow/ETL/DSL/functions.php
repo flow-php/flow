@@ -208,6 +208,12 @@ use Flow\ETL\Schema\Formatter\PHPFormatter\ValueFormatter;
 use Flow\ETL\Schema\Formatter\PHPSchemaFormatter;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Schema\SchemaFormatter;
+use Flow\ETL\Schema\SortingStrategy;
+use Flow\ETL\Schema\SortingStrategy\AlphabeticalStrategy;
+use Flow\ETL\Schema\SortingStrategy\CombinedStrategy;
+use Flow\ETL\Schema\SortingStrategy\MetadataStrategy;
+use Flow\ETL\Schema\SortingStrategy\TypeStrategy;
+use Flow\ETL\Schema\SortingStrategy\TypeStrategy\TypePriorities as SchemaTypePriorities;
 use Flow\ETL\Schema\Validator\EvolvingValidator;
 use Flow\ETL\Schema\Validator\SelectiveValidator;
 use Flow\ETL\Schema\Validator\StrictValidator;
@@ -2366,6 +2372,43 @@ function compare_entries_by_type_and_name(
         new TypeComparator(new TypePriorities($priorities), $order),
         new NameComparator($order),
     );
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
+function schema_sort_by_name(SortOrder $order = SortOrder::ASC): SortingStrategy
+{
+    return new AlphabeticalStrategy($order);
+}
+
+/**
+ * @param array<class-string<Type<mixed>>, int> $priorities
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
+function schema_sort_by_type(
+    array $priorities = SchemaTypePriorities::PRIORITIES,
+    SortOrder $order = SortOrder::ASC,
+): SortingStrategy {
+    return new TypeStrategy(new SchemaTypePriorities($priorities), $order);
+}
+
+/**
+ * @param array<class-string<Type<mixed>>, int> $priorities
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
+function schema_sort_by_type_and_name(
+    array $priorities = SchemaTypePriorities::PRIORITIES,
+    SortOrder $order = SortOrder::ASC,
+): SortingStrategy {
+    return new CombinedStrategy(
+        new TypeStrategy(new SchemaTypePriorities($priorities), $order),
+        new AlphabeticalStrategy($order),
+    );
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
+function schema_sort_by_metadata(string $key, SortOrder $order = SortOrder::ASC): SortingStrategy
+{
+    return new MetadataStrategy($key, $order);
 }
 
 /**

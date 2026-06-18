@@ -10,6 +10,7 @@ use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\SortOrder;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
@@ -28,6 +29,11 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\schema_from_json;
+use function Flow\ETL\DSL\schema_metadata;
+use function Flow\ETL\DSL\schema_sort_by_metadata;
+use function Flow\ETL\DSL\schema_sort_by_name;
+use function Flow\ETL\DSL\schema_sort_by_type;
+use function Flow\ETL\DSL\schema_sort_by_type_and_name;
 use function Flow\ETL\DSL\schema_to_json;
 use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\string_schema;
@@ -792,5 +798,59 @@ final class SchemaTest extends FlowTestCase
             int_schema('id', metadata: Metadata::fromArray(['test' => 'test'])),
             $schema->setMetadata('id', Metadata::fromArray(['test' => 'test']))->get('id'),
         );
+    }
+
+    public function test_sort_alphabetically_by_default(): void
+    {
+        $schema = schema(str_schema('name'), int_schema('id'), bool_schema('active'));
+
+        static::assertSame(['active', 'id', 'name'], array_keys($schema->sort()->definitions()));
+    }
+
+    public function test_sort_by_metadata(): void
+    {
+        $schema = schema(
+            int_schema('c', metadata: schema_metadata(['group' => 2])),
+            int_schema('a', metadata: schema_metadata(['group' => 1])),
+            int_schema('b'),
+        );
+
+        static::assertSame(['a', 'c', 'b'], array_keys($schema->sort(schema_sort_by_metadata('group'))->definitions()));
+    }
+
+    public function test_sort_by_name_descending(): void
+    {
+        $schema = schema(str_schema('name'), int_schema('id'), bool_schema('active'));
+
+        static::assertSame(
+            ['name', 'id', 'active'],
+            array_keys($schema->sort(schema_sort_by_name(SortOrder::DESC))->definitions()),
+        );
+    }
+
+    public function test_sort_by_type(): void
+    {
+        $schema = schema(str_schema('name'), bool_schema('active'), int_schema('id'));
+
+        static::assertSame(['id', 'active', 'name'], array_keys($schema->sort(schema_sort_by_type())->definitions()));
+    }
+
+    public function test_sort_by_type_and_name(): void
+    {
+        $schema = schema(int_schema('z'), str_schema('m'), int_schema('a'));
+
+        static::assertSame(['a', 'z', 'm'], array_keys($schema->sort(schema_sort_by_type_and_name())->definitions()));
+    }
+
+    public function test_sort_empty_schema(): void
+    {
+        static::assertSame([], array_keys(schema()->sort()->definitions()));
+    }
+
+    public function test_sort_returns_same_instance(): void
+    {
+        $schema = schema(str_schema('name'), int_schema('id'));
+
+        static::assertSame($schema, $schema->sort());
     }
 }
