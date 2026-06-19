@@ -413,6 +413,64 @@ flow_telemetry:
         batch_size: 200
 ```
 
+#### Console output (CLI verbosity)
+
+The Flow equivalent of Symfony's Monolog `ConsoleHandler`: while a console command runs,
+emitted log records are also printed to that command's output, filtered by the command's
+verbosity (`-v`/`-vv`/`-vvv`). This is **display only** — it does not change what the
+configured processor exports (OTLP, etc.). It is **off by default**; like MonologBundle's
+console handler, enable it explicitly (typically only in `dev`):
+
+```yaml
+# config/packages/flow_telemetry.yaml
+when@dev:
+  flow_telemetry:
+    logger_provider:
+      console_output:
+        enabled: true
+```
+
+The verbosity → minimum-severity thresholds default to:
+
+| Verbosity                | Flag   | Minimum severity |
+|--------------------------|--------|------------------|
+| `VERBOSITY_QUIET`        | `-q`   | `ERROR`          |
+| `VERBOSITY_NORMAL`       | (none) | `ERROR`          |
+| `VERBOSITY_VERBOSE`      | `-v`   | `WARN`           |
+| `VERBOSITY_VERY_VERBOSE` | `-vv`  | `INFO`           |
+| `VERBOSITY_DEBUG`        | `-vvv` | `DEBUG`          |
+
+Flow has no `NOTICE` level (the PSR-3 bridge collapses `NOTICE` into `INFO`), so there is
+no rung between `WARN` and `INFO`. The defaults keep the terminal quiet by default (errors
+only) and reveal exactly one more severity per `-v` step.
+
+`-vvv` is the most verbose flag Symfony has and the default map stops at `DEBUG`, so with
+the defaults `TRACE` logs are never echoed to the console (they still reach your exporters,
+e.g. OTLP). To see `TRACE` on the console, remap a flag to it with `verbosity_levels` —
+keyed by the Symfony verbosity constant name, valued by a Flow severity name
+(`TRACE|DEBUG|INFO|WARN|ERROR|FATAL`). For example, point `-vvv` at `TRACE`:
+
+```yaml
+flow_telemetry:
+  logger_provider:
+    console_output:
+      enabled: true
+      verbosity_levels:
+        VERBOSITY_DEBUG: TRACE   # -vvv now shows TRACE and everything above it
+```
+
+You can override any rung the same way — for instance, show `INFO` and above with no flag at all:
+
+```yaml
+flow_telemetry:
+  logger_provider:
+    console_output:
+      enabled: true
+      verbosity_levels:
+        VERBOSITY_NORMAL: INFO   # show INFO and above without any -v flag
+        VERBOSITY_VERBOSE: DEBUG
+```
+
 ### Processor Configuration
 
 Processor types available for `tracer_provider`, `meter_provider`, and `logger_provider`.

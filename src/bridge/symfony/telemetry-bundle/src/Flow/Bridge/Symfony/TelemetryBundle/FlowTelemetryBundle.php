@@ -16,7 +16,10 @@ use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\OTLPAvailab
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\ProfilerSignalCapturePass;
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\Psr18ClientTelemetryPass;
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Console\ConsoleLogOutputSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerTracePropagation;
+use Flow\Bridge\Symfony\TelemetryBundle\Logger\ConsoleOutputLogProcessor;
+use Flow\Bridge\Symfony\TelemetryBundle\Logger\ConsoleVerbosityLevels;
 use Flow\Bridge\Symfony\TelemetryBundle\Resource\Detector\SymfonyDeploymentDetector;
 use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
 use Flow\Bridge\Telemetry\OTLP\Serializer\JsonSerializer;
@@ -445,6 +448,24 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->scalarNode('error_handler')
             ->info('Name of an error_handler entry forwarded to the LoggerProvider')
             ->defaultValue('default')
+            ->end()
+            ->arrayNode('console_output')
+            ->info(
+                'Tee emitted log records to the running console command output, filtered by CLI verbosity (-v/-vv/-vvv). The Flow equivalent of Symfony\'s Monolog ConsoleHandler; display only, exporters are unaffected. Off by default.',
+            )
+            ->canBeEnabled()
+            ->children()
+            ->arrayNode('verbosity_levels')
+            ->info(
+                'Override the verbosity->minimum-severity thresholds. Keys: VERBOSITY_QUIET, VERBOSITY_NORMAL, VERBOSITY_VERBOSE, VERBOSITY_VERY_VERBOSE, VERBOSITY_DEBUG. Values: TRACE, DEBUG, INFO, WARN, ERROR, FATAL. Defaults: QUIET=ERROR, NORMAL=WARN, VERBOSE=INFO, VERY_VERBOSE=DEBUG, DEBUG=TRACE.',
+            )
+            ->normalizeKeys(false)
+            ->useAttributeAsKey('name')
+            ->enumPrototype()
+            ->values(['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'])
+            ->end()
+            ->end()
+            ->end()
             ->end()
             ->append($this->processorNode('log'))
             ->end()
@@ -1275,6 +1296,18 @@ final class FlowTelemetryBundle extends AbstractBundle
         $processorServiceId = $this->buildLogProcessor($processorConfig, $providerServiceId, $builder);
         $errorHandlerRef = $this->resolveErrorHandlerReference($config['error_handler'] ?? 'default', $builder);
 
+        $consoleOutputConfig = is_array($config['console_output'] ?? null) ? $config['console_output'] : [];
+
+        if ((bool) ($consoleOutputConfig['enabled'] ?? false)) {
+            $processorServiceId = $this->buildConsoleOutputLogging(
+                $consoleOutputConfig,
+                $providerServiceId,
+                $processorServiceId,
+                $errorHandlerRef,
+                $builder,
+            );
+        }
+
         $definition = new Definition(LoggerProvider::class);
         $definition->setArgument(0, new Reference($processorServiceId));
         $definition->setArgument(1, new Reference('flow.telemetry.clock'));
@@ -1283,6 +1316,46 @@ final class FlowTelemetryBundle extends AbstractBundle
         $builder->setDefinition($providerServiceId, $definition);
 
         return $providerServiceId;
+    }
+
+    /**
+     * Wraps the configured export processor in a composite that also tees records to
+     * the running console command output, and registers the supporting holder and
+     * event subscriber. Returns the id of the composite to use as the provider's processor.
+     *
+     * @param array<array-key, mixed> $config
+     */
+    private function buildConsoleOutputLogging(
+        array $config,
+        string $providerServiceId,
+        string $exportProcessorServiceId,
+        Reference $errorHandlerRef,
+        ContainerBuilder $builder,
+    ): string {
+        /** @var array<string, string> $verbosityLevels */
+        $verbosityLevels = is_array($config['verbosity_levels'] ?? null) ? $config['verbosity_levels'] : [];
+        $levelsDefinition = new Definition(
+            ConsoleVerbosityLevels::class,
+            [ConsoleVerbosityLevels::fromOverrides($verbosityLevels)->thresholds()],
+        );
+
+        $consoleProcessorId = $providerServiceId . '.console_output.processor';
+        $builder->setDefinition(
+            $consoleProcessorId,
+            new Definition(ConsoleOutputLogProcessor::class, [$levelsDefinition]),
+        );
+
+        $subscriberDefinition = new Definition(ConsoleLogOutputSubscriber::class, [new Reference($consoleProcessorId)]);
+        $subscriberDefinition->addTag('kernel.event_subscriber');
+        $builder->setDefinition($providerServiceId . '.console_output.subscriber', $subscriberDefinition);
+
+        $compositeId = $exportProcessorServiceId . '.with_console_output';
+        $compositeDefinition = new Definition(CompositeLogProcessor::class);
+        $compositeDefinition->setArgument(0, [new Reference($exportProcessorServiceId), new Reference($consoleProcessorId)]);
+        $compositeDefinition->setArgument(1, $errorHandlerRef);
+        $builder->setDefinition($compositeId, $compositeDefinition);
+
+        return $compositeId;
     }
 
     /**

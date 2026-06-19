@@ -20,4 +20,17 @@ final class LogEntryMother
             'log.channel' => $channel,
         ]), resource(), instrumentation_scope($channel), new DateTimeImmutable());
     }
+
+    /**
+     * @param array<string, bool|float|int|string> $attributes
+     */
+    public static function with(Severity $severity, string $body = 'message', array $attributes = []): LogEntry
+    {
+        return new LogEntry(
+            new LogRecord($severity, $body, $attributes),
+            resource(),
+            instrumentation_scope('test'),
+            new DateTimeImmutable(),
+        );
+    }
 }
