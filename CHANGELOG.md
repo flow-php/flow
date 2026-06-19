@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-06-19
 
 ### Added
+- [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/telemetry - time-based flush for batching log, metric and span processors** - [@norberttech](https://github.com/norberttech)
+- [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/symfony-telemetry-bundle - per-message telemetry flush on Messenger worker events** - [@norberttech](https://github.com/norberttech)
 - [#2465](https://github.com/flow-php/flow/pull/2465) - **flow-php/symfony-telemetry-bundle - console log output aligned with CLI verbosity (-v/-vv/-vvv), off by default.** - [@norberttech](https://github.com/norberttech)
 - [#2465](https://github.com/flow-php/flow/pull/2465) - **flow-php/symfony-telemetry-bundle - opt-in logger_provider.console_output config with overridable verbosity_levels.** - [@norberttech](https://github.com/norberttech)
 - [#2462](https://github.com/flow-php/flow/pull/2462) - **flow-php/symfony-telemetry-bundle - messenger propagation_style option (continue/link) with new MessengerTracePropagation enum** - [@norberttech](https://github.com/norberttech)
@@ -21,6 +23,9 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2454](https://github.com/flow-php/flow/pull/2454) - **Positional schema definition mutations on Flow\ETL\Schema: prepend(), insertAt(), addBefore(), addAfter(), moveTo(), moveBefore(), moveAfter() and reorder()** - [@bendavies](https://github.com/bendavies)
 
 ### Changed
+- [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/telemetry - span parent is now derived solely from the Context** - [@norberttech](https://github.com/norberttech)
+- [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/telemetry - trace id is derived from the active span; each root span starts a new trace** - [@norberttech](https://github.com/norberttech)
+- [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/symfony-telemetry-bundle - each consumed Messenger message is its own trace, linked to the producer** - [@norberttech](https://github.com/norberttech)
 - [#2464](https://github.com/flow-php/flow/pull/2464) - **flow-php/symfony-telemetry-bundle - messenger span name now follows OTEL {operation} {message} convention** - [@norberttech](https://github.com/norberttech)
 - [#2464](https://github.com/flow-php/flow/pull/2464) - **flow-php/symfony-telemetry-bundle - messaging.operation.name now holds the operation verb, destination is the message class, bus moved to messaging.symfony.bus** - [@norberttech](https://github.com/norberttech)
 - [#2462](https://github.com/flow-php/flow/pull/2462) - **flow-php/symfony-telemetry-bundle - consumer span now defaults to a linked trace instead of continuing the producer trace** - [@norberttech](https://github.com/norberttech)
@@ -33,6 +38,8 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [dd2562](https://github.com/flow-php/flow/commit/dd2562286e0c069f480cd8763915930abf95d32b) - **arrow-rs extension github workflow** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/telemetry - per-tracer span stack** - [@norberttech](https://github.com/norberttech)
+- [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/telemetry - Context::withTraceId() and the standalone context trace id** - [@norberttech](https://github.com/norberttech)
 - [#2408](https://github.com/flow-php/flow/pull/2408) - **Elasticsearch adapter (flow-php/etl-adapter-elasticsearch) — superseded by the SEAL adapter; use SEAL with the Elasticsearch backend
 (cmsig/seal-elasticsearch-adapter)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 
