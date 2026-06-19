@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-06-19
 
 ### Added
+- [#2465](https://github.com/flow-php/flow/pull/2465) - **flow-php/symfony-telemetry-bundle - console log output aligned with CLI verbosity (-v/-vv/-vvv), off by default.** - [@norberttech](https://github.com/norberttech)
+- [#2465](https://github.com/flow-php/flow/pull/2465) - **flow-php/symfony-telemetry-bundle - opt-in logger_provider.console_output config with overridable verbosity_levels.** - [@norberttech](https://github.com/norberttech)
 - [#2462](https://github.com/flow-php/flow/pull/2462) - **flow-php/symfony-telemetry-bundle - messenger propagation_style option (continue/link) with new MessengerTracePropagation enum** - [@norberttech](https://github.com/norberttech)
 - [#2459](https://github.com/flow-php/flow/pull/2459) - **Flow\ETL\Schema::sort() accepting a pluggable SortingStrategy (defaults to AlphabeticalStrategy)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2459](https://github.com/flow-php/flow/pull/2459) - **Core sorting strategies AlphabeticalStrategy, TypeStrategy, MetadataStrategy and CombinedStrategy, exposed via
