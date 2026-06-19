@@ -13,12 +13,14 @@ use Flow\Telemetry\Signal\Signals;
 use Throwable;
 
 use function count;
+use function hrtime;
 
 /**
  * Batches log records for efficient export.
  *
  * Collects log records in memory and exports them in batches when:
  * - The batch size limit is reached
+ * - The max batch age elapses since the first buffered record (when configured)
  * - flush() is explicitly called
  * - the system is shutting down
  */
@@ -31,10 +33,13 @@ final class BatchingLogProcessor implements LogSink
 
     private bool $isShutdown = false;
 
+    private ?int $batchStartedAt = null;
+
     public function __construct(
         private readonly Exporter $exporter,
         private readonly int $batchSize = 512,
         private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
+        private readonly ?float $maxBatchAgeSeconds = null,
     ) {}
 
     public function flush(): bool
@@ -45,6 +50,7 @@ final class BatchingLogProcessor implements LogSink
 
         $entries = $this->buffer;
         $this->buffer = [];
+        $this->batchStartedAt = null;
 
         try {
             return $this->exporter->export(Signals::logs($entries));
@@ -57,9 +63,13 @@ final class BatchingLogProcessor implements LogSink
 
     public function process(LogEntry $entry): void
     {
+        if (count($this->buffer) === 0) {
+            $this->batchStartedAt = (int) hrtime(true);
+        }
+
         $this->buffer[] = $entry;
 
-        if (count($this->buffer) >= $this->batchSize) {
+        if (count($this->buffer) >= $this->batchSize || $this->isBatchExpired()) {
             $this->flush();
         }
     }
@@ -79,5 +89,14 @@ final class BatchingLogProcessor implements LogSink
         } catch (Throwable $e) {
             $this->errorHandler->handle($e);
         }
+    }
+
+    private function isBatchExpired(): bool
+    {
+        if ($this->maxBatchAgeSeconds === null || $this->batchStartedAt === null) {
+            return false;
+        }
+
+        return (((int) hrtime(true) - $this->batchStartedAt) / 1_000_000_000) >= $this->maxBatchAgeSeconds;
     }
 }

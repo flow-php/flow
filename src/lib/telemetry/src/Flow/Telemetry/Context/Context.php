@@ -4,141 +4,88 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Context;
 
+use Flow\Telemetry\Tracer\SpanContext;
+
 /**
- * Telemetry context carrier holding trace information and baggage.
+ * Telemetry context carrier holding the active span and baggage.
  *
- * Context is the main carrier for propagating telemetry data across
- * process boundaries and through the application. It holds:
- * - A TraceId that correlates all spans in a trace
- * - An optional active SpanId for the currently executing span
- * - Baggage for arbitrary key-value data propagation
+ * Follows the OpenTelemetry context model: a Context either carries the currently active span (its
+ * SpanContext) — making the next span its child within the same trace — or carries none, making the next
+ * span a new trace root. Trace id is always derived from the active span; it is never stored independently.
  *
  * Example usage:
  * ```php
- * $context = Context::create();
- * $context = $context->withActiveSpan(SpanId::generate());
- * echo $context->traceId->toHex();
+ * $context = Context::root();
+ * $context = $context->withActiveSpan($span->context());
+ * echo $context->traceId()?->toHex();
  * ```
  */
 final class Context
 {
-    private ?SpanId $activeSpanId = null;
-
     public function __construct(
-        public readonly TraceId $traceId,
+        public readonly ?SpanContext $activeSpan = null,
         public readonly Baggage $baggage = new Baggage(),
     ) {}
 
-    /**
-     * Create a new Context with an invalid TraceId (all zeros).
-     *
-     * Use this when you want to create a context without starting a trace.
-     * Logs and spans emitted in this context will not have a trace ID until
-     * a trace is explicitly started.
-     */
-    public static function create(): self
+    public static function root(): self
     {
-        return new self(TraceId::invalid());
+        return new self();
     }
 
     /**
-     * Create a Context from a normalized array representation.
-     *
-     * @param array{traceId: array{hex: string}, baggage: array{entries: array<string, string>}, activeSpanId: null|array{hex: string}} $data Normalized Context data
+     * @param array{activeSpan: null|array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags?: array{byte: int}, traceState?: array{entries: array<string, string>}}, baggage: array{entries: array<string, string>}} $data
      */
     public static function fromArray(array $data): self
     {
-        $context = new self(TraceId::fromArray($data['traceId']), Baggage::fromArray($data['baggage']));
-
-        if ($data['activeSpanId'] !== null) {
-            $context->activeSpanId = SpanId::fromArray($data['activeSpanId']);
-        }
-
-        return $context;
+        return new self(
+            $data['activeSpan'] !== null ? SpanContext::fromArray($data['activeSpan']) : null,
+            Baggage::fromArray($data['baggage']),
+        );
     }
 
-    /**
-     * Create a new Context with the specified TraceId.
-     *
-     * @param TraceId $traceId The trace ID to use
-     */
-    public static function withTraceId(TraceId $traceId): self
+    public function activeSpan(): ?SpanContext
     {
-        return new self($traceId);
+        return $this->activeSpan;
     }
 
-    /**
-     * Get the currently active span ID, if any.
-     *
-     * @return null|SpanId The active span ID, or null if no span is active
-     */
     public function activeSpanId(): ?SpanId
     {
-        return $this->activeSpanId;
+        return $this->activeSpan?->spanId;
     }
 
-    /**
-     * Check if this is a root context (no active span).
-     *
-     * A root context has no active span, meaning any new span created
-     * in this context would be a root span.
-     */
+    public function traceId(): ?TraceId
+    {
+        return $this->activeSpan?->traceId;
+    }
+
     public function isRootContext(): bool
     {
-        return $this->activeSpanId === null;
+        return $this->activeSpan === null;
     }
 
     /**
-     * Normalize the Context to an array representation for serialization.
-     *
-     * @return array{traceId: array{hex: string}, baggage: array{entries: array<string, string>}, activeSpanId: null|array{hex: string}}
+     * @return array{activeSpan: null|array{traceId: array{hex: string}, spanId: array{hex: string}, parentSpanId: null|array{hex: string}, isRemote: bool, traceFlags: array{byte: int}, traceState: array{entries: array<string, string>}}, baggage: array{entries: array<string, string>}}
      */
     public function normalize(): array
     {
         return [
-            'traceId' => $this->traceId->normalize(),
+            'activeSpan' => $this->activeSpan?->normalize(),
             'baggage' => $this->baggage->normalize(),
-            'activeSpanId' => $this->activeSpanId?->normalize(),
         ];
     }
 
-    /**
-     * Create a new Context with the specified active span.
-     *
-     * @param SpanId $spanId The span ID to set as active
-     *
-     * @return self New Context instance with the active span set
-     */
-    public function withActiveSpan(SpanId $spanId): self
+    public function withActiveSpan(SpanContext $span): self
     {
-        $context = new self($this->traceId, $this->baggage);
-        $context->activeSpanId = $spanId;
-
-        return $context;
+        return new self($span, $this->baggage);
     }
 
-    /**
-     * Create a new Context with the specified baggage.
-     *
-     * @param Baggage $baggage The baggage to use
-     *
-     * @return self New Context instance with the new baggage
-     */
     public function withBaggage(Baggage $baggage): self
     {
-        $context = new self($this->traceId, $baggage);
-        $context->activeSpanId = $this->activeSpanId;
-
-        return $context;
+        return new self($this->activeSpan, $baggage);
     }
 
-    /**
-     * Create a new Context with no active span.
-     *
-     * @return self New Context instance with no active span
-     */
     public function withoutActiveSpan(): self
     {
-        return new self($this->traceId, $this->baggage);
+        return new self(null, $this->baggage);
     }
 }

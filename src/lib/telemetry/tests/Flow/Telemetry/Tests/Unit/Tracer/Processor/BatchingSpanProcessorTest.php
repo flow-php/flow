@@ -12,7 +12,9 @@ use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Signal\SignalType;
 use Flow\Telemetry\Tests\Mother\ErrorHandlerSpy;
+use Flow\Telemetry\Tests\Mother\ExporterSpy;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
+use Flow\Telemetry\Tests\Mother\SpanMother;
 use Flow\Telemetry\Tracer\Processor\BatchingSpanProcessor;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanContext;
@@ -99,6 +101,76 @@ final class BatchingSpanProcessorTest extends TestCase
 
         $processor = new BatchingSpanProcessor($exporter, 1);
         $processor->onStart($this->createSpan());
+    }
+
+    public function test_age_disabled_by_default_does_not_export_until_flush(): void
+    {
+        $exporter = new ExporterSpy();
+        $processor = new BatchingSpanProcessor($exporter, 512, new ErrorHandlerSpy(), null);
+
+        $processor->onEnd(SpanMother::create());
+        $processor->onEnd(SpanMother::create());
+
+        static::assertSame(0, $exporter->exportedCount());
+
+        static::assertTrue($processor->flush());
+        static::assertSame(1, $exporter->exportedCount());
+        static::assertSame(2, $exporter->exported()[0]->count());
+    }
+
+    public function test_age_set_but_not_due_does_not_export_until_flush(): void
+    {
+        $exporter = new ExporterSpy();
+        $processor = new BatchingSpanProcessor($exporter, 512, new ErrorHandlerSpy(), 3600.0);
+
+        $processor->onEnd(SpanMother::create());
+        $processor->onEnd(SpanMother::create());
+
+        static::assertSame(0, $exporter->exportedCount());
+
+        static::assertTrue($processor->flush());
+        static::assertSame(1, $exporter->exportedCount());
+        static::assertSame(2, $exporter->exported()[0]->count());
+    }
+
+    public function test_age_flush_when_deadline_exceeded_on_end(): void
+    {
+        $exporter = new ExporterSpy();
+        $processor = new BatchingSpanProcessor($exporter, 512, new ErrorHandlerSpy(), 0.01);
+
+        $processor->onEnd(SpanMother::create());
+        usleep(20_000);
+        $processor->onEnd(SpanMother::create());
+
+        static::assertSame(1, $exporter->exportedCount());
+        static::assertSame(2, $exporter->exported()[0]->count());
+    }
+
+    public function test_size_trigger_still_flushes_when_age_set_but_not_due(): void
+    {
+        $exporter = new ExporterSpy();
+        $processor = new BatchingSpanProcessor($exporter, 2, new ErrorHandlerSpy(), 3600.0);
+
+        $processor->onEnd(SpanMother::create());
+        $processor->onEnd(SpanMother::create());
+
+        static::assertSame(1, $exporter->exportedCount());
+        static::assertSame(2, $exporter->exported()[0]->count());
+    }
+
+    public function test_age_clock_resets_after_flush(): void
+    {
+        $exporter = new ExporterSpy();
+        $processor = new BatchingSpanProcessor($exporter, 512, new ErrorHandlerSpy(), 0.01);
+
+        $processor->onEnd(SpanMother::create());
+        usleep(20_000);
+        static::assertTrue($processor->flush());
+        static::assertSame(1, $exporter->exportedCount());
+
+        $processor->onEnd(SpanMother::create());
+
+        static::assertSame(1, $exporter->exportedCount());
     }
 
     private function createSpan(): Span

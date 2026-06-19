@@ -8,7 +8,9 @@ use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\ContextStorage;
 use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Context\Scope;
+use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
+use Flow\Telemetry\Tracer\SpanContext;
 use PHPUnit\Framework\TestCase;
 
 final class MemoryContextStorageTest extends TestCase
@@ -18,36 +20,35 @@ final class MemoryContextStorageTest extends TestCase
         $storage = new MemoryContextStorage();
         $originalContext = $storage->current();
 
-        $newContext = Context::withTraceId(TraceId::generate());
+        $newContext = Context::root()->withActiveSpan(SpanContext::create(TraceId::generate(), SpanId::generate()));
         $storage->attach($newContext);
 
-        static::assertFalse($originalContext->traceId->equals($storage->current()->traceId));
-        static::assertTrue($newContext->traceId->equals($storage->current()->traceId));
+        static::assertNull($originalContext->activeSpan());
+        static::assertSame($newContext->activeSpan(), $storage->current()->activeSpan());
     }
 
     public function test_attach_returns_scope(): void
     {
         $storage = new MemoryContextStorage();
-        $newContext = Context::withTraceId(TraceId::generate());
 
-        $scope = $storage->attach($newContext);
+        $scope = $storage->attach(Context::root());
 
         static::assertInstanceOf(Scope::class, $scope);
     }
 
-    public function test_creates_default_context_when_none_provided(): void
+    public function test_creates_default_root_context_when_none_provided(): void
     {
         $storage = new MemoryContextStorage();
 
-        static::assertInstanceOf(Context::class, $storage->current());
+        static::assertTrue($storage->current()->isRootContext());
     }
 
     public function test_current_returns_stored_context(): void
     {
-        $context = Context::withTraceId(TraceId::generate());
+        $context = Context::root()->withActiveSpan(SpanContext::create(TraceId::generate(), SpanId::generate()));
         $storage = new MemoryContextStorage($context);
 
-        static::assertSame($context->traceId->toHex(), $storage->current()->traceId->toHex());
+        static::assertSame($context->activeSpan(), $storage->current()->activeSpan());
     }
 
     public function test_implements_context_storage(): void

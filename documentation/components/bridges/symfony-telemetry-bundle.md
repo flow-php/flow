@@ -508,17 +508,33 @@ processor:
 
 Batches items before export.
 
-| Option       | Type    | Default | Description                             |
-|--------------|---------|---------|-----------------------------------------|
-| `batch_size` | integer | `512`   | Number of items per batch               |
-| `exporter`   | string  | -       | Name of a top-level exporter (required) |
+| Option          | Type    | Default | Description                                                                                          |
+|-----------------|---------|---------|------------------------------------------------------------------------------------------------------|
+| `batch_size`    | integer | `512`   | Number of items per batch                                                                            |
+| `max_batch_age` | float   | `null`  | Max seconds before a partial batch is force-exported, measured from the first buffered signal; `null` disables time-based flush |
+| `exporter`      | string  | -       | Name of a top-level exporter (required)                                                              |
 
 ```yaml
 processor:
   type: batching
   batch_size: 512
+  max_batch_age: 15.0   # export at least every 15s in long-running processes
   exporter: otlp
 ```
+
+By default a batch is exported only when it reaches `batch_size`, when `flush()`/`shutdown()` is called, or
+when the process exits. In a request-scoped app that is fine — the request ends and the buffer drains. In a
+**long-running process** (Symfony Messenger workers, daemons, or persistent runtimes such as ReactPHP,
+RoadRunner, Swoole, AMP, or FrankenPHP worker mode) a low-rate signal can sit in the buffer until 512
+accumulate or the process stops. Set `max_batch_age` (e.g. `15.0`) to bound how long any single signal waits
+before export; leave it unset for request-scoped apps where behavior is unchanged.
+
+> **PHP limitation — idle processes.** PHP has no background timer thread, so the age deadline is evaluated
+> only when a signal is processed, not on a wall-clock schedule. A **fully idle** process — nothing ending
+> spans or processing metrics/logs — cannot self-flush a partial batch on the age trigger. That residual
+> case needs an external flush: the Messenger worker-event flush subscriber, a runtime loop calling
+> `Telemetry::flush()`, or `shutdown()` when the process exits. The deadline is measured from a monotonic
+> clock (`hrtime`), so it is immune to wall-clock adjustments.
 
 #### composite
 
@@ -1083,20 +1099,37 @@ flow_telemetry:
       enabled: true
       context_propagation: true  # Propagate context across message boundaries
       propagation_style: link     # How the consumer span relates to the producer span
+      link_to_worker: true        # Link each message trace back to the messenger:consume worker span
 ```
 
 When `context_propagation` is enabled, `propagation_style` controls how a consumed message's span
 relates to the producing (publishing) span:
 
-- `link` (default) — the consumer span stays in the worker's own trace (under the `messenger:consume`
-  console span) and carries a span link back to the producer span. Producer and consumer get separate,
-  clean traces connected by a link. Recommended for decoupled, batch, or long-delay queues, where
-  continuing the trace would otherwise absorb the entire queue wait into a single span's duration.
+- `link` (default) — each consumed message is the **root of its own trace** and carries a span link back
+  to the producer span (per the OpenTelemetry messaging conventions). Producer and consumer get separate,
+  clean traces connected by a link, and a long-running worker no longer collapses every message into one
+  trace. Recommended for decoupled, batch, or long-delay queues, where continuing the trace would otherwise
+  absorb the entire queue wait into a single span's duration.
 - `continue` — the consumer span adopts the producer's trace and becomes its child, so
   publish → queue → consume is one continuous distributed trace. Fine for fast, 1:1 processing.
 
 `propagation_style` has no effect when `context_propagation` is `false` (there is nothing to relate to).
 The producer side is identical in both modes — the telemetry stamp is always written on dispatch.
+
+`link_to_worker` (default `true`) adds a span link from each consumed message's trace back to the active
+`messenger:consume` worker span, so you can pivot from a message trace to the worker that processed it.
+Set it to `false` to omit the link (e.g. if the consume command is not traced).
+
+Buffered telemetry is flushed **after each handled or failed message** while the worker keeps running, so
+consumer-side traces/logs/metrics export promptly instead of only when the `messenger:consume` worker
+stops. (Without it, signals emitted inside handlers sit in the batching processors — default batch size
+512 — and stay invisible until the buffer fills or the worker exits.) Failures flush too, so error spans
+and exception logs are visible even when the message is retried or sent to the failure transport. This is
+independent of `context_propagation` / `propagation_style`.
+
+Flushing per message means one exporter round-trip per message. For high-throughput workers, set
+[`max_batch_age`](#batching) on the batching processor so the batch coalesces across messages and a single
+idle worker still exports on a time bound rather than per message.
 
 #### Twig
 

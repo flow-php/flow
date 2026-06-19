@@ -167,8 +167,8 @@ final class TracingIntegrationTest extends TestCase
         $httpSpan = $httpTracer->span('http-request');
         $dbSpan = $dbTracer->span('db-query');
 
-        static::assertTrue($httpSpan->context()->traceId->equals($ctx->traceId));
-        static::assertTrue($dbSpan->context()->traceId->equals($ctx->traceId));
+        static::assertTrue($dbSpan->context()->traceId->equals($httpSpan->context()->traceId));
+        static::assertSame($httpSpan->context()->spanId->toHex(), $dbSpan->context()->parentSpanId?->toHex());
 
         $httpTracer->complete($httpSpan);
         $dbTracer->complete($dbSpan);

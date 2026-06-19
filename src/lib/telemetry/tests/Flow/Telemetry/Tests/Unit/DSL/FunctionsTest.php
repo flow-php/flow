@@ -83,38 +83,20 @@ final class FunctionsTest extends TestCase
         static::assertSame('abc', $bag->get('request.id'));
     }
 
-    public function test_context_creates_new_context(): void
+    public function test_context_creates_root_context(): void
     {
         $ctx = context();
 
         static::assertInstanceOf(Context::class, $ctx);
-        static::assertSame(32, strlen($ctx->traceId->toHex()));
+        static::assertTrue($ctx->isRootContext());
+        static::assertNull($ctx->traceId());
         static::assertTrue($ctx->baggage->isEmpty());
     }
 
     public function test_context_with_baggage(): void
     {
-        $bag = baggage(['key' => 'value']);
-        $ctx = context(null, $bag);
+        $ctx = context(baggage(['key' => 'value']));
 
-        static::assertSame('value', $ctx->baggage->get('key'));
-    }
-
-    public function test_context_with_trace_id(): void
-    {
-        $traceId = trace_id();
-        $ctx = context($traceId);
-
-        static::assertTrue($ctx->traceId->equals($traceId));
-    }
-
-    public function test_context_with_trace_id_and_baggage(): void
-    {
-        $traceId = trace_id();
-        $bag = baggage(['key' => 'value']);
-        $ctx = context($traceId, $bag);
-
-        static::assertTrue($ctx->traceId->equals($traceId));
         static::assertSame('value', $ctx->baggage->get('key'));
     }
 
@@ -382,14 +364,14 @@ final class FunctionsTest extends TestCase
     {
         $clock = $this->createMock(ClockInterface::class);
         $clock->method('now')->willReturn(new DateTimeImmutable());
-        $ctx = context();
-        $storage = new MemoryContextStorage($ctx);
+        $span = span_context(trace_id(), span_id());
+        $storage = new MemoryContextStorage(context()->withActiveSpan($span));
         $processor = $this->createSpanProcessor();
 
         $provider = tracer_provider($processor, $clock, $storage);
         $tracer = $provider->tracer($this->testResource, 'test');
 
-        static::assertSame($ctx->traceId->toHex(), $tracer->context()->traceId->toHex());
+        static::assertSame($span->spanId->toHex(), $tracer->context()->activeSpanId()?->toHex());
     }
 
     public function test_tracer_provider_with_void_processor(): void

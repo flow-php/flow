@@ -339,13 +339,6 @@ final class Logger
 
     private function resolveSpanContext(): ?SpanContext
     {
-        $context = $this->contextStorage->current();
-        $activeSpanId = $context->activeSpanId();
-
-        if ($activeSpanId === null || !$context->traceId->isValid()) {
-            return null;
-        }
-
-        return SpanContext::create($context->traceId, $activeSpanId);
+        return $this->contextStorage->current()->activeSpan();
     }
 }

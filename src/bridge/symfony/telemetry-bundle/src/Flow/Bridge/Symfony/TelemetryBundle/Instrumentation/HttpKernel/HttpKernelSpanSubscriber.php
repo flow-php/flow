@@ -185,8 +185,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         $spanContext = $propagationContext->spanContext;
 
         if ($spanContext !== null) {
-            $context = Context::withTraceId($spanContext->traceId);
-            $context = $context->withActiveSpan($spanContext->spanId);
+            $context = (new Context())->withActiveSpan($spanContext);
 
             if ($propagationContext->baggage !== null) {
                 $context = $context->withBaggage($propagationContext->baggage);

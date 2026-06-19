@@ -16,6 +16,7 @@ use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
 use Flow\Telemetry\Provider\Void\VoidExporter;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
+use Flow\Telemetry\Tracer\SpanContext;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
 use RuntimeException;
@@ -148,8 +149,7 @@ final class LoggingIntegrationTest extends TestCase
         $spanId = SpanId::generate();
 
         $contextStorage = new MemoryContextStorage();
-        $context = Context::withTraceId($traceId)->withActiveSpan($spanId);
-        $contextStorage->attach($context);
+        $contextStorage->attach(Context::root()->withActiveSpan(SpanContext::create($traceId, $spanId)));
 
         $processor = $this->createProcessor();
         $provider = new LoggerProvider($processor, $this->clock, $contextStorage);
