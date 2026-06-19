@@ -16,15 +16,14 @@ use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Tracer\Sampler\Sampler;
 use Psr\Clock\ClockInterface;
-use SplStack;
 use Throwable;
 
 /**
  * Creates and manages spans within a trace.
  *
  * Tracer is the primary API for distributed tracing. It creates spans,
- * manages parent-child relationships through a span stack, and delegates
- * span lifecycle events to a SpanProcessor.
+ * manages parent-child relationships through the shared Context (the active span lives in the Context and
+ * the parent is derived from it), and delegates span lifecycle events to a SpanProcessor.
  *
  * Example usage:
  * ```php
@@ -52,11 +51,6 @@ use Throwable;
  */
 final class Tracer
 {
-    /**
-     * @var \SplStack<SpanContext>
-     */
-    private readonly SplStack $spanStack;
-
     public function __construct(
         private readonly Resource $resource,
         private InstrumentationScope $scope,
@@ -67,42 +61,26 @@ final class Tracer
         private readonly SpanLimits $limits = new SpanLimits(),
         private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
         private readonly Attributes $signalAttributes = new Attributes(),
-    ) {
-        /** @var \SplStack<SpanContext> $stack */
-        $stack = new SplStack();
-        $this->spanStack = $stack;
-    }
+    ) {}
 
     /**
-     * Get the currently active span context, or null if none.
+     * Get the currently active span context from the shared Context, or null if none.
      */
     public function activeSpan(): ?SpanContext
     {
-        if ($this->spanStack->isEmpty()) {
-            return null;
-        }
-
-        return $this->spanStack->top();
+        return $this->contextStorage->current()->activeSpan();
     }
 
     /**
      * Complete a span and pass it to the processor.
      *
-     * This ends the span (if not already ended), removes it from the
-     * active span stack, and notifies the processor.
+     * This ends the span (if not already ended), detaches its Context scope
+     * (restoring the parent context), and notifies the processor.
      */
     public function complete(Span $span): void
     {
         if (!$span->isEnded()) {
             $span->end($this->clock->now());
-        }
-
-        if (!$this->spanStack->isEmpty()) {
-            $topContext = $this->spanStack->top();
-
-            if ($topContext->spanId->equals($span->context()->spanId)) {
-                $this->spanStack->pop();
-            }
         }
 
         $span->contextScope()?->detach();
@@ -166,14 +144,14 @@ final class Tracer
      * Start a new span.
      *
      * If there's an active span, it becomes the parent of the new span.
-     * The new span is pushed onto the stack and becomes the active span.
+     * The new span is attached to the Context and becomes the active span.
      *
      * @param string $name The span name
      * @param SpanKind $kind The span kind
      * @param TAttributeValueMap|Attributes $attributes Initial attributes
      * @param array<SpanLink> $links Links to other spans
      * @param null|false|SpanContext $parentContext Explicit parent control:
-     *                                              - null (default): automatic detection from stack/context
+     *                                              - null (default): automatic detection from the Context's active span
      *                                              - SpanContext: use as explicit parent
      *                                              - false: create root span (no parent)
      */
@@ -189,7 +167,6 @@ final class Tracer
         $parentSpanContext = match (true) {
             $parentContext === false => null,
             $parentContext !== null => $parentContext,
-            !$this->spanStack->isEmpty() => $this->spanStack->top(),
             default => $context->activeSpan(),
         };
 
@@ -266,7 +243,6 @@ final class Tracer
             }
         }
 
-        $this->spanStack->push($span->context());
         $span->setContextScope($this->contextStorage->attach($context->withActiveSpan($span->context())));
 
         if ($span->isRecording()) {

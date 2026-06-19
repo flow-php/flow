@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Unit\Tracer;
 
 use Flow\Telemetry\Context\Context;
+use Flow\Telemetry\Context\MemoryContextStorage;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
+use Flow\Telemetry\Provider\Void\VoidSpanProcessor;
+use Flow\Telemetry\Tests\Mother\ClockMother;
+use Flow\Telemetry\Tests\Mother\ResourceMother;
 use Flow\Telemetry\Tests\Mother\TracerMother;
 use Flow\Telemetry\Tracer\SpanContext;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanProcessor;
+use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -29,6 +34,42 @@ final class TracerTest extends TestCase
     public function test_active_span_returns_null_when_no_active_span(): void
     {
         static::assertNull(TracerMother::create()->activeSpan());
+    }
+
+    public function test_attached_context_active_span_wins_as_parent(): void
+    {
+        $storage = new MemoryContextStorage();
+        $tracer = TracerMother::withContextStorage($storage);
+
+        $attached = SpanContext::create(TraceId::generate(), SpanId::generate());
+        $storage->attach(Context::root()->withActiveSpan($attached));
+
+        $span = $tracer->span('child');
+
+        $parentSpanId = $span->context()->parentSpanId;
+        static::assertNotNull($parentSpanId);
+        static::assertTrue($parentSpanId->equals($attached->spanId));
+        static::assertTrue($span->context()->traceId->equals($attached->traceId));
+    }
+
+    public function test_interleaved_cross_tracer_spans_parent_to_innermost_current_span(): void
+    {
+        $storage = new MemoryContextStorage();
+        $provider = new TracerProvider(new VoidSpanProcessor(), ClockMother::frozen(), $storage);
+        $resource = ResourceMother::default();
+
+        $tracerA = $provider->tracer($resource, 'tracerA');
+        $tracerB = $provider->tracer($resource, 'tracerB');
+
+        $a1 = $tracerA->span('A1');
+        $b1 = $tracerB->span('B1');
+        $a2 = $tracerA->span('A2');
+
+        $parentSpanId = $a2->context()->parentSpanId;
+        static::assertNotNull($parentSpanId);
+        static::assertTrue($parentSpanId->equals($b1->context()->spanId));
+        static::assertFalse($parentSpanId->equals($a1->context()->spanId));
+        static::assertTrue($a2->context()->traceId->equals($a1->context()->traceId));
     }
 
     public function test_complete_calls_processor_on_end(): void
@@ -52,7 +93,7 @@ final class TracerTest extends TestCase
         static::assertTrue($span->isEnded());
     }
 
-    public function test_complete_pops_span_from_stack(): void
+    public function test_complete_restores_parent_context_after_child(): void
     {
         $tracer = TracerMother::create();
         $tracer->span('test-span');
