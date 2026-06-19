@@ -1327,6 +1327,7 @@ final class FlowTelemetryBundle extends AbstractBundle
                 $definition->setArgument(0, $exporterRef);
                 $definition->setArgument(1, $config['batch_size'] ?? 512);
                 $definition->setArgument(2, $errorHandlerRef);
+                $definition->setArgument(3, $config['max_batch_age'] ?? null);
                 $builder->setDefinition($processorServiceId, $definition);
 
                 break;
@@ -1458,6 +1459,7 @@ final class FlowTelemetryBundle extends AbstractBundle
                 $definition->setArgument(0, $exporterRef);
                 $definition->setArgument(1, $config['batch_size'] ?? 512);
                 $definition->setArgument(2, $errorHandlerRef);
+                $definition->setArgument(3, $config['max_batch_age'] ?? null);
                 $builder->setDefinition($processorServiceId, $definition);
 
                 break;
@@ -1652,6 +1654,7 @@ final class FlowTelemetryBundle extends AbstractBundle
                 $definition->setArgument(0, $exporterRef);
                 $definition->setArgument(1, $config['batch_size'] ?? 512);
                 $definition->setArgument(2, $errorHandlerRef);
+                $definition->setArgument(3, $config['max_batch_age'] ?? null);
                 $builder->setDefinition($processorServiceId, $definition);
 
                 break;
@@ -1914,6 +1917,11 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->info('Batch size for batching processor')
             ->defaultValue(512)
             ->min(1)
+            ->end()
+            ->floatNode('max_batch_age')
+            ->info('Max batch age in seconds for batching processor; export at least this often in long-running processes (null = disabled)')
+            ->defaultNull()
+            ->min(0)
             ->end()
             ->scalarNode('exporter')
             ->info('Name of a top-level exporter referenced by this processor')
@@ -2248,6 +2256,11 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->defaultValue(512)
             ->min(1)
             ->end()
+            ->floatNode('max_batch_age')
+            ->info('Max batch age in seconds for batching processor; export at least this often in long-running processes (null = disabled)')
+            ->defaultNull()
+            ->min(0)
+            ->end()
             ->scalarNode('exporter')
             ->info('Name of a top-level exporter referenced by this processor')
             ->defaultNull()
@@ -2301,6 +2314,11 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->integerNode('batch_size')
             ->defaultValue(512)
             ->min(1)
+            ->end()
+            ->floatNode('max_batch_age')
+            ->info('Max batch age in seconds for batching processor; export at least this often in long-running processes (null = disabled)')
+            ->defaultNull()
+            ->min(0)
             ->end()
             ->scalarNode('exporter')
             ->defaultNull()
@@ -2430,6 +2448,11 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->defaultValue(512)
             ->min(1)
             ->end()
+            ->floatNode('max_batch_age')
+            ->info('Max batch age in seconds for batching processor; export at least this often in long-running processes (null = disabled)')
+            ->defaultNull()
+            ->min(0)
+            ->end()
             ->scalarNode('exporter')
             ->defaultNull()
             ->end()
@@ -2450,6 +2473,11 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->integerNode('batch_size')
             ->defaultValue(512)
             ->min(1)
+            ->end()
+            ->floatNode('max_batch_age')
+            ->info('Max batch age in seconds for batching processor; export at least this often in long-running processes (null = disabled)')
+            ->defaultNull()
+            ->min(0)
             ->end()
             ->scalarNode('exporter')
             ->defaultNull()

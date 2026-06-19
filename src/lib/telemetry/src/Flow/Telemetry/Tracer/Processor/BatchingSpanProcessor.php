@@ -13,12 +13,14 @@ use Flow\Telemetry\Tracer\SpanProcessor;
 use Throwable;
 
 use function count;
+use function hrtime;
 
 /**
  * Batches spans for efficient export.
  *
  * Collects spans in memory and exports them in batches when:
  * - The batch size limit is reached
+ * - The max batch age elapses since the first buffered span (when configured)
  * - flush() is explicitly called
  * - the system is shutting down
  */
@@ -31,10 +33,13 @@ final class BatchingSpanProcessor implements SpanProcessor
 
     private bool $isShutdown = false;
 
+    private ?int $batchStartedAt = null;
+
     public function __construct(
         private readonly Exporter $exporter,
         private readonly int $batchSize = 512,
         private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
+        private readonly ?float $maxBatchAgeSeconds = null,
     ) {}
 
     public function flush(): bool
@@ -45,6 +50,7 @@ final class BatchingSpanProcessor implements SpanProcessor
 
         $spans = $this->buffer;
         $this->buffer = [];
+        $this->batchStartedAt = null;
 
         try {
             return $this->exporter->export(Signals::traces($spans));
@@ -57,9 +63,13 @@ final class BatchingSpanProcessor implements SpanProcessor
 
     public function onEnd(Span $span): void
     {
+        if (count($this->buffer) === 0) {
+            $this->batchStartedAt = (int) hrtime(true);
+        }
+
         $this->buffer[] = $span;
 
-        if (count($this->buffer) >= $this->batchSize) {
+        if (count($this->buffer) >= $this->batchSize || $this->isBatchExpired()) {
             $this->flush();
         }
     }
@@ -81,5 +91,14 @@ final class BatchingSpanProcessor implements SpanProcessor
         } catch (Throwable $e) {
             $this->errorHandler->handle($e);
         }
+    }
+
+    private function isBatchExpired(): bool
+    {
+        if ($this->maxBatchAgeSeconds === null || $this->batchStartedAt === null) {
+            return false;
+        }
+
+        return (((int) hrtime(true) - $this->batchStartedAt) / 1_000_000_000) >= $this->maxBatchAgeSeconds;
     }
 }

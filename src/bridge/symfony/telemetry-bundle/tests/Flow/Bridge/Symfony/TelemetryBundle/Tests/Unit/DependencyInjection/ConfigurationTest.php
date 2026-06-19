@@ -604,4 +604,45 @@ final class ConfigurationTest extends TestCase
         static::assertSame('service', $config['exporters']['custom_otlp']['otlp']['transport']['type']);
         static::assertSame('app.my_transport', $config['exporters']['custom_otlp']['otlp']['transport']['service_id']);
     }
+
+    public function test_max_batch_age_is_parsed_for_span_metric_and_log_processors(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+            'tracer_provider' => [
+                'processor' => ['type' => 'batching', 'exporter' => 'otlp', 'max_batch_age' => 15.0],
+            ],
+            'meter_provider' => [
+                'processor' => ['type' => 'batching', 'exporter' => 'otlp', 'max_batch_age' => 30.0],
+            ],
+            'logger_provider' => [
+                'processor' => ['type' => 'batching', 'exporter' => 'otlp', 'max_batch_age' => 5.5],
+            ],
+        ]);
+
+        static::assertSame(15.0, $config['tracer_provider']['processor']['max_batch_age']);
+        static::assertSame(30.0, $config['meter_provider']['processor']['max_batch_age']);
+        static::assertSame(5.5, $config['logger_provider']['processor']['max_batch_age']);
+    }
+
+    public function test_max_batch_age_defaults_to_null_when_omitted(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+            'tracer_provider' => [
+                'processor' => ['type' => 'batching', 'exporter' => 'otlp'],
+            ],
+            'meter_provider' => [
+                'processor' => ['type' => 'batching', 'exporter' => 'otlp'],
+            ],
+            'logger_provider' => [
+                'processor' => ['type' => 'batching', 'exporter' => 'otlp'],
+            ],
+        ]);
+
+        static::assertArrayHasKey('max_batch_age', $config['tracer_provider']['processor']);
+        static::assertNull($config['tracer_provider']['processor']['max_batch_age']);
+        static::assertNull($config['meter_provider']['processor']['max_batch_age']);
+        static::assertNull($config['logger_provider']['processor']['max_batch_age']);
+    }
 }

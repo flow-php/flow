@@ -450,17 +450,33 @@ processor:
 
 Batches items before export.
 
-| Option       | Type    | Default | Description                             |
-|--------------|---------|---------|-----------------------------------------|
-| `batch_size` | integer | `512`   | Number of items per batch               |
-| `exporter`   | string  | -       | Name of a top-level exporter (required) |
+| Option          | Type    | Default | Description                                                                                          |
+|-----------------|---------|---------|------------------------------------------------------------------------------------------------------|
+| `batch_size`    | integer | `512`   | Number of items per batch                                                                            |
+| `max_batch_age` | float   | `null`  | Max seconds before a partial batch is force-exported, measured from the first buffered signal; `null` disables time-based flush |
+| `exporter`      | string  | -       | Name of a top-level exporter (required)                                                              |
 
 ```yaml
 processor:
   type: batching
   batch_size: 512
+  max_batch_age: 15.0   # export at least every 15s in long-running processes
   exporter: otlp
 ```
+
+By default a batch is exported only when it reaches `batch_size`, when `flush()`/`shutdown()` is called, or
+when the process exits. In a request-scoped app that is fine — the request ends and the buffer drains. In a
+**long-running process** (Symfony Messenger workers, daemons, or persistent runtimes such as ReactPHP,
+RoadRunner, Swoole, AMP, or FrankenPHP worker mode) a low-rate signal can sit in the buffer until 512
+accumulate or the process stops. Set `max_batch_age` (e.g. `15.0`) to bound how long any single signal waits
+before export; leave it unset for request-scoped apps where behavior is unchanged.
+
+> **PHP limitation — idle processes.** PHP has no background timer thread, so the age deadline is evaluated
+> only when a signal is processed, not on a wall-clock schedule. A **fully idle** process — nothing ending
+> spans or processing metrics/logs — cannot self-flush a partial batch on the age trigger. That residual
+> case needs an external flush: the Messenger worker-event flush subscriber, a runtime loop calling
+> `Telemetry::flush()`, or `shutdown()` when the process exits. The deadline is measured from a monotonic
+> clock (`hrtime`), so it is immune to wall-clock adjustments.
 
 #### composite
 

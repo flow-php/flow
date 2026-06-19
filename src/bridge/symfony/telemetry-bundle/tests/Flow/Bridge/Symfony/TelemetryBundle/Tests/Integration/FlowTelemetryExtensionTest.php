@@ -684,6 +684,64 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         static::assertSame('flow.telemetry.error_handler.silent', (string) $definition->getArgument(2));
     }
 
+    public function test_max_batch_age_is_passed_to_batching_processor_definitions(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.environment', 'test');
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
+        $extension = (new FlowTelemetryBundle())->getContainerExtension();
+        assert($extension !== null);
+        $extension->load([[
+            'resource' => [],
+            'exporters' => [
+                'memory' => ['memory' => null],
+            ],
+            'tracer_provider' => [
+                'processor' => ['type' => 'batching', 'exporter' => 'memory', 'max_batch_age' => 15.0],
+            ],
+            'meter_provider' => [
+                'processor' => ['type' => 'batching', 'exporter' => 'memory', 'max_batch_age' => 30.0],
+            ],
+            'logger_provider' => [
+                'processor' => ['type' => 'batching', 'exporter' => 'memory', 'max_batch_age' => 5.5],
+            ],
+        ]], $container);
+
+        static::assertSame(15.0, $container->getDefinition('flow.telemetry.tracer_provider.processor')->getArgument(3));
+        static::assertSame(30.0, $container->getDefinition('flow.telemetry.meter_provider.processor')->getArgument(3));
+        static::assertSame(5.5, $container->getDefinition('flow.telemetry.logger_provider.processor')->getArgument(3));
+    }
+
+    public function test_max_batch_age_defaults_to_null_in_batching_processor_definitions(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.environment', 'test');
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
+        $extension = (new FlowTelemetryBundle())->getContainerExtension();
+        assert($extension !== null);
+        $extension->load([[
+            'resource' => [],
+            'exporters' => [
+                'memory' => ['memory' => null],
+            ],
+            'tracer_provider' => [
+                'processor' => ['type' => 'batching', 'exporter' => 'memory'],
+            ],
+            'meter_provider' => [
+                'processor' => ['type' => 'batching', 'exporter' => 'memory'],
+            ],
+            'logger_provider' => [
+                'processor' => ['type' => 'batching', 'exporter' => 'memory'],
+            ],
+        ]], $container);
+
+        static::assertNull($container->getDefinition('flow.telemetry.tracer_provider.processor')->getArgument(3));
+        static::assertNull($container->getDefinition('flow.telemetry.meter_provider.processor')->getArgument(3));
+        static::assertNull($container->getDefinition('flow.telemetry.logger_provider.processor')->getArgument(3));
+    }
+
     public function test_provider_uses_named_error_handler(): void
     {
         $container = new ContainerBuilder();
