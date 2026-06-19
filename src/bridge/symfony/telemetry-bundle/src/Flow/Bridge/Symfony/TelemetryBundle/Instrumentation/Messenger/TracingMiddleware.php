@@ -50,17 +50,18 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         $isReceived = $receivedStamp !== null;
 
         $kind = $isReceived ? SpanKind::CONSUMER : SpanKind::PRODUCER;
-        $operation = $isReceived ? 'receive' : 'send';
+        $operation = $isReceived ? 'process' : 'send';
 
         $busName = $busNameStamp instanceof BusNameStamp ? $busNameStamp->getBusName() : 'default';
-        $spanName = "{$busName} {$shortMessageClass}";
+        $spanName = "{$operation} {$shortMessageClass}";
 
         $attributes = [
             'messaging.system' => 'symfony_messenger',
-            'messaging.destination.name' => $busName,
+            'messaging.destination.name' => $shortMessageClass,
             'messaging.message.class' => $messageClass,
             'messaging.operation.type' => $operation,
-            'messaging.operation.name' => $messageClass,
+            'messaging.operation.name' => $operation,
+            'messaging.symfony.bus' => $busName,
         ];
 
         if ($receivedStamp instanceof ReceivedStamp) {
