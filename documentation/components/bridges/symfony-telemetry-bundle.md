@@ -1041,20 +1041,37 @@ flow_telemetry:
       enabled: true
       context_propagation: true  # Propagate context across message boundaries
       propagation_style: link     # How the consumer span relates to the producer span
+      link_to_worker: true        # Link each message trace back to the messenger:consume worker span
 ```
 
 When `context_propagation` is enabled, `propagation_style` controls how a consumed message's span
 relates to the producing (publishing) span:
 
-- `link` (default) — the consumer span stays in the worker's own trace (under the `messenger:consume`
-  console span) and carries a span link back to the producer span. Producer and consumer get separate,
-  clean traces connected by a link. Recommended for decoupled, batch, or long-delay queues, where
-  continuing the trace would otherwise absorb the entire queue wait into a single span's duration.
+- `link` (default) — each consumed message is the **root of its own trace** and carries a span link back
+  to the producer span (per the OpenTelemetry messaging conventions). Producer and consumer get separate,
+  clean traces connected by a link, and a long-running worker no longer collapses every message into one
+  trace. Recommended for decoupled, batch, or long-delay queues, where continuing the trace would otherwise
+  absorb the entire queue wait into a single span's duration.
 - `continue` — the consumer span adopts the producer's trace and becomes its child, so
   publish → queue → consume is one continuous distributed trace. Fine for fast, 1:1 processing.
 
 `propagation_style` has no effect when `context_propagation` is `false` (there is nothing to relate to).
 The producer side is identical in both modes — the telemetry stamp is always written on dispatch.
+
+`link_to_worker` (default `true`) adds a span link from each consumed message's trace back to the active
+`messenger:consume` worker span, so you can pivot from a message trace to the worker that processed it.
+Set it to `false` to omit the link (e.g. if the consume command is not traced).
+
+Buffered telemetry is flushed **after each handled or failed message** while the worker keeps running, so
+consumer-side traces/logs/metrics export promptly instead of only when the `messenger:consume` worker
+stops. (Without it, signals emitted inside handlers sit in the batching processors — default batch size
+512 — and stay invisible until the buffer fills or the worker exits.) Failures flush too, so error spans
+and exception logs are visible even when the message is retried or sent to the failure transport. This is
+independent of `context_propagation` / `propagation_style`.
+
+Flushing per message means one exporter round-trip per message. For high-throughput workers, set
+[`max_batch_age`](#batching) on the batching processor so the batch coalesces across messages and a single
+idle worker still exports on a time bound rather than per message.
 
 #### Twig
 

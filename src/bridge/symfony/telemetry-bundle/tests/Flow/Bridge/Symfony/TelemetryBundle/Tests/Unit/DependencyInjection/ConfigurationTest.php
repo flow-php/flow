@@ -605,6 +605,21 @@ final class ConfigurationTest extends TestCase
         static::assertSame('app.my_transport', $config['exporters']['custom_otlp']['otlp']['transport']['service_id']);
     }
 
+    public function test_messenger_link_to_worker_defaults_to_true_and_is_configurable(): void
+    {
+        $default = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => ['messenger' => ['enabled' => true]],
+        ]);
+        static::assertTrue($default['instrumentation']['messenger']['link_to_worker']);
+
+        $disabled = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => ['messenger' => ['enabled' => true, 'link_to_worker' => false]],
+        ]);
+        static::assertFalse($disabled['instrumentation']['messenger']['link_to_worker']);
+    }
+
     public function test_max_batch_age_is_parsed_for_span_metric_and_log_processors(): void
     {
         $config = $this->context->processConfig([

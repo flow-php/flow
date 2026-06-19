@@ -8,6 +8,7 @@ use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\Tests\Mother\TracerMother;
+use Flow\Telemetry\Tracer\SpanContext;
 use Flow\Telemetry\Tracer\SpanKind;
 use Flow\Telemetry\Tracer\SpanProcessor;
 use PHPUnit\Framework\TestCase;
@@ -66,10 +67,11 @@ final class TracerTest extends TestCase
 
     public function test_context_returns_tracer_context(): void
     {
-        $context = Context::withTraceId(TraceId::generate());
+        $span = SpanContext::create(TraceId::generate(), SpanId::generate());
+        $context = Context::root()->withActiveSpan($span);
         $tracer = TracerMother::withContext($context);
 
-        static::assertSame($context->traceId->toHex(), $tracer->context()->traceId->toHex());
+        static::assertSame($span, $tracer->context()->activeSpan());
     }
 
     public function test_name_returns_tracer_name(): void
@@ -122,14 +124,15 @@ final class TracerTest extends TestCase
 
     public function test_span_inherits_context_active_span_as_parent(): void
     {
-        $activeSpan = SpanId::generate();
-        $context = Context::withTraceId(TraceId::generate())->withActiveSpan($activeSpan);
+        $activeSpan = SpanContext::create(TraceId::generate(), SpanId::generate());
+        $context = Context::root()->withActiveSpan($activeSpan);
 
         $span = TracerMother::withContext($context)->span('child');
 
         $parentSpanId = $span->context()->parentSpanId;
         static::assertNotNull($parentSpanId);
-        static::assertTrue($parentSpanId->equals($activeSpan));
+        static::assertTrue($parentSpanId->equals($activeSpan->spanId));
+        static::assertTrue($span->context()->traceId->equals($activeSpan->traceId));
     }
 
     public function test_span_is_root_when_no_parent(): void
@@ -137,12 +140,35 @@ final class TracerTest extends TestCase
         static::assertTrue(TracerMother::create()->span('root-span')->context()->isRoot());
     }
 
-    public function test_span_uses_tracer_trace_id(): void
+    public function test_root_span_generates_new_trace_id(): void
     {
-        $context = Context::withTraceId(TraceId::generate());
-        $span = TracerMother::withContext($context)->span('test-span');
+        $span = TracerMother::create()->span('test-span');
 
-        static::assertTrue($span->context()->traceId->equals($context->traceId));
+        static::assertTrue($span->context()->traceId->isValid());
+        static::assertTrue($span->context()->isRoot());
+    }
+
+    public function test_sequential_root_spans_get_distinct_trace_ids(): void
+    {
+        $tracer = TracerMother::create();
+
+        $first = $tracer->span('first');
+        $tracer->complete($first);
+        $second = $tracer->span('second');
+        $tracer->complete($second);
+
+        static::assertFalse($first->context()->traceId->equals($second->context()->traceId));
+    }
+
+    public function test_parent_context_false_starts_a_new_trace_root(): void
+    {
+        $activeSpan = SpanContext::create(TraceId::generate(), SpanId::generate());
+        $tracer = TracerMother::withContext(Context::root()->withActiveSpan($activeSpan));
+
+        $span = $tracer->span('detached', SpanKind::INTERNAL, [], [], false);
+
+        static::assertTrue($span->context()->isRoot());
+        static::assertFalse($span->context()->traceId->equals($activeSpan->traceId));
     }
 
     public function test_trace_completes_span_after_callback(): void

@@ -56,6 +56,28 @@ incoming and injecting outgoing W3C trace headers:
 composer require flow-php/symfony-http-foundation-telemetry-bridge
 ```
 
+### 3) `flow-php/telemetry` - trace id derived from the active span; root spans start a new trace
+
+| Before                              | After                                                                   |
+|-------------------------------------|-------------------------------------------------------------------------|
+| `Context::create()`                 | `Context::root()`                                                       |
+| `Context::withTraceId(TraceId)`     | removed                                                                 |
+| `$context->traceId` (property)      | `$context->traceId(): ?TraceId` (derived from the active span)          |
+| `Context::withActiveSpan(SpanId)`   | `Context::withActiveSpan(SpanContext)`                                  |
+| `context(?TraceId, ?Baggage)` (DSL) | `context(?Baggage)`                                                     |
+| a root span reused the context trace id | each root span generates a new `TraceId`                            |
+
+`Context` no longer stores a standalone trace id; attach the active span as a `SpanContext` to keep
+subsequent spans in the same trace.
+
+### 4) `flow-php/symfony-telemetry-bundle` - each consumed Messenger message is its own trace
+
+| Before                                                       | After                                                                       |
+|--------------------------------------------------------------|-----------------------------------------------------------------------------|
+| all messages in a `messenger:consume` run shared one trace   | each handled message is a new trace root, linked to the producer (`link` mode) |
+
+`continue` mode still joins the producer's trace.
+
 ---
 
 ## Upgrading from 0.39.x to 0.40.x

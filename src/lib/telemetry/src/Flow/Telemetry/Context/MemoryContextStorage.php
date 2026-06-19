@@ -10,7 +10,7 @@ final class MemoryContextStorage implements ContextStorage
 
     public function __construct(?Context $context = null)
     {
-        $this->context = $context ?? Context::create();
+        $this->context = $context ?? Context::root();
     }
 
     public function attach(Context $context): Scope

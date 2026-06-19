@@ -185,32 +185,18 @@ final class Tracer
         SpanContext|false|null $parentContext = null,
     ): Span {
         $context = $this->contextStorage->current();
-        $parentSpanId = null;
-        $parentSpanContext = null;
-        $parentIsRemote = false;
 
-        if ($parentContext === false) {
-            $parentSpanId = null;
-            $parentSpanContext = null;
-        } elseif ($parentContext !== null) {
-            $parentSpanContext = $parentContext;
-            $parentSpanId = $parentContext->spanId;
-            $parentIsRemote = $parentContext->isRemote;
-        } elseif (!$this->spanStack->isEmpty()) {
-            $parentSpanContext = $this->spanStack->top();
-            $parentSpanId = $parentSpanContext->spanId;
-        } elseif ($context->activeSpanId() !== null) {
-            $parentSpanId = $context->activeSpanId();
-            $parentIsRemote = true;
-        }
+        $parentSpanContext = match (true) {
+            $parentContext === false => null,
+            $parentContext !== null => $parentContext,
+            !$this->spanStack->isEmpty() => $this->spanStack->top(),
+            default => $context->activeSpan(),
+        };
 
-        $traceId = $context->traceId;
-
-        if (!$traceId->isValid()) {
-            $traceId = TraceId::generate();
-            $context = Context::withTraceId($traceId);
-            $this->contextStorage->attach($context);
-        }
+        // OpenTelemetry: a span inherits its parent's trace id; a root span (no parent) starts a new trace.
+        $traceId = $parentSpanContext !== null ? $parentSpanContext->traceId : TraceId::generate();
+        $parentSpanId = $parentSpanContext?->spanId;
+        $parentIsRemote = $parentSpanContext !== null && $parentSpanContext->isRemote;
 
         $spanId = SpanId::generate();
         $traceFlags = $parentSpanContext !== null ? $parentSpanContext->traceFlags : TraceFlags::sampled();
@@ -281,7 +267,7 @@ final class Tracer
         }
 
         $this->spanStack->push($span->context());
-        $span->setContextScope($this->contextStorage->attach($context->withActiveSpan($span->context()->spanId)));
+        $span->setContextScope($this->contextStorage->attach($context->withActiveSpan($span->context())));
 
         if ($span->isRecording()) {
             try {

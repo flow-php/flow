@@ -163,21 +163,17 @@ function baggage(array $entries = []): Baggage
 }
 
 /**
- * Create a Context.
+ * Create a root Context (no active span).
  *
- * If no TraceId is provided, generates a new one.
- * If no Baggage is provided, creates an empty one.
+ * A span created in this context becomes a new trace root. Attach an active span with
+ * Context::withActiveSpan() to make subsequent spans its children.
  *
- * @param null|TraceId $traceId Optional TraceId to use
  * @param null|Baggage $baggage Optional Baggage to use
  */
 #[DocumentationDSL(module: Module::TELEMETRY, type: DSLType::TYPE)]
-function context(?TraceId $traceId = null, ?Baggage $baggage = null): Context
+function context(?Baggage $baggage = null): Context
 {
-    $traceId ??= TraceId::generate();
-    $baggage ??= new Baggage();
-
-    return new Context($traceId, $baggage);
+    return new Context(null, $baggage ?? new Baggage());
 }
 
 /**

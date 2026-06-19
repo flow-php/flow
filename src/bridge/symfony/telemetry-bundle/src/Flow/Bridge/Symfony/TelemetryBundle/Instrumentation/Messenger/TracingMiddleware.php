@@ -33,6 +33,7 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         private ?ContextStorage $contextStorage = null,
         private ?Propagator $propagator = null,
         private MessengerTracePropagation $propagation = MessengerTracePropagation::Link,
+        private bool $linkToWorker = true,
     ) {}
 
     public function handle(Envelope $envelope, StackInterface $stack): Envelope
@@ -73,20 +74,23 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         }
 
         $remote = $isReceived ? $this->extractRemoteContext($envelope) : null;
+        $workerSpan = $isReceived ? $this->contextStorage?->current()->activeSpan() : null;
         $links = [];
+        $continuingRemoteTrace = false;
 
         if ($remote !== null && $remote->spanContext !== null) {
             $remoteSpanContext = $remote->spanContext;
             $remoteBaggage = $remote->baggage;
 
             if ($this->propagation === MessengerTracePropagation::Continuation) {
-                $context = Context::withTraceId($remoteSpanContext->traceId)->withActiveSpan($remoteSpanContext->spanId);
+                $context = (new Context())->withActiveSpan($remoteSpanContext);
 
                 if ($remoteBaggage !== null) {
                     $context = $context->withBaggage($remoteBaggage);
                 }
 
                 $this->contextStorage?->attach($context);
+                $continuingRemoteTrace = true;
             } else {
                 $links[] = SpanLink::create(
                     SpanContext::createRemote($remoteSpanContext->traceId, $remoteSpanContext->spanId),
@@ -99,7 +103,15 @@ final readonly class TracingMiddleware implements MiddlewareInterface
             }
         }
 
-        $span = $tracer->span($spanName, $kind, $attributes, $links);
+        // A consumed message starts its own trace (linked to the producer), per the OTEL messaging
+        // conventions, unless we are explicitly continuing the producer's trace.
+        $parentContext = $isReceived && !$continuingRemoteTrace ? false : null;
+
+        if ($parentContext === false && $this->linkToWorker && $workerSpan !== null) {
+            $links[] = SpanLink::create($workerSpan, ['flow.messenger.worker' => true]);
+        }
+
+        $span = $tracer->span($spanName, $kind, $attributes, $links, $parentContext);
 
         if (!$isReceived) {
             $envelope = $this->injectContext($envelope);
@@ -149,15 +161,13 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         }
 
         $context = $this->contextStorage->current();
-        $activeSpanId = $context->activeSpanId();
+        $activeSpan = $context->activeSpan();
 
-        if ($activeSpanId === null) {
+        if ($activeSpan === null) {
             return $envelope;
         }
 
-        $spanContext = SpanContext::create($context->traceId, $activeSpanId);
-
-        $propagationContext = new PropagationContext($spanContext, $context->baggage);
+        $propagationContext = new PropagationContext($activeSpan, $context->baggage);
 
         $carrier = new TelemetryStampCarrier();
         $this->propagator->inject($propagationContext, $carrier);
