@@ -1,6 +1,8 @@
-## [Unreleased] - 2026-06-19
+## [Unreleased] - 2026-06-20
 
 ### Added
+- [#2467](https://github.com/flow-php/flow/pull/2467) - **flow-php/telemetry-otlp-bridge - non-blocking CurlTransport::tick() to drive in-flight requests** - [@norberttech](https://github.com/norberttech)
+- [#2467](https://github.com/flow-php/flow/pull/2467) - **flow-php/symfony-telemetry-bundle - pump curl transports on Messenger WorkerRunningEvent** - [@norberttech](https://github.com/norberttech)
 - [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/telemetry - time-based flush for batching log, metric and span processors** - [@norberttech](https://github.com/norberttech)
 - [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/symfony-telemetry-bundle - per-message telemetry flush on Messenger worker events** - [@norberttech](https://github.com/norberttech)
 - [#2465](https://github.com/flow-php/flow/pull/2465) - **flow-php/symfony-telemetry-bundle - console log output aligned with CLI verbosity (-v/-vv/-vvv), off by default.** - [@norberttech](https://github.com/norberttech)
@@ -23,6 +25,7 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2454](https://github.com/flow-php/flow/pull/2454) - **Positional schema definition mutations on Flow\ETL\Schema: prepend(), insertAt(), addBefore(), addAfter(), moveTo(), moveBefore(), moveAfter() and reorder()** - [@bendavies](https://github.com/bendavies)
 
 ### Changed
+- [#2467](https://github.com/flow-php/flow/pull/2467) - **flow-php/telemetry-otlp-bridge - curl per-request timeout_ms default raised 250 to 5000** - [@norberttech](https://github.com/norberttech)
 - [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/telemetry - span parent is now derived solely from the Context** - [@norberttech](https://github.com/norberttech)
 - [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/telemetry - trace id is derived from the active span; each root span starts a new trace** - [@norberttech](https://github.com/norberttech)
 - [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/symfony-telemetry-bundle - each consumed Messenger message is its own trace, linked to the producer** - [@norberttech](https://github.com/norberttech)
@@ -33,6 +36,8 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2457](https://github.com/flow-php/flow/pull/2457) - **flow-php/filesystem - rename FilesystemTable::for() parameter $protocol to $mount** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2467](https://github.com/flow-php/flow/pull/2467) - **flow-php/telemetry-otlp-bridge - telemetry lost in long-running workers when requests stalled between messages** - [@norberttech](https://github.com/norberttech)
+- [#2467](https://github.com/flow-php/flow/pull/2467) - **flow-php/telemetry-otlp-bridge - unbounded failure accumulation by surfacing export failures to the ErrorHandler as reaped** - [@norberttech](https://github.com/norberttech)
 - [#2460](https://github.com/flow-php/flow/pull/2460) - **flow-php/symfony-telemetry-bundle - metric attributes render as a toggleable table row in the profiler panel** - [@norberttech](https://github.com/norberttech)
 - [#2458](https://github.com/flow-php/flow/pull/2458) - **flow-php/symfony-telemetry-bundle - successful Twig spans now report OK status** - [@norberttech](https://github.com/norberttech)
 - [dd2562](https://github.com/flow-php/flow/commit/dd2562286e0c069f480cd8763915930abf95d32b) - **arrow-rs extension github workflow** - [@norberttech](https://github.com/norberttech)
