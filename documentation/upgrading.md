@@ -58,25 +58,46 @@ composer require flow-php/symfony-http-foundation-telemetry-bridge
 
 ### 3) `flow-php/telemetry` - trace id derived from the active span; root spans start a new trace
 
-| Before                              | After                                                                   |
-|-------------------------------------|-------------------------------------------------------------------------|
-| `Context::create()`                 | `Context::root()`                                                       |
-| `Context::withTraceId(TraceId)`     | removed                                                                 |
-| `$context->traceId` (property)      | `$context->traceId(): ?TraceId` (derived from the active span)          |
-| `Context::withActiveSpan(SpanId)`   | `Context::withActiveSpan(SpanContext)`                                  |
-| `context(?TraceId, ?Baggage)` (DSL) | `context(?Baggage)`                                                     |
-| a root span reused the context trace id | each root span generates a new `TraceId`                            |
+| Before                                  | After                                                          |
+|-----------------------------------------|----------------------------------------------------------------|
+| `Context::create()`                     | `Context::root()`                                              |
+| `Context::withTraceId(TraceId)`         | removed                                                        |
+| `$context->traceId` (property)          | `$context->traceId(): ?TraceId` (derived from the active span) |
+| `Context::withActiveSpan(SpanId)`       | `Context::withActiveSpan(SpanContext)`                         |
+| `context(?TraceId, ?Baggage)` (DSL)     | `context(?Baggage)`                                            |
+| a root span reused the context trace id | each root span generates a new `TraceId`                       |
 
 `Context` no longer stores a standalone trace id; attach the active span as a `SpanContext` to keep
 subsequent spans in the same trace.
 
 ### 4) `flow-php/symfony-telemetry-bundle` - each consumed Messenger message is its own trace
 
-| Before                                                       | After                                                                       |
-|--------------------------------------------------------------|-----------------------------------------------------------------------------|
-| all messages in a `messenger:consume` run shared one trace   | each handled message is a new trace root, linked to the producer (`link` mode) |
+| Before                                                     | After                                                                          |
+|------------------------------------------------------------|--------------------------------------------------------------------------------|
+| all messages in a `messenger:consume` run shared one trace | each handled message is a new trace root, linked to the producer (`link` mode) |
 
 `continue` mode still joins the producer's trace.
+
+### 5) `flow-php/telemetry-otlp-bridge`, `flow-php/symfony-telemetry-bundle` - curl per-request `timeout_ms` default raised to 5000ms
+
+| Default                                             | Before | After  |
+|-----------------------------------------------------|--------|--------|
+| `CurlTransportOptions::DEFAULT_TIMEOUT_MS`          | `250`  | `5000` |
+| bundle curl transport `timeout_ms` (config default) | `250`  | `5000` |
+
+gRPC `timeout_ms` default is unchanged (`250`). Set `timeout_ms` explicitly to restore the previous value.
+
+### 6) `flow-php/telemetry-otlp-bridge` - curl export failures surface to an `ErrorHandler` instead of a shutdown exception
+
+| Before                                                             | After                                                                                                               |
+|--------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| `new CurlTransport($endpoint, $serializer, $options, $failover)`   | `new CurlTransport($endpoint, $serializer, $options, $failover, ErrorHandler $errorHandler = new ErrorLogHandler())` |
+| `otlp_curl_transport($endpoint, $serializer, $options, $failover)` | `otlp_curl_transport(..., errorHandler: $handler)`                                                                   |
+| `shutdown()` threw an aggregate `TransportException` for failed exports (no failover) | failures surface to the `ErrorHandler` as reaped; `shutdown()` no longer throws for them          |
+
+Handle failures via the `ErrorHandler` (default `ErrorLogHandler`) instead of try/catching `shutdown()`. The Symfony
+bundle injects the exporter's configured `error_handler` into the transport automatically. Failover behavior
+(`FailoverTransportException`) is unchanged.
 
 ---
 

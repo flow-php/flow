@@ -15,6 +15,7 @@ use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Signal\Signals;
+use Flow\Telemetry\Tests\Mother\ErrorHandlerSpy;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanContext;
@@ -191,25 +192,29 @@ final class CurlTransportTest extends TestCase
         $transport->send(Signals::traces($this->createSpans()));
     }
 
-    public function test_shutdown_aggregates_curl_connection_failures(): void
+    public function test_shutdown_surfaces_curl_connection_failures_to_error_handler(): void
     {
         if (!extension_loaded('curl')) {
             static::markTestSkipped('ext-curl is required');
         }
 
+        $errorHandler = new ErrorHandlerSpy();
         $transport = otlp_curl_transport(
             'http://127.0.0.1:1',
             otlp_json_serializer(),
             otlp_curl_options()->withConnectTimeout(1)->withTimeout(1),
+            errorHandler: $errorHandler,
         );
 
         $transport->send(Signals::traces($this->createSpans()));
         $transport->send(Signals::traces($this->createSpans()));
 
-        $this->expectException(TransportException::class);
-        $this->expectExceptionMessageMatches('/OTLP curl shutdown: 2 exports failed; first error: curl error \\d+/');
-
         $transport->shutdown();
+
+        $error = $errorHandler->last();
+        static::assertSame(2, $errorHandler->count());
+        static::assertInstanceOf(TransportException::class, $error);
+        static::assertStringContainsString('curl error', $error->getMessage());
     }
 
     public function test_shutdown_cascades_to_failover_shutdown(): void
@@ -309,12 +314,13 @@ final class CurlTransportTest extends TestCase
         static::assertSame(1, $failover->shutdownCalls);
     }
 
-    public function test_shutdown_with_zero_timeout_marks_pending_as_failed_in_legacy_mode(): void
+    public function test_shutdown_with_zero_timeout_surfaces_pending_failure_to_error_handler(): void
     {
         if (!extension_loaded('curl')) {
             static::markTestSkipped('ext-curl is required');
         }
 
+        $errorHandler = new ErrorHandlerSpy();
         $transport = new CurlTransport(
             'http://127.0.0.1:1',
             new JsonSerializer(),
@@ -322,22 +328,49 @@ final class CurlTransportTest extends TestCase
                 ->withConnectTimeout(60_000)
                 ->withTimeout(60_000)
                 ->withShutdownTimeout(0),
+            errorHandler: $errorHandler,
         );
 
         $transport->send(Signals::traces($this->createSpans()));
+        $transport->shutdown();
 
-        try {
-            $transport->shutdown();
+        $error = $errorHandler->last();
+        static::assertSame(1, $errorHandler->count());
+        static::assertInstanceOf(TransportException::class, $error);
+        // Either the shutdown-deadline-reached path or the normal connection-refused path.
+        static::assertTrue(
+            str_contains($error->getMessage(), 'shutdown_timeout=0ms expired')
+            || str_contains($error->getMessage(), 'curl error'),
+        );
+    }
 
-            // If everything completed before shutdown_timeout=0 fired, that's also valid (race condition).
-            self::addToAssertionCount(1);
-        } catch (TransportException $e) {
-            // Either the shutdown-deadline-reached path OR the normal connection-refused path.
-            static::assertTrue(
-                str_contains($e->getMessage(), 'shutdown_timeout=0ms expired')
-                || str_contains($e->getMessage(), 'curl error'),
-            );
+    public function test_tick_is_noop_when_no_pending_requests(): void
+    {
+        if (!extension_loaded('curl')) {
+            static::markTestSkipped('ext-curl is required');
         }
+
+        $transport = new CurlTransport('http://localhost:4318', new JsonSerializer());
+
+        $transport->tick();
+
+        $this->addToAssertionCount(1);
+
+        $transport->shutdown();
+    }
+
+    public function test_tick_is_noop_after_shutdown(): void
+    {
+        if (!extension_loaded('curl')) {
+            static::markTestSkipped('ext-curl is required');
+        }
+
+        $transport = new CurlTransport('http://localhost:4318', new JsonSerializer());
+        $transport->shutdown();
+
+        $transport->tick();
+
+        $this->addToAssertionCount(1);
     }
 
     /**
