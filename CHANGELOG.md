@@ -1,6 +1,10 @@
 ## [Unreleased] - 2026-06-20
 
 ### Added
+- [#2468](https://github.com/flow-php/flow/pull/2468) - **flow-php/symfony-telemetry-bundle - controller body span, default on, as child of the request span** - [@norberttech](https://github.com/norberttech)
+- [#2468](https://github.com/flow-php/flow/pull/2468) - **flow-php/symfony-telemetry-bundle - opt-in controller.get_callable resolution span** - [@norberttech](https://github.com/norberttech)
+- [#2468](https://github.com/flow-php/flow/pull/2468) - **flow-php/symfony-telemetry-bundle - opt-in controller.get_arguments aggregate span** - [@norberttech](https://github.com/norberttech)
+- [#2468](https://github.com/flow-php/flow/pull/2468) - **flow-php/symfony-telemetry-bundle - opt-in per-resolver controller.argument_value_resolver spans** - [@norberttech](https://github.com/norberttech)
 - [#2467](https://github.com/flow-php/flow/pull/2467) - **flow-php/telemetry-otlp-bridge - non-blocking CurlTransport::tick() to drive in-flight requests** - [@norberttech](https://github.com/norberttech)
 - [#2467](https://github.com/flow-php/flow/pull/2467) - **flow-php/symfony-telemetry-bundle - pump curl transports on Messenger WorkerRunningEvent** - [@norberttech](https://github.com/norberttech)
 - [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/telemetry - time-based flush for batching log, metric and span processors** - [@norberttech](https://github.com/norberttech)
@@ -25,6 +29,7 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2454](https://github.com/flow-php/flow/pull/2454) - **Positional schema definition mutations on Flow\ETL\Schema: prepend(), insertAt(), addBefore(), addAfter(), moveTo(), moveBefore(), moveAfter() and reorder()** - [@bendavies](https://github.com/bendavies)
 
 ### Changed
+- [#2468](https://github.com/flow-php/flow/pull/2468) - **flow-php/symfony-telemetry-bundle - extract shared ControllerName helper from the request span subscriber** - [@norberttech](https://github.com/norberttech)
 - [#2467](https://github.com/flow-php/flow/pull/2467) - **flow-php/telemetry-otlp-bridge - curl per-request timeout_ms default raised 250 to 5000** - [@norberttech](https://github.com/norberttech)
 - [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/telemetry - span parent is now derived solely from the Context** - [@norberttech](https://github.com/norberttech)
 - [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/telemetry - trace id is derived from the active span; each root span starts a new trace** - [@norberttech](https://github.com/norberttech)
