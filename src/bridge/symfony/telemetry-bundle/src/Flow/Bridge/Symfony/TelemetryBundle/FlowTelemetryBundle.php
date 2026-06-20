@@ -889,8 +889,8 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->defaultTrue()
             ->end()
             ->integerNode('timeout_ms')
-            ->info('Per-request deadline in milliseconds (curl: total request; grpc: call deadline). Default 250ms.')
-            ->defaultValue(250)
+            ->info('Per-request deadline in milliseconds (curl: total request; grpc: call deadline). Default 5000ms.')
+            ->defaultValue(5000)
             ->min(1)
             ->end()
             ->arrayNode('headers')
@@ -978,6 +978,7 @@ final class FlowTelemetryBundle extends AbstractBundle
         array $transportConfig,
         ContainerBuilder $builder,
         bool $allowFailover = true,
+        ?Reference $errorHandlerRef = null,
     ): string {
         $transportServiceId = 'flow.telemetry.exporter.' . $exporterName . '.transport';
         // @mago-expect analysis:mixed-assignment
@@ -1083,11 +1084,18 @@ final class FlowTelemetryBundle extends AbstractBundle
                     $transportConfig,
                     $builder,
                     $allowFailover,
+                    $errorHandlerRef,
                 );
 
                 if ($failoverReference !== null) {
                     $definition->setArgument(3, $failoverReference);
                 }
+
+                if ($errorHandlerRef !== null) {
+                    $definition->setArgument('$errorHandler', $errorHandlerRef);
+                }
+
+                $definition->addTag('flow.telemetry.curl_transport');
 
                 $builder->setDefinition($transportServiceId, $definition);
 
@@ -1267,6 +1275,7 @@ final class FlowTelemetryBundle extends AbstractBundle
         array $transportConfig,
         ContainerBuilder $builder,
         bool $allowFailover,
+        ?Reference $errorHandlerRef = null,
     ): ?Reference {
         if (!$allowFailover) {
             return null;
@@ -1284,6 +1293,7 @@ final class FlowTelemetryBundle extends AbstractBundle
             $failoverConfig,
             $builder,
             allowFailover: false,
+            errorHandlerRef: $errorHandlerRef,
         );
 
         return new Reference($failoverServiceId);
@@ -2983,10 +2993,15 @@ final class FlowTelemetryBundle extends AbstractBundle
                         $name,
                     ));
                 }
-                $transportServiceId = $this->buildEmbeddedOtlpTransport($name, $transportConfig, $builder);
                 $errorHandlerRef = $this->resolveErrorHandlerReference(
                     $exporterConfig['otlp']['error_handler'] ?? 'default',
                     $builder,
+                );
+                $transportServiceId = $this->buildEmbeddedOtlpTransport(
+                    $name,
+                    $transportConfig,
+                    $builder,
+                    errorHandlerRef: $errorHandlerRef,
                 );
                 $definition = new Definition(OTLPExporter::class);
                 $definition->setArgument(0, new Reference($transportServiceId));

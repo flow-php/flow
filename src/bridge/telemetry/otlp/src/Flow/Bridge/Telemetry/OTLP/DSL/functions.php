@@ -128,8 +128,9 @@ function otlp_curl_transport(
     JsonSerializer|ProtobufSerializer $serializer = new JsonSerializer(),
     CurlTransportOptions $options = new CurlTransportOptions(),
     ?Transport $failover = null,
+    ErrorHandler $errorHandler = new ErrorLogHandler(),
 ): Transport {
-    return new CurlTransport($endpoint, $serializer, $options, $failover);
+    return new CurlTransport($endpoint, $serializer, $options, $failover, $errorHandler);
 }
 
 /**

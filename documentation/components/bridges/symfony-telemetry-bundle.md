@@ -508,11 +508,11 @@ processor:
 
 Batches items before export.
 
-| Option          | Type    | Default | Description                                                                                          |
-|-----------------|---------|---------|------------------------------------------------------------------------------------------------------|
-| `batch_size`    | integer | `512`   | Number of items per batch                                                                            |
+| Option          | Type    | Default | Description                                                                                                                     |
+|-----------------|---------|---------|---------------------------------------------------------------------------------------------------------------------------------|
+| `batch_size`    | integer | `512`   | Number of items per batch                                                                                                       |
 | `max_batch_age` | float   | `null`  | Max seconds before a partial batch is force-exported, measured from the first buffered signal; `null` disables time-based flush |
-| `exporter`      | string  | -       | Name of a top-level exporter (required)                                                              |
+| `exporter`      | string  | -       | Name of a top-level exporter (required)                                                                                         |
 
 ```yaml
 processor:
@@ -815,19 +815,21 @@ Inside `exporters.<name>.otlp.transport`. Required for the `otlp` sub-block.
 
 #### Timeouts
 
-Both curl and gRPC default to **aggressive, local-collector-friendly per-request timeouts** with a separate, looser
-budget for graceful drain at shutdown:
-
-| Setting               | Default | Applies to | Bounds                                                      |
-|-----------------------|--------:|------------|-------------------------------------------------------------|
-| `timeout_ms`          |     250 | curl, grpc | Per-request deadline (curl: total request; grpc: per-call)  |
-| `connect_timeout_ms`  |     250 | curl only  | TCP/TLS connect; gRPC has no separate bound                 |
-| `shutdown_timeout_ms` |    5000 | curl, grpc | Wall-clock budget for draining pending requests at shutdown |
-
 The defaults assume the recommended deployment: an OpenTelemetry Collector running close to the application (loopback,
-UDS, or sidecar). `shutdown_timeout_ms` is independent of `timeout_ms` — keep the per-request value tight to surface
-collector slowness during steady-state, while still giving graceful exit a longer window to drain. For a remote
-collector across regions, raise both values. See the
+UDS, or sidecar):
+
+| Setting               |              Default | Applies to | Bounds                                                      |
+|-----------------------|---------------------:|------------|-------------------------------------------------------------|
+| `timeout_ms`          | 5000 curl / 250 grpc | curl, grpc | Per-request deadline (curl: total request; grpc: per-call)  |
+| `connect_timeout_ms`  |                  250 | curl only  | TCP/TLS connect; gRPC has no separate bound                 |
+| `shutdown_timeout_ms` |                 5000 | curl, grpc | Wall-clock budget for draining pending requests at shutdown |
+
+The curl transport is asynchronous and only advances while the host pumps it, so its `timeout_ms` must span the gap
+between dispatch and the next pump — hence the **5000 ms** curl default, which comfortably covers a worker's loop
+iteration (the bundle pumps in-flight curl requests on Messenger's `WorkerRunningEvent`, see
+[Messenger instrumentation](#messenger)). gRPC calls progress in the background via the grpc core, so the gRPC
+per-call deadline stays tight at **250 ms**. `shutdown_timeout_ms` is independent of `timeout_ms` and bounds graceful
+drain at exit. For a remote collector across regions, raise `timeout_ms`. See the
 [OTLP bridge Timeouts section](/documentation/components/bridges/telemetry-otlp-bridge.md#timeouts) for the rationale.
 
 #### Failover Transport
@@ -867,7 +869,7 @@ For the underlying behavior — when a forwarded batch is treated as absorbed vs
 | Option                | Type    | Default | Description                                                                     |
 |-----------------------|---------|---------|---------------------------------------------------------------------------------|
 | `endpoint`            | string  | -       | OTLP base URL (required)                                                        |
-| `timeout_ms`          | integer | `250`   | Total per-request deadline in **milliseconds**                                  |
+| `timeout_ms`          | integer | `5000`  | Total per-request deadline in **milliseconds**                                  |
 | `connect_timeout_ms`  | integer | `250`   | TCP/TLS connect deadline in **milliseconds**                                    |
 | `shutdown_timeout_ms` | integer | `5000`  | Wall-clock budget in **milliseconds** for draining pending requests at shutdown |
 | `compression`         | boolean | `false` | Enable compression                                                              |
@@ -1130,6 +1132,13 @@ independent of `context_propagation` / `propagation_style`.
 Flushing per message means one exporter round-trip per message. For high-throughput workers, set
 [`max_batch_age`](#batching) on the batching processor so the batch coalesces across messages and a single
 idle worker still exports on a time bound rather than per message.
+
+The async OTLP `curl` transport makes no network progress unless the process pumps it, and a worker blocks on its
+queue poll between messages. The bundle therefore pumps every configured `curl` transport on Messenger's
+`WorkerRunningEvent` (each loop iteration), so a request dispatched by the per-message flush completes in the
+background instead of stalling until shutdown and tripping its wall-clock `timeout_ms`. This is wired automatically
+when `messenger` instrumentation is enabled; it requires no configuration. Keep the curl `timeout_ms` comfortably
+above the worker's poll/sleep cadence — the **5000 ms** default already does (see [Timeouts](#timeouts)).
 
 #### Twig
 

@@ -7,6 +7,8 @@ namespace Flow\Bridge\Telemetry\OTLP\Transport;
 use CurlMultiHandle;
 use Flow\Bridge\Telemetry\OTLP\Serializer\JsonSerializer;
 use Flow\Bridge\Telemetry\OTLP\Serializer\ProtobufSerializer;
+use Flow\Telemetry\ErrorHandler\ErrorHandler;
+use Flow\Telemetry\ErrorHandler\ErrorLogHandler;
 use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Signal\SignalType;
 use Generator;
@@ -49,14 +51,12 @@ use const CURLOPT_TIMEOUT_MS;
  *
  * When $failover is set, prior failed batches are forwarded to it on the next
  * send()/shutdown(); a FailoverTransportException is then thrown.
+ *
  */
 final class CurlTransport implements Transport
 {
     /** @var list<array{primary: \Throwable, failover: null|\Throwable}> */
     private array $deferredFailures = [];
-
-    /** @var list<\Throwable> */
-    private array $failures = [];
 
     private bool $isShutdown = false;
 
@@ -70,6 +70,7 @@ final class CurlTransport implements Transport
         private readonly JsonSerializer|ProtobufSerializer $serializer = new JsonSerializer(),
         private readonly CurlTransportOptions $options = new CurlTransportOptions(),
         private readonly ?Transport $failover = null,
+        private readonly ErrorHandler $errorHandler = new ErrorLogHandler(),
     ) {
         if (!extension_loaded('curl')) {
             throw new RuntimeException('ext-curl is required for CurlTransport');
@@ -161,18 +162,25 @@ final class CurlTransport implements Transport
                 $cascadeException,
             );
         }
+    }
 
-        if (count($this->failures) === 0) {
+    public function tick(): void
+    {
+        if ($this->isShutdown || count($this->pending) === 0) {
             return;
         }
 
-        $first = $this->failures[0];
-        $count = count($this->failures);
-        $message = $count === 1
-            ? sprintf('OTLP curl shutdown: 1 export failed: %s', $first->getMessage())
-            : sprintf('OTLP curl shutdown: %d exports failed; first error: %s', $count, $first->getMessage());
+        $running = 0;
 
-        throw new TransportException($message, 0, $first);
+        do {
+            $status = curl_multi_exec($this->multiHandle, $running);
+        } while ($status === CURLM_CALL_MULTI_PERFORM);
+
+        if ($this->failover === null) {
+            $this->processCompleted();
+        } else {
+            $this->drainCompleted();
+        }
     }
 
     /**
@@ -353,7 +361,7 @@ final class CurlTransport implements Transport
     private function markStillPendingAsShutdownTimedOut(): void
     {
         foreach ($this->iterateStillPending() as $item) {
-            $this->failures[] = $item['primaryError'];
+            $this->errorHandler->handle($item['primaryError']);
         }
     }
 
@@ -361,7 +369,7 @@ final class CurlTransport implements Transport
     {
         foreach ($this->iterateCompleted() as $item) {
             if ($item['primaryError'] !== null) {
-                $this->failures[] = $item['primaryError'];
+                $this->errorHandler->handle($item['primaryError']);
             }
         }
     }
