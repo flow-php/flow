@@ -1067,6 +1067,10 @@ flow_telemetry:
     http_kernel:
       enabled: true
       context_propagation: true  # Extract context from incoming headers
+      trace_controller: true                  # Controller body span (default ON)
+      trace_controller_resolution: false      # controller.get_callable span (default OFF)
+      trace_controller_arguments: false       # controller.get_arguments aggregate span (default OFF)
+      trace_controller_argument_resolvers: false  # per-resolver controller.argument_value_resolver spans (default OFF)
       exclude_paths:
         - path: '/_profiler'
         - path: '/_wdt'
@@ -1074,6 +1078,25 @@ flow_telemetry:
           method: GET
         - path: '/^\/api\/internal\/.*/'  # Regex pattern
 ```
+
+In addition to the request (SERVER) span, the bundle can trace the controller lifecycle as child spans of
+the request span (same instrumentation scope, kind `INTERNAL`). They are emitted only while the request span
+exists, so disabling `http_kernel` or excluding the path produces none.
+
+- `trace_controller` (default **true**) — the controller **body** execution. The span is named after the
+  resolved controller (e.g. `App\Controller\OrderController::import`) and carries `code.namespace`,
+  `code.function` and `controller` attributes. It starts after argument resolution and completes at
+  `kernel.view`/`kernel.response`, so it excludes resolution time and appears in both the OTLP export and the
+  Flow Telemetry profiler panel.
+- `trace_controller_resolution` (default **false**) — controller resolution
+  (`ControllerResolverInterface::getController()`), emitted as a `controller.get_callable` span.
+- `trace_controller_arguments` (default **false**) — argument resolution as a single aggregate
+  `controller.get_arguments` span.
+- `trace_controller_argument_resolvers` (default **false**) — one `controller.argument_value_resolver` span
+  per value resolver invocation (finer-grained, higher cardinality).
+
+The resolution and argument toggles install service decorators only when enabled, so they add zero overhead
+when off.
 
 #### Console
 

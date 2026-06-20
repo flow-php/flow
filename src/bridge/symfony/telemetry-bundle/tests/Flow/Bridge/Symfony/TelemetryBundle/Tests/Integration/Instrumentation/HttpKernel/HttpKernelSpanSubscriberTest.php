@@ -10,6 +10,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Controller\TestController
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\KernelTestCase;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
+use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanKind;
 use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -85,9 +86,9 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        static::assertCount(1, $spans);
+        static::assertCount(2, $spans);
 
-        $span = $spans[0];
+        $span = array_values(array_filter($spans, static fn(Span $s): bool => $s->kind() === SpanKind::SERVER))[0];
         static::assertNotSame($incomingTraceId, $span->context()->traceId->toHex());
         static::assertNull($span->context()->parentSpanId);
     }
@@ -197,8 +198,12 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        static::assertCount(1, $spans);
-        static::assertSame('GET /test', $spans[0]->name());
+        static::assertCount(2, $spans);
+        $requestSpan = array_values(array_filter(
+            $spans,
+            static fn(Span $s): bool => $s->kind() === SpanKind::SERVER,
+        ))[0];
+        static::assertSame('GET /test', $requestSpan->name());
     }
 
     public function test_excludes_path_with_method_filter(): void
@@ -260,8 +265,12 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        static::assertCount(1, $spans);
-        static::assertSame('POST /_wdt', $spans[0]->name());
+        static::assertCount(2, $spans);
+        $requestSpan = array_values(array_filter(
+            $spans,
+            static fn(Span $s): bool => $s->kind() === SpanKind::SERVER,
+        ))[0];
+        static::assertSame('POST /_wdt', $requestSpan->name());
     }
 
     public function test_excludes_path_with_regex_pattern(): void
@@ -327,8 +336,12 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        static::assertCount(1, $spans);
-        static::assertSame('GET /test', $spans[0]->name());
+        static::assertCount(2, $spans);
+        $requestSpan = array_values(array_filter(
+            $spans,
+            static fn(Span $s): bool => $s->kind() === SpanKind::SERVER,
+        ))[0];
+        static::assertSame('GET /test', $requestSpan->name());
     }
 
     public function test_extracts_context_from_traceparent_header(): void
@@ -387,9 +400,9 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        static::assertCount(1, $spans);
+        static::assertCount(2, $spans);
 
-        $span = $spans[0];
+        $span = array_values(array_filter($spans, static fn(Span $s): bool => $s->kind() === SpanKind::SERVER))[0];
         static::assertSame($incomingTraceId, $span->context()->traceId->toHex());
         static::assertSame($incomingSpanId, $span->context()->parentSpanId?->toHex());
     }
@@ -445,9 +458,9 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        static::assertCount(1, $spans);
+        static::assertCount(2, $spans);
 
-        $span = $spans[0];
+        $span = array_values(array_filter($spans, static fn(Span $s): bool => $s->kind() === SpanKind::SERVER))[0];
         static::assertNotEmpty($span->context()->traceId->toHex());
         static::assertNull($span->context()->parentSpanId);
     }
@@ -500,9 +513,9 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        static::assertCount(1, $spans);
+        static::assertCount(2, $spans);
 
-        $span = $spans[0];
+        $span = array_values(array_filter($spans, static fn(Span $s): bool => $s->kind() === SpanKind::SERVER))[0];
         $attributes = $span->attributes();
         static::assertSame(404, $attributes['http.response.status_code']);
 
@@ -560,9 +573,9 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        static::assertCount(1, $spans);
+        static::assertCount(2, $spans);
 
-        $span = $spans[0];
+        $span = array_values(array_filter($spans, static fn(Span $s): bool => $s->kind() === SpanKind::SERVER))[0];
         static::assertSame('GET /test', $span->name());
         static::assertSame(SpanKind::SERVER, $span->kind());
 
@@ -624,9 +637,9 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
         $spans = $processor->endedSpans();
 
-        static::assertCount(1, $spans);
+        static::assertCount(2, $spans);
 
-        $span = $spans[0];
+        $span = array_values(array_filter($spans, static fn(Span $s): bool => $s->kind() === SpanKind::SERVER))[0];
         static::assertSame(
             "00-{$span->context()->traceId->toHex()}-{$span->context()->spanId->toHex()}-01",
             $response->headers->get('traceparent'),

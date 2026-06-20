@@ -78,7 +78,11 @@ final class HttpKernelFlushSubscriberTest extends KernelTestCase
 
         $spansAfterTerminate = $exporter->spans();
 
-        static::assertCount(1, $spansAfterTerminate, 'Spans should be exported after terminate when flush is called');
+        static::assertCount(
+            2,
+            $spansAfterTerminate,
+            'Request and controller spans should be exported after terminate when flush is called',
+        );
     }
 
     public function test_flush_is_not_called_when_http_kernel_instrumentation_is_disabled(): void

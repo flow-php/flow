@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel;
 
-use Closure;
 use DateTimeImmutable;
 use Flow\Bridge\Symfony\HttpFoundationTelemetry\RequestCarrier;
 use Flow\Bridge\Symfony\HttpFoundationTelemetry\ResponseCarrier;
@@ -29,14 +28,11 @@ use Symfony\Component\HttpKernel\Event\TerminateEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 use function array_map;
-use function count;
-use function is_array;
-use function is_object;
 use function is_string;
 
 final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterface
 {
-    private const string SPAN_ATTRIBUTE = '_flow_telemetry_span';
+    public const string SPAN_ATTRIBUTE = '_flow_telemetry_span';
 
     private const string TRACER_ATTRIBUTE = '_flow_telemetry_tracer';
 
@@ -84,8 +80,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
             $span->setAttribute('http.route', $route);
         }
 
-        $controller = $event->getController();
-        $controllerName = $this->resolveControllerName($controller);
+        $controllerName = ControllerName::resolve($event->getController())?->name;
 
         if ($controllerName !== null) {
             $span->setAttribute('controller', $controllerName);
@@ -200,40 +195,6 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         $propagationContext = new PropagationContext($span->context(), $this->contextStorage->current()->baggage);
 
         $this->propagator->inject($propagationContext, new ResponseCarrier($response));
-    }
-
-    /**
-     * @param array<int, object|string>|callable|object $controller
-     */
-    private function resolveControllerName(callable|object|array $controller): ?string
-    {
-        if (is_array($controller)) {
-            if (count($controller) === 2) {
-                $firstElement = $controller[0];
-                $secondElement = $controller[1];
-                $class = is_object($firstElement) ? $firstElement::class : $firstElement;
-                $method = is_string($secondElement) ? $secondElement : '';
-
-                return "{$class}::{$method}";
-            }
-
-            return null;
-        }
-
-        if (is_object($controller)) {
-            if ($controller instanceof Closure) {
-                return 'Closure';
-            }
-
-            return $controller::class . '::__invoke';
-        }
-
-        if (is_string($controller)) {
-            // @mago-expect analysis:never-return
-            return $controller;
-        }
-
-        return null;
     }
 
     private function shouldTraceByPath(string $path, string $method): bool
