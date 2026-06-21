@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-06-20
+## [Unreleased] - 2026-06-21
 
 ### Added
 - [#2468](https://github.com/flow-php/flow/pull/2468) - **flow-php/symfony-telemetry-bundle - controller body span, default on, as child of the request span** - [@norberttech](https://github.com/norberttech)
