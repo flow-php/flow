@@ -99,6 +99,23 @@ Handle failures via the `ErrorHandler` (default `ErrorLogHandler`) instead of tr
 bundle injects the exporter's configured `error_handler` into the transport automatically. Failover behavior
 (`FailoverTransportException`) is unchanged.
 
+### 7) `flow-php/symfony-postgresql-bundle` - migrations run against a single configured connection
+
+| Before                                                  | After                                                                            |
+|---------------------------------------------------------|----------------------------------------------------------------------------------|
+| `flow:migrations:* --connection=<name>` (`-c`)          | removed — every migration command uses the configured migrations connection      |
+| migrator stack registered for every connection          | registered only for the migrations connection                                    |
+| —                                                       | `flow_postgresql.migrations.connection: <name>` (defaults to the first connection)|
+
+To run migrations against a non-default connection, set `migrations.connection` instead of passing `-c`:
+
+```yaml
+flow_postgresql:
+  migrations:
+    enabled: true
+    connection: analytics
+```
+
 ---
 
 ## Upgrading from 0.39.x to 0.40.x

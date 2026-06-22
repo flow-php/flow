@@ -16,7 +16,6 @@ use Flow\PostgreSql\Schema\Diff\CatalogComparator;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
-use Symfony\Component\DependencyInjection\Container;
 
 final class DiffCommandTest extends TestCase
 {
@@ -29,19 +28,14 @@ final class DiffCommandTest extends TestCase
             new SpyMigrationGenerator(Version::fromString('20260401120000')),
         );
 
-        $container = new Container();
-        $container->set('flow.postgresql.default.migrations.diff_generator', $diffGenerator);
-        $container->set(
-            'flow.postgresql.default.migrations.configuration',
-            new Configuration(
-                new SpyClient(),
-                new FakeCatalogProvider(new Catalog([])),
-                '/tmp/migrations',
-                'App\\Migrations',
-            ),
+        $configuration = new Configuration(
+            new SpyClient(),
+            new FakeCatalogProvider(new Catalog([])),
+            '/tmp/migrations',
+            'App\\Migrations',
         );
 
-        $tester = new CommandTester(new DiffCommand($container, 'default'));
+        $tester = new CommandTester(new DiffCommand($diffGenerator, $configuration));
         $tester->execute(['name' => 'schema_change']);
 
         static::assertSame(Command::FAILURE, $tester->getStatusCode());
@@ -58,19 +52,14 @@ final class DiffCommandTest extends TestCase
             $generator,
         );
 
-        $container = new Container();
-        $container->set('flow.postgresql.default.migrations.diff_generator', $diffGenerator);
-        $container->set(
-            'flow.postgresql.default.migrations.configuration',
-            new Configuration(
-                new SpyClient(),
-                new FakeCatalogProvider(new Catalog([])),
-                '/tmp/migrations',
-                'App\\Migrations',
-            ),
+        $configuration = new Configuration(
+            new SpyClient(),
+            new FakeCatalogProvider(new Catalog([])),
+            '/tmp/migrations',
+            'App\\Migrations',
         );
 
-        $tester = new CommandTester(new DiffCommand($container, 'default'));
+        $tester = new CommandTester(new DiffCommand($diffGenerator, $configuration));
         $tester->execute(['name' => 'schema_change', '--allow-empty-diff' => true]);
 
         static::assertStringContainsString('Generated migration: 20260401120000', $tester->getDisplay());

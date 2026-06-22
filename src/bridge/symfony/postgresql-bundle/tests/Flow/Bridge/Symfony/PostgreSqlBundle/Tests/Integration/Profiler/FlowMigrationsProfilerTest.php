@@ -81,7 +81,7 @@ final class FlowMigrationsProfilerTest extends KernelTestCase
         $container = $this->boot(['enabled' => true])->getContainer();
 
         type_instance_of(Migrator::class)
-            ->assert($container->get('flow.postgresql.default.migrations.migrator'))
+            ->assert($container->get('flow.postgresql.migrations.migrator'))
             ->migrate(Version::fromString('20260401120000'));
 
         $collector = type_instance_of(FlowMigrationsDataCollector::class)->assert($container->get(
@@ -92,14 +92,14 @@ final class FlowMigrationsProfilerTest extends KernelTestCase
         static::assertSame(1, $collector->getExecutedCount());
         static::assertGreaterThan(0, $collector->getPendingCount());
 
-        $connection = $collector->getConnections()['default'];
-        static::assertNull($connection['error']);
-        $configuration = $connection['configuration'];
+        static::assertSame('default', $collector->getConnection());
+        static::assertNull($collector->getError());
+        $configuration = $collector->getConfiguration();
         static::assertIsArray($configuration);
         static::assertSame(self::STORE_TABLE, $configuration['tableName']);
 
         $executed = array_values(array_filter(
-            $connection['migrations'],
+            $collector->getMigrations(),
             static fn(array $migration): bool => $migration['state'] === 'executed',
         ));
 
@@ -115,7 +115,7 @@ final class FlowMigrationsProfilerTest extends KernelTestCase
         $container = $kernel->getContainer();
 
         type_instance_of(Migrator::class)
-            ->assert($container->get('flow.postgresql.default.migrations.migrator'))
+            ->assert($container->get('flow.postgresql.migrations.migrator'))
             ->migrate(Version::fromString('20260401120000'));
 
         type_instance_of(Router::class)

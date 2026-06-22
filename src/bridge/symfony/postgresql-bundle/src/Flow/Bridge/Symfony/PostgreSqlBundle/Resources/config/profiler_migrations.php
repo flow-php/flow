@@ -14,8 +14,9 @@ return static function (ContainerConfigurator $container): void {
     $services
         ->set('flow.postgresql.profiler.migrations_collector', FlowMigrationsDataCollector::class)
         ->args([
-            service('flow.postgresql.command_locator'),
-            param('flow.postgresql.migrations.connections'),
+            param('flow.postgresql.migrations.connection'),
+            service('flow.postgresql.migrations.migrator'),
+            service('flow.postgresql.migrations.configuration'),
         ])
         ->public()
         ->tag('data_collector', [

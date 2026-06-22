@@ -19,7 +19,6 @@ use Flow\PostgreSql\Migrations\Version;
 use Flow\PostgreSql\Schema\Catalog;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
-use Symfony\Component\DependencyInjection\Container;
 
 final class ExecuteCommandTest extends TestCase
 {
@@ -34,19 +33,15 @@ final class ExecuteCommandTest extends TestCase
             ),
         );
 
-        $container = new Container();
-        $container->set(
-            'flow.postgresql.default.migrations.migrator',
-            new Migrator(
-                $repository,
-                new FakeMigrationStore(),
-                new SpyMigrationExecutor(),
-                $client = new SpyClient(),
-                new Configuration($client, new FakeCatalogProvider(new Catalog([])), '/tmp', 'App\\Migrations'),
-            ),
+        $migrator = new Migrator(
+            $repository,
+            new FakeMigrationStore(),
+            new SpyMigrationExecutor(),
+            $client = new SpyClient(),
+            new Configuration($client, new FakeCatalogProvider(new Catalog([])), '/tmp', 'App\\Migrations'),
         );
 
-        $tester = new CommandTester(new ExecuteCommand($container, 'default'));
+        $tester = new CommandTester(new ExecuteCommand($migrator));
         $tester->setInputs(['yes']);
         $tester->execute(['version' => '20260401120000', '--dry-run' => true]);
 
@@ -68,19 +63,15 @@ final class ExecuteCommandTest extends TestCase
         $store->initialize();
         $store->complete(Version::fromString('20260401120000'), 10);
 
-        $container = new Container();
-        $container->set(
-            'flow.postgresql.default.migrations.migrator',
-            new Migrator(
-                $repository,
-                $store,
-                new SpyMigrationExecutor(),
-                $client = new SpyClient(),
-                new Configuration($client, new FakeCatalogProvider(new Catalog([])), '/tmp', 'App\\Migrations'),
-            ),
+        $migrator = new Migrator(
+            $repository,
+            $store,
+            new SpyMigrationExecutor(),
+            $client = new SpyClient(),
+            new Configuration($client, new FakeCatalogProvider(new Catalog([])), '/tmp', 'App\\Migrations'),
         );
 
-        $tester = new CommandTester(new ExecuteCommand($container, 'default'));
+        $tester = new CommandTester(new ExecuteCommand($migrator));
         $tester->setInputs(['yes']);
         $tester->execute(['version' => '20260401120000', '--down' => true]);
 
@@ -100,19 +91,15 @@ final class ExecuteCommandTest extends TestCase
             ),
         );
 
-        $container = new Container();
-        $container->set(
-            'flow.postgresql.default.migrations.migrator',
-            new Migrator(
-                $repository,
-                new FakeMigrationStore(),
-                new SpyMigrationExecutor(),
-                $client = new SpyClient(),
-                new Configuration($client, new FakeCatalogProvider(new Catalog([])), '/tmp', 'App\\Migrations'),
-            ),
+        $migrator = new Migrator(
+            $repository,
+            new FakeMigrationStore(),
+            new SpyMigrationExecutor(),
+            $client = new SpyClient(),
+            new Configuration($client, new FakeCatalogProvider(new Catalog([])), '/tmp', 'App\\Migrations'),
         );
 
-        $tester = new CommandTester(new ExecuteCommand($container, 'default'));
+        $tester = new CommandTester(new ExecuteCommand($migrator));
         $tester->setInputs(['yes']);
         $tester->execute(['version' => '20260401120000']);
 
