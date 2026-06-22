@@ -475,13 +475,17 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             ->info('Show bound query parameters in the panel')
             ->defaultTrue()
             ->end()
+            ->booleanNode('migrations')
+            ->info('Show the Flow Migrations panel (executed/pending/unavailable status). Queries the database on every profiled request; set false to disable. Requires migrations to be enabled.')
+            ->defaultTrue()
+            ->end()
             ->end()
             ->end()
             ->end();
     }
 
     /**
-     * @param array{connections: array<string, array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}, profiler?: bool}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>, profiler?: array{enabled?: bool|null, include_parameters?: bool}} $config
+     * @param array{connections: array<string, array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}, profiler?: bool}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>, profiler?: array{enabled?: bool|null, include_parameters?: bool, migrations?: bool}} $config
      */
     #[Override]
     public function loadExtension(array $config, ContainerConfigurator $configurator, ContainerBuilder $container): void
@@ -520,6 +524,38 @@ final class FlowPostgreSqlBundle extends AbstractBundle
         $this->registerCache($config['cache'] ?? [], $connectionNames, $container);
         $this->registerSession($config['session'] ?? [], $connectionNames, $container);
         $this->registerProfiler($config, $configurator, $container, $connectionNames);
+        $this->registerMigrationsProfiler($config, $configurator, $container);
+    }
+
+    /**
+     * @param array<array-key, mixed> $config
+     */
+    private function registerMigrationsProfiler(
+        array $config,
+        ContainerConfigurator $configurator,
+        ContainerBuilder $container,
+    ): void {
+        $migrationsConfig = is_array($config['migrations'] ?? null) ? $config['migrations'] : [];
+
+        if (($migrationsConfig['enabled'] ?? false) !== true) {
+            return;
+        }
+
+        $profilerConfig = is_array($config['profiler'] ?? null) ? $config['profiler'] : [];
+        // @mago-expect analysis:mixed-assignment
+        $enabled = $profilerConfig['enabled'] ?? null;
+
+        if ($enabled === false || ($profilerConfig['migrations'] ?? true) === false) {
+            return;
+        }
+
+        $hasWebProfiler = $this->isWebProfilerBundleRegistered($container);
+
+        if ($enabled === null && !$hasWebProfiler) {
+            return;
+        }
+
+        $configurator->import(__DIR__ . '/Resources/config/profiler_migrations.php');
     }
 
     /**

@@ -146,6 +146,7 @@ final readonly class Migrator
                     $migration->name,
                     MigrationState::EXECUTED,
                     $em->executedAt,
+                    $em->executionTimeMs,
                 );
             } else {
                 $statuses[] = new MigrationStatus($migration->version, $migration->name, MigrationState::PENDING, null);
@@ -159,6 +160,7 @@ final readonly class Migrator
                     (string) $em->version,
                     MigrationState::UNAVAILABLE,
                     $em->executedAt,
+                    $em->executionTimeMs,
                 );
             }
         }
