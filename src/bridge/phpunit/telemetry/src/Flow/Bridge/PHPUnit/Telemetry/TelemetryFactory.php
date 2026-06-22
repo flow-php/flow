@@ -25,6 +25,7 @@ use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_stream_transport;
 use function Flow\Telemetry\DSL\batching_log_processor;
 use function Flow\Telemetry\DSL\batching_metric_processor;
 use function Flow\Telemetry\DSL\batching_span_processor;
+use function Flow\Telemetry\DSL\git_detector;
 use function Flow\Telemetry\DSL\logger_provider;
 use function Flow\Telemetry\DSL\memory_context_storage;
 use function Flow\Telemetry\DSL\meter_provider;
@@ -40,6 +41,7 @@ final class TelemetryFactory
     {
         $telemetryResource = resource_detector()
             ->detect()
+            ->merge(git_detector()->detect())
             ->merge(resource([
                 'service.name' => $config->serviceName,
                 'telemetry.sdk.name' => 'flow-php-phpunit-telemetry',

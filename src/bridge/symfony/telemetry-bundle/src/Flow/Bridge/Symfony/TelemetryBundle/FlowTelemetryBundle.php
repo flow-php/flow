@@ -84,6 +84,7 @@ use Flow\Telemetry\Resource\Detector\CachingDetector;
 use Flow\Telemetry\Resource\Detector\ChainDetector;
 use Flow\Telemetry\Resource\Detector\ComposerDetector;
 use Flow\Telemetry\Resource\Detector\EnvironmentDetector;
+use Flow\Telemetry\Resource\Detector\GitDetector;
 use Flow\Telemetry\Resource\Detector\HostDetector;
 use Flow\Telemetry\Resource\Detector\ManualDetector;
 use Flow\Telemetry\Resource\Detector\OsDetector;
@@ -264,6 +265,26 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->children()
             ->booleanNode('enabled')
             ->defaultTrue()
+            ->end()
+            ->end()
+            ->end()
+            ->arrayNode('git')
+            ->info(
+                'Git detector - detects vcs.ref.head.* and vcs.repository.url.full by invoking the git binary. Disabled by default; the remote URL is reported with any embedded credentials stripped.',
+            )
+            ->addDefaultsIfNotSet()
+            ->children()
+            ->booleanNode('enabled')
+            ->info('Enable the git detector (default: false)')
+            ->defaultFalse()
+            ->end()
+            ->scalarNode('binary')
+            ->info('Path to the git binary (default: "git", resolved from $PATH)')
+            ->defaultValue('git')
+            ->end()
+            ->scalarNode('working_directory')
+            ->info('Directory to run git in (default: %kernel.project_dir%)')
+            ->defaultNull()
             ->end()
             ->end()
             ->end()
@@ -762,7 +783,7 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * @param array{resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, framework_logger?: null|string, capture_framework_channels?: bool, channel_attribute_target?: 'scope'|'signal'|'both', context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, exporters?: array<string, array<string, mixed>>, error_handlers?: array<string, array<string, mixed>>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool, trace_controller?: bool, trace_controller_resolution?: bool, trace_controller_arguments?: bool, trace_controller_argument_resolvers?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool, propagation_style?: 'continue'|'link', link_to_worker?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, profiler?: array{enabled?: bool|null, capture_logs?: bool}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>} $config
+     * @param array{resource: array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, git?: array{enabled?: bool, binary?: string, working_directory?: null|string}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>}, clock_service_id?: null|string, framework_logger?: null|string, capture_framework_channels?: bool, channel_attribute_target?: 'scope'|'signal'|'both', context_storage?: array{type?: string, service_id?: null|string}, propagator?: array{type?: string, service_id?: null|string}, exporters?: array<string, array<string, mixed>>, error_handlers?: array<string, array<string, mixed>>, tracer_provider?: array<string, mixed>, meter_provider?: array<string, mixed>, logger_provider?: array<string, mixed>, instrumentation?: array{http_kernel?: array{enabled?: bool, exclude_paths?: array<array{path: string, method?: null|string}>, context_propagation?: bool, trace_controller?: bool, trace_controller_resolution?: bool, trace_controller_arguments?: bool, trace_controller_argument_resolvers?: bool}, console?: array{enabled?: bool, exclude_commands?: array<string>}, messenger?: array{enabled?: bool, context_propagation?: bool, propagation_style?: 'continue'|'link', link_to_worker?: bool}, twig?: array{enabled?: bool, trace_templates?: bool, trace_blocks?: bool, trace_macros?: bool, exclude_templates?: array<string>}, http_client?: array{enabled?: bool, exclude_clients?: array<string>}, psr18_client?: array{enabled?: bool, exclude_clients?: array<string>}, dbal?: array{enabled?: bool, log_sql?: bool, max_sql_length?: int, exclude_connections?: array<string>}, cache?: array{enabled?: bool, exclude_pools?: array<string>}}, profiler?: array{enabled?: bool|null, capture_logs?: bool}, tracers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, meters?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>, loggers?: array<string, array{version?: string, schema_url?: null|string, attributes?: array{scope?: array<string, mixed>, signal?: array<string, mixed>}}>} $config
      */
     #[Override]
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
@@ -3136,7 +3157,7 @@ final class FlowTelemetryBundle extends AbstractBundle
     }
 
     /**
-     * @param array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>} $resourceConfig
+     * @param array{detectors?: array{enabled?: bool, static?: array{cache?: array{enabled?: bool, path?: null|string}, os?: array{enabled?: bool}, host?: array{enabled?: bool}, service?: array{enabled?: bool}, deployment?: array{enabled?: bool}, git?: array{enabled?: bool, binary?: string, working_directory?: null|string}, environment?: array{enabled?: bool}}, dynamic?: array{process?: array{enabled?: bool}}}, custom?: array<string, mixed>} $resourceConfig
      */
     private function registerResource(array $resourceConfig, ContainerBuilder $builder): void
     {
@@ -3181,6 +3202,18 @@ final class FlowTelemetryBundle extends AbstractBundle
             $deploymentDefinition->setArgument(0, '%kernel.environment%');
             $builder->setDefinition('flow.telemetry.resource.detector.deployment', $deploymentDefinition);
             $staticDetectorRefs[] = new Reference('flow.telemetry.resource.detector.deployment');
+        }
+
+        if ($staticConfig['git']['enabled'] ?? false) {
+            $gitConfig = is_array($staticConfig['git'] ?? null) ? $staticConfig['git'] : [];
+            $workingDirectory = $gitConfig['working_directory'] ?? null;
+            $gitBinary = is_string($gitConfig['binary'] ?? null) ? $gitConfig['binary'] : 'git';
+
+            $gitDefinition = new Definition(GitDetector::class);
+            $gitDefinition->setArgument(0, $workingDirectory ?? '%kernel.project_dir%');
+            $gitDefinition->setArgument(1, $gitBinary);
+            $builder->setDefinition('flow.telemetry.resource.detector.git', $gitDefinition);
+            $staticDetectorRefs[] = new Reference('flow.telemetry.resource.detector.git');
         }
 
         if (count($customAttributes) > 0) {
