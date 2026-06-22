@@ -125,7 +125,7 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         $mockFilesystem->method('mount')->willReturn(new Mount('gcs'));
 
         $config = config_builder()
-            ->withTelemetry($telemetry, telemetry_options(filesystem: filesystem_telemetry_options(traceStreams: true)))
+            ->withTelemetry($telemetry, telemetry_options(filesystem: filesystem_telemetry_options(trace_streams: true)))
             ->mount($mockFilesystem)
             ->build();
 
@@ -141,7 +141,7 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         $config = config_builder()
             ->withTelemetry(
                 $telemetry,
-                telemetry_options(filesystem: filesystem_telemetry_options(traceStreams: false, collectMetrics: false)),
+                telemetry_options(filesystem: filesystem_telemetry_options(trace_streams: false, collect_metrics: false)),
             )
             ->build();
 
@@ -157,7 +157,7 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         $telemetry = $this->createTelemetry();
 
         $config = config_builder()
-            ->withTelemetry($telemetry, telemetry_options(filesystem: filesystem_telemetry_options(traceStreams: true)))
+            ->withTelemetry($telemetry, telemetry_options(filesystem: filesystem_telemetry_options(trace_streams: true)))
             ->build();
 
         $filesystems = $config->fstab()->filesystems();

@@ -119,6 +119,20 @@ final class TelemetryHandlerTest extends TestCase
         static::assertSame('abc-123', $entries[0]->record->attributes->get('extra.request_id'));
     }
 
+    public function test_handler_interpolates_message_placeholders_from_context(): void
+    {
+        $this->monolog->info('User {user_id} performed {action}', [
+            'user_id' => 123,
+            'action' => 'login',
+        ]);
+
+        $entries = $this->processor->entries();
+        static::assertCount(1, $entries);
+        static::assertSame('User 123 performed login', $entries[0]->record->body);
+        static::assertSame(123, $entries[0]->record->attributes->get('context.user_id'));
+        static::assertSame('login', $entries[0]->record->attributes->get('context.action'));
+    }
+
     public function test_handler_forwards_message_body(): void
     {
         $this->monolog->info('Hello World');

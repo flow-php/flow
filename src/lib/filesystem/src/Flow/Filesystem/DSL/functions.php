@@ -143,15 +143,15 @@ function filesystem_telemetry_config(
 /**
  * Create options for filesystem telemetry.
  *
- * @param bool $traceStreams Create a single span per stream lifecycle (default: ON)
- * @param bool $collectMetrics Collect metrics for bytes/operation counts (default: ON)
+ * @param bool $trace_streams Create a single span per stream lifecycle (default: ON)
+ * @param bool $collect_metrics Collect metrics for bytes/operation counts (default: ON)
  */
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function filesystem_telemetry_options(
-    bool $traceStreams = true,
-    bool $collectMetrics = true,
+    bool $trace_streams = true,
+    bool $collect_metrics = true,
 ): FilesystemTelemetryOptions {
-    return new FilesystemTelemetryOptions($traceStreams, $collectMetrics);
+    return new FilesystemTelemetryOptions($trace_streams, $collect_metrics);
 }
 
 /**

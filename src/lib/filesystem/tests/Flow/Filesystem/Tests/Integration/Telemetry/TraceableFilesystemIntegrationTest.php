@@ -342,7 +342,7 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $fs = FilesystemTelemetryConfigMother::createTraceableFilesystem(
             $spanProcessor,
-            filesystem_telemetry_options(traceStreams: false),
+            filesystem_telemetry_options(trace_streams: false),
         );
 
         $testFile = path(__DIR__ . '/var/no_stream_trace.txt');
