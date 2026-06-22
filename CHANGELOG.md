@@ -31,6 +31,8 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2454](https://github.com/flow-php/flow/pull/2454) - **Positional schema definition mutations on Flow\ETL\Schema: prepend(), insertAt(), addBefore(), addAfter(), moveTo(), moveBefore(), moveAfter() and reorder()** - [@bendavies](https://github.com/bendavies)
 
 ### Changed
+- [#2474](https://github.com/flow-php/flow/pull/2474) - **flow-php/telemetry - GitDetector reads git via a non-blocking, timeout-bounded subprocess.** - [@norberttech](https://github.com/norberttech)
+- [#2474](https://github.com/flow-php/flow/pull/2474) - **flow-php/phpunit-telemetry-bridge - resource detectors are now wired explicitly through resource_detector().** - [@norberttech](https://github.com/norberttech)
 - [#2468](https://github.com/flow-php/flow/pull/2468) - **flow-php/symfony-telemetry-bundle - extract shared ControllerName helper from the request span subscriber** - [@norberttech](https://github.com/norberttech)
 - [#2467](https://github.com/flow-php/flow/pull/2467) - **flow-php/telemetry-otlp-bridge - curl per-request timeout_ms default raised 250 to 5000** - [@norberttech](https://github.com/norberttech)
 - [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/telemetry - span parent is now derived solely from the Context** - [@norberttech](https://github.com/norberttech)
@@ -54,6 +56,10 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/telemetry - Context::withTraceId() and the standalone context trace id** - [@norberttech](https://github.com/norberttech)
 - [#2408](https://github.com/flow-php/flow/pull/2408) - **Elasticsearch adapter (flow-php/etl-adapter-elasticsearch) — superseded by the SEAL adapter; use SEAL with the Elasticsearch backend
 (cmsig/seal-elasticsearch-adapter)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+
+### Security
+- [#2474](https://github.com/flow-php/flow/pull/2474) - **flow-php/telemetry - GitDetector kills hanging git commands and caps output to resist hostile repositories.** - [@norberttech](https://github.com/norberttech)
+- [#2474](https://github.com/flow-php/flow/pull/2474) - **flow-php/telemetry - remote URL sanitizer now strips query and fragment so embedded tokens are never reported.** - [@norberttech](https://github.com/norberttech)
 
 ## [0.40.0] - 2026-06-16
 
