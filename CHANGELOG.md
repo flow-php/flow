@@ -1,6 +1,8 @@
-## [Unreleased] - 2026-06-21
+## [Unreleased] - 2026-06-22
 
 ### Added
+- [#2409](https://github.com/flow-php/flow/pull/2409) - **Add git detector to telemetry** - [@jdecool](https://github.com/jdecool)
+- [#2409](https://github.com/flow-php/flow/pull/2409) - **Add git detector to phpunit telemetry** - [@jdecool](https://github.com/jdecool)
 - [#2468](https://github.com/flow-php/flow/pull/2468) - **flow-php/symfony-telemetry-bundle - controller body span, default on, as child of the request span** - [@norberttech](https://github.com/norberttech)
 - [#2468](https://github.com/flow-php/flow/pull/2468) - **flow-php/symfony-telemetry-bundle - opt-in controller.get_callable resolution span** - [@norberttech](https://github.com/norberttech)
 - [#2468](https://github.com/flow-php/flow/pull/2468) - **flow-php/symfony-telemetry-bundle - opt-in controller.get_arguments aggregate span** - [@norberttech](https://github.com/norberttech)
