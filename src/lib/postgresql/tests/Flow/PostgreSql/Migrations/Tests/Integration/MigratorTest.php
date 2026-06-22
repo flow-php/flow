@@ -187,6 +187,14 @@ final class MigratorTest extends TestCase
         static::assertCount(3, $status);
         static::assertCount(1, $status->executed());
         static::assertCount(2, $status->pending());
+
+        foreach ($status->executed() as $executed) {
+            static::assertNotNull($executed->executionTimeMs);
+        }
+
+        foreach ($status->pending() as $pending) {
+            static::assertNull($pending->executionTimeMs);
+        }
     }
 
     private function fixtureRepository(): FakeMigrationRepository

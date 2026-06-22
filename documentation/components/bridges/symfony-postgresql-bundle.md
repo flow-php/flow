@@ -133,10 +133,9 @@ and failures.
 ```yaml
 flow_postgresql:
   profiler:
-    # enabled: null (default) auto-enables when WebProfilerBundle is registered; true forces it on
-    # (throws if WebProfilerBundle is absent); false forces it off entirely.
     enabled: ~
     include_parameters: true # show bound query parameters in the panel
+    migrations: true         # show the Flow Migrations panel (requires migrations enabled)
 ```
 
 Recording is dev-only and adds nothing in production: when the profiler is disabled — or
@@ -149,6 +148,17 @@ flow_postgresql:
     default:
       dsn: '%env(DATABASE_URL)%'
       profiler: false # do not record queries in selected connection (default: true)
+```
+
+When `migrations` are enabled, a separate **Flow Migrations** panel reports each connection's
+executed, pending and unavailable migrations (with execution time) — like the Doctrine Migrations
+bundle's panel. It queries the database on every profiled request; set `profiler.migrations: false`
+to disable it while keeping the query panel:
+
+```yaml
+flow_postgresql:
+  profiler:
+    migrations: false # do not query/show migration status in the profiler (default: true)
 ```
 
 ### Migrations

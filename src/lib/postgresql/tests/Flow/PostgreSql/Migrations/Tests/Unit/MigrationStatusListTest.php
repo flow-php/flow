@@ -71,6 +71,21 @@ final class MigrationStatusListTest extends TestCase
         }
     }
 
+    public function test_execution_time_round_trips(): void
+    {
+        $executed = new MigrationStatus(
+            Version::fromString('20260401120000'),
+            'first',
+            MigrationState::EXECUTED,
+            new DateTimeImmutable(),
+            42,
+        );
+        $pending = new MigrationStatus(Version::fromString('20260402120000'), 'second', MigrationState::PENDING, null);
+
+        static::assertSame(42, $executed->executionTimeMs);
+        static::assertNull($pending->executionTimeMs);
+    }
+
     public function test_iteration(): void
     {
         $s1 = new MigrationStatus(Version::fromString('20260401120000'), 'first', MigrationState::PENDING, null);

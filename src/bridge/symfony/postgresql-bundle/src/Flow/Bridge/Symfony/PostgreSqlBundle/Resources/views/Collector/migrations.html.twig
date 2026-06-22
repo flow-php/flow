@@ -1,0 +1,128 @@
+{% extends '@WebProfiler/Profiler/layout.html.twig' %}
+
+{% macro migrations_icon() %}
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 2 2 7l10 5 10-5-10-5zm0 2.18L17.64 7 12 9.82 6.36 7 12 4.18zM2 12l10 5 10-5-2.5-1.25L12 14.25 4.5 10.75 2 12zm0 5 10 5 10-5-2.5-1.25L12 19.25 4.5 15.75 2 17z"/></svg>
+{% endmacro %}
+
+{% block toolbar %}
+    {% set status_color = collector.unavailableCount > 0 ? 'yellow' : '' %}
+    {% set status_color = collector.pendingCount > 0 ? 'red' : status_color %}
+
+    {% set icon %}
+        {{ _self.migrations_icon() }}
+        <span class="sf-toolbar-value">{{ collector.pendingCount + collector.unavailableCount }}</span>
+    {% endset %}
+
+    {% set text %}
+        <div class="sf-toolbar-info-piece">
+            <b>Executed</b>
+            <span>{{ collector.executedCount }}</span>
+        </div>
+        <div class="sf-toolbar-info-piece">
+            <b>Pending</b>
+            <span class="sf-toolbar-status {{ collector.pendingCount > 0 ? 'sf-toolbar-status-red' }}">{{ collector.pendingCount }}</span>
+        </div>
+        <div class="sf-toolbar-info-piece">
+            <b>Unavailable</b>
+            <span class="sf-toolbar-status {{ collector.unavailableCount > 0 ? 'sf-toolbar-status-yellow' }}">{{ collector.unavailableCount }}</span>
+        </div>
+        <div class="sf-toolbar-info-piece">
+            <b>Total</b>
+            <span>{{ collector.totalCount }}</span>
+        </div>
+    {% endset %}
+
+    {{ include('@WebProfiler/Profiler/toolbar_item.html.twig', { link: profiler_url, status: collector.totalCount > 0 ? status_color : 'disabled' }) }}
+{% endblock %}
+
+{% block menu %}
+    <span class="label {{ collector.totalCount == 0 ? 'disabled' }} {{ collector.pendingCount > 0 ? 'label-status-error' : (collector.unavailableCount > 0 ? 'label-status-warning') }}">
+        <span class="icon">{{ _self.migrations_icon() }}</span>
+        <strong>Flow Migrations</strong>
+        {% if collector.pendingCount + collector.unavailableCount > 0 %}
+            <span class="count"><span>{{ collector.pendingCount + collector.unavailableCount }}</span></span>
+        {% endif %}
+    </span>
+{% endblock %}
+
+{% block panel %}
+    <h2>Flow PostgreSQL Migrations</h2>
+
+    <div class="metrics">
+        <div class="metric">
+            <span class="value">{{ collector.executedCount }}</span>
+            <span class="label">Executed</span>
+        </div>
+        <div class="metric{{ collector.pendingCount > 0 ? ' red' }}">
+            <span class="value">{{ collector.pendingCount }}</span>
+            <span class="label">Pending</span>
+        </div>
+        <div class="metric{{ collector.unavailableCount > 0 ? ' yellow' }}">
+            <span class="value">{{ collector.unavailableCount }}</span>
+            <span class="label">Unavailable</span>
+        </div>
+        <div class="metric">
+            <span class="value">{{ collector.totalCount }}</span>
+            <span class="label">Total</span>
+        </div>
+    </div>
+
+    {% for connection, data in collector.connections %}
+        <h3>Connection: {{ connection }}</h3>
+
+        {% if data.error %}
+            <div class="empty status-error"><p>{{ data.error }}</p></div>
+        {% endif %}
+
+        {% if data.migrations is empty %}
+            {% if not data.error %}
+                <div class="empty"><p>No migrations found for this connection.</p></div>
+            {% endif %}
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Version</th>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Executed at</th>
+                        <th class="text-right">Execution time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for migration in data.migrations %}
+                        <tr{% if migration.state == 'pending' %} class="status-warning"{% elseif migration.state == 'unavailable' %} class="status-error"{% endif %}>
+                            <td><code>{{ migration.version }}</code></td>
+                            <td>{{ migration.name }}</td>
+                            <td>
+                                {% if migration.state == 'executed' %}
+                                    <span class="label status-success">Executed</span>
+                                {% elseif migration.state == 'pending' %}
+                                    <span class="label status-warning">Pending</span>
+                                {% else %}
+                                    <span class="label status-error">Unavailable</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ migration.executedAt ?? '—' }}</td>
+                            <td class="text-right">{{ migration.executionTimeMs is not null ? migration.executionTimeMs ~ ' ms' : '—' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+
+        {% if data.configuration %}
+            <table class="text-small">
+                <thead>
+                    <tr><th colspan="2">Configuration</th></tr>
+                </thead>
+                <tbody>
+                    <tr><th>Table</th><td>{{ data.configuration.tableSchema }}.{{ data.configuration.tableName }}</td></tr>
+                    <tr><th>Directory</th><td>{{ data.configuration.directory }}</td></tr>
+                    <tr><th>Namespace</th><td>{{ data.configuration.namespace }}</td></tr>
+                    <tr><th>All or nothing</th><td>{{ data.configuration.allOrNothing ? 'true' : 'false' }}</td></tr>
+                </tbody>
+            </table>
+        {% endif %}
+    {% endfor %}
+{% endblock %}
