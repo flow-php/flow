@@ -1,6 +1,8 @@
 ## [Unreleased] - 2026-06-22
 
 ### Added
+- [#2475](https://github.com/flow-php/flow/pull/2475) - **flow-php/symfony-postgresql-bundle - Flow Migrations profiler panel showing executed/pending/unavailable migrations per connection** - [@norberttech](https://github.com/norberttech)
+- [#2475](https://github.com/flow-php/flow/pull/2475) - **flow-php/symfony-postgresql-bundle - profiler.migrations config toggle (default: true)** - [@norberttech](https://github.com/norberttech)
 - [#2409](https://github.com/flow-php/flow/pull/2409) - **Add git detector to telemetry** - [@jdecool](https://github.com/jdecool)
 - [#2409](https://github.com/flow-php/flow/pull/2409) - **Add git detector to phpunit telemetry** - [@jdecool](https://github.com/jdecool)
 - [#2468](https://github.com/flow-php/flow/pull/2468) - **flow-php/symfony-telemetry-bundle - controller body span, default on, as child of the request span** - [@norberttech](https://github.com/norberttech)
@@ -31,6 +33,7 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2454](https://github.com/flow-php/flow/pull/2454) - **Positional schema definition mutations on Flow\ETL\Schema: prepend(), insertAt(), addBefore(), addAfter(), moveTo(), moveBefore(), moveAfter() and reorder()** - [@bendavies](https://github.com/bendavies)
 
 ### Changed
+- [#2475](https://github.com/flow-php/flow/pull/2475) - **flow-php/postgresql - expose migration execution time via MigrationStatus::executionTimeMs** - [@norberttech](https://github.com/norberttech)
 - [#2474](https://github.com/flow-php/flow/pull/2474) - **flow-php/telemetry - GitDetector reads git via a non-blocking, timeout-bounded subprocess.** - [@norberttech](https://github.com/norberttech)
 - [#2474](https://github.com/flow-php/flow/pull/2474) - **flow-php/phpunit-telemetry-bridge - resource detectors are now wired explicitly through resource_detector().** - [@norberttech](https://github.com/norberttech)
 - [#2468](https://github.com/flow-php/flow/pull/2468) - **flow-php/symfony-telemetry-bundle - extract shared ControllerName helper from the request span subscriber** - [@norberttech](https://github.com/norberttech)
