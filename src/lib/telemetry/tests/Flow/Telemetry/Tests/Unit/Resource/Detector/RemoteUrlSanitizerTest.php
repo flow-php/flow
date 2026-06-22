@@ -23,9 +23,14 @@ final class RemoteUrlSanitizerTest extends TestCase
             'https://github.com/flow-php/repo.git',
         ];
 
-        yield 'preserves port, path, query and fragment while stripping credentials' => [
+        yield 'preserves port and path while stripping credentials, query and fragment' => [
             'https://user:secret@github.com:8443/flow-php/repo.git?ref=main#readme',
-            'https://github.com:8443/flow-php/repo.git?ref=main#readme',
+            'https://github.com:8443/flow-php/repo.git',
+        ];
+
+        yield 'strips query and fragment from a credential-free url' => [
+            'https://github.com/flow-php/repo.git?token=secret#section',
+            'https://github.com/flow-php/repo.git',
         ];
 
         yield 'leaves scp-like ssh remote untouched' => [

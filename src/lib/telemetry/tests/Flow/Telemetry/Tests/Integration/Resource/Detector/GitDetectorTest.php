@@ -6,32 +6,41 @@ namespace Flow\Telemetry\Tests\Integration\Resource\Detector;
 
 use Flow\Telemetry\Resource\Attribute\VcsAttribute;
 use Flow\Telemetry\Resource\Detector\GitDetector;
-use PHPUnit\Framework\TestCase;
-use RuntimeException;
+use Flow\Telemetry\Tests\Context\GitContext;
+use Flow\Telemetry\Tests\Integration\GitTestCase;
 
+use function sys_get_temp_dir;
 use function uniqid;
 
-final class GitDetectorTest extends TestCase
+use const DIRECTORY_SEPARATOR;
+
+final class GitDetectorTest extends GitTestCase
 {
-    private GitRepositoryHelper $gitRepositoryHelper;
-
-    protected function setUp(): void
+    public function test_detect_keeps_scp_like_ssh_remote_untouched(): void
     {
-        $this->gitRepositoryHelper = new GitRepositoryHelper();
+        $directory = $this->gitContext->cloneRepositoryWithRemote('git@github.com:flow-php/phpstan-types-bridge.git');
 
-        if (!$this->gitRepositoryHelper->gitBinaryExists()) {
-            static::markTestSkipped('Git binary is unavailable');
-        }
+        $resource = (new GitDetector($directory))->detect();
+
+        static::assertSame(
+            'git@github.com:flow-php/phpstan-types-bridge.git',
+            $resource->get(VcsAttribute::REPOSITORY_URL->value),
+        );
     }
 
-    protected function tearDown(): void
+    public function test_detect_returns_branch_name_and_type_when_not_detached(): void
     {
-        $this->gitRepositoryHelper->cleanup();
+        $directory = $this->gitContext->cloneRepository(GitContext::BRANCH);
+
+        $resource = (new GitDetector($directory))->detect();
+
+        static::assertSame(GitContext::BRANCH, $resource->get(VcsAttribute::REF_HEAD_NAME->value));
+        static::assertSame('branch', $resource->get(VcsAttribute::REF_HEAD_TYPE->value));
     }
 
     public function test_detect_returns_empty_resource_outside_a_work_tree(): void
     {
-        $directory = __DIR__ . '/var/non_existing_' . uniqid();
+        $directory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'flow_telemetry_git_non_existing_' . uniqid();
 
         $resource = (new GitDetector($directory))->detect();
 
@@ -40,7 +49,7 @@ final class GitDetectorTest extends TestCase
 
     public function test_detect_returns_head_revision(): void
     {
-        $directory = $this->cloneRepository(GitRepositoryHelper::BRANCH);
+        $directory = $this->gitContext->cloneRepository(GitContext::BRANCH);
 
         $resource = (new GitDetector($directory))->detect();
 
@@ -50,39 +59,29 @@ final class GitDetectorTest extends TestCase
         static::assertMatchesRegularExpression('/^[0-9a-f]{40}$/', $revision);
     }
 
-    public function test_detect_returns_branch_name_and_type_when_not_detached(): void
+    public function test_detect_returns_repository_url(): void
     {
-        $directory = $this->cloneRepository(GitRepositoryHelper::BRANCH);
+        $directory = $this->gitContext->cloneRepository(GitContext::BRANCH);
 
         $resource = (new GitDetector($directory))->detect();
 
-        static::assertSame(GitRepositoryHelper::BRANCH, $resource->get(VcsAttribute::REF_HEAD_NAME->value));
-        static::assertSame('branch', $resource->get(VcsAttribute::REF_HEAD_TYPE->value));
+        static::assertSame(GitContext::REPOSITORY_URL, $resource->get(VcsAttribute::REPOSITORY_URL->value));
     }
 
     public function test_detect_returns_tag_name_and_type_in_detached_head(): void
     {
-        $directory = $this->cloneRepository(GitRepositoryHelper::TAG);
+        $directory = $this->gitContext->cloneRepository(GitContext::TAG);
 
         $resource = (new GitDetector($directory))->detect();
 
-        static::assertSame(GitRepositoryHelper::TAG, $resource->get(VcsAttribute::REF_HEAD_NAME->value));
+        static::assertSame(GitContext::TAG, $resource->get(VcsAttribute::REF_HEAD_NAME->value));
         static::assertSame('tag', $resource->get(VcsAttribute::REF_HEAD_TYPE->value));
-        static::assertSame(GitRepositoryHelper::TAG_REVISION, $resource->get(VcsAttribute::REF_HEAD_REVISION->value));
-    }
-
-    public function test_detect_returns_repository_url(): void
-    {
-        $directory = $this->cloneRepository(GitRepositoryHelper::BRANCH);
-
-        $resource = (new GitDetector($directory))->detect();
-
-        static::assertSame(GitRepositoryHelper::REPOSITORY_URL, $resource->get(VcsAttribute::REPOSITORY_URL->value));
+        static::assertSame(GitContext::TAG_REVISION, $resource->get(VcsAttribute::REF_HEAD_REVISION->value));
     }
 
     public function test_detect_strips_credentials_from_repository_url(): void
     {
-        $directory = $this->cloneRepositoryWithRemote(
+        $directory = $this->gitContext->cloneRepositoryWithRemote(
             'https://user:secret@github.com/flow-php/phpstan-types-bridge.git',
         );
 
@@ -94,48 +93,18 @@ final class GitDetectorTest extends TestCase
         );
     }
 
-    public function test_detect_keeps_scp_like_ssh_remote_untouched(): void
-    {
-        $directory = $this->cloneRepositoryWithRemote('git@github.com:flow-php/phpstan-types-bridge.git');
-
-        $resource = (new GitDetector($directory))->detect();
-
-        static::assertSame(
-            'git@github.com:flow-php/phpstan-types-bridge.git',
-            $resource->get(VcsAttribute::REPOSITORY_URL->value),
-        );
-    }
-
     public function test_detect_uses_explicit_git_binary_path(): void
     {
-        $gitBinary = $this->gitRepositoryHelper->resolveGitBinaryPath();
+        $gitBinary = $this->gitContext->resolveGitBinaryPath();
 
         if ($gitBinary === null) {
             static::markTestSkipped('Unable to resolve an absolute git binary path');
         }
 
-        $directory = $this->cloneRepository(GitRepositoryHelper::BRANCH);
+        $directory = $this->gitContext->cloneRepository(GitContext::BRANCH);
 
         $resource = (new GitDetector($directory, $gitBinary))->detect();
 
-        static::assertSame(GitRepositoryHelper::BRANCH, $resource->get(VcsAttribute::REF_HEAD_NAME->value));
-    }
-
-    private function cloneRepository(string $ref): string
-    {
-        try {
-            return $this->gitRepositoryHelper->cloneRepository($ref);
-        } catch (RuntimeException) {
-            static::markTestSkipped('Unable to clone the fixture repository ' . GitRepositoryHelper::REPOSITORY_URL);
-        }
-    }
-
-    private function cloneRepositoryWithRemote(string $remoteUrl): string
-    {
-        try {
-            return $this->gitRepositoryHelper->cloneRepositoryWithRemote($remoteUrl);
-        } catch (RuntimeException) {
-            static::markTestSkipped('Unable to clone the fixture repository ' . GitRepositoryHelper::REPOSITORY_URL);
-        }
+        static::assertSame(GitContext::BRANCH, $resource->get(VcsAttribute::REF_HEAD_NAME->value));
     }
 }

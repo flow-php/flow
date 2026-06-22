@@ -25,10 +25,15 @@ use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_stream_transport;
 use function Flow\Telemetry\DSL\batching_log_processor;
 use function Flow\Telemetry\DSL\batching_metric_processor;
 use function Flow\Telemetry\DSL\batching_span_processor;
+use function Flow\Telemetry\DSL\composer_detector;
+use function Flow\Telemetry\DSL\environment_detector;
 use function Flow\Telemetry\DSL\git_detector;
+use function Flow\Telemetry\DSL\host_detector;
 use function Flow\Telemetry\DSL\logger_provider;
 use function Flow\Telemetry\DSL\memory_context_storage;
 use function Flow\Telemetry\DSL\meter_provider;
+use function Flow\Telemetry\DSL\os_detector;
+use function Flow\Telemetry\DSL\process_detector;
 use function Flow\Telemetry\DSL\resource;
 use function Flow\Telemetry\DSL\resource_detector;
 use function Flow\Telemetry\DSL\telemetry;
@@ -39,9 +44,15 @@ final class TelemetryFactory
 {
     public static function create(Configuration $config): Telemetry
     {
-        $telemetryResource = resource_detector()
+        $telemetryResource = resource_detector([
+            os_detector(),
+            host_detector(),
+            process_detector(),
+            composer_detector(),
+            environment_detector(),
+            git_detector(),
+        ])
             ->detect()
-            ->merge(git_detector()->detect())
             ->merge(resource([
                 'service.name' => $config->serviceName,
                 'telemetry.sdk.name' => 'flow-php-phpunit-telemetry',

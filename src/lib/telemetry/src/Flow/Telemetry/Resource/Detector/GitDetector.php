@@ -9,11 +9,17 @@ use Flow\Telemetry\Resource\Attribute\VcsAttribute;
 use Flow\Telemetry\Resource\ResourceDetector;
 
 use function fclose;
+use function feof;
+use function fread;
+use function getenv;
 use function is_resource;
-use function is_string;
+use function microtime;
 use function proc_close;
 use function proc_open;
-use function stream_get_contents;
+use function proc_terminate;
+use function stream_select;
+use function stream_set_blocking;
+use function strlen;
 use function trim;
 
 /**
@@ -39,6 +45,10 @@ use function trim;
  */
 final readonly class GitDetector implements ResourceDetector
 {
+    private const MAX_OUTPUT_BYTES = 1_048_576;
+
+    private const TIMEOUT_SECONDS = 10.0;
+
     private RemoteUrlSanitizer $remoteUrlSanitizer;
 
     public function __construct(
@@ -108,8 +118,12 @@ final readonly class GitDetector implements ResourceDetector
             2 => ['pipe', 'w'],
         ];
 
+        $environment = getenv();
+        // Never let git block waiting for an interactive credential prompt.
+        $environment['GIT_TERMINAL_PROMPT'] = '0';
+
         $pipes = [];
-        $process = @proc_open($command, $descriptors, $pipes);
+        $process = @proc_open($command, $descriptors, $pipes, null, $environment);
 
         if (!is_resource($process)) {
             return null;
@@ -123,21 +137,83 @@ final readonly class GitDetector implements ResourceDetector
             fclose($stdin);
         }
 
-        $output = is_resource($stdout) ? stream_get_contents($stdout) : null;
-
-        if (is_resource($stdout)) {
-            fclose($stdout);
+        foreach ([$stdout, $stderr] as $pipe) {
+            if (is_resource($pipe)) {
+                stream_set_blocking($pipe, false);
+            }
         }
 
-        // Drain and discard stderr so the child never blocks on a full pipe.
-        if (is_resource($stderr)) {
-            stream_get_contents($stderr);
-            fclose($stderr);
+        $output = '';
+        $deadline = microtime(true) + self::TIMEOUT_SECONDS;
+        $timedOut = false;
+
+        while (is_resource($stdout) || is_resource($stderr)) {
+            $remaining = $deadline - microtime(true);
+
+            if ($remaining <= 0) {
+                $timedOut = true;
+
+                break;
+            }
+
+            $read = [];
+
+            if (is_resource($stdout)) {
+                $read[] = $stdout;
+            }
+
+            if (is_resource($stderr)) {
+                $read[] = $stderr;
+            }
+
+            $write = [];
+            $except = [];
+            $seconds = (int) $remaining;
+
+            if (
+                @stream_select($read, $write, $except, $seconds, (int) (($remaining - $seconds) * 1_000_000)) === false
+            ) {
+                break;
+            }
+
+            foreach ($read as $pipe) {
+                $chunk = fread($pipe, 8192);
+
+                // Drain stderr without retaining it; cap stdout so a hostile config cannot exhaust memory.
+                if (
+                    $chunk !== false
+                    && $chunk !== ''
+                    && $pipe === $stdout
+                    && strlen($output) < self::MAX_OUTPUT_BYTES
+                ) {
+                    $output .= $chunk;
+                }
+
+                if ($chunk === false || feof($pipe)) {
+                    fclose($pipe);
+
+                    if ($pipe === $stdout) {
+                        $stdout = null;
+                    } elseif ($pipe === $stderr) {
+                        $stderr = null;
+                    }
+                }
+            }
+        }
+
+        if ($timedOut) {
+            proc_terminate($process, 9);
+        }
+
+        foreach ([$stdout, $stderr] as $pipe) {
+            if (is_resource($pipe)) {
+                fclose($pipe);
+            }
         }
 
         proc_close($process);
 
-        if (!is_string($output)) {
+        if ($timedOut) {
             return null;
         }
 

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Flow\Telemetry\Tests\Integration\Resource\Detector;
+namespace Flow\Telemetry\Tests\Context;
 
 use FilesystemIterator;
+use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
-use RuntimeException;
 use SplFileInfo;
 
 use function explode;
@@ -21,6 +21,7 @@ use function proc_close;
 use function proc_open;
 use function rmdir;
 use function stream_get_contents;
+use function sys_get_temp_dir;
 use function uniqid;
 use function unlink;
 
@@ -31,11 +32,14 @@ use const PATH_SEPARATOR;
  * Provides Git working copies for tests by shallow-cloning a small, public
  * fixture repository.
  */
-final class GitRepositoryHelper
+final class GitContext
 {
-    public const REPOSITORY_URL = 'https://github.com/flow-php/phpstan-types-bridge.git';
     public const BRANCH = '1.x';
+
+    public const REPOSITORY_URL = 'https://github.com/flow-php/phpstan-types-bridge.git';
+
     public const TAG = '0.39.0';
+
     public const TAG_REVISION = '4d135d4eff0d7895ad2d07737484474936fb5200';
 
     private static bool $repositoryUnavailable = false;
@@ -44,6 +48,52 @@ final class GitRepositoryHelper
      * @var array<string>
      */
     private array $directories = [];
+
+    public function cleanup(): void
+    {
+        foreach ($this->directories as $directory) {
+            $this->removeDirectory($directory);
+        }
+
+        $this->directories = [];
+    }
+
+    public function cloneRepository(string $ref): string
+    {
+        if (self::$repositoryUnavailable) {
+            TestCase::markTestSkipped('Unable to clone the fixture repository ' . self::REPOSITORY_URL);
+        }
+
+        $directory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'flow_telemetry_git_' . uniqid();
+        $this->directories[] = $directory;
+
+        if (!$this->runGit([
+            'clone',
+            '--quiet',
+            '--depth',
+            '1',
+            '--no-tags',
+            '--branch',
+            $ref,
+            self::REPOSITORY_URL,
+            $directory,
+        ])) {
+            self::$repositoryUnavailable = true;
+
+            TestCase::markTestSkipped('Unable to clone the fixture repository ' . self::REPOSITORY_URL);
+        }
+
+        return $directory;
+    }
+
+    public function cloneRepositoryWithRemote(string $remoteUrl): string
+    {
+        $directory = $this->cloneRepository(self::BRANCH);
+
+        $this->runGit(['-C', $directory, 'remote', 'set-url', 'origin', $remoteUrl]);
+
+        return $directory;
+    }
 
     public function gitBinaryExists(): bool
     {
@@ -73,63 +123,30 @@ final class GitRepositoryHelper
         return null;
     }
 
-    /**
-     * Shallow-clones the fixture repository at the given branch or tag. Cloning
-     * a tag leaves HEAD detached.
-     *
-     * `--no-tags` is required: the fixture repository points several release tags
-     * at the same commit, so auto-following tags would let `git describe
-     * --exact-match` resolve a different tag than the one requested.
-     *
-     * @throws RuntimeException when the repository cannot be cloned (e.g. no network access)
-     */
-    public function cloneRepository(string $ref): string
+    private function removeDirectory(string $directory): void
     {
-        if (self::$repositoryUnavailable) {
-            throw new RuntimeException('Fixture repository ' . self::REPOSITORY_URL . ' is unavailable');
+        if (!is_dir($directory)) {
+            return;
         }
 
-        $directory = __DIR__ . '/var/flow_telemetry_git_' . uniqid();
-        $this->directories[] = $directory;
+        $items = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST,
+        );
 
-        if (!$this->runGit([
-            'clone',
-            '--quiet',
-            '--depth',
-            '1',
-            '--no-tags',
-            '--branch',
-            $ref,
-            self::REPOSITORY_URL,
-            $directory,
-        ])) {
-            self::$repositoryUnavailable = true;
+        foreach ($items as $item) {
+            if (!$item instanceof SplFileInfo) {
+                continue;
+            }
 
-            throw new RuntimeException('Unable to clone fixture repository ' . self::REPOSITORY_URL);
+            if ($item->isDir()) {
+                rmdir($item->getPathname());
+            } else {
+                unlink($item->getPathname());
+            }
         }
 
-        return $directory;
-    }
-
-    /**
-     * @throws RuntimeException when the repository cannot be cloned (e.g. no network access)
-     */
-    public function cloneRepositoryWithRemote(string $remoteUrl): string
-    {
-        $directory = $this->cloneRepository(self::BRANCH);
-
-        $this->runGit(['-C', $directory, 'remote', 'set-url', 'origin', $remoteUrl]);
-
-        return $directory;
-    }
-
-    public function cleanup(): void
-    {
-        foreach ($this->directories as $directory) {
-            $this->removeDirectory($directory);
-        }
-
-        $this->directories = [];
+        rmdir($directory);
     }
 
     /**
@@ -176,31 +193,5 @@ final class GitRepositoryHelper
         }
 
         return proc_close($process) === 0;
-    }
-
-    private function removeDirectory(string $directory): void
-    {
-        if (!is_dir($directory)) {
-            return;
-        }
-
-        $items = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::CHILD_FIRST,
-        );
-
-        foreach ($items as $item) {
-            if (!$item instanceof SplFileInfo) {
-                continue;
-            }
-
-            if ($item->isDir()) {
-                rmdir($item->getPathname());
-            } else {
-                unlink($item->getPathname());
-            }
-        }
-
-        rmdir($directory);
     }
 }

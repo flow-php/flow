@@ -8,8 +8,10 @@ use function is_array;
 use function parse_url;
 
 /**
- * Removes any embedded credentials (user:password@) from a remote URL so they
- * are never reported as a resource attribute.
+ * Reduces a remote URL to its scheme, host, optional port and path so that no
+ * secrets are ever reported as a resource attribute. Embedded credentials
+ * (user:password@) are removed, and any query string or fragment is dropped as
+ * either can carry an access token.
  *
  * SCP-like SSH remotes (e.g. "git@github.com:org/repo.git") carry no secret and
  * are returned untouched, as are URLs that cannot be parsed.
@@ -24,26 +26,12 @@ final readonly class RemoteUrlSanitizer
             return $url;
         }
 
-        if (!isset($parts['user']) && !isset($parts['pass'])) {
-            return $url;
-        }
-
         $sanitized = $parts['scheme'] . '://' . $parts['host'];
 
         if (isset($parts['port'])) {
             $sanitized .= ':' . $parts['port'];
         }
 
-        $sanitized .= $parts['path'] ?? '';
-
-        if (isset($parts['query'])) {
-            $sanitized .= '?' . $parts['query'];
-        }
-
-        if (isset($parts['fragment'])) {
-            $sanitized .= '#' . $parts['fragment'];
-        }
-
-        return $sanitized;
+        return $sanitized . ($parts['path'] ?? '');
     }
 }
