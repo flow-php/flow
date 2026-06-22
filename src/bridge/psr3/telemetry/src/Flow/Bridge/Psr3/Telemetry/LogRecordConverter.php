@@ -4,33 +4,31 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Psr3\Telemetry;
 
+use BackedEnum;
+use DateTimeInterface;
 use Flow\Telemetry\Logger\LogRecord;
 use Stringable;
 use Throwable;
+use UnitEnum;
 
+use function array_keys;
 use function array_walk;
-use function is_bool;
+use function gettype;
+use function is_array;
 use function is_object;
 use function is_scalar;
+use function json_encode;
 use function method_exists;
 use function str_contains;
 use function strtr;
 
 /**
  * Convert a PSR-3 log call (level + message + context) into a Telemetry LogRecord.
- *
- * Behavior:
- * - Severity mapped via {@see SeverityMapper}.
- * - Message body has `{placeholder}` tokens substituted from context per PSR-3 §1.2.
- *   Only scalars and Stringable objects participate in interpolation; arrays,
- *   Throwables, and objects without __toString are left in the template.
- * - Every context entry is recorded as an attribute under its raw key.
- * - A `Throwable` under the `exception` key is routed through
- *   {@see LogRecord::setException()} (populates exception.type/message/stacktrace)
- *   and NOT also recorded under the `exception` attribute.
  */
 final readonly class LogRecordConverter
 {
+    private const string INTERPOLATION_DATE_FORMAT = 'Y-m-d\TH:i:s.uP';
+
     public function __construct(
         private SeverityMapper $severityMapper = new SeverityMapper(),
         private ValueNormalizer $valueNormalizer = new ValueNormalizer(),
@@ -74,51 +72,59 @@ final readonly class LogRecordConverter
      */
     private function interpolate(string $message, array $context): string
     {
-        if ($message === '' || !str_contains($message, '{')) {
+        if (!str_contains($message, '{')) {
             return $message;
         }
 
         $replacements = [];
 
-        array_walk($context, function (mixed $value, int|string $key) use (&$replacements): void {
-            $rendered = $this->renderForInterpolation($value);
+        foreach (array_keys($context) as $key) {
+            $placeholder = '{' . $key . '}';
 
-            if ($rendered === null) {
-                return;
+            if (!str_contains($message, $placeholder)) {
+                continue;
             }
 
-            $replacements['{' . $key . '}'] = $rendered;
-        });
-
-        if ($replacements === []) {
-            return $message;
+            $replacements[$placeholder] = $this->renderForInterpolation($context[$key]);
         }
 
         return strtr($message, $replacements);
     }
 
-    private function renderForInterpolation(mixed $value): ?string
+    private function renderForInterpolation(mixed $value): string
     {
         if ($value === null) {
             return '';
-        }
-
-        if (is_bool($value)) {
-            return $value ? '1' : '';
         }
 
         if (is_scalar($value)) {
             return (string) $value;
         }
 
-        if ($value instanceof Throwable) {
-            return null;
-        }
-
         if (is_object($value) && method_exists($value, '__toString')) {
             return (string) $value;
         }
 
-        return null;
+        if ($value instanceof DateTimeInterface) {
+            return $value->format(self::INTERPOLATION_DATE_FORMAT);
+        }
+
+        if ($value instanceof BackedEnum) {
+            return (string) $value->value;
+        }
+
+        if ($value instanceof UnitEnum) {
+            return $value->name;
+        }
+
+        if (is_object($value)) {
+            return '[object ' . $value::class . ']';
+        }
+
+        if (is_array($value)) {
+            return 'array' . (json_encode($value) ?: '');
+        }
+
+        return '[' . gettype($value) . ']';
     }
 }

@@ -67,62 +67,60 @@
         </div>
     </div>
 
-    {% for connection, data in collector.connections %}
-        <h3>Connection: {{ connection }}</h3>
+    <h3>Connection: {{ collector.connection }}</h3>
 
-        {% if data.error %}
-            <div class="empty status-error"><p>{{ data.error }}</p></div>
+    {% if collector.error %}
+        <div class="empty status-error"><p>{{ collector.error }}</p></div>
+    {% endif %}
+
+    {% if collector.migrations is empty %}
+        {% if not collector.error %}
+            <div class="empty"><p>No migrations found.</p></div>
         {% endif %}
-
-        {% if data.migrations is empty %}
-            {% if not data.error %}
-                <div class="empty"><p>No migrations found for this connection.</p></div>
-            {% endif %}
-        {% else %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Version</th>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th>Executed at</th>
-                        <th class="text-right">Execution time</th>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Version</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Executed at</th>
+                    <th class="text-right">Execution time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for migration in collector.migrations %}
+                    <tr{% if migration.state == 'pending' %} class="status-warning"{% elseif migration.state == 'unavailable' %} class="status-error"{% endif %}>
+                        <td><code>{{ migration.version }}</code></td>
+                        <td>{{ migration.name }}</td>
+                        <td>
+                            {% if migration.state == 'executed' %}
+                                <span class="label status-success">Executed</span>
+                            {% elseif migration.state == 'pending' %}
+                                <span class="label status-warning">Pending</span>
+                            {% else %}
+                                <span class="label status-error">Unavailable</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ migration.executedAt ?? '—' }}</td>
+                        <td class="text-right">{{ migration.executionTimeMs is not null ? migration.executionTimeMs ~ ' ms' : '—' }}</td>
                     </tr>
-                </thead>
-                <tbody>
-                    {% for migration in data.migrations %}
-                        <tr{% if migration.state == 'pending' %} class="status-warning"{% elseif migration.state == 'unavailable' %} class="status-error"{% endif %}>
-                            <td><code>{{ migration.version }}</code></td>
-                            <td>{{ migration.name }}</td>
-                            <td>
-                                {% if migration.state == 'executed' %}
-                                    <span class="label status-success">Executed</span>
-                                {% elseif migration.state == 'pending' %}
-                                    <span class="label status-warning">Pending</span>
-                                {% else %}
-                                    <span class="label status-error">Unavailable</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ migration.executedAt ?? '—' }}</td>
-                            <td class="text-right">{{ migration.executionTimeMs is not null ? migration.executionTimeMs ~ ' ms' : '—' }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
 
-        {% if data.configuration %}
-            <table class="text-small">
-                <thead>
-                    <tr><th colspan="2">Configuration</th></tr>
-                </thead>
-                <tbody>
-                    <tr><th>Table</th><td>{{ data.configuration.tableSchema }}.{{ data.configuration.tableName }}</td></tr>
-                    <tr><th>Directory</th><td>{{ data.configuration.directory }}</td></tr>
-                    <tr><th>Namespace</th><td>{{ data.configuration.namespace }}</td></tr>
-                    <tr><th>All or nothing</th><td>{{ data.configuration.allOrNothing ? 'true' : 'false' }}</td></tr>
-                </tbody>
-            </table>
-        {% endif %}
-    {% endfor %}
+    {% if collector.configuration %}
+        <table class="text-small">
+            <thead>
+                <tr><th colspan="2">Configuration</th></tr>
+            </thead>
+            <tbody>
+                <tr><th>Table</th><td>{{ collector.configuration.tableSchema }}.{{ collector.configuration.tableName }}</td></tr>
+                <tr><th>Directory</th><td>{{ collector.configuration.directory }}</td></tr>
+                <tr><th>Namespace</th><td>{{ collector.configuration.namespace }}</td></tr>
+                <tr><th>All or nothing</th><td>{{ collector.configuration.allOrNothing ? 'true' : 'false' }}</td></tr>
+            </tbody>
+        </table>
+    {% endif %}
 {% endblock %}

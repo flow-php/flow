@@ -241,8 +241,8 @@ final class TraceableDestinationStreamTest extends TestCase
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor, filesystem_telemetry_options(
-            traceStreams: false,
-            collectMetrics: false,
+            trace_streams: false,
+            collect_metrics: false,
         ));
         $path = Path::realpath('/tmp/test.txt');
 

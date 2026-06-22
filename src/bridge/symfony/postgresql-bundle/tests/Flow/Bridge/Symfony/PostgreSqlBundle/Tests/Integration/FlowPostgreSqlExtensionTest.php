@@ -480,7 +480,7 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
             },
         ]);
 
-        $configuration = $this->getContainer()->get('flow.postgresql.default.migrations.configuration');
+        $configuration = $this->getContainer()->get('flow.postgresql.migrations.configuration');
         static::assertInstanceOf(MigrationsConfiguration::class, $configuration);
 
         static::assertArrayHasKey(FlowPostgreSqlBundle::SERVICE_CONTAINER, $configuration->attributes);
@@ -520,7 +520,7 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
             },
         ]);
 
-        $configuration = $this->getContainer()->get('flow.postgresql.default.migrations.configuration');
+        $configuration = $this->getContainer()->get('flow.postgresql.migrations.configuration');
         static::assertInstanceOf(MigrationsConfiguration::class, $configuration);
 
         static::assertInstanceOf(MigrationSeedProvider::class, $configuration->attributes['report_generator']);
@@ -563,7 +563,7 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
             },
         ]);
 
-        $configuration = $this->getContainer()->get('flow.postgresql.default.migrations.configuration');
+        $configuration = $this->getContainer()->get('flow.postgresql.migrations.configuration');
         static::assertInstanceOf(MigrationsConfiguration::class, $configuration);
 
         $policy = $configuration->exclusionPolicy;
@@ -870,14 +870,14 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
             },
         ]);
 
-        static::assertTrue($this->getContainer()->has('flow.postgresql.default.migrations.configuration'));
-        static::assertTrue($this->getContainer()->has('flow.postgresql.default.migrations.factory'));
-        static::assertTrue($this->getContainer()->has('flow.postgresql.default.migrations.migrator'));
-        static::assertTrue($this->getContainer()->has('flow.postgresql.default.migrations.store'));
-        static::assertTrue($this->getContainer()->has('flow.postgresql.default.migrations.repository'));
-        static::assertTrue($this->getContainer()->has('flow.postgresql.default.migrations.generator'));
-        static::assertTrue($this->getContainer()->has('flow.postgresql.default.migrations.diff_generator'));
-        static::assertTrue($this->getContainer()->has('flow.postgresql.default.migrations.version_resolver'));
+        static::assertTrue($this->getContainer()->has('flow.postgresql.migrations.configuration'));
+        static::assertTrue($this->getContainer()->has('flow.postgresql.migrations.factory'));
+        static::assertTrue($this->getContainer()->has('flow.postgresql.migrations.migrator'));
+        static::assertTrue($this->getContainer()->has('flow.postgresql.migrations.store'));
+        static::assertTrue($this->getContainer()->has('flow.postgresql.migrations.repository'));
+        static::assertTrue($this->getContainer()->has('flow.postgresql.migrations.generator'));
+        static::assertTrue($this->getContainer()->has('flow.postgresql.migrations.diff_generator'));
+        static::assertTrue($this->getContainer()->has('flow.postgresql.migrations.version_resolver'));
     }
 
     public function test_connection_without_migrations_has_no_migration_services(): void
@@ -897,7 +897,67 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
             },
         ]);
 
-        static::assertFalse($this->getContainer()->has('flow.postgresql.default.migrations.migrator'));
+        static::assertFalse($this->getContainer()->has('flow.postgresql.migrations.migrator'));
+    }
+
+    public function test_migrations_use_configured_connection(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                    $container->register('flow.postgresql.secondary.client', SpyClient::class)->setPublic(true);
+                    $catalogDef = new Definition(Catalog::class, [[]]);
+                    $container
+                        ->register('test.catalog_provider', FakeCatalogProvider::class)
+                        ->addArgument($catalogDef)
+                        ->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => ['dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres'],
+                        'secondary' => ['dsn' => 'postgresql://postgres:postgres@localhost:5432/secondary'],
+                    ],
+                    'migrations' => [
+                        'enabled' => true,
+                        'connection' => 'secondary',
+                        'directory' => '/tmp/test_migrations',
+                        'namespace' => 'App\\Migrations',
+                    ],
+                    'catalog_providers' => [
+                        ['catalog_provider_id' => 'test.catalog_provider'],
+                    ],
+                ]);
+            },
+        ]);
+
+        static::assertTrue($this->getContainer()->has('flow.postgresql.migrations.migrator'));
+        static::assertSame('secondary', $this->getContainer()->getParameter('flow.postgresql.migrations.connection'));
+    }
+
+    public function test_migrations_throw_when_configured_connection_is_unknown(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('Migrations are configured to run against connection "missing"');
+
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container->register('flow.postgresql.default.client', SpyClient::class)->setPublic(true);
+                });
+                $kernel->addTestExtensionConfig('flow_postgresql', [
+                    'connections' => [
+                        'default' => ['dsn' => 'postgresql://postgres:postgres@localhost:5432/postgres'],
+                    ],
+                    'migrations' => [
+                        'enabled' => true,
+                        'connection' => 'missing',
+                        'directory' => '/tmp/test_migrations',
+                        'namespace' => 'App\\Migrations',
+                    ],
+                ]);
+            },
+        ]);
     }
 
     public function test_context_catalog_merged_with_user_data_when_both_configured(): void
@@ -1239,7 +1299,7 @@ final class FlowPostgreSqlExtensionTest extends KernelTestCase
         ]);
 
         /** @var MigrationsConfiguration $configuration */
-        $configuration = $this->getContainer()->get('flow.postgresql.default.migrations.configuration');
+        $configuration = $this->getContainer()->get('flow.postgresql.migrations.configuration');
 
         static::assertSame('/tmp/custom_migrations', $configuration->migrationsDirectory);
         static::assertSame('Custom\\Migrations', $configuration->migrationsNamespace);

@@ -184,7 +184,11 @@ final class FlowTelemetryBundle extends AbstractBundle
         }
 
         if (interface_exists(self::DBAL_MIDDLEWARE_INTERFACE)) {
-            $container->addCompilerPass(new DBALTelemetryPass(), priority: 10);
+            $container->addCompilerPass(
+                new DBALTelemetryPass(),
+                PassConfig::TYPE_BEFORE_OPTIMIZATION,
+                1,
+            );
         }
 
         if (interface_exists(self::CACHE_ADAPTER_INTERFACE)) {

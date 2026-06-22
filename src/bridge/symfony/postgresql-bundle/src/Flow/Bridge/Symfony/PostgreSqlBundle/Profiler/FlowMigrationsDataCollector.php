@@ -7,30 +7,23 @@ namespace Flow\Bridge\Symfony\PostgreSqlBundle\Profiler;
 use Flow\PostgreSql\Migrations\Configuration;
 use Flow\PostgreSql\Migrations\MigrationState;
 use Flow\PostgreSql\Migrations\Migrator;
-use Psr\Container\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\DataCollector\DataCollector;
 use Throwable;
 
-use function array_map;
-use function array_sum;
 use function count;
-use function Flow\Types\DSL\type_instance_of;
 
 /**
  * @phpstan-type MigrationRow array{version: string, name: string, state: string, executedAt: null|string, executionTimeMs: null|int}
  * @phpstan-type ConfigurationData array{tableName: string, tableSchema: string, directory: string, namespace: string, allOrNothing: bool}
- * @phpstan-type ConnectionData array{total: int, executed: int, pending: int, unavailable: int, migrations: list<MigrationRow>, configuration: null|ConfigurationData, error: null|string}
  */
 final class FlowMigrationsDataCollector extends DataCollector
 {
-    /**
-     * @param list<string> $connections
-     */
     public function __construct(
-        private readonly ContainerInterface $locator,
-        private readonly array $connections,
+        private readonly string $connection,
+        private readonly Migrator $migrator,
+        private readonly Configuration $configuration,
     ) {}
 
     public function collect(Request $request, Response $response, ?Throwable $exception = null): void
@@ -39,13 +32,7 @@ final class FlowMigrationsDataCollector extends DataCollector
             return;
         }
 
-        $connections = [];
-
-        foreach ($this->connections as $name) {
-            $connections[$name] = $this->collectConnection($name);
-        }
-
-        $this->data = ['connections' => $connections];
+        $this->data = ['connection' => $this->connection] + $this->collectStatus();
     }
 
     public function reset(): void
@@ -58,45 +45,63 @@ final class FlowMigrationsDataCollector extends DataCollector
         return 'flow_postgresql_migrations';
     }
 
-    /**
-     * @return array<string, ConnectionData>
-     */
-    public function getConnections(): array
+    public function getConnection(): string
     {
         // @mago-expect analysis:mixed-return-statement
-        return $this->data['connections'] ?? [];
+        return $this->data['connection'] ?? '';
+    }
+
+    /**
+     * @return list<MigrationRow>
+     */
+    public function getMigrations(): array
+    {
+        // @mago-expect analysis:mixed-return-statement
+        return $this->data['migrations'] ?? [];
+    }
+
+    /**
+     * @return null|ConfigurationData
+     */
+    public function getConfiguration(): ?array
+    {
+        // @mago-expect analysis:mixed-return-statement
+        return $this->data['configuration'] ?? null;
+    }
+
+    public function getError(): ?string
+    {
+        // @mago-expect analysis:mixed-return-statement
+        return $this->data['error'] ?? null;
     }
 
     public function getExecutedCount(): int
     {
-        return $this->sum('executed');
+        return (int) ($this->data['executed'] ?? 0);
     }
 
     public function getPendingCount(): int
     {
-        return $this->sum('pending');
+        return (int) ($this->data['pending'] ?? 0);
     }
 
     public function getUnavailableCount(): int
     {
-        return $this->sum('unavailable');
+        return (int) ($this->data['unavailable'] ?? 0);
     }
 
     public function getTotalCount(): int
     {
-        return $this->sum('total');
+        return (int) ($this->data['total'] ?? 0);
     }
 
     /**
-     * @return ConnectionData
+     * @return array{total: int, executed: int, pending: int, unavailable: int, migrations: list<MigrationRow>, configuration: null|ConfigurationData, error: null|string}
      */
-    private function collectConnection(string $name): array
+    private function collectStatus(): array
     {
         try {
-            $configuration = $this->describeConfiguration($name);
-            $status = type_instance_of(Migrator::class)
-                ->assert($this->locator->get("flow.postgresql.{$name}.migrations.migrator"))
-                ->status();
+            $status = $this->migrator->status();
 
             $migrations = [];
             $counts = [
@@ -122,7 +127,7 @@ final class FlowMigrationsDataCollector extends DataCollector
                 'pending' => $counts[MigrationState::PENDING->value],
                 'unavailable' => $counts[MigrationState::UNAVAILABLE->value],
                 'migrations' => $migrations,
-                'configuration' => $configuration,
+                'configuration' => $this->describeConfiguration(),
                 'error' => null,
             ];
         } catch (Throwable $exception) {
@@ -141,29 +146,14 @@ final class FlowMigrationsDataCollector extends DataCollector
     /**
      * @return ConfigurationData
      */
-    private function describeConfiguration(string $name): array
+    private function describeConfiguration(): array
     {
-        $configuration = type_instance_of(Configuration::class)->assert($this->locator->get(
-            "flow.postgresql.{$name}.migrations.configuration",
-        ));
-
         return [
-            'tableName' => $configuration->tableName,
-            'tableSchema' => $configuration->tableSchema,
-            'directory' => $configuration->migrationsDirectory,
-            'namespace' => $configuration->migrationsNamespace,
-            'allOrNothing' => $configuration->allOrNothing,
+            'tableName' => $this->configuration->tableName,
+            'tableSchema' => $this->configuration->tableSchema,
+            'directory' => $this->configuration->migrationsDirectory,
+            'namespace' => $this->configuration->migrationsNamespace,
+            'allOrNothing' => $this->configuration->allOrNothing,
         ];
-    }
-
-    /**
-     * @param 'executed'|'pending'|'total'|'unavailable' $key
-     */
-    private function sum(string $key): int
-    {
-        return (int) array_sum(array_map(
-            static fn(array $connection): int => (int) ($connection[$key] ?? 0),
-            $this->getConnections(),
-        ));
     }
 }

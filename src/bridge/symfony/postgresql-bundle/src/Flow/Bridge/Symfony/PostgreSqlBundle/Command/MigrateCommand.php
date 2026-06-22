@@ -9,7 +9,6 @@ use Flow\PostgreSql\Migrations\Direction;
 use Flow\PostgreSql\Migrations\MigrationState;
 use Flow\PostgreSql\Migrations\Migrator;
 use Flow\PostgreSql\Migrations\VersionResolver;
-use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -19,7 +18,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 use function count;
-use function Flow\Types\DSL\type_instance_of;
 use function Flow\Types\DSL\type_string;
 use function sprintf;
 
@@ -27,8 +25,9 @@ use function sprintf;
 final class MigrateCommand extends Command
 {
     public function __construct(
-        private readonly ContainerInterface $container,
-        private readonly string $defaultConnection,
+        private readonly Migrator $migrator,
+        private readonly VersionResolver $resolver,
+        private readonly MigrationsConfiguration $configuration,
     ) {
         parent::__construct();
     }
@@ -42,7 +41,6 @@ final class MigrateCommand extends Command
                 'The version to migrate to (first, prev, next, latest, or version string)',
                 'latest',
             )
-            ->addOption('connection', 'c', InputOption::VALUE_OPTIONAL, 'The connection to use', null)
             ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Execute migration as a dry run')
             ->addOption('all-or-nothing', null, InputOption::VALUE_NONE, 'Wrap the entire migration in a transaction');
     }
@@ -50,29 +48,17 @@ final class MigrateCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $connection = type_string()->assert($input->getOption('connection') ?? $this->defaultConnection);
-        $migrator = type_instance_of(Migrator::class)->assert($this->container->get(
-            "flow.postgresql.{$connection}.migrations.migrator",
-        ));
-        $resolver = type_instance_of(VersionResolver::class)->assert($this->container->get(
-            "flow.postgresql.{$connection}.migrations.version_resolver",
-        ));
-        $configuration = type_instance_of(MigrationsConfiguration::class)->assert($this->container->get(
-            "flow.postgresql.{$connection}.migrations.configuration",
-        ));
         $versionAlias = type_string()->assert($input->getArgument('version'));
         $dryRun = $input->getOption('dry-run') === true;
         $allOrNothing = $input->getOption('all-or-nothing') ? true : null;
 
         $io->title('Migrate' . ($dryRun ? ' (dry run)' : ''));
 
-        $io->definitionList(
-            ['Connection' => "<fg=cyan>{$connection}</>"],
-            ['Target' => "<fg=cyan>{$versionAlias}</>"],
-            ['Directory' => "<fg=gray>{$configuration->migrationsDirectory}</>"],
-        );
+        $io->definitionList(['Target' => "<fg=cyan>{$versionAlias}</>"], [
+            'Directory' => "<fg=gray>{$this->configuration->migrationsDirectory}</>",
+        ]);
 
-        $statuses = $migrator->status();
+        $statuses = $this->migrator->status();
         $pendingCount = count($statuses->pending());
 
         if (count($statuses) === 0) {
@@ -100,7 +86,7 @@ final class MigrateCommand extends Command
 
         $io->table(['Status', 'Version', 'Name'], $statusRows);
 
-        $version = $resolver->resolve($versionAlias);
+        $version = $this->resolver->resolve($versionAlias);
 
         if ($input->isInteractive() && !$io->confirm(sprintf('Migrate to version <fg=cyan>%s</>?', $version), false)) {
             $io->warning('Migration cancelled.');
@@ -108,7 +94,7 @@ final class MigrateCommand extends Command
             return Command::SUCCESS;
         }
 
-        $results = $migrator->migrate($version, $dryRun, $allOrNothing);
+        $results = $this->migrator->migrate($version, $dryRun, $allOrNothing);
 
         if (count($results) === 0) {
             $io->success('Already up to date.');

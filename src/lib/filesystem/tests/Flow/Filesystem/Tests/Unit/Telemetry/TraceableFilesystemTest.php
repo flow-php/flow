@@ -30,8 +30,8 @@ final class TraceableFilesystemTest extends TestCase
     {
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create($spanProcessor, filesystem_telemetry_options(
-            traceStreams: false,
-            collectMetrics: false,
+            trace_streams: false,
+            collect_metrics: false,
         ));
         $path = Path::realpath('/tmp/test.txt');
 
@@ -233,7 +233,7 @@ final class TraceableFilesystemTest extends TestCase
         $spanProcessor = memory_span_processor(void_exporter());
         $config = FilesystemTelemetryConfigMother::create(
             $spanProcessor,
-            filesystem_telemetry_options(traceStreams: true),
+            filesystem_telemetry_options(trace_streams: true),
         );
         $path = Path::realpath('/tmp/test.txt');
 

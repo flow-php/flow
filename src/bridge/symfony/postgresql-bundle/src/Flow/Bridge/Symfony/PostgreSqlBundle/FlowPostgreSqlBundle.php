@@ -351,6 +351,10 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             ->arrayNode('migrations')
             ->canBeEnabled()
             ->children()
+            ->scalarNode('connection')
+            ->defaultNull()
+            ->info('Connection migrations run against. Defaults to the default (first) connection when not set.')
+            ->end()
             ->scalarNode('directory')
             ->defaultValue('%kernel.project_dir%/migrations')
             ->cannotBeEmpty()
@@ -485,7 +489,7 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     }
 
     /**
-     * @param array{connections: array<string, array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}, profiler?: bool}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>, profiler?: array{enabled?: bool|null, include_parameters?: bool, migrations?: bool}} $config
+     * @param array{connections: array<string, array{dsn: string, dbname: ?string, host: ?string, port: ?int, user: ?string, password: ?string, dbname_suffix: string, test_transaction_rollback: bool, context?: array<string, mixed>, telemetry?: array{service_id: string, clock_service_id: ?string, trace_queries: bool, trace_transactions: bool, collect_metrics: bool, log_queries: bool, max_query_length: int, include_parameters: bool, max_parameters: int, max_parameter_length: int}, profiler?: bool}>, messenger: array{enabled: bool, table_name: string, schema: string}, cache: array{pools?: array<string, array{connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, namespace: string, default_lifetime: int, marshaller_service_id: ?string, share_connection: bool}>}, session: array{enabled: bool, connection: ?string, table_name: string, schema: string, id_col: string, data_col: string, lifetime_col: string, time_col: string, lock_mode: string, ttl: ?int, share_connection: bool}, migrations: array{enabled: bool, connection: ?string, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>}, catalog_providers: list<array{catalog_provider_id: ?string, catalog: ?array<string, mixed>}>, profiler?: array{enabled?: bool|null, include_parameters?: bool, migrations?: bool}} $config
      */
     #[Override]
     public function loadExtension(array $config, ContainerConfigurator $configurator, ContainerBuilder $container): void
@@ -507,15 +511,19 @@ final class FlowPostgreSqlBundle extends AbstractBundle
         $configurator->import(__DIR__ . '/Resources/config/format.php');
 
         if ($config['migrations']['enabled']) {
-            $isFirst = true;
+            $migrationsConnection = $config['migrations']['connection'] ?? $connectionNames[0];
 
-            foreach ($connectionNames as $name) {
-                $this->registerMigrations($name, $config['migrations'], $container, $isFirst);
-                $isFirst = false;
+            if (!in_array($migrationsConnection, $connectionNames, true)) {
+                throw new LogicException(sprintf(
+                    'Migrations are configured to run against connection "%s", but it is not defined. Available connections: %s.',
+                    $migrationsConnection,
+                    implode(', ', $connectionNames),
+                ));
             }
 
-            $container->setParameter('flow.postgresql.migrations.connections', $connectionNames);
-            $container->setParameter('flow.postgresql.migrations.default_connection', $connectionNames[0]);
+            $this->registerMigrations($migrationsConnection, $config['migrations'], $container);
+
+            $container->setParameter('flow.postgresql.migrations.connection', $migrationsConnection);
 
             $configurator->import(__DIR__ . '/Resources/config/migrations.php');
         }
@@ -840,14 +848,14 @@ final class FlowPostgreSqlBundle extends AbstractBundle
     }
 
     /**
-     * @param array{enabled: bool, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>} $mc
+     * @param array{enabled: bool, connection: ?string, directory: string, namespace: string, table_name: string, table_schema: string, migration_file_name: string, rollback_file_name: string, all_or_nothing: bool, generate_rollback: bool, drop_if_exists: bool, context?: array<string, mixed>, exclude?: list<array{schema: ?string, table: ?string, exact: ?string, starts_with: ?string, ends_with: ?string, pattern: ?string, policy_id: ?string, type: ?string, for_schema: ?string}>} $mc
      */
-    private function registerMigrations(string $name, array $mc, ContainerBuilder $container, bool $isFirst): void
+    private function registerMigrations(string $connection, array $mc, ContainerBuilder $container): void
     {
         $catalogProviderRef = new Reference('flow.postgresql.catalog_provider');
 
         $configDef = new Definition(MigrationsConfiguration::class, [
-            new Reference("flow.postgresql.{$name}.client"),
+            new Reference("flow.postgresql.{$connection}.client"),
             $catalogProviderRef,
             $mc['directory'],
             $mc['namespace'],
@@ -862,91 +870,89 @@ final class FlowPostgreSqlBundle extends AbstractBundle
             $this->buildMigrationContextAttributes($mc['context'] ?? []),
         ]);
         $configDef->setPublic(true);
-        $container->setDefinition("flow.postgresql.{$name}.migrations.configuration", $configDef);
+        $container->setDefinition("flow.postgresql.migrations.configuration", $configDef);
 
         $fsDef = new Definition(NativeLocalFilesystem::class);
-        $container->setDefinition("flow.postgresql.{$name}.migrations.filesystem", $fsDef);
+        $container->setDefinition("flow.postgresql.migrations.filesystem", $fsDef);
 
         $pathDef = new Definition(Path::class);
         $pathDef->setFactory([Path::class, 'from']);
         $pathDef->setArguments([$mc['directory']]);
-        $container->setDefinition("flow.postgresql.{$name}.migrations.path", $pathDef);
+        $container->setDefinition("flow.postgresql.migrations.path", $pathDef);
 
         $repoDef = new Definition(FilesystemMigrationRepository::class, [
-            new Reference("flow.postgresql.{$name}.migrations.filesystem"),
-            new Reference("flow.postgresql.{$name}.migrations.path"),
-            new Reference("flow.postgresql.{$name}.migrations.configuration"),
+            new Reference("flow.postgresql.migrations.filesystem"),
+            new Reference("flow.postgresql.migrations.path"),
+            new Reference("flow.postgresql.migrations.configuration"),
         ]);
         $repoDef->setPublic(true);
-        $container->setDefinition("flow.postgresql.{$name}.migrations.repository", $repoDef);
+        $container->setDefinition("flow.postgresql.migrations.repository", $repoDef);
 
         $factoryDef = new Definition(MigrationsFactory::class, [
-            new Reference("flow.postgresql.{$name}.migrations.configuration"),
-            new Reference("flow.postgresql.{$name}.migrations.repository"),
+            new Reference("flow.postgresql.migrations.configuration"),
+            new Reference("flow.postgresql.migrations.repository"),
         ]);
-        $container->setDefinition("flow.postgresql.{$name}.migrations.factory", $factoryDef);
+        $container->setDefinition("flow.postgresql.migrations.factory", $factoryDef);
 
         $migratorDef = new Definition(Migrator::class);
-        $migratorDef->setFactory([new Reference("flow.postgresql.{$name}.migrations.factory"), 'createMigrator']);
+        $migratorDef->setFactory([new Reference("flow.postgresql.migrations.factory"), 'createMigrator']);
         $migratorDef->setPublic(true);
-        $container->setDefinition("flow.postgresql.{$name}.migrations.migrator", $migratorDef);
+        $container->setDefinition("flow.postgresql.migrations.migrator", $migratorDef);
 
         $storeDef = new Definition(MigrationStore::class);
-        $storeDef->setFactory([new Reference("flow.postgresql.{$name}.migrations.factory"), 'createStore']);
+        $storeDef->setFactory([new Reference("flow.postgresql.migrations.factory"), 'createStore']);
         $storeDef->setPublic(true);
-        $container->setDefinition("flow.postgresql.{$name}.migrations.store", $storeDef);
+        $container->setDefinition("flow.postgresql.migrations.store", $storeDef);
 
         $executorDef = new Definition(MigrationExecutor::class);
-        $executorDef->setFactory([new Reference("flow.postgresql.{$name}.migrations.factory"), 'createExecutor']);
-        $container->setDefinition("flow.postgresql.{$name}.migrations.executor", $executorDef);
+        $executorDef->setFactory([new Reference("flow.postgresql.migrations.factory"), 'createExecutor']);
+        $container->setDefinition("flow.postgresql.migrations.executor", $executorDef);
 
         $resolverDef = new Definition(VersionResolver::class);
         $resolverDef->setFactory([
-            new Reference("flow.postgresql.{$name}.migrations.factory"),
+            new Reference("flow.postgresql.migrations.factory"),
             'createVersionResolver',
         ]);
         $resolverDef->setPublic(true);
-        $container->setDefinition("flow.postgresql.{$name}.migrations.version_resolver", $resolverDef);
+        $container->setDefinition("flow.postgresql.migrations.version_resolver", $resolverDef);
 
         $twigLoaderDef = new Definition(FilesystemLoader::class, [
             [__DIR__ . '/Resources/templates'],
         ]);
-        $container->setDefinition("flow.postgresql.{$name}.migrations.twig_loader", $twigLoaderDef);
+        $container->setDefinition("flow.postgresql.migrations.twig_loader", $twigLoaderDef);
 
         $twigDef = new Definition(Environment::class, [
-            new Reference("flow.postgresql.{$name}.migrations.twig_loader"),
+            new Reference("flow.postgresql.migrations.twig_loader"),
         ]);
-        $container->setDefinition("flow.postgresql.{$name}.migrations.twig", $twigDef);
+        $container->setDefinition("flow.postgresql.migrations.twig", $twigDef);
 
         $versionGenDef = new Definition(TimestampVersionGenerator::class);
-        $container->setDefinition("flow.postgresql.{$name}.migrations.version_generator", $versionGenDef);
+        $container->setDefinition("flow.postgresql.migrations.version_generator", $versionGenDef);
 
         $generatorDef = new Definition(TwigMigrationGenerator::class, [
-            new Reference("flow.postgresql.{$name}.migrations.configuration"),
-            new Reference("flow.postgresql.{$name}.migrations.version_generator"),
-            new Reference("flow.postgresql.{$name}.migrations.twig"),
-            new Reference("flow.postgresql.{$name}.migrations.filesystem"),
+            new Reference("flow.postgresql.migrations.configuration"),
+            new Reference("flow.postgresql.migrations.version_generator"),
+            new Reference("flow.postgresql.migrations.twig"),
+            new Reference("flow.postgresql.migrations.filesystem"),
         ]);
         $generatorDef->setPublic(true);
-        $container->setDefinition("flow.postgresql.{$name}.migrations.generator", $generatorDef);
+        $container->setDefinition("flow.postgresql.migrations.generator", $generatorDef);
 
         $diffGenDef = new Definition(DiffMigrationGenerator::class);
-        $diffGenDef->setFactory([new Reference("flow.postgresql.{$name}.migrations.factory"), 'createDiffGenerator']);
-        $diffGenDef->setArguments([new Reference("flow.postgresql.{$name}.migrations.generator")]);
+        $diffGenDef->setFactory([new Reference("flow.postgresql.migrations.factory"), 'createDiffGenerator']);
+        $diffGenDef->setArguments([new Reference("flow.postgresql.migrations.generator")]);
         $diffGenDef->setPublic(true);
-        $container->setDefinition("flow.postgresql.{$name}.migrations.diff_generator", $diffGenDef);
+        $container->setDefinition("flow.postgresql.migrations.diff_generator", $diffGenDef);
 
-        if ($isFirst) {
-            $container->setAlias(MigrationsConfiguration::class, "flow.postgresql.{$name}.migrations.configuration");
-            $container->setAlias(MigrationsFactory::class, "flow.postgresql.{$name}.migrations.factory");
-            $container->setAlias(Migrator::class, "flow.postgresql.{$name}.migrations.migrator");
-            $container->setAlias(MigrationStore::class, "flow.postgresql.{$name}.migrations.store");
-            $container->setAlias(MigrationRepository::class, "flow.postgresql.{$name}.migrations.repository");
-            $container->setAlias(MigrationExecutor::class, "flow.postgresql.{$name}.migrations.executor");
-            $container->setAlias(VersionResolver::class, "flow.postgresql.{$name}.migrations.version_resolver");
-            $container->setAlias(MigrationGenerator::class, "flow.postgresql.{$name}.migrations.generator");
-            $container->setAlias(DiffMigrationGenerator::class, "flow.postgresql.{$name}.migrations.diff_generator");
-        }
+        $container->setAlias(MigrationsConfiguration::class, "flow.postgresql.migrations.configuration");
+        $container->setAlias(MigrationsFactory::class, "flow.postgresql.migrations.factory");
+        $container->setAlias(Migrator::class, "flow.postgresql.migrations.migrator");
+        $container->setAlias(MigrationStore::class, "flow.postgresql.migrations.store");
+        $container->setAlias(MigrationRepository::class, "flow.postgresql.migrations.repository");
+        $container->setAlias(MigrationExecutor::class, "flow.postgresql.migrations.executor");
+        $container->setAlias(VersionResolver::class, "flow.postgresql.migrations.version_resolver");
+        $container->setAlias(MigrationGenerator::class, "flow.postgresql.migrations.generator");
+        $container->setAlias(DiffMigrationGenerator::class, "flow.postgresql.migrations.diff_generator");
     }
 
     /**

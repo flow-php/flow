@@ -20,7 +20,6 @@ use Flow\PostgreSql\Schema\Catalog;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
-use Symfony\Component\DependencyInjection\Container;
 
 final class UpToDateCommandTest extends TestCase
 {
@@ -41,19 +40,15 @@ final class UpToDateCommandTest extends TestCase
             ),
         );
 
-        $container = new Container();
-        $container->set(
-            'flow.postgresql.default.migrations.migrator',
-            new Migrator(
-                $repository,
-                new FakeMigrationStore(),
-                new SpyMigrationExecutor(),
-                $client = new SpyClient(),
-                new Configuration($client, new FakeCatalogProvider(new Catalog([])), '/tmp', 'App\\Migrations'),
-            ),
+        $migrator = new Migrator(
+            $repository,
+            new FakeMigrationStore(),
+            new SpyMigrationExecutor(),
+            $client = new SpyClient(),
+            new Configuration($client, new FakeCatalogProvider(new Catalog([])), '/tmp', 'App\\Migrations'),
         );
 
-        $tester = new CommandTester(new UpToDateCommand($container, 'default'));
+        $tester = new CommandTester(new UpToDateCommand($migrator));
         $tester->execute([]);
 
         static::assertSame(Command::FAILURE, $tester->getStatusCode());
@@ -76,19 +71,15 @@ final class UpToDateCommandTest extends TestCase
             ),
         );
 
-        $container = new Container();
-        $container->set(
-            'flow.postgresql.default.migrations.migrator',
-            new Migrator(
-                $repository,
-                $store,
-                new SpyMigrationExecutor(),
-                $client = new SpyClient(),
-                new Configuration($client, new FakeCatalogProvider(new Catalog([])), '/tmp', 'App\\Migrations'),
-            ),
+        $migrator = new Migrator(
+            $repository,
+            $store,
+            new SpyMigrationExecutor(),
+            $client = new SpyClient(),
+            new Configuration($client, new FakeCatalogProvider(new Catalog([])), '/tmp', 'App\\Migrations'),
         );
 
-        $tester = new CommandTester(new UpToDateCommand($container, 'default'));
+        $tester = new CommandTester(new UpToDateCommand($migrator));
         $tester->execute([]);
 
         static::assertSame(Command::SUCCESS, $tester->getStatusCode());

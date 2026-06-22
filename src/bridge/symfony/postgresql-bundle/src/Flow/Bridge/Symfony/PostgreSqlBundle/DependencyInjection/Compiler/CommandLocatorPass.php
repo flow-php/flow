@@ -36,28 +36,6 @@ final class CommandLocatorPass implements CompilerPassInterface
             }
         }
 
-        if ($container->hasParameter('flow.postgresql.migrations.connections')) {
-            /** @var list<string> $migrationConnections */
-            $migrationConnections = $container->getParameter('flow.postgresql.migrations.connections');
-
-            foreach ($migrationConnections as $connection) {
-                foreach ([
-                    'configuration',
-                    'migrator',
-                    'store',
-                    'version_resolver',
-                    'generator',
-                    'diff_generator',
-                ] as $kind) {
-                    $serviceId = "flow.postgresql.{$connection}.migrations.{$kind}";
-
-                    if ($container->hasDefinition($serviceId)) {
-                        $services[$serviceId] = new ServiceClosureArgument(new Reference($serviceId));
-                    }
-                }
-            }
-        }
-
         $locatorDef = new Definition(ServiceLocator::class, [$services]);
         $locatorDef->addTag('container.service_locator');
         $locatorDef->setPublic(false);

@@ -5,43 +5,29 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\PostgreSqlBundle\Command;
 
 use Flow\PostgreSql\Migrations\Store\MigrationStore;
-use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 use function count;
-use function Flow\Types\DSL\type_instance_of;
-use function Flow\Types\DSL\type_string;
 
 #[AsCommand(name: 'flow:migrations:current', description: 'Output the current migration version')]
 final class CurrentCommand extends Command
 {
     public function __construct(
-        private readonly ContainerInterface $container,
-        private readonly string $defaultConnection,
+        private readonly MigrationStore $store,
     ) {
         parent::__construct();
-    }
-
-    protected function configure(): void
-    {
-        $this->addOption('connection', 'c', InputOption::VALUE_OPTIONAL, 'The connection to use', null);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $connection = type_string()->assert($input->getOption('connection') ?? $this->defaultConnection);
-        $store = type_instance_of(MigrationStore::class)->assert($this->container->get(
-            "flow.postgresql.{$connection}.migrations.store",
-        ));
 
-        $store->initialize();
-        $executed = $store->executedMigrations();
+        $this->store->initialize();
+        $executed = $this->store->executedMigrations();
         $latest = $executed->latest();
 
         $io->title('Current Migration');
