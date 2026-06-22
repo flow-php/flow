@@ -48,6 +48,7 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2457](https://github.com/flow-php/flow/pull/2457) - **flow-php/filesystem - rename FilesystemTable::for() parameter $protocol to $mount** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2476](https://github.com/flow-php/flow/pull/2476) - **DBALTelemetryPass is now registered at priority 10 to guarantee it runs before DoctrineBundle's MiddlewaresPass, fixing silent DBAL tracing failure when DoctrineBundle precedes FlowTelemetryBundle in the kernel.** - [@darenas31415](https://github.com/darenas31415)
 - [#2467](https://github.com/flow-php/flow/pull/2467) - **flow-php/telemetry-otlp-bridge - telemetry lost in long-running workers when requests stalled between messages** - [@norberttech](https://github.com/norberttech)
 - [#2467](https://github.com/flow-php/flow/pull/2467) - **flow-php/telemetry-otlp-bridge - unbounded failure accumulation by surfacing export failures to the ErrorHandler as reaped** - [@norberttech](https://github.com/norberttech)
 - [#2460](https://github.com/flow-php/flow/pull/2460) - **flow-php/symfony-telemetry-bundle - metric attributes render as a toggleable table row in the profiler panel** - [@norberttech](https://github.com/norberttech)
@@ -3518,6 +3519,7 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - @broncha
 - @christianc1
 - @codedmonkey
+- @darenas31415
 - @DawidSajdak
 - @drupol
 - @f-lapinski
