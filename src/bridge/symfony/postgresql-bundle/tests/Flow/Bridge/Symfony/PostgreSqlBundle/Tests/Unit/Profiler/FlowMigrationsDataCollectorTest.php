@@ -137,7 +137,7 @@ final class FlowMigrationsDataCollectorTest extends TestCase
     public function test_collect_degrades_gracefully_when_status_fails(): void
     {
         $store = $this->createMock(MigrationStore::class);
-        $store->method('initialize')->willThrowException(new RuntimeException('connection failed'));
+        $store->method('executedMigrations')->willThrowException(new RuntimeException('connection failed'));
 
         $client = new SpyClient();
         $configuration = new Configuration(

@@ -23,6 +23,7 @@ final class FakeMigrationStore implements MigrationStore
 
     public function complete(Version $version, int $executionTimeMs): void
     {
+        $this->initialized = true;
         $this->migrations[(string) $version] = new ExecutedMigration(
             $version,
             new DateTimeImmutable(),

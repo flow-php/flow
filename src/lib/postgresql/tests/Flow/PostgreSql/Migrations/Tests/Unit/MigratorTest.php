@@ -173,6 +173,28 @@ final class MigratorTest extends TestCase
         static::assertTrue($store->isInitialized());
     }
 
+    public function test_status_does_not_initialize_store(): void
+    {
+        $store = new FakeMigrationStore();
+        $client = new SpyClient();
+
+        $migrator = new Migrator(
+            new FakeMigrationRepository(
+                new AvailableMigration(Version::fromString('20260401120000'), 'first', new SpyMigration(), null),
+            ),
+            $store,
+            new SpyMigrationExecutor(),
+            $client,
+            new Configuration($client, new FakeCatalogProvider(new Catalog([])), '/tmp', 'App\\Migrations'),
+        );
+
+        $status = $migrator->status();
+
+        static::assertFalse($store->isInitialized());
+        static::assertCount(1, $status->pending());
+        static::assertCount(0, $status->executed());
+    }
+
     public function test_migrate_overrides_configuration_all_or_nothing(): void
     {
         $client = new SpyClient();

@@ -132,8 +132,6 @@ final readonly class Migrator
 
     public function status(): MigrationStatusList
     {
-        $this->store->initialize();
-
         $available = $this->repository->all();
         $executed = $this->store->executedMigrations();
         $statuses = [];

@@ -11,6 +11,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
+use function dirname;
 use function Flow\Types\DSL\type_instance_of;
 use function is_callable;
 use function str_starts_with;
@@ -93,20 +94,15 @@ final class SymfonyContext
             return;
         }
 
-        $cacheDir = $this->kernel->getCacheDir();
-        $logDir = $this->kernel->getLogDir();
+        $runDir = dirname($this->kernel->getCacheDir());
 
         $this->kernel->shutdown();
         $this->kernel = null;
 
         $filesystem = new Filesystem();
 
-        if ($filesystem->exists($cacheDir)) {
-            $filesystem->remove($cacheDir);
-        }
-
-        if ($filesystem->exists($logDir)) {
-            $filesystem->remove($logDir);
+        if ($filesystem->exists($runDir)) {
+            $filesystem->remove($runDir);
         }
 
         $defaultResourceCache = sys_get_temp_dir() . '/flow_telemetry_resource.cache';

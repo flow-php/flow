@@ -47,6 +47,10 @@ final readonly class PostgreSqlMigrationStore implements MigrationStore
 
     public function executedMigrations(): ExecutedMigrations
     {
+        if (!$this->isInitialized()) {
+            return new ExecutedMigrations();
+        }
+
         $rows = $this->client->fetchAll(
             select(col('version'), col('executed_at'), col('execution_time_ms'))
                 ->from($this->qualifiedTableName())

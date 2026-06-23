@@ -96,6 +96,12 @@ final class PostgreSqlMigrationStoreTest extends TestCase
         static::assertTrue($this->store->isInitialized());
     }
 
+    public function test_executed_migrations_returns_empty_without_creating_the_table(): void
+    {
+        static::assertCount(0, $this->store->executedMigrations());
+        static::assertFalse($this->store->isInitialized());
+    }
+
     public function test_remove_deletes_record(): void
     {
         $this->store->initialize();
