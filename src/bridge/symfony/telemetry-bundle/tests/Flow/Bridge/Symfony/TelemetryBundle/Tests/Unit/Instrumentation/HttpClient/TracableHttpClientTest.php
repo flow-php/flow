@@ -4,39 +4,35 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Instrumentation\HttpClient;
 
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpClient\ResponseStream;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpClient\TracableHttpClient;
-use Flow\Telemetry\Context\MemoryContextStorage;
-use Flow\Telemetry\Logger\LoggerProvider;
-use Flow\Telemetry\Meter\MeterProvider;
-use Flow\Telemetry\Provider\Clock\SystemClock;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpClient\TraceableResponse;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\HttpClient\FailingHttpClient;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\HttpClient\StreamingHttpClient;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\HttpClient\SuccessHttpClient;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Mother\TelemetryMother;
 use Flow\Telemetry\Provider\Memory\MemoryExporter;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
-use Flow\Telemetry\Provider\Void\VoidLogProcessor;
-use Flow\Telemetry\Provider\Void\VoidMetricProcessor;
-use Flow\Telemetry\Resource;
-use Flow\Telemetry\Telemetry;
 use Flow\Telemetry\Tracer\SpanKind;
-use Flow\Telemetry\Tracer\TracerProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
-use Symfony\Contracts\HttpClient\ChunkInterface;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
-use Symfony\Contracts\HttpClient\ResponseInterface;
-use Symfony\Contracts\HttpClient\ResponseStreamInterface;
 
 #[CoversClass(TracableHttpClient::class)]
+#[CoversClass(TraceableResponse::class)]
+#[CoversClass(ResponseStream::class)]
 final class TracableHttpClientTest extends TestCase
 {
     public function test_request_defaults_host_to_unknown_when_missing(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $tracable = new TracableHttpClient(
+            new SuccessHttpClient(200),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'test.client',
+        );
 
-        $innerClient = $this->createMockHttpClient(200);
-        $tracable = new TracableHttpClient($innerClient, $telemetry, 'test.client');
-
-        $tracable->request('GET', '/users');
+        $tracable->request('GET', '/users')->getContent();
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
@@ -46,27 +42,48 @@ final class TracableHttpClientTest extends TestCase
     public function test_request_defaults_scheme_to_http_when_missing(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $tracable = new TracableHttpClient(
+            new SuccessHttpClient(200),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'test.client',
+        );
 
-        $innerClient = $this->createMockHttpClient(200);
-        $tracable = new TracableHttpClient($innerClient, $telemetry, 'test.client');
-
-        $tracable->request('GET', '/users');
+        $tracable->request('GET', '/users')->getContent();
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
         static::assertSame('http', $spans[0]->attributes()['url.scheme']);
     }
 
+    public function test_request_does_not_complete_span_before_response_is_consumed(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $tracable = new TracableHttpClient(
+            new SuccessHttpClient(200),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'test.client',
+        );
+
+        $response = $tracable->request('GET', 'https://api.example.com/users');
+
+        static::assertInstanceOf(TraceableResponse::class, $response);
+        static::assertCount(0, $spanProcessor->endedSpans());
+
+        $response->getContent();
+
+        static::assertCount(1, $spanProcessor->endedSpans());
+    }
+
     public function test_request_extracts_host_from_url(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $tracable = new TracableHttpClient(
+            new SuccessHttpClient(200),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'test.client',
+        );
 
-        $innerClient = $this->createMockHttpClient(200);
-        $tracable = new TracableHttpClient($innerClient, $telemetry, 'test.client');
-
-        $tracable->request('GET', 'https://api.example.com/users');
+        $tracable->request('GET', 'https://api.example.com/users')->getContent();
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
@@ -76,61 +93,13 @@ final class TracableHttpClientTest extends TestCase
     public function test_request_extracts_scheme_from_url(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $tracable = new TracableHttpClient(
+            new SuccessHttpClient(200),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'test.client',
+        );
 
-        $innerClient = new class implements HttpClientInterface {
-            /** @param array<array-key, mixed> $options */
-            public function request(string $method, string $url, array $options = []): ResponseInterface
-            {
-                return new class implements ResponseInterface {
-                    public function cancel(): void {}
-
-                    public function getContent(bool $throw = true): string
-                    {
-                        return '';
-                    }
-
-                    /** @return array<string, list<string>> */
-                    public function getHeaders(bool $throw = true): array
-                    {
-                        return [];
-                    }
-
-                    public function getInfo(?string $type = null): mixed
-                    {
-                        return null;
-                    }
-
-                    public function getStatusCode(): int
-                    {
-                        return 200;
-                    }
-
-                    /** @return array<string, mixed> */
-                    public function toArray(bool $throw = true): array
-                    {
-                        return [];
-                    }
-                };
-            }
-
-            public function stream(
-                ResponseInterface|iterable $responses,
-                ?float $timeout = null,
-            ): ResponseStreamInterface {
-                throw new RuntimeException('Not implemented');
-            }
-
-            /** @param array<array-key, mixed> $options */
-            public function withOptions(array $options): static
-            {
-                return $this;
-            }
-        };
-
-        $tracable = new TracableHttpClient($innerClient, $telemetry, 'test.client');
-
-        $tracable->request('GET', 'https://api.example.com/users');
+        $tracable->request('GET', 'https://api.example.com/users')->getContent();
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
@@ -140,12 +109,13 @@ final class TracableHttpClientTest extends TestCase
     public function test_request_includes_client_name_attribute(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $tracable = new TracableHttpClient(
+            new SuccessHttpClient(200),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'my_api_client',
+        );
 
-        $innerClient = $this->createMockHttpClient(200);
-        $tracable = new TracableHttpClient($innerClient, $telemetry, 'my_api_client');
-
-        $tracable->request('GET', 'https://api.example.com/users');
+        $tracable->request('GET', 'https://api.example.com/users')->getContent();
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
@@ -155,12 +125,13 @@ final class TracableHttpClientTest extends TestCase
     public function test_request_includes_http_status_code_attribute(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $tracable = new TracableHttpClient(
+            new SuccessHttpClient(200),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'test.client',
+        );
 
-        $innerClient = $this->createMockHttpClient(200);
-        $tracable = new TracableHttpClient($innerClient, $telemetry, 'test.client');
-
-        $tracable->request('GET', 'https://api.example.com/users');
+        $tracable->request('GET', 'https://api.example.com/users')->getContent();
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
@@ -170,12 +141,13 @@ final class TracableHttpClientTest extends TestCase
     public function test_request_includes_method_and_url_attributes(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $tracable = new TracableHttpClient(
+            new SuccessHttpClient(200),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'test.client',
+        );
 
-        $innerClient = $this->createMockHttpClient(200);
-        $tracable = new TracableHttpClient($innerClient, $telemetry, 'test.client');
-
-        $tracable->request('POST', 'https://api.example.com/users');
+        $tracable->request('POST', 'https://api.example.com/users')->getContent();
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
@@ -183,33 +155,14 @@ final class TracableHttpClientTest extends TestCase
         static::assertSame('https://api.example.com/users', $spans[0]->attributes()['url.full']);
     }
 
-    public function test_request_records_exception_on_failure(): void
+    public function test_request_records_exception_on_synchronous_failure(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
-
-        $innerClient = new class implements HttpClientInterface {
-            /** @param array<array-key, mixed> $options */
-            public function request(string $method, string $url, array $options = []): ResponseInterface
-            {
-                throw new RuntimeException('Connection timeout');
-            }
-
-            public function stream(
-                ResponseInterface|iterable $responses,
-                ?float $timeout = null,
-            ): ResponseStreamInterface {
-                throw new RuntimeException('Not implemented');
-            }
-
-            /** @param array<array-key, mixed> $options */
-            public function withOptions(array $options): static
-            {
-                return $this;
-            }
-        };
-
-        $tracable = new TracableHttpClient($innerClient, $telemetry, 'test.client');
+        $tracable = new TracableHttpClient(
+            new FailingHttpClient('Connection timeout'),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'test.client',
+        );
 
         $exceptionThrown = false;
 
@@ -237,12 +190,13 @@ final class TracableHttpClientTest extends TestCase
     public function test_request_sets_error_status_for_4xx_codes(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $tracable = new TracableHttpClient(
+            new SuccessHttpClient(404),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'test.client',
+        );
 
-        $innerClient = $this->createMockHttpClient(404);
-        $tracable = new TracableHttpClient($innerClient, $telemetry, 'test.client');
-
-        $tracable->request('GET', 'https://api.example.com/missing');
+        $tracable->request('GET', 'https://api.example.com/missing')->getContent();
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
@@ -256,12 +210,13 @@ final class TracableHttpClientTest extends TestCase
     public function test_request_sets_error_status_for_5xx_codes(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $tracable = new TracableHttpClient(
+            new SuccessHttpClient(500),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'test.client',
+        );
 
-        $innerClient = $this->createMockHttpClient(500);
-        $tracable = new TracableHttpClient($innerClient, $telemetry, 'test.client');
-
-        $tracable->request('GET', 'https://api.example.com/error');
+        $tracable->request('GET', 'https://api.example.com/error')->getContent();
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
@@ -275,12 +230,13 @@ final class TracableHttpClientTest extends TestCase
     public function test_request_sets_ok_status_for_2xx_codes(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $tracable = new TracableHttpClient(
+            new SuccessHttpClient(201),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'test.client',
+        );
 
-        $innerClient = $this->createMockHttpClient(201);
-        $tracable = new TracableHttpClient($innerClient, $telemetry, 'test.client');
-
-        $tracable->request('POST', 'https://api.example.com/users');
+        $tracable->request('POST', 'https://api.example.com/users')->getContent();
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
@@ -293,12 +249,13 @@ final class TracableHttpClientTest extends TestCase
     public function test_request_sets_ok_status_for_3xx_codes(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $tracable = new TracableHttpClient(
+            new SuccessHttpClient(302),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'test.client',
+        );
 
-        $innerClient = $this->createMockHttpClient(302);
-        $tracable = new TracableHttpClient($innerClient, $telemetry, 'test.client');
-
-        $tracable->request('GET', 'https://api.example.com/redirect');
+        $tracable->request('GET', 'https://api.example.com/redirect')->getContent();
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
@@ -311,12 +268,13 @@ final class TracableHttpClientTest extends TestCase
     public function test_request_span_name_includes_method_and_host(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $tracable = new TracableHttpClient(
+            new SuccessHttpClient(200),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'test.client',
+        );
 
-        $innerClient = $this->createMockHttpClient(200);
-        $tracable = new TracableHttpClient($innerClient, $telemetry, 'test.client');
-
-        $tracable->request('POST', 'https://api.example.com/users');
+        $tracable->request('POST', 'https://api.example.com/users')->getContent();
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
@@ -326,169 +284,86 @@ final class TracableHttpClientTest extends TestCase
     public function test_span_kind_is_client(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $tracable = new TracableHttpClient(
+            new SuccessHttpClient(200),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'test.client',
+        );
 
-        $innerClient = $this->createMockHttpClient(200);
-        $tracable = new TracableHttpClient($innerClient, $telemetry, 'test.client');
-
-        $tracable->request('GET', 'https://api.example.com/users');
+        $tracable->request('GET', 'https://api.example.com/users')->getContent();
 
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
         static::assertSame(SpanKind::CLIENT, $spans[0]->kind());
     }
 
-    public function test_stream_delegates_to_inner_client(): void
+    public function test_stream_completes_span_with_error_when_chunk_reports_error(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
+        $tracable = new TracableHttpClient(
+            new StreamingHttpClient(200, 'Network is down'),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'test.client',
+        );
 
-        $mockResponse = $this->createMock(ResponseInterface::class);
+        $response = $tracable->request('GET', 'https://api.example.com/users');
 
-        $streamResponse = new readonly class($mockResponse, $this->createMock(ChunkInterface::class)) implements
-            ResponseStreamInterface {
-            public function __construct(
-                private ResponseInterface $response,
-                private ChunkInterface $chunk,
-            ) {}
+        foreach ($tracable->stream($response) as $chunk) {
+            static::assertSame('Network is down', $chunk->getError());
+        }
 
-            public function key(): ResponseInterface
-            {
-                return $this->response;
-            }
+        $spans = $spanProcessor->endedSpans();
+        static::assertCount(1, $spans);
 
-            public function current(): ChunkInterface
-            {
-                return $this->chunk;
-            }
+        $status = $spans[0]->status();
+        static::assertNotNull($status);
+        static::assertTrue($status->isError());
+        static::assertSame('Network is down', $status->description);
+    }
 
-            public function next(): void {}
+    public function test_stream_unwraps_tracable_response_and_completes_span_on_last_chunk(): void
+    {
+        $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
+        $tracable = new TracableHttpClient(
+            new StreamingHttpClient(200),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'test.client',
+        );
 
-            public function rewind(): void {}
+        $response = $tracable->request('GET', 'https://api.example.com/users');
 
-            public function valid(): bool
-            {
-                return false;
-            }
-        };
+        static::assertInstanceOf(TraceableResponse::class, $response);
+        static::assertCount(0, $spanProcessor->endedSpans());
 
-        $innerClient = new readonly class($streamResponse) implements HttpClientInterface {
-            public function __construct(
-                private ResponseStreamInterface $stream,
-            ) {}
+        $stream = $tracable->stream($response);
+        static::assertInstanceOf(ResponseStream::class, $stream);
 
-            /** @param array<array-key, mixed> $options */
-            public function request(string $method, string $url, array $options = []): ResponseInterface
-            {
-                throw new RuntimeException('Not implemented');
-            }
+        $chunks = 0;
 
-            public function stream(
-                ResponseInterface|iterable $responses,
-                ?float $timeout = null,
-            ): ResponseStreamInterface {
-                return $this->stream;
-            }
+        foreach ($stream as $key => $_chunk) {
+            static::assertSame($response, $key);
+            $chunks++;
+        }
 
-            /** @param array<array-key, mixed> $options */
-            public function withOptions(array $options): static
-            {
-                return $this;
-            }
-        };
+        static::assertSame(2, $chunks);
 
-        $tracable = new TracableHttpClient($innerClient, $telemetry, 'test.client');
-
-        $result = $tracable->stream($mockResponse);
-
-        static::assertSame($streamResponse, $result);
+        $spans = $spanProcessor->endedSpans();
+        static::assertCount(1, $spans);
+        static::assertSame(200, $spans[0]->attributes()['http.response.status_code']);
     }
 
     public function test_with_options_creates_new_instance(): void
     {
         $spanProcessor = new MemorySpanProcessor(new MemoryExporter());
-        $telemetry = $this->createTelemetry($spanProcessor);
-
-        $innerClient = $this->createMockHttpClient(200);
-        $tracable = new TracableHttpClient($innerClient, $telemetry, 'test.client');
+        $tracable = new TracableHttpClient(
+            new SuccessHttpClient(200),
+            TelemetryMother::withSpanProcessor($spanProcessor),
+            'test.client',
+        );
 
         $newTracable = $tracable->withOptions(['timeout' => 30]);
 
         static::assertNotSame($tracable, $newTracable);
         static::assertInstanceOf(TracableHttpClient::class, $newTracable);
-    }
-
-    private function createMockHttpClient(int $statusCode): HttpClientInterface
-    {
-        return new readonly class($statusCode) implements HttpClientInterface {
-            public function __construct(
-                private int $statusCode,
-            ) {}
-
-            /** @param array<array-key, mixed> $options */
-            public function request(string $method, string $url, array $options = []): ResponseInterface
-            {
-                return new readonly class($this->statusCode) implements ResponseInterface {
-                    public function __construct(
-                        private int $statusCode,
-                    ) {}
-
-                    public function cancel(): void {}
-
-                    public function getContent(bool $throw = true): string
-                    {
-                        return '';
-                    }
-
-                    /** @return array<string, list<string>> */
-                    public function getHeaders(bool $throw = true): array
-                    {
-                        return [];
-                    }
-
-                    public function getInfo(?string $type = null): mixed
-                    {
-                        return null;
-                    }
-
-                    public function getStatusCode(): int
-                    {
-                        return $this->statusCode;
-                    }
-
-                    /** @return array<string, mixed> */
-                    public function toArray(bool $throw = true): array
-                    {
-                        return [];
-                    }
-                };
-            }
-
-            public function stream(
-                ResponseInterface|iterable $responses,
-                ?float $timeout = null,
-            ): ResponseStreamInterface {
-                throw new RuntimeException('Not implemented');
-            }
-
-            /** @param array<array-key, mixed> $options */
-            public function withOptions(array $options): static
-            {
-                return new self($this->statusCode);
-            }
-        };
-    }
-
-    private function createTelemetry(MemorySpanProcessor $spanProcessor): Telemetry
-    {
-        $clock = new SystemClock();
-        $contextStorage = new MemoryContextStorage();
-
-        return new Telemetry(
-            Resource::create(['service.name' => 'test']),
-            new TracerProvider($spanProcessor, $clock, $contextStorage),
-            new MeterProvider(new VoidMetricProcessor(), $clock),
-            new LoggerProvider(new VoidLogProcessor(), $clock, $contextStorage),
-        );
     }
 }

@@ -218,7 +218,7 @@ final class TracableHttpClientTest extends KernelTestCase
 
         /** @var HttpClientInterface $client */
         $client = $container->get('test.error_client');
-        $client->request('POST', 'http://localhost:8080/api/data');
+        $client->request('POST', 'http://localhost:8080/api/data')->getContent();
 
         /** @var MemorySpanProcessor $processor */
         $processor = $container->get('flow.telemetry.tracer_provider.processor');
@@ -271,7 +271,7 @@ final class TracableHttpClientTest extends KernelTestCase
 
         /** @var HttpClientInterface $client */
         $client = $container->get('test.api_client');
-        $client->request('GET', 'https://api.example.com/users?page=1');
+        $client->request('GET', 'https://api.example.com/users?page=1')->getContent();
 
         /** @var MemorySpanProcessor $processor */
         $processor = $container->get('flow.telemetry.tracer_provider.processor');

@@ -52,30 +52,24 @@ final readonly class TracableHttpClient implements HttpClientInterface
 
         try {
             $response = $this->client->request($method, $url, $options);
-
-            $statusCode = $response->getStatusCode();
-            $span->setAttribute('http.response.status_code', $statusCode);
-
-            if ($statusCode >= 400) {
-                $span->setStatus(SpanStatus::error("HTTP {$statusCode}"));
-            } else {
-                $span->setStatus(SpanStatus::ok());
-            }
-
-            return $response;
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
             $span->setStatus(SpanStatus::error($exception->getMessage()));
+            $tracer->complete($span);
 
             throw $exception;
-        } finally {
-            $tracer->complete($span);
         }
+
+        return new TraceableResponse($tracer, $response, $span);
     }
 
     public function stream(ResponseInterface|iterable $responses, ?float $timeout = null): ResponseStreamInterface
     {
-        return $this->client->stream($responses, $timeout);
+        if ($responses instanceof ResponseInterface) {
+            $responses = [$responses];
+        }
+
+        return new ResponseStream(TraceableResponse::stream($this->client, $responses, $timeout));
     }
 
     /**
