@@ -18,7 +18,9 @@ final class GitDetectorTest extends GitTestCase
 {
     public function test_detect_keeps_scp_like_ssh_remote_untouched(): void
     {
-        $directory = $this->gitContext->cloneRepositoryWithRemote('git@github.com:flow-php/phpstan-types-bridge.git');
+        $directory = $this->gitContext->createLocalRepositoryWithRemote(
+            'git@github.com:flow-php/phpstan-types-bridge.git',
+        );
 
         $resource = (new GitDetector($directory))->detect();
 
@@ -30,7 +32,7 @@ final class GitDetectorTest extends GitTestCase
 
     public function test_detect_returns_branch_name_and_type_when_not_detached(): void
     {
-        $directory = $this->gitContext->cloneRepository(GitContext::BRANCH);
+        $directory = $this->gitContext->createLocalRepository(GitContext::BRANCH);
 
         $resource = (new GitDetector($directory))->detect();
 
@@ -49,7 +51,7 @@ final class GitDetectorTest extends GitTestCase
 
     public function test_detect_returns_head_revision(): void
     {
-        $directory = $this->gitContext->cloneRepository(GitContext::BRANCH);
+        $directory = $this->gitContext->createLocalRepository(GitContext::BRANCH);
 
         $resource = (new GitDetector($directory))->detect();
 
@@ -61,7 +63,7 @@ final class GitDetectorTest extends GitTestCase
 
     public function test_detect_returns_repository_url(): void
     {
-        $directory = $this->gitContext->cloneRepository(GitContext::BRANCH);
+        $directory = $this->gitContext->createLocalRepository(GitContext::BRANCH);
 
         $resource = (new GitDetector($directory))->detect();
 
@@ -70,18 +72,21 @@ final class GitDetectorTest extends GitTestCase
 
     public function test_detect_returns_tag_name_and_type_in_detached_head(): void
     {
-        $directory = $this->gitContext->cloneRepository(GitContext::TAG);
+        $directory = $this->gitContext->createLocalRepository(GitContext::TAG);
 
         $resource = (new GitDetector($directory))->detect();
 
         static::assertSame(GitContext::TAG, $resource->get(VcsAttribute::REF_HEAD_NAME->value));
         static::assertSame('tag', $resource->get(VcsAttribute::REF_HEAD_TYPE->value));
-        static::assertSame(GitContext::TAG_REVISION, $resource->get(VcsAttribute::REF_HEAD_REVISION->value));
+        static::assertSame(
+            $this->gitContext->headRevision($directory),
+            $resource->get(VcsAttribute::REF_HEAD_REVISION->value),
+        );
     }
 
     public function test_detect_strips_credentials_from_repository_url(): void
     {
-        $directory = $this->gitContext->cloneRepositoryWithRemote(
+        $directory = $this->gitContext->createLocalRepositoryWithRemote(
             'https://user:secret@github.com/flow-php/phpstan-types-bridge.git',
         );
 
@@ -101,7 +106,7 @@ final class GitDetectorTest extends GitTestCase
             static::markTestSkipped('Unable to resolve an absolute git binary path');
         }
 
-        $directory = $this->gitContext->cloneRepository(GitContext::BRANCH);
+        $directory = $this->gitContext->createLocalRepository(GitContext::BRANCH);
 
         $resource = (new GitDetector($directory, $gitBinary))->detect();
 

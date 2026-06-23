@@ -8,6 +8,7 @@ use Flow\Bridge\Symfony\FilesystemCache\Exception\FilesystemCacheException;
 use Flow\Filesystem\Filesystem;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter\OnlyFiles;
+use Psr\Clock\ClockInterface;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
 use Symfony\Component\Cache\Marshaller\DefaultMarshaller;
@@ -39,6 +40,7 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
         string $namespace = '',
         int $defaultLifetime = 0,
         ?MarshallerInterface $marshaller = null,
+        private readonly ?ClockInterface $clock = null,
     ) {
         $match = [];
 
@@ -56,7 +58,7 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
 
     public function prune(): bool
     {
-        $now = time();
+        $now = $this->now();
 
         foreach ($this->filesystem->list($this->listPattern(), new OnlyFiles()) as $status) {
             $expiry = $this->readExpiry($status->path);
@@ -114,7 +116,7 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
      */
     protected function doFetch(array $ids): iterable
     {
-        $now = time();
+        $now = $this->now();
         $expired = [];
 
         // @mago-expect analysis:mixed-assignment
@@ -166,7 +168,7 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
 
         $expiry = $this->readExpiry($path);
 
-        return $expiry === 0 || $expiry > time();
+        return $expiry === 0 || $expiry > $this->now();
     }
 
     /**
@@ -184,7 +186,7 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
             return $failedKeys;
         }
 
-        $expiry = $lifetime > 0 ? time() + $lifetime : 0;
+        $expiry = $lifetime > 0 ? $this->now() + $lifetime : 0;
 
         // @mago-expect analysis:mixed-assignment
         foreach ($marshalled as $id => $value) {
@@ -227,6 +229,11 @@ final class FlowFilesystemCacheAdapter extends AbstractAdapter implements Prunea
         }
 
         return $result;
+    }
+
+    private function now(): int
+    {
+        return $this->clock?->now()->getTimestamp() ?? time();
     }
 
     private function fileFor(string $id): Path

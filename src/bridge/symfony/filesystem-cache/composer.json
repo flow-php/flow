@@ -11,7 +11,11 @@
     "require": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
         "flow-php/filesystem": "self.version",
+        "psr/clock": "^1.0",
         "symfony/cache": "^6.4 || ^7.4 || ^8.0"
+    },
+    "require-dev": {
+        "symfony/clock": "^6.4 || ^7.4 || ^8.0"
     },
     "config": {
         "optimize-autoloader": true,

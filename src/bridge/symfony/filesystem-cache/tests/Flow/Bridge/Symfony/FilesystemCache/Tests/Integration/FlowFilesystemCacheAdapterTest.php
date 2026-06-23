@@ -7,8 +7,7 @@ namespace Flow\Bridge\Symfony\FilesystemCache\Tests\Integration;
 use Flow\Bridge\Symfony\FilesystemCache\FlowFilesystemCacheAdapter;
 use Flow\Bridge\Symfony\FilesystemCache\Tests\Context\FilesystemCacheContext;
 use PHPUnit\Framework\TestCase;
-
-use function sleep;
+use Symfony\Component\Clock\MockClock;
 
 final class FlowFilesystemCacheAdapterTest extends TestCase
 {
@@ -73,7 +72,8 @@ final class FlowFilesystemCacheAdapterTest extends TestCase
 
     public function test_prune_removes_expired_items(): void
     {
-        $adapter = new FlowFilesystemCacheAdapter($this->context->filesystem, $this->context->directory);
+        $clock = new MockClock();
+        $adapter = new FlowFilesystemCacheAdapter($this->context->filesystem, $this->context->directory, clock: $clock);
 
         $expired = $adapter->getItem('will_expire');
         $expired->set('gone');
@@ -84,7 +84,7 @@ final class FlowFilesystemCacheAdapterTest extends TestCase
         $alive->set('alive');
         $adapter->save($alive);
 
-        sleep(2);
+        $clock->sleep(2);
 
         static::assertTrue($adapter->prune());
 

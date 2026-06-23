@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Flow\Telemetry\Tests\Context;
 
 use FilesystemIterator;
-use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use RuntimeException;
 use SplFileInfo;
 
+use function array_key_exists;
 use function explode;
 use function fclose;
 use function getenv;
+use function implode;
 use function is_dir;
 use function is_executable;
 use function is_file;
@@ -22,6 +24,7 @@ use function proc_open;
 use function rmdir;
 use function stream_get_contents;
 use function sys_get_temp_dir;
+use function trim;
 use function uniqid;
 use function unlink;
 
@@ -29,8 +32,8 @@ use const DIRECTORY_SEPARATOR;
 use const PATH_SEPARATOR;
 
 /**
- * Provides Git working copies for tests by shallow-cloning a small, public
- * fixture repository.
+ * Provides Git working copies for tests by building small local repositories,
+ * so the suite never depends on network access to a remote fixture.
  */
 final class GitContext
 {
@@ -40,14 +43,15 @@ final class GitContext
 
     public const TAG = '0.39.0';
 
-    public const TAG_REVISION = '4d135d4eff0d7895ad2d07737484474936fb5200';
-
-    private static bool $repositoryUnavailable = false;
-
     /**
      * @var array<string>
      */
     private array $directories = [];
+
+    /**
+     * @var array<string, string>
+     */
+    private array $revisions = [];
 
     public function cleanup(): void
     {
@@ -56,48 +60,53 @@ final class GitContext
         }
 
         $this->directories = [];
+        $this->revisions = [];
     }
 
-    public function cloneRepository(string $ref): string
+    public function createLocalRepository(string $ref): string
     {
-        if (self::$repositoryUnavailable) {
-            TestCase::markTestSkipped('Unable to clone the fixture repository ' . self::REPOSITORY_URL);
-        }
-
         $directory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'flow_telemetry_git_' . uniqid();
         $this->directories[] = $directory;
 
-        if (!$this->runGit([
-            'clone',
-            '--quiet',
-            '--depth',
-            '1',
-            '--no-tags',
-            '--branch',
-            $ref,
-            self::REPOSITORY_URL,
-            $directory,
-        ])) {
-            self::$repositoryUnavailable = true;
+        $this->git(['init', '--quiet', $directory]);
+        $this->git(['-C', $directory, 'symbolic-ref', 'HEAD', 'refs/heads/' . self::BRANCH]);
+        $this->git(['-C', $directory, 'config', 'user.email', 'ci@flow-php.com']);
+        $this->git(['-C', $directory, 'config', 'user.name', 'Flow PHP']);
+        $this->git(['-C', $directory, 'config', 'commit.gpgsign', 'false']);
+        $this->git(['-C', $directory, 'remote', 'add', 'origin', self::REPOSITORY_URL]);
+        $this->git(['-C', $directory, 'commit', '--quiet', '--allow-empty', '-m', 'fixture commit']);
 
-            TestCase::markTestSkipped('Unable to clone the fixture repository ' . self::REPOSITORY_URL);
+        if ($ref === self::TAG) {
+            $this->git(['-C', $directory, 'tag', self::TAG]);
+            $this->git(['-C', $directory, 'checkout', '--quiet', self::TAG]);
         }
+
+        $this->revisions[$directory] = $this->git(['-C', $directory, 'rev-parse', 'HEAD']);
 
         return $directory;
     }
 
-    public function cloneRepositoryWithRemote(string $remoteUrl): string
+    public function createLocalRepositoryWithRemote(string $remoteUrl): string
     {
-        $directory = $this->cloneRepository(self::BRANCH);
+        $directory = $this->createLocalRepository(self::BRANCH);
 
-        $this->runGit(['-C', $directory, 'remote', 'set-url', 'origin', $remoteUrl]);
+        $this->git(['-C', $directory, 'remote', 'set-url', 'origin', $remoteUrl]);
 
         return $directory;
+    }
+
+    public function headRevision(string $directory): string
+    {
+        if (!array_key_exists($directory, $this->revisions)) {
+            throw new RuntimeException('No repository was created at ' . $directory);
+        }
+
+        return $this->revisions[$directory];
     }
 
     public function gitBinaryExists(): bool
     {
-        return $this->runGit(['--version']);
+        return $this->run(['git', '--version']) !== null;
     }
 
     public function resolveGitBinaryPath(): ?string
@@ -152,14 +161,22 @@ final class GitContext
     /**
      * @param array<string> $arguments
      */
-    private function runGit(array $arguments): bool
+    private function git(array $arguments): string
     {
-        $command = ['git'];
+        $output = $this->run(['git', ...$arguments]);
 
-        foreach ($arguments as $argument) {
-            $command[] = $argument;
+        if ($output === null) {
+            throw new RuntimeException('git ' . implode(' ', $arguments) . ' failed');
         }
 
+        return trim($output);
+    }
+
+    /**
+     * @param array<string> $command
+     */
+    private function run(array $command): ?string
+    {
         $descriptors = [
             0 => ['pipe', 'r'],
             1 => ['pipe', 'w'],
@@ -170,7 +187,7 @@ final class GitContext
         $process = @proc_open($command, $descriptors, $pipes);
 
         if (!is_resource($process)) {
-            return false;
+            return null;
         }
 
         $stdin = $pipes[0] ?? null;
@@ -181,17 +198,19 @@ final class GitContext
             fclose($stdin);
         }
 
-        // Drain stdout and stderr so the child never blocks on a full pipe.
+        $output = '';
+
         if (is_resource($stdout)) {
-            stream_get_contents($stdout);
+            $output = (string) stream_get_contents($stdout);
             fclose($stdout);
         }
 
+        // Drain stderr so the child never blocks on a full pipe.
         if (is_resource($stderr)) {
             stream_get_contents($stderr);
             fclose($stderr);
         }
 
-        return proc_close($process) === 0;
+        return proc_close($process) === 0 ? $output : null;
     }
 }

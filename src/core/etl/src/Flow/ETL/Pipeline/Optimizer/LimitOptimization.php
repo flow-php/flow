@@ -85,7 +85,7 @@ final class LimitOptimization implements Optimization
                 }
             }
 
-            if (!in_array($pipelineElement::class, $this->nonExpandingTransformers, true)) {
+            if (!$this->isNonExpandingStep($pipelineElement)) {
                 break;
             }
 
@@ -97,6 +97,21 @@ final class LimitOptimization implements Optimization
         }
 
         return $pipeline->add($element);
+    }
+
+    private function isNonExpandingStep(Loader|Processor|Transformer $step): bool
+    {
+        if (in_array($step::class, $this->nonExpandingTransformers, true)) {
+            return true;
+        }
+
+        foreach ($this->nonExpandingProcessors as $nonExpandingProcessor) {
+            if ($step instanceof $nonExpandingProcessor) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function hasOnlyNonExpandingSteps(Pipeline $pipeline): bool
