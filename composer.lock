@@ -4570,16 +4570,16 @@
         },
         {
             "name": "cmsig/seal-memory-adapter",
-            "version": "0.12.14",
+            "version": "0.12.15",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHP-CMSIG/seal-memory-adapter.git",
-                "reference": "ec900ca5f575694db262d8d71710b3777bcbffee"
+                "reference": "ea34dbf5cf0328d05ef97cbcd08e60b2ed4154dc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHP-CMSIG/seal-memory-adapter/zipball/ec900ca5f575694db262d8d71710b3777bcbffee",
-                "reference": "ec900ca5f575694db262d8d71710b3777bcbffee",
+                "url": "https://api.github.com/repos/PHP-CMSIG/seal-memory-adapter/zipball/ea34dbf5cf0328d05ef97cbcd08e60b2ed4154dc",
+                "reference": "ea34dbf5cf0328d05ef97cbcd08e60b2ed4154dc",
                 "shasum": ""
             },
             "require": {
@@ -4625,7 +4625,7 @@
                 "search-client"
             ],
             "support": {
-                "source": "https://github.com/PHP-CMSIG/seal-memory-adapter/tree/0.12.14"
+                "source": "https://github.com/PHP-CMSIG/seal-memory-adapter/tree/0.12.15"
             },
             "funding": [
                 {
@@ -4637,7 +4637,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-06-08T06:10:03+00:00"
+            "time": "2026-06-22T09:01:21+00:00"
         },
         {
             "name": "composer/semver",
