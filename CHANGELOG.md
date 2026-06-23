@@ -36,6 +36,7 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2454](https://github.com/flow-php/flow/pull/2454) - **Positional schema definition mutations on Flow\ETL\Schema: prepend(), insertAt(), addBefore(), addAfter(), moveTo(), moveBefore(), moveAfter() and reorder()** - [@bendavies](https://github.com/bendavies)
 
 ### Changed
+- [#2481](https://github.com/flow-php/flow/pull/2481) - **flow-php/symfony-telemetry-bundle - http client span now completes when the response is consumed, not at request() return** - [@norberttech](https://github.com/norberttech)
 - [#2477](https://github.com/flow-php/flow/pull/2477) - **flow-php/symfony-postgresql-bundle - migrations target a single configured connection** - [@norberttech](https://github.com/norberttech)
 - [#2475](https://github.com/flow-php/flow/pull/2475) - **flow-php/postgresql - expose migration execution time via MigrationStatus::executionTimeMs** - [@norberttech](https://github.com/norberttech)
 - [#2474](https://github.com/flow-php/flow/pull/2474) - **flow-php/telemetry - GitDetector reads git via a non-blocking, timeout-bounded subprocess.** - [@norberttech](https://github.com/norberttech)
@@ -52,6 +53,7 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2457](https://github.com/flow-php/flow/pull/2457) - **flow-php/filesystem - rename FilesystemTable::for() parameter $protocol to $mount** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2481](https://github.com/flow-php/flow/pull/2481) - **flow-php/symfony-telemetry-bundle - http client decorator no longer reads the response inside request(), restoring async and concurrency** - [@norberttech](https://github.com/norberttech)
 - [#2480](https://github.com/flow-php/flow/pull/2480) - **flow-php/etl - respect limit push-down across non-expanding processors** - [@norberttech](https://github.com/norberttech)
 - [#2480](https://github.com/flow-php/flow/pull/2480) - **flow-php/postgresql - migration status checks no longer create the tracking table** - [@norberttech](https://github.com/norberttech)
 - [#2477](https://github.com/flow-php/flow/pull/2477) - **flow-php/symfony-telemetry-bundle - DBAL spans now emitted regardless of bundle registration order** - [@norberttech](https://github.com/norberttech)
