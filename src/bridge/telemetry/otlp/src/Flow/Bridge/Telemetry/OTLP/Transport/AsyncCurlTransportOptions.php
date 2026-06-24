@@ -24,29 +24,31 @@ use const CURLOPT_TIMEOUT_MS;
 use const CURLOPT_URL;
 
 /**
- * Configuration options for CurlTransport.
+ * Configuration options for AsyncCurlTransport.
  *
- * Provides a fluent interface for configuring curl transport options.
+ * Provides a fluent interface for configuring the asynchronous curl_multi transport.
  *
  * Example usage:
  * ```php
- * $options = otlp_curl_options()
+ * $options = otlp_async_curl_options()
  *     ->withTimeout(2000)
  *     ->withConnectTimeout(500)
  *     ->withHeader('Authorization', 'Bearer token')
  *     ->withCompression()
  *     ->withSslVerification(verifyPeer: true);
  *
- * $transport = otlp_curl_transport($endpoint, $serializer, $options);
+ * $transport = otlp_async_curl_transport($endpoint, $serializer, $options);
  * ```
  */
-final class CurlTransportOptions
+final class AsyncCurlTransportOptions
 {
-    public const int DEFAULT_CONNECT_TIMEOUT_MS = 250;
+    public const int DEFAULT_CONNECT_TIMEOUT_MS = 1500;
+
+    public const int DEFAULT_PUMP_TIMEOUT_MS = 100;
 
     public const int DEFAULT_SHUTDOWN_TIMEOUT_MS = 5000;
 
-    public const int DEFAULT_TIMEOUT_MS = 10000;
+    public const int DEFAULT_TIMEOUT_MS = 5000;
 
     private ?string $caInfoPath = null;
 
@@ -62,6 +64,8 @@ final class CurlTransportOptions
     private int $maxRedirects = 3;
 
     private ?string $proxy = null;
+
+    private int $pumpTimeoutMs = self::DEFAULT_PUMP_TIMEOUT_MS;
 
     private int $shutdownTimeoutMs = self::DEFAULT_SHUTDOWN_TIMEOUT_MS;
 
@@ -111,6 +115,11 @@ final class CurlTransportOptions
     public function proxy(): ?string
     {
         return $this->proxy;
+    }
+
+    public function pumpTimeoutMs(): int
+    {
+        return $this->pumpTimeoutMs;
     }
 
     public function shutdownTimeoutMs(): int
@@ -292,11 +301,35 @@ final class CurlTransportOptions
     }
 
     /**
+     * Set the per-`tick()` budget (milliseconds) for cooperatively driving pending requests toward
+     * completion.
+     *
+     * Each `tick()` runs an exec + `curl_multi_select` loop bounded by this budget: against a
+     * fast/local backend the pending request completes within the budget (sub-millisecond) and the
+     * tick returns early; against a slow/remote backend the tick returns once the budget elapses and
+     * the request stays pending for the next pump. `0` degrades to a single non-blocking
+     * `curl_multi_exec` round (legacy behaviour) — usually too little to complete a request in one
+     * tick.
+     *
+     * @param int $milliseconds Bounded pump budget; must be non-negative
+     */
+    public function withPumpTimeout(int $milliseconds): self
+    {
+        if ($milliseconds < 0) {
+            throw new InvalidArgumentException('Pump timeout must be non-negative');
+        }
+
+        $this->pumpTimeoutMs = $milliseconds;
+
+        return $this;
+    }
+
+    /**
      * Set the wall-clock budget for draining pending requests at shutdown.
      *
      * Requests still pending after this deadline are abandoned and reported as failed
      * (forwarded to a configured failover transport, otherwise aggregated into the
-     * shutdown TransportException). Steady-state flush() is unaffected by this knob.
+     * shutdown TransportException). Steady-state pumping is unaffected by this knob.
      *
      * @param int $milliseconds Maximum drain wall-clock at shutdown
      */

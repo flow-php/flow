@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Telemetry\OTLP\Tests\Integration;
 
 use DateTimeImmutable;
-use Flow\Bridge\Telemetry\OTLP\Transport\CurlTransport;
+use Flow\Bridge\Telemetry\OTLP\Transport\AsyncCurlTransport;
 use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\InstrumentationScope;
@@ -16,11 +16,11 @@ use Flow\Telemetry\Tracer\SpanContext;
 use Flow\Telemetry\Tracer\SpanKind;
 
 use function extension_loaded;
-use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_curl_options;
+use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_async_curl_options;
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_json_serializer;
 use function usleep;
 
-final class CurlTransportTickIntegrationTest extends IntegrationTestCase
+final class AsyncCurlTransportTickIntegrationTest extends IntegrationTestCase
 {
     public function test_tick_drives_in_flight_request_to_completion_without_shutdown(): void
     {
@@ -30,10 +30,10 @@ final class CurlTransportTickIntegrationTest extends IntegrationTestCase
 
         $spansBefore = $this->otelContext->collectorMetrics()->getAcceptedSpans();
 
-        $transport = new CurlTransport(
+        $transport = new AsyncCurlTransport(
             $this->otelContext->httpEndpoint(),
             otlp_json_serializer(),
-            otlp_curl_options()->withTimeout(5000)->withConnectTimeout(1000),
+            otlp_async_curl_options()->withTimeout(5000)->withConnectTimeout(1000),
         );
 
         $transport->send(Signals::traces($this->createSpans()));
@@ -66,12 +66,12 @@ final class CurlTransportTickIntegrationTest extends IntegrationTestCase
     private function createSpans(): array
     {
         return [new Span(
-            'tick-integration-span',
+            'async-tick-integration-span',
             SpanContext::create(TraceId::generate(), SpanId::generate()),
             SpanKind::INTERNAL,
             new DateTimeImmutable(),
             ResourceMother::default(),
-            new InstrumentationScope('tick-integration', '1.0.0'),
+            new InstrumentationScope('async-tick-integration', '1.0.0'),
         )];
     }
 }

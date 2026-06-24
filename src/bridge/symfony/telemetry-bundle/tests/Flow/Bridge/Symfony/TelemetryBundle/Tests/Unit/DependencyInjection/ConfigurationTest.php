@@ -305,6 +305,123 @@ final class ConfigurationTest extends TestCase
         static::assertSame('otlp', $config['tracer_provider']['processor']['exporter']);
     }
 
+    public function test_async_curl_transport_is_accepted(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => [
+                            'type' => 'async_curl',
+                            'endpoint' => 'http://localhost:4318',
+                            'encoding' => 'protobuf',
+                            'connect_timeout_ms' => 500,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        static::assertSame('async_curl', $config['exporters']['otlp']['otlp']['transport']['type']);
+        static::assertSame('protobuf', $config['exporters']['otlp']['otlp']['transport']['encoding']);
+        static::assertSame(500, $config['exporters']['otlp']['otlp']['transport']['connect_timeout_ms']);
+    }
+
+    public function test_async_curl_transport_defaults_connect_timeout_to_1500ms(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => ['type' => 'async_curl', 'endpoint' => 'http://localhost:4318'],
+                    ],
+                ],
+            ],
+        ]);
+
+        static::assertSame(1500, $config['exporters']['otlp']['otlp']['transport']['connect_timeout_ms']);
+    }
+
+    public function test_async_curl_transport_accepts_pump_timeout_ms(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => [
+                            'type' => 'async_curl',
+                            'endpoint' => 'http://localhost:4318',
+                            'pump_timeout_ms' => 50,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        static::assertSame(50, $config['exporters']['otlp']['otlp']['transport']['pump_timeout_ms']);
+    }
+
+    public function test_async_curl_transport_defaults_pump_timeout_to_100ms(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => ['type' => 'async_curl', 'endpoint' => 'http://localhost:4318'],
+                    ],
+                ],
+            ],
+        ]);
+
+        static::assertSame(100, $config['exporters']['otlp']['otlp']['transport']['pump_timeout_ms']);
+    }
+
+    #[TestWith(['curl'])]
+    #[TestWith(['grpc'])]
+    #[TestWith(['stream'])]
+    public function test_pump_timeout_ms_is_rejected_for_non_async_curl_transports(string $type): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage(
+            'The "pump_timeout_ms" parameter is only supported when transport.type is "async_curl"',
+        );
+
+        $this->context->processConfig([
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => [
+                            'type' => $type,
+                            'endpoint' => $type === 'stream' ? '/var/log/otel/logs.jsonl' : 'http://localhost:4318',
+                            'pump_timeout_ms' => 100,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    public function test_curl_transport_defaults_request_timeout_to_10000ms(): void
+    {
+        $config = $this->context->processConfig([
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => ['type' => 'curl', 'endpoint' => 'http://localhost:4318'],
+                    ],
+                ],
+            ],
+        ]);
+
+        static::assertSame(10000, $config['exporters']['otlp']['otlp']['transport']['timeout_ms']);
+    }
+
     public function test_otlp_exporter_error_handler_defaults_to_default(): void
     {
         $config = $this->context->processConfig([
@@ -573,7 +690,9 @@ final class ConfigurationTest extends TestCase
     public function test_transport_failover_rejected_for_stream_primary(): void
     {
         $this->expectException(InvalidConfigurationException::class);
-        $this->expectExceptionMessage('"failover" block is only supported for transport.type "curl" or "grpc"');
+        $this->expectExceptionMessage(
+            '"failover" block is only supported for transport.type "curl", "async_curl" or "grpc"',
+        );
 
         $this->context->processConfig([
             'resource' => [],

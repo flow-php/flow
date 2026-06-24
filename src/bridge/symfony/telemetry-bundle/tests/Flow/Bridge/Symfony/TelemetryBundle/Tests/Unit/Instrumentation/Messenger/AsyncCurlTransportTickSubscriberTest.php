@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Unit\Instrumentation\Messenger;
 
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\CurlTransportTickSubscriber;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\AsyncCurlTransportTickSubscriber;
 use Flow\Bridge\Telemetry\OTLP\Serializer\JsonSerializer;
-use Flow\Bridge\Telemetry\OTLP\Transport\CurlTransport;
+use Flow\Bridge\Telemetry\OTLP\Transport\AsyncCurlTransport;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Messenger\Envelope;
@@ -16,14 +16,14 @@ use Symfony\Component\Messenger\Worker;
 
 use function extension_loaded;
 
-#[CoversClass(CurlTransportTickSubscriber::class)]
-final class CurlTransportTickSubscriberTest extends TestCase
+#[CoversClass(AsyncCurlTransportTickSubscriber::class)]
+final class AsyncCurlTransportTickSubscriberTest extends TestCase
 {
     public function test_subscribed_events(): void
     {
         static::assertSame(
             [WorkerRunningEvent::class => 'onWorkerRunning'],
-            CurlTransportTickSubscriber::getSubscribedEvents(),
+            AsyncCurlTransportTickSubscriber::getSubscribedEvents(),
         );
     }
 
@@ -34,8 +34,8 @@ final class CurlTransportTickSubscriberTest extends TestCase
         }
 
         $transports = [
-            new CurlTransport('http://localhost:4318', new JsonSerializer()),
-            new CurlTransport('http://localhost:4318', new JsonSerializer()),
+            new AsyncCurlTransport('http://localhost:4318', new JsonSerializer()),
+            new AsyncCurlTransport('http://localhost:4318', new JsonSerializer()),
         ];
 
         $bus = new class implements MessageBusInterface {
@@ -45,7 +45,7 @@ final class CurlTransportTickSubscriberTest extends TestCase
             }
         };
 
-        (new CurlTransportTickSubscriber($transports))->onWorkerRunning(
+        (new AsyncCurlTransportTickSubscriber($transports))->onWorkerRunning(
             new WorkerRunningEvent(new Worker([], $bus), false),
         );
 

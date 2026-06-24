@@ -155,34 +155,25 @@ The Protobuf serializer requires the `google/protobuf` package.
 The production recommendation is to run an OpenTelemetry Collector close to the application (loopback, UDS, or
 sidecar), so the roundtrip is sub-millisecond and a stuck collector never freezes your PHP process at shutdown.
 
-The curl transport is asynchronous (`curl_multi`): it only makes network progress while the host process pumps it
-(`send()`, `shutdown()`, or `tick()`). Its per-request `timeout_ms` is wall-clock from dispatch, so the budget must
-span the gap between dispatching a request and the next pump. In a long-running worker that gap is a whole loop
-iteration, which is why curl `timeout_ms` defaults to **5000 ms**. gRPC calls progress in the background via the grpc
-core with no host pumping, so the gRPC per-call deadline stays tight at **250 ms**.
+The curl transport is **synchronous**: each `send()` blocks up to `timeout_ms`, then returns or throws. Keeping export
+off the hot path is the batching processor's job — it flushes only every `batch_size` signals (or on age / flush /
+shutdown). gRPC progresses in the background, so its per-call deadline stays at **250 ms**.
 
-| Transport | Setting                 | Default | Unit         | Bounds                                                      |
-|-----------|-------------------------|--------:|--------------|-------------------------------------------------------------|
-| Curl      | `withTimeout()`         |    5000 | milliseconds | Per-request: connect + send + receive                       |
-| Curl      | `withConnectTimeout()`  |     250 | milliseconds | TCP/TLS connection establishment only                       |
-| Curl      | `withShutdownTimeout()` |    5000 | milliseconds | Wall-clock budget for draining pending requests at shutdown |
-| gRPC      | `timeoutMs`             |     250 | milliseconds | Per-call deadline (no separate connect bound)               |
-| gRPC      | `shutdownTimeoutMs`     |    5000 | milliseconds | Wall-clock budget for draining pending calls at shutdown    |
+| Transport   | Setting                 | Default | Unit         | Bounds                                                           |
+|-------------|-------------------------|--------:|--------------|------------------------------------------------------------------|
+| Curl (sync) | `withTimeout()`         |   10000 | milliseconds | Per-request: connect + send + receive (max time `send()` blocks) |
+| Curl (sync) | `withConnectTimeout()`  |     250 | milliseconds | TCP/TLS connection establishment only                            |
+| Curl (sync) | `withShutdownTimeout()` |    5000 | milliseconds | Reserved for the failover drain budget at shutdown               |
+| Async curl  | `withTimeout()`         |    5000 | milliseconds | Per-request wall-clock; must span the gap between pumps          |
+| Async curl  | `withConnectTimeout()`  |    1500 | milliseconds | TCP/TLS connect; larger default tolerates infrequent pumping     |
+| Async curl  | `withPumpTimeout()`     |     100 | milliseconds | Per-`tick()` bounded drive budget (`0` = single exec round)      |
+| Async curl  | `withShutdownTimeout()` |    5000 | milliseconds | Wall-clock budget for draining pending requests at shutdown      |
+| gRPC        | `timeoutMs`             |     250 | milliseconds | Per-call deadline (no separate connect bound)                    |
+| gRPC        | `shutdownTimeoutMs`     |    5000 | milliseconds | Wall-clock budget for draining pending calls at shutdown         |
 
-`timeout_ms` is the per-request deadline. `shutdown_timeout_ms` is a separate wall-clock budget enforced only when
-draining pending requests during `shutdown()` — it bounds graceful exit independently of `timeout_ms`. Pending
-requests still in flight after the shutdown deadline are abandoned and reported as failed: forwarded to the failover
-transport if one is configured, otherwise surfaced to the curl transport's `ErrorHandler` (default `ErrorLogHandler`).
-
-Failed exports are surfaced to that `ErrorHandler` **as they are reaped** — on `send()`, `tick()`, or `shutdown()` —
-and never retained, so a long-running host does not accumulate failures. Pass a custom handler as the fifth
-`CurlTransport` constructor argument (or the `errorHandler:` argument of `otlp_curl_transport()`); the Symfony bundle
-injects the exporter's configured `error_handler` automatically.
-
-For a remote collector across regions or a managed SaaS endpoint, 5000–10000 ms is reasonable for both transports.
-Long-running hosts that idle between dispatches (e.g. a Symfony Messenger worker) should call `tick()` periodically so
-in-flight curl requests complete in the background instead of stalling until shutdown — see
-[Long-running workers](#long-running-workers-tick).
+Against a local collector each send is sub-millisecond, so the defaults are only ceilings. On failure `send()` throws
+synchronously — `TransportException`, or `FailoverTransportException` once the batch is forwarded to the failover. Async
+curl is tuned differently — see [Asynchronous transport](#async-curl-transport).
 
 ```php
 <?php
@@ -212,27 +203,42 @@ $remoteGrpc = otlp_grpc_transport(
 > earlier versions could not express tight, realistic deadlines. A negative value to `withTimeout()` /
 > `withConnectTimeout()` raises `\InvalidArgumentException`.
 
-## Long-running workers (`tick()`) {#long-running-workers-tick}
+## Long-running workers {#long-running-workers}
 
-`curl_multi` has no background thread — an in-flight request only advances while the host pumps the multi-handle.
-Short-lived processes (an HTTP request, a one-shot CLI command) are fine: they end right after dispatch and
-`shutdown()` drains synchronously. A long-running worker is not: it dispatches telemetry after handling a message and
-then blocks on its queue poll waiting for the next one. During that idle gap nothing pumps the request, yet
-`CURLOPT_TIMEOUT_MS` keeps counting wall-clock — so the request eventually dies with `curl error 28 (Timeout was
-reached)` and the telemetry is lost.
+The synchronous curl transport completes each request before `send()` returns, so nothing ages out between messages.
+Keeping export off the worker's hot path is the **batching processor** — it flushes per `batch_size` signals or age
+limit. In a Symfony Messenger worker the bundle flushes after each message and on stop (see the
+[Symfony telemetry bundle](/documentation/components/bridges/symfony-telemetry-bundle.md)); keep a local Collector so
+each flush stays sub-millisecond. For non-blocking dispatch, see [Asynchronous transport](#async-curl-transport).
 
-`CurlTransport::tick()` fixes this. It is non-blocking: it advances all currently-possible I/O and reaps finished
-handles, but never waits. Call it periodically from the host's idle loop so dispatched requests complete in the
-background:
+## Asynchronous transport (`AsyncCurlTransport`) {#async-curl-transport}
+
+`AsyncCurlTransport` uses `curl_multi` for non-blocking I/O: `send()` queues the request and returns without waiting.
+Opt in with `otlp_async_curl_transport()` or the bundle's `transport.type: 'async_curl'`.
+
+A queued request only advances while the host pumps the handle — on the next `send()`, `shutdown()`, or `tick()`.
+`tick()` is bounded and select-driven: it drives pending requests for up to `pump_timeout_ms` (default **100 ms**), so a
+local backend completes within a single tick. `0` falls back to one non-blocking exec round (rarely enough — prefer the
+default).
 
 ```php
-// once per worker loop iteration
-$curlTransport->tick();
+use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_async_curl_transport;
+
+$transport = otlp_async_curl_transport('http://localhost:4318');
+
+// Pump once per worker loop so in-flight requests complete:
+$transport->tick();
 ```
 
-`tick()` is a no-op when nothing is pending or after `shutdown()`, so calling it on every iteration is cheap. The
-Symfony bundle wires this automatically on Messenger's `WorkerRunningEvent` — see the
-[Symfony telemetry bundle](/documentation/components/bridges/symfony-telemetry-bundle.md).
+In a Symfony Messenger worker with `messenger` instrumentation enabled, the bundle pumps every `async_curl` transport on
+`WorkerRunningEvent` (~1s when idle) — the cadence the **1500 ms** `connect_timeout_ms` default is sized for. Elsewhere
+you must call `tick()` yourself.
+
+Failures surface on a later `send()`/`tick()`/`shutdown()` (no caller on the stack), so they go to the failover
+transport or, without one, the injected `ErrorHandler` (5th constructor arg, default `ErrorLogHandler`) — which is why
+the async transport takes an error handler and the synchronous one just throws.
+
+Prefer the synchronous `curl` transport unless you need non-blocking dispatch and can guarantee a pump cadence.
 
 ## Failover Transport
 

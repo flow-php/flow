@@ -8,11 +8,13 @@ use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\FrameworkLo
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\OTLPAvailabilityPass;
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
 use Flow\Bridge\Symfony\TelemetryBundle\FlowTelemetryBundle;
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\CurlTransportTickSubscriber;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\AsyncCurlTransportTickSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerFlushSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerTracePropagation;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
+use Flow\Bridge\Telemetry\OTLP\Transport\AsyncCurlTransport;
+use Flow\Bridge\Telemetry\OTLP\Transport\AsyncCurlTransportOptions;
 use Flow\Bridge\Telemetry\OTLP\Transport\CurlTransport;
 use Flow\Bridge\Telemetry\OTLP\Transport\GrpcTransport;
 use Flow\Bridge\Telemetry\OTLP\Transport\StreamTransport;
@@ -297,6 +299,137 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $container = $this->getContainer();
         static::assertInstanceOf(CurlTransport::class, $container->get('flow.telemetry.exporter.otlp.transport'));
         static::assertInstanceOf(OTLPExporter::class, $container->get('flow.telemetry.exporter.otlp'));
+    }
+
+    public function test_async_curl_transport_is_built_inline_inside_otlp_exporter(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => [
+                        'otlp' => [
+                            'otlp' => [
+                                'transport' => [
+                                    'type' => 'async_curl',
+                                    'endpoint' => 'http://localhost:4318',
+                                ],
+                            ],
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+        static::assertInstanceOf(AsyncCurlTransport::class, $container->get('flow.telemetry.exporter.otlp.transport'));
+    }
+
+    public function test_async_curl_transport_options_and_error_handler_are_wired(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.environment', 'test');
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
+        $extension = (new FlowTelemetryBundle())->getContainerExtension();
+        assert($extension !== null);
+        $extension->load([[
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => ['type' => 'async_curl', 'endpoint' => 'http://localhost:4318'],
+                    ],
+                ],
+            ],
+        ]], $container);
+
+        $definition = $container->getDefinition('flow.telemetry.exporter.otlp.transport');
+        static::assertSame(AsyncCurlTransport::class, $definition->getClass());
+
+        // @mago-expect analysis:mixed-assignment
+        $errorHandler = $definition->getArgument('$errorHandler');
+        static::assertInstanceOf(Reference::class, $errorHandler);
+        static::assertSame('flow.telemetry.error_handler.default', (string) $errorHandler);
+
+        $optionsDefinition = $container->getDefinition('flow.telemetry.exporter.otlp.transport.options');
+        static::assertSame(AsyncCurlTransportOptions::class, $optionsDefinition->getClass());
+    }
+
+    public function test_async_curl_transport_is_tagged_for_worker_pump(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.environment', 'test');
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
+        $extension = (new FlowTelemetryBundle())->getContainerExtension();
+        assert($extension !== null);
+        $extension->load([[
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => ['type' => 'async_curl', 'endpoint' => 'http://localhost:4318'],
+                    ],
+                ],
+            ],
+        ]], $container);
+
+        static::assertTrue(
+            $container
+                ->getDefinition('flow.telemetry.exporter.otlp.transport')
+                ->hasTag('flow.telemetry.async_curl_transport'),
+        );
+    }
+
+    public function test_sync_curl_transport_is_not_tagged_for_worker_pump(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.environment', 'test');
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
+        $extension = (new FlowTelemetryBundle())->getContainerExtension();
+        assert($extension !== null);
+        $extension->load([[
+            'resource' => [],
+            'exporters' => [
+                'otlp' => [
+                    'otlp' => [
+                        'transport' => ['type' => 'curl', 'endpoint' => 'http://localhost:4318'],
+                    ],
+                ],
+            ],
+        ]], $container);
+
+        static::assertFalse(
+            $container
+                ->getDefinition('flow.telemetry.exporter.otlp.transport')
+                ->hasTag('flow.telemetry.async_curl_transport'),
+        );
+    }
+
+    public function test_async_curl_transport_tick_subscriber_is_registered_when_messenger_enabled(): void
+    {
+        if (!interface_exists(MessengerMiddlewareInterface::class)) {
+            static::markTestSkipped('symfony/messenger is not installed');
+        }
+
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.environment', 'test');
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
+        $extension = (new FlowTelemetryBundle())->getContainerExtension();
+        assert($extension !== null);
+        $extension->load([[
+            'resource' => [],
+            'instrumentation' => [
+                'messenger' => ['enabled' => true],
+            ],
+        ]], $container);
+
+        $definition = $container->getDefinition('flow.telemetry.messenger.async_curl_transport_tick_subscriber');
+        static::assertSame(AsyncCurlTransportTickSubscriber::class, $definition->getClass());
+        static::assertTrue($definition->hasTag('kernel.event_subscriber'));
     }
 
     public function test_custom_exporter_via_service(): void
@@ -704,84 +837,6 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         ]], $container);
 
         static::assertFalse($container->hasDefinition('flow.telemetry.messenger.flush_subscriber'));
-    }
-
-    public function test_curl_transport_tick_subscriber_is_registered_and_tagged_when_enabled(): void
-    {
-        if (!interface_exists(MessengerMiddlewareInterface::class)) {
-            static::markTestSkipped('symfony/messenger is not installed');
-        }
-
-        $container = new ContainerBuilder();
-        $container->setParameter('kernel.environment', 'test');
-        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
-        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
-        $extension = (new FlowTelemetryBundle())->getContainerExtension();
-        assert($extension !== null);
-        $extension->load([[
-            'resource' => [],
-            'instrumentation' => [
-                'messenger' => ['enabled' => true],
-            ],
-        ]], $container);
-
-        $definition = $container->getDefinition('flow.telemetry.messenger.curl_transport_tick_subscriber');
-        static::assertSame(CurlTransportTickSubscriber::class, $definition->getClass());
-        static::assertTrue($definition->hasTag('kernel.event_subscriber'));
-    }
-
-    public function test_curl_transport_is_tagged_for_worker_pump(): void
-    {
-        $container = new ContainerBuilder();
-        $container->setParameter('kernel.environment', 'test');
-        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
-        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
-        $extension = (new FlowTelemetryBundle())->getContainerExtension();
-        assert($extension !== null);
-        $extension->load([[
-            'resource' => [],
-            'exporters' => [
-                'otlp' => [
-                    'otlp' => [
-                        'transport' => ['type' => 'curl', 'endpoint' => 'http://localhost:4318'],
-                    ],
-                ],
-            ],
-        ]], $container);
-
-        static::assertTrue(
-            $container
-                ->getDefinition('flow.telemetry.exporter.otlp.transport')
-                ->hasTag('flow.telemetry.curl_transport'),
-        );
-    }
-
-    public function test_curl_transport_receives_the_exporter_error_handler(): void
-    {
-        $container = new ContainerBuilder();
-        $container->setParameter('kernel.environment', 'test');
-        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
-        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
-        $extension = (new FlowTelemetryBundle())->getContainerExtension();
-        assert($extension !== null);
-        $extension->load([[
-            'resource' => [],
-            'exporters' => [
-                'otlp' => [
-                    'otlp' => [
-                        'transport' => ['type' => 'curl', 'endpoint' => 'http://localhost:4318'],
-                    ],
-                ],
-            ],
-        ]], $container);
-
-        // @mago-expect analysis:mixed-assignment
-        $errorHandler = $container
-            ->getDefinition('flow.telemetry.exporter.otlp.transport')
-            ->getArgument('$errorHandler');
-
-        static::assertInstanceOf(Reference::class, $errorHandler);
-        static::assertSame('flow.telemetry.error_handler.default', (string) $errorHandler);
     }
 
     public function test_otlp_transport_failover_inline_curl_with_stream_failover(): void

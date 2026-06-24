@@ -8,6 +8,7 @@ use Flow\ETL\Dataset\Statistics\HighResolutionTime;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 
+use function is_numeric;
 use function max;
 use function preg_match_all;
 use function preg_quote;
@@ -15,12 +16,6 @@ use function usleep;
 
 /**
  * Helper class to query OTEL Collector's Prometheus metrics endpoint.
- *
- * Used to verify that telemetry data flows through the collector.
- * Queries `otelcol_exporter_sent_*` metrics which indicate data was
- * successfully exported (more reliable than receiver metrics in v0.115+).
- * Collector v0.153.0 drops the `_total` suffix on these counters.
- * The collector exposes internal metrics at port 8888.
  */
 final readonly class CollectorMetrics
 {
@@ -90,9 +85,11 @@ final readonly class CollectorMetrics
         $total = 0;
         $matches = [];
 
-        if (preg_match_all('/' . preg_quote($metricName, '/') . '\{[^}]*\}\s+(\d+)/', $body, $matches)) {
+        if (preg_match_all('/' . preg_quote($metricName, '/') . '\{[^}]*\}\s+([0-9.eE+-]+)/', $body, $matches)) {
             foreach ($matches[1] as $value) {
-                $total += (int) $value;
+                if (is_numeric($value)) {
+                    $total += (int) (float) $value;
+                }
             }
         }
 
