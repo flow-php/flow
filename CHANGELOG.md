@@ -1,6 +1,9 @@
-## [Unreleased] - 2026-06-23
+## [Unreleased] - 2026-06-24
 
 ### Added
+- [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/telemetry-otlp-bridge - AsyncCurlTransport (curl_multi) with bounded select-driven tick()** - [@norberttech](https://github.com/norberttech)
+- [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/telemetry-otlp-bridge - otlp_async_curl_transport() and otlp_async_curl_options() DSL helpers** - [@norberttech](https://github.com/norberttech)
+- [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/symfony-telemetry-bundle - transport.type 'async_curl', auto-pumped on WorkerRunningEvent** - [@norberttech](https://github.com/norberttech)
 - [#2480](https://github.com/flow-php/flow/pull/2480) - **flow-php/symfony-filesystem-cache-bridge - accept an optional PSR-20 clock** - [@norberttech](https://github.com/norberttech)
 - [#2477](https://github.com/flow-php/flow/pull/2477) - **flow-php/psr3-telemetry-bridge - interpolate {placeholder} tokens in telemetry log messages** - [@norberttech](https://github.com/norberttech)
 - [#2477](https://github.com/flow-php/flow/pull/2477) - **flow-php/monolog-telemetry-bridge - interpolate {placeholder} tokens in telemetry log messages** - [@norberttech](https://github.com/norberttech)
@@ -36,6 +39,9 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2454](https://github.com/flow-php/flow/pull/2454) - **Positional schema definition mutations on Flow\ETL\Schema: prepend(), insertAt(), addBefore(), addAfter(), moveTo(), moveBefore(), moveAfter() and reorder()** - [@bendavies](https://github.com/bendavies)
 
 ### Changed
+- [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/telemetry-otlp-bridge - CurlTransport is now synchronous; send() blocks and throws on failure** - [@norberttech](https://github.com/norberttech)
+- [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/telemetry-otlp-bridge - curl request timeout default raised to 10000ms** - [@norberttech](https://github.com/norberttech)
+- [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/symfony-telemetry-bundle - async_curl connect_timeout default 1500ms, pump_timeout 100ms** - [@norberttech](https://github.com/norberttech)
 - [#2481](https://github.com/flow-php/flow/pull/2481) - **flow-php/symfony-telemetry-bundle - http client span now completes when the response is consumed, not at request() return** - [@norberttech](https://github.com/norberttech)
 - [#2477](https://github.com/flow-php/flow/pull/2477) - **flow-php/symfony-postgresql-bundle - migrations target a single configured connection** - [@norberttech](https://github.com/norberttech)
 - [#2475](https://github.com/flow-php/flow/pull/2475) - **flow-php/postgresql - expose migration execution time via MigrationStatus::executionTimeMs** - [@norberttech](https://github.com/norberttech)
@@ -53,6 +59,7 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2457](https://github.com/flow-php/flow/pull/2457) - **flow-php/filesystem - rename FilesystemTable::for() parameter $protocol to $mount** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/telemetry-otlp-bridge - CollectorMetrics test parser reads scientific-notation counters** - [@norberttech](https://github.com/norberttech)
 - [#2481](https://github.com/flow-php/flow/pull/2481) - **flow-php/symfony-telemetry-bundle - http client decorator no longer reads the response inside request(), restoring async and concurrency** - [@norberttech](https://github.com/norberttech)
 - [#2480](https://github.com/flow-php/flow/pull/2480) - **flow-php/etl - respect limit push-down across non-expanding processors** - [@norberttech](https://github.com/norberttech)
 - [#2480](https://github.com/flow-php/flow/pull/2480) - **flow-php/postgresql - migration status checks no longer create the tracking table** - [@norberttech](https://github.com/norberttech)
