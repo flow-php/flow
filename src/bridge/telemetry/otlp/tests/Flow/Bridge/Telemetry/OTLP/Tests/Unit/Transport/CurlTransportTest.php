@@ -15,7 +15,6 @@ use Flow\Telemetry\Context\SpanId;
 use Flow\Telemetry\Context\TraceId;
 use Flow\Telemetry\InstrumentationScope;
 use Flow\Telemetry\Signal\Signals;
-use Flow\Telemetry\Tests\Mother\ErrorHandlerSpy;
 use Flow\Telemetry\Tests\Mother\ResourceMother;
 use Flow\Telemetry\Tracer\Span;
 use Flow\Telemetry\Tracer\SpanContext;
@@ -23,12 +22,10 @@ use Flow\Telemetry\Tracer\SpanKind;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
-use function count;
 use function extension_loaded;
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_curl_options;
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_curl_transport;
 use function Flow\Bridge\Telemetry\OTLP\DSL\otlp_json_serializer;
-use function str_contains;
 
 final class CurlTransportTest extends TestCase
 {
@@ -103,7 +100,25 @@ final class CurlTransportTest extends TestCase
         $transport->shutdown();
     }
 
-    public function test_failover_receives_failed_batches_and_shutdown_throws_composite(): void
+    public function test_send_throws_transport_exception_on_connection_failure(): void
+    {
+        if (!extension_loaded('curl')) {
+            static::markTestSkipped('ext-curl is required');
+        }
+
+        $transport = otlp_curl_transport(
+            'http://127.0.0.1:1',
+            otlp_json_serializer(),
+            otlp_curl_options()->withConnectTimeout(1)->withTimeout(1),
+        );
+
+        $this->expectException(TransportException::class);
+        $this->expectExceptionMessage('curl error');
+
+        $transport->send(Signals::traces($this->createSpans()));
+    }
+
+    public function test_send_forwards_failed_batch_to_failover_and_throws(): void
     {
         if (!extension_loaded('curl')) {
             static::markTestSkipped('ext-curl is required');
@@ -119,31 +134,25 @@ final class CurlTransportTest extends TestCase
             $failover,
         );
 
-        $batchA = Signals::traces($this->createSpans());
-        $batchB = Signals::traces($this->createSpans());
-
-        $transport->send($batchA);
-        $transport->send($batchB);
+        $batch = Signals::traces($this->createSpans());
 
         try {
-            $transport->shutdown();
+            $transport->send($batch);
             static::fail('Expected FailoverTransportException');
         } catch (FailoverTransportException $e) {
-            static::assertCount(2, $e->failures);
-
-            foreach ($e->failures as $failure) {
-                static::assertInstanceOf(TransportException::class, $failure['primary']);
-                static::assertNull($failure['failover']);
-            }
+            static::assertCount(1, $e->failures);
+            static::assertInstanceOf(TransportException::class, $e->failures[0]['primary']);
+            static::assertNull($e->failures[0]['failover']);
         }
 
-        static::assertCount(2, $failover->sent);
-        static::assertContains($batchA, $failover->sent);
-        static::assertContains($batchB, $failover->sent);
+        static::assertCount(1, $failover->sent);
+        static::assertContains($batch, $failover->sent);
+
+        $transport->shutdown();
         static::assertSame(1, $failover->shutdownCalls);
     }
 
-    public function test_failover_records_double_failure_when_failover_send_also_throws(): void
+    public function test_send_records_double_failure_when_failover_send_also_throws(): void
     {
         if (!extension_loaded('curl')) {
             static::markTestSkipped('ext-curl is required');
@@ -161,10 +170,8 @@ final class CurlTransportTest extends TestCase
             $failover,
         );
 
-        $transport->send(Signals::traces($this->createSpans()));
-
         try {
-            $transport->shutdown();
+            $transport->send(Signals::traces($this->createSpans()));
             static::fail('Expected FailoverTransportException');
         } catch (FailoverTransportException $e) {
             static::assertCount(1, $e->failures);
@@ -192,31 +199,6 @@ final class CurlTransportTest extends TestCase
         $transport->send(Signals::traces($this->createSpans()));
     }
 
-    public function test_shutdown_surfaces_curl_connection_failures_to_error_handler(): void
-    {
-        if (!extension_loaded('curl')) {
-            static::markTestSkipped('ext-curl is required');
-        }
-
-        $errorHandler = new ErrorHandlerSpy();
-        $transport = otlp_curl_transport(
-            'http://127.0.0.1:1',
-            otlp_json_serializer(),
-            otlp_curl_options()->withConnectTimeout(1)->withTimeout(1),
-            errorHandler: $errorHandler,
-        );
-
-        $transport->send(Signals::traces($this->createSpans()));
-        $transport->send(Signals::traces($this->createSpans()));
-
-        $transport->shutdown();
-
-        $error = $errorHandler->last();
-        static::assertSame(2, $errorHandler->count());
-        static::assertInstanceOf(TransportException::class, $error);
-        static::assertStringContainsString('curl error', $error->getMessage());
-    }
-
     public function test_shutdown_cascades_to_failover_shutdown(): void
     {
         if (!extension_loaded('curl')) {
@@ -233,14 +215,13 @@ final class CurlTransportTest extends TestCase
             $failover,
         );
 
-        $transport->send(Signals::traces($this->createSpans()));
-
         try {
-            $transport->shutdown();
-            static::fail('Expected FailoverTransportException');
-        } catch (FailoverTransportException $e) {
-            static::assertCount(1, $e->failures);
+            $transport->send(Signals::traces($this->createSpans()));
+        } catch (FailoverTransportException) {
+            // primary fails synchronously and the batch is forwarded to the failover
         }
+
+        $transport->shutdown();
 
         static::assertSame(1, $failover->shutdownCalls);
     }
@@ -259,7 +240,7 @@ final class CurlTransportTest extends TestCase
         $this->addToAssertionCount(1);
     }
 
-    public function test_shutdown_surfaces_failover_shutdown_exception_when_no_deferred_failures(): void
+    public function test_shutdown_surfaces_failover_shutdown_exception(): void
     {
         if (!extension_loaded('curl')) {
             static::markTestSkipped('ext-curl is required');
@@ -279,98 +260,6 @@ final class CurlTransportTest extends TestCase
         $this->expectExceptionMessage('failover shutdown failed: boom');
 
         $transport->shutdown();
-    }
-
-    public function test_shutdown_with_zero_timeout_forwards_pending_to_failover(): void
-    {
-        if (!extension_loaded('curl')) {
-            static::markTestSkipped('ext-curl is required');
-        }
-
-        $failover = new RecordingTransport();
-        $batch = Signals::traces($this->createSpans());
-
-        $transport = new CurlTransport(
-            'http://127.0.0.1:1',
-            new JsonSerializer(),
-            (new CurlTransportOptions())
-                ->withConnectTimeout(60_000)
-                ->withTimeout(60_000)
-                ->withShutdownTimeout(0),
-            $failover,
-        );
-
-        $transport->send($batch);
-
-        try {
-            $transport->shutdown();
-            self::addToAssertionCount(1);
-        } catch (FailoverTransportException $e) {
-            static::assertGreaterThanOrEqual(1, count($e->failures));
-            // Either the still-pending path forwarded the batch, or the normal failover drain did.
-            static::assertContains($batch, $failover->sent);
-        }
-
-        static::assertSame(1, $failover->shutdownCalls);
-    }
-
-    public function test_shutdown_with_zero_timeout_surfaces_pending_failure_to_error_handler(): void
-    {
-        if (!extension_loaded('curl')) {
-            static::markTestSkipped('ext-curl is required');
-        }
-
-        $errorHandler = new ErrorHandlerSpy();
-        $transport = new CurlTransport(
-            'http://127.0.0.1:1',
-            new JsonSerializer(),
-            (new CurlTransportOptions())
-                ->withConnectTimeout(60_000)
-                ->withTimeout(60_000)
-                ->withShutdownTimeout(0),
-            errorHandler: $errorHandler,
-        );
-
-        $transport->send(Signals::traces($this->createSpans()));
-        $transport->shutdown();
-
-        $error = $errorHandler->last();
-        static::assertSame(1, $errorHandler->count());
-        static::assertInstanceOf(TransportException::class, $error);
-        // Either the shutdown-deadline-reached path or the normal connection-refused path.
-        static::assertTrue(
-            str_contains($error->getMessage(), 'shutdown_timeout=0ms expired')
-            || str_contains($error->getMessage(), 'curl error'),
-        );
-    }
-
-    public function test_tick_is_noop_when_no_pending_requests(): void
-    {
-        if (!extension_loaded('curl')) {
-            static::markTestSkipped('ext-curl is required');
-        }
-
-        $transport = new CurlTransport('http://localhost:4318', new JsonSerializer());
-
-        $transport->tick();
-
-        $this->addToAssertionCount(1);
-
-        $transport->shutdown();
-    }
-
-    public function test_tick_is_noop_after_shutdown(): void
-    {
-        if (!extension_loaded('curl')) {
-            static::markTestSkipped('ext-curl is required');
-        }
-
-        $transport = new CurlTransport('http://localhost:4318', new JsonSerializer());
-        $transport->shutdown();
-
-        $transport->tick();
-
-        $this->addToAssertionCount(1);
     }
 
     /**

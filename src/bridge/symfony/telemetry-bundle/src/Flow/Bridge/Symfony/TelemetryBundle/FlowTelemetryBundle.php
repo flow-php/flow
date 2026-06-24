@@ -27,6 +27,8 @@ use Flow\Bridge\Symfony\TelemetryBundle\Resource\Detector\SymfonyDeploymentDetec
 use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
 use Flow\Bridge\Telemetry\OTLP\Serializer\JsonSerializer;
 use Flow\Bridge\Telemetry\OTLP\Serializer\ProtobufSerializer;
+use Flow\Bridge\Telemetry\OTLP\Transport\AsyncCurlTransport;
+use Flow\Bridge\Telemetry\OTLP\Transport\AsyncCurlTransportOptions;
 use Flow\Bridge\Telemetry\OTLP\Transport\CurlTransport;
 use Flow\Bridge\Telemetry\OTLP\Transport\CurlTransportOptions;
 use Flow\Bridge\Telemetry\OTLP\Transport\GrpcTransport;
@@ -827,9 +829,29 @@ final class FlowTelemetryBundle extends AbstractBundle
                     return $v;
                 }
 
+                // Per-type timeout defaults that differ from the shared schema node defaults.
+                // The synchronous curl transport blocks for the whole request, so it gets a generous
+                // request budget; the async transport idles between pumps, so it gets a generous connect
+                // budget. Injecting here (before node defaults merge) keeps grpc/stream on the shared defaults.
+                $resolvedType = $v['type'] ?? 'curl';
+
+                if ($resolvedType === 'curl' && !array_key_exists('timeout_ms', $v)) {
+                    $v['timeout_ms'] = CurlTransportOptions::DEFAULT_TIMEOUT_MS;
+                }
+
+                if ($resolvedType === 'async_curl' && !array_key_exists('connect_timeout_ms', $v)) {
+                    $v['connect_timeout_ms'] = AsyncCurlTransportOptions::DEFAULT_CONNECT_TIMEOUT_MS;
+                }
+
                 if (($v['type'] ?? null) === 'grpc' && array_key_exists('connect_timeout_ms', $v)) {
                     throw new InvalidConfigurationException(
                         'The "connect_timeout_ms" parameter is not supported when transport.type is "grpc"; gRPC uses the per-call deadline (timeout_ms) for connection establishment too.',
+                    );
+                }
+
+                if (($v['type'] ?? 'curl') !== 'async_curl' && array_key_exists('pump_timeout_ms', $v)) {
+                    throw new InvalidConfigurationException(
+                        'The "pump_timeout_ms" parameter is only supported when transport.type is "async_curl"; it bounds the per-tick() cooperative pump of the curl_multi transport.',
                     );
                 }
 
@@ -883,9 +905,9 @@ final class FlowTelemetryBundle extends AbstractBundle
                 ) {
                     $primaryType = $v['type'] ?? 'curl';
 
-                    if (!in_array($primaryType, ['curl', 'grpc'], true)) {
+                    if (!in_array($primaryType, ['curl', 'async_curl', 'grpc'], true)) {
                         throw new InvalidConfigurationException(sprintf(
-                            'The "failover" block is only supported for transport.type "curl" or "grpc"; got "%s".',
+                            'The "failover" block is only supported for transport.type "curl", "async_curl" or "grpc"; got "%s".',
                             $primaryType,
                         ));
                     }
@@ -913,8 +935,8 @@ final class FlowTelemetryBundle extends AbstractBundle
 
         $children
             ->enumNode('type')
-            ->info("Transport type: 'curl', 'grpc', 'stream', 'service'")
-            ->values(['curl', 'grpc', 'stream', 'service'])
+            ->info("Transport type: 'curl' (synchronous), 'async_curl' (curl_multi, requires pumping), 'grpc', 'stream', 'service'")
+            ->values(['curl', 'async_curl', 'grpc', 'stream', 'service'])
             ->defaultValue('curl')
             ->end()
             ->scalarNode('endpoint')
@@ -936,7 +958,7 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->defaultTrue()
             ->end()
             ->integerNode('timeout_ms')
-            ->info('Per-request deadline in milliseconds (curl: total request; grpc: call deadline). Default 5000ms.')
+            ->info('Per-request deadline in milliseconds (curl: total request, default 10000ms; async_curl/grpc: default 5000ms).')
             ->defaultValue(5000)
             ->min(1)
             ->end()
@@ -948,9 +970,14 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->end()
             ->end()
             ->integerNode('connect_timeout_ms')
-            ->info('Connection-establishment deadline in milliseconds (curl only). Default 250ms.')
+            ->info('Connection-establishment deadline in milliseconds (curl/async_curl only; curl default 250ms, async_curl default 1500ms).')
             ->defaultValue(250)
             ->min(1)
+            ->end()
+            ->integerNode('pump_timeout_ms')
+            ->info('Per-tick() bounded pump budget in milliseconds (async_curl only). 0 = single non-blocking exec round. Default 100ms.')
+            ->defaultValue(100)
+            ->min(0)
             ->end()
             ->integerNode('shutdown_timeout_ms')
             ->info(
@@ -1138,11 +1165,92 @@ final class FlowTelemetryBundle extends AbstractBundle
                     $definition->setArgument(3, $failoverReference);
                 }
 
+                $builder->setDefinition($transportServiceId, $definition);
+
+                break;
+
+            case 'async_curl':
+                $optionsServiceId = $transportServiceId . '.options';
+                $optionsDefinition = new Definition(AsyncCurlTransportOptions::class);
+                $optionsDefinition->addMethodCall('withTimeout', [
+                    $transportConfig['timeout_ms'] ?? AsyncCurlTransportOptions::DEFAULT_TIMEOUT_MS,
+                ]);
+                $optionsDefinition->addMethodCall('withConnectTimeout', [
+                    $transportConfig['connect_timeout_ms'] ?? AsyncCurlTransportOptions::DEFAULT_CONNECT_TIMEOUT_MS,
+                ]);
+                $optionsDefinition->addMethodCall('withPumpTimeout', [
+                    $transportConfig['pump_timeout_ms'] ?? AsyncCurlTransportOptions::DEFAULT_PUMP_TIMEOUT_MS,
+                ]);
+                $optionsDefinition->addMethodCall('withShutdownTimeout', [
+                    $transportConfig['shutdown_timeout_ms'] ?? AsyncCurlTransportOptions::DEFAULT_SHUTDOWN_TIMEOUT_MS,
+                ]);
+
+                // @mago-expect analysis:mixed-assignment
+                $headers = $transportConfig['headers'] ?? [];
+
+                // @mago-expect analysis:mixed-assignment
+                foreach (is_array($headers) ? $headers : [] as $headerName => $headerValue) {
+                    $optionsDefinition->addMethodCall('withHeader', [(string) $headerName, (string) $headerValue]);
+                }
+
+                if ($transportConfig['compression'] ?? false) {
+                    $optionsDefinition->addMethodCall('withCompression', [true]);
+                }
+
+                $optionsDefinition->addMethodCall('withFollowRedirects', [
+                    $transportConfig['follow_redirects'] ?? true,
+                    $transportConfig['max_redirects'] ?? 3,
+                ]);
+
+                if (($transportConfig['proxy'] ?? null) !== null) {
+                    $optionsDefinition->addMethodCall('withProxy', [$transportConfig['proxy']]);
+                }
+
+                $optionsDefinition->addMethodCall('withSslVerification', [
+                    $transportConfig['ssl_verify_peer'] ?? true,
+                    $transportConfig['ssl_verify_host'] ?? true,
+                ]);
+
+                if (($transportConfig['ssl_cert_path'] ?? null) !== null) {
+                    $optionsDefinition->addMethodCall('withSslCertificate', [
+                        $transportConfig['ssl_cert_path'],
+                        $transportConfig['ssl_key_path'] ?? null,
+                    ]);
+                }
+
+                if (($transportConfig['ca_info_path'] ?? null) !== null) {
+                    $optionsDefinition->addMethodCall('withCaInfo', [$transportConfig['ca_info_path']]);
+                }
+
+                $builder->setDefinition($optionsServiceId, $optionsDefinition);
+
+                $serializerClass = match ($transportConfig['encoding'] ?? 'json') {
+                    'protobuf' => ProtobufSerializer::class,
+                    default => JsonSerializer::class,
+                };
+
+                $definition = new Definition(AsyncCurlTransport::class);
+                $definition->setArgument(0, $endpoint);
+                $definition->setArgument(1, new Definition($serializerClass));
+                $definition->setArgument(2, new Reference($optionsServiceId));
+
+                $failoverReference = $this->buildFailoverTransport(
+                    $exporterName,
+                    $transportConfig,
+                    $builder,
+                    $allowFailover,
+                    $errorHandlerRef,
+                );
+
+                if ($failoverReference !== null) {
+                    $definition->setArgument(3, $failoverReference);
+                }
+
                 if ($errorHandlerRef !== null) {
                     $definition->setArgument('$errorHandler', $errorHandlerRef);
                 }
 
-                $definition->addTag('flow.telemetry.curl_transport');
+                $definition->addTag('flow.telemetry.async_curl_transport');
 
                 $builder->setDefinition($transportServiceId, $definition);
 

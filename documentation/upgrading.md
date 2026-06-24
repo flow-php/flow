@@ -78,34 +78,23 @@ subsequent spans in the same trace.
 
 `continue` mode still joins the producer's trace.
 
-### 5) `flow-php/telemetry-otlp-bridge`, `flow-php/symfony-telemetry-bundle` - curl per-request `timeout_ms` default raised to 5000ms
+### 5) `flow-php/telemetry-otlp-bridge`, `flow-php/symfony-telemetry-bundle` - curl is synchronous; async moved to `async_curl`
 
-| Default                                             | Before | After  |
-|-----------------------------------------------------|--------|--------|
-| `CurlTransportOptions::DEFAULT_TIMEOUT_MS`          | `250`  | `5000` |
-| bundle curl transport `timeout_ms` (config default) | `250`  | `5000` |
+| Before                                                         | After                                                                                           |
+|----------------------------------------------------------------|-------------------------------------------------------------------------------------------------|
+| `CurlTransport` async (`curl_multi`, fire-and-forget `send()`) | `CurlTransport` synchronous; `send()` blocks and throws on failure                              |
+| async via `CurlTransport`                                      | async via `AsyncCurlTransport` / `otlp_async_curl_transport()` / `transport.type: 'async_curl'` |
+| `CurlTransportOptions::DEFAULT_TIMEOUT_MS` `250`               | `10000`                                                                                         |
+| bundle `curl` `timeout_ms` `250`                               | `10000`                                                                                         |
+| —                                                              | `async_curl` `connect_timeout_ms` `1500`, `pump_timeout_ms` `100`                               |
 
-gRPC `timeout_ms` default is unchanged (`250`). Set `timeout_ms` explicitly to restore the previous value.
+### 6) `flow-php/symfony-postgresql-bundle` - migrations run against a single configured connection
 
-### 6) `flow-php/telemetry-otlp-bridge` - curl export failures surface to an `ErrorHandler` instead of a shutdown exception
-
-| Before                                                             | After                                                                                                               |
-|--------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
-| `new CurlTransport($endpoint, $serializer, $options, $failover)`   | `new CurlTransport($endpoint, $serializer, $options, $failover, ErrorHandler $errorHandler = new ErrorLogHandler())` |
-| `otlp_curl_transport($endpoint, $serializer, $options, $failover)` | `otlp_curl_transport(..., errorHandler: $handler)`                                                                   |
-| `shutdown()` threw an aggregate `TransportException` for failed exports (no failover) | failures surface to the `ErrorHandler` as reaped; `shutdown()` no longer throws for them          |
-
-Handle failures via the `ErrorHandler` (default `ErrorLogHandler`) instead of try/catching `shutdown()`. The Symfony
-bundle injects the exporter's configured `error_handler` into the transport automatically. Failover behavior
-(`FailoverTransportException`) is unchanged.
-
-### 7) `flow-php/symfony-postgresql-bundle` - migrations run against a single configured connection
-
-| Before                                                  | After                                                                            |
-|---------------------------------------------------------|----------------------------------------------------------------------------------|
-| `flow:migrations:* --connection=<name>` (`-c`)          | removed — every migration command uses the configured migrations connection      |
-| migrator stack registered for every connection          | registered only for the migrations connection                                    |
-| —                                                       | `flow_postgresql.migrations.connection: <name>` (defaults to the first connection)|
+| Before                                         | After                                                                              |
+|------------------------------------------------|------------------------------------------------------------------------------------|
+| `flow:migrations:* --connection=<name>` (`-c`) | removed — every migration command uses the configured migrations connection        |
+| migrator stack registered for every connection | registered only for the migrations connection                                      |
+| —                                              | `flow_postgresql.migrations.connection: <name>` (defaults to the first connection) |
 
 To run migrations against a non-default connection, set `migrations.connection` instead of passing `-c`:
 

@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger;
 
-use Flow\Bridge\Telemetry\OTLP\Transport\CurlTransport;
+use Flow\Bridge\Telemetry\OTLP\Transport\AsyncCurlTransport;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Messenger\Event\WorkerRunningEvent;
 
-final readonly class CurlTransportTickSubscriber implements EventSubscriberInterface
+final readonly class AsyncCurlTransportTickSubscriber implements EventSubscriberInterface
 {
     /**
-     * @param iterable<CurlTransport> $transports
+     * @param iterable<AsyncCurlTransport> $transports
      */
     public function __construct(
         private iterable $transports,

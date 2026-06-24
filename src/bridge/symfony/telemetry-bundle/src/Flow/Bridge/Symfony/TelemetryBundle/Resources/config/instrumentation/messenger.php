@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\CurlTransportTickSubscriber;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\AsyncCurlTransportTickSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerFlushSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\TracingMiddleware;
 use Flow\Telemetry\Telemetry;
@@ -24,7 +24,7 @@ return static function (ContainerConfigurator $container): void {
         ->tag('kernel.event_subscriber');
 
     $services
-        ->set('flow.telemetry.messenger.curl_transport_tick_subscriber', CurlTransportTickSubscriber::class)
-        ->args([tagged_iterator('flow.telemetry.curl_transport')])
+        ->set('flow.telemetry.messenger.async_curl_transport_tick_subscriber', AsyncCurlTransportTickSubscriber::class)
+        ->args([tagged_iterator('flow.telemetry.async_curl_transport')])
         ->tag('kernel.event_subscriber');
 };
