@@ -47,6 +47,12 @@ Build the extension (first build downloads libpg_query automatically):
 nix-shell --arg with-pg-query-ext false --arg with-c true --run "cd src/extension/pg-query-ext && make build"
 ```
 
+A system `libpg_query` is only used when its `PG_MAJORVERSION` matches the pinned `LIBPG_QUERY_VERSION`
+in `config.m4`. A mismatched `--with-pg-query=DIR` is a hard configure error; a mismatched
+auto-discovered library (e.g. a Homebrew keg for a different PostgreSQL major) is skipped in favor of
+downloading the pinned version. This prevents silently baking the wrong PostgreSQL grammar into
+`pg_query.so` ([#2483](https://github.com/flow-php/flow/issues/2483)).
+
 Run PHPT tests:
 
 ```bash
