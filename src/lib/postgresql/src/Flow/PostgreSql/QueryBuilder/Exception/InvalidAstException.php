@@ -21,8 +21,17 @@ final class InvalidAstException extends QueryBuilderException
         return new self(sprintf('Missing required field "%s" in %s node', $field, $nodeType));
     }
 
-    public static function unexpectedNodeType(string $expected, string $actual): self
+    public static function unexpectedNodeType(string $expected, string $actual, ?int $version = null): self
     {
+        if ($version !== null) {
+            return new self(sprintf(
+                'Expected %s node, got "%s" (parse result reports PostgreSQL %d); the pg_query extension was likely built against a different PostgreSQL major than this package expects',
+                $expected,
+                $actual,
+                $version,
+            ));
+        }
+
         return new self(sprintf('Expected %s node, got %s', $expected, $actual));
     }
 }

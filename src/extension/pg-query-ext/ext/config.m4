@@ -12,29 +12,47 @@ if test "$PHP_PG_QUERY" != "no"; then
 
   PG_QUERY_DIR=""
 
+  dnl Expected PostgreSQL major derived from the pinned version ("18-latest" -> "18", "18.0.0" -> "18")
+  PG_EXPECTED_MAJOR=`echo "$LIBPG_QUERY_VERSION" | sed -E 's/^([[0-9]]+).*/\1/'`
+
   dnl Search for existing libpg_query installation
   if test "$PHP_PG_QUERY" != "yes" && test -n "$PHP_PG_QUERY"; then
     SEARCH_PATH="$PHP_PG_QUERY"
+    PG_QUERY_EXPLICIT="yes"
   else
     SEARCH_PATH="/usr/local /usr /opt/local /opt/homebrew"
+    PG_QUERY_EXPLICIT="no"
   fi
 
   AC_MSG_CHECKING([for libpg_query])
 
   for i in $SEARCH_PATH ; do
-    dnl Check flat directory structure (headers and lib in same dir)
+    dnl Locate headers + static lib in either flat or include/lib layout
+    _hdr=""; _inc=""; _lib=""
     if test -r "$i/pg_query.h" && test -r "$i/postgres_deparse.h" && test -r "$i/libpg_query.a"; then
-      PG_QUERY_DIR=$i
-      AC_MSG_RESULT([found in $i])
-      break
+      _hdr="$i/pg_query.h"; _inc="$i"; _lib="$i"
+    elif test -r "$i/include/pg_query.h" && test -r "$i/include/postgres_deparse.h" && test -r "$i/lib/libpg_query.a"; then
+      _hdr="$i/include/pg_query.h"; _inc="$i/include"; _lib="$i/lib"
     fi
-    dnl Check standard include/lib directory structure
-    if test -r "$i/include/pg_query.h" && test -r "$i/include/postgres_deparse.h" && test -r "$i/lib/libpg_query.a"; then
-      PG_QUERY_DIR=$i
-      PG_QUERY_INCLUDE_DIR="$i/include"
-      PG_QUERY_LIB_DIR="$i/lib"
-      AC_MSG_RESULT([found in $i])
+
+    if test -z "$_hdr"; then
+      continue
+    fi
+
+    dnl PG major is a macro in the header we already require: #define PG_MAJORVERSION "18"
+    _found_major=`sed -nE 's/^#define[[:space:]]+PG_MAJORVERSION[[:space:]]+"([0-9]+)".*/\1/p' "$_hdr"`
+
+    if test "x$_found_major" = "x$PG_EXPECTED_MAJOR"; then
+      PG_QUERY_DIR="$i"
+      PG_QUERY_INCLUDE_DIR="$_inc"
+      PG_QUERY_LIB_DIR="$_lib"
+      AC_MSG_RESULT([found in $i (PostgreSQL $_found_major)])
       break
+    elif test "$PG_QUERY_EXPLICIT" = "yes"; then
+      AC_MSG_RESULT([version mismatch])
+      AC_MSG_ERROR([libpg_query in $i is for PostgreSQL ${_found_major:-unknown}, but this extension targets PostgreSQL $PG_EXPECTED_MAJOR (libpg_query $LIBPG_QUERY_VERSION). Point --with-pg-query at a matching install, or omit it to download the pinned version.])
+    else
+      AC_MSG_WARN([ignoring libpg_query in $i: PostgreSQL ${_found_major:-unknown}, need $PG_EXPECTED_MAJOR])
     fi
   done
 
