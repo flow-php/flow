@@ -26,8 +26,8 @@
             <span class="sf-toolbar-status">{{ collector.spanCount }}</span>
         </div>
         <div class="sf-toolbar-info-piece">
-            <b>Span time</b>
-            <span>{{ collector.totalDurationMs|number_format(2) }} ms</span>
+            <b>Trace time</b>
+            <span>{{ collector.timelineDurationMs|number_format(2) }} ms</span>
         </div>
         <div class="sf-toolbar-info-piece">
             <b>Metrics</b>
@@ -65,8 +65,8 @@
             <span class="label">Spans</span>
         </div>
         <div class="metric">
-            <span class="value">{{ collector.totalDurationMs|number_format(2) }} <span class="unit">ms</span></span>
-            <span class="label">Total span time</span>
+            <span class="value">{{ collector.timelineDurationMs|number_format(2) }} <span class="unit">ms</span></span>
+            <span class="label">Total trace time</span>
         </div>
         <div class="metric">
             <span class="value">{{ collector.metricCount }}</span>
@@ -118,7 +118,7 @@
                 {% endfor %}
             </tbody>
         </table>
-        <p class="text-small text-muted">Total window: {{ collector.timelineDurationMs|number_format(2) }} ms · bars are positioned relative to the first captured span.</p>
+        <p class="text-small text-muted">Bars are positioned relative to the first captured span.</p>
     {% endif %}
 
     <h3>Spans</h3>
