@@ -72,6 +72,7 @@ use Flow\Telemetry\Propagation\CompositePropagator;
 use Flow\Telemetry\Propagation\W3CBaggage;
 use Flow\Telemetry\Propagation\W3CTraceContext;
 use Flow\Telemetry\Provider\Clock\SystemClock;
+use Flow\Telemetry\Provider\Conditional\ConditionalExporter;
 use Flow\Telemetry\Provider\Console\ConsoleExporter;
 use Flow\Telemetry\Provider\Memory\MemoryExporter;
 use Flow\Telemetry\Provider\Memory\MemoryLogProcessor;
@@ -2117,6 +2118,10 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->thenInvalid('Exporter must declare exactly one of: otlp, service, console, memory, void.')
             ->end()
             ->children()
+            ->booleanNode('enabled')
+            ->info('When false, this exporter is replaced by a no-op (void) exporter: nothing is exported to its backend, while profiler capture and every other exporter keep working. Set it per environment to keep telemetry in the profiler without shipping it to a collector. Defaults to true.')
+            ->defaultTrue()
+            ->end()
             ->append($this->otlpExporterNode())
             ->append($this->serviceExporterNode())
             ->arrayNode('console')
@@ -3122,71 +3127,115 @@ final class FlowTelemetryBundle extends AbstractBundle
     {
         foreach ($config as $name => $exporterConfig) {
             $serviceId = 'flow.telemetry.exporter.' . $name;
+            // @mago-expect analysis:mixed-assignment
+            $enabled = $exporterConfig['enabled'] ?? true;
 
-            if (array_key_exists('void', $exporterConfig)) {
+            // A literal false is known at compile time, so skip building the real backend entirely.
+            if ($enabled === false) {
                 $builder->setDefinition($serviceId, new Definition(VoidExporter::class));
 
                 continue;
             }
 
-            if (array_key_exists('memory', $exporterConfig)) {
-                $builder->setDefinition($serviceId, new Definition(MemoryExporter::class));
+            $this->registerExporterDefinition($name, $serviceId, $exporterConfig, $builder);
 
-                continue;
+            // Anything that is not a literal true is an unresolved env placeholder (e.g. %env(bool:...)%);
+            // wrap the real exporter so the flag is honored at runtime instead of compile time.
+            if ($enabled !== true) {
+                $this->wrapExporterWithRuntimeToggle($serviceId, $enabled, $builder);
             }
-
-            if (array_key_exists('console', $exporterConfig)) {
-                $builder->setDefinition($serviceId, new Definition(ConsoleExporter::class));
-
-                continue;
-            }
-
-            if (array_key_exists('service', $exporterConfig)) {
-                // @mago-expect analysis:mixed-assignment
-                $customServiceId = $exporterConfig['service']['id'] ?? null;
-
-                if (!is_string($customServiceId) || $customServiceId === '') {
-                    throw new RuntimeException(sprintf('exporter "%s" of type "service" requires "service.id"', $name));
-                }
-                $builder->setAlias($serviceId, $customServiceId);
-
-                continue;
-            }
-
-            if (array_key_exists('otlp', $exporterConfig)) {
-                $builder->setParameter('flow.telemetry.otlp_configured', true);
-                // @mago-expect analysis:mixed-assignment
-                $transportConfig = $exporterConfig['otlp']['transport'] ?? null;
-
-                if (!is_array($transportConfig) || count($transportConfig) === 0) {
-                    throw new RuntimeException(sprintf(
-                        'exporter "%s" of type "otlp" requires an inline "transport" configuration',
-                        $name,
-                    ));
-                }
-                $errorHandlerRef = $this->resolveErrorHandlerReference(
-                    $exporterConfig['otlp']['error_handler'] ?? 'default',
-                    $builder,
-                );
-                $transportServiceId = $this->buildEmbeddedOtlpTransport(
-                    $name,
-                    $transportConfig,
-                    $builder,
-                    errorHandlerRef: $errorHandlerRef,
-                );
-                $definition = new Definition(OTLPExporter::class);
-                $definition->setArgument(0, new Reference($transportServiceId));
-                $definition->setArgument(1, $errorHandlerRef);
-                $builder->setDefinition($serviceId, $definition);
-
-                continue;
-            }
-
-            throw new RuntimeException(sprintf(
-                'exporter "%s" must declare exactly one of: otlp, service, console, memory, void',
-                $name,
-            ));
         }
+    }
+
+    /**
+     * @param array<string, mixed> $exporterConfig
+     */
+    private function registerExporterDefinition(
+        string $name,
+        string $serviceId,
+        array $exporterConfig,
+        ContainerBuilder $builder,
+    ): void {
+        if (array_key_exists('void', $exporterConfig)) {
+            $builder->setDefinition($serviceId, new Definition(VoidExporter::class));
+
+            return;
+        }
+
+        if (array_key_exists('memory', $exporterConfig)) {
+            $builder->setDefinition($serviceId, new Definition(MemoryExporter::class));
+
+            return;
+        }
+
+        if (array_key_exists('console', $exporterConfig)) {
+            $builder->setDefinition($serviceId, new Definition(ConsoleExporter::class));
+
+            return;
+        }
+
+        if (array_key_exists('service', $exporterConfig)) {
+            // @mago-expect analysis:mixed-assignment
+            $customServiceId = $exporterConfig['service']['id'] ?? null;
+
+            if (!is_string($customServiceId) || $customServiceId === '') {
+                throw new RuntimeException(sprintf('exporter "%s" of type "service" requires "service.id"', $name));
+            }
+            $builder->setAlias($serviceId, $customServiceId);
+
+            return;
+        }
+
+        if (array_key_exists('otlp', $exporterConfig)) {
+            $builder->setParameter('flow.telemetry.otlp_configured', true);
+            // @mago-expect analysis:mixed-assignment
+            $transportConfig = $exporterConfig['otlp']['transport'] ?? null;
+
+            if (!is_array($transportConfig) || count($transportConfig) === 0) {
+                throw new RuntimeException(sprintf(
+                    'exporter "%s" of type "otlp" requires an inline "transport" configuration',
+                    $name,
+                ));
+            }
+            $errorHandlerRef = $this->resolveErrorHandlerReference(
+                $exporterConfig['otlp']['error_handler'] ?? 'default',
+                $builder,
+            );
+            $transportServiceId = $this->buildEmbeddedOtlpTransport(
+                $name,
+                $transportConfig,
+                $builder,
+                errorHandlerRef: $errorHandlerRef,
+            );
+            $definition = new Definition(OTLPExporter::class);
+            $definition->setArgument(0, new Reference($transportServiceId));
+            $definition->setArgument(1, $errorHandlerRef);
+            $builder->setDefinition($serviceId, $definition);
+
+            return;
+        }
+
+        throw new RuntimeException(sprintf(
+            'exporter "%s" must declare exactly one of: otlp, service, console, memory, void',
+            $name,
+        ));
+    }
+
+    private function wrapExporterWithRuntimeToggle(string $serviceId, mixed $enabled, ContainerBuilder $builder): void
+    {
+        $innerId = $serviceId . '.toggle.inner';
+
+        if ($builder->hasAlias($serviceId)) {
+            $builder->setAlias($innerId, $builder->getAlias($serviceId));
+            $builder->removeAlias($serviceId);
+        } else {
+            $builder->setDefinition($innerId, $builder->getDefinition($serviceId));
+        }
+
+        $definition = new Definition(ConditionalExporter::class);
+        $definition->setArgument(0, $enabled);
+        $definition->setArgument(1, new Reference($innerId));
+        $builder->setDefinition($serviceId, $definition);
     }
 
     /**

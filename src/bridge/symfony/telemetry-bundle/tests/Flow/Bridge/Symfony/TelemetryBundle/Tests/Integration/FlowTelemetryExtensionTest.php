@@ -30,6 +30,7 @@ use Flow\Telemetry\Logger\Processor\BatchingLogProcessor;
 use Flow\Telemetry\Logger\Processor\PipelineLogProcessor;
 use Flow\Telemetry\Meter\Processor\BatchingMetricProcessor;
 use Flow\Telemetry\Provider\Clock\SystemClock;
+use Flow\Telemetry\Provider\Conditional\ConditionalExporter;
 use Flow\Telemetry\Provider\Console\ConsoleExporter;
 use Flow\Telemetry\Provider\Memory\MemorySpanProcessor;
 use Flow\Telemetry\Provider\Void\VoidExporter;
@@ -39,7 +40,10 @@ use Flow\Telemetry\Provider\Void\VoidSpanProcessor;
 use Flow\Telemetry\Resource;
 use Flow\Telemetry\Resource\Detector\CachingDetector;
 use Flow\Telemetry\Resource\Detector\GitDetector;
+use Flow\Telemetry\Signal\Signals;
 use Flow\Telemetry\Telemetry;
+use Flow\Telemetry\Tests\Mother\ExporterSpy;
+use Flow\Telemetry\Tests\Mother\SpanMother;
 use Flow\Telemetry\Tracer\Processor\BatchingSpanProcessor;
 use Flow\Telemetry\Tracer\Processor\CompositeSpanProcessor;
 use Flow\Telemetry\Tracer\Sampler\AttributeMatchingSampler;
@@ -273,6 +277,102 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
 
         $container = $this->getContainer();
         static::assertInstanceOf(ConsoleExporter::class, $container->get('flow.telemetry.exporter.console'));
+    }
+
+    public function test_disabled_exporter_is_replaced_with_void_exporter(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => [
+                        'otlp' => [
+                            'enabled' => false,
+                            'otlp' => [
+                                'transport' => [
+                                    'type' => 'curl',
+                                    'endpoint' => 'http://localhost:4318',
+                                    'encoding' => 'protobuf',
+                                ],
+                            ],
+                        ],
+                    ],
+                    'tracer_provider' => [
+                        'processor' => ['type' => 'batching', 'exporter' => 'otlp'],
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+        static::assertInstanceOf(VoidExporter::class, $container->get('flow.telemetry.exporter.otlp'));
+        static::assertFalse($container->has('flow.telemetry.exporter.otlp.transport'));
+    }
+
+    public function test_env_bool_flag_drops_export_at_runtime_when_disabled(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => [
+                        'primary' => [
+                            'enabled' => '%env(bool:FLOW_TEST_OTEL_ENABLED)%',
+                            'service' => ['id' => 'app.spy_exporter'],
+                        ],
+                    ],
+                    'tracer_provider' => [
+                        'processor' => ['type' => 'batching', 'exporter' => 'primary'],
+                    ],
+                ]);
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container->setParameter('env(FLOW_TEST_OTEL_ENABLED)', '0');
+                    $container->setDefinition('app.spy_exporter', new Definition(ExporterSpy::class))->setPublic(true);
+                });
+            },
+        ]);
+
+        $container = $this->getContainer();
+        $exporter = $container->get('flow.telemetry.exporter.primary');
+        static::assertInstanceOf(ConditionalExporter::class, $exporter);
+
+        $spy = $container->get('app.spy_exporter');
+        static::assertInstanceOf(ExporterSpy::class, $spy);
+        $exporter->export(Signals::traces([SpanMother::withName('span')]));
+        static::assertSame(0, $spy->exportedCount());
+    }
+
+    public function test_env_bool_flag_forwards_export_at_runtime_when_enabled(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => [
+                        'primary' => [
+                            'enabled' => '%env(bool:FLOW_TEST_OTEL_ENABLED)%',
+                            'service' => ['id' => 'app.spy_exporter'],
+                        ],
+                    ],
+                    'tracer_provider' => [
+                        'processor' => ['type' => 'batching', 'exporter' => 'primary'],
+                    ],
+                ]);
+                $kernel->addTestContainerConfigurator(static function (ContainerBuilder $container): void {
+                    $container->setParameter('env(FLOW_TEST_OTEL_ENABLED)', '1');
+                    $container->setDefinition('app.spy_exporter', new Definition(ExporterSpy::class))->setPublic(true);
+                });
+            },
+        ]);
+
+        $container = $this->getContainer();
+        $exporter = $container->get('flow.telemetry.exporter.primary');
+        static::assertInstanceOf(ConditionalExporter::class, $exporter);
+
+        $spy = $container->get('app.spy_exporter');
+        static::assertInstanceOf(ExporterSpy::class, $spy);
+        $exporter->export(Signals::traces([SpanMother::withName('span')]));
+        static::assertSame(1, $spy->exportedCount());
     }
 
     public function test_curl_transport_is_built_inline_inside_otlp_exporter(): void
