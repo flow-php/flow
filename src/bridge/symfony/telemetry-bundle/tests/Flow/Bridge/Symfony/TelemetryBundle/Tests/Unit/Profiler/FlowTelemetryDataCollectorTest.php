@@ -97,17 +97,6 @@ final class FlowTelemetryDataCollectorTest extends TestCase
         static::assertSame(50.0, $collector->getTimelineDurationMs());
     }
 
-    public function test_late_collect_totals_span_durations(): void
-    {
-        $store = $this->storeWithSpanTree();
-        $collector = $this->collector($store);
-
-        $collector->lateCollect();
-
-        static::assertSame(3, $collector->getSpanCount());
-        static::assertSame(69.0, $collector->getTotalDurationMs());
-    }
-
     public function test_late_collect_normalizes_metric_rows(): void
     {
         $store = new MemoryExporter();

@@ -316,6 +316,32 @@ flow_telemetry:
 | `memory`  | none                           | Stores batches in memory (testing)        |
 | `void`    | none                           | Discards everything (no-op)               |
 
+Every exporter also accepts an `enabled` flag (default `true`). When it resolves to `false`, the exporter does not
+ship anything to its backend, but **profiler capture and all other exporters keep working** — so telemetry stays
+visible in the Symfony profiler without being sent to a collector.
+
+The flag accepts a literal boolean or an environment variable:
+
+- A literal `enabled: false` is resolved at compile time and replaces the exporter with a no-op (`void`); the real
+  backend (e.g. the OTLP transport) is never built.
+- An `enabled: '%env(bool:OTEL_ENABLED)%'` is resolved per request at runtime: the real exporter is wrapped so the
+  env var gates export on or off without rebuilding the container. The backend is still built, so a declared `otlp`
+  exporter requires `flow-php/telemetry-otlp-bridge` to be installed even while the flag is off.
+
+The exporter still declares its real sub-block in both cases, so toggling it back on needs no other change.
+
+```yaml
+flow_telemetry:
+  exporters:
+    otlp:
+      enabled: '%env(bool:OTEL_ENABLED)%' # off → discard exports; profiler still captures every signal
+      otlp:
+        transport:
+          type: curl
+          endpoint: '%env(OTEL_ENDPOINT)%'
+          encoding: protobuf
+```
+
 Service IDs registered by the bundle (predictable for `decorates:`):
 
 - `flow.telemetry.exporter.<name>` — e.g. `flow.telemetry.exporter.otlp`

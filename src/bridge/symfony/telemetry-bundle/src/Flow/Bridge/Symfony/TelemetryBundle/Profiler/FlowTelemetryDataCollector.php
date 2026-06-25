@@ -17,8 +17,6 @@ use Symfony\Component\HttpKernel\DataCollector\LateDataCollectorInterface;
 use Throwable;
 
 use function array_key_exists;
-use function array_map;
-use function array_sum;
 use function count;
 use function is_float;
 use function max;
@@ -56,7 +54,6 @@ final class FlowTelemetryDataCollector extends DataCollector implements LateData
             'spans' => $spans,
             'metrics' => $this->normalizeMetrics($this->exporter->metrics()),
             'logs' => $this->normalizeLogs($this->exporter->logs()),
-            'totalDurationMs' => array_sum(array_map(static fn(array $s): float => $s['durationMs'] ?? 0.0, $spans)),
             'timelineDurationMs' => $timelineDurationMs,
         ];
     }
@@ -117,14 +114,6 @@ final class FlowTelemetryDataCollector extends DataCollector implements LateData
     public function getSignalCount(): int
     {
         return $this->getSpanCount() + $this->getMetricCount() + $this->getLogCount();
-    }
-
-    public function getTotalDurationMs(): float
-    {
-        // @mago-expect analysis:mixed-assignment
-        $value = $this->data['totalDurationMs'] ?? 0.0;
-
-        return is_float($value) ? $value : 0.0;
     }
 
     public function getTimelineDurationMs(): float
