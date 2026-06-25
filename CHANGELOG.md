@@ -1,6 +1,8 @@
-## [Unreleased] - 2026-06-24
+## [Unreleased] - 2026-06-25
 
 ### Added
+- [#2487](https://github.com/flow-php/flow/pull/2487) - **flow-php/telemetry - ConditionalExporter that gates a wrapped exporter behind a runtime flag** - [@norberttech](https://github.com/norberttech)
+- [#2487](https://github.com/flow-php/flow/pull/2487) - **flow-php/symfony-telemetry-bundle - per-exporter enabled flag supporting literal booleans and %env(bool:...)%** - [@norberttech](https://github.com/norberttech)
 - [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/telemetry-otlp-bridge - AsyncCurlTransport (curl_multi) with bounded select-driven tick()** - [@norberttech](https://github.com/norberttech)
 - [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/telemetry-otlp-bridge - otlp_async_curl_transport() and otlp_async_curl_options() DSL helpers** - [@norberttech](https://github.com/norberttech)
 - [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/symfony-telemetry-bundle - transport.type 'async_curl', auto-pumped on WorkerRunningEvent** - [@norberttech](https://github.com/norberttech)
@@ -39,6 +41,7 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2454](https://github.com/flow-php/flow/pull/2454) - **Positional schema definition mutations on Flow\ETL\Schema: prepend(), insertAt(), addBefore(), addAfter(), moveTo(), moveBefore(), moveAfter() and reorder()** - [@bendavies](https://github.com/bendavies)
 
 ### Changed
+- [#2486](https://github.com/flow-php/flow/pull/2486) - **flow-php/postgresql - report decoded node and parse-result PostgreSQL version on SelectStmt mismatch** - [@norberttech](https://github.com/norberttech)
 - [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/telemetry-otlp-bridge - CurlTransport is now synchronous; send() blocks and throws on failure** - [@norberttech](https://github.com/norberttech)
 - [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/telemetry-otlp-bridge - curl request timeout default raised to 10000ms** - [@norberttech](https://github.com/norberttech)
 - [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/symfony-telemetry-bundle - async_curl connect_timeout default 1500ms, pump_timeout 100ms** - [@norberttech](https://github.com/norberttech)
@@ -59,6 +62,8 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2457](https://github.com/flow-php/flow/pull/2457) - **flow-php/filesystem - rename FilesystemTable::for() parameter $protocol to $mount** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2487](https://github.com/flow-php/flow/pull/2487) - **flow-php/symfony-telemetry-bundle - profiler reports total trace time as wall-clock window instead of summed span durations** - [@norberttech](https://github.com/norberttech)
+- [#2486](https://github.com/flow-php/flow/pull/2486) - **flow-php/pg-query-ext - reject system libpg_query whose PostgreSQL major differs from the pinned version** - [@norberttech](https://github.com/norberttech)
 - [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/telemetry-otlp-bridge - CollectorMetrics test parser reads scientific-notation counters** - [@norberttech](https://github.com/norberttech)
 - [#2481](https://github.com/flow-php/flow/pull/2481) - **flow-php/symfony-telemetry-bundle - http client decorator no longer reads the response inside request(), restoring async and concurrency** - [@norberttech](https://github.com/norberttech)
 - [#2480](https://github.com/flow-php/flow/pull/2480) - **flow-php/etl - respect limit push-down across non-expanding processors** - [@norberttech](https://github.com/norberttech)
