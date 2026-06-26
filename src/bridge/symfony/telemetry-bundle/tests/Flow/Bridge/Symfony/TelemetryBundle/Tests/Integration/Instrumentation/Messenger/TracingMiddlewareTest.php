@@ -9,6 +9,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\TelemetryStamp
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\TracingMiddleware;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Message\TestMessage;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\MessageHandler\TestMessageHandler;
+use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Middleware\BaggageCapturingMiddleware;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Middleware\CapturingMiddleware;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\KernelTestCase;
@@ -109,6 +110,56 @@ final class TracingMiddlewareTest extends KernelTestCase
 
         static::assertSame(SpanKind::CONSUMER, $span->kind());
         static::assertSame($originalTraceId, $span->context()->traceId->toHex());
+    }
+
+    public function test_continuation_context_does_not_leak_after_consume(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => 'memory',
+                        ],
+                    ],
+                    'propagator' => ['type' => 'w3c'],
+                    'instrumentation' => [
+                        'http_kernel' => false,
+                        'console' => false,
+                        'messenger' => [
+                            'enabled' => true,
+                            'context_propagation' => true,
+                        ],
+                    ],
+                ]);
+            },
+        ]);
+
+        $this->getContainer();
+
+        $telemetry = $this->symfonyContext()->getService(Telemetry::class, Telemetry::class);
+        $contextStorage = $this->symfonyContext()->getService('flow.telemetry.context_storage', ContextStorage::class);
+        $propagator = $this->symfonyContext()->getService('flow.telemetry.propagator', Propagator::class);
+
+        $bus = new MessageBus([
+            new TracingMiddleware($telemetry, $contextStorage, $propagator, MessengerTracePropagation::Continuation),
+            new HandleMessageMiddleware(new HandlersLocator([
+                TestMessage::class => [new TestMessageHandler()],
+            ])),
+        ]);
+
+        $bus->dispatch(new Envelope(new TestMessage('test'), [
+            new ReceivedStamp('async'),
+            new TelemetryStamp(['traceparent' => '00-abcdef0123456789abcdef0123456789-0123456789abcdef-01']),
+        ]));
+
+        static::assertNull(
+            $contextStorage->current()->activeSpan(),
+            'the continued remote span must not remain active on the worker context after the message is handled',
+        );
     }
 
     public function test_consumer_span_has_no_links_in_continue_mode(): void
@@ -421,8 +472,11 @@ final class TracingMiddlewareTest extends KernelTestCase
         $workerTracer = $telemetry->tracer('worker');
         $workerSpan = $workerTracer->span('messenger:consume');
 
+        $baggageSpy = new BaggageCapturingMiddleware($contextStorage);
+
         $bus = new MessageBus([
             new TracingMiddleware($telemetry, $contextStorage, $propagator, MessengerTracePropagation::Link),
+            $baggageSpy,
             new HandleMessageMiddleware(new HandlersLocator([
                 TestMessage::class => [new TestMessageHandler()],
             ])),
@@ -433,9 +487,17 @@ final class TracingMiddlewareTest extends KernelTestCase
             new TelemetryStamp(['traceparent' => $traceparent, 'baggage' => 'user.id=42']),
         ]));
 
-        $baggage = $contextStorage->current()->baggage;
-        static::assertFalse($baggage->isEmpty());
-        static::assertSame('42', $baggage->get('user.id'));
+        static::assertNotNull($baggageSpy->capturedDuringHandling);
+        static::assertSame(
+            '42',
+            $baggageSpy->capturedDuringHandling->get('user.id'),
+            'producer baggage must be active while the message is handled',
+        );
+
+        static::assertTrue(
+            $contextStorage->current()->baggage->isEmpty(),
+            'producer baggage must not leak onto the worker context after the message is handled',
+        );
 
         $workerTracer->complete($workerSpan);
     }

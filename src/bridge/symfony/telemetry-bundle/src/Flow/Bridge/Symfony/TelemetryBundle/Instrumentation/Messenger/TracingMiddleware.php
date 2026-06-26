@@ -7,6 +7,7 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger;
 use DateTimeImmutable;
 use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\ContextStorage;
+use Flow\Telemetry\Context\Scope;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Propagation\PropagationContext;
 use Flow\Telemetry\Propagation\Propagator;
@@ -77,6 +78,7 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         $workerSpan = $isReceived ? $this->contextStorage?->current()->activeSpan() : null;
         $links = [];
         $continuingRemoteTrace = false;
+        $propagationScope = null;
 
         if ($remote !== null && $remote->spanContext !== null) {
             $remoteSpanContext = $remote->spanContext;
@@ -89,7 +91,7 @@ final readonly class TracingMiddleware implements MiddlewareInterface
                     $context = $context->withBaggage($remoteBaggage);
                 }
 
-                $this->contextStorage?->attach($context);
+                $propagationScope = $this->contextStorage?->attach($context);
                 $continuingRemoteTrace = true;
             } else {
                 $links[] = SpanLink::create(
@@ -98,7 +100,9 @@ final readonly class TracingMiddleware implements MiddlewareInterface
                 );
 
                 if ($remoteBaggage !== null && $this->contextStorage !== null) {
-                    $this->contextStorage->attach($this->contextStorage->current()->withBaggage($remoteBaggage));
+                    $propagationScope = $this->contextStorage->attach(
+                        $this->contextStorage->current()->withBaggage($remoteBaggage),
+                    );
                 }
             }
         }
@@ -129,6 +133,7 @@ final readonly class TracingMiddleware implements MiddlewareInterface
             throw $e;
         } finally {
             $tracer->complete($span);
+            $propagationScope?->detach();
         }
     }
 

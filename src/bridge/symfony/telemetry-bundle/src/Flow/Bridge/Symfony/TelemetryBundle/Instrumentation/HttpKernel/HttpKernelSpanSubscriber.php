@@ -9,6 +9,7 @@ use Flow\Bridge\Symfony\HttpFoundationTelemetry\RequestCarrier;
 use Flow\Bridge\Symfony\HttpFoundationTelemetry\ResponseCarrier;
 use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\ContextStorage;
+use Flow\Telemetry\Context\Scope;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Propagation\PropagationContext;
 use Flow\Telemetry\Propagation\Propagator;
@@ -22,6 +23,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
+use Symfony\Component\HttpKernel\Event\FinishRequestEvent;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\Event\TerminateEvent;
@@ -35,6 +37,8 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
     public const string SPAN_ATTRIBUTE = '_flow_telemetry_span';
 
     private const string TRACER_ATTRIBUTE = '_flow_telemetry_tracer';
+
+    private const string PROPAGATION_SCOPE_ATTRIBUTE = '_flow_telemetry_propagation_scope';
 
     /** @var array<PathExclusionRule> */
     private array $excludePathRules;
@@ -62,6 +66,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
             KernelEvents::CONTROLLER => ['onController', 0],
             KernelEvents::RESPONSE => ['onResponse', -10000],
             KernelEvents::EXCEPTION => ['onException', 0],
+            KernelEvents::FINISH_REQUEST => ['onFinishRequest', -10000],
             KernelEvents::TERMINATE => ['onTerminate', -10000],
         ];
     }
@@ -153,10 +158,26 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         }
     }
 
+    /**
+     * Sub-requests never reach kernel.terminate (it fires only for the main request), so their span is
+     * completed here, where kernel.finish_request fires once for every request, main and sub alike.
+     */
+    public function onFinishRequest(FinishRequestEvent $event): void
+    {
+        if ($event->isMainRequest()) {
+            return;
+        }
+
+        $this->completeSpan($event->getRequest());
+    }
+
     public function onTerminate(TerminateEvent $event): void
     {
-        $request = $event->getRequest();
+        $this->completeSpan($event->getRequest());
+    }
 
+    private function completeSpan(Request $request): void
+    {
         // @mago-expect analysis:mixed-assignment
         if (!($span = $request->attributes->get(self::SPAN_ATTRIBUTE)) instanceof Span) {
             return;
@@ -168,6 +189,12 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         }
 
         $tracer->complete($span);
+
+        // @mago-expect analysis:mixed-assignment
+        if (($scope = $request->attributes->get(self::PROPAGATION_SCOPE_ATTRIBUTE)) instanceof Scope) {
+            $scope->detach();
+            $request->attributes->remove(self::PROPAGATION_SCOPE_ATTRIBUTE);
+        }
 
         $request->attributes->remove(self::SPAN_ATTRIBUTE);
         $request->attributes->remove(self::TRACER_ATTRIBUTE);
@@ -186,7 +213,7 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
                 $context = $context->withBaggage($propagationContext->baggage);
             }
 
-            $this->contextStorage->attach($context);
+            $request->attributes->set(self::PROPAGATION_SCOPE_ATTRIBUTE, $this->contextStorage->attach($context));
         }
     }
 

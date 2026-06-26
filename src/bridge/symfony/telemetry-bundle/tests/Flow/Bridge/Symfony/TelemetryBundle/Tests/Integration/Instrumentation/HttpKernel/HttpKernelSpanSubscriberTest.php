@@ -16,6 +16,7 @@ use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\Router;
 
@@ -407,6 +408,87 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         static::assertSame($incomingSpanId, $span->context()->parentSpanId?->toHex());
     }
 
+    public function test_extracted_context_does_not_leak_into_the_next_request(): void
+    {
+        $kernel = $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => [
+                        'utf8' => true,
+                        'resource' => __DIR__ . '/../../../Fixtures/config/routes.php',
+                    ],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => 'memory',
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => [
+                            'enabled' => true,
+                            'context_propagation' => true,
+                        ],
+                        'console' => ['enabled' => false],
+                        'messenger' => false,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var Router $router */
+        $router = $container->get('router');
+        $router->getRouteCollection()->add('test_index', new Route('/test', [
+            '_controller' => TestController::class . '::index',
+        ]));
+
+        $incomingTraceId = '0af7651916cd43dd8448eb211c80319c';
+
+        $firstRequest = Request::create('/test', 'GET');
+        $firstRequest->headers->set('traceparent', "00-{$incomingTraceId}-b7ad6b7169203331-01");
+        $kernel->terminate($firstRequest, $kernel->handle($firstRequest));
+
+        $secondRequest = Request::create('/test', 'GET');
+        $kernel->terminate($secondRequest, $kernel->handle($secondRequest));
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $serverSpans = array_values(array_filter(
+            $processor->endedSpans(),
+            static fn(Span $s): bool => $s->kind() === SpanKind::SERVER,
+        ));
+
+        static::assertCount(2, $serverSpans);
+
+        $continuingRemoteTrace = array_values(array_filter(
+            $serverSpans,
+            static fn(Span $s): bool => $s->context()->traceId->toHex() === $incomingTraceId,
+        ));
+        $freshTrace = array_values(array_filter(
+            $serverSpans,
+            static fn(Span $s): bool => $s->context()->traceId->toHex() !== $incomingTraceId,
+        ));
+
+        static::assertCount(
+            1,
+            $continuingRemoteTrace,
+            'only the request carrying traceparent continues the remote trace',
+        );
+        static::assertCount(1, $freshTrace);
+        static::assertNull(
+            $freshTrace[0]->context()->parentSpanId,
+            'a request without traceparent must start a fresh root trace, not inherit the previous request remote parent',
+        );
+    }
+
     public function test_handles_missing_trace_headers_gracefully(): void
     {
         $kernel = $this->bootKernel([
@@ -584,6 +666,85 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         static::assertSame(200, $attributes['http.response.status_code']);
         static::assertSame('test_index', $attributes['http.route']);
         static::assertSame(TestController::class . '::index', $attributes['controller']);
+    }
+
+    public function test_completes_sub_request_span_nested_under_main_request(): void
+    {
+        $kernel = $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => [
+                        'utf8' => true,
+                        'resource' => __DIR__ . '/../../../Fixtures/config/routes.php',
+                    ],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => 'memory',
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => ['enabled' => true],
+                        'console' => ['enabled' => false],
+                        'messenger' => false,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var Router $router */
+        $router = $container->get('router');
+        $router->getRouteCollection()->add('test_index', new Route('/test', [
+            '_controller' => TestController::class . '::index',
+        ]));
+
+        $mainRequest = Request::create('/test', 'GET');
+        $response = $kernel->handle($mainRequest);
+
+        $subRequest = Request::create('/test', 'GET');
+        $kernel->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
+
+        $kernel->terminate($mainRequest, $response);
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spans = $processor->endedSpans();
+
+        $serverSpan = array_values(array_filter(
+            $spans,
+            static fn(Span $s): bool => $s->kind() === SpanKind::SERVER && $s->name() === 'GET /test',
+        ));
+        $subRequestSpan = array_values(array_filter(
+            $spans,
+            static fn(Span $s): bool => $s->kind() === SpanKind::INTERNAL && $s->name() === 'GET /test',
+        ));
+
+        static::assertCount(1, $serverSpan);
+        static::assertCount(
+            1,
+            $subRequestSpan,
+            'sub-request request span must be completed and exported on kernel.finish_request',
+        );
+
+        static::assertSame('GET', $subRequestSpan[0]->attributes()['http.request.method']);
+        static::assertTrue(
+            $subRequestSpan[0]->context()->traceId->equals($serverSpan[0]->context()->traceId),
+            'sub-request span must share the main request trace',
+        );
+        static::assertSame(
+            $serverSpan[0]->context()->spanId->toHex(),
+            $subRequestSpan[0]->context()->parentSpanId?->toHex(),
+            'sub-request span must be a child of the main request span',
+        );
     }
 
     public function test_injects_context_into_response_when_propagation_enabled(): void
