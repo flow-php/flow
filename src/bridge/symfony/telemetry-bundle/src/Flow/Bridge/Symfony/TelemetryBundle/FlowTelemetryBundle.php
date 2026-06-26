@@ -21,6 +21,7 @@ use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\Psr18Client
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Console\ConsoleLogOutputSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerTracePropagation;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Security\UserSpanAttributeProvider;
 use Flow\Bridge\Symfony\TelemetryBundle\Logger\ConsoleOutputLogProcessor;
 use Flow\Bridge\Symfony\TelemetryBundle\Logger\ConsoleVerbosityLevels;
 use Flow\Bridge\Symfony\TelemetryBundle\Resource\Detector\SymfonyDeploymentDetector;
@@ -150,6 +151,8 @@ final class FlowTelemetryBundle extends AbstractBundle
 
     private const string PSR18_TRACEABLE_CLIENT = 'Flow\\Bridge\\Psr18\\Telemetry\\PSR18TraceableClient';
 
+    private const string SECURITY_TOKEN_STORAGE_INTERFACE = 'Symfony\\Component\\Security\\Core\\Authentication\\Token\\Storage\\TokenStorageInterface';
+
     private const string WEB_PROFILER_BUNDLE = 'Symfony\\Bundle\\WebProfilerBundle\\WebProfilerBundle';
 
     #[Override]
@@ -177,6 +180,9 @@ final class FlowTelemetryBundle extends AbstractBundle
             },
         );
         $container->addCompilerPass(new ChannelLoggerPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION);
+
+        $container->registerForAutoconfiguration(UserSpanAttributeProvider::class)
+            ->addTag('flow.telemetry.security.user_attribute_provider');
 
         if (interface_exists(self::HTTP_CLIENT_INTERFACE)) {
             $container->addCompilerPass(new HttpClientTelemetryPass());
@@ -601,6 +607,42 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->arrayNode('exclude_templates')
             ->info('Template paths to exclude from tracing (supports regex with / delimiters)')
             ->scalarPrototype()
+            ->end()
+            ->end()
+            ->end()
+            ->end()
+            ->arrayNode('security')
+            ->info('Decorate the request span with the authenticated user (requires symfony/security-core; login capture requires symfony/security-http)')
+            ->canBeEnabled()
+            ->children()
+            ->arrayNode('fields')
+            ->addDefaultsIfNotSet()
+            ->children()
+            ->arrayNode('id')
+            ->info('User identifier (TokenInterface::getUserIdentifier())')
+            ->addDefaultsIfNotSet()
+            ->children()
+            ->booleanNode('enabled')->defaultTrue()->end()
+            ->scalarNode('attribute')->info('Span attribute key')->defaultValue('user.id')->cannotBeEmpty()->end()
+            ->end()
+            ->end()
+            ->arrayNode('roles')
+            ->info('Token role names (TokenInterface::getRoleNames())')
+            ->addDefaultsIfNotSet()
+            ->children()
+            ->booleanNode('enabled')->defaultFalse()->end()
+            ->scalarNode('attribute')->info('Span attribute key')->defaultValue('user.roles')->cannotBeEmpty()->end()
+            ->end()
+            ->end()
+            ->arrayNode('email')
+            ->info('User email, read from a getter on the user object')
+            ->addDefaultsIfNotSet()
+            ->children()
+            ->booleanNode('enabled')->defaultFalse()->end()
+            ->scalarNode('attribute')->info('Span attribute key')->defaultValue('user.email')->cannotBeEmpty()->end()
+            ->scalarNode('getter')->info('User method to read the email from')->defaultValue('getEmail')->cannotBeEmpty()->end()
+            ->end()
+            ->end()
             ->end()
             ->end()
             ->end()
@@ -2892,6 +2934,40 @@ final class FlowTelemetryBundle extends AbstractBundle
             $builder->setParameter('flow.telemetry.twig.trace_macros', $twigConfig['trace_macros'] ?? false);
             $builder->setParameter('flow.telemetry.twig.exclude_templates', $twigConfig['exclude_templates'] ?? []);
             $container->import(__DIR__ . '/Resources/config/instrumentation/twig.php');
+        }
+
+        $securityConfig = $config['security'] ?? [];
+
+        if ((bool) ($securityConfig['enabled'] ?? false)) {
+            if (!interface_exists(self::SECURITY_TOKEN_STORAGE_INTERFACE)) {
+                throw new RuntimeException(
+                    'Security instrumentation requires symfony/security-core package. Install it via composer: composer require symfony/security-core',
+                );
+            }
+
+            $fields = is_array($securityConfig['fields'] ?? null) ? $securityConfig['fields'] : [];
+            $idField = is_array($fields['id'] ?? null) ? $fields['id'] : [];
+            $rolesField = is_array($fields['roles'] ?? null) ? $fields['roles'] : [];
+            $emailField = is_array($fields['email'] ?? null) ? $fields['email'] : [];
+
+            $builder->setParameter(
+                'flow.telemetry.security.field.id_attribute',
+                ($idField['enabled'] ?? true) === true ? ($idField['attribute'] ?? 'user.id') : null,
+            );
+            $builder->setParameter(
+                'flow.telemetry.security.field.roles_attribute',
+                ($rolesField['enabled'] ?? false) === true ? ($rolesField['attribute'] ?? 'user.roles') : null,
+            );
+            $builder->setParameter(
+                'flow.telemetry.security.field.email_attribute',
+                ($emailField['enabled'] ?? false) === true ? ($emailField['attribute'] ?? 'user.email') : null,
+            );
+            $builder->setParameter(
+                'flow.telemetry.security.field.email_getter',
+                $emailField['getter'] ?? 'getEmail',
+            );
+
+            $container->import(__DIR__ . '/Resources/config/instrumentation/security.php');
         }
 
         $this->registerParameterOnlyInstrumentation($config, $builder);

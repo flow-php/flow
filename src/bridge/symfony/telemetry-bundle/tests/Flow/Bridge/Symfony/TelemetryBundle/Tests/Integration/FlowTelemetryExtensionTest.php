@@ -532,6 +532,51 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         static::assertTrue($definition->hasTag('kernel.event_subscriber'));
     }
 
+    public function test_security_instrumentation_registers_subscriber_and_field_parameters(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.environment', 'test');
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
+        $extension = (new FlowTelemetryBundle())->getContainerExtension();
+        assert($extension !== null);
+        $extension->load([[
+            'resource' => [],
+            'instrumentation' => [
+                'security' => [
+                    'enabled' => true,
+                    'fields' => [
+                        'roles' => ['enabled' => true],
+                        'email' => ['enabled' => false],
+                    ],
+                ],
+            ],
+        ]], $container);
+
+        static::assertTrue($container->hasDefinition('flow.telemetry.security.user_attribute_resolver'));
+        static::assertTrue(
+            $container->getDefinition('flow.telemetry.security.span_subscriber')->hasTag('kernel.event_subscriber'),
+        );
+
+        static::assertSame('user.id', $container->getParameter('flow.telemetry.security.field.id_attribute'));
+        static::assertSame('user.roles', $container->getParameter('flow.telemetry.security.field.roles_attribute'));
+        static::assertNull($container->getParameter('flow.telemetry.security.field.email_attribute'));
+        static::assertSame('getEmail', $container->getParameter('flow.telemetry.security.field.email_getter'));
+    }
+
+    public function test_security_instrumentation_is_not_registered_by_default(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.environment', 'test');
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
+        $extension = (new FlowTelemetryBundle())->getContainerExtension();
+        assert($extension !== null);
+        $extension->load([['resource' => []]], $container);
+
+        static::assertFalse($container->hasDefinition('flow.telemetry.security.span_subscriber'));
+    }
+
     public function test_custom_exporter_via_service(): void
     {
         $this->bootKernel([

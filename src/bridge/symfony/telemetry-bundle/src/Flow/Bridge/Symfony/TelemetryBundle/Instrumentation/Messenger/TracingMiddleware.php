@@ -7,7 +7,6 @@ namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger;
 use DateTimeImmutable;
 use Flow\Telemetry\Context\Context;
 use Flow\Telemetry\Context\ContextStorage;
-use Flow\Telemetry\Context\Scope;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Propagation\PropagationContext;
 use Flow\Telemetry\Propagation\Propagator;

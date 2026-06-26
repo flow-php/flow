@@ -1136,6 +1136,53 @@ exists, so disabling `http_kernel` or excluding the path produces none.
 The resolution and argument toggles install service decorators only when enabled, so they add zero overhead
 when off.
 
+#### Security
+
+Decorates the request span with the authenticated user. Requires `symfony/security-core` (and
+`symfony/security-http` to capture logins that happen during the request).
+
+```yaml
+flow_telemetry:
+  instrumentation:
+    security:
+      enabled: true
+      fields:
+        id:
+          enabled: true        # getUserIdentifier() (default ON)
+          attribute: user.id
+        roles:
+          enabled: false       # getRoleNames() (default OFF)
+          attribute: user.roles
+        email:
+          enabled: false       # read from a getter on the user object (default OFF)
+          attribute: user.email
+          getter: getEmail
+```
+
+The user is read from the token storage at `kernel.controller` and again on `LoginSuccessEvent`, so
+both already-authenticated requests and mid-request logins are covered. Each field is independent and
+its attribute key is configurable; `email` is taken from the configured getter and skipped when the
+method is missing or returns a non-scalar. Anonymous requests are left untouched.
+
+To attach application-specific attributes, implement `UserSpanAttributeProvider` and tag the service
+(the tag is autoconfigured). Returned attributes are merged onto the request span and win on key
+collision:
+
+```php
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Security\UserSpanAttributeProvider;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+
+final class TenantAttributes implements UserSpanAttributeProvider
+{
+    public function attributes(TokenInterface $token): array
+    {
+        $user = $token->getUser();
+
+        return $user instanceof AppUser ? ['app.tenant_id' => $user->getTenantId()] : [];
+    }
+}
+```
+
 #### Console
 
 Traces console commands.

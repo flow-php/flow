@@ -73,6 +73,8 @@
         "symfony/messenger": "^6.4 || ^7.4 || ^8.0",
         "symfony/process": "^7.4 || ^8.0",
         "symfony/routing": "^6.4 || ^7.4 || ^8.0",
+        "symfony/security-core": "^6.4 || ^7.4 || ^8.0",
+        "symfony/security-http": "^6.4 || ^7.4 || ^8.0",
         "symfony/web-profiler-bundle": "^6.4 || ^7.4 || ^8.0",
         "twig/twig": "^3.0"
     },
