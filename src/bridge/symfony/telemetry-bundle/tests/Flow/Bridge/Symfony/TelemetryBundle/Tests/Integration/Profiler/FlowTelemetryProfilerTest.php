@@ -109,8 +109,6 @@ final class FlowTelemetryProfilerTest extends KernelTestCase
             '_controller' => TestController::class . '::index',
         ]));
 
-        // Emit a span that ends before the request handles, so it is flushed into the store at
-        // profiler-save time (the http_kernel root span ends later and is intentionally not captured).
         /** @var Telemetry $telemetry */
         $telemetry = $container->get(Telemetry::class);
         $telemetry->tracer('app')->trace('controller_work', static fn(): ?string => null);
@@ -129,6 +127,14 @@ final class FlowTelemetryProfilerTest extends KernelTestCase
         static::assertStringContainsString('Flow Telemetry', $html);
         static::assertStringContainsString('controller_work', $html);
         static::assertStringContainsString('Timeline', $html);
+        // The HTTP server span only completes on kernel.terminate (after the profiler saves), so it is
+        // captured as an in-flight snapshot instead of being missing from the panel.
+        static::assertStringContainsString('GET /test', $html);
+        static::assertStringContainsString('Resource', $html);
+        static::assertStringContainsString('panel-test-service', $html);
+        static::assertStringContainsString('Scopes', $html);
+        static::assertStringContainsString('Configured instruments', $html);
+        static::assertStringContainsString('flow.component', $html);
     }
 
     public function test_spans_are_captured_after_a_request(): void
@@ -279,12 +285,18 @@ final class FlowTelemetryProfilerTest extends KernelTestCase
     private function flowConfig(array $profilerConfig): array
     {
         return [
-            'resource' => [],
+            'resource' => ['custom' => ['service.name' => 'panel-test-service']],
             'exporters' => ['memory' => ['memory' => null]],
             'tracer_provider' => [
                 'processor' => ['type' => 'batching', 'batch_size' => 100, 'exporter' => 'memory'],
             ],
             'profiler' => $profilerConfig,
+            'tracers' => [
+                'checkout' => [
+                    'version' => '2.0.0',
+                    'attributes' => ['scope' => ['flow.component' => 'checkout']],
+                ],
+            ],
             'instrumentation' => [
                 'http_kernel' => ['enabled' => true],
                 'console' => ['enabled' => false],

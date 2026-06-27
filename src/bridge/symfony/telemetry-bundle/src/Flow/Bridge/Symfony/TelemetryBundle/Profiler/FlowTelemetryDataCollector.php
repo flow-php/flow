@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Profiler;
 
+use DateTimeImmutable;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel\HttpKernelSpanSubscriber;
 use Flow\Telemetry\Logger\LogEntry;
 use Flow\Telemetry\Logger\Severity;
 use Flow\Telemetry\Meter\Metric;
@@ -26,15 +28,37 @@ use function usort;
  * @phpstan-type SpanRow array{name: string, kind: string, durationMs: null|float, startMs: float, offsetMs: float, startTime: string, scope: string, spanId: string, parentSpanId: null|string, depth: int, statusCode: int, statusDescription: null|string, attributes: array<string, mixed>, eventCount: int}
  * @phpstan-type MetricRow array{name: string, type: string, value: float|int, unit: null|string, scope: string, attributes: array<string, mixed>}
  * @phpstan-type LogRow array{severity: string, severityCode: int, message: string, scope: string, time: string, attributes: \Symfony\Component\VarDumper\Cloner\Data, hasAttributes: bool}
+ * @phpstan-type ScopeRow array{name: string, version: string, attributes: array<string, mixed>}
+ * @phpstan-type InstrumentRow array{type: string, name: string, version: string, attributes: array<string, mixed>}
  */
 final class FlowTelemetryDataCollector extends DataCollector implements LateDataCollectorInterface
 {
+    private ?Span $requestSpan = null;
+
+    private ?DateTimeImmutable $requestSpanEnd = null;
+
+    /**
+     * @param list<InstrumentRow> $configuredInstruments
+     */
     public function __construct(
         private readonly Telemetry $telemetry,
         private readonly MemoryExporter $exporter,
+        private readonly array $configuredInstruments = [],
     ) {}
 
-    public function collect(Request $request, Response $response, ?Throwable $exception = null): void {}
+    public function collect(Request $request, Response $response, ?Throwable $exception = null): void
+    {
+        // @mago-expect analysis:mixed-assignment
+        $span = $request->attributes->get(HttpKernelSpanSubscriber::SPAN_ATTRIBUTE);
+
+        // The HTTP server span completes on kernel.terminate, after the profiler saves the profile, so it
+        // never reaches the store. Capture it here while still open and snapshot the response moment as its
+        // display end; the real span keeps ending (and exporting) on terminate untouched.
+        if ($span instanceof Span) {
+            $this->requestSpan = $span;
+            $this->requestSpanEnd = new DateTimeImmutable();
+        }
+    }
 
     public function lateCollect(): void
     {
@@ -42,7 +66,7 @@ final class FlowTelemetryDataCollector extends DataCollector implements LateData
         // profiler saves the profile.
         $this->telemetry->flush();
 
-        $spans = $this->normalizeSpans($this->exporter->spans());
+        $spans = $this->normalizeSpans($this->exporter->spans(), $this->requestSpan, $this->requestSpanEnd);
 
         $timelineDurationMs = 0.0;
 
@@ -55,12 +79,17 @@ final class FlowTelemetryDataCollector extends DataCollector implements LateData
             'metrics' => $this->normalizeMetrics($this->exporter->metrics()),
             'logs' => $this->normalizeLogs($this->exporter->logs()),
             'timelineDurationMs' => $timelineDurationMs,
+            'resourceAttributes' => $this->resourceAttributes(),
+            'scopes' => $this->normalizeScopes(),
+            'configuredInstruments' => $this->configuredInstruments,
         ];
     }
 
     public function reset(): void
     {
         $this->data = [];
+        $this->requestSpan = null;
+        $this->requestSpanEnd = null;
         $this->exporter->reset();
     }
 
@@ -116,6 +145,35 @@ final class FlowTelemetryDataCollector extends DataCollector implements LateData
         return $this->getSpanCount() + $this->getMetricCount() + $this->getLogCount();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    public function getResourceAttributes(): array
+    {
+        // @mago-expect analysis:mixed-return-statement
+        return $this->data['resourceAttributes'] ?? [];
+    }
+
+    /**
+     * @return list<ScopeRow>
+     */
+    public function getScopes(): array
+    {
+        // @mago-expect analysis:mixed-return-statement
+        return $this->data['scopes'] ?? [];
+    }
+
+    /**
+     * Named tracers/meters/loggers from configuration, shown regardless of whether they emitted a signal.
+     *
+     * @return list<InstrumentRow>
+     */
+    public function getConfiguredInstruments(): array
+    {
+        // @mago-expect analysis:mixed-return-statement
+        return $this->data['configuredInstruments'] ?? [];
+    }
+
     public function getTimelineDurationMs(): float
     {
         // @mago-expect analysis:mixed-assignment
@@ -129,8 +187,12 @@ final class FlowTelemetryDataCollector extends DataCollector implements LateData
      *
      * @return list<SpanRow>
      */
-    private function normalizeSpans(array $spans): array
+    private function normalizeSpans(array $spans, ?Span $inFlight = null, ?DateTimeImmutable $inFlightEnd = null): array
     {
+        if ($inFlight !== null && $inFlightEnd !== null && !$this->isCaptured($inFlight, $spans)) {
+            $spans[] = $inFlight;
+        }
+
         $parents = [];
 
         foreach ($spans as $span) {
@@ -145,12 +207,18 @@ final class FlowTelemetryDataCollector extends DataCollector implements LateData
             $status = $span->status()?->normalize();
             $spanId = $context['spanId']['hex'];
             $start = $span->startTime();
+            $startMs = ($start->getTimestamp() * 1000.0) + ((int) $start->format('u') / 1000.0);
+
+            $durationMs =
+                $span === $inFlight && $inFlightEnd !== null
+                    ? ($inFlightEnd->getTimestamp() * 1000.0) + ((int) $inFlightEnd->format('u') / 1000.0) - $startMs
+                    : $span->duration();
 
             $rows[] = [
                 'name' => $span->name(),
                 'kind' => $span->kind()->value,
-                'durationMs' => $span->duration(),
-                'startMs' => ($start->getTimestamp() * 1000.0) + ((int) $start->format('u') / 1000.0),
+                'durationMs' => $durationMs,
+                'startMs' => $startMs,
                 'offsetMs' => 0.0,
                 'startTime' => $start->format('H:i:s.v'),
                 'scope' => $span->scope()->name,
@@ -176,6 +244,22 @@ final class FlowTelemetryDataCollector extends DataCollector implements LateData
         }
 
         return $rows;
+    }
+
+    /**
+     * @param array<Span> $spans
+     */
+    private function isCaptured(Span $span, array $spans): bool
+    {
+        $spanId = $span->context()->normalize()['spanId']['hex'];
+
+        foreach ($spans as $captured) {
+            if ($captured->context()->normalize()['spanId']['hex'] === $spanId) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -243,5 +327,63 @@ final class FlowTelemetryDataCollector extends DataCollector implements LateData
         }
 
         return $rows;
+    }
+
+    /**
+     * The resource is shared by every signal from the provider, so the first available one describes the request.
+     *
+     * @return array<string, mixed>
+     */
+    private function resourceAttributes(): array
+    {
+        foreach ($this->exporter->spans() as $span) {
+            return $span->resource()->normalize()['attributes'];
+        }
+
+        foreach ($this->exporter->metrics() as $metric) {
+            return $metric->resource->normalize()['attributes'];
+        }
+
+        foreach ($this->exporter->logs() as $log) {
+            return $log->resource->normalize()['attributes'];
+        }
+
+        return [];
+    }
+
+    /**
+     * Distinct instrumentation scopes across all signals, identified by name + version.
+     *
+     * @return list<ScopeRow>
+     */
+    private function normalizeScopes(): array
+    {
+        $instrumentationScopes = [];
+
+        foreach ($this->exporter->spans() as $span) {
+            $instrumentationScopes[] = $span->scope();
+        }
+
+        foreach ($this->exporter->metrics() as $metric) {
+            $instrumentationScopes[] = $metric->scope;
+        }
+
+        foreach ($this->exporter->logs() as $log) {
+            $instrumentationScopes[] = $log->scope;
+        }
+
+        $scopes = [];
+
+        foreach ($instrumentationScopes as $scope) {
+            $scopes[$scope->name . '@' . $scope->version] ??= [
+                'name' => $scope->name,
+                'version' => $scope->version,
+                'attributes' => $scope->attributes->normalize(),
+            ];
+        }
+
+        usort($scopes, static fn(array $a, array $b): int => $a['name'] <=> $b['name']);
+
+        return $scopes;
     }
 }

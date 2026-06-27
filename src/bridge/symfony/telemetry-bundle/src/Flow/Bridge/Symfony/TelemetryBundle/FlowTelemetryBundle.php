@@ -3022,8 +3022,51 @@ final class FlowTelemetryBundle extends AbstractBundle
 
         $builder->setParameter('flow.telemetry.profiler.captured_exporters', array_values($capturedIds));
         $builder->setParameter('flow.telemetry.profiler.capture_logs', $captureLogs);
+        $builder->setParameter('flow.telemetry.profiler.configured_instruments', $this->configuredInstruments($config));
 
         $container->import(__DIR__ . '/Resources/config/profiler.php');
+    }
+
+    /**
+     * Flatten the named tracer/meter/logger config into rows for the profiler panel, so configured
+     * scope attributes stay visible even when an instrument did not emit a signal during the request.
+     *
+     * @param array<array-key, mixed> $config
+     *
+     * @return list<array{type: string, name: string, version: string, attributes: array<string, mixed>}>
+     */
+    private function configuredInstruments(array $config): array
+    {
+        $rows = [];
+
+        $groups = [
+            'tracer' => $config['tracers'] ?? null,
+            'meter' => $config['meters'] ?? null,
+            'logger' => $config['loggers'] ?? null,
+        ];
+
+        foreach ($groups as $type => $instruments) {
+            if (!is_array($instruments)) {
+                continue;
+            }
+
+            foreach ($instruments as $name => $instrumentConfig) {
+                if (!is_array($instrumentConfig)) {
+                    continue;
+                }
+
+                $attributes = is_array($instrumentConfig['attributes'] ?? null) ? $instrumentConfig['attributes'] : [];
+
+                $rows[] = [
+                    'type' => $type,
+                    'name' => (string) $name,
+                    'version' => is_string($instrumentConfig['version'] ?? null) ? $instrumentConfig['version'] : 'unknown',
+                    'attributes' => is_array($attributes['scope'] ?? null) ? $attributes['scope'] : [],
+                ];
+            }
+        }
+
+        return $rows;
     }
 
     /**

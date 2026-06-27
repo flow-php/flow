@@ -1326,9 +1326,11 @@ flow_telemetry:
 ### Web Profiler
 
 Adds a **Flow Telemetry** panel to the Symfony Web Profiler showing the signals captured during the
-current request — spans as a timeline waterfall, metrics, and (when `capture_logs` is enabled) logs —
-so telemetry is visible locally without an external OTLP backend. The toolbar shows the total signal
-count; the panel breaks it down per signal type.
+current request — the resource attributes, spans as a timeline waterfall, the instrumentation scopes
+that produced them, metrics, and (when `capture_logs` is enabled) logs — so telemetry is visible
+locally without an external OTLP backend. The toolbar shows the total signal count; the panel breaks
+it down per signal type. It also lists the **configured instruments** (named tracers/meters/loggers
+and their scope attributes) so those are visible even when an instrument did not emit this request.
 
 ```yaml
 flow_telemetry:
