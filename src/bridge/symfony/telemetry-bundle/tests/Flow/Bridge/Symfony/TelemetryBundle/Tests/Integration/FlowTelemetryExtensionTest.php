@@ -11,6 +11,8 @@ use Flow\Bridge\Symfony\TelemetryBundle\FlowTelemetryBundle;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\AsyncCurlTransportTickSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerFlushSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerTracePropagation;
+use Flow\Bridge\Symfony\TelemetryBundle\Propagation\TraceContextProvider;
+use Flow\Bridge\Symfony\TelemetryBundle\Routing\TraceContextUrlGenerator;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Telemetry\OTLP\Exporter\OTLPExporter;
 use Flow\Bridge\Telemetry\OTLP\Transport\AsyncCurlTransport;
@@ -575,6 +577,22 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         $extension->load([['resource' => []]], $container);
 
         static::assertFalse($container->hasDefinition('flow.telemetry.security.span_subscriber'));
+    }
+
+    public function test_trace_context_propagation_services_are_registered(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.environment', 'test');
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.build_dir', sys_get_temp_dir());
+        $extension = (new FlowTelemetryBundle())->getContainerExtension();
+        assert($extension !== null);
+        $extension->load([['resource' => []]], $container);
+
+        static::assertTrue($container->hasDefinition('flow.telemetry.trace_context_provider'));
+        static::assertTrue($container->hasAlias(TraceContextProvider::class));
+        static::assertTrue($container->hasDefinition('flow.telemetry.trace_context_url_generator'));
+        static::assertTrue($container->hasAlias(TraceContextUrlGenerator::class));
     }
 
     public function test_custom_exporter_via_service(): void

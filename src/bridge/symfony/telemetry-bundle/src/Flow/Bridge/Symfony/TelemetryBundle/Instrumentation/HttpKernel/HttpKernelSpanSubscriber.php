@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel;
 
 use DateTimeImmutable;
+use Flow\Bridge\Symfony\HttpFoundationTelemetry\QueryCarrier;
 use Flow\Bridge\Symfony\HttpFoundationTelemetry\RequestCarrier;
 use Flow\Bridge\Symfony\HttpFoundationTelemetry\ResponseCarrier;
 use Flow\Telemetry\Context\Context;
@@ -28,6 +29,7 @@ use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\Event\TerminateEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\Routing\RouterInterface;
 
 use function array_map;
 use function is_string;
@@ -52,6 +54,9 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         private ContextStorage $contextStorage,
         private Propagator $propagator,
         private bool $contextPropagation = true,
+        private bool $contextPropagationQuery = false,
+        private ?RouterInterface $router = null,
+        private RouteNaming $routeNaming = RouteNaming::Path,
     ) {
         $this->excludePathRules = array_map(
             static fn(array $config): PathExclusionRule => PathExclusionRule::fromConfig($config),
@@ -81,15 +86,30 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
         }
 
         // @mago-expect analysis:mixed-assignment
-        if (is_string($route = $request->attributes->get('_route'))) {
-            $span->setAttribute('http.route', $route);
-        }
-
+        $route = $request->attributes->get('_route');
         $controllerName = ControllerName::resolve($event->getController())?->name;
 
         if ($controllerName !== null) {
             $span->setAttribute('controller', $controllerName);
         }
+
+        if (is_string($route) && $route !== '') {
+            $routeValue = $this->routeValue($route);
+            $span->setAttribute('http.route', $routeValue);
+            $span->rename("{$request->getMethod()} {$routeValue}");
+        } elseif ($controllerName !== null) {
+            // Sub-requests (render(controller(...))) carry no route, so name them after the controller.
+            $span->rename("{$request->getMethod()} {$controllerName}");
+        }
+    }
+
+    private function routeValue(string $routeName): string
+    {
+        if ($this->routeNaming !== RouteNaming::Path || $this->router === null) {
+            return $routeName;
+        }
+
+        return $this->router->getRouteCollection()->get($routeName)?->getPath() ?? $routeName;
     }
 
     public function onException(ExceptionEvent $event): void
@@ -120,8 +140,11 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
         $kind = $event->isMainRequest() ? SpanKind::SERVER : SpanKind::INTERNAL;
 
+        // OTEL HTTP semconv: the span name must be low-cardinality, so start with just the method and
+        // upgrade to "{method} {route}" once the route is resolved (see onController). The raw path stays
+        // on the url.path attribute.
         $tracer = $this->telemetry->tracer('flow.symfony.http_kernel', PackageVersion::get('symfony/http-kernel'));
-        $span = $tracer->span("{$method} {$path}", $kind, [
+        $span = $tracer->span($method, $kind, [
             'http.request.method' => $method,
             'url.full' => $request->getUri(),
             'url.path' => $request->getRequestUri(),
@@ -203,6 +226,12 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
     private function extractContextFromRequest(Request $request): void
     {
         $propagationContext = $this->propagator->extract(new RequestCarrier($request));
+
+        // Links and full-page navigations cannot send headers, so optionally fall back to the query
+        // string. Headers win when both are present.
+        if ($propagationContext->spanContext === null && $this->contextPropagationQuery) {
+            $propagationContext = $this->propagator->extract(new QueryCarrier($request));
+        }
 
         $spanContext = $propagationContext->spanContext;
 

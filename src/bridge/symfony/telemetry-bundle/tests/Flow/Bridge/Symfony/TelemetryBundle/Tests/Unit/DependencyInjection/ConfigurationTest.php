@@ -814,6 +814,31 @@ final class ConfigurationTest extends TestCase
         static::assertSame('getEmailAddress', $customFields['email']['getter']);
     }
 
+    public function test_http_kernel_route_naming_defaults_to_path_and_is_configurable(): void
+    {
+        $default = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => ['http_kernel' => ['enabled' => true]],
+        ]);
+        static::assertSame('path', $default['instrumentation']['http_kernel']['route_naming']);
+
+        $custom = $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => ['http_kernel' => ['enabled' => true, 'route_naming' => 'name']],
+        ]);
+        static::assertSame('name', $custom['instrumentation']['http_kernel']['route_naming']);
+    }
+
+    public function test_http_kernel_route_naming_rejects_unknown_value(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->context->processConfig([
+            'resource' => [],
+            'instrumentation' => ['http_kernel' => ['enabled' => true, 'route_naming' => 'controller']],
+        ]);
+    }
+
     public function test_security_is_disabled_by_default(): void
     {
         $config = $this->context->processConfig(['resource' => []]);

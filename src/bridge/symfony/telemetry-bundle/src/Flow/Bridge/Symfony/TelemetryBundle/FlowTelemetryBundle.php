@@ -18,8 +18,10 @@ use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\HttpClientT
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\OTLPAvailabilityPass;
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\ProfilerSignalCapturePass;
 use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\Psr18ClientTelemetryPass;
+use Flow\Bridge\Symfony\TelemetryBundle\DependencyInjection\Compiler\TraceContextUrlGeneratorPass;
 use Flow\Bridge\Symfony\TelemetryBundle\Exception\RuntimeException;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Console\ConsoleLogOutputSubscriber;
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel\RouteNaming;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Messenger\MessengerTracePropagation;
 use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\Security\UserSpanAttributeProvider;
 use Flow\Bridge\Symfony\TelemetryBundle\Logger\ConsoleOutputLogProcessor;
@@ -153,6 +155,8 @@ final class FlowTelemetryBundle extends AbstractBundle
 
     private const string SECURITY_TOKEN_STORAGE_INTERFACE = 'Symfony\\Component\\Security\\Core\\Authentication\\Token\\Storage\\TokenStorageInterface';
 
+    private const string URL_GENERATOR_INTERFACE = 'Symfony\\Component\\Routing\\Generator\\UrlGeneratorInterface';
+
     private const string WEB_PROFILER_BUNDLE = 'Symfony\\Bundle\\WebProfilerBundle\\WebProfilerBundle';
 
     #[Override]
@@ -183,6 +187,8 @@ final class FlowTelemetryBundle extends AbstractBundle
 
         $container->registerForAutoconfiguration(UserSpanAttributeProvider::class)
             ->addTag('flow.telemetry.security.user_attribute_provider');
+
+        $container->addCompilerPass(new TraceContextUrlGeneratorPass());
 
         if (interface_exists(self::HTTP_CLIENT_INTERFACE)) {
             $container->addCompilerPass(new HttpClientTelemetryPass());
@@ -537,6 +543,15 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->booleanNode('context_propagation')
             ->info('Extract trace context from incoming request headers and inject it into outgoing response headers (requires flow-php/symfony-http-foundation-telemetry-bridge; silently disabled when absent)')
             ->defaultTrue()
+            ->end()
+            ->booleanNode('context_propagation_query')
+            ->info('Also extract trace context from the URL query string (for links / full-page navigations that cannot send headers); headers take precedence. Security: lets callers inject a traceparent, so keep off unless needed. Requires context_propagation.')
+            ->defaultFalse()
+            ->end()
+            ->enumNode('route_naming')
+            ->info('What routed request spans use for their name and the http.route attribute: "path" (route path template, e.g. /orders/{id}; OTEL semconv default) or "name" (Symfony route name). Sub-requests fall back to the controller; unrouted requests use the method only.')
+            ->values(['path', 'name'])
+            ->defaultValue('path')
             ->end()
             ->booleanNode('trace_controller')
             ->info('Trace controller body execution as a child of the request span (span name = resolved controller)')
@@ -2867,6 +2882,10 @@ final class FlowTelemetryBundle extends AbstractBundle
                 ($httpKernelConfig['context_propagation'] ?? true) && class_exists(self::HTTP_FOUNDATION_REQUEST_CARRIER),
             );
             $builder->setParameter(
+                'flow.telemetry.http_kernel.context_propagation_query',
+                ($httpKernelConfig['context_propagation_query'] ?? false) && class_exists(self::HTTP_FOUNDATION_REQUEST_CARRIER),
+            );
+            $builder->setParameter(
                 'flow.telemetry.http_kernel.trace_controller',
                 $httpKernelConfig['trace_controller'] ?? true,
             );
@@ -2883,6 +2902,12 @@ final class FlowTelemetryBundle extends AbstractBundle
                 $httpKernelConfig['trace_controller_argument_resolvers'] ?? false,
             );
             $container->import(__DIR__ . '/Resources/config/instrumentation/http_kernel.php');
+
+            $routeNaming = is_string($httpKernelConfig['route_naming'] ?? null)
+                ? $httpKernelConfig['route_naming']
+                : 'path';
+            $builder->getDefinition('flow.telemetry.http_kernel.span_subscriber')
+                ->setArgument('$routeNaming', RouteNaming::from($routeNaming));
         }
 
         $consoleConfig = $config['console'] ?? [];
@@ -2968,6 +2993,17 @@ final class FlowTelemetryBundle extends AbstractBundle
             );
 
             $container->import(__DIR__ . '/Resources/config/instrumentation/security.php');
+        }
+
+        // Outgoing trace-context helpers are not instrumentation; register them alongside it.
+        $container->import(__DIR__ . '/Resources/config/propagation.php');
+
+        if (class_exists(AbstractExtension::class)) {
+            $container->import(__DIR__ . '/Resources/config/twig_propagation.php');
+        }
+
+        if (interface_exists(self::URL_GENERATOR_INTERFACE)) {
+            $container->import(__DIR__ . '/Resources/config/url_propagation.php');
         }
 
         $this->registerParameterOnlyInstrumentation($config, $builder);

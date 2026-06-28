@@ -21,6 +21,9 @@ return static function (ContainerConfigurator $container): void {
             service('flow.telemetry.context_storage'),
             service('flow.telemetry.propagator'),
             '%flow.telemetry.http_kernel.context_propagation%',
+            '%flow.telemetry.http_kernel.context_propagation_query%',
+            service('router')->ignoreOnInvalid(),
+            // arg $routeNaming (RouteNaming enum) is set in FlowTelemetryBundle::registerInstrumentation.
         ])
         ->tag('kernel.event_subscriber');
 

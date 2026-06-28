@@ -1105,6 +1105,8 @@ flow_telemetry:
     http_kernel:
       enabled: true
       context_propagation: true  # Extract context from incoming headers
+      context_propagation_query: false  # Also extract from the URL query string (off by default; see note below)
+      route_naming: path  # Span name / http.route source: 'path' (template, e.g. /orders/{id}; default) or 'name'
       trace_controller: true                  # Controller body span (default ON)
       trace_controller_resolution: false      # controller.get_callable span (default OFF)
       trace_controller_arguments: false       # controller.get_arguments aggregate span (default OFF)
@@ -1117,7 +1119,17 @@ flow_telemetry:
         - path: '/^\/api\/internal\/.*/'  # Regex pattern
 ```
 
-In addition to the request (SERVER) span, the bundle can trace the controller lifecycle as child spans of
+The request (SERVER) span follows the OpenTelemetry HTTP semantic conventions for its name and `http.route`,
+controlled by `route_naming`:
+
+- `path` (default) — the route **path template**, e.g. `GET /orders/{id}` (low cardinality, semconv value
+  for `http.route`); resolved from the router.
+- `name` — the Symfony **route name**, e.g. `GET order_show`.
+- Sub-requests (`render(controller(...))`) have no route, so they are named after the **controller**
+  (`GET App\Controller\NavigationController::top`); a request that matches no route at all uses the method
+  only (`GET`).
+
+In addition to the request span, the bundle can trace the controller lifecycle as child spans of
 the request span (same instrumentation scope, kind `INTERNAL`). They are emitted only while the request span
 exists, so disabling `http_kernel` or excluding the path produces none.
 
@@ -1635,6 +1647,86 @@ final class OrderService
         }, [
             'order.id' => $orderId,
         ]);
+    }
+}
+```
+
+### Propagating Trace Context to the Browser
+
+When `twig/twig` is installed the bundle registers Twig helpers that expose the current trace context, so
+you can continue a trace into AJAX requests or multi-step flows.
+
+| Helper                        | Returns                                                              |
+|-------------------------------|----------------------------------------------------------------------|
+| `flow_traceparent()`          | the W3C `traceparent` string (empty when there is no active span)    |
+| `flow_trace_context()`        | array of propagation fields (`traceparent`, `tracestate`, `baggage`) |
+| `flow_trace_context_meta()`   | one `<meta name="…" content="…">` tag per field (HTML-safe)          |
+| `flow_trace_context_url(url)` | the URL with the context appended to its query string                |
+
+**AJAX (headers).** Render the context as meta tags and send them back as request headers — the next
+request continues the trace automatically (`context_propagation` extracts them):
+
+```twig
+{# templates/base.html.twig #}
+<head>
+    {{ flow_trace_context_meta() }}
+</head>
+```
+
+```js
+// Forward every propagation field (traceparent, tracestate, baggage), not just traceparent.
+const headers = {};
+document
+    .querySelectorAll('meta[name="traceparent"], meta[name="tracestate"], meta[name="baggage"]')
+    .forEach((meta) => { headers[meta.name] = meta.content; });
+
+// Only send to your own API origins so trace IDs do not leak to third parties.
+fetch('/api/orders', { headers });
+```
+
+**Links / multi-step flows (query string).** A normal navigation cannot send headers, so carry the
+context in the URL and enable query extraction:
+
+```twig
+<a href="{{ flow_trace_context_url(path('checkout_step_2')) }}">Continue</a>
+```
+
+```yaml
+flow_telemetry:
+  instrumentation:
+    http_kernel:
+      context_propagation: true
+      context_propagation_query: true
+```
+
+**From a controller / service (PHP).** The same helpers are available without Twig. Inject
+`TraceContextProvider` for the raw context, or `TraceContextUrlGenerator` (an opt-in wrapper around the
+router — it does not replace it, so `path()`/`url()` stay untouched):
+
+```php
+use Flow\Bridge\Symfony\TelemetryBundle\Propagation\TraceContextProvider;
+use Flow\Bridge\Symfony\TelemetryBundle\Routing\TraceContextUrlGenerator;
+
+final class CheckoutController extends AbstractController
+{
+    public function __construct(
+        private readonly TraceContextProvider $traceContext,
+        private readonly TraceContextUrlGenerator $traceContextUrls,
+    ) {
+    }
+
+    public function step1(): Response
+    {
+        // append to a URL you generated yourself…
+        $next = $this->traceContext->appendToUrl($this->generateUrl('checkout_step_2'));
+
+        // …or let the wrapper generate + append in one call
+        $next = $this->traceContextUrls->generate('checkout_step_2');
+
+        // raw fields, e.g. to forward as headers on an outgoing call
+        $headers = $this->traceContext->current(); // ['traceparent' => …, 'baggage' => …]
+
+        return $this->redirect($next);
     }
 }
 ```
