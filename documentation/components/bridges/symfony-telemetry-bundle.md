@@ -103,6 +103,45 @@ flow_telemetry:
   clock_service_id: 'app.clock'
 ```
 
+### Runtime Mode
+
+- **type**: `enum`
+- **default**: `auto`
+
+Controls how telemetry is drained at request and command boundaries. In a classic, one-process-per-request
+runtime (PHP-FPM, mod_php) the bundle shuts telemetry down on `kernel.terminate`/`console.terminate`, which
+flushes buffered signals and closes the transport before the process dies. In a long-running worker runtime
+(FrankenPHP worker mode, RoadRunner, Swoole, …) the kernel is booted once and reused across requests, so a
+terminal shutdown would close the transport permanently and leave every subsequent request unable to export.
+There the bundle instead **flushes** on terminate and keeps the transport alive.
+
+```yaml
+flow_telemetry:
+  runtime_mode: auto  # auto|classic|worker
+```
+
+| Mode      | Behaviour                                                                                          |
+|-----------|----------------------------------------------------------------------------------------------------|
+| `auto`    | Detect the runtime per request and pick `worker` or `classic` accordingly (default).               |
+| `classic` | One process per request: shut telemetry down on terminate (full flush + transport close).          |
+| `worker`  | Long-running runtime: flush on terminate, drain async transports, never shut the transport down.   |
+
+`auto` detection looks for the Symfony Runtime worker signal (`APP_RUNTIME_MODE` containing `worker=1`),
+FrankenPHP (`FRANKENPHP_WORKER`), and RoadRunner (`RR_MODE`); when none are present it falls back to `classic`.
+Detection runs per request, never at container-compile time, so a container warmed on the CLI is never baked
+into the wrong mode. Because dev and prod may run different runtimes, wire it to an environment variable:
+
+```yaml
+flow_telemetry:
+  runtime_mode: '%env(FLOW_TELEMETRY_RUNTIME_MODE)%'
+```
+
+To support a runtime the built-in detector does not recognise, override the
+`Flow\Bridge\Symfony\TelemetryBundle\Runtime\WorkerModeDetector` service with your own implementation.
+
+Regardless of mode, the bundle resets per-request trace context between top-level requests (via
+`kernel.reset`), so context never leaks from one worker request into the next.
+
 ### Context Storage
 
 - **type**: `enum`

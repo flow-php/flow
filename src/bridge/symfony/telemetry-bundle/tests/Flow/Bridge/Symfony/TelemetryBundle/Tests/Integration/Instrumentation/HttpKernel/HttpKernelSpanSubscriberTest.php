@@ -15,8 +15,11 @@ use Flow\Telemetry\Tracer\SpanKind;
 use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\Router;
 
@@ -987,11 +990,25 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
             '_controller' => TestController::class . '::index',
         ]));
 
+        // A real sub-request (render(controller(...))) is dispatched from within the main request, so
+        // the kernel's request stack is non-empty and services are not reset between the two spans.
+        // Issuing it as a separate top-level handle() would instead trip Symfony's services_resetter.
+        /** @var EventDispatcherInterface $dispatcher */
+        $dispatcher = $container->get('event_dispatcher');
+        $dispatcher->addListener(
+            KernelEvents::CONTROLLER,
+            static function (ControllerEvent $event) use ($kernel): void {
+                if (!$event->isMainRequest()) {
+                    return;
+                }
+
+                $kernel->handle(Request::create('/test', 'GET'), HttpKernelInterface::SUB_REQUEST);
+            },
+            -100,
+        );
+
         $mainRequest = Request::create('/test', 'GET');
         $response = $kernel->handle($mainRequest);
-
-        $subRequest = Request::create('/test', 'GET');
-        $kernel->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
 
         $kernel->terminate($mainRequest, $response);
 

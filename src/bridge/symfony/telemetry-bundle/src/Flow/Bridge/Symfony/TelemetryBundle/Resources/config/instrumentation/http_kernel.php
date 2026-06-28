@@ -9,6 +9,7 @@ use Flow\Telemetry\Telemetry;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
+use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
 return static function (ContainerConfigurator $container): void {
     $services = $container->services();
@@ -29,7 +30,11 @@ return static function (ContainerConfigurator $container): void {
 
     $services
         ->set('flow.telemetry.http_kernel.flush_subscriber', HttpKernelFlushSubscriber::class)
-        ->args([service(Telemetry::class)])
+        ->args([
+            service(Telemetry::class),
+            service('flow.telemetry.runtime_mode_resolver'),
+            tagged_iterator('flow.telemetry.async_curl_transport'),
+        ])
         ->tag('kernel.event_subscriber');
 
     $services

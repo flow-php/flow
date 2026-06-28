@@ -85,6 +85,65 @@ final class HttpKernelFlushSubscriberTest extends KernelTestCase
         );
     }
 
+    public function test_worker_mode_keeps_exporting_across_repeated_request_cycles(): void
+    {
+        $kernel = $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => [
+                        'utf8' => true,
+                        'resource' => __DIR__ . '/../../../Fixtures/config/routes.php',
+                    ],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'runtime_mode' => 'worker',
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'batching',
+                            'batch_size' => 100,
+                            'exporter' => 'memory',
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => ['enabled' => true],
+                        'console' => ['enabled' => false],
+                        'messenger' => false,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var Router $router */
+        $router = $container->get('router');
+        $router->getRouteCollection()->add('test_index', new Route('/test', [
+            '_controller' => TestController::class . '::index',
+        ]));
+
+        /** @var MemoryExporter $exporter */
+        $exporter = $container->get('flow.telemetry.exporter.memory');
+
+        $firstRequest = Request::create('/test', 'GET');
+        $kernel->terminate($firstRequest, $kernel->handle($firstRequest));
+
+        static::assertCount(2, $exporter->spans(), 'First worker request should flush its spans on terminate');
+
+        $secondRequest = Request::create('/test', 'GET');
+        $kernel->terminate($secondRequest, $kernel->handle($secondRequest));
+
+        static::assertCount(
+            4,
+            $exporter->spans(),
+            'A second request on the same kernel must still export; worker mode must not shut telemetry down',
+        );
+    }
+
     public function test_flush_is_not_called_when_http_kernel_instrumentation_is_disabled(): void
     {
         $kernel = $this->bootKernel([

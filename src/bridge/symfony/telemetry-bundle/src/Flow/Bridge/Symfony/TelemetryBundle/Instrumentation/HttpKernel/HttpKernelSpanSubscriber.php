@@ -211,16 +211,20 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
             return;
         }
 
-        $tracer->complete($span);
+        try {
+            $tracer->complete($span);
+        } finally {
+            // Always detach so a completion failure cannot strand the context scope into the next
+            // request when the kernel is reused (worker mode).
+            // @mago-expect analysis:mixed-assignment
+            if (($scope = $request->attributes->get(self::PROPAGATION_SCOPE_ATTRIBUTE)) instanceof Scope) {
+                $scope->detach();
+                $request->attributes->remove(self::PROPAGATION_SCOPE_ATTRIBUTE);
+            }
 
-        // @mago-expect analysis:mixed-assignment
-        if (($scope = $request->attributes->get(self::PROPAGATION_SCOPE_ATTRIBUTE)) instanceof Scope) {
-            $scope->detach();
-            $request->attributes->remove(self::PROPAGATION_SCOPE_ATTRIBUTE);
+            $request->attributes->remove(self::SPAN_ATTRIBUTE);
+            $request->attributes->remove(self::TRACER_ATTRIBUTE);
         }
-
-        $request->attributes->remove(self::SPAN_ATTRIBUTE);
-        $request->attributes->remove(self::TRACER_ATTRIBUTE);
     }
 
     private function extractContextFromRequest(Request $request): void

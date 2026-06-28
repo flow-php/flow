@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Telemetry\Context;
 
-final class MemoryContextStorage implements ContextStorage
+final class MemoryContextStorage implements ContextStorage, ResettableContextStorage
 {
     private Context $context;
 
@@ -24,6 +24,11 @@ final class MemoryContextStorage implements ContextStorage
     public function current(): Context
     {
         return $this->context;
+    }
+
+    public function reset(): void
+    {
+        $this->context = Context::root();
     }
 
     /**
