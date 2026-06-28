@@ -593,6 +593,10 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         static::assertTrue($container->hasAlias(TraceContextProvider::class));
         static::assertTrue($container->hasDefinition('flow.telemetry.trace_context_url_generator'));
         static::assertTrue($container->hasAlias(TraceContextUrlGenerator::class));
+
+        $providerDefinition = $container->getDefinition('flow.telemetry.trace_context_provider');
+        static::assertInstanceOf(Reference::class, $providerDefinition->getArgument(2));
+        static::assertSame('request_stack', (string) $providerDefinition->getArgument(2));
     }
 
     public function test_custom_exporter_via_service(): void

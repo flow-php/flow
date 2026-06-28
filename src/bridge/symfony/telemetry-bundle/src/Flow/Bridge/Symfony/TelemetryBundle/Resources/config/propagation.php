@@ -13,6 +13,7 @@ return static function (ContainerConfigurator $container): void {
     $services->set('flow.telemetry.trace_context_provider', TraceContextProvider::class)->args([
         service('flow.telemetry.propagator'),
         service('flow.telemetry.context_storage'),
+        service('request_stack')->ignoreOnInvalid(),
     ]);
 
     $services->alias(TraceContextProvider::class, 'flow.telemetry.trace_context_provider')->public();

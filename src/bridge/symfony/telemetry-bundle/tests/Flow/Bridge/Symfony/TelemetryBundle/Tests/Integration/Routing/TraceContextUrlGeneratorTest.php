@@ -4,19 +4,30 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\Routing;
 
+use Flow\Bridge\Symfony\TelemetryBundle\Instrumentation\HttpKernel\HttpKernelSpanSubscriber;
 use Flow\Bridge\Symfony\TelemetryBundle\Routing\TraceContextUrlGenerator;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\Controller\TestController;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Fixtures\TestKernel;
 use Flow\Bridge\Symfony\TelemetryBundle\Tests\Integration\KernelTestCase;
+use Flow\Telemetry\Context\SpanId;
+use Flow\Telemetry\Context\TraceId;
+use Flow\Telemetry\Tests\Mother\SpanMother;
+use Flow\Telemetry\Tracer\SpanKind;
 use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\Router;
 
 #[CoversClass(TraceContextUrlGenerator::class)]
 final class TraceContextUrlGeneratorTest extends KernelTestCase
 {
+    private const string TRACE_ID = '0af7651916cd43dd8448eb211c80319c';
+
+    private const string SPAN_ID = 'b7ad6b7169203331';
+
     #[Override]
     protected function tearDown(): void
     {
@@ -54,7 +65,56 @@ final class TraceContextUrlGeneratorTest extends KernelTestCase
             TraceContextUrlGenerator::class,
         );
 
-        // No active span outside a request, so the URL is returned untouched — this proves the router wiring.
+        // No request span outside a request, so the URL is returned untouched — this proves the router wiring.
         static::assertSame('/test', $generator->generate('test_index'));
+    }
+
+    public function test_appends_the_request_span_trace_context(): void
+    {
+        $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => ['utf8' => true, 'resource' => __DIR__ . '/../../Fixtures/config/routes.php'],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['void' => ['void' => null]],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var Router $router */
+        $router = $container->get('router');
+        $router->getRouteCollection()->add('test_index', new Route('/test', [
+            '_controller' => TestController::class . '::index',
+        ]));
+
+        $request = new Request();
+        $request->attributes->set(HttpKernelSpanSubscriber::SPAN_ATTRIBUTE, SpanMother::create(
+            'request',
+            TraceId::fromHex(self::TRACE_ID),
+            SpanId::fromHex(self::SPAN_ID),
+            null,
+            SpanKind::SERVER,
+        ));
+
+        /** @var RequestStack $requestStack */
+        $requestStack = $container->get('request_stack');
+        $requestStack->push($request);
+
+        $generator = $this->symfonyContext()->getService(
+            TraceContextUrlGenerator::class,
+            TraceContextUrlGenerator::class,
+        );
+
+        static::assertStringStartsWith(
+            '/test?traceparent=00-' . self::TRACE_ID . '-' . self::SPAN_ID . '-',
+            $generator->generate('test_index'),
+        );
     }
 }

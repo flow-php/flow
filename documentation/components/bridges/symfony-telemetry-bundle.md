@@ -1697,7 +1697,7 @@ you can continue a trace into AJAX requests or multi-step flows.
 
 | Helper                        | Returns                                                              |
 |-------------------------------|----------------------------------------------------------------------|
-| `flow_traceparent()`          | the W3C `traceparent` string (empty when there is no active span)    |
+| `flow_traceparent()`          | the W3C `traceparent` string (empty when there is no request span)   |
 | `flow_trace_context()`        | array of propagation fields (`traceparent`, `tracestate`, `baggage`) |
 | `flow_trace_context_meta()`   | one `<meta name="…" content="…">` tag per field (HTML-safe)          |
 | `flow_trace_context_url(url)` | the URL with the context appended to its query string                |
