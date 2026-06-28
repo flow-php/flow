@@ -93,9 +93,9 @@ final class ConsoleSpanSubscriber implements EventSubscriberInterface
         $exitCode = $event->getExitCode();
         $this->span->setAttribute('process.exit_code', $exitCode);
 
-        if ($exitCode === 0) {
-            $this->span->setStatus(SpanStatus::ok());
-        } else {
+        // OTEL spec: instrumentation leaves the status Unset on success; only a non-zero exit is an error.
+        if ($exitCode !== 0) {
+            $this->span->setAttribute('error.type', (string) $exitCode);
             $this->span->setStatus(SpanStatus::error("Exit code: {$exitCode}"));
         }
 

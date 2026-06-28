@@ -170,10 +170,11 @@ final readonly class HttpKernelSpanSubscriber implements EventSubscriberInterfac
 
         $span->setAttribute('http.response.status_code', $statusCode);
 
-        if ($statusCode >= 400) {
+        // OTEL HTTP semconv: for SpanKind.SERVER the span status MUST be left unset for 1xx-4xx; only
+        // 5xx (or other server-caused failures) is an Error. A 4xx is the client's fault, not the server's.
+        if ($statusCode >= 500) {
             $span->setStatus(SpanStatus::error("HTTP {$statusCode}"));
-        } else {
-            $span->setStatus(SpanStatus::ok());
+            $span->setAttribute('error.type', (string) $statusCode);
         }
 
         if ($event->isMainRequest() && $this->contextPropagation) {

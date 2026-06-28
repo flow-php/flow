@@ -39,10 +39,9 @@ final class TracingConnection extends AbstractConnectionMiddleware
 
         try {
             parent::beginTransaction();
-
-            $span->setStatus(SpanStatus::ok());
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -60,10 +59,9 @@ final class TracingConnection extends AbstractConnectionMiddleware
 
         try {
             parent::commit();
-
-            $span->setStatus(SpanStatus::ok());
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -86,13 +84,10 @@ final class TracingConnection extends AbstractConnectionMiddleware
         $span = $tracer->span('doctrine.dbal.connection.exec', SpanKind::CLIENT, $attributes);
 
         try {
-            $result = parent::exec($sql);
-
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return parent::exec($sql);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -117,11 +112,10 @@ final class TracingConnection extends AbstractConnectionMiddleware
         try {
             $statement = parent::prepare($sql);
 
-            $span->setStatus(SpanStatus::ok());
-
             return new TracingStatement($statement, $this->telemetry);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -144,13 +138,10 @@ final class TracingConnection extends AbstractConnectionMiddleware
         $span = $tracer->span('doctrine.dbal.connection.query', SpanKind::CLIENT, $attributes);
 
         try {
-            $result = parent::query($sql);
-
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return parent::query($sql);
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;
@@ -168,10 +159,9 @@ final class TracingConnection extends AbstractConnectionMiddleware
 
         try {
             parent::rollBack();
-
-            $span->setStatus(SpanStatus::ok());
         } catch (Throwable $exception) {
             $span->recordException($exception, new DateTimeImmutable());
+            $span->setAttribute('error.type', $exception::class);
             $span->setStatus(SpanStatus::error($exception->getMessage()));
 
             throw $exception;

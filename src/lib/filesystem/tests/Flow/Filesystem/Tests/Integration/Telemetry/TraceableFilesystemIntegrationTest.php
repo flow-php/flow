@@ -61,9 +61,8 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         static::assertCount(2, $spans);
 
         foreach ($spans as $span) {
-            $status = $span->status();
-            static::assertNotNull($status);
-            static::assertTrue($status->isOk());
+            // OTEL spec: instrumentation leaves the status Unset on success.
+            static::assertNull($span->status());
         }
 
         $destinationSpans = array_values(array_filter(
@@ -128,9 +127,8 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         ));
 
         static::assertCount(1, $destinationSpans);
-        $status = $destinationSpans[0]->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($destinationSpans[0]->status());
         static::assertSame(
             'destination',
             $destinationSpans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_STREAM_TYPE],
@@ -297,9 +295,8 @@ final class TraceableFilesystemIntegrationTest extends TestCase
         $sourceSpans = array_values(array_filter($spans, static fn($span) => $span->name() === 'Read lines_test.txt'));
 
         static::assertCount(1, $sourceSpans);
-        $status = $sourceSpans[0]->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($sourceSpans[0]->status());
     }
 
     public function test_rm_operation_does_not_create_span(): void

@@ -945,9 +945,8 @@ final class TracingMiddlewareTest extends KernelTestCase
         static::assertSame('send', $attributes['messaging.operation.name']);
         static::assertSame('command.bus', $attributes['messaging.symfony.bus']);
 
-        $status = $span->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($span->status());
     }
 
     public function test_traces_message_with_exception(): void

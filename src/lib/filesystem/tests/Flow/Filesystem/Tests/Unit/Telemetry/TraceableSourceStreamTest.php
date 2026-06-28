@@ -46,9 +46,8 @@ final class TraceableSourceStreamTest extends TestCase
             strlen($content),
             $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_READ],
         );
-        $status = $spans[0]->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($spans[0]->status());
     }
 
     public function test_close_records_exception_and_rethrows(): void
@@ -77,6 +76,10 @@ final class TraceableSourceStreamTest extends TestCase
             $status = $spans[0]->status();
             static::assertNotNull($status);
             static::assertTrue($status->isError());
+            static::assertSame(
+                RuntimeException::class,
+                $spans[0]->attributes()[FilesystemTelemetryAttributes::ATTR_ERROR_TYPE],
+            );
             static::assertNotEmpty($spans[0]->events());
         }
     }

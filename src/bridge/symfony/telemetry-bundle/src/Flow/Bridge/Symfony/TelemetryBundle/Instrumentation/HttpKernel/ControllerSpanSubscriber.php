@@ -93,7 +93,7 @@ final readonly class ControllerSpanSubscriber implements EventSubscriberInterfac
             return;
         }
 
-        $span->setStatus(SpanStatus::ok());
+        // OTEL spec: instrumentation leaves the status Unset on success.
         $this->tracer()->complete($span);
 
         $request->attributes->remove(self::CONTROLLER_SPAN_ATTRIBUTE);
@@ -110,6 +110,7 @@ final readonly class ControllerSpanSubscriber implements EventSubscriberInterfac
 
         $throwable = $event->getThrowable();
         $span->recordException($throwable, new DateTimeImmutable());
+        $span->setAttribute('error.type', $throwable::class);
         $span->setStatus(SpanStatus::error($throwable->getMessage()));
         $this->tracer()->complete($span);
 

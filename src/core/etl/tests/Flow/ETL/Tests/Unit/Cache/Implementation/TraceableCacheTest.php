@@ -262,6 +262,7 @@ final class TraceableCacheTest extends FlowTestCase
             static::assertNotNull($status);
             static::assertTrue($status->isError());
             static::assertSame('Test error', $status->description);
+            static::assertSame(RuntimeException::class, $span->attributes()['error.type']);
             static::assertCount(1, $span->events());
         }
     }

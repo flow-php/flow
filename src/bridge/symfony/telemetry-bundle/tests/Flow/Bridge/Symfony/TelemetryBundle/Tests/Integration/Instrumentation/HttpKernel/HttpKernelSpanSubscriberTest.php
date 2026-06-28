@@ -701,7 +701,7 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         static::assertNull($span->context()->parentSpanId);
     }
 
-    public function test_traces_http_request_with_error_status(): void
+    public function test_client_error_status_leaves_server_span_status_unset(): void
     {
         $kernel = $this->bootKernel([
             'config' => static function (TestKernel $kernel): void {
@@ -754,11 +754,73 @@ final class HttpKernelSpanSubscriberTest extends KernelTestCase
         $span = array_values(array_filter($spans, static fn(Span $s): bool => $s->kind() === SpanKind::SERVER))[0];
         $attributes = $span->attributes();
         static::assertSame(404, $attributes['http.response.status_code']);
+        static::assertArrayNotHasKey('error.type', $attributes);
+
+        // OTEL semconv: a 4xx is the client's fault, so the SERVER span status stays unset.
+        static::assertNull($span->status());
+    }
+
+    public function test_server_error_status_marks_server_span_as_error(): void
+    {
+        $kernel = $this->bootKernel([
+            'config' => static function (TestKernel $kernel): void {
+                $kernel->addTestBundle(FrameworkBundle::class);
+                $kernel->addTestExtensionConfig('framework', [
+                    'router' => [
+                        'utf8' => true,
+                        'resource' => __DIR__ . '/../../../Fixtures/config/routes.php',
+                    ],
+                    'http_method_override' => false,
+                    'handle_all_throwables' => true,
+                ]);
+                $kernel->addTestExtensionConfig('flow_telemetry', [
+                    'resource' => [],
+                    'exporters' => ['memory' => ['memory' => null], 'void' => ['void' => null]],
+                    'tracer_provider' => [
+                        'processor' => [
+                            'type' => 'memory',
+                            'exporter' => 'memory',
+                        ],
+                    ],
+                    'instrumentation' => [
+                        'http_kernel' => ['enabled' => true],
+                        'console' => ['enabled' => false],
+                        'messenger' => false,
+                    ],
+                ]);
+            },
+        ]);
+
+        $container = $this->getContainer();
+
+        /** @var Router $router */
+        $router = $container->get('router');
+        $routes = $router->getRouteCollection();
+        $routes->add('test_server_error', new Route('/server-error', [
+            '_controller' => TestController::class . '::serverError',
+        ]));
+
+        $request = Request::create('/server-error', 'GET');
+        $response = $kernel->handle($request);
+        $kernel->terminate($request, $response);
+
+        static::assertSame(500, $response->getStatusCode());
+
+        /** @var MemorySpanProcessor $processor */
+        $processor = $container->get('flow.telemetry.tracer_provider.processor');
+        $spans = $processor->endedSpans();
+
+        static::assertCount(2, $spans);
+
+        $span = array_values(array_filter($spans, static fn(Span $s): bool => $s->kind() === SpanKind::SERVER))[0];
+        $attributes = $span->attributes();
+        static::assertSame(500, $attributes['http.response.status_code']);
+        static::assertSame('500', $attributes['error.type']);
 
         $status = $span->status();
         static::assertNotNull($status);
         static::assertTrue($status->isError());
-        static::assertSame('HTTP 404', $status->description);
+        static::assertSame('HTTP 500', $status->description);
     }
 
     public function test_traces_successful_http_request(): void

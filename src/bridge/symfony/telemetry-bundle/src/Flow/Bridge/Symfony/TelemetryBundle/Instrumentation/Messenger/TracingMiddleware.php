@@ -121,12 +121,10 @@ final readonly class TracingMiddleware implements MiddlewareInterface
         }
 
         try {
-            $result = $stack->next()->handle($envelope, $stack);
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            return $stack->next()->handle($envelope, $stack);
         } catch (Throwable $e) {
             $span->recordException($e, new DateTimeImmutable());
+            $span->setAttribute('error.type', $e::class);
             $span->setStatus(SpanStatus::error($e->getMessage()));
 
             throw $e;

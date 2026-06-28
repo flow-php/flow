@@ -273,9 +273,8 @@ final class TracingTwigExtensionTest extends TestCase
         $spans = $spanProcessor->endedSpans();
         static::assertCount(1, $spans);
 
-        $status = $spans[0]->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($spans[0]->status());
     }
 
     public function test_span_kind_is_internal(): void

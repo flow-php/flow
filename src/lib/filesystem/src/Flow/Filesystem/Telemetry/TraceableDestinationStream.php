@@ -88,11 +88,11 @@ final class TraceableDestinationStream implements DestinationStream
 
             if ($span !== null) {
                 $span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN, $this->totalBytesWritten);
-                $span->setStatus(SpanStatus::ok());
             }
         } catch (Throwable $e) {
             if ($span !== null) {
                 $span->setAttribute(FilesystemTelemetryAttributes::ATTR_BYTES_TOTAL_WRITTEN, $this->totalBytesWritten);
+                $span->setAttribute(FilesystemTelemetryAttributes::ATTR_ERROR_TYPE, $e::class);
                 $span->recordException($e, $this->telemetryConfig->clock->now());
                 $span->setStatus(SpanStatus::error($e->getMessage()));
             }

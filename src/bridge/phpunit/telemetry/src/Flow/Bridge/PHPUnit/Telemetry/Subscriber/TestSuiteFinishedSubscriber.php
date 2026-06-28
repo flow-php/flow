@@ -8,7 +8,6 @@ use Flow\Bridge\PHPUnit\Telemetry\Configuration;
 use Flow\Bridge\PHPUnit\Telemetry\SpanStack;
 use Flow\Telemetry\PackageVersion;
 use Flow\Telemetry\Telemetry;
-use Flow\Telemetry\Tracer\SpanStatus;
 use PHPUnit\Event\TestSuite\Finished;
 use PHPUnit\Event\TestSuite\FinishedSubscriber;
 use Throwable;
@@ -51,7 +50,7 @@ final readonly class TestSuiteFinishedSubscriber implements FinishedSubscriber
                 $span->end();
                 $duration = $span->duration();
 
-                $span->setStatus(SpanStatus::ok());
+                // OTEL spec: instrumentation leaves the status Unset on success.
 
                 if ($this->config->emitMetrics && $duration !== null) {
                     $meter = $this->telemetry->meter('phpunit', $phpunitVersion);

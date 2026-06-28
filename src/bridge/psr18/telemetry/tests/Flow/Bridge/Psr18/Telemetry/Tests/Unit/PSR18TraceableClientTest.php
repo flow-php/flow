@@ -65,6 +65,7 @@ final class PSR18TraceableClientTest extends TestCase
 
             static::assertTrue($status->isError());
             static::assertSame('Connection failed', $status->description);
+            static::assertSame(RuntimeException::class, $span->attributes()['error.type']);
         }
     }
 
@@ -94,6 +95,7 @@ final class PSR18TraceableClientTest extends TestCase
         static::assertTrue($status->isError());
         static::assertSame('HTTP 404', $status->description);
         static::assertSame(404, $span->attributes()['http.response.status_code']);
+        static::assertSame('404', $span->attributes()['error.type']);
     }
 
     public function test_request_with_5xx_status_creates_error_span(): void
@@ -122,6 +124,7 @@ final class PSR18TraceableClientTest extends TestCase
         static::assertTrue($status->isError());
         static::assertSame('HTTP 500', $status->description);
         static::assertSame(500, $span->attributes()['http.response.status_code']);
+        static::assertSame('500', $span->attributes()['error.type']);
     }
 
     public function test_span_has_correct_attributes(): void
@@ -188,13 +191,10 @@ final class PSR18TraceableClientTest extends TestCase
         $span = $spans[0];
 
         static::assertSame('GET api.example.com', $span->name());
-        $status = $span->status();
 
-        if ($status === null) {
-            static::fail('Expected span to have status');
-        }
-
-        static::assertTrue($status->isOk());
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($span->status());
+        static::assertArrayNotHasKey('error.type', $span->attributes());
     }
 
     private function createTelemetry(MemorySpanProcessor $spanProcessor): Telemetry

@@ -80,8 +80,8 @@ final class ControllerSpanSubscriberTest extends TestCase
         static::assertSame('test_index', $attributes['http.route']);
 
         static::assertSame($requestSpan->context()->spanId->toHex(), $span->context()->parentSpanId?->toHex());
-        static::assertNotNull($span->status());
-        static::assertTrue($span->status()?->isOk());
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($span->status());
     }
 
     public function test_completes_body_span_on_view(): void

@@ -167,6 +167,7 @@ final class TestFinishedSubscriberTest extends TestCase
 
         $span = $spanProcessor->endedSpans()[0];
         static::assertTrue($span->status()?->isError());
+        static::assertSame('failed', $span->attributes()['error.type']);
         static::assertArrayHasKey('exception.message', $span->attributes());
         static::assertSame('some error', $span->attributes()['exception.message']);
     }

@@ -305,8 +305,7 @@ final class ConsoleSpanSubscriberTest extends KernelTestCase
         static::assertSame(TestCommand::class, $attributes['command.class']);
         static::assertSame(0, $attributes['process.exit_code']);
 
-        $status = $span->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($span->status());
     }
 }

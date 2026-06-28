@@ -283,12 +283,11 @@ final class Tracer
         $span = $this->span($name, $kind, [], [], $parentContext);
 
         try {
-            $result = $callback();
-            $span->setStatus(SpanStatus::ok());
-
-            return $result;
+            // OTEL spec: instrumentation leaves the status Unset on success; only errors set a status.
+            return $callback();
         } catch (Throwable $e) {
             $span->recordException($e, $this->clock->now());
+            $span->setAttribute('error.type', $e::class);
             $span->setStatus(SpanStatus::error($e->getMessage()));
 
             throw $e;

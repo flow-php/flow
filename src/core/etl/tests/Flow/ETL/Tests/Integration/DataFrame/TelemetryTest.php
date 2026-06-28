@@ -104,9 +104,8 @@ final class TelemetryTest extends FlowTestCase
         static::assertNotEmpty($loadingSpans, 'Loading spans should be created when trace_loading is enabled');
 
         foreach ($loadingSpans as $span) {
-            $status = $span->status();
-            static::assertNotNull($status);
-            static::assertTrue($status->isOk());
+            // OTEL spec: instrumentation leaves the status Unset on success.
+            static::assertNull($span->status());
             static::assertArrayHasKey('loader.class', $span->attributes());
         }
     }
@@ -138,9 +137,8 @@ final class TelemetryTest extends FlowTestCase
 
         $dataFrameSpan = $endedSpans[0];
         static::assertSame('DataFrame flow_dataframe', $dataFrameSpan->name());
-        $status = $dataFrameSpan->status();
-        static::assertNotNull($status);
-        static::assertTrue($status->isOk());
+        // OTEL spec: instrumentation leaves the status Unset on success.
+        static::assertNull($dataFrameSpan->status());
     }
 
     public function test_dataframe_run_logs_start_and_completion(): void
@@ -268,9 +266,8 @@ final class TelemetryTest extends FlowTestCase
         );
 
         foreach ($transformerSpans as $span) {
-            $status = $span->status();
-            static::assertNotNull($status);
-            static::assertTrue($status->isOk());
+            // OTEL spec: instrumentation leaves the status Unset on success.
+            static::assertNull($span->status());
             static::assertArrayHasKey('transformer.class', $span->attributes());
         }
     }

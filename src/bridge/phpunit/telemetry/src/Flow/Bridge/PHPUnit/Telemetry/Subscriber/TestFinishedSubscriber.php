@@ -88,9 +88,9 @@ final readonly class TestFinishedSubscriber implements FinishedSubscriber
                 $span->setAttribute('test.memory.delta_bytes', $deltaBytes);
             }
 
-            if ($status === 'passed') {
-                $span->setStatus(SpanStatus::ok());
-            } else {
+            // OTEL spec: instrumentation leaves the status Unset on success; only failures set a status.
+            if ($status !== 'passed') {
+                $span->setAttribute('error.type', $status);
                 $span->setStatus(SpanStatus::error($errorMessage ?? $status));
             }
 
