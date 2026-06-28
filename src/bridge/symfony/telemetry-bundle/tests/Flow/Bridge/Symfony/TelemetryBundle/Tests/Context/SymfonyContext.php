@@ -95,6 +95,7 @@ final class SymfonyContext
         }
 
         $runDir = dirname($this->kernel->getCacheDir());
+        $environment = $this->kernel->getEnvironment();
 
         $this->kernel->shutdown();
         $this->kernel = null;
@@ -105,7 +106,7 @@ final class SymfonyContext
             $filesystem->remove($runDir);
         }
 
-        $defaultResourceCache = sys_get_temp_dir() . '/flow_telemetry_resource.cache';
+        $defaultResourceCache = sys_get_temp_dir() . '/flow_telemetry_resource_' . $environment . '.cache';
 
         if ($filesystem->exists($defaultResourceCache)) {
             $filesystem->remove($defaultResourceCache);

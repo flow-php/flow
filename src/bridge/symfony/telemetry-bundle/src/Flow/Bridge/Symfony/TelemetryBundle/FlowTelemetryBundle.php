@@ -136,6 +136,7 @@ use function is_bool;
 use function is_int;
 use function is_string;
 use function sprintf;
+use function sys_get_temp_dir;
 use function ucfirst;
 
 use const LOG_PID;
@@ -249,7 +250,7 @@ final class FlowTelemetryBundle extends AbstractBundle
             ->defaultTrue()
             ->end()
             ->scalarNode('path')
-            ->info('Absolute path to the cache file. Default: sys_get_temp_dir()/flow_telemetry_resource.cache.')
+            ->info('Absolute path to the cache file. Default: sys_get_temp_dir()/flow_telemetry_resource_<kernel.environment>.cache (keyed by kernel environment so switching APP_ENV does not serve a stale deployment.environment.name).')
             ->defaultNull()
             ->end()
             ->end()
@@ -3579,7 +3580,10 @@ final class FlowTelemetryBundle extends AbstractBundle
         if ($cacheEnabled) {
             $cachingDefinition = new Definition(CachingDetector::class);
             $cachingDefinition->setArgument(0, new Reference('flow.telemetry.resource.detector.static.chain'));
-            $cachingDefinition->setArgument(1, $cacheConfig['path'] ?? null);
+            $cachingDefinition->setArgument(
+                1,
+                $cacheConfig['path'] ?? sys_get_temp_dir() . '/flow_telemetry_resource_%kernel.environment%.cache',
+            );
             $builder->setDefinition('flow.telemetry.resource.detector.static', $cachingDefinition);
         } else {
             $builder->setAlias(

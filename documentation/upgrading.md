@@ -105,6 +105,14 @@ flow_postgresql:
     connection: analytics
 ```
 
+### 7) `flow-php/symfony-telemetry-bundle` - static resource cache file is keyed by kernel environment
+
+| Before                                                  | After                                                              |
+|---------------------------------------------------------|-------------------------------------------------------------------|
+| `sys_get_temp_dir()/flow_telemetry_resource.cache`      | `sys_get_temp_dir()/flow_telemetry_resource_<kernel.env>.cache`   |
+
+Delete the orphaned `flow_telemetry_resource.cache` from the temp dir; a per-env file is written on the next run.
+
 ---
 
 ## Upgrading from 0.39.x to 0.40.x

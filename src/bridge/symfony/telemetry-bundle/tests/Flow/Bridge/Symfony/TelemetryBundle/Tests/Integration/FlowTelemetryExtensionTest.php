@@ -127,6 +127,42 @@ final class FlowTelemetryExtensionTest extends KernelTestCase
         }
     }
 
+    public function test_caching_detector_default_path_is_keyed_by_kernel_environment(): void
+    {
+        $expectedPath = sys_get_temp_dir() . '/flow_telemetry_resource_test.cache';
+
+        if (is_file($expectedPath)) {
+            unlink($expectedPath);
+        }
+
+        try {
+            $this->bootKernel([
+                'config' => static function (TestKernel $kernel): void {
+                    $kernel->addTestExtensionConfig('flow_telemetry', [
+                        'resource' => [
+                            'custom' => ['service.name' => 'env-keyed-service'],
+                        ],
+                    ]);
+                },
+            ]);
+
+            $container = $this->getContainer();
+            static::assertInstanceOf(
+                CachingDetector::class,
+                $container->get('flow.telemetry.resource.detector.static'),
+            );
+
+            $resource = $container->get('flow.telemetry.resource');
+            static::assertInstanceOf(Resource::class, $resource);
+            static::assertSame('env-keyed-service', $resource->get('service.name'));
+            static::assertFileExists($expectedPath);
+        } finally {
+            if (is_file($expectedPath)) {
+                unlink($expectedPath);
+            }
+        }
+    }
+
     public function test_git_detector_is_not_registered_by_default(): void
     {
         $this->bootKernel([

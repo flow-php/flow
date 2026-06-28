@@ -50,7 +50,7 @@ flow_telemetry:
       static:
         cache:
           enabled: true  # Cache static attributes (default: true)
-          path: null     # Cache file path (default: sys_get_temp_dir()/flow_telemetry_resource.cache)
+          path: null     # Cache file path (default: sys_get_temp_dir()/flow_telemetry_resource_<env>.cache)
         os:
           enabled: true  # Detect os.type, os.name, os.version, os.description
         host:
@@ -86,7 +86,9 @@ Static detectors are cached by default. Dynamic detectors run on every request/c
 The cache file lives outside Symfony's cache lifecycle on purpose: building the Symfony cache
 (via `cache:warmup`) at image build time would otherwise freeze runtime-dependent attributes
 such as `host.name` or `process.pid` from the build container. Defaulting to
-`sys_get_temp_dir()` keeps the cache per-runtime and avoids that pitfall. To invalidate it,
+`sys_get_temp_dir()` keeps the cache per-runtime and avoids that pitfall. The default filename
+is keyed by the kernel environment (`flow_telemetry_resource_<env>.cache`) so switching `APP_ENV`
+(e.g. dev → prod) does not serve a stale `deployment.environment.name`. To invalidate it,
 delete the cache file or restart the process; `cache:clear` does not touch it.
 
 Custom attributes override auto-detected values.
