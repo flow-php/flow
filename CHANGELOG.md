@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-06-25
+## [Unreleased] - 2026-06-28
 
 ### Added
 - [#2487](https://github.com/flow-php/flow/pull/2487) - **flow-php/telemetry - ConditionalExporter that gates a wrapped exporter behind a runtime flag** - [@norberttech](https://github.com/norberttech)
