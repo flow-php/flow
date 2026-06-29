@@ -289,9 +289,9 @@ final readonly class BulkData
         $columnCount = count($this->columns->all());
         $rowCount = $this->count();
 
-        $rowPlaceholder = '(' . str_repeat('?,', $columnCount - 1) . '?)';
+        $rowPlaceholder = '(' . str_repeat('?,', max(0, $columnCount - 1)) . '?)';
 
-        return str_repeat($rowPlaceholder . ',', $rowCount - 1) . $rowPlaceholder;
+        return str_repeat($rowPlaceholder . ',', max(0, $rowCount - 1)) . $rowPlaceholder;
     }
 
     /**

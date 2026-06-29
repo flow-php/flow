@@ -111,6 +111,7 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
     /**
      * @param Type<mixed> $structureType
      * @param array<int, string> $buffer
+     * @param int<0, max> $level
      *
      * @return array<int, string>
      */

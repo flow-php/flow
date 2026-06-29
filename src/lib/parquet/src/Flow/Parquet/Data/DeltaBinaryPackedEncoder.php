@@ -58,7 +58,7 @@ final readonly class DeltaBinaryPackedEncoder
     private function packMiniblock(array $values, int $bitWidth): string
     {
         if ($bitWidth === 0) {
-            return str_repeat("\x00", (int) ceil($this->miniblockSize / 8));
+            return str_repeat("\x00", max(0, (int) ceil($this->miniblockSize / 8)));
         }
 
         $buffer = '';

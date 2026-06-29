@@ -93,7 +93,7 @@ final class TracingTwigExtension extends AbstractExtension
         // @mago-expect analysis:impossible-assignment
         $spanData = $this->activeSpans[$profile];
 
-        // @mago-expect analysis:no-value(2),redundant-type-comparison(2),redundant-logical-operation(2)
+        // @mago-expect analysis:no-value,redundant-type-comparison,redundant-logical-operation(2)
         if (is_array($spanData) && $spanData['tracer'] instanceof Tracer && $spanData['span'] instanceof Span) {
             // OTEL spec: instrumentation leaves the status Unset on success.
             $spanData['tracer']->complete($spanData['span']);

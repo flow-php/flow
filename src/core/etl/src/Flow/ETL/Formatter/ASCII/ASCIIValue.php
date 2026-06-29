@@ -64,9 +64,14 @@ final class ASCIIValue
                     $rightPaddingLength = $paddingRequired - $leftPaddingLength;
 
                     return (
-                        mb_substr(str_repeat($padding, $leftPaddingLength), 0, $leftPaddingLength, $encoding)
+                        mb_substr(str_repeat($padding, max(0, $leftPaddingLength)), 0, $leftPaddingLength, $encoding)
                         . $input
-                        . mb_substr(str_repeat($padding, $rightPaddingLength), 0, $rightPaddingLength, $encoding)
+                        . mb_substr(
+                            str_repeat($padding, max(0, $rightPaddingLength)),
+                            0,
+                            $rightPaddingLength,
+                            $encoding,
+                        )
                     );
             }
         }
@@ -74,6 +79,9 @@ final class ASCIIValue
         return $result;
     }
 
+    /**
+     * @return int<0, max>
+     */
     public function length(int|bool $truncate = 20): int
     {
         return mb_strlen($this->print($truncate));

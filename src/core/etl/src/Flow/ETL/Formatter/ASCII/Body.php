@@ -15,6 +15,9 @@ final readonly class Body
         private Rows $rows,
     ) {}
 
+    /**
+     * @return int<0, max>
+     */
     public function maximumLength(string $entry, int|bool $truncate = 20): int
     {
         $max = 0;

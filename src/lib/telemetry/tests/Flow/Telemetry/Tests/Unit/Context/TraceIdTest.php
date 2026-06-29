@@ -94,6 +94,9 @@ final class TraceIdTest extends TestCase
         static::assertSame($bytes, $traceId->toBytes());
     }
 
+    /**
+     * @param int<0, max> $length
+     */
     #[DataProvider('provideInvalidBytesLength')]
     public function test_from_bytes_throws_on_invalid_length(int $length): void
     {

@@ -62,6 +62,6 @@ final readonly class Mask implements Sanitizer
             return $value;
         }
 
-        return substr($value, 0, $this->offset) . str_repeat($this->character, $length - $this->offset);
+        return substr($value, 0, $this->offset) . str_repeat($this->character, max(0, $length - $this->offset));
     }
 }

@@ -30,6 +30,9 @@ if (!function_exists('dd')) {
 }
 
 if (!function_exists('dj')) {
+    /**
+     * @param int<0, max> $indention
+     */
     function dj(mixed $args, int $indention = 0, ?string $header = null): void
     {
         if (!is_array($args)) {
@@ -104,6 +107,9 @@ if (!function_exists('dj')) {
 }
 
 if (!function_exists('ddj')) {
+    /**
+     * @param int<0, max> $indention
+     */
     function ddj(mixed $args, int $indention = 0): void
     {
         $header = '';

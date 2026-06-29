@@ -412,9 +412,6 @@ final class Schema implements Countable
             ));
         }
 
-        // Mago infers array_splice()'s return as array<array-key, mixed>, dropping the element type,
-        // so we restore it explicitly. See https://github.com/carthage-software/mago/issues/1982
-        /** @var list<Definition<mixed>> $moved */
         $moved = array_splice($definitionsList, $from, 1);
         array_splice($definitionsList, $index, 0, $moved);
 
@@ -628,9 +625,6 @@ final class Schema implements Countable
 
         $definitionsList = array_values($this->definitions);
 
-        // Mago infers array_splice()'s return as array<array-key, mixed>, dropping the element type,
-        // so we restore it explicitly. See https://github.com/carthage-software/mago/issues/1982
-        /** @var list<Definition<mixed>> $moved */
         $moved = array_splice($definitionsList, $from, 1);
 
         $referenceIndex = 0;
