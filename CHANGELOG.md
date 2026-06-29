@@ -1,3 +1,14 @@
+## [Unreleased] - 2026-06-29
+
+### Added
+- [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - Flow PHP 0.41.0 release blog post** - [@norberttech](https://github.com/norberttech)
+- [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - optimize-images Just task with oxipng/jpegoptim nix deps** - [@norberttech](https://github.com/norberttech)
+
+### Changed
+- [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - widen blog post and changelog layout, add figure/image prose styles** - [@norberttech](https://github.com/norberttech)
+- [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - losslessly recompress landing images** - [@norberttech](https://github.com/norberttech)
+- [#2492](https://github.com/flow-php/flow/pull/2492) - **web/landing - regenerate DSL autocompletion functions** - [@norberttech](https://github.com/norberttech)
+
 ## [0.41.0] - 2026-06-29
 
 ### Added
