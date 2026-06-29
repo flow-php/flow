@@ -46,6 +46,7 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2454](https://github.com/flow-php/flow/pull/2454) - **Positional schema definition mutations on Flow\ETL\Schema: prepend(), insertAt(), addBefore(), addAfter(), moveTo(), moveBefore(), moveAfter() and reorder()** - [@bendavies](https://github.com/bendavies)
 
 ### Changed
+- [c335cb](https://github.com/flow-php/flow/commit/c335cb2d927e73e68082778dd34d32e43ae9eef3) - **chore: update dependencies and fix mago lint/analyze finding** - [@norberttech](https://github.com/norberttech)
 - [#2489](https://github.com/flow-php/flow/pull/2489) - **flow-php/symfony-postgresql-bundle - lazy connections by default** - [@norberttech](https://github.com/norberttech)
 - [#2486](https://github.com/flow-php/flow/pull/2486) - **flow-php/postgresql - report decoded node and parse-result PostgreSQL version on SelectStmt mismatch** - [@norberttech](https://github.com/norberttech)
 - [#2482](https://github.com/flow-php/flow/pull/2482) - **flow-php/telemetry-otlp-bridge - CurlTransport is now synchronous; send() blocks and throws on failure** - [@norberttech](https://github.com/norberttech)
