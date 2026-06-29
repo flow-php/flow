@@ -1,4 +1,4 @@
-## [Unreleased] - 2026-06-29
+## [0.41.0] - 2026-06-29
 
 ### Added
 - [#2489](https://github.com/flow-php/flow/pull/2489) - **flow-php/symfony-telemetry-bundle - security instrumentation** - [@norberttech](https://github.com/norberttech)
@@ -30,16 +30,13 @@
 - [#2465](https://github.com/flow-php/flow/pull/2465) - **flow-php/symfony-telemetry-bundle - opt-in logger_provider.console_output config with overridable verbosity_levels.** - [@norberttech](https://github.com/norberttech)
 - [#2462](https://github.com/flow-php/flow/pull/2462) - **flow-php/symfony-telemetry-bundle - messenger propagation_style option (continue/link) with new MessengerTracePropagation enum** - [@norberttech](https://github.com/norberttech)
 - [#2459](https://github.com/flow-php/flow/pull/2459) - **Flow\ETL\Schema::sort() accepting a pluggable SortingStrategy (defaults to AlphabeticalStrategy)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
-- [#2459](https://github.com/flow-php/flow/pull/2459) - **Core sorting strategies AlphabeticalStrategy, TypeStrategy, MetadataStrategy and CombinedStrategy, exposed via
-sort_by_name(), sort_by_type(), sort_by_type_and_name() and sort_by_metadata() DSL helpers** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2459](https://github.com/flow-php/flow/pull/2459) - **Core sorting strategies AlphabeticalStrategy, TypeStrategy, MetadataStrategy and CombinedStrategy, exposed via sort_by_name(), sort_by_type(), sort_by_type_and_name() and sort_by_metadata() DSL helpers** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2459](https://github.com/flow-php/flow/pull/2459) - **PostgreSqlSortingStrategy (primary-key columns first, then by PostgreSQL type, then by name) exposed via the pgsql_sort_strategy() DSL helper** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2460](https://github.com/flow-php/flow/pull/2460) - **flow-php/symfony-telemetry-bundle - inject trace context into outgoing response headers** - [@norberttech](https://github.com/norberttech)
 - [#2458](https://github.com/flow-php/flow/pull/2458) - **flow-php/symfony-telemetry-bundle - cleanup subscriber completing Twig spans orphaned by a render exception on terminate/kernel.reset** - [@norberttech](https://github.com/norberttech)
-- [#2408](https://github.com/flow-php/flow/pull/2408) - **SEAL adapter (flow-php/etl-adapter-seal) — a single, strongly typed integration for SEAL search engines (Elasticsearch, OpenSearch, Meilisearch, Algolia, Solr,
-Typesense, RediSearch, Loupe)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2408](https://github.com/flow-php/flow/pull/2408) - **SEAL adapter (flow-php/etl-adapter-seal) — a single, strongly typed integration for SEAL search engines (Elasticsearch, OpenSearch, Meilisearch, Algolia, Solr, Typesense, RediSearch, Loupe)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2408](https://github.com/flow-php/flow/pull/2408) - **from_seal() extractor and to_seal() loader, working with any SEAL EngineInterface** - [@MrHDOLEK](https://github.com/MrHDOLEK)
-- [#2408](https://github.com/flow-php/flow/pull/2408) - **to_seal_schema() and seal_schema_to_flow() DSL — recursive, bi-directional Flow Schema ↔ SEAL Schema conversion (nested structures, lists and
-maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2408](https://github.com/flow-php/flow/pull/2408) - **to_seal_schema() and seal_schema_to_flow() DSL — recursive, bi-directional Flow Schema ↔ SEAL Schema conversion (nested structures, lists and maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2408](https://github.com/flow-php/flow/pull/2408) - **seal_create_index(), seal_drop_index(), seal_create_schema() and seal_drop_schema() DSL index-lifecycle helpers** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#2457](https://github.com/flow-php/flow/pull/2457) - **flow-php/symfony-filesystem-bundle - inject individual mounted filesystems via named-argument aliases** - [@norberttech](https://github.com/norberttech)
 - [#2457](https://github.com/flow-php/flow/pull/2457) - **flow-php/symfony-filesystem-bundle - #[AsFilesystem] attribute to select a mount to inject** - [@norberttech](https://github.com/norberttech)
@@ -88,8 +85,7 @@ maps)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 ### Removed
 - [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/telemetry - per-tracer span stack** - [@norberttech](https://github.com/norberttech)
 - [#2466](https://github.com/flow-php/flow/pull/2466) - **flow-php/telemetry - Context::withTraceId() and the standalone context trace id** - [@norberttech](https://github.com/norberttech)
-- [#2408](https://github.com/flow-php/flow/pull/2408) - **Elasticsearch adapter (flow-php/etl-adapter-elasticsearch) — superseded by the SEAL adapter; use SEAL with the Elasticsearch backend
-(cmsig/seal-elasticsearch-adapter)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#2408](https://github.com/flow-php/flow/pull/2408) - **Elasticsearch adapter (flow-php/etl-adapter-elasticsearch) — superseded by the SEAL adapter; use SEAL with the Elasticsearch backend (cmsig/seal-elasticsearch-adapter)** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 
 ### Security
 - [#2474](https://github.com/flow-php/flow/pull/2474) - **flow-php/telemetry - GitDetector kills hanging git commands and caps output to resist hostile repositories.** - [@norberttech](https://github.com/norberttech)
